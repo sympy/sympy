@@ -59,6 +59,8 @@ from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import numbered_symbols
 
 def rsolve_poly(coeffs, f, n, **hints):
     """Given linear recurrence operator L of order 'k' with polynomial
@@ -304,7 +306,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if E != []:
             solutions = solve(E, *C)
 
-            if solutions is None:
+            if not solutions:
                 if homogeneous:
                     if hints.get('symbols', False):
                         return (S.Zero, [])
@@ -603,13 +605,15 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 if casoratian(kernel+[K], n) != 0:
                     kernel.append(K)
 
-    symbols = [ Symbol('C'+str(i)) for i in xrange(len(kernel)) ]
+    symbols = numbered_symbols('C')
+    kernel.sort(key=default_sort_key)
+    sk = zip(symbols, kernel)
 
-    for C, ker in zip(symbols, kernel):
+    for C, ker in sk:
         result += C * ker
 
     if hints.get('symbols', False):
-        return (result, symbols)
+        return (result, [s for s, k in sk])
     else:
         return result
 
@@ -648,7 +652,7 @@ def rsolve(f, y, init=None):
     >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
     >>> rsolve(f, y(n))
-    2**n*C1 + C0*n!
+    2**n*C0 + C1*n!
 
     >>> rsolve(f, y(n), { y(0):0, y(1):3 })
     3*2**n - 3*n!
@@ -754,7 +758,7 @@ def rsolve(f, y, init=None):
 
         result = solve(equations, *symbols)
 
-        if result is None:
+        if not result:
             return None
         else:
             for k, v in result.iteritems():

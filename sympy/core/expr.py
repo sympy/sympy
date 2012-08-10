@@ -1,4 +1,5 @@
 from core import C
+from sympify import sympify
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin, pure_complex
@@ -6,9 +7,11 @@ from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from sympy.utilities.misc import default_sort_key
 
 from collections import defaultdict
 from math import log10, ceil
+from inspect import getmro
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -46,9 +49,6 @@ class Expr(Basic, EvalfMixin):
 
     @cacheit
     def sort_key(self, order=None):
-        # XXX: The order argument does not actually work
-
-        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
 
@@ -73,6 +73,28 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
+
+    def __call__(self, *args):
+        # (x+Lambda(y, 2*y))(z) -> x+2*z
+        return Expr._recursive_call(self, args)
+
+    @staticmethod
+    def _recursive_call(expr_to_call, on_args):
+        def the_call_method_is_overridden(expr):
+            for cls in getmro(type(expr)):
+                if '__call__' in cls.__dict__:
+                    return cls != Expr
+
+        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
+            if isinstance(expr_to_call, C.Symbol):# XXX When you call a Symbol it is
+                return expr_to_call               # transformed into an UndefFunction
+            else:
+                return expr_to_call(*on_args)
+        elif expr_to_call.args:
+            args = (Expr._recursive_call(sub, on_args) for sub in expr_to_call.args)
+            return type(expr_to_call)(*args)
+        else:
+            return expr_to_call
 
 
     # ***************
@@ -535,7 +557,7 @@ class Expr(Basic, EvalfMixin):
         elif constant is True:
             ndiff = diff._random()
             if ndiff:
-               return False
+                return False
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -633,6 +655,8 @@ class Expr(Basic, EvalfMixin):
     def _eval_conjugate(self):
         if self.is_real:
             return self
+        elif self.is_imaginary:
+            return -self
 
     def conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
@@ -677,23 +701,8 @@ class Expr(Basic, EvalfMixin):
         return key, reverse
 
     def as_ordered_factors(self, order=None):
-        """
-        Transform an expression to an ordered list of factors.
-
-        Examples
-        ========
-
-        >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
-
-        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
-        [2, x, y, sin(x), cos(x)]
-
-        """
-        if not self.is_Mul:
-            return [self]
-        cpart, ncpart = self.args_cnc()
-        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
+        """Return list of ordered factors (if Mul) else [self]."""
+        return [self]
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -735,7 +744,6 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
-        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 
@@ -1420,7 +1428,7 @@ class Expr(Basic, EvalfMixin):
                 indep.append(n)
             return Mul(*indep), Mul(*depend)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
            containing collected both real and imaginary parts. This
            method can't be confused with re() and im() functions,
@@ -1443,7 +1451,10 @@ class Expr(Basic, EvalfMixin):
            (re(z) - im(w), re(w) + im(z))
 
         """
-        return (C.re(self), C.im(self))
+        if hints.get('ignore') == self:
+            return None
+        else:
+            return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
         """Return self as a dictionary of factors with each factor being
@@ -1562,9 +1573,9 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy.abc import x, y
         >>> (S(3)).as_coeff_add()
         (3, ())
-        >>> (3 + x + y).as_coeff_add()
-        (3, (y, x))
-        >>> (3 + x +y).as_coeff_add(x)
+        >>> (3 + x).as_coeff_add()
+        (3, (x,))
+        >>> (3 + x + y).as_coeff_add(x)
         (y + 3, (x,))
         >>> (3 + y).as_coeff_add(x)
         (y + 3, ())
@@ -1974,7 +1985,11 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        coeff, tail = piimult.as_coeff_add()
+        if not piimult.free_symbols:
+            coeff = piimult
+            tail = ()
+        else:
+            coeff, tail = piimult.as_coeff_add(*piimult.free_symbols)
         # round down to nearest multiple of 2
         branchfact = ceiling(coeff/2 - S(1)/2)*2
         n += branchfact/2
@@ -2557,34 +2572,41 @@ class Expr(Basic, EvalfMixin):
     ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
 
-    # These should be overridden in subclasses
+    # Relevant subclasses should override _eval_expand_hint() methods.  See
+    # the docstring of expand() for more info.
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        return self
+    def _eval_expand_complex(self, **hints):
+        real, imag = self.as_real_imag(**hints)
+        return real + S.ImaginaryUnit*imag
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        return self
+    @staticmethod
+    def _expand_hint(expr, hint, deep=True, **hints):
+        """
+        Helper for ``expand()``.  Recursively calls ``expr._eval_expand_hint()``.
 
-    def _eval_expand_power_base(self, deep=True, **hints):
-        return self
+        Returns ``(expr, hit)``, where expr is the (possibly) expanded
+        ``expr`` and ``hit`` is ``True`` if ``expr`` was truly expanded and
+        ``False`` otherwise.
+        """
+        hit = False
+        # XXX: Hack to support non-Basic args
+        #              |
+        #              V
+        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+            sargs = []
+            for arg in expr.args:
+                arg, arghit = Expr._expand_hint(arg, hint, **hints)
+                hit |= arghit
+                sargs.append(arg)
 
-    def _eval_expand_mul(self, deep=True, **hints):
-        return self
+            if hit:
+                expr = expr.func(*sargs)
 
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_log(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_func(self, deep=True, **hints):
-        return self
+        if hasattr(expr, '_eval_expand_' + hint):
+            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+            if newexpr != expr:
+                return (newexpr, True)
+        return (expr, hit)
 
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
@@ -2592,7 +2614,9 @@ class Expr(Basic, EvalfMixin):
         """
         Expand an expression using hints.
 
-        See the docstring in function.expand for more information.
+        See the docstring of the expand() function in sympy.core.function for
+        more information.
+
         """
         from sympy.simplify.simplify import fraction
 
@@ -2610,11 +2634,32 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
-        for hint, use_hint in hints.iteritems():
+        # Although the hints are sorted here, an earlier hint may get applied
+        # at a given node in the expression tree before another because of how
+        # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
+        # x*z) because while applying log at the top level, log and mul are
+        # applied at the deeper level in the tree so that when the log at the
+        # upper level gets applied, the mul has already been applied at the
+        # lower level.
+
+        # Additionally, because hints are only applied once, the expression
+        # may not be expanded all the way.   For example, if mul is applied
+        # before multinomial, x*(x + 1)**2 won't be expanded all the way.  For
+        # now, we just use a special case to make multinomial run before mul,
+        # so that at least polynomials will be expanded all the way.  In the
+        # future, smarter heuristics should be applied.
+        # TODO: Smarter heuristics
+
+        def _expand_hint_key(hint):
+            """Make multinomial come before mul"""
+            if hint == 'mul':
+                return 'mulz'
+            return hint
+
+        for hint in sorted(hints.keys(), key=_expand_hint_key):
+            use_hint = hints[hint]
             if use_hint:
-                func = getattr(expr, '_eval_expand_'+hint, None)
-                if func is not None:
-                    expr = func(deep=deep, **hints)
+                expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         if modulus is not None:
             modulus = sympify(modulus)
@@ -2841,7 +2886,5 @@ from add import Add
 from power import Pow
 from function import Derivative, expand_mul
 from mod import Mod
-from sympify import sympify
-from symbol import Wild
 from exprtools import factor_terms
 from numbers import Integer, Rational

@@ -46,6 +46,7 @@ if sys.version_info[:2] < (2,5):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
@@ -75,11 +76,14 @@ modules = [
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
+    'sympy.plotting.pygletplot',
     'sympy.polys',
+    'sympy.polys.agca',
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.series',
+    'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
@@ -199,6 +203,7 @@ class run_benchmarks(Command):
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
@@ -219,6 +224,7 @@ tests = [
     'sympy.physics.tests',
     'sympy.plotting.tests',
     'sympy.polys.tests',
+    'sympy.polys.agca.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
     'sympy.series.tests',

@@ -503,7 +503,7 @@ def evalf_mul(v, prec, options):
         else:
             return v, None, acc, None
     else:
-        # intialize with the first term
+        # initialize with the first term
         if (man, exp, bc) != start:
             # there was a real part; give it an imaginary part
             re, im = (sign, man, exp, bitcount(man)), (0, MPZ(0), 0, 0)

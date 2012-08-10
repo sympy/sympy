@@ -51,7 +51,7 @@ class Kane(object):
     Examples
     ========
 
-    This is a simple example for a one defree of freedom translational
+    This is a simple example for a one degree of freedom translational
     spring-mass-damper.
 
     In this example, we first need to do the kinematics.
@@ -224,11 +224,11 @@ class Kane(object):
         self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
 
         if not isinstance(qdep, (list, tuple)):
-            raise TypeError('Dependent speeds and constraints must each be '
+            raise TypeError('Dependent coordinates and constraints must each be '
                             'provided in their own list.')
         if len(qdep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints.')
+                             'coordinates and constraints.')
         coneqs = Matrix(coneqs)
         self._qdep = qdep
         self._f_h = coneqs
@@ -459,18 +459,18 @@ class Kane(object):
                 om = v.frame.ang_vel_in(N).subs(uadz).subs(uaz) # ang velocity
                 omp = v.frame.ang_vel_in(N) # ang velocity, for partials
                 alp = v.frame.ang_acc_in(N).subs(uadz).subs(uaz) # ang acc
-                ve = v.mc.vel(N).subs(uadz).subs(uaz) # velocity
-                vep = v.mc.vel(N) # velocity, for partials
-                acc = v.mc.acc(N).subs(uadz).subs(uaz) # acceleration
+                ve = v.masscenter.vel(N).subs(uadz).subs(uaz) # velocity
+                vep = v.masscenter.vel(N) # velocity, for partials
+                acc = v.masscenter.acc(N).subs(uadz).subs(uaz) # acceleration
                 m = (v.mass).subs(uadz).subs(uaz)
                 I, P = v.inertia
                 I = I.subs(uadz).subs(uaz)
-                if P != v.mc:
-                    # redefine I about mass center
+                if P != v.masscenter:
+                    # redefine I about the center of mass
                     # have I S/O, want I S/S*
                     # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
                     f = v.frame
-                    d = v.mc.pos_from(P)
+                    d = v.masscenter.pos_from(P)
                     I -= inertia_of_point_mass(m, d, f)
                 templist = []
                 # One could think of r star as a collection of coefficients of
@@ -865,4 +865,3 @@ class Kane(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
-

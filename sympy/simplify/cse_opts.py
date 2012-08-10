@@ -3,7 +3,7 @@ opportunities.
 """
 from sympy.core import Add, Basic, Expr, Mul, S
 from sympy.core.exprtools import factor_terms
-from sympy.utilities.iterables import preorder_traversal
+from sympy.core.basic import preorder_traversal
 
 class Neg(Expr):
     """ Stub to hold negated expression.

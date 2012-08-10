@@ -99,7 +99,7 @@ COMMAND LINE OPTIONS
     This is equivalent to setting the environment variable
     SYMPY_USE_CACHE='no'.
 
--a, --auto
+-a, --auto-symbols
 
     Automatically create missing symbols.  Normally, typing a name of a Symbol
     that has not been instantiated first would raise NameError, but with this
@@ -130,6 +130,27 @@ COMMAND LINE OPTIONS
     wrapping the code cell with ``name = Symbol('name')`` and ``del name`` for
     each undefined name.  So, for practical purposes, undefined names will be
     defined as generic Symbols when and only when they are actually used.
+
+    See also the -i and -I options.
+
+-i, --int-to-Integer
+
+    Automatically wrap int literals with Integer.  This makes it so that
+    things like 1/2 will come out as Rational(1, 2), rather than 0.5.  This
+    works by preprocessing the source and wrapping all int literals with
+    Integer.  Note that this will not change the behavior of int literals
+    assigned to variables, and it also won't change the behavior of functions
+    that return int literals.
+
+    If you want an int, you can wrap the literal in int().
+
+    Note that this requires IPython.
+
+-I, --interactive
+
+    This is equivalent to --auto-symbols --int-to-Integer.  Future options
+    designed for ease of interactive use may be added to this.  Note that this
+    requires IPython.
 
 -D, --debug
 
@@ -244,11 +265,25 @@ def main():
         help='disable caching mechanism')
 
     parser.add_option(
-        '-a', '--auto',
-        dest='auto',
+        '-a', '--auto-symbols',
+        dest='auto_symbols',
         action='store_true',
         default=False,
         help='automatically construct missing symbols')
+
+    parser.add_option(
+        '-i', '--int-to-Integer',
+        dest='auto_int_to_Integer',
+        action='store_true',
+        default=False,
+        help="automatically wrap int literals with Integer")
+
+    parser.add_option(
+        '-I', '--interactive',
+        dest='interactive',
+        action='store_true',
+        default=False,
+        help="equivalent to -a -i")
 
     parser.add_option(
         '-D', '--debug',
@@ -297,7 +332,9 @@ def main():
         args['order'] = options.order
 
     args['quiet'] = options.quiet
-    args['auto'] = options.auto
+    args['auto_symbols'] = options.auto_symbols or options.interactive
+    args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
+
 
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     warnings.simplefilter("always", SymPyDeprecationWarning)

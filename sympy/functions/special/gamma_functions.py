@@ -66,17 +66,14 @@ class gamma(Function):
                         return 2**n*sqrt(S.Pi) / coeff
 
 
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
         if arg.is_Rational:
             if abs(arg.p) > arg.q:
                 x = Dummy('x')
                 n = arg.p // arg.q
                 p = arg.p - n*arg.q
-                return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
+                return gamma(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
@@ -119,7 +116,7 @@ class lowergamma(Function):
     This can be shown to be the same as
 
     .. math ::
-        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -244,7 +241,7 @@ class uppergamma(Function):
 
     .. math ::
         \Gamma(s, x) = \Gamma(s)
-                - \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+                - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -484,13 +481,8 @@ class polygamma(Function):
         # TODO n == 1 also can do some rational z
 
 
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            hints['func'] = False
-            n = self.args[0].expand(deep, **hints)
-            z = self.args[1].expand(deep, **hints)
-        else:
-            n, z = self.args[0], self.args[1].expand(deep, func=True)
+    def _eval_expand_func(self, **hints):
+        n, z = self.args
 
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:
@@ -595,4 +587,3 @@ def beta(x, y):
 
     """
     return gamma(x)*gamma(y) / gamma(x+y)
-

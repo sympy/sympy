@@ -24,6 +24,7 @@ def test_sin():
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
     assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
+    assert sin(atan2(y, x)) == y / sqrt(x**2 + y**2)
 
     assert sin(pi*I) == sinh(pi)*I
     assert sin(-pi*I) == -sinh(pi)*I
@@ -102,10 +103,15 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
+    # Note: these forumlas are not unique.  The ones here come from the
+    # Chebyshev formulas.
     x,y = symbols('x,y')
     assert sin(x+y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
-    assert sin(3*x).expand(trig=True) == 4*sin(x)*cos(x)**2-sin(x)
+    assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
+    assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
+    assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
+    assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
 
 def test_trig_symmetry():
     x = Symbol('x')
@@ -165,6 +171,7 @@ def test_cos():
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(atan2(y, x)) == x / sqrt(x**2 + y**2)
 
     assert cos(pi*I) == cosh(pi)
     assert cos(-pi*I) == cosh(pi)
@@ -251,6 +258,8 @@ def test_cos_expansion():
     assert cos(x+y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
     assert cos(2*x).expand(trig=True) == 2*cos(x)**2-1
     assert cos(3*x).expand(trig=True) == 4*cos(x)**3-3*cos(x)
+    assert cos(2).expand(trig=True) == 2*cos(1)**2 - 1
+    assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 def test_tan():
     x, y = symbols('x,y')
@@ -270,6 +279,7 @@ def test_tan():
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
     assert tan(acot(x)) == 1 / x
+    assert tan(atan2(y, x)) == y/x
 
     assert tan(pi*I) == tanh(pi)*I
     assert tan(-pi*I) == -tanh(pi)*I
@@ -358,6 +368,7 @@ def test_cot():
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
     assert cot(acos(x)) == x / sqrt(1 - x**2)
+    assert cot(atan2(y,x)) == x/y
 
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I

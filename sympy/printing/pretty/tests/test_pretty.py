@@ -7,7 +7,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
     euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray, FiniteSet)
+    Ci, Segment, Ray, FiniteSet, homomorphism)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -15,6 +15,7 @@ from sympy.printing.pretty import pprint
 from sympy.physics.units import joule
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.trace import Tr
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -2628,7 +2629,7 @@ def test_pretty_Boolean():
 
     expr = Equivalent(y, x, evaluate=False)
 
-    assert  pretty(expr) == "Equivalent(y, x)"
+    assert  pretty(expr) == "Equivalent(x, y)"
     assert upretty(expr) == u"x ≡ y"
 
 def test_pretty_Domain():
@@ -2671,6 +2672,16 @@ def test_pretty_Domain():
 
     assert  pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
+
+    expr = QQ.poly_ring(x, y, order="lex")
+
+    assert  pretty(expr) == "QQ[x, y, order=lex]"
+    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+
+    expr = QQ.poly_ring(x, y, order="ilex")
+
+    assert  pretty(expr) == "QQ[x, y, order=ilex]"
+    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
 
 def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
@@ -2720,7 +2731,7 @@ def test_pretty_no_wrap_line():
 
 
 def test_settings():
-    raises(TypeError, 'pretty(S(4), method="garbage")')
+    raises(TypeError, lambda: pretty(S(4), method="garbage"))
 
 @XFAIL
 def test_pretty_sum():
@@ -3652,16 +3663,286 @@ def test_expint():
 
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
-    X = Normal(0, 1, symbol=Symbol('x1'))
+    X = Normal('x1', 0, 1)
     assert upretty(where(X>0)) == u"Domain: 0 < x₁"
 
-    D = Die(6, symbol=Symbol('d1'))
+    D = Die('d1', 6)
     assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
-    A = Exponential(1, symbol=Symbol('a'))
-    B = Exponential(1, symbol=Symbol('b'))
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+def test_PrettyPoly():
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    expr = F.convert(x/(x + y))
+    assert pretty(expr) == pretty(x/(x + y))
+    assert upretty(expr) == upretty(x/(x + y))
+
+    expr = R.convert(x + y)
+    assert pretty(expr) == pretty(x + y)
+    assert upretty(expr) == upretty(x + y)
+
+def test_issue_3186():
+    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
+    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+def test_complicated_symbol_unchanged():
+    for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
+        assert pretty(Symbol(symb_name)) == symb_name
+
+def test_categories():
+    from sympy.categories import (Object, Morphism, IdentityMorphism,
+                                  NamedMorphism, CompositeMorphism,
+                                  Category, Diagram, DiagramGrid)
+
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    id_A1 = IdentityMorphism(A1)
+
+    K1 = Category("K1")
+
+    assert pretty(A1) == "A1"
+    assert upretty(A1) == u"A₁"
+
+    assert pretty(f1) == "f1:A1-->A2"
+    assert upretty(f1) == u"f₁:A₁——▶A₂"
+    assert pretty(id_A1) == "id:A1-->A1"
+    assert upretty(id_A1) == u"id:A₁——▶A₁"
+
+    assert pretty(f2*f1) == "f2*f1:A1-->A3"
+    assert upretty(f2*f1) == u"f₂∘f₁:A₁——▶A₃"
+
+    assert pretty(K1) == "K1"
+    assert upretty(K1) == u"K₁"
+
+    # Test how diagrams are printed.
+    d = Diagram()
+    assert pretty(d) == "EmptySet()"
+    assert upretty(d) == u"∅"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet})
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
+           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
+           u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
+
+    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
+           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
+           " ==> {f2*f1:A1-->A3: {unique}}"
+    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
+           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
+           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+
+    grid = DiagramGrid(d)
+    assert pretty(grid) == "A1  A2\n      \nA3    "
+    assert upretty(grid) == u"A\u2081  A\u2082\n      \nA\u2083    "
+
+def test_PrettyModules():
+    R = QQ[x, y]
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    ucode_str = \
+u"""\
+       2\n\
+ℚ[x, y] \
+"""
+    ascii_str = \
+"""\
+        2\n\
+QQ[x, y] \
+"""
+
+    assert upretty(F) == ucode_str
+    assert  pretty(F) == ascii_str
+
+    ucode_str = \
+u"""\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+    ascii_str = \
+"""\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(M) == ucode_str
+    assert  pretty(M) == ascii_str
+
+    I = R.ideal(x**2, y)
+
+    ucode_str = \
+u"""\
+╱ 2   ╲\n\
+╲x , y╱\
+"""
+
+    ascii_str = \
+"""\
+  2    \n\
+<x , y>\
+"""
+
+    assert upretty(I) == ucode_str
+    assert  pretty(I) == ascii_str
+
+    Q = F / M
+
+    ucode_str = \
+u"""\
+            2    \n\
+     ℚ[x, y]     \n\
+─────────────────\n\
+╱        ⎡    2⎤╲\n\
+╲[x, y], ⎣1, x ⎦╱\
+"""
+
+    ascii_str = \
+"""\
+            2    \n\
+    QQ[x, y]     \n\
+-----------------\n\
+              2  \n\
+<[x, y], [1, x ]>\
+"""
+
+    assert upretty(Q) == ucode_str
+    assert  pretty(Q) == ascii_str
+
+    expr = Q.submodule([1, x**3/2], [2, y])
+
+    ucode_str = \
+u"""\
+╱⎡    3⎤                                                ╲\n\
+│⎢   x ⎥   ╱        ⎡    2⎤╲           ╱        ⎡    2⎤╲│\n\
+│⎢1, ──⎥ + ╲[x, y], ⎣1, x ⎦╱, [2, y] + ╲[x, y], ⎣1, x ⎦╱│\n\
+╲⎣   2 ⎦                                                ╱\
+"""
+
+    ascii_str = \
+"""\
+      3                                                  \n\
+     x                   2                           2   \n\
+<[1, --] + <[x, y], [1, x ]>, [2, y] + <[x, y], [1, x ]>>\n\
+     2                                                   \
+"""
+
+
+def test_QuotientRing():
+    R = QQ[x]/[x**2 + 1]
+
+    ucode_str = \
+u"""\
+  ℚ[x]  \n\
+────────\n\
+╱ 2    ╲\n\
+╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+ QQ[x]  \n\
+--------\n\
+  2     \n\
+<x  + 1>\
+"""
+
+    assert upretty(R) == ucode_str
+    assert  pretty(R) == ascii_str
+
+    ucode_str = \
+u"""\
+    ╱ 2    ╲\n\
+1 + ╲x  + 1╱\
+"""
+
+    ascii_str = \
+"""\
+      2     \n\
+1 + <x  + 1>\
+"""
+
+    assert upretty(R.one) == ucode_str
+    assert  pretty(R.one) == ascii_str
+
+def test_Homomorphism():
+    R = QQ[x]
+
+    expr = homomorphism(R.free_module(1), R.free_module(1), [0])
+
+    ucode_str = \
+u"""\
+          1         1\n\
+[0] : ℚ[x]  ──> ℚ[x] \
+"""
+
+    ascii_str = \
+"""\
+           1          1\n\
+[0] : QQ[x]  --> QQ[x] \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str
+
+    expr = homomorphism(R.free_module(2), R.free_module(2), [0, 0])
+
+    ucode_str = \
+u"""\
+⎡0  0⎤       2         2\n\
+⎢    ⎥ : ℚ[x]  ──> ℚ[x] \n\
+⎣0  0⎦                  \
+"""
+
+    ascii_str = \
+"""\
+[0  0]        2          2\n\
+[    ] : QQ[x]  --> QQ[x] \n\
+[0  0]                    \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str
+
+    expr = homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])
+
+    ucode_str = \
+u"""\
+                    1\n\
+          1     ℚ[x] \n\
+[0] : ℚ[x]  ──> ─────\n\
+                <[x]>\
+"""
+
+    ascii_str = \
+"""\
+                      1\n\
+           1     QQ[x] \n\
+[0] : QQ[x]  --> ------\n\
+                 <[x]> \
+"""
+
+    assert upretty(expr) == ucode_str
+    assert  pretty(expr) == ascii_str
+
+def test_Tr():
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert pretty(t) == r'Tr(A*B)'
+    assert upretty(t) == u'Tr(A\u22c5B)'

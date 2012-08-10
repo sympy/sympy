@@ -1,5 +1,5 @@
 from sympy.combinatorics.permutations import (Permutation, perm_af_parity,
-    perm_af_mul)
+    perm_af_mul, perm_af_muln, cyclic)
 
 from sympy.utilities.pytest import raises
 
@@ -16,6 +16,7 @@ def test_Permutation():
     assert perm_af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
         [6, 5, 3, 0, 2, 4, 1]
 
+    assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[1, 3], [0, 4, 2]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
@@ -34,6 +35,15 @@ def test_Permutation():
     a = p-q
     b = q-p
     assert (a+b).is_Identity
+
+    assert p.conjugate(q) == Permutation([5, 3, 0, 4, 6, 2, 1])
+    assert p.conjugate(q) == ~q*p*q == p**q
+    assert q.conjugate(p) == Permutation([6, 3, 2, 0, 1, 4, 5])
+    assert q.conjugate(p) == ~p*q*p == q**p
+
+    assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
+    assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
+    assert p.commutator(q) == ~ q.commutator(p)
 
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
@@ -95,13 +105,6 @@ def test_Permutation():
     assert q.length() == 7
     assert r.length() == 4
 
-    assert not p.is_Positive
-    assert p.is_Negative
-    assert not q.is_Positive
-    assert q.is_Negative
-    assert r.is_Positive
-    assert not r.is_Negative
-
     assert p.runs() == [[1, 5], [2], [0, 3, 6], [4]]
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
     assert r.runs() == [[3], [2], [1], [0]]
@@ -120,9 +123,13 @@ def test_Permutation():
     assert p.get_positional_distance(q) == 8
 
     a = [Permutation.unrank_nonlex(4, i) for i in range(5)]
+    iden = Permutation([0, 1, 2, 3])
     for i in range(5):
         for j in range(i+1, 5):
             assert a[i].commutes_with(a[j]) == (a[i]*a[j] == a[j]*a[i])
+            if a[i].commutes_with(a[j]):
+                assert a[i].commutator(a[j]) == iden
+                assert a[j].commutator(a[i]) == iden
 
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
@@ -175,6 +182,16 @@ def test_ranking():
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
+def test_muln():
+    n = 6
+    m = 8
+    a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
+    h = range(n)
+    for i in range(m):
+        h = perm_af_mul(h, a[i])
+        h2 = perm_af_muln(*a[:i+1])
+        assert h == h2
+
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
@@ -184,8 +201,8 @@ def test_args():
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
-    raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
-    raises(ValueError, 'Permutation([1, 2], [0])') # enclosing brackets needed
-    raises(ValueError, 'Permutation([[1, 2], 0])') # enclosing brackets needed on 0
+    raises(ValueError, lambda: Permutation([[1, 2], [3]])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation([1, 2, 3])) # 0, 1, 2 should be present
+    raises(ValueError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0

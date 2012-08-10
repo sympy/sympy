@@ -96,7 +96,7 @@ def test_rolling_disc():
     # Here the rolling disc is formed from the contact point up, removing the
     # need to introduce generalized speeds. Only 3 configuration and three
     # speed variables are need to describe this system, along with the disc's
-    # mass and radius, and the local graivty (note that mass will drop out).
+    # mass and radius, and the local gravity (note that mass will drop out).
     q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     r, m, g = symbols('r m g')
@@ -115,7 +115,7 @@ def test_rolling_disc():
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form
-    # the position vector from the contact point to the disc mass center.
+    # the position vector from the contact point to the disc's center of mass.
     # Finally we form the velocity and acceleration of the disc.
     C = Point('C')
     C.set_vel(N, 0)
@@ -128,11 +128,11 @@ def test_rolling_disc():
 
     # Kinematic differential equations; how the generalized coordinate time
     # derivatives relate to generalized speeds.
-    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
-    # mass center attribute, a ReferenceFrame to the frame attribute, and mass
+    # center of mass attribute, a ReferenceFrame to the frame attribute, and mass
     # and inertia. Then we form the body list.
     ForceList = [(Dmc, - m * g * Y.z)]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
@@ -141,7 +141,7 @@ def test_rolling_disc():
     # Finally we form the equations of motion, using the same steps we did
     # before. Specify inertial frame, supply generalized speeds, supply
     # kinematic differential equation dictionary, compute Fr from the force
-    # list and Fr* fromt the body list, compute the mass matrix and forcing
+    # list and Fr* from the body list, compute the mass matrix and forcing
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = Kane(N)
@@ -185,7 +185,7 @@ def test_aux():
 
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
-    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
@@ -213,7 +213,7 @@ def test_aux():
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
     # This tests the parallel axis code in Kane. The inertia of the pendulum is
-    # defined about the hinge, not about the mass center.
+    # defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
     gravity        = symbols('g')
@@ -238,7 +238,8 @@ def test_parallel_axis():
     # Origin of Newtonian reference frame
     O = Point('O')
 
-    # Creating and Locating the positions of the cart,C, and mass center of the pendulum, A
+    # Creating and Locating the positions of the cart, C, and the
+    # center of mass of the pendulum, A
     C  = O.locatenew('C',  q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 

@@ -39,7 +39,7 @@ def test_get_indices_exceptions():
     x = IndexedBase('x')
     y = IndexedBase('y')
     i, j = Idx('i'), Idx('j')
-    raises(IndexConformanceException, 'get_indices(x[i] + y[j])')
+    raises(IndexConformanceException, lambda: get_indices(x[i] + y[j]))
 
 def test_scalar_broadcast():
     x = IndexedBase('x')

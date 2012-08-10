@@ -7,6 +7,30 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
+def cyclic(a, n):
+    """convert cycles from standard 1-based to cycle form
+    accepted by Partition
+
+    >>> from sympy.combinatorics.permutations import cyclic
+    >>> a = [(1,2,3)]
+    >>> cyclic(a, 5)
+    [[0, 1, 2], [3], [4]]
+    >>> a = [(1,2,3),(4,5)]
+    >>> cyclic(a, 5)
+    [[0, 1, 2], [3, 4]]
+    """
+    a1 = []
+    v = []
+    for x in a:
+        x = [y-1 for y in x]
+        a1 += x
+        v.append(x)
+    #print 'DB1 v=', v
+    for i in range(n):
+        if i not in a1:
+            v.append([i])
+    return v
+
 def perm_af_parity(pi):
     """
     Computes the parity of a permutation in array form.
@@ -43,7 +67,8 @@ def perm_af_parity(pi):
 
 def perm_af_mul(a, b):
     """
-    Product of two permutations in array form
+    Product of two permutations in array form. The convention used is
+    ab = first apply b, then apply a.
 
     Examples
     ========
@@ -57,54 +82,158 @@ def perm_af_mul(a, b):
     Permutation
     """
     if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations \
-don\'t match.")
+        raise ValueError("The number of elements in the permutations "
+                         "do not match.")
 
     return [a[i] for i in b]
 
+
+def perm_af_muln(*a):
+    """
+    Product of several permutations in array form.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import perm_af_muln
+    >>> perm_af_muln([1,0,3,2],[2,3,0,1],[3,2,1,0])
+    [0, 1, 2, 3]
+
+    See Also
+    ========
+    Permutation, perm_af_mul
+    """
+    if not a:
+        raise ValueError("No element")
+    m = len(a)
+    n = len(a[0])
+    for i in xrange(1, m):
+        if len(a[i]) != n:
+            raise ValueError("The number of elements in the permutations "
+                             "don't match.")
+    if m == 1:
+        return a[0]
+    if m == 2:
+        return perm_af_mul(a[0], a[1])
+    if m == 3:
+       p0, p1, p2 = a
+       return [p0[p1[i]] for i in p2]
+    if m == 4:
+       p0, p1, p2, p3 = a
+       return [p0[p1[p2[i]]] for i in p3]
+    if m == 5:
+       p0, p1, p2, p3, p4 = a
+       return [p0[p1[p2[p3[i]]]] for i in p4]
+    if m == 6:
+       p0, p1, p2, p3, p4, p5 = a
+       return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
+    if m == 7:
+       p0, p1, p2, p3, p4, p5, p6 = a
+       return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
+    if m > 7:
+        p0 = perm_af_muln(*a[:m//2])
+        p1 = perm_af_muln(*a[m//2:])
+        return [p0[i] for i in p1]
+
+def perm_af_invert(a):
+    """
+    Finds the invert of the list a interpreted as the array
+    form of a permutation. The result is again given as a list.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import perm_af_invert
+    >>> perm_af_invert([1,2,3,0])
+    [3, 0, 1, 2]
+
+    See Also
+    ========
+    Permutation, __invert__
+    """
+    n = len(a)
+    inv_form = [0] * n
+    for i in xrange(n):
+        inv_form[a[i]] = i
+    return inv_form
+
+def perm_af_commutes_with(a, b):
+    """
+    Checks if the two permutations with array forms
+    given by a and b commute.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import perm_af_commutes_with
+    >>> perm_af_commutes_with([1,2,0],[0,2,1])
+    False
+
+    See Also
+    ========
+    Permutation, commutes_with
+    """
+    if len(a) != len(b):
+        raise ValueError("The number of elements in the permutations "
+                         "don't match.")
+    for i in range(len(a)-1):
+        if a[b[i]] != b[a[i]]:
+            return False
+    return True
+
 class Permutation(Basic):
     """
-    A permutation, alternatively known as an 'arrangement number'
-    or 'ordering' is an arrangement of the elements of an ordered list
-    into a one-to-one mapping with itself. The number of permutations
-    on a set of n elements is given by n!.
+    A permutation, alternatively known as an 'arrangement number' or 'ordering'
+    is an arrangement of the elements of an ordered list into a one-to-one
+    mapping with itself. The number of permutations on a set of n elements is
+    given by n!.
 
-    A representation of a permutation as a product of permutation cycles
-    is unique (up to the ordering of the cycles). An example of a cyclic
+    A representation of a permutation as a product of permutation cycles is
+    unique (up to the ordering of the cycles). An example of a cyclic
     decomposition is the permutation [3, 1, 0, 2] of the set [0, 1, 2, 3].
     This is denoted as [[1], [0, 3, 2]], corresponding to the disjoint
-    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as
-    we want since the cycles are disjoint and can therefore be specified
-    in any order and a rotation of a given cycle specifies the same cycle [see 1.]
+    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as we
+    want since the cycles are disjoint and can therefore be specified in any
+    order and a rotation of a given cycle specifies the same cycle [1]_.
     Therefore, (320)(1), (203)(1), (032)(1), (1)(320), (1)(203), and (1)(032)
     all describe the same permutation.
 
     Another notation that explicitly identifies the positions occupied by
     elements before and after application of a permutation on n elements uses a
     2xn matrix, where the first row is the identity permutation and the second
-    row is the new arrangement [see 2.].
+    row is the new arrangement [2]_.
 
     Any permutation is also a product of transpositions.
 
     Permutations are commonly denoted in lexicographic or transposition order.
 
     The product of two permutations a and q is defined as their composition as
-    functions, (p*q)(i) = p(q(i)) [see 6.].
+    functions, (p*q)(i) = p(q(i)) [6]_.
 
-    (1) Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
-        Combinatorics and Graph Theory with Mathematica.
-        Reading, MA: Addison-Wesley, pp. 3-16, 1990.
-    (2) Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial
-        Algorithms, 1st ed. Reading, MA: Addison-Wesley, 2011.
-    (3) Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
-        permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
-        281-284. DOI=10.1016/S0020-0190(01)00141-7
-    (4) D. L. Kreher, D. R. Stinson 'Combinatorial Algorithms'
-        CRC Press, 1999
-    (5) Graham, R. L.; Knuth, D. E.; and Patashnik, O.
-        Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
-        Reading, MA: Addison-Wesley, 1994.
-    (6) http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+    References
+    ==========
+
+    .. [1] Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
+           Combinatorics and Graph Theory with Mathematica.  Reading, MA:
+           Addison-Wesley, pp. 3-16, 1990.
+
+    .. [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial
+           Algorithms, 1st ed. Reading, MA: Addison-Wesley, 2011.
+
+    .. [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
+           permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
+           281-284. DOI=10.1016/S0020-0190(01)00141-7
+
+    .. [4] D. L. Kreher, D. R. Stinson 'Combinatorial Algorithms'
+           CRC Press, 1999
+
+    .. [5] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
+           Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
+           Reading, MA: Addison-Wesley, 1994.
+
+    .. [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+
+    .. [7] http://en.wikipedia.org/wiki/Lehmer_code
 
     """
 
@@ -196,6 +325,13 @@ class Permutation(Basic):
         return self.cyclic_form
 
     @property
+    def reduced_cyclic_form(self):
+        return [a for a in self.cyclic_form if len(a)>1]
+
+
+
+
+    @property
     def size(self):
         """
         Returns the number of numbers in the permutation
@@ -226,12 +362,15 @@ class Permutation(Basic):
         """
         if not args or not is_sequence(args[0]) or len(args) > 1 or \
            len(set(is_sequence(a) for a in args[0])) > 1:
-            raise ValueError('Permutation argument must be a list of ints or a list of lists.')
+            raise ValueError("Permutation argument must be a list of ints "
+                             "or a list of lists.")
 
         # 0, 1, ..., n-1 should all be present
+
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
-            raise ValueError("Integers 0 through %s must be present." % len(temp))
+            raise ValueError("Integers 0 through %s must be present." %
+                             len(temp))
 
         cform = aform = None
         if args[0] and is_sequence(args[0][0]):
@@ -246,13 +385,13 @@ class Permutation(Basic):
 
     def __add__(self, other):
         """
-        Routine for addition of permutations.
+        Routine for addition of permutations by their inversion vectors.
 
         This is defined in terms of the Lehmer code of a
         permutation. The Lehmer code is nothing but the
         inversion vector of a permutation. In this scheme
         the identity permutation is like a zero element.
-        # TODO add a reference
+        See [1].
 
         Examples
         ========
@@ -267,6 +406,14 @@ class Permutation(Basic):
         >>> b = Permutation([2, 1, 0, 3])
         >>> a+b
         Permutation([2, 0, 1, 3])
+
+        See Also
+        ========
+        __sub__, inversion_vector
+
+        References
+        ==========
+        [1] http://en.wikipedia.org/wiki/Lehmer_code
         """
         n = self.size
         if n != other.size:
@@ -278,10 +425,9 @@ class Permutation(Basic):
 
     def __sub__(self, other):
         """
-        Routine for subtraction of permutations.
+        Routine for subtraction of permutations by their inversion vectors.
 
-        The idea behind this is the same as the above.
-        With subtraction however,
+        The idea behind this is the same as in ``__add__``
 
         Examples
         ========
@@ -291,6 +437,14 @@ class Permutation(Basic):
         >>> q = Permutation([2,1,3,0])
         >>> q-p==q
         True
+
+        See Also
+        ========
+        __add__, inversion_vector
+
+        References
+        ==========
+        [1] http://en.wikipedia.org/wiki/Lehmer_code
         """
         n = self.size
         if n != other.size:
@@ -324,8 +478,8 @@ class Permutation(Basic):
         a = self.array_form
         b = other.array_form
         if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
 
         perm = [a[i] for i in b]
         return _new_from_array_form(perm)
@@ -348,26 +502,32 @@ don\'t match.")
         """
         a = self.array_form
         b = other.array_form
-        if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
-        for i in range(len(a)-1):
-            if a[b[i]] != b[a[i]]:
-                return False
-        return True
+        return perm_af_commutes_with(a, b)
 
     def __pow__(self, n):
         """
         Routine for finding powers of a permutation.
+
+        Power notation is also used for conjugation.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([2,0,3,1])
+        >>> q = Permutation([1,0,3,2])
+        >>> r = Permutation([0,2,3,1])
         >>> p**4
         Permutation([0, 1, 2, 3])
+        >>> p**q == p.conjugate(q)
+        True
+        >>> q**p == q.conjugate(p)
+        True
+        >>> (p**q)**r == p**(q * r)
+        True
         """
+        if type(n) == Permutation:
+            return self.conjugate(n)
         n = int(n)
         if n == 0:
             return Permutation(range(self.size))
@@ -397,7 +557,11 @@ don\'t match.")
         return _new_from_array_form(b)
 
     def transpositions(self):
-        """a list of transpositions representing the permutation
+        """
+        Return the permutation as a product of transpositions.
+
+        It is always possible to express a permutation as the product of
+        transpositions, see [1]
 
         Examples
         ========
@@ -406,6 +570,11 @@ don\'t match.")
         >>> p = Permutation([[1,2,3],[0,4,5,6,7]])
         >>> p.transpositions()
         [(1, 3), (1, 2), (0, 7), (0, 6), (0, 5), (0, 4)]
+
+        References
+        ==========
+        [1]
+        http://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
         """
         a = self.cyclic_form
         res = []
@@ -954,12 +1123,42 @@ don\'t match.")
         b = x.array_form
         n = len(a)
         if len(b) != n:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
         invb = [None]*n
         for i in xrange(n):
             invb[b[i]] = i
         return _new_from_array_form([invb[a[i]] for i in b])
+
+    def commutator(self, x):
+        """
+        Computes the commutator Permutation ``~p*~x*p*x``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.commutator(b)
+        Permutation([0, 3, 1, 2])
+        >>> ~a*~b*a*b
+        Permutation([0, 3, 1, 2])
+        """
+
+        a = self.array_form
+        b = x.array_form
+        n = len(a)
+        if len(b) != n:
+            raise ValueError("The number of elements in the permutations "
+                             "do not match.")
+        inva = [None]*n
+        for i in xrange(n):
+            inva[a[i]] = i
+        invb = [None]*n
+        for i in xrange(n):
+            invb[b[i]] = i
+        return _new_from_array_form([inva[invb[a[i]]] for i in b])
 
     def signature(self):
         """
@@ -983,7 +1182,9 @@ don\'t match.")
         ========
         inversions
         """
-        return (-1)**self.inversions()
+        if self.is_even:
+            return 1
+        return -1
 
     def order(self):
         """
@@ -1032,41 +1233,6 @@ don\'t match.")
                 length += 1
         return length
 
-    @property
-    def is_Positive(self):
-        """
-        Checks if the permutation is positive
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation([0, 1, 2]).is_Positive
-        True
-
-        See Also
-        ========
-        is_Negative
-        """
-        return self.signature() > 0
-
-    @property
-    def is_Negative(self):
-        """
-        Checks if the permutation is negative
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation([0, 1, 2]).is_Negative
-        False
-
-        See Also
-        ========
-        is_Positive
-        """
-        return self.signature() < 0
 
     @property
     def cycles(self):
@@ -1492,8 +1658,8 @@ don\'t match.")
     def josephus(self, m, n, s = 1):
         """
         Computes the Josephus permutation for a given number of
-        prisoners, frequency of removal and desired number of
-        survivors.
+        prisoners (n), frequency of removal (m) and desired number of
+        survivors (s).
 
         There are people standing in a circle waiting to be executed.
         After the first person is executed, certain number of people
@@ -1501,11 +1667,13 @@ don\'t match.")
         are skipped and a person is executed. The elimination proceeds
         around the circle (which is becoming smaller and smaller as the
         executed people are removed), until only the last person
-        remains, who is given freedom.
+        remains, who is given freedom. The Josephus permutation is given
+        by the order in which the prisoners are executed.
 
         References:
         [1] http://en.wikipedia.org/wiki/Flavius_Josephus
         [2] http://en.wikipedia.org/wiki/Josephus_problem
+        [3] http://www.wou.edu/~burtonl/josephus.html
 
         Examples
         ========
@@ -1660,3 +1828,5 @@ def _merge(arr, temp, left, mid, right):
     else:
         arr[left:right + 1] = temp[left:right + 1]
     return inv_count
+
+Perm = Permutation

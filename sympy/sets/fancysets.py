@@ -1,9 +1,13 @@
-from sympy import Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q
+from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
+        Max)
 from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.complexes import sign
 from sympy.core.compatibility import iterable
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
+from sympy.ntheory.residue_ntheory import int_tested
+
 oo = S.Infinity
 
 class Naturals(Set):
@@ -14,7 +18,7 @@ class Naturals(Set):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+        >>> from sympy import S, Interval, pprint
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Naturals)
@@ -24,8 +28,8 @@ class Naturals(Set):
         2
         >>> print iterable.next()
         3
-        >>> S.Naturals.intersect(Interval(0, 10))
-        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+        >>> pprint(S.Naturals.intersect(Interval(0, 10)))
+        {1, 2, ..., 10}
     """
 
     __metaclass__ = Singleton
@@ -63,7 +67,7 @@ class Integers(Set):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+        >>> from sympy import S, Interval, pprint
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Integers)
@@ -76,16 +80,16 @@ class Integers(Set):
         >>> print iterable.next()
         2
 
-        >>> S.Integers.intersect(Interval(-4, 4))
-        {-4, -3, -2, -1, 0, 1, 2, 3, 4}
+        >>> pprint(S.Integers.intersect(Interval(-4, 4)))
+        {-4, -3, ..., 4}
     """
 
     __metaclass__ = Singleton
     is_iterable = True
 
     def _intersect(self, other):
-        if other.is_Interval:
-            s = FiniteSet(range(ceiling(other.left), floor(other.right) + 1))
+        if other.is_Interval and other.measure < oo:
+            s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other) # take out endpoints if open interval
         return None
 
@@ -110,6 +114,11 @@ class Integers(Set):
     def _sup(self):
         return oo
 
+class Reals(Interval):
+    __metaclass__ = Singleton
+    def __new__(cls):
+        return Interval.__new__(cls, -oo, oo)
+
 class TransformationSet(Set):
     """
     A set that is a transformation of another through some algebraic expression
@@ -126,7 +135,7 @@ class TransformationSet(Set):
     >>> 5 in squares
     False
 
-    >>> FiniteSet(0,1,2,3,4,5,6,7,9,10).intersect(squares)
+    >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
     {1, 4, 9}
 
     >>> square_iterable = iter(squares)
@@ -174,3 +183,105 @@ class TransformationSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+class Range(Set):
+    """
+    Represents a range of integers.
+
+    Examples
+    ========
+
+        >>> from sympy import Range
+        >>> list(Range(5)) # 0 to 5
+        [0, 1, 2, 3, 4]
+        >>> list(Range(10, 15)) # 10 to 15
+        [10, 11, 12, 13, 14]
+        >>> list(Range(10, 20, 2)) # 10 to 20 in steps of 2
+        [10, 12, 14, 16, 18]
+        >>> list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2
+        [12, 14, 16, 18, 20]
+
+    """
+
+    is_iterable = True
+
+    def __new__(cls, *args):
+        # expand range
+        slc = slice(*args)
+        start, stop, step = slc.start or 0, slc.stop, slc.step or 1
+        try:
+            start, stop, step = [S(int_tested(w)) for w in (start, stop, step)]
+        except ValueError:
+            raise ValueError("Inputs to Range must be Integer Valued\n"+
+                    "Use TransformationSets of Ranges for other cases")
+        n = ceiling((stop - start)/step)
+        if n <= 0:
+            return S.EmptySet
+
+        # normalize args: regardless of how they are entered they will show
+        # canonically as Range(inf, sup, step) with step > 0
+        start, stop = sorted((start, start + (n - 1)*step))
+        step = abs(step)
+
+        return Basic.__new__(cls, start, stop + step, step)
+
+    start = property(lambda self: self.args[0])
+    stop  = property(lambda self: self.args[1])
+    step  = property(lambda self: self.args[2])
+
+    def _intersect(self, other):
+        if other.is_Interval:
+            osup = other.sup
+            oinf = other.inf
+            # if other is [0, 10) we can only go up to 9
+            if osup.is_integer and other.right_open:
+                osup -= 1
+            if oinf.is_integer and other.left_open:
+                oinf += 1
+
+            # Take the most restrictive of the bounds set by the two sets
+            # round inwards
+            inf = ceiling(Max(self.inf, oinf))
+            sup = floor(Min(self.sup, osup))
+            # if we are off the sequence, get back on
+            off = (inf - self.inf) % self.step
+            if off:
+                inf += self.step - off
+
+            return Range(inf, sup + 1, self.step)
+
+        if other == S.Naturals:
+            return self._intersect(Interval(1, oo))
+
+        if other == S.Integers:
+            return self
+
+        return None
+
+    def _contains(self, other):
+        return (other >= self.inf and other <= self.sup and
+                ask(Q.integer((self.start - other)/self.step)))
+
+    def __iter__(self):
+        i = self.start
+        while(i < self.stop):
+            yield i
+            i = i + self.step
+
+    def __len__(self):
+        return ((self.stop - self.start)//self.step)
+
+    def _ith_element(self, i):
+        return self.start + i*self.step
+
+    @property
+    def _last_element(self):
+        return self._ith_element(len(self) - 1)
+
+    @property
+    def _inf(self):
+        return self.start
+
+    @property
+    def _sup(self):
+        return self.stop - self.step

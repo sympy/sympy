@@ -135,7 +135,7 @@ class Operator(QExpr):
         if len(self.label) == 1:
             return self._print_label_latex(printer, *args)
         else:
-            return '%s(%s)' % (
+            return r'%s\left(%s\right)' % (
                 self._print_operator_name_latex(printer, *args),
                 self._print_label_latex(printer, *args)
             )
@@ -214,6 +214,7 @@ class HermitianOperator(Operator):
                 return self
         else:
             return Operator._eval_power(self, exp)
+
 
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.
@@ -299,6 +300,7 @@ class OuterProduct(Operator):
 
     .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
+    is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
@@ -314,7 +316,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -351,6 +353,12 @@ class OuterProduct(Operator):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+    def _eval_trace(self,**kwargs):
+        # TODO if operands are tensorproducts this may be will be handled
+        # differently.
+
+        return self.ket._eval_trace(self.bra,**kwargs);
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx
@@ -495,13 +503,13 @@ class DifferentialOperator(Operator):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _print(self, printer, *args):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
           )
 
-    def _print_contents_pretty(self, printer, *args):
+    def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)
         label_pform = self._print_label_pretty(printer, *args)
         label_pform = prettyForm(

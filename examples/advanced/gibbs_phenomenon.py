@@ -29,8 +29,9 @@ def l2_norm(f, lim):
 
     Example:
 
-    >>> from sympy.abc import x
+    >>> from sympy import Symbol
     >>> from gibbs_phenomenon import l2_norm
+    >>> x = Symbol('x', real=True)
     >>> l2_norm(1, (x, -1, 1))
     sqrt(2)
     >>> l2_norm(x, (x, -1, 1))

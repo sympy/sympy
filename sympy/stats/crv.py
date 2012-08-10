@@ -11,7 +11,7 @@ sympy.stats.frv
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (S, Interval, symbols, Dummy, FiniteSet, Mul, Tuple,
+from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -152,7 +152,7 @@ class ContinuousPSpace(PSpace):
     is_Continuous = True
 
     def integrate(self, expr, rvs=None, **kwargs):
-        if rvs == None:
+        if rvs is None:
             rvs = self.values
         else:
             rvs = frozenset(rvs)
@@ -175,6 +175,7 @@ class ContinuousPSpace(PSpace):
         z = Dummy('z', real=True, bounded=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
+    @cacheit
     def compute_cdf(self, expr, **kwargs):
         if not self.domain.set.is_Interval:
             raise ValueError("CDF not well defined on multivariate expressions")
@@ -190,7 +191,6 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, cdf)
 
     def probability(self, condition, **kwargs):
-        evaluate = kwargs.get("evaluate", True)
         z = Dummy('z', real=True, bounded=True)
         # Univariate case can be handled by where
         try:
@@ -199,6 +199,7 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # Integrate out the last variable over the special domain
+            evaluate = kwargs.pop("evaluate", True)
             if evaluate:
                 return integrate(pdf(z), (z, domain.set), **kwargs)
             else:
@@ -242,11 +243,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     This class is commonly implemented by the various ContinuousRV types
     such as Normal, Exponential, Uniform, etc....
     """
-    _count = 0
-    _name = 'x'
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
-        assert symbol.is_Symbol
-        domain = SingleContinuousDomain(symbol, set)
+        domain = SingleContinuousDomain(sympify(symbol), set)
         obj = ContinuousPSpace.__new__(cls, domain, density)
         obj._cdf = None
         return obj
@@ -267,8 +265,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         try:
             inverse_cdf = solve(d(x)-z, x)
         except NotImplementedError:
-            raise NotImplementedError("Could not invert CDF")
-        if len(inverse_cdf) != 1:
+            inverse_cdf = None
+        if not inverse_cdf or len(inverse_cdf) != 1:
             raise NotImplementedError("Could not invert CDF")
 
         return Lambda(z, inverse_cdf[0])

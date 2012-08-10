@@ -4,9 +4,8 @@ from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
@@ -15,7 +14,9 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-                                       preorder_traversal, variations)
+        variations)
+
+from collections import defaultdict
 
 def decompose_power(expr):
     """
@@ -244,7 +245,7 @@ class Term(object):
                 raise NonCommutativeExpression('commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
-            numer, denom = {}, {}
+            numer, denom = defaultdict(int), defaultdict(int)
 
             for factor in factors:
                 base, exp = decompose_power(factor)
@@ -254,9 +255,9 @@ class Term(object):
                     coeff *= cont**exp
 
                 if exp > 0:
-                    numer[base] = exp
+                    numer[base] += exp
                 else:
-                    denom[base] = -exp
+                    denom[base] += -exp
 
             numer = Factors(numer)
             denom = Factors(denom)
@@ -495,7 +496,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
             for i in args]), clear=clear)
 
     def handle(a):
-        # don't treate internal args like terms of an Add
+        # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
                 return a.func(*[handle(i) for i in a.args])
@@ -578,11 +579,14 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
-    list_args = [gcd_terms(a,
+    if p.is_Add:
+        list_args = [gcd_terms(a,
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
-    p = Add._from_args(list_args) # gcd_terms will fix up ordering
+        p = Add._from_args(list_args) # gcd_terms will fix up ordering
+    elif p.args:
+        p = p.func(*[factor_terms(a, radical, clear, fraction) for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,
@@ -612,7 +616,7 @@ def _mask_nc(eq):
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols, Sum
+    >>> from sympy import Dummy, symbols, Sum, Mul, Basic
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -635,22 +639,33 @@ def _mask_nc(eq):
     >>> _mask_nc(NO(Fd(x)*F(y)))
     (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
-    An nc-object without nc-symbols:
-
-    >>> _mask_nc(x + x*Sum(x, (x, 1, 2)))
-    (_3*x + x, {_3: Sum(x, (x, 1, 2))}, [])
-
     Multiple nc-objects:
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
     >>> _mask_nc(eq)
-    (x*_4*_5 + x*_5, {_4: Commutator(A, C), _5: Commutator(A, B)}, [_4, _5])
+    (x*_3 + x*_4*_3, {_3: Commutator(A, B), _4: Commutator(A, C)}, [_3, _4])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq)
-    (A*_7 + B*_6, {_6: Commutator(A, C), _7: Commutator(A, B)}, [_6, _7, A, B])
+    (A*_5 + B*_6, {_5: Commutator(A, B), _6: Commutator(A, C)}, [_5, _6, A, B])
+
+    If there is an object that:
+
+        - doesn't contain nc-symbols
+        - but has arguments which derive from Basic, not Expr
+        - and doesn't define an _eval_is_commutative routine
+
+    then it will give False (or None?) for the is_commutative test. Such
+    objects are also removed by this routine:
+
+    >>> from sympy import Basic, Mul
+    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
+    >>> eq.is_commutative
+    False
+    >>> _mask_nc(eq)
+    (_7**2 + 1, {_7: Basic()}, [])
 
     """
     expr = eq
@@ -661,7 +676,7 @@ def _mask_nc(eq):
     rep = []
     nc_obj = set()
     nc_syms = set()
-    pot = preorder_traversal(expr)
+    pot = preorder_traversal(expr, key=default_sort_key)
     for i, a in enumerate(pot):
         if any(a == r[0] for r in rep):
             pot.skip()
@@ -684,9 +699,10 @@ def _mask_nc(eq):
 
     # Any remaining nc-objects will be replaced with an nc-Dummy and
     # identified as an nc-Symbol to watch out for
-    while nc_obj:
+    nc_obj = sorted(nc_obj, key=default_sort_key)
+    for n in nc_obj:
         nc = Dummy(commutative=False)
-        rep.append((nc_obj.pop(), nc))
+        rep.append((n, nc))
         nc_syms.add(nc)
     expr = expr.subs(rep)
 

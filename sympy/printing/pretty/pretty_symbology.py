@@ -196,6 +196,14 @@ _xobj_unicode = {
     '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
+    '<':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
+
+    '>':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
+
     'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
     'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
     'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
@@ -235,6 +243,9 @@ _xobj_ascii = {
     '{' :   (( '|', '/',  '\\', '<' ),      '{'),
     '}' :   (( '|', '\\', '/',  '>' ),      '}'),
     '|' :   '|',
+
+    '<' :   (( '|', '/',  '\\'  ),          '<'),
+    '>' :   (( '|', '\\', '/'   ),          '>'),
 
     'int':  ( ' | ', '  /', '/  ' ),
 
@@ -367,6 +378,12 @@ _xsym = {
     '>='    : ('>=',    U('GREATER-THAN OR EQUAL TO')),
     '!='    : ('!=',    U('NOT EQUAL TO')),
     '*'     : ('*',     U('DOT OPERATOR')),
+    '-->'   : ('-->',   U('EM DASH') + U('EM DASH') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '==>'   : ('==>',   U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '.'     : ('*',     U('RING OPERATOR')),
 }
 
 
@@ -394,6 +411,7 @@ atoms_table = {
     'EmptySet'          :   U('EMPTY SET'),
     'Naturals'          :   U('DOUBLE-STRUCK CAPITAL N'),
     'Integers'          :   U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals'             :   U('DOUBLE-STRUCK CAPITAL R'),
     'Union'             :   U('UNION'),
     'Intersection'      :   U('INTERSECTION')
 }
@@ -452,18 +470,10 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None: # nice formatting of sups/subs did not work
-        if len(sups) > 0:
-            sups_result = '^' + '^'.join(sups)
-        else:
-            sups_result = ''
-        if len(subs) > 0:
-            subs_result = '_' + '_'.join(subs)
-        else:
-            subs_result = ''
+        return symb_name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
-
 
     return ''.join([name, sups_result, subs_result])
 

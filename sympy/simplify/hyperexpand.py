@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy.core.mod import Mod
 from sympy.functions.special.hyper import hyper
+from sympy.utilities.misc import default_sort_key
 from sympy import SYMPY_DEBUG
 
 from sympy.utilities.timeutils import timethis
@@ -81,9 +82,10 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
+    from sympy import (exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix)
+                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
+                       fresnels, fresnelc)
     from sympy.functions.special.hyper import (HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -161,6 +163,27 @@ def add_formulae(formulae):
          Matrix([[-a, 1], [0, z]]))
     # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
+
+    # Added to get nice results for Laplace transform of Fresnel functions
+    # http://functions.wolfram.com/07.22.03.6437.01
+    # Basic rule
+    #add([1], [S(3)/4, S(5)/4],
+    #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
+    #                sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
+    #    / (2*root(polar_lift(-1)*z,4)))
+    # Manually tuned rule
+    addb([1], [S(3)/4, S(5)/4],
+         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                            + cosh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  * exp(-I*pi/4)/(2*root(z,4)),
+                  sqrt(pi)*root(z,4)*(sinh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
+                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+                  *exp(-I*pi/4)/2,
+                  1 ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4, 1,      S(1)/4],
+                 [ z,      S(1)/4, 0],
+                 [ 0,      0,      0]]))
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
@@ -246,6 +269,32 @@ def add_formulae(formulae):
          Matrix([[1, 0, 0]]),
          Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
 
+    # FresnelS
+    # Basic rule
+    #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
+    # Manually tuned rule
+    addb([S(3)/4], [S(3)/2,S(7)/4],
+         Matrix([ fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ),
+                  sinh(2*sqrt(z))/sqrt(z),
+                  cosh(2*sqrt(z)) ]),
+         Matrix([[6, 0, 0]]),
+         Matrix([[-S(3)/4,  S(1)/16, 0],
+                 [ 0,      -S(1)/2,  1],
+                 [ 0,       z,       0]]))
+
+    # FresnelC
+    # Basic rule
+    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
+    # Manually tuned rule
+    addb([S(1)/4], [S(1)/2,S(5)/4],
+         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4)),
+                  cosh(2*sqrt(z)),
+                  sinh(2*sqrt(z))*sqrt(z) ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4,  S(1)/4, 0     ],
+                 [ 0,       0,      1     ],
+                 [ 0,       z,      S(1)/2]]))
+
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
     #     Formula.find_instantiations (creates 2!*3!*3**(2+3) ~ 3000
@@ -274,7 +323,7 @@ def add_formulae(formulae):
 
 
 def add_meijerg_formulae(formulae):
-    from sympy import Matrix, gamma, uppergamma, exp
+    from sympy import Matrix, gamma, uppergamma, exp, Si, Ci, sin, cos, sqrt, pi
 
     a, b, c, z = map(Dummy, 'abcz')
     rho = Dummy('rho')
@@ -303,6 +352,43 @@ def add_meijerg_formulae(formulae):
         Matrix([[1, 0]]),
         Matrix([[rho+z, -1], [0, a+rho]]),
         detect_uppergamma)
+
+    def detect_3113(iq):
+        """http://functions.wolfram.com/07.34.03.0984.01"""
+        x = iq.an[0]
+        u, v, w = iq.bm
+        if Mod((u - v).simplify(), 1) == 0:
+            if Mod((v - w).simplify(), 1) == 0:
+                return
+            sig = (S(1)/2, S(1)/2, S(0))
+            x1, x2, y = u, v, w
+        else:
+            if Mod((x - u).simplify(), 1) == 0:
+                sig = (S(1)/2, S(0), S(1)/2)
+                x1, y, x2 = u, v, w
+            else:
+                sig = (S(0), S(1)/2, S(1)/2)
+                y, x1, x2 = u, v, w
+
+        if (Mod((x - x1).simplify(), 1) != 0 or
+            Mod((x - x2).simplify(), 1) != 0 or
+            Mod((x - y).simplify(), 1) != S(1)/2 or
+            x > x1 or x > x2):
+            return
+
+        return {a: x}, IndexQuadruple([x], [], [x - S(1)/2 + t for t in sig], [])
+
+    s = sin(2*sqrt(z))
+    c_ = cos(2*sqrt(z))
+    S_ = Si(2*sqrt(z)) - pi/2
+    C = Ci(2*sqrt(z))
+    add([a], [], [a, a, a - S(1)/2], [],
+        Matrix([sqrt(pi)*z**(a - S(1)/2)*(c_*S_ - s*C),
+                sqrt(pi)*z**a*(s*S_ + c_*C),
+                sqrt(pi)*z**a]),
+        Matrix([[-2, 0, 0]]),
+        Matrix([[a - S(1)/2, -1, 0], [z, a, S(1)/2], [0, 0, a]]),
+        detect_3113)
 
 
 def make_simp(z):
@@ -734,23 +820,23 @@ class FormulaCollection(object):
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
-            """ Doing this globally at module init time is a pain ... """
-            self.symbolic_formulae = {}
-            self.concrete_formulae = {}
-            self.formulae = []
+        """ Doing this globally at module init time is a pain ... """
+        self.symbolic_formulae = {}
+        self.concrete_formulae = {}
+        self.formulae = []
 
-            add_formulae(self.formulae)
+        add_formulae(self.formulae)
 
-            # Now process the formulae into a helpful form.
-            # These dicts are indexed by (p, q).
+        # Now process the formulae into a helpful form.
+        # These dicts are indexed by (p, q).
 
-            for f in self.formulae:
-                sizes = f.indices.sizes
-                if len(f.symbols) > 0:
-                    self.symbolic_formulae.setdefault(sizes, []).append(f)
-                else:
-                    inv = f.indices.build_invariants()
-                    self.concrete_formulae.setdefault(sizes, {})[inv] = f
+        for f in self.formulae:
+            sizes = f.indices.sizes
+            if len(f.symbols) > 0:
+                self.symbolic_formulae.setdefault(sizes, []).append(f)
+            else:
+                inv = f.indices.build_invariants()
+                self.concrete_formulae.setdefault(sizes, {})[inv] = f
 
     def lookup_origin(self, ip):
         """
@@ -1490,9 +1576,9 @@ def devise_plan(ip, nip, z):
 
     >>> from sympy import S
     >>> devise_plan(IndexPair((1, S.Half), ()),
-    ...             IndexPair((2, S('3/2')), ()), z)
-    [<Decrement upper index #0 of [2, 1/2], [].>,
-    <Decrement upper index #0 of [3/2, 2], [].>]
+    ...             IndexPair((2, S('3/2')), ()), z) #doctest: +NORMALIZE_WHITESPACE
+    [<Decrement upper index #0 of [3/2, 1], [].>,
+    <Decrement upper index #0 of [2, 3/2], [].>]
 
     A slightly more complicated plan:
 
@@ -1542,7 +1628,7 @@ def devise_plan(ip, nip, z):
                          lambda p, i: UnShiftB(nal + aother, p + bother, i, z),
                          lambda p, i: ShiftB(p[i]))
 
-    for r in set(abuckets.keys() + bbuckets.keys()):
+    for r in sorted(abuckets.keys() + bbuckets.keys(), key=default_sort_key):
         al = ()
         nal = ()
         bk = ()
@@ -1557,7 +1643,8 @@ def devise_plan(ip, nip, z):
             raise ValueError('%s not reachable from %s' % (
                              (ip.ap, ip.bq), (nip.ap, nip.bq)))
 
-        al, nal, bk, nbk = [sorted(list(w)) for w in [al, nal, bk, nbk]]
+        al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
+            for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
             l = []
@@ -1892,7 +1979,7 @@ def hyperexpand_special(ap, bq, z):
     # This code is very ad-hoc. There are many clever algorithms
     # (notably Zeilberger's) related to this problem.
     # For now we just want a few simple cases to work.
-    from sympy import gamma, simplify, cos, unpolarify
+    from sympy import gamma, simplify, cos, unpolarify, pi
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
@@ -1932,7 +2019,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify, polarify
+    from sympy.simplify import powdenest, simplify, polarify, unpolarify
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -1977,7 +2064,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
         p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
-        return simplify(p).subs(z0, z)
+        return unpolarify(simplify(p).subs(z0, z))
 
     # Try to recognise a shifted sum.
     p = S(0)
@@ -1993,7 +2080,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     p = simplify(p).subs(z0, z)
 
     # Try special expansions early.
-    from sympy import unpolarify
     if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
         f = build_hypergeometric_formula(nip)
         r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)

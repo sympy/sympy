@@ -67,10 +67,10 @@ from parsing import *
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from plotting import Plot, textplot
+from plotting import plot, Plot, textplot, plot_backends
 from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
-    pprint_try_use_unicode, print_gtk, print_tree, pager_print
-from printing import ccode, fcode, latex, preview
+    pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
+from printing import ccode, fcode, jscode, latex, preview
 from printing import python, print_python, srepr, sstr, sstrrepr
 from interactive import init_session, init_printing
 
@@ -78,4 +78,3 @@ evalf._create_evalf_table()
 
 # This is slow to import:
 #import abc
-

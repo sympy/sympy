@@ -84,7 +84,8 @@ def solve_poly_inequality(poly, rel):
 
         right, right_open = S.Infinity, True
 
-        for left, multiplicity in reversed(reals):
+        reals.sort(key=lambda w: w[0], reverse=True)
+        for left, multiplicity in reals:
             if multiplicity % 2:
                 if sign == eq_sign:
                     intervals.insert(0, Interval(left, right, not equal, right_open))
@@ -307,7 +308,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x, assume=Q.real(x))
-    And(Or(-12 < x, x < -38), -2/3 < x, x < 4)
+    And(-2/3 < x, Or(-12 < x, x < -38), x < 4)
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x,
     ... assume=Q.real(x))
@@ -423,4 +424,3 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
 
     return And(*(poly_reduced + abs_reduced))
-

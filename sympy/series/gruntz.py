@@ -150,7 +150,7 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
 def tree(subtrees):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     def indent(s, type=1):
         x = s.split("\n")
         r = "+-%s\n"%x[0]
@@ -173,7 +173,7 @@ def tree(subtrees):
 tmp = []
 iter = 0
 def maketree(f, *args, **kw):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     global tmp
     global iter
     oldtmp = tmp

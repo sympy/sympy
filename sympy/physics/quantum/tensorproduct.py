@@ -12,6 +12,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.core.trace import Tr
 
 __all__ = [
     'TensorProduct',
@@ -89,8 +90,9 @@ class TensorProduct(Expr):
         >>> tp.expand(tensorproduct=True)
         AxC + BxC
     """
+    is_commutative = False
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
@@ -100,7 +102,7 @@ class TensorProduct(Expr):
         elif len(new_args) == 1:
             return c_part*new_args[0]
         else:
-            tp = Expr.__new__(cls, *new_args, **{'commutative': False})
+            tp = Expr.__new__(cls, *new_args)
             return c_part*tp
 
     @classmethod
@@ -147,7 +149,10 @@ class TensorProduct(Expr):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                else:
+                    pform = prettyForm(*pform.right('x' + ' '))
         return pform
 
     def _latex(self, printer, *args):
@@ -176,22 +181,26 @@ class TensorProduct(Expr):
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
-                    add_args.append(
-                        TensorProduct(
-                            *args[:i]+(aa,)+args[i+1:]
-                        ).expand(**hints)
-                    )
-                stop = True
-            if stop: break
+                    tp = TensorProduct(*args[:i]+(aa,)+args[i+1:])
+                    if isinstance(tp, TensorProduct):
+                        tp = tp._eval_expand_tensorproduct()
+                    add_args.append(tp)
+                break
+
         if add_args:
-            return Add(*add_args).expand(**hints)
+            return Add(*add_args)
         else:
             return self
 
-    def expand(self, **hints):
-        tp = TensorProduct(*[sympify(item).expand(**hints) for item in self.args])
-        return Expr.expand(tp, **hints)
+    def _eval_trace(self, **kwargs):
+        indices = kwargs.get('indices', None)
+        exp = tensor_product_simp(self)
 
+        if indices is None or len(indices) == 0:
+            return Mul(*[Tr(arg).doit() for arg in exp.args])
+        else:
+            return Mul(*[Tr(value).doit() if idx in indices else value
+                        for idx, value in enumerate(exp.args)])
 
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.
@@ -314,4 +323,3 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
-

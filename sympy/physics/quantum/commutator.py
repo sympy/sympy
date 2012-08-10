@@ -86,18 +86,21 @@ class Commutator(Expr):
 
     .. [1] http://en.wikipedia.org/wiki/Commutator
     """
+    is_commutative = False
 
-    def __new__(cls, A, B, **old_assumptions):
+    def __new__(cls, A, B):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, *(A, B), **{'commutative': False})
+        obj = Expr.__new__(cls, A, B)
         return obj
 
     @classmethod
     def eval(cls, a, b):
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return S.Zero
         if a.is_commutative or b.is_commutative:
             return S.Zero
 
@@ -110,54 +113,63 @@ class Commutator(Expr):
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
-        # The Commutator [A,B] is on canonical form if A < B.
+        # The Commutator [A, B] is in canonical form if A < B.
         if a.compare(b) == 1:
-            return S.NegativeOne*cls(b,a)
+            return S.NegativeOne*cls(b, a)
 
     def _eval_expand_commutator(self, **hints):
-        A = self.args[0].expand(**hints)
-        B = self.args[1].expand(**hints)
-
-        result = None
+        A = self.args[0]
+        B = self.args[1]
 
         if isinstance(A, Add):
-            # [A+B,C]  ->  [A,C] + [B,C]
-            result = Add(
-                *[Commutator(term,B).expand(**hints)\
-                  for term in A.args]
-            )
+            # [A + B, C]  ->  [A, C] + [B, C]
+            sargs = []
+            for term in A.args:
+                comm = Commutator(term, B)
+                if isinstance(comm, Commutator):
+                    comm = comm._eval_expand_commutator()
+                sargs.append(comm)
+            return Add(*sargs)
         elif isinstance(B, Add):
-            # [A,B+C]  ->  [A,B] + [A,C]
-            result = Add(
-                *[Commutator(A,term).expand(**hints)\
-                  for term in B.args]
-            )
+            # [A, B + C]  ->  [A, B] + [A, C]
+            sargs = []
+            for term in B.args:
+                comm = Commutator(A, term)
+                if isinstance(comm, Commutator):
+                    comm = comm._eval_expand_commutator()
+                sargs.append(comm)
+            return Add(*sargs)
         elif isinstance(A, Mul):
-            # [A*B,C] -> A*[B,C] + [A,C]*B
+            # [A*B, C] -> A*[B, C] + [A, C]*B
             a = A.args[0]
             b = Mul(*A.args[1:])
             c = B
-            comm1 = Commutator(b,c).expand(**hints)
-            comm2 = Commutator(a,c).expand(**hints)
+            comm1 = Commutator(b, c)
+            comm2 = Commutator(a, c)
+            if isinstance(comm1, Commutator):
+                comm1 = comm1._eval_expand_commutator()
+            if isinstance(comm2, Commutator):
+                comm2 = comm2._eval_expand_commutator()
             first = Mul(a, comm1)
             second = Mul(comm2, b)
-            result = Add(first, second)
+            return Add(first, second)
         elif isinstance(B, Mul):
-            # [A,B*C] -> [A,B]*C + B*[A,C]
+            # [A, B*C] -> [A, B]*C + B*[A, C]
             a = A
             b = B.args[0]
             c = Mul(*B.args[1:])
-            comm1 = Commutator(a,b).expand(**hints)
-            comm2 = Commutator(a,c).expand(**hints)
+            comm1 = Commutator(a, b)
+            comm2 = Commutator(a, c)
+            if isinstance(comm1, Commutator):
+                comm1 = comm1._eval_expand_commutator()
+            if isinstance(comm2, Commutator):
+                comm2 = comm2._eval_expand_commutator()
             first = Mul(comm1, c)
             second = Mul(b, comm2)
-            result = Add(first, second)
+            return Add(first, second)
 
-        if result is None:
-            # No changes, so return self
-            return self
-        else:
-            return result
+        # No changes, so return self
+        return self
 
     def doit(self, **hints):
         """ Evaluate commutator """
@@ -196,4 +208,3 @@ class Commutator(Expr):
     def _latex(self, printer, *args):
         return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg, *args) for arg in self.args])
-

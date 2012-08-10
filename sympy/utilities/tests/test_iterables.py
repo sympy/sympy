@@ -1,12 +1,10 @@
-from sympy import symbols, Integral, Tuple, Dummy, Basic
-from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
-    flatten, group, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
-    rotate_right, multiset_partitions, partitions, binary_partitions,
-    generate_bell, generate_involutions, generate_derangements,
-    unrestricted_necklace, generate_oriented_forest, unflatten,
-    common_prefix, common_suffix)
-
+from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
+from sympy.utilities.iterables import (postorder_traversal, flatten, group,
+        take, subsets, variations, cartes, numbered_symbols, dict_merge,
+        prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
+        multiset_partitions, partitions, binary_partitions, generate_bell,
+        generate_involutions, generate_derangements, unrestricted_necklace,
+        generate_oriented_forest, unflatten, common_prefix, common_suffix)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -14,54 +12,27 @@ from sympy.utilities.pytest import raises
 w,x,y,z= symbols('w,x,y,z')
 
 def test_postorder_traversal():
-    expr = z+w*(x+y)
-    expected1 = [z, w, y, x, x + y, w*(x + y), z + w*(x + y)]
-    expected2 = [z, w, x, y, x + y, w*(x + y), z + w*(x + y)]
-    expected3 = [w, y, x, x + y, w*(x + y), z, z + w*(x + y)]
-    assert list(postorder_traversal(expr)) in [expected1, expected2, expected3]
+    expr = z + w*(x+y)
+    expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
+    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
 
-    expr = Piecewise((x,x<1),(x**2,True))
-    assert list(postorder_traversal(expr)) == [
-        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2,
-        ExprCondPair.true_sentinel,
+    expr = Piecewise((x, x < 1), (x**2, True))
+    expected = [
+        x, 1, x, x < 1, ExprCondPair(x, x < 1),
+        ExprCondPair.true_sentinel, 2, x, x**2,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
-    ]
-    assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        Integral(x**2, (x, 0, 1)), x**2, x, 2, Tuple(x, 0, 1), x, 0, 1
-    ]
-    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
-        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
+     ]
+    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
+    assert list(postorder_traversal([expr], key=default_sort_key)) == expected + [[expr]]
 
-
-
-def test_preorder_traversal():
-    expr = z+w*(x+y)
-    expected1 = [z + w*(x + y), z, w*(x + y), w, x + y, y, x]
-    expected2 = [z + w*(x + y), z, w*(x + y), w, x + y, x, y]
-    expected3 = [z + w*(x + y), w*(x + y), w, x + y, y, x, z]
-    assert list(preorder_traversal(expr)) in [expected1, expected2, expected3]
-
-    expr = Piecewise((x,x<1),(x**2,True))
-    assert list(preorder_traversal(expr)) == [
-        Piecewise((x, x < 1), (x**2, True)), ExprCondPair(x, x < 1), x, x < 1,
-        x, 1, ExprCondPair(x**2, True), x**2, x, 2, ExprCondPair.true_sentinel
-    ]
-    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
-        x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
+    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
+        key=default_sort_key)) == [
+        2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
         Integral(x**2, Tuple(x, 0, 1))
     ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
-    expr = (x**(y**z)) ** (x**(y**z))
-    expected = [(x**(y**z))**(x**(y**z)), x**(y**z), x**(y**z)]
-    result = []
-    pt = preorder_traversal(expr)
-    for i in pt:
-        result.append(i)
-        if i == x**(y**z):
-            pt.skip()
-    assert result == expected
 
 def test_flatten():
     assert flatten((1, (1,))) == [1, 1]
@@ -74,7 +45,7 @@ def test_flatten():
     assert flatten(ls, levels=2) == [-2, -1, 1, 2, 0, 0]
     assert flatten(ls, levels=3) == [-2, -1, 1, 2, 0, 0]
 
-    raises(ValueError, "flatten(ls, levels=-1)")
+    raises(ValueError, lambda: flatten(ls, levels=-1))
 
     class MyOp(Basic):
         pass
@@ -221,7 +192,7 @@ def test_topological_sort():
     assert topological_sort((V, E)) == [3, 5, 7, 8, 11, 2, 9, 10]
     assert topological_sort((V, E), key=lambda v: -v) == [7, 5, 11, 3, 10, 8, 9, 2]
 
-    raises(ValueError, "topological_sort((V, E + [(10, 7)]))")
+    raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
 
 def test_rotate():
     A = [0, 1, 2, 3, 4]
@@ -263,6 +234,11 @@ def test_partitions():
 
     assert [p.copy() for p in partitions(8, k=4, m=3)] == [{4: 2},\
     {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}]
+
+    assert [p.copy() for p in partitions(S(3), 2)] == \
+    [{3: 1}, {1: 1, 2: 1}]
+
+    raises(ValueError, lambda: list(partitions(3, 0)))
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1], \
@@ -323,8 +299,8 @@ def test_unflatten():
     r = range(10)
     assert unflatten(r) == zip(r[::2], r[1::2])
     assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
-    raises(ValueError, "unflatten(range(10), 3)")
-    raises(ValueError, "unflatten(range(10), -2)")
+    raises(ValueError, lambda: unflatten(range(10), 3))
+    raises(ValueError, lambda: unflatten(range(10), -2))
 
 def test_common_prefix_suffix():
     assert common_prefix([], [1]) == []

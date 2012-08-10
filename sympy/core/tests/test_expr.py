@@ -1,11 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify, WildFunction,
-    Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
-    Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
-    separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E)
+    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+    Piecewise, Mul,  Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+    simplify, together,  collect, factorial, apart, combsimp, factor, refine,
+    cancel, Tuple,  default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+    exp_polar, Lambda)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
@@ -168,12 +169,15 @@ def test_relational_noncommutative():
 
 def test_basic_nostr():
     for obj in basic_objs:
-        for op in ['+','-','*','/','**']:
-            if obj == 2 and op == '*':
-                if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
-                    assert obj * '1' == '11'
-            else:
-                raises(TypeError, "obj %s '1'" % op)
+        raises(TypeError, lambda: obj + '1')
+        raises(TypeError, lambda: obj - '1')
+        if obj == 2:
+            if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+                assert obj * '1' == '11'
+        else:
+            raises(TypeError, lambda: obj * '1')
+        raises(TypeError, lambda: obj / '1')
+        raises(TypeError, lambda: obj ** '1')
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
@@ -217,7 +221,7 @@ def test_as_leading_term_stub():
         pass
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
-    raises(NotImplementedError, 'foo(x).as_leading_term(x)')
+    raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
@@ -343,7 +347,7 @@ def test_SAGE1():
     e = Rational(2)*m
     assert e == 10
 
-    raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, lambda: Rational(2)*MyInt)
 
 def test_SAGE2():
     class MyInt(object):
@@ -353,7 +357,7 @@ def test_SAGE2():
     e = Rational(2)*MyInt()
     assert e == 10
 
-    raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, lambda: Rational(2)*MyInt)
 
 def test_SAGE3():
     class MySymbol:
@@ -382,9 +386,9 @@ def test_doit():
     assert (2*Integral(x, x)).doit() == x**2
 
 def test_attribute_error():
-    raises(AttributeError, "x.cos()")
-    raises(AttributeError, "x.sin()")
-    raises(AttributeError, "x.exp()")
+    raises(AttributeError, lambda: x.cos())
+    raises(AttributeError, lambda: x.sin())
+    raises(AttributeError, lambda: x.exp())
 
 def test_args():
     assert (x*y).args in ((x, y), (y, x))
@@ -501,11 +505,19 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 def test_call():
-    # Unlike what used to be the case, the following should NOT work.
-    # See issue 1927.
+    # See the long history of this in issues 1927 and 2006.
 
-    raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
-    raises(TypeError, "sin(x)(1)")
+    # No effect as there are no callables
+    assert sin(x)(1) == sin(x)
+    assert (1+sin(x))(1) == 1+sin(x)
+
+    # Effect in the pressence of callables
+    l = Lambda(x, 2*x)
+    assert (l+x)(y) == 2*y+x
+    assert (x**l)(2) == x**4
+    # TODO UndefinedFunction does not subclass Expr
+    #f = Function('f')
+    #assert (2*f)(x) == 2*f(x)
 
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
@@ -624,7 +636,7 @@ def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
     h = Function('h')
-    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
+    p = Piecewise((g(x), x < -1), (1, x <= 1), (f, True))
 
     assert p.has(x)
     assert p.has(y)
@@ -653,6 +665,10 @@ def test_has_iterative():
     assert not f.has(x*sin(x)*A*C*B)
     assert not f.has(x*sin(y)*A*B*C)
     assert f.has(x*gamma(x))
+    assert not f.has(x + sin(x))
+
+    assert (x & y & z).has(x & z)
+
 
 def test_has_integrals():
     f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
@@ -682,6 +698,7 @@ def test_has_tuple():
     assert not Tuple(f, g).has(x)
     assert Tuple(f, g).has(f)
     assert not Tuple(f, g).has(h)
+    assert Tuple(True).has(True) is True # .has(1) will also be True
 
 def test_has_units():
     from sympy.physics.units import m, s
@@ -983,7 +1000,8 @@ def test_action_verbs():
     assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
-    assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
+    # Note tested because it's deprecated
+    #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y+2)/(y+1), y) == (y/(y+2)/(y+1)).apart(y)
     assert combsimp(y/(x+2)/(x+1)) == (y/(x+2)/(x+1)).combsimp()
@@ -1018,7 +1036,7 @@ def test_args_cnc():
         [set([x]), []]
     assert Mul(x, x**2, evaluate=False).args_cnc(cset=True, warn=False) == \
         [set([x, x**2]), []]
-    raises(ValueError, 'Mul(x, x, evaluate=False).args_cnc(cset=True)')
+    raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
 
@@ -1131,6 +1149,9 @@ def test_expr_sorting():
     exprs = [{x: -y}, {x: y}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+    exprs = [set([1]), set([1, 2])]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
 
@@ -1190,7 +1211,7 @@ def test_issue_1100():
     # difference gives S.NaN
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
-    raises(ValueError, 'x._eval_interval(x, None, None)')
+    raises(ValueError, lambda: x._eval_interval(x, None, None))
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1317,7 +1338,7 @@ def test_round():
 
     assert (pi + sqrt(2)).round(2) == 4.56
     assert (10*(pi + sqrt(2))).round(-1) == 50
-    raises(TypeError, 'round(x + 2, 2)')
+    raises(TypeError, lambda: round(x + 2, 2))
     assert S(2.3).round(1) == 2.3
     e = S(12.345).round(2)
     assert e == round(12.345, 2)
@@ -1338,7 +1359,7 @@ def test_round():
     assert a.round(27) == Float('2.999999999999999999999999999','')
     assert a.round(30) == Float('2.999999999999999999999999999','')
 
-    raises(TypeError, 'x.round()')
+    raises(TypeError, lambda: x.round())
 
     # exact magnitude of 10
     assert str(S(1).round()) == '1.'
@@ -1359,3 +1380,6 @@ def test_round():
 
     # issue 3815
     assert (I**(I+3)).round(3) == Float('-0.208','')*I
+
+def test_extract_branch_factor():
+    assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)

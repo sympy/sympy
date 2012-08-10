@@ -34,8 +34,8 @@ def test_DiracDelta():
     assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
     assert DiracDelta(y).simplify(x) == DiracDelta(y)
 
-    raises(ArgumentIndexError, 'DiracDelta(x).fdiff(2)')
-    raises(ValueError, 'DiracDelta(x,-1)')
+    raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
+    raises(ValueError, lambda: DiracDelta(x,-1))
 
 def test_heaviside():
     assert Heaviside(0) == 0.5
@@ -47,6 +47,6 @@ def test_heaviside():
     assert Heaviside(x+I).is_Function
     assert Heaviside(I*x).is_Function
 
-    raises(ArgumentIndexError, 'Heaviside(x).fdiff(2)')
-    raises(ValueError, 'Heaviside(I)')
-    raises(ValueError, 'Heaviside(2+3*I)')
+    raises(ArgumentIndexError, lambda: Heaviside(x).fdiff(2))
+    raises(ValueError, lambda: Heaviside(I))
+    raises(ValueError, lambda: Heaviside(2+3*I))

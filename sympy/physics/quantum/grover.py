@@ -94,24 +94,25 @@ class OracleGate(Gate):
 
     @classmethod
     def _eval_args(cls, args):
+        # TODO: args[1] is not a subclass of Basic
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
                     'supply the number of qubits and an unknown function.'
             )
-        sub_args = args[0],
+        sub_args = (args[0],)
         sub_args = UnitaryOperator._eval_args(sub_args)
         if not sub_args[0].is_Integer:
             raise TypeError('Integer expected, got: %r' % sub_args[0])
+
         if not callable(args[1]):
             raise TypeError('Callable expected, got: %r' % args[1])
-        sub_args = UnitaryOperator._eval_args(tuple(range(args[0])))
-        return (sub_args, args[1])
+        return (sub_args[0], args[1])
 
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args[0])+1)
+        return ComplexSpace(2)**args[0]
 
     #-------------------------------------------------------------------------
     # Properties
@@ -125,7 +126,7 @@ class OracleGate(Gate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return self.label[0]
+        return sympify(tuple(range(self.args[0])))
 
     #-------------------------------------------------------------------------
     # Apply
@@ -194,7 +195,15 @@ class WGate(Gate):
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
             raise TypeError('Integer expected, got: %r' % args[0])
-        return sympify(tuple(reversed(range(args[0]))))
+        return args
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    @property
+    def targets(self):
+        return sympify(tuple(reversed(range(self.args[0]))))
 
     #-------------------------------------------------------------------------
     # Apply

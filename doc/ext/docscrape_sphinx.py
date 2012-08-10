@@ -67,7 +67,7 @@ class SphinxDocString(NumpyDocString):
 
             if prefix:
                 prefix = '~%s.' % prefix
-            
+
             ## Lines that are commented out are used to make the
             ## autosummary:: table. Since SymPy does not use the
             ## autosummary:: functionality, it is easiest to just comment it
@@ -190,6 +190,8 @@ class SphinxDocString(NumpyDocString):
         out += self._str_section('Notes')
         out += self._str_references()
         out += self._str_examples()
+        for s in self._other_keys:
+            out += self._str_section(s)
         out += self._str_member_list('Attributes')
         out = self._str_indent(out,indent)
         return '\n'.join(out)

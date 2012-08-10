@@ -37,6 +37,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
 from sympy.utilities.misc import debug as _debug
+from sympy.utilities import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -156,7 +157,7 @@ def _create_lookup_table(table):
     # TODO
 
     # Section 8.4.11
-    from sympy import Ei, I, expint, Si, Ci, Shi, Chi
+    from sympy import Ei, I, expint, Si, Ci, Shi, Chi, fresnels, fresnelc
     addi(Ei(t),
          constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [], t*polar_lift(-1)))],
          True)
@@ -178,6 +179,9 @@ def _create_lookup_table(table):
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
 
+    # Fresnel Integrals
+    add(fresnels(t),  [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnelc(t),  [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
@@ -519,7 +523,7 @@ def _condsimp(cond):
     >>> from sympy import Or, Eq, unbranched_argument as arg, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
-    Or(z, x <= y)
+    Or(x <= y, z)
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """
@@ -1539,20 +1543,43 @@ def _meijerint_indefinite_1(f, x):
         r = hyperexpand(r.subs(t, a*x**b))
 
         # now substitute back
-        # Note: we really do want to powers of x to combine.
+        # Note: we really do want the powers of x to combine.
         res += powdenest(fac_*r, polar=True)
 
-    # This multiplies out superfluous powers of x we created, and chops off
-    # constants (e.g. x*(exp(x)/x - 1/x) -> exp(x))
+    def _clean(res):
+        """This multiplies out superfluous powers of x we created, and chops off
+        constants:
+
+            >> _clean(x*(exp(x)/x - 1/x) + 3)
+            exp(x)
+
+        cancel is used before mul_expand since it is possible for an
+        expression to have an additive constant that doesn't become isolated
+        with simple expansion. Such a situation was identified in issue 3270:
+
+
+        >>> from sympy import sqrt, cancel
+        >>> from sympy.abc import x
+        >>> a = sqrt(2*x + 1)
+        >>> bad = (3*x*a**5 + 2*x - a**5 + 1)/a**2
+        >>> bad.expand().as_independent(x)[0]
+        0
+        >>> cancel(bad).expand().as_independent(x)[0]
+        1
+        """
+        from sympy import cancel
+        res= expand_mul(cancel(res), deep=False)
+        return Add._from_args(res.as_coeff_add(x)[1])
+
     res = piecewise_fold(res)
     if res.is_Piecewise:
         nargs = []
         for expr, cond in res.args:
-            expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
+            expr = _my_unpolarify(_clean(expr))
             nargs += [(expr, cond)]
         res = Piecewise(*nargs)
     else:
-        res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
+        res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 @timeit
@@ -1604,7 +1631,7 @@ def meijerint_definite(f, x, a, b):
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
         _debug('  Sensible splitting points:', innermost)
-        for c in list(innermost) + [S(0)]:
+        for c in sorted(innermost, key=default_sort_key, reverse=True) + [S(0)]:
             _debug('  Trying to split at', c)
             if not c.is_real:
                 _debug('  Non-real splitting point.')
@@ -1631,10 +1658,10 @@ def meijerint_definite(f, x, a, b):
         return -meijerint_definite(f, x, b, oo)
 
     if (a, b) == (0, oo):
-       # This is a common case - try it directly first.
-       res = _meijerint_definite_2(f, x)
-       if res is not None and not res[0].has(meijerg):
-           return res
+        # This is a common case - try it directly first.
+        res = _meijerint_definite_2(f, x)
+        if res is not None and not res[0].has(meijerg):
+            return res
 
     results = []
     if b == oo:
@@ -1746,6 +1773,7 @@ def _meijerint_definite_3(f, x):
 def _my_unpolarify(f):
     from sympy import unpolarify
     return _eval_cond(unpolarify(f))
+
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """

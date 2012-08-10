@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -115,16 +115,11 @@ class ExpBase(Function):
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_power_exp(self, **hints):
+        arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
             expr = 1
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 expr *= self.func(x)
             return expr
         return self.func(arg)
@@ -158,20 +153,31 @@ class exp_polar(ExpBase):
     sympy.simplify.simplify.powsimp
     sympy.functions.elementary.complexes.polar_lift
     sympy.functions.elementary.complexes.periodic_argument
-    sympy.fucntions.elementary.complexes.principal_branch
+    sympy.functions.elementary.complexes.principal_branch
     """
 
     is_polar = True
     is_comparable = False # cannot be evalf'd
-    is_real = False
+
+    def _eval_Abs(self):
+        from sympy import expand_mul
+        return sqrt( expand_mul(self * self.conjugate()) )
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy import im, pi
+        from sympy import im, pi, re
         i = im(self.args[0])
         if i <= -pi or i > pi:
             return self # cannot evalf for this argument
-        return exp(self.args[0])._eval_evalf(prec)
+        res = exp(self.args[0])._eval_evalf(prec)
+        if i > 0 and im(res) < 0:
+            # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
+            return re(res)
+        return res
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
 
     def as_base_exp(self):
         # XXX exp_polar(0) is special!
@@ -291,10 +297,6 @@ class exp(ExpBase):
                 return p * x / n
         return x**n/C.factorial()(n)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a 2-tuple representing a complex number.
@@ -366,11 +368,18 @@ class exp(ExpBase):
         return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_is_positive(self):
         if self.args[0].is_real:
-            return True
+            return not self.args[0] is S.NegativeInfinity
+        elif self.args[0].is_imaginary:
+            arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_lseries(self, x):
         s = self.args[0]
@@ -463,21 +472,26 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
+        arg = sympify(arg)
+
         if base is not None:
             base = sympify(base)
-
-            if arg.is_positive and arg.is_Integer and \
-               base.is_positive and base.is_Integer:
-                base = int(base)
-                arg = int(arg)
+            if base == 1:
+                if arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
+            try:
+                if not (base.is_positive and arg.is_positive):
+                    raise ValueError
                 n = multiplicity(base, arg)
-                return S(n) + log(arg // base ** n) / log(base)
+                return n + log(arg // base ** n) / log(base)
+            except ValueError:
+                pass
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
-
-        arg = sympify(arg)
 
         if arg.is_Number:
             if arg is S.Zero:
@@ -549,32 +563,26 @@ class log(Function):
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
         force = hints.get('force', False)
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+        arg = self.args[0]
         if arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 if force or x.is_positive or x.is_polar:
-                    expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
+                    a = self.func(x)
+                    if isinstance(a, log):
+                        expr.append(self.func(x)._eval_expand_log(**hints))
+                    else:
+                        expr.append(a)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
             if force or (arg.exp.is_real and arg.base.is_positive) or \
                         arg.base.is_polar:
-                if deep:
-                    b = arg.base.expand(deep=deep, **hints)
-                    e = arg.exp.expand(deep=deep, **hints)
-                else:
-                    b = arg.base
-                    e = arg.exp
-                return unpolarify(e) * self.func(b)._eval_expand_log(deep=deep,\
-                **hints)
+                b = arg.base
+                e = arg.exp
+                return unpolarify(e) * self.func(b)._eval_expand_log(**hints)
 
         return self.func(arg)
 
@@ -609,10 +617,6 @@ class log(Function):
             return (log(abs).expand(deep, **hints), arg)
         else:
             return (log(abs), arg)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_is_rational(self):
         s = self.func(*self.args)

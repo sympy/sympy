@@ -1,6 +1,7 @@
 from sympy.core import S, C, Basic, Interval
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -79,6 +80,7 @@ class PrettyPrinter(Printer):
     _print_EmptySet         = _print_Atom
     _print_Naturals         = _print_Atom
     _print_Integers         = _print_Atom
+    _print_Reals            = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -159,31 +161,31 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2227")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2228")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bb")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bc")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bd")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e):
         if self._use_unicode:
@@ -195,7 +197,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2261")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
@@ -525,7 +527,10 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    def _print_MatrixBase(self, e):
+    def _print_matrix_contents(self, e):
+        """
+        This method factors out what is essentially grid printing.
+        """
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -590,6 +595,10 @@ class PrettyPrinter(Printer):
         if D is None:
             D = prettyForm('') # Empty Matrix
 
+        return D
+
+    def _print_MatrixBase(self, e):
+        D = self._print_matrix_contents(e)
         D = prettyForm(*D.parens('[',']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
@@ -626,6 +635,11 @@ class PrettyPrinter(Printer):
 
     def _print_MatAdd(self, expr):
         return self._print_seq(expr.args, None, None, ' + ')
+
+    def _print_FunctionMatrix(self, X):
+        D = self._print(X.lamda.expr)
+        D = prettyForm(*D.parens('[',']'))
+        return D
 
     def _print_Piecewise(self, pexpr):
 
@@ -843,10 +857,12 @@ class PrettyPrinter(Printer):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Function(self, e):
+    def _print_Function(self, e, sort=False):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        if sort:
+            args = sorted(args, key=default_sort_key)
         n = len(args)
 
         func_name = func.__name__
@@ -1132,13 +1148,32 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
         return self._print_seq(items, '{', '}', ', ' )
+
+    def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
+        else:
+            dots = '...'
+
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), dots, s._last_element
+        else:
+            printset = tuple(s)
+
+        return self._print_seq(printset, '{', '}', ', ' )
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1172,10 +1207,13 @@ class PrettyPrinter(Printer):
              parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
         variables = self._print_seq(ts.lamda.variables)
         expr = self._print(ts.lamda.expr)
         bar = self._print("|")
-        inn = self._print(u"\u220a")
         base = self._print(ts.base_set)
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
@@ -1310,8 +1348,11 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('CC')
 
-    def _print_PolynomialRing(self, expr):
-        pform = self._print_seq(expr.gens, '[', ']')
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.gens
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
 
         return pform
@@ -1406,6 +1447,121 @@ class PrettyPrinter(Printer):
                 return pform
             except:
                 return self._print(None)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
+
+    def _print_Object(self, object):
+        return self._print(pretty_symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        arrow = xsym("-->")
+
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        tail = domain.right(arrow, codomain)[0]
+
+        return prettyForm(tail)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(pretty_symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(":", pretty_morphism)[0])
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(
+            NamedMorphism(morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        circle = xsym(".")
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [pretty_symbol(component.name) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = circle.join(component_names_list) + ":"
+
+        pretty_name = self._print(component_names)
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(pretty_morphism)[0])
+
+    def _print_Category(self, category):
+        return self._print(pretty_symbol(category.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        pretty_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            results_arrow = " %s " % xsym("==>")
+
+            pretty_conclusions = self._print(diagram.conclusions)[0]
+            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
+
+        return prettyForm(pretty_result[0])
+
+    def _print_DiagramGrid(self, grid):
+        from sympy.matrices import Matrix
+        from sympy import Symbol
+        matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
+                          for j in xrange(grid.width)]
+                         for i in xrange(grid.height)])
+        return self._print_matrix_contents(matrix)
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return self._print_seq(m, '[', ']')
+
+    def _print_SubModule(self, M):
+        return self._print_seq(M.gens, '<', '>')
+
+    def _print_FreeModule(self, M):
+        return self._print(M.ring)**self._print(M.rank)
+
+    def _print_ModuleImplementedIdeal(self, M):
+        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+
+    def _print_QuotientRing(self, R):
+        return self._print(R.ring) / self._print(R.base_ideal)
+
+    def _print_QuotientRingElement(self, R):
+        return self._print(R.data) + self._print(R.ring.base_ideal)
+
+    def _print_QuotientModuleElement(self, m):
+        return self._print(m.data) + self._print(m.module.killed_module)
+
+    def _print_QuotientModule(self, M):
+        return self._print(M.base) / self._print(M.killed_module)
+
+    def _print_MatrixHomomorphism(self, h):
+        matrix = self._print(h._sympy_matrix())
+        matrix.baseline = matrix.height() // 2
+        pform = prettyForm(*matrix.right(' : ', self._print(h.domain),
+            ' %s> ' % hobj('-', 2), self._print(h.codomain)))
+        return pform
+
+    def _print_Tr(self, p):
+        #TODO: Handle indices
+        pform = self._print(p.args[0])
+        pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
+        pform = prettyForm(*pform.right(')'))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

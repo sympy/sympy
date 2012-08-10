@@ -1,6 +1,8 @@
-from sympy import (symbols, expand, erf, nan, oo, Float, conjugate, sqrt, exp, pi, O, I, Ei,
-                   exp_polar, polar_lift, Symbol, I, exp, uppergamma, expint, log, loggamma, limit,
-                   meijerg, gamma, S, Shi, Chi, Si, Ci, E1, sin, cos, sinh, cosh)
+from sympy import (symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
+                   sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
+                   polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
+                   log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
+                   Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -9,6 +11,8 @@ from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
 x, y, z = symbols('x,y,z')
+w = Symbol("w", real=True)
+n = Symbol("n", integer=True)
 
 def test_erf():
     assert erf(nan) == nan
@@ -40,7 +44,7 @@ def test_erf():
     assert limit((1-erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1-erf(x))*exp(x**2)*sqrt(pi)*x-1)*2*x**2, x, oo) == -1
 
-    raises(ArgumentIndexError, 'erf(x).fdiff(2)')
+    raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
 def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \
@@ -227,3 +231,81 @@ def test_ci():
     assert Ci(x).nseries(x, n=4) == EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
     assert Chi(x).nseries(x, n=4) == EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
+
+def test_fresnel():
+    assert fresnels(0) == 0
+    assert fresnels(oo) == S.Half
+    assert fresnels(-oo) == -S.Half
+
+    assert fresnels(z) == fresnels(z)
+    assert fresnels(-z) == -fresnels(z)
+    assert fresnels(I*z) == -I*fresnels(z)
+    assert fresnels(-I*z) == I*fresnels(z)
+
+    assert conjugate(fresnels(z)) == fresnels(conjugate(z))
+
+    assert fresnels(z).diff(z) == sin(pi*z**2/2)
+
+    assert fresnels(z).rewrite(erf) == (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
+
+    assert fresnels(z).rewrite(hyper) == pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+
+    assert fresnels(z).series(z, n=15) == pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
+
+    assert fresnels(w).is_real is True
+
+    assert fresnels(z).as_real_imag() == ((fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
+                                          I*(fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
+                                          re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+
+    assert fresnels(2+3*I).as_real_imag() == (fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2, I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2)
+
+    assert expand_func(integrate(fresnels(z), z)) == z*fresnels(z) + cos(pi*z**2/2)/pi
+
+    assert fresnels(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(9)/4)* \
+           meijerg(((), (1,)), ((S(3)/4,), (S(1)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
+
+    assert fresnelc(0) == 0
+    assert fresnelc(oo) == S.Half
+    assert fresnelc(-oo) == -S.Half
+
+    assert fresnelc(z) == fresnelc(z)
+    assert fresnelc(-z) == -fresnelc(z)
+    assert fresnelc(I*z) == I*fresnelc(z)
+    assert fresnelc(-I*z) == -I*fresnelc(z)
+
+    assert conjugate(fresnelc(z)) == fresnelc(conjugate(z))
+
+    assert fresnelc(z).diff(z) == cos(pi*z**2/2)
+
+    assert fresnelc(z).rewrite(erf) == (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
+
+    assert fresnelc(z).rewrite(hyper) == z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
+
+    assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
+
+    assert fresnelc(w).is_real is True
+
+    assert fresnelc(z).as_real_imag() == ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
+                                           I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
+                                           re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+
+    assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
+
+    assert expand_func(integrate(fresnelc(z), z)) == z*fresnelc(z) - sin(pi*z**2/2)/pi
+
+    assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4)* \
+           meijerg(((), (1,)), ((S(1)/4,), (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
+
+
+    from sympy.utilities.randtest import test_numerically
+
+    test_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
+    test_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
+    test_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
+    test_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
+
+    test_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
+    test_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
+    test_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
+    test_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)

@@ -164,7 +164,7 @@ def test_evalf_bugs():
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    raises(PrecisionExhausted, "a.evalf()")
+    raises(PrecisionExhausted, lambda: a.evalf())
     assert a.evalf(chop=True) == 3
     assert a.evalf(maxn=500) == 2
     assert b.evalf() == 3
@@ -184,24 +184,24 @@ def test_evalf_trig_zero_detection():
     assert abs(t) < 1e-100
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
-    raises(PrecisionExhausted, "a.evalf(strict=True)")
+    raises(PrecisionExhausted, lambda: a.evalf(strict=True))
 
 def test_evalf_divergent_series():
-    raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf()')
-    raises(ValueError, 'Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf()')
+    raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(n/(n**2+1), (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(n**2, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(2**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf())
+    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf())
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
-    raises(TypeError, "float(pi+x)")
+    raises(TypeError, lambda: float(pi+x))
 
 def test_evalf_power_subs_bugs():
     assert (x**2).evalf(subs={x:0}) == 0
@@ -214,7 +214,7 @@ def test_evalf_power_subs_bugs():
     assert (0**x).evalf(subs={x:0}) == 1
 
 def test_evalf_arguments():
-    raises(TypeError, 'pi.evalf(method="garbage")')
+    raises(TypeError, lambda: pi.evalf(method="garbage"))
 
 def test_implemented_function_evalf():
     from sympy.utilities.lambdify import implemented_function
@@ -302,10 +302,10 @@ def test_scaled_zero():
     a, b = (([1], 1, 100, 1), -1)
     assert scaled_zero(100, -1) == (a, b)
     assert scaled_zero(a) == (1, 1, 100, 1)
-    raises(ValueError, 'scaled_zero(scaled_zero(100))')
-    raises(ValueError, 'scaled_zero(100, 2)')
-    raises(ValueError, 'scaled_zero(100, 0)')
-    raises(ValueError, 'scaled_zero((1, 5, 1, 3))')
+    raises(ValueError, lambda: scaled_zero(scaled_zero(100)))
+    raises(ValueError, lambda: scaled_zero(100, 2))
+    raises(ValueError, lambda: scaled_zero(100, 0))
+    raises(ValueError, lambda: scaled_zero((1, 5, 1, 3)))
 
 def test_chop_value():
     for i in range(-27, 28):

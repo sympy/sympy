@@ -1,5 +1,4 @@
 from core import C
-from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
@@ -25,6 +24,8 @@ class Add(AssocOp):
 
         Applies associativity, all terms are commutable with respect to
         addition.
+
+        NB: the removal of 0 is already handled by AssocOp.__new__
 
         See also
         ========
@@ -127,7 +128,7 @@ class Add(AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
-                    seq.append(Pow(b, e))
+                    seq.append(b**e)
                     continue
                 c, s = S.One, o
 
@@ -222,11 +223,11 @@ class Add(AssocOp):
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
         # solution is not to sort things at all - but this needs some more
-        # fixing. NOTE: this is used in primitive, too, so if it changes
-        # here it should be changed there.
+        # fixing. NOTE: this is used in primitive and Mul.flattten, too, so if
+        # it changes here it should be changed there.
         newseq.sort(key=hash)
 
-        # current code expects coeff to be always in slot-0
+        # current code expects coeff to be first
         if coeff is not S.Zero:
             newseq.insert(0, coeff)
 
@@ -412,6 +413,7 @@ class Add(AssocOp):
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
 
@@ -608,7 +610,7 @@ class Add(AssocOp):
             lst = new_lst
         return tuple(lst)
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         """
         returns a tuple represeting a complex numbers
 
@@ -659,107 +661,6 @@ class Add(AssocOp):
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
-
-    def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        hit = False
-        sargs, terms = self.args, []
-        for term in sargs:
-            if term.is_Mul:
-                old = term
-                hints['mul'] = True
-                targs = [t._eval_expand_mul(deep=deep, **hints) for t in term.args]
-                hints['mul'] = False
-                term = Mul(*targs)
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-                hit = hit or newterm != old
-            else:
-                hints['mul'] = True
-                newterm = term._eval_expand_mul(deep=deep, **hints)
-            terms.append(newterm)
-        hints['mul'] = True
-        if not hit:
-            return self
-        return self.func(*terms)
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomial'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_complex'):
-                newterm = term._eval_expand_complex(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def __neg__(self):
         return Add(*[-t for t in self.args])
@@ -906,7 +807,7 @@ class Add(AssocOp):
                 for q in common_q:
                     g = reduce(igcd, [r[q] for r in rads], 0)
                     if g != 1:
-                        G.append(Pow(g, Rational(1, q)))
+                        G.append(g**Rational(1, q))
                 if G:
                     G = Mul(*G)
                     args = [ai/G for ai in args]
@@ -914,7 +815,10 @@ class Add(AssocOp):
 
         return con, prim
 
-from function import FunctionClass, expand_mul
+    @property
+    def _sorted_args(self):
+        from sympy.utilities.misc import default_sort_key
+        return sorted(self.args, key=lambda w: default_sort_key(w))
+
 from mul import Mul, _keep_coeff, prod
-from power import Pow
 from sympy.core.numbers import Rational

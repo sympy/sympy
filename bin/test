@@ -32,7 +32,7 @@ parser.add_option("--tb", dest="tb",
 parser.add_option("--random", action="store_false", dest="sort", default=True,
         help="Run tests in random order instead of sorting them")
 parser.add_option("--seed", dest="seed", type="int",
-        help="use this seed for randomised tests",
+        help="use this seed for randomized tests",
         metavar="SEED")
 parser.add_option('-t', '--types', dest='types', action='store',
         default=None, choices=['gmpy', 'python', 'sympy'],
@@ -40,9 +40,12 @@ parser.add_option('-t', '--types', dest='types', action='store',
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--timeout", action="store", dest="timeout",
-        default=False, help="Set a timeout for the all functions. By default there is no timeout.",type='int')
+        default=False, help="Set a timeout for the all functions, in seconds. By default there is no timeout.",type='int')
 parser.add_option("--slow", action="store_true", dest="slow",
         default=False, help="Run only the slow functions.")
+parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
+                  default=True, help="Don't run the tests in a separate "
+                  "subprocess.  This may prevent hash randomization from being enabled.")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -61,7 +64,8 @@ import sympy
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "force_colors": options.force_colors, "sort": options.sort, "seed":
-    options.seed, "slow": options.slow, "timeout": options.timeout})
+    options.seed, "slow": options.slow, "timeout": options.timeout,
+    'subprocess': options.subprocess})
 
 if ok:
     sys.exit(0)

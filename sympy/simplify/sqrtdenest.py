@@ -4,6 +4,7 @@ from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
 from sympy.core.function import count_ops
+from sympy.utilities import default_sort_key
 
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
@@ -151,7 +152,7 @@ def _sqrt_match(p):
     if p.is_Number:
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
-        pargs = list(p.args)
+        pargs = sorted(p.args, key=default_sort_key)
         if all((x**2).is_Rational for x in pargs):
             r, b, a = split_surds(p)
             res = a, b, r
@@ -221,7 +222,7 @@ def _sqrtdenest0(expr):
         n, d = expr.as_numer_denom()
         if d is S.One: # n is a square root
             if n.base.is_Add:
-                args = n.base.args
+                args = sorted(n.base.args, key=default_sort_key)
                 if len(args) > 2 and all((x**2).is_Integer for x in args):
                     try:
                         return _sqrtdenest_rec(n)

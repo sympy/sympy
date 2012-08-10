@@ -131,7 +131,7 @@ def test_sdp_pow():
 
     assert sdp_pow(f, 2, 2, grlex, ZZ) == g
 
-    raises(ValueError, "sdp_pow(f, -2, 2, grlex, ZZ)")
+    raises(ValueError, lambda: sdp_pow(f, -2, 2, grlex, ZZ))
 
 def test_sdp_monic():
     pass

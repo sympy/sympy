@@ -35,7 +35,7 @@ def test_integers_cache():
 
 def test_seterr():
     seterr(divide = True)
-    raises(ValueError,"S.Zero/S.Zero")
+    raises(ValueError, lambda: S.Zero/S.Zero)
     seterr(divide = False)
     assert S.Zero / S.Zero == S.NaN
 
@@ -85,8 +85,8 @@ def test_divmod():
     assert divmod(S(12), S(8)) == Tuple(1, 4)
     assert divmod(-S(12), S(8)) == Tuple(-2, 4)
     assert divmod(S(0), S(1)) == Tuple(0, 0)
-    raises(ZeroDivisionError, "divmod(S(0), S(0))")
-    raises(ZeroDivisionError, "divmod(S(1), S(0))")
+    raises(ZeroDivisionError, lambda: divmod(S(0), S(0)))
+    raises(ZeroDivisionError, lambda: divmod(S(1), S(0)))
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
 
@@ -204,7 +204,7 @@ def _test_rational_new(cls):
     assert _strictly_equal(i, cls(10.5))
     assert _strictly_equal(i, cls(i))
 
-    raises(TypeError, "cls(Symbol('x'))")
+    raises(TypeError, lambda: cls(Symbol('x')))
 
 def test_Integer_new():
     """
@@ -212,7 +212,7 @@ def test_Integer_new():
     """
     _test_rational_new(Integer)
 
-    raises(ValueError, 'Integer("10.5")')
+    raises(ValueError, lambda: Integer("10.5"))
     assert Integer(Rational('1.'+'9'*20)) == 1
 
 def test_Rational_new():
@@ -237,7 +237,7 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
-    raises(ValueError, "Rational('1/2 + 2/3')")
+    raises(ValueError, lambda: Rational('1/2 + 2/3'))
 
     # handle fractions.Fraction instances
     try:
@@ -261,8 +261,8 @@ def test_Number_new():
     assert Number('-622').__class__ is Integer
     assert Number('5/3').__class__ is Rational
     assert Number('5.3').__class__ is Float
-    raises(ValueError, "Number('cos')")
-    raises(TypeError, "Number(cos)")
+    raises(ValueError, lambda: Number('cos'))
+    raises(TypeError, lambda: Number(cos))
     a = Rational(3,5)
     assert Number(a) is a # Check idempotence on Numbers
 
@@ -350,7 +350,7 @@ def test_Float():
     assert Float(.125, 22) == .125
     assert Float(2.0, 22) == 2
     assert float(Float('.12500000000000001', '')) == .125
-    raises(ValueError, "Float(.12500000000000001, '')")
+    raises(ValueError, lambda: Float(.12500000000000001, ''))
 
     # allow spaces
     Float('123 456.123 456') == Float('123456.123456')
@@ -363,10 +363,10 @@ def test_Float():
     assert Float('.100', '') == Float(.1, 3)
     assert Float('2.0', '') == Float('2', 2)
 
-    raises(ValueError, 'Float("12.3d-4", "")')
-    raises(ValueError, 'Float(12.3, "")')
-    raises(ValueError, "Float('.')")
-    raises(ValueError, "Float('-.')")
+    raises(ValueError, lambda: Float("12.3d-4", ""))
+    raises(ValueError, lambda:Float(12.3, ""))
+    raises(ValueError, lambda:Float('.'))
+    raises(ValueError, lambda:Float('-.'))
     assert Float('-0') == Float('0.0')
     assert Float('.0') == Float('0.0')
     assert Float('-.0') == Float('-0.0')
@@ -807,13 +807,14 @@ def test_bug_sqrt():
 def test_pi_Pi():
     "Test, that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
-    raises(ImportError, "from sympy import Pi")
+    with raises(ImportError):
+        from sympy import Pi
 
 def test_no_len():
     # there should be no len for numbers
-    raises(TypeError, "len(Rational(2))")
-    raises(TypeError, "len(Rational(2,3))")
-    raises(TypeError, "len(Integer(2))")
+    raises(TypeError, lambda: len(Rational(2)))
+    raises(TypeError, lambda: len(Rational(2,3)))
+    raises(TypeError, lambda: len(Integer(2)))
 
 def test_issue222():
     assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
@@ -941,8 +942,8 @@ def test_Integer_methods():
     assert Integer(100).gcdex(Integer(2004)) == \
         (Integer(-20), Integer(1), Integer(4))
 
-    raises(ValueError, "Integer(3).half_gcdex(Rational(1,2))")
-    raises(ValueError, "Integer(3).gcdex(Rational(1,2))")
+    raises(ValueError, lambda: Integer(3).half_gcdex(Rational(1,2)))
+    raises(ValueError, lambda: Integer(3).gcdex(Rational(1,2)))
 
     assert Integer(3).invert(7) == Integer(5)
     assert Integer(3).invert(Integer(7)) == Integer(5)

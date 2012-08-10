@@ -28,7 +28,7 @@ def test_basic1():
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
     assert limit(y/x/log(x), x, 0) == -y*oo
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
-    raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - log(y), y, oo))
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
@@ -294,9 +294,12 @@ def test_extended_real_line():
     assert limit(oo - x, x, -oo) == oo
     assert limit(x**2/(x-5) - oo, x, oo) == -oo
     assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(oo/x, x, oo) == oo
+
+@XFAIL
+def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
-    assert limit(oo/x, x, oo) == oo
 
 @XFAIL
 def test_order_oo():
@@ -306,13 +309,21 @@ def test_order_oo():
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 def test_issue2337():
-    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
-    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
+    raises(NotImplementedError, lambda: limit(exp(x*y), x, oo))
+    raises(NotImplementedError, lambda: limit(exp(-x*y), x, oo))
 
 def test_Limit_dir():
-    raises(TypeError, "Limit(x, x, 0, dir=0)")
-    raises(ValueError, "Limit(x, x, 0, dir='0')")
+    raises(TypeError, lambda: Limit(x, x, 0, dir=0))
+    raises(ValueError, lambda: Limit(x, x, 0, dir='0'))
 
 def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+
+def test_issue_2641():
+    assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
+
+def test_issue_3267():
+    n = Symbol('n', integer=True, positive=True)
+    r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
+    assert limit(r, x, 1) == n/2

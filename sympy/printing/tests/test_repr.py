@@ -65,8 +65,8 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    for cls in [Matrix, ImmutableMatrix]:
-        name = cls.__name__
+    # Matrix is really MutableMatrix
+    for cls, name in [(Matrix, "Matrix"), (ImmutableMatrix, "ImmutableMatrix")]:
         sT(cls([[x**+1, 1], [y, x+y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
@@ -96,7 +96,7 @@ def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
 def test_settins():
-    raises(TypeError, 'srepr(x, method="garbage")')
+    raises(TypeError, lambda: srepr(x, method="garbage"))
 
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")

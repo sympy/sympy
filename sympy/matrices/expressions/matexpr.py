@@ -100,10 +100,10 @@ class MatrixExpr(Expr):
     def is_square(self):
         return self.rows == self.cols
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         raise NotImplementedError()
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         raise NotImplementedError()
 
     @property
@@ -125,13 +125,15 @@ class MatrixExpr(Expr):
 
     def __getitem__(self, key):
         if isinstance(key, tuple) and len(key)==2:
-            key = sympify(key)
-            i,j = key
+            i, j = key
+            if isinstance(i, slice) or isinstance(j, slice):
+                raise NotImplementedError("Slicing is not implemented")
+            i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
-                return self._entry(*key)
+                return self._entry(i, j)
             else:
-                raise IndexError("Invalid indices (%s, %s)"%(str(i), str(j)))
-        raise IndexError("Invalid index, wanted %s[i,j]"%str(self))
+                raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
         """
@@ -258,7 +260,13 @@ class Identity(MatrixSymbol):
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
-    def transpose(self):
+    def _eval_transpose(self):
+        return self
+
+    def _eval_trace(self):
+        return self.rows
+
+    def _eval_inverse(self):
         return self
 
     def _entry(self, i, j):
@@ -280,8 +288,12 @@ class ZeroMatrix(MatrixSymbol):
     is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
-    def transpose(self):
+
+    def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.Zero
 
     def _entry(self, i, j):
         return S.Zero

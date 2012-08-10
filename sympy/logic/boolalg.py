@@ -492,7 +492,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Implies(A, B))
     Or(B, Not(A))
     >>> eliminate_implications(Equivalent(A, B))
-    And(Or(B, Not(A)), Or(A, Not(B)))
+    And(Or(A, Not(B)), Or(B, Not(A)))
     """
     expr = sympify(expr)
     if expr.is_Atom:
@@ -554,4 +554,3 @@ def to_int_repr(clauses, symbols):
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
                                                             for c in clauses]
-

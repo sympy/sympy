@@ -84,5 +84,25 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff, MatMul(*matrices)
 
+    def _eval_transpose(self):
+        from transpose import Transpose
+        return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
+
+    def _eval_trace(self):
+        factor = Mul(*[arg for arg in self.args if not arg.is_Matrix])
+        matrix = MatMul(*[arg for arg in self.args if arg.is_Matrix])
+        if factor != 1:
+            from trace import Trace
+            return factor * Trace(matrix)
+        else:
+            raise NotImplementedError("Can't simplify any further")
+
+    def _eval_inverse(self):
+        from inverse import Inverse
+        try:
+            return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
+        except ShapeError:
+            raise NotImplementedError("Can not decompose this Inverse")
+
+
 from matadd import MatAdd
-from inverse import Inverse

@@ -1,8 +1,13 @@
-from sympy import log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im
+from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im,
+    Tuple, sin)
 
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
-from sympy.abc import x, y
+from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+    expand_func, expand_trig, expand_complex, expand_power_base,
+    expand_power_exp)
+
+from sympy.abc import x, y, z
 
 def test_expand_no_log():
     assert ((1+log(x**4))**2).expand(log=False) == 1 + 2*log(x**4) + log(x**4)**2
@@ -32,7 +37,8 @@ def test_expand_non_commutative():
                                      x**3 + y**3 + x*y*x + y*x*y)
     # 3120
     assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2*A**(-1)
-    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*A*B**2*A**(-1)
+    # Note that (a*A*B*A**-1)**2 is automatically converted to a**2*(A*B*A**-1)**2
+    assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*(A*B*A**-1)**2
     assert ((a*A*B*A**-1)**2).expand(force=True) == a**2*A*B**2*A**(-1)
     assert ((a*A*B)**2).expand() == a**2*A*B*A*B
     assert ((a*A)**2).expand() == a**2*A**2
@@ -62,11 +68,12 @@ def test_expand_modulus():
     assert ((x + sqrt(2)*y)**11).expand(modulus=11) == x**11 + 10*sqrt(2)*y**11
     assert (x + y/2).expand(modulus=1) == y/2
 
-    raises(ValueError, "((x + y)**11).expand(modulus=0)")
-    raises(ValueError, "((x + y)**11).expand(modulus=x)")
+    raises(ValueError, lambda: ((x + y)**11).expand(modulus=0))
+    raises(ValueError, lambda: ((x + y)**11).expand(modulus=x))
 
 def test_issue_2644():
     assert (x*sqrt(x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
+    assert (x*sqrt(x + y)*(1 + x*sqrt(x + y))).expand() == x**3 + x**2*y + x*sqrt(x + y)
 
 def test_expand_frac():
     assert expand((x + y)*y/x/(x + 1), frac=True) == \
@@ -98,3 +105,24 @@ def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     r, e = cse((eq).expand(complex=True))
     assert abs((eq - e[0].subs(reversed(r))).subs(x, 1 + 3*I)) < 1e-9
+
+def test_expand_power_base():
+    # was test_separate()
+
+    assert expand_power_base((x*y*z)**4) == x**4*y**4*z**4
+    assert expand_power_base((x*y*z)**x).is_Pow
+    assert expand_power_base((x*y*z)**x, force=True) == x**x*y**x*z**x
+    assert expand_power_base((x*(y*z)**2)**3) == x**3*y**6*z**6
+
+    assert expand_power_base((sin((x*y)**2)*y)**z).is_Pow
+    assert expand_power_base((sin((x*y)**2)*y)**z, force=True) == sin((x*y)**2)**z*y**z
+    assert expand_power_base((sin((x*y)**2)*y)**z, deep=True) == (sin(x**2*y**2)*y)**z
+
+    assert expand_power_base(exp(x)**2) == exp(2*x)
+    assert expand_power_base((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
+
+    assert expand_power_base((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
+    assert expand_power_base((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
+
+    assert expand_power_base((exp(x)*exp(y))**z).is_Pow
+    assert expand_power_base((exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z

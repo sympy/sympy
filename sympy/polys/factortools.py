@@ -73,7 +73,6 @@ from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets, cythonized
 
 from math import ceil as _ceil, log as _log
-from random import randint
 
 @cythonized("k")
 def dup_trial_division(f, factors, K):
@@ -855,27 +854,28 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K, mod=None):
+def dmp_zz_wang(f, u, K, mod=None, seed=None):
     """
     Factor primitive square-free polynomials in `Z[X]`.
 
-    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which
-    is primitive and square-free in `x_1`, computes factorization
-    of `f` into irreducibles over integers.
+    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
+    primitive and square-free in `x_1`, computes factorization of `f` into
+    irreducibles over integers.
 
     The procedure is based on Wang's Enhanced Extended Zassenhaus
-    algorithm. The algorithm works by viewing `f` as a univariate
-    polynomial in `Z[x_2,...,x_n][x_1]`, for which an evaluation
-    mapping is computed::
+    algorithm. The algorithm works by viewing `f` as a univariate polynomial
+    in `Z[x_2,...,x_n][x_1]`, for which an evaluation mapping is computed::
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.
-    The mapping is used to transform `f` into a univariate polynomial
-    in `Z[x_1]`, which can be factored efficiently using Zassenhaus
-    algorithm. The last step is to lift univariate factors to obtain
-    true multivariate factors. For this purpose a parallel Hensel
-    lifting procedure is used.
+    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
+    which can be factored efficiently using Zassenhaus algorithm. The last
+    step is to lift univariate factors to obtain true multivariate
+    factors. For this purpose a parallel Hensel lifting procedure is used.
+
+    The parameter ``seed`` is passed to _randint and can be used to seed randint
+    (when an integer) or (for testing purposes) can be a sequence of numbers.
 
     References
     ==========
@@ -884,6 +884,10 @@ def dmp_zz_wang(f, u, K, mod=None):
     2. [Geddes92]_
 
     """
+    from sympy.utilities.randtest import _randint
+
+    randint = _randint(seed)
+
     ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
 
     b = dmp_zz_mignotte_bound(f, u, K)
@@ -967,13 +971,14 @@ def dmp_zz_wang(f, u, K, mod=None):
         i += 1
 
     _, cs, E, H, A = configs[s_arg]
+    orig_f = f
 
     try:
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors: # pragma: no cover
         if query('EEZ_RESTART_IF_NEEDED'):
-            return dmp_zz_wang(f, u, K, mod+1)
+            return dmp_zz_wang(orig_f, u, K, mod+1)
         else:
             raise ExtraneousFactors("we need to restart algorithm with better parameters")
 

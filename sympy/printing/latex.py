@@ -2,11 +2,12 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
+from sympy.core.sympify import SympifyError
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -376,6 +377,14 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
 
+    def _print_Subs(self, subs):
+        expr, old, new = subs.args
+        latex_expr = self._print(expr)
+        latex_old = (self._print(e) for e in old)
+        latex_new = (self._print(e) for e in new)
+        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
+
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
@@ -498,11 +507,13 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Min(self, expr, exp=None):
-        texargs = [r"%s" % self._print(symbol) for symbol in expr.args]
+        args = sorted(expr.args, key=default_sort_key)
+        texargs = [r"%s" % self._print(symbol) for symbol in args]
         return r"\min\left(%s\right)" % ", ".join(texargs)
 
     def _print_Max(self, expr, exp=None):
-        texargs = [r"%s" % self._print(symbol) for symbol in expr.args]
+        args = sorted(expr.args, key=default_sort_key)
+        texargs = [r"%s" % self._print(symbol) for symbol in args]
         return r"\max\left(%s\right)" % ", ".join(texargs)
 
     def _print_floor(self, expr, exp=None):
@@ -733,9 +744,25 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
+
     def _print_hyper(self, expr, exp=None):
-        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
-              r"\right| {%s} \right)}" % \
+        tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
@@ -745,8 +772,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_meijerg(self, expr, exp=None):
-        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
-              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+        tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
              (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
@@ -974,7 +1001,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        return r" \times ".join(self._print(set) for set in p.sets)
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        else:
+            return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
@@ -987,7 +1017,8 @@ class LatexPrinter(Printer):
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_FiniteSet(self, s):
-        return self._print_set(s.args)
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_set(items)
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
@@ -995,6 +1026,17 @@ class LatexPrinter(Printer):
         return r"\left\{%s\right\}" % items
 
     _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), '\ldots', s._last_element
+        else:
+            printset = tuple(s)
+
+        return (r"\left\{"
+              + r", ".join(self._print(el) for el in printset)
+              + r"\right\}")
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1029,6 +1071,9 @@ class LatexPrinter(Printer):
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
+    def _print_Reals(self, i):
+        return r"\mathbb{R}"
+
     def _print_TransformationSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}"%(
                 self._print(s.lamda.expr),
@@ -1050,10 +1095,13 @@ class LatexPrinter(Printer):
     def _print_ComplexDomain(self, expr):
         return r"\mathbb{C}"
 
-    def _print_PolynomialRing(self, expr):
+    def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.dom)
         gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left\[%s\right\]" % (domain, gens)
+        inv = ""
+        if not expr.is_Poly:
+            inv = r"S_<^{-1}"
+        return r"%s%s\left[%s\right]" % (inv, domain, gens)
 
     def _print_FractionField(self, expr):
         domain = self._print(expr.dom)
@@ -1131,6 +1179,123 @@ class LatexPrinter(Printer):
 
     def _print_InverseCosineTransform(self, expr):
         return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
+
+    def _print_Object(self, object):
+        return self._print(Symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        return "%s\\rightarrow %s" % (domain, codomain)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(Symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return "%s:%s" % (pretty_name, pretty_morphism)
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(NamedMorphism(
+            morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [self._print(Symbol(component.name)) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = "\\circ ".join(component_names_list) + ":"
+
+        pretty_morphism = self._print_Morphism(morphism)
+        return component_names + pretty_morphism
+
+    def _print_Category(self, morphism):
+        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        latex_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            latex_result += "\\Longrightarrow %s" % \
+                            self._print(diagram.conclusions)
+
+        return latex_result
+
+    def _print_DiagramGrid(self, grid):
+        latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                if grid[i, j]:
+                    latex_result += latex(grid[i, j])
+                latex_result += " "
+                if j != grid.width - 1:
+                    latex_result += "& "
+
+            if i != grid.height - 1:
+                latex_result += "\\\\"
+            latex_result += "\n"
+
+        latex_result += "\\end{array}\n"
+        return latex_result
+
+    def _print_FreeModule(self, M):
+        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return r"\left[ %s \right]" % ",".join(
+                '{' + self._print(x) + '}' for x in m)
+
+    def _print_SubModule(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for x in m.gens)
+
+    def _print_ModuleImplementedIdeal(self, m):
+        return r"\left< %s \right>" % ",".join(
+                '{' + self._print(x) + '}' for [x] in m._module.gens)
+
+    def _print_QuotientRing(self, R):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))
+
+    def _print_QuotientRingElement(self, x):
+        return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
+
+    def _print_QuotientModuleElement(self, m):
+        return r"{%s} + {%s}" % (self._print(m.data),
+                                 self._print(m.module.killed_module))
+
+    def _print_QuotientModule(self, M):
+        # TODO nicer fractions for few generators...
+        return r"\frac{%s}{%s}" % (self._print(M.base),
+                                   self._print(M.killed_module))
+
+    def _print_MatrixHomomorphism(self, h):
+        return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
+            self._print(h.domain), self._print(h.codomain))
+
+    def _print_Tr(self, p):
+        #Todo: Handle indices
+        contents = self._print(p.args[0])
+        return r'\mbox{Tr}\left(%s\right)' % (contents)
 
 
 def latex(expr, **settings):

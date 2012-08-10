@@ -2,9 +2,10 @@ from matexpr import MatrixExpr, ZeroMatrix, Identity
 from matmul import MatMul
 from matadd import MatAdd
 from transpose import Transpose
+from trace import Trace
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
-from sympy import Tuple, Basic, sympify, FiniteSet
+from sympy import Tuple, Basic, sympify, FiniteSet, Add
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
@@ -58,6 +59,7 @@ class BlockMatrix(MatrixExpr):
     @property
     def blocks(self):
         return self.mat
+
     @property
     def rowblocksizes(self):
         return [self.blocks[i,0].rows for i in range(self.blockshape[0])]
@@ -85,7 +87,7 @@ class BlockMatrix(MatrixExpr):
 
         return MatrixExpr.__add__(self, other)
 
-    def eval_transpose(self):
+    def _eval_transpose(self):
         # Flip all the individual matrices
         matrices = [Transpose(matrix) for matrix in self.mat.mat]
         # Make a copy
@@ -94,10 +96,16 @@ class BlockMatrix(MatrixExpr):
         mat = mat.transpose()
         return BlockMatrix(mat)
 
+    def _eval_trace(self):
+        if self.rowblocksizes == self.colblocksizes:
+            return Add(*[Trace(self.mat[i,i])
+                        for i in range(self.blockshape[0])])
+        raise NotImplementedError("Can't perform trace of irregular blockshape")
+
     #def transpose(self):
     #    return self.eval_transpose()
 
-    def eval_inverse(self, expand=False):
+    def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
         if self.blockshape==(1,1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
@@ -184,7 +192,7 @@ class BlockDiagMatrix(BlockMatrix):
     def diag(self):
         return self.args[2]
 
-    def eval_inverse(self):
+    def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
 
     def _blockmul(self, other):
@@ -310,6 +318,3 @@ def block_collapse(expr):
         for i in range(1, expr.exp):
             rv = rv._blockmul(expr.base)
         return rv
-
-
-
