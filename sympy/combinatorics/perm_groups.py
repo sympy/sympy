@@ -1703,88 +1703,54 @@ class PermutationGroup(Basic):
             self._union_find_rep(i, parents)
         return parents
 
-    def normal_closure(self, gens):
-        """
-        normal closure in self of a list gens2 of permutations
+    def normal_closure(self, other, k=10):
+        if hasattr(other, 'generators'): 
+            degree = self.degree
+            identity = _new_from_array_form(range(degree))
 
-        Examples
-        ========
+            if other.generators == [identity for gen in other.generators]:
+                return other
+            Z = PermutationGroup(other.generators[:])
+            base, strong_gens = Z.schreier_sims_incremental()
+            strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+            basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base,\
+            strong_gens_distr)
+            C = False
+            self._random_pr_init(r=10, n=20)
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1, 2, 0])
-        >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a, b])
-        >>> G.order()
-        6
-        >>> G1 = G.normal_closure([a])
-        >>> list(G1.generate(af=True))
-        [[0, 1, 2], [1, 2, 0], [2, 0, 1]]
-
-        """
-        G2 = PermutationGroup(gens)
-        if G2.is_normal(self):
-            return G2
-        gens1 = [p.array_form for p in self.generators]
-        b = 0
-        while not b:
-            gens2 = [p.array_form for p in G2.generators]
-            b = 1
-            for g1 in gens1:
-                if not b:
-                    break
-                for g2 in gens2:
-                    p = perm_af_muln(g1, g2, perm_af_invert(g1))
-                    p = Permutation(p)
-                    if not G2.has_element(p):
-                        gens2 = G2.generators + [p]
-                        G2 = PermutationGroup(gens2)
-                        b = 0
-                        break
-
-        return G2
-
-    def normal_closure1(self, other, k=10):
-        degree = self.degree
-        identity = _new_from_array_form(range(degree))
-
-        Z = PermutationGroup(other.generators[:])
-        base, strong_gens = Z.schreier_sims_incremental()
-        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base,\
-        strong_gens_distr)
-        C = False
-        self._random_pr_init(r=10, n=20)
-
-        while C == False:
-            print Z.generators
-            Z._random_pr_init(r=10, n=10)
-            for i in range(k):
-                g = self.random_pr()
-                h = Z.random_pr()
-                conj = (~g)*h*g
-                res = _strip(conj, base, basic_orbits, basic_transversals)
-                if res[0] != identity or res[1] != len(base) + 1:
-                    gens = Z.generators
-                    gens.append(conj)
-                    Z = PermutationGroup(gens)
-                    temp_base, temp_strong_gens = Z.schreier_sims_incremental(base, strong_gens)
-                    base, strong_gens = temp_base, temp_strong_gens
-                    strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-                    basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base, strong_gens_distr)
-            C = True
-            break_flag = False
-            for g in self.generators:
-                for h in Z.generators:
+            while C == False:
+                Z._random_pr_init(r=10, n=10)
+                for i in range(k):
+                    g = self.random_pr()
+                    h = Z.random_pr()
                     conj = (~g)*h*g
                     res = _strip(conj, base, basic_orbits, basic_transversals)
                     if res[0] != identity or res[1] != len(base) + 1:
-                        C = False
-                        break_flag = True
+                        gens = Z.generators
+                        gens.append(conj)
+                        Z = PermutationGroup(gens)
+                        strong_gens.append(conj)
+                        temp_base, temp_strong_gens = Z.schreier_sims_incremental(base, strong_gens)
+                        base, strong_gens = temp_base, temp_strong_gens
+                        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+                        basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base, strong_gens_distr)
+                C = True
+                break_flag = False
+                for g in self.generators:
+                    for h in Z.generators:
+                        conj = (~g)*h*g
+                        res = _strip(conj, base, basic_orbits, basic_transversals)
+                        if res[0] != identity or res[1] != len(base) + 1:
+                            C = False
+                            break_flag = True
+                            break
+                    if break_flag == True:
                         break
-                if break_flag == True:
-                    break
-        return Z
+            return Z
+        elif hasattr(other, '__getitem__'):
+            return self.normal_closure(PermutationGroup(other))
+        elif hasattr(other, 'array_form'):
+            return self.normal_closure(PermutationGroup([other]))
 
     def orbit(self, alpha, action='tuples'):
         r"""
