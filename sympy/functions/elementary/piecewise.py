@@ -1,7 +1,8 @@
 from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
-from sympy.logic.boolalg import And, Boolean
 from sympy.core.symbol import Dummy
+from sympy.logic.boolalg import And, Boolean, Or
+from sympy.utilities.misc import default_sort_key
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
@@ -113,7 +114,6 @@ class Piecewise(Function):
 
     @classmethod
     def eval(cls, *args):
-        from sympy import Or
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
@@ -243,8 +243,8 @@ class Piecewise(Function):
                     newargs.append((e, c))
                 else:
                     for i in range(len(values)):
-                        newargs.append((values[i],
-                            intervals[i][0] <= rep and rep <= intervals[i][1]))
+                        newargs.append((values[i], (c is True and i == len(values) - 1) or
+                            And(rep >= intervals[i][0], rep <= intervals[i][1])))
             return Piecewise(*newargs)
 
         # Determine what intervals the expr,cond pairs affect.
@@ -272,7 +272,18 @@ class Piecewise(Function):
         this condition."""
         default = None
         int_expr = []
+        expr_cond = []
+        or_cond = False
+        or_intervals = []
         for expr, cond in self.args:
+            if isinstance(cond, Or):
+                for cond2 in sorted(cond.args, key=default_sort_key):
+                    expr_cond.append((expr, cond2))
+            else:
+                expr_cond.append((expr, cond))
+            if cond is True:
+                break
+        for expr, cond in expr_cond:
             if cond is True:
                 default = expr
                 break
@@ -313,6 +324,13 @@ class Piecewise(Function):
                 int_expr.append((lower, upper, expr))
             if cond is targetcond:
                 return [(lower, upper)]
+            elif isinstance(targetcond, Or) and cond in targetcond.args:
+                or_cond = Or(or_cond, cond)
+                or_intervals.append((lower, upper))
+                if or_cond == targetcond:
+                    or_intervals.sort(key=lambda x:x[0])
+                    return or_intervals
+
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
