@@ -95,13 +95,11 @@ class Dyadic(object):
             for i, v in enumerate(self.args):
                 for i2, v2 in enumerate(other.args):
                     ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
-        elif isinstance(other, Vector):
+        else:
             other = _check_vector(other)
             ol = Vector([])
             for i, v in enumerate(self.args):
                 ol += v[0] * v[1] * (v[2] & other)
-        else:
-            raise TypeError('Need to supply a Vector or Dyadic')
         return ol
 
     def __div__(self, other):
