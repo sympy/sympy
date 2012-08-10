@@ -39,3 +39,14 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     equals = MatrixBase.equals
     is_Identity = MatrixBase.is_Identity
     _eval_transpose = MatrixBase._eval_transpose
+
+    __add__ = MatrixBase.__add__
+    __radd__ = MatrixBase.__radd__
+    __mul__ = MatrixBase.__mul__
+    __rmul__ = MatrixBase.__rmul__
+    __pow__ = MatrixBase.__pow__
+    __sub__ = MatrixBase.__sub__
+    __rsub__ = MatrixBase.__rsub__
+    __neg__ = MatrixBase.__neg__
+    __div__ = MatrixBase.__div__
+    __truediv__ = MatrixBase.__truediv__
