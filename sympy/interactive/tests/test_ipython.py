@@ -1,8 +1,9 @@
 """Tests of tools for setting up interactive IPython sessions. """
 
-from sympy.interactive.session import init_ipython_session, enable_automatic_symbols
+from sympy.interactive.session import (init_ipython_session,
+    enable_automatic_symbols, enable_automatic_int_sympification)
 
-from sympy.core import Symbol
+from sympy.core import Symbol, Rational, Integer
 from sympy.external import import_module
 from sympy.utilities.pytest import raises
 
@@ -31,3 +32,31 @@ def test_automatic_symbols():
     app.run_cell(symbol, False)
     assert symbol in app.user_ns
     assert isinstance(app.user_ns[symbol], Symbol)
+
+    # Check that built-in names aren't overridden
+    app.run_cell("a = all == __builtin__.all", False)
+    assert "all" not in app.user_ns
+    assert app.user_ns['a'] == True
+
+    # Check that sympy names aren't overridden
+    app.run_cell("import sympy")
+    app.run_cell("a = factorial == sympy.factorial")
+    assert app.user_ns['a'] == True
+
+def test_int_to_Integer():
+    # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!
+    app = init_ipython_session()
+    app.run_cell("a = 1")
+    assert isinstance(app.user_ns['a'], int)
+
+    enable_automatic_int_sympification(app)
+    app.run_cell("a = 1/2")
+    assert isinstance(app.user_ns['a'], Rational)
+    app.run_cell("a = 1")
+    assert isinstance(app.user_ns['a'], Integer)
+    app.run_cell("a = int(1)")
+    assert isinstance(app.user_ns['a'], int)
+    app.run_cell("a = (1/\n2)")
+    assert app.user_ns['a'] == Rational(1, 2)
+    # TODO: How can we test that the output of a SyntaxError is the original
+    # input, not the transformed input?
