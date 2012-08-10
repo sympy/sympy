@@ -45,7 +45,7 @@ class LagrangesMethod(object):
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Point
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle
-        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -64,7 +64,7 @@ class LagrangesMethod(object):
     the Vectors represent the nonconservative force or torque.
 
         >>> Pa = Particle('Pa', P, m)
-        >>> T = m * P.vel(N) & P.vel(N) / 2.0
+        >>> T = kinetic_energy(N, Pa)
         >>> V = k * q**2 / 2.0
         >>> L = T - V
         >>> fl = [(P, -b * qd * N.x)]
@@ -79,13 +79,13 @@ class LagrangesMethod(object):
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
         >>> print l.form_lagranges_equations()
-        [b*Derivative(q(t), t) + 1.0*k*q(t) + 1.0*m*Derivative(q(t), t, t)]
+        [b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]
 
     We can also solve for the states using the 'rhs' method.
 
-        >>> print l.rhs("GE")
-        [                        Derivative(q(t), t)]
-        [1.0*(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]
+        >>> print l.rhs()
+        [                    Derivative(q(t), t)]
+        [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]
 
     Please refer to the docstrings for any more details on each method.
 
@@ -101,8 +101,8 @@ class LagrangesMethod(object):
 
         coneqs : list
             A list of the holonomic and non-holonomic constraint equations.
-            NOTE- The holonomic constraints must be differentiated and then
-            included in the list of coneqs.
+            VERY IMPORTANT NOTE- The holonomic constraints must be
+            differentiated with respect to time and then included in coneqs.
 
         forcelist : list
             Takes a list of (Point, Vector) or (ReferenceFrame, Vector) tuples
@@ -315,7 +315,7 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def rhs(self, method):
+    def rhs(self, method = "GE"):
         """ Returns equations that can be solved numerically
 
         Parameters
@@ -329,4 +329,5 @@ class LagrangesMethod(object):
 
         # TODO- should probably use the matinvmul method from Kane
 
-        return (self.mass_matrix_full).inv(method) * self.forcing_full
+        return ((self.mass_matrix_full).inv(method, try_block_diag = True) *
+                self.forcing_full)
