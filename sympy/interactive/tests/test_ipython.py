@@ -33,6 +33,8 @@ def test_automatic_symbols():
     assert symbol not in app.user_ns
     app.run_cell("a = type(%s)" % symbol, True)
     assert app.user_ns['a'] == Symbol
+    app.run_cell("%s = Symbol('%s')" % (symbol, symbol), True)
+    assert symbol in app.user_ns
 
     # Check that built-in names aren't overridden
     app.run_cell("a = all == __builtin__.all", True)
