@@ -67,9 +67,3 @@ def test_trigintegrate_mixed():
     assert trigintegrate(cos(x)*cot(x), x)  == log(cos(x) - 1)/2  \
                                                 - log(cos(x) + 1)/2 \
                                                   + cos(x)
-
-
-
-
-
-
