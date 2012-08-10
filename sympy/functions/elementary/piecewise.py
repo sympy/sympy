@@ -143,11 +143,13 @@ class Piecewise(Function):
             cond_eval = cls.__eval_cond(cond)
             if cond_eval is None:
                 all_conds_evaled = False
-                non_false_ecpairs.append( (expr, cond) )
             elif cond_eval:
                 if all_conds_evaled:
                     return expr
-                non_false_ecpairs.append( (expr, cond) )
+            if len(non_false_ecpairs) != 0 and non_false_ecpairs[-1].expr == expr:
+                non_false_ecpairs[-1] = ExprCondPair(expr, Or(cond, non_false_ecpairs[-1].cond))
+            else:
+                non_false_ecpairs.append( ExprCondPair(expr, cond) )
         if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
