@@ -1,6 +1,7 @@
 from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
                    log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
-                   Rational, Basic, Function, I, conjugate, re, im)
+                   Rational, Basic, Function, I, conjugate, re, im, And, Or,
+                   Max, Min)
 from sympy.utilities.pytest import XFAIL, raises
 
 x,y = symbols('x,y')
@@ -70,7 +71,7 @@ def test_piecewise():
     peval_interval = f1.subs(x,0) - f1.subs(x,-1) + f2.subs(x,1) - f2.subs(x,0)
     assert peval._eval_interval(x, 0, 0) == 0
     assert peval._eval_interval(x, -1, 1) == peval_interval
-    peval2 = Piecewise((f1, x<0), (f2, True))
+    peval2 = Piecewise((f1, x < 0), (f2, True))
     assert peval2._eval_interval(x, 0, 0) == 0
     assert peval2._eval_interval(x, 1, -1) == -peval_interval
     assert peval2._eval_interval(x, -1, -2) == f1.subs(x, -2) - f1.subs(x, -1)
@@ -154,6 +155,54 @@ def test_piecewise_integrate():
         (y**2/2 - y + 0.5, Interval(0, 1).contains(y)),
         (-y**2/2 - y + 0.5, Interval(-1, 0).contains(y)),
         (1, y <= -1), (0, True))
+
+    g = Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0), (1 + x, True))
+    assert integrate(g, (x, -5, 1)) == 1
+    assert integrate(g, (x, -5, y)).subs(y, 1) == 1
+    assert integrate(g, (x, y, 1)).subs(y, -5) == 1
+    assert integrate(g, (x, 1, -5)) == -1
+    assert integrate(g, (x, 1, y)).subs(y, -5) == -1
+    assert integrate(g, (x, y, -5)).subs(y, 1) == -1
+    assert integrate(g, (x, -5, y)) == Piecewise((0, y <= -1), (1, y >= 1),
+        (-y**2/2 + y + 0.5, y > 0), (y**2/2 + y + 0.5, True))
+    assert integrate(g, (x, y, 1)) == Piecewise((1, y <= -1), (0, y >= 1),
+        (y**2/2 - y + 0.5, y > 0), (-y**2/2 - y + 0.5, True))
+
+def test_piecewise_integrate_symbolic_conditions():
+    from sympy.abc import a, b, x, y
+    p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
+    p1 = Piecewise((0, x < a), (0, x > b), (1, True))
+    p2 = Piecewise((0, x > b), (0, x < a), (1, True))
+    p3 = Piecewise((0, x < a), (1, x < b), (0, True))
+    p4 = Piecewise((0, x > b), (1, x > a), (0, True))
+    p5 = Piecewise((1, And(a < x, x < b)), (0, True))
+    assert integrate(p0, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p1, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p2, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p3, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p4, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p5, (x, -oo, y)) == Min(b, y) - Min(a, b, y)
+    assert integrate(p0, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+    assert integrate(p1, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+    assert integrate(p2, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+    assert integrate(p3, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+    assert integrate(p4, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+    assert integrate(p5, (x, y, oo)) == Max(a, b, y) - Max(a, y)
+
+    assert integrate(p0, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
+    assert integrate(p1, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
+    assert integrate(p2, x) == Piecewise((0, Or(x < a, x > b)), (x, True))
+
+    p1 = Piecewise((0, x < a), (0.5, x > b), (1, True))
+    p2 = Piecewise((0.5, x > b), (0, x < a), (1, True))
+    p3 = Piecewise((0, x < a), (1, x < b), (0.5, True))
+    p4 = Piecewise((0.5, x > b), (1, x > a), (0, True))
+    p5 = Piecewise((1, And(a < x, x < b)), (0.5, x > b), (0, True))
+    assert integrate(p1, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
+    assert integrate(p2, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
+    assert integrate(p3, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
+    assert integrate(p4, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
+    assert integrate(p5, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -257,20 +306,20 @@ def test_piecewise_series():
     assert p1.nseries(x,n=2) == p2
 
 def test_piecewise_as_leading_term():
-    p1 = Piecewise((1/x, x>1), (0, True))
-    p2 = Piecewise((x, x>1), (0, True))
-    p3 = Piecewise((1/x, x>1), (x, True))
-    p4 = Piecewise((x, x>1), (1/x, True))
-    assert p1.as_leading_term(x) == 0
-    assert p2.as_leading_term(x) == 0
+    p1 = Piecewise((1/x, x > 1), (x, True))
+    p2 = Piecewise((1/x, x < 1), (x, True))
+    p3 = Piecewise((x, x < 1), (1/x, True))
+    p4 = Piecewise((x, x > 1), (1/x, True))
+    assert p1.as_leading_term(x) == x
+    assert p2.as_leading_term(x) == 1/x
     assert p3.as_leading_term(x) == x
     assert p4.as_leading_term(x) == 1/x
 
 def test_piecewise_complex():
-    p1 = Piecewise((2, x<0), (1, 0 <= x))
-    p2 = Piecewise((2*I, x<0), (I, 0 <= x))
-    p3 = Piecewise((I*x, x>1), (1+I, True))
-    p4 = Piecewise((-I*conjugate(x), x>1), (1-I, True))
+    p1 = Piecewise((2, x < 0), (1, 0 <= x))
+    p2 = Piecewise((2*I, x < 0), (I, 0 <= x))
+    p3 = Piecewise((I*x, x > 1), (1 + I, True))
+    p4 = Piecewise((-I*conjugate(x), x > 1), (1 - I, True))
 
     assert conjugate(p1) == p1
     assert conjugate(p2) == piecewise_fold(-p2)
