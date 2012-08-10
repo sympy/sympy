@@ -27,25 +27,3 @@ def finite_diff(expression, variable, increment = 1):
     expression2 = expression.subs(variable, variable + increment)
     expression2 = expression2.expand()
     return expression2 - expression
-
-def dominant_term(expr, n):
-     """
-     Takes as input a polynomial expression along with it's variable and
-     returns the dominant terms of the expression
-
-     Examples
-     =========
-     >>> from sympy.abc import n, x, z
-     >>> from sympy.series.kauers import dominant_term
-     >>> dominant_term(3*n**2 + 4*n + 8, n)
-     n**2
-     >>> dominant_term(4*x**5 + 6*x**3 + 2*x**2 + 5, x)
-     x**5
-     >>> dominant_term(z**3 + 3*z**2 +4*z + 8, z)
-     z**3
-     """
-     counter = 1
-     while (expr != 0):
-         expr = diff(expr, n)
-         counter = counter + 1
-     return n**(counter - 2)
