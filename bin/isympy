@@ -34,9 +34,9 @@ COMMAND LINE OPTIONS
 
 -p PRETTY, --pretty PRETTY
 
-    Setup pretty printing in SymPy. By default the most pretty, Unicode
-    printing is enabled (if the terminal supports it). You can use less pretty
-    ASCII printing instead or no pretty printing at all, e.g.:
+    Setup pretty printing in SymPy. By default, the most pretty, Unicode
+    printing, is enabled (if the terminal supports it). You can use less
+    pretty ASCII printing instead or no pretty printing at all:
 
         $isympy -p no
 
@@ -45,8 +45,8 @@ COMMAND LINE OPTIONS
 -t TYPES, --types=TYPES
 
     Setup the ground types for the polys.  By default, gmpy ground types are
-    used if gmpy is installed, otherwise it falls back to python ground types,
-    which are a little bit slower.  You can manually choose python ground
+    used if gmpy is installed, otherwise it falls back to Python ground types,
+    which are a little bit slower.  You can manually choose Python ground
     types even if gmpy is installed (e.g., for testing purposes), e.g.:
 
         $isympy -t python
@@ -110,7 +110,7 @@ COMMAND LINE OPTIONS
     usage. In a script that uses SymPy, Symbols should be instantiated at the
     top, so that it's clear what they are.
 
-    This will not override any names that are already defined, which includes
+    This will not override any names that are already defined, which include
     the single character letters represented by the mnemonic QCOSINE (see the
     "Gotchas and Pitfalls" document in the documentation). You can delete
     existing names by executing ``del name``.  You can see if a name is
@@ -139,11 +139,11 @@ COMMAND LINE OPTIONS
 
 -- IPython options
 
-    Additionally you can pass command line options directly to the IPython
-    interpreter (the standard Python shell is not supported).  However you
-    need to add '--' separator between two types of options.  To run SymPy
-    without startup banner and colors, for example, issue in IPython 0.11 or
-    higher:
+    Additionally, you can pass command line options directly to the IPython
+    interpreter (the standard Python shell is not supported).  However, you
+    need to add a '--' separator between two types of options.  To run SymPy
+    without startup banner and colors, for example, in IPython 0.11 or higher,
+    you can issue:
 
         $isympy -q -- --colors=NoColor
 
@@ -152,6 +152,7 @@ COMMAND LINE OPTIONS
         $isympy -q -- -colors NoColor
 
 See also isympy --help.
+
 """
 
 import os, sys, warnings
