@@ -1282,6 +1282,11 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
+def test_sympy__matrices__expressions__trace__Trace():
+    from sympy.matrices.expressions.trace import Trace
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Trace(MatrixSymbol('A', 3, 3)))
+
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
     from sympy import Lambda, symbols
