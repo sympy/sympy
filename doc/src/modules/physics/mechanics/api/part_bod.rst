@@ -28,13 +28,13 @@ inertia_of_point_mass
 .. autofunction:: sympy.physics.mechanics.functions.inertia_of_point_mass
 
 
-linearmomentum
-==============
-
-.. autofunction:: sympy.physics.mechanics.functions.linearmomentum
-
-
-angularmomentum
+linear_momentum
 ===============
 
-.. autofunction:: sympy.physics.mechanics.functions.angularmomentum
+.. autofunction:: sympy.physics.mechanics.functions.linear_momentum
+
+
+angular_momentum
+================
+
+.. autofunction:: sympy.physics.mechanics.functions.angular_momentum

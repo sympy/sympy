@@ -4,8 +4,9 @@ from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
                                      kinematic_equations, Vector,
                                      inertia_of_point_mass, partial_velocity,
                                      outer, Particle,
-                                     Point, RigidBody, angularmomentum,
-                                     linearmomentum)
+                                     RigidBody, angular_momentum,
+                                     linear_momentum, kinetic_energy,
+                                     potential_energy)
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -304,7 +305,7 @@ def test_partial_velocity():
             [r*L.x, 0, L.y], [0, 0, L.z], [L.x, L.x, 0],
                 [cos(q2)*L.y - sin(q2)*L.z, cos(q2)*L.y - sin(q2)*L.z, 0]])
 
-def test_linearmomentum():
+def test_linear_momentum():
     N = ReferenceFrame('N')
     Ac = Point('Ac')
     Ac.set_vel(N, 25 * N.y)
@@ -313,10 +314,9 @@ def test_linearmomentum():
     P = Point('P')
     Pa = Particle('Pa', P, 1)
     Pa.point.set_vel(N, 10 * N.x)
-    BL = [A, Pa]
-    assert linearmomentum(BL, N) == 10 * N.x + 500 * N.y
+    assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
 
-def test_angularmomentum_and_linearmomentum():
+def test_angular_momentum_and_linear_momentum():
     m, M, l1 = symbols('m M l1')
     q1d = dynamicsymbols('q1d')
     N = ReferenceFrame('N')
@@ -331,6 +331,42 @@ def test_angularmomentum_and_linearmomentum():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    BL =[Pa, A]
-    assert linearmomentum(BL, N) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angularmomentum(BL, O, N) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    assert linear_momentum(N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
+    assert angular_momentum(O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+
+def test_kinetic_energy():
+    m, M, l1 = symbols('m M l1')
+    omega = dynamicsymbols('omega')
+    N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    Ac = O.locatenew('Ac', l1 * N.x)
+    P = Ac.locatenew('P', l1 * N.x)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, omega * N.z)
+    Ac.v2pt_theory(O, N, a)
+    P.v2pt_theory(O, N, a)
+    Pa = Particle('Pa', P, m)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, M, (I, Ac))
+    assert 0 == kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
+            + 2*l1**2*m*omega**2 + omega**2/2)
+
+def test_potential_energy():
+    m, M, l1, g, h, H = symbols('m M l1 g h H')
+    omega = dynamicsymbols('omega')
+    N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    Ac = O.locatenew('Ac', l1 * N.x)
+    P = Ac.locatenew('P', l1 * N.x)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, omega * N.z)
+    Ac.v2pt_theory(O, N, a)
+    P.v2pt_theory(O, N, a)
+    Pa = Particle('Pa', P, m)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, M, (I, Ac))
+    Pa.set_potential_energy(m * g * h)
+    A.set_potential_energy(M * g * H)
+    assert potential_energy(A, Pa) == m * g * h + M * g * H
