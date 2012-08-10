@@ -41,6 +41,7 @@ class Particle(object):
         self._name = name
         self.set_mass(mass)
         self.set_point(point)
+        self._pe = None
 
     def __str__(self):
         return self._name
@@ -67,7 +68,7 @@ class Particle(object):
 
     point = property(get_point, set_point)
 
-    def linearmomentum(self, frame):
+    def linear_momentum(self, frame):
         """Linear momentum of the particle.
 
         The linear momentum L, of a particle P, with respect to frame N is
@@ -94,14 +95,14 @@ class Particle(object):
         >>> P = Point('P')
         >>> A = Particle('A', P, m)
         >>> P.set_vel(N, v * N.x)
-        >>> print A.linearmomentum(N)
+        >>> A.linear_momentum(N)
         m*v*N.x
 
         """
 
         return self.mass * self.point.vel(frame)
 
-    def angularmomentum(self, point, frame):
+    def angular_momentum(self, point, frame):
         """Angular momentum of the particle about the point.
 
         The angular momentum H, about some point O of a particle, P, is given
@@ -133,9 +134,91 @@ class Particle(object):
         >>> A = O.locatenew('A', r * N.x)
         >>> P = Particle('P', A, m)
         >>> P.point.set_vel(N, v * N.y)
-        >>> print P.angularmomentum(O, N)
+        >>> P.angular_momentum(O, N)
         m*r*v*N.z
 
         """
 
         return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
+
+    def kinetic_energy(self, frame):
+        """Kinetic energy of the particle
+
+        The kinetic energy, T, of a particle,P, is given by
+
+        'T = 1/2 m v^2'
+
+        where m is the mass of particle P, and v is the velocity of the
+        particle in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The Particle's velocity is typically defined with respect to
+            an inertial frame but any relevant frame in which the velocity is
+            known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
+        >>> from sympy import symbols
+        >>> m, v, r = symbols('m v r')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.point.set_vel(N, v * N.y)
+        >>> P.kinetic_energy(N)
+        m*v**2/2
+
+        """
+
+        return (self.mass / sympify(2) * self.point.vel(frame) &
+                self.point.vel(frame))
+
+    def set_potential_energy(self, scalar):
+        """Used to set the potential energy of the Particle.
+
+        Parameters
+        ==========
+
+        scalar : Sympifyable
+            The potential energy (a scalar) of the Particle.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import symbols
+        >>> m, g, h = symbols('m g h')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.set_potential_energy(m * g * h)
+
+        """
+
+        self._pe = sympify(scalar)
+
+    @property
+    def potential_energy(self):
+        """The potential energy of the Particle.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import symbols
+        >>> m, g, h = symbols('m g h')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.set_potential_energy(m * g * h)
+        >>> P.potential_energy
+        g*h*m
+
+        """
+
+        if callable(self._pe) == True:
+            return self._pe
+        else:
+            raise ValueError('Please set the potential energy of the Particle')
