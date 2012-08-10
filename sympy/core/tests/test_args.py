@@ -1034,6 +1034,10 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
     assert _test_args(HyperRep_sinasin(x, y))
 
 @SKIP("abstract class")
+def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
+    pass
+
+@SKIP("abstract class")
 def test_sympy__functions__special__polynomials__PolynomialSequence():
     pass
 
