@@ -245,8 +245,8 @@ def enable_automatic_symbols(app):
                     self.run_cell(code, store_history=False)
                     return None
                 finally:
-                    self.run_cell("del %(symbol)s" % {'symbol':
-                        match.group("symbol")}, store_history=False)
+                    self.run_cell("del %s" % match.group("symbol"),
+                                  store_history=False)
 
         stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
