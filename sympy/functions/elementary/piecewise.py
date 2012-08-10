@@ -1,7 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean
-from sympy.core.sets import Set
 from sympy.core.symbol import Dummy
 
 class ExprCondPair(Tuple):
@@ -40,6 +39,10 @@ class ExprCondPair(Tuple):
         if hasattr(self.cond, 'free_symbols'):
             result |= self.cond.free_symbols
         return result
+
+    @property
+    def is_commutative(self):
+        return self.expr.is_commutative
 
     def __iter__(self):
         yield self.expr
@@ -90,12 +93,12 @@ class Piecewise(Function):
             cond = pair.cond
             if cond is False:
                 continue
-            if not isinstance(cond, (bool, Relational, Set, Boolean)):
+            if not isinstance(cond, (bool, Relational, Boolean)):
                 raise TypeError(
-                    "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (cond, type(cond)))
+                    "Cond %s is of type %s, but must be a Relational," \
+                    " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
-            if cond is ExprCondPair.true_sentinel:
+            if cond is True:
                 break
 
         if options.pop('evaluate', True):
@@ -163,11 +166,22 @@ class Piecewise(Function):
             newargs.append((e, c))
         return Piecewise(*newargs)
 
-    @property
-    def is_commutative(self):
-        return all(expr.is_commutative for expr, _ in self.args)
+    def _eval_as_leading_term(self, x):
+        for e, c in self.args:
+            if c is True or c.subs(x, 0) is True:
+                return e.as_leading_term(x)
 
-    def _eval_integral(self,x):
+    def _eval_conjugate(self):
+        from sympy.functions.elementary.complexes import conjugate
+        return Piecewise(*[(conjugate(e), c) for e, c in self.args])
+
+    def _eval_derivative(self, x):
+        return Piecewise(*[(diff(e, x), c) for e, c in self.args])
+
+    def _eval_evalf(self, prec):
+        return Piecewise(*[(e.evalf(prec), c) for e, c in self.args])
+
+    def _eval_integral(self, x):
         from sympy.integrals import integrate
         return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
@@ -309,8 +323,6 @@ class Piecewise(Function):
             if curr_low < int_a:
                 holes.append([curr_low, min(b, int_a), default])
             curr_low = int_b
-            if curr_low > b:
-                break
         if curr_low < b:
             holes.append([curr_low, b, default])
 
@@ -325,30 +337,19 @@ class Piecewise(Function):
 
         return int_expr
 
-    def _eval_derivative(self, s):
-        return Piecewise(*[(diff(e, s), c) for e, c in self.args])
+    def _eval_power(self, s):
+        return Piecewise(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
         """
-        Piecewise conditions may contain Sets whose modifications
-        requires the use of contains rather than substitution. They
-        may also contain bool which are not of Basic type.
+        Piecewise conditions may contain bool which are not of Basic type.
         """
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            try:
-                e = e._subs(old, new)
-            except TypeError:
-                if e != old:
-                    continue
-                e = new
+            e = e._subs(old, new)
 
             if isinstance(c, bool):
                 pass
-            elif isinstance(c, Set):
-                # What do we do if there are more than one symbolic
-                # variable. Which do we put pass to Set.contains?
-                c = c.contains(new)
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
 
@@ -361,9 +362,33 @@ class Piecewise(Function):
                    self.args)
         return self.func(*args)
 
-    def _eval_as_leading_term(self, x):
-        # This is completely wrong, cf. issue 3110
-        return self.args[0][0].as_leading_term(x)
+    def _eval_template_is_attr(self, is_attr, when_multiple=None):
+        b = None
+        for expr, _ in self.args:
+            a = getattr(expr, is_attr)
+            if a is None:
+                return None
+            if b is None:
+                b = a
+            elif b is not a:
+                return when_multiple
+        return b
+
+    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=False)
+    _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
+    _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary')
+    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
+    _eval_is_irrational = lambda self: self._eval_template_is_attr('is_irrational')
+    _eval_is_negative = lambda self: self._eval_template_is_attr('is_negative')
+    _eval_is_nonnegative = lambda self: self._eval_template_is_attr('is_nonnegative')
+    _eval_is_nonpositive = lambda self: self._eval_template_is_attr('is_nonpositive')
+    _eval_is_nonzero = lambda self: self._eval_template_is_attr('is_nonzero', when_multiple=True)
+    _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
+    _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
+    _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
+    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
+    _eval_is_zero = lambda self: self._eval_template_is_attr('is_zero', when_multiple=False)
 
     @classmethod
     def __eval_cond(cls, cond):
