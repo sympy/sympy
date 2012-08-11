@@ -1,4 +1,5 @@
-from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
 DihedralGroup, AlternatingGroup
 from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
