@@ -112,6 +112,10 @@ def test_Dict():
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
 
+    # Test creating a Dict from a Dict.
+    d = Dict({x: 1, y: 2, z: 3})
+    assert d == Dict(d)
+
 def issue_2689():
     args = [(1,2),(2,1)]
     for o in [Dict, Tuple, FiniteSet]:
