@@ -41,10 +41,10 @@ class Set(Basic):
         try:
             infimum = self.inf
             if infimum.is_comparable:
-                return default_sort_key(infimum)
+                return default_sort_key(infimum, order)
         except (NotImplementedError, ValueError):
             pass
-        args = tuple([default_sort_key(a) for a in self._sorted_args])
+        args = tuple([default_sort_key(a, order) for a in self._sorted_args])
         return self.class_key(), (len(args), args), S.One.class_key(), S.One
 
     def union(self, other):

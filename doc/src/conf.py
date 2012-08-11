@@ -22,7 +22,7 @@ sys.path.extend(['../sympy', 'ext'])
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc',]
+              'numpydoc', 'sympylive',]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -97,6 +97,7 @@ html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../logo/SymPy-Favicon.ico'
+html_theme_options = {'collapsiblesidebar': True}
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

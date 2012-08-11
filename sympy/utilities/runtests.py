@@ -617,10 +617,11 @@ def _doctest(*paths, **kwargs):
             if first_report:
                 first_report = False
                 msg = 'rst doctests start'
-                lhead = '='*((r.terminal_width - len(msg))//2 - 1)
-                rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
-                print ' '.join([lhead, msg, rhead])
-                print
+                if not t._testfiles:
+                    r.start(msg=msg)
+                else:
+                    r.write_center(msg)
+                    print
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
             print file_id, # get at least the name out so it is know who is being tested
@@ -1487,8 +1488,8 @@ class PyTestReporter(Reporter):
         t = traceback.format_exception_only(e, val)
         self.write("".join(t))
 
-    def start(self, seed=None):
-        self.write_center("test process starts")
+    def start(self, seed=None, msg="test process starts"):
+        self.write_center(msg)
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
@@ -1503,13 +1504,9 @@ class PyTestReporter(Reporter):
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
         self.write("hash randomization: ")
-        if HASH_RANDOMIZATION:
-            hash_seed = os.getenv("PYTHONHASHSEED")
-            if hash_seed:
-                self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
-            else:
-                # This should not happen.
-                self.write("on (PYTHONHASHSEED not set)\n")
+        hash_seed = os.getenv("PYTHONHASHSEED")
+        if HASH_RANDOMIZATION and (hash_seed == "random" or int(hash_seed)):
+            self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:
             self.write("off\n")
         self.write('\n')

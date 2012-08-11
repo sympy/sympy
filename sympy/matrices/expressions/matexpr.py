@@ -284,6 +284,9 @@ class Identity(MatrixSymbol):
     def _eval_transpose(self):
         return self
 
+    def _eval_trace(self):
+        return self.rows
+
     def _eval_inverse(self):
         return self
 
@@ -309,6 +312,9 @@ class ZeroMatrix(MatrixSymbol):
 
     def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.Zero
 
     def _entry(self, i, j):
         return S.Zero

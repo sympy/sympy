@@ -1445,6 +1445,27 @@ class Mul(AssocOp):
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
         return coef, Mul(*args)
 
+    def as_ordered_factors(self, order=None):
+        """Transform an expression into an ordered list of factors.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+        [2, x, y, sin(x), cos(x)]
+
+        """
+        cpart, ncpart = self.args_cnc()
+        cpart.sort(key=lambda expr: expr.sort_key(order=order))
+        return cpart + ncpart
+
+    @property
+    def _sorted_args(self):
+        return self.as_ordered_factors()
+
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.

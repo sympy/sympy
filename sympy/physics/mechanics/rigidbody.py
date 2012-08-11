@@ -100,7 +100,7 @@ class RigidBody(object):
 
     inertia = property(get_inertia, set_inertia)
 
-    def linearmomentum(self, frame):
+    def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
         The linear momentum L, of a rigid body B, with respect to frame N is
@@ -129,14 +129,14 @@ class RigidBody(object):
         >>> I = outer (N.x, N.x)
         >>> Inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, N, M, Inertia_tuple)
-        >>> B.linearmomentum(N)
+        >>> B.linear_momentum(N)
         M*v*N.x
 
         """
 
         return self.mass * self.masscenter.vel(frame)
 
-    def angularmomentum(self, point, frame):
+    def angular_momentum(self, point, frame):
         """ Angular momentum of the rigid body.
 
         The angular momentum H, about some point O, of a rigid body B, in a
@@ -172,7 +172,7 @@ class RigidBody(object):
         >>> I = outer (b.x, b.x)
         >>> Inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.angularmomentum(P, N)
+        >>> B.angular_momentum(P, N)
         omega*b.x
 
         """
@@ -180,3 +180,103 @@ class RigidBody(object):
         return ((self.inertia[0] & self.frame.ang_vel_in(frame)) +
                 (point.vel(frame) ^ -self.masscenter.pos_from(point)) *
                 self.mass)
+
+    def kinetic_energy(self, frame):
+        """Kinetic energy of the rigid body
+
+        The kinetic energy, T, of a rigid body, B, is given by
+
+        'T = 1/2 (I omega^2 + m v^2)'
+
+        where I and m are the central inertia dyadic and mass of rigid body B,
+        respectively, omega is the body's angular velocity and v is the
+        velocity of the body's mass center in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The RigidBody's angular velocity and the velocity of it's mass
+            center is typically defined with respect to an inertial frame but
+            any relevant frame in which the velocity is known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody
+        >>> from sympy import symbols
+        >>> M, v, r, omega = symbols('M v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, inertia_tuple)
+        >>> B.kinetic_energy(N)
+        M*v**2/2 + omega**2/2
+
+        """
+
+        rotational_KE = (self.frame.ang_vel_in(frame) & (self.inertia[0] &
+                self.frame.ang_vel_in(frame)) / sympify(2))
+
+        translational_KE = (self.mass * (self.masscenter.vel(frame) &
+            self.masscenter.vel(frame)) / sympify(2))
+
+        return rotational_KE + translational_KE
+
+    def set_potential_energy(self, scalar):
+        """Used to set the potential energy of this RigidBody.
+
+        Parameters
+        ==========
+
+        scalar: Sympifyable
+            The potential energy (a scalar) of the RigidBody.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, outer
+        >>> from sympy.physics.mechanics import RigidBody, ReferenceFrame
+        >>> from sympy import symbols
+        >>> b = ReferenceFrame('b')
+        >>> M, g, h = symbols('M g h')
+        >>> P = Point('P')
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.set_potential_energy(M * g * h)
+
+        """
+
+        self._pe = sympify(scalar)
+
+    @property
+    def potential_energy(self):
+        """The potential energy of the RigidBody.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+        >>> from sympy import symbols
+        >>> M, g, h = symbols('M g h')
+        >>> b = ReferenceFrame('b')
+        >>> P = Point('P')
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.set_potential_energy(M * g * h)
+        >>> B.potential_energy
+        M*g*h
+
+        """
+
+        if callable(self._pe) == True:
+            return self._pe
+        else:
+            raise ValueError('Please set the potential energy of the RigidBody')

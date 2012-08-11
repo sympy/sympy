@@ -8,4 +8,5 @@ from matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix,
      linear_factors, matrix_symbols, matrixify)
 from matmul import MatMul
 from matpow import MatPow
+from trace import Trace
 from transpose import Transpose

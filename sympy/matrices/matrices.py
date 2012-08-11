@@ -177,6 +177,9 @@ class MatrixBase(object):
     def _eval_transpose(self):
         return self.transpose()
 
+    def _eval_trace(self):
+        return self.trace()
+
     def transpose(self):
         """
         Matrix transposition.
@@ -430,7 +433,7 @@ class MatrixBase(object):
                     break
                 s *= s
                 n //= 2
-            return a
+            return self._new(a)
         elif isinstance(num, Rational):
             try:
                 P, D = self.diagonalize()
@@ -438,7 +441,7 @@ class MatrixBase(object):
                 raise NotImplementedError("Implemented only for diagonalizable matrices")
             for i in range(D.rows):
                 D[i, i] = D[i, i]**num
-            return P * D * P.inv()
+            return self._new(P * D * P.inv())
         else:
             raise NotImplementedError("Only integer and rational values are supported")
 

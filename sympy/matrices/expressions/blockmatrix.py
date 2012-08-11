@@ -2,9 +2,10 @@ from matexpr import MatrixExpr, ZeroMatrix, Identity
 from matmul import MatMul
 from matadd import MatAdd
 from transpose import Transpose
+from trace import Trace
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
-from sympy import Tuple, Basic, sympify, FiniteSet
+from sympy import Tuple, Basic, sympify, FiniteSet, Add
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
@@ -58,6 +59,7 @@ class BlockMatrix(MatrixExpr):
     @property
     def blocks(self):
         return self.mat
+
     @property
     def rowblocksizes(self):
         return [self.blocks[i,0].rows for i in range(self.blockshape[0])]
@@ -93,6 +95,15 @@ class BlockMatrix(MatrixExpr):
         # Transpose the block structure
         mat = mat.transpose()
         return BlockMatrix(mat)
+
+    def _eval_trace(self):
+        if self.rowblocksizes == self.colblocksizes:
+            return Add(*[Trace(self.mat[i,i])
+                        for i in range(self.blockshape[0])])
+        raise NotImplementedError("Can't perform trace of irregular blockshape")
+
+    #def transpose(self):
+    #    return self.eval_transpose()
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy

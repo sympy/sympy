@@ -1433,6 +1433,15 @@ class Atom(Basic):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
+    @property
+    def _sorted_args(self):
+        # this is here as a safeguard against accidentally using _sorted_args
+        # on Atoms -- they cannot be rebuilt as atom.func(*atom._sorted_args)
+        # since there are no args. So the calling routine should be checking
+        # to see that this property is not called for Atoms.
+        raise AttributeError('Atoms have no args. It might be necessary'
+        ' to make a check for Atoms in the calling code.')
+
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
 

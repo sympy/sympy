@@ -66,3 +66,15 @@ def test_function_return_types():
     assert type(X.T.upper_triangular_solve(Y)) == ImmutableMatrix
 
     assert type(X.minorMatrix(0,0)) == ImmutableMatrix
+
+# Issue 3180
+# http://code.google.com/p/sympy/issues/detail?id=3180
+# Test that Immutable _op_ Immutable => Immutable and not MatExpr
+def test_immutable_evaluation():
+    X = ImmutableMatrix(eye(3))
+    A = ImmutableMatrix(3,3, range(9))
+    assert isinstance(X + A, ImmutableMatrix)
+    assert isinstance(X * A, ImmutableMatrix)
+    assert isinstance(X * 2, ImmutableMatrix)
+    assert isinstance(2 * X, ImmutableMatrix)
+    assert isinstance(A**2,  ImmutableMatrix)

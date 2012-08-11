@@ -10,8 +10,10 @@ __all__ = ['cross',
            'kinematic_equations',
            'inertia_of_point_mass',
            'partial_velocity',
-           'linearmomentum',
-           'angularmomentum']
+           'linear_momentum',
+           'angular_momentum',
+           'kinetic_energy',
+           'potential_energy']
 
 from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
@@ -20,7 +22,9 @@ from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                dynamicsymbols)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy.physics.mechanics.point import Point
 from sympy import sympify, diff, sin, cos, Matrix
+from sympy.core.basic import S
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
@@ -448,7 +452,7 @@ def partial_velocity(vel_list, u_ind_list):
             i = i + 1
     return list_of_pvlists
 
-def linearmomentum(bodylist, frame):
+def linear_momentum(frame, *body):
     """Linear momentum of the system.
 
     This function returns the linear momentum of a system of Particle's and/or
@@ -460,17 +464,18 @@ def linearmomentum(bodylist, frame):
 
     L = L1 + L2
 
-    bodylist : list
-        A list of all RigidBody's and Particle's in the system.
-
     frame : ReferenceFrame
         The frame in which linear momentum is desired.
+
+    body1, body2, body3... : Particle and/or RigidBody
+        The body (or bodies) whose kinetic energy is required.
+
 
     Examples
     ========
 
     >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
-    >>> from sympy.physics.mechanics import RigidBody, outer, linearmomentum
+    >>> from sympy.physics.mechanics import RigidBody, outer, linear_momentum
     >>> N = ReferenceFrame('N')
     >>> P = Point('P')
     >>> P.set_vel(N, 10 * N.x)
@@ -479,26 +484,23 @@ def linearmomentum(bodylist, frame):
     >>> Ac.set_vel(N, 25 * N.y)
     >>> I = outer(N.x, N.x)
     >>> A = RigidBody('A', Ac, N, 20, (I, Ac))
-    >>> BL = [Pa, A]
-    >>> print linearmomentum(BL, N)
+    >>> linear_momentum(N, A, Pa)
     10*N.x + 500*N.y
 
     """
 
-    if not isinstance(bodylist, list):
-        raise TypeError('System elements must be supplied as a list')
+    if not isinstance(frame, ReferenceFrame):
+        raise TypeError('Please specify a valid ReferenceFrame')
     else:
-        linearmomentum_sys = 0
-        for e in bodylist:
+        linear_momentum_sys = S(0)
+        for e in body:
             if isinstance(e, (RigidBody, Particle)):
-                lm_individual = e.linearmomentum(frame)
-                linearmomentum_sys = linearmomentum_sys + lm_individual
+                linear_momentum_sys += e.linear_momentum(frame)
             else:
-                raise TypeError('Body list must have only Particle'
-                        'or RigidBody')
-    return linearmomentum_sys
+                raise TypeError('*body must have only Particle or RigidBody')
+    return linear_momentum_sys
 
-def angularmomentum(bodylist, point, frame):
+def angular_momentum(point, frame, *body):
     """Angular momentum of a system
 
     This function returns the angular momentum of a system of Particle's and/or
@@ -513,20 +515,20 @@ def angularmomentum(bodylist, point, frame):
     Parameters
     ==========
 
-    bodylist : list
-        A list of all RigidBody's and Particle's in the system.
-
     point : Point
         The point about which angular momentum of the system is desired.
 
     frame : ReferenceFrame
         The frame in which angular momentum is desired.
 
+    body1, body2, body3... : Particle and/or RigidBody
+        The body (or bodies) whose kinetic energy is required.
+
     Examples
     ========
 
     >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
-    >>> from sympy.physics.mechanics import RigidBody, outer, angularmomentum
+    >>> from sympy.physics.mechanics import RigidBody, outer, angular_momentum
     >>> N = ReferenceFrame('N')
     >>> O = Point('O')
     >>> O.set_vel(N, 0 * N.x)
@@ -539,21 +541,127 @@ def angularmomentum(bodylist, point, frame):
     >>> a.set_ang_vel(N, 10 * N.z)
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
-    >>> BL = [Pa, A]
-    >>> print angularmomentum(BL, O, N)
+    >>> angular_momentum(O, N, Pa, A)
     10*N.z
 
     """
 
-    if not isinstance(bodylist, list):
-        raise TypeError('System elements must be supplied as a list')
+    if not isinstance(frame, ReferenceFrame):
+        raise TypeError('Please enter a valid ReferenceFrame')
+    if not isinstance(point, Point):
+        raise TypeError('Please specify a valid Point')
     else:
-        angularmomentum_sys = 0
-        for e in bodylist:
+        angular_momentum_sys = S(0)
+        for e in body:
             if isinstance(e, (RigidBody, Particle)):
-                angmom_individual = e.angularmomentum(point, frame)
-                angularmomentum_sys = angularmomentum_sys + angmom_individual
+                angular_momentum_sys += e.angular_momentum(point, frame)
             else:
-                raise TypeError('Body list must have only Particle'
-                        'or RigidBody')
-    return angularmomentum_sys
+                raise TypeError('*body must have only Particle or RigidBody')
+    return angular_momentum_sys
+
+def kinetic_energy(frame, *body):
+    """Kinetic energy of a multibody system.
+
+    This function returns the kinetic energy of a system of Particle's and/or
+    RigidBody's. The kinetic energy of such a system is equal to the sum of
+    the kinetic energies of its constituents. Consider a system, S, comprising
+    a rigid body, A, and a particle, P. The kinetic energy of the system, T,
+    is equal to the vector sum of the kinetic energy of the particle, T1, and
+    the kinetic energy of the rigid body, T2, i.e.
+
+    T = T1 + T2
+
+    Kinetic energy is a scalar.
+
+    Parameters
+    ==========
+
+    frame : ReferenceFrame
+        The frame in which angular momentum is desired.
+
+    body1, body2, body3... : Particle and/or RigidBody
+        The body (or bodies) whose kinetic energy is required.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics import RigidBody, outer, kinetic_energy
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> O.set_vel(N, 0 * N.x)
+    >>> P = O.locatenew('P', 1 * N.x)
+    >>> P.set_vel(N, 10 * N.x)
+    >>> Pa = Particle('Pa', P, 1)
+    >>> Ac = O.locatenew('Ac', 2 * N.y)
+    >>> Ac.set_vel(N, 5 * N.y)
+    >>> a = ReferenceFrame('a')
+    >>> a.set_ang_vel(N, 10 * N.z)
+    >>> I = outer(N.z, N.z)
+    >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
+    >>> kinetic_energy(N, Pa, A)
+    350
+
+    """
+
+    if not isinstance(frame, ReferenceFrame):
+        raise TypeError('Please enter a valid ReferenceFrame')
+    ke_sys = S(0)
+    for e in body:
+        if isinstance(e, (RigidBody, Particle)):
+            ke_sys += e.kinetic_energy(frame)
+        else:
+            raise TypeError('*body must have only Particle or RigidBody')
+    return ke_sys
+
+def potential_energy(*body):
+    """Potential energy of a multibody system.
+
+    This function returns the potential energy of a system of Particle's and/or
+    RigidBody's. The potential energy of such a system is equal to the sum of
+    the potential energy of its constituents. Consider a system, S, comprising
+    a rigid body, A, and a particle, P. The potential energy of the system, V,
+    is equal to the vector sum of the potential energy of the particle, V1, and
+    the potential energy of the rigid body, V2, i.e.
+
+    V = V1 + V2
+
+    Potential energy is a scalar.
+
+    Parameters
+    ==========
+
+    body1, body2, body3... : Particle and/or RigidBody
+        The body (or bodies) whose potential energy is required.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics import RigidBody, outer, potential_energy
+    >>> from sympy import symbols
+    >>> M, m, g, h = symbols('M m g h')
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> O.set_vel(N, 0 * N.x)
+    >>> P = O.locatenew('P', 1 * N.x)
+    >>> Pa = Particle('Pa', P, m)
+    >>> Ac = O.locatenew('Ac', 2 * N.y)
+    >>> a = ReferenceFrame('a')
+    >>> I = outer(N.z, N.z)
+    >>> A = RigidBody('A', Ac, a, M, (I, Ac))
+    >>> BL = [Pa, A]
+    >>> Pa.set_potential_energy(m * g * h)
+    >>> A.set_potential_energy(M * g * h)
+    >>> potential_energy(Pa, A)
+    M*g*h + g*h*m
+
+    """
+
+    pe_sys = S(0)
+    for e in body:
+        if isinstance(e, (RigidBody, Particle)):
+            pe_sys += e.potential_energy
+        else:
+            raise TypeError('*body must have only Particle or RigidBody')
+    return pe_sys

@@ -53,6 +53,8 @@ diagrams.
 Diagram Drawing
 ---------------
 
+.. module:: sympy.categories.diagram_drawing
+
 This section lists the classes which allow automatic drawing of
 diagrams.
 
