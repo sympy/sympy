@@ -907,6 +907,18 @@ class PermutationGroup(Basic):
         elif hasattr(other, 'array_form'):
             return self.centralizer(PermutationGroup([other]))
 
+    def commutator(self, G, H):
+        ggens = G.generators
+        hgens = H.generators
+        commutators = []
+        for ggen in ggens:
+            for hgen in hgens:
+                commutator = hgen*ggen*(~hgen)*(~ggen)
+                if commutator not in commutators:
+                    commutators.append(commutator)
+        res = self.normal_closure(commutators)
+        return res
+
     def coset_decomposition(self, g):
         """
         Decompose `g` as h_0*...*h_{len(u)}
@@ -1085,6 +1097,16 @@ class PermutationGroup(Basic):
 
         """
         return self._degree
+
+    def derived_series(self):
+        res = [self]
+        current = self
+        next = self.derived_subgroup()
+        while current != next:
+            res.append(next)
+            current = next
+            next = next.derived_subgroup()
+        return res
 
     def derived_subgroup(self):
         """
