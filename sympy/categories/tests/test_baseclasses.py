@@ -4,6 +4,7 @@ from sympy.categories import (Object, Morphism, IdentityMorphism,
 from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
+from itertools import islice
 
 def test_morphisms():
     A = Object("A")
@@ -138,6 +139,9 @@ def test_diagram():
 
     d11 = Diagram({f: "unique"})
     assert d1 != d11
+    assert d11.get(f) == FiniteSet("unique")
+    assert d11.get(g) is None
+    raises(ValueError, lambda: d11[g])
 
     # Make sure that composites with properties work as expected.
     d = Diagram({f: empty, g: empty, g * f: "unique"})
@@ -215,6 +219,13 @@ def test_diagram():
     assert set(d.generators) == set([f, g, id_A, id_B, id_C])
     assert set(d.morphisms) == set([id_A, id_B, id_C, f, g, g * f])
     assert d == Diagram(f, g)
+
+    # Further tests for cycle detection.
+    h = NamedMorphism(C, A, "h")
+    d = Diagram(f, g, h)
+    assert not d.is_finite
+    assert set(islice(d, 6)) == set(d.generators)
+    raises(TypeError, lambda: len(d))
 
 def test_category():
     A = Object("A")

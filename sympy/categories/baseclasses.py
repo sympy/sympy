@@ -786,8 +786,6 @@ class Diagram(Basic):
         will produce _all_ generators, including identities.
         Otherwise it will only produce non-identity morphisms.
         """
-        if not length:
-            return
         if length == 1:
             for m in self.generators:
                 if isinstance(m, IdentityMorphism) and not identities:
