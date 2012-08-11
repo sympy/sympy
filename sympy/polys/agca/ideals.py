@@ -142,18 +142,32 @@ class Ideal(object):
             return self._contains_ideal(other)
         return all(self._contains_elem(x) for x in other)
 
-    def quotient(self, J):
+    def quotient(self, J, **opts):
         r"""
         Compute the ideal quotient of ``self`` by ``J``.
 
         That is, if ``self`` is the ideal `I`, compute the set
         `I : J = \{x \in R | xJ \subset I \}`.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> R = QQ[x, y]
+        >>> R.ideal(x*y).quotient(R.ideal(x))
+        <y>
         """
         self._check_ideal(J)
-        return self._quotient(J)
+        return self._quotient(J, **opts)
 
     def intersect(self, J):
-        """Compute the intersection of self with ideal J."""
+        """
+        Compute the intersection of self with ideal J.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import QQ
+        >>> R = QQ[x, y]
+        >>> R.ideal(x).intersect(R.ideal(y))
+        <x*y>
+        """
         self._check_ideal(J)
         return self._intersect(J)
 
@@ -267,10 +281,27 @@ class ModuleImplementedIdeal(Ideal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.intersect(J._module))
 
+    def _quotient(self, J, **opts):
+        if not isinstance(J, ModuleImplementedIdeal):
+            raise NotImplementedError
+        return self._module.module_quotient(J._module, **opts)
+
     def _union(self, J):
         if not isinstance(J, ModuleImplementedIdeal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.union(J._module))
+
+    @property
+    def gens(self):
+        """
+        Return generators for ``self``.
+
+        >>> from sympy import QQ
+        >>> from sympy.abc import x, y
+        >>> list(QQ[x, y].ideal(x, y, x**2 + y).gens)
+        [x, y, x**2 + y]
+        """
+        return (x[0] for x in self._module.gens)
 
     def is_zero(self):
         """
@@ -323,5 +354,5 @@ class ModuleImplementedIdeal(Ideal):
         """
         return self._module.in_terms_of_generators([e])
 
-    def reduce_element(self, x):
-        return self._module.reduce_element([x])[0]
+    def reduce_element(self, x, **options):
+        return self._module.reduce_element([x], **options)[0]

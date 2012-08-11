@@ -94,3 +94,27 @@ def test_nontriv_local():
     assert not contains([x+y+z, x*y+x*z+y*z, x*y*z], x**2)
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
+
+def test_intersection():
+    R = QQ[x, y, z]
+    # SCA, example 1.8.11
+    assert R.ideal(x, y).intersect(R.ideal(y**2, z)) == R.ideal(y**2, y*z, x*z)
+
+    assert R.ideal(x, y).intersect(R.ideal()).is_zero()
+
+    R = QQ.poly_ring(x, y, z, order="ilex")
+    assert R.ideal(x, y).intersect(R.ideal(y**2 + y**2*z, z + z*x**3*y)) == \
+           R.ideal(y**2, y*z, x*z)
+
+def test_quotient():
+    # SCA, example 1.8.13
+    R = QQ[x, y, z]
+    assert R.ideal(x, y).quotient(R.ideal(y**2, z)) == R.ideal(x, y)
+
+def test_reduction():
+    from sympy.polys.distributedmodules import sdm_nf_buchberger_reduced
+    R = QQ[x, y]
+    I = R.ideal(x**5, y)
+    e = R.convert(x**3 + y**2)
+    assert I.reduce_element(e) == e
+    assert I.reduce_element(e, NF=sdm_nf_buchberger_reduced) == R.convert(x**3)

@@ -81,11 +81,11 @@ def test_FreeModule():
     raises(CoercionFailed, lambda: M3.convert(1))
 
 def test_ModuleOrder():
-    o1 = ModuleOrder(lex, grlex)
-    o2 = ModuleOrder(ilex, lex)
+    o1 = ModuleOrder(lex, grlex, False)
+    o2 = ModuleOrder(ilex, lex, False)
 
-    assert o1 == ModuleOrder(lex, grlex)
-    assert (o1 != ModuleOrder(lex, grlex)) is False
+    assert o1 == ModuleOrder(lex, grlex, False)
+    assert (o1 != ModuleOrder(lex, grlex, False)) is False
     assert o1 != o2
 
     assert o1((1, 2, 3)) == (1, (5, (2, 3)))
@@ -227,7 +227,7 @@ def test_in_terms_of_generators():
 
     M = R.free_module(2) / ([x, 0], [1, 1])
     SM = M.submodule([1, x])
-    assert SM.in_terms_of_generators([2, 0]) == [R.convert(2)]
+    assert SM.in_terms_of_generators([2, 0]) == [R.convert(-2/(x - 1))]
 
     R = QQ[x, y] / [x**2 - y**2]
     M = R.free_module(2)
@@ -290,6 +290,7 @@ def test_QuotientModule():
     raises(ValueError, lambda: N/F)
     raises(ValueError, lambda: F.submodule([2, 0, 0]) / N)
     raises(ValueError, lambda: R.free_module(2)/F)
+    raises(CoercionFailed, lambda: F.convert(M.convert([1, x, x**2])))
 
     M1 = F / [[1, 1, 1]]
     M2 = M1.submodule([1, 0, 0], [0, 1, 0])
@@ -346,3 +347,38 @@ def test_module_mul():
 
     assert I*M == M*I == S1 == x*M == M*x
     assert I*S1 == S2 == x*S1
+
+def test_intersection():
+    # SCA, example 2.8.5
+    F = QQ[x, y].free_module(2)
+    M1 = F.submodule([x, y], [y, 1])
+    M2 = F.submodule([0, y - 1], [x, 1], [y, x])
+    I = F.submodule([x, y], [y**2 - y, y - 1], [x*y + y, x + 1])
+    I1, rel1, rel2 = M1.intersect(M2, relations=True)
+    assert I1 == M2.intersect(M1) == I
+    for i, g in enumerate(I1.gens):
+        assert g == sum(c*x for c, x in zip(rel1[i], M1.gens)) \
+                 == sum(d*y for d, y in zip(rel2[i], M2.gens))
+
+    assert F.submodule([x, y]).intersect(F.submodule([y, x])).is_zero()
+
+def test_quotient():
+    # SCA, example 2.8.6
+    R = QQ[x, y, z]
+    F = R.free_module(2)
+    assert F.submodule([x*y, x*z], [y*z, x*y]).module_quotient(
+        F.submodule([y,z], [z,y])) == QQ[x, y, z].ideal(x**2*y**2 - x*y*z**2)
+    assert F.submodule([x, y]).module_quotient(F.submodule()).is_whole_ring()
+
+    M = F.submodule([x**2, x**2], [y**2, y**2])
+    N = F.submodule([x + y, x + y])
+    q, rel = M.module_quotient(N, relations=True)
+    assert q == R.ideal(y**2, x - y)
+    for i, g in enumerate(q.gens):
+        assert g*N.gens[0] == sum(c*x for c, x in zip(rel[i], M.gens))
+
+def test_groebner_extendend():
+    M = QQ[x,y,z].free_module(3).submodule([x + 1, y, 1], [x*y, z, z**2])
+    G, R = M._groebner_vec(extended=True)
+    for i, g in enumerate(G):
+        assert g == sum(c*gen for c, gen in zip(R[i], M.gens))

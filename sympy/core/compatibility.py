@@ -351,3 +351,23 @@ except NameError: # Python 2.5
             x >>= 1
             pass
         return '0b' + ''.join(reversed(out))
+
+try:
+    next = next
+except NameError: # Python 2.5
+    def next(*args):
+        """
+        next(iterator[, default])
+
+        Return the next item from the iterator. If default is given and the
+        iterator is exhausted, it is returned instead of raising StopIteration.
+        """
+        if len(args) == 1:
+            return args[0].next()
+        elif len(args) == 2:
+            try:
+                return args[0].next()
+            except StopIteration:
+                return args[1]
+        else:
+            raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
