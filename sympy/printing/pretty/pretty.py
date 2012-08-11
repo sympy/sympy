@@ -1502,11 +1502,11 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(category.name))
 
     def _print_Diagram(self, diagram):
-        if not diagram.morphisms:
+        if not diagram.generators_properties:
             # This is an empty diagram.
             return self._print(S.EmptySet)
 
-        pretty_result = self._print(diagram.morphisms)
+        pretty_result = self._print(diagram.generators_properties)
         return prettyForm(pretty_result[0])
 
     def _print_Implication(self, imp):

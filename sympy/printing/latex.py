@@ -1290,11 +1290,11 @@ class LatexPrinter(Printer):
         return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
 
     def _print_Diagram(self, diagram):
-        if not diagram.morphisms:
+        if not diagram.generators_properties:
             # This is an empty diagram.
             return self._print(S.EmptySet)
 
-        latex_result = self._print(diagram.morphisms)
+        latex_result = self._print(diagram.generators_properties)
         return latex_result
 
     def _print_Implication(self, imp):

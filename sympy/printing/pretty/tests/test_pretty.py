@@ -3732,23 +3732,18 @@ def test_categories():
     assert upretty(d) == u"∅"
 
     d = Diagram({f1:"unique", f2:S.EmptySet})
-
-    assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
-
-    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
-           u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
+    assert pretty(d) == "{id:A1-->A1: EmptySet(), id:A2-->A2: EmptySet(), " \
+           "id:A3-->A3: EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+    assert upretty(d) == u"{id:A₁——▶A₁: ∅, id:A₂——▶A₂: ∅, id:A₃——▶A₃: " \
+           u"∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
     imp = Implication(Diagram({f1:"unique", f2:S.EmptySet}),
                     Diagram({f2 * f1: "unique"}))
-    assert pretty(imp) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
-           " ==> {f2*f1:A1-->A3: {unique}}"
-    assert upretty(imp) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
-           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
-           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+    assert pretty(imp) == "{id:A1-->A1: EmptySet(), id:A2-->A2: EmptySet()," \
+           " id:A3-->A3: EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: " \
+           "EmptySet()} ==> {f2*f1:A1-->A3: {unique}}"
+    assert upretty(imp) == u"{id:A₁——▶A₁: ∅, id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, " \
+           u"f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅} ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
 
     d = Diagram({f1:"unique", f2:S.EmptySet})
     grid = DiagramGrid(d)
