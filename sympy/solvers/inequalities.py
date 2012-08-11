@@ -3,29 +3,11 @@
 from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
+
 from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
 from sympy.logic import And
 from sympy.polys import Poly
-
-def interval_evalf(interval):
-    """Proper implementation of evalf() on Interval.
-
-    Examples
-    ========
-
-    >>> from sympy.core import Interval, Symbol
-    >>> from sympy.solvers.inequalities import interval_evalf
-
-    >>> interval_evalf(Interval(1, 3))
-    [1.0, 3.0]
-
-    >>> x = Symbol('x', real=True)
-    >>> interval_evalf(Interval(2*x, x - 5))
-    [2.0*x, x - 5.0]
-    """
-    return Interval(interval.left.evalf(), interval.right.evalf(),
-        left_open=interval.left_open, right_open=interval.right_open)
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
