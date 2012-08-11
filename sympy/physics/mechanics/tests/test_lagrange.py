@@ -1,7 +1,7 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     kinetic_energy, dynamicsymbols, inertia,
-                                    potential_energy)
+                                    potential_energy, Lagrangian)
 from sympy import symbols, pi, sin, cos, simplify, expand
 
 def test_disc_on_an_incline_plane():
@@ -33,10 +33,8 @@ def test_disc_on_an_incline_plane():
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
     # and potential energies, T and U, respectively. L is defined as the
     # difference between T and U.
-#    T = (m *(Do.vel(N) & Do.vel(N)))/2 + (B.ang_vel_in(N) & (I & B.ang_vel_in(N)))/2
-    U = m * g * (l -y) * sin(alpha)
-    T = kinetic_energy(N, D)
-    L = T - U
+    D.set_potential_energy(m * g * (l - y) * sin(alpha))
+    L = Lagrangian(N, D)
 
     # We then create the list of generalized coordinates and constraint
     # equations. The constraint arises due to the disc rolling without slip on
@@ -80,13 +78,11 @@ def test_simp_pen():
     P = O.locatenew('P', l * A.x)
     P.v2pt_theory(O, N, A)
 
-    # The 'Particle' which represents the bob is then created.
+    # The 'Particle' which represents the bob is then created and its
+    # Lagrangian generated.
     Pa = Particle('Pa', P, m)
-
- #   T = 1/2.0 * m * P.vel(N) & P.vel(N) # T is the kinetic energy of the system
-    V = - m * g * l * cos(q) # V is the potential energy of the system
-    T = kinetic_energy(N, Pa)
-    L = T - V # L is the Lagrangian
+    Pa.set_potential_energy(- m * g * l * cos(q))
+    L = Lagrangian(N, Pa)
 
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
     lm = LagrangesMethod(L, [q])
@@ -103,7 +99,6 @@ def test_dub_pen():
     # for the kinematics. The procedure isn't explicitly explained as this is
     # similar to the simple  pendulum. Also this is documented on the pydy.org
     # website.
-
     q1, q2 = dynamicsymbols('q1 q2')
     q1d, q2d = dynamicsymbols('q1 q2', 1)
     q1dd, q2dd = dynamicsymbols('q1 q2', 2)
@@ -129,16 +124,9 @@ def test_dub_pen():
     ParP = Particle('ParP', P, m)
     ParR = Particle('ParR', R, m)
 
-    # The kinetic energy of the system
-    #T = (m * P.vel(N) & P.vel(N)/2.0) + (m * R.vel(N) & R.vel(N)/2.0)
-    T = kinetic_energy(N, ParP, ParR)
-
-    # V1 and V2 are the potential energies of particles 'ParP' and 'ParR'
-    V1 = -m * g * l * cos(q1)
-    V2 = (- m * g * l * cos(q1) - m * g * l * cos(q2))
-    V = V1 + V2
-    # Then the Lagrangian is given by
-    L = T - V
+    ParP.set_potential_energy(- m * g * l * cos(q1))
+    ParR.set_potential_energy(- m * g * l * cos(q1) - m * g * l * cos(q2))
+    L = Lagrangian(N, ParP, ParR)
     lm = LagrangesMethod(L, [q1, q2])
     lm.form_lagranges_equations()
 
@@ -173,7 +161,6 @@ def test_rolling_disc():
     # in N; this is the contact point between the disc and ground. Next we form
     # the position vector from the contact point to the disc's center of mass.
     # Finally we form the velocity and acceleration of the disc.
-
     C = Point('C')
     C.set_vel(N, 0)
     Dmc = C.locatenew('Dmc', r * L.z)
@@ -185,16 +172,14 @@ def test_rolling_disc():
 
     # Finally we form the equations of motion, using the same steps we did
     # before. Supply the Lagrangian, the generalized speeds.
-    T = kinetic_energy(N, BodyD)
     BodyD.set_potential_energy(- m * g * r * cos(q2))
-    V = potential_energy(BodyD)
-    Lag = T - V
+    Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
-    assert (RHS[4] == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2 
+    assert (RHS[4] == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2
         + 6*r*cos(q2)*q1d*q3d)/(5*r))
     assert RHS[5] == (5*sin(q2)**2*q1d + 6*sin(q2)*q3d - q1d)*q2d/cos(q2)
