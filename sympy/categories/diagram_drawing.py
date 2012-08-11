@@ -300,9 +300,7 @@ class DiagramGrid(object):
         """
         newmorphisms = {}
         for morphism, props in morphisms.items():
-            if isinstance(morphism, CompositeMorphism) and not props:
-                continue
-            elif isinstance(morphism, IdentityMorphism):
+            if isinstance(morphism, IdentityMorphism):
                 continue
             else:
                 newmorphisms[morphism] = props
@@ -1148,7 +1146,7 @@ class DiagramGrid(object):
 
     def __init__(self, diagram, groups=None, **hints):
         all_simplified_morphisms = DiagramGrid._simplify_morphisms(
-            diagram.morphisms)
+            diagram.generators_properties)
 
         simplified_morphisms = DiagramGrid._drop_inessential_morphisms(
             all_simplified_morphisms)
