@@ -4,6 +4,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable
+from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -629,12 +630,16 @@ class Interval(Set, EvalfMixin):
     def _measure(self):
         return self.end - self.start
 
+    @deprecated
     def to_mpi(self, prec=53):
+      return self._mpi_(prec)
+
+    def _mpi_(self, prec=53):
         return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
 
     def _eval_evalf(self, prec):
         return Interval(self.left.evalf(), self.right.evalf(),
-            left_open=self.left_open, right_open=self.right_open)
+          left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
