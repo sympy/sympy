@@ -286,7 +286,6 @@ def fidelity(state1, state2):
     >>> up_dm = represent(up * Dagger(up))
     >>> down_dm = represent(down * Dagger(down))
     >>> updown_dm = represent(updown * Dagger(updown))
-    >>> updown2 = (sqrt(3)/2 )* up + (1/2)*down
     >>>
     >>> fidelity(up_dm, up_dm)
     1
