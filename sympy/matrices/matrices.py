@@ -4333,7 +4333,7 @@ class SparseMatrix(MatrixBase):
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
-                    if value != 0:
+                    if value:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
                 isinstance(args[1],int) and is_sequence(args[2]):
@@ -4375,7 +4375,7 @@ class SparseMatrix(MatrixBase):
                 if (m,n) in self.mat:
                     L.append(self.mat[(m,n)])
                 else:
-                    L.append(0)
+                    L.append(S.Zero)
             if len(L) == 1:
                 return L[0]
             else:
@@ -4388,7 +4388,7 @@ class SparseMatrix(MatrixBase):
             if (i, j) in self.mat:
                 return self.mat[(i,j)]
             else:
-                return 0
+                return S.Zero
         elif isinstance(key[0], slice) or isinstance(key[1], slice):
             return self.submatrix(key)
         else:
@@ -4506,7 +4506,7 @@ class SparseMatrix(MatrixBase):
                 if (i, j) in self.mat:
                     c.append(self[i, j])
                 else:
-                    c.append(0)
+                    c.append(S.Zero)
         return Matrix(l)
 
     def row_list(self):
