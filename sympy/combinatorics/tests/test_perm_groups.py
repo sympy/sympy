@@ -176,11 +176,11 @@ def test_eq():
     assert G1 != G4
     assert not G4.is_subgroup(G1)
 
-def test_commutators():
+def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
     b = Permutation([0, 1, 3, 2, 4])
     G = PermutationGroup([a,b])
-    C = G.commutator()
+    C = G.derived_subgroup()
     assert C.order() == 3
     assert C.is_normal(G)
     assert C.is_subgroup(G)
@@ -188,7 +188,7 @@ def test_commutators():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
     G = PermutationGroup(gens)
-    C = G.commutator()
+    C = G.derived_subgroup()
     assert C.order() == 12
 
 def test_is_solvable():
@@ -210,7 +210,7 @@ def test_rubik1():
     G2 = PermutationGroup(gens2)
     assert G2.order() == 663552
     assert G2.is_subgroup(G1)
-    C1 = G1.commutator()
+    C1 = G1.derived_subgroup()
     assert C1.order() == 4877107200
     assert C1.is_subgroup(G1)
     assert not G2.is_subgroup(C1)
