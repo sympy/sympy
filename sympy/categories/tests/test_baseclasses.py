@@ -164,21 +164,21 @@ def test_diagram():
     d = Diagram({f: empty, g: empty, g * f:"unique"})
 
     d1 = Diagram([f])
-    assert d.is_subdiagram(d1)
-    assert not d1.is_subdiagram(d)
+    assert d1 <= d
+    assert not (d1 >= d)
 
     d = Diagram([NamedMorphism(B, A, "f'")])
-    assert not d.is_subdiagram(d1)
-    assert not d1.is_subdiagram(d)
+    assert not (d1 <= d)
+    assert not (d1 >= d)
 
     d1 = Diagram({f: empty, g: empty, g * f: ["unique", "something"]})
-    assert not d.is_subdiagram(d1)
-    assert not d1.is_subdiagram(d)
+    assert not (d1 <= d)
+    assert not (d1 >= d)
 
     d = Diagram({f: "blooh"})
     d1 = Diagram({f: "bleeh"})
-    assert not d.is_subdiagram(d1)
-    assert not d1.is_subdiagram(d)
+    assert not (d1 <= d)
+    assert not (d1 >= d)
 
     d = Diagram({f: "unique", g: empty, g * f: "veryunique"})
     d1 = d.subdiagram_from_objects(FiniteSet(A, B))

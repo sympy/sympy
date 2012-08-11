@@ -929,6 +929,22 @@ class Diagram(Basic):
 
         return True
 
+    def __le__(self, other):
+        """
+        Checks if this :class:`Diagram` is a subdiagram of ``other``.
+
+        TODO: Expand
+        """
+        return other.is_subdiagram(self)
+
+    def __ge__(self, other):
+        """
+        Checks if ``other`` is a subdiagram of this :class:`Diagram`.
+
+        TODO: Expand
+        """
+        return self.is_subdiagram(other)
+
     def subdiagram_from_objects(self, objects):
         """
         TODO: Check
