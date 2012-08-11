@@ -5,7 +5,7 @@ from sympy.polys.distributedmodules import (
     sdm_add, sdm_LM, sdm_LT, sdm_mul_term, sdm_zero, sdm_deg,
     sdm_LC, sdm_from_dict, sdm_to_dict,
     sdm_spoly, sdm_ecart, sdm_nf_mora, sdm_groebner,
-    sdm_from_vector, sdm_to_vector
+    sdm_from_vector, sdm_to_vector, sdm_monomial_lcm
 )
 
 from sympy.polys.monomialtools import (
@@ -21,6 +21,9 @@ def test_sdm_monomial_mul():
 
 def test_sdm_monomial_deg():
     assert sdm_monomial_deg((5, 2, 1)) == 3
+
+def test_sdm_monomial_lcm():
+    assert sdm_monomial_lcm((1, 2, 3), (1, 5, 0)) == (1, 5, 3)
 
 def test_sdm_monomial_divides():
     assert sdm_monomial_divides((1, 0, 0), (1, 0, 0)) is True
@@ -93,12 +96,16 @@ def test_sdm_nf_mora():
     f1 = sdm_from_dict({(1, 1, 1, 0): QQ(1), (1, 0, 2, 0): QQ(1),
                         (1, 0, 0, 0): QQ(-1)}, grlex)
     f2 = sdm_from_dict({(1, 1, 1, 0): QQ(1)}, grlex)
+    (id0, id1, id2) = [sdm_from_dict({(i, 0, 0, 0): QQ(1)}, grlex)
+                       for i in range(3)]
 
-    assert sdm_nf_mora(f, [f1, f2], grlex, QQ) == \
-        [((1, 0, 2, 1), QQ(1)), ((1, 0, 0, 3), QQ(1)), ((1, 1, 1, 0), QQ(1)),
-         ((1, 1, 0, 1), QQ(1))]
-    assert sdm_nf_mora(f, [f2, f1], grlex, QQ) == \
-        [((1, 0, 2, 1), QQ(1)), ((1, 0, 0, 3), QQ(1)), ((1, 1, 1, 0), QQ(1))]
+    assert sdm_nf_mora(f, [f1, f2], grlex, QQ, phantom=(id0, [id1, id2])) == \
+        ([((1, 0, 2, 1), QQ(1)), ((1, 0, 0, 3), QQ(1)), ((1, 1, 1, 0), QQ(1)),
+          ((1, 1, 0, 1), QQ(1))],
+         [((1, 1, 0, 1), QQ(-1)), ((0, 0, 0, 0), QQ(1))])
+    assert sdm_nf_mora(f, [f2, f1], grlex, QQ, phantom=(id0, [id2, id1])) == \
+        ([((1, 0, 2, 1), QQ(1)), ((1, 0, 0, 3), QQ(1)), ((1, 1, 1, 0), QQ(1))],
+         [((2, 1, 0, 1), QQ(-1)), ((2, 0, 1, 1), QQ(-1)), ((0, 0, 0, 0), QQ(1))])
 
     f = sdm_from_vector([x*z, y**2 + y*z - z, y], lex, QQ, gens=[x, y, z])
     f1 = sdm_from_vector([x, y, 1], lex, QQ, gens=[x, y, z])
