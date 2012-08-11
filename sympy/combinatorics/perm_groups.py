@@ -1607,6 +1607,16 @@ class PermutationGroup(Basic):
         self._is_transitive = ans
         return ans
 
+    def lower_central_series(self):
+        res = [self]
+        current = self
+        next = self.commutator(self, current)
+        while current != next:
+            res.append(next)
+            current = next
+            next = self.commutator(self, current)
+        return res
+
     @property
     def max_div(self):
         """
