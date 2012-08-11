@@ -1001,7 +1001,8 @@ class Diagram(Basic):
         True
 
         """
-        if isinstance(morphism, CompositeMorphism):
+        if isinstance(morphism, CompositeMorphism) and \
+               morphism not in self.generators_properties:
             # Composite morphisms always store the flattened-down
             # version of components, so it suffices to check the
             # inclusion of each of the component.

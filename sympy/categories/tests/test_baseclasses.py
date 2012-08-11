@@ -134,10 +134,12 @@ def test_diagram():
     # works as expected.
     d = Diagram({f: empty, g: empty, g * f: "unique"})
     assert d[g * f] == FiniteSet("unique")
+    assert g * f in d
 
     # Check how the properties of composite morphisms are computed.
     d = Diagram({f: ["unique", "isomorphism"], g: "unique"})
     assert d[g * f] == FiniteSet("unique")
+    assert g * f in d
 
     # Test an empty diagram.
     d = Diagram()
