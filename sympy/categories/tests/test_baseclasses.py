@@ -92,25 +92,32 @@ def test_diagram():
 
     empty = EmptySet()
 
-    # Test the addition of identities.
+    # Test identities.
     d1 = Diagram(f)
 
+    assert set(d1.generators) == set([f])
+    assert d1.generators_properties == Dict({f: empty})
+    assert d1.is_finite == True
+    assert set(d1.morphisms) == set([f, id_A, id_B])
     assert d1.objects == FiniteSet(A, B)
-    assert d1.hom(A, B) == FiniteSet(f)
-    assert d1.hom(A, A) == FiniteSet(id_A)
-    assert d1.hom(B, B) == FiniteSet(id_B)
+    assert set(d1.hom(A, B)) == set([f])
+    assert set(d1.hom(A, A)) == set([id_A])
+    assert set(d1.hom(B, B)) == set([id_B])
 
+    # Test construction from an iterable.
     assert d1 == Diagram([f])
+
+    # Test some basic generator simplifications.
     assert d1 == Diagram(id_A, f)
     assert d1 == Diagram(f, f)
 
-    # Test the addition of composites.
+    # Test composites.
     d2 = Diagram([f, g])
-    homAC = d2.hom(A, C)
 
+    assert d2.is_finite == True
     assert d2.objects == FiniteSet(A, B, C)
-    assert g * f in d2.morphisms.keys()
-    assert homAC == FiniteSet(g * f)
+    assert g * f in d2
+    assert set(d2.hom(A, C)) == set([g * f])
     assert d2 == Diagram(f, g)
 
     # Test equality, inequality and hash.
@@ -126,25 +133,20 @@ def test_diagram():
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
     d = Diagram({f: empty, g: empty, g * f: "unique"})
-    assert d.morphisms[g * f] == FiniteSet("unique")
+    assert d[g * f] == FiniteSet("unique")
 
     # Check how the properties of composite morphisms are computed.
     d = Diagram({f: ["unique", "isomorphism"], g: "unique"})
-    assert d.morphisms[g * f] == FiniteSet("unique")
+    assert d[g * f] == FiniteSet("unique")
 
     # Test an empty diagram.
     d = Diagram()
-    assert d.morphisms == Dict({})
+    assert set(d.morphisms) == set([])
     assert d.objects == empty
 
     # Check a SymPy Dict object.
     d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
-    assert d.morphisms[g * f] == FiniteSet("unique")
-
-    # Check the addition of components of composite morphisms.
-    d = Diagram([g * f])
-    assert f in d.morphisms
-    assert g in d.morphisms
+    assert d[g * f] == FiniteSet("unique")
 
     # Check subdiagrams.
     d = Diagram({f: empty, g: empty, g * f:"unique"})
@@ -181,10 +183,6 @@ def test_diagram():
     assert d[g * f] == FiniteSet("unique")
     assert d[g] == FiniteSet()
 
-    # Test the proper addition of the components of composite
-    # morphisms and their objects.
-    assert Diagram(g * f) == Diagram(g, f)
-
 def test_category():
     A = Object("A")
     B = Object("B")
@@ -215,7 +213,7 @@ def test_implication():
     g = NamedMorphism(B, C, "g")
 
     premise = Diagram(g, f)
-    conclusion = Diagram({g * f: "unique"})
+    conclusion = Diagram({f: [], g: [], g * f: "unique"})
 
     imp = Implication(premise, conclusion)
 

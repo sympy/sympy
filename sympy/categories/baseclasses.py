@@ -1,6 +1,8 @@
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
 from sympy.core.compatibility import iterable
+from itertools import product
+from sympy import cacheit
 
 class Class(Set):
     r"""
@@ -510,6 +512,593 @@ class Category(Basic):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
 
+class Diagram(Basic):
+    """
+    TODO: Rewrite all the docstrings in this class.
+
+    Represents a diagram in a certain category.
+
+    Informally, a diagram is a collection of objects of a category and
+    certain morphisms between them.  Identity morphisms, as well as
+    all composites of morphisms included in the diagram belong to the
+    diagram.  For a more formal approach to this notion see
+    [Pare1970].
+
+    A :class:`Diagram` stores a mapping between morphisms and the
+    :class:`FiniteSet`'s of their properties.  All possible morphism
+    compositions, as well as the components of composite morphisms are
+    also added to the diagram.  No properties are assigned to such
+    morphisms by default.  The set of properties of a composite
+    morphism is the intersection of the sets of properties of its
+    components.
+
+    No checks are carried out of whether the supplied objects and
+    morphisms do belong to one and the same category.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> d = Diagram(f, g)
+    >>> morphisms = sorted(d, key=default_sort_key)
+    >>> pprint(morphisms, use_unicode=False)
+    [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
+    >>> pprint(d.morphisms, use_unicode=False)
+    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
+    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+
+    References
+    ==========
+    [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
+    1970.
+    """
+    def  __new__(cls, *args):
+        """
+        TODO: Document.
+
+        TODO: Mention that identities are dropped.
+        """
+        generators = {}
+        objects = set([])
+
+        if args:
+            first_arg = args[0]
+
+            if isinstance(first_arg, dict) or isinstance(first_arg, Dict):
+                # The user has supplied a dictionary of morphisms and
+                # their properties.  Assure that the properties are
+                # converted to ``FiniteSet``'s.
+                generators = {}
+                for morphism, props in first_arg.items():
+                    if isinstance(morphism, IdentityMorphism) and props:
+                        raise ValueError(
+                            "Instances of IdentityMorphism cannot have "
+                            "properties.")
+
+                    generators[morphism] = FiniteSet(props)
+                    objects.update([morphism.domain, morphism.codomain])
+            elif iterable(first_arg):
+                # The user has supplied a list of morphisms, none of
+                # which have any properties.
+                empty = EmptySet()
+                for morphism in first_arg:
+                    generators[morphism] = empty
+                    objects.update([morphism.domain, morphism.codomain])
+            else:
+                # Attempt to interpret ``args`` as a list of
+                # morphisms.
+                return Diagram(args)
+
+        # Drop identities; they are useless in the generators.
+        for morphism in generators.keys():
+            if isinstance(morphism, IdentityMorphism):
+                del generators[morphism]
+
+        return Basic.__new__(cls, Dict(generators), FiniteSet(objects))
+
+    @property
+    def generators(self):
+        """
+        TODO: Rewrite
+
+        Returns the :class:`Dict` mapping the morphisms included in
+        this :class:`Diagram` to their properties.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> id_A = IdentityMorphism(A)
+        >>> id_B = IdentityMorphism(B)
+        >>> d = Diagram(f)
+        >>> print pretty(d.morphisms, use_unicode=False)
+        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+
+        """
+        return self.args[0].keys()
+
+    @property
+    def generators_properties(self):
+        """
+        TODO: Describe.
+        """
+        return self.args[0]
+
+    @staticmethod
+    def _check_cycles_in_generators(obj, adj_lists, pre_visited, post_visited):
+        """
+        Traverses the graph supplied in ``adj_lists`` starting from
+        ``object``, marking the visited objects in preorder in
+        ``pre_visited`` and in postorder in ``post_visited``.  Reports
+        ``False`` if it never finds a back edge and ``True``
+        otherwise.
+
+        References
+        ==========
+
+        [Sedg2002] Robert Sedgewick, Algorithms in C++ Graph
+        Algorithms, Part 5.  Third Edition.  Addison-Wesley, 2002.
+        Section Digraphs and DAGs.
+
+        [Wikipedia] http://en.wikipedia.org/wiki/Depth-first_search#Output_of_a_depth-first_search
+
+        """
+        pre_visited[obj] = True
+
+        for adj_obj in adj_lists[obj]:
+            if not pre_visited[adj_obj]:
+                # We haven't yet been there.
+                if Diagram._check_cycles_in_generators(
+                    adj_obj, adj_lists, pre_visited, post_visited):
+                    return True
+            elif not post_visited[adj_obj]:
+                # ``(obj, adj_obj)`` is a back edge ([Wikipedia],
+                # [Sedg2002], Listing 19.2), and we have detected a
+                # cycle.
+                #
+                # Essentially, this means that ``adj_obj`` actually
+                # precedes ``obj`` in the DFS tree.  This means that
+                # one can go from ``adj_obj`` to ``obj`` (because
+                # ``adj_obj`` precedes ``obj``), and then back to
+                # ``adj_obj``, thus closing a cycle.
+                #
+                # The reason this check works is the following.
+                # ``post_visited`` is filled in during _postorder_
+                # traversal, that is, when we are getting up the DFS
+                # tree.  ``post_visited[adj_obj] == False`` means that
+                # we haven't yet reached ``adj_obj`` on our way back.
+                # Therefore, when we were going down the DFS tree, we
+                # got to ``obj`` through ``adj_obj``.  (The best way
+                # to understand this is to actually draw some simple
+                # graphs.)
+                return True
+
+        post_visited[obj] = True
+        # No cycles found yet.
+        return False
+
+    @property
+    @cacheit
+    def is_finite(self):
+        """
+        Checks whether this diagram contains a finite number of
+        morphisms.
+
+        TODO: Expand
+        """
+        # This method essentially checks whether there are cycles in
+        # the digraph defined by the generators.  Note that it is
+        # sufficient to only check the generators, since the other
+        # (derived) morphisms essentially form a transitive closure of
+        # the digraph and thus cannot contribute new cycles.
+        #
+        # For references, see ``_check_cycles_in_generators``.  Note
+        # however that the code in that method and in ``is_infinite``
+        # is an adaptation of what can be found in [Sedg2002].
+
+        # In this dictionary, vertices will be marked as visited
+        # during preorder traversal.
+        pre_visited = {}
+
+        # In this dictionary, vertices will be marked as visited
+        # during preorder traversal.
+        post_visited = {}
+
+        # We will also count the number of morphisms which go into
+        # each object.
+        indegrees = {}
+
+        # This dictionary will store the adjacency lists of the graph
+        # of generators.
+        adj_lists = {}
+
+        for obj in self.objects:
+            adj_lists[obj] = []
+            pre_visited[obj] = False
+            post_visited[obj] = False
+            indegrees[obj] = 0
+
+        # Build the adjacency lists of the graph of generators.
+        for m in self.generators:
+            adj_lists[m.domain].append(m.codomain)
+            indegrees[m.codomain] += 1
+
+        # Sort the objects by the number of morphisms which go into
+        # them.  This will allow us to start the traversal with
+        # sources, if there are sources.
+        objects_by_indegree = sorted(
+            self.objects,key=lambda obj: indegrees[obj])
+
+        for obj in objects_by_indegree:
+            if not pre_visited[obj]:
+                # Look for cycles in the DFS tree which starts at this
+                # object.
+                if self._check_cycles_in_generators(
+                    obj, adj_lists, pre_visited, post_visited):
+                    # There are cycles, this diagram is infinite.
+                    return False
+
+        # No cycles, this is a finite diagram.
+        return True
+
+    def _composites_by_length(self, length, identities=True):
+        """
+        Given the desired ``length`` (component count), generates all
+        possible compositions of morphisms from ``generators`` of this
+        length.  For ``length == 1``, this method will produce exactly
+        the list of the generators of this :class:`Diagram`.  For
+        ``length == 0`` will produce nothing.
+
+        If ``identities == True``, and ``length == 1``, this function
+        will produce _all_ generators, including identities.
+        Otherwise it will only produce non-identity morphisms.
+        """
+        if not length:
+            return
+        if length == 1:
+            # Here we will accumulate all those objects for which
+            # identity morphisms have been provided.
+            identities_in_generators = []
+
+            for m in self.generators:
+                if isinstance(m, IdentityMorphism):
+                    if identities:
+                        identities_in_generators.append(m)
+                        yield m
+                    else:
+                        continue
+                yield m
+
+            if identities:
+                for obj in self.objects - FiniteSet(identities_in_generators):
+                    yield IdentityMorphism(obj)
+        else:
+            first_half_len = length/2
+            second_half_len = length - first_half_len
+
+            first_half = self._composites_by_length(first_half_len,
+                                                    identities=False)
+            second_half = self._composites_by_length(second_half_len,
+                                                    identities=False)
+
+            for (first, second) in product(first_half, second_half):
+                # We only need to check either ``first * second`` or
+                # ``second * first``, and it doesn't matter which of
+                # them, because we go through all possible
+                # combinations.
+                #
+                # Note that some composites may have already been
+                # supplied as generators; no need to yield them twice.
+                if (second.domain == first.codomain):
+                    composite = second * first
+                    if composite not in self.generators_properties:
+                        yield composite
+
+    @property
+    def morphisms(self):
+        """
+        Generates all the morphisms of this diagram.
+
+        TODO: Expand
+        """
+        length = 1
+
+        # If this diagram is finite, we want to only go on until there
+        # are composites.  Otherwise, we just go on and on.
+        #
+        # The point of having a lambda is to avoid checking
+        # ``is_finite`` on every iteration.
+        if self.is_finite:
+            halt_condition = lambda ncomposites: ncomposites == 0
+        else:
+            halt_condition = lambda x: False
+
+        ncomposites = 1
+        while not halt_condition(ncomposites):
+            ncomposites = 0
+            for composite in self._composites_by_length(length):
+                ncomposites += 1
+                yield composite
+            length += 1
+
+    @property
+    def objects(self):
+        """
+        Returns the :class:`FiniteSet` of objects that appear in this
+        diagram.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> d.objects
+        {Object("A"), Object("B"), Object("C")}
+
+        """
+        return self.args[1]
+
+    def hom(self, A, B):
+        """
+        TODO: Rewrite
+
+        Returns the :class:`FiniteSet` of morphisms between the
+        objects ``A`` and ``B``.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> print pretty(d.hom(A, C), use_unicode=False)
+        {g*f:A-->C}
+
+        See Also
+        ========
+        Object, Morphism
+        """
+        # For infinite diagrams, we rely on the fact that
+        # ``morphisms`` assures a sufficiently BFS-like traversal.
+        return (m for m in self.morphisms if (m.domain == A) and
+                (m.codomain == B))
+
+    def is_subdiagram(self, other):
+        """
+        TODO: Check
+
+        Checks whether ``other`` is a subdiagram of ``self``.  Diagram
+        `D'` is a subdiagram of `D` if all morphisms of `D'` are
+        contained in the morphisms of `D`.  The morphisms contained
+        both in `D'` and `D` should have the same properties for `D'`
+        to be a subdiagram of `D`.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> d1 = Diagram(f)
+        >>> d.is_subdiagram(d1)
+        True
+        >>> d1.is_subdiagram(d)
+        False
+        """
+        # Check the inclusion of generators.  This suffices since all
+        # other morphisms in diagrams are composites of the
+        # generators.
+        for m in other.generators:
+            if (m not in self.generators_properties) or \
+               not self.generators_properties[m].subset(
+                other.generators_properties[m]):
+                return False
+
+        return True
+
+    def subdiagram_from_objects(self, objects):
+        """
+        TODO: Check
+
+        If ``objects`` is a subset of the objects of ``self``, returns
+        a diagram which has as morphisms all those morphisms of
+        ``self`` which have a domains and codomains in ``objects``.
+        Properties are preserved.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram({f: "unique", g * f: "veryunique"})
+        >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
+        >>> d1 == Diagram({f: "unique"})
+        True
+        """
+        if not self.objects.subset(objects):
+            raise ValueError("Supplied objects should all belong to the diagram.")
+
+        # It suffices to filter the generators, because all other
+        # morphisms are obtained as compositions of generators.
+
+        new_generators = {}
+        for morphism, props in self.generators_properties.items():
+            if (morphism.domain in objects) and (morphism.codomain in objects):
+                new_generators[morphism] = props
+
+        return Diagram(new_generators)
+
+    def __iter__(self):
+        """
+        TODO: Check
+
+        Produces an iterator over the underlying dictionary of
+        morphisms.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> sorted(d, key=default_sort_key)
+        [CompositeMorphism((NamedMorphism(Object("A"), Object("B"), "f"),
+        NamedMorphism(Object("B"), Object("C"), "g"))),
+        IdentityMorphism(Object("A")), IdentityMorphism(Object("B")),
+        IdentityMorphism(Object("C")), NamedMorphism(Object("A"),
+        Object("B"), "f"), NamedMorphism(Object("B"), Object("C"), "g")]
+
+        """
+        return iter(self.morphisms)
+
+    def __contains__(self, morphism):
+        """
+        Checks whether ``morphism`` is contained in the diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> g * f in d
+        True
+
+        """
+        if isinstance(morphism, CompositeMorphism):
+            # Composite morphisms always store the flattened-down
+            # version of components, so it suffices to check the
+            # inclusion of each of the component.
+            return all(component in self.generators for component
+                       in morphism.components)
+        else:
+            return morphism in self.generators
+
+    def __len__(self):
+        """
+        TODO: Document.
+        """
+        if self.is_finite:
+            return len(list(self.morphisms))
+        else:
+            raise TypeError("This diagram is infinite.")
+
+    def _morphism_properties(self, morphism):
+        """
+        Returns the properties of ``morphism`` in this diagram.  Does
+        not check whether ``morphism`` indeed belongs to ``self``.
+        """
+        if (morphism in self.generators_properties) or \
+               not isinstance(morphism, CompositeMorphism):
+            return self.generators_properties[morphism]
+        else:
+            # This is a composite morphisms which was not explicitly
+            # included in the generators.
+            #
+            # Remember that the properties of the composite morphism are
+            # the intersection of the properties of its components.
+            resulting_props =  self.generators_properties[morphism.components[0]]
+            for component in morphism.components:
+                resulting_props &= self.generators_properties[component]
+            return resulting_props
+
+    def __getitem__(self, morphism):
+        r"""
+        Retrieves the properties of the supplied ``morphism``, if it
+        belongs to the diagram.  Throws :class:`ValueError` if
+        ``morphism`` does not belong to this diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram({f: "unique", g: []})
+        >>> d[f]
+        {unique}
+
+        """
+        # People say that ``all`` is implemented directly in C, so
+        # this check should not be too resource-intensive.  The code
+        # is however clearer in this form.
+        if morphism not in self:
+            raise ValueError("%s does not belong to this diagram." %
+                             str(morphism))
+
+        return self._morphism_properties(morphism)
+
+    def get(self, morphism, default=None):
+        """
+        Retrieves the properties of the supplied ``morphism``, if it
+        belongs to the diagram.  Returns the value of ``default`` if
+        ``morphism`` does not belong to this diagram.
+
+        Example
+        =======
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet, pretty
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram({f: "unique", g: []})
+        >>> d.get(f)
+        {unique}
+        >>> d.get(NamedMorphism(B, A, "f'")) is None
+        True
+
+        """
+        # People say that ``all`` is implemented directly in C, so
+        # this check should not be too resource-intensive.  The code
+        # is however clearer in this form.
+        if morphism not in self:
+            return default
+
+        return self._morphism_properties(morphism)
+
 class Implication(Basic):
     r"""
     Represents an category theoretic implication in terms of diagrams.
@@ -664,6 +1253,8 @@ class Implication(Basic):
 
     def to_diagram(self, conclusion_property=None):
         """
+        TODO: Check
+
         Merges the premise and the conclusion of this implication into
         a single :class:`Diagram`.  If ``conclusion_property`` is supplied,
         every morphism from the conclusion will have ``conclusion_property``
@@ -691,14 +1282,14 @@ class Implication(Basic):
         ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
 
         """
-        new_morphisms = dict(self.premise.morphisms)
-        for morphism, props in self.conclusion.morphisms.items():
+        new_generators = dict(self.premise.generators_properties)
+        for morphism, props in self.conclusion.generators_properties.items():
             new_props = props
             if conclusion_property and not isinstance(morphism, IdentityMorphism):
                 new_props |= FiniteSet(conclusion_property)
-            new_morphisms[morphism] = new_props
+            new_generators[morphism] = new_props
 
-        return Diagram(new_morphisms)
+        return Diagram(new_generators)
 
     def diff(self):
         """
@@ -724,7 +1315,7 @@ class Implication(Basic):
 
         """
         diff_morphisms = set([])
-        for morphism, props in self.conclusion.morphisms.items():
+        for morphism, props in self.conclusion.generators_properties.items():
             if morphism not in self.premise:
                 diff_morphisms.add(morphism)
             elif props and (props != self.premise[morphism]):
