@@ -576,29 +576,34 @@ class Diagram(Basic):
                 # converted to ``FiniteSet``'s.
                 generators = {}
                 for morphism, props in first_arg.items():
-                    if isinstance(morphism, IdentityMorphism) and props:
-                        raise ValueError(
-                            "Instances of IdentityMorphism cannot have "
-                            "properties.")
-
                     generators[morphism] = FiniteSet(props)
-                    objects.update([morphism.domain, morphism.codomain])
             elif iterable(first_arg):
                 # The user has supplied a list of morphisms, none of
                 # which have any properties.
                 empty = EmptySet()
                 for morphism in first_arg:
                     generators[morphism] = empty
-                    objects.update([morphism.domain, morphism.codomain])
             else:
                 # Attempt to interpret ``args`` as a list of
                 # morphisms.
                 return Diagram(args)
 
-        # Drop identities; they are useless in the generators.
-        for morphism in generators.keys():
-            if isinstance(morphism, IdentityMorphism):
-                del generators[morphism]
+        for morphism in generators:
+            objects.update([morphism.domain, morphism.codomain])
+
+        # Add identity morphisms for those objects for which they have
+        # not been already added.  We need this to be able to have
+        # isolated objects in diagrams.
+        #
+        # We need one-object diagrams for some technical reasons, for
+        # example, in diagram drawing.  This does not violate the
+        # actual notion of a ``Diagram``, however.  While it is indeed
+        # somewhat unusual to have one-object diagrams, it is
+        # perfectly fine from the formal perspective.
+        for obj in objects:
+            id_obj = IdentityMorphism(obj)
+            if id_obj not in generators:
+                generators[id_obj] = FiniteSet()
 
         return Basic.__new__(cls, Dict(generators), FiniteSet(objects))
 
@@ -730,6 +735,13 @@ class Diagram(Basic):
 
         # Build the adjacency lists of the graph of generators.
         for m in self.generators:
+            if isinstance(m, IdentityMorphism):
+                # The generators may contain some identity morphisms,
+                # which were explicitly supplied with properties.
+                # Yet, since they are identities, they do not add new
+                # morphisms to the diagram, so they should be skipped
+                # here.
+                continue
             adj_lists[m.domain].append(m.codomain)
             indegrees[m.codomain] += 1
 
@@ -766,22 +778,10 @@ class Diagram(Basic):
         if not length:
             return
         if length == 1:
-            # Here we will accumulate all those objects for which
-            # identity morphisms have been provided.
-            identities_in_generators = []
-
             for m in self.generators:
-                if isinstance(m, IdentityMorphism):
-                    if identities:
-                        identities_in_generators.append(m)
-                        yield m
-                    else:
-                        continue
+                if isinstance(m, IdentityMorphism) and not identities:
+                    continue
                 yield m
-
-            if identities:
-                for obj in self.objects - FiniteSet(identities_in_generators):
-                    yield IdentityMorphism(obj)
         else:
             first_half_len = length/2
             second_half_len = length - first_half_len
@@ -1025,10 +1025,9 @@ class Diagram(Basic):
         Returns the properties of ``morphism`` in this diagram.  Does
         not check whether ``morphism`` indeed belongs to ``self``.
         """
-        if (morphism in self.generators_properties) or \
-               not isinstance(morphism, CompositeMorphism):
+        if morphism in self.generators_properties:
             return self.generators_properties[morphism]
-        else:
+        elif isinstance(morphism, CompositeMorphism):
             # This is a composite morphisms which was not explicitly
             # included in the generators.
             #

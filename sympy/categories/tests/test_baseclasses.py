@@ -96,8 +96,8 @@ def test_diagram():
     # Test identities.
     d1 = Diagram(f)
 
-    assert set(d1.generators) == set([f])
-    assert d1.generators_properties == Dict({f: empty})
+    assert set(d1.generators) == set([f, id_A, id_B])
+    assert d1.generators_properties == Dict({f: empty, id_A: empty, id_B: empty})
     assert d1.is_finite == True
     assert set(d1.morphisms) == set([f, id_A, id_B])
     assert d1.objects == FiniteSet(A, B)
@@ -122,8 +122,9 @@ def test_diagram():
     assert d2 == Diagram(f, g)
 
     d = Diagram(g * f)
-    assert set(d.generators) == set([g * f])
-    assert d.generators_properties == Dict({g * f: empty})
+    assert set(d.generators) == set([id_A, id_C, g * f])
+    assert d.generators_properties == Dict({g * f: empty, id_A: empty,
+                                            id_C: empty})
     assert d.is_finite == True
     assert set(d.morphisms) == set([id_A, id_C, g * f])
     assert d.objects == FiniteSet(A, C)
@@ -184,7 +185,21 @@ def test_diagram():
     assert d1 == Diagram({f: "unique"})
     raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
 
-    raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))
+    # Test how identities with properties work.
+    d = Diagram({id_A: "unique", f: []})
+    assert set(d.generators) == set([id_A, id_B, f])
+    assert d.generators_properties == Dict(
+        {id_A: FiniteSet("unique"), id_B: FiniteSet(), f: FiniteSet()})
+    assert d.is_finite == True
+    assert set(d.morphisms) == set([id_A, id_B, f])
+    assert d[id_A] == FiniteSet("unique")
+    assert d[id_B] == FiniteSet()
+    assert d[f] == FiniteSet()
+    assert id_A in d
+    assert id_C not in d
+
+    d = Diagram(f, id_C)
+    assert id_C in d
 
     # Test the dictionary-like interface of ``Diagram``.
     d = Diagram({f: [], g: [], g * f: "unique"})
