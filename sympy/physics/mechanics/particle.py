@@ -144,7 +144,7 @@ class Particle(object):
     def kinetic_energy(self, frame):
         """Kinetic energy of the particle
 
-        The kinetic energy, T, of a particle,P, is given by
+        The kinetic energy, T, of a particle, P, is given by
 
         'T = 1/2 m v^2'
 
