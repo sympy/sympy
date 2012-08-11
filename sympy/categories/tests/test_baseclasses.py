@@ -209,6 +209,13 @@ def test_diagram():
     assert d[g * f] == FiniteSet("unique")
     assert d[g] == FiniteSet()
 
+    # Test how property-less composites are simplified out of
+    # generators.
+    d = Diagram(f, g, g * f)
+    assert set(d.generators) == set([f, g, id_A, id_B, id_C])
+    assert set(d.morphisms) == set([id_A, id_B, id_C, f, g, g * f])
+    assert d == Diagram(f, g)
+
 def test_category():
     A = Object("A")
     B = Object("B")

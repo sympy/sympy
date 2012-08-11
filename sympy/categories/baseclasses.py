@@ -588,7 +588,18 @@ class Diagram(Basic):
                 # morphisms.
                 return Diagram(args)
 
-        for morphism in generators:
+        for morphism, props in generators.items():
+            # Drop property-less composites of other morphisms in the
+            # generators.
+            if isinstance(morphism, CompositeMorphism) and not props:
+                if all(component in generators for component
+                       in morphism.components):
+                    del generators[morphism]
+
+                    continue
+
+            # This morphism is all right, register the objects it
+            # involves.
             objects.update([morphism.domain, morphism.codomain])
 
         # Add identity morphisms for those objects for which they have
