@@ -98,7 +98,7 @@ def test_diagram():
 
     assert set(d1.generators) == set([f, id_A, id_B])
     assert d1.generators_properties == Dict({f: empty, id_A: empty, id_B: empty})
-    assert d1.is_finite == True
+    assert d1.is_finite
     assert set(d1.morphisms) == set([f, id_A, id_B])
     assert d1.objects == FiniteSet(A, B)
     assert set(d1.hom(A, B)) == set([f])
@@ -115,7 +115,7 @@ def test_diagram():
     # Test composites.
     d2 = Diagram([f, g])
 
-    assert d2.is_finite == True
+    assert d2.is_finite
     assert d2.objects == FiniteSet(A, B, C)
     assert g * f in d2
     assert set(d2.hom(A, C)) == set([g * f])
@@ -125,7 +125,7 @@ def test_diagram():
     assert set(d.generators) == set([id_A, id_C, g * f])
     assert d.generators_properties == Dict({g * f: empty, id_A: empty,
                                             id_C: empty})
-    assert d.is_finite == True
+    assert d.is_finite
     assert set(d.morphisms) == set([id_A, id_C, g * f])
     assert d.objects == FiniteSet(A, C)
 
@@ -154,7 +154,7 @@ def test_diagram():
     assert set(d.generators) == set([])
     assert set(d.morphisms) == set([])
     assert d.objects == empty
-    assert d.is_finite == True
+    assert d.is_finite
 
     # Check a SymPy Dict object.
     d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
@@ -190,7 +190,7 @@ def test_diagram():
     assert set(d.generators) == set([id_A, id_B, f])
     assert d.generators_properties == Dict(
         {id_A: FiniteSet("unique"), id_B: FiniteSet(), f: FiniteSet()})
-    assert d.is_finite == True
+    assert d.is_finite
     assert set(d.morphisms) == set([id_A, id_B, f])
     assert d[id_A] == FiniteSet("unique")
     assert d[id_B] == FiniteSet()
