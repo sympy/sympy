@@ -25,6 +25,8 @@ help:
 	@echo "  web         to make files usable by Sphinx.web"
 	@echo "  htmlhelp    to make HTML files and a HTML help project"
 	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  texinfo     to make Texinfo files"
+	@echo "  info        to make Texinfo files and run them through makeinfo"
 	@echo "  changes     to make an overview over all changed/added/deprecated items"
 	@echo "  linkcheck   to check all external links for integrity"
 	@echo "  cheatsheet  to make the Cheatsheet"
@@ -126,3 +128,18 @@ cheatsheet:
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+
+texinfo:
+	mkdir -p _build/texinfo
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) _build/texinfo
+	@echo
+	@echo "Build finished. The Texinfo files are in _build/texinfo."
+	@echo "Run \`make' in that directory to run these through makeinfo" \
+	      "(use \`make info' here to do that automatically)."
+
+info:
+	mkdir -p _build/texinfo
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) _build/texinfo
+	@echo "Running Texinfo files through makeinfo..."
+	make -C _build/texinfo info
+	@echo "makeinfo finished; the Info files are in _build/texinfo."

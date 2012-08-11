@@ -155,3 +155,10 @@ pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
               '\\usepackage{amsfonts}\n'+\
               '\\usepackage{amssymb}\n'+\
               '\\setlength{\\parindent}{0pt}\n'
+
+texinfo_documents = [
+  (master_doc, 'sympy', 'SymPy Documentation',
+   'SymPy Development Team',
+   'SymPy', 'Computer algebra system (CAS) in Python', 'Programming',
+   1),
+]
