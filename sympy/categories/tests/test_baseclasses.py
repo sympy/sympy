@@ -89,6 +89,7 @@ def test_diagram():
     g = NamedMorphism(B, C, "g")
     id_A = IdentityMorphism(A)
     id_B = IdentityMorphism(B)
+    id_C = IdentityMorphism(C)
 
     empty = EmptySet()
 
@@ -120,6 +121,13 @@ def test_diagram():
     assert set(d2.hom(A, C)) == set([g * f])
     assert d2 == Diagram(f, g)
 
+    d = Diagram(g * f)
+    assert set(d.generators) == set([g * f])
+    assert d.generators_properties == Dict({g * f: empty})
+    assert d.is_finite == True
+    assert set(d.morphisms) == set([id_A, id_C, g * f])
+    assert d.objects == FiniteSet(A, C)
+
     # Test equality, inequality and hash.
     d11 = Diagram([f])
 
@@ -130,8 +138,7 @@ def test_diagram():
     d11 = Diagram({f: "unique"})
     assert d1 != d11
 
-    # Make sure that (re-)adding composites (with new properties)
-    # works as expected.
+    # Make sure that composites with properties work as expected.
     d = Diagram({f: empty, g: empty, g * f: "unique"})
     assert d[g * f] == FiniteSet("unique")
     assert g * f in d
@@ -143,8 +150,10 @@ def test_diagram():
 
     # Test an empty diagram.
     d = Diagram()
+    assert set(d.generators) == set([])
     assert set(d.morphisms) == set([])
     assert d.objects == empty
+    assert d.is_finite == True
 
     # Check a SymPy Dict object.
     d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
