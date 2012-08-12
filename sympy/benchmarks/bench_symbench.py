@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-from timeit import default_timer as clock
 from random import random
-from sympy import Symbol, I, sqrt, Integer, factorial, pi, exp, pprint, \
-    simplify, sin, sympify, factor
-
-x = Symbol("x")
-y = Symbol("y")
-z = Symbol("z")
+from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
+from sympy.abc import x, y, z
+from timeit import default_timer as clock
 
 def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"

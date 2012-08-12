@@ -2,24 +2,23 @@
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
-    gf_degree, gf_from_dict,
     gf_lshift, gf_add_mul, gf_mul,
     gf_div, gf_rem,
-    gf_gcd, gf_gcdex,
+    gf_gcdex,
     gf_sqf_p,
     gf_factor_sqf, gf_factor)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC, dmp_ground_TC,
+    dup_TC,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_degree_in, dmp_degree_list,
-    dup_from_dict, dmp_from_dict,
-    dmp_zero, dmp_zero_p,
-    dmp_one, dmp_one_p,
+    dmp_from_dict,
+    dmp_zero_p,
+    dmp_one,
     dmp_nest, dmp_raise,
-    dup_strip, dmp_strip,
+    dup_strip,
     dmp_ground,
     dup_inflate,
     dmp_exclude, dmp_include,
@@ -31,38 +30,36 @@ from sympy.polys.densearith import (
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
+    dup_sqr,
+    dmp_pow,
     dup_div, dmp_div,
-    dup_rem, dmp_rem,
     dup_quo, dmp_quo,
-    dup_expand, dmp_expand,
-    dup_add_mul, dmp_add_mul,
+    dmp_expand,
+    dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
-    dup_lshift, dup_rshift,
+    dup_lshift,
     dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm,
+    dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dmp_quo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_trunc, dmp_ground_trunc,
-    dup_content, dmp_ground_content,
+    dup_content,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive,
-    dup_eval, dmp_eval_tail,
+    dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dup_compose, dmp_compose,
+    dmp_compose,
     dup_shift, dup_mirror)
 
 from sympy.polys.euclidtools import (
     dmp_primitive,
-    dup_gcd, dmp_gcd,
     dup_inner_gcd, dmp_inner_gcd)
 
 from sympy.polys.sqfreetools import (
-    dup_sqf_p, dmp_sqf_p,
+    dup_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part)
 
@@ -76,7 +73,6 @@ from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets, cythonized
 
 from math import ceil as _ceil, log as _log
-from random import randint
 
 @cythonized("k")
 def dup_trial_division(f, factors, K):
@@ -156,7 +152,8 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
         f == G*H (mod m**2)
         S*G + T**H == 1 (mod m**2)
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -207,7 +204,8 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
        F_i = f_i (mod p), i = 1..r
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -335,7 +333,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     """
     Efficiently test if ``f`` is a cyclotomic polnomial.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.factortools import dup_cyclotomic_p
     >>> from sympy.polys.domains import ZZ
@@ -443,7 +442,8 @@ def dup_zz_cyclotomic_factor(f, K):
     which makes this method much faster that any other direct factorization
     approach (e.g. Zassenhaus's).
 
-    **References**
+    References
+    ==========
 
     1. [Weisstein09]_
 
@@ -540,7 +540,8 @@ def dup_zz_factor(f, K):
     using cyclotomic decomposition to speedup computations. To
     disable this behaviour set cyclotomic=False.
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 
@@ -853,34 +854,40 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K, mod=None):
+def dmp_zz_wang(f, u, K, mod=None, seed=None):
     """
     Factor primitive square-free polynomials in `Z[X]`.
 
-    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which
-    is primitive and square-free in `x_1`, computes factorization
-    of `f` into irreducibles over integers.
+    Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
+    primitive and square-free in `x_1`, computes factorization of `f` into
+    irreducibles over integers.
 
     The procedure is based on Wang's Enhanced Extended Zassenhaus
-    algorithm. The algorithm works by viewing `f` as a univariate
-    polynomial in `Z[x_2,...,x_n][x_1]`, for which an evaluation
-    mapping is computed::
+    algorithm. The algorithm works by viewing `f` as a univariate polynomial
+    in `Z[x_2,...,x_n][x_1]`, for which an evaluation mapping is computed::
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.
-    The mapping is used to transform `f` into a univariate polynomial
-    in `Z[x_1]`, which can be factored efficiently using Zassenhaus
-    algorithm. The last step is to lift univariate factors to obtain
-    true multivariate factors. For this purpose a parallel Hensel
-    lifting procedure is used.
+    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
+    which can be factored efficiently using Zassenhaus algorithm. The last
+    step is to lift univariate factors to obtain true multivariate
+    factors. For this purpose a parallel Hensel lifting procedure is used.
 
-    **References**
+    The parameter ``seed`` is passed to _randint and can be used to seed randint
+    (when an integer) or (for testing purposes) can be a sequence of numbers.
+
+    References
+    ==========
 
     1. [Wang78]_
     2. [Geddes92]_
 
     """
+    from sympy.utilities.randtest import _randint
+
+    randint = _randint(seed)
+
     ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
 
     b = dmp_zz_mignotte_bound(f, u, K)
@@ -904,7 +911,6 @@ def dmp_zz_wang(f, u, K, mod=None):
         if r == 1:
             return [f]
 
-        bad_points = set([tuple(A)])
         configs = [(s, cs, E, H, A)]
     except EvaluationFailed:
         pass
@@ -965,13 +971,14 @@ def dmp_zz_wang(f, u, K, mod=None):
         i += 1
 
     _, cs, E, H, A = configs[s_arg]
+    orig_f = f
 
     try:
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors: # pragma: no cover
         if query('EEZ_RESTART_IF_NEEDED'):
-            return dmp_zz_wang(f, u, K, mod+1)
+            return dmp_zz_wang(orig_f, u, K, mod+1)
         else:
             raise ExtraneousFactors("we need to restart algorithm with better parameters")
 
@@ -1018,7 +1025,8 @@ def dmp_zz_factor(f, u, K):
 
                     f = 2 (x - y) (x + y)
 
-    **References**
+    References
+    ==========
 
     1. [Gathen99]_
 

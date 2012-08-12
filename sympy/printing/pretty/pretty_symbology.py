@@ -161,8 +161,8 @@ for l in 'aeioruvx':
 for l in 'in':
     sup[l] = LSUP(l)
 
-for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-    sub[g] = GSUB(g)
+for gl in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+    sub[gl] = GSUB(gl)
 
 for d in [str(i) for i in range(10)]:
     sub[d] = DSUB(d)
@@ -196,13 +196,21 @@ _xobj_unicode = {
     '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
+    '<':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
+
+    '>':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
+
     'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
     'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
     'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
     'rceil'  : (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
 
     'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-   #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
+    'sum':  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
 
 
     # horizontal objects
@@ -236,6 +244,9 @@ _xobj_ascii = {
     '}' :   (( '|', '\\', '/',  '>' ),      '}'),
     '|' :   '|',
 
+    '<' :   (( '|', '/',  '\\'  ),          '<'),
+    '>' :   (( '|', '\\', '/'   ),          '>'),
+
     'int':  ( ' | ', '  /', '/  ' ),
 
     # horizontal objects
@@ -246,7 +257,6 @@ _xobj_ascii = {
     '/' :   '/',
     '\\':   '\\',
 }
-
 
 def xobj(symb, length):
     """Construct spatial object of given length.
@@ -363,10 +373,17 @@ frac = {
 _xsym = {
     '=='    : ( '=',    '='),
     '<'     : ( '<',    '<'),
+    '>'     : ( '>',    '>'),
     '<='    : ('<=',    U('LESS-THAN OR EQUAL TO')),
     '>='    : ('>=',    U('GREATER-THAN OR EQUAL TO')),
     '!='    : ('!=',    U('NOT EQUAL TO')),
     '*'     : ('*',     U('DOT OPERATOR')),
+    '-->'   : ('-->',   U('EM DASH') + U('EM DASH') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '==>'   : ('==>',   U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '.'     : ('*',     U('RING OPERATOR')),
 }
 
 
@@ -392,7 +409,11 @@ atoms_table = {
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
     'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet'          :   U('EMPTY SET'),
-    'Union'             :   U('UNION')
+    'Naturals'          :   U('DOUBLE-STRUCK CAPITAL N'),
+    'Integers'          :   U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals'             :   U('DOUBLE-STRUCK CAPITAL R'),
+    'Union'             :   U('UNION'),
+    'Intersection'      :   U('INTERSECTION')
 }
 
 def pretty_atom(atom_name, default=None):
@@ -449,25 +470,17 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None: # nice formatting of sups/subs did not work
-        if len(sups) > 0:
-            sups_result = '^' + '^'.join(sups)
-        else:
-            sups_result = ''
-        if len(subs) > 0:
-            subs_result = '_' + '_'.join(subs)
-        else:
-            subs_result = ''
+        return symb_name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
-
 
     return ''.join([name, sups_result, subs_result])
 
 
 def annotated(letter):
     """
-    Return a stylised drawing of the letter `letter`, together with
+    Return a stylised drawing of the letter ``letter``, together with
     information on how to put annotations (super- and subscripts to the
     left and to the right) on it.
 

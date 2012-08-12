@@ -15,18 +15,12 @@ TODO List:
 """
 
 
-from sympy.physics.quantum.cartesian import (
-    XOp, YOp, ZOp, XKet, PxOp, PxKet, PositionKet3D
-)
-
+from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
+                                             PositionKet3D)
 from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.state import (
-    StateBase, KetBase, BraBase, Ket, Bra
-)
-
-from sympy.physics.quantum.spin import (
-    JxOp, JyOp, JzOp, J2Op, JxKet, JyKet, JzKet
-)
+from sympy.physics.quantum.state import StateBase, BraBase, Ket
+from sympy.physics.quantum.spin import (JxOp, JyOp, JzOp, J2Op, JxKet, JyKet,
+                                        JzKet)
 
 __all__ = [
     'operators_to_state',

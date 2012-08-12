@@ -12,13 +12,10 @@ from sympy.polys.distributedpolys import (
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed, DomainError,
+    DomainError,
 )
 
 from sympy.polys.polyconfig import query
-from sympy.core.compatibility import cmp
-
-from operator import itemgetter
 
 def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
     """
@@ -71,7 +68,8 @@ def buchberger(f, u, O, K, gens='', verbose=False):
     variable at a time, provided that the ideal is zero-dimensional
     (finite number of solutions).
 
-    **References**
+    References
+    ==========
 
     1. [Bose03]_
     2. [Giovini91]_
@@ -137,7 +135,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
             if monomial_mul(mh, mg) == LCMhg or (
                 not any(lcm_divides(ipx) for ipx in C) and
                 not any(lcm_divides(pr[1]) for pr in D)):
-                    D.add((ih, ig))
+                D.add((ih, ig))
 
         E = set()
 
@@ -181,7 +179,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         G_new.add(ih)
 
         return G_new, B_new
-      # end of update ################################
+        # end of update ################################
 
     if not f:
         return []
@@ -264,7 +262,6 @@ def sdp_str(f, gens):
     if isinstance(gens, basestring):
         gens = gens.split(',')
     ngens = len(gens)
-    z = (0,) * ngens
     s = ''
     for expv, c in f:
         if c > 0:
@@ -830,7 +827,9 @@ def matrix_fglm(F, u, O_from, O_to, K):
     ideal w.r.t. ``O_from`` to a reduced Groebner basis
     w.r.t. ``O_to``.
 
-    **References**
+    References
+    ==========
+
     J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
     Computation of Zero-dimensional Groebner Bases by Change of
     Ordering

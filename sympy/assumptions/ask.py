@@ -55,15 +55,17 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
             where ``proposition`` is any boolean expression
 
-    **Examples**
-        >>> from sympy import ask, Q, pi
-        >>> from sympy.abc import x, y
-        >>> ask(Q.rational(pi))
-        False
-        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
-        True
-        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
-        False
+    Examples
+    ========
+
+    >>> from sympy import ask, Q, pi
+    >>> from sympy.abc import x, y
+    >>> ask(Q.rational(pi))
+    False
+    >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
+    True
+    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
@@ -137,8 +139,9 @@ def ask_full_inference(proposition, assumptions):
 
 
 def register_handler(key, handler):
-    """Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler.
+    """
+    Register a handler in the ask system. key must be a string and handler a
+    class inheriting from AskHandler::
 
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler

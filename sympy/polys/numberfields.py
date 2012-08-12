@@ -1,16 +1,12 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Expr, I, Integer, Rational, Float,
+    S, Expr, Rational,
     Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple
 )
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner,
-)
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
 )
 
 from sympy.polys.polyclasses import (
@@ -36,7 +32,8 @@ def minimal_polynomial(ex, x=None, **args):
     """
     Computes the minimal polynomial of an algebraic number.
 
-    **Example**
+    Examples
+    ========
 
     >>> from sympy import minimal_polynomial, sqrt
     >>> from sympy.abc import x
@@ -75,7 +72,7 @@ def minimal_polynomial(ex, x=None, **args):
                     return update_mapping(ex, 2, 1)
                 else:
                     return symbols[ex]
-            elif ex.is_Rational and ex.q != 0:
+            elif ex.is_Rational:
                 return ex
         elif ex.is_Add:
             return Add(*[ bottom_up_scan(g) for g in ex.args ])
@@ -125,7 +122,7 @@ def minimal_polynomial(ex, x=None, **args):
             return ex.minpoly.as_expr(x)
         else:
             return ex.minpoly.replace(x)
-    elif ex.is_Rational and ex.q != 0:
+    elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:
         F = [x - bottom_up_scan(ex)] + mapping.values()
@@ -220,8 +217,6 @@ def primitive_element(extension, x=None, **args):
         return g.as_expr(), coeffs, H
     else:
         return g, coeffs, H
-
-primelt = primitive_element
 
 def is_isomorphism_possible(a, b):
     """Returns `True` if there is a chance for isomorphism. """
@@ -398,7 +393,7 @@ class AlgebraicNumber(Expr):
 
     is_AlgebraicNumber = True
 
-    def __new__(cls, expr, coeffs=None, **args):
+    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
         expr = sympify(expr)
 
@@ -414,27 +409,33 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs is not None:
+        if coeffs != Tuple():
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
+                scoeffs = Tuple(*coeffs)
             else:
                 rep = DMP.from_list(coeffs.to_list(), 0, dom)
+                scoeffs = Tuple(*coeffs.to_list())
 
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
+
+            sargs = (root, scoeffs)
+
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
             if ask(Q.negative(root)):
                 rep = -rep
 
-        alias = args.get('alias')
+            sargs = (root, coeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
+            sargs = sargs + (alias,)
 
-        obj = Expr.__new__(cls)
+        obj = Expr.__new__(cls, *sargs)
 
         obj.rep = rep
         obj.root = root
@@ -443,18 +444,6 @@ class AlgebraicNumber(Expr):
 
         return obj
 
-    def __eq__(a, b):
-        if not getattr(b, 'is_AlgebraicNumber', False):
-            try:
-                b = to_number_field(b, a)
-            except (NotAlgebraic, IsomorphismFailed):
-                return False
-
-        return a.rep == b.rep and \
-            a.minpoly.all_coeffs() == b.minpoly.all_coeffs()
-
-    def __ne__(a, b):
-        return not a.__eq__(b)
 
     def __hash__(self):
         return super(AlgebraicNumber, self).__hash__()
@@ -464,11 +453,11 @@ class AlgebraicNumber(Expr):
 
     @property
     def is_aliased(self):
-        """Returns `True` if `alias` was set. """
+        """Returns ``True`` if ``alias`` was set. """
         return self.alias is not None
 
     def as_poly(self, x=None):
-        """Create a Poly instance from `self`. """
+        """Create a Poly instance from ``self``. """
         if x is not None:
             return Poly.new(self.rep, x)
         else:
@@ -478,7 +467,7 @@ class AlgebraicNumber(Expr):
                 return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
-        """Create a Basic expression from `self`. """
+        """Create a Basic expression from ``self``. """
         return self.as_poly(x or self.root).as_expr().expand()
 
     def coeffs(self):
@@ -490,7 +479,7 @@ class AlgebraicNumber(Expr):
         return self.rep.all_coeffs()
 
     def to_algebraic_integer(self):
-        """Convert `self` to an algebraic integer. """
+        """Convert ``self`` to an algebraic integer. """
         f = self.minpoly
 
         if f.LC() == 1:

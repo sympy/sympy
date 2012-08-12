@@ -72,7 +72,7 @@ class CMod(Gate):
         out = int(self.a**k%self.N)
 
         # Create array for new qbit-ket which will have high memory unaffected
-        outarray = list(qubits.args[0][0:self.t])
+        outarray = list(qubits.args[0][:self.t])
 
         # Place out in low memory
         for i in reversed(range(self.t)):
@@ -160,7 +160,7 @@ def period_find(a, N):
     """Finds the period of a in modulo N arithmetic
 
     This is quantum part of Shor's algorithm.It takes two registers,
-    puts first in superposition of states with Hadamards so: |k>|0>
+    puts first in superposition of states with Hadamards so: ``|k>|0>``
     with k being all possible choices. It then does a controlled mod and
     a QFT to determine the order of a.
     """
@@ -214,4 +214,3 @@ def period_find(a, N):
     g = getr(answer, 2**t, N)
     print g
     return g
-

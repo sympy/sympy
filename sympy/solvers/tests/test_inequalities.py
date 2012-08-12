@@ -1,14 +1,11 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy.solvers.inequalities import (
-    reduce_poly_inequalities,
-    reduce_inequalities)
-
-from sympy import (S, Symbol, Union, Interval, FiniteSet, Eq, Ne, Lt, Le, Gt,
-        Ge, Or, And, pi, oo, sqrt, Q, global_assumptions, re, im, sin)
-
-from sympy.utilities.pytest import raises
+from sympy import (And, Eq, FiniteSet, Ge, global_assumptions, Gt, im,
+                   Interval, Le, Lt, Ne, oo, Or, Q, re, S, sin, sqrt, Union)
 from sympy.abc import x, y
+from sympy.solvers.inequalities import (reduce_inequalities,
+                                        reduce_poly_inequalities)
+from sympy.utilities.pytest import raises
 
 inf = oo.evalf()
 
@@ -104,12 +101,12 @@ def test_reduce_poly_inequalities_complex_relational():
 def test_reduce_abs_inequalities():
     real = Q.real(x)
 
-    assert reduce_inequalities(abs(x - 5) < 3, assume=real) == And(Gt(x, 2), Lt(x, 8))
-    assert reduce_inequalities(abs(2*x + 3) >= 8, assume=real) == Or(Le(x, -S(11)/2), Ge(x, S(5)/2))
-    assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7, assume=real) == And(Gt(x, S(1)/2), Lt(x, 4))
-    assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7, assume=real) == Or(And(-2 < x, x < -1), And(S(1)/2 < x, x < 4))
+    assert reduce_inequalities(abs(x - 5) < 3, assume=real) == And(Lt(2, x), Lt(x, 8))
+    assert reduce_inequalities(abs(2*x + 3) >= 8, assume=real) == Or(Le(x, -S(11)/2), Le(S(5)/2, x))
+    assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7, assume=real) == And(Lt(S(1)/2, x), Lt(x, 4))
+    assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7, assume=real) == Or(And(S(-2) < x, x < -1), And(S(1)/2 < x, x < 4))
 
-    raises(NotImplementedError, "reduce_inequalities(abs(x - 5) < 3)")
+    raises(NotImplementedError, lambda: reduce_inequalities(abs(x - 5) < 3))
 
 def test_reduce_inequalities_boolean():
     assert reduce_inequalities([Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
@@ -125,6 +122,15 @@ def test_reduce_inequalities_multivariate():
             And(Or(Le(re(y), -1), Le(1, re(y))), Eq(im(y), 0)))
 
 def test_reduce_inequalities_errors():
-    raises(NotImplementedError, "reduce_inequalities(Ge(sin(x) + x, 1))")
-    raises(NotImplementedError, "reduce_inequalities(Ge(x**2*y + y, 1))")
-    raises(NotImplementedError, "reduce_inequalities(Ge(sqrt(2)*x, 1))")
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(sin(x) + x, 1)))
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(x**2*y + y, 1)))
+    raises(NotImplementedError, lambda: reduce_inequalities(Ge(sqrt(2)*x, 1)))
+
+def test_hacky_inequalities():
+    assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
+
+def test_issue_3244():
+    eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
+    assert reduce_inequalities(eq, Q.real(x)) == \
+        And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)

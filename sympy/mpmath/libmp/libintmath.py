@@ -505,7 +505,7 @@ def eulernum(m, _cache={0:MPZ_ONE}):
 
         \frac{1}{\cosh x} = \sum_{n=0}^\infty \frac{E_n}{n!} x^n
 
-    Example::
+    Examples::
 
         >>> [int(eulernum(n)) for n in range(11)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0, -50521]

@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os
 import tempfile
 import pickle
@@ -7,13 +9,12 @@ from sympy.mpmath import *
 def pickler(obj):
     fn = tempfile.mktemp()
 
-    f = open(fn, 'wb')
-    pickle.dump(obj, f)
-    f.close()
+    with open(fn, 'wb') as f:
+        pickle.dump(obj, f)
 
-    f = open(fn, 'rb')
-    obj2 = pickle.load(f)
-    f.close()
+    with open(fn, 'rb') as f:
+        obj2 = pickle.load(f)
+
     os.remove(fn)
 
     return obj2

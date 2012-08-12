@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError
+from matexpr import MatrixExpr
 from sympy import Basic
 
 class Transpose(MatrixExpr):
@@ -24,19 +24,10 @@ class Transpose(MatrixExpr):
         if not mat.is_Matrix:
             return mat
 
-        if isinstance(mat, Transpose):
-            return mat.arg
-
-        if hasattr(mat, 'transpose'):
-            return mat.transpose()
-
-        if mat.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])
-
-        if mat.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in mat.args])
-
-        return Basic.__new__(cls, mat)
+        try:
+            return mat._eval_transpose()
+        except (AttributeError, NotImplementedError):
+            return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
@@ -46,5 +37,12 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-from matmul import MatMul
-from matadd import MatAdd
+    def _entry(self, i, j):
+        return self.arg._entry(j, i)
+
+    def _eval_transpose(self):
+        return self.arg
+
+    def _eval_trace(self):
+        from trace import Trace
+        return Trace(self.arg) # Trace(X.T) => Trace(X)

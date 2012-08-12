@@ -1,5 +1,7 @@
 from sympy.core import S, C, Basic, Interval
+from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -72,10 +74,13 @@ class PrettyPrinter(Printer):
         except KeyError:
             return self.emptyPrinter(e)
 
-    # Infinity inherits from Rational, so we have to override _print_XXX order
+    # Infinity inherits from Number, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet         = _print_Atom
+    _print_Naturals         = _print_Atom
+    _print_Integers         = _print_Atom
+    _print_Reals            = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -84,6 +89,15 @@ class PrettyPrinter(Printer):
         if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right('!'))
+        return pform
+
+    def _print_factorial2(self, e):
+        x = e.args[0]
+        pform = self._print(x)
+        # Add parentheses if needed
+        if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right('!!'))
         return pform
 
     def _print_binomial(self, e):
@@ -122,14 +136,17 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
-    def __print_Boolean(self, e, char):
-        arg = e.args[0]
+    def __print_Boolean(self, e, char, sort=True):
+        args = e.args
+        if sort:
+            args = sorted(e.args, key=default_sort_key)
+        arg = args[0]
         pform = self._print(arg)
 
         if arg.is_Boolean and not arg.is_Not:
             pform = prettyForm(*pform.parens())
 
-        for arg in e.args[1:]:
+        for arg in args[1:]:
             pform_arg = self._print(arg)
 
             if arg.is_Boolean and not arg.is_Not:
@@ -144,35 +161,35 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2227")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2228")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bb")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bc")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u22bd")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2192")
+            return self.__print_Boolean(e, u"\u2192", sort=False)
         else:
             return self._print_Function(e)
 
@@ -180,7 +197,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return self.__print_Boolean(e, u"\u2261")
         else:
-            return self._print_Function(e)
+            return self._print_Function(e, sort=True)
 
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
@@ -337,8 +354,66 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(s))
         return pform
 
+    def _print_Product(self, expr):
+        func = expr.term
+        pretty_func = self._print(func)
+
+        horizontal_chr = xobj('_', 1)
+        corner_chr = xobj('_', 1)
+        vertical_chr = xobj('|', 1)
+
+        if self._use_unicode:
+            # use unicode corners
+            horizontal_chr = xobj('-', 1)
+            corner_chr = u'\u252c'
+
+        func_height = pretty_func.height()
+
+        first = True
+        max_upper = 0
+        sign_height = 0
+
+        for lim in expr.limits:
+            width = (func_height + 2) * 5 // 3 - 2
+            sign_lines = []
+            sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+            for i in range(func_height+1):
+                sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+
+            pretty_sign = stringPict('')
+            pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+
+            pretty_upper = self._print(lim[2])
+            pretty_lower = self._print(C.Equality(lim[0], lim[1]))
+
+            max_upper = max(max_upper, pretty_upper.height())
+
+            if first:
+                sign_height = pretty_sign.height()
+
+            pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+            pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+
+            if first:
+                pretty_func.baseline = 0
+                first = False
+
+            height = pretty_sign.height()
+            padding = stringPict('')
+            padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+            pretty_sign = prettyForm(*pretty_sign.right(padding))
+
+            pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+
+        #pretty_func.baseline = 0
+
+        pretty_func.baseline = max_upper + sign_height//2
+        return pretty_func
+
     def _print_Sum(self, expr):
-        def asum(hrequired, lower, upper):
+        ascii_mode = not self._use_unicode
+
+        def asum(hrequired, lower, upper, use_ascii):
             def adjust(s, wid=None, how='<^>'):
                 if not wid or len(s)>wid:
                     return s
@@ -358,16 +433,28 @@ class PrettyPrinter(Printer):
             more = hrequired % 2
 
             lines = []
-            lines.append("_"*(w) + ' ')
-            lines.append("\%s`" % (' '*(w - 1)))
-            for i in range(1, d):
-              lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
-            if more:
-                lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
-            for i in reversed(range(1, d)):
-              lines.append('%s/%s' % (' '*i, ' '*(w - i)))
-            lines.append("/" + "_"*(w - 1) + ',')
-            return d, h + more, lines
+            if use_ascii:
+                lines.append("_"*(w) + ' ')
+                lines.append("\%s`" % (' '*(w - 1)))
+                for i in range(1, d):
+                    lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                if more:
+                    lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+                for i in reversed(range(1, d)):
+                    lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                lines.append("/" + "_"*(w - 1) + ',')
+                return d, h + more, lines, 0
+            else:
+                w = w + more
+                d = d + more
+                vsum = vobj('sum', 4)
+                lines.append("_"*(w))
+                for i in range(0, d):
+                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
+                for i in reversed(range(0, d)):
+                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)))
+                lines.append(vsum[8]*(w))
+                return d, h + 2*more, lines, more
 
         f = expr.function
 
@@ -397,7 +484,7 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, prettyUpper.height())
 
             # Create sum sign based on the height of the argument
-            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            d, h, slines, adjustment = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
 
@@ -410,7 +497,7 @@ class PrettyPrinter(Printer):
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline)
+                                         prettyF.baseline) - adjustment
                 first = False
 
             # put padding to the right
@@ -440,17 +527,10 @@ class PrettyPrinter(Printer):
 
         return Lim
 
-    # Matrix is special:
-    #
-    # it can exist in SymPy in two forms:
-    # - as Matrix
-    # - as _MatrixAsBasic
-    #
-    # see _MatrixAsBasic docstring, and #420
-    def _print__MatrixAsBasic(self, e):
-        return self._print_Matrix(e.m)
-
-    def _print_Matrix(self, e):
+    def _print_matrix_contents(self, e):
+        """
+        This method factors out what is essentially grid printing.
+        """
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
@@ -515,8 +595,14 @@ class PrettyPrinter(Printer):
         if D is None:
             D = prettyForm('') # Empty Matrix
 
+        return D
+
+    def _print_MatrixBase(self, e):
+        D = self._print_matrix_contents(e)
         D = prettyForm(*D.parens('[',']'))
         return D
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_MutableMatrix = _print_MatrixBase
 
     def _print_Transpose(self, T):
         pform = self._print(T.arg)
@@ -549,6 +635,11 @@ class PrettyPrinter(Printer):
 
     def _print_MatAdd(self, expr):
         return self._print_seq(expr.args, None, None, ' + ')
+
+    def _print_FunctionMatrix(self, X):
+        D = self._print(X.lamda.expr)
+        D = prettyForm(*D.parens('[',']'))
+        return D
 
     def _print_Piecewise(self, pexpr):
 
@@ -760,14 +851,18 @@ class PrettyPrinter(Printer):
         return D
 
 
-    def _print_exp(self, e):
+    def _print_ExpBase(self, e):
+        # TODO should exp_polar be printed differently?
+        #      what about exp_polar(0), exp_polar(1)?
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Function(self, e):
+    def _print_Function(self, e, sort=False):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        if sort:
+            args = sorted(args, key=default_sort_key)
         n = len(args)
 
         func_name = func.__name__
@@ -782,6 +877,10 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_GeometryEntity(self, expr):
+        # GeometryEntity is based on Tuple but should not print like a Tuple
+        return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):
         symbols, expr = e.args
@@ -839,6 +938,26 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_expint(self, e):
+        from sympy import Function
+        if e.args[0].is_Integer and self._use_unicode:
+            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        return self._print_Function(e)
+
+    def _print_Chi(self, e):
+        # This needs a special case since otherwise it comes out as greek
+        # letter chi...
+        prettyFunc = prettyForm("Chi")
+        prettyArgs = prettyForm(*self._print_seq(e.args).parens())
+
+        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
@@ -860,7 +979,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *pform)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and term.as_coeff_mul()[0] < 0:
+            if term.is_Mul and _coeff_isneg(term):
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
@@ -942,53 +1061,58 @@ class PrettyPrinter(Printer):
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
-    def _print_Pow(self, power):
-        # square roots, other roots or n-th roots
-        #test for fraction 1/n or power x**-1
-        if power.is_commutative:
-            if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
-               (   isinstance(power.exp, C.Pow) and
-                   isinstance(power.exp.args[0], C.Symbol) and
-                   power.exp.args[1]==S.NegativeOne):
-                bpretty = self._print(power.base)
+    # A helper function for _print_Pow to print x**(1/n)
+    def _print_nth_root (self, base, expt):
+        bpretty = self._print(base)
 
-                #construct root sign, start with the \/ shape
-                _zZ= xobj('/',1)
-                rootsign = xobj('\\',1)+_zZ
-                #make exponent number to put above it
-                if isinstance(power.exp, C.Rational):
-                    exp = str(power.exp.q)
-                    if exp=='2': exp = ''
-                else: exp = str(power.exp.args[0])
-                exp = exp.ljust(2)
-                if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
-                #stack the exponent
-                rootsign = stringPict(exp+'\n'+rootsign)
-                rootsign.baseline = 0
-                #diagonal: length is one less than height of base
-                linelength = bpretty.height()-1
-                diagonal = stringPict('\n'.join(
-                    ' '*(linelength-i-1)+_zZ+' '*i
-                    for i in range(linelength)
-                    ))
-                #put baseline just below lowest line: next to exp
-                diagonal.baseline = linelength-1
-                #make the root symbol
-                rootsign = prettyForm(*rootsign.right(diagonal))
-                #set the baseline to match contents to fix the height
-                #but if the height of bpretty is one, the rootsign must be one higher
-                rootsign.baseline = max(1, bpretty.baseline)
-                #build result
-                s = prettyForm(hobj('_', 2+ bpretty.width()))
-                s = prettyForm(*bpretty.above(s))
-                s = prettyForm(*s.left(rootsign))
-                return s
-            elif power.exp.is_Rational and power.exp.is_negative:
-                # Things like 1/x
-                return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
+        # Construct root sign, start with the \/ shape
+        _zZ = xobj('/',1)
+        rootsign = xobj('\\',1) + _zZ
+        # Make exponent number to put above it
+        if isinstance(expt, C.Rational):
+            exp = str(expt.q)
+            if exp == '2':
+                exp = ''
+        else:
+            exp = str(expt.args[0])
+        exp = exp.ljust(2)
+        if len(exp) > 2:
+            rootsign = ' '*(len(exp) - 2) + rootsign
+        # Stack the exponent
+        rootsign = stringPict(exp + '\n' + rootsign)
+        rootsign.baseline = 0
+        # Diagonal: length is one less than height of base
+        linelength = bpretty.height() - 1
+        diagonal = stringPict('\n'.join(
+            ' '*(linelength - i - 1) + _zZ + ' '*i
+            for i in range(linelength)
+            ))
+        # Put baseline just below lowest line: next to exp
+        diagonal.baseline = linelength - 1
+        # Make the root symbol
+        rootsign = prettyForm(*rootsign.right(diagonal))
+        # Det the baseline to match contents to fix the height
+        # but if the height of bpretty is one, the rootsign must be one higher
+        rootsign.baseline = max(1, bpretty.baseline)
+        #build result
+        s = prettyForm(hobj('_', 2 + bpretty.width()))
+        s = prettyForm(*bpretty.above(s))
+        s = prettyForm(*s.left(rootsign))
+        return s
+
+    def _print_Pow(self, power):
+        from sympy import fraction
+        b, e = power.as_base_exp()
+        if power.is_commutative:
+            if e is S.NegativeOne:
+                return prettyForm("1")/self._print(b)
+            n, d = fraction(e)
+            if n is S.One and d.is_Atom and not e.is_Integer:
+                return self._print_nth_root(b, e)
+            if e.is_Rational and e < 0:
+                return prettyForm("1")/self._print(b)**self._print(-e)
 
         # None of the above special forms, do a standard power
-        b,e = power.as_base_exp()
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
@@ -1024,24 +1148,32 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
-        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
-                parenthesize = lambda set:set.is_Union )
+        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+            from sympy import Pow
+            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+        else:
+            prod_char = u'\xd7'
+            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+                parenthesize = lambda set:set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
-        if len(s) > 10:
-            # Take ten elements from the set at random
-            q = iter(s)
-            printset = [q.next() for i in xrange(10)]
-            printset.append('...')
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_seq(items, '{', '}', ', ' )
+
+    def _print_Range(self, s):
+
+        if self._use_unicode:
+            dots = u"\u2026"
         else:
-            printset = s
-        try:
-            printset = sorted(printset)
-        except:  pass
+            dots = '...'
+
+        if len(s) > 4:
+            it = iter(s)
+            printset = it.next(), it.next(), dots, s._last_element
+        else:
+            printset = tuple(s)
 
         return self._print_seq(printset, '{', '}', ', ' )
-
 
     def _print_Interval(self, i):
         if i.start == i.end:
@@ -1060,12 +1192,31 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_Intersection(self, u):
+
+        delimiter = ' %s ' % pretty_atom('Intersection')
+
+        return self._print_seq(u.args, None, None, delimiter,
+                parenthesize = lambda set:set.is_ProductSet or set.is_Union)
+
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-                parenthesize = lambda set:set.is_ProductSet)
+             parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
+
+    def _print_TransformationSet(self, ts):
+        if self._use_unicode:
+            inn = u"\u220a"
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.lamda.variables)
+        expr = self._print(ts.lamda.expr)
+        bar = self._print("|")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
@@ -1135,7 +1286,8 @@ class PrettyPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        pretty = self._print_seq(items, '(', ')')
+        pretty = self._print_seq(items, '[', ']')
+        pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
@@ -1196,8 +1348,11 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('CC')
 
-    def _print_PolynomialRing(self, expr):
-        pform = self._print_seq(expr.gens, '[', ']')
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.gens
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
 
         return pform
@@ -1259,25 +1414,160 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
+    def _print_KroneckerDelta(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.right((prettyForm(','))))
+        pform = prettyForm(*pform.right((self._print(e.args[1]))))
+        if self._use_unicode:
+            a = stringPict(pretty_symbol('delta'))
+        else:
+            a = stringPict('d')
+        b = pform
+        top = stringPict(*b.left(' '*a.width()))
+        bot = stringPict(*a.right(' '*b.width()))
+        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+
     def _print_atan2(self, e):
         pform = prettyForm(*self._print_seq(e.args).parens())
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
-def pretty(expr, **settings):
-    """
-    Returns a string containing the prettified form of expr.
+    def _print_RandomDomain(self, d):
+        try:
+            pform = self._print('Domain: ')
+            pform = prettyForm(*pform.right(self._print(d.as_boolean())))
+            return pform
 
-    Arguments
-    ---------
-    expr: the expression to print
-    wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
-    num_columns: number of columns before line breaking (default to None which reads the
-        terminal width), it is useful when using SymPy without terminal.
-    use_unicode: use unicode characters, such as the Greek letter pi instead of
-        the string pi. Values should be boolean or None
-    full_prec: use full precision. Default to "auto"
-    order: set to 'none' for long expressions if slow; default is None
+        except:
+            try:
+                pform = self._print('Domain: ')
+                pform = prettyForm(*pform.right(self._print(d.symbols)))
+                pform = prettyForm(*pform.right(self._print(' in ')))
+                pform = prettyForm(*pform.right(self._print(d.set)))
+                return pform
+            except:
+                return self._print(None)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
+
+    def _print_Object(self, object):
+        return self._print(pretty_symbol(object.name))
+
+    def _print_Morphism(self, morphism):
+        arrow = xsym("-->")
+
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        tail = domain.right(arrow, codomain)[0]
+
+        return prettyForm(tail)
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(pretty_symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(":", pretty_morphism)[0])
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(
+            NamedMorphism(morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+
+        circle = xsym(".")
+
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [pretty_symbol(component.name) for \
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = circle.join(component_names_list) + ":"
+
+        pretty_name = self._print(component_names)
+        pretty_morphism = self._print_Morphism(morphism)
+        return prettyForm(pretty_name.right(pretty_morphism)[0])
+
+    def _print_Category(self, category):
+        return self._print(pretty_symbol(category.name))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        pretty_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            results_arrow = " %s " % xsym("==>")
+
+            pretty_conclusions = self._print(diagram.conclusions)[0]
+            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
+
+        return prettyForm(pretty_result[0])
+
+    def _print_DiagramGrid(self, grid):
+        from sympy.matrices import Matrix
+        from sympy import Symbol
+        matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
+                          for j in xrange(grid.width)]
+                         for i in xrange(grid.height)])
+        return self._print_matrix_contents(matrix)
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return self._print_seq(m, '[', ']')
+
+    def _print_SubModule(self, M):
+        return self._print_seq(M.gens, '<', '>')
+
+    def _print_FreeModule(self, M):
+        return self._print(M.ring)**self._print(M.rank)
+
+    def _print_ModuleImplementedIdeal(self, M):
+        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+
+    def _print_QuotientRing(self, R):
+        return self._print(R.ring) / self._print(R.base_ideal)
+
+    def _print_QuotientRingElement(self, R):
+        return self._print(R.data) + self._print(R.ring.base_ideal)
+
+    def _print_QuotientModuleElement(self, m):
+        return self._print(m.data) + self._print(m.module.killed_module)
+
+    def _print_QuotientModule(self, M):
+        return self._print(M.base) / self._print(M.killed_module)
+
+    def _print_MatrixHomomorphism(self, h):
+        matrix = self._print(h._sympy_matrix())
+        matrix.baseline = matrix.height() // 2
+        pform = prettyForm(*matrix.right(' : ', self._print(h.domain),
+            ' %s> ' % hobj('-', 2), self._print(h.codomain)))
+        return pform
+
+    def _print_Tr(self, p):
+        #TODO: Handle indices
+        pform = self._print(p.args[0])
+        pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
+        pform = prettyForm(*pform.right(')'))
+        return pform
+
+
+def pretty(expr, **settings):
+    """Returns a string containing the prettified form of expr.
+
+    For information on keyword arguments see pretty_print function.
+
     """
     pp = PrettyPrinter(settings)
 
@@ -1291,12 +1581,47 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 def pretty_print(expr, **settings):
-    """
-    Prints expr in pretty form.
+    """Prints expr in pretty form.
 
-    pprint is just a shortcut for this function
+    pprint is just a shortcut for this function.
+
+
+    Parameters
+    ==========
+
+    expr : expression
+        the expression to print
+    wrap_line : bool, optional
+        line wrapping enabled/disabled, defaults to True
+    num_columns : bool, optional
+        number of columns before line breaking (default to None which reads
+        the terminal width), useful when using SymPy without terminal.
+    use_unicode : bool or None, optional
+        use unicode characters, such as the Greek letter pi instead of
+        the string pi.
+    full_prec : bool or string, optional
+        use full precision. Default to "auto"
+    order : bool or string, optional
+        set to 'none' for long expressions if slow; default is None
+
     """
     print pretty(expr, **settings)
 
 pprint = pretty_print
 
+def pager_print(expr, **settings):
+    """Prints expr using the pager, in pretty form.
+
+    This invokes a pager command using pydoc. Lines are not wrapped
+    automatically. This routine is meant to be used with a pager that allows
+    sideways scrolling, like ``less -S``.
+
+    Parameters are the same as for ``pretty_print``. If you wish to wrap lines,
+    pass ``num_columns=None`` to auto-detect the width of the terminal.
+
+    """
+    from pydoc import pager
+    from locale import getpreferredencoding
+    if 'num_columns' not in settings:
+        settings['num_columns'] = 500000 # disable line wrap
+    pager(pretty(expr, **settings).encode(getpreferredencoding()))

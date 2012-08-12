@@ -4,7 +4,7 @@ from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 
-from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
@@ -17,7 +17,8 @@ def apart(f, x=None, full=False, **options):
     coefficients method and the other is Bronstein's full partial fraction
     decomposition algorithm.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
@@ -115,7 +116,8 @@ def apart_full_decomposition(P, Q):
     performed. The final decomposition is formed in terms of a sum of
     :class:`RootSum` instances.
 
-    **References**
+    References
+    ==========
 
     1. [Bronstein93]_
 

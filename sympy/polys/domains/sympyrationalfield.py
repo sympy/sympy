@@ -7,7 +7,6 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 from sympy.polys.polyerrors import CoercionFailed
 
 from sympy import (
-    Integer as sympy_int,
     Rational as sympy_rat,
 )
 
@@ -26,7 +25,7 @@ class SymPyRationalField(RationalField):
         """
         Check if ``a`` is of type ``Rational``.
 
-        Example
+        Examples
         =======
 
         >>> from sympy import Rational, Real
@@ -46,7 +45,7 @@ class SymPyRationalField(RationalField):
 
     def from_sympy(self, a):
         """Convert SymPy's Rational to `dtype`. """
-        if a.is_Rational and a.q != 0:
+        if a.is_Rational:
             return a
         elif a.is_Float:
             from sympy.polys.domains import RR

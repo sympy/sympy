@@ -48,7 +48,7 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
             return n, d
 
     def limit_denom(self, n, d, **args):
-        """Find closest rational to `n/d` (up to `max_denom`). """
+        """Find closest rational to `n/d` (up to ``max_denom``). """
         max_denom = args.get('max_denom', 1000000)
 
         if d <= max_denom:
@@ -82,47 +82,47 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
             return P1, Q1
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         raise DomainError('there is no field associated with %s' % self)
 
     def get_exact(self):
-        """Returns an exact domain associated with `self`. """
+        """Returns an exact domain associated with ``self``. """
         from sympy.polys.domains import QQ
         return QQ
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        """Exact quotient of ``a`` and ``b``, implies ``__div__``.  """
         return a / b
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__div__`. """
+        """Quotient of ``a`` and ``b``, implies ``__div__``. """
         return a / b
 
     def rem(self, a, b):
-        """Remainder of `a` and `b`, implies nothing.  """
+        """Remainder of ``a`` and ``b``, implies nothing.  """
         return self.zero
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies `__div__`. """
+        """Division of ``a`` and ``b``, implies ``__div__``. """
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Returns GCD of ``a`` and ``b``. """
         return self.one
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Returns LCM of ``a`` and ``b``. """
         return a*b
 
     def to_sympy(self, a):
-        """Convert `a` to SymPy number. """
+        """Convert ``a`` to SymPy number. """
         return SymPyRealType(a)
 
     def from_sympy(self, a):
-        """Convert SymPy's number to `dtype`. """
+        """Convert SymPy's number to ``dtype``. """
         b = a.evalf()
 
         if b.is_Number and b not in self._convert_excludes:

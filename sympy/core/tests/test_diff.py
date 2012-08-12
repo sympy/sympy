@@ -3,13 +3,15 @@ from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
 from sympy.utilities.pytest import raises
 
 def test_diff():
-    x = Symbol('x')
+    x, y = symbols('x, y')
     assert Rational(1, 3).diff(x) is S.Zero
     assert I.diff(x) is S.Zero
     assert pi.diff(x) is S.Zero
     assert x.diff(x, 0) == x
     assert (x**2).diff(x, 2, x) == 0
-    raises(ValueError, 'x.diff(1, x)')
+    assert (x**2).diff(x, y, 0) == 2*x
+    assert (x**2).diff(x, y) == 0
+    raises(ValueError, lambda: x.diff(1, x))
 
     a = Symbol("a")
     b = Symbol("b")

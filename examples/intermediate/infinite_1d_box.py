@@ -2,8 +2,8 @@
 
 """
 Applying perturbation theory to calculate the ground state energy
-of the infinite 1D box of width $a$ with a perturbation
-which is linear in $x$, up to second order in perturbation
+of the infinite 1D box of width ``a`` with a perturbation
+which is linear in ``x``, up to second order in perturbation
 """
 
 from sympy.core import pi
@@ -74,8 +74,8 @@ def energy_corrections(perturbation, n, a=10, mass=0.5):
 def main():
     print
     print "Applying perturbation theory to calculate the ground state energy"
-    print "of the infinite 1D box of width $a$ with a perturbation"
-    print "which is linear in $x$, up to second order in perturbation."
+    print "of the infinite 1D box of width ``a`` with a perturbation"
+    print "which is linear in ``x``, up to second order in perturbation."
     print
 
     x, _a = var("x _a")

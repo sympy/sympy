@@ -1,13 +1,12 @@
 """Logic for representing operators in state in various bases.
 
 TODO:
+
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
 
-from sympy import Add, Mul, Pow, I, Expr, oo, Symbol, integrate
-from sympy.functions import conjugate, DiracDelta
-
+from sympy import Add, Expr, I, integrate, Mul, Pow
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -16,7 +15,7 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
-from sympy.physics.quantum.operator import Operator, HermitianOperator, OuterProduct
+from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
@@ -73,6 +72,7 @@ def represent(expr, **options):
 
     Parameters
     ==========
+
     expr  : Expr
         The expression to represent.
     basis : Operator, basis set
@@ -88,6 +88,7 @@ def represent(expr, **options):
 
     Returns
     =======
+
     e : Expr
         The sympy expression of the represented quantum expression.
 
@@ -98,35 +99,35 @@ def represent(expr, **options):
     and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
-        >>> from sympy.physics.quantum import Operator, represent, Ket
-        >>> from sympy import Matrix
+    >>> from sympy.physics.quantum import Operator, represent, Ket
+    >>> from sympy import Matrix
 
-        >>> class SzUpKet(Ket):
-        ...     def _represent_SzOp(self, basis, **options):
-        ...         return Matrix([1,0])
-        ...
-        >>> class SzOp(Operator):
-        ...     pass
-        ...
-        >>> sz = SzOp('Sz')
-        >>> up = SzUpKet('up')
-        >>> represent(up, basis=sz)
-        [1]
-        [0]
+    >>> class SzUpKet(Ket):
+    ...     def _represent_SzOp(self, basis, **options):
+    ...         return Matrix([1,0])
+    ...
+    >>> class SzOp(Operator):
+    ...     pass
+    ...
+    >>> sz = SzOp('Sz')
+    >>> up = SzUpKet('up')
+    >>> represent(up, basis=sz)
+    [1]
+    [0]
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
     of cartesian position operators and kets give us continuous
     expressions involving DiracDelta functions.
 
-        >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
-        >>> X = XOp()
-        >>> x = XKet()
-        >>> y = XBra('y')
-        >>> represent(X*x)
-        x*DiracDelta(x - x_2)
-        >>> represent(X*x*y)
-        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+    >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
+    >>> X = XOp()
+    >>> x = XKet()
+    >>> y = XBra('y')
+    >>> represent(X*x)
+    x*DiracDelta(x - x_2)
+    >>> represent(X*x*y)
+    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
 
     """
 
@@ -226,7 +227,7 @@ def represent(expr, **options):
 
 def rep_innerproduct(expr, **options):
     """
-    Returns an innerproduct like representation (e.g. <x'|x>) for the
+    Returns an innerproduct like representation (e.g. ``<x'|x>``) for the
     given state.
 
     Attempts to calculate inner product with a bra from the specified
@@ -280,7 +281,7 @@ def rep_innerproduct(expr, **options):
 
 def rep_expectation(expr, **options):
     """
-    Returns an <x'|A|x> type representation for the given operator.
+    Returns an ``<x'|A|x>`` type representation for the given operator.
 
     Parameters
     ==========
@@ -322,7 +323,7 @@ def rep_expectation(expr, **options):
 
 def integrate_result(orig_expr, result, **options):
     """
-    Returnst the result of integrating over any unities (|x><x|) in
+    Returns the result of integrating over any unities ``(|x><x|)`` in
     the given expression. Intended for integrating over the result of
     representations in continuous bases.
 
@@ -346,7 +347,8 @@ def integrate_result(orig_expr, result, **options):
         The resulting representation that we wish to integrate over
 
     Examples
-    ==========
+    ========
+
     >>> from sympy import symbols, DiracDelta
     >>> from sympy.physics.quantum.represent import integrate_result
     >>> from sympy.physics.quantum.cartesian import XOp, XKet
@@ -394,23 +396,23 @@ def integrate_result(orig_expr, result, **options):
 
 def get_basis(expr, **options):
     """
-    Returns a basis state instance corresponding to the basis
-    specified in options=s. If no basis is specified, the function
-    tries to form a default basis state of the given expression.
+    Returns a basis state instance corresponding to the basis specified in
+    options=s. If no basis is specified, the function tries to form a default
+    basis state of the given expression.
 
     There are three behaviors:
 
-    1) The basis specified in options is already an instance of
-    StateBase. If this is the case, it is simply returned. If the
-    class is specified but not an instance, a default instance is returned.
+    1. The basis specified in options is already an instance of StateBase. If
+       this is the case, it is simply returned. If the class is specified but
+       not an instance, a default instance is returned.
 
-    2) The basis specified is an operator or set of operators. If this
-    is the case, the operator_to_state mapping method is used.
+    2. The basis specified is an operator or set of operators. If this
+       is the case, the operator_to_state mapping method is used.
 
-    3) No basis is specified. If expr is a state, then a default
-    instance of its class is returned.
-    If expr is an operator, then it is mapped to the corresponding state.
-    If it is neither, then we cannot obtain the basis state.
+    3. No basis is specified. If expr is a state, then a default instance of
+       its class is returned.  If expr is an operator, then it is mapped to the
+       corresponding state.  If it is neither, then we cannot obtain the basis
+       state.
 
     If the basis cannot be mapped, then it is not changed.
 
@@ -419,14 +421,14 @@ def get_basis(expr, **options):
 
     TODO (?): Support for Muls and other types of expressions?
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     expr : Operator or StateBase
         Expression whose basis is sought
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.physics.quantum.represent import get_basis
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
@@ -489,13 +491,12 @@ def enumerate_states(*args, **options):
 
     Operates in two different modes:
 
-    1) Two arguments are passed to it. The first is the base state
-    which is to be indexed, and the second argument is a list of
-    indices to append.
+    1. Two arguments are passed to it. The first is the base state which is to
+       be indexed, and the second argument is a list of indices to append.
 
-    2) Three arguments are passed. The first is again the base state
-    to be indexed. The second is the start index for counting.
-    The final argument is the number of kets you wish to receive.
+    2. Three arguments are passed. The first is again the base state to be
+       indexed. The second is the start index for counting.  The final argument
+       is the number of kets you wish to receive.
 
     Tries to call state._enumerate_state. If this fails, returns an empty list
 

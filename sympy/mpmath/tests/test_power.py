@@ -4,6 +4,7 @@ from sympy.mpmath.libmp import *
 import random
 
 def test_fractional_pow():
+    mp.dps = 15
     assert mpf(16) ** 2.5 == 1024
     assert mpf(64) ** 0.5 == 8
     assert mpf(64) ** -0.5 == 0.125

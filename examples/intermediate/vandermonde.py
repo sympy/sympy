@@ -42,7 +42,8 @@ def vandermonde(order, dim=1, syms='a b c d'):
 
     Define syms to give beginning strings for temporary variables.
 
-    Returns the Matrix, the temporary variables, and the terms for the polynomials
+    Returns the Matrix, the temporary variables, and the terms for the
+    polynomials.
     """
     syms = syms.split()
     if len(syms) < dim:
@@ -164,4 +165,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

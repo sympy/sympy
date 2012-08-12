@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, sin, expand_log, S, sign, nextprime)
-from sympy.utilities.pytest import XFAIL
+        LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
+        sin, cos, sinh, cosh, exp_polar, re)
 
 def test_exp_values():
 
@@ -15,6 +15,8 @@ def test_exp_values():
 
     assert exp(0) == 1
     assert exp(1) == E
+    assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
+    assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
@@ -35,10 +37,20 @@ def test_exp_values():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
+    assert exp(3*log(x)+oo*x) == exp(oo*x) * x**3
+    assert exp(4*log(x)*log(y)+3*log(x)) == x**3 * exp(4*log(x)*log(y))
+
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
     assert exp(log(x)) == x
+    assert log(x).inverse() == exp
+    assert exp(x).inverse() == log
+
+    y = Symbol("y", polar=True)
+    z = Symbol("z")
+    assert log(exp_polar(z)) == z
+    assert exp(log(y)) == y
 
 def test_exp_expand():
     x = Symbol("x")
@@ -69,8 +81,36 @@ def test_exp_infinity():
     y = Symbol('y')
     assert exp(I*y) != nan
     assert exp(I*oo) == nan
-    assert exp(y*I*oo) == nan
+    assert exp(-I*oo) == nan
+    assert exp(y*I*oo) != nan
 
+def test_exp_subs():
+    x, y = symbols('x,y')
+    e = (exp(3*log(x), evaluate=False))
+    assert e.subs(x**3, y**3) == e
+    assert e.subs(x**2, 5) == e
+    assert exp(3*log(x)).subs(x**2, y) == x**3
+    assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
+    assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
+    assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
+    assert exp(x).subs(E,y) == y**x
+    x = symbols('x', positive=True)
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
+
+def test_exp_conjugate():
+    x = Symbol('x')
+    assert conjugate(exp(x)) == exp(conjugate(x))
+
+def test_exp_rewrite():
+    x = symbols('x')
+    assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
+    assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
+
+def test_exp_leading_term():
+    x = symbols('x')
+    assert exp(x).as_leading_term(x) == 1
+    assert exp(1/x).as_leading_term(x) == exp(1/x)
+    assert exp(2+x).as_leading_term(x) == exp(2)
 
 def test_log_values():
     assert log(nan) == nan
@@ -118,7 +158,8 @@ def test_log_base():
     assert log(6, 3) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
-
+    assert log(5, 1) == zoo
+    assert log(1, 1) == nan
 
 def test_log_symbolic():
     x, y = symbols('x,y')
@@ -158,6 +199,20 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+
+def test_exp_assumptions():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    for e in exp, exp_polar:
+        assert e(x).is_real is None
+        assert e(x).is_imaginary is None
+        assert e(i).is_real is None
+        assert e(i).is_imaginary is None
+        assert e(r).is_real is True
+        assert e(r).is_imaginary is False
+        assert e(re(x)).is_real is True
+        assert e(re(x)).is_imaginary is False
 
 def test_log_assumptions():
     p = symbols('p', positive=True)
@@ -204,7 +259,9 @@ def test_log_expand():
     assert e.expand() == log(5)/log(3) * log(w)
     x, y, z = symbols('x,y,z', positive=True)
     assert log(x*(y+z)).expand(mul=False) == log(x)+log(y+z)
-    assert log(log(x**2)*log(y*z)).expand() == log(2*log(x)*log(y) + 2*log(x)*log(z))
+    assert log(log(x**2)*log(y*z)).expand() in [log(2*log(x)*log(y) +
+        2*log(x)*log(z)), log(log(x)*log(z) + log(y)*log(x)) + log(2),
+        log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
     assert (log(x*(y+z))*(x+y)),expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
@@ -250,5 +307,25 @@ def test_as_numer_denom():
     assert exp(-x).as_numer_denom() == (1, exp(x))
     assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
     assert exp(-2).as_numer_denom() == (1, exp(2))
-    assert exp(n).as_numer_denom() == (exp(n), 1)
-    assert exp(-n).as_numer_denom() == (1, exp(n))
+    assert exp(n).as_numer_denom() == (1, exp(-n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+    assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
+    assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
+    assert exp(-n).as_numer_denom() == (exp(-n), 1)
+
+
+def test_polar():
+    x, y = symbols('x y', polar=True)
+    z = Symbol('z')
+
+    assert abs(exp_polar(I*4)) == 1
+    assert exp_polar(I*10).n() == exp_polar(I*10)
+
+    assert log(exp_polar(z)) == z
+    assert log(x*y).expand() == log(x) + log(y)
+    assert log(x**z).expand() == z*log(x)
+
+    assert exp_polar(3).exp == 3
+
+    # Compare exp(1.0*pi*I).
+    assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0

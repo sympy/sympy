@@ -36,7 +36,7 @@ def _qsympify_sequence(seq):
     * other => sympify
 
     Strings are passed to Symbol, not sympify to make sure that variables like
-    'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+    'pi' are kept as Symbols, not the SymPy built-in number subclasses.
 
     Examples
     ========
@@ -63,6 +63,11 @@ def __qsympify_sequence_helper(seq):
         else:
             return sympify(seq)
 
+    # base condition, when seq is QExpr and also
+    # is iterable.
+    if isinstance(seq, QExpr):
+        return seq
+
     #if list, recurse on each item in the list
     result = [__qsympify_sequence_helper(item) for item in seq]
 
@@ -83,14 +88,17 @@ class QExpr(Expr):
     # The Hilbert space a quantum Object belongs to.
     __slots__ = ['hilbert_space']
 
+    is_commutative = False
+
     # The separator used in printing the label.
     _label_separator = u''
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args):
         """Construct a new quantum object.
 
         Parameters
         ==========
+
         args : tuple
             The list of numbers or parameters that uniquely specify the
             quantum object. For a state, this will be its symbol or its
@@ -117,7 +125,7 @@ class QExpr(Expr):
         args = cls._eval_args(args)
         if len(args) == 0:
             args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
@@ -133,7 +141,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args, **{'commutative':False})
+        obj = Expr.__new__(cls, *args)
         obj.hilbert_space = hilbert_space
         return obj
 
@@ -161,7 +169,8 @@ class QExpr(Expr):
 
     @classmethod
     def default_args(self):
-        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
+        """If no arguments are specified, then this will return a default set
+        of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
         Should be overidden by subclasses to specify the default arguments for kets and operators
@@ -223,9 +232,15 @@ class QExpr(Expr):
     def _print_parens_pretty(self, pform, left='(', right=')'):
         return prettyForm(*pform.parens(left=left, right=right))
 
-    # Printing of labels
+    # Printing of labels (i.e. args)
 
     def _print_label(self, printer, *args):
+        """Prints the label of the QExpr
+
+        This method prints self.label, using self._label_separator to separate
+        the elements. This method should not be overridden, instead, override
+        _print_contents to change printing behavior.
+        """
         return self._print_sequence(
             self.label, self._label_separator, printer, *args
         )
@@ -245,13 +260,17 @@ class QExpr(Expr):
             self.label, self._label_separator, printer, *args
         )
 
-    # Printing of contents
+    # Printing of contents (default to label)
 
     def _print_contents(self, printer, *args):
-        return self._print_label(printer, *args)
+        """Printer for contents of QExpr
 
-    def _print_contents_repr(self, printer, *args):
-        return self._print_label_repr(printer, *args)
+        Handles the printing of any unique identifying contents of a QExpr to
+        print as its contents, such as any variables or quantum numbers. The
+        default is to print the label, which is almost always the args. This
+        should not include printing of any brackets or parenteses.
+        """
+        return self._print_label(printer, *args)
 
     def _print_contents_pretty(self, printer, *args):
         return self._print_label_pretty(printer, *args)
@@ -259,15 +278,24 @@ class QExpr(Expr):
     def _print_contents_latex(self, printer, *args):
         return self._print_label_latex(printer, *args)
 
-    # Main methods
+    # Main printing methods
 
     def _sympystr(self, printer, *args):
+        """Default printing behavior of QExpr objects
+
+        Handles the default printing of a QExpr. To add other things to the
+        printing of the object, such as an operator name to operators or
+        brackets to states, the class should override the _print/_pretty/_latex
+        functions directly and make calls to _print_contents where appropriate.
+        This allows things like InnerProduct to easily control its printing the
+        printing of contents.
+        """
         return self._print_contents(printer, *args)
 
     def _sympyrepr(self, printer, *args):
         classname = self.__class__.__name__
-        contents = self._print_contents_repr(printer, *args)
-        return '%s(%s)' % (classname, contents)
+        label = self._print_label_repr(printer, *args)
+        return '%s(%s)' % (classname, label)
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
@@ -333,6 +361,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         basis : Operator
             The Operator whose basis functions will be used as the basis for
             representation.
@@ -394,4 +423,3 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
-

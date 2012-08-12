@@ -7,7 +7,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 def test_find_pure_symbol():
     A, B, C = symbols('A,B,C')
@@ -50,7 +50,9 @@ def test_unit_clause_int_repr():
         (2, False)
     assert find_unit_clause_int_repr(map(set, [[1, 2, 3], [3, -3], [1, 2]]), {1: True}) == \
         (2, True)
-#    assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
+
+    A,B,C = symbols('A,B,C')
+    assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_propagate():
     A, B, C = symbols('A,B,C')
@@ -73,7 +75,8 @@ def test_dpll_satisfiable():
     assert dpll_satisfiable( A & ~B ) == {A: True, B: False}
     assert dpll_satisfiable( A | B ) in ({A: True}, {B: True}, {A: True, B: True})
     assert dpll_satisfiable( (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B:False})
-    assert dpll_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False}, {A: True, C:True})
+    assert dpll_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False},
+            {A: True, C:True}, {B: True, C: True})
     assert dpll_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
     assert dpll_satisfiable( (A | B) & (A >> B) ) == {B: True}
     assert dpll_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
@@ -110,9 +113,9 @@ def test_pl_true():
 
 def test_pl_true_wrong_input():
     from sympy import pi
-    raises(ValueError, "pl_true('John Cleese')")
-    raises(ValueError, "pl_true(42+pi+pi**2)")
-    #raises(ValueError, "pl_true(42)")  #returns None, but should it?
+    raises(ValueError, lambda: pl_true('John Cleese'))
+    raises(ValueError, lambda: pl_true(42+pi+pi**2))
+    raises(ValueError, lambda: pl_true(42))
 
 def test_PropKB():
     A, B, C = symbols('A,B,C')

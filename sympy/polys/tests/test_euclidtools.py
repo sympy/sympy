@@ -1,4 +1,5 @@
-"""Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
+"""Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder
+sequences. """
 
 from sympy.polys.euclidtools import (
     dup_gcdex, dup_half_gcdex, dup_invert,

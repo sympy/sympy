@@ -1,7 +1,6 @@
 """Tests for solvers of systems of polynomial equations. """
 
-from sympy import S, symbols, Integer, Rational, sqrt, I, Poly, QQ, flatten
-
+from sympy import flatten, I, Integer, Poly, QQ, Rational, S, sqrt, symbols
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import solve_poly_system, solve_triangulated
@@ -40,8 +39,8 @@ def test_solve_poly_system():
 
     assert solve_poly_system([x + x*y - 3, y + x*y - 4], x, y) == [(-3, -2), (1, 2)]
 
-    raises(NotImplementedError, "solve_poly_system([x**3-y**3], x, y)")
-    raises(PolynomialError, "solve_poly_system([1/x], x)")
+    raises(NotImplementedError, lambda: solve_poly_system([x**3-y**3], x, y))
+    raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
 def test_solve_biquadratic():
     x0, y0, x1, y1, r = symbols('x0 y0 x1 y1 r')
@@ -92,4 +91,3 @@ def test_solve_triangualted():
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
         [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
-

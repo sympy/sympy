@@ -2,9 +2,10 @@
 
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
+from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
-from sympy.core import S, sympify
+from sympy.core import sympify
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
@@ -106,7 +107,10 @@ def _construct_composite(coeffs, opt):
         numers.append(numer)
         denoms.append(denom)
 
-    polys, gens = parallel_dict_from_basic(numers + denoms) # XXX: sorting
+    try:
+        polys, gens = parallel_dict_from_basic(numers + denoms) # XXX: sorting
+    except GeneratorsNeeded:
+        return None
 
     if any(gen.is_number for gen in gens):
         return None # generators are number-like so lets better use EX
