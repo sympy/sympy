@@ -23,7 +23,7 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
 from inspect import getargspec
-from itertools import repeat, izip
+from itertools import chain
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
@@ -1090,7 +1090,7 @@ class MatplotlibBackend(BaseBackend):
             if s.is_3Dsurface and s.surface_color:
                 if matplotlib.__version__ < "1.2.0": #TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
-                elif isinstance(s.surface_color, (float,int)) or callable(s.surface_color):
+                elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
@@ -1238,7 +1238,6 @@ def _matplotlib_list(interval_list):
 ####New API for plotting module ####
 
 # TODO: Add support for depth and nb_of_points
-# TODO: Refractor the code.
 # TODO: Add color arrays for plots.
 
 def plot_line(*args, **kwargs):
@@ -1306,45 +1305,11 @@ def plot_line(*args, **kwargs):
     >>> plot_line(x**2, adaptive = False, nb_of_points = 400)
 
     """
-    args = sympify([np for np in args])
+    args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
-
-    def add_default_ranges(free_symbol):
-        default_range = Tuple(-10, 10)
-        return Tuple(free_symbol) + default_range
-
-    if not isinstance(args[0], (tuple, Tuple)):
-        #Single range plots
-        for i in range(len(args)):
-            if isinstance(args[i], Tuple):
-                break
-        else:
-            i = len(args) + 1
-
-        exprs = args[:i]
-        assert all(isinstance(e, Expr) for e in exprs)
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
-        if len(free_symbols) > 1:
-            raise ValueError("plot_line can plot plots having a single free"
-                                "variable")
-        if len(args) > i and isinstance(args[i], Tuple):
-            ranges = args[i]
-        else:
-            if free_symbols:
-                ranges = add_default_ranges(free_symbols[0])
-            else:
-                ranges = add_default_ranges(Dummy())
-
-        series.extend(LineOver1DRangeSeries(expr, ranges) for expr in exprs)
-
-    else:
-        for arg in args:
-            assert isinstance(arg[0], Expr)
-            expr = arg[0]
-            assert len(arg[1]) == 3
-            ranges = arg[1]
-            series.append(LineOver1DRangeSeries(expr, ranges))
+    plot_expr = check_arguments(args, 1, 1)
+    series = [LineOver1DRangeSeries(*arg) for arg in plot_expr]
 
     plots = Plot(*series, **kwargs)
     if show:
@@ -1411,67 +1376,11 @@ def plot_parametric(*args, **kwargs):
     >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))
 
     """
-    args = sympify([np for np in args])
+    args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
-
-    def add_default_ranges(free_symbol):
-        default_range = Tuple(-10, 10)
-        return Tuple(free_symbol) + default_range
-
-    if isinstance(args[0], Expr) and isinstance(args[1], Expr):
-        #Single plot
-        free_symbols = list(set_union(*[e.free_symbols for e in args[:2]]))
-        assert len(free_symbols) < 2
-        if len(args) == 3:
-            ranges = args[3]
-            assert len(ranges) == 3
-        else:
-            # No range specified.
-            if free_symbols:
-                ranges = add_default_ranges(free_symbols[0])
-            else:
-                ranges = add_default_ranges(Dummy())
-        series.append(Parametric2DLineSeries(args[0], args[1], ranges))
-    
-    elif isinstance(args[0], Tuple) and len(args[0]) == 2:
-        #Series of plots with same range
-        for i in range(len(args)):
-            if isinstance(args[i], Tuple) and len(args[i]) == 3:
-                break
-        else:
-            i = len(args) + 1
-
-        exprs = list(args[:i])
-        assert all(len(e) == 2 and isinstance(e[0], Expr) and
-                isinstance(e[1], Expr) for e in exprs)
-        free_symbols = list(set_union(*[set_union(e[0].free_symbols, e[1].free_symbols)
-                            for e in args[:2]]))
-        if len(args) > i and isinstance(args[i], Tuple):
-            #Ranges specified
-            ranges = args[i]
-        else:
-            if free_symbols:
-                ranges = add_default_ranges(free_symbols[0])
-            else:
-                ranges = add_default_ranges(Dummy())
-
-        series.extend([Parametric2DLineSeries(expr[0], expr[1], ranges)
-                                                for expr in exprs])
-    elif isinstance(args[0], Tuple) and len(args[0]) == 3:
-        for arg in args:
-            assert len(arg) == 3
-            assert isinstance(arg[0], Expr)
-            assert isinstance(arg[1], Expr)
-            free_symbols = list(set_union(arg[0].free_symbols, arg[1].free_symbols))
-            if len(free_symbols) > 2:
-                raise ValueError("plot_parametric can plot expressions with one"
-                                    " free variable")
-            ranges = arg[2]
-            series.append(Parametric2DLineSeries(arg[0], arg[1], ranges))
-    else:
-        raise ValueError("Inputs provided cannot be processed")
-
+    plot_expr = check_arguments(args, 2, 1)
+    series = [Parametric2DLineSeries(*arg) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1529,47 +1438,11 @@ def plot3D_parametric(*args, **kwargs):
     >>> plot_parametric3D((cos(u), sin(u), u), (sin(u), u**2, u))
 
     """
-    args = sympify([np for np in args])
+    args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
-
-    def add_default_ranges(free_symbol):
-        default_range = Tuple(-10, 10)
-        return Tuple(free_symbol) + default_range
-
-    if isinstance(args[0], Expr) and isinstance(args[1], Expr) and \
-            isinstance(args[2], Expr):
-        #Single plot
-        free_symbols = list(set_union(*[e.free_symbols for e in args[:3]]))
-        assert len(free_symbols) < 2
-        if len(args) == 4:
-            ranges = args[3]
-            assert len(ranges) == 3
-        else:
-            # No range specified.
-            if free_symbols:
-                ranges = add_default_ranges(free_symbols[0])
-            else:
-                ranges = add_default_ranges(Dummy())
-        series.append(Parametric3DLineSeries(args[0], args[1], args[2], ranges))
-    
-    elif isinstance(args[0], Tuple) and len(args[0]) == 4:
-        for arg in args:
-            print arg
-            assert len(arg) == 4
-            assert isinstance(arg[0], Expr)
-            assert isinstance(arg[1], Expr)
-            assert isinstance(arg[2], Expr)
-            free_symbols = list(set_union(arg[0].free_symbols, arg[1].free_symbols,
-                                arg[2].free_symbols))
-            if len(free_symbols) > 2:
-                raise ValueError("plot_parametric can plot expressions with one"
-                                    " free variable")
-            ranges = arg[3]
-            series.append(Parametric3DLineSeries(arg[0], arg[1], arg[2], ranges))
-    else:
-        raise ValueError("Inputs provided cannot be processed")
-
+    plot_expr = check_arguments(args, 3, 1)
+    series = [Parametric3DLineSeries(*arg) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1620,58 +1493,17 @@ def plot3D(*args, **kwargs):
 
     Examples
     ========
-    >>> plot_3D(x*y, (x, -5, 5), (y, -5, 5))
+    >>> plot3D(x*y, (x, -5, 5), (y, -5, 5))
 
     Multiple plots
-    >>> plot_3D((x**2 + y**2, (x, -5, 5), (y, -5, 5), (x*y)))
+    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5), (x*y)))
 
     """
-    args = sympify([np for np in args])
+    args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
-    if isinstance(args[0], Expr):
-        for i in range(len(args)):
-            if isinstance(args[i], Tuple):
-                break
-        else:
-            i = len(args) + 1
-
-        exprs = args[:i]
-        assert all(isinstance(e, Expr) for e in exprs)
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
-        if len(free_symbols) > 2:
-            raise ValueError("plot3D can plot expressions with only one free"
-                                "variable")
-        if len(args) > i + 1:
-            #both ranges mentioned
-            assert len(args[i]) == 3
-            assert len(args[i + 1]) == 3
-            range_x = args[i]
-            range_y = args[i + 1]
-            series.extend([SurfaceOver2DRangeSeries(e, range_x, range_y)
-                            for e in exprs])
-        else:
-            default_range = Tuple(-10, 10)
-            ranges = []
-            for i in range(2):
-                if len(free_symbols) > i:
-                    ranges.append(Tuple(free_symbols[i]) + default_range)
-                else:
-                    ranges.append(Tuple(Dummy()) + default_range)
-
-            series.extend([SurfaceOver2DRangeSeries(e, ranges[0], ranges[1])
-                            for e in exprs])
-    
-    elif isinstance(args[0], Tuple):
-        for arg in args:
-            assert len(arg) == 3
-            free_symbols = list(arg[0].free_symbols)
-            if len(free_symbols) > 2:
-                raise ValueError("plot3D can plot expressions with only one"
-                                    " free variable")
-            series.append(SurfaceOver2DRangeSeries(arg[0], arg[1], arg[2]))
-    else:
-        raise ValueError("Inputs provided to plot3D cannot be processed")
+    plot_expr = check_arguments(args, 1, 2)
+    series = [SurfaceOver2DRangeSeries(*arg) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1727,48 +1559,104 @@ def plot3D_surface(*args, **kwargs):
     >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5))
     """
 
-    args = sympify([np for np in args])
+    args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
-    if isinstance(args[0], Expr):
-        assert all(isinstance(expr, Expr) for expr in args[:3])
-        exprs = args[:3]
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
-        if len(free_symbols) > 2:
-            raise ValueError("plot3D_surface can plot expressions with only one"
-                                " free variable")
-
-        if len(args) == 5:
-            #Ranges mentioned
-            assert len(args[3]) == 3
-            assert len(args[4]) == 3
-            ranges = args[3:5]
-        else:
-            default_range = Tuple(-10, 10)
-            #Use default ranges
-            ranges = []
-            for i in range(2):
-                if len(free_symbols) > i:
-                    ranges.append(Tuple(free_symbols[i]) + default_range)
-                else:
-                    ranges.append(Tuple(Dummy()) + default_range)
-
-        series.append(ParametricSurfaceSeries(exprs[0], exprs[1], exprs[2],
-                                                ranges[0], ranges[1]))
-    
-    elif isinstance(args[0], Tuple):
-        for arg in args:
-            assert len(arg) == 5
-            assert all(isinstance(expr, Expr) for expr in arg[:3])
-            assert len(arg[3]) == 3
-            assert len(arg[4]) == 3
-            exprs = arg[:3]
-            free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
-            series.append(ParametricSurfaceSeries(exprs[0], exprs[1], exprs[2],
-                                                    arg[3], arg[4]))
-    else:
-        raise ValueError("Invalid input")
-    print series
+    plot_expr = check_arguments(args, 3, 2)
+    series = [ParametricSurfaceSeries(*arg) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+
+def check_arguments(args, expr_len, nb_of_free_symbols):
+    """
+    Checks the arguments and converts into tuples of the
+    form (exprs, ranges)
+
+    >>> from sympy import plot, cos, sin, symbols
+    >>> from sympy.plotting.plot import check_arguments
+    >>> x,y,u,v = symbols('x y u v')
+    >>> check_arguments([cos(x), sin(x)], 2, 1)
+        [(cos(x), sin(x), (x, -10, 10))]
+
+    >>> check_arguments([x, x**2], 1, 1)
+        [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
+    """
+    if expr_len > 1 and isinstance(args[0], Expr):
+        # Multiple expressions same range.
+        # The arguments are tuples when the expression length is
+        # greater than 1.
+        assert len(args) >= expr_len
+        for i in range(len(args)):
+            if isinstance(args[i], Tuple):
+                break
+        else:
+            i = len(args) + 1
+
+        exprs = Tuple(*args[:i])
+        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
+        if len(args) == expr_len + nb_of_free_symbols:
+            #Ranges given
+            plots = [exprs + Tuple(*args[expr_len:])]
+        else:
+            default_range = Tuple(-10, 10)
+            ranges = []
+            for symbol in free_symbols:
+                ranges.append(Tuple(symbol) + default_range)
+
+            for i in range(len(free_symbols) - nb_of_free_symbols):
+                ranges.append(Tuple(Dummy()) + default_range)
+            plots = [exprs + Tuple(*ranges)]
+        return plots
+
+    if isinstance(args[0], Expr) or (isinstance(args[0], Tuple) and
+                                        len(args[0]) == expr_len and
+                                        expr_len != 3):
+        # Cannot handle expressions with number of expression = 3. It is
+        # not possible to differentiate between expressions and ranges.
+        #Series of plots with same range
+        for i in range(len(args)):
+            if isinstance(args[i], Tuple) and len(args[i]) != expr_len:
+                break
+            if not isinstance(args[i], Tuple):
+                args[i] = Tuple(args[i])
+        else:
+            i = len(args) + 1
+
+        exprs = args[:i]
+        assert all(isinstance(e, Expr) for expr in exprs for e in expr)
+        free_symbols = list(set_union(*[e.free_symbols for expr in exprs
+                                        for e in expr]))
+
+        if len(free_symbols) > nb_of_free_symbols:
+            raise ValueError("The number of free_symbols in the expression"
+                                "is greater than %d" % nb_of_free_symbols)
+        if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
+            ranges = Tuple(*[range_expr for range_expr in args[i:i + nb_of_free_symbols]])
+            plots = [expr + ranges for expr in exprs]
+            return plots
+        else:
+            #Use default ranges.
+            default_range = Tuple(-10, 10)
+            ranges = []
+            for symbol in free_symbols:
+                ranges.append(Tuple(symbol) + default_range)
+
+            for i in range(len(free_symbols) - nb_of_free_symbols):
+                ranges.append(Tuple(Dummy()) + default_range)
+            ranges = Tuple(*ranges)
+            plots = [expr + ranges for expr in exprs]
+            return plots
+
+    elif isinstance(args[0], Tuple) and len(args[0]) == expr_len + nb_of_free_symbols:
+        #Multiple plots with different ranges.
+        for arg in args:
+            for i in range(expr_len):
+                if not isinstance(arg[i], Expr):
+                    raise ValueError("Expected an expression, given %s" %
+                                        str(arg[i]))
+            for i in range(nb_of_free_symbols):
+                if not len(arg[i + expr_len]) == 3:
+                    raise ValueError("The ranges should be a tuple of"
+                                     "length 3, got %s" % str(arg[i + expr_len]))
+        return args
