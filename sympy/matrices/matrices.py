@@ -148,7 +148,7 @@ class MatrixBase(object):
                 else:
                     in_mat.append(row)
             rows = len(in_mat)
-            if len(in_mat) != 0:
+            if len(in_mat):
                 if not is_sequence(in_mat[0]):
                     cols = 1
                     mat = map(lambda i: sympify(i), in_mat)
@@ -1369,7 +1369,7 @@ class MatrixBase(object):
         for k in range(n-1):
             if U[k,k] == 0:
                 for kpivot in range(k+1, n):
-                    if U[kpivot, k] != 0:
+                    if U[kpivot, k]:
                         break
                 else:
                     raise ValueError("Matrix is not full rank")
@@ -2060,7 +2060,7 @@ class MatrixBase(object):
         """
         for i in xrange(1, self.rows):
             for j in xrange(0, i):
-                if self[i,j] != 0:
+                if self[i,j]:
                     return False
         return True
 
@@ -2104,7 +2104,7 @@ class MatrixBase(object):
         """
         for i in xrange(0, self.rows):
             for j in xrange(i+1, self.cols):
-                if self[i, j] != 0:
+                if self[i, j]:
                     return False
         return True
 
@@ -2136,7 +2136,7 @@ class MatrixBase(object):
         """
         for i in xrange(2, self.rows):
             for j in xrange(0, i - 1):
-                if self[i,j] != 0:
+                if self[i,j]:
                     return False
         return True
 
@@ -2168,7 +2168,7 @@ class MatrixBase(object):
         """
         for i in xrange(0, self.rows):
             for j in xrange(i + 2, self.cols):
-                if self[i, j] != 0:
+                if self[i, j]:
                     return False
         return True
 
@@ -2377,7 +2377,7 @@ class MatrixBase(object):
         """
         for i in xrange(self.rows):
             for j in xrange(self.cols):
-                if i != j and self[i, j] != 0:
+                if i != j and self[i, j]:
                     return False
         return True
 
@@ -2455,7 +2455,7 @@ class MatrixBase(object):
                 # and assume det == 0 if none is found
                 if M[k, k] == 0:
                     for i in range(k+1, n):
-                        if M[i, k] != 0:
+                        if M[i, k]:
                             M.row_swap(i, k)
                             sign *= -1
                             break
@@ -2504,7 +2504,7 @@ class MatrixBase(object):
         M, n = self[:,:], self.rows
         p, prod = [] , 1
         l, u, p = M.LUdecomposition()
-        if  len(p)%2 != 0:
+        if  len(p) % 2:
             prod = -1
 
         for k in range(n):
@@ -2681,7 +2681,7 @@ class MatrixBase(object):
                     v = reduced[line, j]
                     if simplify:
                         v = simpfunc(v)
-                    if v != 0:
+                    if v:
                         if j in pivots:
                             # XXX: Is this the correct error?
                             raise NotImplementedError("Could not compute the nullspace of `self`.")
@@ -3450,7 +3450,7 @@ class MatrixBase(object):
             for j in xrange(self.cols):
                 if i==j and self[i,j] != 1:
                     return False
-                if i!=j and self[i,j] != 0:
+                if i!=j and self[i,j]:
                     return False
         return True
 
@@ -4333,7 +4333,7 @@ class SparseMatrix(MatrixBase):
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(op(i,j))
-                    if value != 0:
+                    if value:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
                 isinstance(args[1],int) and is_sequence(args[2]):
@@ -4343,7 +4343,7 @@ class SparseMatrix(MatrixBase):
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = sympify(mat[i*self.cols+j])
-                    if value != 0:
+                    if value:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
                 isinstance(args[1],int) and isinstance(args[2], dict):
@@ -4363,7 +4363,7 @@ class SparseMatrix(MatrixBase):
             for i in range(self.rows):
                 for j in range(self.cols):
                     value = mat[self.cols*i+j]
-                    if value != 0:
+                    if value:
                         self.mat[(i,j)] = value
 
     def __getitem__(self, key):
@@ -4371,11 +4371,11 @@ class SparseMatrix(MatrixBase):
             lo, hi = self.slice2bounds(key, len(self))
             L = []
             for i in range(lo, hi):
-                m,n = self.rowdecomp(i)
-                if (m,n) in self.mat:
-                    L.append(self.mat[(m,n)])
+                m, n = self.rowdecomp(i)
+                if (m, n) in self.mat:
+                    L.append(self.mat[(m, n)])
                 else:
-                    L.append(0)
+                    L.append(S.Zero)
             if len(L) == 1:
                 return L[0]
             else:
@@ -4384,11 +4384,11 @@ class SparseMatrix(MatrixBase):
             raise ValueError("`key` must be of length 2.")
 
         if isinstance(key[0], int) and isinstance(key[1], int):
-            i,j=self.key2ij(key)
+            i, j=self.key2ij(key)
             if (i, j) in self.mat:
-                return self.mat[(i,j)]
+                return self.mat[(i, j)]
             else:
-                return 0
+                return S.Zero
         elif isinstance(key[0], slice) or isinstance(key[1], slice):
             return self.submatrix(key)
         else:
@@ -4420,12 +4420,12 @@ class SparseMatrix(MatrixBase):
             if is_sequence(value):
                 self.copyin_list(key, value)
         else:
-            i,j=self.key2ij(key)
+            i, j=self.key2ij(key)
             testval = sympify(value)
-            if testval != 0:
-                self.mat[(i,j)] = testval
-            elif (i,j) in self.mat:
-                del self.mat[(i,j)]
+            if testval:
+                self.mat[(i, j)] = testval
+            elif (i, j) in self.mat:
+                del self.mat[(i, j)]
 
     def row_del(self, k):
         """
@@ -4449,14 +4449,14 @@ class SparseMatrix(MatrixBase):
         col_del
         """
         newD = {}
-        k = self.key2ij((k,0))[0]
-        for (i,j) in self.mat.keys():
-            if i==k:
+        k = self.key2ij((k, 0))[0]
+        for (i, j) in self.mat.keys():
+            if i == k:
                 pass
             elif i > k:
-                newD[i-1,j] = self.mat[i,j]
+                newD[i - 1, j] = self.mat[i, j]
             else:
-                newD[i,j] = self.mat[i,j]
+                newD[i, j] = self.mat[i, j]
         self.mat = newD
         self.rows -= 1
 
@@ -4483,14 +4483,14 @@ class SparseMatrix(MatrixBase):
         row_del
         """
         newD = {}
-        k = self.key2ij((0,k))[1]
-        for (i,j) in self.mat.keys():
-            if j==k:
+        k = self.key2ij((0, k))[1]
+        for (i, j) in self.mat.keys():
+            if j == k:
                 pass
             elif j > k:
-                newD[i,j-1] = self.mat[i,j]
+                newD[i, j - 1] = self.mat[i, j]
             else:
-                newD[i,j] = self.mat[i,j]
+                newD[i, j] = self.mat[i, j]
         self.mat = newD
         self.cols -= 1
 
@@ -4506,7 +4506,7 @@ class SparseMatrix(MatrixBase):
                 if (i, j) in self.mat:
                     c.append(self[i, j])
                 else:
-                    c.append(0)
+                    c.append(S.Zero)
         return Matrix(l)
 
     def row_list(self):
@@ -4530,9 +4530,9 @@ class SparseMatrix(MatrixBase):
         new=[]
         for i in range(self.rows):
             for j in range(self.cols):
-                value = self[(i,j)]
-                if value!=0:
-                    new.append((i,j,value))
+                value = self[(i, j)]
+                if value:
+                    new.append((i, j, value))
         return new
 
     RL = property(row_list,None,None,"Alternate faster representation")
@@ -4556,9 +4556,9 @@ class SparseMatrix(MatrixBase):
         new=[]
         for j in range(self.cols):
             for i in range(self.rows):
-                value = self[(i,j)]
-                if value!=0:
-                    new.append((i,j,value))
+                value = self[(i, j)]
+                if value:
+                    new.append((i, j, value))
         return new
 
     CL = property(col_list,None,None,"Alternate faster representation")
@@ -4575,9 +4575,9 @@ class SparseMatrix(MatrixBase):
         [1, 3]
         [2, 4]
         """
-        tran = SparseMatrix(self.cols,self.rows,{})
-        for key,value in self.mat.iteritems():
-            tran.mat[key[1],key[0]]=value
+        tran = SparseMatrix(self.cols, self.rows, {})
+        for key, value in self.mat.iteritems():
+            tran.mat[key[1], key[0]]=value
         return tran
 
     T = property(transpose,None,None,"Matrix transposition.")
@@ -4666,22 +4666,24 @@ class SparseMatrix(MatrixBase):
         add
         """
 
-        def dotprod(a,b,i,j):
+        def dotprod(a, b, i, j):
             if a.cols != b.rows:
                 raise ShapeError("`self.cols` must equal `b.rows`.")
             r=0
             for x in range(a.cols):
-                r+=a[i,x]*b[x,j]
+                r+=a[i, x]*b[x, j]
             return r
 
-        r = SparseMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
+        r = SparseMatrix(self.rows, b.cols,
+            lambda i,j: dotprod(self, b, i, j))
         if r.rows == 1 and r.cols ==1:
-            return r[0,0]
+            return r[0, 0]
         return r
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
+        return SparseMatrix(rhi -rlo, chi - clo,
+            lambda i, j: self[i + rlo, j + clo])
 
     def reshape(self, _rows, _cols):
         if len(self) != _rows*_cols:
@@ -4689,9 +4691,9 @@ class SparseMatrix(MatrixBase):
         newD = {}
         for i in range(_rows):
             for j in range(_cols):
-                m,n = self.rowdecomp(i*_cols + j)
-                if (m,n) in self.mat:
-                    newD[(i,j)] = self.mat[(m,n)]
+                m, n = self.rowdecomp(i*_cols + j)
+                if (m, n) in self.mat:
+                    newD[(i, j)] = self.mat[(m, n)]
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
@@ -4728,7 +4730,7 @@ class SparseMatrix(MatrixBase):
         n = int(n)
         tmp = cls.zeros(n)
         for i in range(tmp.rows):
-            tmp[i,i] = 1
+            tmp[i, i] = 1
         return tmp
 
     def __hash__(self):
