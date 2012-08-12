@@ -8,7 +8,7 @@ from math import log
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
+_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip, _verify_bsgs
 
 def _smallest_change(h, alpha):
     """
@@ -339,6 +339,12 @@ class PermutationGroup(Basic):
     [7] http://www.algorithmist.com/index.php/Union_Find
 
     [8] http://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
+
+    [9] http://en.wikipedia.org/wiki/Center_%28group_theory%29
+
+    [10] http://en.wikipedia.org/wiki/Centralizer_and_normalizer
+
+    [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
 
     """
 
@@ -842,9 +848,82 @@ class PermutationGroup(Basic):
         return self._transversals
 
     def center(self):
+        r"""
+        Return the center of a permutation group.
+
+        The center for a group `G` is defined as
+        `Z(G) = \{z\in G | \forall g\in G, zg = gz \}`,
+        the set of elements of `G` that commute with all elements of `G`.
+        It is equal to the centralizer of `G` inside `G`, and is naturally a
+        subgroup of `G` ([9]).
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import DihedralGroup
+        >>> D = DihedralGroup(4)
+        >>> G = D.center()
+        >>> G.order()
+        2
+
+        See Also
+        ========
+
+        centralizer
+
+        Notes
+        =====
+
+        This is a naive implementation that is a straightforward application
+        of ``.centralizer()``
+
+        """
         return self.centralizer(self)
 
     def centralizer(self, other):
+        r"""
+        Return the centralizer of a group/set/element.
+
+        The centralizer of a set of permutations `S` inside
+        a group `G` is the set of elements of `G` that commute with all
+        elements of `S`:
+        `C_G(S) = \{ g \in G | gs = sg \forall s \in S\}` ([10])
+        Usually, `S` is a subset of `G`, but if `G` is a proper subgroup of
+        the full symmetric group, we allow for `S` to have elements outside
+        `G`.
+        It is naturally a subgroup of `G`; the centralizer of a permutation group
+        is equal to the centralizer of any set of generators for that group, since
+        any element commuting with the generators commutes with any product of the
+        generators.
+
+        Parameters
+        ==========
+
+        ``other`` - a permutation group/list of permutations/single permutation
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> S = SymmetricGroup(6)
+        >>> C = CyclicGroup(6)
+        >>> H = S.centralizer(C)
+        >>> H == C
+        True
+
+        See Also
+        ========
+
+        subgroup_search
+
+        Notes
+        =====
+
+        The implementation is an application of ``.subgroup_search()`` with tests
+        using a specific base for the group `G`.
+
+        """
         if hasattr(other, 'generators'):
             degree = self.degree
             identity = _new_from_array_form(range(degree))
@@ -862,11 +941,11 @@ class PermutationGroup(Basic):
                 for point in orbit:
                     orbit_descr[point] = i
                 long_base = long_base + orbit
-            base, strong_gens = other.schreier_sims_incremental(base=long_base)
+            base, strong_gens = self.schreier_sims_incremental(base=long_base)
             strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
             i = 0
             for i in range(len(base)):
-                if strong_gens_distr == [identity]:
+                if strong_gens_distr[i] == [identity]:
                     break
             base = base[:i]
             base_len = i
@@ -885,7 +964,7 @@ class PermutationGroup(Basic):
                 if base[l] in orbit_reps:
                     tests[l] = trivial_test
                 else:
-                    def test(computed_words):
+                    def test(computed_words, l=l):
                         g = computed_words[l]
                         rep_orb_index = orbit_descr[base[l]]
                         rep = orbit_reps[rep_orb_index]
@@ -908,6 +987,37 @@ class PermutationGroup(Basic):
             return self.centralizer(PermutationGroup([other]))
 
     def commutator(self, G, H):
+        """
+        Return the commutator of two subgroups.
+
+        For a permutation group `K` and subgroups `G`, `H`, the
+        commutator of `G` and `H` is defined as the group generated
+        by all the commutators `[g, h] = hgh^{-1}g^{-1}` for `g` in `G` and
+        `h` in `H`. It is naturally a subgroup of `K` ([1],p.27).
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+        >>> S = SymmetricGroup(5)
+        >>> A = AlternatingGroup(5)
+        >>> G = S.commutator(S, A)
+        >>> G == A
+        True
+
+        See Also
+        ========
+
+        derived_subgroup
+
+        Notes
+        =====
+
+        The commutator of two subgroups `H, G` is equal to the normal closure of the commutators
+        of all the generators, i.e. `hgh^{-1}g^{-1}` for `h` a generator of `H` and `g` a
+        generator of `G` ([1],p.28)
+
+        """
         ggens = G.generators
         hgens = H.generators
         commutators = []
@@ -1099,6 +1209,42 @@ class PermutationGroup(Basic):
         return self._degree
 
     def derived_series(self):
+        r"""
+        Return the derived series for the group.
+
+        The derived series for a group `G` is defined as
+        `G = G_0 > G_1 > G_2 > \ldots`
+        where `G_i = [G_{i-1}, G_{i-1}]`, i.e. `G_i` is the derived subgroup of
+        `G_{i-1}`, for `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some `k\in\mathbb{N}`,
+        the series terminates.
+
+        Returns
+        =======
+
+        A list of permutation groups containing the members of the derived series
+        in the order `G = G_0, G_1, G_2, \ldots`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+        >>> A = AlternatingGroup(5)
+        >>> len(A.derived_series())
+        1
+        >>> S = SymmetricGroup(4)
+        >>> len(S.derived_series())
+        4
+        >>> S.derived_series()[1] == AlternatingGroup(4)
+        True
+        >>> S.derived_series()[2] == DihedralGroup(2)
+        True
+
+        See Also
+        ========
+
+        derived_subgroup
+
+        """
         res = [self]
         current = self
         next = self.derived_subgroup()
@@ -1113,10 +1259,8 @@ class PermutationGroup(Basic):
         Compute the derived subgroup.
 
         The derived subgroup, or commutator subgroup is the subgroup generated by all
-        commutators; it is equal to the normal closure of the set
-        of commutators of the generators.
-
-        see http://groupprops.subwiki.org/wiki/Derived_subgroup
+        commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is equal to the normal closure of the set
+        of commutators of the generators ([1],p.28, [11]).
 
         Examples
         ========
@@ -1129,6 +1273,11 @@ class PermutationGroup(Basic):
         >>> C = G.derived_subgroup()
         >>> list(C.generate(af=True))
         [[0, 1, 2, 3, 4], [0, 1, 3, 4, 2], [0, 1, 4, 2, 3]]
+
+        See Also
+        ========
+
+        derived_series
 
         """
         r = self._r
@@ -1608,6 +1757,36 @@ class PermutationGroup(Basic):
         return ans
 
     def lower_central_series(self):
+        r"""
+        Return the lower central series for the group.
+
+        The lower central series for a group `G` is the series
+        `G = G_0 > G_1 > G_2 > \ldots` where
+        `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the commutator
+        of `G` and the previous term in `G1` ([1],p.29)
+
+        Returns
+        =======
+
+        A list of permutation groups in the order
+        `G = G_0, G_1, G_2, \ldots`
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> A = AlternatingGroup(4)
+        >>> len(A.lower_central_series())
+        2
+        >>> A.lower_central_series()[1] == DihedralGroup(2)
+        True
+
+        See Also
+        ========
+
+        commutator, derived_series
+
+        """
         res = [self]
         current = self
         next = self.commutator(self, current)
@@ -1739,6 +1918,49 @@ class PermutationGroup(Basic):
         return parents
 
     def normal_closure(self, other, k=10):
+        r"""
+        Return the normal closure of a subgroup/set of permutations.
+
+        If `S` is a subset of a group `G`, the normal closure of `A` in `G`
+        is defined as the intersection of all normal subgroups of `G` that
+        contain `A` ([1],p.14). Alternatively, it is the group generated by
+        the conjugates `x^{-1}yx` for `x` a generator of `G` and `y` a
+        generator of the subgroup `\left\langle S\right\rangle` generated by
+        `S` (for some chosen generating set for `\left\langle S\right\rangle`)
+        ([1],p.73).
+
+        Parameters
+        ==========
+
+        ``other`` - a subgroup/list of permutations/single permutation
+        ``k`` - an implementation-specific parameter that determines the number
+        of conjugates that are adjoined to ``other`` at once
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> S = SymmetricGroup(5)
+        >>> C = CyclicGroup(5)
+        >>> G = S.normal_closure(C)
+        >>> G.order()
+        60
+        >>> G == AlternatingGroup(5)
+        True
+
+        See Also
+        ========
+
+        commutator, derived_subgroup, random_pr
+
+        Notes
+        =====
+
+        The algorithm is described in [1],pp.73-74; it makes use of the
+        generation of random elements for permutation groups by the product
+        replacement algorithm.
+
+        """
         if hasattr(other, 'generators'):
             degree = self.degree
             identity = _new_from_array_form(range(degree))
@@ -2009,6 +2231,38 @@ class PermutationGroup(Basic):
         return m
 
     def pointwise_stabilizer(self, points):
+        r"""
+        Return the pointwise stabilizer for a set of points.
+
+        For a permutation group `G` and a set of points
+        `\{p_1, p_2,\ldots, p_k\}`, the pointwise stabilizer of
+        `p_1, p_2, \ldots, p_k` is defined as
+        `G_{p_1,\ldots, p_k} =
+        \{g\in G | g(p_i) = p_i \forall i\in\{1, 2,\ldots,k\}\} ([1],p20).
+        It is a subgroup of `G`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(7)
+        >>> Stab = S.pointwise_stabilizer([2, 3, 5])
+        >>> Stab == S.stabilizer(2).stabilizer(3).stabilizer(5)
+        True
+
+        See Also
+        ========
+
+        stabilizer, schreier_sims_incremental
+
+        Notes
+        =====
+
+        Rather than the obvious implementation using successive calls to
+        .stabilizer(), this uses the incremental Schreier-Sims algorithm
+        to obtain a base with starting segment - the given points.
+
+        """
         base, strong_gens = self.schreier_sims_incremental(base=points)
         stab_gens = []
         degree = self.degree
