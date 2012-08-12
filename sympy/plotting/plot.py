@@ -1252,22 +1252,26 @@ def plot_line(*args, **kwargs):
     Usage
     =====
     Single Plot
-    plot_line(expr, range, ...)
+    plot_line(expr, range, **kwargs)
+    If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with same range.
-    plot_line(expr1, expr2, ..., range)
+    plot_line(expr1, expr2, ..., range, **kwargs)
+    If the range is not specified, then a default range of (-10, 10) is used.
 
-    Multiple plots with different .
-    plot_line((expr1, range), (expr2, range), ...)
+    Multiple plots with different ranges.
+    plot_line((expr1, range), (expr2, range), ..., **kwargs)
+    Range has to be specified for every expression.
+
+    Default Range:
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
 
     Arguments
     =========
+
     ``expr`` : Expression representing the function of single variable
     ``range``: (x, 0, 5), A 3-tuple denoting the range of the free variable.
-
-    If the ranges is not specified, then a default range of (-10, 10) is used.
-    This may change in the future if a more advanced default range detection
-    algorithm is detected.
 
     Keyword Arguments
     =================
@@ -1303,12 +1307,17 @@ def plot_line(*args, **kwargs):
 
     Examples
     ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot_line
+
+    Single Plot
     >>> plot_line(x**2, (x, -5, 5))
 
-    Multiple plots with single range
+    Multiple plots with single range.
     >>> plot_line(x, x**2, x**3, (x, -5, 5))
 
-    Multiple plots
+    Multiple plots with different ranges.
     >>> plot_line((x**2, (x, -6, 6)), (x, (x, -5, 5)))
 
     No adaptive sampling.
@@ -1337,24 +1346,30 @@ def plot_parametric(*args, **kwargs):
 
     Usage
     =====
+
     Single plot.
-    plot_parametric(expr_x, expr_y, range)
+    plot_parametric(expr_x, expr_y, range, **kwargs)
+    If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with same range.
-    plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range)
+    plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)
+    If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with different ranges.
-    plot_parametric((expr_x, expr_y, range), ...)
+    plot_parametric((expr_x, expr_y, range), ..., **kwargs)
+    Range has to be specified for every expression.
+
+    Default Range:
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
 
     Arguments
     =========
+
     ``expr_x`` : Expression representing the function along x.
     ``expr_y`` : Expression representing the function along y.
     ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
     variable.
-    If the range is not specified, then a default range of (-10, 10) is used.
-    This may change in the future if a more advanced default range detection
-    algorithm is detected.
 
     Keyword Arguments
     =================
@@ -1392,8 +1407,14 @@ def plot_parametric(*args, **kwargs):
 
     Examples
     ========
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot_parametric
 
+    Single Parametric plot
     >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+
+    Multiple parametric plot with single range.
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
 
     Multiple parametric plots.
     >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))
@@ -1414,22 +1435,29 @@ def plot3D_parametric(*args, **kwargs):
 
     Usage
     =====
-    Single plot
-    plot3D_parametric(expr_x, expr_y, expr_z, range, kwargs)
 
-    Multiple plots
-    plot3D_parametric((expr_x, expr_y, expr_z, range), ...)
+    Single plot:
+    plot3D_parametric(expr_x, expr_y, expr_z, range, **kwargs)
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots.
+    plot3D_parametric((expr_x, expr_y, expr_z, range), ..., **kwargs)
+
+    Ranges have to be specified for every expression.
+
+    Default Range:
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
 
     Arguments
     =========
+
     ``expr_x`` : Expression representing the function along x.
     ``expr_y`` : Expression representing the function along y.
     ``expr_z`` : Expression representing the function along z.
     ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
     variable.
-    If the range is not specified, then a default range of (-10, 10) is used.
-    This may change in the future if a more advanced default range detection
-    algorithm is detected.
 
     Keyword Arguments
     =================
@@ -1461,11 +1489,15 @@ def plot3D_parametric(*args, **kwargs):
 
     Examples
     ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot3D_parametric
+
+    Single plot.
     >>> plot3D_parametric(cos(u), sin(u), u, (u, -5, 5))
 
-    Multiple plots with default range.
-
-    >>> plot3D_parametric((cos(u), sin(u), u), (sin(u), u**2, u))
+    Multiple plots.
+    >>> plot3D_parametric((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))
 
     """
     args = sympify([arg for arg in args])
@@ -1483,25 +1515,31 @@ def plot3D(*args, **kwargs):
 
     Usage
     =====
+
     Single plot
-    plot3D(expr, range_x, range_y)
+    plot3D(expr, range_x, range_y, **kwargs)
+    If the ranges are not specified, then a default range of (-10, 10) is used.
 
     Multiple plot with the same range.
-    plot3D(expr1, expr2, range_x, range_y)
+    plot3D(expr1, expr2, range_x, range_y, **kwargs)
+    If the ranges are not specified, then a default range of (-10, 10) is used.
 
-    Multiple plots.
-    plot3D((expr, range_x, range_y), ...)
+    Multiple plots with different ranges.
+    plot3D((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)
+    Ranges have to be specified for every expression.
+
+    Default Range:
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
 
     Arguments
     =========
+
     ``expr`` : Expression representing the function along x.
     ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
     variable.
     ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
     variable.
-    If the ranges is not specified, then a default range of (-10, 10) is used.
-    This may change in the future if a more advanced default range detection
-    algorithm is detected.
 
     Keyword Arguments
     =================
@@ -1533,12 +1571,21 @@ def plot3D(*args, **kwargs):
 
     Examples
     ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot3D
+
+    Single plot
     >>> plot3D(x*y, (x, -5, 5), (y, -5, 5))
 
-    Multiple plots
-    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5), (x*y)))
+    Multiple plots with same range
+    >>> plot3D(x*y, -x*y, (x, -5, 5), (y, -5, 5))
+
+    Multiple plots with different ranges.
+    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))
 
     """
+
     args = sympify([arg for arg in args])
     show = kwargs.pop('show', True)
     series = []
@@ -1549,24 +1596,28 @@ def plot3D(*args, **kwargs):
         plots.show()
 
 
-
 def plot3D_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.
 
     Usage
     =====
+
     Single plot.
-    plot3D_surface(expr_x, expr_y, expr_z, range_x, range_y)
+    plot3D_surface(expr_x, expr_y, expr_z, range_x, range_y, **kwargs)
+    If the ranges is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots.
-    plot3D_surface((expr_x, expr_y, expr_z, range_x, range_y), ...)
-    If the ranges are not specified, then a default range of (-10, 10) is used.
-    This may change in the future if a more advanced default range detection
-    algorithm is detected.
+    plot3D_surface((expr_x, expr_y, expr_z, range_x, range_y), ..., **kwargs)
+    Ranges have to be specified for every expression.
+
+    Default Range:
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
 
     Arguments
     =========
+
     ``expr`` : Expression representing the function along x.
    ``range_x``: (x, 0, 5),  A 3-tuple denoting the range of the x
     variable.
@@ -1601,6 +1652,11 @@ def plot3D_surface(*args, **kwargs):
 
     Examples
     ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot3D_surface
+
+    Single plot.
     >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5))
     """
 
