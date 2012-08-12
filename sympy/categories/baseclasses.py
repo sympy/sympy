@@ -514,29 +514,19 @@ class Category(Basic):
 
 class Diagram(Basic):
     """
-    TODO: Rewrite all the docstrings in this class.
+    This class represents a diagram in a certain category.
 
-    Represents a diagram in a certain category.
+    Overview
+    ========
 
     Informally, a diagram is a collection of objects of a category and
     certain morphisms between them.  Identity morphisms, as well as
-    all composites of morphisms included in the diagram belong to the
+    all composites of morphisms included in the diagram, belong to the
     diagram.  For a more formal approach to this notion see
     [Pare1970].
 
-    A :class:`Diagram` stores a mapping between morphisms and the
-    :class:`FiniteSet`'s of their properties.  All possible morphism
-    compositions, as well as the components of composite morphisms are
-    also added to the diagram.  No properties are assigned to such
-    morphisms by default.  The set of properties of a composite
-    morphism is the intersection of the sets of properties of its
-    components.
-
-    No checks are carried out of whether the supplied objects and
-    morphisms do belong to one and the same category.
-
-    Examples
-    ========
+    A :class:`Diagram` represents a mapping between morphisms and the
+    :class:`FiniteSet`'s of their properties.
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
     >>> from sympy import FiniteSet, pprint, default_sort_key
@@ -545,13 +535,120 @@ class Diagram(Basic):
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
-    >>> d = Diagram(f, g)
-    >>> morphisms = sorted(d, key=default_sort_key)
-    >>> pprint(morphisms, use_unicode=False)
+    >>> d = Diagram(f, g, g * f)
+    >>> pprint(d)
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+    ptySet(), g:B-->C: EmptySet()}
+
+    .. note::
+
+       No checks are carried out of whether the supplied objects and
+       morphisms do belong to one and the same category.
+
+    All possible morphism compositions are considered to belong to the
+    diagram.
+
+    >>> d == Diagram(f, g)
+    True
+    >>> g * f in Diagram(f, g)
+    True
+
+    Morphisms can be assigned some properties, which can later be
+    retrieved using the :class:`dict`-like interface of the
+    :class:`Diagram`:
+
+    >>> d = Diagram({f: [], g: "unique"})
+    >>> pprint(d)
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+    ptySet(), g:B-->C: {unique}}
+    >>> d[g]
+    {unique}
+    >>> d[f]
+    EmptySet()
+
+    The set of properties of a composite morphism is the intersection
+    of the sets of properties of its components:
+
+    >>> d = Diagram({f: ["unique", "subobject"], g: ["unique"]})
+    >>> d[g * f]
+    {unique}
+
+    One can construct subdiagrams from sets of objects.
+
+    >>> subd = d.subdiagram_from_objects(FiniteSet(A, B))
+    >>> pprint(subd)
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: {subobject, unique}}
+    >>> d.is_subdiagram(subd)
+    True
+    >>> subd <= d
+    True
+
+    More Details
+    ============
+
+    From the morphisms supplied to its constructor, :class:`Diagram`
+    constructs a set of morphisms which is referred to as
+    _generators_.  :class:`Diagram` adds the identities of all objects
+    referred to by the supplied morphism.
+
+    >>> pprint(Diagram(f))
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+    >>> pprint(sorted(Diagram(f).generators, key=default_sort_key))
+    [id:A-->A, id:B-->B, f:A-->B]
+    >>> pprint(Diagram(f).generators_properties)
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+
+    On the other hand, property-less composites of other generators
+    are removed:
+
+    >>> pprint(Diagram(f, g, g * f))
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+    ptySet(), g:B-->C: EmptySet()}
+
+    To get all morphisms of a :class:`Diagram`, one can either use
+    ``Diagram.morphisms``, or directly enumerate the :class:`Diagram`.
+
+    >>> d = Diagram(g, f)
+    >>> g * f in d.generators
+    False
+    >>> g * f in d.morphisms
+    True
+    >>> g * f in d
+    True
+    >>> pprint(sorted(d.morphisms, key=default_sort_key))
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
-    >>> pprint(d.morphisms, use_unicode=False)
-    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+    >>> pprint(sorted(d, key=default_sort_key))
+    [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
+    >>> len(d)
+    6
+
+    :class:`Diagram` can cope with infinite diagrams, i.e., diagrams
+    which contain an infinite number of morphisms.  Such can diagrams
+    can be obtained by creating cycles.
+
+    >>> d = Diagram(g, f)
+    >>> d.is_finite
+    True
+    >>> f_ = NamedMorphism(B, A, "f'")
+    >>> d = Diagram(f, f_)
+    >>> d.is_finite
+    False
+
+    Computing the length of an infinite diagram is an error.  However,
+    one can still enumerate the morphisms of the diagram.  This
+    enumeration will never stop, so one explicitly retrieve a certain
+    number of morphisms.
+
+    >>> from itertools import islice
+    >>> slice = islice(d, 8)
+    >>> pprint(sorted(slice, key=default_sort_key))
+    [f'*f:A-->A, f*f':B-->B, f*f'*f:A-->B, f'*f*f':B-->A, id:A-->A, id:B-->B, f:A-
+    ->B, f':B-->A]
+
+    .. note::
+
+       No particular ordering is guaranteed for any of the lists
+       produced by :class:`Diagram`.
 
     References
     ==========
@@ -560,9 +657,36 @@ class Diagram(Basic):
     """
     def  __new__(cls, *args):
         """
-        TODO: Document.
+        Creates a new instance of :class:`Diagram`.
 
-        TODO: Mention that identities are dropped.
+        If no arguments are supplied, an empty diagram is created.
+
+        If the first argument is a dictionary, it is interpreted as a
+        mapping between the morphisms which form the diagram and their
+        properties.  If the first argument is an iterable, but not a
+        dictionary, it is interpreted as a collection of morphisms,
+        each of which has no properties.  Otherwise, all arguments are
+        interpreted as morphisms.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> IdentityMorphism(A) in d
+        True
+        >>> g * f in d
+        True
+        >>> d = Diagram({f: [], g: [], g * f: "unique"})
+        >>> d[g * f]
+        {unique}
+
         """
         generators = {}
         objects = set([])
@@ -621,24 +745,30 @@ class Diagram(Basic):
     @property
     def generators(self):
         """
-        TODO: Rewrite
+        Returns the list of generators of this diagram.
+
+        .. note::
+
+           No particular ordering of generators is guaranteed.
 
         Returns the :class:`Dict` mapping the morphisms included in
         this :class:`Diagram` to their properties.
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty
+        >>> from sympy import pretty, default_sort_key
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
         >>> id_A = IdentityMorphism(A)
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram(f)
-        >>> print pretty(d.morphisms, use_unicode=False)
-        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+        >>> sorted_gens = sorted(d.generators, key=default_sort_key)
+        >>> print pretty(sorted_gens, use_unicode=False)
+        [id:A-->A, id:B-->B, f:A-->B]
 
         """
         return self.args[0].keys()
@@ -646,7 +776,25 @@ class Diagram(Basic):
     @property
     def generators_properties(self):
         """
-        TODO: Describe.
+        Returns the dictionary mapping the generators of this
+        :class:`Diagram` to the :class:`FiniteSet`'s of their
+        properties.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> id_A = IdentityMorphism(A)
+        >>> id_B = IdentityMorphism(B)
+        >>> d = Diagram(f)
+        >>> print pretty(d.generators_properties, use_unicode=False)
+        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+
         """
         return self.args[0]
 
@@ -710,7 +858,25 @@ class Diagram(Basic):
         Checks whether this diagram contains a finite number of
         morphisms.
 
-        TODO: Expand
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> id_A = IdentityMorphism(A)
+        >>> id_B = IdentityMorphism(B)
+        >>> d = Diagram(f)
+        >>> d.is_finite
+        True
+        >>> f_ = NamedMorphism(B, A, "f'")
+        >>> d = Diagram(f, f_)
+        >>> d.is_finite
+        False
+
         """
         # This method essentially checks whether there are cycles in
         # the digraph defined by the generators.  Note that it is
@@ -816,9 +982,24 @@ class Diagram(Basic):
     @property
     def morphisms(self):
         """
-        Generates all the morphisms of this diagram.
+        Returns a generator that provides all morphisms belonging to
+        this diagram.
 
-        TODO: Expand
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pprint, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> pprint(sorted(d.morphisms, key=default_sort_key))
+        [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
+
         """
         length = 1
 
@@ -863,24 +1044,22 @@ class Diagram(Basic):
 
     def hom(self, A, B):
         """
-        TODO: Rewrite
-
-        Returns the :class:`FiniteSet` of morphisms between the
+        Returns a generator which enumerates all morphisms between the
         objects ``A`` and ``B``.
 
         Examples
         ========
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import pretty
+        >>> from sympy import pprint
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram(f, g)
-        >>> print pretty(d.hom(A, C), use_unicode=False)
-        {g*f:A-->C}
+        >>> pprint(list(d.hom(A, C)), use_unicode=False)
+        [g*f:A-->C]
 
         See Also
         ========
@@ -893,8 +1072,6 @@ class Diagram(Basic):
 
     def is_subdiagram(self, other):
         """
-        TODO: Check
-
         Checks whether ``other`` is a subdiagram of ``self``.  Diagram
         `D'` is a subdiagram of `D` if all morphisms of `D'` are
         contained in the morphisms of `D`.  The morphisms contained
@@ -903,6 +1080,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -915,6 +1093,7 @@ class Diagram(Basic):
         True
         >>> d1.is_subdiagram(d)
         False
+
         """
         # Check the inclusion of generators.  This suffices since all
         # other morphisms in diagrams are composites of the
@@ -931,7 +1110,28 @@ class Diagram(Basic):
         """
         Checks if this :class:`Diagram` is a subdiagram of ``other``.
 
-        TODO: Expand
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> d <= d
+        True
+        >>> d_ = Diagram(f)
+        >>> d_ <= d
+        True
+
+        See Also
+        ========
+
+        is_subdiagram
+
         """
         return other.is_subdiagram(self)
 
@@ -939,17 +1139,36 @@ class Diagram(Basic):
         """
         Checks if ``other`` is a subdiagram of this :class:`Diagram`.
 
-        TODO: Expand
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> d >= d
+        True
+        >>> d_ = Diagram(f)
+        >>> d >= d_
+        True
+
+        See Also
+        ========
+
+        is_subdiagram
+
         """
         return self.is_subdiagram(other)
 
     def subdiagram_from_objects(self, objects):
         """
-        TODO: Check
-
         If ``objects`` is a subset of the objects of ``self``, returns
-        a diagram which has as morphisms all those morphisms of
-        ``self`` which have a domains and codomains in ``objects``.
+        a :class:`Diagram` which has as morphisms all those morphisms
+        of ``self`` which have a domains and codomains in ``objects``.
         Properties are preserved.
 
         Examples
@@ -965,6 +1184,7 @@ class Diagram(Basic):
         >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
         >>> d1 == Diagram({f: "unique"})
         True
+
         """
         if not self.objects.subset(objects):
             raise ValueError("Supplied objects should all belong to the diagram.")
@@ -981,28 +1201,29 @@ class Diagram(Basic):
 
     def __iter__(self):
         """
-        TODO: Check
+        Produces an iterator over all morphisms in this
+        :class:`Diagram`.
 
-        Produces an iterator over the underlying dictionary of
-        morphisms.
+        This returns the same generator as ``Diagram.morphisms``.
 
         Example
         =======
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty, default_sort_key
+        >>> from sympy import FiniteSet, pprint, default_sort_key
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram(f, g)
-        >>> sorted(d, key=default_sort_key)
-        [CompositeMorphism((NamedMorphism(Object("A"), Object("B"), "f"),
-        NamedMorphism(Object("B"), Object("C"), "g"))),
-        IdentityMorphism(Object("A")), IdentityMorphism(Object("B")),
-        IdentityMorphism(Object("C")), NamedMorphism(Object("A"),
-        Object("B"), "f"), NamedMorphism(Object("B"), Object("C"), "g")]
+        >>> pprint(sorted(d, key=default_sort_key))
+        [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
+
+        See Also
+        ========
+
+        morphisms
 
         """
         return iter(self.morphisms)
@@ -1038,7 +1259,19 @@ class Diagram(Basic):
 
     def __len__(self):
         """
-        TODO: Document.
+        If this :class:`Diagram` is finite, returns the number of
+        morphisms it includes.
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> len(d)
+        6
+
         """
         if self.is_finite:
             return len(list(self.morphisms))
@@ -1154,9 +1387,8 @@ class Implication(Basic):
     >>> conclusion = Diagram({g * f: "unique"})
     >>> imp = Implication(premise, conclusion)
     >>> pprint(imp)
-    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}
-    }
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+    ptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}}
 
     Thus, the diagrams included in an :class:`Implication` should be
     interpreted in the following way: in the situation described by
@@ -1166,8 +1398,7 @@ class Implication(Basic):
     morphisms supplied at creation:
 
     >>> pprint(imp.conclusion)
-    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
-    ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:C-->C: EmptySet()}
 
     To get the morphisms that present some interest, use the method
     ``diff``.  This method returns the set of those morphisms which
@@ -1185,7 +1416,7 @@ class Implication(Basic):
     >>> pprint(imp.to_diagram())
     {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
     ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
-    >>> imp.to_diagram() == Diagram({g * f: "unique"})
+    >>> imp.to_diagram() == Diagram({g: [], f: [], g * f: "unique"})
     True
 
     See Also
@@ -1215,9 +1446,8 @@ class Implication(Basic):
         >>> conclusion = Diagram({g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp)
-        {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-        EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}
-        }
+        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+        ptySet(), g:B-->C: EmptySet()} ==> {g*f:A-->C: {unique}}
 
         """
         if not premise.objects.subset(conclusion.objects):
@@ -1245,8 +1475,9 @@ class Implication(Basic):
         >>> conclusion = Diagram({g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.premise)
-        {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-        EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
+        ptySet(), g:B-->C: EmptySet()}
+
 
         """
         return self.args[0]
@@ -1270,16 +1501,14 @@ class Implication(Basic):
         >>> conclusion = Diagram({g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.conclusion)
-        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
-        ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:C-->C: EmptySet()}
+
 
         """
         return self.args[1]
 
     def to_diagram(self, conclusion_property=None):
         """
-        TODO: Check
-
         Merges the premise and the conclusion of this implication into
         a single :class:`Diagram`.  If ``conclusion_property`` is supplied,
         every morphism from the conclusion will have ``conclusion_property``
