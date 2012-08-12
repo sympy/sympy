@@ -43,8 +43,8 @@ class LagrangesMethod(object):
     This involves creating generalized coordinates and its derivative.
     Then we create a point and set its velocity in a frame::
 
-        >>> from sympy.physics.mechanics import LagrangesMethod, Point
-        >>> from sympy.physics.mechanics import ReferenceFrame, Particle
+        >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
+        >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
         >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
@@ -64,9 +64,8 @@ class LagrangesMethod(object):
     the Vectors represent the nonconservative force or torque.
 
         >>> Pa = Particle('Pa', P, m)
-        >>> T = kinetic_energy(N, Pa)
-        >>> V = k * q**2 / 2.0
-        >>> L = T - V
+        >>> Pa.set_potential_energy(k * q**2 / 2.0)
+        >>> L = Lagrangian(N, Pa)
         >>> fl = [(P, -b * qd * N.x)]
 
      Finally we can generate the equations of motion.
@@ -87,7 +86,7 @@ class LagrangesMethod(object):
         [                    Derivative(q(t), t)]
         [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]
 
-    Please refer to the docstrings for any more details on each method.
+    Please refer to the docstrings on each method for more details.
 
     """
 
