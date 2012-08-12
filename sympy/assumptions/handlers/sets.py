@@ -338,7 +338,7 @@ class AskHermitianHandler(AskRealHandler):
                 result = result ^ True
             elif not ask(Q.hermitian(arg), assumptions):
                 break
-            if ask(Q.commutative(arg), assumptions):
+            if ask(~Q.commutative(arg), assumptions):
                 nccount += 1
                 if nccount > 1:
                     break
@@ -503,7 +503,7 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
                 result = result ^ True
             elif not ask(Q.hermitian(arg), assumptions):
                 break
-            if ask(Q.commutative(arg), assumptions):
+            if ask(~Q.commutative(arg), assumptions):
                 nccount += 1
                 if nccount > 1:
                     break
