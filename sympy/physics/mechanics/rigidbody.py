@@ -53,6 +53,7 @@ class RigidBody(object):
         self.set_mass(mass)
         self.set_frame(frame)
         self.set_inertia(inertia)
+        self._pe = sympify(0)
 
     def __str__(self):
         return self._name
@@ -276,7 +277,4 @@ class RigidBody(object):
 
         """
 
-        if callable(self._pe) == True:
-            return self._pe
-        else:
-            raise ValueError('Please set the potential energy of the RigidBody')
+        return self._pe

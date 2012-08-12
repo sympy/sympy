@@ -41,7 +41,7 @@ class Particle(object):
         self._name = name
         self.set_mass(mass)
         self.set_point(point)
-        self._pe = None
+        self._pe = sympify(0)
 
     def __str__(self):
         return self._name
@@ -144,7 +144,7 @@ class Particle(object):
     def kinetic_energy(self, frame):
         """Kinetic energy of the particle
 
-        The kinetic energy, T, of a particle,P, is given by
+        The kinetic energy, T, of a particle, P, is given by
 
         'T = 1/2 m v^2'
 
@@ -218,7 +218,4 @@ class Particle(object):
 
         """
 
-        if callable(self._pe) == True:
-            return self._pe
-        else:
-            raise ValueError('Please set the potential energy of the Particle')
+        return self._pe
