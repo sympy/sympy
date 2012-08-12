@@ -26,6 +26,8 @@ def test_int_1():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == True
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_int_11():
     z = 11
@@ -44,6 +46,8 @@ def test_int_11():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == True
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_int_12():
     z = 12
@@ -62,6 +66,8 @@ def test_int_12():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == True
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_float_1():
     z = 1.0
@@ -80,6 +86,8 @@ def test_float_1():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == True
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
     z = 7.2123
     assert ask(Q.commutative(z))      == True
@@ -97,6 +105,8 @@ def test_float_1():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_zero_0():
     z = Integer(0)
@@ -115,6 +125,8 @@ def test_zero_0():
     assert ask(Q.infinitesimal(z))    == True
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_negativeone():
     z = Integer(-1)
@@ -134,6 +146,8 @@ def test_negativeone():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_infinity():
     assert ask(Q.commutative(oo))     == True
@@ -152,6 +166,8 @@ def test_infinity():
     assert ask(Q.infinitesimal(oo))   == False
     assert ask(Q.prime(oo))           == False
     assert ask(Q.composite(oo))       == False
+    assert ask(Q.hermitian(oo))       == False
+    assert ask(Q.antihermitian(oo))   == False
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
@@ -171,6 +187,8 @@ def test_neg_infinity():
     assert ask(Q.infinitesimal(mm))  == False
     assert ask(Q.prime(mm))          == False
     assert ask(Q.composite(mm))      == False
+    assert ask(Q.hermitian(mm))      == False
+    assert ask(Q.antihermitian(mm))  == False
 
 def test_nan():
     nan = S.NaN
@@ -190,6 +208,8 @@ def test_nan():
     assert ask(Q.infinitesimal(nan)) == False
     assert ask(Q.prime(nan))         == False
     assert ask(Q.composite(nan))     == False
+    assert ask(Q.hermitian(nan))     == False
+    assert ask(Q.antihermitian(nan)) == False
 
 def test_Rational_number():
     r = Rational(3,4)
@@ -208,6 +228,8 @@ def test_Rational_number():
     assert ask(Q.infinitesimal(r))    == False
     assert ask(Q.prime(r))            == False
     assert ask(Q.composite(r))        == False
+    assert ask(Q.hermitian(r))        == True
+    assert ask(Q.antihermitian(r))    == False
 
     r = Rational(1,4)
     assert ask(Q.positive(r))         == True
@@ -254,6 +276,8 @@ def test_sqrt_2():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_pi():
     z = S.Pi
@@ -272,6 +296,8 @@ def test_pi():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
     z = S.Pi + 1
     assert ask(Q.commutative(z))      == True
@@ -289,6 +315,8 @@ def test_pi():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
     z = 2*S.Pi
     assert ask(Q.commutative(z))      == True
@@ -306,6 +334,8 @@ def test_pi():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
     z = S.Pi ** 2
     assert ask(Q.commutative(z))      == True
@@ -323,6 +353,8 @@ def test_pi():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
     z = (1+S.Pi) ** 2
     assert ask(Q.commutative(z))      == True
@@ -340,6 +372,8 @@ def test_pi():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_E():
     z = S.Exp1
@@ -358,6 +392,8 @@ def test_E():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == True
+    assert ask(Q.antihermitian(z))    == False
 
 def test_I():
     z = I
@@ -376,6 +412,8 @@ def test_I():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == False
+    assert ask(Q.antihermitian(z))    == True
 
     z = 1 + I
     assert ask(Q.commutative(z))      == True
@@ -393,6 +431,8 @@ def test_I():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == False
+    assert ask(Q.antihermitian(z))    == False
 
     z = I*(1+I)
     assert ask(Q.commutative(z))      == True
@@ -410,6 +450,8 @@ def test_I():
     assert ask(Q.infinitesimal(z))    == False
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
+    assert ask(Q.hermitian(z))        == False
+    assert ask(Q.antihermitian(z))    == False
 
 @slow
 def test_bounded():
@@ -907,6 +949,90 @@ def test_rational():
     assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y)) == True
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) == True
     assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) == False
+
+def test_hermitian():
+    assert ask(Q.hermitian(x)) == None
+    assert ask(Q.hermitian(x), Q.antihermitian(x)) == False
+    assert ask(Q.hermitian(x), Q.imaginary(x)) == False
+    assert ask(Q.hermitian(x), Q.prime(x)) == True
+    assert ask(Q.hermitian(x), Q.real(x)) == True
+
+    assert ask(Q.hermitian(x+1), Q.antihermitian(x)) == False
+    assert ask(Q.hermitian(x+1), Q.complex(x)) == None
+    assert ask(Q.hermitian(x+1), Q.hermitian(x)) == True
+    assert ask(Q.hermitian(x+1), Q.imaginary(x)) == False
+    assert ask(Q.hermitian(x+1), Q.real(x)) == True
+    assert ask(Q.hermitian(x+I), Q.antihermitian(x)) == None
+    assert ask(Q.hermitian(x+I), Q.complex(x)) == None
+    assert ask(Q.hermitian(x+I), Q.hermitian(x)) == False
+    assert ask(Q.hermitian(x+I), Q.imaginary(x)) == None
+    assert ask(Q.hermitian(x+I), Q.real(x)) == False
+    assert ask(Q.hermitian(x+y), Q.antihermitian(x) & Q.antihermitian(y)) == None
+    assert ask(Q.hermitian(x+y), Q.antihermitian(x) & Q.complex(y)) == None
+    assert ask(Q.hermitian(x+y), Q.antihermitian(x) & Q.hermitian(y)) == False
+    assert ask(Q.hermitian(x+y), Q.antihermitian(x) & Q.imaginary(y)) == None
+    assert ask(Q.hermitian(x+y), Q.antihermitian(x) & Q.real(y)) == False
+    assert ask(Q.hermitian(x+y), Q.hermitian(x) & Q.complex(y)) == None
+    assert ask(Q.hermitian(x+y), Q.hermitian(x) & Q.hermitian(y)) == True
+    assert ask(Q.hermitian(x+y), Q.hermitian(x) & Q.imaginary(y)) == False
+    assert ask(Q.hermitian(x+y), Q.hermitian(x) & Q.real(y)) == True
+    assert ask(Q.hermitian(x+y), Q.imaginary(x) & Q.complex(y)) == None
+    assert ask(Q.hermitian(x+y), Q.imaginary(x) & Q.imaginary(y)) == None
+    assert ask(Q.hermitian(x+y), Q.imaginary(x) & Q.real(y)) == False
+    assert ask(Q.hermitian(x+y), Q.real(x) & Q.complex(y)) == None
+    assert ask(Q.hermitian(x+y), Q.real(x) & Q.real(y)) == True
+
+    assert ask(Q.hermitian(I*x), Q.antihermitian(x)) == True
+    assert ask(Q.hermitian(I*x), Q.complex(x)) == None
+    assert ask(Q.hermitian(I*x), Q.hermitian(x)) == False
+    assert ask(Q.hermitian(I*x), Q.imaginary(x)) == True
+    assert ask(Q.hermitian(I*x), Q.real(x)) == False
+    assert ask(Q.hermitian(x*y), Q.hermitian(x) & Q.real(y)) == True
+
+    assert ask(Q.hermitian(x+y+z), Q.real(x) & Q.real(y) & Q.real(z)) == True
+    assert ask(Q.hermitian(x+y+z), Q.real(x) & Q.real(y) & Q.imaginary(z)) == False
+    assert ask(Q.hermitian(x+y+z), Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) == None
+    assert ask(Q.hermitian(x+y+z), Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) == None
+
+    assert ask(Q.antihermitian(x)) == None
+    assert ask(Q.antihermitian(x), Q.real(x)) == False
+    assert ask(Q.antihermitian(x), Q.prime(x)) == False
+
+    assert ask(Q.antihermitian(x+1), Q.antihermitian(x)) == False
+    assert ask(Q.antihermitian(x+1), Q.complex(x)) == None
+    assert ask(Q.antihermitian(x+1), Q.hermitian(x)) == None
+    assert ask(Q.antihermitian(x+1), Q.imaginary(x)) == False
+    assert ask(Q.antihermitian(x+1), Q.real(x)) == None
+    assert ask(Q.antihermitian(x+I), Q.antihermitian(x)) == True
+    assert ask(Q.antihermitian(x+I), Q.complex(x)) == None
+    assert ask(Q.antihermitian(x+I), Q.hermitian(x)) == False
+    assert ask(Q.antihermitian(x+I), Q.imaginary(x)) == True
+    assert ask(Q.antihermitian(x+I), Q.real(x)) == False
+
+    assert ask(Q.antihermitian(x+y), Q.antihermitian(x) & Q.antihermitian(y)) == True
+    assert ask(Q.antihermitian(x+y), Q.antihermitian(x) & Q.complex(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.antihermitian(x) & Q.hermitian(y)) == False
+    assert ask(Q.antihermitian(x+y), Q.antihermitian(x) & Q.imaginary(y)) == True
+    assert ask(Q.antihermitian(x+y), Q.antihermitian(x) & Q.real(y)) == False
+    assert ask(Q.antihermitian(x+y), Q.hermitian(x) & Q.complex(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.hermitian(x) & Q.hermitian(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.hermitian(x) & Q.imaginary(y)) == False
+    assert ask(Q.antihermitian(x+y), Q.hermitian(x) & Q.real(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.imaginary(x) & Q.complex(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.imaginary(x) & Q.imaginary(y)) == True
+    assert ask(Q.antihermitian(x+y), Q.imaginary(x) & Q.real(y)) == False
+    assert ask(Q.antihermitian(x+y), Q.real(x) & Q.complex(y)) == None
+    assert ask(Q.antihermitian(x+y), Q.real(x) & Q.real(y)) == None
+
+    assert ask(Q.antihermitian(I*x), Q.real(x)) == True
+    assert ask(Q.antihermitian(I*x), Q.antihermitian(x)) == False
+    assert ask(Q.antihermitian(I*x), Q.complex(x)) == None
+    assert ask(Q.antihermitian(x*y), Q.antihermitian(x) & Q.real(y)) == True
+
+    assert ask(Q.antihermitian(x+y+z), Q.real(x) & Q.real(y) & Q.real(z)) == None
+    assert ask(Q.antihermitian(x+y+z), Q.real(x) & Q.real(y) & Q.imaginary(z)) == None
+    assert ask(Q.antihermitian(x+y+z), Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) == False
+    assert ask(Q.antihermitian(x+y+z), Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) == True
 
 def test_imaginary():
     assert ask(Q.imaginary(x)) == None
