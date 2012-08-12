@@ -1254,18 +1254,26 @@ def plot_line(*args, **kwargs):
     Single Plot
     plot_line(expr, range, ...)
 
-    Multiple plots.
+    Multiple plots with same range.
+    plot_line(expr1, expr2, ..., range)
+
+    Multiple plots with different .
     plot_line((expr1, range), (expr2, range), ...)
 
     Arguments
     =========
     ``expr`` : Expression representing the function of single variable
-    ``range``: (x, 0 , 5), A 3 - tuple denoting the range of the free variable.
+    ``range``: (x, 0, 5), A 3-tuple denoting the range of the free variable.
 
     If the ranges is not specified, then a default range of (-10, 10) is used.
+    This may change in the future if a more advanced default range detection
+    algorithm is detected.
 
-    Named Parameters
-    ===============
+    Keyword Arguments
+    =================
+
+    Arguments for ``LineOver1DRangeSeries`` class:
+
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
 
@@ -1274,6 +1282,8 @@ def plot_line(*args, **kwargs):
 
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The function
     is uniformly sampled at ``nb_of_point`` number of points.
+
+    Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot. It is set to the latex representation of
     the expression, if the plot has only one expression.
@@ -1302,7 +1312,7 @@ def plot_line(*args, **kwargs):
     >>> plot_line((x**2, (x, -6, 6)), (x, (x, -5, 5)))
 
     No adaptive sampling.
-    >>> plot_line(x**2, adaptive = False, nb_of_points = 400)
+    >>> plot_line(x**2, adaptive=False, nb_of_points=400)
 
     """
     args = sympify([arg for arg in args])
@@ -1327,19 +1337,30 @@ def plot_parametric(*args, **kwargs):
 
     Usage
     =====
-    plot_parametric((expr_x, expr_y, range), ...)
+    Single plot.
     plot_parametric(expr_x, expr_y, range)
+
+    Multiple plots with same range.
+    plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range)
+
+    Multiple plots with different ranges.
+    plot_parametric((expr_x, expr_y, range), ...)
 
     Arguments
     =========
     ``expr_x`` : Expression representing the function along x.
     ``expr_y`` : Expression representing the function along y.
-    ``range``: (u, 0 , 5), A 3 - tuple denoting the range of the parameter
+    ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
     variable.
     If the range is not specified, then a default range of (-10, 10) is used.
+    This may change in the future if a more advanced default range detection
+    algorithm is detected.
 
-    Named Parameters
-    ===============
+    Keyword Arguments
+    =================
+
+    Arguments for ``Parametric2DLineSeries`` class:
+
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to
     False and specify ``nb_of_points`` if uniform sampling is required.
 
@@ -1348,6 +1369,8 @@ def plot_parametric(*args, **kwargs):
 
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
     function is uniformly sampled at ``nb_of_point`` number of points.
+
+    Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
 
@@ -1402,14 +1425,21 @@ def plot3D_parametric(*args, **kwargs):
     ``expr_x`` : Expression representing the function along x.
     ``expr_y`` : Expression representing the function along y.
     ``expr_z`` : Expression representing the function along z.
-    ``range``: (u, 0 , 5), A 3 - tuple denoting the range of the parameter
+    ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
     variable.
     If the range is not specified, then a default range of (-10, 10) is used.
+    This may change in the future if a more advanced default range detection
+    algorithm is detected.
 
-    Named Parameters
-    ===============
+    Keyword Arguments
+    =================
+
+    Arguments for ``Parametric3DLineSeries`` class.
+
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
     function is uniformly sampled at ``nb_of_point`` number of points.
+
+    Arguments for ``Plot`` class.
 
     ``title`` : str. Title of the plot.
 
@@ -1431,11 +1461,11 @@ def plot3D_parametric(*args, **kwargs):
 
     Examples
     ========
-    >>> plot_parametric3D(cos(u), sin(u), u, (u, -5, 5))
+    >>> plot3D_parametric(cos(u), sin(u), u, (u, -5, 5))
 
     Multiple plots with default range.
 
-    >>> plot_parametric3D((cos(u), sin(u), u), (sin(u), u**2, u))
+    >>> plot3D_parametric((cos(u), sin(u), u), (sin(u), u**2, u))
 
     """
     args = sympify([arg for arg in args])
@@ -1456,22 +1486,32 @@ def plot3D(*args, **kwargs):
     Single plot
     plot3D(expr, range_x, range_y)
 
+    Multiple plot with the same range.
+    plot3D(expr1, expr2, range_x, range_y)
+
     Multiple plots.
     plot3D((expr, range_x, range_y), ...)
 
     Arguments
     =========
     ``expr`` : Expression representing the function along x.
-    ``range_x``: (x, 0 , 5), A 3 - tuple denoting the range of the x
+    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
     variable.
-    ``range_y``: (y, 0 , 5), A 3 - tuple denoting the range of the y
+    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
     variable.
     If the ranges is not specified, then a default range of (-10, 10) is used.
+    This may change in the future if a more advanced default range detection
+    algorithm is detected.
 
-    Named Parameters
-    ===============
+    Keyword Arguments
+    =================
+
+    Arguments for ``SurfaceOver2DRangeSeries`` class:
+
     ``nb_of_points``: int. The function is uniformly sampled at ``nb_of_point``
     number of points.
+
+    Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
 
@@ -1522,20 +1562,25 @@ def plot3D_surface(*args, **kwargs):
     Multiple plots.
     plot3D_surface((expr_x, expr_y, expr_z, range_x, range_y), ...)
     If the ranges are not specified, then a default range of (-10, 10) is used.
+    This may change in the future if a more advanced default range detection
+    algorithm is detected.
 
     Arguments
     =========
     ``expr`` : Expression representing the function along x.
-   ``range_x``: (x, 0 , 5),  A 3 - tuple denoting the range of the x
+   ``range_x``: (x, 0, 5),  A 3-tuple denoting the range of the x
     variable.
-    ``range_y``: (y, 0 , 5),  A 3 - tuple denoting the range of the y
+    ``range_y``: (y, 0, 5),  A 3-tuple denoting the range of the y
     variable.
 
-    Named Parameters
-    ===============
+    Keyword Arguments
+    =================
+
+    Arguments for ``ParametricSurfaceSeries`` class:
     ``nb_of_points``: int. The function is uniformly sampled at ``nb_of_points``
     number of points.
 
+    Arguments for ``Plot`` class:
     ``title`` : str. Title of the plot.
 
     ``xlabel`` : str. Label for the x - axis.
