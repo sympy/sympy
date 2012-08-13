@@ -248,7 +248,7 @@ def block_collapse(expr):
     if expr.is_Transpose:
         expr = Transpose(block_collapse(expr.arg))
         if expr.is_Transpose and expr.arg.is_BlockMatrix:
-            expr = expr.arg.eval_transpose()
+            expr = expr.arg._eval_transpose()
         return expr
 
     if expr.is_Inverse:

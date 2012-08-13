@@ -137,9 +137,10 @@ class Basic(object):
         {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+        {'commutative': True, 'complex': True, 'hermitian': True,
+        'imaginary': False, 'negative': False, 'nonnegative': True,
+        'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
+        'zero': False}
 
         """
         return {}

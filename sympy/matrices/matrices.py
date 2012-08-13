@@ -223,6 +223,10 @@ class MatrixBase(object):
 
     C = property(conjugate,None,None,"By-element conjugation.")
 
+    def adjoint(self):
+        """Conjugate transpose or Hermitian conjugation."""
+        return self.conjugate().transpose()
+
     @property
     def H(self):
         """

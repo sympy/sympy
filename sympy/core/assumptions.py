@@ -68,7 +68,9 @@ _assume_rules = FactRules([
     'integer        ->  rational',
     'rational       ->  real',
     'real           ->  complex',
+    'real           ->  hermitian',
     'imaginary      ->  complex',
+    'imaginary      ->  antihermitian',
     'complex        ->  commutative',
 
     'odd            ==  integer & !even',

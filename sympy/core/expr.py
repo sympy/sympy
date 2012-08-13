@@ -662,6 +662,35 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+    def _eval_transpose(self):
+        from sympy.functions.elementary.complexes import conjugate
+        if self.is_complex:
+            return self
+        elif self.is_hermitian:
+            return conjugate(self)
+        elif self.is_antihermitian:
+            return -conjugate(self)
+
+    def transpose(self):
+        from sympy.functions.elementary.complexes import transpose
+        return transpose(self)
+
+    def _eval_adjoint(self):
+        from sympy.functions.elementary.complexes import conjugate, transpose
+        if self.is_hermitian:
+            return self
+        elif self.is_antihermitian:
+            return -self
+        obj = self._eval_conjugate()
+        if obj is not None:
+            return transpose(obj)
+        obj = self._eval_transpose()
+        if obj is not None:
+            return conjugate(obj)
+
+    def adjoint(self):
+        from sympy.functions.elementary.complexes import adjoint
+        return adjoint(self)
 
     @classmethod
     def _parse_order(cls, order):

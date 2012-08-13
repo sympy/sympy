@@ -412,7 +412,9 @@ class Add(AssocOp):
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
+    _eval_is_antihermitian = lambda self: self._eval_template_is_attr('is_antihermitian', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
+    _eval_is_hermitian = lambda self: self._eval_template_is_attr('is_hermitian', when_multiple=None)
     _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
@@ -659,8 +661,14 @@ class Add(AssocOp):
                 return rv_fraction
             return rv
 
+    def _eval_adjoint(self):
+        return Add(*[t.adjoint() for t in self.args])
+
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
+
+    def _eval_transpose(self):
+        return Add(*[t.transpose() for t in self.args])
 
     def __neg__(self):
         return Add(*[-t for t in self.args])

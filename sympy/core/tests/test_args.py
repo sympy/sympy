@@ -693,6 +693,10 @@ def test_sympy__functions__elementary__complexes__Abs():
     from sympy.functions.elementary.complexes import Abs
     assert _test_args(Abs(x))
 
+def test_sympy__functions__elementary__complexes__adjoint():
+    from sympy.functions.elementary.complexes import adjoint
+    assert _test_args(adjoint(x))
+
 def test_sympy__functions__elementary__complexes__arg():
     from sympy.functions.elementary.complexes import arg
     assert _test_args(arg(x))
@@ -724,6 +728,10 @@ def test_sympy__functions__elementary__complexes__periodic_argument():
 def test_sympy__functions__elementary__complexes__principal_branch():
     from sympy.functions.elementary.complexes import principal_branch
     assert _test_args(principal_branch(x, y))
+
+def test_sympy__functions__elementary__complexes__transpose():
+    from sympy.functions.elementary.complexes import transpose
+    assert _test_args(transpose(x))
 
 def test_sympy__functions__elementary__exponential__LambertW():
     from sympy.functions.elementary.exponential import LambertW

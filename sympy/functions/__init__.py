@@ -13,7 +13,7 @@ from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
-        principal_branch)
+        principal_branch, transpose, adjoint)
 from sympy.functions.elementary.trigonometric import (tan, cos, sin,
         asin, acos, atan, atan2, acot, cot, sec, csc)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
