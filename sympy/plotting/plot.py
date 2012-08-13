@@ -545,14 +545,16 @@ class List2DSeries(Line2DBaseSeries):
 class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a sympy expression over a range."""
 
-    def __init__(self, expr, var_start_end):
+    def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
-        self.nb_of_points = 300
         self.expr = sympify(expr)
         self.label = str(self.expr)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.pop('nb_of_points', 300)
+        self.adaptive = kwargs.pop('adaptive', True)
+        self.depth = kwargs.pop('depth', 12)
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -574,7 +576,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
-        if self.only_integers:
+        if self.only_integers or not self.adaptive:
             return super(LineOver1DRangeSeries, self).get_segments()
         else:
             f = lambdify([self.var], self.expr)
@@ -592,7 +594,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 new_point = np.array([xnew, ynew])
 
                 #Maximum depth
-                if depth > 12:
+                if depth > self.depth:
                     list_segments.append([p, q])
 
                 #Sample irrespective of whether the line is flat till the
@@ -643,15 +645,17 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, var_start_end):
+    def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
         super(Parametric2DLineSeries, self).__init__()
-        self.nb_of_points = 300
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.pop('nb_of_points', 300)
+        self.adaptive = kwargs.pop('adaptive', True)
+        self.depth = kwargs.pop('depth', 12)
 
     def __str__(self):
         return 'parametric cartesian line: (%s, %s) for %s over %s' % (
@@ -685,6 +689,9 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
+        if not self.adaptive:
+            return super(Parametric2DLineSeries, self).get_segments()
+
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
         list_segments = []
@@ -702,7 +709,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             new_point = np.array([xnew, ynew])
 
             #Maximum depth
-            if depth > 12:
+            if depth > self.depth:
                 list_segments.append([p, q])
 
             #Sample irrespective of whether the line is flat till the
@@ -767,9 +774,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
     """Representation for a 3D line consisting of two parametric sympy
     expressions and a range."""
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end):
+    def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
         super(Parametric3DLineSeries, self).__init__()
-        self.nb_of_points = 300
+        self.nb_of_points = kwargs.pop('nb_of_points', 300)
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -835,10 +842,10 @@ class SurfaceBaseSeries(BaseSeries):
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of a sympy expression and 2D
     range."""
-    def __init__(self, expr, var_start_end_x, var_start_end_y):
+    def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
         super(SurfaceOver2DRangeSeries, self).__init__()
-        self.nb_of_points_x = 50
-        self.nb_of_points_y = 50
+        self.nb_of_points_x = kwargs.pop('nb_of_points_x', 50)
+        self.nb_of_points_y = kwargs.pop('nb_of_points_y', 50)
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
@@ -871,10 +878,11 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v):
+    def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
+                    **kwargs):
         super(ParametricSurfaceSeries, self).__init__()
-        self.nb_of_points_u = 50
-        self.nb_of_points_v = 50
+        self.nb_of_points_u = kwargs.pop('nb_of_points_u', 50)
+        self.nb_of_points_v = kwargs.pop('nb_of_points_v', 50)
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -1237,8 +1245,9 @@ def _matplotlib_list(interval_list):
 
 ####New API for plotting module ####
 
-# TODO: Add support for depth and nb_of_points
 # TODO: Add color arrays for plots.
+# TODO: Add more plotting options for 3d plots.
+# TODO: Adaptive sampling for 3D plots.
 
 def plot_line(*args, **kwargs):
     """
@@ -1328,7 +1337,7 @@ def plot_line(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
-    series = [LineOver1DRangeSeries(*arg) for arg in plot_expr]
+    series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
     plots = Plot(*series, **kwargs)
     if show:
@@ -1389,22 +1398,6 @@ def plot_parametric(*args, **kwargs):
 
     ``title`` : str. Title of the plot.
 
-    ``xlabel`` : str. Label for the x - axis.
-
-    ``line_color``: List of floats corresponding to the line color of the
-    expressions. The length of the List should match the number of expressions.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
-
     Examples
     ========
     >>> from sympy import symbols
@@ -1464,28 +1457,12 @@ def plot3D_parametric(*args, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
-    function is uniformly sampled at ``nb_of_point`` number of points.
+    ``nb_of_points``: The range is uniformly sampled at ``nb_of_point``
+    number of points.
 
     Arguments for ``Plot`` class.
 
     ``title`` : str. Title of the plot.
-
-    ``xlabel`` : str. Label for the x - axis.
-
-    ``line_color``: List of floats corresponding to the line color of the
-    expressions. The length of the List should match the number of expressions.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
 
     Examples
     ========
@@ -1546,28 +1523,15 @@ def plot3D(*args, **kwargs):
 
     Arguments for ``SurfaceOver2DRangeSeries`` class:
 
-    ``nb_of_points``: int. The function is uniformly sampled at ``nb_of_point``
-    number of points.
+    ``nb_of_points_x``: int. The x range is sampled uniformly at
+    ``nb_of_points_x`` of points
+
+    ``nb_of_points_y``: int. The y range is sampled uniformly at
+    ``nb_of_points_y`` of points
 
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
-
-    ``xlabel`` : str. Label for the x - axis.
-
-    ``line_color``: List of floats corresponding to the line color of the
-    expressions. The length of the List should match the number of expressions.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
 
     Examples
     ========
@@ -1604,11 +1568,11 @@ def plot3D_surface(*args, **kwargs):
     =====
 
     Single plot.
-    plot3D_surface(expr_x, expr_y, expr_z, range_x, range_y, **kwargs)
+    plot3D_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)
     If the ranges is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots.
-    plot3D_surface((expr_x, expr_y, expr_z, range_x, range_y), ..., **kwargs)
+    plot3D_surface((expr_x, expr_y, expr_z, range_u, range_v), ..., **kwargs)
     Ranges have to be specified for every expression.
 
     Default Range:
@@ -1618,37 +1582,29 @@ def plot3D_surface(*args, **kwargs):
     Arguments
     =========
 
-    ``expr`` : Expression representing the function along x.
-   ``range_x``: (x, 0, 5),  A 3-tuple denoting the range of the x
+    ``expr_x`` : Expression representing the function along x.
+    ``expr_y`` : Expression representing the function along y.
+    ``expr_z`` : Expression representing the function along z.
+
+   ``range_u``: (u, 0, 5),  A 3-tuple denoting the range of the u
     variable.
-    ``range_y``: (y, 0, 5),  A 3-tuple denoting the range of the y
+    ``range_v``: (v, 0, 5),  A 3-tuple denoting the range of the v
     variable.
 
     Keyword Arguments
     =================
 
     Arguments for ``ParametricSurfaceSeries`` class:
-    ``nb_of_points``: int. The function is uniformly sampled at ``nb_of_points``
-    number of points.
+
+    ``nb_of_points_u``: int. The u range is sampled uniformly at
+    ``nb_of_points_v`` of points
+
+    ``nb_of_points_y``: int. The v range is sampled uniformly at
+    ``nb_of_points_y`` of points
 
     Arguments for ``Plot`` class:
+
     ``title`` : str. Title of the plot.
-
-    ``xlabel`` : str. Label for the x - axis.
-
-    ``line_color``: List of floats corresponding to the line color of the
-    expressions. The length of the List should match the number of expressions.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
 
     Examples
     ========
