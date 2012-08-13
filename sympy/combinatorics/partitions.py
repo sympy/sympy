@@ -27,7 +27,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> str(a)
         '{{3}, {1, 2}}'
         """
@@ -55,7 +55,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> a.next()
         {{1, 2}, {3, 4}, {5}}
         """
@@ -68,7 +68,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4],[5]])
+        >>> a = Partition([[1, 2], [3, 4], [5]])
         >>> a.previous()
         {{1, 2}, {3, 4, 5}}
         """
@@ -82,7 +82,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.size
         2
         """
@@ -96,7 +96,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.partition
         {{3}, {1, 2}}
         """
@@ -110,7 +110,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.partition_set
         {1, 2, 3}
         """
@@ -130,7 +130,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.partition_set_size
         3
         """
@@ -144,7 +144,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.partition_set_list
         [1, 2, 3]
         """
@@ -163,7 +163,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.rank
         1
         >>> a = a + 3
@@ -184,7 +184,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3]])
+        >>> a = Partition([[1, 2], [3]])
         >>> a.rank
         1
         >>> a = a - 1
@@ -192,7 +192,7 @@ class Partition(C.FiniteSet):
         {{1, 2, 3}}
         >>> a.rank
         0
-        >>> a = a + Partition([[1,2],[3]])
+        >>> a = a + Partition([[1, 2], [3]])
         >>> str(a)
         '{{1, 2}, {3}}'
         """
@@ -233,8 +233,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a.compare(b)
         -1
         >>> a.compare(a)
@@ -255,8 +255,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a == b
         False
         >>> a == a
@@ -271,8 +271,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a != b
         True
         >>> a != a
@@ -287,8 +287,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a > b
         True
         """
@@ -301,8 +301,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a < b
         False
         """
@@ -316,8 +316,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a >= a
         True
         >>> a >= b
@@ -333,8 +333,8 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3,4,5]])
-        >>> b = Partition([[1],[2,3],[4],[5]])
+        >>> a = Partition([[1, 2], [3, 4, 5]])
+        >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a <= a
         True
         >>> a <= b
@@ -350,7 +350,7 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3],[4,5]])
+        >>> a = Partition([[1, 2], [3], [4, 5]])
         >>> a.rank
         13
         """
@@ -365,17 +365,17 @@ class Partition(C.FiniteSet):
         Returns the restricted growth string of the partition.
 
         For a set partition of consisting of n elements, the n-character string
-        a_1, a_2,..., a_n, in which each character gives the set block (B_0, B_1, ...)
+        a_1, a_2, ..., a_n, in which each character gives the set block (B_0, B_1, ...)
         in which the corresponding element belongs is called the restricted growth
         string or the restricted growth function. 
 
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1,2],[3],[4,5]])
+        >>> a = Partition([[1, 2], [3], [4, 5]])
         >>> a.RGS
         [0, 0, 1, 2, 2]
-        >>> a = Partition([[1,4],[2],[3,5]])
+        >>> a = Partition([[1, 4], [2], [3, 5]])
         >>> a.RGS
         [0, 1, 2, 0, 2]
         """
@@ -395,9 +395,9 @@ class Partition(C.FiniteSet):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> Partition.partition_from_rgs([0,1,2,0,1],['a','b','c','d','e'])
+        >>> Partition.partition_from_rgs([0, 1, 2, 0, 1], list('abcde'))
         {{a, d}, {b, e}, {c}}
-        >>> a = Partition([[1,4],[2],[3,5]])
+        >>> a = Partition([[1, 4], [2], [3, 5]])
         >>> Partition.partition_from_rgs(a.RGS, a.partition_set_list)
         {{1, 4}, {2}, {3, 5}}
         """
@@ -420,7 +420,7 @@ class IntegerPartition(Partition):
     integers. Two sums that differ only in the order of their summands are
     considered to be the same partition; if order matters then the sum becomes a
     composition. For example, 4 can be partitioned in five distinct ways:
-    [[4],[3,1],[2,2],[2,1,1],[1,1,1,1]].
+    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]].
     
     The order-dependent composition [1, 3] is the same partition as [3, 1],
     while [1, 2, 1] and [1, 1, 2] are the same partition as [2, 1, 1].
@@ -441,10 +441,10 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([5,4,3,1,1,1], 15)
+        >>> a = IntegerPartition([5, 4, 3, 1, 1, 1], 15)
         >>> a
         IntegerPartition([5, 4, 3, 1, 1, 1], 15)
-        >>> b = IntegerPartition([5,4,3,1], 13)
+        >>> b = IntegerPartition([5, 4, 3, 1], 13)
         >>> print b
         [5, 4, 3, 1]
         """
@@ -487,7 +487,7 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a = IntegerPartition([1, 3, 4], 8)
         >>> a.size
         3
         """
@@ -501,7 +501,7 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a = IntegerPartition([1, 3, 4], 8)
         >>> a.partition_set
         8
         """
@@ -516,7 +516,7 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1,3,4], 8)
+        >>> a = IntegerPartition([1, 3, 4], 8)
         >>> a.partition_array
         [4, 3, 1]
         """
@@ -548,10 +548,10 @@ class IntegerPartition(Partition):
         =========
         >>> from sympy.combinatorics.partitions import \
         IntegerPartition
-        >>> a = IntegerPartition([6,3,3,2,1], 15)
-        >>> a.conjugate_partition
+        >>> a = IntegerPartition([6, 3, 3, 2, 1], 15)
+        >>> a.conjugate
         [5, 4, 3, 1, 1, 1]
-        >>> b = IntegerPartition(a.conjugate_partition, 15)
+        >>> b = IntegerPartition(a.conjugate, 15)
         >>> print b.ferrers_representation()
         #####
         ####
@@ -563,7 +563,7 @@ class IntegerPartition(Partition):
         j = 1
         temp_arr = self.partition_array[:] + [0]
         k = temp_arr[0]
-        b = [0] * (k)
+        b = [0]*k
         while k > 0:
             while k > temp_arr[j]:
                 b[k - 1] = j
@@ -587,8 +587,8 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1,1,1,1,1], 5)
-        >>> b = IntegerPartition([1,1,1,2], 5)
+        >>> a = IntegerPartition([1, 1, 1, 1, 1], 5)
+        >>> b = IntegerPartition([1, 1, 1, 2], 5)
         >>> a.compare(b)
         -1
         >>> a < b
@@ -613,8 +613,8 @@ class IntegerPartition(Partition):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([3,2,1], 6)
-        >>> b = IntegerPartition([5,1,1], 7)
+        >>> a = IntegerPartition([3, 2, 1], 6)
+        >>> b = IntegerPartition([5, 1, 1], 7)
         >>> print a.ferrers_representation()
         ###
         ##
@@ -721,8 +721,8 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2,m+1):
-        v = D[m - i,j]
+    for i in xrange(2, m+1):
+        v = D[m - i, j]
         cr = j*v
         if cr <= rank:
             L[i] = j + 1
@@ -742,7 +742,7 @@ def RGS_rank(rgs):
     >>> from sympy.combinatorics.partitions import RGS_rank, RGS_unrank
     >>> RGS_rank([0, 1, 2, 1, 3])
     42
-    >>> RGS_rank(RGS_unrank(4,7))
+    >>> RGS_rank(RGS_unrank(4, 7))
     4
     """
     rgs_size = len(rgs)

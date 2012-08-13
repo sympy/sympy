@@ -14,10 +14,10 @@ def test_partition():
     assert (a + b).partition_list_form == [[1, 2], [3], [4]]
     assert (a - b).partition_list_form == [[1], [2], [3, 4]]
     assert (a + 2).partition_list_form == [[1, 2], [3, 4]]
-    assert (b - 1).partition_list_form == [[1, 2, 3], [4]]
+    assert (b - 1).partition_list_form == [[1, 2, 4], [3]]
 
     assert a.previous().partition_list_form == [[1, 2, 3, 4]]
-    assert a.next().partition_list_form == [[1, 2, 3], [4]]
+    assert a.next().partition_list_form == [[1, 2, 4], [3]]
     assert b.previous().partition_list_form == (b - 1).partition_list_form
     assert b.next().partition_list_form == [[1, 2], [3], [4]]
 
