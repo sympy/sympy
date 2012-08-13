@@ -829,7 +829,7 @@ class Diagram(Basic):
 
     @staticmethod
     def _dfs_markup_postorder(obj, adj_lists, component_idx, obj_indices,
-                              postorder_indices, counter_ref):
+                              postorder_indices=None, counter_ref=None):
         """
         Traverses the graph given by the adjacency lists ``adj_lists``
         starting from the object ``obj``.  On traversal it marks all
@@ -851,8 +851,9 @@ class Diagram(Basic):
                     adj_obj, adj_lists, component_idx, obj_indices,
                     postorder_indices, counter_ref)
 
-        postorder_indices[obj] = counter_ref[0]
-        counter_ref[0] += 1
+        if postorder_indices:
+            postorder_indices[obj] = counter_ref[0]
+            counter_ref[0] += 1
 
     @cacheit
     def _build_strongly_connected_components(self):
@@ -951,10 +952,6 @@ class Diagram(Basic):
             idx = nobjects - 1 - postorder_indices[obj]
             ordered_objects[idx] = obj
 
-        # We do reset the counter, but we don't really care about
-        # postorder markup in the second run.
-        counter_ref = [0]
-
         # We will use this to count through the detected strongly
         # connected components.
         component_idx = 0
@@ -969,8 +966,7 @@ class Diagram(Basic):
         for obj in ordered_objects:
             if obj_indices[obj] is None:
                 Diagram._dfs_markup_postorder(
-                    obj, adj_lists, component_idx, obj_indices,
-                    postorder_indices, counter_ref)
+                    obj, adj_lists, component_idx, obj_indices)
 
                 component_idx += 1
 
