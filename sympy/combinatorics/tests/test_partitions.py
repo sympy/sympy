@@ -1,5 +1,5 @@
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
-                                            partition_from_rgs, RGS_generalized,
+                                            RGS_generalized,
                                             RGS_enum, RGS_unrank, RGS_rank)
 
 def test_partition():
@@ -32,7 +32,6 @@ def test_integer_partition():
     a = IntegerPartition([1,3,4], 8)
     b = IntegerPartition([1,1,2,4], 8)
     assert a.conjugate == [3, 2, 2, 1]
-    assert a.conjugate_partition == a.conjugate
 
     assert (a == b) == False
     assert a > b

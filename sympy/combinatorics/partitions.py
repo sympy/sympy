@@ -401,7 +401,7 @@ class Partition(C.FiniteSet):
         >>> Partition.partition_from_rgs(a.RGS, a.partition_set_list)
         {{1, 4}, {2}, {3, 5}}
         """
-        superset = list(superset)
+        superset = sorted(list(superset))
         max_elem = max(rgs) + 1
         partition = [[] for i in xrange(max_elem)]
         j = 0
@@ -411,7 +411,7 @@ class Partition(C.FiniteSet):
         return Partition(partition)
 
 
-class IntegerPartition(Basic):
+class IntegerPartition(Partition):
     """
     This class represents an integer partition.
 
@@ -457,7 +457,6 @@ class IntegerPartition(Basic):
         list.sort(args[0], key=lambda x: -x)
 
         obj = Basic.__new__(cls, *args, **kw_args)
-        obj.partition = partition
         return obj
 
     def next(self):
@@ -531,17 +530,17 @@ class IntegerPartition(Basic):
         Examples:
         =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([6,3,3,2,1], 15)
+        >>> a = IntegerPartition([6, 3, 3, 2, 1], 15)
         >>> a.is_self_conjugate
         False
-        >>> a = IntegerPartition([3,2,1], 6)
+        >>> a = IntegerPartition([3, 2, 1], 6)
         >>> a.is_self_conjugate
         True
         """
-        return self.conjugate_partition == self.partition_array
+        return self.conjugate == self.partition_array
 
     @property
-    def conjugate_partition(self):
+    def conjugate(self):
         """
         Computes the conjugate partition of itself.
 
@@ -606,16 +605,6 @@ class IntegerPartition(Basic):
             elif val_self < val_other:
                 return -1
         return 1
-
-    @property
-    def rank(self):
-        """
-        Gets the rank of a partition.
-
-        Examples:
-        =========
-        """
-        raise NotImplementedError()
 
     def ferrers_representation(self):
         """
