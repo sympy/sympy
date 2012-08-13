@@ -227,6 +227,18 @@ def test_diagram():
     assert set(islice(d, 6)) == set(d.generators)
     raises(TypeError, lambda: len(d))
 
+    # Test loop morphisms.
+    h = NamedMorphism(A, A, "h")
+    d = Diagram(f, g, h)
+    assert not d.is_finite
+    assert h * h in d
+    assert f * h in d
+    assert f * h * h in d
+
+    s = set(islice(d, 9))
+    assert f * h in s
+    assert h * h in s
+
 def test_category():
     A = Object("A")
     B = Object("B")

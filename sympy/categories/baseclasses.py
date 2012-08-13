@@ -957,7 +957,21 @@ class Diagram(Basic):
 
                 component_idx += 1
 
-        return obj_indices
+        return Dict(obj_indices)
+
+    @cacheit
+    def _get_loop_morphisms(self):
+        """
+        Returns a tuple containing all loop morphisms, excluding
+        identities.
+
+        The purpose of having this method is to benefit from SymPy's
+        cache in order to avoid extracting loop morphisms anew,
+        whenever it should be necessary.
+        """
+        return tuple(m for m in self.generators
+                     if not isinstance(m, IdentityMorphism) and
+                     (m.domain == m.codomain))
 
     @property
     @cacheit
@@ -986,6 +1000,10 @@ class Diagram(Basic):
         False
 
         """
+        if self._get_loop_morphisms():
+            # A diagram with loop morphisms is always infinite.
+            return False
+
         obj_components = self._build_strongly_connected_components()
 
         # If the graph defined by the generators of this diagram has a
