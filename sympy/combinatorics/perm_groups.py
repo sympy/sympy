@@ -3124,7 +3124,10 @@ class PermutationGroup(Basic):
             # line 29: set the next element from the current branch and update
             # accorndingly
             c[l] += 1
-            element = ~(computed_words[l - 1])
+            if l == 0:
+                element = identity
+            else:
+                element = ~(computed_words[l - 1])
             gamma  = element(sorted_orbits[l][c[l]])
             u[l] = transversals[l][gamma]
             if l == 0:
