@@ -1,5 +1,6 @@
 from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I, plot_backends)
+                   oo, LambertW, I)
+from sympy.plotting.plot import matplotlib
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
 import warnings
@@ -173,7 +174,7 @@ def plot_and_save(name):
 
 
 def test_matplotlib():
-    if plot_backends['matplotlib'] == plot_backends['default']:
+    if matplotlib:
         plot_and_save('test')
     else:
         skip("Matplotlib not the default backend")
