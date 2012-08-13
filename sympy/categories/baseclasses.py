@@ -799,57 +799,165 @@ class Diagram(Basic):
         return self.args[0]
 
     @staticmethod
-    def _check_cycles_in_generators(obj, adj_lists, pre_visited, post_visited):
+    def _dfs_markup_postorder(obj, adj_lists, component_idx, obj_indices,
+                              postorder_indices, counter_ref):
         """
-        Traverses the graph supplied in ``adj_lists`` starting from
-        ``object``, marking the visited objects in preorder in
-        ``pre_visited`` and in postorder in ``post_visited``.  Reports
-        ``False`` if it never finds a back edge and ``True``
-        otherwise.
+        Traverses the graph given by the adjacency lists ``adj_lists``
+        starting from the object ``obj``.  On traversal it marks all
+        visited objects by setting to ``component_idx`` in
+        ``object_indices``.  In postorder, it marks the vertices with
+        the values of the counter ``counter_ref`` in
+        ``postorder_indices``.
+
+        ``counter_ref`` is a one-element list, containing the value of
+        the counter.  This trick allows to have one global counter,
+        unique for all recursive call of this function, without
+        polluting ``self`` with additional instance variables.
+        """
+        obj_indices[obj] = component_idx
+
+        for adj_obj in adj_lists[obj]:
+            if obj_indices[adj_obj] is None:
+                Diagram._dfs_markup_postorder(
+                    adj_obj, adj_lists, component_idx, obj_indices,
+                    postorder_indices, counter_ref)
+
+        postorder_indices[obj] = counter_ref[0]
+        counter_ref[0] += 1
+
+    @cacheit
+    def _build_strongly_connected_components(self):
+        """
+        Finds the strongly connected components of the directed
+        multigraph defined by the generators of this diagram.  Returns
+        a :class:`Dict` mapping each object to the number of the
+        connected component it makes part of.
+
+        This method returns a :class:`Dict` instead of the built-in
+        :class:`dict` because we need to return an immutable object to
+        make use of SymPy's cache.
+
+        This implements Kosaraju's algorithm [Wikipedia].  [Sedg2002]
+        contains another explanation and some theoretical background.
+        I have followed [Sedg2002] in writing this method.  I chose
+        Kosaraju's algorithm instead of Tarjan's algorithm [WTar]
+        because we have the edges of the graph (the generators), and
+        not its adjacency matrix.
 
         References
         ==========
 
+        [WKos] http://en.wikipedia.org/wiki/Kosaraju%27s_algorithm
+
         [Sedg2002] Robert Sedgewick, Algorithms in C++ Graph
         Algorithms, Part 5.  Third Edition.  Addison-Wesley, 2002.
-        Section Digraphs and DAGs.
+        Section Digraphs and DAGs, Listing 19.10 and the corresponding
+        explanations.
 
-        [Wikipedia] http://en.wikipedia.org/wiki/Depth-first_search#Output_of_a_depth-first_search
+        [WTar] http://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
         """
-        pre_visited[obj] = True
+        # This dictionary will eventually contain the result, i.e.,
+        # will map objects to numbers of the corresponding component
+        # indices.
+        obj_indices = {}
 
-        for adj_obj in adj_lists[obj]:
-            if not pre_visited[adj_obj]:
-                # We haven't yet been there.
-                if Diagram._check_cycles_in_generators(
-                    adj_obj, adj_lists, pre_visited, post_visited):
-                    return True
-            elif not post_visited[adj_obj]:
-                # ``(obj, adj_obj)`` is a back edge ([Wikipedia],
-                # [Sedg2002], Listing 19.2), and we have detected a
-                # cycle.
-                #
-                # Essentially, this means that ``adj_obj`` actually
-                # precedes ``obj`` in the DFS tree.  This means that
-                # one can go from ``adj_obj`` to ``obj`` (because
-                # ``adj_obj`` precedes ``obj``), and then back to
-                # ``adj_obj``, thus closing a cycle.
-                #
-                # The reason this check works is the following.
-                # ``post_visited`` is filled in during _postorder_
-                # traversal, that is, when we are getting up the DFS
-                # tree.  ``post_visited[adj_obj] == False`` means that
-                # we haven't yet reached ``adj_obj`` on our way back.
-                # Therefore, when we were going down the DFS tree, we
-                # got to ``obj`` through ``adj_obj``.  (The best way
-                # to understand this is to actually draw some simple
-                # graphs.)
-                return True
+        # These dictionaries will store the adjacency lists of the
+        # graph of generators and the same graph with reversed arrows.
+        adj_lists = {}
+        rev_adj_lists = {}
 
-        post_visited[obj] = True
-        # No cycles found yet.
-        return False
+        # This dictionary will store the numbers of vertices, as they
+        # are traversed in postorder by DFS.
+        postorder_indices = {}
+
+        for obj in self.objects:
+            obj_indices[obj] = None
+            adj_lists[obj] = []
+            rev_adj_lists[obj] = []
+            postorder_indices[obj] = None
+
+        # Build the adjacency lists of the graph of generators.
+        for m in self.generators:
+            if m.domain == m.codomain:
+                # The generators may contain some identity morphisms,
+                # which were explicitly supplied with properties.
+                # Yet, since they are identities, they do not add new
+                # morphisms to the diagram, so they should be skipped
+                # here.
+                #
+                # We will also skip loop morphisms here.  In this
+                # function, we only want to detect strongly-connected
+                # components consisting of more than one vertex.  Loop
+                # morphisms will be separately handled elsewhere.
+                continue
+            adj_lists[m.domain].append(m.codomain)
+            rev_adj_lists[m.codomain].append(m.domain)
+
+        # This one-element list holds a global counter for the DFS
+        # traversal (cf. the docstring of
+        # ``Diagram._dfs_markup_postorder``).
+        counter_ref = [0]
+
+        # At first, DFS the reverse graph.
+        #
+        # Since the original graph and the graph with reversed arrows
+        # have the same strongly connected components, it doesn't
+        # matter which one of them we traverse first.  However, let's
+        # follow [Sedg2002] as closely as we can.
+        #
+        # Note that we don't need to start the traversal from sources
+        # only.  Even if start the traversal from a vertex `w`, which
+        # is not a source, and thus don't reach the vertex `v` for
+        # which the edge `(v, w)` exists, we will still arrive at `v`
+        # at a later time, and will mark it with a _greater_ postorder
+        # index, which is right anyway.
+        for obj in self.objects:
+            if obj_indices[obj] is None:
+                # In this run, we only use ``obj_indices`` to assure
+                # that DFS doesn't visit the same vertices twice; that
+                # is, the value of ``component_idx`` is of no
+                # importance.
+                Diagram._dfs_markup_postorder(
+                    obj, rev_adj_lists, -1, obj_indices,
+                    postorder_indices, counter_ref)
+
+        for obj in self.objects:
+            obj_indices[obj] = None
+
+        # We would like now to traverse the objects in decreasing
+        # direction of the postorder markup value in
+        # ``postorder_indices``.
+        nobjects = len(self.objects)
+        ordered_objects = [None] * nobjects
+        for obj in self.objects:
+            idx = nobjects - 1 - postorder_indices[obj]
+            ordered_objects[idx] = obj
+
+        # We do reset the counter, but we don't really care about
+        # postorder markup in the second run.
+        counter_ref = [0]
+
+        # We will use this to count through the detected strongly
+        # connected components.
+        component_idx = 0
+
+        # Now, DFS the original graph (now the direction of edges will
+        # be _reversed_ as compared to the previous run).
+        #
+        # Note that direction of traversal here is a bit different
+        # from that in the Listing 19.10 in [Sedg2002]; however, it
+        # does correspond to what is described in the text and on
+        # [WKos].
+        for obj in ordered_objects:
+            if obj_indices[obj] is None:
+                Diagram._dfs_markup_postorder(
+                    obj, adj_lists, component_idx, obj_indices,
+                    postorder_indices, counter_ref)
+
+                component_idx += 1
+
+        return obj_indices
 
     @property
     @cacheit
@@ -878,66 +986,25 @@ class Diagram(Basic):
         False
 
         """
-        # This method essentially checks whether there are cycles in
-        # the digraph defined by the generators.  Note that it is
-        # sufficient to only check the generators, since the other
-        # (derived) morphisms essentially form a transitive closure of
-        # the digraph and thus cannot contribute new cycles.
-        #
-        # For references, see ``_check_cycles_in_generators``.  Note
-        # however that the code in that method and in ``is_infinite``
-        # is an adaptation of what can be found in [Sedg2002].
+        obj_components = self._build_strongly_connected_components()
 
-        # In this dictionary, vertices will be marked as visited
-        # during preorder traversal.
-        pre_visited = {}
+        # If the graph defined by the generators of this diagram has a
+        # strongly connected component which includes more that one
+        # vertex, this graph has cycles.  Let's see if there are such
+        # components.
 
-        # In this dictionary, vertices will be marked as visited
-        # during preorder traversal.
-        post_visited = {}
+        # ``used_index[i] == True`` if there is a vertex which
+        # belongs to the connected component with index ``i``.
+        used_index = [False] * len(self.objects)
+        for obj in obj_components:
+            component_idx = obj_components[obj]
+            if used_index[component_idx]:
+                # ``component_idx`` is a connected component with at
+                # least two vertices.
+                return False
+            else:
+                used_index[component_idx] = True
 
-        # We will also count the number of morphisms which go into
-        # each object.
-        indegrees = {}
-
-        # This dictionary will store the adjacency lists of the graph
-        # of generators.
-        adj_lists = {}
-
-        for obj in self.objects:
-            adj_lists[obj] = []
-            pre_visited[obj] = False
-            post_visited[obj] = False
-            indegrees[obj] = 0
-
-        # Build the adjacency lists of the graph of generators.
-        for m in self.generators:
-            if isinstance(m, IdentityMorphism):
-                # The generators may contain some identity morphisms,
-                # which were explicitly supplied with properties.
-                # Yet, since they are identities, they do not add new
-                # morphisms to the diagram, so they should be skipped
-                # here.
-                continue
-            adj_lists[m.domain].append(m.codomain)
-            indegrees[m.codomain] += 1
-
-        # Sort the objects by the number of morphisms which go into
-        # them.  This will allow us to start the traversal with
-        # sources, if there are sources.
-        objects_by_indegree = sorted(
-            self.objects,key=lambda obj: indegrees[obj])
-
-        for obj in objects_by_indegree:
-            if not pre_visited[obj]:
-                # Look for cycles in the DFS tree which starts at this
-                # object.
-                if self._check_cycles_in_generators(
-                    obj, adj_lists, pre_visited, post_visited):
-                    # There are cycles, this diagram is infinite.
-                    return False
-
-        # No cycles, this is a finite diagram.
         return True
 
     def _composites_by_length(self, length, identities=True):
