@@ -798,6 +798,35 @@ class Diagram(Basic):
         """
         return self.args[0]
 
+    @cacheit
+    def _build_generator_adj_lists(self):
+        """
+        Returns the adjacency lists of the graph defined by the
+        generators.
+
+        This will skip identities and loop morphisms.
+        """
+        adj_lists = {}
+
+        for obj in self.objects:
+            adj_lists[obj] = []
+
+        for m in self.generators:
+            if m.domain == m.codomain:
+                # The generators may contain some identity morphisms,
+                # which were explicitly supplied with properties.
+                # Yet, since they are identities, they do not add new
+                # morphisms to the diagram, so they should be skipped
+                # here.
+                #
+                # We will also skip loop morphisms here.  Loop
+                # morphisms are always handled in a special way,
+                # without looking at the adjacency lists.
+                continue
+            adj_lists[m.domain].append(m.codomain)
+
+        return adj_lists
+
     @staticmethod
     def _dfs_markup_postorder(obj, adj_lists, component_idx, obj_indices,
                               postorder_indices, counter_ref):
@@ -862,9 +891,8 @@ class Diagram(Basic):
         # indices.
         obj_indices = {}
 
-        # These dictionaries will store the adjacency lists of the
-        # graph of generators and the same graph with reversed arrows.
-        adj_lists = {}
+        # These dictionary will store the adjacency lists of the graph
+        # of generators with reversed arrows.
         rev_adj_lists = {}
 
         # This dictionary will store the numbers of vertices, as they
@@ -873,26 +901,15 @@ class Diagram(Basic):
 
         for obj in self.objects:
             obj_indices[obj] = None
-            adj_lists[obj] = []
-            rev_adj_lists[obj] = []
             postorder_indices[obj] = None
+            rev_adj_lists[obj] = []
 
-        # Build the adjacency lists of the graph of generators.
-        for m in self.generators:
-            if m.domain == m.codomain:
-                # The generators may contain some identity morphisms,
-                # which were explicitly supplied with properties.
-                # Yet, since they are identities, they do not add new
-                # morphisms to the diagram, so they should be skipped
-                # here.
-                #
-                # We will also skip loop morphisms here.  In this
-                # function, we only want to detect strongly-connected
-                # components consisting of more than one vertex.  Loop
-                # morphisms will be separately handled elsewhere.
-                continue
-            adj_lists[m.domain].append(m.codomain)
-            rev_adj_lists[m.codomain].append(m.domain)
+        # Build the adjacency lists.
+        adj_lists = self._build_generator_adj_lists()
+
+        for v in adj_lists:
+            for w in adj_lists[v]:
+                rev_adj_lists[w].append(v)
 
         # This one-element list holds a global counter for the DFS
         # traversal (cf. the docstring of
