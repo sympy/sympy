@@ -727,6 +727,7 @@ def test_sparse_matrix():
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
+
     def zeros(n):
         return SparseMatrix(n,n,lambda i,j:0)
 
@@ -820,6 +821,8 @@ def test_sparse_matrix():
 
     # test_determinant
     x, y = Symbol('x'), Symbol('y')
+
+    assert SparseMatrix(1, 1, [0]).det() == 0
 
     assert SparseMatrix([[1]]).det() == 1
 
