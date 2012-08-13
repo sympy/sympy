@@ -346,6 +346,8 @@ class PermutationGroup(Basic):
 
     [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
 
+    [12] http://en.wikipedia.org/wiki/Nilpotent_group
+
     """
 
     def __eq__(self, gr):
@@ -429,6 +431,8 @@ class PermutationGroup(Basic):
         obj._is_sym = None
         obj._is_alt = None
         obj._is_primitive = None
+        obj._is_nilpotent = None
+        obj._is_solvable = None
         obj._transitivity_degree = None
         obj._max_div = None
         size = len(args[0][0].array_form)
@@ -1227,7 +1231,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
         >>> A = AlternatingGroup(5)
         >>> len(A.derived_series())
         1
@@ -1574,6 +1578,48 @@ class PermutationGroup(Basic):
                     return True
             return False
 
+    @property
+    def is_nilpotent(self):
+        """
+        Test if the group is nilpotent.
+
+        A group `G` is nilpotent if it has a central series of finite length.
+        Alternatively, `G` is nilpotent if its lower central series terminates
+        with the trivial group. Every nilpotent group is also solvable ([1],p.29, [12]).
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> C = CyclicGroup(6)
+        >>> C.is_nilpotent
+        True
+        >>> S = SymmetricGroup(5)
+        >>> S.is_nilpotent
+        False
+
+        See Also
+        ========
+
+        lower_central_series, is_solvable
+
+        """
+        if self._is_nilpotent is None:
+            lcs = self.lower_central_series()
+            terminator = lcs[len(lcs)-1]
+            gens = terminator.generators
+            degree = self.degree
+            identity = _new_from_array_form(range(degree))
+            if [identity for gen in gens] == gens:
+                self._is_solvable = True
+                self._is_nilpotent = True
+                return True
+            else:
+                self._is_nilpotent = False
+                return False
+        else:
+            return self._is_nilpotent
+
     def is_normal(self, gr):
         """
         test if G=self is a normal subgroup of gr
@@ -1665,38 +1711,42 @@ class PermutationGroup(Basic):
         self._is_primitive = True
         return True
 
+    @property
     def is_solvable(self):
         """
-        test if the group G is solvable
+        Test if the group  is solvable
 
-        G is solvable if the derived series
-        G = G_0 < G_1 < ... < G_k = 1, with G_{i+1} = G.derived_subgroup()
-        see http://en.wikipedia.org/wiki/Solvable_group
+        `G` is solvable if its derived series terminates with the trivial
+        group ([1],p.29).
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,2,0])
-        >>> b = Permutation([1,0,2])
-        >>> G = PermutationGroup([a, b])
-        >>> G.is_solvable()
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S = SymmetricGroup(3)
+        >>> S.is_solvable
         True
 
-        """
-        order = self.order()
-        if order == 1:
-            return True
-        G = self
-        while order > 1:
+        See Also
+        ========
 
-            G = G.derived_subgroup()
-            order1 = G.order()
-            if order1 == order:
+        is_nilpotent, derived_series
+
+        """
+        if self._is_solvable is None:
+            ds = self.derived_series()
+            terminator = ds[len(ds) - 1]
+            gens = terminator.generators
+            degree = self.degree
+            identity = _new_from_array_form(range(degree))
+            if [identity for gen in gens] == gens:
+                self._is_solvable = True
+                return True
+            else:
+                self._is_solvable = False
                 return False
-            order = order1
-        return True
+        else:
+            return self._is_solvable
 
     def is_subgroup(self, gr):
         """
@@ -1774,7 +1824,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup
         >>> A = AlternatingGroup(4)
         >>> len(A.lower_central_series())
         2
@@ -1939,7 +1989,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup, AlternatingGroup
         >>> S = SymmetricGroup(5)
         >>> C = CyclicGroup(5)
         >>> G = S.normal_closure(C)
