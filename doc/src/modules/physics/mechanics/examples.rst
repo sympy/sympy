@@ -68,7 +68,7 @@ equations in the end. ::
 Kinematic differential equations; how the generalized coordinate time
 derivatives relate to generalized speeds. Here these were computed by hand. ::
 
-  >>> kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+  >>> kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
 Creation of the force list; it is the gravitational force at the center of mass of
 the disc. Then we create the disc by assigning a Point to the center of mass
@@ -145,7 +145,7 @@ and along the ground in an perpendicular direction. ::
   >>> vel = Dmc.v2pt_theory(C, N, R)
   >>> acc = Dmc.a2pt_theory(C, N, R)
   >>> I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
-  >>> kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+  >>> kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
 Just as we previously introduced three speeds as part of this process, we also
 introduce three forces; they are in the same direction as the speeds, and
