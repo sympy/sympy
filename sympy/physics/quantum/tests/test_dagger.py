@@ -1,6 +1,6 @@
 from sympy import I, Matrix, symbols, conjugate, Expr, Integer
 
-from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
 
@@ -14,10 +14,13 @@ def test_scalars():
     assert Dagger(i) == i
 
     p = symbols('p')
-    assert isinstance(Dagger(p), Dagger)
+    assert isinstance(Dagger(p), adjoint)
 
     i = Integer(3)
     assert Dagger(i) == i
+
+    A = symbols('A', commutative=False)
+    assert Dagger(A).is_commutative == False
 
 
 def test_matrix():
@@ -28,11 +31,11 @@ def test_matrix():
 
 class Foo(Expr):
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return I
 
 
-def test_eval_dagger():
+def test_eval_adjoint():
     f = Foo()
     d = Dagger(f)
     assert d == I

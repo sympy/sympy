@@ -20,12 +20,8 @@ class Transpose(MatrixExpr):
     """
     is_Transpose = True
     def __new__(cls, mat):
-
-        if not mat.is_Matrix:
-            return mat
-
         try:
-            return mat._eval_transpose()
+            return mat.transpose()
         except (AttributeError, NotImplementedError):
             return Basic.__new__(cls, mat)
 

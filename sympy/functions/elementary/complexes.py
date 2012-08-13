@@ -487,6 +487,9 @@ class conjugate(Function):
     def _eval_Abs(self):
         return Abs(self.args[0], **{'evaluate': True})
 
+    def _eval_adjoint(self):
+        return transpose(self.args[0])
+
     def _eval_conjugate(self):
         return self.args[0]
 
@@ -495,6 +498,75 @@ class conjugate(Function):
             return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
         elif x.is_imaginary:
             return -conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+
+    def _eval_transpose(self):
+        return conjugate(transpose(self.args[0]))
+
+class transpose(Function):
+    """
+    Linear map transposition.
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        obj = arg._eval_transpose()
+        if obj is not None:
+            return obj
+
+    def _eval_adjoint(self):
+        return conjugate(self.args[0])
+
+    def _eval_derivative(self, x):
+        return transpose(Derivative(self.args[0], x, **{'evaluate': True}))
+
+    def _eval_transpose(self):
+        return self.args[0]
+
+class adjoint(Function):
+    """
+    Conjugate transpose or Hermite conjugation.
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        obj = arg._eval_adjoint()
+        if obj is not None:
+            return obj
+        obj = arg._eval_transpose()
+        if obj is not None:
+            return conjugate(obj)
+
+    def _eval_adjoint(self):
+        return self.args[0]
+
+    def _eval_conjugate(self):
+        return transpose(self.args[0])
+
+    def _eval_derivative(self, x):
+        return adjoint(Derivative(self.args[0], x, **{'evaluate': True}))
+
+    def _eval_transpose(self):
+        return conjugate(self.args[0])
+
+    def _latex(self, printer, exp=None, *args):
+        arg = printer._print(self.args[0])
+        tex = r'%s^{\dag}' % arg
+        if exp:
+            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+        return tex
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        if printer._use_unicode:
+            pform = pform**prettyForm(u'\u2020')
+        else:
+            pform = pform**prettyForm('+')
+        return pform
 
 ###############################################################################
 ############### HANDLING OF POLAR NUMBERS #####################################

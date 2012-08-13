@@ -116,7 +116,7 @@ class TensorProduct(Expr):
             nc_parts.append(Mul._from_args(ncp))
         return c_part, nc_parts
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
 
     def _eval_rewrite(self, pattern, rule, **hints):

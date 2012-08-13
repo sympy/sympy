@@ -12,4 +12,7 @@ from matrices import MutableMatrix as Matrix
 
 from immutable_matrix import ImmutableMatrix
 
-from expressions import *
+from expressions import (BlockDiagMatrix, BlockMatrix, FunctionMatrix,
+     Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol,
+     Trace, Transpose, ZeroMatrix, block_collapse, linear_factors,
+     matrix_symbols, matrixify)

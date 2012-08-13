@@ -195,8 +195,7 @@ class HermitianOperator(Operator):
     H
     """
 
-    def _eval_dagger(self):
-        return self
+    is_hermitian = True
 
     def _eval_inverse(self):
         if isinstance(self, UnitaryOperator):
@@ -235,7 +234,7 @@ class UnitaryOperator(Operator):
     1
     """
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return self._eval_inverse()
 
 
@@ -316,7 +315,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -330,7 +329,7 @@ class OuterProduct(Operator):
         """Return the bra on the right side of the outer product."""
         return self.args[1]
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):

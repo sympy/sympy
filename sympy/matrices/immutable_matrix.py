@@ -36,9 +36,11 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
 
     as_mutable = MatrixBase.as_mutable
 
+    adjoint = MatrixBase.adjoint
+    conjugate = MatrixBase.conjugate
     equals = MatrixBase.equals
     is_Identity = MatrixBase.is_Identity
-    _eval_transpose = MatrixBase._eval_transpose
+    transpose = MatrixBase.transpose
 
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__
