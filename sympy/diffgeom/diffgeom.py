@@ -9,6 +9,8 @@ from sympy.combinatorics import Permutation
 
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
+# TODO too often one needs to call doit or simplify on the output, check the
+# tests and find out why
 
 class Manifold(Basic):
     """Object representing a mathematical manifold.
@@ -167,7 +169,7 @@ class CoordSystem(Basic):
         #          - list of `Dummy` coordinates in this coordinate system
         #          - list of expressions as a function of the Dummies giving
         #          the coordinates in another coordinate system
-        self._dummies = [Dummy(str(n)) for n in (names if names else range(self.patch.dim))]
+        self._dummies = [Dummy(str(n)) for n in names]
         self._dummy = Dummy()
 
     @property
@@ -417,18 +419,23 @@ class BaseScalarField(Expr):
         self._args = self._coord_sys, self._index
 
     def __call__(self, *args):
+        """Evaluating the field at a point or doing nothing.
+
+        If the argument is a ``Point`` instance, the field is evaluated at that
+        point. The field is returned itself if the argument is any other
+        object. It is so in order to have working recursive calling mechanics
+        for all fields (check the ``__call__`` method of ``Expr``).
+        """
         point = args[0]
-        if not isinstance(point, Point):
-            # We want the recursive calling mechanics for all fields hence
-            # we need to return ScalarField itself if the arg is not a Point.
+        if len(args) != 1 or not isinstance(point, Point):
             return self
         coords = point.coords(self._coord_sys)
         # XXX Calling doit  is necessary with all the Subs expressions
         # XXX Calling simplify is necessary with all the trig expressions
         return simplify(coords[self._index]).doit()
 
-    # Workaround for limitations on the content of args
-    free_symbols=set([])
+    # XXX Workaround for limitations on the content of args
+    free_symbols=set()
     def doit(self):
         return self
 
@@ -495,6 +502,10 @@ class BaseVectorField(Expr):
         self._args = self._coord_sys, self._index
 
     def __call__(self, scalar_field):
+        """Apply on a scalar field.
+
+        If the argument is not a scalar field the behaviour is undefined.
+        """
         base_scalars = list(scalar_field.atoms(BaseScalarField))
 
         # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
@@ -540,7 +551,7 @@ class Commutator(Expr):
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
 
-    >>> c_xy(R2.x + R2.y**2)
+    >>> c_xy
     0
 
     """
@@ -551,6 +562,26 @@ class Commutator(Expr):
     #-2*y*\x  + y /  *cos(theta)*y
 
     #"""
+    def __new__(cls, v1, v2):
+        if v1 == v2:
+            return Zero()
+        coord_sys = set.union(*[v.atoms(CoordSystem) for v in (v1, v2)])
+        if len(coord_sys) == 1:
+            # Only one coordinate systems is used, hence it is easy enough to
+            # actually evaluate the commutator.
+            if all(isinstance(v, BaseVectorField) for v in (v1, v2)):
+                return Zero()
+            bases_1, bases_2 = [list(v.atoms(BaseVectorField)) for v in (v1, v2)]
+            coeffs_1 = [v1.expand().coeff(b) for b in bases_1]
+            coeffs_2 = [v2.expand().coeff(b) for b in bases_2]
+            res = 0
+            for c1, b1 in zip(coeffs_1, bases_1):
+                for c2, b2 in zip(coeffs_2, bases_2):
+                    res += c1*b1(c2)*b2 - c2*b2(c1)*b1
+            return res
+        else:
+            return super(Commutator, cls).__new__(cls, v1, v2)
+
     def __init__(self, v1, v2):
         super(Commutator, self).__init__()
         self._args = (v1, v2)
@@ -558,6 +589,10 @@ class Commutator(Expr):
         self._v2 = v2
 
     def __call__(self, scalar_field):
+        """Apply on a scalar field.
+
+        If the argument is not a scalar field the behaviour is undefined.
+        """
         return self._v1(self._v2(scalar_field)) - self._v2(self._v1(scalar_field))
 
 
@@ -606,7 +641,7 @@ class Differential(Expr):
     """
     def __new__(cls, form_field):
         if isinstance(form_field, Differential):
-            return sympify(0)
+            return Zero()
         else:
             return super(Differential, cls).__new__(cls, form_field)
 
@@ -616,6 +651,24 @@ class Differential(Expr):
         self._args = (self._form_field, )
 
     def __call__(self, *vector_fields):
+        """Apply on a list of vector_fields.
+
+        If the number of vector fields supplied is not equal to 1 + the order of
+        the form field inside the differential the result is undefined.
+
+        For 1-forms (i.e. differentials of scalar fields) the evaluation is
+        done as `df(v)=v(f)`. However if `v` is ``None`` instead of a vector
+        field, the differential is returned unchanged. This is done in order to
+        permit partial contractions for higher forms.
+
+        In the general case the evaluation is done by applying the form field
+        inside the differential on a list with one less elements than the number
+        of elements in the original list. Lowering the number of vector fields
+        is achieved through replacing each pair of fields by their
+        commutator.
+
+        If the arguments are not vectors or ``None``s the result is undefined.
+        """
         k = len(vector_fields)
         if k==1:
             if vector_fields[0]:
@@ -630,8 +683,10 @@ class Differential(Expr):
                 ret += (-1)**i*t
                 for j in range(i+1,k):
                     c = Commutator(v[i], v[j])
-                    t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
-                    ret += (-1)**(i+j)*t
+                    if c: # TODO this is ugly - the Commutator can be Zero and
+                          # this causes the next line to fail
+                        t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
+                        ret += (-1)**(i+j)*t
             return ret
 
 
@@ -676,16 +731,30 @@ class TensorProduct(Expr):
 
     """
     def __new__(cls, *args):
-        if len(args)==1:
-            return args[0]
+        scalar = Mul(*[m for m in args if order_of_form(m)==0])
+        forms = [m for m in args if order_of_form(m)]
+        if forms:
+            if len(forms) == 1:
+                return scalar*forms[0]
+            return scalar*super(TensorProduct, cls).__new__(cls, *forms)
         else:
-            return super(TensorProduct, cls).__new__(cls, *args)
+            return scalar
 
     def __init__(self, *args):
         super(TensorProduct, self).__init__()
         self._args = args
 
     def __call__(self, *v_fields):
+        """Apply on a list of vector_fields.
+
+        If the number of vector fields supplied is not equal to the order of
+        the form field the list of arguments is padded with ``None``'s.
+
+        The list of arguments is divided in sublists depending on the order of
+        the forms inside the tensor product. The sublists are provided as
+        arguments to these forms and the resulting expressions are given to the
+        constructor of ``TensorProduct``.
+        """
         tot_order = order_of_form(self)
         tot_args = len(v_fields)
         if tot_args != tot_order:
@@ -694,11 +763,8 @@ class TensorProduct(Expr):
         indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
         v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
         multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
-        scalar = Mul(*[m for m in multipliers if order_of_form(m)==0])
-        forms = [m for m in multipliers if order_of_form(m)]
-        if forms:
-            return scalar*TensorProduct(*forms)
-        return scalar
+        # TODO, this check should be in the constructor.
+        return TensorProduct(*multipliers)
 
     def _latex(self, printer, *args):
         elements = [printer._print(a) for a in self.args]
