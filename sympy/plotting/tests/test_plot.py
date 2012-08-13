@@ -3,7 +3,7 @@ from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
 from sympy.plotting.plot import matplotlib
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
-def tmp_file(name=''):
+def tmp_file(name='temp'):
     return NamedTemporaryFile(suffix='.png').name
 
 def plot_and_save(name):

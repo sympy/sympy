@@ -78,7 +78,7 @@ class ImplicitSeries(BaseSeries):
         except AttributeError:
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
-                            "expression. Using uniform meshing.")
+                            " expression. Using uniform meshing.")
             self.use_interval_math = False
 
         if self.use_interval_math:

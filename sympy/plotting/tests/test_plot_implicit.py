@@ -1,12 +1,8 @@
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
-                    tan, plot_backends)
-from sympy.external import import_module
+                    tan)
+from sympy.plotting.plot import matplotlib
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
-numpy = import_module('numpy')
-matplotlib = import_module('matplotlib')
-if not numpy or not matplotlib:
-    disabled = True
 
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
@@ -47,10 +43,11 @@ def plot_and_save():
     plot_implicit(And(y > cos(x), Or(y > x, Eq(y, x))), show=False).save(tmp_file())
 
     #Test plots which cannot be rendered using the adaptive algorithm
+    #TODO: catch the warning.
     plot_implicit(Eq(y, re(cos(x) + I*sin(x))), show=False).save(tmp_file())
 
 def test_matplotlib():
-    if plot_backends['matplotlib'] == plot_backends['default']:
-        plot_and_save('test')
+    if matplotlib:
+        plot_and_save()
     else:
         skip("Matplotlib not the default backend")
