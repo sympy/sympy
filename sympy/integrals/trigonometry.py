@@ -29,13 +29,15 @@ def _pat_gen(x):
 
 _u = Dummy('u')
 
-def Trig_Check(s):
-  if sin(s.args[0])/s is S.One or cos(s.args[0])/s is S.One \
-     or csc(s.args[0])/s is S.One or sec(s.args[0])/s is S.One \
-         or tan(s.args[0])/s is S.One or cot(s.args[0])/s is S.One:
-      return True
-
-
+def _trig_check(s):
+    if not s.args:
+        return False
+    if sin(s.args[0])/s is S.One or cos(s.args[0])/s is S.One \
+            or csc(s.args[0])/s is S.One or sec(s.args[0])/s is S.One \
+            or tan(s.args[0])/s is S.One or cot(s.args[0])/s is S.One:
+        return True
+    else:
+        return False
 
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
@@ -64,20 +66,15 @@ def trigintegrate(f, x):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-
     pat, a,n,m = _pat_sincos(x)
     pat1, s,t,q,r = _pat_gen(x)
 
-
     M_ = f.match(pat1)
-
-
     if M_ is None:
         return
 
     q = M_[q]
     r = M_[r]
-
 
   ###
   ###  f =  function1(written in terms of sincos) X function2(written in terms of sincos)
@@ -85,9 +82,7 @@ def trigintegrate(f, x):
     if q is not S.Zero and r is not S.Zero:
         s = M_[s]
         t = M_[t]
-        if s.args is not () and t.args is not () \
-            and Trig_Check(s) and Trig_Check(t):
-
+        if _trig_check(s) and _trig_check(t):
             f = s._eval_rewrite_as_sincos(s.args[0])**q * t._eval_rewrite_as_sincos(t.args[0])**r
 
     if q is S.Zero and r is S.Zero:
@@ -95,17 +90,15 @@ def trigintegrate(f, x):
 
     if q is S.Zero and r is not S.Zero:
         t = M_[t]
-        if t.args is not () and Trig_Check(t):
+        if _trig_check(t):
             f = t._eval_rewrite_as_sincos(t.args[0])**r
 
     if r is S.Zero and q is not S.Zero:
         s = M_[s]
-        if s.args is not () and Trig_Check(s):
+        if _trig_check(s):
             f = s._eval_rewrite_as_sincos(s.args[0])**q
 
-
-    M= f.match(pat)   # matching the rewritten function with the sincos pattern
-
+    M = f.match(pat)   # matching the rewritten function with the sincos pattern
 
     if M is None:
         return
@@ -117,7 +110,6 @@ def trigintegrate(f, x):
     a = M[a]
 
     if n.is_integer and m.is_integer:
-
         if n.is_odd or m.is_odd:
             u = _u
             n_, m_ = n.is_odd, m.is_odd
@@ -182,8 +174,7 @@ def trigintegrate(f, x):
                     #/                                                           /
                     #
                     #
-                    res=Rational(-1,m+1)*cos(x)**(m+1)*sin(x)**(n-1) + Rational(n-1,m+1)*trigintegrate(cos(x)**(m+2)*sin(x)**(n-2),x)
-
+                    res = Rational(-1,m+1)*cos(x)**(m+1)*sin(x)**(n-1) + Rational(n-1,m+1)*trigintegrate(cos(x)**(m+2)*sin(x)**(n-2),x)
 
             elif m_:
                 #  2k        2 k            i            2i
