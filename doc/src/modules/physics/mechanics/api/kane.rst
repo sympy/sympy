@@ -5,9 +5,8 @@ Kane's Method & Associated Functions (Docstrings)
 KanesMethod
 ===========
 
-.. automodule:: sympy.physics.mechanics.kane
+.. autoclass:: sympy.physics.mechanics.KanesMethod
    :members:
-
 
 partial_velocity
 ================

@@ -407,17 +407,27 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     else:
         raise ValueError('Not an approved rotation type for this function')
 
-def partial_velocity(vel_list, u_list):
+def partial_velocity(vel_list, u_list, frame):
     """Returns a list of partial velocities.
+
+    For a list of velocity or angular velocity vectors the partial derivatives
+    with respect to the supplied generalized speeds are computed, in the
+    specified ReferenceFrame.
+
+    The output is a list of lists. The outer list has a number of elements
+    equal to the number of supplied velocity vectors. The inner lists are, for
+    each velocity vector, the partial derivatives of that velocity vector with
+    respect to the generalized speeds supplied.
 
     Parameters
     ==========
 
     vel_list : list
         List of velocities of Point's and angular velocities of ReferenceFrame's
-
     u_list : list
         List of independent generalized speeds.
+    frame : ReferenceFrame
+        The ReferenceFrame the partial derivatives are going to be taken in.
 
     Examples
     ========
@@ -431,7 +441,7 @@ def partial_velocity(vel_list, u_list):
     >>> P.set_vel(N, u * N.x)
     >>> vel_list = [P.vel(N)]
     >>> u_list = [u]
-    >>> partial_velocity(vel_list, u_list)
+    >>> partial_velocity(vel_list, u_list, N)
     [[N.x]]
 
     """
@@ -439,8 +449,6 @@ def partial_velocity(vel_list, u_list):
         raise TypeError('Provide velocities in an iterable')
     if not hasattr(u_list, '__iter__'):
         raise TypeError('Provide speeds in an iterable')
-    a = vel_list[0]
-    frame = a.args[0][1]
     list_of_pvlists = []
     for i in vel_list:
         pvlist = []
@@ -462,12 +470,13 @@ def linear_momentum(frame, *body):
 
     L = L1 + L2
 
+    Parameters
+    ==========
+
     frame : ReferenceFrame
         The frame in which linear momentum is desired.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
-
 
     Examples
     ========
@@ -515,10 +524,8 @@ def angular_momentum(point, frame, *body):
 
     point : Point
         The point about which angular momentum of the system is desired.
-
     frame : ReferenceFrame
         The frame in which angular momentum is desired.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
 
@@ -577,7 +584,6 @@ def kinetic_energy(frame, *body):
     frame : ReferenceFrame
         The frame in which the velocity or angular velocity of the body is
         defined.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
 

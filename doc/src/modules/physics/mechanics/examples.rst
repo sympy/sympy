@@ -344,7 +344,7 @@ its center of mass. ::
   >>> BL = [BodyFrame, BodyFork, BodyWR, BodyWF]
 
 The N frame is the inertial frame, coordinates are supplied in the order of
-independent, dependent coordinates. The kinematic differential equation are
+independent, dependent coordinates. The kinematic differential equations are
 also entered here. Here the independent speeds are specified, followed by the
 dependent speeds, along with the non-holonomic constraints. The dependent
 coordinate is also provided, with the holonomic constraint. Again, this is only

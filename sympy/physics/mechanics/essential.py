@@ -461,8 +461,8 @@ class Dyadic(object):
 
         """
 
-        return sum([Dyadic( [ (v[0].subs(*args, **kwargs), v[1], v[2]) ]) for
-                    v in self.args])
+        return sum([ Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+                     for v in self.args])
 
     dot = __and__
     cross = __xor__

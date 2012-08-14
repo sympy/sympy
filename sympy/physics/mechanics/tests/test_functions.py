@@ -301,7 +301,7 @@ def test_partial_velocity():
 
     vel_list = [Dmc.vel(N), C.vel(N), R.ang_vel_in(N)]
     u_list = [u1, u2, u3, u4, u5]
-    assert (partial_velocity(vel_list, u_list) ==
+    assert (partial_velocity(vel_list, u_list, N) ==
             [[- r*L.y, r*L.x, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [0, 0, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [L.x, L.y, L.z, 0, 0]])

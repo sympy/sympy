@@ -382,7 +382,7 @@ class KanesMethod(object):
             else:
                 raise TypeError('First entry in pair must be point or frame.')
             f_list += [i[1]]
-        partials = partial_velocity(vel_list, u)
+        partials = partial_velocity(vel_list, u, N)
 
         # Fill Fr with dot product of partial velocities and forces
         for i in range(o):
@@ -446,9 +446,9 @@ class KanesMethod(object):
         for v in bl:
             if isinstance(v, RigidBody):
                 partials += [partial_velocity([v.masscenter.vel(N),
-                                               v.frame.ang_vel_in(N)], u)]
+                                               v.frame.ang_vel_in(N)], u, N)]
             elif isinstance(v, Particle):
-                partials += [partial_velocity([v.point.vel(N)], u)]
+                partials += [partial_velocity([v.point.vel(N)], u, N)]
             else:
                 raise TypeError('The body list needs RigidBody or '
                                 'Particle as list elements.')
@@ -778,9 +778,11 @@ class KanesMethod(object):
         """ Returns the system's equations of motion in first order form.
 
         The output of this will be the right hand side of:
-        [qdot, udot].T = rhs(q, u, t)
-        Or, the equations of motion, in first order form, as they would be
-        passed to a numerical integrator.
+
+        [qdot, udot].T = f(q, u, t)
+
+        Or, the equations of motion in first order form.  The right hand side
+        is what is needed by most numerical ODE integrators.
 
         Parameters
         ==========

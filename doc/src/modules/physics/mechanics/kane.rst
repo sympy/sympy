@@ -26,8 +26,8 @@ In :mod:`mechanics` holonomic constraints are only used for the linearization
 process; it is assumed that they will be too complicated to solve for the
 dependent coordinate(s).  If you are able to easily solve a holonomic
 constraint, you should consider redefining your problem in terms of a smaller
-set of coordinates. Altenatively, the time-differentiated holonomic constraints
-can be supplied.
+set of coordinates. Alternatively, the time-differentiated holonomic
+constraints can be supplied.
 
 Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
 is zero. In this module, these expressions are rearranged into the following
