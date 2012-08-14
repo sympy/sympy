@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core import Dummy, Wild, S
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.functions import sin, cos, binomial, tan, sec, csc, cot
 from sympy.core.cache import cacheit
 
@@ -14,7 +14,9 @@ from sympy.core.cache import cacheit
 # so we cache the pattern
 @cacheit
 def _pat_sincos(x):
-    a, n, m = [Wild(s, exclude=[x]) for s in 'anm']
+    a = Wild('a', exclude=[x])
+    n, m = [Wild(s, exclude=[x], properties=[lambda n: isinstance(n, Integer)])
+                for s in 'nm']
     pat = sin(a*x)**n * cos(a*x)**m
     return pat, a,n,m
 
@@ -110,136 +112,135 @@ def trigintegrate(f, x):
 
     a = M[a]
 
-    if n.is_integer and m.is_integer:
-        if n.is_odd or m.is_odd:
-            u = _u
-            n_, m_ = n.is_odd, m.is_odd
+    if n.is_odd or m.is_odd:
+        u = _u
+        n_, m_ = n.is_odd, m.is_odd
 
-            # take smallest n or m -- to choose simplest substitution
-            if n_ and m_:
-                n_ = n_ and     (n < m)  # NB: careful here, one of the
-                m_ = m_ and not (n < m)  #     conditions *must* be true
+        # take smallest n or m -- to choose simplest substitution
+        if n_ and m_:
+            n_ = n_ and     (n < m)  # NB: careful here, one of the
+            m_ = m_ and not (n < m)  #     conditions *must* be true
 
-            #  n      m       u=C        (n-1)/2    m
-            # S(x) * C(x) dx  --> -(1-u^2)       * u  du
-            if n_:
-                ff = -(1-u**2)**((n-1)/2) * u**m
-                uu = cos(a*x)
+        #  n      m       u=C        (n-1)/2    m
+        # S(x) * C(x) dx  --> -(1-u^2)       * u  du
+        if n_:
+            ff = -(1-u**2)**((n-1)/2) * u**m
+            uu = cos(a*x)
 
-            #  n      m       u=S   n         (m-1)/2
-            # S(x) * C(x) dx  -->  u  * (1-u^2)       du
-            elif m_:
-                ff = u**n * (1-u**2)**((m-1)/2)
-                uu = sin(a*x)
+        #  n      m       u=S   n         (m-1)/2
+        # S(x) * C(x) dx  -->  u  * (1-u^2)       du
+        elif m_:
+            ff = u**n * (1-u**2)**((m-1)/2)
+            uu = sin(a*x)
 
-            fi = integrate(ff, u) # XXX cyclic deps
-            fx = fi.subs(u, uu)
-            return fx / a
+        fi = integrate(ff, u) # XXX cyclic deps
+        fx = fi.subs(u, uu)
+        return fx / a
 
-        # n & m are even
+    # n & m are both even
+    #
+    #               2k      2m                         2l       2l
+    # we transform S (x) * C (x) into terms with only S (x) or C (x)
+    #
+    # example:
+    #  100     4       100        2    2    100          4         2
+    # S (x) * C (x) = S (x) * (1-S (x))  = S (x) * (1 + S (x) - 2*S (x))
+    #
+    #                  104       102     100
+    #               = S (x) - 2*S (x) + S (x)
+    #       2k
+    # then S   is integrated with recursive formula
+
+    # take largest n or m -- to choose simplest substitution
+    n_ = (abs(n) > abs(m))
+    m_ = (abs(m) > abs(n))
+    res = S.Zero
+
+    if n_:
+        #  2k       2 k             i            2i
+        # C   = (1-S )  = sum(i, (-) * B(k,i) * S  )
+        if m > 0 :
+            for i in range(0, m//2 + 1):
+                res += ((-1)**i * binomial(m//2, i) *
+                            _sin_pow_integrate(n+2*i, x))
+
+        elif m == 0:
+            res = _sin_pow_integrate(n,x)
         else:
-            #               2k      2m                         2l       2l
-            # we transform S (x) * C (x) into terms with only S (x) or C (x)
+            # m < 0 , |n| > |m|
+            #  /                                                           /
+            # |                                                           |
+            # |    m       n            -1        m+1     n-1     n - 1   |     m+2     n-2
+            # | cos (x) sin (x) dx =  ________ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
+            # |                                                           |
+            # |                         m + 1                     m + 1   |
+            #/                                                           /
             #
-            # example:
-            #  100     4       100        2    2    100          4         2
-            # S (x) * C (x) = S (x) * (1-S (x))  = S (x) * (1 + S (x) - 2*S (x))
             #
-            #                  104       102     100
-            #               = S (x) - 2*S (x) + S (x)
-            #       2k
-            # then S   is integrated with recursive formula
+            res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
+                    Rational(n-1, m+1) *
+                    trigintegrate(cos(x)**(m+2)*sin(x)**(n-2), x))
 
-            # take largest n or m -- to choose simplest substitution
-            n_ = (abs(n) > abs(m))
-            m_ = (abs(m) > abs(n))
-            res = S.Zero
+    elif m_:
+        #  2k        2 k            i            2i
+        # S   = (1 -C ) = sum(i, (-) * B(k,i) * C  )
+        if n > 0:
+            #      /                            /
+            #     |                            |
+            #     |    m       n               |    -m         n
+            #     | cos (x)*sin (x) dx  or     | cos (x) * sin (x) dx
+            #     |                            |
+            #    /                            /
+            #
+            #    |m| > |n| ; m,n >0 ; m,n belong to Z - {0}
+            #       n                                        2
+            #    sin (x) term is expanded here interms of cos (x), and then integrated.
+            for i in range(0, n//2 + 1):
+                res += ((-1)**i * binomial(n//2, i) *
+                            _cos_pow_integrate(m+2*i, x))
 
-            if n_:
-                #  2k       2 k             i            2i
-                # C   = (1-S )  = sum(i, (-) * B(k,i) * S  )
-                if m > 0 :
-                    for i in range(0, m//2 + 1):
-                        res += ((-1)**i * binomial(m//2, i) *
-                                    _sin_pow_integrate(n+2*i, x))
+        elif n == 0 :
+            ##  /
+            ## |
+            #  |  1
+            #  | _ _ _
+            #  |    m
+            #  | cos (x)
+            # /
+            res = _cos_pow_integrate(m, x)
+        else:
+            # n < 0 , |m| > |n|
+            #  /                                                         /
+            # |                                                         |
+            # |    m       n           1        m-1     n+1     m - 1   |     m-2     n+2
+            # | cos (x) sin (x) dx = _______ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
+            # |                                                         |
+            # |                       n + 1                     n + 1   |
+            #/                                                         /
+            #
+            #
+            res = (Rational(1, n+1) * cos(x)**(m-1)*sin(x)**(n+1) +
+                    Rational(m-1, n+1) *
+                    trigintegrate(cos(x)**(m-2)*sin(x)**(n+2), x))
 
-                elif m == 0:
-                    res = _sin_pow_integrate(n,x)
-                else:
-                    # m < 0 , |n| > |m|
-                    #  /                                                           /
-                    # |                                                           |
-                    # |    m       n            -1        m+1     n-1     n - 1   |     m+2     n-2
-                    # | cos (x) sin (x) dx =  ________ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
-                    # |                                                           |
-                    # |                         m + 1                     m + 1   |
-                    #/                                                           /
-                    #
-                    #
-                    res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
-                            Rational(n-1, m+1) *
-                            trigintegrate(cos(x)**(m+2)*sin(x)**(n-2), x))
-
-            elif m_:
-                #  2k        2 k            i            2i
-                # S   = (1 -C ) = sum(i, (-) * B(k,i) * C  )
-                if n > 0:
-                    #      /                            /
-                    #     |                            |
-                    #     |    m       n               |    -m         n
-                    #     | cos (x)*sin (x) dx  or     | cos (x) * sin (x) dx
-                    #     |                            |
-                    #    /                            /
-                    #
-                    #    |m| > |n| ; m,n >0 ; m,n belong to Z - {0}
-                    #       n                                        2
-                    #    sin (x) term is expanded here interms of cos (x), and then integrated.
-                    for i in range(0, n//2 + 1):
-                        res += ((-1)**i * binomial(n//2, i) *
-                                    _cos_pow_integrate(m+2*i, x))
-
-                elif n == 0 :
-                    ##  /
-                    ## |
-                    #  |  1
-                    #  | _ _ _
-                    #  |    m
-                    #  | cos (x)
-                    # /
-                    res = _cos_pow_integrate(m, x)
-                else:
-                    # n < 0 , |m| > |n|
-                    #  /                                                         /
-                    # |                                                         |
-                    # |    m       n           1        m-1     n+1     m - 1   |     m-2     n+2
-                    # | cos (x) sin (x) dx = _______ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
-                    # |                                                         |
-                    # |                       n + 1                     n + 1   |
-                    #/                                                         /
-                    #
-                    #
-                    res = (Rational(1, n+1) * cos(x)**(m-1)*sin(x)**(n+1) +
-                            Rational(m-1, n+1) *
-                            trigintegrate(cos(x)**(m-2)*sin(x)**(n+2), x))
-
-            else :
-                if m == n:
-                    ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
-                    res = integrate((Rational(1, 2)*sin(2*x))**m, x)
-                elif (m == -n):
-                    if n < 0:
-                        # Same as the scheme described above.
-                        # the function argument to integrate in the end will
-                        # be 1 , this cannot be integrated by trigintegrate.
-                        # Hence use sympy.integrals.integrate.
-                        res = (Rational(1, n+1) * cos(x)**(m-1) * sin(x)**(n+1) +
-                                Rational(m-1, n+1) *
-                                integrate(cos(x)**(m-2) * sin(x)**(n+2), x))
-                    else:
-                        res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
-                                Rational(n-1, m+1) *
-                                integrate(cos(x)**(m+2)*sin(x)**(n-2), x))
-            return res.subs(x, a*x) / a
+    else :
+        if m == n:
+            ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
+            res = integrate((Rational(1, 2)*sin(2*x))**m, x)
+        elif (m == -n):
+            if n < 0:
+                # Same as the scheme described above.
+                # the function argument to integrate in the end will
+                # be 1 , this cannot be integrated by trigintegrate.
+                # Hence use sympy.integrals.integrate.
+                res = (Rational(1, n+1) * cos(x)**(m-1) * sin(x)**(n+1) +
+                        Rational(m-1, n+1) *
+                        integrate(cos(x)**(m-2) * sin(x)**(n+2), x))
+            else:
+                res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
+                        Rational(n-1, m+1) *
+                        integrate(cos(x)**(m+2)*sin(x)**(n-2), x))
+    return res.subs(x, a*x) / a
 
 def _sin_pow_integrate(n,x):
     if n > 0 :
