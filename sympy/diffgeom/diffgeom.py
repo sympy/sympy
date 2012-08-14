@@ -233,7 +233,8 @@ class CoordSystem(Basic):
 
     def jacobian(self, to_sys, coords):
         """Return the jacobian matrix of a transformation."""
-        return self.coord_tuple_transform_to(to_sys, coords).jacobian(coords)
+        with_dummies = self.coord_tuple_transform_to(to_sys, self._dummies).jacobian(self._dummies)
+        return with_dummies.subs(zip(self._dummies, coords))
 
     ##########################################################################
     # Base fields.
@@ -503,6 +504,9 @@ class BaseVectorField(Expr):
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
+
+        The action of a vector field on a scalar field is a directional
+        differentiation.
 
         If the argument is not a scalar field the behaviour is undefined.
         """
@@ -1036,6 +1040,36 @@ def order_of_form(expr):
         return sum(order_of_form(a) for a in expr.args)
     else:
         return 0
+
+
+###############################################################################
+# Coordinate transformation functions
+###############################################################################
+def vectors_in_basis(expr, to_sys):
+    """Transform all base vectors in base vectors of a specified coord basis.
+
+    While the new base vectors are in the new coordinate system basis, any
+    coefficients are kept in the old system.
+
+    Examples:
+    =========
+
+    >>> from sympy.diffgeom import vectors_in_basis
+    >>> from sympy.diffgeom.Rn import R2_r, R2_p
+    >>> vectors_in_basis(R2_r.e_x, R2_p)
+    (x**2 + y**2)**(-1/2)*x*e_r - y*(x**2 + y**2)**(-1)*e_theta
+    >>> vectors_in_basis(R2_p.e_r, R2_r)
+    sin(theta)*e_y + cos(theta)*e_x
+    """
+
+    vectors = list(expr.atoms(BaseVectorField))
+    new_vectors = []
+    for v in vectors:
+        cs = v._coord_sys
+        jac = cs.jacobian(to_sys, cs.coord_functions())
+        new = (jac.T*Matrix(to_sys.base_vectors()))[v._index]
+        new_vectors.append(new)
+    return expr.subs(zip(vectors, new_vectors))
 
 
 ###############################################################################
