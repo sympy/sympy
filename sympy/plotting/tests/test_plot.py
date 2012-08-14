@@ -1,11 +1,9 @@
 from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I)
+                    oo, LambertW, I)
 from sympy.plotting.plot import matplotlib
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
-import warnings
-
-def tmp_file(name=''):
+def tmp_file(name='temp'):
     return NamedTemporaryFile(suffix='.png').name
 
 def plot_and_save(name):
@@ -171,7 +169,6 @@ def plot_and_save(name):
     # some bizarre combinatrions
     ## two 3d parametric lines and a surface
     plot(([x, -x], x**2, sin(x)), (x*y,), show=False).save(tmp_file())
-
 
 def test_matplotlib():
     if matplotlib:

@@ -28,7 +28,7 @@ from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
 import warnings
-from experimental_lambdify import vectorized_lambdify, lambdify
+from experimental_lambdify import (vectorized_lambdify, lambdify)
 
 #TODO probably all of the imports after this line can be put inside function to
 # speed up the `from sympy import *` command.
@@ -46,6 +46,7 @@ if matplotlib:
             __import__kwargs={'fromlist':['mplot3d']})
     Axes3D = mpl_toolkits.mplot3d.Axes3D
     art3d = mpl_toolkits.mplot3d.art3d
+    ListedColormap = matplotlib.colors.ListedColormap
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -92,8 +93,8 @@ class Plot(object):
     If the arity does not permit calculation over parameters the calculation is
     done over coordinates.
 
-    Only cartesian coordinates are suported for the moment, but you can use
-    the paremetric plots to plot in polar, spherical and cylindrical
+    Only cartesian coordinates are supported for the moment, but you can use
+    the parametric plots to plot in polar, spherical and cylindrical
     coordinates.
 
     The arguments for the constructor Plot must be subclasses of BaseSeries.
@@ -442,6 +443,14 @@ class BaseSeries(object):
     # Some of the backends expect:
     #   - get_meshes returning mesh_x, mesh_y, mesh_z (2D np.arrays)
     #   - get_points an alias for get_meshes
+
+    is_implicit = False
+    # Some of the backends expect:
+    #   - get_meshes returning mesh_x (1D array), mesh_y(1D array,
+    #     mesh_z (2D np.arrays)
+    #   - get_points an alias for get_meshes
+    #Different from is_contour as the colormap in backend will be
+    #different
 
     is_parametric = False
     # The cacollectionulation of aesthetics expects:
@@ -1042,7 +1051,27 @@ class MatplotlibBackend(BaseBackend):
                 x, y, z = s.get_meshes()
                 collection = self.ax.plot_surface(x, y, z, cmap=cm.jet,
                                                   rstride=1, cstride=1,
-                                                  linewidth = 0.1)
+                                                  linewidth=0.1)
+            elif s.is_implicit:
+                #Smart bounds have to be set to False for implicit plots.
+                self.ax.spines['left'].set_smart_bounds(False)
+                self.ax.spines['bottom'].set_smart_bounds(False)
+                points = s.get_raster()
+                if len(points) == 2:
+                    #interval math plotting
+                    x, y = _matplotlib_list(points[0])
+                    self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                else:
+                    # use contourf or contour depending on whether it is
+                    # an inequality or equality.
+                    #XXX: ``contour`` plots multiple lines. Should be fixed.
+                    colormap = ListedColormap(["white", "blue"])
+                    xarray, yarray, zarray, plot_type = points
+                    if plot_type == 'contour':
+                        self.ax.contour(xarray, yarray, zarray,
+                                contours=(0, 0), fill=False, cmap=colormap)
+                    else:
+                        self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
@@ -1183,3 +1212,25 @@ def flat(x, y, z, eps=1e-3):
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
+
+
+def _matplotlib_list(interval_list):
+    """
+    Returns lists for matplotlib ``fill`` command from a list of bounding
+    rectangular intervals
+    """
+    xlist = []
+    ylist = []
+    if len(interval_list):
+        for intervals in interval_list:
+            intervalx = intervals[0]
+            intervaly = intervals[1]
+            xlist.extend([intervalx.start, intervalx.start,
+                            intervalx.end, intervalx.end, None])
+            ylist.extend([intervaly.start, intervaly.end,
+                            intervaly.end, intervaly.start, None])
+    else:
+        #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
+        xlist.extend([None, None, None, None])
+        ylist.extend([None, None, None, None])
+    return xlist, ylist
