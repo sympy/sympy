@@ -680,6 +680,11 @@ class Differential(Expr):
                 return vector_fields[0](self._form_field)
             return self
         else:
+            # For higher form it is more complicated:
+            # Invariant formula:
+            # http://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
+            # df(v1, ... vn) = +/- vi(f(v1..no i..vn))
+            #                  +/- f([vi,vj],v1..no i, no j..vn)
             f = self._form_field
             v = vector_fields
             ret = 0
@@ -847,7 +852,8 @@ class LieDerivative(Expr):
         v = self._v_field
         expr = self._expr
         lead_term = v(expr(*args))
-        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i+1:]) for i in range(len(args))])
+        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i+1:])
+                     for i in range(len(args))])
         return lead_term - rest
 
 
@@ -921,8 +927,6 @@ class BaseCovarDerivativeOp(Expr):
 class CovarDerivativeOp(Expr):
     """Covariant derivative operator.
 
-    TODO - explain that this is only for convenience.
-
     Examples:
     =========
 
@@ -953,6 +957,9 @@ class CovarDerivativeOp(Expr):
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                         for v in vectors]
         return self._wrt.subs(zip(vectors, base_ops))(field)
+
+    def _latex(self, printer, *args):
+        return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
 
 
 ###############################################################################
