@@ -1,11 +1,12 @@
 from sympy.diffgeom.Rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
 from sympy.diffgeom import *
-from sympy.core import symbols, Function, Derivative
+from sympy.core import symbols, Function, Derivative, S
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin, cos
 from sympy.matrices import Matrix, eye
 from sympy.utilities.pytest import raises
 
+TP = TensorProduct
 
 def test_R2():
     x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0', real=True)
@@ -35,6 +36,59 @@ def test_R3():
     #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
 
 
+def test_point():
+    x, y = symbols('x, y')
+    p = R2_r.point([x, y])
+    #TODO assert p.free_symbols() == set([x, y])
+    assert p.coords(R2_r) == p.coords() == Matrix([x, y])
+    assert p.coords(R2_p) == Matrix([sqrt(x**2+y**2), atan2(y,x)])
+
+
+def test_commutator():
+    assert Commutator(R2.e_x, R2.e_y) == 0
+    assert Commutator(R2.x*R2.e_x, R2.x*R2.e_x) == 0
+    assert Commutator(R2.x*R2.e_x, R2.x*R2.e_y) == R2.x*R2.e_y
+    c = Commutator(R2.e_x, R2.e_r)
+    assert c(R2.x) == R2.y*(R2.x**2 + R2.y**2)**(-1)*sin(R2.theta)
+
+
+def test_differential():
+    xdy = R2.x*R2.dy
+    dxdy = Differential(xdy)
+    assert xdy(None) == xdy
+    assert dxdy(R2.e_x, R2.e_y) == 1
+    assert dxdy(R2.e_x, R2.x*R2.e_y) == R2.x
+    assert Differential(dxdy) == 0
+
+
+def test_products():
+    assert TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
+    assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
+    assert TensorProduct(R2.dx, R2.dy)(None, R2.e_y) == R2.dx
+    assert TensorProduct(R2.dx, R2.dy)(R2.e_x, None) == R2.dy
+    assert TensorProduct(R2.dx, R2.dy)(R2.e_x) == R2.dy
+    assert TensorProduct(R2.x, R2.dx) == R2.x*R2.dx
+
+
+def test_lie_derivative():
+    assert LieDerivative(R2.e_x, R2.y) == R2.e_x(R2.y) == 0
+    assert LieDerivative(R2.e_x, R2.x) == R2.e_x(R2.x) == 1
+    assert LieDerivative(R2.e_x, R2.e_x) == Commutator(R2.e_x, R2.e_x) == 0
+    assert LieDerivative(R2.e_x, R2.e_r) == Commutator(R2.e_x, R2.e_r)
+    assert LieDerivative(R2.e_x+R2.e_y, R2.x) == 1
+    assert LieDerivative(R2.e_x, TensorProduct(R2.dx, R2.dy))(R2.e_x, R2.e_y) == 0
+
+
+def test_covar_deriv():
+    ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
+    assert cvd(R2.x) == 1
+    assert cvd(R2.x*R2.e_x) == R2.e_x
+    cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
+    assert cvd(R2.x) == R2.x
+    assert cvd(R2.x*R2.e_x) == R2.x*R2.e_x
+
+
 def test_intcurve_diffequ():
     t = symbols('t')
     start_point = R2_r.point([1, 0])
@@ -45,18 +99,6 @@ def test_intcurve_diffequ():
     equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
     assert str(equations) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
-
-
-def test_products():
-    assert TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
-    assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
-
-
-def test_differential():
-    xdy = R2.x*R2.dy
-    dxdy = Differential(xdy)
-    assert dxdy(R2.e_x, R2.e_y) == 1
-    assert Differential(dxdy) == 0
 
 
 def test_helpers_and_coordinate_dependent():

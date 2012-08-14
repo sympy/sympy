@@ -364,6 +364,7 @@ class Point(Basic):
         return self._coords.free_symbols
 
 
+
 class BaseScalarField(Expr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
 
@@ -827,26 +828,26 @@ class LieDerivative(Expr):
 
     >>> #TODO
     """
-    def __new__(cls, expr, v_field):
+    def __new__(cls, v_field, expr):
         expr_form_ord = order_of_form(expr)
         if expr_form_ord>0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
-        if arg.atoms(BaseVectorField):
+        if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
         else:
             return v_field(expr)
 
-    def __init__(self, expr, v_field):
+    def __init__(self, v_field, expr):
         super(LieDerivative, self).__init__()
         self._v_field = v_field
         self._expr = expr
-        self._args = (self._expr, self._v_field)
+        self._args = (self._v_field, self._expr)
 
     def __call__(self, *args):
         v = self._v_field
         expr = self._expr
         lead_term = v(expr(*args))
-        rest = Add(*[Mul(*args[:i] + (Commutator[v, args[i]],) + args[i+1:]) for i in range(len(args))])
+        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i+1:]) for i in range(len(args))])
         return lead_term - rest
 
 
