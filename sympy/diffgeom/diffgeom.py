@@ -601,7 +601,7 @@ class Commutator(Expr):
 
 
 class Differential(Expr):
-    """Return the differential of a form field.
+    """Return the differential (exterior derivative) of a form field.
 
     The differential of a form (i.e. the exterior derivative) has a complicated
     definition in the general case.
@@ -698,9 +698,10 @@ class TensorProduct(Expr):
     """Tensor product of forms.
 
     The tensor product permits the creation of multilinear functionals (i.e.
-    higher order forms) out of lower order forms (e.g. 1-forms). However, the
-    higher forms thus created lack the interesting features provided by the
-    other type of product, the wedge product.
+    higher order tensors) out of lower order forms (e.g. 1-forms). However, the
+    higher tensors thus created lack the interesting features provided by the
+    other type of product, the wedge product, namely they are not antisymetric
+    and hence are not form fields.
 
     Examples:
     =========
@@ -815,7 +816,7 @@ class WedgeProduct(TensorProduct):
 
 
 class LieDerivative(Expr):
-    """Lie derivative operator wrt a vector field.
+    """Lie derivative wrt a vector field.
 
     The transport operator that defines the Lie derivative is the pushforward
     of the field to be derived along the integral curve of the field wrt which
@@ -847,6 +848,87 @@ class LieDerivative(Expr):
         lead_term = v(expr(*args))
         rest = Add(*[Mul(*args[:i] + (Commutator[v, args[i]],) + args[i+1:]) for i in range(len(args))])
         return lead_term - rest
+
+
+class BaseCovarDerivativeOp(Expr):
+    """Covariant derivative operator wrt a base vector.
+
+    Examples:
+    =========
+
+    >>> from sympy.diffgeom.Rn import R2, R2_r
+    >>> from sympy.diffgeom import BaseCovarDerivativeOp
+    >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
+    >>> TP = TensorProduct
+    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> ch
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
+    >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
+    >>> cvd(R2.x)
+    1
+    >>> cvd(R2.x*R2.e_x)
+    e_x
+    """
+    def __init__(self, coord_sys, index, christoffel):
+        super(BaseCovarDerivativeOp, self).__init__()
+        self._coord_sys = coord_sys
+        self._index = index
+        self._christoffel = christoffel
+        self._args = self._coord_sys, self._index, self._christoffel
+
+    def __call__(self, field):
+        """Apply on a scalar field.
+
+        The action of a vector field on a scalar field is a directional
+        differentiation.
+
+        If the argument is not a scalar field the behaviour is undefined.
+        """
+        #TODO
+        #if order_of_form(field) != 0:
+        #    raise NotImplementedError()
+
+        field = vectors_in_basis(field, self._coord_sys)
+
+        wrt_vector = self._coord_sys.base_vector(self._index)
+        wrt_scalar = self._coord_sys.coord_function(self._index)
+        vectors = list(field.atoms(BaseVectorField))
+
+        # First step: replace all vectors with something susceptible to
+        # derivation and do the derivation
+        # TODO: you need a real dummy function for the next line
+        d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i, b in enumerate(vectors)]
+        d_result = field.subs(zip(vectors, d_funcs))
+        d_result = wrt_vector(d_result)
+
+        # Second step: backsubstitute the vectors in
+        d_result = d_result.subs(zip(d_funcs, vectors))
+
+        # Third step: evaluate the derivatives of the vectors
+        derivs = []
+        for v in vectors:
+            d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
+                       *v._coord_sys.base_vector(k))
+                           for k in range(v._coord_sys.dim)])
+            derivs.append(d)
+        to_subs = [wrt_vector(d) for d in d_funcs]
+        result = d_result.subs(zip(to_subs, derivs))
+
+        return result #TODO .doit() # XXX doit for the Subs instances
+
+
+#class CovarDerivativeOp(Expr):
+#    def __init__(self, wrt, christoffel):
+#        super(CovarDerivativeOp, self).__init__()
+#        if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
+#            raise NotImplementedError()
+#        self._wrt = wrt
+#        self._christoffel = christoffel
+#        self._args = self._wrt, self._christoffel
+#
+#    def __call__(self, field):
+#        vectors = list(self._wrt.atoms(BaseVectorField))
+#        base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, christoffel)]
 
 
 ###############################################################################
