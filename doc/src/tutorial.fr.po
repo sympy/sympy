@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: SymPy 0.7.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-08-14 15:40\n"
-"PO-Revision-Date: 2012-08-14 14:48\n"
+"PO-Revision-Date: 2012-08-14 16:13\n"
 "Last-Translator: Julien Rioux <julien.rioux@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: French\n"
@@ -58,7 +58,7 @@ msgstr ""
 # 2c2c93f21b5e4209b7f92cbed2b8a8ba
 #: ../../src/tutorial.rst:26
 msgid "First Steps with SymPy"
-msgstr "Premiers Pas avec SymPy"
+msgstr "Premiers pas avec SymPy"
 
 # 8d06c75f00824058ad7889f489ce31b0
 #: ../../src/tutorial.rst:28
@@ -106,7 +106,7 @@ msgstr ""
 # 8f7cb3f507ce4fad82e45f0f0b337920
 #: ../../src/tutorial.rst:87
 msgid "isympy Console"
-msgstr "La Console isympy"
+msgstr "La console isympy"
 
 # 57f6a7bd8cf048dc900ca01ea4a8d9e6
 #: ../../src/tutorial.rst:89
@@ -395,14 +395,15 @@ msgstr "Un autre exemple simple ::"
 # 588350b07e8946c3990190b5e03eeb79
 #: ../../src/tutorial.rst:424
 msgid "Summation"
-msgstr ""
+msgstr "Sommes"
 
 # c8e0a258ce834d868419e0aed64142e9
 #: ../../src/tutorial.rst:426
 msgid ""
 "Compute the summation of f with respect to the given summation variable over "
 "the given limits."
-msgstr ""
+msgstr "Calcule la somme de f indexée sur la variable muette donnée entre les "
+"limites données."
 
 # 8399e19ad841458d9a517e24cd647081
 #: ../../src/tutorial.rst:428
@@ -410,6 +411,8 @@ msgid ""
 "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
 "i.e., ::"
 msgstr ""
+"summation(f, (i, a, b)) calcule la somme de f sur la variable muette i entre "
+"les limites a et b, c'est-à-dire ::"
 
 # 2257b464c29d4d7f8fad17e106053f41
 #: ../../src/tutorial.rst:439
@@ -417,6 +420,9 @@ msgid ""
 "If it cannot compute the sum, it prints the corresponding summation formula. "
 "Repeated sums can be computed by introducing additional limits::"
 msgstr ""
+"Si la somme ne peut pas être résolue, la formule de sommation correspondante "
+"est imprimée. Les sommes répétées peuvent être calculées en introduisant "
+"des limites additionnelles."
 
 # 11ab582b28564b3dbc16b671ccfb73b7
 #: ../../src/tutorial.rst:473
@@ -516,12 +522,12 @@ msgstr "Dans ``isympy`` ::"
 # 9ba6ed46809f45dda668d509187b1da0
 #: ../../src/tutorial.rst:723
 msgid "Algebraic equations"
-msgstr "Équations Algébriques"
+msgstr "Équations algébriques"
 
 # 7ce994b211164a31bf28e153bf36d7ff
 #: ../../src/tutorial.rst:738
 msgid "Linear Algebra"
-msgstr "Algèbre Linéaire"
+msgstr "Algèbre linéaire"
 
 # 30289dafef2a4b4f813881457090b1fb
 #: ../../src/tutorial.rst:743
@@ -598,7 +604,7 @@ msgstr "C'est ce que ``str(expression)`` renvoit et ça ressemble à ça :"
 # fa129049989d4c8e81396404c88ff131
 #: ../../src/tutorial.rst:825
 msgid "**Pretty printing**"
-msgstr "**Affichage Amélioré**"
+msgstr "**Affichage amélioré**"
 
 # e0ee9f57e30248b19d51cac1645607a0
 #: ../../src/tutorial.rst:827
@@ -731,7 +737,7 @@ msgstr ""
 # b2be31fd9b3e482d8d812e12410fa4fc
 #: ../../src/tutorial.rst:957
 msgid "Further documentation"
-msgstr "Plus de Documentation"
+msgstr "Documentation"
 
 # 8c464db44d054007aba2457b69403054
 #: ../../src/tutorial.rst:959
@@ -758,9 +764,9 @@ msgstr ""
 # 6f81344d40194b1e9626585ad7d61071
 #: ../../src/tutorial.rst:968
 msgid "Translations"
-msgstr ""
+msgstr "Traductions"
 
 # d63477b361e444e5ba1312563eb9f3d3
 #: ../../src/tutorial.rst:970
 msgid "This tutorial is also available in other languages:"
-msgstr ""
+msgstr "Ce tutoriel est aussi disponible dans les langues suivantes :"
