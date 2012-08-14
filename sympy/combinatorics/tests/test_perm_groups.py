@@ -1,12 +1,13 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-DihedralGroup, AlternatingGroup
+DihedralGroup, AlternatingGroup, AbelianGroup
 from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
-from sympy.combinatorics.util import _verify_bsgs
+from sympy.combinatorics.util import _verify_bsgs, _naive_list_centralizer,\
+_cmp_perm_lists
 
 
 def test_new():
@@ -30,7 +31,6 @@ def test_generate():
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
     g = PermutationGroup([a]).generate(method='dimino')
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
-
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     G = PermutationGroup([a, b])
@@ -38,10 +38,8 @@ def test_generate():
     v1 = [p.array_form for p in list(g)]
     v1.sort()
     assert v1 == [[0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]]
-
     v2 = list(G.generate(method='dimino', af=True))
     assert v1 == sorted(v2)
-
     a = Permutation([2, 0, 1, 3, 4, 5])
     b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b]).generate(af=True)
@@ -76,6 +74,52 @@ def test_stabilizer():
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
     assert G2.order() == 181440
+
+def test_center():
+    # the center of the dihedral group D_n is of order 2 for even n
+    for i in (4, 6, 10):
+        D = DihedralGroup(i)
+        assert (D.center()).order() == 2
+    # the center of the dihedral group D_n is of order 1 for odd n>2
+    for i in (3, 5, 7):
+        D = DihedralGroup(i)
+        assert (D.center()).order() == 1
+    # the center of an abelian group is the group itself
+    for i in (2, 3, 5):
+        for j in (1, 5, 7):
+            for k in (1, 1, 11):
+                G = AbelianGroup(i, j, k)
+                assert G.center() == G
+    # the center of a nonabelian simple group is trivial
+    for i in(1, 5, 9):
+        A = AlternatingGroup(i)
+        assert (A.center()).order() == 1
+    # brute-force verifications
+    D = DihedralGroup(5)
+    A = AlternatingGroup(3)
+    C = CyclicGroup(4)
+    G = D*A*C
+    center_list_naive = _naive_list_centralizer(G, G)
+    center_list = list((G.center()).generate())
+    assert _cmp_perm_lists(center_list_naive, center_list)
+
+def test_centralizer():
+    # the centralizer of the trivial group is the entire group
+    S = SymmetricGroup(2)
+    assert S.centralizer(Permutation(range(2))) == S
+    A = AlternatingGroup(5)
+    assert A.centralizer(Permutation(range(5))) == A
+    # a centralizer in the trivial group is the trivial group itself
+    triv = PermutationGroup([Permutation([0,1,2,3])])
+    D = DihedralGroup(4)
+    assert triv.centralizer(D) == triv
+    # brute-force verifications
+    S = SymmetricGroup(6)
+    g = Permutation([2, 3, 4, 5, 0, 1])
+    centralizer = S.centralizer(g)
+    centralizer_list = list(centralizer.generate())
+    centralizer_list_naive = _naive_list_centralizer(S, g)
+    assert _cmp_perm_lists(centralizer_list, centralizer_list_naive)
 
 def test_coset_repr():
     a = Permutation([0, 2, 1])
@@ -195,11 +239,11 @@ def test_is_solvable():
     a = Permutation([1,2,0])
     b = Permutation([1,0,2])
     G = PermutationGroup([a, b])
-    assert G.is_solvable()
+    assert G.is_solvable
     a = Permutation([1,2,3,4,0])
     b = Permutation([1,0,2,3,4])
     G = PermutationGroup([a, b])
-    assert not G.is_solvable()
+    assert not G.is_solvable
 
 def test_rubik1():
     gens = rubik_cube_generators()

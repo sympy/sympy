@@ -433,6 +433,7 @@ class PermutationGroup(Basic):
         obj._is_primitive = None
         obj._is_nilpotent = None
         obj._is_solvable = None
+        obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
         size = len(args[0][0].array_form)
@@ -752,6 +753,7 @@ class PermutationGroup(Basic):
             if gen not in strong_gens_new:
                 strong_gens_new.append(gen)
         return base_new, strong_gens_new
+
     @property
     def basic_orbits(self):
         """
@@ -929,6 +931,8 @@ class PermutationGroup(Basic):
 
         """
         if hasattr(other, 'generators'):
+            if other.is_trivial or self.is_trivial:
+                return self
             degree = self.degree
             identity = _new_from_array_form(range(degree))
             orbits = other.orbits()
@@ -1805,6 +1809,34 @@ class PermutationGroup(Basic):
         ans = len(self.orbit(0)) == self.degree
         self._is_transitive = ans
         return ans
+
+    @property
+    def is_trivial(self):
+        """
+        Test if the group is the trivial group.
+
+        This is true if and only if all the generators are the identity.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> id = Permutation(range(5))
+        >>> G = PermutationGroup([id, id, id])
+        >>> G.is_trivial
+        True
+
+        """
+        if self._is_trivial is None:
+            gens = self.generators
+            degree = self.degree
+            identity = _new_from_array_form(range(degree))
+            res = [identity for gen in gens] == gens
+            self._is_trivial = res
+            return res
+        else:
+            return self._is_trivial
 
     def lower_central_series(self):
         r"""
