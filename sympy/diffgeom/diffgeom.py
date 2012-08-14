@@ -862,7 +862,7 @@ class BaseCovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
+    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
     >>> cvd(R2.x)
     1
@@ -917,18 +917,41 @@ class BaseCovarDerivativeOp(Expr):
         return result #TODO .doit() # XXX doit for the Subs instances
 
 
-#class CovarDerivativeOp(Expr):
-#    def __init__(self, wrt, christoffel):
-#        super(CovarDerivativeOp, self).__init__()
-#        if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
-#            raise NotImplementedError()
-#        self._wrt = wrt
-#        self._christoffel = christoffel
-#        self._args = self._wrt, self._christoffel
-#
-#    def __call__(self, field):
-#        vectors = list(self._wrt.atoms(BaseVectorField))
-#        base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, christoffel)]
+class CovarDerivativeOp(Expr):
+    """Covariant derivative operator.
+
+    TODO - explain that this is only for convenience.
+
+    Examples:
+    =========
+
+    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom import CovarDerivativeOp
+    >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
+    >>> TP = TensorProduct
+    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> ch
+    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
+    >>> cvd(R2.x)
+    x
+    >>> cvd(R2.x*R2.e_x)
+    x*e_x
+
+    """
+    def __init__(self, wrt, christoffel):
+        super(CovarDerivativeOp, self).__init__()
+        if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
+            raise NotImplementedError()
+        self._wrt = wrt
+        self._christoffel = christoffel
+        self._args = self._wrt, self._christoffel
+
+    def __call__(self, field):
+        vectors = list(self._wrt.atoms(BaseVectorField))
+        base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
+                        for v in vectors]
+        return self._wrt.subs(zip(vectors, base_ops))(field)
 
 
 ###############################################################################
@@ -1098,6 +1121,13 @@ def dummyfy(args, exprs):
     return d_args, d_exprs
 
 
+def list_to_tuple_rec(the_list):
+    # TODO remove in favor of tensor classes
+    if isinstance(the_list, list):
+        return tuple(list_to_tuple_rec(e) for e in the_list)
+    return the_list
+
+
 def order_of_form(expr):
     # TODO move some of this to class methods.
     # TODO rewrite using the .as_blah_blah methods
@@ -1209,9 +1239,9 @@ def metric_to_Christoffel_1st(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
+    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[[1/2, 0], [0, 0]], [[0, 0], [0, 0]]]
+    (((1/2, 0), (0, 0)), ((0, 0), (0, 0)))
 
     """
     matrix = twoform_to_matrix(expr)
@@ -1224,7 +1254,7 @@ def metric_to_Christoffel_1st(expr):
                      for k in indices]
                      for j in indices]
                      for i in indices]
-    return christoffel
+    return list_to_tuple_rec(christoffel)
 
 
 def metric_to_Christoffel_2nd(expr):
@@ -1240,9 +1270,9 @@ def metric_to_Christoffel_2nd(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
+    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[[x**(-1)/2, 0], [0, 0]], [[0, 0], [0, 0]]]
+    (((x**(-1)/2, 0), (0, 0)), ((0, 0), (0, 0)))
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
@@ -1263,7 +1293,7 @@ def metric_to_Christoffel_2nd(expr):
                      for k in indices]
                      for j in indices]
                      for i in indices]
-    return christoffel
+    return list_to_tuple_rec(christoffel)
 
 
 def metric_to_Riemann_components(expr):
@@ -1281,16 +1311,16 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
+    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0), (0, 0))))
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0]
-    [[[0, 0], [0, 0]], [[0, -exp(-2*r)*r + 2*r*exp(-2*r)], [exp(-2*r)*r - 2*r*exp(-2*r), 0]]]
+    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)), (exp(-2*r)*r - 2*r*exp(-2*r), 0)))
     >>> riemann[1]
-    [[[0, -r**(-1)], [r**(-1), 0]], [[0, 0], [0, 0]]]
+    (((0, -r**(-1)), (r**(-1), 0)), ((0, 0), (0, 0)))
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
@@ -1316,7 +1346,7 @@ def metric_to_Riemann_components(expr):
                      for mu in indices]
                      for sig in indices]
                      for rho in indices]
-    return riemann
+    return list_to_tuple_rec(riemann)
 
 
 def metric_to_Ricci_components(expr):
@@ -1334,13 +1364,13 @@ def metric_to_Ricci_components(expr):
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [[0, 0], [0, 0]]
+    ((0, 0), (0, 0))
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric) #TODO why is this not simpler
-    [[r**(-1), 0], [0, -exp(-2*r)*r + 2*r*exp(-2*r)]]
+    ((r**(-1), 0), (0, -exp(-2*r)*r + 2*r*exp(-2*r)))
 
     """
     riemann = metric_to_Riemann_components(expr)
@@ -1349,4 +1379,4 @@ def metric_to_Ricci_components(expr):
     ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
                      for j in indices]
                      for i in indices]
-    return ricci
+    return list_to_tuple_rec(ricci)
