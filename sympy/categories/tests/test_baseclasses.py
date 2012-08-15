@@ -105,6 +105,7 @@ def test_diagram():
     assert set(d1.hom(A, B)) == set([f])
     assert set(d1.hom(A, A)) == set([id_A])
     assert set(d1.hom(B, B)) == set([id_B])
+    assert d1.condensation == d1
 
     # Test construction from an iterable.
     assert d1 == Diagram([f])
@@ -226,6 +227,53 @@ def test_diagram():
     assert not d.is_finite
     assert set(islice(d, 6)) == set(d.generators)
     raises(TypeError, lambda: len(d))
+
+    # Test condensation for the previous diagram.
+    c = d.condensation
+    assert c.objects == FiniteSet((d,))
+    assert c.generators_properties == Dict({
+        IdentityMorphism(d): FiniteSet()})
+    assert set(c.morphisms) == set(c.generators)
+    assert c.is_finite
+
+    # Further test condensation for a diagram with two strongly
+    # connected components (`\{A, B, C\}` and `\{A', B', C'\}`).
+    A_ = Object("A'")
+    B_ = Object("B'")
+    C_ = Object("C'")
+    f_ = NamedMorphism(A_, B_, "f'")
+    g_ = NamedMorphism(B_, C_, "g'")
+    h_ = NamedMorphism(C_, A_, "h'")
+
+    k1 = NamedMorphism(A, A_, "k1")
+    k2 = NamedMorphism(B, C_, "k2")
+
+    d = Diagram({f: [], g: [], h: [],
+                 f_: [], g_: [], h_: [],
+                 k1: [], k2: "blaster"})
+    d1 = Diagram(f, g, h)
+    d2 = Diagram(f_, g_, h_)
+    assert not d.is_finite
+
+    oc = d.objects_components
+    assert oc[A] == d1
+    assert oc[B] == d1
+    assert oc[C] == d1
+    assert oc[A_] == d2
+    assert oc[B_] == d2
+    assert oc[C_] == d2
+
+    c = d.condensation
+    assert c.objects == FiniteSet(d1, d2)
+    assert c.generators_properties == Dict({
+        IdentityMorphism(d1): FiniteSet(),
+        IdentityMorphism(d2): FiniteSet(),
+        NamedMorphism(d1, d2, "k1"): FiniteSet(),
+        NamedMorphism(d1, d2, "k2"): FiniteSet("blaster")
+        })
+    assert set(c.generators) == set(c.morphisms)
+    assert c.is_finite
+    assert c.condensation == c
 
     # Test loop morphisms.
     h = NamedMorphism(A, A, "h")

@@ -529,7 +529,7 @@ class Diagram(Basic):
     :class:`FiniteSet`'s of their properties.
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> from sympy import FiniteSet, pprint, default_sort_key, Dict
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
@@ -650,10 +650,86 @@ class Diagram(Basic):
        No particular ordering is guaranteed for any of the lists
        produced by :class:`Diagram`.
 
+    Even More Details.  Graph Theory
+    ================================
+
+    Obviously, a diagram is a graph like structure: it has objects
+    connected with arrows.  A diagram is indeed very similar to a
+    directed multigraph, because there can be more than one morphism
+    between the same two objects.  Note however that, formally
+    speaking, only the generators of the diagram form a multigraph;
+    that's because the total number of morphisms belonging to the
+    diagram may be infinite.
+
+    :class:`Diagram` offers a couple graph-theoretical tools which may
+    prove useful in handling infinite cases, which do require special
+    tools (for obvious reasons).
+
+    Observe that there are only two cases in which a diagram can be
+    infinite:
+
+    * the multigraph defined by the generators has cycles, or
+
+    * there are non-identity loop morphisms among the generators
+      (i.e., non-identity morphisms with the same domain and
+      codomain).
+
+    When the multigraph defined by the generators has cycles, it may
+    be useful to know the strongly connected components of that
+    multigraph.
+
+    Consider the following infinite diagram:
+
+    >>> h = NamedMorphism(C, A, "h")
+    >>> D = Object("D")
+    >>> k = NamedMorphism(D, A, "k")
+    >>> d = Diagram(f, g, h, k)
+    >>> pprint(d)
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), id:D-->D: E
+    mptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet(), h:C-->A: EmptySet(), k:D-
+    ->A: EmptySet()}
+
+    The multigraph of the generators has two strongly connected
+    components in this case: `\{A, B, C\}` and `\{D\}`.
+
+    >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+    >>> d.objects_components == Dict({A: component1, B: component1, C: component1,
+    ...                               D: D})
+    True
+
+    Remark that one-vertex strongly-connected components are not
+    represented as :class:`Diagram`'s, but just as objects.
+
+    A step further is computing the condensation of the diagram.  The
+    condensation of a digraph is the graph obtained by contracting
+    every strongly connecting component of the digraph to a vertex and
+    by connecting two such new vertices with an edge if there is an
+    edge between two original vertices located in the corresponding
+    strongly connected components [WCon].  This condensation of a
+    digraph is a directed acyclic graph [WCon].
+
+    If in the current diagram there is a morphism `f:A\rightarrow
+    B` with properties ``props``, the condensation will contain a
+    morphism between the connected components containing `A` and
+    `B`, this morphism will have the name ``f`` and it will have
+    the same properties as the original morphism.
+
+    Consider the following slight modification of the previous
+    example.
+
+    >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
+    >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+    >>> condensation_k = NamedMorphism(D, component1, "k")
+    >>> d.condensation == Diagram({condensation_k: "blaster"})
+    True
+
     References
     ==========
+
     [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
     1970.
+
+    [WCon] http://en.wikipedia.org/wiki/Condensation_%28graph_theory%29
     """
     def  __new__(cls, *args):
         """
@@ -1037,6 +1113,140 @@ class Diagram(Basic):
                 used_index[component_idx] = True
 
         return True
+
+    @property
+    @cacheit
+    def objects_components(self):
+        """
+        Returns a :class:`Dict` mapping objects to the strongly
+        connected component they belong to.  Strongly connected
+        components are represented as :class:`Diagram`'s.
+
+        One-vertex strongly connected components are represented using
+        the corresponding objects instead of one-object diagrams.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty, default_sort_key, Dict, FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> D = Object("D")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> h = NamedMorphism(C, A, "h")
+        >>> k = NamedMorphism(D, A, "k")
+        >>> d = Diagram(f, g, h, k)
+        >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+        >>> d.objects_components == Dict({A: component1, B: component1,
+        ...                               C: component1, D: D})
+        True
+
+        """
+        # Build the actual sets of objects corresponding to each
+        # strongly connected component.
+        component_indices = self._build_strongly_connected_components()
+
+        # ``component_objects[i]`` will hold the list of objects
+        # contained in the strongly connected component with index
+        # ``i``.
+        component_objects = {}
+        for obj, idx in component_indices.items():
+            if idx not in component_objects:
+                component_objects[idx] = [obj]
+            else:
+                component_objects[idx].append(obj)
+
+        # For each nontrivial component, set up a diagram from the
+        # objects.  Also set up the mapping between objects and the
+        # corresponding diagram.
+        object_diagrams = {}
+        for idx, objects in component_objects.items():
+            if len(objects) > 1:
+                diagram = self.subdiagram_from_objects(FiniteSet(objects))
+                for obj in objects:
+                    object_diagrams[obj] = diagram
+            else:
+                # Every object belongs to a strongly connected
+                # component, so if ``objects`` does not have more than
+                # one element, it has exactly one element.
+                obj = objects[0]
+                object_diagrams[obj] = obj
+
+        return Dict(object_diagrams)
+
+    @property
+    @cacheit
+    def condensation(self):
+        """
+        Returns the :class:`Diagram` which represents the condensation
+        of this :class:`Diagram`.
+
+        The condensation of a digraph is the graph obtained by
+        contracting every strongly connecting component of the digraph
+        to a vertex and by connecting two such new vertices with an
+        edge if there is an edge between two original vertices located
+        in the corresponding strongly connected components [WCon].
+        This condensation of a digraph is a directed acyclic graph
+        [WCon].
+
+        This method generalises the notion for directed multigraphs.
+
+        If in the current diagram there is a morphism `f:A\rightarrow
+        B` with properties ``props``, the condensation will contain a
+        morphism between the connected components containing `A` and
+        `B`, this morphism will have the name ``f`` and it will have
+        the same properties as the original morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty, default_sort_key, Dict, FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> D = Object("D")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> h = NamedMorphism(C, A, "h")
+        >>> k = NamedMorphism(D, A, "k")
+        >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
+        >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+        >>> condensation_k = NamedMorphism(D, component1, "k")
+        >>> d.condensation == Diagram({condensation_k: "blaster"})
+        True
+
+        References
+        ==========
+
+        [WCon] http://en.wikipedia.org/wiki/Condensation_%28graph_theory%29
+        """
+        objects_components = self.objects_components
+
+        new_generators = {}
+
+        for generator, props in self.generators_properties.items():
+            dom_component = objects_components[generator.domain]
+            cod_component = objects_components[generator.codomain]
+            if dom_component == cod_component:
+                # ``generator`` belongs to a connected component.
+                continue
+            else:
+                new_generator = NamedMorphism(dom_component, cod_component,
+                                              generator.name)
+                new_generators[new_generator] = props
+
+        # Add an identity morphism for every component, so that all
+        # components make it into the diagram.
+        for component in objects_components.values():
+            new_generators[IdentityMorphism(component)] = []
+
+        return Diagram(new_generators)
 
     def _composites_by_length(self, length, identities=True):
         """
