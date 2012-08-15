@@ -5,6 +5,8 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max, cot, coth,
     re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
     FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma,
+    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
+    laguerre, assoc_laguerre, hermite, gegenbauer, jacobi,
     Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
     InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
     SineTransform, InverseSineTransform, CosineTransform,
@@ -17,7 +19,7 @@ from sympy.functions import DiracDelta
 from sympy.logic import Implies
 from sympy.core.trace import Tr
 
-x, y, z, t = symbols('x y z t')
+x, y, z, t, a, b = symbols('x y z t a b')
 k, n = symbols('k n', integer=True)
 
 def test_printmethod():
@@ -177,6 +179,25 @@ def test_latex_functions():
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
     assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+
+    assert latex(jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
+    assert latex(jacobi(n, a, b, x)**2) == r'\left(P_{n}^{\left(a,b\right)}\left(x\right)\right)^{2}'
+    assert latex(gegenbauer(n, a, x)) == r'C_{n}^{\left(a\right)}\left(x\right)'
+    assert latex(gegenbauer(n, a, x)**2) == r'\left(C_{n}^{\left(a\right)}\left(x\right)\right)^{2}'
+    assert latex(chebyshevt(n, x)) == r'T_{n}\left(x\right)'
+    assert latex(chebyshevt(n, x)**2) == r'\left(T_{n}\left(x\right)\right)^{2}'
+    assert latex(chebyshevu(n, x)) == r'U_{n}\left(x\right)'
+    assert latex(chebyshevu(n, x)**2) == r'\left(U_{n}\left(x\right)\right)^{2}'
+    assert latex(legendre(n, x)) == r'P_{n}\left(x\right)'
+    assert latex(legendre(n, x)**2) == r'\left(P_{n}\left(x\right)\right)^{2}'
+    assert latex(assoc_legendre(n, a, x)) == r'P_{n}^{\left(a\right)}\left(x\right)'
+    assert latex(assoc_legendre(n, a, x)**2) == r'\left(P_{n}^{\left(a\right)}\left(x\right)\right)^{2}'
+    assert latex(laguerre(n, x)) == r'L_{n}\left(x\right)'
+    assert latex(laguerre(n, x)**2) == r'\left(L_{n}\left(x\right)\right)^{2}'
+    assert latex(assoc_laguerre(n, a, x)) == r'L_{n}^{\left(a\right)}\left(x\right)'
+    assert latex(assoc_laguerre(n, a, x)**2) == r'\left(L_{n}^{\left(a\right)}\left(x\right)\right)^{2}'
+    assert latex(hermite(n, x)) == r'H_{n}\left(x\right)'
+    assert latex(hermite(n, x)**2) == r'\left(H_{n}\left(x\right)\right)^{2}'
 
     # Test latex printing of function names with "_"
     assert latex(polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"

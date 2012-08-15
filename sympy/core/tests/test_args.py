@@ -1053,13 +1053,13 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
     pass
 
-@SKIP("abstract class")
-def test_sympy__functions__special__polynomials__PolynomialSequence():
-    pass
+def test_sympy__functions__special__polynomials__jacobi():
+    from sympy.functions.special.polynomials import jacobi
+    assert _test_args(jacobi(x, 2, 2, 2))
 
-def test_sympy__functions__special__polynomials__assoc_legendre():
-    from sympy.functions.special.polynomials import assoc_legendre
-    assert _test_args(assoc_legendre(x, 0, y))
+def test_sympy__functions__special__polynomials__gegenbauer():
+    from sympy.functions.special.polynomials import gegenbauer
+    assert _test_args(gegenbauer(x, 2, 2))
 
 def test_sympy__functions__special__polynomials__chebyshevt():
     from sympy.functions.special.polynomials import chebyshevt
@@ -1084,6 +1084,18 @@ def test_sympy__functions__special__polynomials__hermite():
 def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
     assert _test_args(legendre(x, 2))
+
+def test_sympy__functions__special__polynomials__assoc_legendre():
+    from sympy.functions.special.polynomials import assoc_legendre
+    assert _test_args(assoc_legendre(x, 0, y))
+
+def test_sympy__functions__special__polynomials__laguerre():
+    from sympy.functions.special.polynomials import laguerre
+    assert _test_args(laguerre(x, 2))
+
+def test_sympy__functions__special__polynomials__assoc_laguerre():
+    from sympy.functions.special.polynomials import assoc_laguerre
+    assert _test_args(assoc_laguerre(x, 0, y))
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
