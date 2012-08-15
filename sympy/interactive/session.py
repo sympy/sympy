@@ -447,6 +447,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode, ip=ip)
 
     message = _make_message(ipython, quiet, _preexec_source)
+    ip.enable_pylab(import_all=False)
 
     if not in_ipython:
         mainloop(message)
