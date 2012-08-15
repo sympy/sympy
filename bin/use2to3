@@ -56,11 +56,6 @@ for root, dirs, files in os.walk('doc/src/modules'):
 # some files aren't in /doc/src/modules, add them explicitly
 relevant_rst_files.append(np('./doc/src/install.rst'))
 relevant_rst_files.append(np('./doc/src/tutorial.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.bg.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.cs.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.de.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.fr.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.ru.rst'))
 relevant_rst_files.append(np('./doc/src/gotchas.rst'))
 relevant_rst_files.append(np('./doc/src/guide.rst'))
 relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
