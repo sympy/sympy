@@ -859,17 +859,14 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint, default_sort_key
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
-        >>> id_A = IdentityMorphism(A)
-        >>> id_B = IdentityMorphism(B)
         >>> d = Diagram(f)
         >>> sorted_gens = sorted(d.generators, key=default_sort_key)
-        >>> print pretty(sorted_gens, use_unicode=False)
+        >>> pprint(sorted_gens, use_unicode=False)
         [id:A-->A, id:B-->B, f:A-->B]
 
         """
@@ -885,16 +882,13 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
-        >>> id_A = IdentityMorphism(A)
-        >>> id_B = IdentityMorphism(B)
         >>> d = Diagram(f)
-        >>> print pretty(d.generators_properties, use_unicode=False)
+        >>> pprint(d.generators_properties, use_unicode=False)
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
         """
@@ -1098,14 +1092,10 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
-        >>> id_A = IdentityMorphism(A)
-        >>> id_B = IdentityMorphism(B)
         >>> d = Diagram(f)
         >>> d.is_finite
         True
@@ -1154,9 +1144,8 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key, Dict, FiniteSet
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import Dict
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1230,9 +1219,7 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key, Dict, FiniteSet
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1322,8 +1309,7 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> from sympy import pprint, default_sort_key
         >>> A = Object("A")
         >>> B = Object("B")
@@ -1430,9 +1416,7 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import pretty, default_sort_key
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
@@ -1566,8 +1550,7 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1595,8 +1578,7 @@ class Diagram(Basic):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism
-        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1690,7 +1672,6 @@ class Diagram(Basic):
         =======
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1760,7 +1741,6 @@ class Diagram(Basic):
         =======
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1790,7 +1770,6 @@ class Diagram(Basic):
         =======
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
