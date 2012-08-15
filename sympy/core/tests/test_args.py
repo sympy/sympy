@@ -1966,6 +1966,46 @@ def test_sympy__diffgeom__diffgeom__Differential():
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     assert _test_args(Differential(BaseScalarField(cs, 0)))
 
+def test_sympy__diffgeom__diffgeom__Commutator():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, BaseVectorField, Commutator
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)))
+    v = BaseVectorField(cs, 0)
+    v1 = BaseVectorField(cs1, 0)
+    assert _test_args(Commutator(v, v1))
+
+def test_sympy__diffgeom__diffgeom__TensorProduct():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, TensorProduct
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    d = Differential(BaseScalarField(cs, 0))
+    assert _test_args(TensorProduct(d, d))
+
+def test_sympy__diffgeom__diffgeom__WedgeProduct():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, WedgeProduct
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    d = Differential(BaseScalarField(cs, 0))
+    d1 = Differential(BaseScalarField(cs, 1))
+    assert _test_args(WedgeProduct(d, d1))
+
+def test_sympy__diffgeom__diffgeom__LieDerivative():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, BaseVectorField, LieDerivative
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    d = Differential(BaseScalarField(cs, 0))
+    v = BaseVectorField(cs, 0)
+    assert _test_args(LieDerivative(v, d))
+
+@XFAIL
+def test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseCovarDerivativeOp
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    assert _test_args(BaseCovarDerivativeOp(cs, 0, [[[0,]*3,]*3,]*3))
+
+def test_sympy__diffgeom__diffgeom__CovarDerivativeOp():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, CovarDerivativeOp
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    v = BaseVectorField(cs, 0)
+    _test_args(CovarDerivativeOp(v, [[[0,]*3,]*3,]*3))
+
 def test_sympy__categories__baseclasses__Class():
     from sympy.categories.baseclasses import Class
     assert _test_args(Class())

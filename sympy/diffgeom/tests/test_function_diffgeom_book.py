@@ -131,6 +131,3 @@ def test_functional_diffgeom_ch6():
     dc = Differential(c_f)
     expr = dtheta - WedgeProduct(da, R3_r.dx) - WedgeProduct(db, R3_r.dy) - WedgeProduct(dc, R3_r.dz)
     assert expr(R3_r.e_x, R3_r.e_y) == 0
-
-
-
