@@ -1424,8 +1424,8 @@ class Diagram(Basic):
 
     def is_hom_set_finite(self, A, B):
         """
-        Returns ``True`` if the hom-set `\hom(A, B)` contains a finite
-        number of morphisms and ``False`` otherwise.
+        Returns ``True`` if the `\hom`-set `\hom(A, B)` contains a
+        finite number of morphisms and ``False`` otherwise.
 
         Examples
         ========
@@ -1486,8 +1486,8 @@ class Diagram(Basic):
 
     def is_hom_set_empty(self, A, B):
         """
-        Returns ``True`` if the hom-set `\hom(A, B)` contains at least
-        one morphism and ``False`` otherwise.
+        Returns ``True`` if the `\hom`-set `\hom(A, B)` contains at
+        least one morphism and ``False`` otherwise.
 
         Examples
         ========
@@ -1518,8 +1518,9 @@ class Diagram(Basic):
 
         Diagram._dfs_markup_postorder(A, adj_lists, True, visited)
 
-        # If ``B`` was visited (``visited[B] == True``), the hom-set
-        # `\hom(A, B)` is not empty, so we have to return ``False``.
+        # If ``B`` was visited (``visited[B] == True``), the
+        # `\hom`-set `\hom(A, B)` is not empty, so we have to return
+        # ``False``.
         return visited[B] is not True
 
     def is_subdiagram(self, other):
