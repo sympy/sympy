@@ -100,6 +100,10 @@ def test_diagram():
     assert set(d1.generators) == set([f, id_A, id_B])
     assert d1.generators_properties == Dict({f: empty, id_A: empty, id_B: empty})
     assert d1.is_finite
+    assert d1.is_hom_set_finite(A, B)
+    assert d1.is_hom_set_finite(A, A)
+    assert d1.is_hom_set_finite(B, B)
+
     assert set(d1.morphisms) == set([f, id_A, id_B])
     assert d1.objects == FiniteSet(A, B)
     assert set(d1.hom(A, B)) == set([f])
@@ -225,10 +229,30 @@ def test_diagram():
     h = NamedMorphism(C, A, "h")
     d = Diagram(f, g, h)
     assert not d.is_finite
+    assert not d.is_hom_set_finite(A, B)
+    assert not d.is_hom_set_finite(B, C)
+    assert not d.is_hom_set_finite(C, A)
+    assert not d.is_hom_set_finite(A, A)
+    assert not d.is_hom_set_finite(B, B)
+    assert not d.is_hom_set_finite(C, C)
     assert set(islice(d, 6)) == set(d.generators)
     raises(TypeError, lambda: len(d))
 
-    # Test condensation for the previous diagram.
+    # The same diagram, but with two extra morphisms sticking outward.
+    D = Object("D")
+    E = Object("E")
+    k = NamedMorphism(D, A, "k")
+    m = NamedMorphism(E, D, "m")
+    d = Diagram(f, g, h, k, m)
+    assert not d.is_finite
+    assert not d.is_hom_set_finite(A, B)
+    assert d.is_hom_set_finite(E, D)
+    assert d.is_hom_set_finite(E, E)
+    assert not d.is_hom_set_finite(D, A)
+    assert not d.is_hom_set_finite(E, A)
+
+    # Test condensation.
+    d = Diagram(f, g, h)
     c = d.condensation
     assert c.objects == FiniteSet((d,))
     assert c.generators_properties == Dict({
@@ -278,6 +302,7 @@ def test_diagram():
     # Test loop morphisms.
     h = NamedMorphism(A, A, "h")
     d = Diagram(f, g, h)
+
     assert not d.is_finite
     assert h * h in d
     assert f * h in d
@@ -286,6 +311,10 @@ def test_diagram():
     s = set(islice(d, 9))
     assert f * h in s
     assert h * h in s
+
+    assert not d.is_hom_set_finite(A, B)
+    assert not d.is_hom_set_finite(A, A)
+    assert d.is_hom_set_finite(B, B)
 
 def test_category():
     A = Object("A")

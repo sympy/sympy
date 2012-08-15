@@ -634,6 +634,16 @@ class Diagram(Basic):
     >>> d.is_finite
     False
 
+    It is also possible to check the finiteness of a certain
+    `\hom`-set.
+
+    >>> d = Diagram(g, f)
+    >>> d.is_hom_set_finite(A, C)
+    True
+    >>> d = Diagram(f, f_)
+    >>> d.is_hom_set_finite(A, A)
+    False
+
     Computing the length of an infinite diagram is an error.  However,
     one can still enumerate the morphisms of the diagram.  This
     enumeration will never stop, so one explicitly retrieve a certain
@@ -1377,6 +1387,86 @@ class Diagram(Basic):
         # ``morphisms`` assures a sufficiently BFS-like traversal.
         return (m for m in self.morphisms if (m.domain == A) and
                 (m.codomain == B))
+
+    @staticmethod
+    def _get_involved_objects(morphism):
+        """
+        Given a morphism, returns the :class:`set` of objects it
+        involves.
+
+        A simple (not composite) morphism involves its domain and
+        codomain.  A composite morphism involves the domains and the
+        codomains of each of its components.
+        """
+        objects = set([morphism.domain, morphism.codomain])
+
+        if isinstance(morphism, CompositeMorphism):
+            for component in morphism.components:
+                objects.add(component.domain)
+
+        return objects
+
+    def is_hom_set_finite(self, A, B):
+        """
+        Returns ``True`` if the hom-set `\hom(A, B)` contains a finite
+        number of morphisms and ``False`` otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy.categories import IdentityMorphism, Diagram
+        >>> from sympy import pretty, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> d = Diagram(f)
+        >>> d.is_hom_set_finite(A, B)
+        True
+        >>> f_ = NamedMorphism(B, A, "f'")
+        >>> d = Diagram(f, f_)
+        >>> d.is_hom_set_finite(A, B)
+        False
+
+        """
+        objects_components = self.objects_components
+        component_A = objects_components[A]
+        component_B = objects_components[B]
+        condensation = self.condensation
+
+        condensation_loop_objects = set([objects_components[m.domain] for m
+                                         in self._get_loop_morphisms()])
+
+        # If there is a path from ``component_A`` to ``component_B``
+        # in the condensation that passes through a non-trivial
+        # strongly connected component, `\hom(A, B)` is infinite.
+        # This is so because the a nontrivial strongly connected
+        # component contains at least one cycle.
+        #
+        # Further, if there is a path from ``component_A`` to
+        # ``component_B`` in the condensation that passes through an
+        # object with a loop, `\hom(A, B)` is infinite, because one
+        # can use that loop morphism to produce as many
+        # (theoretically) different morphisms as one wishes.
+        #
+        # Note that the condensation is surely acyclic, so it's
+        # finite.  We will therefore abuse the property ``morphisms``
+        # a bit, for the sake of clarity (hopefully).
+
+        for m in condensation.hom(component_A, component_B):
+            components_involved = self._get_involved_objects(m)
+
+            if components_involved & condensation_loop_objects:
+                # ``m`` passes through a loop object.
+                return False
+
+            for component in components_involved:
+                if isinstance(component, Diagram):
+                    # ``m`` passes through a nontrivial strongly
+                    # connected component.
+                    return False
+
+        return True
 
     def is_subdiagram(self, other):
         """
