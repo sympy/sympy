@@ -109,8 +109,8 @@ def trigintegrate(f, x):
     res = S.Zero
 
     if n_:
-        #  2k       2 k             i            2i
-        # C   = (1-S )  = sum(i, (-) * B(k, i) * S  )
+        #  2k         2 k             i             2i
+        # C   = (1 - S )  = sum(i, (-) * B(k, i) * S  )
         if m > 0 :
             for i in range(0, m//2 + 1):
                 res += ((-1)**i * binomial(m//2, i) *
@@ -134,15 +134,15 @@ def trigintegrate(f, x):
             # ________ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
             #                                     |
             #   m + 1                     m + 1   |
-            #
+            #                                    /
 
             res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
                     Rational(n-1, m+1) *
                     trigintegrate(cos(x)**(m+2)*sin(x)**(n-2), x))
 
     elif m_:
-        #  2k        2 k            i            2i
-        # S   = (1 -C ) = sum(i, (-) * B(k, i) * C  )
+        #  2k         2 k            i             2i
+        # S   = (1 - C ) = sum(i, (-) * B(k, i) * C  )
         if n > 0:
 
             #      /                            /
@@ -190,7 +190,7 @@ def trigintegrate(f, x):
             #  _______ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
             #                                     |
             #   n + 1                     n + 1   |
-            #
+            #                                    /
 
             res = (Rational(1, n+1) * cos(x)**(m-1)*sin(x)**(n+1) +
                     Rational(m-1, n+1) *
