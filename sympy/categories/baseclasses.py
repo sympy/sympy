@@ -539,6 +539,8 @@ class Diagram(Basic):
     >>> pprint(d)
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
     ptySet(), g:B-->C: EmptySet()}
+    >>> pprint(list(d.hom(A, B)))
+    [f:A-->B]
 
     .. note::
 
@@ -552,6 +554,8 @@ class Diagram(Basic):
     True
     >>> g * f in Diagram(f, g)
     True
+    >>> pprint(list(d.hom(A, C)))
+    [g*f:A-->C]
 
     Morphisms can be assigned some properties, which can later be
     retrieved using the :class:`dict`-like interface of the
@@ -642,6 +646,18 @@ class Diagram(Basic):
     True
     >>> d = Diagram(f, f_)
     >>> d.is_hom_set_finite(A, A)
+    False
+
+    Further, it is possible to check the emptiness of a certain
+    `\hom`-set.
+
+    >>> d = Diagram(f)
+    >>> d.is_hom_set_empty(A, B)
+    False
+    >>> d.is_hom_set_empty(B, A)
+    True
+    >>> d = Diagram(f, f_)
+    >>> d.is_hom_set_empty(B, A)
     False
 
     Computing the length of an infinite diagram is an error.  However,
@@ -1467,6 +1483,44 @@ class Diagram(Basic):
                     return False
 
         return True
+
+    def is_hom_set_empty(self, A, B):
+        """
+        Returns ``True`` if the hom-set `\hom(A, B)` contains at least
+        one morphism and ``False`` otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> d.is_hom_set_empty(A, C)
+        False
+        >>> d.is_hom_set_empty(C, A)
+        True
+
+        """
+        # We will start a DFS at ``A`` and see if we can get to ``B``.
+
+        adj_lists = self._build_generator_adj_lists()
+
+        # ``visited[obj] == True`` means that ``obj`` was visited
+        # during the DFS traversal of the graph.
+        visited = {}
+        for obj in self.objects:
+           visited[obj] = None
+
+        Diagram._dfs_markup_postorder(A, adj_lists, True, visited)
+
+        # If ``B`` was visited (``visited[B] == True``), the hom-set
+        # `\hom(A, B)` is not empty, so we have to return ``False``.
+        return visited[B] is not True
 
     def is_subdiagram(self, other):
         """

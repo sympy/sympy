@@ -104,6 +104,9 @@ def test_diagram():
     assert d1.is_hom_set_finite(A, A)
     assert d1.is_hom_set_finite(B, B)
 
+    assert not d1.is_hom_set_empty(A, B)
+    assert d1.is_hom_set_empty(B, A)
+
     assert set(d1.morphisms) == set([f, id_A, id_B])
     assert d1.objects == FiniteSet(A, B)
     assert set(d1.hom(A, B)) == set([f])
@@ -238,6 +241,8 @@ def test_diagram():
     assert set(islice(d, 6)) == set(d.generators)
     raises(TypeError, lambda: len(d))
 
+    assert not d.is_hom_set_empty(A, B)
+
     # The same diagram, but with two extra morphisms sticking outward.
     D = Object("D")
     E = Object("E")
@@ -250,6 +255,8 @@ def test_diagram():
     assert d.is_hom_set_finite(E, E)
     assert not d.is_hom_set_finite(D, A)
     assert not d.is_hom_set_finite(E, A)
+
+    assert d.is_hom_set_empty(D, E)
 
     # Test condensation.
     d = Diagram(f, g, h)
