@@ -113,17 +113,17 @@ def test_helpers_and_coordinate_dependent():
     twoform_not_sym = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dx, R2.dy)
     twoform_not_TP = WedgeProduct(R2.dx, R2.dy)
 
-    assert order_of_form(one_form) == 1
-    assert order_of_form(two_form) == 2
-    assert order_of_form(three_form) == 3
-    assert order_of_form(two_form + metric) == 2
-    assert order_of_form(two_form + metric_ambig) == 2
-    assert order_of_form(two_form + twoform_not_sym) == 2
-    assert order_of_form(two_form + twoform_not_TP) == 2
+    assert covariant_order(one_form) == 1
+    assert covariant_order(two_form) == 2
+    assert covariant_order(three_form) == 3
+    assert covariant_order(two_form + metric) == 2
+    assert covariant_order(two_form + metric_ambig) == 2
+    assert covariant_order(two_form + twoform_not_sym) == 2
+    assert covariant_order(two_form + twoform_not_TP) == 2
 
-    raises(ValueError, lambda : order_of_form(misform_a))
-    raises(ValueError, lambda : order_of_form(misform_b))
-    raises(ValueError, lambda : order_of_form(misform_c))
+    raises(ValueError, lambda : covariant_order(misform_a))
+    raises(ValueError, lambda : covariant_order(misform_b))
+    raises(ValueError, lambda : covariant_order(misform_c))
 
     assert twoform_to_matrix(metric) == Matrix([[1,0],[0,1]])
     assert twoform_to_matrix(twoform_not_sym) == Matrix([[1,0],[1,0]])

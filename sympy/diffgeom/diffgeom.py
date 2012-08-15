@@ -742,8 +742,8 @@ class TensorProduct(Expr):
 
     """
     def __new__(cls, *args):
-        scalar = Mul(*[m for m in args if order_of_form(m)==0])
-        forms = [m for m in args if order_of_form(m)]
+        scalar = Mul(*[m for m in args if covariant_order(m)==0])
+        forms = [m for m in args if covariant_order(m)]
         if forms:
             if len(forms) == 1:
                 return scalar*forms[0]
@@ -766,11 +766,11 @@ class TensorProduct(Expr):
         arguments to these forms and the resulting expressions are given to the
         constructor of ``TensorProduct``.
         """
-        tot_order = order_of_form(self)
+        tot_order = covariant_order(self)
         tot_args = len(v_fields)
         if tot_args != tot_order:
             v_fields = list(v_fields) + [None]*(tot_order-tot_args)
-        orders = [order_of_form(f) for f in self._args]
+        orders = [covariant_order(f) for f in self._args]
         indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
         v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
         multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
@@ -813,7 +813,7 @@ class WedgeProduct(TensorProduct):
     # TODO the caclulation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
     def __call__(self, *vector_fields):
-        orders = (order_of_form(e) for e in self.args)
+        orders = (covariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(vector_fields)
         perms_par = (Permutation(p).signature() for p in permutations(range(len(vector_fields))))
@@ -834,7 +834,7 @@ class LieDerivative(Expr):
     >>> #TODO
     """
     def __new__(cls, v_field, expr):
-        expr_form_ord = order_of_form(expr)
+        expr_form_ord = covariant_order(expr)
         if expr_form_ord>0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
@@ -891,9 +891,8 @@ class BaseCovarDerivativeOp(Expr):
 
         If the argument is not a scalar field the behaviour is undefined.
         """
-        #TODO
-        #if order_of_form(field) != 0:
-        #    raise NotImplementedError()
+        if covariant_order(field) != 0:
+            raise NotImplementedError()
 
         field = vectors_in_basis(field, self._coord_sys)
 
@@ -1136,28 +1135,28 @@ def list_to_tuple_rec(the_list):
     return the_list
 
 
-def order_of_form(expr):
+def covariant_order(expr):
     # TODO move some of this to class methods.
     # TODO rewrite using the .as_blah_blah methods
     if isinstance(expr, Add):
-        orders = [order_of_form(e) for e in expr.args]
+        orders = [covariant_order(e) for e in expr.args]
         if len(set(orders)) != 1:
             raise ValueError('Misformed expression containing form fields of varying order.')
         return orders[0]
     elif isinstance(expr, Mul):
-        orders = [order_of_form(e) for e in expr.args]
+        orders = [covariant_order(e) for e in expr.args]
         not_zero = [o for o in orders if o != 0]
-        if len(not_zero) != 1:
+        if len(not_zero) > 1:
             raise ValueError('Misformed expression containing multiplication between forms.')
         return 0 if not not_zero else not_zero[0]
     elif isinstance(expr, Pow):
-        if order_of_form(expr.base):
+        if covariant_order(expr.base):
             raise ValueError('Misformed expression containing a power of a form.')
         return 0
     elif isinstance(expr, Differential):
-        return order_of_form(*expr.args) + 1
+        return covariant_order(*expr.args) + 1
     elif isinstance(expr, TensorProduct):
-        return sum(order_of_form(a) for a in expr.args)
+        return sum(covariant_order(a) for a in expr.args)
     else:
         return 0
 
@@ -1219,7 +1218,7 @@ def twoform_to_matrix(expr):
     [-1/2, 1]
 
     """
-    if order_of_form(expr) != 2:
+    if covariant_order(expr) != 2:
         raise ValueError('The input expression is not a two-form.')
     coord_sys = expr.atoms(CoordSystem)
     if len(coord_sys) != 1:
