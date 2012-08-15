@@ -17,11 +17,9 @@ ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
 ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) api
 
-LANG = bg cs fr ru
+LANG = bg cs de fr ru
 
 .PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet
-
-LANG = bg cs de ru
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
