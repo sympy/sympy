@@ -186,9 +186,9 @@ def test_diagram():
     assert not (d1 >= d)
 
     d = Diagram({f: "unique", g: empty, g * f: "veryunique"})
-    d1 = d.subdiagram_from_objects(FiniteSet(A, B))
+    d1 = d.subdiagram_from_objects([A, B])
     assert d1 == Diagram({f: "unique"})
-    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
+    raises(ValueError, lambda: d.subdiagram_from_objects([A, Object("D")]))
 
     # Test how identities with properties work.
     d = Diagram({id_A: "unique", f: []})

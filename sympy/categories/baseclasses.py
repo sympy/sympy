@@ -575,7 +575,7 @@ class Diagram(Basic):
 
     One can construct subdiagrams from sets of objects.
 
-    >>> subd = d.subdiagram_from_objects(FiniteSet(A, B))
+    >>> subd = d.subdiagram_from_objects([A, B])
     >>> pprint(subd)
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: {subobject, unique}}
     >>> d.is_subdiagram(subd)
@@ -692,7 +692,7 @@ class Diagram(Basic):
     The multigraph of the generators has two strongly connected
     components in this case: `\{A, B, C\}` and `\{D\}`.
 
-    >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+    >>> component1 = d.subdiagram_from_objects([A, B, C])
     >>> d.objects_components == Dict({A: component1, B: component1, C: component1,
     ...                               D: D})
     True
@@ -718,7 +718,7 @@ class Diagram(Basic):
     example.
 
     >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
-    >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+    >>> component1 = d.subdiagram_from_objects([A, B, C])
     >>> condensation_k = NamedMorphism(D, component1, "k")
     >>> d.condensation == Diagram({condensation_k: "blaster"})
     True
@@ -1140,7 +1140,7 @@ class Diagram(Basic):
         >>> h = NamedMorphism(C, A, "h")
         >>> k = NamedMorphism(D, A, "k")
         >>> d = Diagram(f, g, h, k)
-        >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+        >>> component1 = d.subdiagram_from_objects([A, B, C])
         >>> d.objects_components == Dict({A: component1, B: component1,
         ...                               C: component1, D: D})
         True
@@ -1166,7 +1166,7 @@ class Diagram(Basic):
         object_diagrams = {}
         for idx, objects in component_objects.items():
             if len(objects) > 1:
-                diagram = self.subdiagram_from_objects(FiniteSet(objects))
+                diagram = self.subdiagram_from_objects(objects)
                 for obj in objects:
                     object_diagrams[obj] = diagram
             else:
@@ -1216,7 +1216,7 @@ class Diagram(Basic):
         >>> h = NamedMorphism(C, A, "h")
         >>> k = NamedMorphism(D, A, "k")
         >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
-        >>> component1 = d.subdiagram_from_objects(FiniteSet(A, B, C))
+        >>> component1 = d.subdiagram_from_objects([A, B, C])
         >>> condensation_k = NamedMorphism(D, component1, "k")
         >>> d.condensation == Diagram({condensation_k: "blaster"})
         True
@@ -1482,18 +1482,19 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram({f: "unique", g * f: "veryunique"})
-        >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
+        >>> d1 = d.subdiagram_from_objects([A, B])
         >>> d1 == Diagram({f: "unique"})
         True
 
         """
+        objects = FiniteSet(objects)
+
         if not self.objects.subset(objects):
             raise ValueError("Supplied objects should all belong to the diagram.")
 
