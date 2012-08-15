@@ -17,11 +17,9 @@ ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
 ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) api
 
-LANG = bg cs fr ru
+LANGUAGES = bg cs de fr ru
 
 .PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet
-
-LANG = bg cs de ru
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -79,7 +77,7 @@ gettext:
 htmli18n:
 	mkdir -p _build/i18n/
 	mkdir -p _build/html/
-	for l in $(LANG); do \
+	for l in $(LANGUAGES); do \
 		mkdir -p src/i18n/$$l/LC_MESSAGES/ ; \
 		msgfmt src/tutorial.$$l.po -o src/i18n/$$l/LC_MESSAGES/tutorial.mo ; \
 		$(SPHINXBUILD) -b html -D language=$$l $(ALLSPHINXOPTS) _build/i18n/$$l src/tutorial.rst ; \
