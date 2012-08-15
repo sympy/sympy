@@ -95,6 +95,18 @@ Orthogonal Polynomials
 
 .. automodule:: sympy.functions.special.polynomials
 
+Jacobi Polynomials
+++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.jacobi
+   :members:
+
+Gegenbauer Polynomials
+++++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.gegenbauer
+   :members:
+
 Chebyshev Polynomials
 +++++++++++++++++++++
 
@@ -128,7 +140,10 @@ Hermite Polynomials
 Laguerre Polynomials
 ++++++++++++++++++++
 
-.. autofunction:: sympy.functions.special.polynomials.laguerre_l
+.. autoclass:: sympy.functions.special.polynomials.laguerre
+   :members:
+.. autoclass:: sympy.functions.special.polynomials.assoc_laguerre
+   :members:
 
 Spherical Harmonics
 -------------------
