@@ -51,6 +51,14 @@ if matplotlib:
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
 
+# Global variable
+# Set to False when running tests / doctests so that the plots don't
+# show.
+_show=True
+
+def unset_show():
+    global _show
+    _show=False
 
 ##############################################################################
 # The public interface
@@ -1155,7 +1163,8 @@ class MatplotlibBackend(BaseBackend):
         #TODO after fixing https://github.com/ipython/ipython/issues/1255
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
-        plt.show()
+        if _show:
+            plt.show()
 
     def save(self, path):
         self.process_series()
@@ -1342,6 +1351,7 @@ def plot_line(*args, **kwargs):
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+    return plots
 
 
 def plot_parametric(*args, **kwargs):
@@ -1421,6 +1431,7 @@ def plot_parametric(*args, **kwargs):
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+    return plots
 
 def plot3D_parametric(*args, **kwargs):
     """
@@ -1485,6 +1496,7 @@ def plot3D_parametric(*args, **kwargs):
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+    return plots
 
 def plot3D(*args, **kwargs):
     """
@@ -1558,6 +1570,7 @@ def plot3D(*args, **kwargs):
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+    return plots
 
 
 def plot3D_surface(*args, **kwargs):
@@ -1624,6 +1637,7 @@ def plot3D_surface(*args, **kwargs):
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
+    return plots
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
