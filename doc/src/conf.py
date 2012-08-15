@@ -21,27 +21,27 @@ sys.path.extend(['../sympy', 'ext'])
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'mathjax',
-              'numpydoc',]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
+              'numpydoc', 'sympylive',]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
-# MathJax file, which is free to use.  See https://bitbucket.org/kevindunn/sphinx-extension-mathjax/wiki/Home
-mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+# MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
+mathjax_path = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
+copyright = '2008, 2009, 2010, 2011, 2012 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -56,6 +56,9 @@ release = '0.7.1-git'
 #today = ''
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = '%B %d, %Y'
+
+# Translations:
+locale_dirs = ["i18n/"]
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
@@ -93,6 +96,8 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
+html_favicon = '../logo/SymPy-Favicon.ico'
+html_theme_options = {'collapsiblesidebar': True}
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -150,3 +155,10 @@ pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
               '\\usepackage{amsfonts}\n'+\
               '\\usepackage{amssymb}\n'+\
               '\\setlength{\\parindent}{0pt}\n'
+
+texinfo_documents = [
+  (master_doc, 'sympy', 'SymPy Documentation',
+   'SymPy Development Team',
+   'SymPy', 'Computer algebra system (CAS) in Python', 'Programming',
+   1),
+]

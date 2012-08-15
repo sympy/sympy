@@ -72,7 +72,8 @@ class besselj(BesselBase):
     .. math ::
         J_{-n}(z) = (-1)^n J_n(z).
 
-    **Examples**
+    Examples
+    ========
 
     Create a bessel function object:
 
@@ -97,7 +98,14 @@ class besselj(BesselBase):
     >>> b.argument
     z
 
-    **References**
+    See Also
+    ========
+
+    bessely, besseli, besselk
+
+
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
@@ -110,8 +118,11 @@ class besselj(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_jn(self, nu, z):
-        return sqrt(2*z/pi) * jn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_jn(self, nu, z, expand=False):
+        jn_part = jn(nu - S('1/2'), self.argument)
+        if expand:
+            jn_part = jn_part._eval_expand_func()
+        return sqrt(2*z/pi) * jn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -124,10 +135,28 @@ class besselj(BesselBase):
             if newz: # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
 
-    def _eval_expand_func(self, deep=False, **hints):
+        # branch handling:
+        from sympy import unpolarify, exp
+        if nu.is_integer:
+            newz = unpolarify(z)
+            if newz != z:
+                return besselj(nu, newz)
+        else:
+            newz, n = z.extract_branch_factor()
+            if n != 0:
+                return exp(2*n*pi*nu*I)*besselj(nu, newz)
+        nnu = unpolarify(nu)
+        if nu != nnu:
+            return besselj(nnu, z)
+
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(jn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_jn(*self.args, **{'expand':True})
         return self
+
+    def _eval_rewrite_as_besseli(self, nu, z):
+        from sympy import polar_lift, exp
+        return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
 class bessely(BesselBase):
     r"""
@@ -144,7 +173,8 @@ class bessely(BesselBase):
     It is a solution to Bessel's equation, and linearly independent from
     :math:`J_\nu`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import bessely, yn
     >>> from sympy.abc import z, n
@@ -154,14 +184,21 @@ class bessely(BesselBase):
     >>> b.rewrite(yn)
     sqrt(2)*sqrt(z)*yn(n - 1/2, z)/sqrt(pi)
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    besselj, besseli, besselk
+
     """
 
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_yn(self, nu, z):
-        return sqrt(2*z/pi) * yn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_yn(self, nu, z, expand=False):
+        yn_part = yn(nu - S('1/2'), self.argument)
+        if expand:
+            yn_part = yn_part._eval_expand_func()
+        return sqrt(2*z/pi) * yn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -169,9 +206,9 @@ class bessely(BesselBase):
             if nu < 0:
                 return S(-1)**nu*bessely(-nu, z)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(yn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_yn(*self.args, **{'expand':True})
         return self
 
 class besseli(BesselBase):
@@ -191,14 +228,19 @@ class besseli(BesselBase):
 
     where :math:`J_\mu(z)` is the Bessel function of the first kind.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import besseli
     >>> from sympy.abc import z, n
     >>> besseli(n, z).diff(z)
     besseli(n - 1, z)/2 + besseli(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    besselj, bessely, besselk
+
     """
 
     _a = -S.One
@@ -210,6 +252,24 @@ class besseli(BesselBase):
             newz = z.extract_multiplicatively(I)
             if newz: # NOTE we don't want to change the function if z==0
                 return I**(-nu)*besselj(nu, -newz)
+
+        # branch handling:
+        from sympy import unpolarify, exp
+        if nu.is_integer:
+            newz = unpolarify(z)
+            if newz != z:
+                return besseli(nu, newz)
+        else:
+            newz, n = z.extract_branch_factor()
+            if n != 0:
+                return exp(2*n*pi*nu*I)*besseli(nu, newz)
+        nnu = unpolarify(nu)
+        if nu != nnu:
+            return besseli(nnu, z)
+
+    def _eval_rewrite_as_besselj(self, nu, z):
+        from sympy import polar_lift, exp
+        return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
 class besselk(BesselBase):
     r"""
@@ -226,14 +286,19 @@ class besselk(BesselBase):
     It is a solution of the modified Bessel equation, and linearly independent
     from :math:`Y_\nu`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import besselk
     >>> from sympy.abc import z, n
     >>> besselk(n, z).diff(z)
     -besselk(n - 1, z)/2 - besselk(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    besselj, besseli, bessely
+
     """
 
     _a = S.One
@@ -253,14 +318,19 @@ class hankel1(BesselBase):
 
     It is a solution to Bessel's equation.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import hankel1
     >>> from sympy.abc import z, n
     >>> hankel1(n, z).diff(z)
     hankel1(n - 1, z)/2 - hankel1(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    hankel2, besselj, bessely
+
     """
 
     _a = S.One
@@ -281,14 +351,19 @@ class hankel2(BesselBase):
     It is a solution to Bessel's equation, and linearly independent from
     :math:`H_\nu^{(1)}`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import hankel2
     >>> from sympy.abc import z, n
     >>> hankel2(n, z).diff(z)
     hankel2(n - 1, z)/2 - hankel2(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    hankel1, besselj, bessely
+
     """
 
     _a = S.One
@@ -307,7 +382,7 @@ class SphericalBesselBase(BesselBase):
     To use this class, define the _rewrite and _expand methods.
     """
 
-    def _expand(self):
+    def _expand(self, **hints):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
@@ -315,9 +390,9 @@ class SphericalBesselBase(BesselBase):
         """ Rewrite self in terms of ordinary bessel functions. """
         raise NotImplementedError('rewriting')
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
-            return self._expand()
+            return self._expand(**hints)
         else:
             return self
 
@@ -348,16 +423,17 @@ class jn(SphericalBesselBase):
 
     where :math:`J_\nu(z)` is the Bessel function of the first kind.
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import Symbol, jn, sin, cos, expand_func
-        >>> z = Symbol("z")
-        >>> print jn(0, z).expand(func=True)
-        sin(z)/z
-        >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
-        True
-        >>> expand_func(jn(3, z))
-        (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    >>> from sympy import Symbol, jn, sin, cos, expand_func
+    >>> z = Symbol("z")
+    >>> print jn(0, z).expand(func=True)
+    sin(z)/z
+    >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
+    True
+    >>> expand_func(jn(3, z))
+    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
 
     The spherical Bessel functions of integral order
     are calculated using the formula:
@@ -367,7 +443,11 @@ class jn(SphericalBesselBase):
     where the coefficients :math:`f_n(z)` are available as
     :func:`polys.orthopolys.spherical_bessel_fn`.
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    besselj, bessely, besselk, yn
+
     """
 
     def _rewrite(self):
@@ -376,7 +456,7 @@ class jn(SphericalBesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
         return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
@@ -393,20 +473,25 @@ class yn(SphericalBesselBase):
 
     where :math:`Y_\nu(z)` is the Bessel function of the second kind.
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import Symbol, yn, sin, cos, expand_func
-        >>> z = Symbol("z")
-        >>> print expand_func(yn(0, z))
-        -cos(z)/z
-        >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
-        True
+    >>> from sympy import Symbol, yn, sin, cos, expand_func
+    >>> z = Symbol("z")
+    >>> print expand_func(yn(0, z))
+    -cos(z)/z
+    >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
+    True
 
     For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
 
     .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
-    **See also:** :class:`besselj`, :class:`bessely`, :class:`jn`
+    See Also
+    ========
+
+    besselj, bessely, besselk, jn
+
     """
 
     def _rewrite(self):
@@ -415,7 +500,7 @@ class yn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return sqrt(pi/(2*z)) * bessely(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
         return (-1)**(n+1) * \
@@ -428,20 +513,25 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    method = "sympy": uses mpmath besseljzero
-    method = "scipy": uses the SciPy's sph_jn and newton to find all roots,
-            which is faster than computing the zeros using a general numerical
-            solver, but it requires SciPy and only
-            works with low precision floating point numbers.
-            [the function used with method="sympy" is a recent addition to
-             mpmath, before that a general solver was used]
+    * method = "sympy": uses mpmath besseljzero
+    * method = "scipy": uses the SciPy's sph_jn and newton to find all
+      roots, which is faster than computing the zeros using a general
+      numerical solver, but it requires SciPy and only works with low
+      precision floating point numbers.  [the function used with
+      method="sympy" is a recent addition to mpmath, before that a general
+      solver was used]
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import jn_zeros
-        >>> jn_zeros(2, 4, dps=5)
-        [5.7635, 9.095, 12.323, 15.515]
+    >>> from sympy import jn_zeros
+    >>> jn_zeros(2, 4, dps=5)
+    [5.7635, 9.095, 12.323, 15.515]
 
+    See Also
+    ========
+
+    jn, yn, besselj, besselk, bessely
     """
     from math import pi
 

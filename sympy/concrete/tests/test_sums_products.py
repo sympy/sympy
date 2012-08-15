@@ -1,10 +1,11 @@
-from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
-    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
-    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
+                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
+                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
+                   sympify, zeta, oo)
+from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k, x, y, z = map(Symbol, 'abcdmkxyz')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
@@ -222,13 +223,13 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
            telescopic(1/k, -k/(1+k),(k, n-1, n))
 
-    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
-    raises(ValueError, 'Sum(x, x)')
-    raises(ValueError, 'Sum(x, (x, 1))')
+    raises(ValueError, lambda: Sum(x, x))
+    raises(ValueError, lambda: Sum(x, (x, 1)))
 
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
@@ -258,8 +259,8 @@ def test_Sum_interface():
     assert Sum(0, (n, 0, 2)).doit() == 0
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
-    raises(ValueError, "Sum(1)")
-    raises(ValueError, "summation(1)")
+    raises(ValueError, lambda: Sum(1))
+    raises(ValueError, lambda: summation(1))
 
 def test_eval_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0
@@ -279,14 +280,17 @@ def test_hypersum():
                               (n, 3, oo))) \
            == -x + sin(x) + x**3/6 - x**5/120
 
-    # TODO to get this without hyper need to improve hyperexpand
     assert summation(1/(n+2)**3, (n, 1, oo)) == \
-           hyper([3, 3, 3, 1], [4, 4, 4], 1)/27
+           -S(9)/8 + zeta(3)
+    assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))
     assert s.is_Piecewise
-    assert s.args[0].args[0] == -1/(x*(1-1/x)**2)
+    assert s.args[0].args[0] == -1/(x*(1 - 1/x)**2)
     assert s.args[0].args[1] == (abs(1/x) < 1)
+
+    m = Symbol('n', integer=True, positive=True)
+    assert summation(binomial(m, k), (k, 0, m)) == 2**m
 
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E
@@ -295,6 +299,16 @@ def test_is_zero():
     for func in [Sum, Product]:
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
+
+def test_is_commutative():
+    from sympy.physics.secondquant import NO, F, Fd
+    m = Symbol('m', commutative=False)
+    for f in (Sum, Product, Integral):
+        assert f(z, (z, 1, 1)).is_commutative is True
+        assert f(z*y, (z, 1, 6)).is_commutative is True
+        assert f(m*x, (x, 1, 2)).is_commutative is False
+
+        assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True
@@ -325,5 +339,24 @@ def test_free_symbols():
         assert func(x, (y, 1, 2)).free_symbols == set([x])
         assert func(x, (y, 1, 1)).free_symbols == set([x])
         assert func(x, (y, 1, z)).free_symbols == set([x, z])
+        assert func(x, (x, 1, y), (y, 1, 2)).free_symbols == set()
+        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == set([z])
+        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
+        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
+
+@XFAIL
+def test_issue_1072() :
+    k = Symbol("k")
+    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
+
+@XFAIL
+def test_issue_3174():
+    # when this passes, the doctests involving Sum in
+    # is_constant can be unskipped
+    assert Sum(x, (x, 1, n)).n(1, subs={n: 0}) == 1
+
+@XFAIL
+def test_issue_3175():
+    assert Sum(x, (x, 1, 0)).n(1) == 1

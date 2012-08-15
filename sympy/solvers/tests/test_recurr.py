@@ -1,5 +1,5 @@
-from sympy import Function, symbols, S, sqrt, rf, factorial
-from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
+from sympy import factorial, Function, rf, S, sqrt, symbols
+from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)
@@ -44,7 +44,7 @@ def test_rsolve_hyper():
         C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
     ]
 
-    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C0*factorial(n) + C1*2**n
+    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper([n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
 
@@ -94,7 +94,7 @@ def test_rsolve():
     assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
 
     f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
-    g = C0*factorial(n) + C1*2**n
+    g = C1*factorial(n) + C0*2**n
     h = -3*factorial(n) + 3*2**n
 
     assert rsolve(f, y(n)) == g

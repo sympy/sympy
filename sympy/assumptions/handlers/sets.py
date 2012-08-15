@@ -13,9 +13,13 @@ class AskIntegerHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        if expr.as_real_imag()[1] == 0:
-            return expr.evalf(1) == expr
-        return False
+        try:
+            i = int(expr.round())
+            if not (expr - i).equals(0):
+                raise TypeError
+            return True
+        except TypeError:
+            return False
 
     @staticmethod
     def Add(expr, assumptions):
@@ -139,7 +143,7 @@ class AskRationalHandler(CommonHandler):
 
     @staticmethod
     def Float(expr, assumptions):
-        # it's finite-precission
+        # it's finite-precision
         return True
 
     @staticmethod
@@ -301,6 +305,64 @@ class AskExtendedRealHandler(AskRealHandler):
     def NegativeInfinity(expr, assumptions):
         return True
 
+class AskHermitianHandler(AskRealHandler):
+    """
+    Handler for Q.hermitian
+    Test that an expression belongs to the field of Hermitian operators
+    """
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        Hermitian + Hermitian  -> Hermitian
+        Hermitian + !Hermitian -> !Hermitian
+        """
+        if expr.is_number:
+            return AskRealHandler._number(expr, assumptions)
+        return test_closed_group(expr, assumptions, Q.hermitian)
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        """
+        As long as there is at most only one noncommutative term:
+        Hermitian*Hermitian         -> Hermitian
+        Hermitian*Antihermitian     -> !Hermitian
+        Antihermitian*Antihermitian -> Hermitian
+        """
+        if expr.is_number:
+            return AskRealHandler._number(expr, assumptions)
+        nccount = 0
+        result = True
+        for arg in expr.args:
+            if ask(Q.antihermitian(arg), assumptions):
+                result = result ^ True
+            elif not ask(Q.hermitian(arg), assumptions):
+                break
+            if ask(~Q.commutative(arg), assumptions):
+                nccount += 1
+                if nccount > 1:
+                    break
+        else:
+            return result
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        """
+        Hermitian**Integer -> Hermitian
+        """
+        if expr.is_number:
+            return AskRealHandler._number(expr, assumptions)
+        if ask(Q.hermitian(expr.base), assumptions):
+            if ask(Q.integer(expr.exp), assumptions):
+                return True
+
+    @staticmethod
+    def sin(expr, assumptions):
+        if ask(Q.hermitian(expr.args[0]), assumptions):
+            return True
+
+    cos, exp = sin, sin
+
 class AskComplexHandler(CommonHandler):
     """
     Handler for Q.complex
@@ -407,6 +469,65 @@ class AskImaginaryHandler(CommonHandler):
     def ImaginaryUnit(expr, assumptions):
         return True
 
+class AskAntiHermitianHandler(AskImaginaryHandler):
+    """
+    Handler for Q.antihermitian
+    Test that an expression belongs to the field of anti-Hermitian operators,
+    that is, operators in the form x*I, where x is Hermitian
+    """
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        Antihermitian + Antihermitian  -> Antihermitian
+        Antihermitian + !Antihermitian -> !Antihermitian
+        """
+        if expr.is_number:
+            return AskImaginaryHandler._number(expr, assumptions)
+        return test_closed_group(expr, assumptions, Q.antihermitian)
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        """
+        As long as there is at most only one noncommutative term:
+        Hermitian*Hermitian         -> !Antihermitian
+        Hermitian*Antihermitian     -> Antihermitian
+        Antihermitian*Antihermitian -> !Antihermitian
+        """
+        if expr.is_number:
+            return AskImaginaryHandler._number(expr, assumptions)
+        nccount = 0
+        result = False
+        for arg in expr.args:
+            if ask(Q.antihermitian(arg), assumptions):
+                result = result ^ True
+            elif not ask(Q.hermitian(arg), assumptions):
+                break
+            if ask(~Q.commutative(arg), assumptions):
+                nccount += 1
+                if nccount > 1:
+                    break
+        else:
+            return result
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        """
+        Hermitian**Integer  -> !Antihermitian
+        Antihermitian**Even -> !Antihermitian
+        Antihermitian**Odd  -> Antihermitian
+        """
+        if expr.is_number:
+            return AskImaginaryHandler._number(expr, assumptions)
+        if ask(Q.hermitian(expr.base), assumptions):
+            if ask(Q.integer(expr.exp), assumptions):
+                return False
+        elif ask(Q.antihermitian(expr.base), assumptions):
+            if ask(Q.even(expr.exp), assumptions):
+                return False
+            elif ask(Q.odd(expr.exp), assumptions):
+                return True
+
 class AskAlgebraicHandler(CommonHandler):
     """Handler for Q.algebraic key. """
 
@@ -454,4 +575,3 @@ def test_closed_group(expr, assumptions, key):
             else: break
     else:
         return result
-

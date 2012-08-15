@@ -6,18 +6,14 @@ of Many-Particle Systems."
 """
 from collections import defaultdict
 
-from sympy import (
-    Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, Tuple, Dummy, KroneckerDelta
-)
-
-from sympy.core.sympify import sympify
-from sympy.core.cache import cacheit
-from sympy.core.symbol import Dummy
+from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
+                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
+                   zeros)
+from sympy.core.compatibility import reduce
 from sympy.printing.str import StrPrinter
 
-from sympy.core.compatibility import reduce
 from sympy.physics.quantum.qexpr import split_commutative_parts
+from sympy.core.compatibility import reduce
 
 __all__ = [
     'Dagger',
@@ -30,6 +26,8 @@ __all__ = [
     'FockState',
     'FockStateBra',
     'FockStateKet',
+    'FockStateBosonKet',
+    'FockStateBosonBra',
     'BBra',
     'BKet',
     'FBra',
@@ -77,7 +75,8 @@ class Dagger(Expr):
     """
     Hermitian conjugate of creation/annihilation operators.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import I
     >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -103,7 +102,8 @@ class Dagger(Expr):
         """
         Evaluates the Dagger instance.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -119,7 +119,7 @@ class Dagger(Expr):
         """
         try:
             d = arg._dagger_()
-        except:
+        except AttributeError:
             if isinstance(arg, Basic):
                 if arg.is_Add:
                     return Add(*tuple(map(Dagger, arg.args)))
@@ -136,12 +136,6 @@ class Dagger(Expr):
         else:
             return d
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = Dagger(self.args[0].subs(old, new))
-        return r
-
     def _dagger_(self):
         return self.args[0]
 
@@ -156,7 +150,8 @@ class AntiSymmetricTensor(TensorSymbol):
 
     Each group of indices is assumed to be antisymmetric.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -228,7 +223,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the symbol of the tensor.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -247,7 +243,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the upper indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -267,7 +264,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the lower indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -285,6 +283,19 @@ class AntiSymmetricTensor(TensorSymbol):
         return "%s(%s,%s)" %self.args
 
     def doit(self, **kw_args):
+        """
+        Returns self.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import AntiSymmetricTensor
+        >>> i, j = symbols('i,j', below_fermi=True)
+        >>> a, b = symbols('a,b', above_fermi=True)
+        >>> AntiSymmetricTensor('v', (a, i), (b, j)).doit()
+        AntiSymmetricTensor(v, (a, i), (b, j))
+        """
         return self
 
 class SqOperator(Expr):
@@ -294,15 +305,11 @@ class SqOperator(Expr):
 
     op_symbol = 'sq'
 
-    def __new__(cls, k):
-        obj = Basic.__new__(cls, sympify(k), commutative=False)
-        return obj
+    is_commutative = False
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__(self.args[0].subs(old, new))
-        return r
+    def __new__(cls, k):
+        obj = Basic.__new__(cls, sympify(k))
+        return obj
 
     @property
     def state(self):
@@ -373,7 +380,15 @@ class Creator(SqOperator):
 
 class AnnihilateBoson(BosonicOperator, Annihilator):
     """
-    Bosonic annihilation operator
+    Bosonic annihilation operator.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import B
+    >>> from sympy.abc import x
+    >>> B(x)
+    AnnihilateBoson(x)
     """
 
     op_symbol = 'b'
@@ -382,6 +397,21 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         return CreateBoson(self.state)
 
     def apply_operator(self, state):
+        """
+        Apply state to self if self is not symbolic and state is a FockStateKet, else
+        multiply self by state.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import B, BKet
+        >>> from sympy.abc import x, y, n
+        >>> B(x).apply_operator(y)
+        y*AnnihilateBoson(x)
+        >>> B(0).apply_operator(BKet((n,)))
+        sqrt(n)*FockStateBosonKet((n - 1,))
+
+        """
         if not self.is_symbolic and isinstance(state, FockStateKet):
             element = self.state
             amp = sqrt(state[element])
@@ -394,7 +424,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
 
 class CreateBoson(BosonicOperator, Creator):
     """
-    Bosonic creation operator
+    Bosonic creation operator.
     """
 
     op_symbol = 'b+'
@@ -403,6 +433,20 @@ class CreateBoson(BosonicOperator, Creator):
         return AnnihilateBoson(self.state)
 
     def apply_operator(self, state):
+        """
+        Apply state to self if self is not symbolic and state is a FockStateKet, else
+        multiply self by state.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
+        >>> Dagger(B(x)).apply_operator(y)
+        y*CreateBoson(x)
+        >>> B(0).apply_operator(BKet((n,)))
+        sqrt(n)*FockStateBosonKet((n - 1,))
+        """
         if not self.is_symbolic and isinstance(state, FockStateKet):
             element = self.state
             amp = sqrt(state[element] + 1)
@@ -431,8 +475,8 @@ class FermionicOperator(SqOperator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F, Fd
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_restricted
@@ -463,8 +507,8 @@ class FermionicOperator(SqOperator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_above_fermi
@@ -486,8 +530,8 @@ class FermionicOperator(SqOperator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_below_fermi
@@ -509,8 +553,8 @@ class FermionicOperator(SqOperator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_only_below_fermi
@@ -531,8 +575,8 @@ class FermionicOperator(SqOperator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_only_above_fermi
@@ -562,7 +606,7 @@ class FermionicOperator(SqOperator):
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
     """
-    Fermionic annihilation operator
+    Fermionic annihilation operator.
     """
 
     op_symbol = 'f'
@@ -571,12 +615,26 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return CreateFermion(self.state)
 
     def apply_operator(self, state):
+        """
+        Apply state to self if self is not symbolic and state is a FockStateKet, else
+        multiply self by state.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
+        >>> Dagger(B(x)).apply_operator(y)
+        y*CreateBoson(x)
+        >>> B(0).apply_operator(BKet((n,)))
+        sqrt(n)*FockStateBosonKet((n - 1,))
+        """
         if isinstance(state, FockStateFermionKet):
             element = self.state
             return state.down(element)
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
@@ -594,8 +652,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_q_creator
@@ -617,8 +675,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=1)
-        >>> i = Symbol('i',below_fermi=1)
+        >>> a = Symbol('a', above_fermi=1)
+        >>> i = Symbol('i', below_fermi=1)
         >>> p = Symbol('p')
 
         >>> F(a).is_q_annihilator
@@ -640,8 +698,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_only_q_creator
@@ -661,8 +719,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> F(a).is_only_q_annihilator
@@ -692,13 +750,27 @@ class CreateFermion(FermionicOperator, Creator):
         return AnnihilateFermion(self.state)
 
     def apply_operator(self, state):
+        """
+        Apply state to self if self is not symbolic and state is a FockStateKet, else
+        multiply self by state.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import B, Dagger, BKet
+        >>> from sympy.abc import x, y, n
+        >>> Dagger(B(x)).apply_operator(y)
+        y*CreateBoson(x)
+        >>> B(0).apply_operator(BKet((n,)))
+        sqrt(n)*FockStateBosonKet((n - 1,))
+        """
         if isinstance(state, FockStateFermionKet):
             element = self.state
             return state.up(element)
 
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part + [nc_part[0].up(element)] + nc_part[1:]))
@@ -713,8 +785,8 @@ class CreateFermion(FermionicOperator, Creator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> Fd(a).is_q_creator
@@ -736,8 +808,8 @@ class CreateFermion(FermionicOperator, Creator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
-        >>> a = Symbol('a',above_fermi=1)
-        >>> i = Symbol('i',below_fermi=1)
+        >>> a = Symbol('a', above_fermi=1)
+        >>> i = Symbol('i', below_fermi=1)
         >>> p = Symbol('p')
 
         >>> Fd(a).is_q_annihilator
@@ -758,8 +830,8 @@ class CreateFermion(FermionicOperator, Creator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> Fd(a).is_only_q_creator
@@ -779,8 +851,8 @@ class CreateFermion(FermionicOperator, Creator):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> Fd(a).is_only_q_annihilator
@@ -810,7 +882,10 @@ class FockState(Expr):
 
     Anywhere you can have a FockState, you can also have S.Zero.
     All code must check for this!
+
+    Base class to represent FockStates.
     """
+    is_commutative = False
 
     def __new__(cls, occupations):
         """
@@ -824,15 +899,8 @@ class FockState(Expr):
           is the i'th occupied state.
         """
         occupations = map(sympify, occupations)
-        obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
+        obj = Basic.__new__(cls, Tuple(*occupations))
         return obj
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__([o.subs(old, new) for o in self.args[0]])
-        return r
-
 
     def __getitem__(self, i):
         i = int(i)
@@ -852,18 +920,42 @@ class FockState(Expr):
 
 class BosonState(FockState):
     """
-    Many particle Fock state with a sequence of occupation numbers.
-
-    occupation numbers can be any integer >= 0
+    Base class for FockStateBoson(Ket/Bra).
     """
 
     def up(self, i):
+        """
+        Performs the action of a creation operator.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import BBra
+        >>> b = BBra([1, 2])
+        >>> b
+        FockStateBosonBra((1, 2))
+        >>> b.up(1)
+        FockStateBosonBra((1, 3))
+        """
         i = int(i)
         new_occs = list(self.args[0])
         new_occs[i] = new_occs[i]+S.One
         return self.__class__(new_occs)
 
     def down(self, i):
+        """
+        Performs the action of an annihilation operator.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import BBra
+        >>> b = BBra([1, 2])
+        >>> b
+        FockStateBosonBra((1, 2))
+        >>> b.down(1)
+        FockStateBosonBra((1, 1))
+        """
         i = int(i)
         new_occs = list(self.args[0])
         if new_occs[i]==S.Zero:
@@ -875,17 +967,7 @@ class BosonState(FockState):
 
 class FermionState(FockState):
     """
-    Many particle Fock state with a sequence of occupied orbits
-
-    Each state can only have one particle, so we choose to store a list of
-    occupied orbits rather than a tuple with occupation numbers (zeros and ones).
-
-    states below fermi level are holes, and are represented by negative labels
-    in the occupation list
-
-    For symbolic state labels, the fermi_level caps the number of allowed hole-
-    states
-
+    Base class for FockStateFermion(Ket/Bra).
     """
 
     fermi_level=0
@@ -923,8 +1005,8 @@ class FermionState(FockState):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import FKet
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         >>> FKet([]).up(a)
@@ -968,8 +1050,8 @@ class FermionState(FockState):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import FKet
-        >>> a = Symbol('a',above_fermi=True)
-        >>> i = Symbol('i',below_fermi=True)
+        >>> a = Symbol('a', above_fermi=True)
+        >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
 
         An annihilator acting on vacuum above fermi vanishes
@@ -1075,14 +1157,17 @@ class FermionState(FockState):
 
 
 class FockStateKet(FockState):
-
+    """
+    Representation of a ket.
+    """
     lbracket = '|'
     rbracket = '>'
 
 
 class FockStateBra(FockState):
-
-
+    """
+    Representation of a bra.
+    """
     lbracket = '<'
     rbracket = '|'
 
@@ -1094,18 +1179,72 @@ class FockStateBra(FockState):
             return Expr.__mul__(self, other)
 
 class FockStateBosonKet(BosonState,FockStateKet):
+    """
+    Many particle Fock state with a sequence of occupation numbers.
+
+    Occupation numbers can be any integer >= 0.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import BKet
+    >>> BKet([1, 2])
+    FockStateBosonKet((1, 2))
+    """
     def _dagger_(self):
         return FockStateBosonBra(*self.args)
 
 class FockStateBosonBra(BosonState,FockStateBra):
+    """
+    Describes a collection of BosonBra particles.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import BBra
+    >>> BBra([1, 2])
+    FockStateBosonBra((1, 2))
+    """
     def _dagger_(self):
         return FockStateBosonKet(*self.args)
 
 class FockStateFermionKet(FermionState,FockStateKet):
+    """
+    Many-particle Fock state with a sequence of occupied orbits.
+
+    Each state can only have one particle, so we choose to store a list of
+    occupied orbits rather than a tuple with occupation numbers (zeros and ones).
+
+    states below fermi level are holes, and are represented by negative labels
+    in the occupation list.
+
+    For symbolic state labels, the fermi_level caps the number of allowed hole-
+    states.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import FKet
+    >>> FKet([1, 2]) #doctest: +SKIP
+    FockStateFermionKet((1, 2))
+    """
     def _dagger_(self):
         return FockStateFermionBra(*self.args)
 
 class FockStateFermionBra(FermionState,FockStateBra):
+    """
+    See Also
+    ========
+
+    FockStateFermionKet
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import FBra
+    >>> FBra([1, 2]) #doctest: +SKIP
+    FockStateFermionBra((1, 2))
+    """
     def _dagger_(self):
         return FockStateFermionKet(*self.args)
 
@@ -1114,14 +1253,14 @@ BKet = FockStateBosonKet
 FBra = FockStateFermionBra
 FKet = FockStateFermionKet
 
-def apply_Mul(m):
+def _apply_Mul(m):
     """
     Take a Mul instance with operators and apply them to states.
 
     This method applies all operators with integer state labels
     to the actual states.  For symbolic state labels, nothing is done.
     When inner products of FockStates are encountered (like <a|b>),
-    the are converted to instances of InnerProduct.
+    they are converted to instances of InnerProduct.
 
     This does not currently work on double inner products like,
     <a|b><c|d>.
@@ -1130,7 +1269,7 @@ def apply_Mul(m):
     """
     if not isinstance(m, Mul):
         return m
-    c_part, nc_part = split_commutative_parts(m)
+    c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
     if n_nc == 0 or n_nc == 1:
         return m
@@ -1146,7 +1285,7 @@ def apply_Mul(m):
                     if result == 0:
                         return S.Zero
                     else:
-                        return apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
+                        return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             elif isinstance(next_to_last, Pow):
                 if isinstance(next_to_last.base, SqOperator) and \
                     next_to_last.exp.is_Integer:
@@ -1160,7 +1299,7 @@ def apply_Mul(m):
                         if result == 0:
                             return S.Zero
                         else:
-                            return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                            return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
                 else:
                     return m
             elif isinstance(next_to_last, FockStateBra):
@@ -1168,7 +1307,7 @@ def apply_Mul(m):
                 if result == 0:
                     return S.Zero
                 else:
-                    return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                    return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
             else:
                 return m
         else:
@@ -1178,10 +1317,18 @@ def apply_Mul(m):
 def apply_operators(e):
     """
     Take a sympy expression with operators and states and apply the operators.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import apply_operators
+    >>> from sympy import sympify
+    >>> apply_operators(sympify(3)+4)
+    7
     """
     e = e.expand()
     muls = e.atoms(Mul)
-    subs_list = [(m,apply_Mul(m)) for m in iter(muls)]
+    subs_list = [(m,_apply_Mul(m)) for m in iter(muls)]
     return e.subs(subs_list)
 
 
@@ -1191,40 +1338,35 @@ class InnerProduct(Basic):
 
     Currently this class just reduces things to a product of
     Kronecker Deltas.  In the future, we could introduce abstract
-    states like |a> and |b>, and leave the inner product unevaluated as
-    <a|b>.
+    states like ``|a>`` and ``|b>``, and leave the inner product unevaluated as
+    ``<a|b>``.
 
     """
+    is_commutative = True
+
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
         assert isinstance(ket, FockStateKet), 'must be a key'
-        r = cls.eval(bra, ket)
-        if isinstance(r, Basic):
-            return r
-        obj = Basic.__new__(cls, *(bra, ket), **dict(commutative=True))
-        return obj
+        return cls.eval(bra, ket)
 
     @classmethod
     def eval(cls, bra, ket):
         result = S.One
         for i,j in zip(bra.args[0], ket.args[0]):
             result *= KroneckerDelta(i,j)
-            if result == 0: break
+            if result == 0:
+                break
         return result
 
     @property
     def bra(self):
+        """Returns the bra part of the state"""
         return self.args[0]
 
     @property
     def ket(self):
+        """Returns the ket part of the state"""
         return self.args[1]
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
-        return r
 
     def __repr__(self):
         sbra = repr(self.bra)
@@ -1238,6 +1380,19 @@ class InnerProduct(Basic):
 def matrix_rep(op, basis):
     """
     Find the representation of an operator in a basis.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import VarBosonicBasis, B, matrix_rep
+    >>> b = VarBosonicBasis(5)
+    >>> o = B(0)
+    >>> matrix_rep(o, b)
+    [0, 1,       0,       0, 0]
+    [0, 0, sqrt(2),       0, 0]
+    [0, 0,       0, sqrt(3), 0]
+    [0, 0,       0,       0, 2]
+    [0, 0,       0,       0, 0]
     """
     a = zeros(len(basis))
     for i in range(len(basis)):
@@ -1256,6 +1411,14 @@ class BosonicBasis(object):
 class VarBosonicBasis(object):
     """
     A single state, variable particle number basis set.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import VarBosonicBasis
+    >>> b = VarBosonicBasis(5)
+    >>> b
+    [FockState((0,)), FockState((1,)), FockState((2,)), FockState((3,)), FockState((4,))]
     """
 
     def __init__(self, n_max):
@@ -1269,9 +1432,36 @@ class VarBosonicBasis(object):
         self.n_basis = len(self.basis)
 
     def index(self, state):
+        """
+        Returns the index of state in basis.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import VarBosonicBasis
+        >>> b = VarBosonicBasis(3)
+        >>> state = b.state(1)
+        >>> b
+        [FockState((0,)), FockState((1,)), FockState((2,))]
+        >>> state
+        FockStateBosonKet((1,))
+        >>> b.index(state)
+        1
+        """
         return self.basis.index(state)
 
     def state(self, i):
+        """
+        The state of a single basis.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import VarBosonicBasis
+        >>> b = VarBosonicBasis(5)
+        >>> b.state(3)
+        FockStateBosonKet((3,))
+        """
         return self.basis[i]
 
     def __getitem__(self, i):
@@ -1287,6 +1477,19 @@ class VarBosonicBasis(object):
 class FixedBosonicBasis(BosonicBasis):
     """
     Fixed particle number basis set.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.secondquant import FixedBosonicBasis
+    >>> b = FixedBosonicBasis(2, 2)
+    >>> state = b.state(1)
+    >>> b
+    [FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]
+    >>> state
+    FockStateBosonKet((1, 1))
+    >>> b.index(state)
+    1
     """
     def __init__(self, n_particles, n_levels):
         self.n_particles = n_particles
@@ -1318,9 +1521,29 @@ class FixedBosonicBasis(BosonicBasis):
         self.n_basis = len(self.basis)
 
     def index(self, state):
+        """Returns the index of state in basis.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import FixedBosonicBasis
+        >>> b = FixedBosonicBasis(2, 3)
+        >>> b.index(b.state(3))
+        3
+        """
         return self.basis.index(state)
 
     def state(self, i):
+        """Returns the state that lies at index i of the basis
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import FixedBosonicBasis
+        >>> b = FixedBosonicBasis(2, 3)
+        >>> b.state(3)
+        FockStateBosonKet((1, 0, 1))
+        """
         return self.basis[i]
 
     def __getitem__(self, i):
@@ -1408,8 +1631,8 @@ class Commutator(Function):
     immediately:
 
     >>> from sympy.physics.secondquant import Fd, F
-    >>> a = symbols('a',above_fermi=True)
-    >>> i = symbols('i',below_fermi=True)
+    >>> a = symbols('a', above_fermi=True)
+    >>> i = symbols('i', below_fermi=True)
     >>> p,q = symbols('p,q')
 
     >>> Commutator(Fd(a),Fd(i))
@@ -1421,7 +1644,7 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
+    -KroneckerDelta(p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
 
     """
 
@@ -1431,9 +1654,17 @@ class Commutator(Function):
     @classmethod
     def eval(cls, a,b):
         """
-        The Commutator [A,B] is on canonical form if A < B
+        The Commutator [A,B] is on canonical form if A < B.
 
+        Examples
+        ========
 
+        >>> from sympy.physics.secondquant import Commutator, F, Fd
+        >>> from sympy.abc import x
+        >>> c1 = Commutator(F(x), Fd(x))
+        >>> c2 = Commutator(Fd(x), F(x))
+        >>> Commutator.eval(c1, c2)
+        0
         """
         if not (a and b): return S.Zero
         if a == b: return S.Zero
@@ -1481,6 +1712,20 @@ class Commutator(Function):
 
 
     def doit(self,**hints):
+        """
+        Enables the computation of complex expressions.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import Commutator, F, Fd
+        >>> from sympy import symbols
+        >>> i, j = symbols('i,j', below_fermi=True)
+        >>> a, b = symbols('a,b', above_fermi=True)
+        >>> c = Commutator(Fd(a)*F(i),Fd(b)*F(j))
+        >>> c.doit(wicks=True)
+        0
+        """
         a = self.args[0]
         b = self.args[1]
 
@@ -1545,11 +1790,11 @@ class NO(Expr):
         Use anticommutation to get canonical form of operators.
 
         Employ associativity of normal ordered product: {ab{cd}} = {abcd}
-        but note that {ab}{cd} /= {abcd}
+        but note that {ab}{cd} /= {abcd}.
 
-        We also employ distributivity: {ab + cd} = {ab} + {cd}
+        We also employ distributivity: {ab + cd} = {ab} + {cd}.
 
-        Canonical form also implies expand() {ab(c+d)} = {abc} + {abd}
+        Canonical form also implies expand() {ab(c+d)} = {abc} + {abd}.
 
         """
 
@@ -1614,16 +1859,17 @@ class NO(Expr):
     @property
     def has_q_creators(self):
         """
-        Returns yes or no, fast
+        Return 0 if the leftmost argument of the first argument is a not a
+        q_creator, else 1 if it is above fermi or -1 if it is below fermi.
 
-        Also, in case of yes, we indicate whether leftmost operator is a
-        quasi creator above or below fermi.
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import NO, F, Fd
 
-        >>> a = symbols('a',above_fermi=True)
-        >>> i = symbols('i',below_fermi=True)
+        >>> a = symbols('a', above_fermi=True)
+        >>> i = symbols('i', below_fermi=True)
         >>> NO(Fd(a)*Fd(i)).has_q_creators
         1
         >>> NO(F(i)*F(a)).has_q_creators
@@ -1637,27 +1883,47 @@ class NO(Expr):
     @property
     def has_q_annihilators(self):
         """
-        Returns yes or no, fast
+        Return 0 if the rightmost argument of the first argument is a not a
+        q_annihilator, else 1 if it is above fermi or -1 if it is below fermi.
 
-        Also, in case of yes, we indicate whether rightmost operator is an
-        annihilator above or below fermi.
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import NO, F, Fd
 
-        >>> a = symbols('a',above_fermi=True)
-        >>> i = symbols('i',below_fermi=True)
+        >>> a = symbols('a', above_fermi=True)
+        >>> i = symbols('i', below_fermi=True)
         >>> NO(Fd(a)*Fd(i)).has_q_annihilators
         -1
         >>> NO(F(i)*F(a)).has_q_annihilators
         1
-        >>> NO(Fd(a)*F(i)).has_q_annihilators        #doctest: +SKIP
+        >>> NO(Fd(a)*F(i)).has_q_annihilators
         0
 
         """
         return self.args[0].args[-1].is_q_annihilator
 
     def doit(self, **kw_args):
+        """
+        Either removes the brackets or enables complex computations
+        in its arguments.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.secondquant import NO, Fd, F
+        >>> from textwrap import fill
+        >>> from sympy import symbols, Dummy
+        >>> p,q = symbols('p,q', cls=Dummy)
+        >>> print fill(str(NO(Fd(p)*F(q)).doit()))
+        KroneckerDelta(_a, _p)*KroneckerDelta(_a,
+        _q)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_a,
+        _p)*KroneckerDelta(_i, _q)*CreateFermion(_a)*AnnihilateFermion(_i) -
+        KroneckerDelta(_a, _q)*KroneckerDelta(_i,
+        _p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,
+        _p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)
+        """
         if kw_args.get("remove_brackets", True):
             return self._remove_brackets()
         else:
@@ -1683,10 +1949,10 @@ class NO(Expr):
                     # create indices with fermi restriction
                     assume.pop("above_fermi", None)
                     assume["below_fermi"]=True
-                    below = Dummy('i',**assume)
+                    below = Dummy('i', **assume)
                     assume.pop("below_fermi", None)
                     assume["above_fermi"]=True
-                    above = Dummy('a',**assume)
+                    above = Dummy('a', **assume)
 
                     cls = type(self[i])
                     split = (
@@ -1720,17 +1986,6 @@ class NO(Expr):
         """
         return NO(self._remove_brackets)
 
-
-    def _eval_subs(self,old,new):
-        if self == old:
-            return new
-        ops = self.args[0].args
-        for i in range(len(ops)):
-            if ops[i] == old:
-                l1 = ops[:i]+(new,)+ops[i+1:]
-                return self.__class__(Mul(*l1))
-        return Expr._eval_subs(self,old,new)
-
     def __getitem__(self,i):
         if isinstance(i,slice):
             indices = i.indices(len(self))
@@ -1744,6 +1999,9 @@ class NO(Expr):
     def iter_q_annihilators(self):
         """
         Iterates over the annihilation operators.
+
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> i, j = symbols('i j', below_fermi=True)
@@ -1771,9 +2029,12 @@ class NO(Expr):
         """
         Iterates over the creation operators.
 
+        Examples
+        ========
+
         >>> from sympy import symbols
-        >>> i, j = symbols('i j',below_fermi=True)
-        >>> a, b = symbols('a b',above_fermi=True)
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
         >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
@@ -1796,7 +2057,10 @@ class NO(Expr):
 
     def get_subNO(self, i):
         """
-        Returns a NO() without FermionicOperator at index i
+        Returns a NO() without FermionicOperator at index i.
+
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import F, NO
@@ -1823,13 +2087,16 @@ class NO(Expr):
 # @cacheit
 def contraction(a,b):
     """
-    Calculates contraction of Fermionic operators ab
+    Calculates contraction of Fermionic operators a and b.
+
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import F, Fd, contraction
-    >>> p,q = symbols('p,q')
-    >>> a,b = symbols('a,b', above_fermi=True)
-    >>> i,j = symbols('i,j', below_fermi=True)
+    >>> p, q = symbols('p,q')
+    >>> a, b = symbols('a,b', above_fermi=True)
+    >>> i, j = symbols('i,j', below_fermi=True)
 
     A contraction is non-zero only if a quasi-creator is to the right of a
     quasi-annihilator:
@@ -1867,7 +2134,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Dummy('a',above_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('a', above_fermi=True)))
         if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
             if b.state.assumptions0.get("above_fermi"):
                 return S.Zero
@@ -1879,7 +2146,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Dummy('i',below_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('i', below_fermi=True)))
 
         # vanish if 2xAnnihilator or 2xCreator
         return S.Zero
@@ -1889,11 +2156,11 @@ def contraction(a,b):
         t = ( isinstance(i,FermionicOperator) for i in (a,b) )
         raise ContractionAppliesOnlyToFermions(*t)
 
-def sqkey(sq_operator):
-    """Generates key for canonical sorting of SQ operators"""
+def _sqkey(sq_operator):
+    """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
 
-def _sort_anticommuting_fermions(string1, key=sqkey):
+def _sort_anticommuting_fermions(string1, key=_sqkey):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Uses a bidirectional bubble sort.  Items in string1 are not referenced
@@ -1902,11 +2169,14 @@ def _sort_anticommuting_fermions(string1, key=sqkey):
 
     If the Pauli principle is violated, an exception is raised.
 
-    returns a tuple (sorted_str, sign)
+    Returns
+    =======
 
-    sorted_str -- list containing the sorted operators
-    sign       -- int telling how many times the sign should be changed
-                  (if sign==0 the string was already sorted)
+    tuple (sorted_str, sign)
+
+    sorted_str: list containing the sorted operators
+    sign: int telling how many times the sign should be changed
+          (if sign==0 the string was already sorted)
     """
 
     verified = False
@@ -1959,10 +2229,10 @@ def evaluate_deltas(e):
     dependent, the literal expression resulting from this function may be hard to
     predict.
 
-    Examples:
-    =========
+    Examples
+    ========
 
-    We assume that
+    We assume the following:
 
     >>> from sympy import symbols, Function, Dummy, KroneckerDelta
     >>> from sympy.physics.secondquant import evaluate_deltas
@@ -1973,7 +2243,7 @@ def evaluate_deltas(e):
     >>> t = Function('t')
 
     The order of preference for these indices according to KroneckerDelta is
-    (a,b,i,j,p,q).
+    (a, b, i, j, p, q).
 
     Trivial cases:
 
@@ -2063,7 +2333,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     The index sequence is then substituted consistently in each term.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import substitute_dummies
@@ -2081,8 +2351,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     2*f(_a, _b)
 
 
-    Controlling output
-    ------------------
+    Controlling output:
 
     By default the dummy symbols that are already present in the expression
     will be reused in a different permuation.  However, if new_indices=True,
@@ -2098,7 +2367,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     index_groups must be one of 'above', 'below' or 'general'.
 
     >>> expr = f(a,b,i,j)
-    >>> my_dummies = { 'above':'st','below':'uv' }
+    >>> my_dummies = { 'above':'st', 'below':'uv' }
     >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
     f(_s, _t, _u, _v)
 
@@ -2114,9 +2383,9 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     # setup the replacing dummies
     if new_indices:
-        letters_above  = pretty_indices.get('above',"")
-        letters_below  = pretty_indices.get('below',"")
-        letters_general= pretty_indices.get('general',"")
+        letters_above  = pretty_indices.get('above', "")
+        letters_below  = pretty_indices.get('below', "")
+        letters_general= pretty_indices.get('general', "")
         len_above  = len(letters_above)
         len_below  = len(letters_below)
         len_general= len(letters_general)
@@ -2294,7 +2563,7 @@ def _get_ordered_dummies(mul, verbose = False):
             mask[d] = '2'
     dum_repr = dict([ (d, __kprint(d)) for d in all_dums ])
 
-    def key(d):
+    def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
         other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
         fac = dumstruct[-1]
@@ -2345,7 +2614,7 @@ def _get_ordered_dummies(mul, verbose = False):
                         break
                     pos_val.append(facpos)
         return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
-    dumkey = dict(zip(all_dums, map(key, all_dums)))
+    dumkey = dict(zip(all_dums, map(_key, all_dums)))
     result = sorted(all_dums, key=lambda x: dumkey[x])
     if len(set(dumkey.itervalues())) < len(dumkey):
         # We have ambiguities
@@ -2393,14 +2662,14 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
         all_ordered.add(d)
         ambiguous_groups[0].remove(d)
 
-    stored_counter = __symbol_factory.counter
+    stored_counter = _symbol_factory._counter
     subslist = []
     for d in [ d for d in ordered if d in all_ordered ]:
-        nondum = __symbol_factory.next()
+        nondum = _symbol_factory._next()
         subslist.append((d, nondum))
     newterm = term.subs(subslist)
     neworder = _get_ordered_dummies(newterm)
-    __symbol_factory.set_counter(stored_counter)
+    _symbol_factory._set_counter(stored_counter)
 
     # update ordered list with new information
     for group in ambiguous_groups:
@@ -2417,32 +2686,42 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
 
 class _SymbolFactory(object):
     def __init__(self, label):
-        self._counter = 0
+        self._counterVar = 0
         self._label = label
 
-    def set_counter(self, value):
-        self._counter = value
+    def _set_counter(self, value):
+        """
+        Sets counter to value.
+        """
+        self._counterVar = value
 
     @property
-    def counter(self):
-        return self._counter
+    def _counter(self):
+        """
+        What counter is currently at.
+        """
+        return self._counterVar
 
-    def next(self):
-        s = Symbol("%s%i" % (self._label, self._counter))
-        self._counter += 1
+    def _next(self):
+        """
+        Generates the next symbols and increments counter by 1.
+        """
+        s = Symbol("%s%i" % (self._label, self._counterVar))
+        self._counterVar += 1
         return s
-__symbol_factory = _SymbolFactory('_]"]_') # most certainly a unique label
+_symbol_factory = _SymbolFactory('_]"]_') # most certainly a unique label
 
 
 @cacheit
 def _get_contractions(string1, keep_only_fully_contracted=False):
     """
+    Returns Add-object with contracted terms.
+
     Uses recursion to find all contractions. -- Internal helper function --
 
     Will find nonzero contractions in string1 between indices given in
     leftrange and rightrange.
 
-    returns Add-object with contracted terms.
     """
 
     # Should we store current level of contraction?
@@ -2503,6 +2782,9 @@ def wicks(e, **kw_args):
     Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
 
+    Examples
+    ========
+
     >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
     >>> p,q,r = symbols('p,q,r')
@@ -2521,7 +2803,7 @@ def wicks(e, **kw_args):
      -- KroneckerDelta functions are evaluated
      -- Dummy variables are substituted consistently across terms
 
-    >>> p,q,r = symbols('p q r', cls=Dummy)
+    >>> p, q, r = symbols('p q r', cls=Dummy)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
     KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 
@@ -2612,7 +2894,7 @@ def wicks(e, **kw_args):
 
 class PermutationOperator(Expr):
     """
-    Represents the index permutation operator P(ij)
+    Represents the index permutation operator P(ij).
 
     P(ij)*f(i)*g(j) = f(i)*g(j) - f(j)*g(i)
     """

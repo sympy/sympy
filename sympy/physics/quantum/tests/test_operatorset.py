@@ -48,7 +48,7 @@ def test_op_to_state():
     assert state_to_operators(operators_to_state(XOp("Q"))) == XOp("Q")
     assert state_to_operators(operators_to_state(XOp())) == XOp()
 
-    raises(NotImplementedError, 'operators_to_state(XKet)')
+    raises(NotImplementedError, lambda: operators_to_state(XKet))
 
 def test_state_to_op():
     assert state_to_operators(XKet) == XOp()
@@ -63,5 +63,4 @@ def test_state_to_op():
     assert operators_to_state(state_to_operators(XKet())) == XKet()
     assert operators_to_state(state_to_operators(XBra())) == XKet()
 
-    raises(NotImplementedError, 'state_to_operators(XOp)')
-
+    raises(NotImplementedError, lambda: state_to_operators(XOp))

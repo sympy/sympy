@@ -27,14 +27,14 @@ extensions = ['sphinx.ext.autodoc']
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2011, SymPy Development Team'
+copyright = '2012, SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

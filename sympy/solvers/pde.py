@@ -27,6 +27,25 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     :param strategy: Separation strategy. You can choose between additive
         separation ('add') and multiplicative separation ('mul') which is
         default.
+
+    Examples
+    ========
+
+    >>> from sympy import E, Eq, Function, pde_separate, Derivative as D
+    >>> from sympy.abc import x, t
+    >>> u, X, T = map(Function, 'uXT')
+
+    >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
+    >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='add')
+    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]
+
+    >>> eq = Eq(D(u(x, t), x, 2), D(u(x, t), t, 2))
+    >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='mul')
+    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]
+
+    See Also
+    ========
+    pde_separate_add, pde_separate_mul
     """
 
 
@@ -89,7 +108,8 @@ def pde_separate_add(eq, fun, sep):
 
     `w(x, y, z) = X(x) + y(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import E, Eq, Function, pde_separate_add, Derivative as D
     >>> from sympy.abc import x, t
@@ -112,7 +132,8 @@ def pde_separate_mul(eq, fun, sep):
 
     `w(x, y, z) = X(x)*u(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Function, Eq, pde_separate_mul, Derivative as D
     >>> from sympy.abc import x, y

@@ -6,15 +6,16 @@ def textplot(expr, a, b, W=55, H=18):
     should contain a single symbol, e.g. x or something else) over the
     interval [a, b].
 
-    Example: textplot(sin(t)*t, 0, 15)
+    Examples
+    ========
+
+    textplot(sin(t)*t, 0, 15)
     """
 
-    f = None
-    for x in expr.atoms():
-        if isinstance(x, Symbol):
-            f = lambdify([x], expr)
-            break
-    assert f is not None
+    free = expr.free_symbols
+    assert len(free) <= 1
+    x = free.pop() if free else Dummy()
+    f = lambdify([x], expr)
     a = float(a)
     b = float(b)
 
@@ -23,12 +24,17 @@ def textplot(expr, a, b, W=55, H=18):
     for x in range(W):
         try:
             y[x] = f(a+(b-a)/float(W)*x)
-        except:
+        except TypeError:
             y[x] = 0
 
     # Normalize height to screen space
     ma = max(y)
     mi = min(y)
+    if ma == mi:
+        if ma:
+            mi, ma = sorted([0, 2*ma])
+        else:
+            mi, ma = -1, 1
     for x in range(W):
         y[x] = int(float(H)*(y[x]-mi)/(ma-mi))
     margin = 7

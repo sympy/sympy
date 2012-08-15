@@ -1,9 +1,8 @@
-from sympy import S
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
-from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max
-from sympy import I, cos, sin, oo
+from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
+from sympy import S, Float, I, cos, sin, oo, pi, Add
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -73,7 +72,7 @@ def test_Min():
     assert Min(p, p_).func is Min
 
     # lists
-    raises(ValueError, 'Min()')
+    raises(ValueError, lambda: Min())
     assert Min(x, y) == Min(y, x)
     assert Min(x, y, z) == Min(z, y, x)
     assert Min(x, Min(y, z)) == Min(z, y, x)
@@ -87,10 +86,10 @@ def test_Min():
     assert Min(cos(x), sin(x)) == Min(cos(x), sin(x))
     assert Min(cos(x), sin(x)).subs(x, 1) == cos(1)
     assert Min(cos(x), sin(x)).subs(x, S(1)/2) == sin(S(1)/2)
-    raises(ValueError, 'Min(cos(x), sin(x)).subs(x, I)')
-    raises(ValueError, 'Min(I)')
-    raises(ValueError, 'Min(I, x)')
-    raises(ValueError, 'Min(S.ComplexInfinity, x)')
+    raises(ValueError, lambda: Min(cos(x), sin(x)).subs(x, I))
+    raises(ValueError, lambda: Min(I))
+    raises(ValueError, lambda: Min(I, x))
+    raises(ValueError, lambda: Min(S.ComplexInfinity, x))
 
 
 def test_Max():
@@ -108,7 +107,7 @@ def test_Max():
 
     # lists
 
-    raises(ValueError, 'Max()')
+    raises(ValueError, lambda: Max())
     assert Max(x, y) == Max(y, x)
     assert Max(x, y, z) == Max(z, y, x)
     assert Max(x, Max(y, z)) == Max(z, y, x)
@@ -122,10 +121,10 @@ def test_Max():
     assert Max(cos(x), sin(x)) == Max(sin(x), cos(x))
     assert Max(cos(x), sin(x)).subs(x, 1) == sin(1)
     assert Max(cos(x), sin(x)).subs(x, S(1)/2) == cos(S(1)/2)
-    raises(ValueError, 'Max(cos(x), sin(x)).subs(x, I)')
-    raises(ValueError, 'Max(I)')
-    raises(ValueError, 'Max(I, x)')
-    raises(ValueError, 'Max(S.ComplexInfinity, 1)')
+    raises(ValueError, lambda: Max(cos(x), sin(x)).subs(x, I))
+    raises(ValueError, lambda: Max(I))
+    raises(ValueError, lambda: Max(I, x))
+    raises(ValueError, lambda: Max(S.ComplexInfinity, 1))
     # interesting:
     # Max(n, -oo, n_,  p, 2) == Max(p, 2)
     # True
@@ -154,3 +153,13 @@ def test_root():
 
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
+
+def test_nthroot():
+    assert real_root(-8, 3) == -2
+    assert real_root(-16, 4) == root(-16, 4)
+    r = root(-7, 4)
+    assert real_root(r) == r
+    r1 = root(-1, 3)
+    r2 = r1**2
+    r3 = root(-1, 4)
+    assert real_root(r1 + r2 + r3) == -1 + r2 + r3

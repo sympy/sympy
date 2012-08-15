@@ -1,5 +1,5 @@
-"""Extract reference documentation from the NumPy source tree.
-
+"""
+Extract reference documentation from the NumPy source tree.
 """
 
 import inspect
@@ -7,11 +7,10 @@ import textwrap
 import re
 import pydoc
 from StringIO import StringIO
-from warnings import warn
 
 class Reader(object):
-    """A line-based string reader.
-
+    """
+    A line-based string reader.
     """
     def __init__(self, data):
         """
@@ -106,6 +105,7 @@ class NumpyDocString(object):
             'Examples': '',
             'index': {}
             }
+        self._other_keys = []
 
         self._parse()
 
@@ -114,9 +114,9 @@ class NumpyDocString(object):
 
     def __setitem__(self,key,val):
         if not self._parsed_data.has_key(key):
-            warn("Unknown section %s" % key)
-        else:
-            self._parsed_data[key] = val
+            self._other_keys.append(key)
+
+        self._parsed_data[key] = val
 
     def _is_at_section(self):
         self._doc.seek_next_non_empty_line()
@@ -492,7 +492,7 @@ class ClassDoc(NumpyDocString):
     def methods(self):
         if self._cls is None:
             return []
-        return [name for name,func in inspect.getmembers(self._cls)
+        return [name for name,func in inspect_getmembers(self._cls)
                 if ((not name.startswith('_')
                      or name in self.extra_public_methods)
                     and callable(func))]
@@ -501,5 +501,28 @@ class ClassDoc(NumpyDocString):
     def properties(self):
         if self._cls is None:
             return []
-        return [name for name,func in inspect.getmembers(self._cls)
+        return [name for name,func in inspect_getmembers(self._cls)
                 if not name.startswith('_') and func is None]
+
+
+
+# This function was taken verbatim from Python 2.7 inspect.getmembers() from
+# the standard library. The difference from Python < 2.7 is that there is the
+# try/except AttributeError clause added, which catches exceptions like this
+# one: https://gist.github.com/1471949
+def inspect_getmembers(object, predicate=None):
+    """Return all members of an object as (name, value) pairs sorted by name.
+
+    Optionally, only return members that satisfy a given predicate.
+    """
+
+    results = []
+    for key in dir(object):
+        try:
+            value = getattr(object, key)
+        except AttributeError:
+            continue
+        if not predicate or predicate(value):
+            results.append((key, value))
+    results.sort()
+    return results

@@ -98,5 +98,3 @@ matrix_cache.cache_matrix('Hsqrt2', Matrix([[1, 1], [1, -1]]))
 matrix_cache.cache_matrix('SWAP',Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]]))
 matrix_cache.cache_matrix('ZX', sqrt2_inv*Matrix([[1,1],[1,-1]]))
 matrix_cache.cache_matrix('ZY', Matrix([[I,0],[0,-I]]))
-
-

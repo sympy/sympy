@@ -1,25 +1,23 @@
-from sympy import Matrix, I, Float, Integer, symbols, DiracDelta
+from sympy import Float, I, Integer, Matrix
+from sympy.external import import_module
+from sympy.utilities.pytest import skip
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import (
-    represent, rep_innerproduct, rep_expectation, enumerate_states
-)
-from sympy.physics.quantum.state import Bra, Ket, TimeDepKet
+from sympy.physics.quantum.represent import (represent, rep_innerproduct,
+                                             rep_expectation, enumerate_states)
+from sympy.physics.quantum.state import Bra, Ket
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.matrixutils import (
-    to_sympy, to_numpy, to_scipy_sparse, numpy_ndarray, scipy_sparse_matrix
-)
+from sympy.physics.quantum.matrixutils import (numpy_ndarray,
+                                               scipy_sparse_matrix, to_numpy,
+                                               to_scipy_sparse, to_sympy)
 from sympy.physics.quantum.cartesian import XKet, XOp, XBra
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state
-
-from sympy.external import import_module
-from sympy.utilities.pytest import skip
 
 Amat = Matrix([[1,I],[-I,1]])
 Bmat = Matrix([[1,2],[3,4]])
@@ -165,7 +163,7 @@ def test_innerprod_represent():
     assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet("x_1")).doit()
 
     try:
-        test = rep_innerproduct(x_op)
+        rep_innerproduct(x_op)
     except TypeError:
         return True
 

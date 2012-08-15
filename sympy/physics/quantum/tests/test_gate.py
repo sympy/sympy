@@ -1,4 +1,4 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
+from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
 from sympy.matrices.matrices import Matrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
@@ -19,6 +19,24 @@ def test_gate():
     h = HadamardGate(1)
     assert h.min_qubits == 2
     assert h.nqubits == 1
+
+    i0 = Wild('i0')
+    i1 = Wild('i1')
+    h0_w1 = HadamardGate(i0)
+    h0_w2 = HadamardGate(i0)
+    h1_w1 = HadamardGate(i1)
+
+    assert h0_w1 == h0_w2
+    assert h0_w1 != h1_w1
+    assert h1_w1 != h0_w2
+
+    cnot_10_w1 = CNOT(i1, i0)
+    cnot_10_w2 = CNOT(i1, i0)
+    cnot_01_w1 = CNOT(i0, i1)
+
+    assert cnot_10_w1 == cnot_10_w2
+    assert cnot_10_w1 != cnot_01_w1
+    assert cnot_10_w2 != cnot_01_w1
 
 def test_UGate():
     a,b,c,d = symbols('a,b,c,d')
@@ -75,6 +93,15 @@ def test_cgate():
         I*Qubit('11')
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
+
+    # Test that the dagger, inverse, and power of CGate is evaluated properly
+    assert Dagger(CZGate) == CZGate
+    assert pow(CZGate, 1) == Dagger(CZGate)
+    assert Dagger(CZGate) == CZGate.inverse()
+    assert Dagger(CPhaseGate) != CPhaseGate
+    assert Dagger(CPhaseGate) == CPhaseGate.inverse()
+    assert Dagger(CPhaseGate) == pow(CPhaseGate, -1)
+    assert pow(CPhaseGate, -1) == CPhaseGate.inverse()
 
 def test_UGate_CGate_combo():
     a,b,c,d = symbols('a,b,c,d')
@@ -156,6 +183,10 @@ def test_cnot_gate():
     assert matrix_to_qubit(represent(circuit, nqubits=3)) ==\
         qapply(circuit)
 
+    circuit = CNotGate(1,0)
+    assert Dagger(circuit) == circuit
+    assert Dagger(Dagger(circuit)) == circuit
+    assert circuit*circuit == 1
 
 def test_gate_sort():
     """Test gate_sort."""

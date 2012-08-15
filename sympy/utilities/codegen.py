@@ -3,7 +3,6 @@ module for generating C, C++, Fortran77, Fortran90 and python routines that
 evaluate sympy expressions. This module is work in progress. Only the
 milestones with a '+' character in the list below have been completed.
 
-
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
 
 We considered the idea to extend the printing routines for sympy functions in
@@ -11,65 +10,69 @@ such a way that it prints complete compilable code, but this leads to a few
 unsurmountable issues that can only be tackled with dedicated code generator:
 
 - For C, one needs both a code and a header file, while the printing routines
-generate just one string. This code generator can be extended to support .pyf
-files for f2py.
+  generate just one string. This code generator can be extended to support
+  .pyf files for f2py.
 
-- Sympy functions are not concerned with programming-technical issues, such as
-input, output and input-output arguments. Other examples are contiguous or
-non-contiguous arrays, including headers of other libraries such as gsl or others.
+- SymPy functions are not concerned with programming-technical issues, such
+  as input, output and input-output arguments. Other examples are contiguous
+  or non-contiguous arrays, including headers of other libraries such as gsl
+  or others.
 
-- It is highly interesting to evaluate several sympy functions in one C routine,
-eventually sharing common intermediate results with the help of the cse routine.
-This is more than just printing.
+- It is highly interesting to evaluate several sympy functions in one C
+  routine, eventually sharing common intermediate results with the help
+  of the cse routine. This is more than just printing.
 
 - From the programming perspective, expressions with constants should be
-evaluated in the code generator as much as possible. This is different for
-printing.
-
+  evaluated in the code generator as much as possible. This is different
+  for printing.
 
 --- Basic assumptions ---
 
-* A generic Routine data structure describes the routine that must be translated
-  into C/Fortran/... code. This data structure covers all features present in
-  one or more of the supported languages.
+* A generic Routine data structure describes the routine that must be
+  translated into C/Fortran/... code. This data structure covers all
+  features present in one or more of the supported languages.
 
-* Descendants from the CodeGen class transform multiple Routine instances into
-  compilable code. Each derived class translates into a specific language.
+* Descendants from the CodeGen class transform multiple Routine instances
+  into compilable code. Each derived class translates into a specific
+  language.
 
-* In many cases, one wants a simple workflow. The friendly functions in the last
-  part are a simple api on top of the Routine/CodeGen stuff. They are easier to
-  use, but are less powerful.
-
+* In many cases, one wants a simple workflow. The friendly functions in the
+  last part are a simple api on top of the Routine/CodeGen stuff. They are
+  easier to use, but are less powerful.
 
 --- Milestones ---
 
-+ First working version with scalar input arguments, generating C code, tests
-+ Friendly functions that are easier to use than the rigorous Routine/CodeGen
-  workflow.
++ First working version with scalar input arguments, generating C code,
+  tests
++ Friendly functions that are easier to use than the rigorous
+  Routine/CodeGen workflow.
 + Integer and Real numbers as input and output
-- Optional extra include lines for libraries/objects that can eval special
-  functions
-- Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 + Output arguments
 + InputOutput arguments
 + Sort input/output arguments properly
 + Contiguous array arguments (numpy matrices)
++ Also generate .pyf code for f2py (in autowrap module)
++ Isolate constants and evaluate them beforehand in double precision
++ Fortran 90
+
+- Common Subexpression Elimination
+- User defined comments in the generated code
+- Optional extra include lines for libraries/objects that can eval special
+  functions
+- Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 - Contiguous array arguments (sympy matrices)
 - Non-contiguous array arguments (sympy matrices)
 - ccode must raise an error when it encounters something that can not be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
-+ Also generate .pyf code for f2py (in autowrap module)
 - A default complex datatype
-- Include extra information in the header: date, user, hostname, sha1 hash, ...
-+ Isolate constants and evaluate them beforehand in double precision
-- Common Subexpression Elimination
-- User defined comments in the generated code
+- Include extra information in the header: date, user, hostname, sha1
+  hash, ...
 - Fortran 77
-+ Fortran 90
 - C++
 - Python
 - ...
+
 """
 from __future__ import with_statement
 
@@ -83,7 +86,6 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.utilities import flatten
 
 
 

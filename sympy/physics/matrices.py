@@ -4,21 +4,32 @@ from sympy import Matrix, I
 
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
-    See also:
+
+    See Also
+    ========
+
     http://en.wikipedia.org/wiki/Pauli_matrices
+
+    Examples
+    ========
+
+    >>> from sympy.physics.matrices import msigma
+    >>> msigma(1)
+    [0, 1]
+    [1, 0]
     """
-    if i==1:
-        mat=( (
+    if i == 1:
+        mat = ( (
             (0, 1),
             (1, 0)
             ) )
-    elif i==2:
-        mat=( (
+    elif i == 2:
+        mat = ( (
             (0, -I),
             (I, 0)
             ) )
-    elif i==3:
-        mat=( (
+    elif i == 3:
+        mat = ( (
             (1, 0),
             (0, -1)
             ) )
@@ -64,10 +75,20 @@ def mgamma(mu,lower=False):
     gamma^5 = I * gamma^0 * gamma^1 * gamma^2 * gamma^3
     gamma_5 = I * gamma_0 * gamma_1 * gamma_2 * gamma_3 = - gamma^5
 
-    See also:
+    See Also
+    ========
 
     http://en.wikipedia.org/wiki/Gamma_matrices
 
+    Examples
+    ========
+
+    >>> from sympy.physics.matrices import mgamma
+    >>> mgamma(1)
+    [ 0,  0, 0, 1]
+    [ 0,  0, 1, 0]
+    [ 0, -1, 0, 0]
+    [-1,  0, 0, 0]
     """
     if not mu in [0,1,2,3,5]:
         raise IndexError("Invalid Dirac index")

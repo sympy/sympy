@@ -1,9 +1,11 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, Rational as Q
+from sympy import Poly, S, Rational as Q
 from sympy.utilities.pytest import raises
 
 from sympy.polys.orthopolys import (
+    jacobi_poly,
+    gegenbauer_poly,
     chebyshevt_poly,
     chebyshevu_poly,
     hermite_poly,
@@ -11,10 +13,35 @@ from sympy.polys.orthopolys import (
     laguerre_poly,
 )
 
-from sympy.abc import x, a
+from sympy.abc import x, a, b
+
+def test_jacobi_poly():
+    raises(ValueError, lambda: jacobi_poly(-1, a, b, x))
+
+    assert jacobi_poly(1, a, b, x, polys=True) == Poly((a/2 + b/2 + 1)*x + a/2 - b/2, x, domain='ZZ(a,b)')
+
+    assert jacobi_poly(0, a, b, x) == 1
+    assert jacobi_poly(1, a, b, x) == a/2 - b/2 + x*(a/2 + b/2 + 1)
+    assert jacobi_poly(2, a, b, x) == (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +
+                                       b**2/8 + 7*b/8 + S(3)/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - S(1)/2)
+
+    assert jacobi_poly(1, a, b, polys=True) == Poly((a/2 + b/2 + 1)*x + a/2 - b/2, x, domain='ZZ(a,b)')
+
+def test_gegenbauer_poly():
+    raises(ValueError, lambda: gegenbauer_poly(-1, a, x))
+
+    assert gegenbauer_poly(1, a, x, polys=True) == Poly(2*a*x, x, domain='ZZ(a)')
+
+    assert gegenbauer_poly(0, a, x) == 1
+    assert gegenbauer_poly(1, a, x) == 2*a*x
+    assert gegenbauer_poly(2, a, x) == -a + x**2*(2*a**2 + 2*a)
+    assert gegenbauer_poly(3, a, x) == x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+
+    assert gegenbauer_poly(1, S.Half).dummy_eq(x)
+    assert gegenbauer_poly(1, a, polys=True) == Poly(2*a*x, x, domain='ZZ(a)')
 
 def test_chebyshevt_poly():
-    raises(ValueError, "chebyshevt_poly(-1, x)")
+    raises(ValueError, lambda: chebyshevt_poly(-1, x))
 
     assert chebyshevt_poly(1, x, polys=True) == Poly(x)
 
@@ -30,7 +57,7 @@ def test_chebyshevt_poly():
     assert chebyshevt_poly(1, polys=True) == Poly(x)
 
 def test_chebyshevu_poly():
-    raises(ValueError, "chebyshevu_poly(-1, x)")
+    raises(ValueError, lambda: chebyshevu_poly(-1, x))
 
     assert chebyshevu_poly(1, x, polys=True) == Poly(2*x)
 
@@ -46,7 +73,7 @@ def test_chebyshevu_poly():
     assert chebyshevu_poly(1, polys=True) == Poly(2*x)
 
 def test_hermite_poly():
-    raises(ValueError, "hermite_poly(-1, x)")
+    raises(ValueError, lambda: hermite_poly(-1, x))
 
     assert hermite_poly(1, x, polys=True) == Poly(2*x)
 
@@ -62,7 +89,7 @@ def test_hermite_poly():
     assert hermite_poly(1, polys=True) == Poly(2*x)
 
 def test_legendre_poly():
-    raises(ValueError, "legendre_poly(-1, x)")
+    raises(ValueError, lambda: legendre_poly(-1, x))
 
     assert legendre_poly(1, x, polys=True) == Poly(x)
 
@@ -78,7 +105,7 @@ def test_legendre_poly():
     assert legendre_poly(1, polys=True) == Poly(x)
 
 def test_laguerre_poly():
-    raises(ValueError, "laguerre_poly(-1, x)")
+    raises(ValueError, lambda: laguerre_poly(-1, x))
 
     assert laguerre_poly(1, x, polys=True) == Poly(-x + 1)
 

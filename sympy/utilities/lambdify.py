@@ -45,6 +45,12 @@ MPMATH_TRANSLATIONS = {
     "LambertW":"lambertw",
     "Matrix":"matrix",
     "conjugate":"conj",
+    "dirichlet_eta":"altzeta",
+    "Ei":"ei",
+    "Shi":"shi",
+    "Chi":"chi",
+    "Si":"si",
+    "Ci":"ci"
 }
 
 NUMPY_TRANSLATIONS = {
@@ -126,6 +132,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     Returns a lambda function for fast calculation of numerical values.
 
     Usage:
+
     >>> from sympy import sqrt, sin
     >>> from sympy.utilities.lambdify import lambdify
     >>> from sympy.abc import x, y, z
@@ -142,27 +149,33 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     >>> f(0, 5)
     0.0
 
-    If not specified differently by the user, Sympy functions are replaced as
+    If not specified differently by the user, SymPy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
     functions - exactly in this order.
     To change this behavior, the "modules" argument can be used.
     It accepts:
+
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above. (Entries that are first
         in the list have higher priority)
 
-    Examples:
+    Examples
+    ========
+
     (1) Use one of the provided modules:
+
         >> f = lambdify(x, sin(x), "math")
 
         Attention: Functions that are not in the math module will throw a name
                    error when the lambda function is evaluated! So this would
                    be better:
+
         >> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy"))
 
     (2) Use some other module:
+
         >> import numpy
         >> f = lambdify((x,y), tan(x*y), numpy)
 
@@ -179,11 +192,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use own dictionaries:
+
         >> def my_cool_function(x): ...
         >> dic = {"sin" : my_cool_function}
         >> f = lambdify(x, sin(x), dic)
 
         Now f would look like:
+
         >> lambda x: my_cool_function(x)
 
     Functions present in `expr` can also carry their own numerical
@@ -194,7 +209,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
     >>> func(4)
     5
@@ -324,8 +339,8 @@ def _imp_namespace(expr, namespace=None):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
-    >>> g = implemented_function(Function('g'), lambda x : x*10)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> g = implemented_function(Function('g'), lambda x: x*10)
     >>> namespace = _imp_namespace(f(g(x)))
     >>> sorted(namespace.keys())
     ['f', 'g']
@@ -349,7 +364,7 @@ def _imp_namespace(expr, namespace=None):
     func = getattr(expr, 'func', None)
     if isinstance(func, FunctionClass):
         imp = getattr(func, '_imp_', None)
-        if not imp is None:
+        if imp is not None:
             name = expr.func.__name__
             if name in namespace and namespace[name] != imp:
                 raise ValueError('We found more than one '
@@ -363,20 +378,24 @@ def _imp_namespace(expr, namespace=None):
     return namespace
 
 def implemented_function(symfunc, implementation):
-    """ Add numerical `implementation` to function `symfunc`
+    """ Add numerical ``implementation`` to function ``symfunc``.
 
-    `symfunc` can by a Function, or a name, in which case we make an
-    anonymous function with this name.  The function is anonymous in the
-    sense that the name is not unique in the sympy namespace.
+    ``symfunc`` can be an ``UndefinedFunction`` instance, or a name string.
+    In the latter case we create an ``UndefinedFunction`` instance with that
+    name.
+
+    Be aware that this is a quick workaround, not a general method to create
+    special symbolic functions. If you want to create a symbolic function to be
+    used by all the machinery of sympy you should subclass the ``Function``
+    class.
 
     Parameters
     ----------
-    symfunc : str or ``sympy.FunctionClass`` instance
-       If str, then create new anonymous sympy function with this as
-       name.  If `symfunc` is a sympy function, attach implementation to
-       function
+    symfunc : ``str`` or ``UndefinedFunction`` instance
+       If ``str``, then create new ``UndefinedFunction`` with this as
+       name.  If `symfunc` is a sympy function, attach implementation to it.
     implementation : callable
-       numerical implementation of function for use in ``lambdify``
+       numerical implementation to be called by ``evalf()`` or ``lambdify``
 
     Returns
     -------
@@ -388,16 +407,19 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
-    >>> f = implemented_function(Function('f'), lambda x : x+1)
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
     5
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
-    # if name, create anonymous function to hold implementation
+    # if name, create function to hold implementation
     if isinstance(symfunc, basestring):
         symfunc = UndefinedFunction(symfunc)
+    elif not isinstance(symfunc, UndefinedFunction):
+        raise ValueError('symfunc should be either a string or'
+                         ' an UndefinedFunction instance.')
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)
     return symfunc

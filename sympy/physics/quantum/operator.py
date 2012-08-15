@@ -9,16 +9,10 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from itertools import count
-
-from sympy import Expr, Symbol, diff, Integer, Function, Tuple, Derivative
-from sympy.core.function import UndefinedFunction
+from sympy import Derivative, Expr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-
-from sympy.physics.quantum.qexpr import (
-    QExpr, dispatch_method
-)
+from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
     'Operator',
@@ -35,11 +29,13 @@ __all__ = [
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
-    An operator maps one ket to another [1]. In quantum mechanics, Hermitian
-    operators correspond to observables [2].
+    An operator maps between quantum states [1]_. In quantum mechanics,
+    observables (including, but not limited to, measured physical values) are
+    represented as Hermitian operators [2]_.
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -93,8 +89,8 @@ class Operator(QExpr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Operator
-    [2] http://en.wikipedia.org/wiki/Observable
+    .. [1] http://en.wikipedia.org/wiki/Operator_(physics)
+    .. [2] http://en.wikipedia.org/wiki/Observable
     """
 
     @classmethod
@@ -139,7 +135,7 @@ class Operator(QExpr):
         if len(self.label) == 1:
             return self._print_label_latex(printer, *args)
         else:
-            return '%s(%s)' % (
+            return r'%s\left(%s\right)' % (
                 self._print_operator_name_latex(printer, *args),
                 self._print_label_latex(printer, *args)
             )
@@ -185,6 +181,7 @@ class HermitianOperator(Operator):
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -198,8 +195,7 @@ class HermitianOperator(Operator):
     H
     """
 
-    def _eval_dagger(self):
-        return self
+    is_hermitian = True
 
     def _eval_inverse(self):
         if isinstance(self, UnitaryOperator):
@@ -218,11 +214,13 @@ class HermitianOperator(Operator):
         else:
             return Operator._eval_power(self, exp)
 
+
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.
 
     Parameters
     ==========
+
     args : tuple
         The list of numbers or parameters that uniquely specify the
         operator. For time-dependent operators, this will include the time.
@@ -236,19 +234,20 @@ class UnitaryOperator(Operator):
     1
     """
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return self._eval_inverse()
 
 
 class OuterProduct(Operator):
     """An unevaluated outer product between a ket and bra.
 
-    This constructs an outer product between any subclass of KetBase and
-    BraBase as |a><b|. An OuterProduct inherits from Operator as they act as
-    operators in quantum expressions.  For reference see [1].
+    This constructs an outer product between any subclass of ``KetBase`` and
+    ``BraBase`` as ``|a><b|``. An ``OuterProduct`` inherits from Operator as they act as
+    operators in quantum expressions.  For reference see [1]_.
 
     Parameters
     ==========
+
     ket : KetBase
         The ket on the left side of the outer product.
     bar : BraBase
@@ -298,8 +297,9 @@ class OuterProduct(Operator):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Outer_product
+    .. [1] http://en.wikipedia.org/wiki/Outer_product
     """
+    is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):
         from sympy.physics.quantum.state import KetBase, BraBase
@@ -315,7 +315,7 @@ class OuterProduct(Operator):
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args, **{'commutative': False})
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -329,7 +329,7 @@ class OuterProduct(Operator):
         """Return the bra on the right side of the outer product."""
         return self.args[1]
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
@@ -353,32 +353,36 @@ class OuterProduct(Operator):
         b = self.bra._represent(**options)
         return k*b
 
-class DifferentialOperator(Operator):
-    """
-    An operator for representing the differential operator, i.e. d/dx
+    def _eval_trace(self,**kwargs):
+        # TODO if operands are tensorproducts this may be will be handled
+        # differently.
 
-    It is initialized by passing two arguments. The first is an
-    arbitrary expression that involves a function, such as
-    Derivative(f(x), x). The second is the function (e.g. f(x)) which
-    we are to replace with the Wavefunction that this
-    DifferentialOperator is applied to.
+        return self.ket._eval_trace(self.bra,**kwargs);
+
+class DifferentialOperator(Operator):
+    """An operator for representing the differential operator, i.e. d/dx
+
+    It is initialized by passing two arguments. The first is an arbitrary
+    expression that involves a function, such as ``Derivative(f(x), x)``. The
+    second is the function (e.g. ``f(x)``) which we are to replace with the
+    ``Wavefunction`` that this ``DifferentialOperator`` is applied to.
 
     Parameters
     ==========
 
     expr : Expr
-           The arbitrary expression which the appropriate Wavefunction
-           is to be substituted into
+           The arbitrary expression which the appropriate Wavefunction is to be
+           substituted into
 
     func : Expr
-           A function (e.g. f(x)) which is to be replaced with the
-           appropriate Wavefunction when this DifferentialOperator is applied
+           A function (e.g. f(x)) which is to be replaced with the appropriate
+           Wavefunction when this DifferentialOperator is applied
 
     Examples
     ========
 
-    You can define a completely arbitrary expression and specify where
-    the Wavefunction is to be substituted
+    You can define a completely arbitrary expression and specify where the
+    Wavefunction is to be substituted
 
     >>> from sympy import Derivative, Function, Symbol
     >>> from sympy.physics.quantum.operator import DifferentialOperator
@@ -400,8 +404,8 @@ class DifferentialOperator(Operator):
     @property
     def variables(self):
         """
-        Returns the variables with which the function
-        in the specified arbitrary expression is evaluated
+        Returns the variables with which the function in the specified
+        arbitrary expression is evaluated
 
         Examples
         ========
@@ -449,8 +453,8 @@ class DifferentialOperator(Operator):
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the
-        Wavefunction substituted into it
+        Returns the arbitary expression which is to have the Wavefunction
+        substituted into it
 
         Examples
         ========
@@ -498,13 +502,13 @@ class DifferentialOperator(Operator):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
+    def _print(self, printer, *args):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
           )
 
-    def _print_contents_pretty(self, printer, *args):
+    def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)
         label_pform = self._print_label_pretty(printer, *args)
         label_pform = prettyForm(

@@ -20,12 +20,12 @@ def symmetric_residue(a, m):
         return a - m
 
 def crt(m, v, symmetric=False, check=True):
-    """Chinese Remainder Theorem.
+    r"""Chinese Remainder Theorem.
 
     The moduli in m are assumed to be pairwise coprime.  The output
     is then an integer f, such that f = v_i mod m_i for each pair out
     of v and m. If ``symmetric`` is False a positive integer will be
-    returned, else |f| will be less than or equal to the LCM of the
+    returned, else \|f\| will be less than or equal to the LCM of the
     moduli, and thus f may be negative.
 
     If the moduli are not co-prime the correct result will be returned
@@ -67,6 +67,12 @@ def crt(m, v, symmetric=False, check=True):
     no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
     that there is no factor in common, a check that the result gives the
     indicated residuals is performed -- an O(n) operation.
+
+    See Also
+    ========
+
+    solve_congruence
+    sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
     if check:
         m = int_tested(*m)
@@ -89,12 +95,29 @@ def crt(m, v, symmetric=False, check=True):
     return result, mm
 
 def crt1(m):
-    """First part of Chinese Remainder Theorem, for multiple application. """
+    """First part of Chinese Remainder Theorem, for multiple application.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.modular import crt1
+    >>> crt1([18, 42, 6])
+    (4536, [252, 108, 756], [0, 2, 0])
+    """
 
     return gf_crt1(m, ZZ)
 
 def crt2(m, v, mm, e, s, symmetric=False):
-    """Second part of Chinese Remainder Theorem, for multiple application. """
+    """Second part of Chinese Remainder Theorem, for multiple application.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.modular import crt1, crt2
+    >>> mm, e, s = crt1([18, 42, 6])
+    >>> crt2([18, 42, 6], [0, 0, 0], mm, e, s)
+    (0, 4536)
+    """
 
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
@@ -116,10 +139,13 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     If the hint ``symmetric`` is True (default is False), the value of ``n``
     will be within 1/2 of the modulus, possibly negative.
 
-    Examples::
+    Examples
+    ========
+
     >>> from sympy.ntheory.modular import solve_congruence
 
     What number is 2 mod 3, 3 mod 5 and 2 mod 7?
+
     >>> solve_congruence((2, 3), (3, 5), (2, 7))
     (23, 105)
     >>> [23 % m for m in [3, 5, 7]]
@@ -127,28 +153,38 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     If you prefer to work with all remainder in one list and
     all moduli in another, send the arguments like this:
+
     >>> solve_congruence(*zip((2, 3, 2), (3, 5, 7)))
     (23, 105)
 
     The moduli need not be co-prime; in this case there may or
     may not be a solution:
+
     >>> solve_congruence((2, 3), (4, 6)) is None
     True
+
     >>> solve_congruence((2, 3), (5, 6))
     (5, 6)
 
     The symmetric flag will make the result be within 1/2 of the modulus:
+
     >>> solve_congruence((2, 3), (5, 6), symmetric=True)
     (-1, 6)
 
-    See also: crt and sympy.polys.galoistools.gf_crt
+    See Also
+    ========
+
+    crt : high level routine implementing the Chinese Remainder Theorem
+
     """
     def combine(c1, c2):
         """Return the tuple (a, m) which satisfies the requirement
         that n = a + i*m satisfy n = a1 + j*m1 and n = a2 = k*m2.
 
-        Reference:
-           http://en.wikipedia.org/wiki/Method_of_successive_substitution
+        References
+        ==========
+
+        - http://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         from sympy.core.numbers import igcdex
         a1, m1 = c1

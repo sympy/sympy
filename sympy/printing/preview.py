@@ -6,56 +6,60 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='png', viewer=None, euler=True):
-    """View expression or LaTeX markup in PNG, DVI, PostScript or
-       PDF form.
+def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
+    r"""
+    View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
-       If the expr argument is an expression, it will be exported to
-       LaTeX and then compiled using available the TeX distribution.
-       The first argument, 'expr', may also be a LaTeX string.
-       The function will then run the appropriate viewer for the given
-       output format or use the user defined one. By default png
-       output is generated.
+    If the expr argument is an expression, it will be exported to LaTeX and
+    then compiled using available the TeX distribution.  The first argument,
+    'expr', may also be a LaTeX string.  The function will then run the
+    appropriate viewer for the given output format or use the user defined
+    one. By default png output is generated.
 
-       By default pretty Euler fonts are used for typesetting (they
-       were used to typeset the well known "Concrete Mathematics"
-       book). For that to work, you need the 'eulervm.sty' LaTeX style (in
-       Debian/Ubuntu, install the texlive-fonts-extra package). If you prefer
-       default AMS fonts or your system lacks 'eulervm' LaTeX package then
-       unset the 'euler' keyword argument.
+    By default pretty Euler fonts are used for typesetting (they were used to
+    typeset the well known "Concrete Mathematics" book). For that to work, you
+    need the 'eulervm.sty' LaTeX style (in Debian/Ubuntu, install the
+    texlive-fonts-extra package). If you prefer default AMS fonts or your
+    system lacks 'eulervm' LaTeX package then unset the 'euler' keyword
+    argument.
 
-       To use viewer auto-detection, lets say for 'png' output, issue::
+    To use viewer auto-detection, lets say for 'png' output, issue
 
-           >> from sympy import *
-           >> x, y = symbols("x,y")
+    >>> from sympy import symbols, preview, Symbol
+    >>> x, y = symbols("x,y")
 
-           >> preview(x + y, output='png')
+    >>> preview(x + y, output='png') # doctest: +SKIP
 
-       This will choose 'pyglet' by default. To select different one::
+    This will choose 'pyglet' by default. To select a different one, do
 
-           >> preview(x + y, output='png', viewer='gimp')
+    >>> preview(x + y, output='png', viewer='gimp') # doctest: +SKIP
 
+    The 'png' format is considered special. For all other formats the rules
+    are slightly different. As an example we will take 'dvi' output format. If
+    you would run
 
-       The 'png' format is considered special. For all other formats
-       the rules are slightly different. As an example we will take
-       'dvi' output format. If you would run::
+    >>> preview(x + y, output='dvi') # doctest: +SKIP
 
-           >> preview(x + y, output='dvi')
+    then 'view' will look for available 'dvi' viewers on your system
+    (predefined in the function, so it will try evince, first, then kdvi and
+    xdvi). If nothing is found you will need to set the viewer explicitly.
 
-       then 'view' will look for available 'dvi' viewers on your
-       system (predefined in the function, so it will try evince,
-       first, then kdvi and xdvi). If nothing is found you will
-       need to set the viewer explicitly::
+    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer') # doctest: +SKIP
 
-           >> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
+    This will skip auto-detection and will run user specified
+    'superior-dvi-viewer'. If 'view' fails to find it on your system it will
+    gracefully raise an exception. You may also enter 'file' for the viewer
+    argument. Doing so will cause this function to return a file object in
+    read-only mode.
 
-       This will skip auto-detection and will run user specified
-       'superior-dvi-viewer'. If 'view' fails to find it on
-       your system it will gracefully raise an exception. You may also
-       enter 'file' for the viewer argument. Doing so will cause this function
-       to return a file object in read-only mode.
+    Currently this depends on pexpect, which is not available for windows.
 
-       Currently this depends on pexpect, which is not available for windows.
+    Additional keyword args will be passed to the latex call, e.g., the
+    symbol_names flag.
+
+    >>> phidd = Symbol('phidd')
+    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
+
     """
 
     # we don't want to depend on anything not in the
@@ -89,32 +93,25 @@ def preview(expr, output='png', viewer=None, euler=True):
         if viewer not in special and not pexpect.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    if not euler:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
-    else:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \usepackage{eulervm}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
+    actual_packages = packages + ("amsmath", "amsfonts")
+    if euler:
+        actual_packages += ("euler",)
+    package_includes = "\n".join(["\\usepackage{%s}" % p
+                                  for p in actual_packages])
+
+    format = r"""\documentclass[12pt]{article}
+                 %s
+                 \begin{document}
+                 \pagestyle{empty}
+                 %s
+                 \vfill
+                 \end{document}
+              """ % (package_includes, "%s")
 
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline')
+        latex_string = latex(expr, mode='inline', **latex_settings)
 
 
     tmp = tempfile.mktemp()

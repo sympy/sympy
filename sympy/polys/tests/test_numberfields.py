@@ -1,6 +1,6 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo
+from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
@@ -62,10 +62,10 @@ def test_minimal_polynomial():
     assert minimal_polynomial(1/a, x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
     assert minimal_polynomial(1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
-    raises(NotAlgebraic, "minimal_polynomial(y, x)")
-    raises(NotAlgebraic, "minimal_polynomial(oo, x)")
-    raises(NotAlgebraic, "minimal_polynomial(2**y, x)")
-    raises(NotAlgebraic, "minimal_polynomial(sin(1), x)")
+    raises(NotAlgebraic, lambda: minimal_polynomial(y, x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(oo, x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(2**y, x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(sin(1), x))
 
     assert minimal_polynomial(sqrt(2)).dummy_eq(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
@@ -111,14 +111,14 @@ def test_primitive_element():
 
     assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
 
-    raises(ValueError, "primitive_element([], x, ex=False)")
-    raises(ValueError, "primitive_element([], x, ex=True)")
+    raises(ValueError, lambda: primitive_element([], x, ex=False))
+    raises(ValueError, lambda: primitive_element([], x, ex=True))
 
 def test_field_isomorphism_pslq():
     a = AlgebraicNumber(I)
     b = AlgebraicNumber(I*sqrt(3))
 
-    raises(NotImplementedError, "field_isomorphism_pslq(a, b)")
+    raises(NotImplementedError, lambda: field_isomorphism_pslq(a, b))
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(3))
@@ -326,7 +326,7 @@ def test_to_number_field():
     assert to_number_field(sqrt(2), sqrt(2)+sqrt(3)) == a
     assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2)+sqrt(3))) == a
 
-    raises(IsomorphismFailed, "to_number_field(sqrt(2), sqrt(3))")
+    raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))
 
 def test_AlgebraicNumber():
     minpoly, root = x**2 - 2, sqrt(2)
@@ -407,12 +407,13 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(2))
 
-    assert a == b and a == sqrt(2)
+    assert a == b
 
-    a = AlgebraicNumber(sqrt(2), gen=x)
-    b = AlgebraicNumber(sqrt(2), gen=x)
+    c = AlgebraicNumber(sqrt(2), gen=x)
+    d = AlgebraicNumber(sqrt(2), gen=x)
 
-    assert a == b and a == sqrt(2)
+    assert a == b
+    assert a == c
 
     a = AlgebraicNumber(sqrt(2), [1,2])
     b = AlgebraicNumber(sqrt(2), [1,3])
@@ -446,6 +447,15 @@ def test_AlgebraicNumber():
     assert a.as_expr(x) == 2*x+3
     assert b.as_expr()  == 2*sqrt(2)+3
     assert b.as_expr(x) == 2*x+3
+
+    a = AlgebraicNumber(sqrt(2))
+    b = to_number_field(sqrt(2))
+    assert a.args == b.args == (sqrt(2), Tuple())
+    b = AlgebraicNumber(sqrt(2), alias='alpha')
+    assert b.args == (sqrt(2), Tuple(), Symbol('alpha'))
+
+    a = AlgebraicNumber(sqrt(2), [1, 2, 3])
+    assert a.args == (sqrt(2), Tuple(1, 2, 3))
 
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
@@ -487,4 +497,4 @@ def test_isolate():
     assert isolate(sqrt(2), eps=S(1)/100) == (S(24)/17, S(17)/12)
     assert isolate(-sqrt(2), eps=S(1)/100) == (-S(17)/12, -S(24)/17)
 
-    raises(NotImplementedError, "isolate(I)")
+    raises(NotImplementedError, lambda: isolate(I))

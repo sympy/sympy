@@ -6,6 +6,7 @@ import os
 
 def print_gtk(x, start_viewer=True):
     """Print to Gtkmathview, a gtk widget capable of rendering MathML.
+
     Needs libgtkmathview-bin"""
     from sympy.utilities.mathml import c2p
 

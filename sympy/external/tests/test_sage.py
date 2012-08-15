@@ -23,8 +23,18 @@ from sympy.external import import_module
 
 sage = import_module('sage.all', __import__kwargs={'fromlist':['all']})
 if not sage:
-    #py.test will not execute any tests now
+    #bin/test will not execute any tests now
     disabled = True
+
+if sys.version_info[0] == 3:
+    # Sage does not support Python 3 currently
+    disabled = True
+
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("Sage isn't available.")
 
 import sympy
 
@@ -34,7 +44,8 @@ def check_expression(expr, var_symbols):
     """Does eval(expr) both in Sage and SymPy and does other checks."""
 
     # evaluate the expression in the context of Sage:
-    sage.var(var_symbols)
+    if var_symbols:
+        sage.var(var_symbols)
     a = globals().copy()
     # safety checks...
     assert not "sin" in a

@@ -181,7 +181,7 @@ def test_dmp_mul_ground():
     ]
 
 def test_dup_quo_ground():
-    raises(ZeroDivisionError, 'dup_quo_ground(dup_normal([1,2,3], ZZ), ZZ(0), ZZ)')
+    raises(ZeroDivisionError, lambda: dup_quo_ground(dup_normal([1,2,3], ZZ), ZZ(0), ZZ))
 
     f = dup_normal([], ZZ)
 
@@ -201,8 +201,8 @@ def test_dup_quo_ground():
     assert dup_quo_ground(f, QQ(7), QQ) == [QQ(6,7),QQ(2,7),QQ(8,7)]
 
 def test_dup_exquo_ground():
-    raises(ZeroDivisionError, 'dup_exquo_ground(dup_normal([1,2,3], ZZ), ZZ(0), ZZ)')
-    raises(ExactQuotientFailed, 'dup_exquo_ground(dup_normal([1,2,3], ZZ), ZZ(3), ZZ)')
+    raises(ZeroDivisionError, lambda: dup_exquo_ground(dup_normal([1,2,3], ZZ), ZZ(0), ZZ))
+    raises(ExactQuotientFailed, lambda: dup_exquo_ground(dup_normal([1,2,3], ZZ), ZZ(3), ZZ))
 
     f = dup_normal([], ZZ)
 
@@ -527,7 +527,7 @@ def test_dup_pdiv():
     assert dup_pquo(f, g, ZZ) == q
     assert dup_prem(f, g, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dup_pexquo(f, g, ZZ)')
+    raises(ExactQuotientFailed, lambda: dup_pexquo(f, g, ZZ))
 
     f = dup_normal([3,1,1,5], QQ)
     g = dup_normal([5,-3,1], QQ)
@@ -539,7 +539,7 @@ def test_dup_pdiv():
     assert dup_pquo(f, g, QQ) == q
     assert dup_prem(f, g, QQ) == r
 
-    raises(ExactQuotientFailed, 'dup_pexquo(f, g, QQ)')
+    raises(ExactQuotientFailed, lambda: dup_pexquo(f, g, QQ))
 
 def test_dmp_pdiv():
     f = dmp_normal([[1], [], [1,0,0]], 1, ZZ)
@@ -552,7 +552,7 @@ def test_dmp_pdiv():
     assert dmp_pquo(f, g, 1, ZZ) == q
     assert dmp_prem(f, g, 1, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dmp_pexquo(f, g, 1, ZZ)')
+    raises(ExactQuotientFailed, lambda: dmp_pexquo(f, g, 1, ZZ))
 
     f = dmp_normal([[1], [], [1,0,0]], 1, ZZ)
     g = dmp_normal([[2], [-2,0]], 1, ZZ)
@@ -564,10 +564,10 @@ def test_dmp_pdiv():
     assert dmp_pquo(f, g, 1, ZZ) == q
     assert dmp_prem(f, g, 1, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dmp_pexquo(f, g, 1, ZZ)')
+    raises(ExactQuotientFailed, lambda: dmp_pexquo(f, g, 1, ZZ))
 
 def test_dup_rr_div():
-    raises(ZeroDivisionError, "dup_rr_div([1,2,3], [], ZZ)")
+    raises(ZeroDivisionError, lambda: dup_rr_div([1,2,3], [], ZZ))
 
     f = dup_normal([3,1,1,5], ZZ)
     g = dup_normal([5,-3,1], ZZ)
@@ -577,7 +577,7 @@ def test_dup_rr_div():
     assert dup_rr_div(f, g, ZZ) == (q, r)
 
 def test_dmp_rr_div():
-    raises(ZeroDivisionError, "dmp_rr_div([[1,2],[3]], [[]], 1, ZZ)")
+    raises(ZeroDivisionError, lambda: dmp_rr_div([[1,2],[3]], [[]], 1, ZZ))
 
     f = dmp_normal([[1], [], [1,0,0]], 1, ZZ)
     g = dmp_normal([[1], [-1,0]], 1, ZZ)
@@ -603,7 +603,7 @@ def test_dmp_rr_div():
     assert dmp_rr_div(f, g, 1, ZZ) == (q, r)
 
 def test_dup_ff_div():
-    raises(ZeroDivisionError, "dup_ff_div([1,2,3], [], QQ)")
+    raises(ZeroDivisionError, lambda: dup_ff_div([1,2,3], [], QQ))
 
     f = dup_normal([3,1,1,5], QQ)
     g = dup_normal([5,-3,1], QQ)
@@ -614,7 +614,7 @@ def test_dup_ff_div():
     assert dup_ff_div(f, g, QQ) == (q, r)
 
 def test_dmp_ff_div():
-    raises(ZeroDivisionError, "dmp_ff_div([[1,2],[3]], [[]], 1, QQ)")
+    raises(ZeroDivisionError, lambda: dmp_ff_div([[1,2],[3]], [[]], 1, QQ))
 
     f = dmp_normal([[1], [], [1,0,0]], 1, QQ)
     g = dmp_normal([[1], [-1,0]], 1, QQ)
@@ -647,7 +647,7 @@ def test_dup_div():
     assert dup_quo(f, g, ZZ) == q
     assert dup_rem(f, g, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dup_exquo(f, g, ZZ)')
+    raises(ExactQuotientFailed, lambda: dup_exquo(f, g, ZZ))
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,0,0,9], [5,-6], [15,2,-44,54]
 
@@ -655,7 +655,7 @@ def test_dup_div():
     assert dup_quo(f, g, ZZ) == q
     assert dup_rem(f, g, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dup_exquo(f, g, ZZ)')
+    raises(ExactQuotientFailed, lambda: dup_exquo(f, g, ZZ))
 
 def test_dmp_div():
     f, g, q, r = [5,4,3,2,1], [1,2,3], [5,-6,0], [20,1]
@@ -664,7 +664,7 @@ def test_dmp_div():
     assert dmp_quo(f, g, 0, ZZ) == q
     assert dmp_rem(f, g, 0, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dmp_exquo(f, g, 0, ZZ)')
+    raises(ExactQuotientFailed, lambda: dmp_exquo(f, g, 0, ZZ))
 
     f, g, q, r = [[[1]]], [[[2]],[1]], [[[]]], [[[1]]]
 
@@ -672,7 +672,7 @@ def test_dmp_div():
     assert dmp_quo(f, g, 2, ZZ) == q
     assert dmp_rem(f, g, 2, ZZ) == r
 
-    raises(ExactQuotientFailed, 'dmp_exquo(f, g, 2, ZZ)')
+    raises(ExactQuotientFailed, lambda: dmp_exquo(f, g, 2, ZZ))
 
 def test_dup_max_norm():
     assert dup_max_norm([], ZZ) == 0
@@ -706,4 +706,3 @@ def test_dmp_expand():
     assert dmp_expand((), 1, ZZ) == [[1]]
     assert dmp_expand(([[1],[2],[3]], [[1],[2]], [[7],[5],[4],[3]]), 1, ZZ) == \
         dmp_mul([[1],[2],[3]], dmp_mul([[1],[2]], [[7],[5],[4],[3]], 1, ZZ), 1, ZZ)
-
