@@ -1269,6 +1269,7 @@ def plot_line(*args, **kwargs):
 
     Usage
     =====
+
     Single Plot
     plot_line(expr, range, **kwargs)
     If the range is not specified, then a default range of (-10, 10) is used.
