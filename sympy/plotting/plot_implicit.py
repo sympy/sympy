@@ -331,8 +331,8 @@ def plot_implicit(expr, *args, **kwargs):
     show = kwargs.pop('show', True)
 
     #set the x and y limits
-    kwargs['xlim'] = (float(x) for x in var_start_end_x[1:])
-    kwargs['ylim'] = (float(y) for y in var_start_end_y[1:])
+    kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
+    kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()
