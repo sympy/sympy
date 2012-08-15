@@ -3,7 +3,6 @@
 from sympy.core import Dummy, Wild, S
 from sympy.core.numbers import Rational, Integer
 from sympy.functions import binomial, sin, cos, tan, sec, csc, cot
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.cache import cacheit
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
