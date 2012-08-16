@@ -306,7 +306,7 @@ class bell(Function):
     * bell(n) gives the nth Bell number, `B_n`
     * bell(n, x) gives the nth Bell polynomial, `B_n(x)`
     * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
-            `B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
+            `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`
 
     Notes
     =====

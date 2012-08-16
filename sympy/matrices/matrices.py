@@ -390,7 +390,7 @@ class MatrixBase(object):
 
     def expand(self, **hints):
         """
-        Expand each element of the matrix by calling `expand()`.
+        Expand each element of the matrix by calling ``expand()``.
         """
         out = self._new(self.rows, self.cols,
                 map(lambda i: i.expand(**hints), self.mat))
@@ -398,7 +398,7 @@ class MatrixBase(object):
 
     def subs(self, *args, **kwargs):
         """
-        Create substituted expressions for each element with `Expr.subs`.
+        Create substituted expressions for each element with ``Expr.subs``.
         """
         out = self._new(self.rows, self.cols,
                 map(lambda i: i.subs(*args, **kwargs), self.mat))
@@ -1635,7 +1635,7 @@ class MatrixBase(object):
 
     def cross(self, b):
         """
-        Calculate the cross product of `self` and `b`.
+        Calculate the cross product of ``self`` and ``b``.
 
         See Also
         ========
@@ -1805,7 +1805,7 @@ class MatrixBase(object):
 
     def normalized(self):
         """
-        Return the normalized version of `self`.
+        Return the normalized version of ``self``.
 
         See Also
         ========
@@ -2258,7 +2258,7 @@ class MatrixBase(object):
         Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
 
-        When `simplify=True` (default), the sum M[i, j] + M[j, i] is
+        When ``simplify=True`` (default), the sum M[i, j] + M[j, i] is
         simplified before testing to see if it is zero. By default,
         the SymPy simplify function is used. To use a custom function
         set simplify to a function that accepts a single argument which
@@ -4784,7 +4784,7 @@ def a2idx(a):
 def symarray(prefix, shape):
     """Create a numpy ndarray of symbols (as an object array).
 
-    The created symbols are named `prefix_i1_i2_`...  You should thus provide a
+    The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
     arrays, as SymPy symbols with identical names are the same object.
 

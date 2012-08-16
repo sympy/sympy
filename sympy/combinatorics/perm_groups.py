@@ -675,8 +675,8 @@ class PermutationGroup(Basic):
         [2],p.98. It is of Las Vegas type.
         Notice that [1] contains a mistake in the pseudocode and
         discussion of BASESWAP: on line 3 of the pseudocode,
-        `|\beta_{i+1}^\left\langle T\right\rangle|` should be replaced by
-        `|\beta_{i}^\left\langle T\right\rangle|`, and the same for the
+        `|\beta_{i+1}^{\left\langle T\right\rangle}|` should be replaced by
+        `|\beta_{i}^{\left\langle T\right\rangle}|`, and the same for the
         discussion of the algorithm.
 
         """
@@ -2233,7 +2233,7 @@ class PermutationGroup(Basic):
         The randomized Schreier-Sims algorithm takes the sequence ``base``
         and the generating set ``gens``, and extends ``base`` to a base, and
         ``gens`` to a strong generating set relative to that base with
-        probability of a wrong answer at most `1/\text{consec_succ}`.
+        probability of a wrong answer at most `1/\text{consec\_succ}`.
 
         Parameters
         ==========
@@ -2279,7 +2279,7 @@ class PermutationGroup(Basic):
         used to amend ``stabs``, ``base``, ``gens`` and ``orbs`` accordingly.
         The halting condition is for ``consec_succ`` consecutive successful
         sifts to pass. This makes sure that the current ``base`` and ``gens``
-        form a BSGS with probability at least `1 - 1/\text{consec_succ}`.
+        form a BSGS with probability at least `1 - 1/\text{consec\_succ}`.
 
         See Also
         ========

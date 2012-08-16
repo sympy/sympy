@@ -72,7 +72,7 @@ def process_equals(xstr):
     return(xstr)
 
 class LatexPrinter(Printer):
-    """
+    r"""
     A printer class which converts an expression into its LaTeX equivalent.
     This class extends the LatexPrinter class currently in sympy in the
     following ways:
@@ -86,7 +86,7 @@ class LatexPrinter(Printer):
                 example if you wished the LaTeX output to be ``\bm{\hat{\sigma}}``
                 you would give the variable the name sigmahatbm.
             2 - Subscripts are denoted by a single underscore and superscripts
-                by a double underscore so that ``A_{\\rho\\beta}^{25}`` would be
+                by a double underscore so that ``A_{\rho\beta}^{25}`` would be
                 input as A_rhobeta__25.
 
         2. Some standard function names have been improved such as asin is now
@@ -111,11 +111,11 @@ class LatexPrinter(Printer):
                 '%' is in the line.
             2 - The delimiter for eqnarray input is '@'. The rules are the same
                 as for raw input except that '=' in the first line is replaced
-                be '&=&' and '\\begin{eqnarray*}' is added before the first line
+                be '&=&' and '\begin{eqnarray*}' is added before the first line
                 and '\end{eqnarray*}' to after the last line in the group of
                 lines.
             3 - The delimiter for array input is '#'. The rules are the same
-                as for raw input except that '\\begin{equation*}' is added before
+                as for raw input except that '\begin{equation*}' is added before
                 the first line and '\end{equation*}' to after the last line in
                 the group of lines.
 
