@@ -43,7 +43,7 @@ msgstr "Първи стъпки със SymPy"
 # 6f67d8997f1a474288d6bd50f5ddbc4f
 #: ../../src/tutorial.rst:28
 msgid "The easiest way to download it is to go to http://code.google.com/p/sympy/ and download the latest tarball from the Featured Downloads:"
-msgstr "Най-лесният начин да свалите SymPy е да отидете на http://code.google.com/p/sympy/  и да изтеглите последния архив. .. image:: figures/featured-downloads.png"
+msgstr "Най-лесният начин да свалите SymPy е да отидете на http://code.google.com/p/sympy/  и да изтеглите последния архив."
 
 # 65bde5e4aded4818bc11c4b9cfc8a3b7
 #: ../../src/tutorial.rst:34

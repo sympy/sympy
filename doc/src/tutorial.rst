@@ -110,8 +110,8 @@ defined the symbols x, y, z and some other things:
     In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
          2      4       6        8
-        x    5*x    61*x    277*x     / 10\
-    1 + ── + ──── + ───── + ────── + O\x  /
+        x    5*x    61*x    277*x     / 10\\
+    1 + -- + ---- + ----- + ------ + O\\x  /
         2     24     720     8064
 
 .. note::
