@@ -1,59 +1,77 @@
-from sympy.core import Basic, C
+from sympy.core import Basic, C, Dict
 from sympy.matrices import zeros
 from sympy.functions import floor
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import dups, flatten
 
 import random
+from collections import defaultdict
 
 class Partition(C.FiniteSet):
     """
     This class represents an abstract partition.
 
     A partition is a set of disjoint sets whose union equals a given set.
-    Examples:
-    =========
+
+    Examples
+    ========
     """
 
     _rank = None
-    _super = None
-    _super_list = None
 
-    def __new__(cls, *args, **kw_args):
+    def __new__(cls, *args):
         """
         Generates a new partition object.
 
         This method also verifies if the arguments passed are
-        valid and if it is found that they are not then an exception is raised.
+        valid and raises a ValueError if they are not.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3]])
-        >>> str(a)
-        '{{3}, {1, 2}}'
+        >>> a
+        {{1, 2}, {3}}
+        >>> a.as_list()
+        [[1, 2], [3]]
+        >>> len(a)
+        2
+        >>> a.members
+        (1, 2, 3)
+
         """
         partition = args[0]
-        super_set = C.FiniteSet(sum(partition, []))
 
-        check = []
-        for part in partition:
-            if not isinstance(part, list):
-                raise ValueError("The correct input is a list of lists of integers")
-            check.extend(part)
+        if not all(isinstance(part, list) for part in partition):
+                raise ValueError("Partition should be a list of lists.")
 
-        check.sort()
-        
-        if C.FiniteSet(check) != super_set:
-            raise ValueError("The partition provided is not valid.")
-        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), partition, **kw_args))
-        obj.partition_list_form = sorted([sorted(i) for i in partition])
+        # sort so we have a canonical reference for RGS
+        partition = sorted(sum(partition, []), key=default_sort_key)
+        if dups(partition):
+            raise ValueError("Partition contained duplicated elements.")
+
+        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), args[0]))
+        obj.members = tuple(partition)
+        obj.set_size = len(partition) # should this just be size?
         return obj
+
+    def as_list(self):
+        """Return partition as a sorted list of lists.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> Partition([[1], [2, 3]]).as_list()
+        [[1], [2, 3]]
+        """
+        return sorted(sorted(p) for p in self.args)
 
     def next(self):
         """
         Generates the next partition.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> a.next()
@@ -65,8 +83,8 @@ class Partition(C.FiniteSet):
         """
         Generates the previous partition.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4], [5]])
         >>> a.previous()
@@ -74,165 +92,87 @@ class Partition(C.FiniteSet):
         """
         return self - 1
 
-    @property
-    def size(self):
-        """
-        Gets the size of the partition.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.size
-        2
-        """
-        return len(self)
-
-    @property
-    def partition(self):
-        """
-        Gets the partition itself.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.partition
-        {{3}, {1, 2}}
-        """
-        return self
-
-    @property
-    def partition_set(self):
-        """
-        Gets the set of the partition.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.partition_set
-        {1, 2, 3}
-        """
-        if self._super != None:
-            return self._super
-        e = C.FiniteSet()
-        for elem in self:
-            e = e.union(elem)
-        self._super = e
-        return self._super
-
-    @property
-    def partition_set_size(self):
-        """
-        Gets the total number of elements in the partition set.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.partition_set_size
-        3
-        """
-        return len(self.partition_set)
-
-    @property
-    def partition_set_list(self):
-        """
-        Gets the partition set as a list.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.partition_set_list
-        [1, 2, 3]
-        """
-        if self._super_list != None:
-            return self._super_list
-        self._super_list = sorted(list(self.partition_set))
-        return self._super_list
-
-    def __repr__(self):
-        return str(self.elements)
-
-    def __add__(self, other):
-        """
-        Routine to add partitions.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.rank
-        1
-        >>> a = a + 3
-        >>> a
-        {{1}, {2}, {3}}
-        >>> a.rank
-        4
-        >>> a = a + a
-        >>> a
-        {{2, 3}, {1}}
-        """
-        return self._partition_op(other)
-
-    def __sub__(self, other):
-        """
-        Routine to add partitions.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
-        >>> a.rank
-        1
-        >>> a = a - 1
-        >>> a
-        {{1, 2, 3}}
-        >>> a.rank
-        0
-        >>> a = a + Partition([[1, 2], [3]])
-        >>> str(a)
-        '{{1, 2}, {3}}'
-        """
-        return self._partition_op(other, 1)
-
     def _partition_op(self, other, op=0):
         """
         Helper method for the __add__ and __sub__ methods.
         """
-        if isinstance(other, Partition):
-            if other.partition_set != self.partition_set:
-                raise ValueError("Partition sets are not equal.")
+        if isinstance(other, Partition): # XXX it seems weird to allow this
             if op == 0:
                 offset = self.rank + other.rank
             else:
                 offset = self.rank - other.rank
             result = RGS_unrank((offset) %
-                                RGS_enum(self.partition_set_size),
-                                self.partition_set_size)
+                                RGS_enum(self.set_size),
+                                self.set_size)
         elif isinstance(other, int):
             if op == 0:
                 offset = self.rank + other
             else:
                 offset = self.rank - other
             result = RGS_unrank((offset) %
-                                RGS_enum(self.partition_set_size),
-                                self.partition_set_size)
-        return Partition.partition_from_rgs(result, self.partition_set)
+                                RGS_enum(self.set_size),
+                                self.set_size)
+        return Partition.partition_from_rgs(result, self.members)
 
+    def sort_key(self, order=None):
+        """Return a canonical key that can be used for sorting."""
+        if order is None:
+            members = self.members
+        else:
+            members = tuple(sorted(self.members,
+                             key=lambda w: default_sort_key(w, order)))
+        return self.set_size, self.rank, members
 
-    def _compare(self, other):
+    def __add__(self, other):
         """
-        Compares two partitions.
+        Routine to increment the rank of self by other's rank or value
+        (if other is an integer).
 
-        The basis for comparison of two partitions is rank.
-        Partitions are sorted in an ascending order wrt their ranks.
-
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1, 2], [3]])
+        >>> a.rank
+        1
+        >>> (a + 1).rank
+        2
+        >>> (a + a).rank
+        2
+        """
+        return self._partition_op(other)
+
+    def __sub__(self, other):
+        """
+        Routine to decrement the rank of self by other's rank or value
+        (if other is an integer).
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1, 2], [3]])
+        >>> a.rank
+        1
+        >>> (a - 1).rank
+        0
+        >>> (a - a).rank
+        0
+        """
+        return self._partition_op(other, 1)
+
+    def compare(self, other):
+        """
+        Compares two partitions based on rank if they have the same
+        superset else based on their elements.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[i] for i in range(3)])
+        >>> b = Partition([[4]])
+        >>> a.rank, b.rank
+        (4, 0)
+        >>> a < b
+        True
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> b = Partition([[1], [2, 3], [4], [5]])
         >>> a.compare(b)
@@ -242,113 +182,66 @@ class Partition(C.FiniteSet):
         >>> b.compare(a)
         1
         """
-        if self.rank > other.rank:
+        if not isinstance(other, Partition):
+            raise ValueError('XXX how should the comparison be made?')
+        if self.members != other.members:
+            s, o = (w.members for w in (self, other))
+        else:
+            s, o = (w.rank for w in (self, other))
+        if s < o:
             return -1
-        elif self.rank < other.rank:
+        elif s > o:
             return 1
         return 0
 
-    def __eq__(self, other):
+    def __le__(self, other):
         """
-        Checks for equality of two partitions.
+        Checks if a partition is less than or equal to
+        the other based on rank.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> b = Partition([[1], [2, 3], [4], [5]])
-        >>> a == b
-        False
-        >>> a == a
+        >>> a.rank, b.rank
+        (9, 34)
+        >>> a <= a
+        True
+        >>> a <= b
         True
         """
-        return self._compare(other) == 0
-
-    def __ne__(self, other):
-        """
-        Checks for inequality of two partitions.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
-        >>> a != b
-        True
-        >>> a != a
-        False
-        """
-        return self._compare(other) != 0
-
-    def __gt__(self, other):
-        """
-        Checks if a partition is greater than the other.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
-        >>> a > b
-        True
-        """
-        return self._compare(other) > 0
+        try:
+            return self.compare(other) <= 0
+        except AssertionError:
+            return super(Partition, self).__le__(other)
 
     def __lt__(self, other):
         """
         Checks if a partition is less than the other.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> b = Partition([[1], [2, 3], [4], [5]])
+        >>> a.rank, b.rank
+        (9, 34)
         >>> a < b
-        False
-        """
-        return self._compare(other) < 0
-
-    def __ge__(self, other):
-        """
-        Checks if a partition is greater than or equal to
-        the other partition.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
-        >>> a >= a
-        True
-        >>> a >= b
         True
         """
-        return self == other or self > other
-
-    def __le__(self, other):
-        """
-        Checks if a partition is less than or equal to
-        the other partition.
-
-        Examples:
-        =========
-        >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
-        >>> a <= a
-        True
-        >>> a <= b
-        False
-        """
-        return self == other or self < other
+        try:
+            return self.compare(other) < 0
+        except AssertionError:
+            return super(Partition, self).__lt__(other)
 
     @property
     def rank(self):
         """
         Gets the rank of a partition.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3], [4, 5]])
         >>> a.rank
@@ -362,43 +255,45 @@ class Partition(C.FiniteSet):
     @property
     def RGS(self):
         """
-        Returns the restricted growth string of the partition.
+        Returns the "restricted growth string" of the partition.
 
-        For a set partition of consisting of n elements, the n-character string
-        a_1, a_2, ..., a_n, in which each character gives the set block (B_0, B_1, ...)
-        in which the corresponding element belongs is called the restricted growth
-        string or the restricted growth function. 
+        The RGS is returned as a list of indices, L, where L[i] indicates
+        the block in which element i appears. For example, in a partition
+        of 3 elements (a, b, c) into 2 blocks ([c], [a, b]) the RGS is
+        [1, 1, 0]: "a" is in block 1, "b" is in block 1 and "c" is in block 0.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3], [4, 5]])
+        >>> a.members
+        (1, 2, 3, 4, 5)
         >>> a.RGS
         [0, 0, 1, 2, 2]
-        >>> a = Partition([[1, 4], [2], [3, 5]])
-        >>> a.RGS
-        [0, 1, 2, 0, 2]
+        >>> a.next()
+        {{1, 2}, {3}, {4}, {5}}
+        >>> _.RGS
+        [0, 0, 1, 2, 3]
         """
-        rgs = [0] * self.partition_set_size
-        a = 0
-        for part in self.partition_list_form:
-            for i in part:
-                rgs[self.partition_set_list.index(i)] = a
-            a += 1
-        return rgs
+        rgs = {}
+        partition = self.as_list()
+        for i, part in enumerate(partition):
+            for j in part:
+                rgs[j] = i
+        return [rgs[i] for i in sorted(i for p in partition for i in p)]
 
     @classmethod
     def partition_from_rgs(self, rgs, superset):
         """
         Creates a set partition from a restricted growth string.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> Partition.partition_from_rgs([0, 1, 2, 0, 1], list('abcde'))
-        {{a, d}, {b, e}, {c}}
+        {{c}, {a, d}, {b, e}}
         >>> a = Partition([[1, 4], [2], [3, 5]])
-        >>> Partition.partition_from_rgs(a.RGS, a.partition_set_list)
+        >>> Partition.partition_from_rgs(a.RGS, a.members)
         {{1, 4}, {2}, {3, 5}}
         """
         superset = sorted(list(superset))
@@ -410,158 +305,193 @@ class Partition(C.FiniteSet):
             j += 1
         return Partition(partition)
 
-
-class IntegerPartition(Partition):
+class IntegerPartition(Basic):
     """
     This class represents an integer partition.
 
-    In number theory and combinatorics, a partition of a positive integer n,
-    also called an integer partition, is a way of writing n as a sum of positive
-    integers. Two sums that differ only in the order of their summands are
-    considered to be the same partition; if order matters then the sum becomes a
-    composition. For example, 4 can be partitioned in five distinct ways:
-    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]].
-    
-    The order-dependent composition [1, 3] is the same partition as [3, 1],
-    while [1, 2, 1] and [1, 1, 2] are the same partition as [2, 1, 1].
+    In number theory and combinatorics, a partition of a positive integer,
+    ``n``, also called an integer partition, is a way of writing ``n`` as a
+    list of positive integers that sum to n. Two partitions that differ only
+    in the order of summands are considered to be the same partition; if order
+    matters then the partitions are referred to as compositions. For example,
+    4 has five partitions: [4], [3, 1], [2, 2], [2, 1, 1], and [1, 1, 1, 1];
+    the compositions [1, 2, 1] and [1, 1, 2] are the same as partition
+    [2, 1, 1].
 
     Reference: http://en.wikipedia.org/wiki/Partition_(number_theory)
     """
 
-    def __new__(cls, *args, **kw_args):
-        """
-        Generates a new IntegerPartition object.
-        
-        It also verifies if the arguments passed are valid and if it is
-        found that they are not then an exception is raised. The arguments
-        taken are the integer partition and the integer itself. We simply
-        check if the argument types are what we expect and if the partition
-        is valid.
+    _dict = None
+    _keys = None
 
-        Examples:
-        =========
+    def __new__(cls, partition, integer=None):
+        """
+        Generates a new IntegerPartition object from a list or dictionary.
+
+        The partition can be given as a list of positive integers or a
+        dictionary of (integer, multiplicity) items. If the partition is
+        preceeded by an integer an error will be raised if the partition
+        does not sum to that given integer.
+
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([5, 4, 3, 1, 1, 1], 15)
+        >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
-        IntegerPartition([5, 4, 3, 1, 1, 1], 15)
-        >>> b = IntegerPartition([5, 4, 3, 1], 13)
-        >>> print b
-        [5, 4, 3, 1]
+        IntegerPartition(14, (5, 4, 3, 1, 1))
+        >>> print a
+        [5, 4, 3, 1, 1]
+        >>> IntegerPartition({1:3, 2:1})
+        IntegerPartition(5, (2, 1, 1, 1))
+
+        If the value that the partion should sum to is given first, a check
+        will be made to see n error will be raised if there is a discrepancy:
+        >>> IntegerPartition(10, [5, 4, 3, 1])
+        Traceback (most recent call last):
+        ...
+        ValueError: The partition is not valid
+
         """
-        partition = args[0]
-        integer_rep = args[1]
+        from sympy.ntheory.residue_ntheory import int_tested
 
-        if not isinstance(partition, list) or sum(partition) != integer_rep:
-            raise ValueError("The partition is not valid")
+        if integer is not None:
+            integer, partition = partition, integer
+        if isinstance(partition, (dict, Dict)):
+            _ = []
+            for k, v in sorted(partition.items(), reverse=True):
+                if not v:
+                    continue
+                k, v = int_tested(k, v)
+                _.extend([k]*v)
+            partition = tuple(_)
+        else:
+            partition = tuple(sorted(int_tested(partition), reverse=True))
+        sum_ok = False
+        if integer is None:
+            integer = sum(partition)
+            sum_ok = True
+        else:
+            integer = int_tested(integer)
 
-        list.sort(args[0], key=lambda x: -x)
+        if not sum_ok and sum(partition) != integer:
+            raise ValueError("Partition did not add to %s" % integer)
+        if any(i < 1 for i in partition):
+            raise ValueError("The summands must all be positive.")
 
-        obj = Basic.__new__(cls, *args, **kw_args)
+        obj = Basic.__new__(cls, integer, partition)
+        obj.partition = partition
+        obj.integer = integer
         return obj
 
     def next(self):
-        """
-        Generates the next partition.
+        """Return the next partition of the integer in rev-lex order.
 
-        Examples:
-        =========
-        """
-        raise NotImplementedError("The method to generate the next integer partition \
-        is not implemented yet")
-
-    def previous(self):
-        """
-        Generates the previous partition.
-
-        Examples:
-        =========
-        """
-        raise NotImplementedError("The method to generate the previous integer \
-        partition is not implemented yet")
-
-    @property
-    def size(self):
-        """
-        Gets the size of the partition.
-
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1, 3, 4], 8)
-        >>> a.size
-        3
+        >>> p = IntegerPartition([4])
+        >>> print p.next()
+        [3, 1]
         """
-        return len(self.args[0])
+        d = self.as_dict()
+        keys = self._keys
+        if keys == [1]:
+            return IntegerPartition({self.integer: 1})
+        if keys[-1] != 1:
+            d[keys[-1]] -= 1
+            if keys[-1] == 2:
+                d[1] = 2
+            else:
+                d[keys[-1] - 1] = d[1] = 1
+        else:
+            d[keys[-2]] -= 1
+            if keys[-2] == 2:
+                d[1] += 2
+            else:
+                new = keys[-2] - 1
+                need = d[1] + 1
+                d[new] = 1
+                q, r = divmod(need, new)
+                d[new] += q
+                d[1] = r
+        return IntegerPartition(d)
 
-    @property
-    def partition_set(self):
-        """
-        Gets the set of the partition.
+    def prev(self):
+        """Return the previous partition of the integer in rev-lex order.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1, 3, 4], 8)
-        >>> a.partition_set
-        8
+        >>> p = IntegerPartition([3, 1])
+        >>> print p.prev()
+        [4]
         """
-        return self.args[1]
+        d = defaultdict(int)
+        d.update(self.as_dict())
+        keys = self._keys
+        if self._keys == [self.integer]:
+            return IntegerPartition({1: self.integer})
+        if len(keys) == 1:
+            d = {keys[-1] + 1: 1, 1: self.integer - keys[-1] - 1}
+        elif d[keys[-1]] == 1:
+            tot = keys[-1] + keys[-2]
+            new = keys[-2] + 1
+            d[new] += 1
+            d[keys[-1]] -= 1
+            d[keys[-2]] -= 1
+            r = tot - new
+            if r:
+                d[r] += 1
+        else:
+            new = 2*keys[-1]
+            d[new] += 1
+            d[keys[-1]] -= 2
+        return IntegerPartition(self.integer, d)
 
-    @property
-    def partition_array(self):
-        """
-        Gets the array of partitions from the
-        partition object
+    def as_list(self):
+        """Return the partition as a reverse-sorted list.
 
-        Examples:
-        =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1, 3, 4], 8)
-        >>> a.partition_array
-        [4, 3, 1]
+        >>> IntegerPartition([1, 2]).as_list()
+        [2, 1]
         """
-        return self.args[0]
+        return list(self.partition)
 
-    @property
-    def is_self_conjugate(self):
-        """
-        Checks if the conjugate of a partition equals itself.
+    def as_dict(self):
+        """Return the partition as a dictionary whose keys are the
+        partition integers and the values the multiplicity of that
+        integer.
 
-        Examples:
-        =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([6, 3, 3, 2, 1], 15)
-        >>> a.is_self_conjugate
-        False
-        >>> a = IntegerPartition([3, 2, 1], 6)
-        >>> a.is_self_conjugate
-        True
+        >>> IntegerPartition([1]*3 + [2] + [3]*4).as_dict()
+        {1: 3, 2: 1, 3: 4}
         """
-        return self.conjugate == self.partition_array
+        if self._dict is None:
+            d = {}
+            self._keys = []
+            for i in self.partition:
+                if not i in d:
+                    d[i] = 0
+                    self._keys.append(i)
+                d[i] += 1
+            self._dict = d
+        return self._dict
 
     @property
     def conjugate(self):
         """
         Computes the conjugate partition of itself.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import \
         IntegerPartition
-        >>> a = IntegerPartition([6, 3, 3, 2, 1], 15)
+        >>> a = IntegerPartition([6, 3, 3, 2, 1])
         >>> a.conjugate
         [5, 4, 3, 1, 1, 1]
-        >>> b = IntegerPartition(a.conjugate, 15)
-        >>> print b.ferrers_representation()
-        #####
-        ####
-        ###
-        #
-        #
-        #
         """
         j = 1
-        temp_arr = self.partition_array[:] + [0]
+        temp_arr = list(self.partition) + [0]
         k = temp_arr[0]
         b = [0]*k
         while k > 0:
@@ -571,82 +501,90 @@ class IntegerPartition(Partition):
             j += 1
         return b
 
-    def _compare(self, other):
-        """
-        Compares two partitions.
+    def __lt__(self, other):
+        """Return True if self is less than other when the partition
+        is listed from smallest to biggest.
 
-        The basis for comparison of two integer partitions is the
-        majorizing concept. A majorization is a partial order on
-        vectors of real numbers.
-
-        References:
-
-        [1] Inequalities: Theory of Majorization and Its Applications (1980)
-        Albert W. Marshall, Ingram Olkin, Academic Press 
-
-        Examples:
-        =========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([1, 1, 1, 1, 1], 5)
-        >>> b = IntegerPartition([1, 1, 1, 2], 5)
-        >>> a.compare(b)
-        -1
-        >>> a < b
+        >>> a = IntegerPartition([4])
+        >>> a < a
+        False
+        >>> b = a.next()
+        >>> b < a
+        True
+        >>> a == b
+        False
+        """
+        return list(reversed(self.partition)) < list(reversed(other.partition))
+
+    def __le__(self, other):
+        """Return True if self is less than other when the partition
+        is listed from smallest to biggest.
+
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([4])
+        >>> a <= a
         True
         """
-        k = min(self.size, other.size)
-        val_self = 0
-        val_other = 0
-        for i in xrange(k):
-            val_self += self.partition_array[i]
-            val_other += other.partition_array[i]
-            if val_self > val_other:
-                return 1
-            elif val_self < val_other:
-                return -1
-        return 1
+        return list(reversed(self.partition)) <= list(reversed(other.partition))
 
     def ferrers_representation(self):
         """
         Prints the ferrer diagram of a partition.
 
-        Examples:
-        =========
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> a = IntegerPartition([3, 2, 1], 6)
-        >>> b = IntegerPartition([5, 1, 1], 7)
-        >>> print a.ferrers_representation()
-        ###
-        ##
-        #
-        >>> print b.ferrers_representation()
+        >>> print IntegerPartition([1, 1, 5]).ferrers_representation()
         #####
         #
         #
         """
-        return "\n".join(['#'*i for i in self.partition_array])
+        return "\n".join(['#'*i for i in self.partition])
 
     def __str__(self):
-        return str(self.partition)
+        return str(list(self.partition))
 
-def random_integer_partition(n):
+def random_integer_partition(n, seed=None):
     """
-    Generates a random integer partition.
+    Generates a random integer partition summing to ``n`` as a list
+    of reverse-sorted integers.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.partitions import random_integer_partition
+
+    For the following, a seed is given so a known value can be shown; in
+    practice, the seed would not be given.
+
+    >>> random_integer_partition(100, seed=[1, 1, 12, 1, 2, 1, 85, 1])
+    [85, 12, 2, 1]
+    >>> random_integer_partition(10, seed=[1, 2, 3, 1, 5, 1])
+    [5, 3, 1, 1]
+    >>> random_integer_partition(1)
+    [1]
     """
+    from sympy.utilities.randtest import _randint
+
+    randint = _randint(seed)
+
     partition = []
     while(n > 0):
-        k = random.randint(1, n)
-        partition.append(k)
-        n -= k
-    list.sort(partition)
+        k = randint(1, n)
+        mult = randint(1, n//k)
+        partition.append((k, mult))
+        n -= k*mult
+    partition.sort(reverse=True)
+    partition = flatten([[k]*m for k, m in partition])
     return partition
 
 def RGS_generalized(m):
     """
-    Computes the generalized unrestricted growth strings.
+    Computes the m + 1 generalized unrestricted growth strings
+    and returns them as rows in matrix.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy.combinatorics.partitions import \
     RGS_generalized
     >>> RGS_generalized(6)
@@ -676,8 +614,8 @@ def RGS_enum(m):
     RGS_enum computes the total number of restricted growth strings
     possible for a superset of size m.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy.combinatorics.partitions import RGS_enum
     >>> RGS_enum(4)
     15
@@ -705,8 +643,8 @@ def RGS_unrank(rank, m):
     Gives the unranked restricted growth string for a given
     superset size.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy.combinatorics.partitions import RGS_unrank
     >>> RGS_unrank(14, 4)
     [0, 1, 2, 3]
@@ -737,8 +675,8 @@ def RGS_rank(rgs):
     """
     Computes the rank of a restricted growth string.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy.combinatorics.partitions import RGS_rank, RGS_unrank
     >>> RGS_rank([0, 1, 2, 1, 3])
     42
