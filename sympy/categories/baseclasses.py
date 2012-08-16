@@ -389,6 +389,67 @@ class CompositeMorphism(Morphism):
         """
         return NamedMorphism(self.domain, self.codomain, new_name)
 
+    def __len__(self):
+        """
+        Returns the number of components of this
+        :class:`CompositeMorphism`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> len(g * f)
+        2
+
+        """
+        return len(self.components)
+
+    def __contains__(self, other):
+        """
+        Checks if ``other`` is a component of this
+        :class:`CompositeMorphism`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> g in (g * f)
+        True
+
+        """
+        return other in self.components
+
+    def __iter__(self):
+        """
+        Returns an iterator over the components of this
+        :class:`CompositeMorphism`.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism
+        >>> from sympy import pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> pprint([m for m in g * f])
+        [f:A-->B, g:B-->C]
+
+        """
+        return iter(self.components)
+
 class Category(Basic):
     r"""
     An (abstract) category.
@@ -803,7 +864,8 @@ class Diagram(Basic):
                 generators = {}
                 for morphism, props in first_arg.items():
                     generators[morphism] = FiniteSet(props)
-            elif iterable(first_arg):
+            elif iterable(first_arg) and not isinstance(
+                first_arg, CompositeMorphism):
                 # The user has supplied a list of morphisms, none of
                 # which have any properties.
                 empty = EmptySet()

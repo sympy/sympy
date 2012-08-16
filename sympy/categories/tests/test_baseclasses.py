@@ -42,6 +42,10 @@ def test_morphisms():
     assert k.components == Tuple(f, g)
     assert g * f == k
     assert CompositeMorphism(f, g) == k
+    assert len(k) == 2
+    assert tuple(k) == k.components
+    assert f in k
+    assert g in k
 
     assert CompositeMorphism(g * f) == g * f
 
@@ -130,13 +134,15 @@ def test_diagram():
     assert set(d2.hom(A, C)) == set([g * f])
     assert d2 == Diagram(f, g)
 
-    d = Diagram(g * f)
+    d = Diagram([g * f])
     assert set(d.generators) == set([id_A, id_C, g * f])
     assert d.generators_properties == Dict({g * f: empty, id_A: empty,
                                             id_C: empty})
     assert d.is_finite
     assert set(d.morphisms) == set([id_A, id_C, g * f])
     assert d.objects == FiniteSet(A, C)
+
+    assert Diagram([g * f]) == Diagram(g * f)
 
     # Test equality, inequality and hash.
     d11 = Diagram([f])
@@ -371,7 +377,7 @@ def test_implication():
     raises(ValueError, lambda: Implication(Diagram(f), Diagram(g * f)))
 
     # Test diff.
-    assert imp.diff() == FiniteSet(g * f)
+    assert imp.diff() == FiniteSet([g * f])
 
     h = NamedMorphism(C, A, "h")
     imp = Implication(premise, Diagram(h))
