@@ -106,32 +106,6 @@ def _check_cycles_alt_sym(perm):
                 return True
     return False
 
-def _cmp_perm_lists(first, second):
-    """
-    Compare two lists of permutations as sets.
-
-    This is used for testing purposes. Since the array form of a
-    permutation is currently a list, Permutation is not hashable
-    and cannot be put into a set.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.util import _cmp_perm_lists
-    >>> a = Permutation([0, 2, 3, 4, 1])
-    >>> b = Permutation([1, 2, 0, 4, 3])
-    >>> c = Permutation([3, 4, 0, 1, 2])
-    >>> ls1 = [a, b, c]
-    >>> ls2 = [b, c, a]
-    >>> _cmp_perm_lists(ls1, ls2)
-    True
-
-    """
-    first.sort(key = lambda x: x.array_form)
-    second.sort(key = lambda x: x.array_form)
-    return first == second
-
 def _distribute_gens_by_base(base, gens):
     """
     Distribute the group elements ``gens`` by membership in basic stabilizers.
@@ -262,43 +236,6 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
                 basic_orbits[i] = transversals[i].keys()
     return transversals, basic_orbits, strong_gens_distr
 
-def _naive_list_centralizer(self, other):
-    from sympy.combinatorics.perm_groups import PermutationGroup
-    """
-    Return a list of elements for the centralizer of a subgroup/set/element.
-
-    This is a brute-force implementation that goes over all elements of the group
-    and checks for membership in the centralizer. It is used to
-    test ``.centralizer()`` from ``sympy.combinatorics.perm_groups``.
-
-    Examples
-    ========
-    >>> from sympy.combinatorics.util import _naive_list_centralizer
-    >>> from sympy.combinatorics.named_groups import DihedralGroup
-    >>> D = DihedralGroup(4)
-    >>> _naive_list_centralizer(D, D)
-    [Permutation([0, 1, 2, 3]), Permutation([2, 3, 0, 1])]
-
-    See Also
-    ========
-
-    sympy.combinatorics.perm_groups.centralizer
-
-    """
-    if hasattr(other, 'generators'):
-        elements = list(self.generate())
-        gens = other.generators
-        commutes_with_gens = lambda x: [x*gen for gen in gens] == [gen*x for gen in gens]
-        centralizer_list = []
-        for element in elements:
-            if commutes_with_gens(element):
-                centralizer_list.append(element)
-        return centralizer_list
-    elif hasattr(other, 'getitem'):
-        return _naive_list_centralizer(self, PermutationGroup(other))
-    elif hasattr(other, 'array_form'):
-        return _naive_list_centralizer(self, PermutationGroup([other]))
-
 def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
                                    transversals_only=False):
     """
@@ -377,7 +314,8 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
-    >>> from sympy.combinatorics.util import _remove_gens, _verify_bsgs
+    >>> from sympy.combinatorics.util import _remove_gens
+    >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
     >>> base, strong_gens = S.schreier_sims_incremental()
     >>> len(strong_gens)
@@ -544,59 +482,3 @@ def _strong_gens_from_distr(strong_gens_distr):
             if gen not in result:
                 result.append(gen)
         return result
-
-def _verify_bsgs(group, base, gens):
-    """
-    Verify the correctness of a base and strong generating set.
-
-    This is a naive implementation using the definition of a base and a strong
-    generating set relative to it. There are other procedures for
-    verifying a base and strong generating set, but this one will
-    serve for more robust testing.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.named_groups import AlternatingGroup
-    >>> from sympy.combinatorics.util import _verify_bsgs
-    >>> A = AlternatingGroup(4)
-    >>> A.schreier_sims()
-    >>> _verify_bsgs(A, A.base, A.strong_gens)
-    True
-
-    See Also
-    ========
-
-    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims
-
-    """
-    from sympy.combinatorics.perm_groups import PermutationGroup
-    strong_gens_distr = _distribute_gens_by_base(base, gens)
-    base_len = len(base)
-    degree = group.degree
-    current_stabilizer = group
-    for i in range(base_len):
-        candidate = PermutationGroup(strong_gens_distr[i])
-        if current_stabilizer.order() != candidate.order():
-            return False
-        current_stabilizer = current_stabilizer.stabilizer(base[i])
-    if current_stabilizer.order() != 1:
-        return False
-    return True
-
-def _verify_centralizer(group, arg, centr=None):
-    """
-    Verify the centralizer of a group/set/element inside another group.
-
-    This is used for testing ``.centralizer()`` from ``sympy.combinatorics.perm_groups``
-
-    Examples
-    ========
-
-
-    """
-    if centr is None:
-        centr = group.centralizer(arg)
-    centr_list = list(centr.generate())
-    centr_list_naive = _naive_list_centralizer(group, arg)
-    return _cmp_perm_lists(centr_list, centr_list_naive)

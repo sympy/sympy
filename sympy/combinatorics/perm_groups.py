@@ -8,7 +8,7 @@ from math import log
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip, _verify_bsgs
+_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
 
 def _smallest_change(h, alpha):
     """
@@ -663,7 +663,7 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> S = SymmetricGroup(4)
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
@@ -2559,7 +2559,7 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> A = AlternatingGroup(7)
         >>> base = [2, 3]
         >>> seq = [2, 3]
@@ -2705,7 +2705,7 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(5)
         >>> base, strong_gens = S.schreier_sims_random(consec_succ=5)
@@ -2993,7 +2993,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
         ... AlternatingGroup)
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.util import _verify_bsgs
+        >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> S = SymmetricGroup(7)
         >>> prop_even = lambda x: x.is_even
         >>> base, strong_gens = S.schreier_sims_incremental()

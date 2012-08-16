@@ -6,9 +6,9 @@ from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
-from sympy.combinatorics.util import _verify_bsgs, _naive_list_centralizer,\
-_cmp_perm_lists
-
+from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
+_cmp_perm_lists, _verify_normal_closure
+from sympy.combinatorics.util import _distribute_gens_by_base
 
 def test_new():
     a = Permutation([1, 0])
@@ -99,9 +99,7 @@ def test_center():
     A = AlternatingGroup(3)
     C = CyclicGroup(4)
     G = D*A*C
-    center_list_naive = _naive_list_centralizer(G, G)
-    center_list = list((G.center()).generate())
-    assert _cmp_perm_lists(center_list_naive, center_list)
+    assert _verify_centralizer(G, G)
 
 def test_centralizer():
     # the centralizer of the trivial group is the entire group
@@ -113,13 +111,40 @@ def test_centralizer():
     triv = PermutationGroup([Permutation([0,1,2,3])])
     D = DihedralGroup(4)
     assert triv.centralizer(D) == triv
-    # brute-force verifications
-    S = SymmetricGroup(6)
-    g = Permutation([2, 3, 4, 5, 0, 1])
-    centralizer = S.centralizer(g)
-    centralizer_list = list(centralizer.generate())
-    centralizer_list_naive = _naive_list_centralizer(S, g)
-    assert _cmp_perm_lists(centralizer_list, centralizer_list_naive)
+    # brute-force verifications for centralizers of groups
+    for i in (4, 5, 6):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        C = CyclicGroup(i)
+        D = DihedralGroup(i)
+        for gp in (S, A, C, D):
+            for gp2 in (S, A, C, D):
+                if gp2 != gp:
+                    assert _verify_centralizer(gp, gp2)
+    # verify the centralizer for all elements of several groups
+    S = SymmetricGroup(5)
+    elements = list(S.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(S, element)
+    A = AlternatingGroup(5)
+    elements = list(A.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(A, element)
+    D = DihedralGroup(7)
+    elements = list(D.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(D, element)
+    # verify centralizers of small groups within small groups
+    small = []
+    for i in (1, 2, 3):
+        small.append(SymmetricGroup(i))
+        small.append(AlternatingGroup(i))
+        small.append(DihedralGroup(i))
+        small.append(CyclicGroup(i))
+    for gp in small:
+        for gp2 in small:
+            if gp.degree == gp2.degree:
+                assert _verify_centralizer(gp, gp2)
 
 def test_coset_repr():
     a = Permutation([0, 2, 1])
@@ -410,18 +435,6 @@ def test_baseswap():
     assert randomized[0] == [0, 2, 1]
     assert _verify_bsgs(S, randomized[0], randomized[1]) == True
 
-def test_direct_product_n():
-    C = CyclicGroup(4)
-    D = DihedralGroup(4)
-    G = DirectProduct(C, C, C)
-    assert G.order() == 64
-    assert G.degree == 12
-    assert len(G.orbits()) == 3
-    assert G.is_abelian == True
-    H = DirectProduct(D, C)
-    assert H.order() == 32
-    assert H.is_abelian == False
-
 def test_schreier_sims_incremental():
     identity = Permutation([0, 1, 2, 3, 4])
     TrivialGroup = PermutationGroup([identity])
@@ -476,3 +489,47 @@ def test_subgroup_search():
         comm_g = A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
+
+def test_normal_closure():
+    # the normal closure of the trivial group is trivial
+    S = SymmetricGroup(3)
+    identity = Permutation([0, 1, 2])
+    closure = S.normal_closure(identity)
+    assert closure.is_trivial
+    # the normal closure of the entire group is the entire group
+    A = AlternatingGroup(4)
+    assert A.normal_closure(A) == A
+    # brute-force verifications for subgroups
+    for i in (3, 4, 5):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        D = DihedralGroup(i)
+        C = CyclicGroup(i)
+        for gp in (A, D, C):
+            assert _verify_normal_closure(S, gp)
+    # brute-force verifications for all elements of a group
+    S = SymmetricGroup(5)
+    elements = list(S.generate_dimino())
+    for element in elements:
+        assert _verify_normal_closure(S, element)
+    # small groups
+    small = []
+    for i in (1, 2, 3):
+        small.append(SymmetricGroup(i))
+        small.append(AlternatingGroup(i))
+        small.append(DihedralGroup(i))
+        small.append(CyclicGroup(i))
+    for gp in small:
+        for gp2 in small:
+            if gp2.is_subgroup(gp):
+                assert _verify_normal_closure(gp, gp2)
+
+def test_derived_series():
+    # the derived series of the trivial group consists only of the trivial group
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert triv.derived_series() == [triv]
+    # the derived series for a simple group consists only of the group itself
+    for i in (5, 6, 7):
+        A = AlternatingGroup(7)
+        assert A.derived_series() == A
+
