@@ -371,6 +371,12 @@ def add_formulae(formulae):
                  [0,0,z,0],
                  [0,0,0,-1]]))
 
+    # Orthogonal polynomials
+    from sympy import hermite
+
+    add([-a/2, (1-a)/2], [], hermite(a, 1/sqrt(-z)) / (2/sqrt(-z))**a)
+
+
 
 def add_meijerg_formulae(formulae):
     from sympy.matrices import Matrix
