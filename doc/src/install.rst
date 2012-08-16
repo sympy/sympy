@@ -91,7 +91,7 @@ From here, execute some simple SymPy statements like the ones below::
     >>> integrate(1/x, x)
     log(x)
 
-For a starter guide on using SymPy effectively, refer to the tutorial_.
+For a starter guide on using SymPy effectively, refer to the :doc:`tutorial`.
 
 Questions
 =========
@@ -104,7 +104,6 @@ If you think there's a bug or you would like to request a feature, please open
 an `issue ticket`_.
 
 .. _downloads site: https://code.google.com/p/sympy/downloads/list
-.. _tutorial: tutorial.rst
 .. _#sympy: irc://irc.freenode.net/sympy
 .. _issue ticket: http://code.google.com/p/sympy/issues/list
 .. _mailing list: http://groups.google.com/group/sympy
