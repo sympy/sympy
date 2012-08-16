@@ -187,7 +187,7 @@ class ContinuousPSpace(PSpace):
         # CDF is integral of PDF from left bound to z
         cdf = integrate(d(x), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
-        cdf = Piecewise((0, z<left_bound), (cdf, True))
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
     def probability(self, condition, **kwargs):
