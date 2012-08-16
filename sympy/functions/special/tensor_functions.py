@@ -1,6 +1,7 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
+from sympy.utilities.iterables import has_dups
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -63,7 +64,7 @@ class LeviCivita(Function):
     def eval(cls, *args):
         if all(isinstance(a, (int, Integer)) for a in args):
             return eval_levicivita(*args)
-        if len(set(args)) < len(args):
+        if has_dups(args):
             return S.Zero
 
     def doit(self):

@@ -14,6 +14,7 @@ from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.core.compatibility import reduce
+from sympy.utilities.iterables import has_dups
 
 __all__ = [
     'Dagger',
@@ -2578,7 +2579,7 @@ def _get_ordered_dummies(mul, verbose = False):
         masked_facs = dict(zip(dumstruct, masked_facs))
 
         # dummies for which the ordering cannot be determined
-        if len(set(all_masked)) < len(all_masked):
+        if has_dups(all_masked):
             all_masked.sort()
             return mask[d], tuple(all_masked) # positions are ambiguous
 
@@ -2616,7 +2617,7 @@ def _get_ordered_dummies(mul, verbose = False):
         return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
     dumkey = dict(zip(all_dums, map(_key, all_dums)))
     result = sorted(all_dums, key=lambda x: dumkey[x])
-    if len(set(dumkey.itervalues())) < len(dumkey):
+    if has_dups(dumkey.itervalues()):
         # We have ambiguities
         unordered = defaultdict(set)
         for d, k in dumkey.iteritems():

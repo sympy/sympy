@@ -2,7 +2,7 @@ from sympy.core import Basic, C, Dict
 from sympy.matrices import zeros
 from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
-from sympy.utilities.iterables import dups, flatten
+from sympy.utilities.iterables import has_dups, flatten
 
 import random
 from collections import defaultdict
@@ -47,7 +47,7 @@ class Partition(C.FiniteSet):
 
         # sort so we have a canonical reference for RGS
         partition = sorted(sum(partition, []), key=default_sort_key)
-        if dups(partition):
+        if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
         obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), args[0]))

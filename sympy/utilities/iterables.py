@@ -985,19 +985,19 @@ def binary_partitions(n):
                 x >>= 1
     yield [1]*n
 
-def dups(seq):
+def has_dups(seq):
     """Return True if there are any duplicate elements in ``seq``.
 
     Examples
     ========
-    >>> from sympy.utilities.iterables import dups
+    >>> from sympy.utilities.iterables import has_dups
     >>> from sympy import Dict, Set
 
-    >>> dups((1, 2, 1))
+    >>> has_dups((1, 2, 1))
     True
-    >>> dups(range(3))
+    >>> has_dups(range(3))
     False
-    >>> all(dups(c) is False for c in (set(), Set(), dict(), Dict()))
+    >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
     True
     """
     if isinstance(seq, (dict, set, C.Dict, C.Set)):
