@@ -7,7 +7,7 @@ from sympy import (
     nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
     ratsimpmodprime, rcollect, separatevars, signsimp, simplify,
     sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy,
-    Subs, polarify, exp_polar, polar_lift)
+    Subs, polarify, exp_polar, polar_lift, Piecewise)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1206,3 +1206,13 @@ def test_besselsimp():
            besselj(a, sqrt(x)) * cos(sqrt(x))
     assert besselsimp(besseli(S(-1)/2, z)) == sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == exp(-I*pi*a/2)*besselj(a, z)
+
+def test_Piecewise():
+    e1 = x*(x + y) - y*(x + y)
+    e2 = sin(x)**2 + cos(x)**2
+    e3 = expand((x + y)*y/x)
+    s1 = simplify(e1)
+    s2 = simplify(e2)
+    s3 = simplify(e3)
+    assert simplify(Piecewise((e1, x < e2), (e3, True))) \
+        == Piecewise((s1, x < s2), (s3, True))

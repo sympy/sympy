@@ -106,7 +106,7 @@ def test_cdf():
     Z = Exponential('z', 1)
     f = cdf(Z)
     z = Symbol('z')
-    assert f(z) == Piecewise((0, z < 0), (1 - exp(-z), True))
+    assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
 
 def test_sample():
     z = Symbol('z')
@@ -222,8 +222,8 @@ def test_gamma():
     X = Gamma('x', k, theta)
     assert density(X) == Lambda(_x,
                                 _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
-    assert cdf(X, meijerg=True) == Lambda(_z, Piecewise((0, _z < 0),
-    (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), True)))
+    assert cdf(X, meijerg=True) == Lambda(_z, Piecewise(
+    (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), _z >= 0), (0, True)))
     assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 

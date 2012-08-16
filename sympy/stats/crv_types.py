@@ -587,7 +587,7 @@ def Exponential(name, rate):
     Lambda(_x, lambda*exp(-_x*lambda))
 
     >>> cdf(X)
-    Lambda(_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
+    Lambda(_z, Piecewise((1 - exp(-_z*lambda), _z >= 0), (0, True)))
 
     >>> E(X)
     1/lambda
@@ -683,13 +683,13 @@ def Gamma(name, k, theta):
 
     >>> C = cdf(X, meijerg=True)
     >>> pprint(C, use_unicode=False)
-    Lambda/z, /                      0                        for z < 0\
-          |   |                                                        |
-          |   |                                   /     z  \           |
-          |   <                       k*lowergamma|k, -----|           |
-          |   |  k*lowergamma(k, 0)               \   theta/           |
-          |   |- ------------------ + ----------------------  otherwise|
-          \   \     gamma(k + 1)           gamma(k + 1)                /
+          /   /                                   /     z  \            \
+          |   |                       k*lowergamma|k, -----|            |
+          |   |  k*lowergamma(k, 0)               \   theta/            |
+    Lambda|z, <- ------------------ + ----------------------  for z >= 0|
+          |   |     gamma(k + 1)           gamma(k + 1)                 |
+          |   |                                                         |
+          \   \                      0                        otherwise /
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -1393,14 +1393,28 @@ class UniformPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (S.Zero, x<left),
-                (S.Zero, x>right),
-                (S.One/(right-left), True))
+                (S.One/(right-left), And(left <= x, x <= right)),
+                (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.left = left
         obj.right = right
         return obj
+
+    def compute_cdf(self, expr, **kwargs):
+        from sympy import Lambda, Min
+        z = Dummy('z', real=True, bounded=True)
+        result = SingleContinuousPSpace.compute_cdf(self, expr, **kwargs)
+        result = result(z).subs({Min(z, self.right): z,
+                                 Min(z, self.left, self.right): self.left})
+        return Lambda(z, result)
+
+    def integrate(self, expr, rvs=None, **kwargs):
+        from sympy import Max, Min
+        result = SingleContinuousPSpace.integrate(self, expr, rvs, **kwargs)
+        result = result.subs({Max(self.left, self.right): self.right,
+                              Min(self.left, self.right): self.left})
+        return result
 
     def sample(self):
         return {self.value: random.uniform(self.left, self.right)}
@@ -1442,7 +1456,7 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)
-    Lambda(_x, Piecewise((0, _x < a), (0, _x > b), (1/(-a + b), True)))
+    Lambda(_x, Piecewise((1/(-a + b), And(_x <= b, a <= _x)), (0, True)))
 
     >>> cdf(X)
     Lambda(_z, _z/(-a + b) - a/(-a + b))
