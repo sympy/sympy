@@ -728,6 +728,11 @@ def multiset_partitions(multiset, m):
     [[[1, 2, 3, 4]]]
     >>> list(multiset_partitions([1,2,3,4], 4))
     [[[1], [2], [3], [4]]]
+
+    See Also
+    ========
+    sympy.combinatorics.partitions.Partition
+    sympy.combinatorics.partitions.IntegerPartition
     """
     cache = {}
 
@@ -867,6 +872,11 @@ def partitions(n, m=None, k=None):
     Reference:
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
+
+    See Also
+    ========
+    sympy.combinatorics.partitions.Partition
+    sympy.combinatorics.partitions.IntegerPartition
     """
     from sympy.ntheory.residue_ntheory import int_tested
 

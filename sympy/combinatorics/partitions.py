@@ -13,8 +13,10 @@ class Partition(C.FiniteSet):
 
     A partition is a set of disjoint sets whose union equals a given set.
 
-    Examples
+    See Also
     ========
+    sympy.utilities.iterables.partitions,
+    sympy.utilities.iterables.multiset_partitions
     """
 
     _rank = None
@@ -317,6 +319,11 @@ class IntegerPartition(Basic):
     4 has five partitions: [4], [3, 1], [2, 2], [2, 1, 1], and [1, 1, 1, 1];
     the compositions [1, 2, 1] and [1, 1, 2] are the same as partition
     [2, 1, 1].
+
+    See Also
+    ========
+    sympy.utilities.iterables.partitions,
+    sympy.utilities.iterables.multiset_partitions
 
     Reference: http://en.wikipedia.org/wiki/Partition_(number_theory)
     """
