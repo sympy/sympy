@@ -493,11 +493,13 @@ from above:
 Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
 directly use sympy!
 
-  >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
-  >>> z * diff(B0, z)
-  z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
-  >>> expand(_)
-  cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
+   >>> from sympy import *
+   >>> z = Symbol("z")
+   >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
+   >>> z * diff(B0, z)
+   z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+   >>> expand(_)
+   cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
 
 Formatting this result nicely we obtain
 
@@ -513,7 +515,9 @@ Formatting this result nicely we obtain
 
 Going ahead and computing the second derivative we find
 
-   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
+   >>> from sympy import *
+   >>> z = Symbol("z")
+   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
    >>> z * diff(B1prime, z)
    z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))
    >>> expand(_)
@@ -568,12 +572,16 @@ such that :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
 We already computed the first part :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
 above. This gives us the first row of :math:`M`. For the second row we have:
 
+   >>> from sympy import *
+   >>> z = Symbol("z")
    >>> B1 = cosh(2*sqrt(z))
    >>> z * diff(B1, z)
    sqrt(z)*sinh(2*sqrt(z))
 
 and for the third one
 
+   >>> from sympy import *
+   >>> z = Symbol("z")
    >>> B2 = sinh(2*sqrt(z))*sqrt(z)
    >>> expand(z * diff(B2, z))
    sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
