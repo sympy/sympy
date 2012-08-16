@@ -1329,18 +1329,19 @@ def plot_line(*args, **kwargs):
 
     >>> from sympy import symbols
     >>> from sympy.plotting import plot_line
+    >>> x = symbols('x')
 
     Single Plot
-    >>> plot_line(x**2, (x, -5, 5))
+    >>> plot_line(x**2, (x, -5, 5))# doctest: +SKIP
 
     Multiple plots with single range.
-    >>> plot_line(x, x**2, x**3, (x, -5, 5))
+    >>> plot_line(x, x**2, x**3, (x, -5, 5))# doctest: +SKIP
 
     Multiple plots with different ranges.
-    >>> plot_line((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+    >>> plot_line((x**2, (x, -6, 6)), (x, (x, -5, 5)))# doctest: +SKIP
 
     No adaptive sampling.
-    >>> plot_line(x**2, adaptive=False, nb_of_points=400)
+    >>> plot_line(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
 
     """
     args = sympify([arg for arg in args])
@@ -1411,17 +1412,18 @@ def plot_parametric(*args, **kwargs):
 
     Examples
     ========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot_parametric
+    >>> u = symbols('u')
 
     Single Parametric plot
-    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))# doctest: +SKIP
 
     Multiple parametric plot with single range.
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))# doctest: +SKIP
 
     Multiple parametric plots.
-    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))
+    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))# doctest: +SKIP
 
     """
     args = sympify([arg for arg in args])
@@ -1479,14 +1481,15 @@ def plot3D_parametric(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot3D_parametric
+    >>> u = symbols('u')
 
     Single plot.
-    >>> plot3D_parametric(cos(u), sin(u), u, (u, -5, 5))
+    >>> plot3D_parametric(cos(u), sin(u), u, (u, -5, 5))# doctest: +SKIP
 
     Multiple plots.
-    >>> plot3D_parametric((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))
+    >>> plot3D_parametric((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
 
     """
     args = sympify([arg for arg in args])
@@ -1551,15 +1554,16 @@ def plot3D(*args, **kwargs):
 
     >>> from sympy import symbols
     >>> from sympy.plotting import plot3D
+    >>> x, y = symbols('x y')
 
     Single plot
-    >>> plot3D(x*y, (x, -5, 5), (y, -5, 5))
+    >>> plot3D(x*y, (x, -5, 5), (y, -5, 5)) # doctest: +SKIP
 
     Multiple plots with same range
-    >>> plot3D(x*y, -x*y, (x, -5, 5), (y, -5, 5))
+    >>> plot3D(x*y, -x*y, (x, -5, 5), (y, -5, 5))# doctest: +SKIP
 
     Multiple plots with different ranges.
-    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))
+    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
 
     """
 
@@ -1623,11 +1627,13 @@ def plot3D_surface(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot3D_surface
+    >>> u, v = symbols('u v')
 
     Single plot.
-    >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5))
+    >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
+
     """
 
     args = sympify([arg for arg in args])
