@@ -111,6 +111,15 @@ def test_sympy__combinatorics__prufer__Prufer():
     from sympy.combinatorics.prufer import Prufer
     assert _test_args(Prufer([[0, 1], [0, 2], [0, 3]], 4))
 
+def test_sympy__combinatorics__partitions__Partition():
+    from sympy.combinatorics.partitions import Partition
+    assert _test_args(Partition([[1]]))
+
+@XFAIL
+def test_sympy__combinatorics__partitions__IntegerPartition():
+    from sympy.combinatorics.partitions import IntegerPartition
+    assert _test_args(IntegerPartition([1]))
+
 def test_sympy__concrete__products__Product():
     from sympy.concrete.products import Product
     assert _test_args(Product(x, (x, 0, 10)))
