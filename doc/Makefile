@@ -107,10 +107,10 @@ htmlhelp:
 latex: $(SPHINXBUILDpy) $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) _build/latex
+	sed -i "s/pdflatex/xelatex/g" _build/latex/Makefile
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
-	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
-	      "run these through (pdf)latex."
+	@echo "Run \`make all' in that directory to run these through xelatex."
 
 .svg.pdf:
 	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
