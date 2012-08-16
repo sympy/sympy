@@ -1,10 +1,10 @@
 from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     RigidBody, Kane, inertia, Particle)
+                                     RigidBody, KanesMethod, inertia, Particle)
 
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
-    # It is described in more detail in the Kane docstring.
+    # It is described in more detail in the KanesMethod docstring.
     q, u = dynamicsymbols('q u')
     qd, ud = dynamicsymbols('q u', 1)
     m, c, k = symbols('m c k')
@@ -17,16 +17,13 @@ def test_one_dof():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = Kane(N)
-    KM.coords([q])
-    KM.speeds([u])
-    KM.kindiffeq(kd)
+    KM = KanesMethod(N, [q], [u], kd)
     KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]), Matrix([]))
+    assert KM.linearize() == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.
@@ -51,13 +48,10 @@ def test_two_dof():
     pa2 = Particle('pa2', P2, m)
     BL = [pa1, pa2]
 
-    # Finally we create the Kane object, specify the inertial frame, pass
-    # relevant information, and form Fr & Fr*. Then we calculate the mass
+    # Finally we create the KanesMethod object, specify the inertial frame,
+    # pass relevant information, and form Fr & Fr*. Then we calculate the mass
     # matrix and forcing terms, and finally solve for the udots.
-    KM = Kane(N)
-    KM.coords([q1, q2])
-    KM.speeds([u1, u2])
-    KM.kindiffeq(kd)
+    KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
     KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -79,10 +73,7 @@ def test_pend():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = Kane(N)
-    KM.coords([q])
-    KM.speeds([u])
-    KM.kindiffeq(kd)
+    KM = KanesMethod(N, [q], [u], kd)
     KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -144,10 +135,7 @@ def test_rolling_disc():
     # list and Fr* from the body list, compute the mass matrix and forcing
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
-    KM = Kane(N)
-    KM.coords([q1, q2, q3])
-    KM.speeds([u1, u2, u3])
-    KM.kindiffeq(kd)
+    KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
     KM.kanes_equations(ForceList, BodyList)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -162,7 +150,7 @@ def test_aux():
     # point, which is known to be zero. In one case, we go through then
     # substitute the aux. speeds in at the end (they are zero, as well as their
     # derivative), in the other case, we use the built-in auxiliary speed part
-    # of Kane. The equations from each should be the same.
+    # of KanesMethod. The equations from each should be the same.
     q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     u4, u5, f1, f2 = dynamicsymbols('u4, u5, f1, f2')
@@ -191,18 +179,14 @@ def test_aux():
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
-    KM = Kane(N)
-    KM.coords([q1, q2, q3])
-    KM.speeds([u1, u2, u3, u4, u5])
-    KM.kindiffeq(kd)
+    KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
+                     kd_eqs=kd)
     (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
 
-    KM2 = Kane(N)
-    KM2.coords([q1, q2, q3])
-    KM2.speeds([u1, u2, u3], u_auxiliary=[u4, u5])
-    KM2.kindiffeq(kd)
+    KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
+                      u_auxiliary=[u4, u5])
     (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
@@ -212,8 +196,8 @@ def test_aux():
 
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
-    # This tests the parallel axis code in Kane. The inertia of the pendulum is
-    # defined about the hinge, not about the center of mass.
+    # This tests the parallel axis code in KanesMethod. The inertia of the
+    # pendulum is defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
     gravity        = symbols('g')
@@ -261,10 +245,7 @@ def test_parallel_axis():
                  (C,  -N.x * k * (q1 - ls)),
                  (C,   N.x * F)]
 
-    km=Kane(N)
-    km.coords([q1, q2])
-    km.speeds([u1, u2])
-    km.kindiffeq(kindiffs)
+    km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
     (fr,frstar) = km.kanes_equations(forceList, bodyList)
     mm = km.mass_matrix_full
-    assert mm[3, 3] == -Iz
+    assert mm[3, 3] == Iz
