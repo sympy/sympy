@@ -67,3 +67,9 @@ def test_trigintegrate_mixed():
     assert trigintegrate(cos(x)*cot(x), x)  == log(cos(x) - 1)/2  \
                                                 - log(cos(x) + 1)/2 \
                                                   + cos(x)
+
+def test_trigintegrate_symbolic():
+    n = Symbol('n', integer=True)
+    assert trigintegrate(cos(x)**n, x) is None
+    assert trigintegrate(sin(x)**n, x) is None
+    assert trigintegrate(cot(x)**n, x) is None

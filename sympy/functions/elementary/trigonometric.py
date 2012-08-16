@@ -357,10 +357,6 @@ class sin(TrigonometricFunction):
         import sage.all as sage
         return sage.sin(self.args[0]._sage_())
 
-    def _is_Trig(self):
-        if self/sin(self.args[0]) is S.One:
-            return True
-
 class cos(TrigonometricFunction):
     """
     The cosine function.
@@ -596,10 +592,6 @@ class cos(TrigonometricFunction):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
-    def _is_Trig(self):
-        if self/cos(self.args[0]) is S.One:
-            return True
-
 class sec(TrigonometricFunction):    #TODO implement rest all functions for sec. see cos, sin, tan.
 
     def _eval_rewrite_as_cos(self,arg):
@@ -608,10 +600,6 @@ class sec(TrigonometricFunction):    #TODO implement rest all functions for sec.
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
-    def _is_Trig(self):
-        if self/sec(self.args[0]) is S.One:
-            return True
-
 class csc(TrigonometricFunction):    #TODO implement rest all functions for csc. see cos, sin, tan.
 
     def _eval_rewrite_as_sin(self,arg):
@@ -619,10 +607,6 @@ class csc(TrigonometricFunction):    #TODO implement rest all functions for csc.
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
-
-    def _is_Trig(self):
-        if self/csc(self.args[0]) is S.One:
-            return True
 
 class tan(TrigonometricFunction):
     """
@@ -835,10 +819,6 @@ class tan(TrigonometricFunction):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
 
-    def _is_Trig(self):
-        if self/tan(self.args[0]) is S.One:
-            return True
-
 class cot(TrigonometricFunction):
     """
     cot(x) -> Returns the cotangent of x (measured in radians)
@@ -1015,10 +995,6 @@ class cot(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.cot(self.args[0]._sage_())
-
-    def _is_Trig(self):
-        if self/cot(self.args[0]) is S.One:
-            return True
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
