@@ -493,7 +493,7 @@ from above:
 Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
 directly use sympy!
 
-   >>> from sympy import *
+   >>> from sympy import Symbol, sqrt, exp, I, pi, fresnelc, root, diff, expand
    >>> z = Symbol("z")
    >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
    >>> z * diff(B0, z)
@@ -515,7 +515,7 @@ Formatting this result nicely we obtain
 
 Going ahead and computing the second derivative we find
 
-   >>> from sympy import *
+   >>> from sympy import Symbol, cosh, sqrt, pi, exp, I, fresnelc, root, diff, expand
    >>> z = Symbol("z")
    >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
    >>> z * diff(B1prime, z)
@@ -572,7 +572,7 @@ such that :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
 We already computed the first part :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
 above. This gives us the first row of :math:`M`. For the second row we have:
 
-   >>> from sympy import *
+   >>> from sympy import Symbol, cosh, sqrt, diff
    >>> z = Symbol("z")
    >>> B1 = cosh(2*sqrt(z))
    >>> z * diff(B1, z)
@@ -580,7 +580,7 @@ above. This gives us the first row of :math:`M`. For the second row we have:
 
 and for the third one
 
-   >>> from sympy import *
+   >>> from sympy import Symbol, sinh, sqrt, expand, diff
    >>> z = Symbol("z")
    >>> B2 = sinh(2*sqrt(z))*sqrt(z)
    >>> expand(z * diff(B2, z))
