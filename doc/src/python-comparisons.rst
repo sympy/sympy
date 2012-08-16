@@ -79,14 +79,14 @@ When you now write a test like this::
     assert r == [1.0 + 1.7*I, 2.0 - 1.0*I, 2.0 + I, 1.0 - 1.7*I]
 
 it will fail on a 64-bit platforms, even if it works for your 32-bit system. You can
-avoid this by using the ´´sorted()´´ or ´´set()´´ Python built-in::
+avoid this by using the ``sorted()`` or ``set()`` Python built-in::
 
     r = [i.evalf(2) for i in r]
     assert set(r) == set([1.0 + 1.7*I, 2.0 - 1.0*I, 2.0 + I, 1.0 - 1.7*I])
 
 This approach does not work for doctests since they always compare strings that would
 be printed after a prompt. In that case you could make your test print results using
-a combination of ´´str()´´ and ´´sorted()´´::
+a combination of ``str()`` and ``sorted()``::
 
     >> sorted([str(i.evalf(2)) for i in r])
     ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']
@@ -385,6 +385,4 @@ and its output::
        ``NotImplementedError`` with respect to choosing appropriate comparison
        method, and will just propagate this exception upwards, to the caller.
 
-       So::
-
-          'return NotImplemented'  !=  'raise NotImplementedError'
+       So ``return NotImplemented`` is not the same as ``raise NotImplementedError``.

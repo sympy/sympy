@@ -71,7 +71,7 @@ The dot product operation maps two vectors to a scalar.  It is defined as:
 
 .. math::
   \mathbf{a} \cdot \mathbf{b} = \Vert \mathbf{a} \Vert \Vert \mathbf{b}
-  \Vert cos(\theta)\\
+  \Vert \cos(\theta)\\
 
 where :math:`\theta` is the angle between :math:`\mathbf{a}` and
 :math:`\mathbf{b}`.
