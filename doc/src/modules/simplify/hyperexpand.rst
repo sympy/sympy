@@ -388,9 +388,9 @@ basis.
 An example
 ==========
 
-Because this explanation might be too theoretical, we walk through an explicit
-example now. We take the Fresnel function :math:`C(z)` which obeys the following
-hypergeometric representation:
+Because this explanation so far might be very theoretical and difficult to
+understand, we walk through an explicit example now. We take the Fresnel
+function :math:`C(z)` which obeys the following hypergeometric representation:
 
 .. math ::
     C(z) = z \cdot {}_{1}F_{2}\left.\left(
@@ -400,7 +400,7 @@ hypergeometric representation:
 
 First we try to add this formula to the lookup table by using the
 (simpler) function ``add(ap, bq, res)``. The first two arguments
-are simply the lists containing the parameters of :math:`{}_{1}F_{2}`.
+are simply the lists containing the parameter sets of :math:`{}_{1}F_{2}`.
 The ``res`` argument is a little bit more complicated. We only know
 :math:`C(z)` in terms of :math:`{}_{1}F_{2}(\ldots | f(z))` with :math:`f`
 a function of :math:`z`, in our case
@@ -417,7 +417,7 @@ introduce the new complex symbol :math:`w` and search a function
    f(g(w)) = w
 
 holds. Then we can replace every :math:`z` in the original formula
-of :math:`C(z)` by :math:`g(w)`. In the case of our example the
+for :math:`C(z)` by :math:`g(w)`. In the case of our example the
 function :math:`g` could look like
 
 .. math ::
@@ -433,7 +433,12 @@ we proceed by computing :math:`f(g(w))` (and simplifying naively)
            &= -\exp\left(i \pi\right) w \\
            &= w
 
-and indeed get back :math:`w`. Hence we can write the formula as
+and indeed get back :math:`w`. (In case of branched functions we have to be
+aware of branch cuts. In that case we take :math:`w` to be a positive real
+number and check the formula. If what we have found works for positive
+:math:`w`, then just replace :func:`exp` inside any branched function by
+:func:`exp\_polar` and what we get is right for `all` :math:`w`.) Hence
+we can write the formula as
 
 .. math ::
    C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(
@@ -463,29 +468,27 @@ this rule to the table looks like::
 
 Using this rule we will find that it works but the results are not really nice
 in terms of simplicity and number of special function instances included.
-
 We can obtain much better results by adding the formula to the lookup table
-in antother way. For this we use the (more complicated) function ``addb(ap, bq, B, C, M)``.
+in another way. For this we use the (more complicated) function ``addb(ap, bq, B, C, M)``.
+The first two arguments are again the lists containing the parameter sets of
+:math:`{}_{1}F_{2}`. The remaining three are the matrices mentioned earlier
+on this page.
 
-First we try to add this formula to the lookup table by using the
-(simpler) function ``add(ap, bq, res)``. The first two arguments
-are again the lists containing the parameters of :math:`{}_{1}F_{2}`.
-The others are the matrices mentioned earlier on this page.
-
-We know that the :math:`n = \max{\left(p, q+1\right)}` -th derivative can be
+We know that the :math:`n = \max{\left(p, q+1\right)}`-th derivative can be
 expressed as a linear combination of lower order derivatives. The matrix
-:math:`B` contains the basis :math:`B_0, B_1, \ldots` and is of shape
+:math:`B` contains the basis :math:`\{B_0, B_1, \ldots\}` and is of shape
 :math:`n \times 1`. The best way to get :math:`B_i` is to take the first
-:math:`n = \max(p, q+1)` derivatives of the expression for :math:`{}_p F_q`.
-In our case we find that :math:`n = \max{\left(1, 2+2\right)} = 3`.
-For computing the derivatives, we have to use the operator
-:math:`z\frac{\mathrm{d}}{\mathrm{d}z}`. The first basis element :math:`B_0`
-is set to the expression for :math:`F` from above:
+:math:`n = \max(p, q+1)` derivatives of the expression for :math:`{}_p F_q`
+and take out usefull pieces. In our case we find that
+:math:`n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
+we have to use the operator :math:`z\frac{\mathrm{d}}{\mathrm{d}z}`. The
+first basis element :math:`B_0` is set to the expression for :math:`{}_1 F_2`
+from above:
 
 .. math ::
-   B_0 = \frac{\sqrt{\pi} e^{- \frac{1}{4} \mathbf{\imath} \pi}
-   C\left(2\frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}}{\sqrt{\pi}}\right)}
-   {2 \sqrt[4]{z}}
+   B_0 = \frac{ \sqrt{\pi} \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+   C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)}
+   {2 z^{\frac{1}{4}}}
 
 Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
 directly use sympy!
@@ -493,39 +496,44 @@ directly use sympy!
   >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
   >>> z * diff(B0, z)
   z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
-  >>> simplify(expand(_))
-  cosh(2*sqrt(z))/4 + (-1)**(3/4)*sqrt(pi)*fresnelc(2*(-1)**(1/4)*z**(1/4)/sqrt(pi))/(8*z**(1/4))
+  >>> expand(_)
+  cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
 
 Formatting this result nicely we obtain
 
 .. math ::
-   \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )} -
-   \frac{1}{4} \frac{
+   B_1^\prime =
+   - \frac{1}{4} \frac{
      \sqrt{\pi}
-     e^{\frac{1}{4} \mathbf{\imath} \pi}
-     C\left( 2 \frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}}{\sqrt{\pi}}\right)
-   } {2 \sqrt[4]{z}}
+     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+   }
+   {2 z^{\frac{1}{4}}}
+   + \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )}
 
 Going ahead and computing the second derivative we find
 
-   >>> B1prime = cosh(2*sqrt(z))/4 + (-1)**(3/4)*sqrt(pi)*fresnelc(2*(-1)**(1/4)*z**(1/4)/sqrt(pi))/(8*z**(1/4))
+   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
    >>> z * diff(B1prime, z)
-   z*(z*(-5*cosh(2*sqrt(z))/(16*z**2) + sinh(2*sqrt(z))/(4*z**(3/2)) + 5*sqrt(pi)*exp(-I*pi/4)*\
-   fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(9/4))) + cosh(2*sqrt(z))/(4*z) -
-   sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+   z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))
    >>> expand(_)
    sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16 + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4))
 
 which can be printed as
 
 .. math ::
-   \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z} -
-   \frac{1}{16} \cosh{\left(2\sqrt{z}\right)} +
-   \frac{1}{16} \frac{\sqrt{\pi} e^{- \frac{1}{4} \mathbf{\imath} \pi}
-   C\left(2 \frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}} {\sqrt{\pi}}\right)}{2 \sqrt[4]{z}}
+   B_2^\prime =
+   \frac{1}{16} \frac{
+     \sqrt{\pi}
+     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+   }
+   {2 z^{\frac{1}{4}}}
+   - \frac{1}{16} \cosh{\left(2\sqrt{z}\right)}
+   + \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z}
 
 We see the common pattern and can collect the pieces. Hence it makes sense to
-choose :math:`B_1` and :math:`B_2` as follows:
+choose :math:`B_1` and :math:`B_2` as follows
 
 .. math ::
    B =
@@ -534,11 +542,17 @@ choose :math:`B_1` and :math:`B_2` as follows:
    \end{matrix} \right)
    =
    \left( \begin{matrix}
-     \frac{\sqrt{\pi}}{2\sqrt[4]{z}} \exp\left(-\frac{i \pi}{4}\right)
-     \mathrm{C}\left( \frac{2}{\sqrt{\pi}} z^{\frac{1}{4}} \exp\left(\frac{i\pi}{4}\right) \right) \\
+     \frac{
+       \sqrt{\pi}
+       \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+       C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+     }{2 z^{\frac{1}{4}}} \\
      \cosh\left(2\sqrt{z}\right) \\
      \sinh\left(2\sqrt{z}\right) \sqrt{z}
    \end{matrix} \right)
+
+(This is in contrast to the basis :math:`B = \left(B_0, B_1^\prime, B_2^\prime\right)` that would
+have been computed automatically if we used just ``add(ap, bq, res)``.)
 
 Because it must hold that :math:`{}_p F_q\left(\cdots \middle| z \right) = C B`
 the entries of :math:`C` are obviously
@@ -552,7 +566,7 @@ the entries of :math:`C` are obviously
 Finally we have to compute the entries of the :math:`3 \times 3` matrix :math:`M`
 such that :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
 We already computed the first part :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
-above. This gives the first row of :math:`M`. For the second row we have:
+above. This gives us the first row of :math:`M`. For the second row we have:
 
    >>> B1 = cosh(2*sqrt(z))
    >>> z * diff(B1, z)
@@ -564,7 +578,7 @@ and for the third one
    >>> expand(z * diff(B2, z))
    sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
 
-Now we have computed the entries of this matrix
+Now we have computed the entries of this matrix to be
 
 .. math ::
    M =
@@ -576,7 +590,8 @@ Now we have computed the entries of this matrix
 
 Note that the entries of :math:`C` and :math:`M` should typically be
 rational functions in :math:`z`, with rational coefficients. This is all
-we need to do in order to add a new formula to the lookup table.
+we need to do in order to add a new formula to the lookup table for
+``hyperexpand``.
 
 Implemented Hypergeometric Formulae
 ***********************************
