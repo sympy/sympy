@@ -4577,6 +4577,8 @@ def gcd(f, g=None, *gens, **args):
 
         if hasattr(f, 'gcd'):
             try:
+                if not (f.is_Integer and g.is_Integer):
+                    raise TypeError("Expected two Integers, got %s and %s " % (type(f), type(g)))
                 return f.gcd(g)
             except (SympifyError, ValueError):
                 pass

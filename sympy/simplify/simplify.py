@@ -1670,7 +1670,7 @@ def _denest_pow(eq):
     # we want 3*x. Neither work with noncommutatives.
     def nc_gcd(aa, bb):
         a, b = [i.as_coeff_Mul() for i in [aa, bb]]
-        c = gcd(a[0], b[0]).as_numer_denom()[0]
+        c = gcd(a[0].p, b[0].p).as_numer_denom()[0]
         g = Mul(*(a[1].args_cnc(cset=True)[0] & b[1].args_cnc(cset=True)[0]))
         return _keep_coeff(c, g)
 
