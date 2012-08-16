@@ -399,7 +399,7 @@ hypergeometric representation:
         \end{matrix} \right| -\frac{\pi^2 z^4}{16}\right) \,.
 
 First we try to add this formula to the lookup table by using the
-(simpler) function ``add(ap, bq, res)``. The two first arguments
+(simpler) function ``add(ap, bq, res)``. The first two arguments
 are simply the lists containing the parameters of :math:`{}_{1}F_{2}`.
 The ``res`` argument is a little bit more complicated. We only know
 :math:`C(z)` in terms of :math:`{}_{1}F_{2}(\ldots | f(z))` with :math:`f`
@@ -462,7 +462,121 @@ this rule to the table looks like::
      )
 
 Using this rule we will find that it works but the results are not really nice
-in terms of simplicity and number of special function instances inluded.
+in terms of simplicity and number of special function instances included.
+
+We can obtain much better results by adding the formula to the lookup table
+in antother way. For this we use the (more complicated) function ``addb(ap, bq, B, C, M)``.
+
+First we try to add this formula to the lookup table by using the
+(simpler) function ``add(ap, bq, res)``. The first two arguments
+are again the lists containing the parameters of :math:`{}_{1}F_{2}`.
+The others are the matrices mentioned earlier on this page.
+
+We know that the :math:`n = \max{\left(p, q+1\right)}` -th derivative can be
+expressed as a linear combination of lower order derivatives. The matrix
+:math:`B` contains the basis :math:`B_0, B_1, \ldots` and is of shape
+:math:`n \times 1`. The best way to get :math:`B_i` is to take the first
+:math:`n = \max(p, q+1)` derivatives of the expression for :math:`{}_p F_q`.
+In our case we find that :math:`n = \max{\left(1, 2+2\right)} = 3`.
+For computing the derivatives, we have to use the operator
+:math:`z\frac{\mathrm{d}}{\mathrm{d}z}`. The first basis element :math:`B_0`
+is set to the expression for :math:`F` from above:
+
+.. math ::
+   B_0 = \frac{\sqrt{\pi} e^{- \frac{1}{4} \mathbf{\imath} \pi}
+   C\left(2\frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}}{\sqrt{\pi}}\right)}
+   {2 \sqrt[4]{z}}
+
+Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
+directly use sympy!
+
+  >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
+  >>> z * diff(B0, z)
+  z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+  >>> simplify(expand(_))
+  cosh(2*sqrt(z))/4 + (-1)**(3/4)*sqrt(pi)*fresnelc(2*(-1)**(1/4)*z**(1/4)/sqrt(pi))/(8*z**(1/4))
+
+Formatting this result nicely we obtain
+
+.. math ::
+   \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )} -
+   \frac{1}{4} \frac{
+     \sqrt{\pi}
+     e^{\frac{1}{4} \mathbf{\imath} \pi}
+     C\left( 2 \frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}}{\sqrt{\pi}}\right)
+   } {2 \sqrt[4]{z}}
+
+Going ahead and computing the second derivative we find
+
+   >>> B1prime = cosh(2*sqrt(z))/4 + (-1)**(3/4)*sqrt(pi)*fresnelc(2*(-1)**(1/4)*z**(1/4)/sqrt(pi))/(8*z**(1/4))
+   >>> z * diff(B1prime, z)
+   z*(z*(-5*cosh(2*sqrt(z))/(16*z**2) + sinh(2*sqrt(z))/(4*z**(3/2)) + 5*sqrt(pi)*exp(-I*pi/4)*\
+   fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(9/4))) + cosh(2*sqrt(z))/(4*z) -
+   sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+   >>> expand(_)
+   sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16 + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4))
+
+which can be printed as
+
+.. math ::
+   \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z} -
+   \frac{1}{16} \cosh{\left(2\sqrt{z}\right)} +
+   \frac{1}{16} \frac{\sqrt{\pi} e^{- \frac{1}{4} \mathbf{\imath} \pi}
+   C\left(2 \frac{\sqrt[4]{z} e^{\frac{1}{4} \mathbf{\imath} \pi}} {\sqrt{\pi}}\right)}{2 \sqrt[4]{z}}
+
+We see the common pattern and can collect the pieces. Hence it makes sense to
+choose :math:`B_1` and :math:`B_2` as follows:
+
+.. math ::
+   B =
+   \left( \begin{matrix}
+     B_0 \\ B_1 \\ B_2
+   \end{matrix} \right)
+   =
+   \left( \begin{matrix}
+     \frac{\sqrt{\pi}}{2\sqrt[4]{z}} \exp\left(-\frac{i \pi}{4}\right)
+     \mathrm{C}\left( \frac{2}{\sqrt{\pi}} z^{\frac{1}{4}} \exp\left(\frac{i\pi}{4}\right) \right) \\
+     \cosh\left(2\sqrt{z}\right) \\
+     \sinh\left(2\sqrt{z}\right) \sqrt{z}
+   \end{matrix} \right)
+
+Because it must hold that :math:`{}_p F_q\left(\cdots \middle| z \right) = C B`
+the entries of :math:`C` are obviously
+
+.. math ::
+   C =
+   \left( \begin{matrix}
+     1 \\ 0 \\ 0
+   \end{matrix} \right)
+
+Finally we have to compute the entries of the :math:`3 \times 3` matrix :math:`M`
+such that :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
+We already computed the first part :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
+above. This gives the first row of :math:`M`. For the second row we have:
+
+   >>> B1 = cosh(2*sqrt(z))
+   >>> z * diff(B1, z)
+   sqrt(z)*sinh(2*sqrt(z))
+
+and for the third one
+
+   >>> B2 = sinh(2*sqrt(z))*sqrt(z)
+   >>> expand(z * diff(B2, z))
+   sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
+
+Now we have computed the entries of this matrix
+
+.. math ::
+   M =
+   \left( \begin{matrix}
+     -\frac{1}{4} & \frac{1}{4} & 0 \\
+     0            & 0           & 1 \\
+     0            & z           & \frac{1}{2} \\
+   \end{matrix} \right)
+
+Note that the entries of :math:`C` and :math:`M` should typically be
+rational functions in :math:`z`, with rational coefficients. This is all
+we need to do in order to add a new formula to the lookup table.
 
 Implemented Hypergeometric Formulae
 ***********************************
