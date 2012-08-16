@@ -1261,45 +1261,6 @@ class Diagram(Basic):
 
         return Diagram(new_generators)
 
-    def _composites_by_length(self, length, identities=True):
-        """
-        Given the desired ``length`` (component count), generates all
-        possible compositions of morphisms from ``generators`` of this
-        length.  For ``length == 1``, this method will produce exactly
-        the list of the generators of this :class:`Diagram`.  For
-        ``length == 0`` will produce nothing.
-
-        If ``identities == True``, and ``length == 1``, this function
-        will produce _all_ generators, including identities.
-        Otherwise it will only produce non-identity morphisms.
-        """
-        if length == 1:
-            for m in self.generators:
-                if isinstance(m, IdentityMorphism) and not identities:
-                    continue
-                yield m
-        else:
-            first_half_len = length/2
-            second_half_len = length - first_half_len
-
-            first_half = self._composites_by_length(first_half_len,
-                                                    identities=False)
-            second_half = self._composites_by_length(second_half_len,
-                                                    identities=False)
-
-            for (first, second) in product(first_half, second_half):
-                # We only need to check either ``first * second`` or
-                # ``second * first``, and it doesn't matter which of
-                # them, because we go through all possible
-                # combinations.
-                #
-                # Note that some composites may have already been
-                # supplied as generators; no need to yield them twice.
-                if (second.domain == first.codomain):
-                    composite = second * first
-                    if composite not in self.generators_properties:
-                        yield composite
-
     @property
     def morphisms(self):
         """
@@ -1321,7 +1282,13 @@ class Diagram(Basic):
         [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
 
         """
-        length = 1
+        # At first, just yield all generators.
+        for m in self.generators:
+            yield m
+
+        # Next we will generate morphisms in rounds; at each round we
+        # will generate morphisms from combinations of a fixed number
+        # of generators.
 
         # If this diagram is finite, we want to only go on until there
         # are composites.  Otherwise, we just go on and on.
@@ -1333,13 +1300,35 @@ class Diagram(Basic):
         else:
             halt_condition = lambda x: False
 
+        # Here we will store the previous round of morphisms.
+        # Remember, we have just yielded all generators, so that's the
+        # previous round here.
+        previous_morphisms = [gen for gen in self.generators
+                              if not isinstance(gen, IdentityMorphism)]
+
         ncomposites = 1
         while not halt_condition(ncomposites):
             ncomposites = 0
-            for composite in self._composites_by_length(length):
-                ncomposites += 1
-                yield composite
-            length += 1
+
+            # Here we will store the current round of morphisms.
+            current_morphisms = []
+
+            # We need to yield all possible combinations between
+            # non-trivial generators and ``previous_morphisms``.
+            for (previous, current) in product(previous_morphisms,
+                                               self.generators):
+                if not isinstance(current, IdentityMorphism) and \
+                       (current.domain == previous.codomain):
+                    composite = current * previous
+
+                    # The generators may already include this
+                    # composite, if has been given some properties.
+                    if composite not in self.generators_properties:
+                        yield composite
+                        ncomposites += 1
+                        current_morphisms.append(composite)
+
+            previous_morphisms = current_morphisms
 
     @property
     def objects(self):
