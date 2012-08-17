@@ -185,6 +185,21 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 2),
     ]
 
+def test_RootOf_eval_rational():
+    p = legendre_poly(4, x, polys=True)
+    roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
+    for r in roots:
+        assert isinstance(r, Rational)
+    # All we know is that the Rational instance will be at most 1/10^20 from
+    # the exact root. So if we evaluate to 17 digits, it must be exactly equal
+    # to:
+    roots = [str(r.n(17)) for r in roots]
+    assert roots == [
+            "-0.86113631159405258",
+            "-0.33998104358485626",
+             "0.33998104358485626",
+             "0.86113631159405258",
+             ]
 
 def test_RootSum___new__():
     f = x**3 + x + 3
