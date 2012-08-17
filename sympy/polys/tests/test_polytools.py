@@ -1659,8 +1659,6 @@ def test_gcd():
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
-    raises(TypeError, lambda: gcd(45., 12))
-
 def test_terms_gcd():
     assert terms_gcd(1) == 1
     assert terms_gcd(1, x) == 1

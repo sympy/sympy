@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Rational
 )
 
 from sympy.core.mul import _keep_coeff
@@ -4577,8 +4577,10 @@ def gcd(f, g=None, *gens, **args):
 
         if hasattr(f, 'gcd'):
             try:
-                if not (f.is_Integer and g.is_Integer):
-                    raise TypeError("Expected two Integers, got %s and %s " % (type(f), type(g)))
+                if f.is_Float:
+                    f = Rational(*(f.as_integer_ratio()))
+                if g.is_Float:
+                    g = Rational(*(g.as_integer_ratio()))
                 return f.gcd(g)
             except (SympifyError, ValueError):
                 pass
