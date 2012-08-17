@@ -642,6 +642,9 @@ class Float(Number):
         return C.Integer(int(mlib.to_int(
             mlib.mpf_ceil(self._mpf_, self._prec))))
 
+    def as_integer_ratio(self):
+        return float(self).as_integer_ratio()
+
     @property
     def num(self):
         return mpmath.mpf(self._mpf_)
