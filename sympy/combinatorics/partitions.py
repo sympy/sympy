@@ -3,6 +3,7 @@ from sympy.matrices import zeros
 from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import has_dups, flatten
+from sympy.ntheory.residue_ntheory import int_tested
 
 import random
 from collections import defaultdict
@@ -20,8 +21,9 @@ class Partition(C.FiniteSet):
     """
 
     _rank = None
+    _partition = None
 
-    def __new__(cls, *args):
+    def __new__(cls, partition):
         """
         Generates a new partition object.
 
@@ -34,7 +36,7 @@ class Partition(C.FiniteSet):
         >>> a = Partition([[1, 2], [3]])
         >>> a
         {{1, 2}, {3}}
-        >>> a.as_list()
+        >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
         2
@@ -42,9 +44,9 @@ class Partition(C.FiniteSet):
         (1, 2, 3)
 
         """
-        partition = args[0]
-
-        if not all(isinstance(part, list) for part in partition):
+        args = partition
+        # XXX check how Tuple and Permutation handle input
+        if not all(isinstance(part, list) for part in args):
             raise ValueError("Partition should be a list of lists.")
 
         # sort so we have a canonical reference for RGS
@@ -52,7 +54,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), args[0]))
+        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), args))
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -63,6 +65,8 @@ class Partition(C.FiniteSet):
         Ordering is based on the size and sorted elements of the partition
         and ties are broken with the rank.
 
+        Examples
+        ========
         >>> from sympy.utilities.iterables import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
@@ -81,16 +85,19 @@ class Partition(C.FiniteSet):
                              key=lambda w: default_sort_key(w, order)))
         return self.size, members, self.rank
 
-    def as_list(self):
+    @property
+    def partition(self):
         """Return partition as a sorted list of lists.
 
         Examples
         ========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> Partition([[1], [2, 3]]).as_list()
+        >>> Partition([[1], [2, 3]]).partition
         [[1], [2, 3]]
         """
-        return sorted(sorted(p) for p in self.args)
+        if self._partition is None:
+            self._partition = sorted(sorted(p) for p in self.args)
+        return self._partition
 
     def _partition_op(self, other, op=0):
         """
@@ -112,7 +119,7 @@ class Partition(C.FiniteSet):
             result = RGS_unrank((offset) %
                                 RGS_enum(self.size),
                                 self.size)
-        return Partition.partition_from_rgs(result, self.members)
+        return Partition.from_rgs(result, self.members)
 
     def __add__(self, other):
         """
@@ -219,40 +226,51 @@ class Partition(C.FiniteSet):
         >>> a.members
         (1, 2, 3, 4, 5)
         >>> a.RGS
-        [0, 0, 1, 2, 2]
+        (0, 0, 1, 2, 2)
         >>> a + 1
         {{1, 2}, {3}, {4}, {5}}
         >>> _.RGS
-        [0, 0, 1, 2, 3]
+        (0, 0, 1, 2, 3)
         """
         rgs = {}
-        partition = self.as_list()
+        partition = self.partition
         for i, part in enumerate(partition):
             for j in part:
                 rgs[j] = i
-        return [rgs[i] for i in sorted(i for p in partition for i in p)]
+        return tuple([rgs[i] for i in sorted(i for p in partition for i in p)])
 
     @classmethod
-    def partition_from_rgs(self, rgs, superset):
+    def from_rgs(self, rgs, elements):
         """
         Creates a set partition from a restricted growth string.
+
+        The indices given in rgs are assumed to be the index
+        of the element as given in elements *as provided* (the
+        elements are not sorted by this routine). Block numbering
+        starts from 0. If any block was not referenced in ``rgs``
+        an error will be raised.
 
         Examples
         ========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> Partition.partition_from_rgs([0, 1, 2, 0, 1], list('abcde'))
+        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
         {{c}, {a, d}, {b, e}}
+        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
+        {{e}, {a, c}, {b, d}}
         >>> a = Partition([[1, 4], [2], [3, 5]])
-        >>> Partition.partition_from_rgs(a.RGS, a.members)
+        >>> Partition.from_rgs(a.RGS, a.members)
         {{1, 4}, {2}, {3, 5}}
         """
-        superset = sorted(list(superset))
+        if len(rgs) != len(elements):
+            raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
         partition = [[] for i in xrange(max_elem)]
         j = 0
         for i in rgs:
-            partition[i].append(superset[j])
+            partition[i].append(elements[j])
             j += 1
+        if not all(p for p in partition):
+            raise ValueError('some blocks of the partition were empty.')
         return Partition(partition)
 
 class IntegerPartition(Basic):
@@ -334,7 +352,7 @@ class IntegerPartition(Basic):
             raise ValueError("The summands must all be positive.")
 
         obj = Basic.__new__(cls, integer, partition)
-        obj.partition = partition
+        obj.partition = list(partition)
         obj.integer = integer
         return obj
 
@@ -347,7 +365,7 @@ class IntegerPartition(Basic):
         >>> p = IntegerPartition([4])
         >>> print p.prev_lex()
         [3, 1]
-        >>> p.as_list() > p.prev_lex().as_list()
+        >>> p.partition > p.prev_lex().partition
         True
         """
         d = defaultdict(int)
@@ -382,7 +400,7 @@ class IntegerPartition(Basic):
         >>> p = IntegerPartition([3, 1])
         >>> print p.next_lex()
         [4]
-        >>> p.as_list() < p.next_lex().as_list()
+        >>> p.partition < p.next_lex().partition
         True
         """
         d = defaultdict(int)
@@ -421,20 +439,13 @@ class IntegerPartition(Basic):
                 d[1] = need
         return IntegerPartition(self.integer, d)
 
-    def as_list(self):
-        """Return the partition as a reverse-sorted list.
-
-        >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> IntegerPartition([1, 2]).as_list()
-        [2, 1]
-        """
-        return list(self.partition)
-
     def as_dict(self):
         """Return the partition as a dictionary whose keys are the
-        partition integers and the values the multiplicity of that
+        partition integers and the values are the multiplicity of that
         integer.
 
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> IntegerPartition([1]*3 + [2] + [3]*4).as_dict()
         {1: 3, 2: 1, 3: 4}
@@ -478,6 +489,8 @@ class IntegerPartition(Basic):
         """Return True if self is less than other when the partition
         is listed from smallest to biggest.
 
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([3, 1])
         >>> a < a
@@ -494,6 +507,8 @@ class IntegerPartition(Basic):
         """Return True if self is less than other when the partition
         is listed from smallest to biggest.
 
+        Examples
+        ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([4])
         >>> a <= a
@@ -501,14 +516,14 @@ class IntegerPartition(Basic):
         """
         return list(reversed(self.partition)) <= list(reversed(other.partition))
 
-    def ferrers_representation(self, char='#'):
+    def as_ferrers(self, char='#'):
         """
         Prints the ferrer diagram of a partition.
 
         Examples
         ========
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> print IntegerPartition([1, 1, 5]).ferrers_representation()
+        >>> print IntegerPartition([1, 1, 5]).as_ferrers()
         #####
         #
         #
@@ -539,10 +554,14 @@ def random_integer_partition(n, seed=None):
     """
     from sympy.utilities.randtest import _randint
 
+    n = int_tested(n)
+    if n < 1:
+        raise ValueError('n must be a positive integer')
+
     randint = _randint(seed)
 
     partition = []
-    while(n > 0):
+    while (n > 0):
         k = randint(1, n)
         mult = randint(1, n//k)
         partition.append((k, mult))
@@ -590,19 +609,31 @@ def RGS_enum(m):
     Examples
     ========
     >>> from sympy.combinatorics.partitions import RGS_enum
+    >>> from sympy.combinatorics.partitions import Partition
     >>> RGS_enum(4)
     15
     >>> RGS_enum(5)
     52
     >>> RGS_enum(6)
     203
+
+    We can check that the enumeration is correct by actually generating
+    the partitions. Here, the 15 partitions of 4 items are generated:
+
+    >>> a = Partition([range(4)])
+    >>> s = set()
+    >>> for i in range(20):
+    ...     s.add(a)
+    ...     a += 1
+    ...
+    >>> assert len(s) == 15
     """
-    m += 1
-    if (m < 0):
+    if (m < 1):
         return 0
-    elif (m == 0):
+    elif (m == 1):
         return 1
     else:
+        m += 1
         b = [1] * (m)
         for j in xrange(1, m):
             for i in xrange(1, j):
