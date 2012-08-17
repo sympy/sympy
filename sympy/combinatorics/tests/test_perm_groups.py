@@ -530,6 +530,77 @@ def test_derived_series():
     assert triv.derived_series() == [triv]
     # the derived series for a simple group consists only of the group itself
     for i in (5, 6, 7):
-        A = AlternatingGroup(7)
-        assert A.derived_series() == A
+        A = AlternatingGroup(i)
+        assert A.derived_series() == [A]
+    # the derived series for S_4 is S_4 > A_4 > K_4 > triv
+    S = SymmetricGroup(4)
+    series = S.derived_series()
+    assert series[1] == AlternatingGroup(4)
+    assert series[2] == DihedralGroup(2)
+    assert series[3].is_trivial
 
+def test_lower_central_series():
+    # the lower central series of the trivial group consists only of the trivial group
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert triv.lower_central_series() == [triv]
+    # the lower central series of a simple group consists only of the group itself
+    for i in (5, 6, 7):
+        A = AlternatingGroup(i)
+        assert A.lower_central_series() == [A]
+    # GAP-verified example
+    S = SymmetricGroup(6)
+    series = S.lower_central_series()
+    assert len(series) == 2
+    assert series[1] == AlternatingGroup(6)
+
+def test_commutator():
+    # the commutator of the trivial group and the trivial group is trivial
+    S = SymmetricGroup(3)
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert S.commutator(triv, triv) == triv
+    # the commutator of the trivial group and any other group is again trivial
+    A = AlternatingGroup(3)
+    assert S.commutator(triv, A) == triv
+    # the commutator is commutative
+    for i in (3, 4, 5):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        D = DihedralGroup(i)
+        assert S.commutator(A, D) == S.commutator(D, A)
+    # the commutator of an abelian group is trivial
+    S = SymmetricGroup(7)
+    A1 = AbelianGroup(2, 5)
+    A2 = AbelianGroup(3, 4)
+    triv = PermutationGroup([Permutation([0, 1, 2, 3, 4, 5, 6])])
+    assert S.commutator(A1, A1) == triv
+    assert S.commutator(A2, A2) == triv
+    # examples calculated by hand
+    S = SymmetricGroup(3)
+    A = AlternatingGroup(3)
+    assert S.commutator(A, S) == A
+
+def test_is_nilpotent():
+    # every abelian group is nilpotent
+    for i in (1, 2, 3):
+        C = CyclicGroup(i)
+        Ab = AbelianGroup(i, i + 2)
+        assert C.is_nilpotent
+        assert Ab.is_nilpotent
+    Ab = AbelianGroup(5, 7, 10)
+    assert Ab.is_nilpotent
+    # A_5 is not solvable and thus not nilpotent
+    assert AlternatingGroup(5).is_nilpotent == False
+
+def test_is_trivial():
+    for i in range(5):
+        triv = PermutationGroup([Permutation(range(i))])
+        assert triv.is_trivial
+
+def test_pointwise_stabilizer():
+    S = SymmetricGroup(5)
+    points = []
+    stab = S
+    for point in (2, 0, 3, 4, 1):
+        stab = stab.stabilizer(point)
+        points.append(point)
+        assert S.pointwise_stabilizer(points) == stab
