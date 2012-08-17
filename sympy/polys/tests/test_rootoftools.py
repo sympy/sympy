@@ -2,6 +2,7 @@
 
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import RootOf, RootSum
+from sympy.polys.orthopolys import legendre_poly
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -152,6 +153,14 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("0.60670583138111481707"))
     assert im.epsilon_eq(Float("1.45061224918844152650"))
 
+    p = legendre_poly(4, x, polys=True)
+    roots = [str(r.n(17)) for r in p.real_roots()]
+    assert roots == [
+            "-0.86113631159405258",
+            "-0.33998104358485626",
+             "0.33998104358485626",
+             "0.86113631159405258",
+             ]
 
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]

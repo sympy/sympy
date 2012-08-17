@@ -408,6 +408,18 @@ class RootOf(Expr):
 
                 try:
                     root = findroot(func, x0)
+                    if self.is_real:
+                        a = mpf(str(interval.a))
+                        b = mpf(str(interval.b))
+                        # This is needed due to the bug #3364:
+                        a, b = min(a, b), max(a, b)
+                        if not (a < root and root < b):
+                            # If the root is not in the interval (a, b), we
+                            # keep refining the interval. This happens if
+                            # findroot accidentally finds a root in different
+                            # interval, because our initial estimate was not
+                            # close enough.
+                            raise ValueError("Root not in the interval.")
                 except ValueError:
                     interval = interval.refine()
                     refined = True
