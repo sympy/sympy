@@ -357,7 +357,8 @@ class IntegerPartition(Basic):
         return obj
 
     def prev_lex(self):
-        """Return the previous partition of the integer in lexical order.
+        """Return the previous partition of the integer, n, in lexical order,
+        wrapping around to [1, ..., 1] if the partition is [n].
 
         Examples
         ========
@@ -392,7 +393,8 @@ class IntegerPartition(Basic):
         return IntegerPartition(self.integer, d)
 
     def next_lex(self):
-        """Return the next partition of the integer in lexical order.
+        """Return the next partition of the integer, n, in lexical order,
+        wrapping around to [n] if the partition is [1, ..., 1].
 
         Examples
         ========
