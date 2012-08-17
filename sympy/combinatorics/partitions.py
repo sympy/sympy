@@ -45,7 +45,6 @@ class Partition(C.FiniteSet):
 
         """
         args = partition
-        # XXX check how Tuple and Permutation handle input
         if not all(isinstance(part, list) for part in args):
             raise ValueError("Partition should be a list of lists.")
 
@@ -99,32 +98,10 @@ class Partition(C.FiniteSet):
             self._partition = sorted(sorted(p) for p in self.args)
         return self._partition
 
-    def _partition_op(self, other, op=0):
-        """
-        Helper method for the __add__ and __sub__ methods.
-        """
-        if isinstance(other, Partition): # XXX it seems weird to allow this
-            if op == 0:
-                offset = self.rank + other.rank
-            else:
-                offset = self.rank - other.rank
-            result = RGS_unrank((offset) %
-                                RGS_enum(self.size),
-                                self.size)
-        elif isinstance(other, int):
-            if op == 0:
-                offset = self.rank + other
-            else:
-                offset = self.rank - other
-            result = RGS_unrank((offset) %
-                                RGS_enum(self.size),
-                                self.size)
-        return Partition.from_rgs(result, self.members)
-
     def __add__(self, other):
         """
-        Routine to increment the rank of self by other's rank or value
-        (if other is an integer).
+        Return permutation whose rank is ``other`` greater than current rank,
+        (mod the maximum rank for the set).
 
         Examples
         ========
@@ -134,15 +111,20 @@ class Partition(C.FiniteSet):
         1
         >>> (a + 1).rank
         2
-        >>> (a + a).rank
-        2
+        >>> (a + 100).rank
+        1
         """
-        return self._partition_op(other)
+        other = int_tested(other)
+        offset = self.rank + other
+        result = RGS_unrank((offset) %
+                            RGS_enum(self.size),
+                            self.size)
+        return Partition.from_rgs(result, self.members)
 
     def __sub__(self, other):
         """
-        Routine to decrement the rank of self by other's rank or value
-        (if other is an integer).
+        Return permutation whose rank is ``other`` less than current rank,
+        (mod the maximum rank for the set).
 
         Examples
         ========
@@ -152,10 +134,10 @@ class Partition(C.FiniteSet):
         1
         >>> (a - 1).rank
         0
-        >>> (a - a).rank
-        0
+        >>> (a - 100).rank
+        1
         """
-        return self._partition_op(other, 1)
+        return self.__add__(-other)
 
     def __le__(self, other):
         """

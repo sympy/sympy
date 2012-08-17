@@ -266,6 +266,7 @@ class Permutation(Basic):
 
         temp = [int(i) for i in flatten(args[0])]
         if set(range(len(temp))) != set(temp):
+            # XXX allow arbitrary elements like Partition does
             raise ValueError("Integers 0 through %s must be present." %
                              len(temp))
 

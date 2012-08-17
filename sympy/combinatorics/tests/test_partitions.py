@@ -25,8 +25,6 @@ def test_partition():
     assert (a > b) == False
     assert a != b
 
-    assert (a + b).partition == [[1, 2], [3], [4]]
-    assert (a - b).partition == [[1], [2], [3, 4]]
     assert (a + 2).partition == [[1, 2], [3, 4]]
     assert (b - 1).partition == [[1, 2, 4], [3]]
 
