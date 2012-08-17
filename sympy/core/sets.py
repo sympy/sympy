@@ -690,16 +690,16 @@ class Union(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import Union, Interval
+    >>> from sympy import Union, Interval
 
-        >>> Union(Interval(1, 2), Interval(3, 4))
-        [1, 2] U [3, 4]
+    >>> Union(Interval(1, 2), Interval(3, 4))
+    [1, 2] U [3, 4]
 
-        The Union constructor will always try to merge overlapping intervals,
-        if possible. For example:
+    The Union constructor will always try to merge overlapping intervals,
+    if possible. For example:
 
-        >>> Union(Interval(1, 2), Interval(2, 3))
-        [1, 3]
+    >>> Union(Interval(1, 2), Interval(2, 3))
+    [1, 3]
 
     See Also
     ========

@@ -8,7 +8,7 @@ from sympy.ntheory.residue_ntheory import int_tested
 import random
 from collections import defaultdict
 
-class Partition(C.FiniteSet):
+class Partition(C.Union):
     """
     This class represents an abstract partition.
 
@@ -34,8 +34,8 @@ class Partition(C.FiniteSet):
         ========
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3]])
-        >>> a
-        {{1, 2}, {3}}
+        >>> a # doctest: +SKIP
+        {1, 2} U {3}
         >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
@@ -74,8 +74,12 @@ class Partition(C.FiniteSet):
         >>> c = Partition([[1, x]])
         >>> d = Partition([range(4)])
         >>> l = [d, b, a + 1, a, c]
-        >>> l.sort(key=default_sort_key); l
-        [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
+        >>> z = zip('d, b, a + 1, a, c'.split(', '), l)
+        >>> s, e = zip(*sorted(z, key=default_sort_key))
+        >>> s
+        ('a', 'a + 1', 'b', 'c', 'd')
+        >>> [i.partition for i in e]
+        [[[1, 2]], [[1], [2]], [[3, 4]], [[1, x]], [[0, 1, 2, 3]]]
         """
         if order is None:
             members = self.members
@@ -97,6 +101,17 @@ class Partition(C.FiniteSet):
         if self._partition is None:
             self._partition = sorted(sorted(p) for p in self.args)
         return self._partition
+
+    def __len__(self):
+        """Return the number of blocks contained in the partition.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> len(Partition([[1, 2], [3]]))
+        2
+        """
+        return len(self.args)
 
     def __add__(self, other):
         """
@@ -209,10 +224,6 @@ class Partition(C.FiniteSet):
         (1, 2, 3, 4, 5)
         >>> a.RGS
         (0, 0, 1, 2, 2)
-        >>> a + 1
-        {{1, 2}, {3}, {4}, {5}}
-        >>> _.RGS
-        (0, 0, 1, 2, 3)
         """
         rgs = {}
         partition = self.partition
@@ -235,13 +246,13 @@ class Partition(C.FiniteSet):
         Examples
         ========
         >>> from sympy.combinatorics.partitions import Partition
-        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
-        {{c}, {a, d}, {b, e}}
-        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
-        {{e}, {a, c}, {b, d}}
+        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde')).partition
+        [[a, d], [b, e], [c]]
+        >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead')).partition
+        [[a, c], [b, d], [e]]
         >>> a = Partition([[1, 4], [2], [3, 5]])
-        >>> Partition.from_rgs(a.RGS, a.members)
-        {{1, 4}, {2}, {3, 5}}
+        >>> Partition.from_rgs(a.RGS, a.members).partition
+        [[1, 4], [2], [3, 5]]
         """
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
