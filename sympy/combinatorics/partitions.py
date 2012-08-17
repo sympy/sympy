@@ -53,7 +53,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, map(lambda x: C.FiniteSet(x), args))
+        obj = C.FiniteSet.__new__(cls, map(C.FiniteSet, args))
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
