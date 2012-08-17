@@ -281,32 +281,32 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy `B_0 = 1` and::
+    The Bell numbers satisfy `B_0 = 1` and
 
-    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k
+    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k.
 
-    They are also given by::
+    They are also given by:
 
-    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
+    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}.
 
-    The Bell polynomials are given by `B_0(x) = 1` and::
+    The Bell polynomials are given by `B_0(x) = 1` and
 
-    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x)
+    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x).
 
     The second kind of Bell polynomials (are sometimes called "partial" Bell
-    polynomials or incomplete Bell polynomials) are defined as:
+    polynomials or incomplete Bell polynomials) are defined as
 
     .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
             \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
                 \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
                 \left(\frac{x_1}{1!} \right)^{j_1}
                 \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
-                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
 
-    * bell(n) gives the nth Bell number, `B_n`
-    * bell(n, x) gives the nth Bell polynomial, `B_n(x)`
-    * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
-            `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`
+    * bell(n) gives the `n^{th}` Bell number, `B_n`.
+    * bell(n, x) gives the `n^{th}` Bell polynomial, `B_n(x)`.
+    * bell(n, k, (x1, x2, ...)) gives Bell polynomials of the second kind,
+      `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
 
     Notes
     =====

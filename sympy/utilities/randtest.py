@@ -92,8 +92,10 @@ def _randrange(seed=None):
         o int - return a generator seeded with the int
         o list - the values to be returned will be taken from the list
           in the order given; the provided list is not modified.
+
     Examples
     ========
+
     >>> from sympy.utilities.randtest import _randrange
     >>> rr = _randrange()
     >>> rr(1000) # doctest: +SKIP
@@ -140,8 +142,10 @@ def _randint(seed=None):
         o int - return a generator seeded with the int
         o list - the values to be returned will be taken from the list
           in the order given; the provided list is not modified.
+
     Examples
     ========
+
     >>> from sympy.utilities.randtest import _randint
     >>> ri = _randint()
     >>> ri(1, 1000) # doctest: +SKIP

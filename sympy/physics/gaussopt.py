@@ -3,15 +3,23 @@
 Gaussian optics.
 
 The module implements:
-    Ray transfer matrices for geometrical and gaussian optics
-     See RayTransferMatrix, GeometricRay and BeamParameter
-    Conjugation relations for geometrical and gaussian optics
-     See geometric_conj*, gauss_conj and conjugate_gauss_beams
+
+- Ray transfer matrices for geometrical and gaussian optics.
+
+  See RayTransferMatrix, GeometricRay and BeamParameter
+
+- Conjugation relations for geometrical and gaussian optics.
+
+  See geometric_conj*, gauss_conj and conjugate_gauss_beams
 
 The conventions for the distances are as follows:
-    focal distance - positive for convergent lenses
-    object distance - positive for real objects
-    image distance - positive for real images
+
+focal distance
+    positive for convergent lenses
+object distance
+    positive for real objects
+image distance
+    positive for real images
 """
 
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
@@ -32,10 +40,10 @@ class RayTransferMatrix(Matrix):
     Parameters
     ==========
 
-    parameters A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
+    parameters : A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
     >>> from sympy import Symbol, Matrix
@@ -196,8 +204,8 @@ class FlatRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    n1: refractive index of one medium
-    n2: refractive index of other medium
+    n1 : refractive index of one medium
+    n2 : refractive index of other medium
 
     See Also
     ========
@@ -225,9 +233,9 @@ class CurvedRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    R: radius of curvature (positive for concave),
-    n1: refractive index of one medium
-    n2: refractive index of other medium
+    R : radius of curvature (positive for concave)
+    n1 : refractive index of one medium
+    n2 : refractive index of other medium
 
     See Also
     ========
@@ -252,7 +260,10 @@ class FlatMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection.
 
-    See Also: RayTransferMatrix
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -272,7 +283,7 @@ class CurvedMirror(RayTransferMatrix):
     Parameters
     ==========
 
-    radius of curvature (positive for concave)
+    R : radius of curvature (positive for concave)
 
     See Also
     ========
@@ -300,7 +311,7 @@ class ThinLens(RayTransferMatrix):
     Parameters
     ==========
 
-    the focal distance
+    f : the focal distance
 
     See Also
     ========
@@ -333,7 +344,9 @@ class GeometricRay(Matrix):
     Parameters
     ==========
 
-    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    h : height, and
+    angle : angle, or
+    matrix : a 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
     =======
@@ -419,7 +432,10 @@ class BeamParameter(Expr):
     Parameters
     ==========
 
-    wavelength, distance to waist, and w (waist) or z_r (rayleigh range)
+    wavelen : the wavelength,
+    z : the distance to waist, and
+    w : the waist, or
+    z_r : the rayleigh range
 
     Examples
     ========
@@ -508,12 +524,12 @@ class BeamParameter(Expr):
     @property
     def w(self):
         """
-        The beam radius at 1/e^2 intensity.
+        The beam radius at `1/e^2` intensity.
 
         See Also
         ========
 
-        w_0: minimal radius of beam
+        w_0 : the minimal radius of beam
 
         Examples
         ========
@@ -530,11 +546,10 @@ class BeamParameter(Expr):
         """
         The beam waist (minimal radius).
 
-
         See Also
         ========
 
-        w: beam radius at 1/e^2 intensity
+        w : the beam radius at `1/e^2` intensity
 
         Examples
         ========
@@ -704,17 +719,17 @@ def gaussian_conj(s_in, z_r_in, f):
     Parameters
     ==========
 
-    s_in: distance to optical element from the waist
-    z_r_in: the rayleigh range of the incident beam
-    f: the focal length of the optical element
+    s_in : the distance to optical element from the waist
+    z_r_in : the rayleigh range of the incident beam
+    f : the focal length of the optical element
 
     Returns
     =======
 
-    A tuple containing (s_out, z_r_out, m)
-     - s_out - distance between the new waist and the optical element
-     - z_r_out - rayleigh range of the emergent beam
-     - m - the ration between the new and the old waists
+    a tuple containing (s_out, z_r_out, m)
+    s_out : the distance between the new waist and the optical element
+    z_r_out : the rayleigh range of the emergent beam
+    m : the ration between the new and the old waists
 
     Examples
     ========
@@ -745,17 +760,17 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     Parameters
     ==========
 
-    wavelen: the wavelength of the beam
-    waist_in and waist_out: the waists to be conjugated
-    f: the focal distance of the element used in the conjugation
+    wavelen : the wavelength of the beam
+    waist_in and waist_out : the waists to be conjugated
+    f : the focal distance of the element used in the conjugation
 
     Returns
     =======
 
-    A tuple containing (s_in, s_out, f)
-     - s_in - distance before the optical element
-     - s_out - distance after the optical element
-     - f -  focal distance of the optical element
+    a tuple containing (s_in, s_out, f)
+    s_in : the distance before the optical element
+    s_out : the distance after the optical element
+    f : the focal distance of the optical element
 
     Examples
     ========

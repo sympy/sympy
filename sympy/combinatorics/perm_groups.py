@@ -634,19 +634,25 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``base``, ``strong_gens`` - the base and strong generating set
-        ``pos`` - position at which swapping is performed
-        ``randomized`` - switch between randomized and deterministic version
-        ``transversals`` - transversals for the basic orbits, if known
-        ``basic_orbits`` - basic orbits, if known
-        ``strong_gens_distr`` - strong generators distributed by basic stabilizers,
-        if known
+        base, strong_gens
+            The base and strong generating set.
+        pos
+            The position at which swapping is performed.
+        randomized
+            A switch between randomized and deterministic version.
+        transversals
+            The transversals for the basic orbits, if known.
+        basic_orbits
+            The basic orbits, if known.
+        strong_gens_distr
+            The strong generators distributed by basic stabilizers, if known.
 
         Returns
         =======
 
-        ``(base, strong_gens)``, where ``base`` is the new base, and
-        ``strong_gens`` is a generating set relative to it
+        (base, strong_gens)
+            ``base`` is the new base, and ``strong_gens`` is a generating set
+            relative to it.
 
         Examples
         ========
@@ -2089,18 +2095,21 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``base`` - the sequence of points to be extended to a base. Optional
-        parameter with default value ``[]``
-        ``gens`` - generating set to be extended to a strong generating set
-        relative to the base obtained. Optional parameter with default value
-        ``self.generators``
+        base
+            The sequence of points to be extended to a base. Optional
+            parameter with default value ``[]``.
+        gens
+            The generating set to be extended to a strong generating set
+            relative to the base obtained. Optional parameter with default
+            value ``self.generators``.
 
         Returns
         =======
 
-        ``(base, strong_gens)`` where ``base`` is the base obtained, and
-        ``strong_gens`` is the strong generating set relative to it. The
-        original parameters ``base``, ``gens`` remain unchanged.
+        (base, strong_gens)
+            ``base`` is the base obtained, and ``strong_gens`` is the strong
+            generating set relative to it. The original parameters ``base``,
+            ``gens`` remain unchanged.
 
         Examples
         ========
@@ -2238,16 +2247,21 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``base`` - the sequence to be extended to a base
-        ``gens`` - the generating set to be extended to a strong generating set
-        ``consec_succ`` - parameter defining the probability of a wrong answer.
-        ``_random_prec`` - internal parameter used for testing purposes
+        base
+            The sequence to be extended to a base.
+        gens
+            The generating set to be extended to a strong generating set.
+        consec_succ
+            The parameter defining the probability of a wrong answer.
+        _random_prec
+            An internal parameter used for testing purposes.
 
         Returns
         =======
 
-        ``(base, strong_gens)``, where ``base`` is the base and ``strong_gens``
-        is the strong generating set relative to it.
+        (base, strong_gens)
+            ``base`` is the base and ``strong_gens`` is the strong generating
+            set relative to it.
 
         Examples
         ========
@@ -2516,24 +2530,29 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``prop`` - the property to be used. Has to be callable on group
-        elements and always return ``True`` or ``False``. It is assumed that
-        all group elements satisfying ``prop`` indeed form a subgroup.
-        ``base`` - a base for the supergroup.
-        ``strong_gens`` - a strong generating set for the supergroup.
-        ``tests`` - list of callables of length equal to the length of ``base``.
-        These are used to rule out group elements by partial base images, so
-        that ``tests[l](g)`` returns False if the element ``g`` is known not
-        to satisfy prop base on where g sends the first ``l + 1`` base points.
-        ``init_subgroup`` - if a subgroup of the saught group is known in
-        advance, it can be passed to the function as this parameter.
+        prop
+            The property to be used. Has to be callable on group elements
+            and always return ``True`` or ``False``. It is assumed that
+            all group elements satisfying ``prop`` indeed form a subgroup.
+        base
+            A base for the supergroup.
+        strong_gens
+            A strong generating set for the supergroup.
+        tests
+            A list of callables of length equal to the length of ``base``.
+            These are used to rule out group elements by partial base images, so
+            that ``tests[l](g)`` returns False if the element ``g`` is known not
+            to satisfy prop base on where g sends the first ``l + 1`` base points.
+            ``init_subgroup`` - if a subgroup of the saught group is known in
+            advance, it can be passed to the function as this parameter.
 
         Returns
         =======
 
-        The subgroup of all elements satisfying ``prop``. The generating set
-        for this group is guaranteed to be a strong generating set relative to
-        the base ``base``.
+        res
+            The subgroup of all elements satisfying ``prop``. The generating set
+            for this group is guaranteed to be a strong generating set relative to
+            the base ``base``.
 
         Examples
         ========
