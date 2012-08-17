@@ -370,7 +370,8 @@ class LatticeOp(AssocOp):
 
     @property
     def args(self):
-        return tuple(self._argset)
+        from sympy.utilities.misc import default_sort_key
+        return tuple(sorted(self._argset, key=default_sort_key))
 
     @staticmethod
     def _compare_pretty(a, b):
