@@ -4578,9 +4578,9 @@ def gcd(f, g=None, *gens, **args):
         if hasattr(f, 'gcd'):
             try:
                 if f.is_Float:
-                    f = Rational(*(f.as_integer_ratio()))
+                    f = Rational(str(f))
                 if g.is_Float:
-                    g = Rational(*(g.as_integer_ratio()))
+                    g = Rational(str(g))
                 return f.gcd(g)
             except (SympifyError, ValueError):
                 pass
