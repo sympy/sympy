@@ -4,7 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 
 import random
 
-C1, C2, C3, C4, C5, C6, C7, C8, C9 = symbols('C1:10')
+C1, C2, C3, C4, C5, C6, C7, C8, C9 = range(9)
 
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
@@ -26,7 +26,7 @@ def test_polyhedron():
              (C2,C5,C4,C7),(C4,C7,C1,C6),(C3,C5,C4,C6))
 
 
-    corners = list(symbols('A:H'))
+    corners = tuple(symbols('A:H'))
     cube = Polyhedron(corners, faces, pgroup)
 
     assert cube.size == 8
