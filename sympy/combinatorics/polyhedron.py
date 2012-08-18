@@ -1,4 +1,4 @@
-from sympy.core import Basic, Tuple
+from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation
 from sympy.utilities.misc import default_sort_key
@@ -73,7 +73,7 @@ class Polyhedron(Basic):
         >>> tetra.size
         4
         >>> tetra.edges
-        [(w, x), (w, y), (w, z), (x, y), (x, z), (y, z)]
+        {(w, x), (w, y), (w, z), (x, y), (x, z), (y, z)}
         >>> tetra.corners
         [w, x, y, z]
         >>> tetra.rotate(Permutation([3,2,1,0]))
@@ -87,9 +87,10 @@ class Polyhedron(Basic):
         References:
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
         """
-        ret_obj = Basic.__new__(cls, *[Tuple(*a) for a in args])
-        ret_obj._corners = sorted(args[0], key=default_sort_key)
-        ret_obj._faces = sorted(args[1], key=default_sort_key)
+        args = [Tuple(*a) for a in args]
+        ret_obj = Basic.__new__(cls, *args)
+        ret_obj._corners = list(args[0]) # in order given
+        ret_obj._faces = FiniteSet(*args[1])
         ret_obj._perm_size = args[2][0].size
         ret_obj._pgroups = [args[2][0]] + filter(lambda x: x.size == \
                                                 ret_obj._perm_size,
@@ -122,7 +123,7 @@ class Polyhedron(Basic):
                     edge = tuple(sorted([face[i], face[i - 1]]))
                     if edge not in output:
                         output.add(edge)
-            self._edges = sorted(output, key=default_sort_key)
+            self._edges = FiniteSet(*output)
         return self._edges
 
     @property
