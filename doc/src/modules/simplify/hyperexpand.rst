@@ -410,15 +410,14 @@ a function of :math:`z`, in our case
 
 What we need is a formula where the hypergeometric function has
 only :math:`z` as argument :math:`{}_{1}F_{2}(\ldots | z)`. We
-introduce the new complex symbol :math:`w` and search a function
+introduce the new complex symbol :math:`w` and search for a function
 :math:`g(w)` such that
 
 .. math ::
    f(g(w)) = w
 
-holds. Then we can replace every :math:`z` in the original formula
-for :math:`C(z)` by :math:`g(w)`. In the case of our example the
-function :math:`g` could look like
+holds. Then we can replace every :math:`z` in :math:`C(z)` by :math:`g(w)`.
+In the case of our example the function :math:`g` could look like
 
 .. math ::
    g(w) = \frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}} \,.
@@ -457,8 +456,8 @@ and trivially
    = \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
           {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}
 
-which is exactly what we stick into ``add`` for the
-third parameter ``res``. Finally, the whole function call to add
+which is exactly what is needed for the third paramenter,
+``res``, in ``add``. Finally, the whole function call to add
 this rule to the table looks like::
 
   add([S(1)/4],
@@ -491,7 +490,7 @@ from above:
    {2 z^{\frac{1}{4}}}
 
 Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
-directly use sympy!
+directly use SymPy!
 
    >>> from sympy import Symbol, sqrt, exp, I, pi, fresnelc, root, diff, expand
    >>> z = Symbol("z")
@@ -513,7 +512,7 @@ Formatting this result nicely we obtain
    {2 z^{\frac{1}{4}}}
    + \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )}
 
-Going ahead and computing the second derivative we find
+Computing the second derivative we find
 
    >>> from sympy import Symbol, cosh, sqrt, pi, exp, I, fresnelc, root, diff, expand
    >>> z = Symbol("z")
