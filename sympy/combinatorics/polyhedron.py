@@ -81,8 +81,8 @@ class Polyhedron(Basic):
         [z, y, x, w]
         >>> import random
         >>> random.seed(0) #We fix the seed to make it predictable
-        >>> tetra.make_perm(3)
-        Permutation([1, 3, 0, 2])
+        >>> tetra.make_perm(3, seed=range(3))
+        Permutation([1, 0, 2, 3])
 
         References:
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
@@ -137,15 +137,19 @@ class Polyhedron(Basic):
         """
         Multiply randomly selected permutations from
         pgroups together, starting with the identity
-        permutation.  Randomly choose and multiply n times
+        permutation.  Randomly choose and multiply n times.
+
+        ``seed`` is used to set the seed for the random selection
+        of permutations from pgroups.
         """
         from sympy.utilities.randtest import _randrange
         randrange = _randrange(seed)
 
         # For polyhedra, the last permutation is the identity permutation
         result = self.pgroups[-1]
+        m = len(self.pgroups)
         for i in xrange(n):
-            result *= self.pgroups[randrange(len(self.pgroups))]
+            result *= self.pgroups[randrange(m)]
         return result
 
     def rotate(self, perm):
