@@ -1463,6 +1463,14 @@ class Diagram(Basic):
         Returns a generator that provides all morphisms belonging to
         this diagram.
 
+        This generator guarantees certain ordering of morphisms in the
+        yielded sequence.  Diagram generators will always be yielded
+        first.  Then, morphisms will be yielded in rounds.  At each
+        round, morphisms obtained by composing the same number of
+        diagram generators will be yielded.  This assures that, on
+        average, the length of a composite will be bigger if it is
+        produced later.
+
         Examples
         ========
 
