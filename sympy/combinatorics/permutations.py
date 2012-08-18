@@ -242,6 +242,44 @@ class Permutation(Basic):
     _array_form = None
     _cyclic_form = None
 
+    def __new__(cls, *args, **kw_args):
+        """
+        Constructor for the Permutation object.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2])
+        >>> p
+        Permutation([0, 1, 2])
+        >>> q = Permutation([[0,1],[2]])
+        >>> q
+        Permutation([[0, 1], [2]])
+        """
+        if not args or not is_sequence(args[0]) or len(args) > 1 or \
+           len(set(is_sequence(a) for a in args[0])) > 1:
+            raise ValueError("Permutation argument must be a list of ints "
+                             "or a list of lists.")
+
+        # 0, 1, ..., n-1 should all be present
+
+        temp = [int(i) for i in flatten(args[0])]
+        if set(range(len(temp))) != set(temp):
+            # XXX allow arbitrary elements like Partition does
+            raise ValueError("Integers 0 through %s must be present." %
+                             len(temp))
+
+        cform = aform = None
+        if args[0] and is_sequence(args[0][0]):
+            cform = [list(a) for a in args[0]]
+        else:
+            aform = list(args[0])
+
+        ret_obj = Basic.__new__(cls, (cform or aform), **kw_args)
+        ret_obj._cyclic_form, ret_obj._array_form = cform, aform
+        return ret_obj
+
     @property
     def array_form(self):
         """
@@ -328,9 +366,6 @@ class Permutation(Basic):
     def reduced_cyclic_form(self):
         return [a for a in self.cyclic_form if len(a)>1]
 
-
-
-
     @property
     def size(self):
         """
@@ -344,44 +379,6 @@ class Permutation(Basic):
         4
         """
         return len(self.array_form)
-
-    def __new__(cls, *args, **kw_args):
-        """
-        Constructor for the Permutation object.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2])
-        >>> p
-        Permutation([0, 1, 2])
-        >>> q = Permutation([[0,1],[2]])
-        >>> q
-        Permutation([[0, 1], [2]])
-        """
-        if not args or not is_sequence(args[0]) or len(args) > 1 or \
-           len(set(is_sequence(a) for a in args[0])) > 1:
-            raise ValueError("Permutation argument must be a list of ints "
-                             "or a list of lists.")
-
-        # 0, 1, ..., n-1 should all be present
-
-        temp = [int(i) for i in flatten(args[0])]
-        if set(range(len(temp))) != set(temp):
-            raise ValueError("Integers 0 through %s must be present." %
-                             len(temp))
-
-        cform = aform = None
-        if args[0] and is_sequence(args[0][0]):
-            cform = [list(a) for a in args[0]]
-        else:
-            aform = list(args[0])
-
-        ret_obj = Basic.__new__(cls, (cform or aform), **kw_args)
-        ret_obj._cyclic_form, ret_obj._array_form = cform, aform
-        return ret_obj
-
 
     def __add__(self, other):
         """

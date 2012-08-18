@@ -7,8 +7,8 @@ Currently implemented methods:
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
-
 from sympy.core.compatibility import reduce
+from sympy.utilities.iterables import has_dups
 
 import operator
 
@@ -78,7 +78,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if len(subs_args) != len(orig_args):
         raise ValueError("Variable counts do not match")
     # Check for duplicate arguments like  [X(x), u(x, y)]
-    if len(subs_args) != len(set(subs_args)):
+    if has_dups(subs_args):
         raise ValueError("Duplicate substitution arguments detected")
     # Check whether the variables match
     if set(orig_args) != set(subs_args):
