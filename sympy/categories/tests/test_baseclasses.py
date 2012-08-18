@@ -338,7 +338,13 @@ def test_diagram():
         g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
 
     raises(ValueError, lambda: Diagram(f, g, f * h * h))
+    raises(ValueError, lambda: Diagram({f: [], g: [], f * h * h: []}))
     raises(ValueError, lambda: Diagram(f, g, h, f * h * h))
+
+    # Test expanded generators with composites among generators.
+    d = Diagram({f: [], g: [], h: [], g * f: "big"})
+    assert set(d.expanded_generators) == set([
+        g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
 
 def test_category():
     A = Object("A")
