@@ -112,6 +112,7 @@ def test_diagram():
     assert d1.is_hom_set_empty(B, A)
 
     assert set(d1.morphisms) == set([f, id_A, id_B])
+    assert set(d1.expanded_generators) == set(d1.morphisms)
     assert d1.objects == FiniteSet(A, B)
     assert set(d1.hom(A, B)) == set([f])
     assert set(d1.hom(A, A)) == set([id_A])
@@ -133,6 +134,7 @@ def test_diagram():
     assert g * f in d2
     assert set(d2.hom(A, C)) == set([g * f])
     assert d2 == Diagram(f, g)
+    assert set(d2.expanded_generators) == set(d2.morphisms)
 
     d = Diagram([g * f])
     assert set(d.generators) == set([id_A, id_C, g * f])
@@ -140,6 +142,7 @@ def test_diagram():
                                             id_C: empty})
     assert d.is_finite
     assert set(d.morphisms) == set([id_A, id_C, g * f])
+    assert set(d2.expanded_generators) == set(d2.morphisms)
     assert d.objects == FiniteSet(A, C)
 
     assert Diagram([g * f]) == Diagram(g * f)
@@ -170,6 +173,7 @@ def test_diagram():
     # Test an empty diagram.
     d = Diagram()
     assert set(d.generators) == set([])
+    assert set(d.expanded_generators) == set([])
     assert set(d.morphisms) == set([])
     assert d.objects == empty
     assert d.is_finite
@@ -210,6 +214,7 @@ def test_diagram():
         {id_A: FiniteSet("unique"), id_B: FiniteSet(), f: FiniteSet()})
     assert d.is_finite
     assert set(d.morphisms) == set([id_A, id_B, f])
+    assert set(d.morphisms) == set(d.expanded_generators)
     assert d[id_A] == FiniteSet("unique")
     assert d[id_B] == FiniteSet()
     assert d[f] == FiniteSet()
@@ -245,6 +250,7 @@ def test_diagram():
     assert not d.is_hom_set_finite(B, B)
     assert not d.is_hom_set_finite(C, C)
     assert set(islice(d, 6)) == set(d.generators)
+    assert set(d.expanded_generators) == set(islice(d, 18))
     raises(TypeError, lambda: len(d))
 
     assert not d.is_hom_set_empty(A, B)
@@ -261,7 +267,6 @@ def test_diagram():
     assert d.is_hom_set_finite(E, E)
     assert not d.is_hom_set_finite(D, A)
     assert not d.is_hom_set_finite(E, A)
-
     assert d.is_hom_set_empty(D, E)
 
     # Test condensation.
@@ -328,6 +333,9 @@ def test_diagram():
     assert not d.is_hom_set_finite(A, B)
     assert not d.is_hom_set_finite(A, A)
     assert d.is_hom_set_finite(B, B)
+
+    assert set(d.expanded_generators) == set([
+        g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
 
 def test_category():
     A = Object("A")

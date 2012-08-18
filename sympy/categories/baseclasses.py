@@ -1392,6 +1392,101 @@ class Diagram(Basic):
 
             previous_morphisms = current_morphisms
 
+    @staticmethod
+    def _is_expanded_generator(morphism):
+        """
+        Checks whether the ``morphism`` is an expanded generator.  Any
+        non-composite morphism is an expanded generator.
+
+        For examples of composite expanded generators, consider the
+        following situation:
+
+                +----> C ----+
+                |            |
+                |           \|/
+        A ----> B            D ----> F
+               /|\           |
+                |            |
+                +----- E ----+
+
+        A->B->C->D->F is an expanded generator, so is
+        A->B->C->D->E->B->C->D->F.  However, the morphisms
+        A->B->C->D->E->B and A->B->C->D->E->B->C->D->E->B->C->D->F are
+        not expanded generators.
+
+        See the docstring of this class for more details.
+        """
+        if not isinstance(morphism, CompositeMorphism):
+            return True
+
+        # To see if ``composite`` is an expanded generator, we will we
+        # count how much it passes through the objects it involves.
+        # By taking a look at the examples in the docstring it is
+        # rather easy to see the following:
+        #
+        #   * a non-loop expanded generator will pass at most twice
+        #     through each object it involves, except for endpoints,
+        #     thought which it passes only once;
+        #
+        #   * a loop expanded generator will pass at most twice
+        #     through each object it involves.
+        #
+        # Thus, any expanded generator will not pass more than twice
+        # through each object it involves.
+
+        objects_involved = Diagram._get_involved_objects(morphism)
+
+        object_pass_count = dict.fromkeys(objects_involved, 0)
+        object_pass_count[morphism.domain] = 1
+        for component in morphism:
+            object_pass_count[component.codomain] += 1
+
+        return all(object_pass_count[obj] <= 2 for obj in objects_involved)
+
+    @property
+    def expanded_generators(self):
+        """
+        Enumerates the expanded generators of this :class:`Diagram`.
+
+        Expanded generators include all morphisms which are obtained
+        by composing generators, without repeating any one of them.
+        The set of expanded generators is always finite.
+
+        TODO: Add examples
+
+        TODO: Expand the class docstring
+        """
+        # Any composite expanded generator passes through every object
+        # it involves at most twice.  The same applies to the
+        # generators it involves: it passes through each of them at
+        # most twice.  Therefore, any expanded morphism is of a length
+        # less or equal to twice the number of generators.
+        #
+        # We know that ``self.morphisms`` produces morphisms in rounds
+        # of the same length in terms of generators, i.e., at first,
+        # it produces the generators, then all composites of pairs of
+        # generators, then all composites of triples of generators,
+        # etc.  This means that once we have arrived at a non-expanded
+        # morphism of length greater than the limit length, we have
+        # exhausted all expanded generator morphisms.
+
+        # Keep in mind that ``CompositeMorphism`` always stores the
+        # flattened list of components, so we cannot just do ``2 *
+        # len(self.generators)``.
+        limit_length = 0
+        for gen in self.generators:
+            if isinstance(gen, CompositeMorphism):
+                limit_length += len(gen)
+            else:
+                limit_length += 1
+        limit_length *= 2
+
+        for morphism in self.morphisms:
+            if self._is_expanded_generator(morphism):
+                yield morphism
+            elif len(morphism) > limit_length:
+                return
+
     @property
     def objects(self):
         """
