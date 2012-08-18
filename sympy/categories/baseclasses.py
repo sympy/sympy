@@ -831,6 +831,9 @@ class Diagram(Basic):
         each of which has no properties.  Otherwise, all arguments are
         interpreted as morphisms.
 
+        Raises a :class:`ValueError` if it encounters a morphism which
+        is not an expanded generator.
+
         Examples
         ========
 
@@ -863,6 +866,10 @@ class Diagram(Basic):
                 # converted to ``FiniteSet``'s.
                 generators = {}
                 for morphism, props in first_arg.items():
+                    if not Diagram._is_expanded_generator(morphism):
+                        raise ValueError(
+                            "All generators must be expanded generators.")
+
                     generators[morphism] = FiniteSet(props)
             elif iterable(first_arg) and not isinstance(
                 first_arg, CompositeMorphism):
@@ -870,6 +877,10 @@ class Diagram(Basic):
                 # which have any properties.
                 empty = EmptySet()
                 for morphism in first_arg:
+                    if not Diagram._is_expanded_generator(morphism):
+                        raise ValueError(
+                            "All generators must be expanded generators.")
+
                     generators[morphism] = empty
             else:
                 # Attempt to interpret ``args`` as a list of

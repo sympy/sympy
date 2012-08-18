@@ -337,6 +337,9 @@ def test_diagram():
     assert set(d.expanded_generators) == set([
         g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
 
+    raises(ValueError, lambda: Diagram(f, g, f * h * h))
+    raises(ValueError, lambda: Diagram(f, g, h, f * h * h))
+
 def test_category():
     A = Object("A")
     B = Object("B")
