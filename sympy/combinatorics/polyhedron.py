@@ -1,4 +1,5 @@
-from sympy.core import Basic
+from sympy.core import Basic, Tuple
+from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation
 from sympy.utilities.misc import default_sort_key
 
@@ -86,7 +87,7 @@ class Polyhedron(Basic):
         References:
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
         """
-        ret_obj = Basic.__new__(cls, *args)
+        ret_obj = Basic.__new__(cls, *[Tuple(*a) for a in args])
         ret_obj._corners = sorted(args[0], key=default_sort_key)
         ret_obj._faces = sorted(args[1], key=default_sort_key)
         ret_obj._perm_size = args[2][0].size
