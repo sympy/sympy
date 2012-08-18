@@ -3,20 +3,51 @@
 Gaussian optics.
 
 The module implements:
-    Ray transfer matrices for geometrical and gaussian optics
+    Ray transfer matrices for geometrical and Gaussian optics
      See RayTransferMatrix, GeometricRay and BeamParameter
-    Conjugation relations for geometrical and gaussian optics
+    Conjugation relations for geometrical and Gaussian optics
      See geometric_conj*, gauss_conj and conjugate_gauss_beams
 
 The conventions for the distances are as follows:
     focal distance - positive for convergent lenses
     object distance - positive for real objects
     image distance - positive for real images
+
+Module uses dual formalism to represent ray transfer matrix and geometric
+ray. One of formalisms uses unimodular matrices (det(M) = 1) in which
+geometric ray is represented by two parameters: distance to optical axis
+and optical-direction cosine (which equals n*u, n - refractive index,
+u - angle to optical axis). The second formalism uses distance and angle
+to optical axis. The first formalism is set by default.
+
+See Also
+========
+
+[1] Gerrard, Anthony; Burch, James M. (1994).
+    Introduction to matrix methods in optics. Courier Dover.
 """
 
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
+
+
+def isunimodular(function):
+    """Review kwargs argument in function and decide
+    whether unimodular or non-unimodular formalism is needed
+    """
+    def _isunimodular(*args, **kwargs):
+        if len(kwargs) > 1:
+            raise ValueError(filldedent('''
+                Too many named arguments; only one needed'''))
+        else:
+            uni = kwargs.get('unimodular', True)
+            if uni not in (True, False):
+                raise ValueError(filldedent('''
+                    Unimodular can be only True of False'''))
+        kwargs['unimodular'] = bool(uni)
+        return function(*args, **kwargs)
+    return _isunimodular
 
 ###
 # A, B, C, D matrices
@@ -42,12 +73,12 @@ class RayTransferMatrix(Matrix):
 
     >>> mat = RayTransferMatrix(1, 2, 3, 4)
     >>> mat
-    [1,  2]
-    [3,  4]
+    [1, 2]
+    [3, 4]
 
-    >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
-    [1,  2]
-    [3,  4]
+    >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]), unimodular=False)
+    [1, 2]
+    [3, 4]
 
     >>> mat.A
     1
@@ -74,8 +105,9 @@ class RayTransferMatrix(Matrix):
     [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
-    def __new__(cls, *args):
+    unimodular = True
 
+    def __new__(cls, *args, **kwargs):
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
@@ -86,13 +118,27 @@ class RayTransferMatrix(Matrix):
             raise ValueError(filldedent('''
                 Expecting 2x2 Matrix or the 4 elements of
                 the Matrix but got %s''' % str(args)))
-        return Matrix.__new__(cls, temp)
+        return super(RayTransferMatrix, cls).__new__(cls, temp)
+
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self.unimodular = kwargs['unimodular']
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
-            return RayTransferMatrix(Matrix.__mul__(self, other))
+            if self.unimodular != other.unimodular:
+                raise ValueError(filldedent('''
+                    Only unimodular or non-unimodular formalism
+                    can be applied'''))
+            return RayTransferMatrix(Matrix.__mul__(self, other),
+                                     unimodular=self.unimodular)
         elif isinstance(other, GeometricRay):
-            return GeometricRay(Matrix.__mul__(self, other))
+            if self.unimodular != other.unimodular:
+                raise ValueError(filldedent('''
+                    Only unimodular or non-unimodular formalism
+                    can be applied'''))
+            return GeometricRay(Matrix.__mul__(self, other),
+                                unimodular=self.unimodular)
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
@@ -170,6 +216,9 @@ class FreeSpace(RayTransferMatrix):
     ==========
 
     distance
+    n index or refraction (only for unimodular case)
+    and
+    unimodular (default = True)
 
     See Also
     ========
@@ -181,13 +230,31 @@ class FreeSpace(RayTransferMatrix):
 
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> from sympy import symbols
-    >>> d = symbols('d')
+    >>> d, n = symbols('d n')
     >>> FreeSpace(d)
     [1, d]
     [0, 1]
+
+    >>> FreeSpace(d, n)
+    [1, d/n]
+    [0,   1]
+
+    >>> FreeSpace(d, n).unimodular
+    True
+
+    >>> FreeSpace(d, unimodular=False).unimodular
+    False
     """
-    def __new__(cls, d):
-        return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+
+    @isunimodular
+    def __new__(cls, d, n=1, **kwargs):
+        d = sympify((d))
+        if kwargs['unimodular'] == False:
+            return RayTransferMatrix.__new__(cls, 1, d, 0, 1,
+                                             unimodular=kwargs['unimodular'])
+        n = sympify((n))
+        return RayTransferMatrix.__new__(cls, 1, d/n, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -198,6 +265,8 @@ class FlatRefraction(RayTransferMatrix):
 
     n1: refractive index of one medium
     n2: refractive index of other medium
+    and
+    unimodular (default = True)
 
     See Also
     ========
@@ -210,13 +279,21 @@ class FlatRefraction(RayTransferMatrix):
     >>> from sympy.physics.gaussopt import FlatRefraction
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
-    >>> FlatRefraction(n1, n2)
+    >>> FlatRefraction(n1, n2, unimodular=False)
     [1,     0]
     [0, n1/n2]
+
+    >>> FlatRefraction(n1, n2, unimodular=False).unimodular
+    False
     """
-    def __new__(cls, n1, n2):
-        n1, n2 = sympify((n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+    @isunimodular
+    def __new__(cls, n1, n2, **kwargs):
+        if kwargs['unimodular'] == False:
+            n1, n2 = sympify((n1, n2))
+            return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -228,6 +305,10 @@ class CurvedRefraction(RayTransferMatrix):
     R: radius of curvature (positive for concave),
     n1: refractive index of one medium
     n2: refractive index of other medium
+    or
+    P: optical power ((n2 - n1) / R = 1/f, where f - focal length)
+    and
+    unimodular (default = True)
 
     See Also
     ========
@@ -241,18 +322,34 @@ class CurvedRefraction(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
     >>> CurvedRefraction(R, n1, n2)
+    [          1, 0]
+    [(n1 - n2)/R, 1]
+
+    >>> CurvedRefraction(R, n1, n2, unimodular=False)
     [               1,     0]
     [(n1 - n2)/(R*n2), n1/n2]
     """
-    def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+
+    @isunimodular
+    def __new__(cls, R, n1, n2, **kwargs):
+        if kwargs['unimodular'] == False:
+            return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class FlatMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection.
 
-    See Also: RayTransferMatrix
+    Parameters
+    ==========
+    unimodular (default = True)
+
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -262,8 +359,11 @@ class FlatMirror(RayTransferMatrix):
     [1, 0]
     [0, 1]
     """
-    def __new__(cls):
-        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
+
+    @isunimodular
+    def __new__(cls, **kwargs):
+        return RayTransferMatrix.__new__(cls, 1, 0, 0, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class CurvedMirror(RayTransferMatrix):
     """
@@ -273,6 +373,8 @@ class CurvedMirror(RayTransferMatrix):
     ==========
 
     radius of curvature (positive for concave)
+    and
+    unimodular (default = True)
 
     See Also
     ========
@@ -286,12 +388,18 @@ class CurvedMirror(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R = symbols('R')
     >>> CurvedMirror(R)
-    [   1, 0]
-    [-2/R, 1]
+    [  1, 0]
+    [2/R, 1]
     """
-    def __new__(cls, R):
+
+    @isunimodular
+    def __new__(cls, R, **kwargs):
         R = sympify(R)
-        return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+        if kwargs['unimodular'] == False:
+            return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1,
+                                             unimodular=kwargs['unimodular'])
+        return RayTransferMatrix.__new__(cls, 1, 0, 2/R, 1,
+                                         unimodular=kwargs['unimodular'])
 
 class ThinLens(RayTransferMatrix):
     """
@@ -317,10 +425,80 @@ class ThinLens(RayTransferMatrix):
     [   1, 0]
     [-1/f, 1]
     """
-    def __new__(cls, f):
-        f = sympify(f)
-        return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
 
+    @isunimodular
+    def __new__(cls, f, **kwargs):
+        f = sympify(f)
+        return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1,
+                                         unimodular=kwargs['unimodular'])
+
+class ThinPrism(Matrix):
+    """Ray Transfer matrix for thin prism
+
+    Adds delta = -n1 * angle * (n2 - n1) to optical direction cosine
+    [1, 0] + [                      0]
+    [0, 1]   [-n1 * angle * (n2 - n1)]
+
+    Parameters
+    ==========
+
+    angle: top angle of the prism
+    n1: refractive index of one medium (default=1.0)
+    n2: refractive index of prism medium
+
+    See Also
+    ========
+
+    Matrix
+
+    [1] Matrix Methods for Optical Layouts, Gerhaed Kloos,
+        Bellingham, Washington USA, ISBN 978-0-8194-6780-5
+
+    Examples
+    ========
+    >>> from sympy import symbols
+    >>> from sympy.physics.gaussopt import ThinPrism
+    >>> alpha, n2, n1 = symbols('alpha n2 n1')
+    >>> ThinPrism(alpha, n2, n1)
+    [                   0]
+    [-alpha*n1*(-n1 + n2)]
+
+    >>> from sympy.physics.gaussopt import GeometricRay
+    >>> h, angle, n = symbols('h angle n')
+    >>> ThinPrism(alpha, n2)*GeometricRay(h, angle*n)
+    [                        h]
+    [alpha*(-n2 + 1) + angle*n]
+    >>> ThinPrism(alpha, n2, n1)*GeometricRay(h, angle*n)
+    [                             h]
+    [-alpha*n1*(-n1 + n2) + angle*n]
+    """
+
+    unimodular = True
+
+    @isunimodular
+    def __new__(cls, angle, n2, n1=1, **kwargs):
+        angle, n2, n1 = sympify((angle, n2, n1))
+        if kwargs['unimodular'] == False:
+            return Matrix.__new__(cls, [[0,], [(n1 - n2) * angle,]])
+        return Matrix.__new__(cls, [[0,], [-n1 * (n2 - n1) * angle,]])
+
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self._unimodular = kwargs['unimodular']
+
+    def __mul__(self, other):
+        if isinstance(other, Matrix) and other.shape == (2, 1):
+            if isinstance(other, GeometricRay):
+                return GeometricRay(Matrix.__add__(self,other),
+                                    unimodular=self.unimodular)
+            else:
+                return Matrix.__add__(self,other)
+        else:
+            raise ValueError(filldedent('''
+                Only 2x1 Matrix can be multiplied with ThinPrism'''))
+
+# TODO Add "Duct" (radially variad index and gain)
+# TODO Add class OpticalSystem which will contain optical elements
 
 ###
 # Representation for geometric ray
@@ -333,26 +511,31 @@ class GeometricRay(Matrix):
     Parameters
     ==========
 
-    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    n : refraction index (default = 1.0), needed only for unimodular formalism
+    height: distance to optical axis
+    angle: optical direction angle; equals n*u in case of unimodular formalism,
+    where u - angle to optical axis)
+    or
+    2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
     =======
 
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
-    >>> d, h, angle = symbols('d, h, angle')
+    >>> d, h, angle, n = symbols('d h angle n')
 
-    >>> GeometricRay(h, angle)
-    [    h]
-    [angle]
+    >>> GeometricRay(h, angle*n)
+    [      h]
+    [angle*n]
 
-    >>> FreeSpace(d)*GeometricRay(h, angle)
-    [angle*d + h]
-    [      angle]
+    >>> FreeSpace(d)*GeometricRay(h, angle*n)
+    [angle*d*n + h]
+    [      angle*n]
 
-    >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
-    [    h]
-    [angle]
+    >>> GeometricRay( Matrix( ((h,), (angle*n,)) ))
+    [      h]
+    [angle*n]
 
     See Also
     ========
@@ -361,7 +544,8 @@ class GeometricRay(Matrix):
 
     """
 
-    def __new__(cls, *args):
+    @isunimodular
+    def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], Matrix) \
                           and args[0].shape == (2, 1):
             temp = args[0]
@@ -372,6 +556,10 @@ class GeometricRay(Matrix):
                 Expecting 2x1 Matrix or the 2 elements of
                 the Matrix but got %s''' % str(args)))
         return Matrix.__new__(cls, temp)
+
+    @isunimodular
+    def __init__(self, *args, **kwargs):
+        self.unimodular = kwargs['unimodular']
 
     @property
     def height(self):
@@ -384,7 +572,7 @@ class GeometricRay(Matrix):
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
-        >>> gRay = GeometricRay(h, angle)
+        >>> gRay = GeometricRay(h, angle, unimodular=False)
         >>> gRay.height
         h
         """
@@ -401,7 +589,7 @@ class GeometricRay(Matrix):
         >>> from sympy.physics.gaussopt import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
-        >>> gRay = GeometricRay(h, angle)
+        >>> gRay = GeometricRay(h, angle, unimodular=False)
         >>> gRay.angle
         angle
         """
@@ -409,17 +597,17 @@ class GeometricRay(Matrix):
 
 
 ###
-# Representation for gauss beam
+# Representation for Gaussian beam
 ###
 
 class BeamParameter(Expr):
     """
-    Representation for a gaussian ray in the Ray Transfer Matrix formalism.
+    Representation for a Gaussian ray in the Ray Transfer Matrix formalism.
 
     Parameters
     ==========
 
-    wavelength, distance to waist, and w (waist) or z_r (rayleigh range)
+    wavelength, distance to waist, and w (waist) or z_r (Rayleigh range)
 
     Examples
     ========
@@ -444,6 +632,15 @@ class BeamParameter(Expr):
     >>> p1.w.n()
     0.00210803120913829
 
+    >>> from sympy.physics.gaussopt import CurvedMirror
+    >>> from sympy import symbols
+    >>> R, t, n = 1.5, 2.0, 1.76
+    >>> Resonator = FreeSpace(t,n)*CurvedMirror(R)*\
+    FreeSpace(t,n)*CurvedMirror(-R)
+    >>> outp = (Resonator**10)*BeamParameter(530e-9, 1, w=1e-3)
+    >>> outp.w.n()
+    0.00260674329962508
+
     See Also
     ========
 
@@ -466,13 +663,15 @@ class BeamParameter(Expr):
         inst.wavelen = wavelen
         inst.z = z
         if len(kwargs) !=1:
-            raise ValueError('Constructor expects exactly one named argument.')
+            raise ValueError(filldedent('''
+                Constructor expects exactly one named argument.'''))
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
         elif 'w' in kwargs:
             inst.z_r = waist2rayleigh(sympify(kwargs['w']), wavelen)
         else:
-            raise ValueError('The constructor needs named argument w or z_r')
+            raise ValueError(filldedent('''
+                The constructor needs named argument w or z_r'''))
         return inst
 
     @property
@@ -579,9 +778,9 @@ class BeamParameter(Expr):
     @property
     def waist_approximation_limit(self):
         """
-        The minimal waist for which the gauss beam approximation is valid.
+        The minimal waist for which the Gaussian beam approximation is valid.
 
-        The gauss beam is a solution to the paraxial equation. For curvatures
+        The Gaussian beam is a solution to the paraxial equation. For curvatures
         that are too great it is not a valid approximation.
 
         Examples
@@ -601,7 +800,7 @@ class BeamParameter(Expr):
 
 def waist2rayleigh(w, wavelen):
     """
-    Calculate the rayleigh range from the waist of a gaussian beam.
+    Calculate the Rayleigh range from the waist of a Gaussian beam.
 
     See Also
     ========
@@ -621,7 +820,7 @@ def waist2rayleigh(w, wavelen):
     return w**2*pi/wavelen
 
 def rayleigh2waist(z_r, wavelen):
-    """Calculate the waist from the rayleigh range of a gaussian beam.
+    """Calculate the waist from the Rayleigh range of a Gaussian beam.
 
     See Also
     ========
@@ -699,13 +898,13 @@ geometric_conj_bf = geometric_conj_af
 
 def gaussian_conj(s_in, z_r_in, f):
     """
-    Conjugation relation for gaussian beams.
+    Conjugation relation for Gaussian beams.
 
     Parameters
     ==========
 
     s_in: distance to optical element from the waist
-    z_r_in: the rayleigh range of the incident beam
+    z_r_in: the Rayleigh range of the incident beam
     f: the focal length of the optical element
 
     Returns
@@ -713,7 +912,7 @@ def gaussian_conj(s_in, z_r_in, f):
 
     A tuple containing (s_out, z_r_out, m)
      - s_out - distance between the new waist and the optical element
-     - z_r_out - rayleigh range of the emergent beam
+     - z_r_out - Rayleigh range of the emergent beam
      - m - the ration between the new and the old waists
 
     Examples
