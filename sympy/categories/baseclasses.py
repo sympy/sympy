@@ -606,7 +606,7 @@ class Diagram(Basic):
     .. note::
 
        No checks are carried out of whether the supplied objects and
-       morphisms do belong to one and the same category.
+       morphisms do belong to the same category.
 
     All possible morphism compositions are considered to belong to the
     diagram.
@@ -618,7 +618,7 @@ class Diagram(Basic):
     >>> pprint(list(d.hom(A, C)))
     [g*f:A-->C]
 
-    Morphisms can be assigned some properties, which can later be
+    Morphisms can be assigned some properties which can later be
     retrieved using the :class:`dict`-like interface of the
     :class:`Diagram`:
 
@@ -631,8 +631,8 @@ class Diagram(Basic):
     >>> d[f]
     EmptySet()
 
-    The set of properties of a composite morphism is the intersection
-    of the sets of properties of its components:
+    The set of properties of such a composite morphism is the
+    intersection of the sets of properties of its components:
 
     >>> d = Diagram({f: ["unique", "subobject"], g: ["unique"]})
     >>> d[g * f]
@@ -664,7 +664,7 @@ class Diagram(Basic):
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
     On the other hand, property-less composites of other generators
-    are removed:
+    are removed::
 
     >>> pprint(Diagram(f, g, g * f))
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
@@ -688,8 +688,8 @@ class Diagram(Basic):
     6
 
     :class:`Diagram` can cope with infinite diagrams, i.e., diagrams
-    which contain an infinite number of morphisms.  Such can diagrams
-    can be obtained by creating cycles.
+    which contain an infinite number of morphisms.  Such diagrams can
+    be obtained by creating cycles.
 
     >>> d = Diagram(g, f)
     >>> d.is_finite
@@ -700,7 +700,7 @@ class Diagram(Basic):
     False
 
     It is also possible to check the finiteness of a certain
-    `\hom`-set.
+    `\hom`-set::
 
     >>> d = Diagram(g, f)
     >>> d.is_hom_set_finite(A, C)
@@ -710,7 +710,7 @@ class Diagram(Basic):
     False
 
     Further, it is possible to check the emptiness of a certain
-    `\hom`-set.
+    `\hom`-set::
 
     >>> d = Diagram(f)
     >>> d.is_hom_set_empty(A, B)
@@ -723,8 +723,8 @@ class Diagram(Basic):
 
     Computing the length of an infinite diagram is an error.  However,
     one can still enumerate the morphisms of the diagram.  This
-    enumeration will never stop, so one explicitly retrieve a certain
-    number of morphisms.
+    enumeration will never stop, so one can explicitly retrieve a
+    certain number of morphisms.
 
     >>> from itertools import islice
     >>> slice = islice(d, 8)
@@ -740,7 +740,7 @@ class Diagram(Basic):
     Even More Details.  Graph Theory
     ================================
 
-    Obviously, a diagram is a graph like structure: it has objects
+    Obviously, a diagram is a graph-like structure: it has objects
     connected with arrows.  A diagram is indeed very similar to a
     directed multigraph, because there can be more than one morphism
     between the same two objects.  Note however that, formally
@@ -749,8 +749,7 @@ class Diagram(Basic):
     diagram may be infinite.
 
     :class:`Diagram` offers a couple graph-theoretical tools which may
-    prove useful in handling infinite cases, which do require special
-    tools (for obvious reasons).
+    prove useful in handling infinite cases.
 
     Observe that there are only two cases in which a diagram can be
     infinite:
@@ -765,7 +764,7 @@ class Diagram(Basic):
     be useful to know the strongly connected components of that
     multigraph.
 
-    Consider the following infinite diagram:
+    Consider the following infinite diagram::
 
     >>> h = NamedMorphism(C, A, "h")
     >>> D = Object("D")
@@ -795,14 +794,14 @@ class Diagram(Basic):
     strongly connected components [WCon].  This condensation of a
     digraph is a directed acyclic graph [WCon].
 
-    If in the current diagram there is a morphism `f:A\rightarrow
-    B` with properties ``props``, the condensation will contain a
-    morphism between the connected components containing `A` and
-    `B`, this morphism will have the name ``f`` and it will have
-    the same properties as the original morphism.
+    If in a :class:`Diagram` there is a morphism `f:A\rightarrow B`
+    with properties ``props``, the condensation will contain a
+    morphism between the connected components containing `A` and `B`;
+    this morphism will have the same name and the same properties as
+    the original morphism.
 
     Consider the following slight modification of the previous
-    example.
+    example::
 
     >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
     >>> component1 = d.subdiagram_from_objects([A, B, C])
@@ -828,7 +827,7 @@ class Diagram(Basic):
 
     That is, we have the morphisms `f`, `g`, and `g\circ f` and then
     we obtain the other morphisms by "appending" arbitrary long "runs"
-    of `h` to the end of `f` of `g\circ f`.  Remark that all morphisms
+    of `h` to the end of `f` or `g\circ f`.  Remark that all morphisms
     in the family `[f\circ h] = \{f\circ h^n\mid n\in\mathbb{N}\}`
     (where `\mathbb{N}` does _not_ include zero) are very tightly
     related.  Firstly, either the whole family `[f\circ h]` is
@@ -859,7 +858,7 @@ class Diagram(Basic):
        generators.
 
     Expanded generators have a number of properties which are very
-    useful in practise.  Notice firstly that an extended generator
+    useful in practise.  Notice firstly that an expanded generator
     does not pass through any loop or cycle in the multigraph of
     generators more than once.  An immediate consequence of this
     observation and the fact that we only allow finite sets of
@@ -869,7 +868,7 @@ class Diagram(Basic):
     .. note::
 
        :class:`Diagram` will accept as generators only those morphism
-       which can be extended generators::
+       which can be expanded generators::
 
        >>> Diagram(f, g, f * h * h)
        Traceback (most recent call last):
