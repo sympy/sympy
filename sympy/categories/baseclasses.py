@@ -810,6 +810,72 @@ class Diagram(Basic):
     >>> d.condensation == Diagram({condensation_k: "blaster"})
     True
 
+    Another powerful, graph-theory based, infinite diagram analysis
+    tool is the notion of an _expanded generator_.  Consider the
+    following diagram with a loop morphism::
+
+    >>> h = NamedMorphism(A, A, "h")
+    >>> d = Diagram(f, g, h)
+
+    It is obviously infinite, because it includes the loop morphism
+    `h`.  Note, however, that the set of morphisms of this diagram has
+    a very simple structure::
+
+    >>> pprint(set(islice(d, 18)))
+    set([h*h:A-->A, f*h:A-->B, g*f:A-->C, h*h*h:A-->A, f*h*h:A-->B, g*f*h:A-->C, h
+    *h*h*h:A-->A, f*h*h*h:A-->B, g*f*h*h:A-->C, h*h*h*h*h:A-->A, f*h*h*h*h:A-->B,
+    g*f*h*h*h:A-->C, id:A-->A, id:B-->B, id:C-->C, h:A-->A, f:A-->B, g:B-->C])
+
+    That is, we have the morphisms `f`, `g`, and `g\circ f` and then
+    we obtain the other morphisms by "appending" arbitrary long "runs"
+    of `h` to the end of `f` of `g\circ f`.  Remark that all morphisms
+    in the family `[f\circ h] = \{f\circ h^n\mid n\in\mathbb{N}\}`
+    (where `\mathbb{N}` does _not_ include zero) are very tightly
+    related.  Firstly, either the whole family `[f\circ h]` is
+    included in a diagram, or neither of these morphisms belongs to a
+    diagram.  Secondly, since the properties of composite morphisms
+    are computed as intersections of the properties of the components,
+    all morphisms in `[f\circ h]` will have the _same_ set of
+    properties.  That is, when analysing infinite diagrams, we are
+    generally more interested in considering such families of
+    morphisms rather than attempting to handle the infinite multitude
+    as a whole.
+
+    An _expanded generator_ is a the shortest composite morphism in a
+    family of morphisms of the form described in the previous
+    paragraph.
+
+    Let's check that the expanded generators of the diagram ``d`` are
+    those which we expected::
+
+    >>> pprint(set(d.expanded_generators))
+    set([f*h:A-->B, g*f:A-->C, g*f*h:A-->C, id:A-->A, id:B-->B, id:C-->C, h:A-->A,
+    f:A-->B, g:B-->C])
+
+    .. note::
+
+       While we have only discussed loops, the same reasoning applies
+       to the situations when there are cycles in the multigraph of
+       generators.
+
+    Expanded generators have a number of properties which are very
+    useful in practise.  Notice firstly that an extended generator
+    does not pass through any loop or cycle in the multigraph of
+    generators more than once.  An immediate consequence of this
+    observation and the fact that we only allow finite sets of
+    generators is that the set of expanded generators is always
+    _finite_.
+
+    .. note::
+
+       :class:`Diagram` will accept as generators only those morphism
+       which can be extended generators::
+
+       >>> Diagram(f, g, f * h * h)
+       Traceback (most recent call last):
+          ...
+       ValueError: All generators must be expanded generators.
+
     References
     ==========
 
@@ -1463,9 +1529,22 @@ class Diagram(Basic):
         by composing generators, without repeating any one of them.
         The set of expanded generators is always finite.
 
-        TODO: Add examples
+        Examples
+        ========
 
-        TODO: Expand the class docstring
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> h = NamedMorphism(A, A, "h")
+        >>> d = Diagram(f, g, h)
+        >>> pprint(set(d.expanded_generators))
+        set([f*h:A-->B, g*f:A-->C, g*f*h:A-->C, id:A-->A, id:B-->B, id:C-->C, h:A-->A,
+        f:A-->B, g:B-->C])
+
         """
         # Any composite expanded generator passes through every object
         # it involves at most twice.  The same applies to the
