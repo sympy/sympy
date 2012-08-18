@@ -70,7 +70,10 @@ def test_Permutation():
     raises(ValueError, lambda: p - Permutation(range(10)))
 
     assert p*q == Permutation(_af_mul(*[list(w) for w in (q, p)]))
-    raises(ValueError, lambda: p*Permutation([]))
+    assert p*Permutation([]) == p
+    assert Permutation([])*p == p
+    assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
+    assert Permutation([[0, 1]])*p == Permutation([5, 2, 1, 6, 3, 0, 4])
 
     a = p-q
     b = q-p
@@ -301,12 +304,18 @@ def test_args():
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == \
         Permutation(((0, ), [1]))
     assert Permutation([[1,2]]) == Permutation([0, 2, 1])
+    assert Permutation([[1], [4,2]]) == Permutation([0, 1, 4, 3, 2])
+    # you can't truncate a permutation with the size parameter
+    # XXX add a trim parameter which returns only the elements that have
+    # changed?
+    assert Permutation([[1], [4,2]], size=1) == Permutation([0, 1, 4, 3, 2])
+    assert Permutation([[1], [4,2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
+    assert Permutation([], 3) == Permutation([0, 1, 2])
     raises(TypeError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1,1,0]))
     raises(ValueError, lambda: Permutation([[1], [1,2]]))
-    raises(ValueError, lambda: Permutation([[1], [4,2]]))
 
 def test_Cycle():
     a, b = Cycle(1, 2), Cycle(2, 3)
