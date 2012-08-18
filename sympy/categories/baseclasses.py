@@ -1399,30 +1399,14 @@ class Diagram(Basic):
 
         return Diagram(new_generators)
 
-    @property
-    def morphisms(self):
+    def _morphisms_in_rounds(self):
         """
-        Returns a generator that provides all morphisms belonging to
-        this diagram.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import pprint, default_sort_key
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> f = NamedMorphism(A, B, "f")
-        >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram(f, g)
-        >>> pprint(sorted(d.morphisms, key=default_sort_key))
-        [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
-
+        Returns a generator that enumerates all morphisms belonging to
+        the diagram, and yields the number of the generation round as
+        well.
         """
-        # At first, just yield all generators.
         for m in self.generators:
-            yield m
+            yield (m, 1)
 
         # Next we will generate morphisms in rounds; at each round we
         # will generate morphisms from combinations of a fixed number
@@ -1444,6 +1428,8 @@ class Diagram(Basic):
         previous_morphisms = [gen for gen in self.generators
                               if not isinstance(gen, IdentityMorphism)]
 
+        round = 2
+
         ncomposites = 1
         while not halt_condition(ncomposites):
             ncomposites = 0
@@ -1462,11 +1448,36 @@ class Diagram(Basic):
                     # The generators may already include this
                     # composite, if has been given some properties.
                     if composite not in self.generators_properties:
-                        yield composite
+                        yield (composite, round)
                         ncomposites += 1
                         current_morphisms.append(composite)
 
             previous_morphisms = current_morphisms
+            round += 1
+
+    @property
+    def morphisms(self):
+        """
+        Returns a generator that provides all morphisms belonging to
+        this diagram.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint, default_sort_key
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram(f, g)
+        >>> pprint(sorted(d.morphisms, key=default_sort_key))
+        [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
+
+        """
+        for (morphism, round) in self._morphisms_in_rounds():
+            yield morphism
 
     @staticmethod
     def _is_expanded_generator(morphism):
