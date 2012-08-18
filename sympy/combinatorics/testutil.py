@@ -137,6 +137,27 @@ def _verify_centralizer(group, arg, centr=None):
 
 def _verify_normal_closure(group, arg, closure=None):
     from sympy.combinatorics.perm_groups import PermutationGroup
+    """
+    Verify the normal closure of a subgroup/subset/element in a group.
+
+    This is used to test sympy.combinatorics.perm_groups.PermutationGroup.normal_closure
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+    >>> from sympy.combinatorics.testutil import _verify_normal_closure
+    >>> S = SymmetricGroup(3)
+    >>> A = AlternatingGroup(3)
+    >>> _verify_normal_closure(S, A, closure=A)
+    True
+
+    See Also
+    ========
+
+    sympy.combinatorics.perm_groups.PermutationGroup.normal_closure
+
+    """
     if closure is None:
         closure = group.normal_closure(arg)
     conjugates = []
