@@ -333,7 +333,6 @@ def test_diagram():
     assert not d.is_hom_set_finite(A, B)
     assert not d.is_hom_set_finite(A, A)
     assert d.is_hom_set_finite(B, B)
-
     assert set(d.expanded_generators) == set([
         g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
 
@@ -345,6 +344,104 @@ def test_diagram():
     d = Diagram({f: [], g: [], h: [], g * f: "big"})
     assert set(d.expanded_generators) == set([
         g, f, g * f, h, f * h, g * f * h, id_A, id_B, id_C])
+
+    # Test expanded generators with two loops starting at the same
+    # object.
+    h_ = NamedMorphism(A, A, "h'")
+    d = Diagram(f, g, h, h_)
+
+    egen = set(d.expanded_generators)
+
+    assert g * f in egen
+    assert g * f * h in egen
+    assert g * f * h_ in egen
+    assert g * f * h * h_ in egen
+    assert g * f * h_ * h in egen
+
+    assert f in egen
+    assert f * h in egen
+    assert f * h_ in egen
+    assert f * h * h_ in egen
+    assert f * h_ * h in egen
+
+    assert f * h * h not in egen
+    assert f * h * h_ * h not in egen
+    assert f * h_ * h_ * h not in egen
+
+    # To test expanded generators with some complex cycles, we will
+    # need more objects.
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+    A4 = Object("A4")
+    A5 = Object("A5")
+    A6 = Object("A6")
+    A7 = Object("A7")
+
+    # Test two cycles starting at the same object.
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    f3 = NamedMorphism(A3, A2, "f3")
+    f4 = NamedMorphism(A2, A4, "f4")
+    f5 = NamedMorphism(A4, A2, "f5")
+    f6 = NamedMorphism(A2, A5, "f6")
+    d = Diagram(f1, f2, f3, f4, f5, f6)
+
+    egen = set(d.expanded_generators)
+
+    assert f2 * f1 in egen
+    assert f2 * f3 * f2 * f1 in egen
+    assert f2 * f5 * f4 * f1 in egen
+    assert f2 * f5 * f4 * f3 * f2 * f1 in egen
+    assert f2 * f3 * f2 * f5 * f4 * f1 in egen
+
+    assert f2 * f3 * f2 * f3 * f2 * f1 not in egen
+    assert f2 * f5 * f4 * f5 * f4 * f1 not in egen
+    assert f2 * f5 * f4 * f3 * f2 * f5 * f4 * f3 * f2 * f1 not in egen
+
+    # Test a cycle which starts in the middle of another cycle.
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    f3 = NamedMorphism(A3, A4, "f3")
+    f4 = NamedMorphism(A4, A5, "f4")
+    f5 = NamedMorphism(A5, A6, "f5")
+    f6 = NamedMorphism(A6, A3, "f6")
+    f7 = NamedMorphism(A5, A2, "f7")
+    f8 = NamedMorphism(A2, A7, "f8")
+    d = Diagram(f1, f2, f3, f4, f5, f6, f7, f8)
+
+    egen = set(d.expanded_generators)
+    assert f8 * f1 in egen
+    assert f8 * f7 * f4 * f3 * f2 * f1 in egen
+    assert f8 * f7 * f4 * f3 * f6 * f5 * f4 * f3 * f2 * f1 in egen
+
+    assert f8 * f7 * f4 * f3 * f2 * f7 * f4 * f3 * f2 * f1 not in \
+           egen
+    assert f8 * f7 * f4 * f3 * f6 * f5 * f4 * f3 * f6 * f5 * f4 * \
+           f3 * f2 * f1 not in egen
+    assert f8 * f7 * f4 * f3 * f6 * f5 * f4 * f3 * f2 * f7 * f4 * \
+           f3 * f6 * f5 * f4 * f3 * f2 * f1 not in egen
+
+    # Test two cycles containing the same edge.
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    f3 = NamedMorphism(A3, A4, "f3")
+    f4 = NamedMorphism(A3, A5, "f4")
+    f5 = NamedMorphism(A5, A2, "f5")
+    f6 = NamedMorphism(A3, A6, "f6")
+    f7 = NamedMorphism(A6, A2, "f7")
+    d = Diagram(f1, f2, f3, f4, f5, f6, f7)
+
+    egen = set(d.expanded_generators)
+    assert f3 * f2 * f1 in egen
+    assert f3 * f2 * f5 * f4 * f2 * f1 in egen
+    assert f3 * f2 * f7 * f6 * f2 * f1 in egen
+    assert f3 * f2 * f5 * f4 * f2 * f7 * f6 * f2 * f1 in egen
+
+    assert f3 * f2 * f5 * f4 * f2 * f5 * f4 * f2 * f1 not in egen
+    assert f3 * f2 * f7 * f6 * f2 * f7 * f6 * f2 * f1 not in egen
+    assert f3 * f2 * f5 * f4 * f2 * f7 * f6 * f2 * f5 * f4 * f2 * \
+           f7 * f6 * f2 * f1 not in egen
 
 def test_category():
     A = Object("A")

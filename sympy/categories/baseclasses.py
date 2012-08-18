@@ -851,11 +851,13 @@ class Diagram(Basic):
     set([f*h:A-->B, g*f:A-->C, g*f*h:A-->C, id:A-->A, id:B-->B, id:C-->C, h:A-->A,
     f:A-->B, g:B-->C])
 
-    .. note::
-
-       While we have only discussed loops, the same reasoning applies
-       to the situations when there are cycles in the multigraph of
-       generators.
+    For cycles, the reasoning is similar.  The morphism `A\rightarrow
+    B\rightarrow C` can be an extended generator, as well as
+    `A\rightarrow B\rightarrow D\rightarrow B\rightarrow C`, provided
+    the diagram includes the necessary elementary morphisms and
+    objects.  However, the morphism `A\rightarrow B\rightarrow
+    D\rightarrow B\rightarrow D\rightarrow B\rightarrow C` is not an
+    extended generator.
 
     Expanded generators have a number of properties which are very
     useful in practise.  Notice firstly that an expanded generator
@@ -1480,6 +1482,64 @@ class Diagram(Basic):
             yield morphism
 
     @staticmethod
+    def _bad_composite_loops(components, current, limit, registered_paths):
+        """
+        Given the tuple of components of a composite morphisms, checks
+        the interval from component with index ``current`` to
+        component with index ``limit``, both included, whether the
+        morphism passes more than once through any loop.
+
+        This function does not sanity check its arguments.
+        """
+        if current > limit:
+            return False
+
+        # We cannot just walk the components and count how many times
+        # the morphisms goes through certain objects or certain
+        # components (edges), because there can be _different_ cycles
+        # with _common_ edges, and it is thus perfectly legal for an
+        # expanded generator to pass through such edges many times.
+        #
+        # To cope with this most general case, we actually have to
+        # look at all cycles and loops traversed by the morphism and
+        # see whether some of these cycles or loops are traversed more
+        # than once.
+
+        start = current
+        while start <= limit:
+            end = None
+            for i in xrange(start, limit + 1):
+                if components[i].codomain == components[start].domain:
+                    end = i
+                    break
+
+            if end is not None:
+                # We have detected that the morphism traverses a cycle
+                # (or a loop) starting and ending at
+                # ``components[start].domain`` (or, equivalently,
+                # ``components[end].codomain``).
+
+                path = components[start:end + 1]
+                if path in registered_paths:
+                    return True
+                registered_paths.add(path)
+
+                # See if the morphism traverses other cycles or loops
+                # more than once on the interval between ``start + 1``
+                # and ``end``.
+                if Diagram._bad_composite_loops(components, start + 1, end,
+                                                registered_paths):
+                    # There are loops traversed more than once on that
+                    # interval, that's bad.
+                    return True
+
+                start = end
+
+            start += 1
+
+        return False
+
+    @staticmethod
     def _is_expanded_generator(morphism):
         """
         Checks whether the ``morphism`` is an expanded generator.  Any
@@ -1506,29 +1566,13 @@ class Diagram(Basic):
         if not isinstance(morphism, CompositeMorphism):
             return True
 
-        # To see if ``composite`` is an expanded generator, we will we
-        # count how much it passes through the objects it involves.
-        # By taking a look at the examples in the docstring it is
-        # rather easy to see the following:
-        #
-        #   * a non-loop expanded generator will pass at most twice
-        #     through each object it involves, except for endpoints,
-        #     thought which it passes only once;
-        #
-        #   * a loop expanded generator will pass at most twice
-        #     through each object it involves.
-        #
-        # Thus, any expanded generator will not pass more than twice
-        # through each object it involves.
+        # To see if the composite ``morphism`` is an expanded
+        # generator, we will follow its components, detect whether it
+        # passes a cycle or a loop, and verify that it never passes
+        # the same cycle or loop twice.
 
-        objects_involved = Diagram._get_involved_objects(morphism)
-
-        object_pass_count = dict.fromkeys(objects_involved, 0)
-        object_pass_count[morphism.domain] = 1
-        for component in morphism:
-            object_pass_count[component.codomain] += 1
-
-        return all(object_pass_count[obj] <= 2 for obj in objects_involved)
+        return not Diagram._bad_composite_loops(tuple(morphism.components),
+                                                0, len(morphism) - 1, set([]))
 
     @property
     def expanded_generators(self):
@@ -1556,36 +1600,32 @@ class Diagram(Basic):
         f:A-->B, g:B-->C])
 
         """
-        # Any composite expanded generator passes through every object
-        # it involves at most twice.  The same applies to the
-        # generators it involves: it passes through each of them at
-        # most twice.  Therefore, any expanded morphism is of a length
-        # less or equal to twice the number of generators.
-        #
-        # We know that ``self.morphisms`` produces morphisms in rounds
-        # of the same length in terms of generators, i.e., at first,
-        # it produces the generators, then all composites of pairs of
-        # generators, then all composites of triples of generators,
-        # etc.  This means that once we have arrived at a non-expanded
-        # morphism of length greater than the limit length, we have
-        # exhausted all expanded generator morphisms.
+        # Quite expectedly, we will just yield all those morphisms for
+        # which ``_is_expanded_generator`` is ``True``.  The process
+        # stops when there are no expanded generators at a certain
+        # round of generation of morphisms.  This works because the
+        # morphisms from round `n + 1` are obtained by composing the
+        # morphisms from round `n` with the generators.  Thus, if at
+        # round `n` there are no more extended generators, there will
+        # be no more extended generators at next rounds.
 
-        # Keep in mind that ``CompositeMorphism`` always stores the
-        # flattened list of components, so we cannot just do ``2 *
-        # len(self.generators)``.
-        limit_length = 0
-        for gen in self.generators:
-            if isinstance(gen, CompositeMorphism):
-                limit_length += len(gen)
-            else:
-                limit_length += 1
-        limit_length *= 2
+        # This counter is set to 1 just to pass the conditions in the
+        # head of the loop at the first iteration.
+        morphisms_yielded_at_round = 1
+        old_round = 0
+        for (morphism, current_round) in self._morphisms_in_rounds():
+            if old_round != current_round:
+                if not morphisms_yielded_at_round:
+                    # No morphisms yielded at the current round; end
+                    # of extended generators reached.
+                    return
 
-        for morphism in self.morphisms:
+                old_round = current_round
+                morphisms_yielded_at_round = 0
+
             if self._is_expanded_generator(morphism):
+                morphisms_yielded_at_round += 1
                 yield morphism
-            elif len(morphism) > limit_length:
-                return
 
     @property
     def objects(self):
