@@ -58,7 +58,9 @@ class Polyhedron(Basic):
         Although the vertices of a tetrahedron can be numbered in 24 (4!)
         different ways, there are only 12 different orientations for a
         physical tetrahedron. The following permutations, applied once or
-        twice, will generate all 12 of the orientations.
+        twice, will generate all 12 of the orientations. (The identity
+        permutation, Permutation(range(4)), is not included since it does
+        not change the orientation of the vertices.)
 
         >>> pgroups = [Permutation([[0,1,2], [3]]),\
                       Permutation([[0,1,3], [2]]),\
@@ -149,6 +151,27 @@ class Polyhedron(Basic):
         >>> _ in all and _ == sequentially
         True
 
+        For convenience, the vertices and faces are defined for the following
+        standard solids (but the allowed transformations are not provided).
+
+        - tetrahedron
+        - square
+        - octahedron
+        - dodecahedron
+        - icosahedron
+
+        >>> from sympy.combinatorics.polyhedron import square
+        >>> Polyhedron(*square).edges
+        {(0, 1), (0, 3), (0, 5), '...', (4, 7), (5, 6), (6, 7)}
+
+        If you want to use letters or other names for the corners you
+        can still use the pre-calculated faces:
+
+        >>> _, faces = square
+        >>> corners = list('abcdefgh')
+        >>> Polyhedron(corners, faces).corners
+        (a, b, c, d, e, f, g, h)
+
         References
         ==========
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
@@ -157,7 +180,7 @@ class Polyhedron(Basic):
         args = [Tuple(*a) for a in (corners, faces, pgroups)]
         obj = Basic.__new__(cls, *args)
         obj._corners = tuple(args[0]) # in order given
-        obj._faces = FiniteSet(args[1])
+        obj._faces = FiniteSet([tuple(a) for a in args[1]])
         if args[2] and args[2][0].size != len(obj.corners):
             raise ValueError("Permutation size unequal to number of corners.")
         if len(set([a.size for a in args[2]])) > 1:
@@ -285,3 +308,25 @@ class Polyhedron(Basic):
         for i in xrange(len(self.corners)):
             temp.append(self.corners[perm.array_form[i]])
         self._corners = tuple(temp)
+
+tetrahedron = ([0, 1, 2, 3], [[0, 1, 2], [0, 2, 3], [0, 3, 1], [1, 2, 3]])
+square = ([0, 1, 2, 3, 4, 5, 6, 7], [[0, 1, 2, 3], [0, 1, 4, 5], [1, 2, 5, 6],
+[2, 3, 6, 7], [3, 0, 7, 4], [4, 5, 6, 7]])
+octahedron = ([0, 1, 2, 3, 4, 5], [[0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1],
+[1, 2, 5], [2, 3, 5], [3, 4, 5], [4, 1, 5]])
+dodecahedron = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+18, 19], [[0, 1, 2, 3, 4], [0, 1, 5, 6, 10], [1, 2, 6, 7, 11], [2, 3, 7,
+8, 12], [3, 4, 8, 9, 13], [4, 0, 9, 5, 14], [5, 10, 11, 15, 16], [6,
+11, 12, 16, 17], [7, 12, 13, 17, 18], [8, 13, 14, 18, 19], [9, 14, 10,
+19, 15], [15, 16, 17, 18, 19]])
+icosahedron = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [[0, 1, 2], [0, 2, 3],
+[0, 3, 4], [0, 4, 5], [0, 5, 1], [[1, 2, 6], [2, 3, 6], [3, 4, 6], [4, 5, 6],
+[5, 1, 6]], [[1, 6, 7], [1, 7, 8], [1, 8, 9], [1, 9, 10], [1, 10, 6]],
+[[1, 2, 7], [2, 3, 7], [3, 4, 7], [4, 5, 7], [5, 1, 7]], [[2, 6, 7],
+[2, 7, 8], [2, 8, 9], [2, 9, 10], [2, 10, 6]], [[1, 2, 8], [2, 3, 8],
+[3, 4, 8], [4, 5, 8], [5, 1, 8]], [[3, 6, 7], [3, 7, 8], [3, 8, 9],
+[3, 9, 10], [3, 10, 6]], [[1, 2, 9], [2, 3, 9], [3, 4, 9], [4, 5, 9],
+[5, 1, 9]], [[4, 6, 7], [4, 7, 8], [4, 8, 9], [4, 9, 10], [4, 10, 6]],
+[[1, 2, 10], [2, 3, 10], [3, 4, 10], [4, 5, 10], [5, 1, 10]], [[5, 6,
+7], [5, 7, 8], [5, 8, 9], [5, 9, 10], [5, 10, 6]], [6, 7, 11], [7, 8,
+11], [8, 9, 11], [9, 10, 11], [10, 6, 11]])
