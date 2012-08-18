@@ -20,5 +20,3 @@ Utilities
 .. autofunction:: _strip
 
 .. autofunction:: _strong_gens_from_distr
-
-.. autofunction:: _verify_bsgs

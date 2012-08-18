@@ -17,3 +17,5 @@ Contents
    graycode.rst
    named_groups.rst
    util.rst
+   group_constructs.rst
+   testutil.rst
