@@ -193,10 +193,10 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     Returns
     =======
 
-    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals`` are the
-    basic transversals, ``basic_orbits`` are the basic orbits, and
-    ``strong_gens_distr`` are the strong generators distributed by membership in basic
-    stabilizers.
+    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals``
+    are the basic transversals, ``basic_orbits`` are the basic orbits, and
+    ``strong_gens_distr`` are the strong generators distributed by membership
+    in basic stabilizers.
 
     Examples
     ========

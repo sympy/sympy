@@ -1,4 +1,5 @@
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, AlternatingGroup, CyclicGroup
+from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
+AlternatingGroup, CyclicGroup
 from sympy.combinatorics.util import _distribute_gens_by_base
 
 def _cmp_perm_lists(first, second):
@@ -32,8 +33,8 @@ def _naive_list_centralizer(self, other):
     """
     Return a list of elements for the centralizer of a subgroup/set/element.
 
-    This is a brute-force implementation that goes over all elements of the group
-    and checks for membership in the centralizer. It is used to
+    This is a brute-force implementation that goes over all elements of the
+    group and checks for membership in the centralizer. It is used to
     test ``.centralizer()`` from ``sympy.combinatorics.perm_groups``.
 
     Examples
@@ -53,7 +54,8 @@ def _naive_list_centralizer(self, other):
     if hasattr(other, 'generators'):
         elements = list(self.generate_dimino())
         gens = other.generators
-        commutes_with_gens = lambda x: [x*gen for gen in gens] == [gen*x for gen in gens]
+        commutes_with_gens = lambda x: [x*gen for gen in gens] ==\
+                                       [gen*x for gen in gens]
         centralizer_list = []
         for element in elements:
             if commutes_with_gens(element):
@@ -107,12 +109,14 @@ def _verify_centralizer(group, arg, centr=None):
     """
     Verify the centralizer of a group/set/element inside another group.
 
-    This is used for testing ``.centralizer()`` from ``sympy.combinatorics.perm_groups``
+    This is used for testing ``.centralizer()`` from
+    ``sympy.combinatorics.perm_groups``
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+    ... AlternatingGroup)
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.testutil import _verify_centralizer
@@ -125,7 +129,8 @@ def _verify_centralizer(group, arg, centr=None):
     See Also
     ========
 
-    _naive_list_centralizer, sympy.combinatorics.perm_groups.PermutationGroup.centralizer,\
+    _naive_list_centralizer,\
+    sympy.combinatorics.perm_groups.PermutationGroup.centralizer,\
     _cmp_perm_lists
 
     """
@@ -140,12 +145,14 @@ def _verify_normal_closure(group, arg, closure=None):
     """
     Verify the normal closure of a subgroup/subset/element in a group.
 
-    This is used to test sympy.combinatorics.perm_groups.PermutationGroup.normal_closure
+    This is used to test
+    sympy.combinatorics.perm_groups.PermutationGroup.normal_closure
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,\
+    ... AlternatingGroup)
     >>> from sympy.combinatorics.testutil import _verify_normal_closure
     >>> S = SymmetricGroup(3)
     >>> A = AlternatingGroup(3)

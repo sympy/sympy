@@ -478,7 +478,8 @@ def test_subgroup_search():
         points = [7]
         assert S.stabilizer(7) == S.subgroup_search(prop_fix_points)
         points = [3, 4]
-        assert S.stabilizer(3).stabilizer(4) == S.subgroup_search(prop_fix_points)
+        assert S.stabilizer(3).stabilizer(4) ==\
+               S.subgroup_search(prop_fix_points)
         points = [3, 5]
         fix35 = A.subgroup_search(prop_fix_points)
         points = [5]
@@ -486,7 +487,8 @@ def test_subgroup_search():
         assert A.subgroup_search(prop_fix_points, init_subgroup=fix35) == fix5
         base, strong_gens = A.schreier_sims_incremental()
         g = A.generators[0]
-        comm_g = A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
+        comm_g =\
+             A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
 
@@ -540,10 +542,11 @@ def test_derived_series():
     assert series[3].is_trivial
 
 def test_lower_central_series():
-    # the lower central series of the trivial group consists only of the trivial group
+    # the lower central series of the trivial group consists of the trivial
+    # group
     triv = PermutationGroup([Permutation([0, 1, 2])])
     assert triv.lower_central_series() == [triv]
-    # the lower central series of a simple group consists only of the group itself
+    # the lower central series of a simple group consists of the group itself
     for i in (5, 6, 7):
         A = AlternatingGroup(i)
         assert A.lower_central_series() == [A]

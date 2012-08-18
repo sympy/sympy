@@ -650,8 +650,8 @@ class PermutationGroup(Basic):
         ``randomized`` - switch between randomized and deterministic version
         ``transversals`` - transversals for the basic orbits, if known
         ``basic_orbits`` - basic orbits, if known
-        ``strong_gens_distr`` - strong generators distributed by basic stabilizers,
-        if known
+        ``strong_gens_distr`` - strong generators distributed by basic
+        stabilizers, if known
 
         Returns
         =======
@@ -898,10 +898,10 @@ class PermutationGroup(Basic):
         Usually, `S` is a subset of `G`, but if `G` is a proper subgroup of
         the full symmetric group, we allow for `S` to have elements outside
         `G`.
-        It is naturally a subgroup of `G`; the centralizer of a permutation group
-        is equal to the centralizer of any set of generators for that group, since
-        any element commuting with the generators commutes with any product of the
-        generators.
+        It is naturally a subgroup of `G`; the centralizer of a permutation
+        group is equal to the centralizer of any set of generators for that
+        group, since any element commuting with the generators commutes with
+        any product of the  generators.
 
         Parameters
         ==========
@@ -911,7 +911,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... CyclicGroup)
         >>> S = SymmetricGroup(6)
         >>> C = CyclicGroup(6)
         >>> H = S.centralizer(C)
@@ -926,8 +927,8 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The implementation is an application of ``.subgroup_search()`` with tests
-        using a specific base for the group `G`.
+        The implementation is an application of ``.subgroup_search()`` with
+        tests using a specific base for the group `G`.
 
         """
         if hasattr(other, 'generators'):
@@ -965,7 +966,8 @@ class PermutationGroup(Basic):
             transversals = [None]*num_rel_orbits
             for j in range(num_rel_orbits):
                 rep = orbit_reps[j]
-                transversals[j] = dict(other.orbit_transversal(rep, pairs=True))
+                transversals[j] = dict(
+                                      other.orbit_transversal(rep, pairs=True))
             trivial_test = lambda x: True
             tests = [None]*base_len
             for l in range(base_len):
@@ -986,8 +988,10 @@ class PermutationGroup(Basic):
                             return True
                     tests[l] = test
             def prop(g):
-                return [g*gen for gen in other.generators] == [gen*g for gen in other.generators]
-            return self.subgroup_search(prop, base=base, strong_gens=strong_gens, tests=tests)
+                return [g*gen for gen in other.generators] ==\
+                       [gen*g for gen in other.generators]
+            return self.subgroup_search(prop, base=base,
+                                        strong_gens=strong_gens, tests=tests)
         elif hasattr(other, '__getitem__'):
             gens = list(other)
             return self.centralizer(PermutationGroup(gens))
@@ -1006,7 +1010,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... AlternatingGroup)
         >>> S = SymmetricGroup(5)
         >>> A = AlternatingGroup(5)
         >>> G = S.commutator(S, A)
@@ -1021,9 +1026,9 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The commutator of two subgroups `H, G` is equal to the normal closure of the commutators
-        of all the generators, i.e. `hgh^{-1}g^{-1}` for `h` a generator of `H` and `g` a
-        generator of `G` ([1],p.28)
+        The commutator of two subgroups `H, G` is equal to the normal closure
+        of the commutators of all the generators, i.e. `hgh^{-1}g^{-1}` for `h`
+        a generator of `H` and `g` a generator of `G` ([1],p.28)
 
         """
         ggens = G.generators
@@ -1223,19 +1228,20 @@ class PermutationGroup(Basic):
         The derived series for a group `G` is defined as
         `G = G_0 > G_1 > G_2 > \ldots`
         where `G_i = [G_{i-1}, G_{i-1}]`, i.e. `G_i` is the derived subgroup of
-        `G_{i-1}`, for `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some `k\in\mathbb{N}`,
-        the series terminates.
+        `G_{i-1}`, for `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some
+        `k\in\mathbb{N}`, the series terminates.
 
         Returns
         =======
 
-        A list of permutation groups containing the members of the derived series
-        in the order `G = G_0, G_1, G_2, \ldots`.
+        A list of permutation groups containing the members of the derived
+        series in the order `G = G_0, G_1, G_2, \ldots`.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... AlternatingGroup, DihedralGroup)
         >>> A = AlternatingGroup(5)
         >>> len(A.derived_series())
         1
@@ -1266,9 +1272,10 @@ class PermutationGroup(Basic):
         """
         Compute the derived subgroup.
 
-        The derived subgroup, or commutator subgroup is the subgroup generated by all
-        commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is equal to the normal closure of the set
-        of commutators of the generators ([1],p.28, [11]).
+        The derived subgroup, or commutator subgroup is the subgroup generated
+        by all commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is
+        equal to the normal closure of the set of commutators of the generators
+        ([1],p.28, [11]).
 
         Examples
         ========
@@ -1526,8 +1533,8 @@ class PermutationGroup(Basic):
         Monte Carlo test for the symmetric/alternating group for degrees >= 8.
 
         More specifically, it is one-sided Monte Carlo with the
-        answer True (i.e., G is symmetric/alternating) guaranteed to be correct,
-        and the answer False being incorrect with probability eps.
+        answer True (i.e., G is symmetric/alternating) guaranteed to be
+        correct, and the answer False being incorrect with probability eps.
 
         Notes
         =====
@@ -1589,12 +1596,14 @@ class PermutationGroup(Basic):
 
         A group `G` is nilpotent if it has a central series of finite length.
         Alternatively, `G` is nilpotent if its lower central series terminates
-        with the trivial group. Every nilpotent group is also solvable ([1],p.29, [12]).
+        with the trivial group. Every nilpotent group is also solvable
+        ([1],p.29, [12]).
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... CyclicGroup)
         >>> C = CyclicGroup(6)
         >>> C.is_nilpotent
         True
@@ -1844,8 +1853,8 @@ class PermutationGroup(Basic):
 
         The lower central series for a group `G` is the series
         `G = G_0 > G_1 > G_2 > \ldots` where
-        `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the commutator
-        of `G` and the previous term in `G1` ([1],p.29)
+        `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the
+        commutator of `G` and the previous term in `G1` ([1],p.29).
 
         Returns
         =======
@@ -1856,7 +1865,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup
+        >>> from sympy.combinatorics.named_groups import (AlternatingGroup,
+        ... DihedralGroup)
         >>> A = AlternatingGroup(4)
         >>> len(A.lower_central_series())
         2
@@ -2021,7 +2031,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup, AlternatingGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ... CyclicGroup, AlternatingGroup)
         >>> S = SymmetricGroup(5)
         >>> C = CyclicGroup(5)
         >>> G = S.normal_closure(C)
@@ -2052,8 +2063,8 @@ class PermutationGroup(Basic):
             Z = PermutationGroup(other.generators[:])
             base, strong_gens = Z.schreier_sims_incremental()
             strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-            basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base,\
-            strong_gens_distr)
+            basic_orbits, basic_transversals =\
+                    _orbits_transversals_from_bsgs(base, strong_gens_distr)
             C = False
             self._random_pr_init(r=10, n=20)
 
@@ -2069,16 +2080,21 @@ class PermutationGroup(Basic):
                         gens.append(conj)
                         Z = PermutationGroup(gens)
                         strong_gens.append(conj)
-                        temp_base, temp_strong_gens = Z.schreier_sims_incremental(base, strong_gens)
+                        temp_base, temp_strong_gens =\
+                                Z.schreier_sims_incremental(base, strong_gens)
                         base, strong_gens = temp_base, temp_strong_gens
-                        strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-                        basic_orbits, basic_transversals = _orbits_transversals_from_bsgs(base, strong_gens_distr)
+                        strong_gens_distr =\
+                                _distribute_gens_by_base(base, strong_gens)
+                        basic_orbits, basic_transversals =\
+                                _orbits_transversals_from_bsgs(base,\
+                                strong_gens_distr)
                 C = True
                 break_flag = False
                 for g in self.generators:
                     for h in Z.generators:
                         conj = (~g)*h*g
-                        res = _strip(conj, base, basic_orbits, basic_transversals)
+                        res = _strip(conj, base, basic_orbits,\
+                                     basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
                             C = False
                             break_flag = True
@@ -2654,7 +2670,8 @@ class PermutationGroup(Basic):
                             # data structures and start over
                             for l in range(i + 1, j):
                                 strong_gens_distr[l].append(h)
-                                stabs[l] = PermutationGroup(strong_gens_distr[l])
+                                stabs[l] =\
+                                        PermutationGroup(strong_gens_distr[l])
                                 transversals[l] =\
                                 dict(stabs[l].orbit_transversal(_base[l],\
                                                                 pairs=True))
@@ -3037,7 +3054,7 @@ class PermutationGroup(Basic):
         # compute BSGS-related structures
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_orbits, transversals = _orbits_transversals_from_bsgs(base,\
-                                                                    strong_gens_distr)
+                                     strong_gens_distr)
         # handle subgroup initialization and tests
         if init_subgroup is None:
             init_subgroup = PermutationGroup([identity])
@@ -3054,7 +3071,8 @@ class PermutationGroup(Basic):
         res_base = base[:]
         # line 3: compute BSGS and related structures for K
         res_base, res_strong_gens = res.schreier_sims_incremental(base=res_base)
-        res_strong_gens_distr = _distribute_gens_by_base(res_base, res_strong_gens)
+        res_strong_gens_distr = _distribute_gens_by_base(res_base,\
+                                res_strong_gens)
         res_basic_orbits_init_base =\
         [PermutationGroup(res_strong_gens_distr[i]).orbit(res_base[i])\
          for i in range(base_len)]
