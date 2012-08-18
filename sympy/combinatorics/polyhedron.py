@@ -1,5 +1,6 @@
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
+from sympy.utilities.misc import default_sort_key
 
 from random import choice
 
@@ -23,65 +24,6 @@ class Polyhedron(Basic):
     _faces = []
     _pgroups = []
     _corners = []
-
-    @property
-    def corners(self):
-        return self._corners
-
-    @property
-    def size(self):
-        return self._perm_size
-
-    @property
-    def faces(self):
-        return self._faces
-
-    @property
-    def edges(self):
-        """
-        Given the faces of the polyhedra we can get the edges.
-        """
-        if self._edges is None:
-            output = set()
-            for face in self.faces:
-                for i in xrange(len(face)):
-                    edge = tuple(sorted([face[i], face[i - 1]]))
-                    if edge not in output:
-                        output.append(edge)
-            self._edges = list(output)
-        return self._edges
-
-    @property
-    def pgroups(self):
-        """
-        Get the permutations of the Polyhedron.
-        """
-        return self._pgroups
-
-    def make_perm(self, n):
-        """
-        Multiply randomly selected permutations from
-        pgroups together, starting with the identity
-        permutation.  Randomly choose and multiply n times
-        """
-        # For polyhedra, the last permutation is the identity permutation
-        result = self.pgroups[-1]
-        for i in xrange(n):
-            result *= choice(self.pgroups)
-        return result
-
-    def rotate(self, perm):
-        """
-        Apply permutation to corners of a polyhedron -- an
-        operation analogous to rotation about an axis by a
-        fixed increment
-        """
-        if perm.size != self.size:
-            raise ValueError("The size of the permutation and polyhedron must match.")
-        temp = []
-        for i in xrange(len(self.corners)):
-            temp.append(self.corners[perm.array_form[i]])
-        self._corners = temp
 
     def __new__(cls, *args):
         """
@@ -130,7 +72,7 @@ class Polyhedron(Basic):
         >>> tetra.size
         4
         >>> tetra.edges
-        [(w, y), (w, x), (x, y), (w, z), (y, z), (x, z)]
+        [(w, x), (w, y), (w, z), (x, y), (x, z), (y, z)]
         >>> tetra.corners
         [w, x, y, z]
         >>> tetra.rotate(Permutation([3,2,1,0]))
@@ -145,8 +87,8 @@ class Polyhedron(Basic):
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
         """
         ret_obj = Basic.__new__(cls, *args)
-        ret_obj._corners = args[0]
-        ret_obj._faces = args[1]
+        ret_obj._corners = sorted(args[0], key=default_sort_key)
+        ret_obj._faces = sorted(args[1], key=default_sort_key)
         ret_obj._perm_size = args[2][0].size
         ret_obj._pgroups = [args[2][0]] + filter(lambda x: x.size == \
                                                 ret_obj._perm_size,
@@ -154,3 +96,65 @@ class Polyhedron(Basic):
         if len(ret_obj._pgroups) != len(args[2]):
             raise ValueError("All permutations must be of the same size.")
         return ret_obj
+
+    @property
+    def corners(self):
+        return self._corners
+
+    @property
+    def size(self):
+        return self._perm_size
+
+    @property
+    def faces(self):
+        return self._faces
+
+    @property
+    def edges(self):
+        """
+        Given the faces of the polyhedra we can get the edges.
+        """
+        if self._edges is None:
+            output = set()
+            for face in self.faces:
+                for i in xrange(len(face)):
+                    edge = tuple(sorted([face[i], face[i - 1]]))
+                    if edge not in output:
+                        output.add(edge)
+            self._edges = sorted(output, key=default_sort_key)
+        return self._edges
+
+    @property
+    def pgroups(self):
+        """
+        Get the permutations of the Polyhedron.
+        """
+        return self._pgroups
+
+    def make_perm(self, n, seed=None):
+        """
+        Multiply randomly selected permutations from
+        pgroups together, starting with the identity
+        permutation.  Randomly choose and multiply n times
+        """
+        from sympy.utilities.randtest import _randrange
+        randrange = _randrange(seed)
+
+        # For polyhedra, the last permutation is the identity permutation
+        result = self.pgroups[-1]
+        for i in xrange(n):
+            result *= self.pgroups[randrange(len(self.pgroups))]
+        return result
+
+    def rotate(self, perm):
+        """
+        Apply permutation to corners of a polyhedron -- an
+        operation analogous to rotation about an axis by a
+        fixed increment
+        """
+        if perm.size != self.size:
+            raise ValueError("The size of the permutation and polyhedron must match.")
+        temp = []
+        for i in xrange(len(self.corners)):
+            temp.append(self.corners[perm.array_form[i]])
+        self._corners = temp

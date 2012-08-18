@@ -4,7 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 
 import random
 
-C1, C2, C3, C4, C5, C6, C7, C8, C9 = symbols('C1:9')
+C1, C2, C3, C4, C5, C6, C7, C8, C9 = symbols('C1:10')
 
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
@@ -30,21 +30,18 @@ def test_polyhedron():
     cube = Polyhedron(corners, faces, pgroup)
 
     assert cube.size == 8
-    assert cube.edges == [(C1, C6), (C1, C8), (C3, C8), (C3, C6), \
-                          (C1, C7), (C2, C8), (C2, C7), (C2, C5), \
-                          (C3, C5), (C4, C5), (C4, C7), (C4, C6)]
+    assert cube.edges == [(C1, C6), (C1, C7), (C1, C8), (C2, C5), (C2, C7),
+        (C2, C8), (C3, C5), (C3, C6), (C3, C8), (C4, C5), (C4, C6), (C4, C7)]
 
     for i in xrange(3):    #  add 180 degree face rotations
         cube.rotate(cube.pgroups[i]**2)
 
-    assert cube.corners == ['A', 'B', 'F', 'C', 'E', 'D', 'G', 'H']
+    assert cube.corners == corners
 
     for i in range(3,7):  # add 240 degree axial corner rotations
         cube.rotate(cube.pgroups[i]**2)
 
-    assert cube.corners == ['A', 'F', 'C', 'B', 'E', 'G', 'H', 'D']
+    assert cube.corners == corners
 
-    random.seed(0)
-    assert cube.make_perm(5) == Permutation([6, 5, 4, 3, 1, 2, 7, 0])
-    assert cube.make_perm(7) == Permutation([4, 2, 7, 6, 0, 3, 1, 5])
-
+    assert cube.make_perm(5, seed=range(5)) == Permutation([4, 5, 7, 6, 0, 1, 3, 2])
+    assert cube.make_perm(7, seed=range(7)) == Permutation([5, 4, 6, 7, 1, 0, 2, 3])
