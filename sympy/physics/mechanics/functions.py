@@ -407,17 +407,27 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     else:
         raise ValueError('Not an approved rotation type for this function')
 
-def partial_velocity(vel_list, u_ind_list):
+def partial_velocity(vel_list, u_list, frame):
     """Returns a list of partial velocities.
+
+    For a list of velocity or angular velocity vectors the partial derivatives
+    with respect to the supplied generalized speeds are computed, in the
+    specified ReferenceFrame.
+
+    The output is a list of lists. The outer list has a number of elements
+    equal to the number of supplied velocity vectors. The inner lists are, for
+    each velocity vector, the partial derivatives of that velocity vector with
+    respect to the generalized speeds supplied.
 
     Parameters
     ==========
 
     vel_list : list
         List of velocities of Point's and angular velocities of ReferenceFrame's
-
-    u_ind_list : list
+    u_list : list
         List of independent generalized speeds.
+    frame : ReferenceFrame
+        The ReferenceFrame the partial derivatives are going to be taken in.
 
     Examples
     ========
@@ -431,26 +441,21 @@ def partial_velocity(vel_list, u_ind_list):
     >>> P.set_vel(N, u * N.x)
     >>> vel_list = [P.vel(N)]
     >>> u_list = [u]
-    >>> partial_velocity(vel_list, u_list)
+    >>> partial_velocity(vel_list, u_list, N)
     [[N.x]]
 
     """
-    if not isinstance(vel_list, list):
-        raise TypeError('Provide velocities in a list')
-    if not isinstance(u_ind_list, list):
-        raise TypeError('Provide speeds in a list')
-    else:
-        a = vel_list[0]
-        frame = a.args[0][1]
-        list_of_pvlists = []
-        i = 0
-        while i < len(u_ind_list):
-            pvlist = []
-            for e in vel_list:
-                vel = e.diff(u_ind_list[i], frame)
-                pvlist = pvlist + [vel]
-            list_of_pvlists = list_of_pvlists + [pvlist]
-            i = i + 1
+    if not hasattr(vel_list, '__iter__'):
+        raise TypeError('Provide velocities in an iterable')
+    if not hasattr(u_list, '__iter__'):
+        raise TypeError('Provide speeds in an iterable')
+    list_of_pvlists = []
+    for i in vel_list:
+        pvlist = []
+        for j in u_list:
+            vel = i.diff(j, frame)
+            pvlist += [vel]
+        list_of_pvlists += [pvlist]
     return list_of_pvlists
 
 def linear_momentum(frame, *body):
@@ -465,12 +470,13 @@ def linear_momentum(frame, *body):
 
     L = L1 + L2
 
+    Parameters
+    ==========
+
     frame : ReferenceFrame
         The frame in which linear momentum is desired.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
-
 
     Examples
     ========
@@ -518,10 +524,8 @@ def angular_momentum(point, frame, *body):
 
     point : Point
         The point about which angular momentum of the system is desired.
-
     frame : ReferenceFrame
         The frame in which angular momentum is desired.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
 
@@ -580,7 +584,6 @@ def kinetic_energy(frame, *body):
     frame : ReferenceFrame
         The frame in which the velocity or angular velocity of the body is
         defined.
-
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose kinetic energy is required.
 

@@ -4,10 +4,9 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
                    expand, zeros, Derivative, Function, symbols, Add,
-                   solve)
+                   solve, S)
 from sympy.core import C
 from sympy.core.function import UndefinedFunction
-from sympy.core.numbers import Zero
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
@@ -96,13 +95,11 @@ class Dyadic(object):
             for i, v in enumerate(self.args):
                 for i2, v2 in enumerate(other.args):
                     ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
-        elif isinstance(other, Vector):
+        else:
             other = _check_vector(other)
             ol = Vector([])
             for i, v in enumerate(self.args):
                 ol += v[0] * v[1] * (v[2] & other)
-        else:
-            raise TypeError('Need to supply a Vector or Dyadic')
         return ol
 
     def __div__(self, other):
@@ -402,10 +399,15 @@ class Dyadic(object):
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
-        ol = 0
+        ol = S(0)
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
         return ol
+
+    def doit(self, **hints):
+        """Calls .doit() on each term in the Dyadic"""
+        return sum([Dyadic( [ (v[0].doit(**hints), v[1], v[2]) ]) for
+                    v in self.args])
 
     def dt(self, frame):
         """Take the time derivative of this Dyadic in a frame.
@@ -431,15 +433,20 @@ class Dyadic(object):
 
         _check_frame(frame)
         t = dynamicsymbols._t
-        ol = 0
+        ol = S(0)
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
             ol += (v[0] * (v[1].dt(frame) | v[2]))
             ol += (v[0] * (v[1] | v[2].dt(frame)))
         return ol
 
-    def subs(self, dictin):
-        """Substituion on the Dyadic, with a dict.
+    def simplify(self):
+        """Simplify the elements in the Dyadic in-place."""
+        for i in self.args:
+            i[0] = i[0].simplify()
+
+    def subs(self, *args, **kwargs):
+        """Substituion on the Dyadic.
 
         Examples
         ========
@@ -454,8 +461,8 @@ class Dyadic(object):
 
         """
 
-        return sum([ Dyadic( [ (v[0].subs(dictin), v[1], v[2]) ]) for v in
-                   self.args])
+        return sum([ Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+                     for v in self.args])
 
     dot = __and__
     cross = __xor__
@@ -1112,7 +1119,7 @@ class Vector(object):
         if isinstance(other, Dyadic):
             return NotImplemented
         other = _check_vector(other)
-        out = 0
+        out = S(0)
         for i, v1 in enumerate(self.args):
             for j, v2 in enumerate(other.args):
                 out += ((v2[0].T)
@@ -1411,7 +1418,7 @@ class Vector(object):
             return NotImplemented
         other = _check_vector(other)
         if other.args == []:
-            return self * 0
+            return self * S(0)
 
         def _det(mat):
             """This is needed as a little method for to find the determinant
@@ -1487,7 +1494,7 @@ class Vector(object):
 
         wrt = sympify(wrt)
         _check_frame(otherframe)
-        outvec = 0
+        outvec = S(0)
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
@@ -1499,6 +1506,13 @@ class Vector(object):
                     d = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
                     outvec += Vector([(d, otherframe)]).express(v[1])
         return outvec
+
+    def doit(self, **hints):
+        """Calls .doit() on each term in the Vector"""
+        ov = S(0)
+        for i, v in enumerate(self.args):
+            ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)) , v[1])])
+        return ov
 
     def dt(self, otherframe):
         """Returns the time derivative of the Vector in a ReferenceFrame.
@@ -1530,7 +1544,7 @@ class Vector(object):
 
         """
 
-        outvec = 0
+        outvec = S(0)
         _check_frame(otherframe)
         for i, v in enumerate(self.args):
             if v[1] == otherframe:
@@ -1578,8 +1592,13 @@ class Vector(object):
                 outvec -= Vector([v])
         return outvec
 
-    def subs(self, dictin):
-        """Substituion on the Vector, with a dict.
+    def simplify(self):
+        """Simplify the elements in the Vector in place. """
+        for i in self.args:
+            i[0] = i[0].simplify()
+
+    def subs(self, *args, **kwargs):
+        """Substituion on the Vector.
 
         Examples
         ========
@@ -1594,9 +1613,9 @@ class Vector(object):
 
         """
 
-        ov = 0
+        ov = S(0)
         for i, v in enumerate(self.args):
-            ov += Vector([(v[0].subs(dictin), v[1])])
+            ov += Vector([(v[0].subs(*args, **kwargs), v[1])])
         return ov
 
     def magnitude(self):
@@ -1862,7 +1881,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
         other = sympify(other)
-        if other != 0:
+        if other != S(0):
             raise TypeError('A Dyadic must be supplied')
         else:
             other = Dyadic([])
@@ -1877,7 +1896,7 @@ def _check_frame(other):
 def _check_vector(other):
     if not isinstance(other, Vector):
         other = sympify(other)
-        if other != 0:
+        if other != S(0):
             raise TypeError('A Vector must be supplied')
         else:
             other = Vector([])
