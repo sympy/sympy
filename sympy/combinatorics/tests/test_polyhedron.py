@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import Polyhedron
 from sympy.combinatorics.permutations import Permutation
 
@@ -26,12 +26,12 @@ def test_polyhedron():
              (C2,C5,C4,C7),(C4,C7,C1,C6),(C3,C5,C4,C6))
 
 
-    corners = ['A','B','C','D','E','F','G','H']
+    corners = list(symbols('A:H'))
     cube = Polyhedron(corners, faces, pgroup)
 
     assert cube.size == 8
-    assert cube.edges == [(C1, C6), (C1, C7), (C1, C8), (C2, C5), (C2, C7),
-        (C2, C8), (C3, C5), (C3, C6), (C3, C8), (C4, C5), (C4, C6), (C4, C7)]
+    assert cube.edges == FiniteSet(*[(C1, C6), (C1, C7), (C1, C8), (C2, C5), (C2, C7),
+        (C2, C8), (C3, C5), (C3, C6), (C3, C8), (C4, C5), (C4, C6), (C4, C7)])
 
     for i in xrange(3):    #  add 180 degree face rotations
         cube.rotate(cube.pgroups[i]**2)
