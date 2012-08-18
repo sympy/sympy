@@ -154,7 +154,7 @@ class Cycle(dict):
     [0, 2]
 
     The array form can be used to instantiate a Permutation so other
-    perperties of the permutation can be investigated:
+    properties of the permutation can be investigated:
 
     >>> Perm(a.as_list(4)).transpositions()
     {(1, 2)}
@@ -306,8 +306,12 @@ class Permutation(Basic):
     Permutation([3, 1, 0, 2])
     >>> Permutation([[1], [3, 2, 0]])
     Permutation([3, 1, 0, 2])
+    >>> Permutation([[2, 0, 3]])
+    Permutation([3, 1, 0, 2])
 
-    An abbreviated cyclic-form shows only the non-singleton cycles:
+    As the last example shows, cycles can be entered without the singletons.
+    The abbreviated cyclic form for any permutation can be seen with the
+    cyclic_form method:
 
     >>> p = _
     >>> p.cyclic_form
@@ -363,10 +367,10 @@ class Permutation(Basic):
     The permutation can be 'applied' to any list-like object, not only
     Permutations:
 
-    >>> p('zo32')
-    ['2', 'o', 'z', '3']
     >>> p(['zero', 'one', 'three', 'two'])
     ['two', 'one', 'zero', 'three']
+    >>> p('zo32')
+    ['2', 'o', 'z', '3']
 
     See Also
     ========
@@ -422,9 +426,10 @@ class Permutation(Basic):
         >>> Permutation([0, 1, 2])
         Permutation([0, 1, 2])
 
-        Permutations entered in cyclic form are converted to array form:
+        Permutations entered in cyclic form are converted to array form;
+        singletons need not be entered:
 
-        >>> Permutation([[4, 5, 6], [3], [0, 1], [2]])
+        >>> Permutation([[4, 5, 6], [0, 1]])
         Permutation([1, 0, 2, 3, 5, 6, 4])
 
         All manipulation of permutations assumes that the smallest element
@@ -435,7 +440,8 @@ class Permutation(Basic):
 
         If a permutation is entered in cyclic form, it can be entered without
         singletons and the ``size`` specified so those values can be filled
-        in:
+        in, otherwise the array form will only extend to the maximum value
+        in the cycles:
 
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
         Permutation([0, 4, 3, 5, 1, 2, 6, 7, 8, 9])
@@ -461,8 +467,7 @@ class Permutation(Basic):
         is_cycle = args and is_sequence(args[0])
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
-        # unless a cycle notation has been provided (in which case size must
-        # also be given if all elements are not present). A 0 will be added
+        # unless a cycle notation has been provided. A 0 will be added
         # for convenience in case one wants to enter permutations where
         # counting starts from 1.
 
@@ -484,18 +489,27 @@ class Permutation(Basic):
             temp.add(0)
 
 
-        if size is None and any(i not in temp for i in range(len(temp))):
+        if not is_cycle and not size and \
+            any(i not in temp for i in range(len(temp))):
             raise ValueError("Integers 0 through %s must be present "
-                             "or (for cyclic notation) size must be given." %
-                             (len(temp) - 1))
+                             "or size must be given." %
+                             max(temp))
 
-        size = size or len(temp)
         if is_cycle:
-            obj = Basic.__new__(cls, args)
-            obj._size = size
-            aform = obj.array_form
+            # it's not necessarily canonical so we won't store
+            # it -- use the array form instead
+            c = Cycle()
+            for ci in args:
+                c *= ci
+            aform = c.as_list()
         else:
             aform = list(args)
+        if size and size > len(aform):
+            # don't allow for truncation of permutation which
+            # might split a cycle and lead to an invalid aform
+            # but do allow the permutation size to be increased
+            aform.extend(range(len(aform), size))
+        size = len(aform)
         obj = Basic.__new__(cls, aform)
         obj._array_form = aform
         obj._size = size
@@ -503,8 +517,7 @@ class Permutation(Basic):
 
     @staticmethod
     def _af_new(perm):
-        """
-        factory function to produce a Permutation object from a list;
+        """A method to produce a Permutation object from a list;
         the list is bound to the _array_form attribute, so it must
         not be modified; this method is meant for internal use only;
         the list ``a`` is supposed to be generated as a temporary value
@@ -531,8 +544,6 @@ class Permutation(Basic):
         """
         This is used to convert from cyclic notation to the
         canonical notation.
-        Currently singleton cycles need to be written
-        explicitly.
 
         Examples
         ========
@@ -545,6 +556,8 @@ class Permutation(Basic):
         [3, 2, 0, 1]
         >>> Permutation([2,0,3,1]).array_form
         [2, 0, 3, 1]
+        >>> Permutation([[1, 2], [4, 5]]).array_form
+        [0, 2, 1, 3, 5, 4]
 
         See Also
         ========
@@ -809,11 +822,11 @@ class Permutation(Basic):
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         b = other.array_form
-        if len(a) != len(b):
-            raise ValueError("The number of elements in the permutations "
-                             "do not match.")
-
-        perm = [b[i] for i in a]
+        if not b:
+            perm = a
+        else:
+            b.extend(range(len(b), len(a)))
+            perm = [b[i] for i in a] + b[len(a):]
         return Perm._af_new(perm)
 
     def commutes_with(self, other):
