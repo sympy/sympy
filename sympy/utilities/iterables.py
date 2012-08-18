@@ -2,8 +2,9 @@ from collections import defaultdict
 import random
 
 from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
-from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.core.compatibility import is_sequence, iterable # logical location
+from sympy.core.compatibility import \
+    product as cartes, combinations, combinations_with_replacement
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -727,6 +728,11 @@ def multiset_partitions(multiset, m):
     [[[1, 2, 3, 4]]]
     >>> list(multiset_partitions([1,2,3,4], 4))
     [[[1], [2], [3], [4]]]
+
+    See Also
+    ========
+    sympy.combinatorics.partitions.Partition
+    sympy.combinatorics.partitions.IntegerPartition
     """
     cache = {}
 
@@ -866,6 +872,11 @@ def partitions(n, m=None, k=None):
     Reference:
         modified from Tim Peter's version to allow for k and m values:
         code.activestate.com/recipes/218332-generator-for-integer-partitions/
+
+    See Also
+    ========
+    sympy.combinatorics.partitions.Partition
+    sympy.combinatorics.partitions.IntegerPartition
     """
     from sympy.ntheory.residue_ntheory import int_tested
 
@@ -984,8 +995,28 @@ def binary_partitions(n):
                 x >>= 1
     yield [1]*n
 
+def has_dups(seq):
+    """Return True if there are any duplicate elements in ``seq``.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import has_dups
+    >>> from sympy import Dict, Set
+
+    >>> has_dups((1, 2, 1))
+    True
+    >>> has_dups(range(3))
+    False
+    >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
+    True
+    """
+    if isinstance(seq, (dict, set, C.Dict, C.Set)):
+        return False
+    uniq = set()
+    return any(True for s in seq if s in uniq or uniq.add(s))
+
 def uniq(seq):
-    '''
+    """
     Remove repeated elements from an iterable, preserving order of first
     appearance.
 
@@ -1003,7 +1034,7 @@ def uniq(seq):
     >>> uniq(x for x in (1,4,1,5,4,2,1,2))
     [1, 4, 5, 2]
 
-    '''
+    """
     from sympy.core.function import Tuple
     seen = set()
     result = (s for s in seq if not (s in seen or seen.add(s)))
