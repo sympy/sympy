@@ -1,5 +1,6 @@
 from sympy import symbols, FiniteSet
-from sympy.combinatorics.polyhedron import Polyhedron
+from sympy.combinatorics.polyhedron import (Polyhedron,
+    tetrahedron, cube as square, octahedron, dodecahedron, icosahedron)
 from sympy.combinatorics.permutations import Permutation
 
 import random
@@ -45,3 +46,6 @@ def test_polyhedron():
 
     assert cube.make_perm(5, seed=range(5)) == Permutation([4, 5, 7, 6, 0, 1, 3, 2])
     assert cube.make_perm(7, seed=range(7)) == Permutation([5, 4, 6, 7, 1, 0, 2, 3])
+    assert all(len(f) + len(v) - len(Polyhedron(v, f).edges) == 2
+        for v, f in (tetrahedron, square, octahedron,
+        dodecahedron, icosahedron))
