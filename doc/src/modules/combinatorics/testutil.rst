@@ -1,7 +1,7 @@
 .. _combinatorics-testutil:
 
 Test Utilities
-============
+==============
 
 .. module:: sympy.combinatorics.testutil
 
