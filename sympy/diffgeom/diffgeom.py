@@ -509,8 +509,11 @@ class BaseVectorField(Expr):
         The action of a vector field on a scalar field is a directional
         differentiation.
 
-        If the argument is not a scalar field the behaviour is undefined.
+        If the argument is not a scalar field an error is raised.
         """
+        if covariant_order(scalar_field) or contravariant_order(scalar_field):
+            raise ValueError('Only scalar fields can be supplied as arguments to vector fields.')
+
         base_scalars = list(scalar_field.atoms(BaseScalarField))
 
         # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
@@ -568,6 +571,9 @@ class Commutator(Expr):
 
     #"""
     def __new__(cls, v1, v2):
+        if (covariant_order(v1) or contravariant_order(v1) != 1
+            or covariant_order(v2) or contravariant_order(v2) != 1):
+            raise ValueError('Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
         coord_sys = set.union(*[v.atoms(CoordSystem) for v in (v1, v2)])
@@ -596,7 +602,7 @@ class Commutator(Expr):
     def __call__(self, scalar_field):
         """Apply on a scalar field.
 
-        If the argument is not a scalar field the behaviour is undefined.
+        If the argument is not a scalar field an error is raised.
         """
         return self._v1(self._v2(scalar_field)) - self._v2(self._v1(scalar_field))
 
@@ -645,6 +651,8 @@ class Differential(Expr):
 
     """
     def __new__(cls, form_field):
+        if contravariant_order(form_field):
+            raise ValueError('A vector field was supplied as an argument to Differential.')
         if isinstance(form_field, Differential):
             return Zero()
         else:
@@ -672,8 +680,11 @@ class Differential(Expr):
         is achieved through replacing each pair of fields by their
         commutator.
 
-        If the arguments are not vectors or ``None``s the result is undefined.
+        If the arguments are not vectors or ``None``s an error is raised.
         """
+        if any((contravariant_order(a) != 1 or covariant_order(a)) and a is not None
+                for a in vector_fields):
+            raise ValueError('The arguments supplied to Differential should be vector fields or Nones.')
         k = len(vector_fields)
         if k==1:
             if vector_fields[0]:
@@ -742,6 +753,8 @@ class TensorProduct(Expr):
 
     """
     def __new__(cls, *args):
+        if any(contravariant_order(a) for a in args):
+            raise ValueError('A vector field was supplied as an argument to TensorProduct.')
         scalar = Mul(*[m for m in args if covariant_order(m)==0])
         forms = [m for m in args if covariant_order(m)]
         if forms:
@@ -774,7 +787,6 @@ class TensorProduct(Expr):
         indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
         v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
         multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
-        # TODO, this check should be in the constructor.
         return TensorProduct(*multipliers)
 
     def _latex(self, printer, *args):
@@ -813,6 +825,9 @@ class WedgeProduct(TensorProduct):
     # TODO the caclulation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
     def __call__(self, *vector_fields):
+        """Apply on a list of vector_fields.
+
+        The expression is rewritten internally in terms of tensor products and evaluated."""
         orders = (covariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(vector_fields)
@@ -835,6 +850,9 @@ class LieDerivative(Expr):
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
+        if contravariant_order(v_field) != 1 or covariant_order(v_field):
+            raise ValueError('Lie derivatives are defined only wrt vector fields.'
+                             ' The supplied argument was not a vector field.')
         if expr_form_ord>0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
@@ -947,6 +965,9 @@ class CovarDerivativeOp(Expr):
         super(CovarDerivativeOp, self).__init__()
         if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
             raise NotImplementedError()
+        if contravariant_order(wrt) != 1 or covariant_order(wrt):
+            raise ValueError('Covariant derivatives are defined only wrt vector fields.'
+                             ' The supplied argument was not a vector field.')
         self._wrt = wrt
         self._christoffel = christoffel
         self._args = self._wrt, self._christoffel
@@ -1034,6 +1055,8 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [                                t**2*x*y/(x**2 + y**2)**2]
 
     """
+    if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
+        raise ValueError('The supplied field was not a vector field.')
     def iter_vfield(scalar_field, i):
         """Return `vector_field` called `i` times on `scalar_field`."""
         return reduce(lambda s, v: v(s), [vector_field,]*i, scalar_field)
@@ -1107,6 +1130,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     [f_0(0) - 1, f_1(0) - pi/2]
 
     """
+    if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
+        raise ValueError('The supplied field was not a vector field.')
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
     gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
@@ -1138,7 +1163,7 @@ def list_to_tuple_rec(the_list):
 ###############################################################################
 # Helpers
 ###############################################################################
-def contravariant_order(expr):
+def contravariant_order(expr, _strict=False):
     """Return the contravariant order of an expression.
 
     Examples:
@@ -1174,11 +1199,13 @@ def contravariant_order(expr):
         return 0
     elif isinstance(expr, BaseVectorField):
         return 1
-    else:
+    elif not _strict or expr.atoms(BaseScalarField):
         return 0
+    else: # If it does not contain anything related to the diffgeom module and it is _strict
+        return -1
 
 
-def covariant_order(expr):
+def covariant_order(expr, _strict=False):
     """Return the covariant order of an expression.
 
     Examples:
@@ -1216,8 +1243,10 @@ def covariant_order(expr):
         return covariant_order(*expr.args) + 1
     elif isinstance(expr, TensorProduct):
         return sum(covariant_order(a) for a in expr.args)
-    else:
+    elif not _strict or expr.atoms(BaseScalarField):
         return 0
+    else: # If it does not contain anything related to the diffgeom module and it is _strict
+        return -1
 
 
 ###############################################################################
@@ -1239,7 +1268,6 @@ def vectors_in_basis(expr, to_sys):
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
-
     vectors = list(expr.atoms(BaseVectorField))
     new_vectors = []
     for v in vectors:
@@ -1277,7 +1305,7 @@ def twoform_to_matrix(expr):
     [-1/2, 1]
 
     """
-    if covariant_order(expr) != 2:
+    if covariant_order(expr) != 2 or contravariant_order(expr):
         raise ValueError('The input expression is not a two-form.')
     coord_sys = expr.atoms(CoordSystem)
     if len(coord_sys) != 1:
