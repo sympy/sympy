@@ -8,17 +8,15 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 from functools import wraps
 from sympify import SympifyError, sympify
 
-def deprecated(func):
+def deprecated(func, **kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
     @wraps(func)
     def new_func(*args, **kwargs):
         from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(
-            "Call to deprecated function.",
-            feature=func.__name__ + "()"
-            ).warn()
+        kwargs.setdefault('feature', func.__name__ + "()")
+        SymPyDeprecationWarning(**kwargs).warn()
         return func(*args, **kwargs)
     return new_func
 
