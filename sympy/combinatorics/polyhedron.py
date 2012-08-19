@@ -62,6 +62,7 @@ class Polyhedron(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.abc import w, x, y, z
 
@@ -169,17 +170,91 @@ class Polyhedron(Basic):
         >>> _ in all and _ == sequentially
         True
 
+        Note
+        ====
+
         For convenience, the vertices and faces are defined for the following
         standard solids (but the allowed transformations are not provided).
         When the polyhedron is oriented as indicated below, the vertices in
         a given horizontal plane are numbered in ccw direction, starting from
-        the vertex that will give the lowest indices in a given face.
+        the vertex that will give the lowest indices in a given face. (In the
+        net of the vertices, indices preceded by "-" indicate replication of
+        the lhs index in the net.)
 
-        - tetrahedron (vertex up)
-        - cube (face up)
-        - octahedron (vertex up)
-        - dodecahedron (face up)
-        - icosahedron (vertex up)
+        tetrahedron
+        -----------
+
+            4 vertices (vertex up) net:
+
+                 0 0-0
+                1 2 3-1
+
+            4 faces:
+
+            (0,1,2) (0,2,3) (0,3,1) (1,2,3)
+
+        cube
+        ----
+
+            8 vertices (face up) net:
+
+                0 1 2 3-0
+                4 5 6 7-4
+
+            6 faces:
+
+            (0,1,2,3)
+            (0,1,5,4) (1,2,6,5) (2,3,7,6) (0,3,7,4)
+            (4,5,6,7)
+
+        octahedron
+        ----------
+
+            6 vertices (vertex up) net:
+
+                 0 0 0-0
+                1 2 3 4-1
+                 5 5 5-5
+
+            8 faces:
+
+            (0,1,2) (0,2,3) (0,3,4) (0,1,4)
+            (1,2,5) (2,3,5) (3,4,5) (1,4,5)
+
+        dodecahedron
+        ------------
+
+            12 vertices (face up) net:
+
+                 0  0  0  0 -0
+                1  2  3  4  5 -1
+                 6  7  8  9  10 -6
+                  11 11 11 11 -11
+
+            20 faces:
+
+            (0,1,2) (0,2,3) (0,3,4) (0,4,5) (0,1,5)
+            (1,2,6) (2,3,7) (3,4,8) (4,5,9) (1,5,10)
+            (2,6,7) (3,7,8) (4,8,9) (5,9,10) (1,6,10)
+            (6,7,11,) (7,8,11) (8,9,11) (9,10,11) (6,10,11)
+
+        icosahedron
+        -----------
+
+            20 vertices (vertex up) net:
+
+                  0  1  2  3  4 -0
+                  5  6  7  8  9 -5
+                10 11 12 13 14-10
+                15 16 17 18 19-15
+
+            12 faces:
+
+            (0,1,2,3,4)
+            (0,1,6,11,5) (1,2,7,12,6) (2,3,8,13,7) (3,4,9,14,8) (0,4,9,10,5)
+            (5,10,15,16,11) (6,11,16,17,12) (7,12,17,18,13) (8,13,18,19,14)
+                                                               (9,10,15,19,14)
+            (15,16,17,18,19)
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> Polyhedron(*cube).edges
