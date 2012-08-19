@@ -2,8 +2,20 @@ from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation
 from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import rotate_left
 
 from random import choice
+
+def _canonical(face):
+    """Return the face in canonical order."""
+    small = min(face)
+    i = face.index(small)
+    m = len(face)
+    p = (i + 1) % m
+    n = (i - 1) % m
+    if face[p] > face[n]:
+        face = list(reversed(face))
+    return tuple(rotate_left(face, face.index(small)))
 
 class Polyhedron(Basic):
     """
@@ -34,8 +46,15 @@ class Polyhedron(Basic):
 
         The faces are entered as a list of tuples of indices; a tuple
         of indices identifies the vertices which define the face. They
-        should be entered in a cw or ccw order. If no faces are given
-        then no edges will be computed.
+        should be entered in a cw or ccw order; they will be standardized
+        by reversal and rotation to be give the lowest lexical ordering.
+        If no faces are given then no edges will be computed.
+
+            >>> from sympy.combinatorics.polyhedron import Polyhedron
+            >>> Polyhedron(list('abc'), [(1, 2, 0)]).faces
+            {(0, 1, 2)}
+            >>> Polyhedron(list('abc'), [(1, 0, 2)]).faces
+            {(0, 1, 2)}
 
         The allowed transformations are entered as allowable permutations
         of the vertices for the polyhedron. Instance of Permutations
@@ -44,7 +63,6 @@ class Polyhedron(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.polyhedron import Polyhedron
         >>> from sympy.abc import w, x, y, z
 
         Here we construct the Polyhedron object for a tetrahedron.
@@ -153,12 +171,15 @@ class Polyhedron(Basic):
 
         For convenience, the vertices and faces are defined for the following
         standard solids (but the allowed transformations are not provided).
+        When the polyhedron is oriented as indicated below, the vertices in
+        a given horizontal plane are numbered in ccw direction, starting from
+        the vertex that will give the lowest indices in a given face.
 
-        - tetrahedron
-        - cube
-        - octahedron
-        - dodecahedron
-        - icosahedron
+        - tetrahedron (vertex up)
+        - cube (face up)
+        - octahedron (vertex up)
+        - dodecahedron (face up)
+        - icosahedron (vertex up)
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> Polyhedron(*cube).edges
@@ -177,15 +198,17 @@ class Polyhedron(Basic):
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        args = [Tuple(*a) for a in (corners, faces, pgroups)]
+        faces = [_canonical(f) for f in faces]
+        corners, faces, pgroups = args = \
+            [Tuple(*a) for a in (corners, faces, pgroups)]
         obj = Basic.__new__(cls, *args)
-        obj._corners = tuple(args[0]) # in order given
-        obj._faces = FiniteSet([tuple(a) for a in args[1]])
-        if args[2] and args[2][0].size != len(obj.corners):
+        obj._corners = tuple(corners) # in order given
+        obj._faces = FiniteSet(faces)
+        if pgroups and pgroups[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
-        if len(set([a.size for a in args[2]])) > 1:
+        if len(set([a.size for a in pgroups])) > 1:
             raise ValueError("All permutations must be of the same size.")
-        obj._pgroups = args[2]
+        obj._pgroups = pgroups
         return obj
 
     @property
@@ -315,7 +338,7 @@ cube = ([0, 1, 2, 3, 4, 5, 6, 7], [
     [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [0, 3, 7, 4],
     [4, 5, 6, 7]])
 octahedron = ([0, 1, 2, 3, 4, 5], [
-    [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1],
+    [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 1, 4],
     [1, 2, 5], [2, 3, 5], [3, 4, 5], [1, 4, 5]])
 icosahedron = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [
     [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
@@ -325,8 +348,8 @@ icosahedron = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [
 dodecahedron = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
                 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], [
     [0, 1, 2, 3, 4],
-    [0, 1, 5, 10, 9], [1, 2, 6, 11, 5], [2, 3, 7, 12, 6],
-                      [3, 4, 8, 13, 7], [0, 4, 8, 14, 9],
+    [0, 1, 6, 11, 5], [1, 2, 7, 12, 6], [2, 3, 8, 13, 7],
+                      [3, 4, 9, 14, 8], [0, 4, 9, 10, 5],
     [5, 10, 15, 16, 11], [6, 11, 16, 17, 12], [7, 12, 17, 18, 13],
                          [8, 13, 18, 19, 14], [9, 10, 15, 19, 14],
     [15, 16, 17, 18, 19]])
