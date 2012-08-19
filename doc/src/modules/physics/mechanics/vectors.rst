@@ -13,7 +13,7 @@ Vector
 A vector is a geometric object that has a magnitude (or length) and a
 direction.  Vectors in 3-space are often represented on paper as:
 
-.. image:: vec_rep.svg
+.. image:: vec_rep.*
    :height: 175
    :width: 350
    :align: center
@@ -33,7 +33,7 @@ vectors, scalar multiplication, and vector multiplication.
 
 Vector addition as based on the parallelogram law.
 
-.. image:: vec_add.svg
+.. image:: vec_add.*
    :height: 200
    :width: 200
    :align: center
@@ -50,7 +50,7 @@ vector with the same orientation but whose magnitude is scaled by the scalar.
 Note that multiplication by -1 is equivalent to rotating the vector by 180
 degrees about an arbitrary axis in the plane perpendicular to the vector.
 
-.. image:: vec_mul.svg
+.. image:: vec_mul.*
    :height: 150
    :width: 200
    :align: center
@@ -81,7 +81,7 @@ direction; for other vectors, it is the product of the magnitude of the common
 direction and the two vectors' magnitudes. The dot product of two perpendicular
 is zero. The figure below shows some examples:
 
-.. image:: vec_dot.svg
+.. image:: vec_dot.*
    :height: 250
    :width: 450
    :align: center
@@ -105,7 +105,7 @@ is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
-.. image:: vec_cross.svg
+.. image:: vec_cross.*
    :height: 350
    :width: 700
    :align: center
@@ -244,7 +244,7 @@ properties when observed from that frame. Calculus is the study of change, and
 in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
-.. image:: vec_fix_notfix.svg
+.. image:: vec_fix_notfix.*
    :height: 300
    :width: 450
    :align: center
@@ -308,7 +308,7 @@ aligned, then one frame has all of its basis vectors rotated around an axis
 which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
-.. image:: simp_rot.svg
+.. image:: simp_rot.*
    :height: 250
    :width: 250
    :align: center
@@ -436,7 +436,7 @@ Examples
 
 An example of vector calculus:
 
-.. image:: vec_simp_der.svg
+.. image:: vec_simp_der.*
    :height: 500
    :width: 350
    :align: center

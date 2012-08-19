@@ -11,6 +11,9 @@ SPHINXBUILDpy  = sphinx-build
 SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) $(SPHINXBUILDpy)
 PAPER        =
 
+SVGFILES = $(wildcard src/modules/physics/mechanics/*.svg)
+PDFFILES = $(SVGFILES:%.svg=%.pdf)
+
 ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) src
 
@@ -20,6 +23,8 @@ ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
 LANGUAGES = bg cs de fr pl ru sr
 
 .PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet
+
+.SUFFIXES: .pdf .svg
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -99,13 +104,16 @@ htmlhelp:
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in _build/htmlhelp."
 
-latex: $(SPHINXBUILDpy)
+latex: $(SPHINXBUILDpy) $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) _build/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
+
+.svg.pdf:
+	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
 
 changes:
 	mkdir -p _build/changes _build/doctrees
