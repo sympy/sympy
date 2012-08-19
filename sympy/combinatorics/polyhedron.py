@@ -8,6 +8,7 @@ from random import choice
 
 def _canonical(face):
     """Return the face in canonical order."""
+    face = list(face)
     small = min(face)
     i = face.index(small)
     m = len(face)
