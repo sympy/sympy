@@ -80,12 +80,15 @@ we form the body list. ::
   >>> BodyList = [BodyD]
 
 Finally we form the equations of motion, using the same steps we did before.
-Specify inertial frame, supply generalized coordinates and speeds, supply
-kinematic differential equation dictionary, compute Fr from the force list and
-Fr* from the body list, compute the mass matrix and forcing terms, then solve
-for the u dots (time derivatives of the generalized speeds). ::
+Specify inertial frame, supply generalized speeds, supply kinematic
+differential equation dictionary, compute Fr from the force list and Fr* from
+the body list, compute the mass matrix and forcing terms, then solve for the u
+dots (time derivatives of the generalized speeds). ::
 
-  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
+  >>> KM = Kane(N)
+  >>> KM.coords([q1, q2, q3])
+  >>> KM.speeds([u1, u2, u3])
+  >>> KM.kindiffeq(kd)
   >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
@@ -152,8 +155,10 @@ represent the constraint forces in those directions. ::
   >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
   >>> BodyList = [BodyD]
 
-  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
-  ...           u_auxiliary=[u4, u5, u6])
+  >>> KM = Kane(N)
+  >>> KM.coords([q1, q2, q3])
+  >>> KM.speeds([u1, u2, u3], u_auxiliary=[u4, u5, u6])
+  >>> KM.kindiffeq(kd)
   >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
@@ -167,9 +172,9 @@ represent the constraint forces in those directions. ::
   [                        (-2*u2 + u3*tan(q2))*u1]
   >>> from sympy import signsimp, factor_terms
   >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: factor_terms(signsimp(w))))
-  [                                                   m*r*(u1*u3 + u2') - f1]
-  [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
-  [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
+  [                                                   -m*r*(u1*u3 + u2') + f1]
+  [      -m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) + f2]
+  [-g*m + m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) + f3]
 
 The Bicycle
 ===========
@@ -345,23 +350,23 @@ dynamic equations, but instead is necessary for the linearization process. ::
 The force list; each body has the appropriate gravitational force applied at
 its center of mass. ::
 
-  >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z),
-  ...       (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
+  >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z), (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
   >>> BL = [BodyFrame, BodyFork, BodyWR, BodyWF]
 
 The N frame is the inertial frame, coordinates are supplied in the order of
-independent, dependent coordinates. The kinematic differential equations are
-also entered here. Here the independent speeds are specified, followed by the
-dependent speeds, along with the non-holonomic constraints. The dependent
-coordinate is also provided, with the holonomic constraint. Again, this is only
-comes into play in the linearization process, but is necessary for the
-linearization to correctly work. ::
+independent, dependent coordinates, as are the speeds. The kinematic
+differential equation are also entered here.  Here the dependent speeds are
+specified, in the same order they were provided in earlier, along with the
+non-holonomic constraints.  The dependent coordinate is also provided, with the
+holonomic constraint.  Again, this is only provided for the linearization
+process. ::
 
-  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3],
-  ...           q_dependent=[q4], configuration_constraints=conlist_coord,
-  ...           u_ind=[u2, u3, u5],
-  ...           u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
-  ...           kd_eqs=kd)
+  >>> KM = Kane(N)
+  >>> KM.coords([q1, q2, q5], qdep=[q4], coneqs=conlist_coord)
+  >>> print('Before Handling of Dependent Speeds.')
+  Before Handling of Dependent Speeds.
+  >>> KM.speeds([u2, u3, u5], udep=[u1, u4, u6], coneqs=conlist_speed)
+  >>> KM.kindiffeq(kd)
   >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
   Before Forming Generalized Active and Inertia Forces, Fr and Fr*
   >>> (fr, frstar) = KM.kanes_equations(FL, BL)
@@ -508,6 +513,70 @@ Upon running the above code yourself, enabling the commented out lines, compare
 the computed eigenvalues to those is the referenced paper. This concludes the
 bicycle example.
 
+The Rolling Disc Example using Lagranges Method
+===============================================
 
+Here the rolling disc is formed from the contact point up, removing the
+need to introduce generalized speeds. Only 3 configuration and 3
+speed variables are need to describe this system, along with the
+disc's mass and radius, and the local gravity. ::
 
+  >>> from sympy import symbols, cos, sin
+  >>> from sympy.physics.mechanics import *
+  >>> mechanics_printing()
+  >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
+  >>> q1d, q2d, q3d = dynamicsymbols('q1 q2 q3', 1)
+  >>> r, m, g = symbols('r m g')
 
+The kinematics are formed by a series of simple rotations. Each simple
+rotation creates a new frame, and the next rotation is defined by the new
+frame's basis vectors. This example uses a 3-1-2 series of rotations, or
+Z, X, Y series of rotations. Angular velocity for this is defined using
+the second frame's basis (the lean frame). ::
+
+  >>> N = ReferenceFrame('N')
+  >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
+  >>> L = Y.orientnew('L', 'Axis', [q2, Y.x])
+  >>> R = L.orientnew('R', 'Axis', [q3, L.y])
+
+This is the translational kinematics. We create a point with no velocity
+in N; this is the contact point between the disc and ground. Next we form
+the position vector from the contact point to the disc's center of mass.
+Finally we form the velocity and acceleration of the disc. ::
+
+  >>> C = Point('C')
+  >>> C.set_vel(N, 0)
+  >>> Dmc = C.locatenew('Dmc', r * L.z)
+  >>> Dmc.v2pt_theory(C, N, R)
+  r*(sin(q2)*q1' + q3')*L.x - r*q2'*L.y
+
+Forming the inertia dyadic. ::
+
+  >>> I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+  >>> mprint(I)
+  m*r**2/4*(L.x|L.x) + m*r**2/2*(L.y|L.y) + m*r**2/4*(L.z|L.z)
+  >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
+
+We then set the potential energy and determine the Lagrangian of the rolling
+disc. ::
+
+  >>> BodyD.set_potential_energy(- m * g * r * cos(q2))
+  >>> Lag = Lagrangian(N, BodyD)
+
+Then the equations of motion are generated by initializing the
+``LagrangesMethod`` object. Finally we solve for the generalized
+accelerations(q double dots) with the ``rhs`` method. ::
+
+  >>> q = [q1, q2, q3]
+  >>> l = LagrangesMethod(Lag, q)
+  >>> l.form_lagranges_equations()
+  [5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 + 5*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')*sin(q2)/4 + m*r**2*sin(q2)*q3''/4 + m*r**2*cos(q2)**2*q1''/8 + m*r**2*cos(q2)*q2'*q3'/4 + (m*r**2*sin(q2)**2/4 + m*r**2*cos(q2)**2/8)*q1'']
+  [                                                                                                                                 g*m*r*sin(q2) - 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 - m*r**2*cos(q2)*q1'*q3'/4 + 5*m*r**2*q2''/4]
+  [                                                            m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/4 + m*r**2*(2*sin(q2)*q1'' + 2*cos(q2)*q1'*q2' + 2*q3'')/2 + m*r**2*sin(q2)*q1''/4 + m*r**2*cos(q2)*q1'*q2'/4 + m*r**2*q3''/4]
+  >>> l.rhs()
+  [                                                                                                                                                                                                                             q1']
+  [                                                                                                                                                                                                                             q2']
+  [                                                                                                                                                                                                                             q3']
+  [(24*sin(q2)**2/(m*r**2*(5*sin(q2)**2 + 1)*cos(q2)**2) + 4/(m*r**2*(5*sin(q2)**2 + 1)))*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4) + 6*sin(q2)*q1'*q2'/cos(q2)]
+  [                                                                                                                           4*(-g*m*r*sin(q2) + 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 + m*r**2*cos(q2)*q1'*q3'/4)/(5*m*r**2)]
+  [                                               -(5*sin(q2)**2 + 1)*q1'*q2'/cos(q2) - 4*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4)*sin(q2)/(m*r**2*cos(q2)**2)]
