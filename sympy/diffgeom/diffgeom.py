@@ -180,7 +180,7 @@ class CoordSystem(Basic):
     # Coordinate transformations.
     ##########################################################################
 
-    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=True):
+    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
         """Register the transformation used to switch to another coordinate system.
 
         Arguments:
@@ -218,8 +218,8 @@ class CoordSystem(Basic):
 
     @staticmethod
     def _fill_gaps_in_transformations():
+        raise NotImplementedError
         # TODO
-        pass
 
     def coord_tuple_transform_to(self, to_sys, coords):
         """Transform `coords` to coord system `to_sys`.
@@ -361,8 +361,8 @@ class Point(Basic):
 
     @property
     def free_symbols(self):
+        raise NotImplementedError
         return self._coords.free_symbols
-
 
 
 class BaseScalarField(Expr):
