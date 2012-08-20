@@ -33,6 +33,18 @@ def cyclic(cyclic_form1, n):
     rv.extend([[i] for i in sorted(need)])
     return rv
 
+def one_based(cyclic_form0, singletons=True):
+    """Return a cyclic form in 1-based cyclic form, omitting cycles
+    smaller than ``smallest``.
+    >>> from sympy.combinatorics.permutations import one_based
+    >>> one_based([[0, 1], [2]])
+    [[1, 2], [3]]
+    >>> one_based([[0, 1], [2]], singletons=False)
+    [[1, 2]]
+    """
+    min = 1 + (not bool(singletons))
+    return [[e + 1 for e in c] for c in cyclic_form0 if len(c) >= min]
+
 def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
