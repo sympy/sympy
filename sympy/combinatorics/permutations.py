@@ -135,12 +135,9 @@ def _af_mul(*a):
         return [a[i] for i in b]
     if m == 1:
         return list(a[0])
-    rv = []
-    for i in range(n):
-        r = a[-1][i]
-        for j in range(-2, -m - 1, -1):
-            r = a[j][r]
-        rv.append(r)
+    rv = range(n)
+    for ai in reversed(a):
+        rv = [ai[i] for i in rv]
     return rv
 
 def _af_invert(a):
