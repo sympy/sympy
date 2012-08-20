@@ -1463,8 +1463,10 @@ def _aresame(a, b):
 
     """
     from itertools import izip
+    from sympy.utilities.misc import default_sort_key
 
-    for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
+    for i, j in izip(preorder_traversal(a, key=default_sort_key),
+                     preorder_traversal(b, key=default_sort_key)):
         if i != j or type(i) != type(j):
             return False
     else:
