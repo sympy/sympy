@@ -390,7 +390,7 @@ An example
 
 Because this explanation so far might be very theoretical and difficult to
 understand, we walk through an explicit example now. We take the Fresnel
-function :math:`C(z)` which obeys the following hypergeometric representation:
+function `C(z)` which obeys the following hypergeometric representation:
 
 .. math ::
     C(z) = z \cdot {}_{1}F_{2}\left.\left(
@@ -400,30 +400,30 @@ function :math:`C(z)` which obeys the following hypergeometric representation:
 
 First we try to add this formula to the lookup table by using the
 (simpler) function ``add(ap, bq, res)``. The first two arguments
-are simply the lists containing the parameter sets of :math:`{}_{1}F_{2}`.
+are simply the lists containing the parameter sets of `{}_{1}F_{2}`.
 The ``res`` argument is a little bit more complicated. We only know
-:math:`C(z)` in terms of :math:`{}_{1}F_{2}(\ldots | f(z))` with :math:`f`
-a function of :math:`z`, in our case
+`C(z)` in terms of `{}_{1}F_{2}(\ldots | f(z))` with `f`
+a function of `z`, in our case
 
 .. math ::
    f(z) = -\frac{\pi^2 z^4}{16} \,.
 
 What we need is a formula where the hypergeometric function has
-only :math:`z` as argument :math:`{}_{1}F_{2}(\ldots | z)`. We
-introduce the new complex symbol :math:`w` and search for a function
-:math:`g(w)` such that
+only `z` as argument `{}_{1}F_{2}(\ldots | z)`. We
+introduce the new complex symbol `w` and search for a function
+`g(w)` such that
 
 .. math ::
    f(g(w)) = w
 
-holds. Then we can replace every :math:`z` in :math:`C(z)` by :math:`g(w)`.
-In the case of our example the function :math:`g` could look like
+holds. Then we can replace every `z` in `C(z)` by `g(w)`.
+In the case of our example the function `g` could look like
 
 .. math ::
    g(w) = \frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}} \,.
 
 We get these functions mainly by guessing and testing the result. Hence
-we proceed by computing :math:`f(g(w))` (and simplifying naively)
+we proceed by computing `f(g(w))` (and simplifying naively)
 
 .. math ::
    f(g(w)) &= -\frac{\pi^2 g(w)^4}{16} \\
@@ -432,11 +432,11 @@ we proceed by computing :math:`f(g(w))` (and simplifying naively)
            &= -\exp\left(i \pi\right) w \\
            &= w
 
-and indeed get back :math:`w`. (In case of branched functions we have to be
-aware of branch cuts. In that case we take :math:`w` to be a positive real
+and indeed get back `w`. (In case of branched functions we have to be
+aware of branch cuts. In that case we take `w` to be a positive real
 number and check the formula. If what we have found works for positive
-:math:`w`, then just replace :func:`exp` inside any branched function by
-:func:`exp\_polar` and what we get is right for `all` :math:`w`.) Hence
+`w`, then just replace :func:`exp` inside any branched function by
+:func:`exp\_polar` and what we get is right for `all` `w`.) Hence
 we can write the formula as
 
 .. math ::
@@ -470,18 +470,18 @@ in terms of simplicity and number of special function instances included.
 We can obtain much better results by adding the formula to the lookup table
 in another way. For this we use the (more complicated) function ``addb(ap, bq, B, C, M)``.
 The first two arguments are again the lists containing the parameter sets of
-:math:`{}_{1}F_{2}`. The remaining three are the matrices mentioned earlier
+`{}_{1}F_{2}`. The remaining three are the matrices mentioned earlier
 on this page.
 
-We know that the :math:`n = \max{\left(p, q+1\right)}`-th derivative can be
+We know that the `n = \max{\left(p, q+1\right)}`-th derivative can be
 expressed as a linear combination of lower order derivatives. The matrix
-:math:`B` contains the basis :math:`\{B_0, B_1, \ldots\}` and is of shape
-:math:`n \times 1`. The best way to get :math:`B_i` is to take the first
-:math:`n = \max(p, q+1)` derivatives of the expression for :math:`{}_p F_q`
+`B` contains the basis `\{B_0, B_1, \ldots\}` and is of shape
+`n \times 1`. The best way to get `B_i` is to take the first
+`n = \max(p, q+1)` derivatives of the expression for `{}_p F_q`
 and take out usefull pieces. In our case we find that
-:math:`n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
-we have to use the operator :math:`z\frac{\mathrm{d}}{\mathrm{d}z}`. The
-first basis element :math:`B_0` is set to the expression for :math:`{}_1 F_2`
+`n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
+we have to use the operator `z\frac{\mathrm{d}}{\mathrm{d}z}`. The
+first basis element `B_0` is set to the expression for `{}_1 F_2`
 from above:
 
 .. math ::
@@ -489,7 +489,7 @@ from above:
    C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)}
    {2 z^{\frac{1}{4}}}
 
-Next we compute :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
+Next we compute `z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
 directly use SymPy!
 
    >>> from sympy import Symbol, sqrt, exp, I, pi, fresnelc, root, diff, expand
@@ -536,7 +536,7 @@ which can be printed as
    + \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z}
 
 We see the common pattern and can collect the pieces. Hence it makes sense to
-choose :math:`B_1` and :math:`B_2` as follows
+choose `B_1` and `B_2` as follows
 
 .. math ::
    B =
@@ -554,11 +554,11 @@ choose :math:`B_1` and :math:`B_2` as follows
      \sinh\left(2\sqrt{z}\right) \sqrt{z}
    \end{matrix} \right)
 
-(This is in contrast to the basis :math:`B = \left(B_0, B_1^\prime, B_2^\prime\right)` that would
+(This is in contrast to the basis `B = \left(B_0, B_1^\prime, B_2^\prime\right)` that would
 have been computed automatically if we used just ``add(ap, bq, res)``.)
 
-Because it must hold that :math:`{}_p F_q\left(\cdots \middle| z \right) = C B`
-the entries of :math:`C` are obviously
+Because it must hold that `{}_p F_q\left(\cdots \middle| z \right) = C B`
+the entries of `C` are obviously
 
 .. math ::
    C =
@@ -566,10 +566,10 @@ the entries of :math:`C` are obviously
      1 \\ 0 \\ 0
    \end{matrix} \right)
 
-Finally we have to compute the entries of the :math:`3 \times 3` matrix :math:`M`
-such that :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
-We already computed the first part :math:`z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
-above. This gives us the first row of :math:`M`. For the second row we have:
+Finally we have to compute the entries of the `3 \times 3` matrix `M`
+such that `z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
+We already computed the first part `z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
+above. This gives us the first row of `M`. For the second row we have:
 
    >>> from sympy import Symbol, cosh, sqrt, diff
    >>> z = Symbol("z")
@@ -595,8 +595,8 @@ Now we have computed the entries of this matrix to be
      0            & z           & \frac{1}{2} \\
    \end{matrix} \right)
 
-Note that the entries of :math:`C` and :math:`M` should typically be
-rational functions in :math:`z`, with rational coefficients. This is all
+Note that the entries of `C` and `M` should typically be
+rational functions in `z`, with rational coefficients. This is all
 we need to do in order to add a new formula to the lookup table for
 ``hyperexpand``.
 
