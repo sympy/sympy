@@ -30,8 +30,10 @@ class Polyhedron(Basic):
     All doctests have been given in the docstring of the
     constructor of the object.
 
-    Reference:
-    [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+    References
+    ==========
+
+    http://mathworld.wolfram.com/PolyhedralGroup.html
     """
     _edges = None
 
@@ -271,6 +273,7 @@ class Polyhedron(Basic):
 
         References
         ==========
+
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
@@ -296,6 +299,7 @@ class Polyhedron(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Polyhedron
         >>> from sympy.abc import a, b, c, d
         >>> p = Polyhedron(list('abcd'))
@@ -334,6 +338,7 @@ class Polyhedron(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Polyhedron
         >>> from sympy.abc import a, b, c
         >>> corners = (a, b, c)
@@ -366,6 +371,7 @@ class Polyhedron(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation, Polyhedron
         >>> pgroups = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> h = Polyhedron(list('abcd'), pgroups=pgroups)
@@ -394,6 +400,7 @@ class Polyhedron(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Polyhedron, Permutation
         >>> h = Polyhedron(list('abcde'))
         >>> h.rotate(Permutation([3, 0, 1, 2, 4]))
