@@ -2,7 +2,7 @@ from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
 from sympy.core.compatibility import iterable
 from itertools import product
-from sympy import cacheit
+from sympy import cacheit, default_sort_key
 
 class Class(Set):
     r"""
@@ -819,14 +819,17 @@ class Diagram(Basic):
     corresponding strongly connected components [WCon].  This
     condensation of a digraph is a directed acyclic graph [WCon].
 
-    If in a :class:`Diagram` there is a morphism `f:A\rightarrow B`
+    If in a :class:`Diagram`` there is a morphism `f:A\rightarrow B`
     with properties ``props``, the condensation will contain a
-    morphism between the connected components containing `A` and `B`;
-    this morphism will have the same name and the same properties as
-    the original morphism.
+    :class:`DerivedMorphism` between the connected components
+    containing `A` and `B`.  This morphism will reference `f` as the
+    original morphism and will have exactly the same properties.
+    Derived morphisms will have the names ``xi_i``, where ``i`` is an
+    index.
 
     Consider the following infinite diagram::
 
+    >>> from sympy.categories import DerivedMorphism
     >>> h = NamedMorphism(C, A, "h")
     >>> D = Object("D")
     >>> k = NamedMorphism(D, A, "k")
@@ -843,8 +846,8 @@ class Diagram(Basic):
 
     >>> component1 = d.subdiagram_from_objects([D])
     >>> component2 = d.subdiagram_from_objects([A, B, C])
-    >>> condensation_k = NamedMorphism(component1, component2, "k")
-    >>> d.condensation == Diagram({condensation_k: "blaster"})
+    >>> xi_1 = DerivedMorphism(component1, component2, "xi_1", k)
+    >>> d.condensation == Diagram({xi_1: "blaster"})
     True
 
     Another powerful, graph-theory based, infinite diagram analysis
@@ -1361,14 +1364,17 @@ class Diagram(Basic):
 
         If in the current diagram there is a morphism `f:A\rightarrow
         B` with properties ``props``, the condensation will contain a
-        morphism between the connected components containing `A` and
-        `B`, this morphism will have the name ``f`` and it will have
-        the same properties as the original morphism.
+        :class:`DerivedMorphism` between the connected components
+        containing `A` and `B`.  This morphism will reference `f` as
+        the original morphism and will have exactly the same
+        properties.  Derived morphisms will have the names ``xi_i``,
+        where ``i`` is an index.
 
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy.categories import (Object, NamedMorphism,
+        ...                               Diagram, DerivedMorphism)
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -1380,8 +1386,8 @@ class Diagram(Basic):
         >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
         >>> component1 = d.subdiagram_from_objects([D])
         >>> component2 = d.subdiagram_from_objects([A, B, C])
-        >>> condensation_k = NamedMorphism(component1, component2, "k")
-        >>> d.condensation == Diagram({condensation_k: "blaster"})
+        >>> xi_1 = DerivedMorphism(component1, component2, "xi_1", k)
+        >>> d.condensation == Diagram({xi_1: "blaster"})
         True
 
         References
@@ -1393,16 +1399,24 @@ class Diagram(Basic):
 
         new_generators = {}
 
-        for generator, props in self.generators_properties.items():
+        # We will use this to count condensation morphisms.
+        xi_counter = 1
+
+        # We must explicitly order the generators in order to assure
+        # consistent condensation morphism names.
+        sorted_generators = sorted(self.generators, key=default_sort_key)
+        for generator in sorted_generators:
             dom_component = objects_components[generator.domain]
             cod_component = objects_components[generator.codomain]
+
             if dom_component == cod_component:
                 # ``generator`` belongs to a connected component.
                 continue
             else:
-                new_generator = NamedMorphism(dom_component, cod_component,
-                                              generator.name)
-                new_generators[new_generator] = props
+                new_generator = DerivedMorphism(
+                    dom_component, cod_component, "xi_%d" % xi_counter, generator)
+                new_generators[new_generator] = self[generator]
+                xi_counter += 1
 
         # Add an identity morphism for every component, so that all
         # components make it into the diagram.

@@ -311,8 +311,8 @@ def test_diagram():
     assert c.generators_properties == Dict({
         IdentityMorphism(d1): FiniteSet(),
         IdentityMorphism(d2): FiniteSet(),
-        NamedMorphism(d1, d2, "k1"): FiniteSet(),
-        NamedMorphism(d1, d2, "k2"): FiniteSet("blaster")
+        DerivedMorphism(d1, d2, "xi_1", k1): FiniteSet(),
+        DerivedMorphism(d1, d2, "xi_2", k2): FiniteSet("blaster")
         })
     assert set(c.generators) == set(c.morphisms)
     assert c.is_finite
