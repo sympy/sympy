@@ -437,7 +437,7 @@ class RootOf(Expr):
 
     def eval_rational(self, tol):
         """
-        Returns a Rational approximation to 'self' within the tolerance 'tol'.
+        Returns a Rational approximation to ``self`` with the tolerance ``tol``.
 
         This method uses bisection, which is very robust and it will always
         converge. The returned Rational instance will be at most 'tol' from the
