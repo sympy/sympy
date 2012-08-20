@@ -782,6 +782,7 @@ class Diagram(Basic):
     >>> D = Object("D")
     >>> k = NamedMorphism(D, A, "k")
     >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
+    >>> pprint(d)
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), id:D-->D: E
     mptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet(), h:C-->A: EmptySet(), k:D-
     ->A: {blaster}}
@@ -791,13 +792,11 @@ class Diagram(Basic):
     morphism which does not belong to either strongly connected
     component is `k:D\rightarrow A`.
 
-    >>> component1 = d.subdiagram_from_objects([A, B, C])
-    >>> condensation_k = NamedMorphism(D, component1, "k")
+    >>> component1 = d.subdiagram_from_objects([D])
+    >>> component2 = d.subdiagram_from_objects([A, B, C])
+    >>> condensation_k = NamedMorphism(component1, component2, "k")
     >>> d.condensation == Diagram({condensation_k: "blaster"})
     True
-
-    Remark that one-vertex strongly-connected components are not
-    represented as :class:`Diagram`'s, but just as objects.
 
     Another powerful, graph-theory based, infinite diagram analysis
     tool is the notion of an _expanded generator_.  Consider the
@@ -1266,9 +1265,6 @@ class Diagram(Basic):
         Returns a :class:`Dict` mapping objects to the strongly
         connected component they belong to.  Strongly connected
         components are represented as :class:`Diagram`'s.
-
-        One-vertex strongly connected components are represented using
-        the corresponding objects instead of one-object diagrams.
         """
         # Build the actual sets of objects corresponding to each
         # strongly connected component.
@@ -1284,21 +1280,16 @@ class Diagram(Basic):
             else:
                 component_objects[idx].append(obj)
 
-        # For each nontrivial component, set up a diagram from the
-        # objects.  Also set up the mapping between objects and the
-        # corresponding diagram.
+        # For each component, set up a diagram from the objects.  Also
+        # set up the mapping between objects and the corresponding
+        # diagram.
         object_diagrams = {}
         for idx, objects in component_objects.items():
-            if len(objects) > 1:
-                diagram = self.subdiagram_from_objects(objects)
-                for obj in objects:
-                    object_diagrams[obj] = diagram
-            else:
-                # Every object belongs to a strongly connected
-                # component, so if ``objects`` does not have more than
-                # one element, it has exactly one element.
-                obj = objects[0]
-                object_diagrams[obj] = obj
+            # Note that we may be creating one-object diagrams here,
+            # which is alright.
+            diagram = self.subdiagram_from_objects(objects)
+            for obj in objects:
+                object_diagrams[obj] = diagram
 
         return Dict(object_diagrams)
 
@@ -1338,8 +1329,9 @@ class Diagram(Basic):
         >>> h = NamedMorphism(C, A, "h")
         >>> k = NamedMorphism(D, A, "k")
         >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
-        >>> component1 = d.subdiagram_from_objects([A, B, C])
-        >>> condensation_k = NamedMorphism(D, component1, "k")
+        >>> component1 = d.subdiagram_from_objects([D])
+        >>> component2 = d.subdiagram_from_objects([A, B, C])
+        >>> condensation_k = NamedMorphism(component1, component2, "k")
         >>> d.condensation == Diagram({condensation_k: "blaster"})
         True
 
@@ -1724,7 +1716,7 @@ class Diagram(Basic):
                 return False
 
             for component in components_involved:
-                if isinstance(component, Diagram):
+                if len(component.generators) > 1:
                     # ``m`` passes through a nontrivial strongly
                     # connected component.
                     return False

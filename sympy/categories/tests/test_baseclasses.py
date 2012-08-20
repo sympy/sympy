@@ -117,7 +117,6 @@ def test_diagram():
     assert set(d1.hom(A, B)) == set([f])
     assert set(d1.hom(A, A)) == set([id_A])
     assert set(d1.hom(B, B)) == set([id_B])
-    assert d1.condensation == d1
 
     # Test construction from an iterable.
     assert d1 == Diagram([f])
@@ -307,7 +306,6 @@ def test_diagram():
         })
     assert set(c.generators) == set(c.morphisms)
     assert c.is_finite
-    assert c.condensation == c
 
     # Test loop morphisms.
     h = NamedMorphism(A, A, "h")
