@@ -7,31 +7,33 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
-def cyclic(a, n):
-    """convert cycles from standard 1-based to cycle form
-    accepted by Partition
+def cyclic(cyclic_form1, n):
+    """Convert from 1-based cyclic-form to 0-based cyclic form after
+    filling in any missing singletons (up to ``n``).
+
+    If any element in the cycles is greater than n, singletons will
+    be missing from the cyclic form returned.
 
     >>> from sympy.combinatorics.permutations import cyclic
-    >>> a = [(1,2,3)]
+    >>> a = [(1, 2, 3)]
     >>> cyclic(a, 5)
     [[0, 1, 2], [3], [4]]
-    >>> a = [(1,2,3),(4,5)]
+    >>> a = [(1, 2, 3), (4, 5)]
     >>> cyclic(a, 5)
     [[0, 1, 2], [3, 4]]
+    >>> cyclic([[4, 5]], 2)
+    [[3, 4], [0], [1]]
     """
-    a1 = []
-    v = []
-    for x in a:
-        x = [y-1 for y in x]
-        a1 += x
-        v.append(x)
-    #print 'DB1 v=', v
-    for i in range(n):
-        if i not in a1:
-            v.append([i])
-    return v
+    rv = []
+    need = set(range(n))
+    for c in cyclic_form1:
+        c = [i - 1 for i in c]
+        need -= set(c)
+        rv.append(c)
+    rv.extend([[i] for i in sorted(need)])
+    return rv
 
-def perm_af_parity(pi):
+def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
 
@@ -42,10 +44,10 @@ def perm_af_parity(pi):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import perm_af_parity
-    >>> perm_af_parity([0,1,2,3])
+    >>> from sympy.combinatorics.permutations import _af_parity
+    >>> _af_parity([0,1,2,3])
     0
-    >>> perm_af_parity([3,2,0,1])
+    >>> _af_parity([3,2,0,1])
     1
 
     See Also
@@ -65,86 +67,54 @@ def perm_af_parity(pi):
                 a[i] = 1
     return (n - c) % 2
 
-def perm_af_mul(a, b):
+def _af_mul(*a):
     """
-    Product of two permutations in array form. The convention used is
-    ab = first apply b, then apply a.
+    Product of two or more permutations in array form, following the
+    right to left convention: for A*B, B is applied to A.
+
+    If there is only one array, a copy of it is returned.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import perm_af_mul
-    >>> perm_af_mul([1,2,3,0], [3,2,0,1])
-    [0, 3, 1, 2]
-
-    See Also
-    ========
-    Permutation
-    """
-    if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations "
-                         "do not match.")
-
-    return [a[i] for i in b]
-
-
-def perm_af_muln(*a):
-    """
-    Product of several permutations in array form.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.permutations import perm_af_muln
-    >>> perm_af_muln([1,0,3,2],[2,3,0,1],[3,2,1,0])
+    >>> from sympy.combinatorics.permutations import _af_mul
+    >>> _af_mul([1,0,3,2], [2,3,0,1], [3,2,1,0])
     [0, 1, 2, 3]
 
     See Also
     ========
-    Permutation, perm_af_mul
+    Permutation, _af_mul
     """
     if not a:
         raise ValueError("No element")
     m = len(a)
     n = len(a[0])
-    for i in xrange(1, m):
-        if len(a[i]) != n:
+    if any(len(ai) != n for ai in a):
             raise ValueError("The number of elements in the permutations "
                              "don't match.")
-    if m == 1:
-        return a[0]
     if m == 2:
-        return perm_af_mul(a[0], a[1])
-    if m == 3:
-       p0, p1, p2 = a
-       return [p0[p1[i]] for i in p2]
-    if m == 4:
-       p0, p1, p2, p3 = a
-       return [p0[p1[p2[i]]] for i in p3]
-    if m == 5:
-       p0, p1, p2, p3, p4 = a
-       return [p0[p1[p2[p3[i]]]] for i in p4]
-    if m == 6:
-       p0, p1, p2, p3, p4, p5 = a
-       return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
-    if m == 7:
-       p0, p1, p2, p3, p4, p5, p6 = a
-       return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
-    if m > 7:
-        p0 = perm_af_muln(*a[:m//2])
-        p1 = perm_af_muln(*a[m//2:])
-        return [p0[i] for i in p1]
+        a, b = a
+        return [a[i] for i in b]
+    if m == 1:
+        return list(a[0])
+    rv = []
+    for i in range(n):
+        r = a[-1][i]
+        for j in range(-2, -m - 1, -1):
+            r = a[j][r]
+        rv.append(r)
+    return rv
 
-def perm_af_invert(a):
+def _af_invert(a):
     """
-    Finds the invert of the list a interpreted as the array
+    Finds the invert of the list ``a`` interpreted as the array-
     form of a permutation. The result is again given as a list.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import perm_af_invert
-    >>> perm_af_invert([1,2,3,0])
+    >>> from sympy.combinatorics.permutations import _af_invert
+    >>> _af_invert([1,2,3,0])
     [3, 0, 1, 2]
 
     See Also
@@ -157,16 +127,16 @@ def perm_af_invert(a):
         inv_form[a[i]] = i
     return inv_form
 
-def perm_af_commutes_with(a, b):
+def _af_commutes_with(a, b):
     """
     Checks if the two permutations with array forms
-    given by a and b commute.
+    given by ``a`` and ``b`` commute.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import perm_af_commutes_with
-    >>> perm_af_commutes_with([1,2,0],[0,2,1])
+    >>> from sympy.combinatorics.permutations import _af_commutes_with
+    >>> _af_commutes_with([1,2,0],[0,2,1])
     False
 
     See Also
@@ -371,9 +341,17 @@ class Permutation(Basic):
         self._cyclic_form = cyclic_form
         return self.cyclic_form
 
-    @property
-    def reduced_cyclic_form(self):
-        return [a for a in self.cyclic_form if len(a) > 1]
+    def reduced_cyclic_form(self, base=0):
+        """Return permutation in cyclic form without singletons,
+        adding base to each element.
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation([0, 2, 1]).reduced_cyclic_form()
+        [[1, 2]]
+        >>> Permutation([0, 2, 1]).reduced_cyclic_form()
+        [[1, 2]]
+        """
+        return [[e + base for e in c] for c in self.cyclic_form if len(c) > 1]
 
     @property
     def size(self):
@@ -514,7 +492,7 @@ class Permutation(Basic):
         """
         a = self.array_form
         b = other.array_form
-        return perm_af_commutes_with(a, b)
+        return _af_commutes_with(a, b)
 
     def __pow__(self, n):
         """
@@ -856,12 +834,12 @@ class Permutation(Basic):
 
         See Also
         ========
-        perm_af_parity
+        _af_parity
         """
         if self._cyclic_form is not None:
             return (self.size - len(self._cyclic_form)) % 2
 
-        return perm_af_parity(self.array_form)
+        return _af_parity(self.array_form)
 
     @property
     def is_even(self):
@@ -1474,7 +1452,7 @@ class Permutation(Basic):
             d = rho.index(m)
             for i in range(d, m):
                 rho[i] = rho[i+1]
-            par = perm_af_parity(rho[:m])
+            par = _af_parity(rho[:m])
             if par == 1:
                 if d == m:
                     m -= 1

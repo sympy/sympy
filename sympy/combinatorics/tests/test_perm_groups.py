@@ -1,13 +1,13 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-DihedralGroup, AlternatingGroup, AbelianGroup
-from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
+    DihedralGroup, AlternatingGroup, AbelianGroup
+from sympy.combinatorics.permutations import Permutation, _af_mul, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
-_cmp_perm_lists, _verify_normal_closure
+    _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
 
 def test_new():
@@ -179,7 +179,7 @@ def test_coset_decomposition():
     assert not g.has_element(d)
     c = Permutation([1,0,2,3,5,4])
     v = g.coset_decomposition(c)
-    assert perm_af_muln(*v) == [1,0,2,3,5,4]
+    assert _af_mul(*v) == [1,0,2,3,5,4]
     assert g.has_element(c)
 
     a = Permutation([0,2,1])

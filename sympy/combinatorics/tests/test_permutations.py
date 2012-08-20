@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
-from sympy.combinatorics.permutations import (Permutation, perm_af_parity,
-    perm_af_mul, perm_af_muln, cyclic)
+from sympy.combinatorics.permutations import (Permutation, _af_parity,
+    _af_mul, _af_mul, cyclic)
 
 from sympy.utilities.pytest import raises
 
@@ -16,10 +16,11 @@ def test_Permutation():
     assert q.cycles == 2
     assert q*p == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert p*q == Permutation([6, 5, 3, 0, 2, 4, 1])
-    assert perm_af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
+    assert _af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
         [6, 5, 3, 0, 2, 4, 1]
 
     assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
+    assert cyclic([(2,3,5)], 3) == [[1, 2, 4], [0]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
@@ -61,8 +62,8 @@ def test_Permutation():
 
     assert Permutation([0, 4, 1, 3, 2]).parity() == 0
     assert Permutation([0, 1, 4, 3, 2]).parity() == 1
-    assert perm_af_parity([0, 4, 1, 3, 2]) == 0
-    assert perm_af_parity([0, 1, 4, 3, 2]) == 1
+    assert _af_parity([0, 4, 1, 3, 2]) == 0
+    assert _af_parity([0, 1, 4, 3, 2]) == 1
 
     s = Permutation([0])
 
@@ -185,14 +186,14 @@ def test_ranking():
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
-def test_muln():
+def test_mul():
     n = 6
     m = 8
     a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
     h = range(n)
     for i in range(m):
-        h = perm_af_mul(h, a[i])
-        h2 = perm_af_muln(*a[:i+1])
+        h = _af_mul(h, a[i])
+        h2 = _af_mul(*a[:i+1])
         assert h == h2
 
 def test_args():
