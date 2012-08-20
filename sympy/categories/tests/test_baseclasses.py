@@ -145,16 +145,8 @@ def test_diagram():
     assert d2 == Diagram(f, g)
     assert set(d2.expanded_generators) == set(d2.morphisms)
 
-    d = Diagram([g * f])
-    assert set(d.generators) == set([id_A, id_C, g * f])
-    assert d.generators_properties == Dict({g * f: empty, id_A: empty,
-                                            id_C: empty})
-    assert d.is_finite
-    assert set(d.morphisms) == set([id_A, id_C, g * f])
-    assert set(d2.expanded_generators) == set(d2.morphisms)
-    assert d.objects == FiniteSet(A, C)
-
-    assert Diagram([g * f]) == Diagram(g * f)
+    raises(ValueError, lambda: Diagram([g * f]))
+    raises(ValueError, lambda: Diagram(g * f))
 
     # Test equality, inequality and hash.
     d11 = Diagram([f])
@@ -488,7 +480,7 @@ def test_implication():
     assert imp.to_diagram("conclusion") == flattened_implication
 
     # Extra objects in conclusion.
-    raises(ValueError, lambda: Implication(Diagram(f), Diagram(g * f)))
+    raises(ValueError, lambda: Implication(Diagram(f), Diagram(g, f, g * f)))
 
     # Test diff.
     assert imp.diff() == FiniteSet([g * f])

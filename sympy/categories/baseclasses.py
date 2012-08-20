@@ -939,6 +939,10 @@ class Diagram(Basic):
         each of which has no properties.  Otherwise, all arguments are
         interpreted as morphisms.
 
+        Raises a :class:`ValueError` if a composite morphism whose
+        components do not all belong to the diagram is supplied as a
+        generator.
+
         Raises a :class:`ValueError` if it encounters a morphism which
         is not an expanded generator.
 
@@ -1022,6 +1026,16 @@ class Diagram(Basic):
             id_obj = IdentityMorphism(obj)
             if id_obj not in generators:
                 generators[id_obj] = FiniteSet()
+
+        # Check if, among the generators, there composites whose
+        # components are not among the generators.
+        for morphism in generators:
+            if isinstance(morphism, CompositeMorphism):
+                for component in morphism:
+                    if component not in generators:
+                        raise ValueError(
+                            "Components of all composites must be listed "
+                            "as generators, too.")
 
         return Basic.__new__(cls, Dict(generators), FiniteSet(objects))
 
@@ -1937,7 +1951,7 @@ class Diagram(Basic):
         >>> C = Object("C")
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
-        >>> d = Diagram({f: "unique", g * f: "veryunique"})
+        >>> d = Diagram({g: [], f: "unique", g * f: "veryunique"})
         >>> d1 = d.subdiagram_from_objects([A, B])
         >>> d1 == Diagram({f: "unique"})
         True
@@ -2140,7 +2154,7 @@ class Implication(Basic):
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> premise = Diagram(f, g)
-    >>> conclusion = Diagram({g * f: "unique"})
+    >>> conclusion = Diagram({f: [], g: [], g * f: "unique"})
     >>> imp = Implication(premise, conclusion)
     >>> pprint(imp)
     {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
@@ -2154,7 +2168,8 @@ class Implication(Basic):
     morphisms supplied at creation:
 
     >>> pprint(imp.conclusion)
-    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:C-->C: EmptySet()}
+    {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+     ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
 
     To get the morphisms that present some interest, use the method
     ``diff``.  This method returns the set of those morphisms which
@@ -2199,7 +2214,7 @@ class Implication(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> premise = Diagram(f, g)
-        >>> conclusion = Diagram({g * f: "unique"})
+        >>> conclusion = Diagram({f:[], g: [], g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp)
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
@@ -2228,7 +2243,7 @@ class Implication(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> premise = Diagram(f, g)
-        >>> conclusion = Diagram({g * f: "unique"})
+        >>> conclusion = Diagram({f:[], g: [], g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.premise)
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), f:A-->B: Em
@@ -2254,10 +2269,11 @@ class Implication(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> premise = Diagram(f, g)
-        >>> conclusion = Diagram({g * f: "unique"})
+        >>> conclusion = Diagram({f: [], g: [], g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.conclusion)
-        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:C-->C: EmptySet()}
+        {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
+         ptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
 
 
         """
@@ -2285,7 +2301,7 @@ class Implication(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> premise = Diagram(f, g)
-        >>> conclusion = Diagram({g * f: "unique"})
+        >>> conclusion = Diagram({f: [], g: [], g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.to_diagram())
         {g*f:A-->C: {unique}, id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: Em
@@ -2318,7 +2334,7 @@ class Implication(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> premise = Diagram(f, g)
-        >>> conclusion = Diagram({g * f: "unique"})
+        >>> conclusion = Diagram({f: [], g: [], g * f: "unique"})
         >>> imp = Implication(premise, conclusion)
         >>> pprint(imp.diff())
         {g*f:A-->C}
