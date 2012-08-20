@@ -373,7 +373,7 @@ class Permutation(Basic):
 
     @property
     def reduced_cyclic_form(self):
-        return [a for a in self.cyclic_form if len(a)>1]
+        return [a for a in self.cyclic_form if len(a) > 1]
 
     @property
     def size(self):
@@ -388,6 +388,12 @@ class Permutation(Basic):
         4
         """
         return len(self.array_form)
+
+    @property
+    def support(self):
+        """Return the elements that are out of place in the array form."""
+        a = self.array_form
+        return [i for i, e in enumerate(self.array_form) if a[i] != i]
 
     def __add__(self, other):
         """
