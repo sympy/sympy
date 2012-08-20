@@ -8,6 +8,8 @@ def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
 
+    assert p.support == range(7)
+    assert q.support == [0, 2, 3, 4, 5, 6]
     assert Permutation(p.cyclic_form).array_form == p.array_form
     assert p.cardinality == 5040
     assert q.cardinality == 5040
