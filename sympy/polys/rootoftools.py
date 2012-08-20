@@ -676,7 +676,8 @@ def bisect(f, a, b, tol):
     Implements bisection. This function is used in RootOf.eval_rational() and
     it needs to be robust.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import S
     >>> from sympy.polys.rootoftools import bisect
