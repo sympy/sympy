@@ -28,7 +28,9 @@ from optparse import OptionParser
 try:
     import coverage
 except ImportError:
-    print "You need to install module coverage. See http://nedbatchelder.com/code/coverage/"
+    print ("You need to install module coverage.\n"
+    "See http://nedbatchelder.com/code/coverage/ or \n"
+    "https://launchpad.net/ubuntu/+source/python-coverage/")
     sys.exit(-1)
 
 REPORT_DIR = "covhtml"

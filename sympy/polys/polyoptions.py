@@ -2,6 +2,7 @@
 
 from sympy.core import S, Basic, sympify
 from sympy.utilities import numbered_symbols, topological_sort
+from sympy.utilities.iterables import has_dups
 
 from sympy.polys.polyerrors import (
     GeneratorsError,
@@ -280,7 +281,7 @@ class Gens(Option):
 
         if gens == (None,):
             gens = ()
-        elif len(set(gens)) != len(gens):
+        elif has_dups(gens):
             raise GeneratorsError("duplicated generators: %s" % str(gens))
         elif any(gen.is_commutative is False for gen in gens):
             raise GeneratorsError("non-commutative generators: %s" % str(gens))

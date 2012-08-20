@@ -22,11 +22,26 @@ def int_tested(*j):
     ...
     ValueError: All arguments were not integers
 
+    Input can be a single number, multiple numbers, or a list of numbers:
+    >>> int_tested(1)
+    1
+    >>> int_tested(1, 2)
+    [1, 2]
+    >>> int_tested([1])
+    [1]
+    >>> int_tested([1, 2])
+    [1, 2]
     """
-    i = tuple([int(i) for i in j])
-    if i != j:
+    try:
+        j[0][0]
+        as_int = False
+        j = j[0]
+    except TypeError:
+        as_int = len(j) == 1
+    i = [int(i) for i in j]
+    if i != list(j):
         raise ValueError('all arguments were not integers')
-    if len(i) == 1:
+    if as_int:
         return i[0]
     return i
 

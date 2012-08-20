@@ -1,4 +1,5 @@
-from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation, _new_from_array_form
 
 def AbelianGroup(*cyclic_orders):
