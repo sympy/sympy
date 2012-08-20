@@ -240,6 +240,7 @@ class _JGraph(object):
                 gens[r] = self.jg[j]
                 r += 1
         self.r = r
+
     def remove_edge(self, i, ig):
         """
         remove edge from i to ig
@@ -349,6 +350,40 @@ class PermutationGroup(Basic):
     [12] http://en.wikipedia.org/wiki/Nilpotent_group
 
     """
+
+    def __new__(cls, *args, **kw_args):
+        """
+        The default constructor.
+        """
+        obj = Basic.__new__(cls, *args, **kw_args)
+        obj._generators = args[0]
+        obj._order = None
+        obj._center = []
+        obj._is_abelian = None
+        obj._is_transitive = None
+        obj._is_sym = None
+        obj._is_alt = None
+        obj._is_primitive = None
+        obj._transitivity_degree = None
+        obj._max_div = None
+        size = len(args[0][0].array_form)
+        obj._r = len(obj._generators)
+        if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
+                raise ValueError("Permutation group size is not correct")
+        obj._degree = size
+
+        # these attributes are assigned after running schreier_sims
+        obj._base = []
+        obj._coset_repr = []
+        obj._coset_repr_n = []
+        obj._stabilizers_gens = []
+        obj._strong_gens = []
+        obj._basic_orbits = []
+        obj._transversals = []
+
+        # these attributes are assigned after running _random_pr_init
+        obj._random_gens = []
+        return obj
 
     def __eq__(self, gr):
         """
