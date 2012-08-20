@@ -1,6 +1,7 @@
 from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
-                              Diagram, Category, Implication)
+                              DerivedMorphism, Diagram, Category,
+                              Implication)
 from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
@@ -84,6 +85,15 @@ def test_morphisms():
 
     raises(ValueError, lambda: NamedMorphism(A, B, ""))
     raises(NotImplementedError, lambda: Morphism(A, B))
+
+    # Test derived morphisms.
+    assert DerivedMorphism(A, B, "f", f) != f
+
+    g = DerivedMorphism(A, B, "g", f)
+    assert g.original_morphism == f
+
+    raises(ValueError, lambda: DerivedMorphism(A, B, "", f))
+    raises(ValueError, lambda: DerivedMorphism(A, B, "f", None))
 
 def test_diagram():
     A = Object("A")

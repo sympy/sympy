@@ -2028,6 +2028,14 @@ def test_sympy__categories__baseclasses__NamedMorphism():
     from sympy.categories import Object, NamedMorphism
     assert _test_args(NamedMorphism(Object("A"), Object("B"), "f"))
 
+def test_sympy__categories__baseclasses__DerivedMorphism():
+    from sympy.categories import Object, NamedMorphism, DerivedMorphism
+    A = Object("A")
+    B = Object("B")
+    f = NamedMorphism(A, B, "f")
+    g = DerivedMorphism(A, B, "g", f)
+    assert _test_args(g)
+
 def test_sympy__categories__baseclasses__CompositeMorphism():
     from sympy.categories import Object, NamedMorphism, CompositeMorphism
     A = Object("A")

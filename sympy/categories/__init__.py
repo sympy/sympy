@@ -18,8 +18,9 @@ from
 """
 
 from baseclasses import (Object, Morphism, IdentityMorphism,
-                         NamedMorphism, CompositeMorphism, Category,
-                         Diagram, Implication)
+                         NamedMorphism, CompositeMorphism,
+                         DerivedMorphism, Category, Diagram,
+                         Implication)
 
 from diagram_drawing import (DiagramGrid, XypicDiagramDrawer,
                              xypic_draw_diagram, preview_diagram)

@@ -573,6 +573,55 @@ class Category(Basic):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
 
+class DerivedMorphism(NamedMorphism):
+    """
+    Represents a named morphism which has been derived from another
+    morphism.
+
+    No actual connection between the name, domain, or codomain of this
+    morphism and the name, domain, or codomain is enforced.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import NamedMorphism, Object, DerivedMorphism
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = DerivedMorphism(A, B, "g", f)
+    >>> g.original_morphism
+    NamedMorphism(Object("A"), Object("B"), "f")
+
+    """
+    def __new__(cls, domain, codomain, name, original_morphism):
+        if not name:
+            raise ValueError("Empty morphism names not allowed.")
+
+        if not original_morphism:
+            raise ValueError("An original morphism must be specified.")
+
+        return Basic.__new__(cls, domain, codomain, Symbol(name),
+                             original_morphism)
+
+    @property
+    def original_morphism(self):
+        """
+        Returns the original morphism.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import NamedMorphism, Object, DerivedMorphism
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = DerivedMorphism(A, B, "g", f)
+        >>> g.original_morphism
+        NamedMorphism(Object("A"), Object("B"), "f")
+
+        """
+        return self.args[3]
+
 class Diagram(Basic):
     """
     This class represents a diagram in a certain category.
