@@ -131,8 +131,8 @@ Accuracy and error handling
 
 When the input to ``N`` or ``evalf`` is a complicated expression, numerical
 error propagation becomes a concern. As an example, consider the 100'th
-Fibonacci number and the excellent (but not exact) approximation φ^100 / √5
-where φ is the golden ratio. With ordinary floating-point arithmetic,
+Fibonacci number and the excellent (but not exact) approximation `\varphi^{100} / \sqrt{5}`
+where `\varphi` is the golden ratio. With ordinary floating-point arithmetic,
 subtracting these numbers from each other erroneously results in a complete
 cancellation:
 

@@ -133,18 +133,42 @@ htmlhelp_basename = 'SymPydoc'
 #latex_font_size = '10pt'
 
 # Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, document class [howto/manual]).
-latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
-                        'SymPy Development Team', 'manual')]
+# (source start file, target name, title, author, document class [howto/manual], toctree_only).
+# toctree_only is set to True so that the start file document itself is not included in the
+# output, only the documents referenced by it via TOC trees.  The extra stuff in the master
+# document is intended to show up in the HTML, but doesn't really belong in the LaTeX output.
+latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
+                    'SymPy Development Team', 'manual', True)]
 
 # Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
+# Tweaked to work with XeTeX.
+latex_elements = {
+  'babel':     '',
+  'fontenc': r'''
+\usepackage{amssymb}
+\usepackage{fontspec}
+\defaultfontfeatures{Mapping=tex-text}
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+''',
+  'fontpkg':   '',
+  'inputenc':  '',
+  'utf8extra': '',
+  'preamble':  ''
+}
+
+# SymPy logo on title page
+latex_logo = '_static/sympylogo.png'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
 
-# If false, no module index is generated.
-#latex_use_modindex = True
+# Show page numbers next to internal references
+latex_show_pagerefs = True
+
+# We use False otherwise the module index gets generated twice.
+latex_use_modindex = False
 
 default_role = 'math'
 pngmath_divpng_args = ['-gamma 1.5','-D 110']

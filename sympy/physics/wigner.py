@@ -617,7 +617,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
       `l_2 \ge |m_2|`, `l_3 \ge |m_3|`
 
     - non-zero only for an even sum of the `l_i`, i.e.
-      `J=l_1+l_2+l_3=2n` for `n` in `\Bold{N}`
+      `J = l_1 + l_2 + l_3 = 2n` for `n` in `\mathbb{N}`
 
     ALGORITHM:
 

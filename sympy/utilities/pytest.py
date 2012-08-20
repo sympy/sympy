@@ -53,6 +53,7 @@ if not USE_PYTEST:
 
         Note that you cannot test multiple statements via
         ``with raises``:
+
         >>> with raises(ZeroDivisionError): # doctest: +SKIP
         ...     n = 1/0    # will execute and raise, aborting the ``with``
         ...     n = 9999/0 # never executed
@@ -63,6 +64,7 @@ if not USE_PYTEST:
 
         To test multiple statements, you'll need a separate ``with``
         for each:
+
         >>> with raises(ZeroDivisionError): # doctest: +SKIP
         ...     n = 1/0    # will execute and raise
         ... with raises(ZeroDivisionError):

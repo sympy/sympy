@@ -42,11 +42,6 @@
 .. % The abstract should be a paragraph or two long, and describe the
 .. % scope of the document.
 
-.. math ::
-
-    \newcommand{\W}{\wedge}
-    \newcommand{\bm}{\boldsymbol}
-
 .. topic:: Abstract
 
    This document describes the extension of the latex module for  :mod:`sympy`. The
@@ -76,19 +71,19 @@ follows::
 :mod:`latex_ex` modules the results are
 
 
-.. csv-table:: 
-	:header: " Ascii String ", " LaTeX Output "
+.. csv-table::
+	:header: Ascii String, LaTeX Output
 	:widths: 15, 15
 
-	 " ``xalpha`` ", " :math:`x\alpha` "   
-	 " ``Gammavec__1_rho`` ", " :math:`\vec{\Gamma}^{1}_{\rho}` "
-	 " ``delta__j_k`` ", " :math:`\delta^{j}_{k}` " 
+	``xalpha``,            :math:`x\alpha`
+	``Gammavec__1_rho``,   :math:`\vec{\Gamma}^{1}_{\rho}`
+	``delta__j_k``,        :math:`\delta^{j}_{k}`
 
 
 A single underscore denotes a subscript and a double undscore a superscript.
 
 In addition to all normal LaTeX accents boldmath is supported so that
-``omegaomegabm``:math:`\rightarrow \Omega\bm{\Omega}` so an accent (or boldmath)
+``omegaomegabm``:math:`\rightarrow \Omega\boldsymbol{\Omega}` so an accent (or boldmath)
 only applies to the character (characters in the case of the string representing
 a greek letter) immediately preceeding the accent command.
 
@@ -165,19 +160,20 @@ Helper Functions for Extending LatexPrinter Class
    in the text string argument of ``Format`` as follows.  It is assumed that the
    text string ``fmt`` always contains four integers separated by blanks.
 
-   .. csv-table:: 
-	:header: " Position ", " Switch ", " Values "    
+   .. csv-table::
+        :delim: ;
+	:header: Position, Switch, Values
 	:widths: 4, 6, 40
 
-	"   :math:`1^{st}` ", " symbol ", " 0: Use symbol encoding in ``latex.py`` "
-	"   ", "   ", " 1: Use extended symbol encoding in ``latex_ex.py`` " 
-	"   :math:`2^{nd}` ", " function ", " 0: Use symbol encoding in  ``latex.py``. Print functions args,  use ``\operator{ }`` format. "
-	"   ", "   ", " 1: Do not print function args. Do not use ``\operator{}`` format. Suppress printing of function arguments. "
-	"   :math:`3^{d}` ", " partial derivative", " 0: Use partial derivative format in ``latex.py``.  "
-	"   ", "   ", " 1: Use format :math:`\partial_{x}` instead of :math:`\partial/\partial x`. "
-	"   :math:`4^{th}` ", " multivector ", " 1: Print entire multivector on one line. "
-	"   ", "   ", " 2: Print each grade of multivector on one line. " 
-	"   ", "   ", " 3: Print each base of multivector on one line. "
+	:math:`1^{st}`;   symbol;               0: Use symbol encoding in ``latex.py``
+	; ;                                     1: Use extended symbol encoding in ``latex_ex.py``
+	:math:`2^{nd}`;   function;             0: Use symbol encoding in  ``latex.py``. Print functions args, use ``\operator{ }`` format.
+	; ;                                     1: Do not print function args. Do not use ``\operator{}`` format. Suppress printing of function arguments.
+	:math:`3^{rd}`;   partial derivative;   0: Use partial derivative format in ``latex.py``.
+	; ;                                     1: Use format :math:`\partial_{x}` instead of :math:`\partial/\partial x`.
+	:math:`4^{th}`;   multivector;          1: Print entire multivector on one line.
+	; ;                                     2: Print each grade of multivector on one line.
+	; ;                                     3: Print each base of multivector on one line.
 
 
 .. function:: LaTeX(expr, inline=True)
@@ -237,14 +233,14 @@ remain in the program and have no effect on program output.
 
    :func:`pdiff_format` allows one to change the latex format options for
    :class:`sympy` partial derivative output independent of other format switches
-   (see :math:`3^{d}` switch in Table I).
+   (see :math:`3^{rd}` switch in Table I).
 
 
 .. function:: MV_format(mv_fmt)
 
    :func:`MV_format` allows one to change the latex format options for
    :class:`sympy` partial derivative output independent of other format switches
-   (see :math:`3^{d}` switch in Table I).
+   (see :math:`3^{rd}` switch in Table I).
 
 
 Examples
@@ -268,7 +264,7 @@ Start of Program Output
   :nowrap:
 
   \begin{equation*}
-  x = \frac{{\alpha}_{1} {}\bm{x}}{{\delta}^{{\nu}{\gamma}}_{r}}
+  x = \frac{{\alpha}_{1} {}\boldsymbol{x}}{{\delta}^{{\nu}{\gamma}}_{r}}
   \end{equation*}
 
 
@@ -277,7 +273,7 @@ End of Program Output
 The program :program:`latexdemo.py` demonstrates the extended symbol naming
 conventions in :mod:`latex_ex`.   the statment ``Format()`` starts the
 :class:`LatexPrinter` driver with default formatting. Note that on the right
-hand side of the output that *xbm* gives :math:`\bm{x}`, *alpha_1* gives
+hand side of the output that *xbm* gives :math:`\boldsymbol{x}`, *alpha_1* gives
 :math:`\alpha_{1}` and  *delta__nugamma_r* gives :math:`\delta^{\nu\gamma}_{r}`.
 Also the fraction is printed correctly.  The statment ``print 'x =',x`` sends
 the string ``'x = '+str(x)`` to the output processor (:func:`xdvi`).  Because
@@ -392,7 +388,7 @@ Curl :math:`E` and Div :math:`B` equations
   :nowrap:
 
   \begin{align*}
-  <\nabla F>_3 & =   \left( -\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}\W {\gamma}_{x}\W {\gamma}_{y} \\ & + \left( -\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}\W {\gamma}_{x}\W {\gamma}_{z} \\ & + \left( -\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}\W {\gamma}_{y}\W {\gamma}_{z} \\ & + \left( \partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}\W {\gamma}_{y}\W {\gamma}_{z}\end{align*}
+  <\nabla F>_3 & =   \left( -\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}\wedge {\gamma}_{x}\wedge {\gamma}_{y} \\ & + \left( -\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}\wedge {\gamma}_{x}\wedge {\gamma}_{z} \\ & + \left( -\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}\wedge {\gamma}_{y}\wedge {\gamma}_{z} \\ & + \left( \partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}\wedge {\gamma}_{y}\wedge {\gamma}_{z}\end{align*}
 
 
 
