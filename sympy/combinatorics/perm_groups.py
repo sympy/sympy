@@ -1,7 +1,7 @@
 from sympy.combinatorics import Permutation
 from sympy.core import Basic
-from sympy.combinatorics.permutations import perm_af_mul, \
- _new_from_array_form, perm_af_commutes_with, perm_af_invert, perm_af_muln
+from sympy.combinatorics.permutations import (_new_from_array_form,
+    _af_commutes_with, _af_invert, _af_mul)
 from random import randrange, choice
 from sympy.functions.combinatorial.factorials import factorial
 from math import log
@@ -115,8 +115,8 @@ class _JGraph(object):
                 if g != jginn:
                     # cycle consisting of two edges;
                     # replace jginn by g and insert h = g**-1*jginn
-                    g1 = perm_af_invert(g)
-                    h = perm_af_mul(g1, jginn)
+                    g1 = _af_invert(g)
+                    h = _af_mul(g1, jginn)
                     jg[ vertex[i].perm[nn] ] = g
                     self.insert(h, alpha)
             else:  # new edge
@@ -140,10 +140,10 @@ class _JGraph(object):
                         p = jg[ vertex[i].perm[nn] ]
 
                         if i > j:
-                            p = perm_af_invert(p)
+                            p = _af_invert(p)
                         ap.append(p)
                     ap.reverse()
-                    h = perm_af_muln(*ap)
+                    h = _af_mul(*ap)
                     self.remove_edge(cycle[cmin], cycle[cmin + 1])
                     self.insert(h, alpha)
 
@@ -294,7 +294,7 @@ class _JGraph(object):
             ag = g[alpha]
 
             if G._coset_repr[ag] == None:
-                gen1 = perm_af_mul(g, stg[-1])
+                gen1 = _af_mul(g, stg[-1])
                 G._coset_repr[ag] = gen1
                 G._coset_repr_n += 1
                 sta.append(ag)
@@ -1088,12 +1088,12 @@ class PermutationGroup(Basic):
             for h in u[i]:
                 if h[i] == x:
                     a.append(h)
-                    p2 = perm_af_invert(h)
-                    g1 = perm_af_mul(p2, g1)
+                    p2 = _af_invert(h)
+                    g1 = _af_mul(p2, g1)
                     break
             else:
                 return False
-        if perm_af_muln(*a) == g:
+        if _af_mul(*a) == g:
             return a
         return False
 
@@ -1149,12 +1149,12 @@ class PermutationGroup(Basic):
                     a.append(h)
                     a1[i] = j
                     rank += j*base[i1]
-                    p2 = perm_af_invert(h)
-                    g1 = perm_af_mul(p2, g1)
+                    p2 = _af_invert(h)
+                    g1 = _af_mul(p2, g1)
                     break
             else:
                 return None
-        if perm_af_muln(*a) == g:
+        if _af_mul(*a) == g:
             return rank
         return None
 
@@ -1203,7 +1203,7 @@ class PermutationGroup(Basic):
             rank, c = divmod(rank, un[i])
             v[j] = c
         a = [u[i][v[i]] for i in range(m)]
-        h = perm_af_muln(*a)
+        h = _af_mul(*a)
         if af:
             return h
         else:
@@ -1389,12 +1389,12 @@ class PermutationGroup(Basic):
                 N = []
                 for a in A:
                     for g in gens[:i+1]:
-                        ag = perm_af_mul(a, g)
+                        ag = _af_mul(a, g)
                         if tuple(ag) not in set_element_list:
                             # produce G_i*g
                             for d in D:
                                 order += 1
-                                ap = perm_af_mul(d, ag)
+                                ap = _af_mul(d, ag)
                                 if af:
                                     yield ap
                                 else:
@@ -1447,7 +1447,7 @@ class PermutationGroup(Basic):
                 h -= 1
                 stg.pop()
                 continue
-            p = perm_af_mul(stg[-1], u[h][pos[h]])
+            p = _af_mul(stg[-1], u[h][pos[h]])
             pos[h] += 1
             stg.append(p)
             h += 1
@@ -1529,7 +1529,7 @@ class PermutationGroup(Basic):
             for y in gens:
                 if y <= x:
                     continue
-                if not perm_af_commutes_with(x, y):
+                if not _af_commutes_with(x, y):
                     self._is_abelian = False
                     return False
         return True
@@ -1665,7 +1665,7 @@ class PermutationGroup(Basic):
         gens1 = [p.array_form for p in gr.generators]
         for g1 in gens1:
             for g2 in gens2:
-                p = perm_af_muln(g1, g2, perm_af_invert(g1))
+                p = _af_mul(g1, g2, _af_invert(g1))
                 if not self.coset_decomposition(p):
                     return False
         return True
@@ -2504,7 +2504,7 @@ class PermutationGroup(Basic):
                 if not p:
                     cri.append(p)
                 else:
-                    cri.append(perm_af_invert(p))
+                    cri.append(_af_invert(p))
             JGr.jerrum_filter(alpha, cri)
             if self._coset_repr_n > 1:
                 base[alpha] = self._coset_repr_n
