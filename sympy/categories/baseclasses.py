@@ -762,37 +762,13 @@ class Diagram(Basic):
 
     When the multigraph defined by the generators has cycles, it may
     be useful to know the strongly connected components of that
-    multigraph.
-
-    Consider the following infinite diagram::
-
-    >>> h = NamedMorphism(C, A, "h")
-    >>> D = Object("D")
-    >>> k = NamedMorphism(D, A, "k")
-    >>> d = Diagram(f, g, h, k)
-    >>> pprint(d)
-    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), id:D-->D: E
-    mptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet(), h:C-->A: EmptySet(), k:D-
-    ->A: EmptySet()}
-
-    The multigraph of the generators has two strongly connected
-    components in this case: `\{A, B, C\}` and `\{D\}`.
-
-    >>> component1 = d.subdiagram_from_objects([A, B, C])
-    >>> d.objects_components == Dict({A: component1, B: component1, C: component1,
-    ...                               D: D})
-    True
-
-    Remark that one-vertex strongly-connected components are not
-    represented as :class:`Diagram`'s, but just as objects.
-
-    A step further is computing the condensation of the diagram.  The
-    condensation of a digraph is the graph obtained by contracting
-    every strongly connecting component of the digraph to a vertex and
-    by connecting two such new vertices with an edge if there is an
-    edge between two original vertices located in the corresponding
-    strongly connected components [WCon].  This condensation of a
-    digraph is a directed acyclic graph [WCon].
+    multigraph.  A step further is computing the condensation of the
+    diagram.  The condensation of a digraph is the graph obtained by
+    contracting every strongly connecting component of the digraph to
+    a vertex and by connecting two such new vertices with an edge if
+    there is an edge between two original vertices located in the
+    corresponding strongly connected components [WCon].  This
+    condensation of a digraph is a directed acyclic graph [WCon].
 
     If in a :class:`Diagram` there is a morphism `f:A\rightarrow B`
     with properties ``props``, the condensation will contain a
@@ -800,14 +776,28 @@ class Diagram(Basic):
     this morphism will have the same name and the same properties as
     the original morphism.
 
-    Consider the following slight modification of the previous
-    example::
+    Consider the following infinite diagram::
 
+    >>> h = NamedMorphism(C, A, "h")
+    >>> D = Object("D")
+    >>> k = NamedMorphism(D, A, "k")
     >>> d = Diagram({f: [], g: [], h: [], k: "blaster"})
+    {id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C: EmptySet(), id:D-->D: E
+    mptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet(), h:C-->A: EmptySet(), k:D-
+    ->A: {blaster}}
+
+    The multigraph of the generators has two strongly connected
+    components in this case: `\{A, B, C\}` and `\{D\}`.  The only
+    morphism which does not belong to either strongly connected
+    component is `k:D\rightarrow A`.
+
     >>> component1 = d.subdiagram_from_objects([A, B, C])
     >>> condensation_k = NamedMorphism(D, component1, "k")
     >>> d.condensation == Diagram({condensation_k: "blaster"})
     True
+
+    Remark that one-vertex strongly-connected components are not
+    represented as :class:`Diagram`'s, but just as objects.
 
     Another powerful, graph-theory based, infinite diagram analysis
     tool is the notion of an _expanded generator_.  Consider the
@@ -1270,9 +1260,8 @@ class Diagram(Basic):
 
         return True
 
-    @property
     @cacheit
-    def objects_components(self):
+    def _objects_components(self):
         """
         Returns a :class:`Dict` mapping objects to the strongly
         connected component they belong to.  Strongly connected
@@ -1280,26 +1269,6 @@ class Diagram(Basic):
 
         One-vertex strongly connected components are represented using
         the corresponding objects instead of one-object diagrams.
-
-        Examples
-        ========
-
-        >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import Dict
-        >>> A = Object("A")
-        >>> B = Object("B")
-        >>> C = Object("C")
-        >>> D = Object("D")
-        >>> f = NamedMorphism(A, B, "f")
-        >>> g = NamedMorphism(B, C, "g")
-        >>> h = NamedMorphism(C, A, "h")
-        >>> k = NamedMorphism(D, A, "k")
-        >>> d = Diagram(f, g, h, k)
-        >>> component1 = d.subdiagram_from_objects([A, B, C])
-        >>> d.objects_components == Dict({A: component1, B: component1,
-        ...                               C: component1, D: D})
-        True
-
         """
         # Build the actual sets of objects corresponding to each
         # strongly connected component.
@@ -1379,7 +1348,7 @@ class Diagram(Basic):
 
         [WCon] http://en.wikipedia.org/wiki/Condensation_%28graph_theory%29
         """
-        objects_components = self.objects_components
+        objects_components = self._objects_components()
 
         new_generators = {}
 
@@ -1723,7 +1692,7 @@ class Diagram(Basic):
         False
 
         """
-        objects_components = self.objects_components
+        objects_components = self._objects_components()
         component_A = objects_components[A]
         component_B = objects_components[B]
         condensation = self.condensation

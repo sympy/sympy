@@ -297,14 +297,6 @@ def test_diagram():
     d2 = Diagram(f_, g_, h_)
     assert not d.is_finite
 
-    oc = d.objects_components
-    assert oc[A] == d1
-    assert oc[B] == d1
-    assert oc[C] == d1
-    assert oc[A_] == d2
-    assert oc[B_] == d2
-    assert oc[C_] == d2
-
     c = d.condensation
     assert c.objects == FiniteSet(d1, d2)
     assert c.generators_properties == Dict({
