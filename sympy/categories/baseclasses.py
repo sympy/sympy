@@ -1607,9 +1607,10 @@ class Diagram(Basic):
                                                 0, len(morphism) - 1, set([]))
 
     @property
+    @cacheit
     def expanded_generators(self):
         """
-        Enumerates the expanded generators of this :class:`Diagram`.
+        Produces the expanded generators of this :class:`Diagram`.
 
         Expanded generators include all morphisms which are obtained
         by composing generators, without repeating any one of them.
@@ -1643,6 +1644,8 @@ class Diagram(Basic):
 
         # This counter is set to 1 just to pass the conditions in the
         # head of the loop at the first iteration.
+        expanded_generators = []
+
         morphisms_yielded_at_round = 1
         old_round = 0
         for (morphism, current_round) in self._morphisms_in_rounds():
@@ -1650,14 +1653,16 @@ class Diagram(Basic):
                 if not morphisms_yielded_at_round:
                     # No morphisms yielded at the current round; end
                     # of extended generators reached.
-                    return
+                    return Tuple(*expanded_generators)
 
                 old_round = current_round
                 morphisms_yielded_at_round = 0
 
             if self._is_expanded_generator(morphism):
                 morphisms_yielded_at_round += 1
-                yield morphism
+                expanded_generators.append(morphism)
+
+        return Tuple(*expanded_generators)
 
     @property
     def objects(self):
