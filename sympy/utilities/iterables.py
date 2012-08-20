@@ -1013,6 +1013,27 @@ def has_dups(seq):
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
 
+def has_variety(seq):
+    """Return True if there are any different elements in ``seq``.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import has_variety
+    >>> from sympy import Dict, Set
+
+    >>> has_variety((1, 2, 1))
+    True
+    >>> has_variety((1, 1, 1))
+    False
+    """
+    for i, s in enumerate(seq):
+        if i == 0:
+            sentinel = s
+        else:
+            if s != sentinel:
+                return True
+    return False
+
 def uniq(seq):
     """
     Remove repeated elements from an iterable, preserving order of first
