@@ -43,7 +43,7 @@ Angular velocity is defined as being positive in the direction which causes the
 orientation angles to increase (for simple rotations, or series of simple
 rotations).
 
-.. image:: kin_angvel1.svg
+.. image:: kin_angvel1.*
    :height: 350
    :width: 250
    :align: center
@@ -84,7 +84,7 @@ angular velocities of multiple bodies and frames. The theorem follows:
 
 This is also shown in the following example:
 
-.. image:: kin_angvel2.svg
+.. image:: kin_angvel2.*
    :height: 300
    :width: 450
    :align: center
@@ -107,7 +107,7 @@ to the previous body in order to be fully defined (and the first body needs
 to be defined in the desired reference frame). The following figure shows an
 example of when using this theorem can make things easier.
 
-.. image:: kin_angvel3.svg
+.. image:: kin_angvel3.*
    :height: 250
    :width: 400
    :align: center
@@ -217,7 +217,7 @@ acceleration vectors.
 
 We can find these quantities for a simple example easily:
 
-.. image:: kin_1.svg
+.. image:: kin_1.*
    :height: 300
    :width: 300
    :align: center
@@ -256,7 +256,7 @@ There will often be cases when the velocity of a point is desired and a related
 point's velocity is known. For the cases in which we have two points fixed on a
 rigid body, we use the 2-Point Theorem:
 
-.. image:: kin_2pt.svg
+.. image:: kin_2pt.*
    :height: 300
    :width: 300
    :align: center
@@ -277,7 +277,7 @@ of the point :math:`P` in :math:`\mathbf{N}` as follows:
 When only one of the two points is fixed on a body, the 1 point theorem is used
 instead.
 
-.. image:: kin_1pt.svg
+.. image:: kin_1pt.*
    :height: 400
    :width: 400
    :align: center
@@ -302,7 +302,7 @@ the velocity of the point :math:`P` is known in the frame associated with body
 
 Examples of applications of the 1 point and 2 point theorem follow.
 
-.. image:: kin_2.svg
+.. image:: kin_2.*
    :height: 300
    :width: 400
    :align: center
@@ -346,7 +346,7 @@ point :math:`P` now.
   \mathbf{\hat{n}_y} + R\dot{u_3}\mathbf{\hat{b}_y} - R u_3^2
   \mathbf{\hat{b}_x}\\
 
-.. image:: kin_3.svg
+.. image:: kin_3.*
    :height: 200
    :width: 200
    :align: center
@@ -370,7 +370,7 @@ point :math:`O`'s velocity is zero in :math:`\mathbf{N}`.
   \times l \mathbf{\hat{c}_x}\\
   ^\mathbf{N}\mathbf{v}^Q &= u_1 l\mathbf{\hat{b}_y}+u_2 l\mathbf{\hat{c}_y}\\
 
-.. image:: kin_4.svg
+.. image:: kin_4.*
    :height: 400
    :width: 300
    :align: center
@@ -404,7 +404,7 @@ rather, rolling without slip. Two bodies are said to be rolling without slip if
 and only if the point of contact on each body has the same velocity in another
 frame. See the following figure:
 
-.. image:: kin_rolling.svg
+.. image:: kin_rolling.*
    :height: 250
    :width: 450
    :align: center
@@ -451,7 +451,7 @@ Note that the angular velocity can be defined in an alternate way: ::
 Both upon frame creation during ``orientnew`` and when calling ``set_ang_vel``,
 the angular velocity is set in both frames involved, as seen above.
 
-.. image:: kin_angvel2.svg
+.. image:: kin_angvel2.*
    :height: 300
    :width: 450
    :align: center
@@ -525,7 +525,7 @@ otherwise.
 Next is a description of the 2 point and 1 point theorems, as used in
 ``sympy``.
 
-.. image:: kin_2.svg
+.. image:: kin_2.*
    :height: 300
    :width: 400
    :align: center
@@ -547,7 +547,7 @@ First is the translating, rotating disc. ::
 
 We will also cover implementation of the 1 point theorem.
 
-.. image:: kin_4.svg
+.. image:: kin_4.*
    :height: 400
    :width: 300
    :align: center

@@ -72,58 +72,62 @@ def process_equals(xstr):
     return(xstr)
 
 class LatexPrinter(Printer):
-    """
+    r"""
     A printer class which converts an expression into its LaTeX equivalent.
     This class extends the LatexPrinter class currently in sympy in the
     following ways:
 
-        1. Variable and function names can now encode multiple Greek symbols,
-           number, Greek, and roman super and subscripts and accents plus bold
-           math in an alphanumeric ASCII string consisting of ``[A-Za-z0-9_]``
-           symbols
+        1.  Variable and function names can now encode multiple Greek symbols,
+            number, Greek, and roman super and subscripts and accents plus bold
+            math in an alphanumeric ASCII string consisting of ``[A-Za-z0-9_]``
+            symbols
 
-            1 - Accents and bold math are implemented in reverse notation. For
+            a)  Accents and bold math are implemented in reverse notation. For
                 example if you wished the LaTeX output to be ``\bm{\hat{\sigma}}``
                 you would give the variable the name sigmahatbm.
-            2 - Subscripts are denoted by a single underscore and superscripts
-                by a double underscore so that ``A_{\\rho\\beta}^{25}`` would be
+
+            b)  Subscripts are denoted by a single underscore and superscripts
+                by a double underscore so that ``A_{\rho\beta}^{25}`` would be
                 input as A_rhobeta__25.
 
-        2. Some standard function names have been improved such as asin is now
-           denoted by Sin^{-1} and log by ln.
+        2.  Some standard function names have been improved such as asin is now
+            denoted by sin^{-1} and log by ln.
 
-        3. Several LaTeX formats for multivectors are available:
-            1 - Print multivector on one line
+        3.  Several LaTeX formats for multivectors are available:
 
-            2 - Print each grade of multivector on one line
+            a)  Print multivector on one line
 
-            3 - Print each base of multivector on one line
+            b)  Print each grade of multivector on one line
 
-        4. A LaTeX output for numpy arrays containing sympy expressions is
-           implemented for up to a three dimensional array.
+            c)  Print each base of multivector on one line
 
-        5. LaTeX formatting for raw LaTeX, eqnarray, and array is available
-           in simple output strings.
+        4.  A LaTeX output for numpy arrays containing sympy expressions is
+            implemented for up to a three dimensional array.
 
-            1 - The delimiter for raw LaTeX input is '%'.  The raw input starts
+        5.  LaTeX formatting for raw LaTeX, eqnarray, and array is available
+            in simple output strings.
+
+            a)  The delimiter for raw LaTeX input is '%'.  The raw input starts
                 on the line where '%' is first encountered and continues until
                 the next line where '%' is encountered. It does not matter where
                 '%' is in the line.
-            2 - The delimiter for eqnarray input is '@'. The rules are the same
+
+            b)  The delimiter for eqnarray input is '@'. The rules are the same
                 as for raw input except that '=' in the first line is replaced
-                be '&=&' and '\\begin{eqnarray*}' is added before the first line
+                be '&=&' and '\begin{eqnarray*}' is added before the first line
                 and '\end{eqnarray*}' to after the last line in the group of
                 lines.
-            3 - The delimiter for array input is '#'. The rules are the same
-                as for raw input except that '\\begin{equation*}' is added before
+
+            c)  The delimiter for array input is '#'. The rules are the same
+                as for raw input except that '\begin{equation*}' is added before
                 the first line and '\end{equation*}' to after the last line in
                 the group of lines.
 
-        6. Additional formats for partial derivatives:
+        6.  Additional formats for partial derivatives:
 
-            0 - Same as sympy latex module
+            a)  Same as sympy latex module
 
-            1 - Use subscript notation with partial symbol to indicate which
+            b)  Use subscript notation with partial symbol to indicate which
                 variable the differentiation is with respect to.  Symbol is of
                 form \partial_{differentiation variable}
     """

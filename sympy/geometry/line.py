@@ -104,7 +104,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def coefficients(self):
-        """The coefficients (a, b, c) for the linear equation ax + by + c = 0.
+        """The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.
 
         See Also
         ========
@@ -151,8 +151,8 @@ class LinearEntity(GeometryEntity):
         Returns
         =======
 
-        True if the set of linear entities are concurrent, False
-        otherwise.
+        True : if the set of linear entities are concurrent,
+        False : otherwise.
 
         Notes
         =====
@@ -216,7 +216,8 @@ class LinearEntity(GeometryEntity):
         Returns
         =======
 
-        True if l1 and l2 are parallel, False otherwise.
+        True : if l1 and l2 are parallel,
+        False : otherwise.
 
         See Also
         ========
@@ -258,7 +259,8 @@ class LinearEntity(GeometryEntity):
         Returns
         =======
 
-        True if l1 and l2 are perpendicular, False otherwise.
+        True : if l1 and l2 are perpendicular,
+        False : otherwise.
 
         See Also
         ========
@@ -545,7 +547,7 @@ class LinearEntity(GeometryEntity):
         =======
 
         projection : Point or LinearEntity (Line, Ray, Segment)
-            The return type matches the type of the parameter `other`.
+            The return type matches the type of the parameter ``other``.
 
         Raises
         ======
@@ -892,7 +894,7 @@ class Line(LinearEntity):
 
     p1 : Point
     pt : Point
-    slope: sympy expression
+    slope : sympy expression
 
     See Also
     ========
@@ -916,7 +918,7 @@ class Line(LinearEntity):
     >>> L.coefficients
     (-2, 1, 1)
 
-    Instantiate with keyword `slope`:
+    Instantiate with keyword ``slope``:
 
     >>> Line(Point(0, 0), slope=0)
     Line(Point(0, 0), Point(1, 0))
@@ -972,7 +974,7 @@ class Line(LinearEntity):
         ======
 
         ValueError
-            When `parameter` already appears in the Line's definition.
+            When ``parameter`` already appears in the Line's definition.
 
         See Also
         ========
@@ -1292,7 +1294,7 @@ class Ray(LinearEntity):
         ======
 
         ValueError
-            When `parameter` already appears in the Ray's definition.
+            When ``parameter`` already appears in the Ray's definition.
 
         See Also
         ========
@@ -1328,21 +1330,23 @@ class Ray(LinearEntity):
         If you want to be located a distance of 1 from the origin of the
         ray, what value of `t` is needed?
 
-        a) find the unit length and pick t accordingly
-        >>> u = Segment(r.p1, p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
-        >>> want = 1
-        >>> t_need = want/u
-        >>> p_want = p.subs(t, t_need/(1 + t_need))
-        >>> simplify(Segment(r.p1, p_want).length)
-        1
+        a)  Find the unit length and pick `t` accordingly.
 
-        b) find the t that makes the length from origin to p equal to 1
-        >>> l = Segment(r.p1, p).length
-        >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
-        >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
-        >>> p_want = p.subs(t, t_need)
-        >>> simplify(Segment(r.p1, p_want).length)
-        1
+            >>> u = Segment(r.p1, p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
+            >>> want = 1
+            >>> t_need = want/u
+            >>> p_want = p.subs(t, t_need/(1 + t_need))
+            >>> simplify(Segment(r.p1, p_want).length)
+            1
+
+        b)  Find the `t` that makes the length from origin to `p` equal to 1.
+
+            >>> l = Segment(r.p1, p).length
+            >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
+            >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
+            >>> p_want = p.subs(t, t_need)
+            >>> simplify(Segment(r.p1, p_want).length)
+            1
 
         """
         t = _symbol(parameter)
@@ -1518,7 +1522,7 @@ class Segment(LinearEntity):
         ======
 
         ValueError
-            When `parameter` already appears in the Segment's definition.
+            When ``parameter`` already appears in the Segment's definition.
 
         See Also
         ========

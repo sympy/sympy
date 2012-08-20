@@ -38,27 +38,6 @@
 
 .. % scope of the document.
 
-.. math::
-
-    \newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
-    \newcommand{\lp}{\left (}
-    \newcommand{\rp}{\right )}
-    \newcommand{\half}{\frac{1}{2}}
-    \newcommand{\llt}{\left <}
-    \newcommand{\rgt}{\right >}
-    \newcommand{\abs}[1]{\left |{#1}\right | }
-    \newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
-    \newcommand{\lbrc}{\left \{}
-    \newcommand{\rbrc}{\right \}}
-    \newcommand{\W}{\wedge}
-    \newcommand{\R}{\dagger}
-    \newcommand{\lbrk}{\left [}
-    \newcommand{\rbrk}{\right ]}
-    \newcommand{\proj}[2]{\llt {#1} \rgt_{#2}}
-    \newcommand{\bm}{\boldsymbol}
-
-
-
 .. topic:: Abstract
 
    This document describes the implementation of a geometric algebra module in
@@ -91,9 +70,9 @@ additional axioms for the geometric algebra are that for any vectors :math:`a`,
 
   \begin{equation*}
   \begin{array}{c}
-  a\lp bc \rp = \lp ab \rp c \\
-  a\lp b+c \rp = ab+ac \\
-  \lp a + b \rp c = ac+bc \\
+  a \left( bc \right) = \left( ab \right) c \\
+  a \left( b+c \right) = ab+ac \\
+  \left( a + b \right) c = ac+bc \\
   aa = a^{2} \in \Re
   \end{array}
   \end{equation*}
@@ -123,23 +102,23 @@ a multivector class, MV, and overloading the python operators in Table
 .. _table1:
 
 .. csv-table::
-    :header: " Operation ", " Result "
+    :header: Operation, Result
     :widths: 10, 40
 
-    " ``A+B`` ", " sum of multivectors "
-    " ``A-B`` ", " difference of multivectors "
-    " ``A*B`` ", " geometric product "
-    " ``A^B`` ", " outer product of multivectors  "
-    " ``A|B`` ", " inner product of multivectors "
-    " ``A<B`` or ``A<<B`` ", " left contraction of multivectors "
-    " ``A>B`` or ``A>>B`` ", " right contraction of multivectors "
+    ``A+B``,             Sum of multivectors
+    ``A-B``,             Difference of multivectors
+    ``A*B``,             Geometric product
+    ``A^B``,             Outer product of multivectors
+    ``A|B``,             Inner product of multivectors
+    ``A<B`` or ``A<<B``, Left contraction of multivectors
+    ``A>B`` or ``A>>B``, Right contraction of multivectors
 
 Table :ref:`1 <table1>`. Multivector operations for symbolicGA
 
 The option to use ``<`` or ``<<`` for left contraction and ``>`` or ``>>`` is given since the ``<`` and
-``>`` operators do not have r-forms (there are no *__rlt__()* and *__rlt__()* functions to overload) while
-``<<`` and ``>>`` do have r-forms so that *x << A* and *x >> A* are allowed where *x* is a scalar (symbol or integer)
-and *A* is a multivector. With ``<`` and ``>`` we can only have mixed modes (scalars and multivectors) if the
+``>`` operators do not have r-forms (there are no :func:`__rlt__` and :func:`__rgt__` functions to overload) while
+``<<`` and ``>>`` do have r-forms so that ``x << A`` and ``x >> A`` are allowed where ``x`` is a scalar (symbol or integer)
+and ``A`` is a multivector. With ``<`` and ``>`` we can only have mixed modes (scalars and multivectors) if the
 multivector is the first operand.
 
 .. note::
@@ -191,13 +170,13 @@ the following symbols
   :nowrap:
 
   \begin{equation*}
-  g = \lbrk
+  g = \left[
   \begin{array}{ccc}
-    a0**2 & (a0.a1)  & (a0.a2) \\
-    (a0.a1) & a1**2  & (a1.a2) \\
+    a0**2 & (a0.a1) & (a0.a2) \\
+    (a0.a1) & a1**2 & (a1.a2) \\
     (a0.a2) & (a1.a2) & a2**2 \\
   \end{array}
-  \rbrk
+  \right]
   \end{equation*}
 
 
@@ -209,7 +188,7 @@ products of the basis vectors. Note that the symbols are named so that
 Note that the strings shown in equation :ref:`1 <eq1>` are only used when the values
 of :math:`g_{ij}` are output (printed).   In the :mod:`GA` module (library)
 the :math:`g_{ij}` symbols are stored in a static member list of the multivector
-class :class:`MV` as the double list *MV.metric* (:math:`g_{ij}` = *MV.metric[i][j]*).
+class :class:`MV` as the double list ``MV.metric`` (:math:`g_{ij}` = ``MV.metric[i][j]``).
 
 The default definition of :math:`g` can be overwritten by specifying a string
 that will define :math:`g`. As an example consider a symbolic representation
@@ -229,7 +208,7 @@ then calling `MV.setup(basis,metric)` would initialize
   :nowrap:
 
   \begin{equation*}
-  g = \lbrk
+  g = \left[
   \begin{array}{ccccc}
     a0**2 & (a0.a1)  & (a0.a2) & 0 & 0\\
     (a0.a1) & a1**2  & (a1.a2) & 0 & 0\\
@@ -237,7 +216,7 @@ then calling `MV.setup(basis,metric)` would initialize
     0 & 0 & 0 & 0 & 2 \\
     0 & 0 & 0 & 2 & 0
   \end{array}
-  \rbrk
+  \right]
   \end{equation*}
 
 
@@ -293,7 +272,7 @@ ordered geometric products are all multivectors of the form
 :math:`a_{i_{1}}a_{i_{2}}\dots a_{i_{r}}` where :math:`i_{1}<i_{2}<\dots <i_{r}`
 and :math:`r \le n`. We call these multivectors bases and represent them
 internally with the list of integers
-:math:`\lbrk i_{1},i_{2},\dots,i_{r}\rbrk`. The bases are labeled, for the
+:math:`\left[ i_{1},i_{2},\dots,i_{r}\right]`. The bases are labeled, for the
 purpose of output display, with strings that are concatenations of the strings
 representing the basis vectors.  So that in our example  ``[1,2]`` would be
 labeled with the string ``'a1a2'`` and represents the geometric product
@@ -329,29 +308,29 @@ product is reduced via two operations, contraction and revision. The state of
 the reduction is saved in two lists of equal length.  The first list contains
 symbolic scale factors (symbol or numeric types) for the corresponding interger
 list representing the product of bases.  If we wish to reduce
-:math:`\lbrk i_{1},\dots,i_{r}\rbrk` the starting point is the coefficient list
-:math:`C = \lbrk 1 \rbrk` and the bases list
-:math:`B = \lbrk \lbrk i_{1},\dots,i_{r}\rbrk \rbrk`.  We now operate on each
+:math:`\left[ i_{1},\dots,i_{r}\right]` the starting point is the coefficient list
+:math:`C = \left[ 1 \right]` and the bases list
+:math:`B = \left[ \left[ i_{1},\dots,i_{r}\right] \right]`.  We now operate on each
 element of the lists as follows:
 
 * ``contraction``: Consider a basis list :math:`B` with element
-  :math:`B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk` where
+  :math:`B[j] = \left[ i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\right]` where
   :math:`i_{l} = i_{l+1}`. Then the product of the :math:`l` and :math:`l+1` terms
   result in a scalar and :math:`B[j]` is replaced by the new list representation
-  :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{r}\rbrk` which is of psuedo
+  :math:`\left[ i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{r}\right]` which is of psuedo
   grade :math:`r-2` and :math:`C[j]` is replaced by the symbol
   :math:`g_{i_{l}i_{l}}C[j]`.
 
 * ``revision``: Consider a basis list :math:`B` with element
-  :math:`B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk` where
+  :math:`B[j] = \left[ i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\right]` where
   :math:`i_{l} > i_{l+1}`. Then the :math:`l` and :math:`l+1` elements must be
   reversed to be put in normal order, but we have :math:`a_{i_{l}}a_{i_{l+1}} = 2g_{i_{l}i_{l+1}}-a_{i_{l+1}}a_{i_{l}}`
   (From the geometric algebra definition of the dot product of two vectors). Thus
   we append the list representing the reduced element,
-  :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{s}\rbrk`, to the pseudo bases
+  :math:`\left[ i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{s}\right]`, to the pseudo bases
   list, :math:`B`, and append :math:`2g_{i{l}i_{l+1}}C[j]` to the coefficients
   list, then we replace :math:`B[j]` with
-  :math:`\lbrk i_{1},\dots,i_{l+1},i_{l},\dots,i_{s}\rbrk`  and :math:`C[j]` with
+  :math:`\left[ i_{1},\dots,i_{l+1},i_{l},\dots,i_{s}\right]`  and :math:`C[j]` with
   :math:`-C[j]`. Both lists are increased by one element if
   :math:`g_{i_{l}i_{l+1}} \ne 0`.
 
@@ -420,7 +399,7 @@ the symbolic basis vectors using the formula
   :nowrap:
 
   \begin{equation*}
-    A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
+    A_{r}\wedge b = \frac{1}{2}\left( A_{r}b-\left( -1 \right)^{r}bA_{r} \right),
   \end{equation*}
 
 
@@ -507,11 +486,11 @@ The geometric product of two pure grade multivectors :math:`A_{r}` and
   :nowrap:
 
   \begin{equation*}
-  A_{r}B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}+\proj{A_{r}B_{s}}{\abs{r-s}+2}+\cdots+\proj{A_{r}B_{s}}{r+s}
+  A_{r}B_{s} = \left\langle A_{r}B_{s} \right\rangle_{\left| r-s \right|} + \left\langle A_{r}B_{s} \right\rangle_{\left| r-s \right|+2} + \cdots + \left\langle A_{r}B_{s} \right\rangle_{r+s}
   \end{equation*}
 
 
-where :math:`\proj{}{t}` projects the :math:`t` grade components of the
+where :math:`\left\langle  \right\rangle_{t}` projects the :math:`t` grade components of the
 multivector argument.  The inner and outer products of :math:`A_{r}` and
 :math:`B_{s}` are then defined to be
 
@@ -519,7 +498,7 @@ multivector argument.  The inner and outer products of :math:`A_{r}` and
   :nowrap:
 
   \begin{equation*}
-  A_{r}\cdot B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}
+  A_{r}\cdot B_{s} = \left\langle A_{r}B_{s} \right\rangle_{\left| r-s \right|}
   \end{equation*}
 
 
@@ -529,7 +508,7 @@ multivector argument.  The inner and outer products of :math:`A_{r}` and
   :nowrap:
 
   \begin{equation*}
-  A_{r}\wedge B_{s} = \proj{A_{r}B_{s}}{r+s}
+  A_{r}\wedge B_{s} = \left\langle A_{r}B_{s} \right\rangle_{r+s}
   \end{equation*}
 
 
@@ -560,8 +539,8 @@ Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are
 
   \begin{equation*}
   A_{r}\lfloor B_{s} = \left \{ \begin{array}{cc}
-     \proj{A_{r}B_{s}}{r-s} &  r \ge s \\
-               0            &  r < s \end{array} \right \}
+    \left\langle A_{r}B_{s} \right\rangle_{r-s} &  r \ge s \\
+                     0                          &  r < s \end{array} \right \}
   \end{equation*}
 
 .. math::
@@ -569,8 +548,8 @@ Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are
 
   \begin{equation*}
   A_{r}\rfloor B_{s} = \left \{ \begin{array}{cc}
-     \proj{A_{r}B_{s}}{s-r} &  s \ge r \\
-               0            &  s < r \end{array} \right \}
+     \left\langle A_{r}B_{s} \right\rangle_{s-r} &  s \ge r \\
+                      0                          &  s < r \end{array} \right \}
   \end{equation*}
 
 
@@ -709,13 +688,13 @@ If :math:`A` is the geometric product of :math:`r` vectors
   \end{equation*}
 
 
-then the reverse of :math:`A` designated :math:`A^{\R}` is defined by
+then the reverse of :math:`A` designated :math:`A^{\dagger}` is defined by
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-    A^{\R} \equiv a_{r}\dots a_{1}.
+    A^{\dagger} \equiv a_{r}\dots a_{1}.
   \end{equation*}
 
 
@@ -727,7 +706,7 @@ multivector A we have
   :nowrap:
 
   \begin{equation*}
-    A^{\R} = \sum_{i=0}^{N} \proj{A}{i}^{\R}
+    A^{\dagger} = \sum_{i=0}^{N} \left\langle A \right\rangle_{i}^{\dagger}
   \end{equation*}
 
 
@@ -742,7 +721,7 @@ but
   :nowrap:
 
   \begin{equation*}
-    \proj{A}{i}^{\R} = \lp -1\rp^{\frac{i\lp i-1\rp}{2}}\proj{A}{i}
+    \left\langle A \right\rangle_{i}^{\dagger} = \left( -1\right)^{\frac{i\left( i-1\right)}{2}}\left\langle A \right\rangle_{i}
   \end{equation*}
 
 
@@ -751,14 +730,14 @@ showing that equation :ref:`2 <eq14>` holds for the geometric product of orthogo
 vectors.
 
 The reverse is important in the theory of rotations in :math:`n`-dimensions.  If
-:math:`R` is the product of an even number of vectors and :math:`RR^{\R} = 1`
-then :math:`RaR^{\R}` is a composition of rotations of the vector :math:`a`.
+:math:`R` is the product of an even number of vectors and :math:`RR^{\dagger} = 1`
+then :math:`RaR^{\dagger}` is a composition of rotations of the vector :math:`a`.
 If :math:`R` is the product of two vectors then the plane that :math:`R` defines
-is the plane of the rotation.  That is to say that :math:`RaR^{\R}` rotates the
+is the plane of the rotation.  That is to say that :math:`RaR^{\dagger}` rotates the
 component of :math:`a` that is projected into the plane defined by :math:`a` and
 :math:`b` where :math:`R=ab`.  :math:`R` may be written
 :math:`R = e^{\frac{\theta}{2}U}`, where :math:`\theta` is the angle of rotation
-and :math:`u` is a unit blade :math:`\lp u^{2} = \pm 1\rp` that defines the
+and :math:`u` is a unit blade :math:`\left( u^{2} = \pm 1\right)` that defines the
 plane of rotation.
 
 
@@ -777,7 +756,7 @@ if :math:`i = j`). The reciprocal frame is constructed as follows:
   :nowrap:
 
   \begin{equation*}
-    E_{M} = a_{1}\W\dots\W a_{M}
+    E_{M} = a_{1}\wedge\dots\wedge a_{M}
   \end{equation*}
 
 
@@ -787,7 +766,7 @@ if :math:`i = j`). The reciprocal frame is constructed as follows:
   :nowrap:
 
   \begin{equation*}
-    E_{M}^{-1} = \bfrac{E_{M}}{E_{M}^{2}}
+    E_{M}^{-1} = \displaystyle\frac{E_{M}}{E_{M}^{2}}
   \end{equation*}
 
 
@@ -797,7 +776,7 @@ Then
   :nowrap:
 
   \begin{equation*}
-    a^{i} = \lp -1\rp^{i-1}\lp a_{1}\W\dots\W \breve{a}_{i} \W\dots\W a_{M}\rp E_{M}^{-1}
+    a^{i} = \left( -1\right)^{i-1}\left( a_{1}\wedge\dots\wedge \breve{a}_{i} \wedge\dots\wedge a_{M}\right) E_{M}^{-1}
   \end{equation*}
 
 
@@ -819,7 +798,7 @@ Geometric Derivative
 ====================
 
 If :math:`F` is a multivector field that is a function of a vector
-:math:`x = x^{i}\bm{\gamma}_{i}` (we are using the summation convention that
+:math:`x = x^{i}\boldsymbol{\gamma}_{i}` (we are using the summation convention that
 pairs of subscripts and superscripts are summed over the dimension of the vector
 space) then the geometric derivative :math:`\nabla F` is given by (in this
 section the summation convention is used):
@@ -828,25 +807,25 @@ section the summation convention is used):
   :nowrap:
 
   \begin{equation*}
-    \nabla F = \bm{\gamma}^{i}\bfrac{\partial F}{\partial x^{i}}
+    \nabla F = \boldsymbol{\gamma}^{i}\displaystyle\frac{\partial F}{\partial x^{i}}
   \end{equation*}
 
 
 If :math:`F_{R}` is a grade-:math:`R` multivector and
-:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}}`
+:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\boldsymbol{\gamma}_{i_{1}}\wedge\dots\wedge \boldsymbol{\gamma}_{i_{R}}`
 then
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-    \nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W
-                 \dots\W \bm{\gamma}_{i_{R}} \rp
+    \nabla F_{R} = \displaystyle\frac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\boldsymbol{\gamma}^{j}\left(\boldsymbol{\gamma}_{i_{1}}\wedge
+                   \dots\wedge \boldsymbol{\gamma}_{i_{R}} \right)
   \end{equation*}
 
 
 Note that
-:math:`\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}} \rp`
+:math:`\boldsymbol{\gamma}^{j}\left(\boldsymbol{\gamma}_{i_{1}}\wedge\dots\wedge \boldsymbol{\gamma}_{i_{R}} \right)`
 can only contain grades :math:`R-1` and :math:`R+1` so that :math:`\nabla F_{R}`
 also can only contain those grades. For a grade-:math:`R` multivector
 :math:`F_{R}` the inner (div) and outer (curl) derivatives are defined as
@@ -866,7 +845,7 @@ and
   :nowrap:
 
   \begin{equation*}
-  \nabla\W F_{R} = \left < \nabla F_{R}\right >_{R+1}
+  \nabla\wedge F_{R} = \left < \nabla F_{R}\right >_{R+1}
   \end{equation*}
 
 
@@ -875,29 +854,29 @@ just the sum of the inner and outer dervatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
-:math:`x(\bm{\theta})` where
-:math:`\bm{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
+:math:`x(\boldsymbol{\theta})` where
+:math:`\boldsymbol{\theta} = \left(\theta_{1},\dots,\theta_{N}\right)` where the number of
 coordinates is equal to the dimension of the vector space.  In the case of
-3-dimensional spherical coordinates :math:`\bm{\theta} = \lp r,\theta,\phi \rp`
-and the coordinate generating function :math:`x(\bm{\theta})` is
+3-dimensional spherical coordinates :math:`\boldsymbol{\theta} = \left( r,\theta,\phi \right)`
+and the coordinate generating function :math:`x(\boldsymbol{\theta})` is
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+ r \cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{y}}}+ r \cos\left({\theta}\right){\boldsymbol{{\gamma}_{z}}}
   \end{equation*}
 
 
 A coordinate frame is derived from :math:`x` by
-:math:`\bm{e}_{i} = \pdiff{x}{\theta^{i}}`.  The following show the frame for
+:math:`\boldsymbol{e}_{i} = \displaystyle\frac{\partial x}{\partial \theta^{i}}`.  The following show the frame for
 spherical coordinates.
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+\cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  \boldsymbol{e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{y}}}+\cos\left({\theta}\right){\boldsymbol{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -907,7 +886,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{\gamma}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{\gamma}_{y}}} - r \sin\left({\theta}\right){\bm{{\gamma}_{z}}}
+  \boldsymbol{e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){\boldsymbol{{\gamma}_{y}}} - r \sin\left({\theta}\right){\boldsymbol{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -917,7 +896,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\phi}} =  - r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}
+  \boldsymbol{e}_{{\phi}} = - r \sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{y}}}
   \end{equation*}
 
 
@@ -928,19 +907,19 @@ define a normalized frame by
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{i} = \bfrac{\bm{e}_{i}}{\sqrt{\abs{\bm{e}_{i}^{2}}}} = \bfrac{\bm{e}_{i}}{\abs{\bm{e}_{i}}}
+  \boldsymbol{\hat{e}}_{i} = \displaystyle\frac{\boldsymbol{e}_{i}}{\sqrt{\left| \boldsymbol{e}_{i}^{2} \right|}} = \displaystyle\frac{\boldsymbol{e}_{i}}{\left| \boldsymbol{e}_{i} \right|}
   \end{equation*}
 
 
-This works for all :math:`\bm{e}_{i}^{2} \neq 0` since we have defined
-:math:`\abs{\bm{e}_{i}} = \sqrt{\abs{\bm{e}_{i}^{2}}}`.   For spherical
+This works for all :math:`\boldsymbol{e}_{i}^{2} \neq 0` since we have defined
+:math:`\left| \boldsymbol{e}_{i} \right| = \sqrt{\left| \boldsymbol{e}_{i}^{2} \right|}`.   For spherical
 coordinates the normalized frame vectors are
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{r} =  \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+\cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  \boldsymbol{\hat{e}}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{\gamma}_{y}}}+\cos\left({\theta}\right){\boldsymbol{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -950,7 +929,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{\gamma}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{\gamma}_{y}}}- \sin\left({\theta}\right){\bm{{\gamma}_{z}}}
+  \boldsymbol{\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\boldsymbol{{\gamma}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){\boldsymbol{{\gamma}_{y}}}- \sin\left({\theta}\right){\boldsymbol{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -960,7 +939,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){\bm{{\gamma}_{x}}}+\cos\left({\phi}\right){\bm{{\gamma}_{y}}}
+  \boldsymbol{\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){\boldsymbol{{\gamma}_{x}}}+\cos\left({\phi}\right){\boldsymbol{{\gamma}_{y}}}
   \end{equation*}
 
 
@@ -970,17 +949,17 @@ The geometric derivative in curvilinear coordinates is given by
   :nowrap:
 
   \begin{align*}
-    \nabla F_{R} & =  \bm{\gamma}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
-                   & =  \bm{e^{j}}\pdiff{}{\theta^{j}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
-                   & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}\bm{e^{j}}
-                     \pdiff{}{\theta^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp \\
-                   & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc
+    \nabla F_{R} & = \boldsymbol{\gamma}^{i}\displaystyle\frac{\partial }{\partial x^{i}}\left( F_{R}^{i_{1}\dots i_{R}}
+                     \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right)  \\
+                 & = \boldsymbol{e^{j}}\displaystyle\frac{\partial }{\partial \theta^{j}}\left( F_{R}^{i_{1}\dots i_{R}}
+                     \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right)  \\
+                 & = \left(\displaystyle\frac{\partial }{\partial \theta^{j}} F_{R}^{i_{1}\dots i_{R}}\right)
+                     \boldsymbol{e^{j}}\left(\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right)+
+                     F_{R}^{i_{1}\dots i_{R}}\boldsymbol{e^{j}}
+                     \displaystyle\frac{\partial }{\partial \theta^{j}}\left(\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right) \\
+                 & = \left(\displaystyle\frac{\partial }{\partial \theta^{j}} F_{R}^{i_{1}\dots i_{R}}\right)
+                     \boldsymbol{e^{j}}\left(\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right)+
+                     F_{R}^{i_{1}\dots i_{R}}C\left\{ \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right\}
   \end{align*}
 
 
@@ -990,8 +969,8 @@ where
   :nowrap:
 
   \begin{equation*}
-  C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc  = \bm{e^{j}}\pdiff{}{\theta^{j}}
-                                                              \lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp
+  C\left\{ \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right\} = \boldsymbol{e^{j}}\displaystyle\frac{\partial }{\partial \theta^{j}}
+                                                                                               \left(\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right)
   \end{equation*}
 
 
@@ -1002,7 +981,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\rbrc =  \frac{2}{r}
+  C\left\{\boldsymbol{\hat{e}}_{r}\right\} =  \frac{2}{r}
   \end{equation*}
 
 
@@ -1012,8 +991,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\rbrc =  \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                +\frac{1}{r}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\theta}
+  C\left\{\boldsymbol{\hat{e}}_{\theta}\right\} = \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
+                                                + \frac{1}{r}\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{\theta}
   \end{equation*}
 
 
@@ -1023,7 +1002,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}{\bm{\bm{\hat{e}}_{r}}}\W\bm{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\left\{\boldsymbol{\hat{e}}_{\phi}\right\} = \frac{1}{r}{\boldsymbol{\boldsymbol{\hat{e}}_{r}}}\wedge\boldsymbol{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\boldsymbol{\hat{e}}_{{\theta}}\wedge\boldsymbol{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1033,8 +1012,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\hat{e}_{r}\W\hat{e}_{\theta}\rbrc =  - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                        \bm{\hat{e}}_{r}+\frac{1}{r}\bm{\hat{e}}_{{\theta}}
+  C\left\{\hat{e}_{r}\wedge\hat{e}_{\theta}\right\} = - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
+                                                        \boldsymbol{\hat{e}}_{r}+\frac{1}{r}\boldsymbol{\hat{e}}_{{\theta}}
   \end{equation*}
 
 
@@ -1044,8 +1023,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}\bm{\hat{e}}_{{\phi}}
-                      - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\left\{\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{\phi}\right\} = \frac{1}{r}\boldsymbol{\hat{e}}_{{\phi}}
+                                                                            - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{{\theta}}\wedge\boldsymbol{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1055,8 +1034,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc =  \frac{2}{r}\bm{\hat{e}}_{r}\W
-                                                \bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}
+  C\left\{\boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}\right\} = \frac{2}{r}\boldsymbol{\hat{e}}_{r}\wedge
+                                                                                   \boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}
   \end{equation*}
 
 
@@ -1066,7 +1045,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_r\W\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc = 0
+  C\left\{\boldsymbol{\hat{e}}_r\wedge\boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}\right\} = 0
   \end{equation*}
 
 
@@ -1083,18 +1062,18 @@ The multivector class is initialized with:
 
 .. function:: MV.setup(basis,metric='',rframe=False,coords=None,debug=False,offset=0)
 
-   The *basis* and *metric* parameters were described in section :ref:`vbm`. If
-   *rframe=True* the reciprocal frame of the symbolic bases vectors is calculated.
-   If *debug=True* the data structure required to initialize the :class:`MV` class
-   are printer out. *coords* is a list of :class:`sympy` symbols equal in length to
+   The ``basis`` and ``metric`` parameters were described in section :ref:`vbm`. If
+   ``rframe=True`` the reciprocal frame of the symbolic bases vectors is calculated.
+   If ``debug=True`` the data structure required to initialize the :class:`MV` class
+   are printer out. ``coords`` is a list of :class:`sympy` symbols equal in length to
    the number of basis vectors.  These symbols are used as the arguments of a
    multivector field as a function of position and for calculating the derivatives
-   of a multivector field (if *coords* is defined then *rframe* is automatically
-   set equal to *True*). *offset* is an integer that is added to the multivector
+   of a multivector field (if ``coords`` is defined then ``rframe`` is automatically
+   set equal to ``True``). ``offset`` is an integer that is added to the multivector
    coefficient index. For example if one wishes to start labeling vector coefficient
-   indexes at one instead of zero then set *offset=1*.  Additionally, :func:`MV.setup`
+   indexes at one instead of zero then set ``offset=1``.  Additionally, :func:`MV.setup`
    calculates the pseudo scalar, :math:`I` and its inverse, :math:`I^{-1}` and makes
-   them available to the programmer as *MV.I* and *MV.Iinv*.
+   them available to the programmer as ``MV.I`` and ``MV.Iinv``.
 
 After :func:`MV.setup` is run one can reinialize the :class:`MV` class with
 curvilinear coordinates using:
@@ -1153,12 +1132,12 @@ curvilinear coordinates using:
 
 
         .. csv-table::
-            :header: " ``str_mode`` ", " Effect on print "
+            :header: ``str_mode``, Effect on print
             :widths: 10, 50
 
-            " 0 ","One multivector per line"
-            " 1 ","One grade per line"
-            " 2 ","One base per line"
+            0, One multivector per line
+            1, One grade per line
+            2, One base per line
 
 Instantiating a Multivector
 ---------------------------
@@ -1181,45 +1160,46 @@ or with the multivector class constructor:
 
 .. class:: MV(value='',mvtype='',mvname='',fct=False)
 
-   *mvname* is a string that defines the name of the multivector for output
-   purposes. *value* and  *type* are defined by the following table and *fct* is a
+   ``mvname`` is a string that defines the name of the multivector for output
+   purposes. ``value`` and  ``type`` are defined by the following table and ``fct`` is a
    switch that will convert the symbolic coefficients of a multivector to functions
    if coordinate variables have been defined when :func:`MV.setup` is called:
 
     .. csv-table::
-        :header: " mvtype ", " value ", " result "
+        :delim: ;
+        :header: ``mvtype``, ``value``, Result
         :widths: 10, 30, 30
 
-        " default ", " default ", " Zero multivector "
-        " 'basisvector' ", " int i ", " :math:`\mbox{i}^{th}` basis vector "
-        " 'basisbivector' ", " int i ", " :math:`\mbox{i}^{th}` basis bivector "
-        " 'scalar' ", " symbol x ", " symbolic scalar of value x"
-        "   ", " string s ", " symbolic scalar of value Symbol(s) "
-        "  ", " int i ", " sympy integer of value i"
-        " 'grade' ", " [int r, 1-D symbol array A] ", " X.grade(r) = A "
-        "   ", " [int r, string s] ", " symbolic grade r multivector "
-        " 'vector' ", " 1-D symbol array A ", " X.grade(1) = A "
-        "   ", " string s ", " symbolic vector "
-        " 'grade2' ", " 1-D symbol array A ", " X.grade(2) = A "
-        " 'pseudo' ", " symbol x ", " X.grade(n) = x "
-        " 'spinor' ", " string s ", " symbolic even multivector "
+        default;           default;                       Zero multivector
+        'basisvector';     int i;                         :math:`\mbox{i}^{th}` basis vector
+        'basisbivector';   int i;                         :math:`\mbox{i}^{th}` basis bivector
+        'scalar';          symbol x;                      Symbolic scalar of value x
+        ;                  string s;                      Symbolic scalar of value Symbol(s)
+        ;                  int i;                         SymPy integer of value i
+        'grade';           [int r, 1-D symbol array A];   X.grade(r) = A
+        ;                  [int r, string s];             Symbolic grade r multivector
+        'vector';          1-D symbol array A;            X.grade(1) = A
+        ;                  string s;                      Symbolic vector
+        'grade2';          1-D symbol array A;            X.grade(2) = A
+        'pseudo';          symbol x;                      X.grade(n) = x
+        'spinor';          string s;                      Symbolic even multivector
 
 
-        " default "," string s ", " symbolic general multivector "
+        default;           string s;                      Symbolic general multivector
 
 
-   If the *value* argument has the option of being a string s then a general symbolic
-   multivector will be constructed constrained by the value of *mvtype*.  The string
-   s will be the base name of the multivector symbolic coefficients.  If *coords* is
+   If the ``value`` argument has the option of being a string s then a general symbolic
+   multivector will be constructed constrained by the value of ``mvtype``.  The string
+   s will be the base name of the multivector symbolic coefficients.  If ``coords`` is
    not defined in :func:`MV.setup` the indices of the multivector bases are appended to
-   the base name with a double underscore (superscript notation).  If *coords* is defined
+   the base name with a double underscore (superscript notation).  If ``coords`` is defined
    the coordinate names will replace the indices in the coefficient names.  For example if
    the base string is *A* and the coordinates *(x,y,z)* then the
    coefficients of a spinor in 3d space would be *A*, *A__xy*, *A__xz*, and *A__yz*.  If
    the :mod:`latex_ex` is used to print the multivector the coefficients would print as
    :math:`A`, :math:`A^{xy}`, :math:`A^{xz}`, and :math:`A^{yz}`.
 
-   If the *fct* argrument of :func:`MV` is set to *True* and the *coords* argument in
+   If the ``fct`` argrument of :func:`MV` is set to ``True`` and the ``coords`` argument in
    :func:`MV.setup` is defined the symbolic coefficients of the multivector are functions
    of the coordinates.
 
@@ -1305,7 +1285,7 @@ Basic Multivector Class Functions
 
 .. function:: set_coef(self,grade,base,value)
 
-   Set the multivector coefficient of index *(grade,base)* to *value*.
+   Set the multivector coefficient of index ``(grade,base)`` to ``value``.
 
 
 SymPy Functions Applied Inplace to Multivector Coefficients
@@ -1351,30 +1331,30 @@ class.
 
 .. function:: set_names(var_lst,var_str)
 
-   :func:`set_names` allows one to name a list, *var_lst*, of multivectors enmass.
-   The names are in *var_str*, a blank separated string of names.  An error is
-   generated if the number of name is not equal to the length of *var_lst*.
+    :func:`set_names` allows one to name a list, ``var_lst``, of multivectors enmass.
+    The names are in ``var_str``, a blank separated string of names.  An error is
+    generated if the number of name is not equal to the length of ``var_lst``.
 
 
 .. function:: reciprocal_frame(vlst,names='')
 
-   :func:`reciprocal_frame` implements the proceedure described in section
-   :ref:`recframe`.  *vlst* is a list of independent vectors that you wish the
-   reciprocal frame calculated for. *names* is a blank separated string of names
-   for the reciprocal vectors if names are required by you application.  The
-   function returns a list containing the reciprocal vectors.
+    :func:`reciprocal_frame` implements the proceedure described in section
+    :ref:`recframe`.  ``vlst`` is a list of independent vectors that you wish the
+    reciprocal frame calculated for. ``names`` is a blank separated string of names
+    for the reciprocal vectors if names are required by you application.  The
+    function returns a list containing the reciprocal vectors.
 
 
 .. function:: trigsimp(f)
 
-   In general :func:`sympy.trigsimp` will not catch all the trigonometric
-   simplifications in an :mod:`sympy` expression, but by using the recursive
-   option, more of them are caught. So :func:`trigsimp` uses this option by
-   default.
+    In general :func:`sympy.trigsimp` will not catch all the trigonometric
+    simplifications in an :mod:`sympy` expression, but by using the recursive
+    option, more of them are caught. So :func:`trigsimp` uses this option by
+    default.
 
 .. function:: S(x)
 
-    :func:`S` instanciates a scaler multivector of value *x*, where *x* can be a
+    :func:`S` instanciates a scaler multivector of value ``x``, where ``x`` can be a
     :mod:`sympy` variable or integer.  This is just a shorthand method for
     constructing scalar multivectors and can be used when there is any ambiguity
     in a multivector expression as to whether a symbol or constant should be
@@ -1534,7 +1514,15 @@ Geometric Derivative of Electo-Magnetic Field Bi-Vector
   :nowrap:
 
   \begin{align*}
-  \nabla F & =   \left(\partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\ & + \left(-\partial_{t} {E^{x}} + \partial_{y} {B^{z}} -\partial_{z} {B^{y}}\right){\gamma}_{x} \\ & + \left(\partial_{z} {B^{x}} -\partial_{t} {E^{y}} -\partial_{x} {B^{z}}\right){\gamma}_{y} \\ & + \left(-\partial_{y} {B^{x}} -\partial_{t} {E^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z} \\ & + \left(-\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
+  \nabla F & = \left( \partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\
+           & + \left(-\partial_{t} {E^{x}} + \partial_{y} {B^{z}} - \partial_{z} {B^{y}}\right){\gamma}_{x} \\
+           & + \left( \partial_{z} {B^{x}} - \partial_{t} {E^{y}} - \partial_{x} {B^{z}}\right){\gamma}_{y} \\
+           & + \left(-\partial_{y} {B^{x}} - \partial_{t} {E^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z} \\
+           & + \left(-\partial_{x} {E^{y}} - \partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\
+           & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\
+           & + \left(-\partial_{t} {B^{x}} - \partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\
+           & + \left( \partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
+  \end{align*}
 
 
 All Maxwell Equations are
@@ -1553,7 +1541,11 @@ Div :math:`E` and Curl :math:`H` Equations
   :nowrap:
 
   \begin{align*}
-  <\nabla F>_1 -J & =   \left(-{J^{t}} + \partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\ & + \left(-{J^{x}} -\partial_{t} {E^{x}} + \partial_{y} {B^{z}} -\partial_{z} {B^{y}}\right){\gamma}_{x} \\ & + \left(\partial_{z} {B^{x}} -\partial_{t} {E^{y}} -{J^{y}} -\partial_{x} {B^{z}}\right){\gamma}_{y} \\ & + \left(-\partial_{y} {B^{x}} -\partial_{t} {E^{z}} -{J^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z}\end{align*}
+  <\nabla F>_1 -J & = \left(-{J^{t}} + \partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\
+                  & + \left(-{J^{x}} - \partial_{t} {E^{x}} + \partial_{y} {B^{z}} - \partial_{z} {B^{y}}\right){\gamma}_{x} \\
+                  & + \left( \partial_{z} {B^{x}} - \partial_{t} {E^{y}} -{J^{y}} - \partial_{x} {B^{z}}\right){\gamma}_{y} \\
+                  & + \left(-\partial_{y} {B^{x}} - \partial_{t} {E^{z}} -{J^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z}
+  \end{align*}
 
 
 
@@ -1572,7 +1564,11 @@ Curl :math:`E` and Div :math:`B` equations
   :nowrap:
 
   \begin{align*}
-  <\nabla F>_3 & =   \left(-\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}\W {\gamma}_{x}\W {\gamma}_{y} \\ & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}\W {\gamma}_{x}\W {\gamma}_{z} \\ & + \left(-\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}\W {\gamma}_{y}\W {\gamma}_{z} \\ & + \left(\partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}\W {\gamma}_{y}\W {\gamma}_{z}\end{align*}
+  <\nabla F>_3 & = \left(-\partial_{x} {E^{y}} - \partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}\wedge {\gamma}_{x}\wedge {\gamma}_{y} \\
+               & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}\wedge {\gamma}_{x}\wedge {\gamma}_{z} \\
+               & + \left(-\partial_{t} {B^{x}} - \partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}\wedge {\gamma}_{y}\wedge {\gamma}_{z} \\
+               & + \left( \partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}\wedge {\gamma}_{y}\wedge {\gamma}_{z}
+  \end{align*}
 
 
 
@@ -1592,7 +1588,7 @@ Dirac's Equation
 ^^^^^^^^^^^^^^^^
 
 The geometric algebra/calculus allows one to formulate the Dirac equation in
-real terms (no :math:`\sqrt{-1}`).  Spinors  :math:`\lp\Psi\rp` are even
+real terms (no :math:`\sqrt{-1}`).  Spinors  :math:`\left(\Psi\right)` are even
 multivectors in space time (Minkowski space with signature (1,-1,-1,-1)) and the
 Dirac equation becomes
 :math:`\nabla \Psi I \sigma_{z}-eA\Psi = m\Psi\gamma_{t}`.  All the terms in the
@@ -1617,25 +1613,34 @@ real equation are explined in Doran and Lasenby [Lasenby,pp281-283].
   \end{equation*}
 
 
-:math:`\bm{\psi}` is 8-component real spinor (even multi-vector)
+:math:`\boldsymbol{\psi}` is 8-component real spinor (even multi-vector)
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  {}\bm{{\psi}} =  {{\psi}}+ {{\psi}^{tx}}{\gamma}_{t}{\gamma}_{x}+ {{\psi}^{ty}}{\gamma}_{t}{\gamma}_{y}+ {{\psi}^{xy}}{\gamma}_{x}{\gamma}_{y}+ {{\psi}^{tz}}{\gamma}_{t}{\gamma}_{z}+ {{\psi}^{xz}}{\gamma}_{x}{\gamma}_{z}+ {{\psi}^{yz}}{\gamma}_{y}{\gamma}_{z}+ {{\psi}^{txyz}}{\gamma}_{t}{\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
+  {}\boldsymbol{{\psi}} = {{\psi}}+ {{\psi}^{tx}}{\gamma}_{t}{\gamma}_{x}+ {{\psi}^{ty}}{\gamma}_{t}{\gamma}_{y}+ {{\psi}^{xy}}{\gamma}_{x}{\gamma}_{y}+ {{\psi}^{tz}}{\gamma}_{t}{\gamma}_{z}+ {{\psi}^{xz}}{\gamma}_{x}{\gamma}_{z}+ {{\psi}^{yz}}{\gamma}_{y}{\gamma}_{z}+ {{\psi}^{txyz}}{\gamma}_{t}{\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
   \end{equation*}
 
 
 Dirac equation in terms of real geometric algebra/calculus
-:math:`\lp\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi} = m\bm{\psi}\gamma_{t}\rp`
+:math:`\left(\nabla \boldsymbol{\psi} I \sigma_{z}-eA\boldsymbol{\psi} = m\boldsymbol{\psi}\gamma_{t}\right)`
 Spin measured with respect to :math:`z` axis
 
 .. math::
   :nowrap:
 
   \begin{align*}
-  \nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi}-m\bm{\psi}\gamma_{t} & =    \left(-e {A^{y}} {{\psi}^{ty}} -m {{\psi}} -\partial_{z} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{tx}} -e {A^{z}} {{\psi}^{tz}} -e {A^{x}} {{\psi}^{tx}} + \partial_{x} {{\psi}^{ty}} -e {A^{t}} {{\psi}} + \partial_{t} {{\psi}^{xy}}\right){\gamma}_{t} \\ & + \left(-e {A^{y}} {{\psi}^{xy}} + \partial_{z} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tx}} + m {{\psi}^{tx}} -\partial_{x} {{\psi}^{xy}} + \partial_{y} {{\psi}} -e {A^{x}} {{\psi}} -\partial_{t} {{\psi}^{ty}}\right){\gamma}_{x} \\ & + \left(-e {A^{y}} {{\psi}} + e {A^{x}} {{\psi}^{xy}} -e {A^{t}} {{\psi}^{ty}} -\partial_{x} {{\psi}} + \partial_{t} {{\psi}^{tx}} -\partial_{z} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{yz}} + m {{\psi}^{ty}} -\partial_{y} {{\psi}^{xy}}\right){\gamma}_{y} \\ & + \left(-\partial_{z} {{\psi}^{xy}} + e {A^{x}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tz}} -\partial_{x} {{\psi}^{yz}} + \partial_{y} {{\psi}^{xz}} + e {A^{y}} {{\psi}^{yz}} + \partial_{t} {{\psi}^{txyz}} + m {{\psi}^{tz}} -e {A^{z}} {{\psi}}\right){\gamma}_{z} \\ & + \left(\partial_{y} {{\psi}^{ty}} -e {A^{y}} {{\psi}^{tx}} + e {A^{x}} {{\psi}^{ty}} + \partial_{z} {{\psi}^{tz}} -e {A^{z}} {{\psi}^{txyz}} + \partial_{x} {{\psi}^{tx}} -e {A^{t}} {{\psi}^{xy}} -\partial_{t} {{\psi}} -m {{\psi}^{xy}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{y} {{\psi}^{tz}} + \partial_{x} {{\psi}^{txyz}} -e {A^{t}} {{\psi}^{xz}} + e {A^{x}} {{\psi}^{tz}} + e {A^{y}} {{\psi}^{txyz}} + \partial_{z} {{\psi}^{ty}} -m {{\psi}^{xz}} -e {A^{z}} {{\psi}^{tx}} -\partial_{t} {{\psi}^{yz}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-e {A^{t}} {{\psi}^{yz}} -\partial_{z} {{\psi}^{tx}} + \partial_{x} {{\psi}^{tz}} -m {{\psi}^{yz}} + \partial_{y} {{\psi}^{txyz}} + \partial_{t} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{ty}} -e {A^{x}} {{\psi}^{txyz}} + e {A^{y}} {{\psi}^{tz}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{z} {{\psi}} + e {A^{y}} {{\psi}^{xz}} + m {{\psi}^{txyz}} -\partial_{t} {{\psi}^{tz}} -\partial_{x} {{\psi}^{xz}} -e {A^{x}} {{\psi}^{yz}} -e {A^{t}} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xy}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
+  \nabla \boldsymbol{\psi} I \sigma_{z}-eA\boldsymbol{\psi}-m\boldsymbol{\psi}\gamma_{t}
+    & = \left(-e {A^{y}} {{\psi}^{ty}} - m {{\psi}} - \partial_{z} {{\psi}^{txyz}} - \partial_{y} {{\psi}^{tx}} - e {A^{z}} {{\psi}^{tz}} - e {A^{x}} {{\psi}^{tx}} + \partial_{x} {{\psi}^{ty}} - e {A^{t}} {{\psi}} + \partial_{t} {{\psi}^{xy}}\right){\gamma}_{t} \\
+    & + \left(-e {A^{y}} {{\psi}^{xy}} + \partial_{z} {{\psi}^{yz}} - e {A^{z}} {{\psi}^{xz}} - e {A^{t}} {{\psi}^{tx}} + m {{\psi}^{tx}} - \partial_{x} {{\psi}^{xy}} + \partial_{y} {{\psi}} - e {A^{x}} {{\psi}} - \partial_{t} {{\psi}^{ty}}\right){\gamma}_{x} \\
+    & + \left(-e {A^{y}} {{\psi}} + e {A^{x}} {{\psi}^{xy}} - e {A^{t}} {{\psi}^{ty}} - \partial_{x} {{\psi}} + \partial_{t} {{\psi}^{tx}} - \partial_{z} {{\psi}^{xz}} - e {A^{z}} {{\psi}^{yz}} + m {{\psi}^{ty}} - \partial_{y} {{\psi}^{xy}}\right){\gamma}_{y} \\
+    & + \left(-\partial_{z} {{\psi}^{xy}} + e {A^{x}} {{\psi}^{xz}} - e {A^{t}} {{\psi}^{tz}} - \partial_{x} {{\psi}^{yz}} + \partial_{y} {{\psi}^{xz}} + e {A^{y}} {{\psi}^{yz}} + \partial_{t} {{\psi}^{txyz}} + m {{\psi}^{tz}} - e {A^{z}} {{\psi}}\right){\gamma}_{z} \\
+    & + \left( \partial_{y} {{\psi}^{ty}} - e {A^{y}} {{\psi}^{tx}} + e {A^{x}} {{\psi}^{ty}} + \partial_{z} {{\psi}^{tz}} - e {A^{z}} {{\psi}^{txyz}} + \partial_{x} {{\psi}^{tx}} - e {A^{t}} {{\psi}^{xy}} - \partial_{t} {{\psi}} - m {{\psi}^{xy}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\
+    & + \left(-\partial_{y} {{\psi}^{tz}} + \partial_{x} {{\psi}^{txyz}} - e {A^{t}} {{\psi}^{xz}} + e {A^{x}} {{\psi}^{tz}} + e {A^{y}} {{\psi}^{txyz}} + \partial_{z} {{\psi}^{ty}} - m {{\psi}^{xz}} - e {A^{z}} {{\psi}^{tx}} - \partial_{t} {{\psi}^{yz}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\
+    & + \left(-e {A^{t}} {{\psi}^{yz}} - \partial_{z} {{\psi}^{tx}} + \partial_{x} {{\psi}^{tz}} - m {{\psi}^{yz}} + \partial_{y} {{\psi}^{txyz}} + \partial_{t} {{\psi}^{xz}} - e {A^{z}} {{\psi}^{ty}} - e {A^{x}} {{\psi}^{txyz}} + e {A^{y}} {{\psi}^{tz}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\
+    & + \left(\partial_{z} {{\psi}} + e {A^{y}} {{\psi}^{xz}} + m {{\psi}^{txyz}} -\partial_{t} {{\psi}^{tz}} -\partial_{x} {{\psi}^{xz}} -e {A^{x}} {{\psi}^{yz}} -e {A^{t}} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xy}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
+  \end{align*}
 
 
 
@@ -1656,7 +1661,7 @@ Spherical Coordinates
 
 Curvilinear coodinates are implemented as shown in section :ref:`deriv`.  The
 gradient of a scalar function and the divergence and curl of a vector function
-(:math:`-I\lp\nabla\W A\rp` is the curl in three dimensions in the notation of
+(:math:`-I\left(\nabla\wedge A\right)` is the curl in three dimensions in the notation of
 geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
 
 ``Begin Program coords.py``
@@ -1674,7 +1679,7 @@ Gradient of Scalar Function :math:`\psi`
   :nowrap:
 
   \begin{equation*}
-  \nabla\psi =  \partial_{r} {{\psi}}{}\bm{e}_{r}+\frac{1 \partial_{{\theta}} {{\psi}}}{r}{}\bm{e}_{{\theta}}+\frac{1 \partial_{{\phi}} {{\psi}}}{r \operatorname{sin}\left({\theta}\right)}{}\bm{e}_{{\phi}}
+  \nabla\psi =  \partial_{r} {{\psi}}{}\boldsymbol{e}_{r}+\frac{1 \partial_{{\theta}} {{\psi}}}{r}{}\boldsymbol{e}_{{\theta}}+\frac{1 \partial_{{\phi}} {{\psi}}}{r \operatorname{sin}\left({\theta}\right)}{}\boldsymbol{e}_{{\phi}}
   \end{equation*}
 
 
@@ -1684,7 +1689,7 @@ Div and Curl of Vector Function :math:`A`
   :nowrap:
 
   \begin{equation*}
-  A =  {A^{r}}{}\bm{e}_{r}+ {A^{{\theta}}}{}\bm{e}_{{\theta}}+ {A^{{\phi}}}{}\bm{e}_{{\phi}}
+  A =  {A^{r}}{}\boldsymbol{e}_{r}+ {A^{{\theta}}}{}\boldsymbol{e}_{{\theta}}+ {A^{{\phi}}}{}\boldsymbol{e}_{{\phi}}
   \end{equation*}
 
 
@@ -1704,7 +1709,10 @@ Div and Curl of Vector Function :math:`A`
   :nowrap:
 
   \begin{align*}
-  -I\lp\nabla \W A\rp & =   \left(\frac{\partial_{{\theta}} {A^{{\phi}}}}{r} + \frac{{A^{{\phi}}} \operatorname{cos}\left({\theta}\right)}{r \operatorname{sin}\left({\theta}\right)} -\frac{\partial_{{\phi}} {A^{{\theta}}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\bm{e}_{r} \\ & - \left(\frac{{A^{{\phi}}}}{r} + \partial_{r} {A^{{\phi}}} -\frac{\partial_{{\phi}} {A^{r}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\bm{e}_{{\theta}} \\ & + \left(\frac{{A^{{\theta}}}}{r} + \partial_{r} {A^{{\theta}}} -\frac{\partial_{{\theta}} {A^{r}}}{r}\right){}\bm{e}_{{\phi}}\end{align*}
+  -I\left(\nabla \wedge A\right) & = \left(\frac{\partial_{{\theta}} {A^{{\phi}}}}{r} + \frac{{A^{{\phi}}} \operatorname{cos}\left({\theta}\right)}{r \operatorname{sin}\left({\theta}\right)} -\frac{\partial_{{\phi}} {A^{{\theta}}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\boldsymbol{e}_{r} \\
+                                 & - \left(\frac{{A^{{\phi}}}}{r} + \partial_{r} {A^{{\phi}}} -\frac{\partial_{{\phi}} {A^{r}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\boldsymbol{e}_{{\theta}} \\
+                                 & + \left(\frac{{A^{{\theta}}}}{r} + \partial_{r} {A^{{\theta}}} -\frac{\partial_{{\theta}} {A^{r}}}{r}\right){}\boldsymbol{e}_{{\phi}}
+  \end{align*}
 
 
 ``End Program Output``

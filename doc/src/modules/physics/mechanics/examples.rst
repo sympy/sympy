@@ -12,7 +12,7 @@ The first example is that of a rolling disc. The disc is assumed to be
 infinitely thin, in contact with the ground at only 1 point, and it is rolling
 without slip on the ground. See the image below.
 
-.. image:: ex_rd.svg
+.. image:: ex_rd.*
    :height: 550
    :width: 550
    :align: center

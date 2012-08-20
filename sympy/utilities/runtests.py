@@ -45,9 +45,9 @@ class Skipped(Exception):
 def _indent(s, indent=4):
     """
     Add the given number of space characters to the beginning of
-    every non-blank line in `s`, and return the result.
-    If the string `s` is Unicode, it is encoded using the stdout
-    encoding and the `backslashreplace` error handler.
+    every non-blank line in ``s``, and return the result.
+    If the string ``s`` is Unicode, it is encoded using the stdout
+    encoding and the ``backslashreplace`` error handler.
     """
     # After a 2to3 run the below code is bogus, so wrap it with a version check
     if sys.version_info[0] < 3:
@@ -232,7 +232,6 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     For example, to run the solvers tests with colors turned off:
 
     >>> from sympy.utilities.runtests import run_all_tests
-
     >>> run_all_tests(test_args=("solvers",), test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
@@ -285,9 +284,9 @@ def test(*paths, **kwargs):
 
     Notes:
 
-       * if sort=False, tests are run in random order (not default).
-       * paths can be entered in native system format or in unix,
-         forward-slash format.
+    - If sort=False, tests are run in random order (not default).
+    - Paths can be entered in native system format or in unix,
+      forward-slash format.
 
     **Explanation of test results**
 
@@ -458,14 +457,15 @@ def _test(*paths, **kwargs):
 
 def doctest(*paths, **kwargs):
     """
-    Runs doctests in all \*py files in the sympy directory which match
-    any of the given strings in `paths` or all tests if paths=[].
+    Runs doctests in all \*.py files in the sympy directory which match
+    any of the given strings in ``paths`` or all tests if paths=[].
 
-    Note:
-       o paths can be entered in native system format or in unix,
-         forward-slash format.
-       o files that are on the blacklist can be tested by providing
-         their path; they are only excluded if no paths are given.
+    Notes:
+
+    - Paths can be entered in native system format or in unix,
+      forward-slash format.
+    - Files that are on the blacklist can be tested by providing
+      their path; they are only excluded if no paths are given.
 
     Examples
     ========
@@ -473,13 +473,16 @@ def doctest(*paths, **kwargs):
     >>> import sympy
 
     Run all tests:
+
     >>> sympy.doctest() # doctest: +SKIP
 
     Run one file:
+
     >>> sympy.doctest("sympy/core/basic.py") # doctest: +SKIP
     >>> sympy.doctest("polynomial.rst") # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
+
     >>> sympy.doctest("/functions", "basic.py") # doctest: +SKIP
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.rst,
@@ -654,69 +657,69 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     """
     Test examples in the given file.  Return (#failures, #tests).
 
-    Optional keyword arg "module_relative" specifies how filenames
+    Optional keyword arg ``module_relative`` specifies how filenames
     should be interpreted:
 
-      - If "module_relative" is True (the default), then "filename"
-         specifies a module-relative path.  By default, this path is
-         relative to the calling module's directory; but if the
-         "package" argument is specified, then it is relative to that
-         package.  To ensure os-independence, "filename" should use
-         "/" characters to separate path segments, and should not
-         be an absolute path (i.e., it may not begin with "/").
+    - If ``module_relative`` is True (the default), then ``filename``
+      specifies a module-relative path.  By default, this path is
+      relative to the calling module's directory; but if the
+      ``package`` argument is specified, then it is relative to that
+      package.  To ensure os-independence, ``filename`` should use
+      "/" characters to separate path segments, and should not
+      be an absolute path (i.e., it may not begin with "/").
 
-      - If "module_relative" is False, then "filename" specifies an
-        os-specific path.  The path may be absolute or relative (to
-        the current working directory).
+    - If ``module_relative`` is False, then ``filename`` specifies an
+      os-specific path.  The path may be absolute or relative (to
+      the current working directory).
 
-    Optional keyword arg "name" gives the name of the test; by default
+    Optional keyword arg ``name`` gives the name of the test; by default
     use the file's basename.
 
-    Optional keyword argument "package" is a Python package or the
+    Optional keyword argument ``package`` is a Python package or the
     name of a Python package whose directory should be used as the
     base directory for a module relative filename.  If no package is
     specified, then the calling module's directory is used as the base
     directory for module relative filenames.  It is an error to
-    specify "package" if "module_relative" is False.
+    specify ``package`` if ``module_relative`` is False.
 
-    Optional keyword arg "globs" gives a dict to be used as the globals
+    Optional keyword arg ``globs`` gives a dict to be used as the globals
     when executing examples; by default, use {}.  A copy of this dict
     is actually used for each docstring, so that each docstring's
     examples start with a clean slate.
 
-    Optional keyword arg "extraglobs" gives a dictionary that should be
+    Optional keyword arg ``extraglobs`` gives a dictionary that should be
     merged into the globals that are used to execute examples.  By
     default, no extra globals are used.
 
-    Optional keyword arg "verbose" prints lots of stuff if true, prints
+    Optional keyword arg ``verbose`` prints lots of stuff if true, prints
     only failures if false; by default, it's true iff "-v" is in sys.argv.
 
-    Optional keyword arg "report" prints a summary at the end when true,
+    Optional keyword arg ``report`` prints a summary at the end when true,
     else prints nothing at the end.  In verbose mode, the summary is
     detailed, else very brief (in fact, empty if all tests passed).
 
-    Optional keyword arg "optionflags" or's together module constants,
+    Optional keyword arg ``optionflags`` or's together module constants,
     and defaults to 0.  Possible values (see the docs for details):
 
-        DONT_ACCEPT_TRUE_FOR_1
-        DONT_ACCEPT_BLANKLINE
-        NORMALIZE_WHITESPACE
-        ELLIPSIS
-        SKIP
-        IGNORE_EXCEPTION_DETAIL
-        REPORT_UDIFF
-        REPORT_CDIFF
-        REPORT_NDIFF
-        REPORT_ONLY_FIRST_FAILURE
+    - DONT_ACCEPT_TRUE_FOR_1
+    - DONT_ACCEPT_BLANKLINE
+    - NORMALIZE_WHITESPACE
+    - ELLIPSIS
+    - SKIP
+    - IGNORE_EXCEPTION_DETAIL
+    - REPORT_UDIFF
+    - REPORT_CDIFF
+    - REPORT_NDIFF
+    - REPORT_ONLY_FIRST_FAILURE
 
-    Optional keyword arg "raise_on_error" raises an exception on the
+    Optional keyword arg ``raise_on_error`` raises an exception on the
     first unexpected exception or failure. This allows failures to be
     post-mortem debugged.
 
-    Optional keyword arg "parser" specifies a DocTestParser (or
+    Optional keyword arg ``parser`` specifies a DocTestParser (or
     subclass) that should be used to extract tests from the files.
 
-    Optional keyword arg "encoding" specifies an encoding that should
+    Optional keyword arg ``encoding`` specifies an encoding that should
     be used to convert the file to unicode.
 
     Advanced tomfoolery:  testmod runs methods of a local instance of
@@ -929,7 +932,7 @@ class SymPyTests(object):
     def get_test_files(self, dir, pat = 'test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
-        `dir` relative to the sympy home directory.
+        ``dir`` relative to the sympy home directory.
         """
         dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
@@ -1034,10 +1037,10 @@ class SymPyDocTests(object):
 
     def get_test_files(self, dir, pat='*.py', init_only=True):
         """
-        Returns the list of *py files (default) from which docstrings
-        will be tested which are at or below directory `dir`. By default,
+        Returns the list of \*.py files (default) from which docstrings
+        will be tested which are at or below directory ``dir``. By default,
         only those that have an __init__.py in their parent directory
-        and do not start with `test_` will be included.
+        and do not start with ``test_`` will be included.
         """
         def importable(x):
             """
@@ -1083,7 +1086,7 @@ class SymPyDocTestFinder(DocTestFinder):
     def _find(self, tests, obj, name, module, source_lines, globs, seen):
         """
         Find tests for the given object and any contained objects, and
-        add them to `tests`.
+        add them to ``tests``.
         """
         if self._verbose:
             print 'Finding tests in %s' % name
@@ -1221,9 +1224,9 @@ class SymPyDocTestFinder(DocTestFinder):
 class SymPyDocTestRunner(DocTestRunner):
     """
     A class used to run DocTest test cases, and accumulate statistics.
-    The `run` method is used to process a single DocTest case.  It
-    returns a tuple `(f, t)`, where `t` is the number of test cases
-    tried, and `f` is the number of test cases that failed.
+    The ``run`` method is used to process a single DocTest case.  It
+    returns a tuple ``(f, t)``, where ``t`` is the number of test cases
+    tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
     issue 2041).
@@ -1233,23 +1236,23 @@ class SymPyDocTestRunner(DocTestRunner):
 
     def run(self, test, compileflags=None, out=None, clear_globs=True):
         """
-        Run the examples in `test`, and display the results using the
-        writer function `out`.
+        Run the examples in ``test``, and display the results using the
+        writer function ``out``.
 
-        The examples are run in the namespace `test.globs`.  If
-        `clear_globs` is true (the default), then this namespace will
+        The examples are run in the namespace ``test.globs``.  If
+        ``clear_globs`` is true (the default), then this namespace will
         be cleared after the test runs, to help with garbage
         collection.  If you would like to examine the namespace after
-        the test completes, then use `clear_globs=False`.
+        the test completes, then use ``clear_globs=False``.
 
-        `compileflags` gives the set of flags that should be used by
+        ``compileflags`` gives the set of flags that should be used by
         the Python compiler when running the examples.  If not
         specified, then it will default to the set of future-import
-        flags that apply to `globs`.
+        flags that apply to ``globs``.
 
         The output of each example is checked using
-        `SymPyDocTestRunner.check_output`, and the results are formatted by
-        the `SymPyDocTestRunner.report_*` methods.
+        ``SymPyDocTestRunner.check_output``, and the results are
+        formatted by the ``SymPyDocTestRunner.report_*`` methods.
         """
         self.test = test
 
@@ -1395,14 +1398,13 @@ class PyTestReporter(Reporter):
 
         It uses sys.stdout.write(), so no readline library is necessary.
 
-        +-------+-------------------------------------------------------------+
-        | color | choose from the colors below, "" means default color        |
-        +-------+-------------------------------------------------------------+
-        | align | left/right, left is a normal print, right is aligned on the |
-        |       | right hand side of the screen, filled with " " if necessary |
-        +-------+-------------------------------------------------------------+
-        | width | the screen width                                            |
-        +-------+-------------------------------------------------------------+
+        Parameters
+        ==========
+
+        color : choose from the colors below, "" means default color
+        align : "left"/"right", "left" is a normal print, "right" is aligned on
+                the right-hand side of the screen, filled with spaces if necessary
+        width : the screen width
 
         """
         color_templates = (

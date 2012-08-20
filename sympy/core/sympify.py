@@ -73,8 +73,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: True
 
-    To extend `sympify` to convert custom objects (not derived from `Basic`),
-    just define a `_sympy_` method to your class. You can do that even to
+    To extend ``sympify`` to convert custom objects (not derived from ``Basic``),
+    just define a ``_sympy_`` method to your class. You can do that even to
     classes that you do not own by subclassing or adding the method at runtime.
 
     >>> from sympy import Matrix
@@ -90,9 +90,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     [2]
 
     If you do not have control over the class definition you could also use the
-    `converter` global dictionary. The key is the class and the value is a
+    ``converter`` global dictionary. The key is the class and the value is a
     function that takes a single argument and returns the desired SymPy
-    object, e.g. `converter[MyList] = lambda x: Matrix(x)`.
+    object, e.g. ``converter[MyList] = lambda x: Matrix(x)``.
 
     >>> class MyList2(object):   # XXX Do not do this if you control the class!
     ...     def __iter__(self):  #     Use _sympy_!
