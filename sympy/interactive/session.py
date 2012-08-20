@@ -315,7 +315,9 @@ def init_python_session():
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, quiet=False, auto_symbols=False, auto_int_to_Integer=False, argv=[]):
     """
-    Initialize an embedded IPython or Python session.
+    Initialize an embedded IPython or Python session. The IPython session is
+    initiated with the --pylab option, without the numpy imports, so that
+    matplotlib plotting can be interactive.
 
     Parameters
     ==========
