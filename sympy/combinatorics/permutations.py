@@ -23,7 +23,12 @@ def cyclic(cyclic_form1, n):
     [[0, 1, 2], [3, 4]]
     >>> cyclic([[4, 5]], 2)
     [[3, 4], [0], [1]]
+
+    See Also
+    ========
+    one_based
     """
+
     rv = []
     need = set(range(n))
     for c in cyclic_form1:
@@ -34,14 +39,35 @@ def cyclic(cyclic_form1, n):
     return rv
 
 def one_based(cyclic_form0, singletons=True):
-    """Return a cyclic form in 1-based cyclic form, omitting cycles
-    smaller than ``smallest``.
-    >>> from sympy.combinatorics.permutations import one_based
+    """Return a cyclic form in 1-based cyclic form, omitting singletons
+    if ``singleton`` is False.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics.permutations import one_based, cyclic
     >>> one_based([[0, 1], [2]])
     [[1, 2], [3]]
     >>> one_based([[0, 1], [2]], singletons=False)
     [[1, 2]]
+
+    >>> p = Permutation(cyclic([(2, 3, 4)], 5))
+    >>> p.reduced_cyclic_form
+    [[1, 2, 3]]
+    >>> p.cyclic_form
+    [[1, 2, 3], [0], [4]]
+    >>> c = _
+    >>> one_based(c)
+    [[2, 3, 4], [1], [5]]
+    >>> one_based(c, False)
+    [[2, 3, 4]]
+
+    See Also
+    ========
+    cyclic
     """
+
     min = 1 + (not bool(singletons))
     return [[e + 1 for e in c] for c in cyclic_form0 if len(c) >= min]
 
@@ -353,17 +379,17 @@ class Permutation(Basic):
         self._cyclic_form = cyclic_form
         return self.cyclic_form
 
-    def reduced_cyclic_form(self, base=0):
-        """Return permutation in cyclic form without singletons,
-        adding base to each element.
+    @property
+    def reduced_cyclic_form(self):
+        """Return permutation in cyclic form without singletons.
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation([0, 2, 1]).reduced_cyclic_form()
+        >>> Permutation([0, 2, 1]).reduced_cyclic_form
         [[1, 2]]
-        >>> Permutation([0, 2, 1]).reduced_cyclic_form()
+        >>> Permutation([0, 2, 1]).reduced_cyclic_form
         [[1, 2]]
         """
-        return [[e + base for e in c] for c in self.cyclic_form if len(c) > 1]
+        return [c for c in self.cyclic_form if len(c) > 1]
 
     @property
     def size(self):
