@@ -193,10 +193,10 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     Returns
     =======
 
-    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals`` are the
-    basic transversals, ``basic_orbits`` are the basic orbits, and
-    ``strong_gens_distr`` are the strong generators distributed by membership in basic
-    stabilizers.
+    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals``
+    are the basic transversals, ``basic_orbits`` are the basic orbits, and
+    ``strong_gens_distr`` are the strong generators distributed by membership
+    in basic stabilizers.
 
     Examples
     ========
@@ -314,7 +314,8 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
-    >>> from sympy.combinatorics.util import _remove_gens, _verify_bsgs
+    >>> from sympy.combinatorics.util import _remove_gens
+    >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
     >>> base, strong_gens = S.schreier_sims_incremental()
     >>> len(strong_gens)
@@ -481,42 +482,3 @@ def _strong_gens_from_distr(strong_gens_distr):
             if gen not in result:
                 result.append(gen)
         return result
-
-def _verify_bsgs(group, base, gens):
-    """
-    Verify the correctness of a base and strong generating set.
-
-    This is a naive implementation using the definition of a base and a strong
-    generating set relative to it. There are other procedures for
-    verifying a base and strong generating set, but this one will
-    serve for more robust testing.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.named_groups import AlternatingGroup
-    >>> from sympy.combinatorics.util import _verify_bsgs
-    >>> A = AlternatingGroup(4)
-    >>> A.schreier_sims()
-    >>> _verify_bsgs(A, A.base, A.strong_gens)
-    True
-
-    See Also
-    ========
-
-    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims
-
-    """
-    from sympy.combinatorics.perm_groups import PermutationGroup
-    strong_gens_distr = _distribute_gens_by_base(base, gens)
-    base_len = len(base)
-    degree = group.degree
-    current_stabilizer = group
-    for i in range(base_len):
-        candidate = PermutationGroup(strong_gens_distr[i])
-        if current_stabilizer.order() != candidate.order():
-            return False
-        current_stabilizer = current_stabilizer.stabilizer(base[i])
-    if current_stabilizer.order() != 1:
-        return False
-    return True

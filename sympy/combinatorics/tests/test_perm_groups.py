@@ -1,12 +1,14 @@
-from sympy.combinatorics.perm_groups import PermutationGroup, DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-DihedralGroup, AlternatingGroup
+DihedralGroup, AlternatingGroup, AbelianGroup
 from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random
-from sympy.combinatorics.util import _verify_bsgs
-
+from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
+_cmp_perm_lists, _verify_normal_closure
+from sympy.combinatorics.util import _distribute_gens_by_base
 
 def test_new():
     a = Permutation([1, 0])
@@ -29,7 +31,6 @@ def test_generate():
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
     g = PermutationGroup([a]).generate(method='dimino')
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
-
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     G = PermutationGroup([a, b])
@@ -37,10 +38,8 @@ def test_generate():
     v1 = [p.array_form for p in list(g)]
     v1.sort()
     assert v1 == [[0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]]
-
     v2 = list(G.generate(method='dimino', af=True))
     assert v1 == sorted(v2)
-
     a = Permutation([2, 0, 1, 3, 4, 5])
     b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b]).generate(af=True)
@@ -75,6 +74,77 @@ def test_stabilizer():
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
     assert G2.order() == 181440
+
+def test_center():
+    # the center of the dihedral group D_n is of order 2 for even n
+    for i in (4, 6, 10):
+        D = DihedralGroup(i)
+        assert (D.center()).order() == 2
+    # the center of the dihedral group D_n is of order 1 for odd n>2
+    for i in (3, 5, 7):
+        D = DihedralGroup(i)
+        assert (D.center()).order() == 1
+    # the center of an abelian group is the group itself
+    for i in (2, 3, 5):
+        for j in (1, 5, 7):
+            for k in (1, 1, 11):
+                G = AbelianGroup(i, j, k)
+                assert G.center() == G
+    # the center of a nonabelian simple group is trivial
+    for i in(1, 5, 9):
+        A = AlternatingGroup(i)
+        assert (A.center()).order() == 1
+    # brute-force verifications
+    D = DihedralGroup(5)
+    A = AlternatingGroup(3)
+    C = CyclicGroup(4)
+    G = D*A*C
+    assert _verify_centralizer(G, G)
+
+def test_centralizer():
+    # the centralizer of the trivial group is the entire group
+    S = SymmetricGroup(2)
+    assert S.centralizer(Permutation(range(2))) == S
+    A = AlternatingGroup(5)
+    assert A.centralizer(Permutation(range(5))) == A
+    # a centralizer in the trivial group is the trivial group itself
+    triv = PermutationGroup([Permutation([0,1,2,3])])
+    D = DihedralGroup(4)
+    assert triv.centralizer(D) == triv
+    # brute-force verifications for centralizers of groups
+    for i in (4, 5, 6):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        C = CyclicGroup(i)
+        D = DihedralGroup(i)
+        for gp in (S, A, C, D):
+            for gp2 in (S, A, C, D):
+                if gp2 != gp:
+                    assert _verify_centralizer(gp, gp2)
+    # verify the centralizer for all elements of several groups
+    S = SymmetricGroup(5)
+    elements = list(S.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(S, element)
+    A = AlternatingGroup(5)
+    elements = list(A.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(A, element)
+    D = DihedralGroup(7)
+    elements = list(D.generate_dimino())
+    for element in elements:
+        assert _verify_centralizer(D, element)
+    # verify centralizers of small groups within small groups
+    small = []
+    for i in (1, 2, 3):
+        small.append(SymmetricGroup(i))
+        small.append(AlternatingGroup(i))
+        small.append(DihedralGroup(i))
+        small.append(CyclicGroup(i))
+    for gp in small:
+        for gp2 in small:
+            if gp.degree == gp2.degree:
+                assert _verify_centralizer(gp, gp2)
 
 def test_coset_repr():
     a = Permutation([0, 2, 1])
@@ -175,11 +245,11 @@ def test_eq():
     assert G1 != G4
     assert not G4.is_subgroup(G1)
 
-def test_commutators():
+def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
     b = Permutation([0, 1, 3, 2, 4])
     G = PermutationGroup([a,b])
-    C = G.commutator()
+    C = G.derived_subgroup()
     assert C.order() == 3
     assert C.is_normal(G)
     assert C.is_subgroup(G)
@@ -187,18 +257,18 @@ def test_commutators():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
     G = PermutationGroup(gens)
-    C = G.commutator()
+    C = G.derived_subgroup()
     assert C.order() == 12
 
 def test_is_solvable():
     a = Permutation([1,2,0])
     b = Permutation([1,0,2])
     G = PermutationGroup([a, b])
-    assert G.is_solvable()
+    assert G.is_solvable
     a = Permutation([1,2,3,4,0])
     b = Permutation([1,0,2,3,4])
     G = PermutationGroup([a, b])
-    assert not G.is_solvable()
+    assert not G.is_solvable
 
 def test_rubik1():
     gens = rubik_cube_generators()
@@ -209,7 +279,7 @@ def test_rubik1():
     G2 = PermutationGroup(gens2)
     assert G2.order() == 663552
     assert G2.is_subgroup(G1)
-    C1 = G1.commutator()
+    C1 = G1.derived_subgroup()
     assert C1.order() == 4877107200
     assert C1.is_subgroup(G1)
     assert not G2.is_subgroup(C1)
@@ -365,18 +435,6 @@ def test_baseswap():
     assert randomized[0] == [0, 2, 1]
     assert _verify_bsgs(S, randomized[0], randomized[1]) == True
 
-def test_direct_product_n():
-    C = CyclicGroup(4)
-    D = DihedralGroup(4)
-    G = DirectProduct(C, C, C)
-    assert G.order() == 64
-    assert G.degree == 12
-    assert len(G.orbits()) == 3
-    assert G.is_abelian == True
-    H = DirectProduct(D, C)
-    assert H.order() == 32
-    assert H.is_abelian == False
-
 def test_schreier_sims_incremental():
     identity = Permutation([0, 1, 2, 3, 4])
     TrivialGroup = PermutationGroup([identity])
@@ -420,7 +478,8 @@ def test_subgroup_search():
         points = [7]
         assert S.stabilizer(7) == S.subgroup_search(prop_fix_points)
         points = [3, 4]
-        assert S.stabilizer(3).stabilizer(4) == S.subgroup_search(prop_fix_points)
+        assert S.stabilizer(3).stabilizer(4) ==\
+               S.subgroup_search(prop_fix_points)
         points = [3, 5]
         fix35 = A.subgroup_search(prop_fix_points)
         points = [5]
@@ -428,6 +487,123 @@ def test_subgroup_search():
         assert A.subgroup_search(prop_fix_points, init_subgroup=fix35) == fix5
         base, strong_gens = A.schreier_sims_incremental()
         g = A.generators[0]
-        comm_g = A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
+        comm_g =\
+             A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
+
+def test_normal_closure():
+    # the normal closure of the trivial group is trivial
+    S = SymmetricGroup(3)
+    identity = Permutation([0, 1, 2])
+    closure = S.normal_closure(identity)
+    assert closure.is_trivial
+    # the normal closure of the entire group is the entire group
+    A = AlternatingGroup(4)
+    assert A.normal_closure(A) == A
+    # brute-force verifications for subgroups
+    for i in (3, 4, 5):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        D = DihedralGroup(i)
+        C = CyclicGroup(i)
+        for gp in (A, D, C):
+            assert _verify_normal_closure(S, gp)
+    # brute-force verifications for all elements of a group
+    S = SymmetricGroup(5)
+    elements = list(S.generate_dimino())
+    for element in elements:
+        assert _verify_normal_closure(S, element)
+    # small groups
+    small = []
+    for i in (1, 2, 3):
+        small.append(SymmetricGroup(i))
+        small.append(AlternatingGroup(i))
+        small.append(DihedralGroup(i))
+        small.append(CyclicGroup(i))
+    for gp in small:
+        for gp2 in small:
+            if gp2.is_subgroup(gp):
+                assert _verify_normal_closure(gp, gp2)
+
+def test_derived_series():
+    # the derived series of the trivial group consists only of the trivial group
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert triv.derived_series() == [triv]
+    # the derived series for a simple group consists only of the group itself
+    for i in (5, 6, 7):
+        A = AlternatingGroup(i)
+        assert A.derived_series() == [A]
+    # the derived series for S_4 is S_4 > A_4 > K_4 > triv
+    S = SymmetricGroup(4)
+    series = S.derived_series()
+    assert series[1] == AlternatingGroup(4)
+    assert series[2] == DihedralGroup(2)
+    assert series[3].is_trivial
+
+def test_lower_central_series():
+    # the lower central series of the trivial group consists of the trivial
+    # group
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert triv.lower_central_series() == [triv]
+    # the lower central series of a simple group consists of the group itself
+    for i in (5, 6, 7):
+        A = AlternatingGroup(i)
+        assert A.lower_central_series() == [A]
+    # GAP-verified example
+    S = SymmetricGroup(6)
+    series = S.lower_central_series()
+    assert len(series) == 2
+    assert series[1] == AlternatingGroup(6)
+
+def test_commutator():
+    # the commutator of the trivial group and the trivial group is trivial
+    S = SymmetricGroup(3)
+    triv = PermutationGroup([Permutation([0, 1, 2])])
+    assert S.commutator(triv, triv) == triv
+    # the commutator of the trivial group and any other group is again trivial
+    A = AlternatingGroup(3)
+    assert S.commutator(triv, A) == triv
+    # the commutator is commutative
+    for i in (3, 4, 5):
+        S = SymmetricGroup(i)
+        A = AlternatingGroup(i)
+        D = DihedralGroup(i)
+        assert S.commutator(A, D) == S.commutator(D, A)
+    # the commutator of an abelian group is trivial
+    S = SymmetricGroup(7)
+    A1 = AbelianGroup(2, 5)
+    A2 = AbelianGroup(3, 4)
+    triv = PermutationGroup([Permutation([0, 1, 2, 3, 4, 5, 6])])
+    assert S.commutator(A1, A1) == triv
+    assert S.commutator(A2, A2) == triv
+    # examples calculated by hand
+    S = SymmetricGroup(3)
+    A = AlternatingGroup(3)
+    assert S.commutator(A, S) == A
+
+def test_is_nilpotent():
+    # every abelian group is nilpotent
+    for i in (1, 2, 3):
+        C = CyclicGroup(i)
+        Ab = AbelianGroup(i, i + 2)
+        assert C.is_nilpotent
+        assert Ab.is_nilpotent
+    Ab = AbelianGroup(5, 7, 10)
+    assert Ab.is_nilpotent
+    # A_5 is not solvable and thus not nilpotent
+    assert AlternatingGroup(5).is_nilpotent == False
+
+def test_is_trivial():
+    for i in range(5):
+        triv = PermutationGroup([Permutation(range(i))])
+        assert triv.is_trivial
+
+def test_pointwise_stabilizer():
+    S = SymmetricGroup(5)
+    points = []
+    stab = S
+    for point in (2, 0, 3, 4, 1):
+        stab = stab.stabilizer(point)
+        points.append(point)
+        assert S.pointwise_stabilizer(points) == stab
