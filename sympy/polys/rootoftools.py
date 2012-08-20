@@ -414,7 +414,7 @@ class RootOf(Expr):
                         b = mpf(str(interval.b))
                         # This is needed due to the bug #3364:
                         a, b = min(a, b), max(a, b)
-                        if not (a < root and root < b):
+                        if not (a < root < b):
                             # If the root is not in the interval (a, b), we
                             # keep refining the interval. This happens if
                             # findroot accidentally finds a root in different
