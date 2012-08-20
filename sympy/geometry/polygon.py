@@ -5,6 +5,8 @@ from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.matrices import Matrix
 from sympy.solvers import solve
+from sympy.utilities.iterables import has_variety, has_dups
+
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
@@ -1742,7 +1744,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 1
+        return not has_variety(s.length for s in self.sides)
 
     def is_isosceles(self):
         """Are two or more of the sides the same length?
@@ -1766,7 +1768,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) < 3
+        return has_dups(s.length for s in self.sides)
 
     def is_scalene(self):
         """Are all the sides of the triangle of different lengths?
@@ -1790,7 +1792,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 3
+        return not has_dups(s.length for s in self.sides)
 
     def is_right(self):
         """Is the triangle right-angled.
