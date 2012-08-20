@@ -1,3 +1,4 @@
+from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, perm_af_parity,
     perm_af_mul, perm_af_muln, cyclic)
 
@@ -18,10 +19,10 @@ def test_Permutation():
 
     assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
-        [[1, 3], [0, 4, 2]]
+        [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
-    assert p.cyclic_form == [[3, 6, 4], [0, 2, 1, 5]]
-    assert p.transpositions() == [(3, 4), (3, 6), (0, 5), (0, 1), (0, 2)]
+    assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
+    assert p.transpositions() == FiniteSet([(0, 1), (0, 2), (0, 5), (3, 4), (3, 6)])
 
     assert p**13 == p
     assert q**2 == Permutation([5, 1, 0, 6, 3, 2, 4])

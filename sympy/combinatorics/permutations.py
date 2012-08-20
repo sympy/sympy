@@ -1,6 +1,6 @@
-from sympy.core import Basic, S
+from sympy.core import Basic, S, FiniteSet
 from sympy.core.compatibility import is_sequence
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, has_variety
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 from sympy.mpmath.libmp.libintmath import ifac
@@ -250,15 +250,20 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2])
-        >>> p
+
+        Permutations entered in array-form are left unaltered:
+
+        >>> Permutation([0, 1, 2])
         Permutation([0, 1, 2])
-        >>> q = Permutation([[0,1],[2]])
-        >>> q
-        Permutation([[0, 1], [2]])
+
+        Permutations entered in cyclic-form are made canonical, sorted
+        and arranged so longer cycles appear first:
+
+        >>> Permutation([[4, 5, 6], [3], [0, 1], [2]])
+        Permutation([[4, 5, 6], [0, 1], [2], [3]])
         """
         if not args or not is_sequence(args[0]) or len(args) > 1 or \
-           len(set(is_sequence(a) for a in args[0])) > 1:
+           has_variety(is_sequence(a) for a in args[0]):
             raise ValueError("Permutation argument must be a list of ints "
                              "or a list of lists.")
 
@@ -273,6 +278,9 @@ class Permutation(Basic):
         cform = aform = None
         if args[0] and is_sequence(args[0][0]):
             cform = [list(a) for a in args[0]]
+            # put in numerical order with singletons at the end
+            cform.sort()
+            cform.sort(key=lambda w: -len(w))
         else:
             aform = list(args[0])
 
@@ -358,7 +366,8 @@ class Permutation(Basic):
                     cycle.append(j)
                     unchecked[j] = False
                 cyclic_form.append(cycle)
-        cyclic_form.sort(key=lambda t: -t[0])
+        cyclic_form.sort()
+        cyclic_form.sort(key=lambda w: -len(w))
         self._cyclic_form = cyclic_form
         return self.cyclic_form
 
@@ -566,7 +575,7 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[1,2,3],[0,4,5,6,7]])
         >>> p.transpositions()
-        [(1, 3), (1, 2), (0, 7), (0, 6), (0, 5), (0, 4)]
+        {(0, 4), (0, 5), (0, 6), (0, 7), (1, 2), (1, 3)}
 
         References
         ==========
@@ -583,7 +592,7 @@ class Permutation(Basic):
                 first = x[0]
                 for y in x[nx-1:0:-1]:
                     res.append((first,y))
-        return res
+        return FiniteSet(res)
 
     def __invert__(self):
         """

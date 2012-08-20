@@ -2,7 +2,7 @@ from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation
 from sympy.utilities.misc import default_sort_key
-from sympy.utilities.iterables import rotate_left
+from sympy.utilities.iterables import rotate_left, has_variety
 
 from random import choice
 
@@ -285,7 +285,7 @@ class Polyhedron(Basic):
         obj._faces = FiniteSet(faces)
         if pgroups and pgroups[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
-        if len(set([a.size for a in pgroups])) > 1:
+        if has_variety(a.size for a in pgroups) > 1:
             raise ValueError("All permutations must be of the same size.")
         obj._pgroups = pgroups
         return obj
