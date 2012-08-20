@@ -5,7 +5,8 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.util import _check_cycles_alt_sym, _strip,\
 _distribute_gens_by_base, _strong_gens_from_distr,\
 _orbits_transversals_from_bsgs, _handle_precomputed_bsgs, _base_ordering,\
-_verify_bsgs, _remove_gens
+_remove_gens
+from sympy.combinatorics.testutil import _verify_bsgs
 
 def test_check_cycles_alt_sym():
     perm1 = Permutation([[0, 1, 2, 3, 4, 5, 6], [7], [8], [9]])
@@ -96,16 +97,6 @@ def test_base_ordering():
     base = [2, 4, 5]
     degree = 7
     assert _base_ordering(base, degree) == [3, 4, 0, 5, 1, 2, 6]
-
-def test_verify_bsgs():
-    S = SymmetricGroup(5)
-    S.schreier_sims()
-    base = S.base
-    strong_gens = S.strong_gens
-    gens = S.generators
-    assert _verify_bsgs(S, base, strong_gens) == True
-    assert _verify_bsgs(S, base[:-1], strong_gens) == False
-    assert _verify_bsgs(S, base, S.generators) == False
 
 def test_remove_gens():
     S = SymmetricGroup(10)
