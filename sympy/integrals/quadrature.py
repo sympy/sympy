@@ -6,23 +6,30 @@ def gauss_legendre(n, n_digits):
     r"""
     Computes the Gauss-Legendre quadrature [1] points and weights.
 
-    Parameters:
+    Parameters
+    ==========
 
-    ``n``: the order of quadrature
+    n : the order of quadrature
 
-    ``n_digits``: number of significant digits of the points and weights to
-                  return
+    n_digits : number of significant digits of the points and weights to
+               return
+
+    Returns
+    =======
+
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
 
     The Gauss-Legendre quadrature approximates the integral:
 
     .. math::
 
-        \int_{-1}^1 f(x) dx \approx \sum_{i=1}^n w_i f(x_i)
+        \int_{-1}^1 f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
 
-    The points :math:`x_i` and weights :math:`w_i` are returned
-    as ``(x, w)`` tuple of lists.
+    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
+    lists.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.integrals.quadrature import gauss_legendre
     >>> x, w = gauss_legendre(3, 5)
@@ -54,23 +61,30 @@ def gauss_laguerre(n, n_digits):
     r"""
     Computes the Gauss-Laguerre quadrature [1] points and weights.
 
-    Parameters:
+    Parameters
+    ==========
 
-    ``n``: the order of quadrature
+    n : the order of quadrature
 
-    ``n_digits``: number of significant digits of the points and weights to
-                  return
+    n_digits : number of significant digits of the points and weights to
+               return
+
+    Returns
+    =======
+
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
 
     The Gauss-Laguerre quadrature approximates the integral:
 
     .. math::
 
-        \int_0^{\infty} e^{-x} f(x) dx \approx \sum_{i=1}^n w_i f(x_i)
+        \int_0^{\infty} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
 
-    The points :math:`x_i` and weights :math:`w_i` are returned
-    as ``(x, w)`` tuple of lists.
+    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
+    lists.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.integrals.quadrature import gauss_laguerre
     >>> x, w = gauss_laguerre(3, 5)
