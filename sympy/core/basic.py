@@ -1070,7 +1070,8 @@ class Basic(object):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
@@ -1573,6 +1574,7 @@ class preorder_traversal(object):
             for item in node:
                 for subtree in self._preorder_traversal(item, key):
                     yield subtree
+
 
     def skip(self):
         """
