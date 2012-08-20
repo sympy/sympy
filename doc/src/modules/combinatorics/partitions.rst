@@ -11,13 +11,13 @@ Partitions
 .. autoclass:: IntegerPartition
    :members:
 
-.. automethod:: random_integer_partition
+.. autofunction:: random_integer_partition
 
-.. automethod:: RGS_generalized
+.. autofunction:: RGS_generalized
 
-.. automethod:: RGS_enum
+.. autofunction:: RGS_enum
 
-.. automethod:: RGS_unrank
+.. autofunction:: RGS_unrank
 
-.. automethod:: RGS_rank
+.. autofunction:: RGS_rank
 

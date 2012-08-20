@@ -7,7 +7,3 @@ Polyhedron
 
 .. autoclass:: Polyhedron
    :members:
-
-.. automethod:: cyclic
-
-.. automethod:: one_based
