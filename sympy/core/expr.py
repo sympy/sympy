@@ -190,7 +190,7 @@ class Expr(Basic, EvalfMixin):
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
-        r = self.round(1)
+        r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
         i = int(r)
