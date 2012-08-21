@@ -21,7 +21,7 @@ def test_Permutation():
 
     assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
     assert cyclic([(2,3,5)], 3) == [[1, 2, 4], [0]]
-    assert one_based([[0, 1], [2]]) == [[1, 2], [3]]
+    assert one_based([[0, 1], [2]], singletons=True) == [[1, 2], [3]]
     assert one_based([[0, 1], [2]], singletons=False) == [[1, 2]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
