@@ -371,7 +371,8 @@ class LatticeOp(AssocOp):
     @property
     @cacheit
     def args(self):
-        return tuple(sorted(self._argset, key=hash))
+        from sympy.utilities import quick_sort
+        return quick_sort(self._argset)
 
     @staticmethod
     def _compare_pretty(a, b):

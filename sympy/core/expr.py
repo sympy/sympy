@@ -2852,17 +2852,7 @@ class Expr(Basic, EvalfMixin):
         precs = [f._prec for f in x.atoms(C.Float)]
         dps = prec_to_dps(max(precs)) if precs else None
 
-        xpos = abs(x.n())
-        if not xpos:
-            return S.Zero
-        try:
-            mag_first_dig = int(ceil(log10(xpos)))
-        except (ValueError, OverflowError):
-            mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
-        # check that we aren't off by 1
-        if (xpos/10**mag_first_dig) >= 1:
-            mag_first_dig += 1
-            assert .1 <= (xpos/10**mag_first_dig) < 1
+        mag_first_dig = _mag(x)
         allow = digits_needed = mag_first_dig + p
         if dps is not None and allow > dps:
             allow = dps
@@ -2907,6 +2897,34 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_nseries(self, x, n, logx):
         return self
+
+def _mag(x):
+    """Return integer ``i`` such that .1 <= x/10**i < 1
+
+    Examples
+    ========
+    >>> from sympy.core.expr import _mag
+    >>> from sympy import Float
+    >>> _mag(Float(.1))
+    0
+    >>> _mag(Float(.01))
+    -1
+    >>> _mag(Float(1234))
+    4
+    """
+    from math import log10, ceil, log
+    xpos = abs(x.n())
+    if not xpos:
+        return S.Zero
+    try:
+        mag_first_dig = int(ceil(log10(xpos)))
+    except (ValueError, OverflowError):
+        mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
+    # check that we aren't off by 1
+    if (xpos/10**mag_first_dig) >= 1:
+        assert 1 <= (xpos/10**mag_first_dig) < 10
+        mag_first_dig += 1
+    return mag_first_dig
 
 from mul import Mul
 from add import Add
