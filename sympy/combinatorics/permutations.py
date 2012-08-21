@@ -135,7 +135,7 @@ def _af_mul(*a):
         return [a[i] for i in b]
     if m == 1:
         return list(a[0])
-    rv = range(n)
+    rv = range(n) # start with identity
     for ai in reversed(a):
         rv = [ai[i] for i in rv]
     return rv
