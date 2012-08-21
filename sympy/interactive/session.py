@@ -315,7 +315,9 @@ def init_python_session():
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, quiet=False, auto_symbols=False, auto_int_to_Integer=False, argv=[]):
     """
-    Initialize an embedded IPython or Python session.
+    Initialize an embedded IPython or Python session. The IPython session is
+    initiated with the --pylab option, without the numpy imports, so that
+    matplotlib plotting can be interactive.
 
     Parameters
     ==========
@@ -433,6 +435,13 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # take a symbol arg.  The second arg is `store_history`,
                 # and False means don't add the line to IPython's history.
                 ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+
+                #Enable interactive plotting using pylab.
+                try:
+                    ip.enable_pylab(import_all=False)
+                except ImportError:
+                    #Causes an import error if matplotlib is not installed.
+                    pass
             if not in_ipython:
                 mainloop = ip.mainloop
 
