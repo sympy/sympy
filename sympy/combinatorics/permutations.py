@@ -38,9 +38,9 @@ def cyclic(cyclic_form1, n):
     rv.extend([[i] for i in sorted(need)])
     return rv
 
-def one_based(cyclic_form0, singletons=True):
+def one_based(cyclic_form0, singletons=False):
     """Return a cyclic form in 1-based cyclic form, omitting singletons
-    if ``singleton`` is False.
+    if ``singleton`` is False (default).
 
     Examples
     ========
@@ -48,9 +48,9 @@ def one_based(cyclic_form0, singletons=True):
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.permutations import one_based, cyclic
     >>> one_based([[0, 1], [2]])
-    [[1, 2], [3]]
-    >>> one_based([[0, 1], [2]], singletons=False)
     [[1, 2]]
+    >>> one_based([[0, 1], [2]], singletons=True)
+    [[1, 2], [3]]
 
     >>> p = Permutation(cyclic([(2, 3, 4)], 5))
     >>> p.reduced_cyclic_form
@@ -59,9 +59,9 @@ def one_based(cyclic_form0, singletons=True):
     [[1, 2, 3], [0], [4]]
     >>> c = _
     >>> one_based(c)
-    [[2, 3, 4], [1], [5]]
-    >>> one_based(c, False)
     [[2, 3, 4]]
+    >>> one_based(c, True)
+    [[2, 3, 4], [1], [5]]
 
     See Also
     ========
