@@ -1647,6 +1647,9 @@ class Diagram(Basic):
         f:A-->B, g:B-->C])
 
         """
+        if self.is_finite:
+            return Tuple(*self.morphisms)
+
         # Quite expectedly, we will just yield all those morphisms for
         # which ``_is_expanded_generator`` is ``True``.  The process
         # stops when there are no expanded generators at a certain
@@ -1676,7 +1679,9 @@ class Diagram(Basic):
                 morphisms_yielded_at_round += 1
                 expanded_generators.append(morphism)
 
-        return Tuple(*expanded_generators)
+        # We will never get here, because the finite case is processed
+        # at the very beginning, while in the infinite case the loop
+        # can only be broken by the return statement in its body.
 
     @property
     def objects(self):
