@@ -126,16 +126,15 @@ class _JGraph(object):
                     cycle = self.cycle
                     cycle.append(cycle[0])
                     # find the smallest point (vertex) of the cycle
-                    minn = min(cycle)
-                    cmin = cycle.index(minn)
+                    cmin = cycle.index(min(cycle))
 
                     # now walk around the cycle starting from the smallest
                     # point, and multiply around the cycle to obtain h
                     # satisfying h[cmin] = cmin
                     ap = []
-                    for c in range(cmin, len(cycle)-1) + range(cmin):
+                    for c in range(cmin, len(cycle) - 1) + range(cmin):
                         i = cycle[c]
-                        j = cycle[c+1]
+                        j = cycle[c + 1]
                         nn = vertex[i].index_neighbor[j]
                         p = jg[ vertex[i].perm[nn] ]
 
