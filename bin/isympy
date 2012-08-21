@@ -19,7 +19,8 @@ the user:
 So starting 'isympy' is equivalent to starting Python (or IPython) and
 executing the above commands by hand.  It is intended for easy and quick
 experimentation with SymPy.  isympy is a good way to use SymPy as an
-interactive calculator
+interactive calculator. If you have IPython and Matplotlib installed, then
+interactive plotting is enabled by default.
 
 COMMAND LINE OPTIONS
 --------------------
