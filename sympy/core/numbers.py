@@ -842,7 +842,7 @@ converter[float] = converter[decimal.Decimal] = Float
 # this is here to work nicely in Sage
 RealNumber = Float
 
-@deprecated
+@deprecated()
 def Real(*args, **kwargs):  # pragma: no cover
     """Deprecated alias for the Float constructor."""
     return Float(*args, **kwargs)

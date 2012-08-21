@@ -97,7 +97,7 @@ class FunctionClass(ManagedProperties):
     def __repr__(cls):
         return cls.__name__
 
-    @deprecated
+    @deprecated()
     def __contains__(self, obj):
         return (self == obj)
 
@@ -168,7 +168,7 @@ class Application(Basic):
              isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
             return new(*self.args)
 
-    @deprecated
+    @deprecated()
     def __contains__(self, obj):
         if self.func == obj:
             return True
