@@ -91,6 +91,9 @@ def igcd(a, b):
     try:
         return _gcdcache[(a,b)]
     except KeyError:
+        from sympy.ntheory.residue_ntheory import int_tested
+        a, b = int_tested(a, b)
+
         if a and b:
             if b < 0:
                 b = -b
