@@ -7,5 +7,3 @@ Permutation Groups
 
 .. autoclass:: PermutationGroup
    :members:
-
-.. autofunction:: DirectProduct
