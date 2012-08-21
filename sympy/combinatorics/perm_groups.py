@@ -1338,7 +1338,7 @@ class PermutationGroup(Basic):
         """
         r = self._r
         gens = [p.array_form for p in self.generators]
-        gens_inv = [perm_af_invert(p) for p in gens]
+        gens_inv = [_af_invert(p) for p in gens]
         set_commutators = set()
         for i in range(r):
             for j in range(r):
