@@ -355,7 +355,7 @@ def test_issue_1072() :
 def test_issue_3174():
     # when this passes, the doctests involving Sum in
     # is_constant can be unskipped
-    assert Sum(x, (x, 1, n)).n(1, subs={n: 0}) == 1
+    assert Sum(x, (x, 1, n)).n(2, subs={n: 0}) == 1
 
 @XFAIL
 def test_issue_3175():
