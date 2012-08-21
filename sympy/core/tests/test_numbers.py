@@ -165,8 +165,8 @@ def test_igcd():
     assert igcd(7, -3) == 1
     assert igcd(-7, 3) == 1
     assert igcd(-7, -3) == 1
-    raises(TypeError, lambda: igcd(45.1, 30))
-    raises(TypeError, lambda: igcd(45, 30.1))
+    raises(ValueError, lambda: igcd(45.1, 30))
+    raises(ValueError, lambda: igcd(45, 30.1))
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -177,8 +177,8 @@ def test_ilcm():
     assert ilcm(8, 2) == 8
     assert ilcm(8, 6) == 24
     assert ilcm(8, 7) == 56
-    raises(TypeError, lambda: ilcm(8.1, 7))
-    raises(TypeError, lambda: ilcm(8, 7.1))
+    raises(ValueError, lambda: ilcm(8.1, 7))
+    raises(ValueError, lambda: ilcm(8, 7.1))
 
 def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
