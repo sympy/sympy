@@ -359,4 +359,4 @@ def test_issue_3174():
 
 @XFAIL
 def test_issue_3175():
-    assert Sum(x, (x, 1, 0)).n(1) == 1
+    assert Sum(x, (x, 1, 0)).doit() == 0
