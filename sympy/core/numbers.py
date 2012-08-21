@@ -91,6 +91,9 @@ def igcd(a, b):
     try:
         return _gcdcache[(a,b)]
     except KeyError:
+        if int(a) != a or int(b) != b:
+            raise TypeError("Can't convert input arguments into int")
+
         if a and b:
             if b < 0:
                 b = -b
