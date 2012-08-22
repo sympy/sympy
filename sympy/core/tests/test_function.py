@@ -181,9 +181,9 @@ def test_Subs():
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
     assert Derivative(f(x),x).subs(x,g(x)) == Subs(Derivative(f(x),x), (x,), (g(x),))
-    assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(1) == \
-        Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(1) == \
-        z + Rational('1/2').n(1)*f(0)
+    assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
+        Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
+        z + Rational('1/2').n(2)*f(0)
 
 @XFAIL
 def test_Subs2():

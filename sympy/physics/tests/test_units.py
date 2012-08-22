@@ -7,7 +7,7 @@ def test_units():
     assert (5*m/s * day) / km == 432
     assert foot / meter == Rational('0.3048')
     # amu is a pure mass so mass/mass gives a number, not an amount (mol)
-    assert str(grams/(amu).n(1)) == '6.e+23'
+    assert str(grams/(amu).n(2)) == '6.0e+23'
 
     # Light from the sun needs about 8.3 minutes to reach earth
     t = (1*au / speed_of_light).evalf() / minute
