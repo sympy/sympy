@@ -1267,8 +1267,9 @@ def quick_sort(seq, quick=True):
     given session ``quick`` can be True.
 
     >>> from sympy.utilities import quick_sort
+    >>> from sympy.abc import x
     >>> quick_sort([x, 1, 3])
-    (x, 1, 3)
+    (1, 3, x)
     """
     from collections import defaultdict
     d = defaultdict(list)
