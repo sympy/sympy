@@ -403,9 +403,9 @@ class cos(TrigonometricFunction):
 
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return (S.NegativeOne)**pi_coeff
             if not pi_coeff.is_Rational:
-                if pi_coeff.is_integer:
-                    return (S.NegativeOne)**pi_coeff
                 narg = pi_coeff*S.Pi
                 if narg != arg:
                     return cls(narg)
