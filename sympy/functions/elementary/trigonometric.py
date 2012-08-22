@@ -445,7 +445,6 @@ class cos(TrigonometricFunction):
                 #    return None
 
                 if 0==q%2:
-                    # ?? narg = C.Rational(p%q, q/2)*S.Pi
                     narg = (pi_coeff*2)*S.Pi
                     nval = cls(narg)
                     if None == nval:
@@ -467,16 +466,16 @@ class cos(TrigonometricFunction):
                     # Now we use partial-fraction decomposition
                     # and angle sum formulas.
                     if frozenset([3,5]) == FC:
-                        narg1 = C.Rational(p, 6)*S.Pi
-                        narg2 = C.Rational(p,10)*S.Pi
+                        narg1 = Rational(p, 6)*S.Pi
+                        narg2 = Rational(p,10)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     elif frozenset([3,17]) == FC:
-                        narg1 = C.Rational(p*6,17)*S.Pi
-                        narg2 = C.Rational(p*1, 3)*S.Pi
+                        narg1 = Rational(p*6,17)*S.Pi
+                        narg2 = Rational(p*1, 3)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     elif frozenset([5,17]) == FC:
-                        narg1 = C.Rational(p*7,17)*S.Pi
-                        narg2 = C.Rational(p*2, 5)*S.Pi
+                        narg1 = Rational(p*7,17)*S.Pi
+                        narg2 = Rational(p*2, 5)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     else :
                         return None
@@ -525,7 +524,7 @@ class cos(TrigonometricFunction):
                     else:
                         return None
                 return result.expand()
-                # should have used sqrtdenest() ?
+                # should have used sqrtdenest() rather than expand ?
             return None
 
         if arg.is_Add:
