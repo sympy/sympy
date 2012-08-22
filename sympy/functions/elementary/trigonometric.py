@@ -519,8 +519,8 @@ class cos(TrigonometricFunction):
                     else:
                         result = ChebyshevMethod(fundamental,p)
                 except KeyError:
-                    if pi_coeff.p != p or pi_coeff.q != q:
-                        narg = C.Rational(p, q)*S.Pi
+                    if (pi_coeff.p, pi_coeff.q) != (p,q):
+                        narg = Rational(p, q)*S.Pi
                         result = cls(narg)
                     else:
                         return None
