@@ -1255,3 +1255,27 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def quick_sort(seq, quick=True):
+    """Sort by hash and break ties with default_sort_key (default)
+    or entirely by default_sort_key if ``quick`` is False.
+
+    When sorting for consistency between systems, ``quick`` should be False;
+    if sorting is just needed to give consistent orderings during a
+    given session ``quick`` can be True.
+
+    >>> from sympy.utilities import quick_sort
+    >>> quick_sort([x, 1, 3])
+    (x, 1, 3)
+    """
+    from collections import defaultdict
+    d = defaultdict(list)
+    for a in seq:
+        d[hash(a)].append(a)
+    seq = []
+    for k in sorted(d.keys()):
+      if len(d[k]) > 1:
+          seq.extend(sorted(d[k], key=default_sort_key))
+      else:
+          seq.extend(d[k])
+    return tuple(seq)
