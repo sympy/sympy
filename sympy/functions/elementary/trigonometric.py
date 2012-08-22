@@ -172,8 +172,9 @@ class sin(TrigonometricFunction):
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
-            elif arg is S.Infinity:
-                return
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return        # for test_sin in test_trigonometric
+
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -193,44 +194,19 @@ class sin(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            cst_table_some = {
-                2 : S.One,
-                3 : S.Half*sqrt(3),
-                4 : S.Half*sqrt(2),
-                6 : S.Half,
-            }
-
-            cst_table_more = {
-                (1, 5) : sqrt((5 - sqrt(5)) / 8),
-                (2, 5) : sqrt((5 + sqrt(5)) / 8)
-            }
-
-            p = pi_coeff.p
-            q = pi_coeff.q
-
-            Q, P = p // q, p % q
-
-            try:
-                result = cst_table_some[q]
-            except KeyError:
-                if abs(P) > q // 2:
-                    P = q - P
-
-                try:
-                    result = cst_table_more[(P, q)]
-                except KeyError:
-                    if P != p:
-                        result = cls(C.Rational(P, q)*S.Pi)
-                    else:
-                        newarg = pi_coeff*S.Pi
-                        if newarg != arg:
-                            return cls(newarg)
-                        return None
-
-            if Q % 2 == 1:
-                return -result
-            else:
-                return result
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # transform a sine to a cosine, to avoid redundant code
+            if pi_coeff.is_Rational:
+                x = pi_coeff%2
+                if x > 1:
+                    return -cls(x%1*S.Pi)
+                if 2*x > 1:
+                    return cls((1-x)*S.Pi)
+                narg = ((pi_coeff + Rational(3,2))%2)*S.Pi
+                result = cos(narg)
+                if not isinstance(result,cos):
+                    return result
+                return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -415,8 +391,8 @@ class cos(TrigonometricFunction):
                 return S.NaN
             elif arg is S.Zero:
                 return S.One
-            elif arg is S.Infinity:
-                return
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return        # for test_sin in test_trigonometric
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
@@ -427,53 +403,129 @@ class cos(TrigonometricFunction):
 
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return (S.NegativeOne)**pi_coeff
             if not pi_coeff.is_Rational:
-                if pi_coeff.is_integer:
-                    return (S.NegativeOne)**pi_coeff
                 narg = pi_coeff*S.Pi
                 if narg != arg:
                     return cls(narg)
                 return None
 
-            cst_table_some = {
-                1 : S.One,
-                2 : S.Zero,
-                3 : S.Half,
-                4 : S.Half*sqrt(2),
-                6 : S.Half*sqrt(3),
-            }
+            # cosine formula #####################
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            def fermatCoords(n):
+                assert isinstance(n,int)
+                assert n > 0
+                if n == 1 or 0 == n%2:
+                    return False
+                primes = { 65537:0,257:0,17:0,5:0,3:0 }
+                for i,p_i in enumerate(primes):
+                    while 0 == n%p_i:
+                        n = n/p_i;
+                        primes[p_i] += 1;
+                if 1 != n:
+                    return False
+                if max(primes.values()) > 1:
+                    return False
+                return frozenset([ p for p in primes if primes[p]==1])
+            if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % (2*q)
+                if p>q:
+                    narg = (pi_coeff-1)*S.Pi
+                    return -cls(narg)
+                if 2*p > q:
+                    narg = (1-pi_coeff)*S.Pi
+                    return -cls(narg)
 
-            cst_table_more = {
-                (1, 5) : (sqrt(5) + 1)/4,
-                (2, 5) : (sqrt(5) - 1)/4
-            }
+                ###  Good place to bail-out.
+                #if q > 15:
+                #    # arbitrary threshold set for complex denominators
+                #    # 15 is the largest denominator allowed
+                #    return None
 
-            p = pi_coeff.p
-            q = pi_coeff.q
-
-            Q, P = 2*p // q, p % q
-
-            try:
-                result = cst_table_some[q]
-            except KeyError:
-                if abs(P) > q // 2:
-                    P = q - P
-
-                try:
-                    result = cst_table_more[(P, q)]
-                except KeyError:
-                    if P != p:
-                        result = cls(C.Rational(P, q)*S.Pi)
-                    else:
-                        newarg = pi_coeff*S.Pi
-                        if newarg != arg:
-                            return cls(newarg)
+                if 0==q%2:
+                    narg = (pi_coeff*2)*S.Pi
+                    nval = cls(narg)
+                    if None == nval:
+                        return None
+                    if isinstance(nval,cos):
+                        return
+                    if isinstance(-nval,cos):
+                        return
+                    x = (2*pi_coeff+1)/2
+                    sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+                    return sign_cos*sqrt( (1+nval)/2 )
+                FC = fermatCoords(q)
+                if not FC or len(FC) > 2:
+                    return None
+                elif len(FC) == 2:
+                    # only 3, 5, and 17 are used currently
+                    # so only 3 pairs are possible.
+                    #
+                    # Now we use partial-fraction decomposition
+                    # and angle sum formulas.
+                    if frozenset([3,5]) == FC:
+                        narg1 = Rational(p, 6)*S.Pi
+                        narg2 = Rational(p,10)*S.Pi
+                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
+                    elif frozenset([3,17]) == FC:
+                        narg1 = Rational(p*6,17)*S.Pi
+                        narg2 = Rational(p*1, 3)*S.Pi
+                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
+                    elif frozenset([5,17]) == FC:
+                        narg1 = Rational(p*7,17)*S.Pi
+                        narg2 = Rational(p*2, 5)*S.Pi
+                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
+                    else :
                         return None
 
-            if Q % 4 in (1, 2):
-                return -result
-            else:
-                return result
+                assert len(FC) == 1
+
+                def makecos17():
+                    # this calculation could be cached
+                    sq17 = sqrt(17)
+                    en = sqrt(17 + sq17)
+                    ec = sqrt(17 - sq17)
+                    d = sq17-1
+                    a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
+                    return sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
+                    # sin(pi/17) = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8
+
+                cst_table_some = {
+                    1 : -S.One,
+                    3 : S.Half,
+                    5 : (sqrt(5) + 1)/4,
+                    17 : makecos17(),
+                    # 65537 and 257 are missing becaue they are too complicated.
+                }
+
+                def ChebyshevMethod(x,n):
+                    # Chebyshev polynomial method for reducing
+                    # numerators
+                    y = x*x-1
+                    z = sqrt(y.expand())
+                    E = ((x-z)**n + (x+z)**n)/2
+                    E = E.expand()
+                    return E
+
+                try:
+                    fundamental= cst_table_some[q]
+                    if 1 == p:
+                        result = fundamental
+                    elif 2 == p:
+                        result = 2*fundamental**2-1
+                    else:
+                        result = ChebyshevMethod(fundamental,p)
+                except KeyError:
+                    if (pi_coeff.p, pi_coeff.q) != (p,q):
+                        narg = Rational(p, q)*S.Pi
+                        result = cls(narg)
+                    else:
+                        return None
+                return result.expand()
+                # should have used sqrtdenest() rather than expand ?
+            return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
