@@ -155,7 +155,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 Nlhs = S.Zero
             elif know is False:
                 from sympy import sign
-                Nlhs = sign(diff.n(1))
+                Nlhs = sign(diff.n(2))
             else:
                 Nlhs = None
                 lhs = know

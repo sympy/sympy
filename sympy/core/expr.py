@@ -190,7 +190,7 @@ class Expr(Basic, EvalfMixin):
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
-        r = self.round(1)
+        r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
         i = int(r)
@@ -200,11 +200,11 @@ class Expr(Basic, EvalfMixin):
         if i == r and not (self - i).equals(0):
             isign = 1 if i > 0 else -1
             x = C.Dummy()
-            # in the following (self - i).evalf(1) will not always work while
-            # (self - r).evalf(1) and the use of subs does; if the test that
+            # in the following (self - i).evalf(2) will not always work while
+            # (self - r).evalf(2) and the use of subs does; if the test that
             # was added when this comment was added passes, it might be safe
             # to simply use sign to compute this rather than doing this by hand:
-            diff_sign = 1 if (self - x).evalf(1, subs={x: i}) > 0 else -1
+            diff_sign = 1 if (self - x).evalf(2, subs={x: i}) > 0 else -1
             if diff_sign != isign:
                 i -= isign
         return i
@@ -328,10 +328,10 @@ class Expr(Basic, EvalfMixin):
             a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free]))
-            nmag = abs(self.evalf(1, subs=reps))
+            nmag = abs(self.evalf(2, subs=reps))
         else:
             reps = {}
-            nmag = abs(self.evalf(1))
+            nmag = abs(self.evalf(2))
 
         if not hasattr(nmag, '_prec'):
             # e.g. exp_polar(2*I*pi) doesn't evaluate but is_number is True
@@ -575,7 +575,7 @@ class Expr(Basic, EvalfMixin):
                 return False
             try:
                 # check to see that we can get a value
-                n2 = self._eval_evalf(1)
+                n2 = self._eval_evalf(2)
             except AttributeError:
                 n2 = None
             if n2 is None:
@@ -597,7 +597,7 @@ class Expr(Basic, EvalfMixin):
                 return False
             try:
                 # check to see that we can get a value
-                n2 = self._eval_evalf(1)
+                n2 = self._eval_evalf(2)
             except AttributeError:
                 n2 = None
             if n2 is None:
