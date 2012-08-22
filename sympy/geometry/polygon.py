@@ -1340,9 +1340,9 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy.geometry import RegularPolygon, Point
-        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp = RegularPolygon(Point(0, 0), 4, 7)
         >>> rp.incircle
-        Circle(Point(0, 0), 4*cos(pi/8))
+        Circle(Point(0, 0), 4*cos(pi/7))
 
         """
         return Circle(self.center, self.apothem)
