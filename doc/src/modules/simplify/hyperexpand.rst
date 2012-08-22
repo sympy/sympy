@@ -104,7 +104,7 @@ when `a_I \ne 0` and `r \ne 0`. Substituting `a_I - 1` for
 following rules:
 
 * An index `a_I` can be decremented if `a_I \ne 1` and
-  `a_I \ne b_j` for all `b_j`. 
+  `a_I \ne b_j` for all `b_j`.
 * An index `b_J` can be
   incremented if `b_J \ne -1` and `b_J \ne a_i` for all
   `a_i`.
@@ -316,7 +316,7 @@ Also
     \Gamma(1 - a_j + l_u + b + t) =
         \Gamma(1 - a_j + l_u + b) (1 - a_j + l_u + b)_t
 
-and 
+and
 
 .. math ::
     res_{s = b + l_u + t} \Gamma(b - s) = -\frac{(-1)^{l_u + t}}{(l_u + t)!}
@@ -384,6 +384,221 @@ good way of testing this, other than observing very messy output). In this
 case the matrices `B`, `C` and `M` should be computed by hand. Then the helper
 ``addb`` can be used to declare a hypergeometric formula with hand-computed
 basis.
+
+An example
+==========
+
+Because this explanation so far might be very theoretical and difficult to
+understand, we walk through an explicit example now. We take the Fresnel
+function `C(z)` which obeys the following hypergeometric representation:
+
+.. math ::
+    C(z) = z \cdot {}_{1}F_{2}\left.\left(
+        \begin{matrix} \frac{1}{4} \\
+                       \frac{1}{2}, \frac{5}{4}
+        \end{matrix} \right| -\frac{\pi^2 z^4}{16}\right) \,.
+
+First we try to add this formula to the lookup table by using the
+(simpler) function ``add(ap, bq, res)``. The first two arguments
+are simply the lists containing the parameter sets of `{}_{1}F_{2}`.
+The ``res`` argument is a little bit more complicated. We only know
+`C(z)` in terms of `{}_{1}F_{2}(\ldots | f(z))` with `f`
+a function of `z`, in our case
+
+.. math ::
+   f(z) = -\frac{\pi^2 z^4}{16} \,.
+
+What we need is a formula where the hypergeometric function has
+only `z` as argument `{}_{1}F_{2}(\ldots | z)`. We
+introduce the new complex symbol `w` and search for a function
+`g(w)` such that
+
+.. math ::
+   f(g(w)) = w
+
+holds. Then we can replace every `z` in `C(z)` by `g(w)`.
+In the case of our example the function `g` could look like
+
+.. math ::
+   g(w) = \frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}} \,.
+
+We get these functions mainly by guessing and testing the result. Hence
+we proceed by computing `f(g(w))` (and simplifying naively)
+
+.. math ::
+   f(g(w)) &= -\frac{\pi^2 g(w)^4}{16} \\
+           &= -\frac{\pi^2 g\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)^4}{16} \\
+           &= -\frac{\pi^2 \frac{2^4}{\sqrt{\pi}^4} \exp\left(\frac{i \pi}{4}\right)^4 {w^{\frac{1}{4}}}^4}{16} \\
+           &= -\exp\left(i \pi\right) w \\
+           &= w
+
+and indeed get back `w`. (In case of branched functions we have to be
+aware of branch cuts. In that case we take `w` to be a positive real
+number and check the formula. If what we have found works for positive
+`w`, then just replace :func:`exp` inside any branched function by
+:func:`exp\_polar` and what we get is right for `all` `w`.) Hence
+we can write the formula as
+
+.. math ::
+   C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(
+        \begin{matrix} \frac{1}{4} \\
+                       \frac{1}{2}, \frac{5}{4}
+        \end{matrix} \right| w\right) \,.
+
+and trivially
+
+.. math ::
+   {}_{1}F_{2}\left.\left(
+   \begin{matrix} \frac{1}{4} \\
+                  \frac{1}{2}, \frac{5}{4}
+   \end{matrix} \right| w\right)
+   = \frac{C(g(w))}{g(w)}
+   = \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
+          {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}
+
+which is exactly what is needed for the third paramenter,
+``res``, in ``add``. Finally, the whole function call to add
+this rule to the table looks like::
+
+  add([S(1)/4],
+      [S(1)/2, S(5)/4],
+      fresnelc(exp(pi*I/4)*root(z,4)*2/sqrt(pi)) / (exp(pi*I/4)*root(z,4)*2/sqrt(pi))
+     )
+
+Using this rule we will find that it works but the results are not really nice
+in terms of simplicity and number of special function instances included.
+We can obtain much better results by adding the formula to the lookup table
+in another way. For this we use the (more complicated) function ``addb(ap, bq, B, C, M)``.
+The first two arguments are again the lists containing the parameter sets of
+`{}_{1}F_{2}`. The remaining three are the matrices mentioned earlier
+on this page.
+
+We know that the `n = \max{\left(p, q+1\right)}`-th derivative can be
+expressed as a linear combination of lower order derivatives. The matrix
+`B` contains the basis `\{B_0, B_1, \ldots\}` and is of shape
+`n \times 1`. The best way to get `B_i` is to take the first
+`n = \max(p, q+1)` derivatives of the expression for `{}_p F_q`
+and take out usefull pieces. In our case we find that
+`n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
+we have to use the operator `z\frac{\mathrm{d}}{\mathrm{d}z}`. The
+first basis element `B_0` is set to the expression for `{}_1 F_2`
+from above:
+
+.. math ::
+   B_0 = \frac{ \sqrt{\pi} \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+   C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)}
+   {2 z^{\frac{1}{4}}}
+
+Next we compute `z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
+directly use SymPy!
+
+   >>> from sympy import Symbol, sqrt, exp, I, pi, fresnelc, root, diff, expand
+   >>> z = Symbol("z")
+   >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
+   >>> z * diff(B0, z)
+   z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+   >>> expand(_)
+   cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
+
+Formatting this result nicely we obtain
+
+.. math ::
+   B_1^\prime =
+   - \frac{1}{4} \frac{
+     \sqrt{\pi}
+     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+   }
+   {2 z^{\frac{1}{4}}}
+   + \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )}
+
+Computing the second derivative we find
+
+   >>> from sympy import Symbol, cosh, sqrt, pi, exp, I, fresnelc, root, diff, expand
+   >>> z = Symbol("z")
+   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
+   >>> z * diff(B1prime, z)
+   z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))
+   >>> expand(_)
+   sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16 + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4))
+
+which can be printed as
+
+.. math ::
+   B_2^\prime =
+   \frac{1}{16} \frac{
+     \sqrt{\pi}
+     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+   }
+   {2 z^{\frac{1}{4}}}
+   - \frac{1}{16} \cosh{\left(2\sqrt{z}\right)}
+   + \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z}
+
+We see the common pattern and can collect the pieces. Hence it makes sense to
+choose `B_1` and `B_2` as follows
+
+.. math ::
+   B =
+   \left( \begin{matrix}
+     B_0 \\ B_1 \\ B_2
+   \end{matrix} \right)
+   =
+   \left( \begin{matrix}
+     \frac{
+       \sqrt{\pi}
+       \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+       C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+     }{2 z^{\frac{1}{4}}} \\
+     \cosh\left(2\sqrt{z}\right) \\
+     \sinh\left(2\sqrt{z}\right) \sqrt{z}
+   \end{matrix} \right)
+
+(This is in contrast to the basis `B = \left(B_0, B_1^\prime, B_2^\prime\right)` that would
+have been computed automatically if we used just ``add(ap, bq, res)``.)
+
+Because it must hold that `{}_p F_q\left(\cdots \middle| z \right) = C B`
+the entries of `C` are obviously
+
+.. math ::
+   C =
+   \left( \begin{matrix}
+     1 \\ 0 \\ 0
+   \end{matrix} \right)
+
+Finally we have to compute the entries of the `3 \times 3` matrix `M`
+such that `z\frac{\mathrm{d}}{\mathrm{d}z} B = M B` holds. This is easy.
+We already computed the first part `z\frac{\mathrm{d}}{\mathrm{d}z} B_0`
+above. This gives us the first row of `M`. For the second row we have:
+
+   >>> from sympy import Symbol, cosh, sqrt, diff
+   >>> z = Symbol("z")
+   >>> B1 = cosh(2*sqrt(z))
+   >>> z * diff(B1, z)
+   sqrt(z)*sinh(2*sqrt(z))
+
+and for the third one
+
+   >>> from sympy import Symbol, sinh, sqrt, expand, diff
+   >>> z = Symbol("z")
+   >>> B2 = sinh(2*sqrt(z))*sqrt(z)
+   >>> expand(z * diff(B2, z))
+   sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
+
+Now we have computed the entries of this matrix to be
+
+.. math ::
+   M =
+   \left( \begin{matrix}
+     -\frac{1}{4} & \frac{1}{4} & 0 \\
+     0            & 0           & 1 \\
+     0            & z           & \frac{1}{2} \\
+   \end{matrix} \right)
+
+Note that the entries of `C` and `M` should typically be
+rational functions in `z`, with rational coefficients. This is all
+we need to do in order to add a new formula to the lookup table for
+``hyperexpand``.
 
 Implemented Hypergeometric Formulae
 ***********************************
