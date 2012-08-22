@@ -82,6 +82,19 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) == True
     assert isinstance(sin(-re(x) + im(y)), sin) == False
 
+    for d in range(1,22)+[60,85]:
+        for n in xrange(0,d*2+1):
+            x = n*pi/d
+            e = abs( float(sin(x)) - sin(float(x)) )
+            assert e < 1e-12
+
+def test_sin_cos():
+    for d in [1,2,3,4,5,6,8,10,12,15,16,20,60,85]: # list is not exhaustive...
+        for n in xrange(0,d*2):
+            x = n*pi/d
+            assert sin(x+pi/2) == cos(x)
+            assert sin(x-pi/2) == -cos(x)
+
 def test_sin_series():
     x = Symbol('x')
     assert sin(x).series(x, 0, 9) == \
@@ -225,6 +238,12 @@ def test_cos():
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
+
+    for d in range(1,22)+[60,85]:
+        for n in xrange(0,2*d+1):
+            x = n*pi/d
+            e = abs( float(cos(x)) - cos(float(x)) )
+            assert e < 1e-12
 
 def test_issue_3091():
     c = Float('123456789012345678901234567890.25', '')
