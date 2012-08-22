@@ -2,7 +2,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup
-from sympy.combinatorics.permutations import Permutation, _af_mul, cyclic
+from sympy.combinatorics.permutations import Permutation, _af_mul
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 import random

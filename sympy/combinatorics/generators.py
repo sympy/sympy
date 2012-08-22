@@ -1,5 +1,5 @@
 from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.permutations import cyclic as perm_cyclic
+from sympy.combinatorics.permutations import full_cyclic_form0 as perm_cyclic
 from sympy.utilities.iterables import variations, rotate_left
 
 def symmetric(n):

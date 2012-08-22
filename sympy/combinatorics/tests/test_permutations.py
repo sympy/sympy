@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_mul, cyclic, one_based)
+    _af_mul, _af_mul, full_cyclic_form0, cyclic_form1)
 
 from sympy.utilities.pytest import raises
 
@@ -19,10 +19,10 @@ def test_Permutation():
     assert _af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
         [6, 5, 3, 0, 2, 4, 1]
 
-    assert cyclic([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
-    assert cyclic([(2,3,5)], 3) == [[1, 2, 4], [0]]
-    assert one_based([[0, 1], [2]], singletons=True) == [[1, 2], [3]]
-    assert one_based([[0, 1], [2]], singletons=False) == [[1, 2]]
+    assert full_cyclic_form0([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
+    assert full_cyclic_form0([(2,3,5)], 3) == [[1, 2, 4], [0]]
+    assert cyclic_form1([[0, 1], [2]], singletons=True) == [[1, 2], [3]]
+    assert cyclic_form1([[0, 1], [2]], singletons=False) == [[1, 2]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
