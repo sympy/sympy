@@ -85,6 +85,8 @@ class Basic(object):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
         """ Pickling support."""

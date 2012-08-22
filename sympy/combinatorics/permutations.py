@@ -7,26 +7,28 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
-def cyclic(cyclic_form1, n):
-    """Convert from 1-based cyclic-form to 0-based cyclic form after
-    filling in any missing singletons (up to ``n``).
+def full_cyclic_form0(cyclic_form1, n):
+    """Convert from a 1-based permutation in cycle notation
+    to 0-based cyclic form after filling in any missing
+    singletons (up to ``n``).
 
     If any element in the cycles is greater than n, singletons will
-    be missing from the cyclic form returned.
+    be missing from the returned permutation.
 
-    >>> from sympy.combinatorics.permutations import cyclic
+    >>> from sympy.combinatorics.permutations import full_cyclic_form0
     >>> a = [(1, 2, 3)]
-    >>> cyclic(a, 5)
+    >>> full_cyclic_form0(a, 5)
     [[0, 1, 2], [3], [4]]
     >>> a = [(1, 2, 3), (4, 5)]
-    >>> cyclic(a, 5)
+    >>> full_cyclic_form0(a, 5)
     [[0, 1, 2], [3, 4]]
-    >>> cyclic([[4, 5]], 2)
+    >>> full_cyclic_form0([[4, 5]], 2)
     [[3, 4], [0], [1]]
 
     See Also
     ========
-    one_based
+
+    cyclic_form1
     """
 
     rv = []
@@ -38,34 +40,36 @@ def cyclic(cyclic_form1, n):
     rv.extend([[i] for i in sorted(need)])
     return rv
 
-def one_based(cyclic_form0, singletons=False):
+def cyclic_form1(cyclic_form0, singletons=False):
     """Return a cyclic form in 1-based cyclic form, omitting singletons
     if ``singleton`` is False (default).
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.permutations import one_based, cyclic
-    >>> one_based([[0, 1], [2]])
+    >>> from sympy.combinatorics.permutations import (Permutation,
+    ... cyclic_form1, full_cyclic_form0)
+    ...
+    >>> cyclic_form1([[0, 1], [2]])
     [[1, 2]]
-    >>> one_based([[0, 1], [2]], singletons=True)
+    >>> cyclic_form1([[0, 1], [2]], singletons=True)
     [[1, 2], [3]]
 
-    >>> p = Permutation(cyclic([(2, 3, 4)], 5))
+    >>> p = Permutation(full_cyclic_form0([(2, 3, 4)], 5))
     >>> p.reduced_cyclic_form
     [[1, 2, 3]]
     >>> p.cyclic_form
     [[1, 2, 3], [0], [4]]
     >>> c = _
-    >>> one_based(c)
+    >>> cyclic_form1(c)
     [[2, 3, 4]]
-    >>> one_based(c, True)
+    >>> cyclic_form1(c, True)
     [[2, 3, 4], [1], [5]]
 
     See Also
     ========
-    cyclic
+
+    full_cyclic_form0
     """
 
     min = 1 + (not bool(singletons))
@@ -121,7 +125,7 @@ def _af_mul(*a):
 
     See Also
     ========
-    Permutation, _af_mul
+    Permutation
     """
     if not a:
         raise ValueError("No element")

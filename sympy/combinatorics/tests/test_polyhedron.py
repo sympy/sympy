@@ -1,11 +1,16 @@
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
-    tetrahedron, cube as square, octahedron, dodecahedron, icosahedron)
+    tetrahedron, cube as square, octahedron, dodecahedron, icosahedron, minlex,
+    cube_faces)
 from sympy.combinatorics.permutations import Permutation
 
 import random
 
-C1, C2, C3, C4, C5, C6, C7, C8, C9 = range(9)
+def test_minlex():
+    p = Permutation(range(3))
+    while p:
+        assert minlex(p.array_form) == (0, 1, 2)
+        p = p.next_lex()
 
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
@@ -22,17 +27,13 @@ def test_polyhedron():
               Permutation([[4,1],[0,5],[6,2],[7,3]]),\
               Permutation([[7,2],[3,6],[0,4],[1,5]]),\
               Permutation([0,1,2,3,4,5,6,7])]
-
-    faces = ((C1,C8,C3,C6),(C1,C8,C2,C7),(C2,C5,C3,C8),
-             (C2,C5,C4,C7),(C4,C7,C1,C6),(C3,C5,C4,C6))
-
-
     corners = tuple(symbols('A:H'))
+    faces = cube_faces
     cube = Polyhedron(corners, faces, pgroup)
 
-    assert cube.size == 8
-    assert cube.edges == FiniteSet(*[(C1, C6), (C1, C7), (C1, C8), (C2, C5), (C2, C7),
-        (C2, C8), (C3, C5), (C3, C6), (C3, C8), (C4, C5), (C4, C6), (C4, C7)])
+    assert cube.edges == FiniteSet(*(
+        (0, 1), (6, 7), (1, 2), (5, 6), (0, 3), (2, 3),
+        (4, 7), (4, 5), (3, 7), (1, 5), (0, 4), (2, 6)))
 
     for i in xrange(3):    #  add 180 degree face rotations
         cube.rotate(cube.pgroups[i]**2)
@@ -46,6 +47,35 @@ def test_polyhedron():
 
     assert cube.make_perm(5, seed=range(5)) == Permutation([4, 5, 7, 6, 0, 1, 3, 2])
     assert cube.make_perm(7, seed=range(7)) == Permutation([5, 4, 6, 7, 1, 0, 2, 3])
-    assert all(len(f) + len(v) - len(Polyhedron(v, f).edges) == 2
-        for v, f in (tetrahedron, square, octahedron,
-        dodecahedron, icosahedron))
+
+
+    def check(h, size, rpt, target):
+
+        assert len(h.faces) + len(h.vertices) - len(h.edges) == 2
+        assert h.size == size
+
+        got = set()
+        for p in h.pgroups:
+            # make sure it restores original
+            P = h.copy()
+            hit = P.corners
+            for i in range(rpt):
+                P.rotate(p)
+                if P.corners == hit:
+                    break
+            else:
+                print 'error in permutation', p.array_form
+            for i in range(rpt):
+                P.rotate(p)
+                got.add(tuple(P.corners))
+                c = P.corners
+                f = [[c[i] for i in f] for f in P.faces]
+                assert h.faces == Polyhedron(c, f).faces
+        assert len(got) == target
+
+    for h, size, rpt, target in zip(
+        (tetrahedron, square, octahedron, dodecahedron, icosahedron),
+        (4,           8,      6,          20,          12),
+        (3,           4,      4,          5,            5),
+        (12,          24,     24,         60,           60)):
+        check(h, size, rpt, target)
