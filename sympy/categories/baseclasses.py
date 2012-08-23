@@ -1749,6 +1749,28 @@ class Diagram(Basic):
         return (m for m in self.morphisms if (m.domain == A) and
                 (m.codomain == B))
 
+    def expanded_generators_hom(self, A, B):
+        """
+        Returns a generator which enumerates all expanded generators
+        between the objects ``A`` and ``B``.
+
+        Examples
+        ========
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import pprint
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, A, "g")
+        >>> d = Diagram(f, g)
+        >>> pprint(set(d.expanded_generators_hom(A, B)), use_unicode=False)
+        set([f*g*f:A-->B, f:A-->B])
+
+        """
+        return (m for m in self.expanded_generators if (m.domain == A) and
+                (m.codomain == B))
+
     @staticmethod
     def _get_involved_objects(morphism):
         """

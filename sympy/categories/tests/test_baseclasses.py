@@ -131,6 +131,7 @@ def test_diagram():
     assert set(d1.hom(A, B)) == set([f])
     assert set(d1.hom(A, A)) == set([id_A])
     assert set(d1.hom(B, B)) == set([id_B])
+    assert set(d1.expanded_generators_hom(A, B)) == set(d1.hom(A, B))
 
     # Test construction from an iterable.
     assert d1 == Diagram([f])
@@ -148,6 +149,7 @@ def test_diagram():
     assert set(d2.hom(A, C)) == set([g * f])
     assert d2 == Diagram(f, g)
     assert set(d2.expanded_generators) == set(d2.morphisms)
+    assert set(d2.expanded_generators_hom(A, C)) == set([g * f])
 
     raises(ValueError, lambda: Diagram([g * f]))
     raises(ValueError, lambda: Diagram(g * f))
