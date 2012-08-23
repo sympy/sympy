@@ -95,19 +95,20 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
         return QQ
 
     def exquo(self, a, b):
-        """Exact quotient of ``a`` and ``b``, implies ``__div__``.  """
+        """Exact quotient of ``a`` and ``b``.  """
         return a / b
 
     def quo(self, a, b):
-        """Quotient of ``a`` and ``b``, implies ``__div__``. """
+        """Quotient of ``a`` and ``b``. """
         return a / b
 
     def rem(self, a, b):
-        """Remainder of ``a`` and ``b``, implies nothing.  """
-        return self.zero
+        """Remainder of ``a`` and ``b``.  """
+        return a % b
 
     def div(self, a, b):
-        """Division of ``a`` and ``b``, implies ``__div__``. """
+        """Division of ``a`` and ``b``. """
+        return (a / b, a % b)
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """

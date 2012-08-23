@@ -458,9 +458,21 @@ class Domain(object):
         """Returns denominator of ``a``. """
         raise NotImplementedError
 
+    def half_gcdex(self, a, b):
+        """Half extended GCD of ``a`` and ``b``. """
+        s, t, h = self.gcdex(a, b)
+        return s, h
+
     def gcdex(self, a, b):
         """Extended GCD of ``a`` and ``b``. """
         raise NotImplementedError
+
+    def cofactors(self, a, b):
+        """Returns GCD and cofactors of ``a`` and ``b``. """
+        gcd = self.gcd(a, b)
+        cfa = self.quo(a, gcd)
+        cfb = self.quo(b, gcd)
+        return gcd, cfa, cfb
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """
