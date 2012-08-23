@@ -15,6 +15,8 @@ def test_simple_1():
     assert Order(2*x) == Order(x)
     assert Order(x)*3 == Order(x)
     assert -28*Order(x) == Order(x)
+    assert Order(Order(x)) == Order(x)
+    assert Order(Order(x), y) == Order(Order(x), x, y)
     assert Order(-23) == Order(1)
     assert Order(exp(x)) == Order(1,x)
     assert Order(exp(1/x)).expr == exp(1/x)
@@ -62,6 +64,12 @@ def test_simple_7():
     assert 2+O(1) == O(1)
     assert x+O(1) == O(1)
     assert 1/x+O(1) == 1/x+O(1)
+
+def test_as_expr_variables():
+    assert Order(x).as_expr_variables(None) == (x, (x,))
+    assert Order(x).as_expr_variables((x,)) == (x, (x,))
+    assert Order(y).as_expr_variables((x,)) == (y, (x, y))
+    assert Order(y).as_expr_variables((x, y)) == (y, (x, y))
 
 def test_contains_0():
     assert Order(1,x).contains(Order(1,x))
@@ -185,6 +193,7 @@ def test_order_symbols():
     assert O(e, x) == O(x**2)
 
 def test_nan():
+    assert O(nan) == nan
     assert not O(x).contains(nan)
 
 def test_O1():
@@ -220,6 +229,8 @@ def test_eval():
     from sympy import Basic
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
+    assert Order(x).subs(y, x) == Order(x)
+    assert Order(x).subs(x, x + y) == Order(x + y)
     assert (O(1)**x).is_Pow
 
 def test_oseries():
