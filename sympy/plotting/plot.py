@@ -1300,7 +1300,7 @@ def plot3D_parametric(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos(u), sin(u)
+    >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot3D_parametric
     >>> u = symbols('u')
 
@@ -1472,7 +1472,7 @@ def plot3D_surface(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos(u), sin(u)
+    >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot3D_surface
     >>> u, v = symbols('u v')
 
