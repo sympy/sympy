@@ -26,6 +26,9 @@ def test_morphisms():
     assert id_A.codomain == A
     assert id_A == IdentityMorphism(A)
     assert id_A != id_B
+    assert id_A == IdentityMorphism(A, A)
+
+    raises(ValueError, lambda: IdentityMorphism(A, B))
 
     # Test named morphisms.
     g = NamedMorphism(B, C, "g")
@@ -489,3 +492,32 @@ def test_implication():
     h = NamedMorphism(C, A, "h")
     imp = Implication(premise, Diagram(h))
     assert imp.diff() == FiniteSet(h)
+
+def test_sympy_compliance():
+    """
+    This will run some tests which assure to some extent SymPy
+    compliance of certain classes.
+    """
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    assert f.__class__(*f.args) == f
+
+    K = Category("K")
+    assert K.__class__(*K.args) == K
+
+    f_ = DerivedMorphism(A, B, "f_", f)
+    assert f_.__class__(*f_.args) == f_
+
+    id_A = IdentityMorphism(A)
+    assert id_A.__class__(*id_A.args) == id_A
+
+    assert (g * f).__class__(*(g * f).args) == g * f
+
+    d = Diagram({g: "golden", f: []})
+    assert d.__class__(*d.args) == d
+
+    imp = Implication(d, d)
+    assert imp.__class__(*imp.args) == imp

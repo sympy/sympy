@@ -157,8 +157,14 @@ class IdentityMorphism(Morphism):
 
     Morphism
     """
-    def __new__(cls, domain):
-        return Basic.__new__(cls, domain, domain)
+    def __new__(cls, domain, codomain=None):
+        if codomain and (domain != codomain):
+            raise ValueError(
+                "An IdentityMorphism must have the same domain and codomain")
+        else:
+            codomain = domain
+
+        return Basic.__new__(cls, domain, codomain)
 
 class NamedMorphism(Morphism):
     """
@@ -189,7 +195,10 @@ class NamedMorphism(Morphism):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
 
-        return Basic.__new__(cls, domain, codomain, Symbol(name))
+        if isinstance(name, Symbol):
+            return Basic.__new__(cls, domain, codomain, name)
+        else:
+            return Basic.__new__(cls, domain, codomain, Symbol(name))
 
     @property
     def name(self):
@@ -504,9 +513,14 @@ class Category(Basic):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
-        new_category = Basic.__new__(cls, Symbol(name), Class(objects),
-                                     FiniteSet(commutative_diagrams))
-        return new_category
+        if not isinstance(name, Symbol):
+            name = Symbol(name)
+
+        if not isinstance(objects, Class):
+            objects = Class(objects)
+
+        return Basic.__new__(cls, name, objects,
+                            FiniteSet(commutative_diagrams))
 
     @property
     def name(self):
@@ -599,8 +613,12 @@ class DerivedMorphism(NamedMorphism):
         if not original_morphism:
             raise ValueError("An original morphism must be specified.")
 
-        return Basic.__new__(cls, domain, codomain, Symbol(name),
-                             original_morphism)
+        if isinstance(name, Symbol):
+            return Basic.__new__(cls, domain, codomain, name,
+                                 original_morphism)
+        else:
+            return Basic.__new__(cls, domain, codomain, Symbol(name),
+                                 original_morphism)
 
     @property
     def original_morphism(self):
