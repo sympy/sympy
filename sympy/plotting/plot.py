@@ -1304,7 +1304,16 @@ def plot_line(*args, **kwargs):
     samples a maximum of `2^{n}` points.
 
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The function
-    is uniformly sampled at ``nb_of_point`` number of points.
+    is uniformly sampled at ``nb_of_points`` number of points.
+
+    Aesthetics options:
+
+    ``line_color``: float. Specifies the color for the plot.
+    See ``Plot`` to see how to set color for the plots.
+
+    If there are multiple plots, then the same series series are applied to
+    all the plots. If you want to set these options separately, you can index
+    the ``Plot`` object returned and set it.
 
     Arguments for ``Plot`` class:
 
@@ -1312,6 +1321,8 @@ def plot_line(*args, **kwargs):
     the expression, if the plot has only one expression.
 
     ``xlabel`` : str. Label for the x - axis.
+
+    ``ylabel`` : str. Label for the y - axis.
 
     ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
 
@@ -1342,6 +1353,11 @@ def plot_line(*args, **kwargs):
 
     No adaptive sampling.
     >>> plot_line(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
+
+    See Also
+    ========
+
+    Plot, LineOver1DRangeSeries.
 
     """
     args = sympify([arg for arg in args])
@@ -1406,9 +1422,31 @@ def plot_parametric(*args, **kwargs):
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
     function is uniformly sampled at ``nb_of_point`` number of points.
 
+    Aesthetics
+    ----------
+
+    ``line_color``: float. Specifies the color for the plot.
+
+    If there are multiple plots, then the same Series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
     Arguments for ``Plot`` class:
 
-    ``title`` : str. Title of the plot.
+    ``xlabel`` : str. Label for the x - axis.
+
+    ``ylabel`` : str. Label for the y - axis.
+
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+
+    ``axis_center``: tuple of two floats denoting the coordinates of the center or
+    {'center', 'auto'}
+
+    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+
+    ``ylim`` : tuple of two floats, denoting the y - axis limits.
 
     Examples
     ========
@@ -1424,6 +1462,10 @@ def plot_parametric(*args, **kwargs):
 
     Multiple parametric plots.
     >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))# doctest: +SKIP
+
+    See Also
+    ========
+    Plot, Parametric2DLineSeries
 
     """
     args = sympify([arg for arg in args])
@@ -1471,8 +1513,16 @@ def plot3D_parametric(*args, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    ``nb_of_points``: The range is uniformly sampled at ``nb_of_point``
+    ``nb_of_points``: The range is uniformly sampled at ``nb_of_points``
     number of points.
+
+    Aesthetics:
+
+    ``line_color``: float. Specifies the color for the plot.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
 
     Arguments for ``Plot`` class.
 
@@ -1481,7 +1531,7 @@ def plot3D_parametric(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
+    >>> from sympy import symbols, cos(u), sin(u)
     >>> from sympy.plotting import plot3D_parametric
     >>> u = symbols('u')
 
@@ -1490,6 +1540,11 @@ def plot3D_parametric(*args, **kwargs):
 
     Multiple plots.
     >>> plot3D_parametric((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
+
+    See Also
+    ========
+
+    Plot, Parametric3DLineSeries
 
     """
     args = sympify([arg for arg in args])
@@ -1545,6 +1600,14 @@ def plot3D(*args, **kwargs):
     ``nb_of_points_y``: int. The y range is sampled uniformly at
     ``nb_of_points_y`` of points
 
+    Aesthetics:
+
+    ``surface_color``: float. Specifies the color for the surface of the plot.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
@@ -1564,6 +1627,10 @@ def plot3D(*args, **kwargs):
 
     Multiple plots with different ranges.
     >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
+
+    See Also
+    ========
+    Plot, SurfaceOver2DRangeSeries
 
     """
 
@@ -1614,11 +1681,20 @@ def plot3D_surface(*args, **kwargs):
 
     Arguments for ``ParametricSurfaceSeries`` class:
 
-    ``nb_of_points_u``: int. The u range is sampled uniformly at
+    ``nb_of_points_u``: int. The ``u`` range is sampled uniformly at
     ``nb_of_points_v`` of points
 
-    ``nb_of_points_y``: int. The v range is sampled uniformly at
+    ``nb_of_points_y``: int. The ``v`` range is sampled uniformly at
     ``nb_of_points_y`` of points
+
+    Aesthetics:
+
+    ``surface_color``: float. Specifies the color for the surface of the plot.
+
+    If there are multiple plots, then the same series arguments are applied for
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
 
     Arguments for ``Plot`` class:
 
@@ -1627,12 +1703,16 @@ def plot3D_surface(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
+    >>> from sympy import symbols, cos(u), sin(u)
     >>> from sympy.plotting import plot3D_surface
     >>> u, v = symbols('u v')
 
     Single plot.
     >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
+
+    See Also
+    ========
+    Plot, ParametricSurfaceSeries
 
     """
 
