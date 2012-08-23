@@ -1,4 +1,4 @@
-from sympy import (plot, pi, sin, cos, Symbol, Integral, summation, sqrt, log,
+from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
                    oo, LambertW, I)
 from sympy.plotting import (plot_line, plot_parametric, plot3D_parametric,
                             plot3D, plot3D_surface)
