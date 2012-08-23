@@ -368,11 +368,10 @@ class CompositeMorphism(Morphism):
         """
         Forgets the composite structure of this morphism.
 
-        If ``new_name`` is not empty, returns a :class:`NamedMorphism`
-        with the supplied name, otherwise returns a :class:`Morphism`.
-        In both cases the domain of the new morphism is the domain of
-        this composite morphism and the codomain of the new morphism
-        is the codomain of this composite morphism.
+        If ``new_name`` is not empty, returns a
+        :class:`DerivedMorphism` which references this
+        :class:`CompositeMorphism` and has the supplied name and the
+        same domain and codomain as this :class:`CompositeMorphism`.
 
         Examples
         ========
@@ -387,7 +386,7 @@ class CompositeMorphism(Morphism):
         NamedMorphism(Object("A"), Object("C"), "h")
 
         """
-        return NamedMorphism(self.domain, self.codomain, new_name)
+        return DerivedMorphism(self.domain, self.codomain, new_name, self)
 
     def __len__(self):
         """

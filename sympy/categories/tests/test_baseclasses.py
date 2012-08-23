@@ -62,10 +62,11 @@ def test_morphisms():
 
     # Test flattening.
     u2 = u.flatten("u")
-    assert isinstance(u2, NamedMorphism)
+    assert isinstance(u2, DerivedMorphism)
     assert u2.name == "u"
     assert u2.domain == A
     assert u2.codomain == D
+    assert u2.original_morphism == u
 
     # Test identities.
     assert f * id_A == f
