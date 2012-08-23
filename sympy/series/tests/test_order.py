@@ -1,5 +1,5 @@
 from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
-    S, Integral, sin)
+    S, Integral, sin, conjugate, expand)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -238,3 +238,21 @@ def test_issue_1756():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(f(x)) != O(1/x)
+
+def test_order_conjugate():
+    x = Symbol('x', real=True)
+    y = Symbol('y', imaginary=True)
+    assert conjugate(Order(x)) == Order(conjugate(x))
+    assert conjugate(Order(y)) == Order(conjugate(y))
+    assert conjugate(Order(x**2)) == Order(conjugate(x)**2)
+    assert conjugate(Order(y**2)) == Order(conjugate(y)**2)
+
+def test_order_noncommutative():
+    A = Symbol('A', commutative=False)
+    x = Symbol('x')
+    assert Order(A + A*x, x) == Order(1, x)
+    assert (A + A*x)*Order(x) == Order(x)
+    assert (A*x)*Order(x) == Order(x**2, x)
+    assert expand((1 + Order(x))*A*A*x) == A*A*x + Order(x**2, x)
+    assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
+    assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
