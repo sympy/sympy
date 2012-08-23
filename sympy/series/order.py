@@ -122,7 +122,7 @@ class Order(Expr):
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e,f) in lst])
             elif expr:
-                if len(symbols) > 1:
+                if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
                     # We cannot use compute_leading_term because that only
                     # works in one symbol.
