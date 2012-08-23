@@ -244,6 +244,11 @@ class Order(Expr):
             return Order(self.expr._subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
         return Order(self.expr._subs(old, new), *self.variables)
 
+    def _eval_conjugate(self):
+        expr = self.expr._eval_conjugate()
+        if expr is not None:
+            return self.func(expr, *self.variables)
+
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
 
