@@ -251,14 +251,14 @@ class BaseSeries(object):
     #  - get_points returning 1D np.arrays list_x, list_y
     #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
-    # with the colors cacollectionulated at the points from get_points
+    # with the colors calculated at the points from get_points
 
     is_3Dline = False
     # Some of the backends expect:
     #  - get_points returning 1D np.arrays list_x, list_y, list_y
     #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
-    # with the colors cacollectionulated at the points from get_points
+    # with the colors calculated at the points from get_points
 
     is_3Dsurface = False
     # Some of the backends expect:
@@ -279,9 +279,9 @@ class BaseSeries(object):
     #different
 
     is_parametric = False
-    # The cacollectionulation of aesthetics expects:
+    # The calculation of aesthetics expects:
     #   - get_parameter_points returning one or two np.arrays (1D or 2D)
-    # used for cacollectionulation aesthetics
+    # used for calculation aesthetics
 
     def __init__(self):
         super(BaseSeries, self).__init__()
@@ -378,9 +378,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.pop('nb_of_points', 300)
-        self.adaptive = kwargs.pop('adaptive', True)
-        self.depth = kwargs.pop('depth', 12)
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.adaptive = kwargs.get('adaptive', True)
+        self.depth = kwargs.get('depth', 12)
+        self.line_color = kwargs.get('line_color', None)
+
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -479,9 +481,10 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.pop('nb_of_points', 300)
-        self.adaptive = kwargs.pop('adaptive', True)
-        self.depth = kwargs.pop('depth', 12)
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.adaptive = kwargs.get('adaptive', True)
+        self.depth = kwargs.get('depth', 12)
+        self.line_color = kwargs.get('line_color', None)
 
     def __str__(self):
         return 'parametric cartesian line: (%s, %s) for %s over %s' % (
@@ -602,7 +605,6 @@ class Parametric3DLineSeries(Line3DBaseSeries):
 
     def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
         super(Parametric3DLineSeries, self).__init__()
-        self.nb_of_points = kwargs.pop('nb_of_points', 300)
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -610,6 +612,8 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.line_color = kwargs.get('line_color', None)
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
@@ -670,8 +674,6 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     range."""
     def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
         super(SurfaceOver2DRangeSeries, self).__init__()
-        self.nb_of_points_x = kwargs.pop('nb_of_points_x', 50)
-        self.nb_of_points_y = kwargs.pop('nb_of_points_y', 50)
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
@@ -679,6 +681,9 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
         self.var_y = sympify(var_start_end_y[0])
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
+        self.nb_of_points_x = kwargs.get('nb_of_points_x', 50)
+        self.nb_of_points_y = kwargs.get('nb_of_points_y', 50)
+        self.surface_color = kwargs.get('surface_color', None)
 
     def __str__(self):
         return ('cartesian surface: %s for'
@@ -707,8 +712,6 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
                     **kwargs):
         super(ParametricSurfaceSeries, self).__init__()
-        self.nb_of_points_u = kwargs.pop('nb_of_points_u', 50)
-        self.nb_of_points_v = kwargs.pop('nb_of_points_v', 50)
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -718,6 +721,9 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
         self.var_v = sympify(var_start_end_v[0])
         self.start_v = float(var_start_end_v[1])
         self.end_v = float(var_start_end_v[2])
+        self.nb_of_points_u = kwargs.get('nb_of_points_u', 50)
+        self.nb_of_points_v = kwargs.get('nb_of_points_v', 50)
+        self.surface_color = kwargs.get('surface_color', None)
 
     def __str__(self):
         return ('parametric cartesian surface: (%s, %s, %s) for'
@@ -748,6 +754,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 class ContourSeries(BaseSeries):
     """Representation for a contour plot."""
     #The code is mostly repetition of SurfaceOver2DRange.
+    #XXX: Presently not used in any of those functions.
+    #XXX: Add contour plot and use this seties.
 
     is_contour = True
 
