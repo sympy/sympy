@@ -1,3 +1,82 @@
+Plotting Module
+===============
+
+.. module:: sympy.plotting.plot
+
+Introduction
+------------
+
+The plotting module allows you to plot 2-dimensional and 3-dimensional plots.
+Presently the plots are rendered using ``Matplotlib`` as its backend. It is
+also possible to plot 2-dimensional plots using a ``TextBackend`` if you don't
+have ``Matplotlib``.
+
+The plotting module has the following functions:
+
+* plot_line: Plots 2D line plots.
+* plot_parametric: Plots 2D parametric plots.
+* plot_implicit: Plots 2D implicit and region plots.
+* plot3D: Plots 3D plots of functions in two variables.
+* plot3D_parametric: Plots 3D line plots, defined by a parameter.
+* plot3D_surface: Plots 3D parametric surface plots.
+
+Plot Class
+----------
+
+.. autoclass:: sympy.plotting.plot.Plot
+   :members:
+
+Plotting Function Reference
+---------------------------
+
+.. autofunction:: sympy.plotting.plot.plot_line
+
+.. autofunction:: sympy.plotting.plot.plot_parametric
+
+.. autofunction:: sympy.plotting.plot.plot3D
+
+.. autofunction:: sympy.plotting.plot.plot3D_parametric
+
+.. autofunction:: sympy.plotting.plot.plot3D_surface
+
+.. autofunction:: sympy.plotting.plot_implicit.plot_implicit
+
+Series Classes
+--------------
+
+.. autoclass:: sympy.plotting.plot.BaseSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.Line2DBaseSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.LineOver1DRangeSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.Parametric2DLineSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.Line3DBaseSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.Parametric3DLineSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.SurfaceBaseSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.SurfaceOver2DRangeSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot.ParametricSurfaceSeries
+   :members:
+
+.. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
+   :members:
+
+
+
+
 Pyglet Plotting Module
 ======================
 
