@@ -1,5 +1,4 @@
 from sympy.core.add import Add
-from sympy.core.numbers import Rational
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
@@ -94,10 +93,10 @@ def _pi_coeff(arg, cycles=1):
                     cm = c*m
                     i = int(cm)
                     if i == cm:
-                        c = Rational(i, m)
+                        c = C.Rational(i, m)
                         cx = c*x
                 else:
-                    c = Rational(int(c))
+                    c = C.Rational(int(c))
                     cx = c*x
             if x.is_integer:
                 c2 = c % 2
@@ -202,7 +201,7 @@ class sin(TrigonometricFunction):
                     return -cls(x%1*S.Pi)
                 if 2*x > 1:
                     return cls((1-x)*S.Pi)
-                narg = ((pi_coeff + Rational(3,2))%2)*S.Pi
+                narg = ((pi_coeff + C.Rational(3,2))%2)*S.Pi
                 result = cos(narg)
                 if not isinstance(result,cos):
                     return result
@@ -466,16 +465,16 @@ class cos(TrigonometricFunction):
                     # Now we use partial-fraction decomposition
                     # and angle sum formulas.
                     if frozenset([3,5]) == FC:
-                        narg1 = Rational(p, 6)*S.Pi
-                        narg2 = Rational(p,10)*S.Pi
+                        narg1 = C.Rational(p, 6)*S.Pi
+                        narg2 = C.Rational(p,10)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     elif frozenset([3,17]) == FC:
-                        narg1 = Rational(p*6,17)*S.Pi
-                        narg2 = Rational(p*1, 3)*S.Pi
+                        narg1 = C.Rational(p*6,17)*S.Pi
+                        narg2 = C.Rational(p*1, 3)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     elif frozenset([5,17]) == FC:
-                        narg1 = Rational(p*7,17)*S.Pi
-                        narg2 = Rational(p*2, 5)*S.Pi
+                        narg1 = C.Rational(p*7,17)*S.Pi
+                        narg2 = C.Rational(p*2, 5)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     else :
                         return None
@@ -519,7 +518,7 @@ class cos(TrigonometricFunction):
                         result = ChebyshevMethod(fundamental,p)
                 except KeyError:
                     if (pi_coeff.p, pi_coeff.q) != (p,q):
-                        narg = Rational(p, q)*S.Pi
+                        narg = C.Rational(p, q)*S.Pi
                         result = cls(narg)
                     else:
                         return None
@@ -750,8 +749,8 @@ class tan(TrigonometricFunction):
                 if pi_coeff.p > pi_coeff.q:
                     p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
                     if 2 * p > q:
-                        return -cls(Rational(q - p, q)*S.Pi)
-                    return cls(Rational(p, q)*S.Pi)
+                        return -cls(C.Rational(q - p, q)*S.Pi)
+                    return cls(C.Rational(p, q)*S.Pi)
                 else:
                     newarg = pi_coeff*S.Pi
                     if newarg != arg:
@@ -934,8 +933,8 @@ class cot(TrigonometricFunction):
                 if pi_coeff.p > pi_coeff.q:
                     p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
                     if 2 * p > q:
-                        return -cls(Rational(q - p, q)*S.Pi)
-                    return cls(Rational(p, q)*S.Pi)
+                        return -cls(C.Rational(q - p, q)*S.Pi)
+                    return cls(C.Rational(p, q)*S.Pi)
                 else:
                     newarg = pi_coeff*S.Pi
                     if newarg != arg:
