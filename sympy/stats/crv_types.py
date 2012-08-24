@@ -17,6 +17,7 @@ FDistribution
 FisherZ
 Frechet
 Gamma
+GammaInverse
 Kumaraswamy
 Laplace
 Logistic
@@ -63,6 +64,7 @@ __all__ = ['ContinuousRV',
 'FisherZ',
 'Frechet',
 'Gamma',
+'GammaInverse',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
@@ -1065,6 +1067,73 @@ def Gamma(name, k, theta):
     """
 
     return GammaPSpace(name, k, theta).value
+
+#-------------------------------------------------------------------------------
+# Inverse Gamma distribution ---------------------------------------------------
+
+class GammaInversePSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a = sympify(a)
+        b = sympify(b)
+        _value_check(a > 0, "alpha must be positive")
+        _value_check(b > 0, "beta must be positive")
+        x = Symbol(name)
+        pdf = b**a/gamma(a) * x**(-a-1) * exp(-b/x)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def GammaInverse(name, a, b):
+    r"""
+    Create a continuous random variable with an inverse Gamma distribution.
+
+    The density of the inverse Gamma distribution is given by
+
+    .. math::
+        f(x) := \frac{\beta^\alpha}{\Gamma(\alpha)} x^{-\alpha - 1}
+                \exp\left(\frac{-\beta}{x}\right)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a scale
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy import Symbol, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+
+    >>> X = GammaInverse("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /               -b\
+          |               --|
+          |    -a - 1  a  x |
+          |   x      *b *e  |
+    Lambda|x, --------------|
+          \      gamma(a)   /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    """
+
+    return GammaInversePSpace(name, a, b).value
 
 #-------------------------------------------------------------------------------
 # Kumaraswamy distribution -----------------------------------------------------
