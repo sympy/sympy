@@ -13,12 +13,12 @@ have ``Matplotlib``.
 
 The plotting module has the following functions:
 
-* plot_line: Plots 2D line plots.
+* plot: Plots 2D line plots.
 * plot_parametric: Plots 2D parametric plots.
 * plot_implicit: Plots 2D implicit and region plots.
-* plot3D: Plots 3D plots of functions in two variables.
-* plot3D_parametric: Plots 3D line plots, defined by a parameter.
-* plot3D_surface: Plots 3D parametric surface plots.
+* plot3d: Plots 3D plots of functions in two variables.
+* plot3d_parametric_line: Plots 3D line plots, defined by a parameter.
+* plot3d_parametric_surface: Plots 3D parametric surface plots.
 
 The above functions are only for convenience and ease of use. It is possible to
 plot any plot by passing the corresponding ``Series`` class to ``Plot`` as

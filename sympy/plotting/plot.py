@@ -130,16 +130,12 @@ class Plot(object):
 
     Some data series support additional aesthetics or options:
 
-    is_line:
-
-    - ListSeries
-    - LineOver1DRangeSeries,
-    - Parametric2DLineSeries
-    - Parametric3DLineSeries
+    ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries, 
+    Parametric3DLineSeries support the following:
 
     Aesthetics:
 
-    - line_color : float
+    - line_color : function which returns a float.
 
     options:
 
@@ -147,14 +143,11 @@ class Plot(object):
     - steps : bool
     - integers_only : bool
 
-    is_3Dsurface:
-
-    - SurfaceOver2DRangeSeries
-    - ParametricSurfaceSeries
+    SurfaceOver2DRangeSeries, ParametricSurfaceSeries support the following:
 
     aesthetics:
 
-    - surface_color : float
+    - surface_color : function which returns a float.
     """
 
     def __init__(self, *args, **kwargs):
@@ -1228,12 +1221,13 @@ def plot_parametric(*args, **kwargs):
     value ``n`` samples a maximum of `2^{n}` points.
 
     ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
-    function is uniformly sampled at ``nb_of_point`` number of points.
+    function is uniformly sampled at ``nb_of_points`` number of points.
 
     Aesthetics
     ----------
 
-    ``line_color``: float. Specifies the color for the plot.
+    ``line_color``: function which returns a float. Specifies the color for the
+    plot. See ``sympy.plotting.Plot`` for more details.
 
     If there are multiple plots, then the same Series arguments are applied to
     all the plots. If you want to set these options separately, you can index
@@ -1333,7 +1327,8 @@ def plot3d_parametric_line(*args, **kwargs):
 
     Aesthetics:
 
-    ``line_color``: float. Specifies the color for the plot.
+    ``line_color``: function which returns a float. Specifies the color for the
+    plot. See ``sympy.plotting.Plot`` for more details.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
@@ -1426,7 +1421,8 @@ def plot3d(*args, **kwargs):
 
     Aesthetics:
 
-    ``surface_color``: float. Specifies the color for the surface of the plot.
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
@@ -1522,7 +1518,8 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     Aesthetics:
 
-    ``surface_color``: float. Specifies the color for the surface of the plot.
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
 
     If there are multiple plots, then the same series arguments are applied for
     all the plots. If you want to set these options separately, you can index
