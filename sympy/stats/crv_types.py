@@ -9,6 +9,7 @@ Beta
 BetaPrime
 Cauchy
 Chi
+ChiNoncentral
 Dagum
 Erlang
 Exponential
@@ -35,7 +36,7 @@ WignerSemicircle
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log)
+                   Symbol, log, besseli)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from crv import SingleContinuousPSpace
@@ -51,6 +52,7 @@ __all__ = ['ContinuousRV',
 'BetaPrime',
 'Cauchy',
 'Chi',
+'ChiNoncentral',
 'Dagum',
 'Erlang',
 'Exponential',
@@ -497,6 +499,63 @@ def Chi(name, k):
     """
 
     return ChiPSpace(name, k).value
+
+#-------------------------------------------------------------------------------
+# Non-central Chi distribution -------------------------------------------------
+
+class ChiNoncentralPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, k, l):
+        k = sympify(k)
+        l = sympify(l)
+        x = Symbol(name)
+        pdf = exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+def ChiNoncentral(name, k, l):
+    r"""
+    Create a continuous random variable with a non-central Chi distribution.
+
+    The density of the non-central Chi distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
+                {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : `k` > 0 the number of degrees of freedom
+    l : Shift parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiNoncentral, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> k = Symbol("k", integer=True)
+    >>> l = Symbol("l")
+
+    >>> X = ChiNoncentral("x", k, l)
+
+    >>> density(X)
+    Lambda(_x, _x**k*l*(_x*l)**(-k/2)*exp(-_x**2/2 - l**2/2)*besseli(k/2 - 1, _x*l))
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    """
+
+    return ChiNoncentralPSpace(name, k, l).value
 
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
