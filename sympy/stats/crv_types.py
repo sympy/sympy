@@ -13,6 +13,7 @@ ChiNoncentral
 Dagum
 Erlang
 Exponential
+FDistribution
 Gamma
 Kumaraswamy
 Laplace
@@ -56,6 +57,7 @@ __all__ = ['ContinuousRV',
 'Dagum',
 'Erlang',
 'Exponential',
+'FDistribution',
 'Gamma',
 'Kumaraswamy',
 'Laplace',
@@ -770,6 +772,74 @@ def Exponential(name, rate):
     """
 
     return ExponentialPSpace(name, rate).value
+
+#-------------------------------------------------------------------------------
+# F distribution ---------------------------------------------------------------
+
+class FDistributionPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, d1, d2):
+        d1 = sympify(d1)
+        d2 = sympify(d2)
+        x = Symbol(name)
+        pdf = (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
+               / (x * beta_fn(d1/2, d2/2)))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        return obj
+
+def FDistribution(name, d1, d2):
+    r"""
+    Create a continuous random variable with a F distribution.
+
+    The density of the F distribution is given by
+
+    .. math::
+        f(x) := \frac{\sqrt{\frac{(d_1 x)^{d_1} d_2^{d_2}}
+                {(d_1 x + d_2)^{d_1 + d_2}}}}
+                {x \mathrm{B} \left(\frac{d_1}{2}, \frac{d_2}{2}\right)}
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0 a parameter
+    d2 : `d2` > 0 a parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FDistribution, density
+    >>> from sympy import Symbol, simplify
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+
+    >>> X = FDistribution("x", d1, d2)
+
+    >>> density(X)
+          /     d2                                                 \
+          |     --    ______________________________               |
+          |     2    /       d1            -d1 - d2       /d1   d2\|
+          |   d2  *\/  (x*d1)  *(x*d1 + d2)         *gamma|-- + --||
+          |                                               \2    2 /|
+    Lambda|x, -----------------------------------------------------|
+          |                          /d1\      /d2\                |
+          |                   x*gamma|--|*gamma|--|                |
+          \                          \2 /      \2 /                /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/F-distribution
+    [2] http://mathworld.wolfram.com/F-Distribution.html
+    """
+
+    return FDistributionPSpace(name, d1, d2).value
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
