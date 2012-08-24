@@ -499,7 +499,7 @@ class cos(TrigonometricFunction):
                     # 65537 and 257 are missing becaue they are too complicated.
                 }
 
-                def ChebyshevMethod(x,n):
+                def chebyshevMethod(x,n):
                     # Chebyshev polynomial method for reducing
                     # numerators
                     y = x*x-1
@@ -515,7 +515,7 @@ class cos(TrigonometricFunction):
                     elif 2 == p:
                         result = 2*fundamental**2-1
                     else:
-                        result = ChebyshevMethod(fundamental,p)
+                        result = chebyshevMethod(fundamental,p)
                 except KeyError:
                     if (pi_coeff.p, pi_coeff.q) != (p,q):
                         narg = C.Rational(p, q)*S.Pi
