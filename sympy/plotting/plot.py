@@ -130,7 +130,7 @@ class Plot(object):
 
     Some data series support additional aesthetics or options:
 
-    ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries, 
+    ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries,
     Parametric3DLineSeries support the following:
 
     Aesthetics:
