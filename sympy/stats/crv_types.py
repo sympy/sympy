@@ -670,11 +670,11 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)
     >>> pprint(C, use_unicode=False)
-    Lambda/z, /                     0                       for z < 0\
-          |   |                                                      |
-          |   <  k*lowergamma(k, 0)   k*lowergamma(k, z*l)           |
-          |   |- ------------------ + --------------------  otherwise|
-          \   \     gamma(k + 1)          gamma(k + 1)               /
+          /   /  k*lowergamma(k, 0)   k*lowergamma(k, z*l)            \
+    Lambda|z, |- ------------------ + --------------------  for z >= 0|
+          |   <     gamma(k + 1)          gamma(k + 1)                |
+          |   |                                                       |
+          \   \                     0                       otherwise /
 
     >>> simplify(E(X))
     k/l
@@ -820,14 +820,15 @@ def FDistribution(name, d1, d2):
     ========
 
     >>> from sympy.stats import FDistribution, density
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
 
     >>> X = FDistribution("x", d1, d2)
 
-    >>> pprint(density(X), use_unicode=False)
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
           /     d2                                                 \
           |     --    ______________________________               |
           |     2    /       d1            -d1 - d2       /d1   d2\|
@@ -885,14 +886,15 @@ def FisherZ(name, d1, d2):
     ========
 
     >>> from sympy.stats import FisherZ, density
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
 
     >>> X = FisherZ("x", d1, d2)
 
-    >>> pprint(density(X), use_unicode=False)
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
           /                               d1   d2                     \
           |       d1   d2               - -- - --                     |
           |       --   --                 2    2                      |
@@ -958,7 +960,7 @@ def Frechet(name, a, s=1, m=0):
 
     >>> a = Symbol("a", positive=True)
     >>> s = Symbol("s", positive=True)
-    >>> m = Symbol("m")
+    >>> m = Symbol("m", real=True)
 
     >>> X = Frechet("x", a, s, m)
 
@@ -1751,7 +1753,7 @@ def QuadraticU(name, a, b):
           |   |   /    a   b\                          |
           |   |12*|x - - - -|                          |
           |   |   \    2   2/                          |
-    Lambda|x, <---------------  for And(a <= x, x <= b)|
+    Lambda|x, <---------------  for And(x <= b, a <= x)|
           |   |           3                            |
           |   |   (-a + b)                             |
           |   |                                        |
@@ -1822,7 +1824,7 @@ def RaisedCosine(name, mu, s):
           /   /   /pi*(x - mu)\                                       \
           |   |cos|-----------| + 1                                   |
           |   |   \     s     /                                       |
-    Lambda|x, <--------------------  for And(mu - s <= x, x <= mu + s)|
+    Lambda|x, <--------------------  for And(x <= mu + s, mu - s <= x)|
           |   |        2*s                                            |
           |   |                                                       |
           \   \         0                        otherwise            /
