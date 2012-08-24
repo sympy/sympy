@@ -15,6 +15,7 @@ Erlang
 Exponential
 FDistribution
 FisherZ
+Frechet
 Gamma
 Kumaraswamy
 Laplace
@@ -60,6 +61,7 @@ __all__ = ['ContinuousRV',
 'Exponential',
 'FDistribution',
 'FisherZ',
+'Frechet',
 'Gamma',
 'Kumaraswamy',
 'Laplace',
@@ -908,6 +910,66 @@ def FisherZ(name, d1, d2):
     """
 
     return FisherZPSpace(name, d1, d2).value
+
+#-------------------------------------------------------------------------------
+# Frechet distribution ---------------------------------------------------------
+
+class FrechetPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, s=0, m=0):
+        a = sympify(a)
+        s = sympify(s)
+        m = sympify(m)
+        x = Symbol(name)
+        pdf = a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)-a)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(m, oo))
+        return obj
+
+def Frechet(name, a, s=1, m=0):
+    r"""
+    Create a continuous random variable with a Frechet distribution.
+
+    The density of the Frechet distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha}{s} \left(\frac{x-m}{s}\right)^{-1-\alpha}
+                 e^{-(\frac{x-m}{s})^{-\alpha}}
+
+    with :math:`x \geq m`.
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`a \in \left(0, \infty\right)` the shape
+    s : Real number, :math:`s \in \left(0, \infty\right)` the scale
+    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Frechet, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> a = Symbol("a", positive=True)
+    >>> s = Symbol("s", positive=True)
+    >>> m = Symbol("m")
+
+    >>> X = Frechet("x", a, s, m)
+
+    >>> density(X)
+    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    """
+
+    return FrechetPSpace(name, a, s, m).value
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
