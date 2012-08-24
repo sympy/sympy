@@ -20,6 +20,10 @@ The plotting module has the following functions:
 * plot3D_parametric: Plots 3D line plots, defined by a parameter.
 * plot3D_surface: Plots 3D parametric surface plots.
 
+The above functions are only for convenience and ease of use. It is possible to
+plot any plot by passing the corresponding ``Series`` class to ``Plot`` as
+argument.
+
 Plot Class
 ----------
 
@@ -29,15 +33,15 @@ Plot Class
 Plotting Function Reference
 ---------------------------
 
-.. autofunction:: sympy.plotting.plot.plot_line
+.. autofunction:: sympy.plotting.plot.plot
 
 .. autofunction:: sympy.plotting.plot.plot_parametric
 
-.. autofunction:: sympy.plotting.plot.plot3D
+.. autofunction:: sympy.plotting.plot.plot3d
 
-.. autofunction:: sympy.plotting.plot.plot3D_parametric
+.. autofunction:: sympy.plotting.plot.plot3d_parametric_line
 
-.. autofunction:: sympy.plotting.plot.plot3D_surface
+.. autofunction:: sympy.plotting.plot.plot3d_parametric_surface
 
 .. autofunction:: sympy.plotting.plot_implicit.plot_implicit
 
