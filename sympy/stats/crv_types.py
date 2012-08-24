@@ -14,6 +14,7 @@ Dagum
 Erlang
 Exponential
 FDistribution
+FisherZ
 Gamma
 Kumaraswamy
 Laplace
@@ -58,6 +59,7 @@ __all__ = ['ContinuousRV',
 'Erlang',
 'Exponential',
 'FDistribution',
+'FisherZ',
 'Gamma',
 'Kumaraswamy',
 'Laplace',
@@ -821,7 +823,7 @@ def FDistribution(name, d1, d2):
 
     >>> X = FDistribution("x", d1, d2)
 
-    >>> density(X)
+    >>> pprint(density(X), use_unicode=False)
           /     d2                                                 \
           |     --    ______________________________               |
           |     2    /       d1            -d1 - d2       /d1   d2\|
@@ -840,6 +842,72 @@ def FDistribution(name, d1, d2):
     """
 
     return FDistributionPSpace(name, d1, d2).value
+
+#-------------------------------------------------------------------------------
+# Fisher Z distribution --------------------------------------------------------
+
+class FisherZPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, d1, d2):
+        d1 = sympify(d1)
+        d2 = sympify(d2)
+        x = Symbol(name)
+        pdf = (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
+               exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def FisherZ(name, d1, d2):
+    r"""
+    Create a Continuous Random Variable with an Fisher's Z distribution.
+
+    The density of the Fisher's Z distribution is given by
+
+    .. math::
+        f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}
+                \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0, degree of freedom
+    d2 : `d2` > 0, degree of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FisherZ, density
+    >>> from sympy import Symbol, simplify
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+
+    >>> X = FisherZ("x", d1, d2)
+
+    >>> pprint(density(X), use_unicode=False)
+          /                               d1   d2                     \
+          |       d1   d2               - -- - --                     |
+          |       --   --                 2    2                      |
+          |       2    2  /    2*x     \           x*d1      /d1   d2\|
+          |   2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --||
+          |                                                  \2    2 /|
+    Lambda|x, --------------------------------------------------------|
+          |                          /d1\      /d2\                   |
+          |                     gamma|--|*gamma|--|                   |
+          \                          \2 /      \2 /                   /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    """
+
+    return FisherZPSpace(name, d1, d2).value
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
