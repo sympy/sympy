@@ -696,6 +696,11 @@ def test_sympy__stats__crv_types__ChiPSpace():
     assert _test_args(ChiPSpace('X', 1))
 
 
+def test_sympy__stats__crv_types__ChiNoncentralPSpace():
+    from sympy.stats.crv_types import ChiNoncentralPSpace
+    assert _test_args(ChiNoncentralPSpace('X', 1,1))
+
+
 def test_sympy__stats__crv_types__DagumPSpace():
     from sympy.stats.crv_types import DagumPSpace
     assert _test_args(DagumPSpace('X', 1, 1, 1))
@@ -704,6 +709,26 @@ def test_sympy__stats__crv_types__DagumPSpace():
 def test_sympy__stats__crv_types__ExponentialPSpace():
     from sympy.stats.crv_types import ExponentialPSpace
     assert _test_args(ExponentialPSpace('X', 1))
+
+
+def test_sympy__stats__crv_types__FDistributionPSpace():
+    from sympy.stats.crv_types import FDistributionPSpace
+    assert _test_args(FDistributionPSpace('X', 1, 1))
+
+
+def test_sympy__stats__crv_types__FisherZPSpace():
+    from sympy.stats.crv_types import FisherZPSpace
+    assert _test_args(FisherZPSpace('X', 1, 1))
+
+
+def test_sympy__stats__crv_types__FrechetPSpace():
+    from sympy.stats.crv_types import FrechetPSpace
+    assert _test_args(FrechetPSpace('X', 1, 1, 1))
+
+
+def test_sympy__stats__crv_types__GammaInversePSpace():
+    from sympy.stats.crv_types import GammaInversePSpace
+    assert _test_args(GammaInversePSpace('X', 1, 1))
 
 
 def test_sympy__stats__crv_types__GammaPSpace():
