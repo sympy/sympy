@@ -1,7 +1,7 @@
 from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
                    oo, LambertW, I)
-from sympy.plotting import (plot_line, plot_parametric, plot3D_parametric,
-                            plot3D, plot3D_surface)
+from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
+                            plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import matplotlib, unset_show
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
@@ -21,8 +21,8 @@ def plot_and_save(name):
     # Examples from the 'introduction' notebook
     ###
 
-    p = plot_line(x)
-    p = plot_line(x*sin(x),x*cos(x))
+    p = plot(x)
+    p = plot(x*sin(x),x*cos(x))
     p.extend(p)
     p[0].line_color = lambda a : a
     p[1].line_color='b'
@@ -34,20 +34,20 @@ def plot_and_save(name):
     p.xlim = (-15,20)
     p.save(tmp_file('%s_basic_options_and_colors.png' % name))
 
-    p.extend(plot_line(x+1))
-    p.append(plot_line(x+3,x**2)[1])
+    p.extend(plot(x+1))
+    p.append(plot(x+3,x**2)[1])
     p.save(tmp_file('%s_plot_extend_append.png' % name))
 
-    p[2] = plot_line(x**2, (x, -2, 3))
+    p[2] = plot(x**2, (x, -2, 3))
     p.save(tmp_file('%s_plot_setitem.png' % name))
 
-    p = plot_line(sin(x),(x,-2*pi,4*pi))
+    p = plot(sin(x),(x,-2*pi,4*pi))
     p.save(tmp_file('%s_line_explicit.png' % name))
 
-    p = plot_line(sin(x))
+    p = plot(sin(x))
     p.save(tmp_file('%s_line_default_range.png' % name))
 
-    p = plot_line((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
+    p = plot((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
     p.save(tmp_file('%s_line_multiple_range.png' % name))
 
 
@@ -76,33 +76,33 @@ def plot_and_save(name):
     p.save(tmp_file('%s_adaptive' % name))
 
     #3d parametric plots
-    p = plot3D_parametric(sin(x),cos(x),x)
+    p = plot3d_parametric_line(sin(x),cos(x),x)
     p.save(tmp_file('%s_3d_line.png' % name))
 
-    p = plot3D_parametric((sin(x), cos(x), x, (x, -5, 5)), (cos(x), sin(x), x, (x, -3, 3)))
+    p = plot3d_parametric_line((sin(x), cos(x), x, (x, -5, 5)), (cos(x), sin(x), x, (x, -3, 3)))
     p.save(tmp_file('%s_3d_line_multiple' % name))
 
-    p = plot3D_parametric(sin(x), cos(x), x, nb_of_points=30)
+    p = plot3d_parametric_line(sin(x), cos(x), x, nb_of_points=30)
     p.save(tmp_file('%s_3d_line_points' % name))
 
     # 3d surface single plot.
-    p = plot3D(x * y)
+    p = plot3d(x * y)
     p.save(tmp_file('%s_surface.png' % name))
 
     # Multiple 3D plots with same range.
-    p = plot3D(-x * y, x * y, (x, -5, 5))
+    p = plot3d(-x * y, x * y, (x, -5, 5))
     p.save(tmp_file('%s_surface_multiple' % name))
 
     # Multiple 3D plots with different ranges.
-    p = plot3D((x * y, (x, -3, 3), (y, -3, 3)), (-x * y, (x, -3, 3), (y, -3, 3)))
+    p = plot3d((x * y, (x, -3, 3), (y, -3, 3)), (-x * y, (x, -3, 3), (y, -3, 3)))
     p.save(tmp_file('%s_surface_multiple_ranges' % name))
 
     # Single Parametric 3D plot
-    p = plot3D_surface(sin(x + y), cos(x - y), x - y)
+    p = plot3d_parametric_surface(sin(x + y), cos(x - y), x - y)
     p.save(tmp_file('%s_parametric_surface' % name))
 
     # Multiple Parametric 3D plots.
-    p = plot3D_surface((x*sin(z),x*cos(z),z, (x, -5, 5), (z, -5, 5)),
+    p = plot3d_parametric_surface((x*sin(z),x*cos(z),z, (x, -5, 5), (z, -5, 5)),
                 (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface.png' % name))
 
@@ -110,14 +110,14 @@ def plot_and_save(name):
     # Examples from the 'colors' notebook
     ###
 
-    p = plot_line(sin(x))
+    p = plot(sin(x))
     p[0].line_color = lambda a : a
     p.save(tmp_file('%s_colors_line_arity1.png' % name))
 
     p[0].line_color = lambda a, b : b
     p.save(tmp_file('%s_colors_line_arity2.png' % name))
 
-    p = plot_line(x*sin(x), x*cos(x), (x, 0, 10))
+    p = plot(x*sin(x), x*cos(x), (x, 0, 10))
     p[0].line_color = lambda a : a
     p.save(tmp_file('%s_colors_param_line_arity1.png' % name))
 
@@ -127,7 +127,7 @@ def plot_and_save(name):
     p[0].line_color = lambda a, b : b
     p.save(tmp_file('%s_colors_param_line_arity2b.png' % name))
 
-    p = plot3D_parametric(sin(x)+0.1*sin(x)*cos(7*x),
+    p = plot3d_parametric_line(sin(x)+0.1*sin(x)*cos(7*x),
              cos(x)+0.1*cos(x)*cos(7*x),
              0.1*sin(7*x),
              (x, 0 , 2*pi))
@@ -138,7 +138,7 @@ def plot_and_save(name):
     p[0].line_color = lambda a, b, c : c
     p.save(tmp_file('%s_colors_3d_line_arity3.png' % name))
 
-    p = plot3D(sin(x)*y, (x, 0, 6*pi), (y, -5, 5))
+    p = plot3d(sin(x)*y, (x, 0, 6*pi), (y, -5, 5))
     p[0].surface_color = lambda a : a
     p.save(tmp_file('%s_colors_surface_arity1.png' % name))
     p[0].surface_color = lambda a, b : b
@@ -148,7 +148,7 @@ def plot_and_save(name):
     p[0].surface_color = lambda a, b, c : sqrt((a-3*pi)**2+b**2)
     p.save(tmp_file('%s_colors_surface_arity3b.png' % name))
 
-    p = plot3D_surface(x * cos(4 * y), x * sin(4 * y), y,
+    p = plot3d_parametric_surface(x * cos(4 * y), x * sin(4 * y), y,
              (x, -1, 1), (y, -1, 1))
     p[0].surface_color = lambda a : a
     p.save(tmp_file('%s_colors_param_surf_arity1.png' % name))
@@ -162,14 +162,14 @@ def plot_and_save(name):
     ###
 
     i = Integral(log((sin(x)**2+1)*sqrt(x**2+1)),(x,0,y))
-    p = plot_line(i,(y, 1, 5))
+    p = plot(i,(y, 1, 5))
     p.save(tmp_file('%s_advanced_integral.png' % name))
 
     s = summation(1/x**y,(x, 1, oo))
-    p = plot_line(s, (y, 2, 10))
+    p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum.png' % name))
 
-    p = plot_line(summation(1/x,(x,1,y)), (y, 2,10), show=False)
+    p = plot(summation(1/x,(x,1,y)), (y, 2,10), show=False)
     p[0].only_integers = True
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum.png' % name))
@@ -181,10 +181,10 @@ def plot_and_save(name):
     ###
 
 
-    plot_line(sin(x)+I*cos(x)).save(tmp_file())
-    plot_line(sqrt(sqrt(-x))).save(tmp_file())
-    plot_line(LambertW(x)).save(tmp_file())
-    plot_line(sqrt(LambertW(x))).save(tmp_file())
+    plot(sin(x)+I*cos(x)).save(tmp_file())
+    plot(sqrt(sqrt(-x))).save(tmp_file())
+    plot(LambertW(x)).save(tmp_file())
+    plot(sqrt(LambertW(x))).save(tmp_file())
 
 
 def test_matplotlib():

@@ -1049,7 +1049,7 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-def plot_line(*args, **kwargs):
+def plot(*args, **kwargs):
     """
     Plots a function of a single variable.
 
@@ -1063,19 +1063,19 @@ def plot_line(*args, **kwargs):
 
     Single Plot
 
-    ``plot_line(expr, range, **kwargs)``
+    ``plot(expr, range, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with same range.
 
-    ``plot_line(expr1, expr2, ..., range, **kwargs)``
+    ``plot(expr1, expr2, ..., range, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with different ranges.
 
-    ``plot_line((expr1, range), (expr2, range), ..., **kwargs)``
+    ``plot((expr1, range), (expr2, range), ..., **kwargs)``
 
     Range has to be specified for every expression.
 
@@ -1136,24 +1136,24 @@ def plot_line(*args, **kwargs):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.plotting import plot_line
+    >>> from sympy.plotting import plot
     >>> x = symbols('x')
 
     Single Plot
 
-    >>> plot_line(x**2, (x, -5, 5))# doctest: +SKIP
+    >>> plot(x**2, (x, -5, 5))# doctest: +SKIP
 
     Multiple plots with single range.
 
-    >>> plot_line(x, x**2, x**3, (x, -5, 5))# doctest: +SKIP
+    >>> plot(x, x**2, x**3, (x, -5, 5))# doctest: +SKIP
 
     Multiple plots with different ranges.
 
-    >>> plot_line((x**2, (x, -6, 6)), (x, (x, -5, 5)))# doctest: +SKIP
+    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))# doctest: +SKIP
 
     No adaptive sampling.
 
-    >>> plot_line(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
+    >>> plot(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
 
     See Also
     ========
@@ -1289,22 +1289,22 @@ def plot_parametric(*args, **kwargs):
         plots.show()
     return plots
 
-def plot3D_parametric(*args, **kwargs):
+def plot3d_parametric_line(*args, **kwargs):
     """
-    Plots a 3D parametric plot.
+    Plots a 3D parametric line plot.
 
     Usage
     =====
 
     Single plot:
 
-    ``plot3D_parametric(expr_x, expr_y, expr_z, range, **kwargs)``
+    ``plot3d_parametric_line(expr_x, expr_y, expr_z, range, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots.
 
-    ``plot3D_parametric((expr_x, expr_y, expr_z, range), ..., **kwargs)``
+    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range), ..., **kwargs)``
 
     Ranges have to be specified for every expression.
 
@@ -1347,16 +1347,16 @@ def plot3D_parametric(*args, **kwargs):
     ========
 
     >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3D_parametric
+    >>> from sympy.plotting import plot3d_parametric_line
     >>> u = symbols('u')
 
     Single plot.
 
-    >>> plot3D_parametric(cos(u), sin(u), u, (u, -5, 5))# doctest: +SKIP
+    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))# doctest: +SKIP
 
     Multiple plots.
 
-    >>> plot3D_parametric((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
+    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
 
     See Also
     ========
@@ -1374,7 +1374,7 @@ def plot3D_parametric(*args, **kwargs):
         plots.show()
     return plots
 
-def plot3D(*args, **kwargs):
+def plot3d(*args, **kwargs):
     """
     Plots a 3D surface plot.
 
@@ -1383,19 +1383,19 @@ def plot3D(*args, **kwargs):
 
     Single plot
 
-    ``plot3D(expr, range_x, range_y, **kwargs)``
+    ``plot3d(expr, range_x, range_y, **kwargs)``
 
     If the ranges are not specified, then a default range of (-10, 10) is used.
 
     Multiple plot with the same range.
 
-    ``plot3D(expr1, expr2, range_x, range_y, **kwargs)``
+    ``plot3d(expr1, expr2, range_x, range_y, **kwargs)``
 
     If the ranges are not specified, then a default range of (-10, 10) is used.
 
     Multiple plots with different ranges.
 
-    ``plot3D((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)``
+    ``plot3d((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)``
 
     Ranges have to be specified for every expression.
 
@@ -1440,20 +1440,20 @@ def plot3D(*args, **kwargs):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.plotting import plot3D
+    >>> from sympy.plotting import plot3d
     >>> x, y = symbols('x y')
 
     Single plot
 
-    >>> plot3D(x*y, (x, -5, 5), (y, -5, 5)) # doctest: +SKIP
+    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5)) # doctest: +SKIP
 
     Multiple plots with same range
 
-    >>> plot3D(x*y, -x*y, (x, -5, 5), (y, -5, 5))# doctest: +SKIP
+    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))# doctest: +SKIP
 
     Multiple plots with different ranges.
 
-    >>> plot3D((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
+    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
 
     See Also
     ========
@@ -1472,7 +1472,7 @@ def plot3D(*args, **kwargs):
     return plots
 
 
-def plot3D_surface(*args, **kwargs):
+def plot3d_parametric_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.
 
@@ -1481,13 +1481,13 @@ def plot3D_surface(*args, **kwargs):
 
     Single plot.
 
-    ``plot3D_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
+    ``plot3d_parametric_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
 
     If the ranges is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots.
 
-    ``plot3D_surface((expr_x, expr_y, expr_z, range_u, range_v), ..., **kwargs)``
+    ``plot3d_parametric_surface((expr_x, expr_y, expr_z, range_u, range_v), ..., **kwargs)``
 
     Ranges have to be specified for every expression.
 
@@ -1537,12 +1537,12 @@ def plot3D_surface(*args, **kwargs):
     ========
 
     >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3D_surface
+    >>> from sympy.plotting import plot3d_parametric_surface
     >>> u, v = symbols('u v')
 
     Single plot.
 
-    >>> plot3D_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
+    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
 
     See Also
     ========

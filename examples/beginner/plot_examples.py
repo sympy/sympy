@@ -1,8 +1,9 @@
 # Check the plot docstring
 
 from sympy import Symbol, exp, sin, cos
-from sympy.plotting import (plot_line, plot_parametric, plot3D_surface,
-                            plot3D_parametric, plot3D)
+from sympy.plotting import (plot, plot_parametric,
+                            plot3d_parametric_surface,plot3d_parametric_line,
+                            plot3d)
 
 lx = range(5)
 ly = [i**2 for i in lx]
@@ -13,11 +14,11 @@ u = Symbol('u')
 v = Symbol('v')
 expr = x**2 - 1
 
-b = plot_line(expr, (x, 2, 4), show=False) # cartesian plot
-e = plot_line(exp(-x),(x, 0, 4), show=False) # cartesian plot (and coloring, see below)
-f = plot3D_parametric(sin(x), cos(x), x, (x, 0, 10), show=False)  # 3d parametric line plot
-g = plot3D(sin(x)*cos(y), (x, -5, 5), (y, -10, 10), show=False) # 3d surface cartesian plot
-h = plot3D_surface(cos(u)*v, sin(u)*v, u, (u, 0, 10),(v, -2, 2), show=False) # 3d parametric surface plot
+b = plot(expr, (x, 2, 4), show=False) # cartesian plot
+e = plot(exp(-x),(x, 0, 4), show=False) # cartesian plot (and coloring, see below)
+f = plot3d_parametric_line(sin(x), cos(x), x, (x, 0, 10), show=False)  # 3d parametric line plot
+g = plot3d(sin(x)*cos(y), (x, -5, 5), (y, -10, 10), show=False) # 3d surface cartesian plot
+h = plot3d_parametric_surface(cos(u)*v, sin(u)*v, u, (u, 0, 10),(v, -2, 2), show=False) # 3d parametric surface plot
 
 # Some aesthetics
 e[0].line_color = lambda x : x / 4
@@ -30,7 +31,7 @@ param_line_2d[0].line_color = lambda u : sin(u) # parametric
 param_line_2d[1].line_color = lambda u, v : u**2 + v**2 # coordinates
 param_line_2d.title = 'The inner one is colored by parameter and the outher one by coordinates'
 
-param_line_3d = plot3D_parametric((x*cos(x), x*sin(x), x, (x, 0, 15)),
+param_line_3d = plot3d_parametric_line((x*cos(x), x*sin(x), x, (x, 0, 15)),
                      (1.5*x*cos(x), 1.5*x*sin(x), x, (x, 0, 15)),
                      (2*x*cos(x), 2*x*sin(x), x, (x, 0, 15)), show=False)
 param_line_3d[0].line_color = lambda u : u #parametric
