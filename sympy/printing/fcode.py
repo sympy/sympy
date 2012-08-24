@@ -133,7 +133,7 @@ class FCodePrinter(CodePrinter):
             if len(self._not_supported) > 0:
                 frontlines.append("! Not Fortran:")
                 for expr in sorted(self._not_supported, key=self._print):
-                    frontlines.append("! %s" % expr)
+                    frontlines.append("! %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("parameter (%s = %s)" % (str(name), value))
             frontlines.extend(lines)

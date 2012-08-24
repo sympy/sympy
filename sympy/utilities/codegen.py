@@ -478,7 +478,7 @@ class CodeGen(object):
             [DEFAULT=True]
         """
 
-        code_lines = self._preprosessor_statements(prefix)
+        code_lines = self._preprocessor_statements(prefix)
 
         for routine in routines:
             if empty: code_lines.append("\n")
@@ -563,7 +563,7 @@ class CCodeGen(CodeGen):
         arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
-    def _preprosessor_statements(self, prefix):
+    def _preprocessor_statements(self, prefix):
         code_lines = []
         code_lines.append("#include \"%s.h\"\n" % os.path.basename(prefix))
         code_lines.append("#include <math.h>\n")
@@ -689,7 +689,7 @@ class FCodeGen(CodeGen):
         code_lines.append("!" + "*"*78 + '\n')
         return code_lines
 
-    def _preprosessor_statements(self, prefix):
+    def _preprocessor_statements(self, prefix):
         return []
 
     def _get_routine_opening(self, routine):
