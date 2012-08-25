@@ -75,6 +75,46 @@ def cyclic_form1(cyclic_form0, singletons=False):
     min = 1 + (not bool(singletons))
     return [[e + 1 for e in c] for c in cyclic_form0 if len(c) >= min]
 
+def _af_mul(*a, **kwargs):
+    """
+    Product of two or more permutations in array form, following the
+    L to R convention: for A*B, A is applied first (to the identity
+    permutation) and then B is applied to A.
+
+    If there is only one array, a copy of it is returned.
+
+    To multiply them in reverse order (R to L) set keyword ``reverse`` = True.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import _af_mul
+    >>> _af_mul([0,2,1,3], [0,1,3,2])
+    [0, 2, 3, 1]
+    >>> _af_mul([0,2,1,3], [0,1,3,2], reverse=True)
+    [0, 3, 1, 2]
+
+    """
+    if not a:
+        raise ValueError("No element")
+    m = len(a)
+    n = len(a[0])
+    if any(len(ai) != n for ai in a):
+            raise ValueError("The number of elements in the permutations "
+                             "don't match.")
+    reverse = kwargs.get('reverse', False)
+    if m == 2:
+        a, b = a
+        if reverse:
+            a, b = b, a
+        return [a[i] for i in b]
+    if m == 1:
+        return list(a[0])
+    rv = range(n)
+    for ai in reversed(a) if reverse else a:
+        rv = [rv[j] for j in ai]
+    return rv
+
 def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
@@ -108,42 +148,6 @@ def _af_parity(pi):
                 i = pi[i]
                 a[i] = 1
     return (n - c) % 2
-
-def _af_mul(*a, **kwargs):
-    """
-    Product of two or more permutations in array form, following the
-    L to R convention: for A*B, A is applied first (to the identity
-    permutation) and then B is applied to A.
-
-    If there is only one array, a copy of it is returned.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.permutations import _af_mul
-    >>> _af_mul([0,2,1,3], [0,1,3,2])
-    [0, 2, 3, 1]
-
-    See Also
-    ========
-    Permutation
-    """
-    if not a:
-        raise ValueError("No element")
-    m = len(a)
-    n = len(a[0])
-    if any(len(ai) != n for ai in a):
-            raise ValueError("The number of elements in the permutations "
-                             "don't match.")
-    if m == 2:
-        a, b = a
-        return [a[i] for i in b]
-    if m == 1:
-        return list(a[0])
-    rv = a[0]
-    for i in range(1, m):
-        rv = [rv[j] for j in a[i]]
-    return rv
 
 def _af_invert(a):
     """
@@ -489,6 +493,41 @@ class Permutation(Basic):
         b = other.inversion_vector()
         result_inv = [(a[i] - b[i]) % (n - i) for i in range(n - 1)]
         return Permutation.from_inversion_vector(result_inv)
+
+    @classmethod
+    def mul(self, *a, **kwargs):
+        """Return the product of Permutations (or permutations in
+        array form) evaluated from left to right. To evaluate from
+        right to left, set the keyword ``reverse`` to True.
+
+        If any argument is a Permutation instance then a permutation
+        will be returned, else the permutation product will be returned
+        in array form.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation([0, 2, 1, 3])
+        >>> b = (0, 1, 3, 2)
+        >>> c = (3, 1, 2, 0)
+        >>> Permutation.mul(a, b, c)
+        Permutation([1, 2, 3, 0])
+        >>> Permutation.mul(a, b, c, reverse=True)
+        Permutation([3, 0, 1, 2])
+        >>> Permutation.mul(b, c)
+        [2, 1, 3, 0]
+        """
+        args = []
+        perm = False
+        for ai in a:
+            if isinstance(ai, Permutation):
+                ai = ai.array_form
+                perm = True
+            args.append(ai)
+        array = _af_mul(*args, **kwargs)
+        if perm:
+            return Permutation(array)
+        return array
 
     def __mul__(self, other):
         """
@@ -1845,9 +1884,10 @@ def _new_from_array_form(perm):
 
 def _merge(arr, temp, left, mid, right):
     """
-    Helper function for calculating inversions.This method is
-    for internal use only.
     Merges two sorted arrays and calculates the inversion count.
+
+    Helper function for calculating inversions. This method is
+    for internal use only.
     """
     i = left
     j = mid
