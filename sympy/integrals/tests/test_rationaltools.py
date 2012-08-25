@@ -85,9 +85,7 @@ def test_ratint():
 
     # Issue 1892
     assert ratint(1/(x*(a+b*x)**3), x) == \
-        (sqrt(a**(-6))*log(x + (a - a**4*sqrt(a**(-6)))/(2*b)) +
-        (3*a + 2*b*x)/(2*a**2*b**2*x**2 + 4*b*x*a**3 + 2*a**4) -
-        sqrt(a**(-6))*log(x + (a + a**4*sqrt(a**(-6)))/(2*b)))
+        (3*a + 2*b*x)/(2*a**4 + 4*a**3*b*x + 2*a**2*b**2*x**2) + (log(x) - log(a/b + x))/a**3
 
     assert ratint(x/(1 - x**2), x) == -log(x**2 - 1)/2
     assert ratint(-x/(1 - x**2), x) == log(x**2 - 1)/2
@@ -107,9 +105,7 @@ def test_issue_2315():
     assert ratint(1/(x**2 + 16), x) == atan(x/4)/4
 
 def test_issue_2150():
-    assert ratint(1/(x**2 + a**2), x) == \
-        sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - sqrt(-1/a**2)*log(x -
-        a**2*sqrt(-1/a**2))/2
+    assert ratint(1/(x**2 + a**2), x) == (-I*log(-I*a + x)/2 + I*log(I*a + x)/2)/a
 
 def test_issue_2718():
     a, b, c = symbols('a,b,c', positive=True)
