@@ -1,14 +1,17 @@
-from sympy.combinatorics import Permutation
+from random import randrange, choice
+from math import log
+
 from sympy.core import Basic
+from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_new_from_array_form,
     _af_commutes_with, _af_invert, _af_mul)
-from random import randrange, choice
-from sympy.functions.combinatorial.factorials import factorial
-from math import log
-from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
 _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
+
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.ntheory import isprime, sieve
+from sympy.utilities.iterables import has_variety
 
 def _smallest_change(h, alpha):
     """
@@ -363,13 +366,15 @@ class PermutationGroup(Basic):
         obj._is_sym = None
         obj._is_alt = None
         obj._is_primitive = None
+        obj._is_nilpotent = None
+        obj._is_solvable = None
+        obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
-        size = len(args[0][0].array_form)
         obj._r = len(obj._generators)
-        if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
-                raise ValueError("Permutation group size is not correct")
-        obj._degree = size
+        obj._degree = args[0][0].size
+        if has_variety(a.size for a in args[0]):
+            raise ValueError("Permutation group size is not correct")
 
         # these attributes are assigned after running schreier_sims
         obj._base = []
@@ -451,43 +456,6 @@ class PermutationGroup(Basic):
 
     def __ne__(self, gr):
         return not self == gr
-
-    def __new__(cls, *args, **kw_args):
-        """
-        The default constructor.
-        """
-        obj = Basic.__new__(cls, *args, **kw_args)
-        obj._generators = args[0]
-        obj._order = None
-        obj._center = []
-        obj._is_abelian = None
-        obj._is_transitive = None
-        obj._is_sym = None
-        obj._is_alt = None
-        obj._is_primitive = None
-        obj._is_nilpotent = None
-        obj._is_solvable = None
-        obj._is_trivial = None
-        obj._transitivity_degree = None
-        obj._max_div = None
-        size = len(args[0][0].array_form)
-        obj._r = len(obj._generators)
-        if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
-                raise ValueError("Permutation group size is not correct")
-        obj._degree = size
-
-        # these attributes are assigned after running schreier_sims
-        obj._base = []
-        obj._coset_repr = []
-        obj._coset_repr_n = []
-        obj._stabilizers_gens = []
-        obj._strong_gens = []
-        obj._basic_orbits = []
-        obj._transversals = []
-
-        # these attributes are assigned after running _random_pr_init
-        obj._random_gens = []
-        return obj
 
     def _random_pr_init(self, r, n, _random_prec_n=None):
         r"""

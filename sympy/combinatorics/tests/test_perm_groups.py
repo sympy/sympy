@@ -206,7 +206,7 @@ def test_orbits():
     G = PermutationGroup([a])
     assert G.orbits(rep=True) == [0]
     gens = rubik_cube_generators()
-    g = PermutationGroup(gens, 48)
+    g = PermutationGroup(gens)
     assert g.orbits(rep=True) == [0, 1]
     assert not g.is_transitive
 

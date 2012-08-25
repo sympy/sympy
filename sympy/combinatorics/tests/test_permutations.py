@@ -1,11 +1,13 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_mul, full_cyclic_form0, cyclic_form1)
+    _af_mul, _af_mul)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
 
 def test_Permutation():
+    assert Permutation([1,2,3]) == Permutation([0, 1, 2, 3])
+    assert Permutation([[1,2]], size=4) == Permutation([[1, 2], [0], [3]])
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
@@ -28,10 +30,6 @@ def test_Permutation():
     assert _af_mul(p.array_form, q.array_form) == \
         [6, 5, 3, 0, 2, 4, 1]
 
-    assert full_cyclic_form0([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
-    assert full_cyclic_form0([(2,3,5)], 3) == [[1, 2, 4], [0]]
-    assert cyclic_form1([[0, 1], [2]], singletons=True) == [[1, 2], [3]]
-    assert cyclic_form1([[0, 1], [2]], singletons=False) == [[1, 2]]
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
@@ -234,8 +232,6 @@ def test_args():
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
-    raises(ValueError, lambda: Permutation([[1, 2], [3]])) # 0, 1, 2 should be present
-    raises(ValueError, lambda: Permutation([1, 2, 3])) # 0, 1, 2 should be present
-    raises(ValueError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
-    raises(ValueError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
+    raises(TypeError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
+    raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
