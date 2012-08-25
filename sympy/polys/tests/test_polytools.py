@@ -1659,6 +1659,25 @@ def test_gcd():
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
+def test_gcd_numbers_vs_polys():
+    assert isinstance(gcd(3, 9), Integer)
+    assert isinstance(gcd(3*x, 9), Integer)
+
+    assert gcd(3, 9) == 3
+    assert gcd(3*x, 9) == 3
+
+    assert isinstance(gcd(S(3)/2, S(9)/4), Rational)
+    assert isinstance(gcd(S(3)/2*x, S(9)/4), Rational)
+
+    assert gcd(S(3)/2, S(9)/4) == S(3)/4
+    assert gcd(S(3)/2*x, S(9)/4) == 1
+
+    assert isinstance(gcd(3.0, 9.0), Float)
+    assert isinstance(gcd(3.0*x, 9.0), Float)
+
+    assert gcd(3.0, 9.0) == 1.0
+    assert gcd(3.0*x, 9.0) == 1.0
+
 def test_terms_gcd():
     assert terms_gcd(1) == 1
     assert terms_gcd(1, x) == 1
