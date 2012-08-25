@@ -7,74 +7,6 @@ from sympy.mpmath.libmp.libintmath import ifac
 
 import random
 
-def full_cyclic_form0(cyclic_form1, n):
-    """Convert from a 1-based permutation in cycle notation
-    to 0-based cyclic form after filling in any missing
-    singletons (up to ``n``).
-
-    If any element in the cycles is greater than n, singletons will
-    be missing from the returned permutation.
-
-    >>> from sympy.combinatorics.permutations import full_cyclic_form0
-    >>> a = [(1, 2, 3)]
-    >>> full_cyclic_form0(a, 5)
-    [[0, 1, 2], [3], [4]]
-    >>> a = [(1, 2, 3), (4, 5)]
-    >>> full_cyclic_form0(a, 5)
-    [[0, 1, 2], [3, 4]]
-    >>> full_cyclic_form0([[4, 5]], 2)
-    [[3, 4], [0], [1]]
-
-    See Also
-    ========
-
-    cyclic_form1
-    """
-
-    rv = []
-    need = set(range(n))
-    for c in cyclic_form1:
-        c = [i - 1 for i in c]
-        need -= set(c)
-        rv.append(c)
-    rv.extend([[i] for i in sorted(need)])
-    return rv
-
-def cyclic_form1(cyclic_form0, singletons=False):
-    """Return a cyclic form in 1-based cyclic form, omitting singletons
-    if ``singleton`` is False (default).
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics.permutations import (Permutation,
-    ... cyclic_form1, full_cyclic_form0)
-    ...
-    >>> cyclic_form1([[0, 1], [2]])
-    [[1, 2]]
-    >>> cyclic_form1([[0, 1], [2]], singletons=True)
-    [[1, 2], [3]]
-
-    >>> p = Permutation(full_cyclic_form0([(2, 3, 4)], 5))
-    >>> p.reduced_cyclic_form
-    [[1, 2, 3]]
-    >>> p.cyclic_form
-    [[1, 2, 3], [0], [4]]
-    >>> c = _
-    >>> cyclic_form1(c)
-    [[2, 3, 4]]
-    >>> cyclic_form1(c, True)
-    [[2, 3, 4], [1], [5]]
-
-    See Also
-    ========
-
-    full_cyclic_form0
-    """
-
-    min = 1 + (not bool(singletons))
-    return [[e + 1 for e in c] for c in cyclic_form0 if len(c) >= min]
-
 def _af_mul(*a, **kwargs):
     """
     Product of two or more permutations in array form, following the
@@ -256,7 +188,7 @@ class Permutation(Basic):
     _array_form = None
     _cyclic_form = None
 
-    def __new__(cls, *args, **kw_args):
+    def __new__(cls, args, size=None):
         """
         Constructor for the Permutation object.
 
@@ -275,30 +207,63 @@ class Permutation(Basic):
 
         >>> Permutation([[4, 5, 6], [3], [0, 1], [2]])
         Permutation([[4, 5, 6], [0, 1], [2], [3]])
+
+        All manipulation of permutations assumes that the smallest element
+        is 0; if a permutation is not entered with a 0, one will be added:
+
+        >>> Permutation([1, 2])
+        Permutation([0, 1, 2])
+
+        If a permutation is entered in cyclic form, it can be entered without
+        singletons and the ``size`` specified so those values can be filled
+        in:
+
+        >>> Permutation([[1,4],[3,5,2]], size=10)
+        Permutation([[2, 3, 5], [1, 4], [0], [6], [7], [8], [9]])
         """
-        if not args or not is_sequence(args[0]) or len(args) > 1 or \
-           has_variety(is_sequence(a) for a in args[0]):
+        args = list(args)
+        if has_variety(is_sequence(a) for a in args):
             raise ValueError("Permutation argument must be a list of ints "
                              "or a list of lists.")
+        if size:
+            size = int(size)
+
+        cycle_form = args and is_sequence(args[0])
 
         # 0, 1, ..., n-1 should all be present
+        # XXX allow arbitrary elements like Partition does?
 
-        temp = [int(i) for i in flatten(args[0])]
-        if set(range(len(temp))) != set(temp):
-            # XXX allow arbitrary elements like Partition does
-            raise ValueError("Integers 0 through %s must be present." %
-                             len(temp))
+        temp = set([int(i) for i in flatten(args)])
+        if args and 0 not in temp:
+            if cycle_form:
+                args.append([0])
+            else:
+                args.insert(0, 0)
+            temp.add(0)
+
+        if size and len(temp) != size or \
+            any(i not in temp for i in range(len(temp))):
+            if size is not None:
+                if cycle_form:
+                    for i in set(range(size)) - temp:
+                        args.append([i])
+                else:
+                    raise ValueError("size can only be given "
+                    "with permutaions in cyclic form.")
+            else:
+                raise ValueError("Integers 0 through %s must be present." %
+                                 len(temp))
 
         cform = aform = None
-        if args[0] and is_sequence(args[0][0]):
-            cform = [list(minlex(a)) for a in args[0]]
+        if cycle_form:
+            cform = [list(minlex(a)) for a in args]
             # put in numerical order with singletons at the end
             cform.sort()
             cform.sort(key=lambda w: -len(w))
         else:
-            aform = list(args[0])
+            aform = list(args)
 
-        ret_obj = Basic.__new__(cls, (cform or aform), **kw_args)
+        ret_obj = Basic.__new__(cls, aform or cform)
         ret_obj._cyclic_form, ret_obj._array_form = cform, aform
         return ret_obj
 
