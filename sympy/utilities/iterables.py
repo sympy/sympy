@@ -253,9 +253,9 @@ def interactive_traversal(expr):
 
     return _interactive_traversal(expr, 0)
 
-def variations(seq, n=None, repetition=False):
-    """Returns a generator of the variations (size n) of the list `seq` (size N).
-    `repetition` controls whether items in seq can appear more than once;
+def variations(seq, n, repetition=False):
+    """Returns a generator of the n-sized variations of ``seq`` (size N).
+    ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
     ========
@@ -281,7 +281,10 @@ def variations(seq, n=None, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
+    See Also
+    ========
 
+    sympy.core.compatibility.permutations
     """
     from sympy.core.compatibility import permutations
 

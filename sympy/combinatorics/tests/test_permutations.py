@@ -1,7 +1,7 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_mul, _af_mul, full_cyclic_form0, cyclic_form1)
-from sympy.utilities import variations
+from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
 
@@ -13,7 +13,7 @@ def test_Permutation():
     assert (p*q*r).array_form == ans
     # make sure no other permutation of p, q, r could have given
     # that answer
-    for a, b, c in variations((p, q, r)):
+    for a, b, c in permutations((p, q, r)):
         if (a, b, c) == (p, q, r): continue
         assert (a*b*c).array_form != ans
 
