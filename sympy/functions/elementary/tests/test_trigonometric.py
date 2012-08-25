@@ -228,6 +228,8 @@ def test_cos():
 
     assert cos(-1273*pi/5) == -cos(2*pi/5)
 
+    assert cos(pi/8) == sqrt((2+sqrt(2))/4)
+
     assert cos(104*pi/105) == -cos(pi/105)
     assert cos(106*pi/105) == -cos(pi/105)
 
