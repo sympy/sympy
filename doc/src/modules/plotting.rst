@@ -33,15 +33,15 @@ Plot Class
 Plotting Function Reference
 ---------------------------
 
-.. autofunction:: sympy.plotting.plot.plot
+.. autofunction:: plot
 
-.. autofunction:: sympy.plotting.plot.plot_parametric
+.. autofunction:: plot_parametric
 
-.. autofunction:: sympy.plotting.plot.plot3d
+.. autofunction:: plot3d
 
-.. autofunction:: sympy.plotting.plot.plot3d_parametric_line
+.. autofunction:: plot3d_parametric_line
 
-.. autofunction:: sympy.plotting.plot.plot3d_parametric_surface
+.. autofunction:: plot3d_parametric_surface
 
 .. autofunction:: sympy.plotting.plot_implicit.plot_implicit
 
