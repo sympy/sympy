@@ -263,7 +263,7 @@ class Permutation(Basic):
         else:
             aform = list(args)
 
-        ret_obj = Basic.__new__(cls, aform or cform)
+        ret_obj = Basic.__new__(cls, aform or cform or [])
         ret_obj._cyclic_form, ret_obj._array_form = cform, aform
         return ret_obj
 
