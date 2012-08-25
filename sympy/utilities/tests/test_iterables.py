@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        minlex)
+        quick_sort, minlex)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -322,3 +322,8 @@ def test_minlex():
     assert minlex((1, 2, 0)) == (0, 1, 2)
     assert minlex((1, 0, 2)) == (0, 2, 1)
     assert minlex((1, 0, 2), directed=False) == (0, 1, 2)
+
+def test_quick_sort():
+    assert quick_sort((x, y)) in [(x, y), (y, x)]
+    assert quick_sort((x, y)) == quick_sort((y, x))
+    assert quick_sort((x, y), quick=False) == (x, y)
