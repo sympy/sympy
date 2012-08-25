@@ -354,7 +354,8 @@ def test_Domain_get_ring():
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
     assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
-    raises(DomainError, lambda: EX.get_ring())
+    assert EX.get_ring() == EX
+
     raises(DomainError, lambda: RR.get_ring())
     raises(DomainError, lambda: ALG.get_ring())
 

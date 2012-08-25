@@ -99,6 +99,14 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __nonzero__(f):
             return f.ex != 0
 
+        def gcd(f, g):
+            from sympy.polys import gcd
+            return f.__class__(gcd(f.ex, f.__class__(g).ex))
+
+        def lcm(f, g):
+            from sympy.polys import lcm
+            return f.__class__(lcm(f.ex, f.__class__(g).ex))
+
     dtype = Expression
 
     zero  = Expression(0)
@@ -166,7 +174,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        raise DomainError('there is no ring associated with %s' % self)
+        return self # XXX: EX is not a ring but we don't have much choice here.
 
     def get_field(self):
         """Returns a field associated with ``self``. """
@@ -195,3 +203,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     def denom(self, a):
         """Returns denominator of ``a``. """
         return a.denom()
+
+    def gcd(self, a, b):
+        return a.gcd(b)
+
+    def lcm(self, a, b):
+        return a.lcm(b)
