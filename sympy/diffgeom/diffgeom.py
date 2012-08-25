@@ -76,11 +76,12 @@ class Patch(Basic):
 class CoordSystem(Basic):
     """Contains all coordinate transformation logic.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define a Manifold and a Patch, and then define two coord systems on that
     patch:
+
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> r, theta = symbols('r, theta')
@@ -92,7 +93,8 @@ class CoordSystem(Basic):
     True
 
     Connect the coordinate systems. An inverse transformation is automatically
-    found by `solve` when possible:
+    found by ``solve`` when possible:
+
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
     [0]
@@ -105,18 +107,21 @@ class CoordSystem(Basic):
     [   pi/4]
 
     Calculate the jacobian of the polar to cartesian transformation:
+
     >>> polar.jacobian(rect, [r, theta])
     [cos(theta), -r*sin(theta)]
     [sin(theta),  r*cos(theta)]
 
     Define a point using coordinates in one of the coordinate systems:
+
     >>> p = polar.point([1, 3*pi/4])
     >>> rect.point_to_coords(p)
     [-sqrt(2)/2]
     [ sqrt(2)/2]
 
     Define a basis scalar field (i.e. a coordinate function), that takes a
-    point and returns its coordinates. It is an instance of `BaseScalarField`.
+    point and returns its coordinates. It is an instance of ``BaseScalarField``.
+
     >>> rect.coord_function(0)(p)
     -sqrt(2)/2
     >>> rect.coord_function(1)(p)
@@ -124,7 +129,8 @@ class CoordSystem(Basic):
 
     Define a basis vector field (i.e. a unit vector field along the coordinate
     line). Vectors are also differential operators on scalar fields. It is an
-    instance of `BaseVectorField`.
+    instance of ``BaseVectorField``.
+
     >>> v_x = rect.base_vector(0)
     >>> x = rect.coord_function(0)
     >>> v_x(x)(p)
@@ -133,16 +139,19 @@ class CoordSystem(Basic):
     0
 
     Define a basis oneform field:
+
     >>> dx = rect.base_oneform(0)
     >>> dx(v_x)(p)
     1
 
     If you provide a list of names the fields will print nicely:
     - without provided names:
+
     >>> x, v_x, dx
     (rect_0, e_rect_0, drect_0)
 
     - with provided names
+
     >>> rect = CoordSystem('rect', patch, ['x', 'y'])
     >>> rect.coord_function(0), rect.base_vector(0), rect.base_oneform(0)
     (x, e_x, dx)
@@ -183,13 +192,14 @@ class CoordSystem(Basic):
     def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
         """Register the transformation used to switch to another coordinate system.
 
-        Arguments:
-        ==========
-        - to_sys - another instance of `CoordSystem`
-        - from_coords - list of symbols in terms of which `to_exprs` is given
-        - to_exprs - list of the expressions of the new coordinate tuple
-        - inverse - try to deduce and register the inverse transformation
-        - fill_in_gaps - try to deduce other transformation that are made
+        Arguments
+        =========
+
+         - to_sys - another instance of `CoordSystem`
+         - from_coords - list of symbols in terms of which `to_exprs` is given
+         - to_exprs - list of the expressions of the new coordinate tuple
+         - inverse - try to deduce and register the inverse transformation
+         - fill_in_gaps - try to deduce other transformation that are made
         possible by composing the present transformation with other already
         registered transformation
 
@@ -222,9 +232,9 @@ class CoordSystem(Basic):
         # TODO
 
     def coord_tuple_transform_to(self, to_sys, coords):
-        """Transform `coords` to coord system `to_sys`.
+        """Transform ``coords`` to coord system ``to_sys``.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         coords = Matrix(coords)
         if self != to_sys:
             transf = self.transforms[to_sys]
@@ -241,47 +251,47 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def coord_function(self, coord_index):
-        """Return a `ScalarField` that takes a point and returns one of the coords.
+        """Return a ``BaseScalarField`` that takes a point and returns one of the coords.
 
         Takes a point and returns its coordinate in this coordinate system.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         return BaseScalarField(self, coord_index)
 
     def coord_functions(self):
         """Returns a list of all coordinate functions.
 
-        For more details see the coord_function method of this class."""
+        For more details see the ``coord_function`` method of this class."""
         return [self.coord_function(i) for i in range(self.dim)]
 
     def base_vector(self, coord_index):
-        """Return a basis VectorField.
+        """Return a basis vector field.
 
         The basis vector field for this coordinate system. It is also an
         operator on scalar fields.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         return BaseVectorField(self, coord_index)
 
     def base_vectors(self):
         """Returns a list of all base vectors.
 
-        For more details see the base_vector method of this class."""
+        For more details see the ``base_vector`` method of this class."""
         return [self.base_vector(i) for i in range(self.dim)]
 
     def base_oneform(self, coord_index):
-        """Return a basis OneFormField.
+        """Return a basis 1-form field.
 
         The basis one-form field for this coordinate system. It is also an
         operator on vector fields.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         return Differential(self.coord_function(coord_index))
 
     def base_oneforms(self):
         """Returns a list of all base oneforms.
 
-        For more details see the base_oneform method of this class."""
+        For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
 
     ##########################################################################
@@ -289,15 +299,15 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def point(self, coords):
-        """Create a `Point` with coordinates given in this coord system.
+        """Create a ``Point`` with coordinates given in this coord system.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         return Point(self, coords)
 
     def point_to_coords(self, point):
         """Calculate the coordinates of a point in this coord system.
 
-        See the docstring of `CoordSystem` for examples."""
+        See the docstring of ``CoordSystem`` for examples."""
         return point.coords(self)
 
     ##########################################################################
@@ -319,10 +329,11 @@ class Point(Basic):
     limitations in the simplification routines you can arrive at complicated
     expressions if you use inappropriate coordinate systems.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define the boilerplate Manifold, Patch and coordinate systems:
+
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point)
@@ -334,6 +345,7 @@ class Point(Basic):
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
 
     Define a point using coordinates from one of the coordinate systems:
+
     >>> p = Point(polar, [r, 3*pi/4])
     >>> p.coords()
     [     r]
@@ -352,7 +364,7 @@ class Point(Basic):
     def coords(self, to_sys=None):
         """Coordinates of the point in a given coordinate system.
 
-        If `to_sys` is None it returns the coordinates in the system in
+        If ``to_sys`` is ``None`` it returns the coordinates in the system in
         which the point was defined."""
         if to_sys:
             return self._coord_sys.coord_tuple_transform_to(to_sys, self._coords)
@@ -388,6 +400,7 @@ class BaseScalarField(Expr):
     ========
 
     Define boilerplate Manifold, Patch and coordinate systems:
+
     >>> from sympy import symbols, sin, cos, pi, Function
     >>> from sympy.diffgeom import (
     ...        Manifold, Patch, CoordSystem, Point, BaseScalarField)
@@ -399,9 +412,11 @@ class BaseScalarField(Expr):
     >>> polar.connect_to(rect, [r0, theta0], [r0*cos(theta0), r0*sin(theta0)])
 
     Point to be used as an argument for the filed:
+
     >>> point = polar.point([r0, 0])
 
     Examples of fields:
+
     >>> fx = BaseScalarField(rect, 0)
     >>> fy = BaseScalarField(rect, 1)
     >>> (fx**2+fy**2)(point)
@@ -459,10 +474,11 @@ class BaseVectorField(Expr):
     the simplification routines you may arrive at more complicated
     expression if you use unappropriate coordinate systems.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import symbols, pi, Function
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
@@ -470,10 +486,12 @@ class BaseVectorField(Expr):
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
     Points to be used as arguments for the field:
+
     >>> point_p = R2_p.point([r0, theta0])
     >>> point_r = R2_r.point([x0, y0])
 
     Scalar field to operate on:
+
     >>> g = Function('g')
     >>> s_field = g(R2.x, R2.y)
     >>> s_field(point_r)
@@ -482,6 +500,7 @@ class BaseVectorField(Expr):
     g(r0*cos(theta0), r0*sin(theta0))
 
     Vector field:
+
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
     /  d              \|
@@ -545,16 +564,18 @@ class Commutator(Expr):
     vector field `[v_1, v_2]` that evaluated on each scalar field `f` is equal
     to `v_1(v_2(f)) - v_2(v_1(f))`.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import Commutator
     >>> from sympy import pprint
     >>> from sympy.simplify import simplify
 
     Vector fields:
+
     >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
@@ -616,23 +637,27 @@ class Differential(Expr):
     The differential `df` of the 0-form `f` is defined for any vector field `v`
     as `df(v) = v(f)`.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import Function
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import Differential
     >>> from sympy import pprint
 
     Scalar field (0-forms):
+
     >>> g = Function('g')
     >>> s_field = g(R2.x, R2.y)
 
     Vector fields:
+
     >>> e_x, e_y, = R2.e_x, R2.e_y
 
     Differentials:
+
     >>> dg = Differential(s_field)
     >>> dg
     d(g(x, y))
@@ -646,6 +671,7 @@ class Differential(Expr):
     \dxi_2            /|xi_2=y
 
     Applying the exterior derivative operator twice always results in:
+
     >>> Differential(dg)
     0
 
@@ -720,10 +746,11 @@ class TensorProduct(Expr):
     other type of product, the wedge product, namely they are not antisymetric
     and hence are not form fields.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import Function
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import TensorProduct
@@ -737,17 +764,20 @@ class TensorProduct(Expr):
     x**2
 
     You can nest tensor products.
+
     >>> tp1 = TensorProduct(R2.dx, R2.dy)
     >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     1
 
     You can make partial contaction for instance when 'raising an index'.
+
     >>> TP = TensorProduct
     >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
     >>> metric(R2.e_y, None)
     3*dy
 
     Or automatically pad the args with ``None``s.
+
     >>> metric(R2.e_y)
     3*dy
 
@@ -800,10 +830,11 @@ class WedgeProduct(TensorProduct):
     In the context of integration only completely antisymetric forms make
     sense. The wedge product permits the creation of such forms.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import Function
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import WedgeProduct
@@ -817,6 +848,7 @@ class WedgeProduct(TensorProduct):
     x**2
 
     You can nest wedge products.
+
     >>> wp1 = WedgeProduct(R2.dx, R2.dy)
     >>> WedgeProduct(wp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     0
@@ -843,8 +875,8 @@ class LieDerivative(Expr):
     of the field to be derived along the integral curve of the field wrt which
     one derives.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> #TODO
     """
@@ -878,8 +910,8 @@ class LieDerivative(Expr):
 class BaseCovarDerivativeOp(Expr):
     """Covariant derivative operator wrt a base vector.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom.Rn import R2, R2_r
     >>> from sympy.diffgeom import BaseCovarDerivativeOp
@@ -944,8 +976,8 @@ class BaseCovarDerivativeOp(Expr):
 class CovarDerivativeOp(Expr):
     """Covariant derivative operator.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import CovarDerivativeOp
@@ -1001,8 +1033,8 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    Arguments:
-    ==========
+    Arguments
+    =========
 
     - vector_field - the vector field for which an integral curve will be given
     - param - the argument of the function `gamma` from R to the curve
@@ -1013,24 +1045,28 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
     See Also: intcurve_diffequ
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold:
+
     >>> from sympy.abc import t, x, y
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_series
 
     Specify a starting point and a vector field:
+
     >>> start_point = R2_r.point([x, y])
     >>> vector_field = R2_r.e_x
 
     Calculate the series:
+
     >>> intcurve_series(vector_field, t, start_point, n=3)
     [t + x]
     [    y]
 
     Or get the elements of the expansion in a list:
+
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
     [x]
@@ -1043,6 +1079,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [0]
 
     The series in the polar coordinate system:
+
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
     [sqrt(x**2 + y**2)]
@@ -1089,33 +1126,36 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    Arguments:
-    ==========
+    Arguments
+    =========
 
     - vector_field - the vector field for which an integral curve will be given
     - param - the argument of the function `gamma` from R to the curve
     - start_point - the point which coresponds to `gamma(0)`
     - coord_sys - the coordinate system in which to give the equations
 
-    Returns:
-    ========
+    Returns
+    =======
     a tuple of (equations, initial conditions)
 
     See Also: intcurve_series
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Use the predefined R2 manifold:
+
     >>> from sympy.abc import t
     >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_diffequ
 
     Specify a starting point and a vector field:
+
     >>> start_point = R2_r.point([0, 1])
     >>> vector_field = -R2.y*R2.e_x + R2.x*R2.e_y
 
     Get the equation:
+
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
     >>> equations
     [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
@@ -1123,6 +1163,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     [f_0(0), f_1(0) - 1]
 
     The series in the polar coordinate system:
+
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
     >>> equations
     [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
@@ -1166,8 +1207,8 @@ def list_to_tuple_rec(the_list):
 def contravariant_order(expr, _strict=False):
     """Return the contravariant order of an expression.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom import contravariant_order
     >>> from sympy.diffgeom.Rn import R2
@@ -1208,8 +1249,8 @@ def contravariant_order(expr, _strict=False):
 def covariant_order(expr, _strict=False):
     """Return the covariant order of an expression.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom import covariant_order
     >>> from sympy.diffgeom.Rn import R2
@@ -1258,8 +1299,8 @@ def vectors_in_basis(expr, to_sys):
     While the new base vectors are in the new coordinate system basis, any
     coefficients are kept in the old system.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.Rn import R2_r, R2_p
@@ -1288,8 +1329,8 @@ def twoform_to_matrix(expr):
     where `e_i` is the i-th base vector field for the coordinate system in
     which the expression of `w` is given.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
@@ -1326,8 +1367,8 @@ def metric_to_Christoffel_1st(expr):
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
@@ -1357,8 +1398,8 @@ def metric_to_Christoffel_2nd(expr):
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.diffgeom.Rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
@@ -1397,8 +1438,8 @@ def metric_to_Riemann_components(expr):
     canonical basis of the coordinate system in which the metric expression is
     given.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy import pprint, exp
     >>> from sympy.diffgeom.Rn import R2
@@ -1450,8 +1491,8 @@ def metric_to_Ricci_components(expr):
     canonical basis of the coordinate system in which the metric expression is
     given.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy import pprint, exp
     >>> from sympy.diffgeom.Rn import R2
