@@ -25,12 +25,7 @@ from pythonrationalfield import PythonRationalField
 from sympyrationalfield import SymPyRationalField
 from gmpyrationalfield import GMPYRationalField
 
-from sympyrealdomain import SymPyRealDomain
-from pythonrealdomain import PythonRealDomain
 from mpmathrealdomain import MPmathRealDomain
-
-from pythoncomplexdomain import PythonComplexDomain
-from mpmathcomplexdomain import MPmathComplexDomain
 
 from algebraicfield import AlgebraicField
 
@@ -53,12 +48,7 @@ QQ_python = PythonRationalField
 QQ_sympy = SymPyRationalField
 QQ_gmpy = GMPYRationalField
 
-RR_sympy = SymPyRealDomain
-RR_python = PythonRealDomain
 RR_mpmath = MPmathRealDomain
-
-CC_python = PythonComplexDomain
-CC_mpmath = MPmathComplexDomain
 
 from pythonrationaltype import PythonRationalType
 
@@ -95,6 +85,5 @@ except KeyError:
 GF = FF
 
 RR = RR_mpmath()
-CC = CC_mpmath()
 
 EX = ExpressionDomain()
