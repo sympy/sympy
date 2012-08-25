@@ -207,6 +207,14 @@ def test_mul():
     assert _af_mul(a, b) == [0, 2, 3, 1]
     assert _af_mul(a, b, range(4)) == [0, 2, 3, 1]
     assert (Permutation(a)*Permutation(b)).array_form == [0, 2, 3, 1]
+    assert _af_mul([0,2,1,3], [0,1,3,2], reverse=True) == [0, 3, 1, 2]
+
+    a = Permutation([0, 2, 1, 3])
+    b = (0, 1, 3, 2)
+    c = (3, 1, 2, 0)
+    assert Permutation.mul(a, b, c) == Permutation([1, 2, 3, 0])
+    assert Permutation.mul(a, b, c, reverse=True) == Permutation([3, 0, 1, 2])
+    assert Permutation.mul(b, c) == [2, 1, 3, 0]
 
     n = 6
     m = 8
