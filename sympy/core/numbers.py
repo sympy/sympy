@@ -369,20 +369,6 @@ class Number(AtomicExpr):
             return self, tuple()
         return S.Zero, (self,)
 
-    def gcd(self, other):
-        """Compute greatest common divisor of input arguments. """
-        return S.One
-
-    def lcm(self, other):
-        """Compute least common multiple of input arguments. """
-        other = _sympify(other)
-        return self*other
-
-    def cofactors(self, other):
-        """Compute GCD and cofactors of input arguments. """
-        other = _sympify(other)
-        return S.One, self, other
-
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
         if rational and not self.is_Rational:
@@ -392,6 +378,21 @@ class Number(AtomicExpr):
     def as_coeff_Add(self):
         """Efficiently extract the coefficient of a summation. """
         return self, S.Zero
+
+    def gcd(self, other):
+        """Compute GCD of `self` and `other`. """
+        from sympy.polys import gcd
+        return gcd(self, other)
+
+    def lcm(self, other):
+        """Compute LCM of `self` and `other`. """
+        from sympy.polys import lcm
+        return lcm(self, other)
+
+    def cofactors(self, other):
+        """Compute GCD and cofactors of `self` and `other`. """
+        from sympy.polys import cofactors
+        return cofactors(self, other)
 
 class Float(Number):
     """
@@ -1270,65 +1271,6 @@ class Rational(Number):
                          for i in sorted(f.items())])
             return Mul(*args, **{'evaluate':False})
 
-    def gcd(self, other):
-        """Compute greatest common divisor of input arguments. """
-        if type(other) in (int, long):
-            p = igcd(self.p, other)
-
-            if self.is_Integer:
-                return Integer(p)
-            else:
-                return Rational(p, self.q)
-        else:
-            other = _sympify(other)
-
-            if other.is_Rational:
-                p = igcd(self.p, other.p)
-
-                if other.is_Integer:
-                    if self.is_Integer:
-                        return Integer(p)
-                    else:
-                        return Rational(p, self.q)
-                else:
-                    if self.is_Integer:
-                        return Rational(p, other.q)
-                    else:
-                        return Rational(p, ilcm(self.q, other.q))
-            elif other.is_Number:
-                return S.One
-            else:
-                raise TypeError("expected integer or rational, got %s" % other)
-
-    def lcm(self, other):
-        """Compute least common multiple of input arguments. """
-        if type(other) in (int, long):
-            return Integer(ilcm(self.p, other))
-        else:
-            other = _sympify(other)
-
-            if other.is_Rational:
-                p = ilcm(self.p, other.p)
-
-                if self.is_Integer or other.is_Integer:
-                    return Integer(p)
-                else:
-                    return Rational(p, igcd(self.q, other.q))
-            elif other.is_Number:
-                return self*other
-            else:
-                raise TypeError("expected integer or rational, got %s" % other)
-
-    def cofactors(self, other):
-        """Compute GCD and cofactors of input arguments. """
-        other = _sympify(other)
-        gcd = self.gcd(other)
-
-        if gcd is S.One:
-            return gcd, self, other
-        else:
-            return gcd, self/gcd, other/gcd
-
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
 
@@ -1709,49 +1651,6 @@ class Integer(Rational):
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
-
-    def factorial(self):
-        """Compute factorial of `self`. """
-        from sympy.functions.combinatorial.factorials import factorial
-        return Integer(factorial(int(self)))
-
-    def isqrt(self):
-        """Compute integer square root of `self`. """
-        return Integer(mlib.isqrt(int(self)))
-
-    def half_gcdex(self, other):
-        """Half Extended Euclidean Algorithm. """
-        s, _, h = self.gcdex(other)
-        return s, h
-
-    def gcdex(self, other):
-        """Extended Euclidean Algorithm. """
-        if isinstance(other, (int, long)):
-            return tuple(map(Integer, igcdex(int(self), other)))
-        b = _sympify(other)
-        if b.is_Integer:
-            return tuple(map(Integer, igcdex(int(self), int(b))))
-        else:
-            raise ValueError("expected an integer, got %s" % b)
-
-    def invert(self, other):
-        """Invert `self` modulo `other`, if possible. """
-        if isinstance(other, (int, long)):
-            a, b = int(self), other
-        else:
-            b = _sympify(other)
-
-            if b.is_Integer:
-                a, b = int(self), int(b)
-            else:
-                raise ValueError("expected an integer, got %s" % b)
-
-        s, _, h = igcdex(a, b)
-
-        if h == 1:
-            return Integer(s % b)
-        else:
-            raise ZeroDivisionError("zero divisor")
 
 # Add sympify converters
 converter[int] = converter[long] = Integer

@@ -928,30 +928,6 @@ def test_IntegerInteger():
 
     assert a == b
 
-def test_Integer_methods():
-    assert Integer(0).factorial() == Integer(1)
-    assert Integer(1).factorial() == Integer(1)
-    assert Integer(10).factorial() == Integer(3628800)
-
-    assert Integer(100).isqrt() == Integer(10)
-    assert Integer(110).isqrt() == Integer(10)
-    assert Integer(121).isqrt() == Integer(11)
-
-    assert Integer(100).half_gcdex(2004) == \
-        (Integer(-20), Integer(4))
-    assert Integer(100).half_gcdex(Integer(2004)) == \
-        (Integer(-20), Integer(4))
-    assert Integer(100).gcdex(2004) == \
-        (Integer(-20), Integer(1), Integer(4))
-    assert Integer(100).gcdex(Integer(2004)) == \
-        (Integer(-20), Integer(1), Integer(4))
-
-    raises(ValueError, lambda: Integer(3).half_gcdex(Rational(1,2)))
-    raises(ValueError, lambda: Integer(3).gcdex(Rational(1,2)))
-
-    assert Integer(3).invert(7) == Integer(5)
-    assert Integer(3).invert(Integer(7)) == Integer(5)
-
 def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).gcd(2) == Integer(2)
     assert Integer(4).lcm(2) == Integer(4)
