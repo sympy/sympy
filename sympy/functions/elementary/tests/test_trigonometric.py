@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float,Pow)
+        Float,Pow,expand)
 
 from sympy.utilities.pytest import XFAIL
 
@@ -63,6 +63,9 @@ def test_sin():
     assert sin(8*pi/5) == -sin(2*pi/5)
 
     assert sin(-1273*pi/5) == -sin(2*pi/5)
+
+    assert 0 == (sin(pi/8) - sqrt((2-sqrt(2))/4))
+
 
     assert sin(104*pi/105) == sin(pi/105)
     assert sin(106*pi/105) == -sin(pi/105)

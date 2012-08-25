@@ -496,26 +496,11 @@ class cos(TrigonometricFunction):
                     3 : S.Half,
                     5 : (sqrt(5) + 1)/4,
                     17 : makecos17(),
-                    # 65537 and 257 are missing becaue they are too complicated.
+                    # 65537 and 257 are missing because they are too complicated.
                 }
 
-                def chebyshevMethod(x,n):
-                    # Chebyshev polynomial method for reducing
-                    # numerators
-                    y = x*x-1
-                    z = sqrt(y.expand())
-                    E = ((x-z)**n + (x+z)**n)/2
-                    E = E.expand()
-                    return E
-
                 try:
-                    fundamental= cst_table_some[q]
-                    if 1 == p:
-                        result = fundamental
-                    elif 2 == p:
-                        result = 2*fundamental**2-1
-                    else:
-                        result = chebyshevMethod(fundamental,p)
+                    result = C.chebyshevt(p,cst_table_some[q])
                 except KeyError:
                     if (pi_coeff.p, pi_coeff.q) != (p,q):
                         narg = C.Rational(p, q)*S.Pi
