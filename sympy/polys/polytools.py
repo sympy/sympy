@@ -4562,6 +4562,8 @@ def gcd(f, g=None, *gens, **args):
             gens = (g,) + gens
 
         return gcd_list(f, *gens, **args)
+    elif g is None:
+        raise TypeError("gcd() takes 2 arguments or a sequence of arguments")
 
     options.allowed_flags(args, ['polys'])
 
@@ -4653,6 +4655,8 @@ def lcm(f, g=None, *gens, **args):
             gens = (g,) + gens
 
         return lcm_list(f, *gens, **args)
+    elif g is None:
+        raise TypeError("lcm() takes 2 arguments or a sequence of arguments")
 
     options.allowed_flags(args, ['polys'])
 

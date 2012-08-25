@@ -1659,6 +1659,9 @@ def test_gcd():
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
+    raises(TypeError, lambda: gcd(x))
+    raises(TypeError, lambda: lcm(x))
+
 def test_gcd_numbers_vs_polys():
     assert isinstance(gcd(3, 9), Integer)
     assert isinstance(gcd(3*x, 9), Integer)
