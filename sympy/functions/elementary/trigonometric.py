@@ -418,7 +418,7 @@ class cos(TrigonometricFunction):
                 if n == 1 or 0 == n%2:
                     return False
                 primes = { 65537:0,257:0,17:0,5:0,3:0 }
-                for i,p_i in enumerate(primes):
+                for p_i in primes:
                     while 0 == n%p_i:
                         n = n/p_i;
                         primes[p_i] += 1;
