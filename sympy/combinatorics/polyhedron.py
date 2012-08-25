@@ -2,36 +2,15 @@ from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation
 from sympy.utilities.misc import default_sort_key
-from sympy.utilities.iterables import rotate_left, has_variety, is_sequence
+from sympy.utilities.iterables import (rotate_left, has_variety,
+    is_sequence, minlex)
 from sympy.utilities.randtest import _randrange
-
-def minlex(face):
-    """Return the face in canonical order: smallest first with
-    direction (perhaps reversed) such that the next smallest comes next.
-
-    Examples
-    ========
-    >>> from sympy.combinatorics.polyhedron import minlex
-    >>> minlex((1, 0, 2))
-    (0, 1, 2)
-    >>> minlex((1, 2, 0))
-    (0, 1, 2)
-    """
-    face = list(face)
-    small = min(face)
-    i = face.index(small)
-    m = len(face)
-    p = (i + 1) % m
-    n = (i - 1) % m
-    if face[p] > face[n]:
-        face = list(reversed(face))
-    return tuple(rotate_left(face, face.index(small)))
 
 class Polyhedron(Basic):
     """
-    Represents the Polyhedral symmetry group.
+    Represents the polyhedral symmetry group (PSG).
 
-    It is one of the symmetry groups of the Platonic solids.
+    The PSG is one of the symmetry groups of the Platonic solids.
     There are three polyhedral groups: the tetrahedral group
     of order 12, the octahedral group of order 24, and the
     icosahedral group of order 60.
@@ -356,7 +335,7 @@ class Polyhedron(Basic):
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [minlex(f) for f in faces]
+        faces = [minlex(f, directed=False) for f in faces]
         corners, faces, pgroups = args = \
             [Tuple(*a) for a in (corners, faces, pgroups)]
         obj = Basic.__new__(cls, *args)
@@ -430,7 +409,7 @@ class Polyhedron(Basic):
             output = set()
             n = len(self.corners)
             for face in self.faces:
-                for i in xrange(len(face)):
+                for i in range(len(face)):
                     edge = tuple(sorted([face[i], face[i - 1]]))
                     if edge not in output:
                         output.add(edge)
@@ -472,7 +451,7 @@ class Polyhedron(Basic):
         # start with the identity permutation
         result = Permutation(range(len(self.corners)))
         m = len(self.pgroups)
-        for i in xrange(n):
+        for i in range(n):
             result *= self.pgroups[randrange(m)]
         return result
 
@@ -502,7 +481,7 @@ class Polyhedron(Basic):
         if perm.size != self.size:
             raise ValueError("The size of the permutation and polyhedron must match.")
         temp = []
-        for i in xrange(len(self.corners)):
+        for i in range(len(self.corners)):
             temp.append(self.corners[perm.array_form[i]])
         self._corners = tuple(temp)
 
@@ -522,7 +501,7 @@ def _pgroup_calcs():
         # the vertices of the double which sits inside a give polyhedron
         # can be found by tracking the faces of the outer polyhedron.
         # A map between face and the vertex of the double is made so that
-        # afater rotation the position of the vertices can be located
+        # after rotation the position of the vertices can be located
         fmap = dict(zip(ordered_faces,
                          range(len(ordered_faces))))
         flat_faces = flatten(ordered_faces)
@@ -535,7 +514,8 @@ def _pgroup_calcs():
             # enumerating the faces
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
-            reorder = [tuple(int_tested(minlex(f))) for f in reorder]
+            reorder = [tuple(int_tested(minlex(f, directed=False)))
+                for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double
             new_pgroup.append(Permutation([fmap[f] for f in reorder]))

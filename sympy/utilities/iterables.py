@@ -1262,23 +1262,55 @@ def quick_sort(seq, quick=True):
     """Sort by hash and break ties with default_sort_key (default)
     or entirely by default_sort_key if ``quick`` is False.
 
-    When sorting for consistency between systems, ``quick`` should be False;
-    if sorting is just needed to give consistent orderings during a
-    given session ``quick`` can be True.
+    When sorting for consistency between systems, ``quick`` should be
+    False; if sorting is just needed to give consistent orderings during
+    a given session ``quick`` can be True.
 
     >>> from sympy.utilities import quick_sort
     >>> from sympy.abc import x
     >>> quick_sort([x, 1, 3])
     (1, 3, x)
     """
-    from collections import defaultdict
-    d = defaultdict(list)
-    for a in seq:
-        d[hash(a)].append(a)
-    seq = []
-    for k in sorted(d.keys()):
-      if len(d[k]) > 1:
-          seq.extend(sorted(d[k], key=default_sort_key))
-      else:
-          seq.extend(d[k])
+    if not quick:
+        seq = list(seq)
+        seq.sort(key=default_sort_key)
+    else:
+        d = defaultdict(list)
+        for a in seq:
+            d[hash(a)].append(a)
+        seq = []
+        for k in sorted(d.keys()):
+          if len(d[k]) > 1:
+              seq.extend(sorted(d[k], key=default_sort_key))
+          else:
+              seq.extend(d[k])
+    return tuple(seq)
+
+def minlex(seq, directed=True):
+    """Return a tuple where the smallest element appears first; if
+    ``directed`` is True (default) then the order is preserved, otherwise the
+    sequence will be reversed if that gives a lexically smaller ordering.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.polyhedron import minlex
+    >>> minlex((1, 2, 0))
+    (0, 1, 2)
+    >>> minlex((1, 0, 2))
+    (0, 2, 1)
+    >>> minlex((1, 0, 2), directed=False)
+    (0, 1, 2)
+    """
+    seq = list(seq)
+    small = min(seq)
+    i = seq.index(small)
+    if not directed:
+        n = len(seq)
+        p = (i + 1) % n
+        m = (i - 1) % n
+        if seq[p] > seq[m]:
+            seq = list(reversed(seq))
+            i = n - i - 1
+    if i:
+        seq = rotate_left(seq, i)
     return tuple(seq)
