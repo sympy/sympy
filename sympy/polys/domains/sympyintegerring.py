@@ -105,20 +105,20 @@ class SymPyIntegerRing(IntegerRing):
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
-        return a.gcdex(b)
+        return SymPyIntegerType(python_gcdex(int(a), int(b)))
 
     def gcd(self, a, b):
         """Compute GCD of ``a`` and ``b``. """
-        return a.gcd(b)
+        return SymPyIntegerType(python_gcd(int(a), int(b)))
 
     def lcm(self, a, b):
         """Compute LCM of ``a`` and ``b``. """
-        return a.lcm(b)
+        return SymPyIntegerType(python_lcm(int(a), int(b)))
 
     def sqrt(self, a):
         """Compute square root of ``a``. """
-        return a.isqrt()
+        return SymPyIntegerType(python_sqrt(int(a)))
 
     def factorial(self, a):
         """Compute factorial of ``a``. """
-        return a.factorial()
+        return SymPyIntegerType(python_factorial(int(a)))
