@@ -47,14 +47,6 @@ class LatexPrinter(Printer):
             settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
-        if ('inline') in self._settings:
-            warnings.warn("'inline' is deprecated, please use 'mode'. "
-                "'mode' can be one of 'inline', 'plain', 'equation', or "
-                "'equation*'.")
-            if self._settings['inline']:
-                self._settings['mode'] = 'inline'
-            else:
-                self._settings['mode'] = 'equation*'
         if 'mode' in self._settings:
             valid_modes = ['inline', 'plain', 'equation', \
                             'equation*']
