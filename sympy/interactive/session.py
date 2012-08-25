@@ -439,8 +439,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 #Enable interactive plotting using pylab.
                 try:
                     ip.enable_pylab(import_all=False)
-                except ImportError:
-                    #Causes an import error if matplotlib is not installed.
+                except Exception:
+                    # Causes an import error if matplotlib is not installed.
+                    # Causes other errors (depending on the backend) if there
+                    # is no display, or if there is some problem in the
+                    # backend, so we have a bare "except Exception" here
                     pass
             if not in_ipython:
                 mainloop = ip.mainloop
