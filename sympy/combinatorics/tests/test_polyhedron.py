@@ -1,16 +1,10 @@
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
-    tetrahedron, cube as square, octahedron, dodecahedron, icosahedron, minlex,
+    tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
 
 import random
-
-def test_minlex():
-    p = Permutation(range(3))
-    while p:
-        assert minlex(p.array_form) == (0, 1, 2)
-        p = p.next_lex()
 
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
