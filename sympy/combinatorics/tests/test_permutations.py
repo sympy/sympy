@@ -1,12 +1,21 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_mul, _af_mul, full_cyclic_form0, cyclic_form1)
+from sympy.utilities import variations
 
 from sympy.utilities.pytest import raises
 
 def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
+    r = Permutation([1,3,2,0,4,6,5])
+    ans = Permutation(_af_mul(*[w.array_form for w in (p, q, r)])).array_form
+    assert (p*q*r).array_form == ans
+    # make sure no other permutation of p, q, r could have given
+    # that answer
+    for a, b, c in variations((p, q, r)):
+        if (a, b, c) == (p, q, r): continue
+        assert (a*b*c).array_form != ans
 
     assert p.support == range(7)
     assert q.support == [0, 2, 3, 4, 5, 6]
@@ -16,7 +25,7 @@ def test_Permutation():
     assert q.cycles == 2
     assert q*p == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert p*q == Permutation([6, 5, 3, 0, 2, 4, 1])
-    assert _af_mul([2, 5, 1, 6, 3, 0, 4], [3, 1, 4, 5, 0, 6, 2]) == \
+    assert _af_mul(p.array_form, q.array_form) == \
         [6, 5, 3, 0, 2, 4, 1]
 
     assert full_cyclic_form0([(2,3,5)], 5) == [[1, 2, 4], [0], [3]]
@@ -43,10 +52,14 @@ def test_Permutation():
     b = q-p
     assert (a+b).is_Identity
 
-    assert p.conjugate(q) == Permutation([5, 3, 0, 4, 6, 2, 1])
-    assert p.conjugate(q) == ~q*p*q == p**q
-    assert q.conjugate(p) == Permutation([6, 3, 2, 0, 1, 4, 5])
-    assert q.conjugate(p) == ~p*q*p == q**p
+    pq = p.conjugate(q)
+    assert pq == Permutation([5, 3, 0, 4, 6, 2, 1])
+    assert pq == ~q*p*q
+    assert pq == p**q
+    qp = q.conjugate(p)
+    assert qp == Permutation([6, 3, 2, 0, 1, 4, 5])
+    assert qp == ~p*q*p
+    assert qp == q**p
 
     assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
     assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
@@ -190,6 +203,11 @@ def test_ranking():
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
 def test_mul():
+    a, b = [0,2,1,3], [0,1,3,2]
+    assert _af_mul(a, b) == [0, 2, 3, 1]
+    assert _af_mul(a, b, range(4)) == [0, 2, 3, 1]
+    assert (Permutation(a)*Permutation(b)).array_form == [0, 2, 3, 1]
+
     n = 6
     m = 8
     a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
