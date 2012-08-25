@@ -400,6 +400,8 @@ class Domain(Option):
     requires = []
     excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
 
+    after = ['gens']
+
     _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
     _re_polynomial  = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
     _re_fraction    = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
@@ -463,7 +465,10 @@ class Domain(Option):
     def postprocess(cls, options):
         if 'gens' in options and 'domain' in options and options['domain'].is_Composite and \
                 (set(options['domain'].gens) & set(options['gens'])):
-            raise GeneratorsError("ground domain and generators interferes together")
+            raise GeneratorsError("ground domain and generators interfere together")
+        elif ('gens' not in options or not options['gens']) and \
+                'domain' in options and options['domain'] == sympy.polys.domains.EX:
+            raise GeneratorsError("you have to provide generators because EX domain was requested")
 
 class Split(BooleanOption):
     """``split`` option to polynomial manipulation functions. """

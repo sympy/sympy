@@ -196,6 +196,9 @@ def test_Domain_preprocess():
 def test_Domain_postprocess():
     raises(GeneratorsError, lambda: Domain.postprocess({'gens': (x, y), 'domain': ZZ[y, z]}))
 
+    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (), 'domain': EX}))
+    raises(GeneratorsError, lambda: Domain.postprocess({'domain': EX}))
+
 def test_Split_preprocess():
     assert Split.preprocess(False) is False
     assert Split.preprocess(True) is True
