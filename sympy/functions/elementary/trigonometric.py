@@ -110,6 +110,7 @@ def _pi_coeff(arg, cycles=1):
                     return c2*x
             return cx
 
+
 class sin(TrigonometricFunction):
     """
     The sine function.
@@ -481,21 +482,30 @@ class cos(TrigonometricFunction):
 
                 assert len(FC) == 1
 
-                def makecos17():
+                ## calculate and store special values of sine and cosine
+                def _calc_cos_pi_over_17():
                     # this calculation could be cached
                     sq17 = sqrt(17)
                     en = sqrt(17 + sq17)
                     ec = sqrt(17 - sq17)
                     d = sq17-1
                     a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
-                    return sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
-                    # sin(pi/17) = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8
+                    c17 = sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
+                    return c17
+                    # Perhaps this should be stored in the singletans, like S.Half?
+                    # Then the calculation of cos and sin together would use...
+                    #
+                    #s17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8
+                    #return c17,s17
+
+                #cos_pi_over_17, sin_pi_over_17 = _calc_cos_pi_over_17()
+                cos_pi_over_17 = _calc_cos_pi_over_17()
 
                 cst_table_some = {
                     1 : -S.One,
                     3 : S.Half,
                     5 : (sqrt(5) + 1)/4,
-                    17 : makecos17(),
+                    17 : cos_pi_over_17,
                     # 65537 and 257 are missing because they are too complicated.
                 }
 
