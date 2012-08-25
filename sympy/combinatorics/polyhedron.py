@@ -583,18 +583,20 @@ def _pgroup_calcs():
 
     def _string_to_perm(s):
         rv = Permutation(range(20))
-        last = None
+        p = None
         for si in s:
-            if si == '0':
-                rv *= _f0
-                last = _f0
-            elif si == '1':
-                rv *= _f1
-                last = _f1
+            if si not in '01':
+                count = int(si) - 1
             else:
-                for i in range(int(si) - 1):
-                    rv *= last
+                count = 1
+                if si == '0':
+                    p = _f0
+                elif si == '1':
+                    p = _f1
+            for i in range(count):
+                rv *= p
         return rv
+
     # top face cw
     _f0 = Permutation([
         1, 2, 3, 4, 0, 6, 7, 8, 9, 5, 11,

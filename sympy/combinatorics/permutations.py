@@ -109,10 +109,11 @@ def _af_parity(pi):
                 a[i] = 1
     return (n - c) % 2
 
-def _af_mul(*a):
+def _af_mul(*a, **kwargs):
     """
     Product of two or more permutations in array form, following the
-    right to left convention: for A*B, B is applied to A.
+    L to R convention: for A*B, A is applied first (to the identity
+    permutation) and then B is applied to A.
 
     If there is only one array, a copy of it is returned.
 
@@ -120,8 +121,8 @@ def _af_mul(*a):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_mul
-    >>> _af_mul([1,0,3,2], [2,3,0,1], [3,2,1,0])
-    [0, 1, 2, 3]
+    >>> _af_mul([0,2,1,3], [0,1,3,2])
+    [0, 2, 3, 1]
 
     See Also
     ========
@@ -139,9 +140,9 @@ def _af_mul(*a):
         return [a[i] for i in b]
     if m == 1:
         return list(a[0])
-    rv = range(n) # start with identity
-    for ai in reversed(a):
-        rv = [ai[i] for i in rv]
+    rv = a[0]
+    for i in range(1, m):
+        rv = [rv[j] for j in a[i]]
     return rv
 
 def _af_invert(a):
@@ -491,7 +492,13 @@ class Permutation(Basic):
 
     def __mul__(self, other):
         """
-        Routine for multiplication of permutations.
+        Routine for multiplication of permutations following L to R order.
+
+        Note
+        ====
+
+        a*b*c applies permutations in order a, b, c which is reverse of
+        function notation abc(x) meaning a(b(c(x))).
 
         Examples
         ========
@@ -501,13 +508,15 @@ class Permutation(Basic):
         >>> q = Permutation([3,2,0,1])
         >>> p*q
         Permutation([0, 3, 1, 2])
+        >>> q*p == p*q
+        False
 
         If one of the permutations is in a cyclic form then it is first
         converted to an array form and then multiplied. ::
 
-        >>> q = Permutation([[1,3,2],[0]])
+        >>> p = Permutation(p.cyclic_form)
         >>> p*q
-        Permutation([1, 0, 2, 3])
+        Permutation([0, 3, 1, 2])
 
         """
         a = self.array_form
@@ -1151,6 +1160,8 @@ class Permutation(Basic):
         >>> a.conjugate(b)
         Permutation([0, 3, 2, 1])
         >>> ~b*a*b
+        Permutation([0, 3, 2, 1])
+        >>> a**b
         Permutation([0, 3, 2, 1])
         """
 
