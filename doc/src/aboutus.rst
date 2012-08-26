@@ -225,14 +225,15 @@ Financial and Infrastructure Support
 ------------------------------------
 
 * `Google <http://www.google.com/corporate/>`_: SymPy has received generous
-  financial support from Google in various years through the Google Summer of
-  Code program by providing stipends:
+  financial support from Google in various years through the `Google Summer of
+  Code <http://www.google-melange.com/>`_ program by providing stipends:
 
   * in 2007 for 5 students (`GSoC 2007 <http://code.google.com/p/sympy/wiki/GSoC2007>`_)
   * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
   * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
   * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
   * in 2011 for 9 studends (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+  * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
 
 * `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
   various GSoC studends over the years:
@@ -260,7 +261,7 @@ License
 -------
 
 Unless stated otherwise, all files in the SymPy project, SymPy's webpage (and
-wiki), all images and all documentation including this User's Guide is licensed
+wiki), all images and all documentation including this User's Guide are licensed
 using the new BSD license:
 
 .. literalinclude:: ../../LICENSE
