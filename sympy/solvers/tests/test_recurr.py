@@ -98,6 +98,8 @@ def test_rsolve():
     h = -3*factorial(n) + 3*2**n
 
     assert rsolve(f, y(n)) == g
+    assert rsolve(f, y(n), []) == g
+    assert rsolve(f, y(n), {}) == g
 
     assert rsolve(f, y(n), [      0,      3 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
