@@ -216,6 +216,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. marshall2389: Spelling correction
 #. Guru Devanla: Implemented quantum density operator
 #. George Waksman: Implemented JavaScript code printer and MathML printer
+#. Ljubisha Rus: Serbian translation of the tutorial
 #. Piotr Korgul: Polish translation of the tutorial
 #. Rom le Clair: French translation of the tutorial
 #. Alexandr Popov: Fixes to Pauli algebra
