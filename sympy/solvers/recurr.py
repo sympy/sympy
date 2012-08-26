@@ -657,6 +657,12 @@ def rsolve(f, y, init=None):
     >>> rsolve(f, y(n), { y(0):0, y(1):3 })
     3*2**n - 3*n!
 
+    >>> rsolve(f, y(n), {})
+    2**n*C0 + C1*n!
+
+    >>> rsolve(f, y(n), [])
+    2**n*C0 + C1*n!
+
     """
     if isinstance(f, Equality):
         f = f.lhs - f.rhs
