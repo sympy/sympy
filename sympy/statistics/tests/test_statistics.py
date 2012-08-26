@@ -1,10 +1,21 @@
 from sympy import sqrt, Rational, oo, Symbol, exp, pi
 from sympy.functions import erf
-from sympy.statistics.distributions import Normal, Uniform
-from sympy.statistics.distributions import PDF
+
 from operator import abs
 
 from sympy.mpmath import mp
+
+# Disable sympy.statistics deprecation warning for the tests
+# The warning is in __init__.py, so we only need to disable it for imports
+
+import warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+
+from sympy.statistics.distributions import Normal, Uniform
+from sympy.statistics.distributions import PDF
+
+warnings.filterwarnings("default")
 
 def test_normal():
     dps, mp.dps = mp.dps, 20
