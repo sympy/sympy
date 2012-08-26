@@ -6,7 +6,6 @@ from sympy import (
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_interval_arguments():

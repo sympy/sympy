@@ -78,7 +78,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
     http://code.google.com/p/sympy/issues/detail?id=2142 for more info.
 
     Every formal deprecation should have an associated issue in the Google
-    Code issue tracker.
+    Code issue tracker.  All such issues should have the DeprecationRemoval
+    tag.
 
     Additionally, each formal deprecation should mark the first release for
     which it was deprecated.  Use the ``deprecated_since_version`` flag for

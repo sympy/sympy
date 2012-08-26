@@ -133,7 +133,11 @@ def separate(expr, deep=False, force=False):
     Deprecated wrapper around ``expand_power_base()``.  Use that function instead.
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(feature="separate()", useinstead="expand_power_base()").warn()
+    SymPyDeprecationWarning(
+        feature="separate()", useinstead="expand_power_base()", issue=3383,
+        deprecated_since_version="0.7.2", value="Note: in separate() deep "
+        "defaults to False, whereas in expand_power_base(), deep defaults to True.",
+    ).warn()
     return expand_power_base(sympify(expr), deep=deep, force=force)
 
 def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):

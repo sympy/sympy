@@ -24,9 +24,12 @@ def Plot(*args, **kwargs):
     The old plotting module is not deprecated. Only the location will
     change. The new location is sympy.plotting.pygletplot.
     """
-    warn('This interface will change in future versions of sympy.'
-         ' As a precatuion use the plot() function (lowercase).'
-         ' See the docstring for details.',
-         SymPyDeprecationWarning)
+    SymPyDeprecationWarning(value="This interface will change in future "
+        "versions of SymPy.  As a precatuion use the plot() function "
+        "(lowercase), or use sympy.plotting.pygletplot.PygletPlot to "
+        "continue using Pyglet.  See the docstring of this function for "
+        "details.", feature="Plot as an interface to Pyglet",
+        issue=2845, deprecated_since_version="0.7.2"
+    ).warn()
 
     return PygletPlot(*args, **kwargs)
