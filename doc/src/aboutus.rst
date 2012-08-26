@@ -257,7 +257,12 @@ Financial and Infrastructure Support
   * 3 students (Aaron, Dale and Fabian) in 2009
   * 1 student (Addison) in 2010
 
-* `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+* `The Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+
+* Several 13-17 year old pre-university students contributed as part of
+  Google's `Code-In
+  <http://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
+  2011 <http://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
 
 * `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
