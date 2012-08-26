@@ -1,5 +1,5 @@
 from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
-    S, Integral, sin)
+    S, Integral, sin, conjugate)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -238,3 +238,9 @@ def test_issue_1756():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(f(x)) != O(1/x)
+
+def test_conjugate():
+    x = Symbol('x', real=True)
+    # The problem is that conjugate doesn't have the nseries method
+    # hence we assume real x for test where the conjugate vanishes.
+    assert conjugate(Order(x**2)) == Order(conjugate(x**2))
