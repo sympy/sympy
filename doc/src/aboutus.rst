@@ -172,7 +172,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Chancellor Arkantos: Fixes to the logo
 #. Stepan Simsa: Translation of the tutorial to Czech
 #. Tobias Lenz: Unicode pretty printer for Sum
-#. Siddhu: Documentation fixes for the Physics module
+#. Siddhanathan Shanmugam: Documentation fixes for the Physics module
 #. Tiffany Zhu: Improved the latex() docstring
 #. Alexey Subach: Translation of the tutorial to Russian
 #. Joan Creus: Improvements to the test runner
