@@ -208,6 +208,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ashwini Oruganti: Changes to Pow printing
 #. Andreas Kloeckner: Fix to cse()
 #. Prateek Papriwal: improve summation documentation
+#. Arpit Goyal: Improvements to Integral and Sum
 #. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
 #. Comer Duncan: added dual, is_antisymmetric, and det_lu_decomposition to matrices.py
 #. Jens H. Nielsen: added sets to modules listing
