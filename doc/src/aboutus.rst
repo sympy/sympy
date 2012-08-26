@@ -215,8 +215,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. marshall2389: Spelling correction
 #. Guru Devanla: Implemented quantum density operator
 #. George Waksman: Implemented JavaScript code printer and MathML printer
-#. Takafumi Arakaki: Add info target to the doc Makefile
+#. Saurabh Jha: Work on Kauers algorithm
 #. Tarun Gaba: Implemented some trigonometric integrals
+#. Takafumi Arakaki: Add info target to the doc Makefile
+
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
