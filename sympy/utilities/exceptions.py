@@ -116,13 +116,13 @@ class SymPyDeprecationWarning(DeprecationWarning):
             else:
                 self.fullMessage = "%s has been deprecated. " % feature
 
-            if last_supported_version:
-                self.fullMessage += ("It will be last supported in SymPy "
+        if last_supported_version:
+            self.fullMessage += ("It will be last supported in SymPy "
                 "version %s. ") % last_supported_version
-            if useinstead:
-                self.fullMessage += "Use %s instead. " % useinstead
-            if issue:
-                self.fullMessage += ("See "
+        if useinstead:
+            self.fullMessage += "Use %s instead. " % useinstead
+        if issue:
+            self.fullMessage += ("See "
                 "http://code.google.com/p/sympy/issues/detail?id=%d for more "
                 "info. ") % issue
 
