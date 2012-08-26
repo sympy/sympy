@@ -110,7 +110,6 @@ def _pi_coeff(arg, cycles=1):
                     return c2*x
             return cx
 
-
 class sin(TrigonometricFunction):
     """
     The sine function.
