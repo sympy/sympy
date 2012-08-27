@@ -383,6 +383,21 @@ class cos(TrigonometricFunction):
     def inverse(self, argindex=1):
         return acos
 
+#    _cos_pi_over_17 = sqrt(sqrt(17)/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) + sqrt(sqrt(2)*(-8*sqrt(sqrt(17) + 17) + (-1 + sqrt(17))*sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32 + 15/32)
+    def _calc_cos_pi_over_17():
+        ## calculate and store special values of sine and cosine
+        # Perhaps this should be stored in the singletans, like S.Half?
+        # Then the calculation of cos and sin together would use...
+        #
+        #sin17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8                    # this calculation could be cached
+        sq17 = sqrt(17)
+        en = sqrt(17 + sq17)
+        ec = sqrt(17 - sq17)
+        d = sq17-1
+        a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
+        c17 = sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
+        return c17
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -412,12 +427,16 @@ class cos(TrigonometricFunction):
 
             # cosine formula #####################
             # http://code.google.com/p/sympy/issues/detail?id=2949
+            cst_table_some = {
+                3 : S.Half,
+                5 : (sqrt(5) + 1)/4,
+            }
             def fermatCoords(n):
                 assert isinstance(n,int)
                 assert n > 0
                 if n == 1 or 0 == n%2:
                     return False
-                primes = { 65537:0,257:0,17:0,5:0,3:0 }
+                primes = dict([(p,0) for p in cst_table_some])
                 for p_i in primes:
                     while 0 == n%p_i:
                         n = n/p_i;
@@ -437,11 +456,12 @@ class cos(TrigonometricFunction):
                     narg = (1-pi_coeff)*S.Pi
                     return -cls(narg)
 
-                ###  Good place to bail-out.
-                #if q > 15:
-                #    # arbitrary threshold set for complex denominators
-                #    # 15 is the largest denominator allowed
-                #    return None
+                if q > 12:
+                    return None
+
+                if q in cst_table_some:
+                    cts = cst_table_some[pi_coeff.q]
+                    return C.chebyshevt(pi_coeff.p,cts).expand()
 
                 if 0==q%2:
                     narg = (pi_coeff*2)*S.Pi
@@ -459,8 +479,8 @@ class cos(TrigonometricFunction):
                 if not FC or len(FC) > 2:
                     return None
                 elif len(FC) == 2:
-                    # only 3, 5, and 17 are used currently
-                    # so only 3 pairs are possible.
+                    # only 3, and 5 are used currently
+                    # so only 1 pair is possible.
                     #
                     # Now we use partial-fraction decomposition
                     # and angle sum formulas.
@@ -468,53 +488,8 @@ class cos(TrigonometricFunction):
                         narg1 = C.Rational(p, 6)*S.Pi
                         narg2 = C.Rational(p,10)*S.Pi
                         return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
-                    elif frozenset([3,17]) == FC:
-                        narg1 = C.Rational(p*6,17)*S.Pi
-                        narg2 = C.Rational(p*1, 3)*S.Pi
-                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
-                    elif frozenset([5,17]) == FC:
-                        narg1 = C.Rational(p*7,17)*S.Pi
-                        narg2 = C.Rational(p*2, 5)*S.Pi
-                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
                     else :
                         return None
-
-                assert len(FC) == 1
-
-                def _calc_cos_pi_over_17():
-                    ## calculate and store special values of sine and cosine
-                    # Perhaps this should be stored in the singletans, like S.Half?
-                    # Then the calculation of cos and sin together would use...
-                    #
-                    #sin17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8                    # this calculation could be cached
-                    sq17 = sqrt(17)
-                    en = sqrt(17 + sq17)
-                    ec = sqrt(17 - sq17)
-                    d = sq17-1
-                    a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
-                    c17 = sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
-                    return c17
-
-                cos_pi_over_17 = _calc_cos_pi_over_17()
-
-                cst_table_some = {
-                    1 : -S.One,
-                    3 : S.Half,
-                    5 : (sqrt(5) + 1)/4,
-                    17 : cos_pi_over_17,
-                    # 65537 and 257 are missing because they are too complicated.
-                }
-
-                try:
-                    result = C.chebyshevt(p,cst_table_some[q])
-                except KeyError:
-                    if (pi_coeff.p, pi_coeff.q) != (p,q):
-                        narg = C.Rational(p, q)*S.Pi
-                        result = cls(narg)
-                    else:
-                        return None
-                return result.expand()
-                # should have used sqrtdenest() rather than expand ?
             return None
 
         if arg.is_Add:
@@ -617,7 +592,7 @@ class cos(TrigonometricFunction):
             #1 : -S.One,
             3 : S.Half,
             5 : (sqrt(5) + 1)/4,
-            17 : _makecos17(),
+            17 : _calc_cos_pi_over_17(),
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them
         }
@@ -640,15 +615,15 @@ class cos(TrigonometricFunction):
 
         if pi_coeff.q in cst_table_some:
             return C.chebyshevt(pi_coeff.p,cst_table_some[pi_coeff.q]).expand()
-            #return C.chebyshevt(pi_coeff.p,cst_table_some[pi_coeff.q]).expand()
 
         if 0==pi_coeff.q%2: # recursively remove powers of 2
             narg = (pi_coeff*2)*S.Pi
             nval = cls(narg)
             if None == nval:
                 return None
-            if not _EXPAND_INTS and (isinstance(nval,cos) or isinstance(-nval,cos)):
-                return None
+            if not _EXPAND_INTS:
+                if (isinstance(nval,cos) or isinstance(-nval,cos)):
+                    return None
             x = (2*pi_coeff+1)/2
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
             return sign_cos*sqrt( (1+nval)/2 )
