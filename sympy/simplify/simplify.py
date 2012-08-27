@@ -2939,15 +2939,13 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             return choices[0]
         return min(choices, key=measure)
 
-    if expr.is_commutative is False:
-        expr1 = factor_terms(together(powsimp(expr)))
-        if ratio is S.Infinity:
-            return expr1
-        return shorter(expr1, expr)
-
     expr0 = powsimp(expr)
-    expr1 = cancel(expr0)
-    expr2 = together(expr1.expand(), deep=True)
+    if expr.is_commutative is False:
+        expr1 = together(expr0)
+        expr2 = factor_terms(expr1)
+    else:
+        expr1 = cancel(expr0)
+        expr2 = together(expr1.expand(), deep=True)
 
     # sometimes factors in the denominators need to be allowed to join
     # factors in numerators (see issue 3270)
@@ -3009,9 +3007,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     if measure(expr) > ratio*measure(original_expr):
         return original_expr
-
-    if original_expr.is_Matrix:
-        expr = matrixify(expr)
 
     return expr
 
