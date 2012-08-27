@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
-from sympy.core.function import Function, ArgumentIndexError, expand_trig
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -317,6 +317,10 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul((-1)**(n/2 - 1)*cos(x)*C.chebyshevu(n -
                         1, sin(x)), deep=False)
+            pi_coeff = _pi_coeff(arg)
+            if pi_coeff is not None:
+                if pi_coeff.is_Rational:
+                    return self.rewrite(sqrt)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -604,12 +608,12 @@ class cos(TrigonometricFunction):
         if FC:
             decomp = ipartfrac(pi_coeff,FC)
             X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
-            pcls = expand_trig(cos(sum([x[0] for x in X]))).subs(X)
+            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
         if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
             X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
-            pcls = expand_trig(cos(sum([x[0] for x in X]))).subs(X)
+            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
         return None
 
@@ -643,6 +647,10 @@ class cos(TrigonometricFunction):
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return C.chebyshevt(coeff, cos(terms))
+            pi_coeff = _pi_coeff(arg)
+            if pi_coeff is not None:
+                if pi_coeff.is_Rational:
+                    return self.rewrite(sqrt)
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
