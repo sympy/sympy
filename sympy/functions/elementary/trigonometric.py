@@ -581,6 +581,93 @@ class cos(TrigonometricFunction):
         cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
 
+    def _eval_rewrite_as_sqrt(self, arg):
+        _EXPAND_INTS = False
+        def ipartfrac(r,factors=None):
+            if isinstance(r,int):
+                return r
+            assert isinstance(r,Rational)
+            n = r.q
+            if r.q*r.q < 2:
+                return r.q
+
+            if None == factors:
+                a=[n/x**y for x,y in factorint(r.q).iteritems()]
+            else:
+                a=[n/x for x in factors]
+            if len(a) == 1:
+                return [ r ]
+            h = migcdex(a)
+            ans = [ r.p*C.Rational(i*j,r.q) for i,j in zip(h[:-1],a) ]
+            assert r == sum(ans)
+            return ans
+        pi_coeff = arg
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is None:
+            return None
+
+        assert not pi_coeff.is_integer, "should have been simplified already"
+
+        if not pi_coeff.is_Rational:
+            return None
+
+        assert pi_coeff.is_Rational
+
+        cst_table_some = {
+            #1 : -S.One,
+            3 : S.Half,
+            5 : (sqrt(5) + 1)/4,
+            17 : _makecos17(),
+            # 65537 and 257 are the only other known Fermat primes
+            # Please add if you would like them
+        }
+        def fermatCoords(n):
+            assert isinstance(n,int)
+            assert n > 0
+            if n == 1 or 0 == n%2:
+                return False
+            primes = dict( [(p,0) for p in cst_table_some ] )
+            assert 1 not in primes
+            for p_i in primes:
+                while 0 == n%p_i:
+                    n = n/p_i;
+                    primes[p_i] += 1;
+            if 1 != n:
+                return False
+            if max(primes.values()) > 1:
+                return False
+            return tuple([ p for p in primes if primes[p]==1])
+
+        if pi_coeff.q in cst_table_some:
+            return C.chebyshevt(pi_coeff.p,cst_table_some[pi_coeff.q]).expand()
+            #return C.chebyshevt(pi_coeff.p,cst_table_some[pi_coeff.q]).expand()
+
+        if 0==pi_coeff.q%2: # recursively remove powers of 2
+            narg = (pi_coeff*2)*S.Pi
+            nval = cls(narg)
+            if None == nval:
+                return None
+            if not _EXPAND_INTS and (isinstance(nval,cos) or isinstance(-nval,cos)):
+                return None
+            x = (2*pi_coeff+1)/2
+            sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+            return sign_cos*sqrt( (1+nval)/2 )
+
+
+        FC = fermatCoords(pi_coeff.q)
+        if FC:
+            decomp = ipartfrac(pi_coeff,FC)
+            return cls(pi_coeff*S.Pi)
+        if _EXPAND_INTS:
+            decomp = ipartfrac(pi_coeff)
+            X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
+            pcls = expand_trig(cls(sum([x[0] for x in X]))).subs(X)
+            return pcls
+        return None
+
+
+
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
