@@ -1,5 +1,5 @@
 from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Float, \
-        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly, sqrt
+        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly, sqrt, symbols
 from sympy.utilities.pytest import XFAIL
 
 
@@ -113,6 +113,39 @@ def test_mul():
 
     e = I*Poly(x, x)
     assert e.match(I*p) == {p: Poly(x, x)}
+
+def test_mul_noncommutative():
+    x, y = symbols('x y')
+    A, B = symbols('A B', commutative=False)
+    u, v = symbols('u v', cls=Wild)
+    w = Wild('w', commutative=False)
+
+    assert (u*v).matches(x) in ({v: x, u: 1}, {u: x, v: 1})
+    assert (u*v).matches(x*y) in ({v: y, u: x}, {u: y, v: x})
+    assert (u*v).matches(A) == None
+    assert (u*v).matches(A*B) == None
+    assert (u*v).matches(x*A) == None
+    assert (u*v).matches(x*y*A) == None
+    assert (u*v).matches(x*A*B) == None
+    assert (u*v).matches(x*y*A*B) == None
+
+    assert (v*w).matches(x) == None
+    assert (v*w).matches(x*y) == None
+    assert (v*w).matches(A) == {w: A, v: 1}
+    assert (v*w).matches(A*B) == {w: A*B, v: 1}
+    assert (v*w).matches(x*A) == {w: A, v: x}
+    assert (v*w).matches(x*y*A) == {w: A, v: x*y}
+    assert (v*w).matches(x*A*B) == {w: A*B, v: x}
+    assert (v*w).matches(x*y*A*B) == {w: A*B, v: x*y}
+
+    assert (v*w).matches(-x) == None
+    assert (v*w).matches(-x*y) == None
+    assert (v*w).matches(-A) == {w: A, v: -1}
+    assert (v*w).matches(-A*B) == {w: A*B, v: -1}
+    assert (v*w).matches(-x*A) == {w: A, v: -x}
+    assert (v*w).matches(-x*y*A) == {w: A, v: -x*y}
+    assert (v*w).matches(-x*A*B) == {w: A*B, v: -x}
+    assert (v*w).matches(-x*y*A*B) == {w: A*B, v: -x*y}
 
 def test_complex():
     a,b,c = map(Symbol, 'abc')
