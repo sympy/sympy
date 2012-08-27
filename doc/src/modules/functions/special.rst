@@ -173,11 +173,11 @@ Spherical Harmonics
 
 .. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ynm
+.. autoclass:: sympy.functions.special.spherical_harmonics.Ynm
 
 .. autofunction:: sympy.functions.special.spherical_harmonics.Ynm_c
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Znm
+.. autoclass:: sympy.functions.special.spherical_harmonics.Znm
 
 Tensor Functions
 ----------------

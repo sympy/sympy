@@ -23,8 +23,8 @@ class Ynm(Function):
     Ynm() gives the spherical harmonic function of order `n` and `m`
     in `\theta` and `\varphi`, `Y_n^m(\theta, \varphi)`. The four
     parameters are as follows: `n \geq 0` an integer and `m` an integer
-    such that `-n \leq m \leq n` holds. The two angles are real with
-    `\theta \in [0, \pi]` and `\phi \in [0, 2\pi]`.
+    such that `-n \leq m \leq n` holds. The two angles are real-valued
+    with `\theta \in [0, \pi]` and `\varphi \in [0, 2\pi]`.
 
     Examples
     ========
