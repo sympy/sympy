@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float,Pow,expand)
+        Float,Pow,expand,gcd)
 
 from sympy.utilities.pytest import XFAIL
 
@@ -824,3 +824,20 @@ def test_sin_cos_with_infinity():
     # http://code.google.com/p/sympy/issues/detail?id=2097
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
+
+def test_sincos_rewrite_sqrt():
+    for p in [1,3,5,17,3*5*17]:
+        for t in [ 1, 8]:
+            n=t*p
+            for i in xrange(1,(n+1)/2+1):
+                if 1 == gcd(i,n):
+                    x = i*pi/n
+                    s1 = sin(x).rewrite(sqrt)
+                    c1 = cos(x).rewrite(sqrt)
+
+                    assert not isinstance(abs(s1),sin)
+                    assert not isinstance(abs(s1),cos)
+                    assert not isinstance(abs(c1),sin)
+                    assert not isinstance(abs(c1),cos)
+                    assert 1e-10 > abs( sin(float(x)) - float(s1) )
+                    assert 1e-10 > abs( cos(float(x)) - float(c1) )
