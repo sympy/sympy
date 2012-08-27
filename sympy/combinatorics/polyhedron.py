@@ -489,7 +489,7 @@ def _pgroup_calcs():
     """
     Although only 2 permutations are needed for a polyhedron in order to
     generate all the possible orientations, it is customary to give a
-    group of permutations (P0, P1, ...) such that powers of them alone are
+    list of permutations (P0, P1, ...) such that powers of them alone are
     able to generate the orientations, e.g. P0, P0**2, P0**3, P1, P1**2,
     etc..., instead of mixed permutations (P0*P1**2*P0). The following
     work was used to calculate the permutation group of the polyhedra.

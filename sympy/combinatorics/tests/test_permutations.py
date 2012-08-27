@@ -33,8 +33,9 @@ def test_Permutation():
     assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
+    assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
+    assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
-    assert q.reduced_cyclic_form == [[0, 3, 5, 6, 2, 4]]
     assert p.transpositions() == FiniteSet([(0, 1), (0, 2), (0, 5), (3, 4), (3, 6)])
 
     assert p**13 == p
