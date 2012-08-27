@@ -437,15 +437,14 @@ class cos(TrigonometricFunction):
                     cts = cst_table_some[pi_coeff.q]
                     return C.chebyshevt(pi_coeff.p,cts).expand()
 
+                if q > 10:
+                    return None
+
                 if 0==q%2:
                     narg = (pi_coeff*2)*S.Pi
                     nval = cls(narg)
                     if None == nval:
                         return None
-                    if isinstance(nval,cos):
-                        return
-                    if isinstance(-nval,cos):
-                        return
                     x = (2*pi_coeff+1)/2
                     sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
                     return sign_cos*sqrt( (1+nval)/2 )
@@ -549,7 +548,6 @@ class cos(TrigonometricFunction):
             ans = [ r.p*C.Rational(i*j,r.q) for i,j in zip(h[:-1],a) ]
             assert r == sum(ans)
             return ans
-        pi_coeff = arg
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is None:
             return None
@@ -558,8 +556,6 @@ class cos(TrigonometricFunction):
 
         if not pi_coeff.is_Rational:
             return None
-
-        assert pi_coeff.is_Rational
 
         cst_table_some = {
             #1 : -S.One,
@@ -596,6 +592,7 @@ class cos(TrigonometricFunction):
             nval = cos(narg)
             if None == nval:
                 return None
+            nval = nval.rewrite(sqrt)
             if not _EXPAND_INTS:
                 if (isinstance(nval,cos) or isinstance(-nval,cos)):
                     return None
