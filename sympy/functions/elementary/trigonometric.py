@@ -1,10 +1,12 @@
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.numbers import igcdex
+from sympy.core.function import Function, ArgumentIndexError, expand_trig
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.utilities.iterables import numbered_symbols
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -205,6 +207,8 @@ class sin(TrigonometricFunction):
                 result = cos(narg)
                 if not isinstance(result,cos):
                     return result
+                if pi_coeff*S.Pi != arg:
+                	return cls(pi_coeff*S.Pi)
                 return None
 
         if arg.is_Add:
@@ -270,6 +274,9 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        return self.rewrite(cos).rewrite(sqrt)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -383,21 +390,6 @@ class cos(TrigonometricFunction):
     def inverse(self, argindex=1):
         return acos
 
-#    _cos_pi_over_17 = sqrt(sqrt(17)/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) + sqrt(sqrt(2)*(-8*sqrt(sqrt(17) + 17) + (-1 + sqrt(17))*sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32 + 15/32)
-    def _calc_cos_pi_over_17():
-        ## calculate and store special values of sine and cosine
-        # Perhaps this should be stored in the singletans, like S.Half?
-        # Then the calculation of cos and sin together would use...
-        #
-        #sin17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8                    # this calculation could be cached
-        sq17 = sqrt(17)
-        en = sqrt(17 + sq17)
-        ec = sqrt(17 - sq17)
-        d = sq17-1
-        a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
-        c17 = sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
-        return c17
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -431,21 +423,6 @@ class cos(TrigonometricFunction):
                 3 : S.Half,
                 5 : (sqrt(5) + 1)/4,
             }
-            def fermatCoords(n):
-                assert isinstance(n,int)
-                assert n > 0
-                if n == 1 or 0 == n%2:
-                    return False
-                primes = dict([(p,0) for p in cst_table_some])
-                for p_i in primes:
-                    while 0 == n%p_i:
-                        n = n/p_i;
-                        primes[p_i] += 1;
-                if 1 != n:
-                    return False
-                if max(primes.values()) > 1:
-                    return False
-                return frozenset([ p for p in primes if primes[p]==1])
             if pi_coeff.is_Rational:
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
@@ -455,9 +432,6 @@ class cos(TrigonometricFunction):
                 if 2*p > q:
                     narg = (1-pi_coeff)*S.Pi
                     return -cls(narg)
-
-                if q > 12:
-                    return None
 
                 if q in cst_table_some:
                     cts = cst_table_some[pi_coeff.q]
@@ -475,21 +449,6 @@ class cos(TrigonometricFunction):
                     x = (2*pi_coeff+1)/2
                     sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
                     return sign_cos*sqrt( (1+nval)/2 )
-                FC = fermatCoords(q)
-                if not FC or len(FC) > 2:
-                    return None
-                elif len(FC) == 2:
-                    # only 3, and 5 are used currently
-                    # so only 1 pair is possible.
-                    #
-                    # Now we use partial-fraction decomposition
-                    # and angle sum formulas.
-                    if frozenset([3,5]) == FC:
-                        narg1 = C.Rational(p, 6)*S.Pi
-                        narg2 = C.Rational(p,10)*S.Pi
-                        return cos(narg1)*cos(narg2)+sin(narg1)*sin(narg2)
-                    else :
-                        return None
             return None
 
         if arg.is_Add:
@@ -558,10 +517,24 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_sqrt(self, arg):
         _EXPAND_INTS = False
+        def migcdex(x):
+            # recursive calcuation of gcd and linear combination
+            # for a sequence of integers.
+            # Given  (x1,x2,x3)
+            # Returns (y1,y1,y3,g)
+            # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
+            # Note, that this is only one such linear combination.
+            if len(x) == 1:
+                return (1,x[0])
+            if len(x) == 2:
+                return igcdex(x[0],x[-1])
+            g = migcdex(x[1:])
+            u,v,h = igcdex(x[0],g[-1])
+            return tuple([u]+[v*i for i in g[0:-1]]+[h])
         def ipartfrac(r,factors=None):
             if isinstance(r,int):
                 return r
-            assert isinstance(r,Rational)
+            assert isinstance(r,C.Rational)
             n = r.q
             if r.q*r.q < 2:
                 return r.q
@@ -592,7 +565,9 @@ class cos(TrigonometricFunction):
             #1 : -S.One,
             3 : S.Half,
             5 : (sqrt(5) + 1)/4,
-            17 : _calc_cos_pi_over_17(),
+            17 : sqrt(sqrt(17)/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) +\
+                sqrt(sqrt(2)*(-8*sqrt(sqrt(17) + 17) + (-1 + sqrt(17))\
+                *sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32 + 15/32)
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them
         }
@@ -618,7 +593,7 @@ class cos(TrigonometricFunction):
 
         if 0==pi_coeff.q%2: # recursively remove powers of 2
             narg = (pi_coeff*2)*S.Pi
-            nval = cls(narg)
+            nval = cos(narg)
             if None == nval:
                 return None
             if not _EXPAND_INTS:
@@ -628,20 +603,18 @@ class cos(TrigonometricFunction):
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
             return sign_cos*sqrt( (1+nval)/2 )
 
-
         FC = fermatCoords(pi_coeff.q)
         if FC:
             decomp = ipartfrac(pi_coeff,FC)
-            return cls(pi_coeff*S.Pi)
+            X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
+            pcls = expand_trig(cos(sum([x[0] for x in X]))).subs(X)
+            return pcls
         if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
             X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
-            pcls = expand_trig(cls(sum([x[0] for x in X]))).subs(X)
+            pcls = expand_trig(cos(sum([x[0] for x in X]))).subs(X)
             return pcls
         return None
-
-
-
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
