@@ -187,10 +187,13 @@ class Permutation(Basic):
 
     _array_form = None
     _cyclic_form = None
+    _size = None
 
     def __new__(cls, args, size=None):
         """
-        Constructor for the Permutation object.
+        Constructor for the Permutation object from a list or a
+        list of lists in which all elements of the permutation may
+        appear only once.
 
         Examples
         ========
@@ -202,11 +205,11 @@ class Permutation(Basic):
         >>> Permutation([0, 1, 2])
         Permutation([0, 1, 2])
 
-        Permutations entered in cyclic-form are made canonical, sorted
-        and arranged so longer cycles appear first:
+        Permutations entered in cyclic-form are ordered lexically and
+        singletons are omitted:
 
         >>> Permutation([[4, 5, 6], [3], [0, 1], [2]])
-        Permutation([[4, 5, 6], [0, 1], [2], [3]])
+        Permutation([[0, 1], [4, 5, 6]])
 
         All manipulation of permutations assumes that the smallest element
         is 0; if a permutation is not entered with a 0, one will be added:
@@ -218,22 +221,31 @@ class Permutation(Basic):
         singletons and the ``size`` specified so those values can be filled
         in:
 
-        >>> Permutation([[1,4],[3,5,2]], size=10)
-        Permutation([[2, 3, 5], [1, 4], [0], [6], [7], [8], [9]])
+        >>> Permutation([[1, 4], [3, 5, 2]], size=10)
+        Permutation([[1, 4], [2, 3, 5]])
         """
         args = list(args)
+
+        if len(args) == 1 and isinstance(args[0], Permutation):
+            return args[0].copy()
+
         if has_variety(is_sequence(a) for a in args):
             raise ValueError("Permutation argument must be a list of ints "
                              "or a list of lists.")
-        if size:
+
+        if size is not None:
             size = int(size)
 
         cycle_form = args and is_sequence(args[0])
 
-        # 0, 1, ..., n-1 should all be present
-        # XXX allow arbitrary elements like Partition does?
+        # 0, 1, ..., n-1 should all be present but if 0 is missing it
+        # will be added
 
-        temp = set([int(i) for i in flatten(args)])
+        temp = [int(i) for i in flatten(args)]
+        if has_dups(temp):
+            raise ValueError('there were repeated elements; to resolve '
+            'cycles use DisjointCycle.')
+        temp = set(temp)
         if args and 0 not in temp:
             if cycle_form:
                 args.append([0])
@@ -241,31 +253,25 @@ class Permutation(Basic):
                 args.insert(0, 0)
             temp.add(0)
 
-        if size and len(temp) != size or \
-            any(i not in temp for i in range(len(temp))):
-            if size is not None:
-                if cycle_form:
-                    for i in set(range(size)) - temp:
-                        args.append([i])
-                else:
-                    raise ValueError("size can only be given "
-                    "with permutaions in cyclic form.")
-            else:
-                raise ValueError("Integers 0 through %s must be present." %
-                                 len(temp))
+        if size and not cycle_form:
+            raise ValueError("size can only be given "
+            "with permutaions in cyclic form.")
+        elif size is None and any(i not in temp for i in range(len(temp))):
+            raise ValueError("Integers 0 through %s must be present." %
+                             len(temp))
 
         cform = aform = None
         if cycle_form:
-            cform = [list(minlex(a)) for a in args]
+            cform = [list(minlex(a)) for a in args if len(a) > 1]
             # put in numerical order with singletons at the end
             cform.sort()
-            cform.sort(key=lambda w: -len(w))
         else:
             aform = list(args)
-
-        ret_obj = Basic.__new__(cls, aform or cform or [])
-        ret_obj._cyclic_form, ret_obj._array_form = cform, aform
-        return ret_obj
+        obj = Basic.__new__(cls, aform or cform or [])
+        obj._array_form = aform
+        obj._cyclic_form = cform
+        obj._size = size or len(temp)
+        return obj
 
     @property
     def array_form(self):
@@ -291,22 +297,18 @@ class Permutation(Basic):
         ========
         cyclic_form
         """
+        # watch that given list doesn't shadow the argument:
+        # store a copy; return a copy
         if self._array_form is not None:
-            return self._array_form
-        if not isinstance(self.args[0][0], list):
-            self._array_form = self.args[0]
-            return self._array_form
-        size = 0
+            return list(self._array_form)
         cycles = self.args[0]
+        perm = range(self.size)
         for c in cycles:
-            size += len(c)
-        perm = [None]*size
-        for c in cycles:
-            for i in range(len(c)-1):
-                perm[c[i]] = c[i+1]
+            for i in range(len(c) - 1):
+                perm[c[i]] = c[i + 1]
             perm[c[-1]] = c[0]
         self._array_form = perm
-        return perm
+        return self.array_form
 
     @property
     def cyclic_form(self):
@@ -320,28 +322,25 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0,3,1,2])
         >>> p.cyclic_form
-        [[1, 3, 2], [0]]
+        [[1, 3, 2]]
 
         See Also
         ========
         array_form
         """
         if self._cyclic_form is not None:
-            return self._cyclic_form
-        if isinstance(self.args[0][0], list):
-            self._cyclic_form = self.args[0]
-            return self._cyclic_form
-        linear_rep = self.args[0]
-        unchecked = [True] * len(linear_rep)
+            return list(self._cyclic_form)
+        array_form = self.array_form
+        unchecked = [True] * len(array_form)
         cyclic_form = []
-        for i in range(len(linear_rep)):
+        for i in range(len(array_form)):
             if unchecked[i]:
                 cycle = []
                 cycle.append(i)
                 unchecked[i] = False
                 j = i
-                while unchecked[linear_rep[j]]:
-                    j = linear_rep[j]
+                while unchecked[array_form[j]]:
+                    j = array_form[j]
                     cycle.append(j)
                     unchecked[j] = False
                 cyclic_form.append(cycle)
@@ -349,14 +348,18 @@ class Permutation(Basic):
         return Permutation(cyclic_form).cyclic_form
 
     @property
-    def reduced_cyclic_form(self):
-        """Return permutation in cyclic form without singletons.
+    def full_cyclic_form(self):
+        """Return permutation in cyclic form including singletons.
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation([0, 2, 1]).reduced_cyclic_form
-        [[1, 2]]
+        >>> Permutation([0, 2, 1]).full_cyclic_form
+        [[0], [1, 2]]
         """
-        return [c for c in self.cyclic_form if len(c) > 1]
+        need = set(range(self.size)) - set(flatten(self.cyclic_form))
+        rv = self.cyclic_form
+        rv.extend([[i] for i in need])
+        rv.sort()
+        return rv
 
     @property
     def size(self):
@@ -370,7 +373,7 @@ class Permutation(Basic):
         >>> Permutation([[3, 2], [0, 1]]).size
         4
         """
-        return len(self.array_form)
+        return self._size
 
     @property
     def support(self):
@@ -1005,10 +1008,7 @@ class Permutation(Basic):
         ========
         order
         """
-        if self._cyclic_form:
-            return self.size == len(self._cyclic_form)
-        a = self.array_form
-        return a == range(len(a))
+        return self.array_form == range(self.size)
 
     def ascents(self):
         """
@@ -1259,6 +1259,7 @@ class Permutation(Basic):
         """
         return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form])
 
+    @property
     def length(self):
         """
         Returns the number of integers moved by a permutation.
@@ -1267,28 +1268,23 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation([0, 3, 2, 1]).length()
+        >>> Permutation([0, 3, 2, 1]).length
         2
-        >>> Permutation([[0, 1], [2, 3]]).length()
+        >>> Permutation([[0, 1], [2, 3]]).length
         4
 
         See Also
         ========
         min, max
         """
-        length = 0
-        a = self.array_form
-        for i in range(len(a)):
-            if a[i] != i:
-                length += 1
-        return length
+        return len(self.support)
 
 
     @property
     def cycles(self):
         """
         Returns the number of cycles that the permutation
-        has been decomposed into.
+        has been decomposed into (including singletons).
 
         Examples
         ========
@@ -1299,7 +1295,7 @@ class Permutation(Basic):
         >>> Permutation([[0, 1], [2, 3]]).cycles
         2
         """
-        return len(self.cyclic_form)
+        return len(self.full_cyclic_form)
 
     def index(self):
         """
@@ -1845,6 +1841,7 @@ def _new_from_array_form(perm):
     """
     p = Basic.__new__(Permutation, perm)
     p._array_form = perm
+    p._size = len(perm)
     return p
 
 def _merge(arr, temp, left, mid, right):
