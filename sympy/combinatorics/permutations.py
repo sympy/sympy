@@ -1,11 +1,13 @@
+from collections import defaultdict
+import random
+
 from sympy.core import Basic, S, FiniteSet
 from sympy.core.compatibility import is_sequence
 from sympy.utilities.iterables import flatten, has_variety, minlex
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
-from sympy.mpmath.libmp.libintmath import ifac
 
-import random
+from sympy.mpmath.libmp.libintmath import ifac
 
 def _af_mul(*a, **kwargs):
     """
@@ -126,6 +128,107 @@ def _af_commutes_with(a, b):
         if a[b[i]] != b[a[i]]:
             return False
     return True
+
+class BaseDisjointCycle(defaultdict):
+    """
+    Wrapper around defaultdict which provides the functionality of a disjoint cycle.
+    """
+    def __missing__(self, arg):
+        """Return enter arg into dictionary and return arg."""
+        self[arg] = arg
+        return arg
+
+    def __mul__(self, other):
+        """Return cycles multiplies from right to left.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import DisjointCycle as C
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> print C(1, 2)*C(2, 3)
+        [(1, 3, 2)]
+
+        An instance of a DisjointCycle will automatically parse list-like
+        objects and Permutations that are on the right:
+
+        >>> DC = C(1, 2)
+        >>> print DC*(2, 3)
+        [(1, 3, 2)]
+        >>> print DC*[(2, 3), (4, 5)]
+        [(1, 3, 2), (4, 5)]
+        >>> print DC*Permutation([2, 1, 0, 3])
+        [(0, 2, 1)]
+        """
+        if isinstance(other, (Tuple, tuple, list)):
+            if other and not isinstance(other[0], (list, tuple, Tuple)):
+                return self*DisjointCycle(*other)
+        if isinstance(other, (Permutation, list, tuple, Tuple)):
+            rv = self
+            cycles = other.cyclic_form if \
+                isinstance(other, Permutation) else other
+            for c in cycles:
+                rv *= c
+            return rv
+        elif isinstance(other, BaseDisjointCycle):
+            rv = other.copy()
+            newv = []
+            for k in self:
+                newv.append(rv[self[k]])
+            for k, v in zip(self, newv):
+                rv[k] = v
+            return rv
+        else:
+            raise TypeError(
+            'expected list, tuple, Tuple, Permutation or '
+            'DisjointCycle but got %s' % other)
+
+    def as_list(self, size=None):
+        """Return the cycles as an explicit list starting from 0.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import DisjointCycle as C
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = C()*[(2, 3), (4, 5)]
+        >>> p.as_list()
+        [0, 1, 3, 2, 5, 4]
+        >>> p.as_list(10)
+        [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
+        """
+        return [self[i] for i in range(size or (max(self) + 1))]
+
+    def as_permutation(self, size=None):
+        """Return the cycles as a Permutation."""
+        p = Permutation(self.as_list(size))
+        return Permutation(p.cyclic_form, size=p.size)
+
+    def __str__(self):
+        reduced = Permutation(self.as_list()).cyclic_form
+        return str([tuple(c) for c in reduced])
+
+
+class DisjointCycle(BaseDisjointCycle):
+    def __new__(cls, *args):
+        """Load up a BaseDisjointCycle instance with the values for the cycle.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import DisjointCycle as C
+        >>> C(1, 2, 6)
+        [(1, 2, 6)]
+        """
+
+        from sympy.ntheory.residue_ntheory import int_tested
+        d = BaseDisjointCycle()
+        if not args:
+            return d
+        args = int_tested(args)
+        n = len(args)
+        args += [args[0]]
+        for i in range(n):
+            d[args[i]] = args[i + 1]
+        return d
+
 
 class Permutation(Basic):
     """
