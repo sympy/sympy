@@ -73,6 +73,7 @@ class Poly(Expr):
 
     __slots__ = ['rep', 'gens']
 
+    is_commutative = True
     is_Poly = True
 
     def __new__(cls, rep, *gens, **args):
