@@ -139,14 +139,21 @@ class BaseDisjointCycle(defaultdict):
         return arg
 
     def __mul__(self, other):
-        """Return cycles multiplies from right to left.
+        """Return product of cycles processed from L to R.
+
+        Note: the order of processing of corresponding *permutations* is
+        from R to L.
 
         Examples
         ========
         >>> from sympy.combinatorics.permutations import DisjointCycle as C
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> print C(1, 2)*C(2, 3)
+        >>> from sympy.combinatorics.permutations import Permutation as Perm
+        >>> a, b = C(1, 2), C(2, 3)
+        >>> print a*b
         [(1, 3, 2)]
+        >>> A, B = [Perm(w.as_list(4)) for w in (a,b)]
+        >>> print (B*A).cyclic_form
+        [[1, 3, 2]]
 
         An instance of a DisjointCycle will automatically parse list-like
         objects and Permutations that are on the right:
@@ -156,7 +163,7 @@ class BaseDisjointCycle(defaultdict):
         [(1, 3, 2)]
         >>> print DC*[(2, 3), (4, 5)]
         [(1, 3, 2), (4, 5)]
-        >>> print DC*Permutation([2, 1, 0, 3])
+        >>> print DC*Perm([2, 1, 0, 3])
         [(0, 2, 1)]
         """
         if isinstance(other, (Tuple, tuple, list)):
