@@ -481,9 +481,12 @@ class cos(TrigonometricFunction):
 
                 assert len(FC) == 1
 
-                ## calculate and store special values of sine and cosine
                 def _calc_cos_pi_over_17():
-                    # this calculation could be cached
+                    ## calculate and store special values of sine and cosine
+                    # Perhaps this should be stored in the singletans, like S.Half?
+                    # Then the calculation of cos and sin together would use...
+                    #
+                    #sin17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8                    # this calculation could be cached
                     sq17 = sqrt(17)
                     en = sqrt(17 + sq17)
                     ec = sqrt(17 - sq17)
@@ -491,13 +494,7 @@ class cos(TrigonometricFunction):
                     a = sqrt(34+6*sq17+sqrt(2)*(d*ec-8*en))
                     c17 = sqrt(1-(2*(17-sq17-sqrt(2)*(a+ec)))/64)
                     return c17
-                    # Perhaps this should be stored in the singletans, like S.Half?
-                    # Then the calculation of cos and sin together would use...
-                    #
-                    #s17 = sqrt(2*(17-sq17-sqrt(2)*(a+ec)))/8
-                    #return c17,s17
 
-                #cos_pi_over_17, sin_pi_over_17 = _calc_cos_pi_over_17()
                 cos_pi_over_17 = _calc_cos_pi_over_17()
 
                 cst_table_some = {
