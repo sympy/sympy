@@ -829,7 +829,7 @@ def test_sincos_rewrite_sqrt():
     for p in [1,3,5,17,3*5*17]:
         for t in [ 1, 8]:
             n=t*p
-            for i in xrange(1,(n+1)/2+1):
+            for i in xrange(1,(n+1)//2+1):
                 if 1 == gcd(i,n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
