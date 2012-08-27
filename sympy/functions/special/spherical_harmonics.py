@@ -21,7 +21,7 @@ class Ynm(Function):
                                   \mathrm{P}_n^m\left(\cos(\theta)\right)
 
     Ynm() gives the spherical harmonic function of order `n` and `m`
-    in `\theta` and `\varphi`, :math:`Y_n^m(\theta, \varphi)`.
+    in `\theta` and `\varphi`, `Y_n^m(\theta, \varphi)`.
 
     Examples
     ========
@@ -194,6 +194,15 @@ class Ynm(Function):
         n, m, theta, phi = self.args
         return S.NegativeOne**m * self.func(n, -m, theta, phi)
 
+    def as_real_imag(self, deep=True, **hints):
+        # TODO: Handle deep and hints
+        n, m, theta, phi = self.args
+        re = (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
+              C.cos(m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        im = (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
+              C.sin(m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        return (re, im)
+
 
 def Ynm_c(l, m, theta, phi):
     r"""Conjugate spherical harmonics defined as
@@ -225,11 +234,20 @@ def Znm(n, m, th, ph):
 
         Z_n^m(\theta, \varphi) :=
         \begin{cases}
-          \frac{(-1)^m \left(Y_n^m(\theta, \varphi) +
-          \overline{Y_n^m(\theta, \varphi)}\right)}{\sqrt{2}} &\quad m > 0 \\
+          \frac{Y_n^m(\theta, \varphi) + \overline{Y_n^m(\theta, \varphi)}}{\sqrt{2}} &\quad m > 0 \\
           Y_n^m(\theta, \varphi) &\quad m = 0 \\
-          \frac{(-1)^m \left(Y_n^{-m}(\theta, \varphi) -
-           \overline{Y_n^{-m}(\theta, \varphi)}\right)}{i\sqrt{2}} &\quad m < 0
+          \frac{Y_n^m(\theta, \varphi) - \overline{Y_n^m(\theta, \varphi)}}{i \sqrt{2}} &\quad m < 0 \\
+        \end{cases}
+
+    which gives in simplified form
+
+    .. math::
+
+        Z_n^m(\theta, \varphi) =
+        \begin{cases}
+          \frac{Y_n^m(\theta, \varphi) + (-1)^m Y_n^{-m}(\theta, \varphi)}{\sqrt{2}} &\quad m > 0 \\
+          Y_n^m(\theta, \varphi) &\quad m = 0 \\
+          \frac{Y_n^m(\theta, \varphi) - (-1)^m Y_n^{-m}(\theta, \varphi)}{i \sqrt{2}} &\quad m < 0 \\
         \end{cases}
 
     See Also
@@ -244,24 +262,17 @@ def Znm(n, m, th, ph):
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
-    from sympy import simplify
+    from sympy import conjugate, simplify
 
     if m > 0:
-        zz = (Ynm(n, m, th, ph) + C.NegativeOne()**m * Ynm(n, -m, th, ph)) / sqrt(2)
+        zz = (Ynm(n, m, th, ph) + conjugate(Ynm(n, m, th, ph))) / sqrt(2)
     elif m == 0:
         return Ynm(n, m, th, ph)
     else:
-        zz = (Ynm(n, -m, th, ph) - C.NegativeOne()**m * Ynm(n, m, th, ph)) / (I*sqrt(2))
-
-    # if m > 0:
-    #     zz = C.NegativeOne()**m * (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph))/sqrt(2)
-    # elif m == 0:
-    #     return Ynm(n, m, th, ph)
-    # else:
-    #     zz = C.NegativeOne()**m * (Ynm(n, -m, th, ph) - Ynm_c(n, -m, th, ph))/(I*sqrt(2))
+        zz = (Ynm(n, m, th, ph) - conjugate(Ynm(n, m, th, ph))) / (sqrt(2)*I)
 
     zz = zz.expand(complex=True)
-    zz = simplify(zz)
+    #zz = simplify(zz)
     return zz
 
 
