@@ -208,7 +208,7 @@ class sin(TrigonometricFunction):
                 if not isinstance(result,cos):
                     return result
                 if pi_coeff*S.Pi != arg:
-                	return cls(pi_coeff*S.Pi)
+                    return cls(pi_coeff*S.Pi)
                 return None
 
         if arg.is_Add:
