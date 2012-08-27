@@ -6,6 +6,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.utilities.iterables import flatten, has_variety, minlex, has_dups
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
+from sympy.ntheory.residue_ntheory import int_tested
 
 from sympy.mpmath.libmp.libintmath import ifac
 
@@ -225,15 +226,19 @@ class DisjointCycle(BaseDisjointCycle):
         [(1, 2, 6)]
         """
 
-        from sympy.ntheory.residue_ntheory import int_tested
         d = BaseDisjointCycle()
         if not args:
             return d
-        args = int_tested(args)
-        n = len(args)
-        args += [args[0]]
-        for i in range(n):
-            d[args[i]] = args[i + 1]
+        if len(args) == 1 and isinstance(args[0], Permutation):
+            args = args[0].cyclic_form
+        else:
+            args = [int_tested(args)]
+            if has_dups(args):
+                raise ValueError('All elements must be uniq.')
+        for c in args:
+            c += [c[0]]
+            for i in range(len(c) - 1):
+                d[c[i]] = c[i + 1]
         return d
 
 
@@ -461,6 +466,9 @@ class Permutation(Basic):
     def full_cyclic_form(self):
         """Return permutation in cyclic form including singletons.
 
+        Examples
+        ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation([0, 2, 1]).full_cyclic_form
         [[0], [1, 2]]
@@ -470,6 +478,19 @@ class Permutation(Basic):
         rv.extend([[i] for i in need])
         rv.sort()
         return rv
+
+    @property
+    def as_cycle(self):
+        """Return permutation as a DisjointCycle instance.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> print Permutation([0, 4, 3, 2, 1, 5]).as_cycle
+        [(1, 4), (2, 3)]
+        """
+        return DisjointCycle(self)
 
     @property
     def size(self):
@@ -491,6 +512,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> p = Permutation([[3, 2], [0, 1], [4]])
         >>> p.array_form
@@ -584,6 +606,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = (0, 1, 3, 2)
@@ -704,15 +727,15 @@ class Permutation(Basic):
         else:
             b = range(len(a))
             while 1:
-                if n&1:
+                if n & 1:
                     b = [b[i] for i in a]
                     n -= 1
                     if not n:
                         break
-                if n%4 == 0:
+                if n % 4 == 0:
                     a = [a[a[a[i]]] for i in a]
                     n = n // 4
-                elif n%2 == 0:
+                elif n % 2 == 0:
                     a = [a[i] for i in a]
                     n = n // 2
         return _new_from_array_form(b)
