@@ -561,9 +561,9 @@ class cos(TrigonometricFunction):
             #1 : -S.One,
             3 : S.Half,
             5 : (sqrt(5) + 1)/4,
-            17 : sqrt(sqrt(17)/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) +\
+            17 : sqrt((15+sqrt(17))/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) +\
                 sqrt(sqrt(2)*(-8*sqrt(sqrt(17) + 17) + (-1 + sqrt(17))\
-                *sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32 + 15/32)
+                *sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32)
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them
         }
