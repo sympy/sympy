@@ -976,6 +976,7 @@ def _trigsimp(expr, deep=False):
             args.append(term)
         if args != expr.args:
             expr = Add(*args)
+            expr = min(expr, expand(expr), key=count_ops)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
