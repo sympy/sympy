@@ -1,6 +1,7 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing, totient
+from sympy.core.compatibility import is_sequence
 
 def int_tested(*j):
     """
@@ -32,6 +33,8 @@ def int_tested(*j):
     >>> int_tested([1, 2])
     [1, 2]
     """
+    if not j or is_sequence(j[0]) and not j[0]:
+        return []
     try:
         j[0][0]
         as_int = False
