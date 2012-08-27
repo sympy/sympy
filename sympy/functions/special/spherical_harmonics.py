@@ -21,7 +21,10 @@ class Ynm(Function):
                                   \mathrm{P}_n^m\left(\cos(\theta)\right)
 
     Ynm() gives the spherical harmonic function of order `n` and `m`
-    in `\theta` and `\varphi`, `Y_n^m(\theta, \varphi)`.
+    in `\theta` and `\varphi`, `Y_n^m(\theta, \varphi)`. The four
+    parameters are as follows: `n \geq 0` an integer and `m` an integer
+    such that `-n \leq m \leq n` holds. The two angles are real with
+    `\theta \in [0, \pi]` and `\phi \in [0, 2\pi]`.
 
     Examples
     ========
@@ -204,7 +207,7 @@ class Ynm(Function):
         return (re, im)
 
 
-def Ynm_c(l, m, theta, phi):
+def Ynm_c(n, m, theta, phi):
     r"""Conjugate spherical harmonics defined as
 
     .. math::
@@ -226,7 +229,7 @@ def Ynm_c(l, m, theta, phi):
     return conjugate(Ynm(n, m, theta, phi))
 
 
-def Znm(n, m, th, ph):
+class Znm(Function):
     r"""
     Real spherical harmonics defined as
 
@@ -262,18 +265,25 @@ def Znm(n, m, th, ph):
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
-    from sympy import conjugate, simplify
 
-    if m > 0:
-        zz = (Ynm(n, m, th, ph) + conjugate(Ynm(n, m, th, ph))) / sqrt(2)
-    elif m == 0:
-        return Ynm(n, m, th, ph)
-    else:
-        zz = (Ynm(n, m, th, ph) - conjugate(Ynm(n, m, th, ph))) / (sqrt(2)*I)
+    nargs = 4
 
-    zz = zz.expand(complex=True)
-    #zz = simplify(zz)
-    return zz
+    @classmethod
+    def eval(cls, n, m, theta, phi):
+        n, m, th, ph = [sympify(x) for x in (n, m, theta, phi)]
+
+        if m.is_positive:
+            zz = (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph)) / sqrt(2)
+            #zz = zz.expand(complex=True)
+            #zz = simplify(zz)
+            return zz
+        elif m.is_zero:
+            return Ynm(n, m, th, ph)
+        elif m.is_negative:
+            zz = (Ynm(n, m, th, ph) - Ynm_c(n, m, th, ph)) / (sqrt(2)*I)
+            #zz = zz.expand(complex=True)
+            #zz = simplify(zz)
+            return zz
 
 
 def Plmcos(l, m, th):
