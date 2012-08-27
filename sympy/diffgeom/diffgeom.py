@@ -192,16 +192,21 @@ class CoordSystem(Basic):
     def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
         """Register the transformation used to switch to another coordinate system.
 
-        Arguments
-        =========
+        Parameters
+        ==========
 
-         - to_sys - another instance of `CoordSystem`
-         - from_coords - list of symbols in terms of which `to_exprs` is given
-         - to_exprs - list of the expressions of the new coordinate tuple
-         - inverse - try to deduce and register the inverse transformation
-         - fill_in_gaps - try to deduce other transformation that are made
-        possible by composing the present transformation with other already
-        registered transformation
+        to_sys
+            another instance of ``CoordSystem``
+        from_coords
+            list of symbols in terms of which ``to_exprs`` is given
+        to_exprs
+            list of the expressions of the new coordinate tuple
+        inverse
+            try to deduce and register the inverse transformation
+        fill_in_gaps
+            try to deduce other transformation that are made
+            possible by composing the present transformation with other already
+            registered transformation
 
         """
         from_coords, to_exprs = dummyfy(from_coords, to_exprs)
@@ -1033,15 +1038,20 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    - vector_field - the vector field for which an integral curve will be given
-    - param - the argument of the function `gamma` from R to the curve
-    - start_point - the point which coresponds to `gamma(0)`
-    - n - the order to which to expand
-    - coord_sys - the coordinate system in which to expand
-    - coeffs (default False) - if True return a list of elements of the expansion
+    vector_field
+        the vector field for which an integral curve will be given
+    param
+        the argument of the function `gamma` from R to the curve
+    start_point
+        the point which coresponds to `gamma(0)`
+    n
+        the order to which to expand
+    coord_sys
+        the coordinate system in which to expand
+        coeffs (default False) - if True return a list of elements of the expansion
 
     See Also: intcurve_diffequ
 
@@ -1126,13 +1136,17 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    - vector_field - the vector field for which an integral curve will be given
-    - param - the argument of the function `gamma` from R to the curve
-    - start_point - the point which coresponds to `gamma(0)`
-    - coord_sys - the coordinate system in which to give the equations
+    vector_field
+        the vector field for which an integral curve will be given
+    param
+        the argument of the function `gamma` from R to the curve
+    start_point
+        the point which coresponds to `gamma(0)`
+    coord_sys
+        the coordinate system in which to give the equations
 
     Returns
     =======
