@@ -1,7 +1,7 @@
 from collections import defaultdict
 import random
 
-from sympy.core import Basic, S, FiniteSet
+from sympy.core import Basic, S, FiniteSet, Tuple
 from sympy.core.compatibility import is_sequence
 from sympy.utilities.iterables import flatten, has_variety, minlex, has_dups
 from sympy.polys.polytools import lcm
