@@ -3,7 +3,7 @@ import random
 
 from sympy.core import Basic, S, FiniteSet
 from sympy.core.compatibility import is_sequence
-from sympy.utilities.iterables import flatten, has_variety, minlex
+from sympy.utilities.iterables import flatten, has_variety, minlex, has_dups
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 
