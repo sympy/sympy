@@ -10,6 +10,8 @@ from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
 
+lmul = Permutation.lmul
+
 def test_new():
     a = Permutation([1, 0])
     G =  PermutationGroup([a])
@@ -450,9 +452,9 @@ def test_schreier_sims_incremental():
     gens = A.generators[:]
     gen0 = gens[0]
     gen1 = gens[1]
-    gen1 = gen1*(~gen0)
-    gen0 = gen0*gen1
-    gen1 = gen0*gen1
+    gen1 = lmul(gen1, ~gen0)
+    gen0 = lmul(gen0, gen1)
+    gen1 = lmul(gen0, gen1)
     base, strong_gens = A.schreier_sims_incremental(base=[0,1], gens=gens)
     assert _verify_bsgs(A, base, strong_gens) == True
     C = CyclicGroup(11)
@@ -463,7 +465,7 @@ def test_schreier_sims_incremental():
 def test_subgroup_search():
     prop_true = lambda x: True
     prop_fix_points = lambda x: [x(point) for point in points] == points
-    prop_comm_g = lambda x: x*g == g*x
+    prop_comm_g = lambda x: lmul(x, g) == lmul(g, x)
     prop_even = lambda x: x.is_even
     for i in range(10, 17, 2):
         S = SymmetricGroup(i)

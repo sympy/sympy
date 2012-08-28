@@ -13,6 +13,8 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import isprime, sieve
 from sympy.utilities.iterables import has_variety
 
+lmul = Permutation.lmul
+
 def _smallest_change(h, alpha):
     """
     find the smallest point not fixed by `h`
@@ -746,7 +748,7 @@ class PermutationGroup(Basic):
                     Gamma = Gamma - current_group.orbit(gamma)
                 else:
                     y = transversals[pos + 1][temp]
-                    el = x*y
+                    el = lmul(x, y)
                     if el(base[pos]) not in current_group.orbit(base[pos]):
                         T.append(el)
                         current_group = PermutationGroup(T)
@@ -996,8 +998,8 @@ class PermutationGroup(Basic):
                             return True
                     tests[l] = test
             def prop(g):
-                return [g*gen for gen in other.generators] ==\
-                       [gen*g for gen in other.generators]
+                return [lmul(g, gen) for gen in other.generators] ==\
+                       [lmul(gen, g) for gen in other.generators]
             return self.subgroup_search(prop, base=base,
                                         strong_gens=strong_gens, tests=tests)
         elif hasattr(other, '__getitem__'):
@@ -1044,7 +1046,7 @@ class PermutationGroup(Basic):
         commutators = []
         for ggen in ggens:
             for hgen in hgens:
-                commutator = hgen*ggen*(~hgen)*(~ggen)
+                commutator = lmul(hgen, ggen, ~hgen, ~ggen)
                 if commutator not in commutators:
                     commutators.append(commutator)
         res = self.normal_closure(commutators)
@@ -2081,7 +2083,7 @@ class PermutationGroup(Basic):
                 for i in range(k):
                     g = self.random_pr()
                     h = Z.random_pr()
-                    conj = (~g)*h*g
+                    conj = lmul(~g, h, g)
                     res = _strip(conj, base, basic_orbits, basic_transversals)
                     if res[0] != identity or res[1] != len(base) + 1:
                         gens = Z.generators
@@ -2100,7 +2102,7 @@ class PermutationGroup(Basic):
                 break_flag = False
                 for g in self.generators:
                     for h in Z.generators:
-                        conj = (~g)*h*g
+                        conj = lmul(~g, h, g)
                         res = _strip(conj, base, basic_orbits,\
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
@@ -2223,7 +2225,7 @@ class PermutationGroup(Basic):
         k = schreier_vector[beta]
         gens = self.generators
         while k != -1:
-            u = u*gens[k]
+            u = lmul(u, gens[k])
             beta = (~gens[k])(beta)
             k = schreier_vector[beta]
         return u
@@ -2265,7 +2267,7 @@ class PermutationGroup(Basic):
             for gen in gens:
                 temp = gen(pair[0])
                 if used[temp] == False:
-                    tr.append((temp, gen*pair[1]))
+                    tr.append((temp, Permutation.lmul(gen, pair[1])))
                     used[temp] = True
         if pairs:
             return tr
@@ -2423,11 +2425,11 @@ class PermutationGroup(Basic):
             e = _random_prec['e']
 
         if x == 1:
-            random_gens[s] = random_gens[s]*(random_gens[t]**e)
-            random_gens[r] = random_gens[r]*random_gens[s]
+            random_gens[s] = lmul(random_gens[s], random_gens[t]**e)
+            random_gens[r] = lmul(random_gens[r], random_gens[s])
         else:
-            random_gens[s] = (random_gens[t]**e)*random_gens[s]
-            random_gens[r] = random_gens[s]*random_gens[r]
+            random_gens[s] = lmul(random_gens[t]**e, random_gens[s])
+            random_gens[r] = lmul(random_gens[s], random_gens[r])
         return random_gens[r]
 
     def random_stab(self, alpha, schreier_vector=None, _random_prec=None):
@@ -2451,7 +2453,7 @@ class PermutationGroup(Basic):
             rand = _random_prec['rand']
         beta = rand(alpha)
         h = self.orbit_rep(alpha, beta, schreier_vector)
-        return (~h)*rand
+        return lmul(~h, rand)
 
     def schreier_sims(self):
         """
@@ -2658,11 +2660,11 @@ class PermutationGroup(Basic):
                 u_beta = transversals[i][beta]
                 for gen in strong_gens_distr[i]:
                     u_beta_gen = transversals[i][gen(beta)]
-                    if gen*u_beta != u_beta_gen:
+                    if lmul(gen, u_beta) != u_beta_gen:
                         # test if the schreier generator is in the i+1-th
                         # would-be basic stabilizer
                         y = True
-                        schreier_gen = (~u_beta_gen)*gen*u_beta
+                        schreier_gen = lmul(~u_beta_gen, gen, u_beta)
                         h, j = _strip(schreier_gen, _base, orbs, transversals)
                         if j <= base_len:
                             # new strong generator h at level j
@@ -2921,12 +2923,12 @@ class PermutationGroup(Basic):
             for gen in gens:
                 temp = gen(b)
                 if used[temp] == False:
-                    gen_temp = gen*table[b]
+                    gen_temp = lmul(gen, table[b])
                     orb.append(temp)
                     table[temp] = gen_temp
                     used[temp] = True
                 else:
-                    schreier_gen = (~table[temp])*gen*table[b]
+                    schreier_gen = lmul(~table[temp], gen, table[b])
                     if schreier_gen not in stab_gens:
                         stab_gens.append(schreier_gen)
         return PermutationGroup(list(stab_gens))
@@ -3182,7 +3184,7 @@ class PermutationGroup(Basic):
                 gamma = temp_element(temp_point)
                 u[l] = transversals[l][gamma]
                 # update computed words
-                computed_words[l] = computed_words[l-1] * u[l]
+                computed_words[l] = lmul(computed_words[l-1], u[l])
             # lines 17 & 18: apply the tests to the group element found
             g = computed_words[l]
             temp_point = g(base[l])
@@ -3254,7 +3256,7 @@ class PermutationGroup(Basic):
             if l == 0:
                 computed_words[l] = u[l]
             else:
-                computed_words[l] = computed_words[l - 1]*u[l]
+                computed_words[l] = lmul(computed_words[l - 1], u[l])
 
     @property
     def transitivity_degree(self):

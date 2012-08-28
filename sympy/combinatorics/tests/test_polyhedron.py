@@ -6,6 +6,8 @@ from sympy.combinatorics.permutations import Permutation
 
 import random
 
+lmul = Permutation.lmul
+
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
               Permutation([[0,7,1,6],[5,2,4,3]]),\

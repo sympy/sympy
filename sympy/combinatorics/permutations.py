@@ -346,13 +346,13 @@ class Permutation(Basic):
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
         Permutation([[1, 4], [2, 3, 5]])
         """
-        if len(args) == 1 and isinstance(args[0], Permutation):
-                return args[0].copy()
+        if isinstance(args, Permutation):
+            return args.copy()
 
         if any(is_sequence(a) and not a for a in args) or \
            has_variety(is_sequence(a) for a in args):
-            raise ValueError("Permutation argument must be a list of ints "
-                             "or a list of lists.")
+            raise ValueError("Permutation argument must be a list of ints, "
+                             "a list of lists, or a Permutation.")
 
         args = list(args)
 
@@ -605,49 +605,23 @@ class Permutation(Basic):
         return Permutation.from_inversion_vector(result_inv)
 
     @classmethod
-    def mul(self, *a, **kwargs):
-        """Return the product of Permutations (or permutations in
-        array form) evaluated from left to right. To evaluate from
-        right to left, set the keyword ``reverse`` to True.
-
-        If any argument is a Permutation instance then a permutation
-        will be returned, else the permutation product will be returned
-        in array form.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> a = Permutation([0, 2, 1, 3])
-        >>> b = (0, 1, 3, 2)
-        >>> c = (3, 1, 2, 0)
-        >>> Permutation.mul(a, b, c)
-        Permutation([1, 2, 3, 0])
-        >>> Permutation.mul(a, b, c, reverse=True)
-        Permutation([3, 0, 1, 2])
-        >>> Permutation.mul(b, c)
-        [2, 1, 3, 0]
-        """
-        args = []
-        perm = False
-        for ai in a:
-            if isinstance(ai, Permutation):
-                ai = ai.array_form
-                perm = True
-            args.append(ai)
-        array = _af_mul(*args, **kwargs)
-        if perm:
-            return Permutation(array)
-        return array
+    def lmul(self, *args):
+        if not args:
+            raise ValueError('must provide something to multiply.')
+        return Permutation(_af_mul(*[a.array_form if not is_sequence(a) else a for a in args]))
+        rv = Permutation(args[0])
+        for i in range(1, len(args)):
+            rv = Permutation(args[i])*rv
+        return rv
 
     def __mul__(self, other):
         """
-        Routine for multiplication of permutations following L to R order.
+        Routine for multiplication of permutations following R to L order.
 
         Note
         ====
 
-        a*b*c applies permutations in order a, b, c which is reverse of
+        a*b*c applies permutations in order c, b, a which is consistent with
         function notation abc(x) meaning a(b(c(x))).
 
         Examples
@@ -669,13 +643,14 @@ class Permutation(Basic):
         Permutation([0, 3, 1, 2])
 
         """
+        assert None
         a = self.array_form
         b = other.array_form
         if len(a) != len(b):
             raise ValueError("The number of elements in the permutations "
                              "do not match.")
 
-        perm = [a[i] for i in b]
+        perm = [b[i] for i in a]
         return _new_from_array_form(perm)
 
     def commutes_with(self, other):
@@ -717,7 +692,7 @@ class Permutation(Basic):
         True
         >>> q**p == q.conjugate(p)
         True
-        >>> (p**q)**r == p**(q * r)
+        >>> (p**q)**r == p**(r*q)
         True
         """
         if type(n) == Permutation:
