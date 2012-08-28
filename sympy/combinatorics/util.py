@@ -1,7 +1,8 @@
 from sympy.ntheory import isprime, sieve
-from sympy.combinatorics.permutations import _new_from_array_form, Permutation
+from sympy.combinatorics.permutations import Permutation
 
 lmul = Permutation.lmul
+_af_new = Permutation._af_new
 
 ############################################
 ###
@@ -170,7 +171,7 @@ def _distribute_gens_by_base(base, gens):
         for k in xrange(j + 1):
             stabs[k].append(gens[i])
     for i in range(max_stab_index + 1, base_len):
-        stabs[i].append(_new_from_array_form(range(degree)))
+        stabs[i].append(_af_new(range(degree)))
     return stabs
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
@@ -343,7 +344,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     from sympy.combinatorics.perm_groups import PermutationGroup
     base_len = len(base)
     degree = strong_gens[0].size
-    identity = _new_from_array_form(range(degree))
+    identity = _af_new(range(degree))
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
     temp = strong_gens_distr[:]

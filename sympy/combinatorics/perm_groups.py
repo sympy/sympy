@@ -3,8 +3,8 @@ from math import log
 
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.permutations import (_new_from_array_form,
-    _af_commutes_with, _af_invert, _af_mul)
+from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
+    _af_mul)
 from sympy.combinatorics.util import _check_cycles_alt_sym,\
 _distribute_gens_by_base, _orbits_transversals_from_bsgs,\
 _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
@@ -14,6 +14,7 @@ from sympy.ntheory import isprime, sieve
 from sympy.utilities.iterables import has_variety
 
 lmul = Permutation.lmul
+_af_new = Permutation._af_new
 
 def _smallest_change(h, alpha):
     """
@@ -453,7 +454,7 @@ class PermutationGroup(Basic):
         gens2 = [start + gen for gen in gens2]
         gens1 = [gen + end for gen in gens1]
         together = gens1 + gens2
-        gens = [_new_from_array_form(x) for x in together]
+        gens = [_af_new(x) for x in together]
         return PermutationGroup(gens)
 
     def __ne__(self, gr):
@@ -505,7 +506,7 @@ class PermutationGroup(Basic):
         if k < r:
             for i in range(k, r):
                 random_gens.append(random_gens[i - k])
-        acc = _new_from_array_form(range(deg))
+        acc = _af_new(range(deg))
         random_gens.append(acc)
         self._random_gens = random_gens
 
@@ -719,7 +720,7 @@ class PermutationGroup(Basic):
         else:
             T = strong_gens_distr[pos + 2][:]
         if T == []:
-            current_group = PermGroup([_new_from_array_form(range(degree))])
+            current_group = PermGroup([_af_new(range(degree))])
         else:
             current_group = PermGroup(T)
         # randomized version
@@ -945,7 +946,7 @@ class PermutationGroup(Basic):
             if other.is_trivial or self.is_trivial:
                 return self
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
             orbits = other.orbits()
             num_orbits = len(orbits)
             orbits.sort(key = lambda x: -len(x))
@@ -1211,7 +1212,7 @@ class PermutationGroup(Basic):
         if af:
             return h
         else:
-            return _new_from_array_form(h)
+            return _af_new(h)
 
     @property
     def degree(self):
@@ -1381,7 +1382,7 @@ class PermutationGroup(Basic):
         if af:
             yield idn
         else:
-            yield _new_from_array_form(idn)
+            yield _af_new(idn)
         gens = [p.array_form for p in self.generators]
 
         for i in xrange(len(gens)):
@@ -1402,7 +1403,7 @@ class PermutationGroup(Basic):
                                 if af:
                                     yield ap
                                 else:
-                                    p = _new_from_array_form(ap)
+                                    p = _af_new(ap)
                                     yield p
                                 element_list.append(ap)
                                 set_element_list.add(tuple(ap))
@@ -1459,7 +1460,7 @@ class PermutationGroup(Basic):
                 if af:
                     yield p
                 else:
-                    p1 = _new_from_array_form(p)
+                    p1 = _af_new(p)
                     yield p1
                 stg.pop()
                 h -= 1
@@ -1632,7 +1633,7 @@ class PermutationGroup(Basic):
             terminator = lcs[len(lcs)-1]
             gens = terminator.generators
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
             if [identity for gen in gens] == gens:
                 self._is_solvable = True
                 self._is_nilpotent = True
@@ -1761,7 +1762,7 @@ class PermutationGroup(Basic):
             terminator = ds[len(ds) - 1]
             gens = terminator.generators
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
             if [identity for gen in gens] == gens:
                 self._is_solvable = True
                 return True
@@ -1850,7 +1851,7 @@ class PermutationGroup(Basic):
         if self._is_trivial is None:
             gens = self.generators
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
             res = [identity for gen in gens] == gens
             self._is_trivial = res
             return res
@@ -2066,7 +2067,7 @@ class PermutationGroup(Basic):
         """
         if hasattr(other, 'generators'):
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
 
             if other.generators == [identity for gen in other.generators]:
                 return other
@@ -2221,7 +2222,7 @@ class PermutationGroup(Basic):
         if schreier_vector[beta] == None:
             return False
         n = self.degree
-        u = _new_from_array_form(range(n))
+        u = _af_new(range(n))
         k = schreier_vector[beta]
         gens = self.generators
         while k != -1:
@@ -2259,7 +2260,7 @@ class PermutationGroup(Basic):
 
         """
         n = self.degree
-        tr = [(alpha, _new_from_array_form(range(n)))]
+        tr = [(alpha, _af_new(range(n)))]
         used = [False]*n
         used[alpha] = True
         gens = self.generators
@@ -2374,7 +2375,7 @@ class PermutationGroup(Basic):
         base, strong_gens = self.schreier_sims_incremental(base=points)
         stab_gens = []
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
+        identity = _af_new(range(degree))
         for gen in strong_gens:
             if [gen(point) for point in points] == points:
                 stab_gens.append(gen)
@@ -2621,7 +2622,7 @@ class PermutationGroup(Basic):
             gens = self.generators[:]
         base_len = len(base)
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
+        identity = _af_new(range(degree))
         # handle the trivial group
         if gens == [identity]:
             return base, gens
@@ -2669,7 +2670,7 @@ class PermutationGroup(Basic):
                         if j <= base_len:
                             # new strong generator h at level j
                             y = False
-                        elif h != _new_from_array_form(range(degree)):
+                        elif h != _af_new(range(degree)):
                             # h fixes all base points
                             y = False
                             moved = 0
@@ -2914,7 +2915,7 @@ class PermutationGroup(Basic):
         """
         n = self.degree
         orb = [alpha]
-        table = {alpha: _new_from_array_form(range(n))}
+        table = {alpha: _af_new(range(n))}
         used = [False]*n
         used[alpha] = True
         gens = self.generators
@@ -3068,7 +3069,7 @@ class PermutationGroup(Basic):
             base, strong_gens = self.schreier_sims_incremental()
         base_len = len(base)
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
+        identity = _af_new(range(degree))
         base_ordering = _base_ordering(base, degree)
         # add an element larger than all points
         base_ordering.append(degree)

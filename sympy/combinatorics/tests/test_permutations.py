@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_mul, DisjointCycle as DC)
+    _af_mul, _af_mul, Cycle)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
@@ -8,8 +8,8 @@ from sympy.utilities.pytest import raises
 lmul = Permutation.lmul
 
 def test_Permutation():
-    assert Permutation([1,2,3]) == Permutation([0, 1, 2, 3])
-    assert Permutation([[1,2]], size=4) == Permutation([[1, 2], [0], [3]])
+    assert Permutation([1, 2, 3]) == Permutation([0, 1, 2, 3])
+    assert Permutation([[1, 2]], size=4) == Permutation([[1, 2], [0], [3]])
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
@@ -240,22 +240,22 @@ def test_args():
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
 
-def test_DisjointCycle():
-    a, b = DC(1, 2), DC(2, 3)
-    ans = DC(1, 3, 2)
+def test_Cycle():
+    a, b = Cycle(1, 2), Cycle(2, 3)
+    ans = Cycle(1, 3, 2)
     assert a*b == ans
     assert a*(2, 3) == ans
-    assert a*[(2, 3), (4, 5)] == DC(1, 3, 2)*DC(4, 5)
-    assert a*Permutation([2, 1, 0, 3]) == DC(0, 2, 1)
-    raises(ValueError, lambda: DC().as_list())
-    assert DC(1,2).as_list() == [0, 2, 1]
-    assert DC(1,2).as_list(4) == [0, 2, 1, 3]
-    assert DC(1,2).as_permutation(4).array_form == \
+    assert a*[(2, 3), (4, 5)] == Cycle(1, 3, 2)*Cycle(4, 5)
+    assert a*Permutation([2, 1, 0, 3]) == Cycle(0, 2, 1)
+    raises(ValueError, lambda: Cycle().as_list())
+    assert Cycle(1,2).as_list() == [0, 2, 1]
+    assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
+    assert Cycle(1,2).as_permutation(4).array_form == \
         Permutation([0, 2, 1, 3]).array_form
-    assert str(DC(1,2)*DC(4,5)) == '[(1, 2), (4, 5)]'
-    assert str(DC(1,2)) == '[(1, 2)]'
-    assert DC(Permutation(range(3))) == DC()
-    assert DC(1,2).as_list() == [0, 2, 1]
-    assert DC(1,2).as_list(4) == [0, 2, 1, 3]
-    raises(TypeError, lambda: DC((1,2)))
-    raises(ValueError, lambda: DC(1,2,1))
+    assert str(Cycle(1,2)*Cycle(4,5)) == '[(1, 2), (4, 5)]'
+    assert str(Cycle(1,2)) == '[(1, 2)]'
+    assert Cycle(Permutation(range(3))) == Cycle()
+    assert Cycle(1,2).as_list() == [0, 2, 1]
+    assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
+    raises(TypeError, lambda: Cycle((1,2)))
+    raises(ValueError, lambda: Cycle(1,2,1))

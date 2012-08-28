@@ -256,7 +256,7 @@ class PrettyPrinter(Printer):
 
         return pform
 
-    def _print_DisjointCycle(self, dc):
+    def _print_Cycle(self, dc):
         from sympy.combinatorics.permutations import Permutation
         return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
 
