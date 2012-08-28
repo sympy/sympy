@@ -203,6 +203,8 @@ class BaseDisjointCycle(defaultdict):
         >>> p.as_list(10)
         [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
         """
+        if not self and not size:
+            raise ValueError('must gives size for empty DisjointCycle')
         return [self[i] for i in range(size or (max(self) + 1))]
 
     def as_permutation(self, size=None):
@@ -232,9 +234,10 @@ class DisjointCycle(BaseDisjointCycle):
         if len(args) == 1 and isinstance(args[0], Permutation):
             args = args[0].cyclic_form
         else:
-            args = [int_tested(args)]
+            args = int_tested(args)
             if has_dups(args):
                 raise ValueError('All elements must be uniq.')
+            args = [args]
         for c in args:
             c += [c[0]]
             for i in range(len(c) - 1):
@@ -339,36 +342,40 @@ class Permutation(Basic):
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
         Permutation([[1, 4], [2, 3, 5]])
         """
-        args = list(args)
-
         if len(args) == 1 and isinstance(args[0], Permutation):
-            return args[0].copy()
+                return args[0].copy()
 
-        if has_variety(is_sequence(a) for a in args):
+        if any(is_sequence(a) and not a for a in args) or \
+           has_variety(is_sequence(a) for a in args):
             raise ValueError("Permutation argument must be a list of ints "
                              "or a list of lists.")
+
+        args = list(args)
 
         if size is not None:
             size = int(size)
 
-        cycle_form = args and is_sequence(args[0])
+        is_cycle = args and is_sequence(args[0])
 
-        # 0, 1, ..., n-1 should all be present but if 0 is missing it
+        # 0, 1, ..., n should all be present but if 0 is missing it
         # will be added
 
         temp = [int(i) for i in flatten(args)]
         if has_dups(temp):
-            raise ValueError('there were repeated elements; to resolve '
-            'cycles use DisjointCycle.')
+            if is_cycle:
+                raise ValueError('there were repeated elements; to resolve '
+                'cycles use DisjointCycle()*%s.' % args)
+            else:
+                raise ValueError('there were repeated elements.')
         temp = set(temp)
         if args and 0 not in temp:
-            if cycle_form:
+            if is_cycle:
                 args.append([0])
             else:
                 args.insert(0, 0)
             temp.add(0)
 
-        if size and not cycle_form:
+        if size and not is_cycle:
             raise ValueError("size can only be given "
             "with permutaions in cyclic form.")
         elif size is None and any(i not in temp for i in range(len(temp))):
@@ -376,7 +383,7 @@ class Permutation(Basic):
                              len(temp))
 
         cform = aform = None
-        if cycle_form:
+        if is_cycle:
             cform = [list(minlex(a)) for a in args if len(a) > 1]
             # put in numerical order with singletons at the end
             cform.sort()
@@ -506,7 +513,6 @@ class Permutation(Basic):
         """
         return self._size
 
-    @property
     def support(self):
         """Return the elements in permutation, P, for which P[i] != i.
 
@@ -517,7 +523,7 @@ class Permutation(Basic):
         >>> p = Permutation([[3, 2], [0, 1], [4]])
         >>> p.array_form
         [1, 0, 3, 2, 4]
-        >>> p.support
+        >>> p.support()
         [0, 1, 2, 3]
         """
         a = self.array_form
@@ -774,19 +780,18 @@ class Permutation(Basic):
 
     def __invert__(self):
         """
-        Finds the invert of a permutation.
+        Return the inverse of the permutation.
 
-        A permutation multiplied by its invert equals
-        the identity permutation.
+        A permutation multiplied by its inverse is the identity permutation.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[2,0],[3,1]])
+        >>> p = Permutation([[2,0], [3,1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
-        >>> p*(~p) == Permutation([0,1,2,3])
+        >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
         a = self.array_form
@@ -1392,7 +1397,6 @@ class Permutation(Basic):
         """
         return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form])
 
-    @property
     def length(self):
         """
         Returns the number of integers moved by a permutation.
@@ -1401,16 +1405,16 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation([0, 3, 2, 1]).length
+        >>> Permutation([0, 3, 2, 1]).length()
         2
-        >>> Permutation([[0, 1], [2, 3]]).length
+        >>> Permutation([[0, 1], [2, 3]]).length()
         4
 
         See Also
         ========
-        min, max
+        min, max, suppport
         """
-        return len(self.support)
+        return len(self.support())
 
 
     @property
