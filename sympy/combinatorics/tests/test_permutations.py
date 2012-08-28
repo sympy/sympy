@@ -229,10 +229,11 @@ def test_mul():
 
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
+    assert p._cyclic_form is None
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
-    assert p._array_form == None
+    assert p._array_form == [3, 2, 0, 1, 5, 4]
     p = Permutation((0, 3, 1, 2))
-    assert p._cyclic_form == None
+    assert p._cyclic_form is None
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
@@ -259,3 +260,8 @@ def test_Cycle():
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
     raises(TypeError, lambda: Cycle((1,2)))
     raises(ValueError, lambda: Cycle(1,2,1))
+    
+    # check round-trip
+    p = Permutation([[1,2], [4,3]], size=5)
+    assert Permutation(Cycle(p)) == p
+
