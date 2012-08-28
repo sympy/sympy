@@ -252,6 +252,11 @@ class Order(Expr):
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
 
+    def _eval_transpose(self):
+        expr = self.expr._eval_transpose()
+        if expr is not None:
+            return self.func(expr, *self.variables)
+
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
