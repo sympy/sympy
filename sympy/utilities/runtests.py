@@ -359,7 +359,7 @@ def test(*paths, **kwargs):
     Force colors, even when the output is not to a terminal (this is useful,
     e.g., if you are piping to ``less -r`` and you still want colors)
 
-    >>> sympy.test(force_colors=False    # doctest: +SKIP
+    >>> sympy.test(force_colors=False)    # doctest: +SKIP
 
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
@@ -388,7 +388,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os,environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
 
     Or from the command line using
 
