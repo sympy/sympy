@@ -1457,8 +1457,11 @@ class PyTestReporter(Reporter):
             if text[0] != "\n":
                 sys.stdout.write("\n")
 
+        # Avoid UnicodeEncodeError when printing out test failures
         if IS_PYTHON_3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
+        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+            text = text.encode(sys.stdout.encoding, 'backslashreplace').decode(sys.stdout.encoding)
 
         if color == "":
             sys.stdout.write(text)
