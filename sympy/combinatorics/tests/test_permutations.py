@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_mul)
+    _af_mul, _af_mul, DisjointCycle as DC)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
@@ -19,8 +19,8 @@ def test_Permutation():
         if (a, b, c) == (p, q, r): continue
         assert (a*b*c).array_form != ans
 
-    assert p.support == range(7)
-    assert q.support == [0, 2, 3, 4, 5, 6]
+    assert p.support() == range(7)
+    assert q.support() == [0, 2, 3, 4, 5, 6]
     assert Permutation(p.cyclic_form).array_form == p.array_form
     assert p.cardinality == 5040
     assert q.cardinality == 5040
@@ -236,3 +236,23 @@ def test_args():
     raises(TypeError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
+
+def test_DisjointCycle():
+    a, b = DC(1, 2), DC(2, 3)
+    ans = DC(1, 3, 2)
+    assert a*b == ans
+    assert a*(2, 3) == ans
+    assert a*[(2, 3), (4, 5)] == DC(1, 3, 2)*DC(4, 5)
+    assert a*Permutation([2, 1, 0, 3]) == DC(0, 2, 1)
+    raises(ValueError, lambda: DC().as_list())
+    assert DC(1,2).as_list() == [0, 2, 1]
+    assert DC(1,2).as_list(4) == [0, 2, 1, 3]
+    assert DC(1,2).as_permutation(4).array_form == \
+        Permutation([0, 2, 1, 3]).array_form
+    assert str(DC(1,2)*DC(4,5)) == '[(1, 2), (4, 5)]'
+    assert str(DC(1,2)) == '[(1, 2)]'
+    assert DC(Permutation(range(3))) == DC()
+    assert DC(1,2).as_list() == [0, 2, 1]
+    assert DC(1,2).as_list(4) == [0, 2, 1, 3]
+    raises(TypeError, lambda: DC((1,2)))
+    raises(ValueError, lambda: DC(1,2,1))
