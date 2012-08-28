@@ -816,7 +816,7 @@ class SymPyTests(object):
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
-            if IS_PYTHON_3 and IS_WINDOWS:
+            if IS_PYTHON_3:
                 with open(filename, encoding="utf8") as f:
                     source = f.read()
                 c = compile(source, filename, 'exec')
