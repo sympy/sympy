@@ -479,8 +479,6 @@ class Permutation(Basic):
         >>> p = Perm._af_new(a)
         >>> p
         Permutation([2, 1, 3, 0])
-        >>> Perm._af_new([[0, 2, 3]], size=4)
-        Permutation([[0, 2, 3]])
 
         """
         p = Basic.__new__(Perm, perm)
@@ -705,12 +703,31 @@ class Permutation(Basic):
         Permutation([2, 0, 1])
         >>> Perm.lmul(a, b)
         Permutation([1, 2, 0])
+
+        Notes
+        =====
+
+        All items in the sequence will be parsed by Permutation as
+        necessary as long as the first item is a Permutation. For speed
+        reasons this routine does not do any initial coersion since in
+        the codebase, places where is used already had a Permutation
+        on the left and handle the rhs operand as necessary, i.e.
+        P*foo was changed to lmul(P, foo):
+
+        >>> Perm.lmul(a, [0, 2, 1]) == Perm.lmul(a, b)
+        True
+
+        The reverse order of arguments will raise a TypeError.
+
         """
-        rv = Perm(args[0])
+        rv = args[0]
         for i in range(1, len(args)):
-            p = Perm(args[i])
-            rv = p*rv
+            rv = args[i]*rv
         return rv
+
+    def __rmul__(self, other):
+        """This is needed to coerse other to Permutation in lmul."""
+        return Perm(other)*self
 
     def __mul__(self, other):
         """

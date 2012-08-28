@@ -216,7 +216,8 @@ def test_mul():
     b = (0, 1, 3, 2)
     c = (3, 1, 2, 0)
     assert Permutation.lmul(a, b, c) == Permutation([1, 2, 3, 0])
-    assert Permutation.lmul(b, c) == Permutation([2, 1, 3, 0])
+    assert Permutation.lmul(a, c) == Permutation([3, 2, 1, 0])
+    raises (TypeError, lambda: Permutation.lmul(b, c))
 
     n = 6
     m = 8
@@ -260,8 +261,7 @@ def test_Cycle():
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
     raises(TypeError, lambda: Cycle((1,2)))
     raises(ValueError, lambda: Cycle(1,2,1))
-    
+
     # check round-trip
     p = Permutation([[1,2], [4,3]], size=5)
     assert Permutation(Cycle(p)) == p
-
