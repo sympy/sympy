@@ -275,6 +275,9 @@ class sin(TrigonometricFunction):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
 
+    def _eval_rewrite_as_pow(self, arg):
+        return self.rewrite(cos).rewrite(pow)
+
     def _eval_rewrite_as_sqrt(self, arg):
         return self.rewrite(cos).rewrite(sqrt)
 
@@ -517,6 +520,9 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
+
+    def _eval_rewrite_as_pow(self, arg):
+         return self._eval_rewrite_as_sqrt(arg)
 
     def _eval_rewrite_as_sqrt(self, arg):
         _EXPAND_INTS = False
