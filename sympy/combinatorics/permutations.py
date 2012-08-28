@@ -382,11 +382,10 @@ class Permutation(Basic):
         >>> Permutation([0, 1, 2])
         Permutation([0, 1, 2])
 
-        Permutations entered in cyclic-form are ordered lexically and
-        singletons are omitted:
+        Permutations entered in cyclic form are converted to array form:
 
         >>> Permutation([[4, 5, 6], [3], [0, 1], [2]])
-        Permutation([[0, 1], [4, 5, 6]])
+        Permutation([1, 0, 2, 3, 5, 6, 4])
 
         All manipulation of permutations assumes that the smallest element
         is 0; if a permutation is not entered with a 0, one will be added:
@@ -399,20 +398,25 @@ class Permutation(Basic):
         in:
 
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
-        Permutation([[1, 4], [2, 3, 5]])
+        Permutation([0, 4, 3, 5, 1, 2, 6, 7, 8, 9])
         """
         if isinstance(args, Perm):
             return args.copy()
 
+        if size is not None:
+            size = int(size)
+
+        if isinstance(args, Cycle):
+            return Perm._af_new(args.as_list(size))
+
         if any(is_sequence(a) and not a for a in args) or \
            has_variety(is_sequence(a) for a in args):
             raise ValueError("Permutation argument must be a list of ints, "
-                             "a list of lists, or a Permutation.")
+                             "a list of lists, Permutation or Cycle.")
 
+
+        # safe to assume args are valid
         args = list(args)
-
-        if size is not None:
-            size = int(size)
 
         is_cycle = args and is_sequence(args[0])
 
@@ -445,34 +449,27 @@ class Permutation(Basic):
                              "or (for cyclic notation) size must be given." %
                              (len(temp) - 1))
 
-        cform = aform = None
-        if is_cycle:
-            cform = [list(minlex(a)) for a in args if len(a) > 1]
-            # put in numerical order
-            cform.sort()
-        else:
-            aform = list(args)
         size = size or len(temp)
         if is_cycle:
-            obj = Basic.__new__(cls, cform)
+            obj = Basic.__new__(cls, args)
+            obj._size = size
+            aform = obj.array_form
         else:
-            obj = Basic.__new__(cls, aform)
+            aform = list(args)
+        obj = Basic.__new__(cls, aform)
         obj._array_form = aform
-        obj._cyclic_form = cform
         obj._size = size
-        obj._is_cycle = is_cycle
         return obj
 
     @staticmethod
-    def _af_new(perm, size=None):
+    def _af_new(perm):
         """
         factory function to produce a Permutation object from a list;
         the list is bound to the _array_form attribute, so it must
         not be modified; this method is meant for internal use only;
         the list ``a`` is supposed to be generated as a temporary value
         in a method, so p = Perm._af_new(a) is the only object
-        to hold a reference to ``a``. If perm is in cyclic form then
-        size must be given::
+        to hold a reference to ``a``::
 
         Examples
         ========
@@ -486,25 +483,10 @@ class Permutation(Basic):
         Permutation([[0, 2, 3]])
 
         """
-        if perm and is_sequence(perm[0]):
-            if size is None:
-                raise ValueError('must give size with cyclic form')
-            p = Basic.__new__(Perm, perm)
-            p._cyclic_form = perm
-            p._is_cycle = True
-        else:
-            size = len(perm)
-            p = Basic.__new__(Perm, perm)
-            p._array_form = perm
-            p._is_cycle = False
-        p._size = size
+        p = Basic.__new__(Perm, perm)
+        p._array_form = perm
+        p._size = len(perm)
         return p
-
-    def copy(self):
-        rv = Perm._af_new(self.array_form)
-        if self._is_cycle:
-            return Perm(rv.cyclic_form, self.size)
-        return rv
 
     @property
     def array_form(self):
