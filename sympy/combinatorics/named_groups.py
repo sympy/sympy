@@ -1,6 +1,8 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
-from sympy.combinatorics.permutations import Permutation, _new_from_array_form
+from sympy.combinatorics.permutations import Permutation
+
+_af_new = Permutation._af_new
 
 def AbelianGroup(*cyclic_orders):
     """
@@ -76,15 +78,15 @@ def AlternatingGroup(n):
 
     a = range(n)
     a[0], a[1], a[2] = a[1], a[2], a[0]
-    gen1 = _new_from_array_form(a)
+    gen1 = _af_new(a)
     if n % 2:
         a = range(1, n)
         a.append(0)
-        gen2 = _new_from_array_form(a)
+        gen2 = _af_new(a)
     else:
         a = range(2, n)
         a.append(1)
-        gen2 = _new_from_array_form([0] + a)
+        gen2 = _af_new([0] + a)
     G = PermutationGroup([gen1, gen2])
 
     if n<4:
@@ -123,7 +125,7 @@ def CyclicGroup(n):
     """
     a = range(1, n)
     a.append(0)
-    gen = _new_from_array_form(a)
+    gen = _af_new(a)
     G = PermutationGroup([gen])
 
     G._is_abelian = True
@@ -176,10 +178,10 @@ def DihedralGroup(n):
 
     a = range(1, n)
     a.append(0)
-    gen1 = _new_from_array_form(a)
+    gen1 = _af_new(a)
     a = range(n)
     a.reverse()
-    gen2 = _new_from_array_form(a)
+    gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
 
     G._is_abelian = False
@@ -229,10 +231,10 @@ def SymmetricGroup(n):
     else:
         a = range(1,n)
         a.append(0)
-        gen1 = _new_from_array_form(a)
+        gen1 = _af_new(a)
         a = range(n)
         a[0], a[1] = a[1], a[0]
-        gen2 = _new_from_array_form(a)
+        gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
 
     if n<3:

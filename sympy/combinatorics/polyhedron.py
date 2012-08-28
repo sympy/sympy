@@ -140,9 +140,10 @@ class Polyhedron(Basic):
         of indices to the permutations in pgroups:
 
         >>> use = [0, 0, 2]
-        >>> tetra.make_perm(3, use)
+        >>> saved = tetra.make_perm(3, use)
+        >>> saved
         Permutation([1, 0, 3, 2])
-        >>> saved = _
+
 
         Apply them one at a time:
 
@@ -152,7 +153,7 @@ class Polyhedron(Basic):
         ...
         >>> h.vertices
         (x, w, z, y)
-        >>> sequentially = _
+        >>> sequentially = h.vertices
 
         Apply the saved "composite" permutation:
 
@@ -160,7 +161,7 @@ class Polyhedron(Basic):
         >>> h.rotate(saved)
         >>> h.corners
         (x, w, z, y)
-        >>> _ in all and _ == sequentially
+        >>> h.corners in all and h.corners == sequentially
         True
 
         Notes
@@ -423,7 +424,9 @@ class Polyhedron(Basic):
         Multiply ``n`` randomly selected permutations from
         pgroups together, starting with the identity
         permutation. If ``n`` is a list of integers, those
-        integers will be used to select the permutations.
+        integers will be used to select the permutations and they
+        will be applied in L to R order: make_perm((A, B, C)) will
+        give CBA(I) where I is the identity permutation.
 
         ``seed`` is used to set the seed for the random selection
         of permutations from pgroups. If this is a list of integers,
@@ -454,7 +457,8 @@ class Polyhedron(Basic):
         result = Permutation(range(len(self.corners)))
         m = len(self.pgroups)
         for i in range(n):
-            result = lmul(result, self.pgroups[randrange(m)])
+            p = self.pgroups[randrange(m)]
+            result = lmul(result, p)
         return result
 
     def rotate(self, perm):
