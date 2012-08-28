@@ -16,8 +16,8 @@ class Ynm(Function):
     Spherical harmonics defined as
 
     .. math::
-        Y_n^m(\theta, \varphi) := \sqrt{\frac{(2n+1)(n-m)!}{4\pi(n+m)}}
-                                  \exp(-i m \varphi)
+        Y_n^m(\theta, \varphi) := \sqrt{\frac{(2n+1)(n-m)!}{4\pi(n+m)!}}
+                                  \exp(i m \varphi)
                                   \mathrm{P}_n^m\left(\cos(\theta)\right)
 
     Ynm() gives the spherical harmonic function of order `n` and `m`
