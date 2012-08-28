@@ -1028,7 +1028,7 @@ class Basic(object):
                 return self.func(*args)
         return self
 
-    @deprecated(useinstead="has", issue=2283, deprecated_since_version="0.7.2")
+    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
