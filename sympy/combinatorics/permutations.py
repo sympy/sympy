@@ -603,19 +603,6 @@ class Permutation(Basic):
         return rv
 
     @property
-    def as_cycle(self):
-        """Return the permutation as a Cycle instance.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> print Permutation([0, 4, 3, 2, 1, 5]).as_cycle
-        [(1, 4), (2, 3)]
-        """
-        return Cycle(self)
-
-    @property
     def size(self):
         """
         Returns the number of elements in the permutation.
