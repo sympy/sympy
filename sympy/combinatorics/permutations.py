@@ -1,4 +1,3 @@
-from collections import defaultdict
 import random
 
 from sympy.core import Basic, S, FiniteSet, Tuple
@@ -130,9 +129,9 @@ def _af_commutes_with(a, b):
             return False
     return True
 
-class BaseDisjointCycle(defaultdict):
+class DisjointCycle(dict):
     """
-    Wrapper around defaultdict which provides the functionality of a disjoint cycle.
+    Wrapper around dict which provides the functionality of a disjoint cycle.
     """
     def __missing__(self, arg):
         """Return enter arg into dictionary and return arg."""
@@ -177,7 +176,7 @@ class BaseDisjointCycle(defaultdict):
             for c in cycles:
                 rv *= c
             return rv
-        elif isinstance(other, BaseDisjointCycle):
+        elif isinstance(other, DisjointCycle):
             rv = other.copy()
             newv = []
             for k in self:
@@ -212,38 +211,43 @@ class BaseDisjointCycle(defaultdict):
         p = Permutation(self.as_list(size))
         return Permutation(p.cyclic_form, size=p.size)
 
-    def __str__(self):
+    def __repr__(self):
         reduced = Permutation(self.as_list()).cyclic_form
         return str([tuple(c) for c in reduced])
 
-
-class DisjointCycle(BaseDisjointCycle):
-    def __new__(cls, *args):
-        """Load up a BaseDisjointCycle instance with the values for the cycle.
+    def __init__(self, *args):
+        """Load up a DisjointCycle instance with the values for the cycle.
 
         Examples
         ========
         >>> from sympy.combinatorics.permutations import DisjointCycle as C
         >>> C(1, 2, 6)
+        {1: 2, 2: 6, 6: 1}
+        >>> print _
         [(1, 2, 6)]
         """
 
-        d = BaseDisjointCycle()
+        if len(args) == 1 and isinstance(args[0], DisjointCycle):
+            for k, v in args[0].iteritems():
+                self[k] = v
+            return
+        d = self
         if not args:
-            return d
+            return
         if len(args) == 1 and isinstance(args[0], Permutation):
             args = args[0].cyclic_form
         else:
             args = int_tested(args)
             if has_dups(args):
-                raise ValueError('All elements must be uniq.')
+                raise ValueError('All elements must be unique in a cycle.')
             args = [args]
         for c in args:
             c += [c[0]]
             for i in range(len(c) - 1):
                 d[c[i]] = c[i + 1]
-        return d
 
+    def copy(self):
+        return DisjointCycle(self)
 
 class Permutation(Basic):
     """
