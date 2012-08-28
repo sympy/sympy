@@ -6,6 +6,8 @@ from sympy.utilities.iterables import (rotate_left, has_variety,
     is_sequence, minlex)
 from sympy.utilities.randtest import _randrange
 
+lmul = Permutation.lmul
+
 class Polyhedron(Basic):
     """
     Represents the polyhedral symmetry group (PSG).
@@ -452,7 +454,7 @@ class Polyhedron(Basic):
         result = Permutation(range(len(self.corners)))
         m = len(self.pgroups)
         for i in range(n):
-            result *= self.pgroups[randrange(m)]
+            result = lmul(result, self.pgroups[randrange(m)])
         return result
 
     def rotate(self, perm):
@@ -582,7 +584,7 @@ def _pgroup_calcs():
          (15,16,17,18,19)]
 
     def _string_to_perm(s):
-        rv = Permutation(range(20))
+        rv = [Permutation(range(20))]
         p = None
         for si in s:
             if si not in '01':
@@ -593,9 +595,8 @@ def _pgroup_calcs():
                     p = _f0
                 elif si == '1':
                     p = _f1
-            for i in range(count):
-                rv *= p
-        return rv
+            rv.extend([p]*count)
+        return Permutation.lmul(*rv)
 
     # top face cw
     _f0 = Permutation([

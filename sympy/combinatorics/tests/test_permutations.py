@@ -5,6 +5,8 @@ from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
 
+lmul = Permutation.lmul
+
 def test_Permutation():
     assert Permutation([1,2,3]) == Permutation([0, 1, 2, 3])
     assert Permutation([[1,2]], size=4) == Permutation([[1, 2], [0], [3]])
@@ -12,12 +14,12 @@ def test_Permutation():
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
     ans = Permutation(_af_mul(*[w.array_form for w in (p, q, r)])).array_form
-    assert (p*q*r).array_form == ans
+    assert lmul(p, q, r).array_form == ans
     # make sure no other permutation of p, q, r could have given
     # that answer
     for a, b, c in permutations((p, q, r)):
         if (a, b, c) == (p, q, r): continue
-        assert (a*b*c).array_form != ans
+        assert lmul(a, b, c).array_form != ans
 
     assert p.support() == range(7)
     assert q.support() == [0, 2, 3, 4, 5, 6]
@@ -25,12 +27,13 @@ def test_Permutation():
     assert p.cardinality == 5040
     assert q.cardinality == 5040
     assert q.cycles == 2
-    assert q*p == Permutation([4, 6, 1, 2, 5, 3, 0])
-    assert p*q == Permutation([6, 5, 3, 0, 2, 4, 1])
+    assert lmul(q, p) == Permutation([4, 6, 1, 2, 5, 3, 0])
+    assert lmul(p, q) == Permutation([6, 5, 3, 0, 2, 4, 1])
     assert _af_mul(p.array_form, q.array_form) == \
         [6, 5, 3, 0, 2, 4, 1]
 
-    assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
+    assert lmul(Permutation([[1,2,3],[0,4]]),
+                Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
@@ -53,11 +56,11 @@ def test_Permutation():
 
     pq = p.conjugate(q)
     assert pq == Permutation([5, 3, 0, 4, 6, 2, 1])
-    assert pq == ~q*p*q
+    assert pq == lmul(~q, p, q)
     assert pq == p**q
     qp = q.conjugate(p)
     assert qp == Permutation([6, 3, 2, 0, 1, 4, 5])
-    assert qp == ~p*q*p
+    assert qp == lmul(~p, q, p)
     assert qp == q**p
 
     assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
@@ -87,7 +90,7 @@ def test_Permutation():
     r = Permutation([3, 2, 1, 0])
     assert (r**2).is_Identity
 
-    assert (p*(~p)).is_Identity
+    assert lmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
     assert ~(r**2).is_Identity
     assert p.max() == 6
@@ -113,8 +116,8 @@ def test_Permutation():
     assert p.signature() == -1
     assert q.inversions() == 11
     assert q.signature() == -1
-    assert (p*(~p)).inversions() == 0
-    assert (p*(~p)).signature() == 1
+    assert lmul(p, ~p).inversions() == 0
+    assert lmul(p, ~p).signature() == 1
 
     assert p.order() == 6
     assert q.order() == 10
@@ -145,7 +148,8 @@ def test_Permutation():
     iden = Permutation([0, 1, 2, 3])
     for i in range(5):
         for j in range(i+1, 5):
-            assert a[i].commutes_with(a[j]) == (a[i]*a[j] == a[j]*a[i])
+            assert a[i].commutes_with(a[j]) == \
+            (lmul(a[i], a[j]) == lmul(a[j], a[i]))
             if a[i].commutes_with(a[j]):
                 assert a[i].commutator(a[j]) == iden
                 assert a[j].commutator(a[i]) == iden
@@ -205,15 +209,14 @@ def test_mul():
     a, b = [0,2,1,3], [0,1,3,2]
     assert _af_mul(a, b) == [0, 2, 3, 1]
     assert _af_mul(a, b, range(4)) == [0, 2, 3, 1]
-    assert (Permutation(a)*Permutation(b)).array_form == [0, 2, 3, 1]
+    assert lmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
     assert _af_mul([0,2,1,3], [0,1,3,2], reverse=True) == [0, 3, 1, 2]
 
     a = Permutation([0, 2, 1, 3])
     b = (0, 1, 3, 2)
     c = (3, 1, 2, 0)
-    assert Permutation.mul(a, b, c) == Permutation([1, 2, 3, 0])
-    assert Permutation.mul(a, b, c, reverse=True) == Permutation([3, 0, 1, 2])
-    assert Permutation.mul(b, c) == [2, 1, 3, 0]
+    assert Permutation.lmul(a, b, c) == Permutation([1, 2, 3, 0])
+    assert Permutation.lmul(b, c) == Permutation([2, 1, 3, 0])
 
     n = 6
     m = 8
