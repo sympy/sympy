@@ -1,12 +1,12 @@
 from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
-from sympy.combinatorics import Permutation
+from sympy.combinatorics import Permutation as Perm
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import (rotate_left, has_variety,
     is_sequence, minlex)
 from sympy.utilities.randtest import _randrange
 
-lmul = Permutation.lmul
+lmul = Perm.lmul
 
 class Polyhedron(Basic):
     """
@@ -372,6 +372,41 @@ class Polyhedron(Basic):
     vertices = corners
 
     @property
+    def array_form(self):
+        """Return the indices of the corners.
+
+        The indices are given relative to the original position of corners.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, Cycle
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> tetrahedron.array_form
+        [0, 1, 2, 3]
+        >>> tetrahedron.rotate(tetrahedron.pgroups[0])
+        >>> a = tetrahedron.array_form
+        >>> a
+        [1, 2, 0, 3]
+        >>> Permutation(a).cyclic_form
+        [[0, 1, 2]]
+        >>> print Cycle(*a)
+        [(0, 3, 1, 2)]
+        >>> print Cycle(1,0,2,4,3,5)
+        >>> Permutation(Cycle(1,0,2,4,3,5)).cyclic_form
+        """
+        corners = tuple(self.args[0])
+        return [corners.index(c) for c in self.corners]
+
+    @property
+    def cyclic_form(self):
+        """Return the indices of the corners in cyclic notation.
+
+        The indices are given relative to the original position of corners.
+        """
+        return Perm._af_new(self.array_form).cyclic_form
+
+    @property
     def size(self):
         """
         Get the number of corners of the Polyhedron.
@@ -454,7 +489,7 @@ class Polyhedron(Basic):
         randrange = _randrange(seed)
 
         # start with the identity permutation
-        result = Permutation(range(len(self.corners)))
+        result = Perm(range(len(self.corners)))
         m = len(self.pgroups)
         for i in range(n):
             p = self.pgroups[randrange(m)]
@@ -524,19 +559,19 @@ def _pgroup_calcs():
                 for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double
-            new_pgroup.append(Permutation([fmap[f] for f in reorder]))
+            new_pgroup.append(Perm([fmap[f] for f in reorder]))
         return new_pgroup
 
     tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
     _t_pgroups = [
-        Permutation([[0,1,2], [3]]),\
-        Permutation([[0,1,3], [2]]),\
-        Permutation([[0,2,3], [1]]),\
-        Permutation([[1,2,3], [0]]),\
-        Permutation([[0,1], [2,3]]),\
-        Permutation([[0,2], [1,3]]),\
-        Permutation([[0,3], [1,2]])]
+        Perm([[0,1,2], [3]]),\
+        Perm([[0,1,3], [2]]),\
+        Perm([[0,2,3], [1]]),\
+        Perm([[1,2,3], [0]]),\
+        Perm([[0,1], [2,3]]),\
+        Perm([[0,2], [1,3]]),\
+        Perm([[0,3], [1,2]])]
 
     tetrahedron = Polyhedron(
         range(4),
@@ -548,7 +583,7 @@ def _pgroup_calcs():
     (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4),
     (4, 5, 6, 7)]
 
-    _c_pgroups = [Permutation(p) for p in
+    _c_pgroups = [Perm(p) for p in
         [[1,2,3,0,5,6,7,4],
         [4,0,3,7,5,1,2,6],
         [4,5,1,0,7,6,2,3],
@@ -588,7 +623,7 @@ def _pgroup_calcs():
          (15,16,17,18,19)]
 
     def _string_to_perm(s):
-        rv = [Permutation(range(20))]
+        rv = [Perm(range(20))]
         p = None
         for si in s:
             if si not in '01':
@@ -600,14 +635,14 @@ def _pgroup_calcs():
                 elif si == '1':
                     p = _f1
             rv.extend([p]*count)
-        return Permutation.lmul(*rv)
+        return Perm.lmul(*rv)
 
     # top face cw
-    _f0 = Permutation([
+    _f0 = Perm([
         1, 2, 3, 4, 0, 6, 7, 8, 9, 5, 11,
         12, 13, 14, 10, 16, 17, 18, 19, 15])
     # front face cw
-    _f1 = Permutation([
+    _f1 = Perm([
         5, 0, 4, 9, 14, 10, 1, 3, 13, 15,
         6, 2, 8, 19, 16, 17, 11, 7, 12, 18])
     # the strings below, like 0104 are shorthand for F0*F1*F0**4 and are
