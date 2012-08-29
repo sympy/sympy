@@ -141,15 +141,20 @@ class Cycle(dict):
     that all elements need not be present in order to investigate how
     multiple cycles act in sequence:
 
-    >>> from sympy.combinatorics.permutations import Perm, Cycle as C
-    >>> a = C(1, 2)
+    >>> from sympy.combinatorics.permutations import Perm, Cycle
+    >>> a = Cycle(1, 2)
 
     A Cycle will automatically parse a cycle given as a tuple:
 
     >>> print a*(2, 3)
     [(1, 3, 2)]
 
-    It can also parse a list of cycles or an explicit Permutation:
+    The identity cycle, Cycle(), can be used to start a product:
+
+    >>> print Cycle()*(1, 2)*(2,3)
+    [(1, 3, 2)]
+
+    Cycle can also parse a list of cycles or an explicit Permutation:
 
     >>> print a*[(2, 3), (4, 5)]
     [(1, 3, 2), (4, 5)]
@@ -528,7 +533,7 @@ class Permutation(Basic):
     def cyclic_form(self):
         """
         This is used to convert to the cyclic notation
-        from the canonical notation.
+        from the canonical notation. Singletons are omitted.
 
         Examples
         ========
@@ -537,11 +542,13 @@ class Permutation(Basic):
         >>> p = Permutation([0,3,1,2])
         >>> p.cyclic_form
         [[1, 3, 2]]
+        >>> Permutation([1, 0, 2, 4, 3, 5]).cyclic_form
+        [[0, 1], [3, 4]]
 
         See Also
         ========
 
-        array_form
+        array_form, full_cyclic_form
         """
         if self._cyclic_form is not None:
             return list(self._cyclic_form)

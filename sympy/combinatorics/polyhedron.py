@@ -27,7 +27,7 @@ class Polyhedron(Basic):
     """
     _edges = None
 
-    def __new__(cls, corners, faces=[], pgroups=[]):
+    def __new__(cls, corners, faces=[], pgroup=[]):
         """
         The constructor of the Polyhedron group object.
 
@@ -74,7 +74,7 @@ class Polyhedron(Basic):
         permutation, Permutation(range(4)), is not included since it does
         not change the orientation of the vertices.)
 
-        >>> pgroups = [Permutation([[0,1,2], [3]]),\
+        >>> pgroup = [Permutation([[0,1,2], [3]]),\
                       Permutation([[0,1,3], [2]]),\
                       Permutation([[0,2,3], [1]]),\
                       Permutation([[1,2,3], [0]]),\
@@ -84,7 +84,7 @@ class Polyhedron(Basic):
 
         The Polyhedron is now constructed and demonstrated:
 
-        >>> tetra = Polyhedron(corners, faces, pgroups)
+        >>> tetra = Polyhedron(corners, faces, pgroup)
         >>> tetra.size
         4
         >>> tetra.edges
@@ -93,16 +93,16 @@ class Polyhedron(Basic):
         (w, x, y, z)
 
         It can be rotated with an arbitrary permutation of vertices, e.g.
-        the following permutation is not in the pgroups:
+        the following permutation is not in the pgroup:
 
         >>> tetra.rotate(Permutation([0, 1, 3, 2]))
         >>> tetra.corners
         (w, x, z, y)
 
         An allowed permutation of the vertices can be constructed by
-        repeatedly applying permutations from the pgroups to the vertices.
+        repeatedly applying permutations from the pgroup to the vertices.
         Here is a demonstration that applying p and p**2 for every p in
-        pgroups generates all the orientations of a tetrahedron and no others:
+        pgroup generates all the orientations of a tetrahedron and no others:
 
         >>> all = ( (w, x, y, z) ,\
                     (x, y, w, z) ,\
@@ -118,7 +118,7 @@ class Polyhedron(Basic):
                     (z, x, w, y) )
 
         >>> got = []
-        >>> for p in (pgroups + [p**2 for p in pgroups]):
+        >>> for p in (pgroup + [p**2 for p in pgroup]):
         ...     h = Polyhedron(corners)
         ...     h.rotate(p)
         ...     got.append(h.corners)
@@ -127,7 +127,7 @@ class Polyhedron(Basic):
         True
 
         The make_perm method will randomly pick permutations given in
-        pgroups, multiply them together, and return the permutation that
+        pgroup, multiply them together, and return the permutation that
         can be applied to the polyhedron to give the orientation produced
         by those individual permutations.
 
@@ -137,7 +137,7 @@ class Polyhedron(Basic):
         Permutation([0, 3, 1, 2])
 
         To select the permutations that should be used, supply a list
-        of indices to the permutations in pgroups:
+        of indices to the permutations in pgroup:
 
         >>> use = [0, 0, 2]
         >>> saved = tetra.make_perm(3, use)
@@ -149,7 +149,7 @@ class Polyhedron(Basic):
 
         >>> h = Polyhedron(corners)
         >>> for i in use:
-        ...     h.rotate(pgroups[i])
+        ...     h.rotate(pgroup[i])
         ...
         >>> h.vertices
         (x, w, z, y)
@@ -224,7 +224,7 @@ class Polyhedron(Basic):
         To rotate the square a single permutation we can do:
 
         >>> sq = square.copy()
-        >>> sq.rotate(square.pgroups[0]); sq.corners
+        >>> sq.rotate(square.pgroup[0]); sq.corners
         (1, 3, 2, 4)
 
         To use more than one permutation (or to use one permutation more
@@ -339,16 +339,16 @@ class Polyhedron(Basic):
 
         """
         faces = [minlex(f, directed=False) for f in faces]
-        corners, faces, pgroups = args = \
-            [Tuple(*a) for a in (corners, faces, pgroups)]
+        corners, faces, pgroup = args = \
+            [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
         obj._corners = tuple(corners) # in order given
         obj._faces = FiniteSet(faces)
-        if pgroups and pgroups[0].size != len(corners):
+        if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
-        if has_variety(a.size for a in pgroups) > 1:
+        if has_variety(a.size for a in pgroup) > 1:
             raise ValueError("All permutations must be of the same size.")
-        obj._pgroups = pgroups
+        obj._pgroup = pgroup
         return obj
 
     @property
@@ -367,6 +367,10 @@ class Polyhedron(Basic):
         >>> p.corners == p.vertices == (a, b, c, d)
         True
 
+        See Also
+        ========
+
+        array_form, cyclic_form
         """
         return self._corners
     vertices = corners
@@ -384,16 +388,17 @@ class Polyhedron(Basic):
         >>> from sympy.combinatorics.polyhedron import tetrahedron
         >>> tetrahedron.array_form
         [0, 1, 2, 3]
-        >>> tetrahedron.rotate(tetrahedron.pgroups[0])
-        >>> a = tetrahedron.array_form
-        >>> a
+
+        >>> tetrahedron.rotate(tetrahedron.pgroup[0])
+        >>> tetrahedron.array_form
         [1, 2, 0, 3]
-        >>> Permutation(a).cyclic_form
-        [[0, 1, 2]]
-        >>> print Cycle(*a)
-        [(0, 3, 1, 2)]
-        >>> print Cycle(1,0,2,4,3,5)
-        >>> Permutation(Cycle(1,0,2,4,3,5)).cyclic_form
+        >>> tetrahedron.pgroup[0].array_form
+        [1, 2, 0, 3]
+
+        See Also
+        ========
+
+        corners, cyclic_form
         """
         corners = tuple(self.args[0])
         return [corners.index(c) for c in self.corners]
@@ -403,6 +408,11 @@ class Polyhedron(Basic):
         """Return the indices of the corners in cyclic notation.
 
         The indices are given relative to the original position of corners.
+
+        See Also
+        ========
+
+        corners, array_form
         """
         return Perm._af_new(self.array_form).cyclic_form
 
@@ -421,11 +431,11 @@ class Polyhedron(Basic):
         return self._faces
 
     @property
-    def pgroups(self):
+    def pgroup(self):
         """
         Get the permutations of the Polyhedron.
         """
-        return self._pgroups
+        return self._pgroup
 
     @property
     def edges(self):
@@ -457,23 +467,23 @@ class Polyhedron(Basic):
     def make_perm(self, n, seed=None):
         """
         Multiply ``n`` randomly selected permutations from
-        pgroups together, starting with the identity
+        pgroup together, starting with the identity
         permutation. If ``n`` is a list of integers, those
         integers will be used to select the permutations and they
         will be applied in L to R order: make_perm((A, B, C)) will
         give CBA(I) where I is the identity permutation.
 
         ``seed`` is used to set the seed for the random selection
-        of permutations from pgroups. If this is a list of integers,
-        the corresponding permutations from pgroups will be selected
+        of permutations from pgroup. If this is a list of integers,
+        the corresponding permutations from pgroup will be selected
         in the order give. This is mainly used for testing purposes.
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Permutation, Polyhedron
-        >>> pgroups = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
-        >>> h = Polyhedron(list('abcd'), pgroups=pgroups)
+        >>> pgroup = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
+        >>> h = Polyhedron(list('abcd'), pgroup=pgroup)
         >>> h.make_perm(1, [0])
         Permutation([1, 0, 3, 2])
         >>> h.make_perm(3, [0, 1, 0])
@@ -481,6 +491,10 @@ class Polyhedron(Basic):
         >>> h.make_perm([0, 1, 0])
         Permutation([2, 0, 3, 1])
 
+        See Also
+        ========
+
+        rotate
         """
         if is_sequence(n):
             if is_sequence(seed):
@@ -490,41 +504,104 @@ class Polyhedron(Basic):
 
         # start with the identity permutation
         result = Perm(range(len(self.corners)))
-        m = len(self.pgroups)
+        m = len(self.pgroup)
         for i in range(n):
-            p = self.pgroups[randrange(m)]
+            p = self.pgroup[randrange(m)]
             result = lmul(result, p)
         return result
 
     def rotate(self, perm):
         """
-        Apply permutation to corners of a polyhedron *in place*.
+        Apply a permutation to the polyhedron *in place*. The permutation
+        may be given as a Permutation instance or an integer indicating
+        which permutation from pgroup of the Polyhedron should be
+        applied.
 
         This is an operation that is analogous to rotation about
-        an axis by a fixed increment.
+        an axis by a fixed increment. This method is like ``make_perm``
+        except instead of returning a permutation it applies the
+        permutation to the Polyhedron instance and only a single
+        permutation is applied.
+
+        Notes
+        =====
+
+        When a Permutation is applied, no check is done to see if that
+        is a valid permutation for the Polyhedron. For example, a cube
+        could be given a permutation which effectively swaps only 2
+        vertices. A valid permutation (that rotates the object in a
+        physical way) will be obtained if one only uses
+        permutations from the ``pgroup`` of the Polyhedron. On the other
+        hand, allowing arbitrary rotations (applications of permutations)
+        gives a way to follow named elements rather than indices since
+        Polyhedron allows vertices to be named while Permutation works
+        only with indices.
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Polyhedron, Permutation
-        >>> shadow = h = Polyhedron(list('abcde'))
+        >>> from sympy.combinatorics.polyhedron import cube
+        >>> cube.corners
+        (0, 1, 2, 3, 4, 5, 6, 7)
+        >>> cube.rotate(0)
+        >>> cube.corners
+        (1, 2, 3, 0, 5, 6, 7, 4)
+
+        A non-physical "rotation" that is not prohibited by this method:
+
+        >>> cube.reset()
+        >>> cube.rotate(Permutation([[1,2]], size=8))
+        >>> cube.corners
+        (0, 2, 1, 3, 4, 5, 6, 7)
+
+        Polyhedron can be used to follow elements of set that are
+        identified by letters instead of integers:
+
+        >>> shadow = h5 = Polyhedron(list('abcde'))
         >>> p = Permutation([3, 0, 1, 2, 4])
-        >>> h.rotate(p)
-        >>> h.corners
+        >>> h5.rotate(p)
+        >>> h5.corners
         (d, a, b, c, e)
         >>> _ == shadow.corners
         True
-        >>> copy = h.copy()
-        >>> h.rotate(p)
-        >>> h.corners == copy.corners
+        >>> copy = h5.copy()
+        >>> h5.rotate(p)
+        >>> h5.corners == copy.corners
         False
+
+        See Also
+        ========
+
+        make_perm
         """
-        if perm.size != self.size:
-            raise ValueError("The size of the permutation and polyhedron must match.")
+        try:
+            perm = self.pgroup[int_tested(perm)]
+        except TypeError:
+            if perm.size != self.size:
+                raise ValueError('Polyhedron and Permutation sizes differ.')
         temp = []
         for i in range(len(self.corners)):
             temp.append(self.corners[perm.array_form[i]])
         self._corners = tuple(temp)
+
+    def reset(self):
+        """Return corners to their original positions.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.polyhedron import tetrahedron as T
+        >>> T.corners
+        (0, 1, 2, 3)
+        >>> T.rotate(0)
+        >>> T.corners
+        (1, 2, 0, 3)
+        >>> T.reset()
+        >>> T.corners
+        (0, 1, 2, 3)
+        """
+        self._corners = self.args[0]
 
 def _pgroup_calcs():
     """
@@ -564,7 +641,7 @@ def _pgroup_calcs():
 
     tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
-    _t_pgroups = [
+    _t_pgroup = [
         Perm([[0,1,2], [3]]),\
         Perm([[0,1,3], [2]]),\
         Perm([[0,2,3], [1]]),\
@@ -576,14 +653,14 @@ def _pgroup_calcs():
     tetrahedron = Polyhedron(
         range(4),
         tetrahedron_faces,
-        _t_pgroups)
+        _t_pgroup)
 
     cube_faces = [
     (0, 1, 2, 3),
     (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4),
     (4, 5, 6, 7)]
 
-    _c_pgroups = [Perm(p) for p in
+    _c_pgroup = [Perm(p) for p in
         [[1,2,3,0,5,6,7,4],
         [4,0,3,7,5,1,2,6],
         [4,5,1,0,7,6,2,3],
@@ -603,7 +680,7 @@ def _pgroup_calcs():
     cube = Polyhedron(
         range(8),
         cube_faces,
-        _c_pgroups)
+        _c_pgroup)
 
     octahedron_faces = [
         (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4),
@@ -612,7 +689,7 @@ def _pgroup_calcs():
     octahedron = Polyhedron(
         range(6),
         octahedron_faces,
-        _pgroups_of_double(cube, cube_faces, _c_pgroups))
+        _pgroup_of_double(cube, cube_faces, _c_pgroup))
 
     dodecahedron_faces = [
          (0,1,2,3,4),
@@ -648,7 +725,7 @@ def _pgroup_calcs():
     # the strings below, like 0104 are shorthand for F0*F1*F0**4 and are
     # the remaining 4 face rotations, 15 edge permutations, and the
     # 10 vertex rotations.
-    _dodeca_pgroups = [_f0, _f1] + [_string_to_perm(s) for s in '''
+    _dodeca_pgroup = [_f0, _f1] + [_string_to_perm(s) for s in '''
     0104 140 014 0410
     010 1403 03104 04103 102
     120 1304 01303 021302 03130
@@ -658,7 +735,7 @@ def _pgroup_calcs():
     dodecahedron = Polyhedron(
         range(20),
         dodecahedron_faces,
-        _dodeca_pgroups)
+        _dodeca_pgroup)
 
     icosahedron_faces = [
         [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
@@ -669,7 +746,7 @@ def _pgroup_calcs():
     icosahedron = Polyhedron(
         range(12),
         icosahedron_faces,
-        _pgroups_of_double(dodecahedron, dodecahedron_faces, _dodeca_pgroups))
+        _pgroup_of_double(dodecahedron, dodecahedron_faces, _dodeca_pgroup))
 
     return (tetrahedron, cube, octahedron, dodecahedron, icosahedron,
         tetrahedron_faces, cube_faces, octahedron_faces,
