@@ -952,6 +952,20 @@ class LatexPrinter(Printer):
             tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
         return tex
 
+    def _print_Ynm(self, expr, exp=None):
+        n, m, theta, phi = map(self._print, expr.args)
+        tex = r"Y_{%s}^{%s}\left(%s,%s\right)" % (n, m, theta, phi)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
+    def _print_Znm(self, expr, exp=None):
+        n, m, theta, phi = map(self._print, expr.args)
+        tex = r"Z_{%s}^{%s}\left(%s,%s\right)" % (n, m, theta, phi)
+        if exp is not None:
+            tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
+        return tex
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
