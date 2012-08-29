@@ -32,12 +32,12 @@ def test_polyhedron():
         (4, 7), (4, 5), (3, 7), (1, 5), (0, 4), (2, 6)))
 
     for i in xrange(3):    #  add 180 degree face rotations
-        cube.rotate(cube.pgroups[i]**2)
+        cube.rotate(cube.pgroup[i]**2)
 
     assert cube.corners == corners
 
     for i in range(3,7):  # add 240 degree axial corner rotations
-        cube.rotate(cube.pgroups[i]**2)
+        cube.rotate(cube.pgroup[i]**2)
 
     assert cube.corners == corners
 
@@ -51,7 +51,7 @@ def test_polyhedron():
         assert h.size == size
 
         got = set()
-        for p in h.pgroups:
+        for p in h.pgroup:
             # make sure it restores original
             P = h.copy()
             hit = P.corners
