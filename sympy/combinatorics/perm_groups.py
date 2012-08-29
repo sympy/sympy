@@ -56,9 +56,10 @@ class _JGraph(object):
              i-th free position of jg
     To a directed edge (i, j) between vertices i, j
     it is associated the index of a permutation `g` satisfying
-    g[i] = j
-    g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
-      = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]
+    g[i] = j where
+
+        g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
+          = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]
 
     cycle  list of indices of vertices used to identify cycles
     G Permutation group
@@ -321,15 +322,17 @@ class PermutationGroup(Basic):
     >>> G = PermutationGroup([a, b])
     >>> G
     PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
+    >>> G[0]
+    Permutation([0, 2, 1])
 
     References
     ==========
 
     [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    "Handbook of Computational Group Theory"
 
     [2] Seress, A.
-    "Permutation group algorithms"
+    "Permutation Group Algorithms"
 
     [3] http://en.wikipedia.org/wiki/Schreier_vector
 
@@ -337,8 +340,8 @@ class PermutationGroup(Basic):
     #Product_replacement_algorithm
 
     [5] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
-    Alice C.Niemeyer, and E.A.O'Brien. "Generating random
-    elements of a finite group"
+    Alice C.Niemeyer, and E.A.O'Brien. "Generating Random
+    Elements of a Finite Group"
 
     [6] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
@@ -361,7 +364,7 @@ class PermutationGroup(Basic):
         The default constructor.
         """
         obj = Basic.__new__(cls, *args, **kw_args)
-        obj._generators = args[0]
+        obj._generators = list(args[0])
         obj._order = None
         obj._center = []
         obj._is_abelian = None
@@ -391,6 +394,9 @@ class PermutationGroup(Basic):
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
         return obj
+
+    def __getitem__(self, i):
+        return self._generators[i]
 
     def __eq__(self, gr):
         """
@@ -678,7 +684,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
-        ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]), Permutation([0, 3, 2, 1])])
+        ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]),
+        Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]),
+        Permutation([0, 3, 2, 1])])
         >>> S.base
         [0, 1, 2]
         >>> _verify_bsgs(S, S.base, S.strong_gens)
@@ -813,7 +821,9 @@ class PermutationGroup(Basic):
         >>> A.base
         [0, 1]
         >>> A.basic_stabilizers
-        [PermutationGroup([Permutation([1, 2, 0, 3]), Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])]), PermutationGroup([Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])])]
+        [PermutationGroup([Permutation([1, 2, 0, 3]),
+        Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])]),
+        PermutationGroup([Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])])]
 
         See Also
         ========
@@ -1077,7 +1087,9 @@ class PermutationGroup(Basic):
         False
         >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
         >>> G.coset_decomposition(c)
-        [[6, 4, 2, 0, 7, 5, 3, 1], [0, 4, 1, 5, 2, 6, 3, 7], [0, 1, 2, 3, 4, 5, 6, 7]]
+        [[6, 4, 2, 0, 7, 5, 3, 1],
+         [0, 4, 1, 5, 2, 6, 3, 7],
+         [0, 1, 2, 3, 4, 5, 6, 7]]
         >>> G.has_element(c)
         True
 
@@ -1343,7 +1355,8 @@ class PermutationGroup(Basic):
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
         >>> list(g.generate(af=True))
-        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1], [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
+        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1],
+         [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
         if method == "coset":
@@ -1372,7 +1385,8 @@ class PermutationGroup(Basic):
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
         >>> list(g.generate_dimino(af=True))
-        [[0, 1, 2, 3], [0, 2, 1, 3], [0, 2, 3, 1], [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
+        [[0, 1, 2, 3], [0, 2, 1, 3], [0, 2, 3, 1],
+         [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
         idn = range(self.degree)
@@ -1425,7 +1439,8 @@ class PermutationGroup(Basic):
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
         >>> list(g.generate_schreier_sims(af=True))
-        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1], [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
+        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1],
+         [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
         def get1(posmax):
@@ -1738,10 +1753,10 @@ class PermutationGroup(Basic):
     @property
     def is_solvable(self):
         """
-        Test if the group  is solvable
+        Test if the group is solvable
 
         `G` is solvable if its derived series terminates with the trivial
-        group ([1],p.29).
+        group ([1], p.29).
 
         Examples
         ========
@@ -2829,7 +2844,7 @@ class PermutationGroup(Basic):
                     strong_gens_distr[l].append(h)
                     stabs[l] = PermutationGroup(strong_gens_distr[l])
                     transversals[l] = dict(stabs[l].orbit_transversal(base[l],\
-                                                                    pairs=True))
+                                                                   pairs=True))
                     orbs[l] = transversals[l].keys()
                 c = 0
             else:
@@ -3014,19 +3029,20 @@ class PermutationGroup(Basic):
             A strong generating set for the supergroup.
         tests
             A list of callables of length equal to the length of ``base``.
-            These are used to rule out group elements by partial base images, so
-            that ``tests[l](g)`` returns False if the element ``g`` is known not
-            to satisfy prop base on where g sends the first ``l + 1`` base points.
-            ``init_subgroup`` - if a subgroup of the saught group is known in
-            advance, it can be passed to the function as this parameter.
+            These are used to rule out group elements by partial base images,
+            so that ``tests[l](g)`` returns False if the element ``g`` is known
+            not to satisfy prop base on where g sends the first ``l + 1`` base
+            points. ``init_subgroup`` - if a subgroup of the saught group is
+            known in advance, it can be passed to the function as this
+            parameter.
 
         Returns
         =======
 
         res
-            The subgroup of all elements satisfying ``prop``. The generating set
-            for this group is guaranteed to be a strong generating set relative to
-            the base ``base``.
+            The subgroup of all elements satisfying ``prop``. The generating
+            set for this group is guaranteed to be a strong generating set
+            relative to the base ``base``.
 
         Examples
         ========
