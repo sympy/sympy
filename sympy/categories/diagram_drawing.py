@@ -1786,18 +1786,40 @@ class XypicDiagramDrawer(object):
                                             ("d","r")][freest_quadrant]
 
         elif (delta_i == 0) and (abs(j - target_j) > 1):
-            # Suppose we are going from left to right.
+            # The arrow is horizontal.  Check if it goes from left to
+            # right (``backwards == False``) or from right to left
+            # (``backwards == True``).
             backwards = False
             start = j
             end = target_j
-
             if end < start:
                 (start, end) = (end, start)
                 backwards = True
 
             # Let's see which objects are there between ``start`` and
             # ``end``, and then count how many morphisms stick out
-            # upwards, and how many stick downwards.
+            # upwards, and how many stick out downwards.
+            #
+            # For example, consider the situation:
+            #
+            #    B1 C1
+            #    |  |
+            # A--B--C--D
+            #    |
+            #    B2
+            #
+            # Between the objects `A` and `D` there are two objects:
+            # `B` and `C`.  Further, there are two morphisms which
+            # stick out upward (the ones between `B1` and `B` and
+            # between `C` and `C1`) and one morphism which sticks out
+            # downward (the one between `B and `B2`).
+            #
+            # We need this information to decide how to curve the
+            # arrow between `A` and `D`.  First of all, since there
+            # are two objects between `A` and `D``, we must curve the
+            # arrow.  Then, we will have it curve downward, because
+            # there is more space (less morphisms stick out downward
+            # than upward).
             up = []
             down = []
             straight_horizontal = []
@@ -1875,11 +1897,12 @@ class XypicDiagramDrawer(object):
                     m_str_info.forced_label_position = True
 
         elif (delta_j == 0) and (abs(i - target_i) > 1):
-            # Suppose the arrow goes downwards.
+            # This arrow is vertical.  Check if it goes from top to
+            # bottom (``backwards == False``) or from bottom to top
+            # (``backwards == True``).
             backwards = False
             start = i
             end = target_i
-
             if end < start:
                 (start, end) = (end, start)
                 backwards = True
@@ -1887,6 +1910,9 @@ class XypicDiagramDrawer(object):
             # Let's see which objects are there between ``start`` and
             # ``end``, and then count how many morphisms stick out to
             # the left, and how many stick out to the right.
+            #
+            # See the corresponding comment in the previous branch of
+            # this if-statement for more details.
             left = []
             right = []
             straight_vertical = []
