@@ -126,8 +126,10 @@ args_2to3_doctests.extend(modified_rst_files)
 
 # call 2to3, once for regular files and once for doctests
 from lib2to3.main import main as main2to3
-main2to3("lib2to3.fixes", args_2to3)
-main2to3("lib2to3.fixes", args_2to3_doctests)
+if modified_files:
+    main2to3("lib2to3.fixes", args_2to3)
+if modified_files or modified_rst_files:
+    main2to3("lib2to3.fixes", args_2to3_doctests)
 
 # remove trailing spaced added to lines by 2to3
 whitespace = re.compile(" +$", re.MULTILINE)
