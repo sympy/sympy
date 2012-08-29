@@ -155,4 +155,4 @@ def evaluate_pauli_product(arg):
             sigma_product *= el
         else:
             com_product *= el
-    return (sigma_product*com_product)
+    return (tmp[0]*sigma_product*com_product)

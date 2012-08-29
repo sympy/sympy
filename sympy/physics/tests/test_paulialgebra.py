@@ -32,6 +32,9 @@ def test_Pauli():
 
     assert sigma1*2*sigma1 == 2
 
+    # Check bug 3372
+    assert evaluate_pauli_product(-I*4*sigma1*sigma2) == 4*sigma3
+
 @XFAIL
 def test_Pauli_should_work():
     assert sigma1*sigma3*sigma1 == -sigma3
