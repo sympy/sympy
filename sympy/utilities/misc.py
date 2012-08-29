@@ -2,6 +2,8 @@
 
 from textwrap import fill, dedent
 
+from sympy.utilities.iterables import is_sequence
+
 # if you use
 # filldedent('''
 #             the text''')
@@ -10,6 +12,51 @@ from textwrap import fill, dedent
 # so we strip off any leading and trailing \n since printed wrapped
 # text should not have leading or trailing spaces.
 filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+
+def int_tested(*j):
+    """
+    Return all args as Python integers and confirm that the input
+    was equivalent to the integer, else raise a ValueError.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import int_tested
+    >>> from sympy import sqrt
+    >>> 3.0
+    3.0
+    >>> int_tested(_) # convert to int and test for equality
+    3
+    >>> n = sqrt(10)
+    >>> int_tested(n)
+    Traceback (most recent call last):
+    ...
+    ValueError: All arguments were not integers
+
+    Input can be a single number, multiple numbers, or a list of numbers:
+    >>> int_tested(1)
+    1
+    >>> int_tested(1, 2)
+    [1, 2]
+    >>> int_tested([1])
+    [1]
+    >>> int_tested([1, 2])
+    [1, 2]
+    """
+    if is_sequence(j) and not j:
+        return []
+    try:
+        j[0][0]
+        as_int = False
+        j = j[0]
+    except TypeError:
+        as_int = len(j) == 1
+    i = [int(i) for i in j]
+    if i != list(j):
+        raise ValueError('all arguments were not integers')
+    if as_int:
+        return i[0]
+    return i
 
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.

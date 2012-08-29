@@ -1,7 +1,7 @@
 from sympy.core import Basic
 from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import flatten
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.misc import int_tested
 
 from collections import defaultdict
 

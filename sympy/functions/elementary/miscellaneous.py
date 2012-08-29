@@ -7,7 +7,7 @@ from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.misc import int_tested
 
 class IdentityFunction(Lambda):
     """

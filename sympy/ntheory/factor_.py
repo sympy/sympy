@@ -190,7 +190,7 @@ def multiplicity(p, n):
     [0, 1, 2, 3, 3]
 
     """
-    from residue_ntheory import int_tested
+    from sympy.utilities.misc import int_tested
 
     p, n = int_tested(p, n)
     if p == 2:
@@ -1309,7 +1309,7 @@ def totient(n):
 
     divisor_count
     """
-    from residue_ntheory import int_tested
+    from sympy.utilities.misc import int_tested
     n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")

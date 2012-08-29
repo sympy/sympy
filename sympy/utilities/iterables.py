@@ -881,7 +881,7 @@ def partitions(n, m=None, k=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    from sympy.ntheory.residue_ntheory import int_tested
+    from sympy.utilities.misc import int_tested
 
     if n < 0:
         raise ValueError("n must be >= 0")

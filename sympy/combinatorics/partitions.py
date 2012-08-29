@@ -3,7 +3,7 @@ from sympy.matrices import zeros
 from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import has_dups, flatten, group
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.misc import int_tested
 
 import random
 from collections import defaultdict
@@ -307,7 +307,7 @@ class IntegerPartition(Basic):
         ValueError: The partition is not valid
 
         """
-        from sympy.ntheory.residue_ntheory import int_tested
+        from sympy.utilities.misc import int_tested
 
         if integer is not None:
             integer, partition = partition, integer

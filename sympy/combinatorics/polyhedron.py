@@ -1,7 +1,7 @@
 from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation as Perm
-from sympy.utilities.misc import default_sort_key
+from sympy.utilities.misc import default_sort_key, int_tested
 from sympy.utilities.iterables import (rotate_left, has_variety,
     is_sequence, minlex)
 from sympy.utilities.randtest import _randrange
@@ -535,9 +535,8 @@ def _pgroup_calcs():
     etc..., instead of mixed permutations (P0*P1**2*P0). The following
     work was used to calculate the permutation group of the polyhedra.
     """
-    def _pgroups_of_double(polyh, ordered_faces, pgroup):
-        from sympy.utilities import unflatten, flatten
-        from sympy.ntheory.residue_ntheory import int_tested
+    def _pgroup_of_double(polyh, ordered_faces, pgroup):
+        from sympy.utilities import unflatten, flatten, int_tested
         n = len(ordered_faces[0])
         # the vertices of the double which sits inside a give polyhedron
         # can be found by tracking the faces of the outer polyhedron.

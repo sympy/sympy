@@ -1050,7 +1050,7 @@ class Expr(Basic, EvalfMixin):
         as_independent: a method to separate x dependent terms/factors from others
 
         """
-        from sympy.ntheory.residue_ntheory import int_tested
+        from sympy.utilities.misc import int_tested
 
         x = sympify(x)
         if not isinstance(x, Basic):

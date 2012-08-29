@@ -17,4 +17,4 @@ from runtests import test, doctest
 from cythonutils import cythonized
 from timeutils import timed
 
-from misc import default_sort_key
+from misc import default_sort_key, int_tested

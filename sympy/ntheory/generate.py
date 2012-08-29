@@ -614,4 +614,4 @@ def cycle_length(f, x0, nmax=None, values=False):
             mu -= 1
         yield lam, mu
 
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.misc import int_tested

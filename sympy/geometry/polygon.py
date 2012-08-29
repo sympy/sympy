@@ -1019,7 +1019,7 @@ class RegularPolygon(Polygon):
     __slots__ = ['_n', '_center', '_radius', '_rot']
 
     def __new__(self, c, r, n, rot=0, **kwargs):
-        from sympy.ntheory.residue_ntheory import int_tested
+        from sympy.utilities.misc import int_tested
 
         r, n, rot = sympify([r, n, rot])
         c = Point(c)

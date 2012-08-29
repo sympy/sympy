@@ -115,7 +115,7 @@ def _randrange(seed=None):
         seed = list(seed) # make a copy
         seed.reverse()
         def give(a, b=None, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
+            from sympy.utilities.misc import int_tested
             if b is None:
                 a, b = 0, a
             a, b = int_tested(a, b)
@@ -165,7 +165,7 @@ def _randint(seed=None):
         seed = list(seed) # make a copy
         seed.reverse()
         def give(a, b, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
+            from sympy.utilities.misc import int_tested
             a, b = int_tested(a, b)
             w = b - a
             if w < 0:

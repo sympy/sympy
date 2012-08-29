@@ -6,7 +6,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.misc import int_tested
 
 oo = S.Infinity
 
