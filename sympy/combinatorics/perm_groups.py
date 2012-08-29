@@ -11,7 +11,7 @@ _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
 
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import isprime, sieve
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.iterables import has_variety, is_sequence
 
 lmul = Permutation.lmul
 _af_new = Permutation._af_new
@@ -364,7 +364,7 @@ class PermutationGroup(Basic):
         The default constructor.
         """
         obj = Basic.__new__(cls, *args, **kw_args)
-        obj._generators = list(args[0])
+        obj._generators = list(args[0] if is_sequence(args[0]) else args)
         obj._order = None
         obj._center = []
         obj._is_abelian = None
@@ -378,9 +378,9 @@ class PermutationGroup(Basic):
         obj._transitivity_degree = None
         obj._max_div = None
         obj._r = len(obj._generators)
-        obj._degree = args[0][0].size
-        if has_variety(a.size for a in args[0]):
-            raise ValueError("Permutation group size is not correct")
+        obj._degree = obj._generators[0].size
+        if has_variety(a.size for a in obj._generators):
+            raise ValueError("All Permutations must have the same size.")
 
         # these attributes are assigned after running schreier_sims
         obj._base = []
@@ -397,6 +397,9 @@ class PermutationGroup(Basic):
 
     def __getitem__(self, i):
         return self._generators[i]
+
+    def __len__(self):
+        return len(self._generators)
 
     def __eq__(self, gr):
         """
