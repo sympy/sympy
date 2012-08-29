@@ -1,6 +1,7 @@
 from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
 from sympy.combinatorics import Permutation as Perm
+from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.misc import default_sort_key, int_tested
 from sympy.utilities.iterables import (rotate_left, has_variety,
     is_sequence, minlex)
@@ -52,6 +53,7 @@ class Polyhedron(Basic):
         The allowed transformations are entered as allowable permutations
         of the vertices for the polyhedron. Instance of Permutations
         (as with faces) should refer to the supplied vertices by index.
+        These permutation are stored as a PermutationGroup.
 
         Examples
         ========
@@ -348,7 +350,9 @@ class Polyhedron(Basic):
             raise ValueError("Permutation size unequal to number of corners.")
         if has_variety(a.size for a in pgroup) > 1:
             raise ValueError("All permutations must be of the same size.")
-        obj._pgroup = pgroup
+        # use the identity permutation if none are given
+        obj._pgroup = PermutationGroup(*(
+            pgroup or [Perm(range(len(corners)))] ))
         return obj
 
     @property
