@@ -404,7 +404,7 @@ class Polyhedron(Basic):
 
         corners, cyclic_form
         """
-        corners = tuple(self.args[0])
+        corners = list(self.args[0])
         return [corners.index(c) for c in self.corners]
 
     @property
