@@ -1138,8 +1138,9 @@ class PermutationGroup(Basic):
 
         The coset rank of ``g`` is the ordering number in which
         it appears in the lexicographic listing according to the
-        coset decomposition, see coset_decomposition;
-        the ordering is the same as in G.generate(method='coset').
+        coset decomposition
+
+        The ordering is the same as in G.generate(method='coset').
         If ``g`` does not belong to the group it returns None.
 
         Examples
@@ -1157,6 +1158,11 @@ class PermutationGroup(Basic):
         40
         >>> G.coset_unrank(40, af=True)
         [6, 7, 4, 5, 2, 3, 0, 1]
+
+        See Also
+        ========
+
+        coset_decomposition
 
         """
         u = self.coset_repr()
@@ -1246,6 +1252,9 @@ class PermutationGroup(Basic):
     def degree(self):
         """Returns the size of the permutations in the group.
 
+        (The length of the group -- the number of permutations -- is
+        given by len(group).)
+
         Examples
         ========
 
@@ -1255,6 +1264,8 @@ class PermutationGroup(Basic):
         >>> G = PermutationGroup([a])
         >>> G.degree
         2
+        >>> len(G)
+        1
 
         """
         return self._degree
@@ -1509,11 +1520,30 @@ class PermutationGroup(Basic):
         return self._generators
 
     def has(self, g):
-        """Test if g is one of the permutations in self."""
+        """Test if g is one of the permutations in self.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0, 2, 1])
+        >>> b = Permutation([1, 0, 2])
+        >>> G = PermutationGroup([a])
+        >>> G.has(a)
+        True
+        >>> G.has(b)
+        False
+
+        See Also
+        ========
+
+        has_element
+        """
         return g in self
 
     def has_element(self, g):
-        """Test if permutation ``g`` belongs to G; see coset_decomposition
+        """Test if permutation ``g`` belongs to G.
 
         Examples
         ========
@@ -1535,6 +1565,12 @@ class PermutationGroup(Basic):
         False
         >>> g.has(elem)
         False
+
+        See Also
+        ========
+
+        coset_decomposition, has
+
         """
         return bool(self.coset_decomposition(g.array_form))
 
