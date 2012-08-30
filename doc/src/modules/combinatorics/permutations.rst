@@ -8,9 +8,8 @@ Permutations
 .. autoclass:: Permutation
    :members:
 
-.. autofunction:: cyclic
-
-.. autofunction:: one_based
+.. autoclass:: Cycle
+   :members:
 
 .. _combinatorics-generators:
 
