@@ -2,7 +2,8 @@ import random
 
 from sympy.core import Basic, S, FiniteSet, Tuple
 from sympy.core.compatibility import is_sequence
-from sympy.utilities.iterables import flatten, has_variety, minlex, has_dups
+from sympy.utilities.iterables import (flatten, has_variety, minlex,
+    has_dups, runs)
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 from sympy.ntheory.residue_ntheory import int_tested
@@ -29,13 +30,8 @@ def _af_mul(*a, **kwargs):
     [0, 3, 1, 2]
 
     """
-    if not a:
-        raise ValueError("No element")
     m = len(a)
     n = len(a[0])
-    if any(len(ai) != n for ai in a):
-            raise ValueError("The number of elements in the permutations "
-                             "don't match.")
     reverse = kwargs.get('reverse', False)
     if m == 2:
         a, b = a
@@ -86,25 +82,26 @@ def _af_parity(pi):
 
 def _af_invert(a):
     """
-    Finds the invert of the list ``a`` interpreted as the array-
-    form of a permutation. The result is again given as a list.
+    Finds the inverse, ~A, of a permutation, A, given in array form.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_invert
-    >>> _af_invert([1,2,3,0])
-    [3, 0, 1, 2]
+    >>> from sympy.combinatorics.permutations import _af_invert, _af_mul
+    >>> A = [1, 2, 0, 3]
+    >>> _af_invert(A)
+    [2, 0, 1, 3]
+    >>> _af_mul(_, A)
+    [0, 1, 2, 3]
 
     See Also
     ========
 
     Permutation, __invert__
     """
-    n = len(a)
-    inv_form = [0] * n
-    for i in range(n):
-        inv_form[a[i]] = i
+    inv_form = [0] * len(a)
+    for i, ai in enumerate(a):
+        inv_form[ai] = i
     return inv_form
 
 def _af_commutes_with(a, b):
@@ -124,13 +121,7 @@ def _af_commutes_with(a, b):
 
     Permutation, commutes_with
     """
-    if len(a) != len(b):
-        raise ValueError("The number of elements in the permutations "
-                         "don't match.")
-    for i in range(len(a)-1):
-        if a[b[i]] != b[a[i]]:
-            return False
-    return True
+    return not any(a[b[i]] != b[a[i]] for i in range(len(a) - 1))
 
 class Cycle(dict):
     """
@@ -260,11 +251,6 @@ class Cycle(dict):
         if not self and not size:
             raise ValueError('must gives size for empty Cycle')
         return [self[i] for i in range(size or (max(self) + 1))]
-
-    def as_permutation(self, size=None):
-        """Return the cycles as a Permutation."""
-        p = Perm(self.as_list(size))
-        return Perm(p.cyclic_form, size=p.size)
 
     def __repr__(self):
         reduced = Perm(self.as_list()).cyclic_form
@@ -766,14 +752,8 @@ class Permutation(Basic):
 
         """
         a = self.array_form
-        if isinstance(other, Permutation):
-            b = other.array_form
-        elif is_sequence(other):
-            b = other
-            if other and is_sequence(other[0]):
-                raise ValueError('Provide cyclic form as Permutation(%s)' % other)
-        else:
-            raise ValueError('Cannot multiply Permutation by %s' % type(other))
+        # __rmul__ makes sure the other is a Permutation
+        b = other.array_form
         if len(a) != len(b):
             raise ValueError("The number of elements in the permutations "
                              "do not match.")
@@ -827,7 +807,7 @@ class Permutation(Basic):
             return self.conjugate(n)
         n = int(n)
         if n == 0:
-            return Perm(range(self.size))
+            return Perm._af_new(range(self.size))
         if n < 0:
             return pow(~self, -n)
         a = self.array_form
@@ -838,6 +818,7 @@ class Permutation(Basic):
         elif n == 4:
             b = [a[a[a[i]]] for i in a]
         else:
+            # use binary multiplication
             b = range(len(a))
             while 1:
                 if n & 1:
@@ -901,14 +882,22 @@ class Permutation(Basic):
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
-        a = self.array_form
-        n = len(a)
-        inv_form = [0] * n
-        for i in range(n):
-            inv_form[a[i]] = i
-        return Perm._af_new(inv_form)
+        return Perm._af_new(_af_invert(self.array_form))
 
-    def __call__(self, arg):
+    def __iter__(self):
+        """Yield elements from array form.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> list(Permutation(range(3)))
+        [0, 1, 2]
+        """
+        for i in self.array_form:
+            yield i
+
+    def __call__(self, i):
         """
         Allows applying a permutation instance as a bijective function.
 
@@ -916,13 +905,13 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[2,0],[3,1]])
-        >>> p(3)
-        1
+        >>> p = Permutation([[2,0], [3,1]])
+        >>> p.array_form
+        [2, 3, 0, 1]
+        >>> [p(i) for i in range(4)]
+        [2, 3, 0, 1]
         """
-        if not isinstance(arg, int):
-            raise ValueError("Arguments must be integers.")
-        return self.array_form[arg]
+        return self.array_form[int_tested(i)]
 
     def atoms(self):
         """
@@ -1149,7 +1138,7 @@ class Permutation(Basic):
         _af_parity
         """
         if self._cyclic_form is not None:
-            return (self.size - len(self._cyclic_form)) % 2
+            return (self.size - self.cycles) % 2
 
         return _af_parity(self.array_form)
 
@@ -1174,7 +1163,8 @@ class Permutation(Basic):
 
         is_odd
         """
-        return S(self.parity()).is_even
+        return not self.is_odd
+
     @property
     def is_odd(self):
         """
@@ -1196,13 +1186,13 @@ class Permutation(Basic):
 
         is_even
         """
-        return S(self.parity()).is_odd
+        return bool(self.parity() % 2)
 
     @property
     def is_Singleton(self):
         """
-        Checks to see if the permutation contains only one number
-        Therefore there is only one possible permutation of this set of numbers
+        Checks to see if the permutation contains only one number and is
+        thus the only possible permutation of this set of numbers
 
         Examples
         ========
@@ -1368,6 +1358,7 @@ class Permutation(Basic):
         values and calculates the number of inversions.
         For large length of p, it uses a variation of merge
         sort to calculate the number of inversions.
+
         References
         =========
         [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
@@ -1598,39 +1589,7 @@ class Permutation(Basic):
         >>> q.runs()
         [[1, 3], [2], [0]]
         """
-        cycles = []
-        temp_cycle = []
-        perm = self.array_form
-        for i in range(len(perm) - 1):
-            current_elem = perm[i]
-            next_elem    = perm[i+1]
-
-            if current_elem < next_elem:
-                temp_cycle.append(current_elem)
-                continue
-
-            if current_elem > next_elem:
-                if temp_cycle != [] and \
-                       temp_cycle[-1] < current_elem:
-                    temp_cycle.append(current_elem)
-                    cycles.append(temp_cycle)
-                    temp_cycle = []
-                    continue
-                else:
-                    if temp_cycle != []:
-                        cycles.append(temp_cycle)
-                    cycles.append([current_elem])
-                    temp_cycle = []
-                    continue
-
-        if current_elem < next_elem:
-            temp_cycle.append(next_elem)
-            cycles.append(temp_cycle)
-        else:
-            if temp_cycle != []:
-                cycles.append(temp_cycle)
-            cycles.append([next_elem])
-        return cycles
+        return runs(self.array_form)
 
     def inversion_vector(self):
         """
@@ -1973,41 +1932,44 @@ class Permutation(Basic):
 
     @classmethod
     def josephus(self, m, n, s = 1):
-        """
-        Computes the Josephus permutation for a given number of
-        prisoners (n), frequency of removal (m) and desired number of
-        survivors (s).
+        """Return as a permutation the shuffling of range(n) using the Josephus
+        scheme in which every m-th item is selected until all have been chosen.
+        The returned permutation has elements listed by the order in which they
+        were selected.
 
-        There are people standing in a circle waiting to be executed.
-        After the first person is executed, certain number of people
-        are skipped and another person is executed. Then again, people
-        are skipped and a person is executed. The elimination proceeds
-        around the circle (which is becoming smaller and smaller as the
-        executed people are removed), until only the last person
-        remains, who is given freedom. The Josephus permutation is given
-        by the order in which the prisoners are executed.
+        The parameter ``s`` stops the selection process when there are ``s``
+        items remaining and these are selected by countining the selection
+        counting by 1 rather than by m.
+
+        Examples
+        =======
+
+        Consider selecting every 3rd item from 6 until only 2 remain:
+
+        choices  chosen
+        012345
+        01 345   2
+        01 34    25
+        01  4    253
+        0   4    2531
+        0        25314
+                 253140
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.josephus(3, 6, 2)
+        Permutation([2, 5, 3, 1, 4, 0])
 
         References:
         [1] http://en.wikipedia.org/wiki/Flavius_Josephus
         [2] http://en.wikipedia.org/wiki/Josephus_problem
         [3] http://www.wou.edu/~burtonl/josephus.html
 
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.josephus(3, 40, 1)
-        Permutation([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, \
-        38, 1, 6, 10, 15, 19, 24, 28, 33, 37, 3, 9, 16, 22, 30, 36, \
-        4, 13, 25, 34, 7, 21, 39, 18, 0, 31, 12, 27])
         """
         from collections import deque
         m -= 1
-        if s <= 0:
-            s = 1
         Q = deque(range(n))
         perm = []
-        while len(Q) > s:
+        while len(Q) > max(s, 1):
             for dp in range(m):
                 Q.append(Q.popleft())
             perm.append(Q.popleft())
@@ -2042,19 +2004,17 @@ class Permutation(Basic):
         return Perm._af_new(perm)
 
     @classmethod
-    def random_permutation(self, n):
+    def random(self, n):
         """
         Generates a random permutation of length ``n``.
 
-        Uses the underlying Python psuedo-random
-        number generator.
+        Uses the underlying Python psuedo-random number generator.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> a = Permutation.random_permutation(5)
-        >>> (a*(~a)).is_Identity
+        >>> Permutation.random(2) in (Permutation([1, 0]), Permutation([0, 1]))
         True
 
         """
@@ -2102,9 +2062,8 @@ def _merge(arr, temp, left, mid, right):
     Helper function for calculating inversions. This method is
     for internal use only.
     """
-    i = left
+    i = k = left
     j = mid
-    k = left
     inv_count = 0
     while i < mid and j <= right:
         if arr[i] < arr[j]:

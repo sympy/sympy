@@ -2,6 +2,7 @@ from sympy.combinatorics.generators import symmetric, cyclic, alternating, dihed
 from sympy.combinatorics.permutations import Permutation
 
 def test_generators():
+
     assert list(cyclic(6)) == [
     Permutation([0, 1, 2, 3, 4, 5]),
     Permutation([1, 2, 3, 4, 5, 0]),
@@ -69,6 +70,9 @@ def test_generators():
     Permutation([3, 1, 2, 0]),
     Permutation([3, 2, 0, 1]),
     Permutation([3, 2, 1, 0])]
+
+    assert list(dihedral(1)) == [
+    Permutation([0, 1]), Permutation([1, 0])]
 
     assert list(dihedral(2)) == [
     Permutation([0, 1, 2, 3]),

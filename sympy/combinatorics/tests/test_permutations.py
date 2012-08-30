@@ -8,8 +8,12 @@ from sympy.utilities.pytest import raises
 lmul = Permutation.lmul
 
 def test_Permutation():
-    assert Permutation([1, 2, 3]) == Permutation([0, 1, 2, 3])
+    p = Permutation([1, 2, 3])
+    assert p == Permutation([0, 1, 2, 3])
+    assert [p(i) for i in range(p.size)] == list(p)
+    assert list(p) == range(4)
     assert Permutation([[1, 2]], size=4) == Permutation([[1, 2], [0], [3]])
+    assert Permutation.random(2) in (Permutation([1, 0]), Permutation([0, 1]))
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
@@ -40,15 +44,25 @@ def test_Permutation():
     assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
     assert p.transpositions() == FiniteSet([(0, 1), (0, 2), (0, 5), (3, 4), (3, 6)])
+    assert Permutation([1, 0]).transpositions() == FiniteSet([(0, 1)])
 
     assert p**13 == p
+    assert q**0 == Permutation(range(q.size))
+    assert q**-2 == ~q**2
     assert q**2 == Permutation([5, 1, 0, 6, 3, 2, 4])
+    assert q**3 == q**2*q
+    assert q**4 == q**2*q**2
 
     assert p+q == Permutation([5, 6, 3, 1, 2, 4, 0])
     assert q+p == p+q
+    raises(ValueError, lambda: p + Permutation(range(10)))
 
     assert p-q == Permutation([6, 3, 5, 1, 2, 4, 0])
     assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
+    raises(ValueError, lambda: p - Permutation(range(10)))
+    
+    assert p*q == Permutation(_af_mul(*[list(w) for w in (q, p)]))
+    raises(ValueError, lambda: p*Permutation([]))
 
     a = p-q
     b = q-p
@@ -62,10 +76,12 @@ def test_Permutation():
     assert qp == Permutation([6, 3, 2, 0, 1, 4, 5])
     assert qp == lmul(~p, q, p)
     assert qp == q**p
+    raises(ValueError, lambda: p.conjugate(Permutation([])))
 
     assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
     assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
     assert p.commutator(q) == ~ q.commutator(p)
+    raises(ValueError, lambda: p.commutator(Permutation([])))
 
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
@@ -76,9 +92,15 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(p.inversion_vector()) == p
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
            == q.array_form
+    raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
     assert Permutation([i for i in range(500,-1,-1)]).inversions() == 125250
 
-    assert Permutation([0, 4, 1, 3, 2]).parity() == 0
+    s = Permutation([0, 4, 1, 3, 2])
+    assert s.parity() == 0
+    jnk = s.cyclic_form
+    assert len(s._cyclic_form) != s.size and s.parity() == 0
+    assert not s.is_odd
+    assert s.is_even
     assert Permutation([0, 1, 4, 3, 2]).parity() == 1
     assert _af_parity([0, 4, 1, 3, 2]) == 0
     assert _af_parity([0, 1, 4, 3, 2]) == 1
@@ -86,6 +108,7 @@ def test_Permutation():
     s = Permutation([0])
 
     assert s.is_Singleton
+    assert Permutation([]).is_Empty
 
     r = Permutation([3, 2, 1, 0])
     assert (r**2).is_Identity
@@ -113,6 +136,9 @@ def test_Permutation():
     assert Permutation(r.descents()).is_Identity
 
     assert p.inversions() == 7
+    # test the merge-sort with a longer permutation
+    big = list(p) + list(range(p.max() + 1, p.max() + 130))
+    assert Permutation(big).inversions() == 7
     assert p.signature() == -1
     assert q.inversions() == 11
     assert q.signature() == -1
@@ -143,6 +169,12 @@ def test_Permutation():
     assert p.get_precedence_distance(q) == 6
     assert p.get_adjacency_distance(q) == 3
     assert p.get_positional_distance(q) == 8
+    p = Permutation([0, 3, 1, 2, 4]) 
+    q = Permutation.josephus(4, 5, 2) 
+    assert p.get_adjacency_distance(q)  == 3
+    raises(ValueError, lambda: p.get_adjacency_distance(Permutation([])))
+    raises(ValueError, lambda: p.get_positional_distance(Permutation([])))
+    raises(ValueError, lambda: p.get_precedence_distance(Permutation([])))
 
     a = [Permutation.unrank_nonlex(4, i) for i in range(5)]
     iden = Permutation([0, 1, 2, 3])
@@ -181,6 +213,18 @@ def test_ranking():
 
     assert q.rank_trotterjohnson() == 2283
     assert p.rank_trotterjohnson() == 3389
+    assert Permutation([1, 0]).rank_trotterjohnson() == 1
+    a = Permutation(range(3))
+    b = a
+    l = []
+    tj = []
+    for i in range(6):
+      l.append(a)
+      tj.append(b)
+      a=a.next_lex()
+      b=b.next_trotterjohnson()
+    assert a == b == None
+    assert set([tuple(a) for a in l]) == set([tuple(a) for a in tj])
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[6], [5], [0, 1, 2, 3, 4]])
@@ -202,6 +246,15 @@ def test_ranking():
      [2, 1, 0, 3], [3, 2, 1, 0], [0, 2, 3, 1], [0, 3, 1, 2], [0, 2, 1, 3], \
      [3, 1, 2, 0], [0, 3, 2, 1], [0, 1, 3, 2], [0, 1, 2, 3]]
 
+    ok = []
+    p = Permutation([1, 0])
+    for i in range(3):
+        ok.append(p.array_form)
+        p = p.next_nonlex()
+        if p is None:
+            ok.append(None)
+            break
+    assert ok == [[1, 0], [0, 1], None]
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
@@ -230,6 +283,7 @@ def test_mul():
 
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
+    assert Permutation(p) == p
     assert p._cyclic_form is None
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
     assert p._array_form == [3, 2, 0, 1, 5, 4]
@@ -237,10 +291,15 @@ def test_args():
     assert p._cyclic_form is None
     assert p._array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
-    assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
+    assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == \
+        Permutation(((0, ), [1]))
+    assert Permutation([[1,2]]) == Permutation([0, 2, 1])
     raises(TypeError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
+    raises(ValueError, lambda: Permutation([1,1,0]))
+    raises(ValueError, lambda: Permutation([[1], [1,2]]))
+    raises(ValueError, lambda: Permutation([[1], [4,2]]))
 
 def test_Cycle():
     a, b = Cycle(1, 2), Cycle(2, 3)
@@ -252,15 +311,16 @@ def test_Cycle():
     raises(ValueError, lambda: Cycle().as_list())
     assert Cycle(1,2).as_list() == [0, 2, 1]
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
-    assert Cycle(1,2).as_permutation(4).array_form == \
-        Permutation([0, 2, 1, 3]).array_form
+    assert Permutation(Cycle(1, 2), 4) == \
+        Permutation([0, 2, 1, 3])
     assert str(Cycle(1,2)*Cycle(4,5)) == '[(1, 2), (4, 5)]'
     assert str(Cycle(1,2)) == '[(1, 2)]'
     assert Cycle(Permutation(range(3))) == Cycle()
     assert Cycle(1,2).as_list() == [0, 2, 1]
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
-    raises(TypeError, lambda: Cycle((1,2)))
-    raises(ValueError, lambda: Cycle(1,2,1))
+    raises(TypeError, lambda: Cycle((1, 2)))
+    raises(ValueError, lambda: Cycle(1, 2, 1))
+    raises(TypeError, lambda: Cycle(1, 2)*{})
 
     # check round-trip
     p = Permutation([[1,2], [4,3]], size=5)
