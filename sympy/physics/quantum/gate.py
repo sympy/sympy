@@ -815,7 +815,6 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     Examples
     --------
 
-    >>> from sympy import sqrt
     >>> from sympy.physics.quantum.gate import CNOT
     >>> from sympy.physics.quantum.qapply import qapply
     >>> from sympy.physics.quantum.qubit import Qubit
