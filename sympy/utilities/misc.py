@@ -34,6 +34,7 @@ def int_tested(*j):
     ValueError: All arguments were not integers
 
     Input can be a single number, multiple numbers, or a list of numbers:
+
     >>> int_tested(1)
     1
     >>> int_tested(1, 2)
@@ -42,18 +43,30 @@ def int_tested(*j):
     [1]
     >>> int_tested([1, 2])
     [1, 2]
+
     """
-    if is_sequence(j) and not j:
-        return []
     try:
-        j[0][0]
+        if not j:
+            raise ValueError
         as_int = False
-        j = j[0]
-    except TypeError:
-        as_int = len(j) == 1
-    i = [int(i) for i in j]
-    if i != list(j):
-        raise ValueError('all arguments were not integers')
+        if is_sequence(j[0]):
+            try:
+                if len(j) > 1:
+                    raise TypeError
+                i = [int(i) for i in j[0]]
+                j = j[0]
+            except TypeError:
+                raise ValueError
+        else:
+            try:
+                i = [int(i) for i in j]
+                as_int = len(j) == 1
+            except TypeError:
+                raise ValueError
+        if i != list(j):
+            raise ValueError
+    except ValueError:
+        raise ValueError('all args not integers')
     if as_int:
         return i[0]
     return i
