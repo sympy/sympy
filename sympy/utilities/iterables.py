@@ -1269,11 +1269,15 @@ def quick_sort(seq, quick=True):
     When sorting for consistency between systems, ``quick`` should be
     False; if sorting is just needed to give consistent orderings during
     a given session ``quick`` can be True.
-
+    
     >>> from sympy.utilities import quick_sort
     >>> from sympy.abc import x
-    >>> quick_sort([x, 1, 3])
-    (1, 3, x)
+
+    For PYTHONHASHSEED=3923375334 the x came first; for
+    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+
+    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    True
     """
     if not quick:
         seq = list(seq)
