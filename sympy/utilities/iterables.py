@@ -1267,7 +1267,7 @@ def quick_sort(seq, quick=True):
     When sorting for consistency between systems, ``quick`` should be
     False; if sorting is just needed to give consistent orderings during
     a given session ``quick`` can be True.
-    
+
     >>> from sympy.utilities import quick_sort
     >>> from sympy.abc import x
 
@@ -1325,10 +1325,10 @@ def runs(seq, op=gt):
     """Group the sequence into lists in which successive elements
     all compare the same with the comparison operator, ``op``:
     op(seq[i + 1], seq[i]) is True from all elements in a run.
-    
+
     Examples
     ========
-    
+
     >>> from sympy.utilities.iterables import runs
     >>> from operator import ge
     >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2])
