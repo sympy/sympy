@@ -615,3 +615,7 @@ def test_pointwise_stabilizer():
         stab = stab.stabilizer(point)
         points.append(point)
         assert S.pointwise_stabilizer(points) == stab
+
+def test___contains__():
+    assert (Permutation([]) in Tetra.pgroup) is False
+    assert (Tetra.pgroup[0] in Tetra.pgroup) is True

@@ -418,6 +418,8 @@ class PermutationGroup(Basic):
         >>> assert G1 == G2 and G1 != G3
 
         """
+        if not isinstance(gr, PermutationGroup):
+            return False
         if self.degree != gr.degree:
             return False
         if self.order() != gr.order():
