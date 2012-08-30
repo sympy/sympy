@@ -139,7 +139,8 @@ class Polyhedron(Basic):
         Permutation([0, 3, 1, 2])
 
         To select the permutations that should be used, supply a list
-        of indices to the permutations in pgroup:
+        of indices to the permutations in pgroup in the order they should
+        be applied:
 
         >>> use = [0, 0, 2]
         >>> saved = tetra.make_perm(3, use)
@@ -469,18 +470,9 @@ class Polyhedron(Basic):
         return self._edges
 
     def make_perm(self, n, seed=None):
-        """
-        Multiply ``n`` randomly selected permutations from
-        pgroup together, starting with the identity
-        permutation. If ``n`` is a list of integers, those
-        integers will be used to select the permutations and they
-        will be applied in L to R order: make_perm((A, B, C)) will
-        give CBA(I) where I is the identity permutation.
-
-        ``seed`` is used to set the seed for the random selection
-        of permutations from pgroup. If this is a list of integers,
-        the corresponding permutations from pgroup will be selected
-        in the order give. This is mainly used for testing purposes.
+        """A wrapper to the ``pgroup`` method of the same name which
+        multiplies ``n`` randomly selected permutations from
+        the pgroup together.
 
         Examples
         ========
@@ -498,21 +490,9 @@ class Polyhedron(Basic):
         See Also
         ========
 
-        rotate
+        rotate, sympy.combinatorics.perm_groups.PermutationGroup.make_perm
         """
-        if is_sequence(n):
-            if is_sequence(seed):
-                raise ValueError('If n is a sequence, seed should be None')
-            n, seed = len(n), n
-        randrange = _randrange(seed)
-
-        # start with the identity permutation
-        result = Perm(range(len(self.corners)))
-        m = len(self.pgroup)
-        for i in range(n):
-            p = self.pgroup[randrange(m)]
-            result = lmul(result, p)
-        return result
+        return self.pgroup.make_perm(n, seed)
 
     def rotate(self, perm):
         """

@@ -5,13 +5,14 @@ from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_mul)
-from sympy.combinatorics.util import _check_cycles_alt_sym,\
-_distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
-
+from sympy.combinatorics.util import (_check_cycles_alt_sym,
+    _distribute_gens_by_base, _orbits_transversals_from_bsgs,
+    _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
+    _strip)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import isprime, sieve
 from sympy.utilities.iterables import has_variety, is_sequence
+from sympy.utilities.randtest import _randrange
 
 lmul = Permutation.lmul
 _af_new = Permutation._af_new
@@ -338,9 +339,9 @@ class PermutationGroup(Basic):
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> a = Permutation([0, 2, 1])
     >>> b = Permutation([1, 0, 2])
-    >>> G = PermutationGroup([a, b])
+    >>> G = PermutationGroup(a, b)
     >>> G
-    PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
+    PermutationGroup(Permutation([0, 2, 1]), Permutation([1, 0, 2]))
     >>> G[0]
     Permutation([0, 2, 1])
 
@@ -381,8 +382,9 @@ class PermutationGroup(Basic):
     def __new__(cls, *args, **kw_args):
         """The default constructor.
         """
-        obj = Basic.__new__(cls, *args, **kw_args)
-        obj._generators = list(args[0] if is_sequence(args[0]) else args)
+        args = list(args[0] if is_sequence(args[0]) else args)
+        obj = Basic.__new__(cls, *[args], **kw_args)
+        obj._generators = args
         obj._order = None
         obj._center = []
         obj._is_abelian = None
@@ -2398,6 +2400,53 @@ class PermutationGroup(Basic):
             if [gen(point) for point in points] == points:
                 stab_gens.append(gen)
         return PermutationGroup(stab_gens)
+
+    def make_perm(self, n, seed=None):
+        """
+        Multiply ``n`` randomly selected permutations from
+        pgroup together, starting with the identity
+        permutation. If ``n`` is a list of integers, those
+        integers will be used to select the permutations and they
+        will be applied in L to R order: make_perm((A, B, C)) will
+        give CBA(I) where I is the identity permutation.
+
+        ``seed`` is used to set the seed for the random selection
+        of permutations from pgroup. If this is a list of integers,
+        the corresponding permutations from pgroup will be selected
+        in the order give. This is mainly used for testing purposes.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
+        >>> G = PermutationGroup([a, b])
+        >>> G.make_perm(1, [0])
+        Permutation([1, 0, 3, 2])
+        >>> G.make_perm(3, [0, 1, 0])
+        Permutation([2, 0, 3, 1])
+        >>> G.make_perm([0, 1, 0])
+        Permutation([2, 0, 3, 1])
+
+        See Also
+        ========
+
+        random
+        """
+        if is_sequence(n):
+            if is_sequence(seed):
+                raise ValueError('If n is a sequence, seed should be None')
+            n, seed = len(n), n
+        randrange = _randrange(seed)
+
+        # start with the identity permutation
+        result = Permutation(range(self.degree))
+        m = len(self)
+        for i in range(n):
+            p = self[randrange(m)]
+            result = lmul(result, p)
+        return result
 
     def random(self, af=False):
         """Return a random group element

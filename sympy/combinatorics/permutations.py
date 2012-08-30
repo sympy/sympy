@@ -1930,8 +1930,8 @@ class Permutation(Basic):
         were selected.
 
         The parameter ``s`` stops the selection process when there are ``s``
-        items remaining and these are selected by countining the selection
-        counting by 1 rather than by m.
+        items remaining and these are selected by countinuing the selection,
+        counting by 1 rather than by ``m``.
 
         Examples
         =======
