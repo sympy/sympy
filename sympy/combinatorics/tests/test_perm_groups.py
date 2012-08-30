@@ -14,7 +14,7 @@ from sympy.combinatorics.util import _distribute_gens_by_base
 
 lmul = Permutation.lmul
 
-def test_new():
+def test_new_has():
     a = Permutation([1, 0])
     G =  PermutationGroup([a])
     assert G.is_abelian
@@ -22,6 +22,12 @@ def test_new():
     b = Permutation([2, 1, 0])
     G =  PermutationGroup([a, b])
     assert not G.is_abelian
+
+    G =  PermutationGroup([a])
+    assert G.has(a)
+    assert not G.has(b)
+    assert a in G
+    assert b not in G
 
     def test1():
         a = Permutation([2, 0, 1, 3, 4, 5])
