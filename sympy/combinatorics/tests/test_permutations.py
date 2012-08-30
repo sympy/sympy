@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_mul, Cycle)
+    _af_mul, Cycle)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
