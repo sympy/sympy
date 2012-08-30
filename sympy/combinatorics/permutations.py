@@ -625,7 +625,8 @@ class Permutation(Basic):
 
         References
         ==========
-        [1] http://en.wikipedia.org/wiki/Lehmer_code
+
+        1. http://en.wikipedia.org/wiki/Lehmer_code
         """
         n = self.size
         if n != other.size:
@@ -658,7 +659,7 @@ class Permutation(Basic):
         References
         ==========
 
-        [1] http://en.wikipedia.org/wiki/Lehmer_code
+        1. http://en.wikipedia.org/wiki/Lehmer_code
         """
         n = self.size
         if n != other.size:
@@ -840,8 +841,9 @@ class Permutation(Basic):
 
         References
         ==========
-        [1]
-        http://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
+
+        1. http://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
+
         """
         a = self.cyclic_form
         res = []
@@ -1352,7 +1354,8 @@ class Permutation(Basic):
         sort to calculate the number of inversions.
 
         References
-        =========
+        ==========
+
         [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
 
         Examples
@@ -1933,28 +1936,31 @@ class Permutation(Basic):
         items remaining and these are selected by countinuing the selection,
         counting by 1 rather than by ``m``.
 
+        Consider selecting every 3rd item from 6 until only 2 remain::
+
+            choices    chosen
+            ========   ======
+              012345
+              01 345   2
+              01 34    25
+              01  4    253
+              0   4    2531
+              0        25314
+                      253140
+
         Examples
-        =======
-
-        Consider selecting every 3rd item from 6 until only 2 remain:
-
-        choices  chosen
-        012345
-        01 345   2
-        01 34    25
-        01  4    253
-        0   4    2531
-        0        25314
-                 253140
+        ========
 
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.josephus(3, 6, 2)
         Permutation([2, 5, 3, 1, 4, 0])
 
-        References:
-        [1] http://en.wikipedia.org/wiki/Flavius_Josephus
-        [2] http://en.wikipedia.org/wiki/Josephus_problem
-        [3] http://www.wou.edu/~burtonl/josephus.html
+        References
+        ==========
+
+        1. http://en.wikipedia.org/wiki/Flavius_Josephus
+        2. http://en.wikipedia.org/wiki/Josephus_problem
+        3. http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque
