@@ -4,7 +4,7 @@ from sympy.combinatorics import Permutation as Perm
 from sympy.utilities.misc import default_sort_key
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.iterables import (rotate_left, has_variety,
-    is_sequence, minlex)
+    is_sequence, minlex, unflatten, flatten)
 from sympy.utilities.randtest import _randrange
 
 lmul = Perm.lmul
@@ -579,15 +579,15 @@ class Polyhedron(Basic):
 
         make_perm
         """
-        try:
-            perm = self.pgroup[int_tested(perm)]
-        except TypeError:
+        if not isinstance(perm, Perm):
+            perm = self.pgroup[perm]
+            # and we know it's valid
+        else:
             if perm.size != self.size:
                 raise ValueError('Polyhedron and Permutation sizes differ.')
-        temp = []
-        for i in range(len(self.corners)):
-            temp.append(self.corners[perm.array_form[i]])
-        self._corners = tuple(temp)
+        a = perm.array_form
+        corners = [self.corners[a[i]] for i in range(len(self.corners))]
+        self._corners = tuple(corners)
 
     def reset(self):
         """Return corners to their original positions.
@@ -616,9 +616,7 @@ def _pgroup_calcs():
     etc..., instead of mixed permutations (P0*P1**2*P0). The following
     work was used to calculate the permutation group of the polyhedra.
     """
-    def _pgroups_of_double(polyh, ordered_faces, pgroup):
-        from sympy.utilities import unflatten, flatten
-        from sympy.ntheory.residue_ntheory import int_tested
+    def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
         # the vertices of the double which sits inside a give polyhedron
         # can be found by tracking the faces of the outer polyhedron.
