@@ -1140,7 +1140,7 @@ class PermutationGroup(Basic):
         it appears in the lexicographic listing according to the
         coset decomposition, see coset_decomposition;
         the ordering is the same as in G.generate(method='coset').
-        If ``g`` does not belong to the group it returns None
+        If ``g`` does not belong to the group it returns None.
 
         Examples
         ========
