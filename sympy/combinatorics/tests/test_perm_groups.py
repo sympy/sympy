@@ -1,3 +1,5 @@
+import random
+
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
@@ -5,7 +7,7 @@ from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
 from sympy.combinatorics.permutations import Permutation, _af_mul
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
-import random
+from sympy.combinatorics.polyhedron import tetrahedron as Tetra
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
@@ -29,8 +31,8 @@ def test_new():
 
 def test_generate():
     a = Permutation([1, 0])
-    g = PermutationGroup([a]).generate()
-    assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
+    g = list(PermutationGroup([a]).generate())
+    assert g == [Permutation([0, 1]), Permutation([1, 0])]
     g = PermutationGroup([a]).generate(method='dimino')
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
     a = Permutation([2, 0, 1])
@@ -380,6 +382,8 @@ def test_minimal_block():
     S = SymmetricGroup(6)
     assert S.minimal_block([0, 1]) == [0, 0, 0, 0, 0, 0]
 
+    assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
+
 def test_max_div():
     S = SymmetricGroup(10)
     assert S.max_div == 5
@@ -410,6 +414,8 @@ def test_transitivity_degree():
     assert Alt.transitivity_degree == 3
 
 def test_schreier_sims_random():
+    assert Tetra.pgroup.base == [0, 1]
+
     S = SymmetricGroup(3)
     base = [0, 1]
     strong_gens = [Permutation([1, 2, 0]), Permutation([1, 0, 2]),\
