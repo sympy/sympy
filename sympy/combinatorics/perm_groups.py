@@ -341,7 +341,7 @@ class PermutationGroup(Basic):
     >>> b = Permutation([1, 0, 2])
     >>> G = PermutationGroup(a, b)
     >>> G
-    PermutationGroup([a, b])
+    PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
     >>> G[0]
     Permutation([0, 2, 1])
     >>> G.order()
