@@ -601,6 +601,17 @@ class HadamardGate(HermitianOperator, OneQubitGate):
     Examples
     --------
 
+    >>> from sympy import sqrt
+    >>> from sympy.physics.quantum.qubit import Qubit
+    >>> from sympy.physics.quantum.gate import HadamardGate
+    >>> from sympy.physics.quantum.qapply import qapply
+    >>> qapply(HadamardGate(0)*Qubit('1'))
+    sqrt(2)*|0>/2 - sqrt(2)*|1>/2
+    >>> # Hadamard on bell state, applied on 2 qubits.
+    >>> psi = 1/sqrt(2)*(Qubit('00')+Qubit('11'))
+    >>> qapply(HadamardGate(0)*HadamardGate(1)*psi)
+    sqrt(2)*|00>/2 + sqrt(2)*|11>/2
+
     """
     gate_name = u'H'
     gate_name_latex = u'H'
@@ -803,6 +814,13 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     Examples
     --------
+
+    >>> from sympy.physics.quantum.gate import CNOT
+    >>> from sympy.physics.quantum.qapply import qapply
+    >>> from sympy.physics.quantum.qubit import Qubit
+    >>> c = CNOT(1,0)
+    >>> qapply(c*Qubit('10')) # note that qubits are indexed from right to left
+    |11>
 
     """
     gate_name = 'CNOT'
