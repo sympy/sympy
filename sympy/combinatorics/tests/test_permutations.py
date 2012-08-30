@@ -263,7 +263,6 @@ def test_mul():
     assert _af_mul(a, b) == [0, 2, 3, 1]
     assert _af_mul(a, b, range(4)) == [0, 2, 3, 1]
     assert lmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
-    assert _af_mul([0,2,1,3], [0,1,3,2], reverse=True) == [0, 3, 1, 2]
 
     a = Permutation([0, 2, 1, 3])
     b = (0, 1, 3, 2)

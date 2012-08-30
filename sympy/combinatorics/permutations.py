@@ -6,8 +6,6 @@ from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
-from sympy.utilities.misc import int_tested
-
 from sympy.mpmath.libmp.libintmath import ifac
 
 def _af_mul(*a, **kwargs):
@@ -269,7 +267,7 @@ class Cycle(dict):
         if len(args) == 1 and isinstance(args[0], Permutation):
             args = args[0].cyclic_form
         else:
-            args = int_tested(args)
+            args = [int(a) for a in args]
             if has_dups(args):
                 raise ValueError('All elements must be unique in a cycle.')
             args = [args]
@@ -902,7 +900,10 @@ class Permutation(Basic):
         >>> [p(i) for i in range(4)]
         [2, 3, 0, 1]
         """
-        return self.array_form[int_tested(i)]
+        # list indices can be Integer or int; leave this
+        # as it is (don't test or convert it) because this
+        # gets called a lot and should be fast
+        return self.array_form[i]
 
     def atoms(self):
         """
