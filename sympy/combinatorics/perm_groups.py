@@ -17,25 +17,29 @@ lmul = Permutation.lmul
 _af_new = Permutation._af_new
 
 def _smallest_change(h, alpha):
-    """
-    find the smallest point not fixed by `h`
-    """
+    """find the smallest point not fixed by ``h``."""
     for i in range(alpha, len(h)):
         if h[i] != i:
             return i
 
 class _Vertex(object):
-    """
-    vertex of JGraph
+    """Represents a vertex of JGraph.
 
-    neighbor list of neighbor vertices
-    perm     list of permutations
-    index_neighbor list of index position of vertices in neighbor
-    if vertex j is a neighbor of vertex i, then
-       vertex[i].index_neighbor[ vertex[i].neighbor[j] ] = j
-    if vertex j is not a neighbor of vertex i,
-    vertex[i].index_neighbor[j] = -1
-    n size of permutation
+    Parameters
+    ==========
+
+    neighbor
+        list of neighbor vertices
+    perm
+        list of permutations
+    index_neighbor
+        list of index position of vertices in neighbor where,
+        if vertex j is a neighbor of vertex i, then
+        vertex[i].index_neighbor[ vertex[i].neighbor[j] ] = j, and
+        if vertex j is not a neighbor of vertex i,
+        vertex[i].index_neighbor[j] = -1
+    n
+        size of permutation
 
     """
     def __init__(self, n):
@@ -45,26 +49,34 @@ class _Vertex(object):
       self.index_neighbor = [-1]*n
 
 class _JGraph(object):
-    """
-    Jerrum graph
+    """Represents a Jerrum graph.
 
-    vertex   vertices of the Jerrum graph for permutation group G < S(n);
-    vertex[i] i-th vertex, with `i` in range(n)
-    jg       array of Jerrums generators (edges of the graph)
-    jgs number of occupied entries of jg
-    freejg   stack of slots of jg. freejg[i] points to the
-             i-th free position of jg
-    To a directed edge (i, j) between vertices i, j
-    it is associated the index of a permutation `g` satisfying
-    g[i] = j where
+    Parameters
+    ==========
 
-        g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
-          = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]
+    vertex
+        vertices of the Jerrum graph for permutation group G < S(n)
+        vertex[i] is the i-th vertex (with ``i`` in range(n))
+    jg
+        array of Jerrums generators (edges of the graph)
+    jgs
+        number of occupied entries of ``jg``
+    freejg
+        stack of slots of ``jg`` such that ``freejg[i]`` points to the i-th
+        free position of ``jg``. To a directed edge ``(i, j)`` between vertices
+        ``i`` and ``j`` it is associated the index of a permutation ``g``
+        satisfying ``g[i] = j`` where
+        ``g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
+            = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]``
 
-    cycle  list of indices of vertices used to identify cycles
-    G Permutation group
-    n size of permutation
-    r number of generators
+    cycle
+        list of indices of vertices used to identify cycles
+    G
+        Permutation group
+    n
+        size of permutation
+    r
+        number of generators
     """
     def __init__(self, G):
         n = G._degree
@@ -80,12 +92,17 @@ class _JGraph(object):
         self.idn = range(n)
 
     def find_cycle(self, v, v1, v2, prev):
-        """
-        find if there is a cycle
+        """Test if there is a cycle.
 
-        v      vertex from which start searching a cycle
-        v1, v2 vertices through which the cycle must go
-        prev   previous vertex
+        Parameters
+        ==========
+
+        v
+            vertex from which start searching a cycle
+        v1, v2
+            vertices through which the cycle must go
+        prev
+            previous vertex
         """
         cycle = self.cycle
         neighbor = self.vertex[v].neighbor
@@ -107,8 +124,7 @@ class _JGraph(object):
         return False
 
     def insert(self, g, alpha):
-        """
-        insert permutation `g` in stabilizer chain at point alpha
+        """insert permutation ``g`` in stabilizer chain at point alpha
         """
         n = len(g)
         if not g == self.idn:
@@ -154,8 +170,7 @@ class _JGraph(object):
                     self.insert(h, alpha)
 
     def insert_edge(self, g, i, ig):
-        """
-        insert edge (permutation g) moving i to ig (i < ig)
+        """insert edge (permutation g) moving i to ig (i < ig)
         """
         vertex = self.vertex
         self.jgs += 1
@@ -171,17 +186,24 @@ class _JGraph(object):
         vertex[ig].index_neighbor[i] = nn
 
     def jerrum_filter(self, alpha, cri):
-        """
-        filter the generators of the stabilizer subgroup G_alpha
+        """filter the generators of the stabilizer subgroup G_alpha
 
-        alpha point for which the stabilizer is computed
+        Parameters
+        ==========
 
-        cri[i] inverse of G._coset_repr[i] if `i` is not None
+        alpha
+            point for which the stabilizer is computed
+        cri[i]
+            inverse of G._coset_repr[i] if ``i`` is not None
+
+        Notes
+        =====
 
         Schreier lemma: the stabilizer subgroup G_alpha of G
         is generated by the schreier generators
         h = cosrep[ p2[i] ]**-1 * g[j] * cosrep[i]
         where j=0,..,len(gens)-1 and i=0,..,n-1, where n is the degree.
+
         Proof that h belongs to G_alpha:
         cosrep[k][alpha] = k for all k; cosrep[k]**-1[k] = alpha
         p1 = cosrep[i]; p2 = g[j]
@@ -194,27 +216,27 @@ class _JGraph(object):
 
         Jerrum's filter:
         (see Cameron 'Permutation groups', page 22)
-        _JGraph has n-1 vertices; the edges (i, j) are labelled by
-        group elements `g` with j = imin(g) = min(i | g[i] != i);
+        _JGraph has n-1 vertices; the edges (i, j) are labeled by
+        group elements ``g`` with j = imin(g) = min(i | g[i] != i);
         define m(graph) = sum(imin(g) for g in graph)
 
         At the beginning the graph has no edges, so it is
         an acyclic graph.
-        Insert a group element `g` produced by the Schreier lemma;
+
+        Insert a group element ``g`` produced by the Schreier lemma;
         introduce in _JGraph an edge (imin(g), g[imin(g));
-        if the graph contains a cycle,
-        let `i0` be the smallest point in the cycle, and `h` the
-        product of the group elements labelling the edges in the cycle,
-        starting from `i0`; h[j] = j for j <= i0;
-        modify it eliminating the edge (i0, g0[i0])
-        in the cycle; one obtains a new acyclic graph with
-        m(graph_new) > m(graph). `g0` can be expressed as a product
-        of `h` and the other elements in the cycle.
-        Then insert `h` in the graph, and so on.
-        Since m < n**2, this process ends after
-        a finite number of times, so in the end one remains
-        with an acyclic graph, with at most n-1 edges and
-        the same number of generators.
+        if the graph contains a cycle, let ``i0`` be the smallest point
+        in the cycle, and ``h`` the product of the group elements labeling
+        the edges in the cycle, starting from ``i0``; h[j] = j for j <= i0;
+        modify it eliminating the edge (i0, g0[i0]) in the cycle; one obtains
+        a new acyclic graph with m(graph_new) > m(graph). ``g0`` can be
+        expressed as a product of ``h`` and the other elements in the cycle.
+
+        Then insert ``h`` in the graph, and so on.
+
+        Since m < n**2, this process ends after a finite number of times, so
+        in the end one remains with an acyclic graph, with at most n-1 edges
+        and the same number of generators.
         """
         n = self.n
         r = self.r
@@ -248,11 +270,10 @@ class _JGraph(object):
         self.r = r
 
     def remove_edge(self, i, ig):
-        """
-        remove edge from i to ig
+        """remove edge from i to ig
         """
         vertex = self.vertex
-        # remove the permutation labelling this edge
+        # remove the permutation labeling this edge
         self.jgs -= 1
         jgslot = vertex[i].perm[ vertex[i].index_neighbor[ig] ]
         self.jg[jgslot] = None
@@ -269,8 +290,7 @@ class _JGraph(object):
             v.index_neighbor[ig] = -1
 
     def schreier_tree(self, alpha, gen):
-        """
-        traversal of the orbit of alpha
+        """traversal of the orbit of alpha
 
         Compute a traversal of the orbit of alpha, storing the values
         in G._coset_repr; G._coset_repr[i][alpha] = i if i belongs
@@ -309,8 +329,7 @@ class _JGraph(object):
                 h += 1
 
 class PermutationGroup(Basic):
-    """
-    The class defining a Permutation group.
+    """The class defining a Permutation group.
 
     Permutation(generator_list) returns the permutation group
     generated by permutation_list.
@@ -360,8 +379,7 @@ class PermutationGroup(Basic):
     """
 
     def __new__(cls, *args, **kw_args):
-        """
-        The default constructor.
+        """The default constructor.
         """
         obj = Basic.__new__(cls, *args, **kw_args)
         obj._generators = list(args[0] if is_sequence(args[0]) else args)
@@ -402,8 +420,7 @@ class PermutationGroup(Basic):
         return len(self._generators)
 
     def __eq__(self, gr):
-        """
-        test if two groups have the same elements
+        """Test if two groups have the same elements
 
         Examples
         ========
@@ -431,13 +448,12 @@ class PermutationGroup(Basic):
         return True
 
     def __mul__(self, other):
-        """
-        Return the direct product of two permutation groups as a permutation
+        """Return the direct product of two permutation groups as a permutation
         group.
 
         This implementation realizes the direct product by shifting
         the index set for the generators of the second group: so if we have
-        G acting on n1 points and H acting on n2 points, G*H acts on n1+n2
+        G acting on n1 points and H acting on n2 points, G*H acts on n1 + n2
         points.
 
         Examples
@@ -472,8 +488,7 @@ class PermutationGroup(Basic):
         return not self == gr
 
     def _random_pr_init(self, r, n, _random_prec_n=None):
-        r"""
-        Initializes random generators for the product replacement algorithm.
+        r"""Initialize random generators for the product replacement algorithm.
 
         The implementation uses a modification of the original product
         replacement algorithm due to Leedham-Green, as described in [1],
@@ -481,28 +496,28 @@ class PermutationGroup(Basic):
         analysis of the original product replacement algorithm, and [4].
 
         The product replacement algorithm is used for producing random,
-        uniformly distributed elements of a group `G` with a set of generators
-        `S`. For the initialization ``_random_pr_init``, a list `R` of
-        `\max\{r, |S|\}` group generators is created as the attribute
-        ``G._random_gens``, repeating elements of `S` if necessary, and the
-        identity element of `G` is appended to `R` - we shall refer to this
+        uniformly distributed elements of a group ``G`` with a set of generators
+        ``S``. For the initialization ``_random_pr_init``, a list ``R`` of
+        ``\max\{r, |S|\}`` group generators is created as the attribute
+        ``G._random_gens``, repeating elements of ``S`` if necessary, and the
+        identity element of ``G`` is appended to ``R`` - we shall refer to this
         last element as the accumulator. Then the function ``random_pr()``
-        is called ``n`` times, randomizing the list `R` while preserving
-        the generation of `G` by `R`. The function ``random_pr()`` itself
-        takes two random elements `g, h` among all elements of `R` but
-        the accumulator and replaces `g` with a randomly chosen element
-        from `\{gh, g(~h), hg, (~h)g\}`. Then the accumulator is multiplied
-        by whatever `g` was replaced by. The new value of the accumulator is
+        is called ``n`` times, randomizing the list ``R`` while preserving
+        the generation of ``G`` by ``R``. The function ``random_pr()`` itself
+        takes two random elements ``g, h`` among all elements of ``R`` but
+        the accumulator and replaces ``g`` with a randomly chosen element
+        from ``\{gh, g(~h), hg, (~h)g\}``. Then the accumulator is multiplied
+        by whatever ``g`` was replaced by. The new value of the accumulator is
         then returned by ``random_pr()``.
 
         The elements returned will eventually (for ``n`` large enough) become
-        uniformly distributed across `G` ([5]). For practical purposes however,
+        uniformly distributed across ``G`` ([5]). For practical purposes however,
         the values ``n = 50, r = 11`` are suggested in [1].
 
         Notes
         =====
 
-        XXX THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
+        THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
         self._random_gens
 
         See Also
@@ -530,8 +545,7 @@ class PermutationGroup(Basic):
                 self.random_pr(_random_prec = _random_prec_n[i])
 
     def _union_find_merge(self, first, second, ranks, parents, not_rep):
-        """
-        Merges two classes in a union-find data structure.
+        """Merges two classes in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
         pp.83-87. The class merging process uses union by rank as an
@@ -577,8 +591,7 @@ class PermutationGroup(Basic):
         return 0
 
     def _union_find_rep(self, num, parents):
-        """
-        Find representative of a class in a union-find data structure.
+        """Find representative of a class in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
         pp.83-87. After the representative of the class to which ``num``
@@ -619,12 +632,11 @@ class PermutationGroup(Basic):
 
     @property
     def base(self):
-        """
-        Return a base from the Schreier-Sims algorithm.
+        """Return a base from the Schreier-Sims algorithm.
 
-        For a permutation group `G`, a base is a sequence of points
-        `B = (b_1, b_2, ..., b_k)` such that no element of `G` apart from the
-        identity fixes all the points in `B`. The concepts of a base and
+        For a permutation group ``G``, a base is a sequence of points
+        ``B = (b_1, b_2, ..., b_k)`` such that no element of ``G`` apart from the
+        identity fixes all the points in ``B``. The concepts of a base and
         strong generating set and their applications are discussed in depth
         in [1], pp.87-89 and [2], pp.55-57.
 
@@ -648,14 +660,14 @@ class PermutationGroup(Basic):
 
     def baseswap(self, base, strong_gens, pos, randomized=False,\
                  transversals=None, basic_orbits=None, strong_gens_distr=None):
-        r"""
-        Swap two consecutive base points in a base and strong generating set.
+        r"""Swap two consecutive base points in base and strong generating set.
 
-        If a base for a group `G` is given by `(b_1, b_2, ..., b_k)`, this
-        function returns a base `(b_1, b_2, ..., b_{i+1}, b_i, ..., b_k)`,
-        where `i` is given by ``pos``, and a strong generating set relative
+        If a base for a group ``G`` is given by ``(b_1, b_2, ..., b_k)``, this
+        function returns a base ``(b_1, b_2, ..., b_{i+1}, b_i, ..., b_k)``,
+        where ``i`` is given by ``pos``, and a strong generating set relative
         to that base. The original base and strong generating set are not
         modified.
+
         The randomized version (default) is of Las Vegas type.
 
         Parameters
@@ -710,8 +722,8 @@ class PermutationGroup(Basic):
         [2], p.98. It is of Las Vegas type.
         Notice that [1] contains a mistake in the pseudocode and
         discussion of BASESWAP: on line 3 of the pseudocode,
-        `|\beta_{i+1}^{\left\langle T\right\rangle}|` should be replaced by
-        `|\beta_{i}^{\left\langle T\right\rangle}|`, and the same for the
+        ``|\beta_{i+1}^{\left\langle T\right\rangle}|`` should be replaced by
+        ``|\beta_{i}^{\left\langle T\right\rangle}|``, and the same for the
         discussion of the algorithm.
 
         """
@@ -783,10 +795,10 @@ class PermutationGroup(Basic):
         """
         Return the basic orbits relative to a base and strong generating set.
 
-        If `(b_1, b_2, ..., b_k)` is a base for a group `G`, and
-        `G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}` is the `i`-th basic stabilizer
-        (so that `G^{(1)} = G`), the `i`-th basic orbit relative to this base
-        is the orbit of `b_i` under `G^{(i)}`. See [1], pp.87-89 for more
+        If ``(b_1, b_2, ..., b_k)`` is a base for a group ``G``, and
+        ``G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}`` is the ``i``-th basic stabilizer
+        (so that ``G^{(1)} = G``), the ``i``-th basic orbit relative to this base
+        is the orbit of ``b_i`` under ``G^{(i)}``. See [1], pp.87-89 for more
         information.
 
         Examples
@@ -813,8 +825,8 @@ class PermutationGroup(Basic):
         Return a chain of stabilizers relative to a base and strong generating
         set.
 
-        The `i`-th basic stabilizer `G^{(i)}` relative to a base
-        `(b_1, b_2, ..., b_k)` is `G_{b_1, b_2, ..., b_{i-1}}`. For more
+        The ``i``-th basic stabilizer ``G^{(i)}`` relative to a base
+        ``(b_1, b_2, ..., b_k)`` is ``G_{b_1, b_2, ..., b_{i-1}}``. For more
         information, see [1], pp.87-89.
 
         Examples
@@ -883,11 +895,11 @@ class PermutationGroup(Basic):
         r"""
         Return the center of a permutation group.
 
-        The center for a group `G` is defined as
-        `Z(G) = \{z\in G | \forall g\in G, zg = gz \}`,
-        the set of elements of `G` that commute with all elements of `G`.
-        It is equal to the centralizer of `G` inside `G`, and is naturally a
-        subgroup of `G` ([9]).
+        The center for a group ``G`` is defined as
+        ``Z(G) = \{z\in G | \forall g\in G, zg = gz \}``,
+        the set of elements of ``G`` that commute with all elements of ``G``.
+        It is equal to the centralizer of ``G`` inside ``G``, and is naturally a
+        subgroup of ``G`` ([9]).
 
         Examples
         ========
@@ -917,14 +929,14 @@ class PermutationGroup(Basic):
         r"""
         Return the centralizer of a group/set/element.
 
-        The centralizer of a set of permutations `S` inside
-        a group `G` is the set of elements of `G` that commute with all
-        elements of `S`:
-        `C_G(S) = \{ g \in G | gs = sg \forall s \in S\}` ([10])
-        Usually, `S` is a subset of `G`, but if `G` is a proper subgroup of
-        the full symmetric group, we allow for `S` to have elements outside
-        `G`.
-        It is naturally a subgroup of `G`; the centralizer of a permutation
+        The centralizer of a set of permutations ``S`` inside
+        a group ``G`` is the set of elements of ``G`` that commute with all
+        elements of ``S``:
+        ``C_G(S) = \{ g \in G | gs = sg \forall s \in S\}`` ([10])
+        Usually, ``S`` is a subset of ``G``, but if ``G`` is a proper subgroup of
+        the full symmetric group, we allow for ``S`` to have elements outside
+        ``G``.
+        It is naturally a subgroup of ``G``; the centralizer of a permutation
         group is equal to the centralizer of any set of generators for that
         group, since any element commuting with the generators commutes with
         any product of the  generators.
@@ -932,7 +944,8 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``other`` - a permutation group/list of permutations/single permutation
+        other
+            a permutation group/list of permutations/single permutation
 
         Examples
         ========
@@ -954,7 +967,7 @@ class PermutationGroup(Basic):
         =====
 
         The implementation is an application of ``.subgroup_search()`` with
-        tests using a specific base for the group `G`.
+        tests using a specific base for the group ``G``.
 
         """
         if hasattr(other, 'generators'):
@@ -1028,10 +1041,10 @@ class PermutationGroup(Basic):
         """
         Return the commutator of two subgroups.
 
-        For a permutation group `K` and subgroups `G`, `H`, the
-        commutator of `G` and `H` is defined as the group generated
-        by all the commutators `[g, h] = hgh^{-1}g^{-1}` for `g` in `G` and
-        `h` in `H`. It is naturally a subgroup of `K` ([1], p.27).
+        For a permutation group ``K`` and subgroups ``G``, ``H``, the
+        commutator of ``G`` and ``H`` is defined as the group generated
+        by all the commutators ``[g, h] = hgh^{-1}g^{-1}`` for ``g`` in ``G`` and
+        ``h`` in ``H``. It is naturally a subgroup of ``K`` ([1], p.27).
 
         Examples
         ========
@@ -1052,9 +1065,9 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The commutator of two subgroups `H, G` is equal to the normal closure
-        of the commutators of all the generators, i.e. `hgh^{-1}g^{-1}` for `h`
-        a generator of `H` and `g` a generator of `G` ([1], p.28)
+        The commutator of two subgroups ``H, G`` is equal to the normal closure
+        of the commutators of all the generators, i.e. ``hgh^{-1}g^{-1}`` for ``h``
+        a generator of ``H`` and ``g`` a generator of ``G`` ([1], p.28)
 
         """
         ggens = G.generators
@@ -1069,14 +1082,13 @@ class PermutationGroup(Basic):
         return res
 
     def coset_decomposition(self, g):
-        """
-        Decompose `g` as h_0*...*h_{len(u)}
+        """Decompose ``g`` as h_0*...*h_{len(u)}
 
-        The Schreier-Sims coset representation u of `G`
-        gives a univoque decomposition of an element `g`
+        The Schreier-Sims coset representation u of ``G``
+        gives a univoque decomposition of an element ``g``
         as h_0*...*h_{len(u)}, where h_i belongs to u[i]
 
-        Output: [h_0, .., h_{len(u)}] if `g` belongs to `G`
+        Output: [h_0, .., h_{len(u)}] if ``g`` belongs to ``G``
                 False otherwise
 
         Examples
@@ -1120,14 +1132,13 @@ class PermutationGroup(Basic):
         return False
 
     def coset_rank(self, g):
-        """
-        rank using Schreier-Sims representation
+        """rank using Schreier-Sims representation
 
-        The coset rank of `g` is the ordering number in which
+        The coset rank of ``g`` is the ordering number in which
         it appears in the lexicographic listing according to the
         coset decomposition, see coset_decomposition;
         the ordering is the same as in G.generate(method='coset').
-        If `g` does not belong to the group it returns None
+        If ``g`` does not belong to the group it returns None
 
         Examples
         ========
@@ -1181,8 +1192,7 @@ class PermutationGroup(Basic):
         return None
 
     def coset_repr(self):
-        """
-        Return the Schreier-Sims representation of the group.
+        """Return the Schreier-Sims representation of the group.
 
         The Schreier-Sims representation is the list of the cosets of
         the chain of stabilizers, see schreier_sims.
@@ -1204,8 +1214,7 @@ class PermutationGroup(Basic):
         return self._coset_repr
 
     def coset_unrank(self, rank, af=False):
-        """
-        unrank using Schreier-Sims representation
+        """unrank using Schreier-Sims representation
 
         coset_unrank is the inverse operation of coset_rank
         if 0 <= rank < order; otherwise it returns None.
@@ -1233,8 +1242,7 @@ class PermutationGroup(Basic):
 
     @property
     def degree(self):
-        """
-        Returns the size of the permutations in the group.
+        """Returns the size of the permutations in the group.
 
         Examples
         ========
@@ -1250,20 +1258,19 @@ class PermutationGroup(Basic):
         return self._degree
 
     def derived_series(self):
-        r"""
-        Return the derived series for the group.
+        r"""Return the derived series for the group.
 
-        The derived series for a group `G` is defined as
-        `G = G_0 > G_1 > G_2 > \ldots`
-        where `G_i = [G_{i-1}, G_{i-1}]`, i.e. `G_i` is the derived subgroup of
-        `G_{i-1}`, for `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some
-        `k\in\mathbb{N}`, the series terminates.
+        The derived series for a group ``G`` is defined as
+        ``G = G_0 > G_1 > G_2 > \ldots``
+        where ``G_i = [G_{i-1}, G_{i-1}]``, i.e. ``G_i`` is the derived subgroup of
+        ``G_{i-1}``, for ``i\in\mathbb{N}``. When we have ``G_k = G_{k-1}`` for some
+        ``k\in\mathbb{N}``, the series terminates.
 
         Returns
         =======
 
         A list of permutation groups containing the members of the derived
-        series in the order `G = G_0, G_1, G_2, \ldots`.
+        series in the order ``G = G_0, G_1, G_2, \ldots``.
 
         Examples
         ========
@@ -1297,11 +1304,10 @@ class PermutationGroup(Basic):
         return res
 
     def derived_subgroup(self):
-        """
-        Compute the derived subgroup.
+        """Compute the derived subgroup.
 
         The derived subgroup, or commutator subgroup is the subgroup generated
-        by all commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is
+        by all commutators ``[g, h] = hgh^{-1}g^{-1}`` for ``g, h\in G`` ; it is
         equal to the normal closure of the set of commutators of the generators
         ([1], p.28, [11]).
 
@@ -1342,8 +1348,7 @@ class PermutationGroup(Basic):
         return G2
 
     def generate(self, method="coset", af=False):
-        """
-        return iterator to generate the elements of the group
+        """Return iterator to generate the elements of the group
 
         Iteration is done with one of these methods:
           method='coset'  using the Schreier-Sims coset representation
@@ -1372,8 +1377,7 @@ class PermutationGroup(Basic):
             raise ValueError('there is not this method')
 
     def generate_dimino(self, af=False):
-        """
-        yield group elements using Dimino's algorithm
+        """Yield group elements using Dimino's algorithm
 
         If af == True it yields the array form of the permutations
 
@@ -1430,8 +1434,7 @@ class PermutationGroup(Basic):
         self._order = len(element_list)
 
     def generate_schreier_sims(self, af=False):
-        """
-        yield group elements using the Schreier-Sims representation
+        """Yield group elements using the Schreier-Sims representation
 
         If af = True it yields the array form of the permutations
 
@@ -1487,8 +1490,7 @@ class PermutationGroup(Basic):
 
     @property
     def generators(self):
-        """
-        Returns the generators of the group in array form.
+        """Returns the generators of the group in array form.
 
         Examples
         ========
@@ -1504,9 +1506,12 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
+    def has(self, g):
+        """Test if g is one of the permutations in self."""
+        return g in self
+
     def has_element(self, g):
-        """
-        test if `g` belongs to G; see coset_decomposition
+        """Test if permutation ``g`` belongs to G; see coset_decomposition
 
         Examples
         ========
@@ -1516,18 +1521,24 @@ class PermutationGroup(Basic):
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
-        >>> g.has_element(Permutation([0, 1, 3, 2]))
+        >>> elem = Permutation([0, 1, 3, 2])
+        >>> g.has_element(elem)
         True
         >>> g.has_element(Permutation([1, 2, 3, 0]))
         False
 
+        To test if a given permutation is present in the group:
+
+        >>> elem in g
+        False
+        >>> g.has(elem)
+        False
         """
         return bool(self.coset_decomposition(g.array_form))
 
     @property
     def is_abelian(self):
-        """
-        Checks if the group is Abelian.
+        """Test if the group is Abelian.
 
         Examples
         ========
@@ -1560,8 +1571,8 @@ class PermutationGroup(Basic):
         return True
 
     def is_alt_sym(self, eps=0.05, _random_prec=None):
-        r"""
-        Monte Carlo test for the symmetric/alternating group for degrees >= 8.
+        r"""Monte Carlo test for the symmetric/alternating group for degrees
+        >= 8.
 
         More specifically, it is one-sided Monte Carlo with the
         answer True (i.e., G is symmetric/alternating) guaranteed to be
@@ -1572,11 +1583,11 @@ class PermutationGroup(Basic):
 
         The algorithm itself uses some nontrivial results from group theory and
         number theory:
-        1) If a transitive group `G` of degree ``n`` contains an element
-        with a cycle of length `n/2 < p < n-2` for `p` a prime, `G` is the
+        1) If a transitive group ``G`` of degree ``n`` contains an element
+        with a cycle of length ``n/2 < p < n-2`` for ``p`` a prime, ``G`` is the
         symmetric or alternating group ([1], pp.81-82)
         2) The proportion of elements in the symmetric/alternating group having
-        the property described in 1) is approximately `\log(2)/\log(n)`
+        the property described in 1) is approximately ``\log(2)/\log(n)``
         ([1], p.82; [2], pp.226-227).
         The helper function ``_check_cycles_alt_sym`` is used to
         go over the cycles in a permutation and look for ones satisfying 1).
@@ -1622,11 +1633,10 @@ class PermutationGroup(Basic):
 
     @property
     def is_nilpotent(self):
-        """
-        Test if the group is nilpotent.
+        """Test if the group is nilpotent.
 
-        A group `G` is nilpotent if it has a central series of finite length.
-        Alternatively, `G` is nilpotent if its lower central series terminates
+        A group ``G`` is nilpotent if it has a central series of finite length.
+        Alternatively, ``G`` is nilpotent if its lower central series terminates
         with the trivial group. Every nilpotent group is also solvable
         ([1], p.29, [12]).
 
@@ -1665,8 +1675,7 @@ class PermutationGroup(Basic):
             return self._is_nilpotent
 
     def is_normal(self, gr):
-        """
-        test if G=self is a normal subgroup of gr
+        """Test if G=self is a normal subgroup of gr.
 
         G is normal in gr if
         for each g2 in G, g1 in gr, g = g1*g2*g1**-1 belongs to G
@@ -1696,26 +1705,25 @@ class PermutationGroup(Basic):
         return True
 
     def is_primitive(self, randomized=True):
-        """
-        Test a group for primitivity.
+        """Test if a group is primitive.
 
-        A permutation group `G` acting on a set `S` is called primitive if
-        `S` contains no nontrivial block under the action of `G`
-        (a block is nontrivial if its cardinality is more than `1`).
+        A permutation group ``G`` acting on a set ``S`` is called primitive if
+        ``S`` contains no nontrivial block under the action of ``G``
+        (a block is nontrivial if its cardinality is more than ``1``).
 
         Notes
         =====
 
         The algorithm is described in [1], p.83, and uses the function
-        minimal_block to search for blocks of the form `\{0, k\}` for `k`
-        ranging over representatives for the orbits of `G_0`, the stabilizer of
-        `0`. This algorithm has complexity `O(n^2)` where `n` is the degree
-        of the group, and will perform badly if `G_0` is small.
+        minimal_block to search for blocks of the form ``\{0, k\}`` for ``k``
+        ranging over representatives for the orbits of ``G_0``, the stabilizer of
+        ``0``. This algorithm has complexity ``O(n^2)`` where ``n`` is the degree
+        of the group, and will perform badly if ``G_0`` is small.
 
-        There are two implementations offered: one finds `G_0`
+        There are two implementations offered: one finds ``G_0``
         deterministically using the function ``stabilizer``, and the other
-        (default) produces random elements of `G_0` using ``random_stab``,
-        hoping that they generate a subgroup of `G_0` with not too many more
+        (default) produces random elements of ``G_0`` using ``random_stab``,
+        hoping that they generate a subgroup of ``G_0`` with not too many more
         orbits than G_0 (this is suggested in [1], p.83). Behavior is changed
         by the ``randomized`` flag.
 
@@ -1757,10 +1765,9 @@ class PermutationGroup(Basic):
 
     @property
     def is_solvable(self):
-        """
-        Test if the group is solvable
+        """Test if the group is solvable.
 
-        `G` is solvable if its derived series terminates with the trivial
+        ``G`` is solvable if its derived series terminates with the trivial
         group ([1], p.29).
 
         Examples
@@ -1793,8 +1800,7 @@ class PermutationGroup(Basic):
             return self._is_solvable
 
     def is_subgroup(self, gr):
-        """
-        test if self is a subgroup of gr
+        """Test if self is a subgroup of gr.
 
         Examples
         ========
@@ -1822,8 +1828,7 @@ class PermutationGroup(Basic):
 
     @property
     def is_transitive(self):
-        """
-        test if the group is transitive
+        """Test if the group is transitive.
 
         A group is transitive if it has a single orbit.
 
@@ -1852,8 +1857,7 @@ class PermutationGroup(Basic):
 
     @property
     def is_trivial(self):
-        """
-        Test if the group is the trivial group.
+        """Test if the group is the trivial group.
 
         This is true if and only if all the generators are the identity.
 
@@ -1879,19 +1883,18 @@ class PermutationGroup(Basic):
             return self._is_trivial
 
     def lower_central_series(self):
-        r"""
-        Return the lower central series for the group.
+        r"""Return the lower central series for the group.
 
-        The lower central series for a group `G` is the series
-        `G = G_0 > G_1 > G_2 > \ldots` where
-        `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the
-        commutator of `G` and the previous term in `G1` ([1], p.29).
+        The lower central series for a group ``G`` is the series
+        ``G = G_0 > G_1 > G_2 > \ldots`` where
+        ``G_k = [G, G_{k-1}]``, i.e. every term after the first is equal to the
+        commutator of ``G`` and the previous term in ``G1`` ([1], p.29).
 
         Returns
         =======
 
         A list of permutation groups in the order
-        `G = G_0, G_1, G_2, \ldots`
+        ``G = G_0, G_1, G_2, \ldots``
 
         Examples
         ========
@@ -1921,14 +1924,13 @@ class PermutationGroup(Basic):
 
     @property
     def max_div(self):
-        """
-        Maximum proper divisor of the degree of a permutation group.
+        """Maximum proper divisor of the degree of a permutation group.
 
         Notes
         =====
 
         Obviously, this is the degree divided by its minimal proper divisor
-        (larger than `1`, if one exists). As it is guaranteed to be prime,
+        (larger than ``1``, if one exists). As it is guaranteed to be prime,
         the ``sieve`` from ``sympy.ntheory`` is used.
         This function is also used as an optimization tool for the functions
         ``minimal_block`` and ``_union_find_merge``.
@@ -1960,30 +1962,30 @@ class PermutationGroup(Basic):
                 return d
 
     def minimal_block(self, points):
-        r"""
-        For a transitive group, finds the block system generated by ``points``.
+        r"""For a transitive group, finds the block system generated by
+        ``points``.
 
-        If a group `G` acts on a set `S`, a nonempty subset `B` of `S` is
-        called a block under the action of `G` if for all `g` in `G` we have
-        `gB = B` (`g` fixes `B`) or `gB` and `B` have no common points
-        (`g` moves `B` entirely). ([1], p.23; [6]).
-        The distinct translates `gB` of a block `B` for `g` in `G` partition
-        the set `S` and this set of translates is known as a block system.
+        If a group ``G`` acts on a set ``S``, a nonempty subset ``B`` of ``S`` is
+        called a block under the action of ``G`` if for all ``g`` in ``G`` we have
+        ``gB = B`` (``g`` fixes ``B``) or ``gB`` and ``B`` have no common points
+        (``g`` moves ``B`` entirely). ([1], p.23; [6]).
+        The distinct translates ``gB`` of a block ``B`` for ``g`` in ``G`` partition
+        the set ``S`` and this set of translates is known as a block system.
         Moreover, we obviously have that all blocks in the partition have
-        the same size, hence the block size divides `|S|` ([1], p.23).
-        A `G`-congruence is an equivalence relation `~` on the set `S` such that
-        `a ~ b` implies `g(a) ~ g(b)` for all `g` in `G`. For a
-        transitive group, the equivalence classes of a `G`-congruence and the
+        the same size, hence the block size divides ``|S|`` ([1], p.23).
+        A ``G``-congruence is an equivalence relation ``~`` on the set ``S`` such that
+        ``a ~ b`` implies ``g(a) ~ g(b)`` for all ``g`` in ``G``. For a
+        transitive group, the equivalence classes of a ``G``-congruence and the
         blocks of a block system are the same thing ([1], p.23).
         The algorithm below checks the group for transitivity, and then finds
-        the `G`-congruence generated by the pairs `(p_0, p_1), (p_0, p_2), ...,
-        (p_0,p_{k-1})` which is the same as finding the maximal block system
+        the ``G``-congruence generated by the pairs ``(p_0, p_1), (p_0, p_2), ...,
+        (p_0,p_{k-1})`` which is the same as finding the maximal block system
         (i.e., the one with minimum block size) such that
-        `p_0, ..., p_{k-1}` are in the same block ([1], p.83).
+        ``p_0, ..., p_{k-1}`` are in the same block ([1], p.83).
         It is an implementation of Atkinson's algorithm, as suggested in [1],
-        and manipulates an equivalence relation on the set `S` using a
+        and manipulates an equivalence relation on the set ``S`` using a
         union-find data structure. The running time is just above
-        `O(|points||S|)`. ([1], pp.83-87; [7]).
+        ``O(|points||S|)``. ([1], pp.83-87; [7]).
 
         Examples
         ========
@@ -2041,23 +2043,24 @@ class PermutationGroup(Basic):
         return parents
 
     def normal_closure(self, other, k=10):
-        r"""
-        Return the normal closure of a subgroup/set of permutations.
+        r"""Return the normal closure of a subgroup/set of permutations.
 
-        If `S` is a subset of a group `G`, the normal closure of `A` in `G`
-        is defined as the intersection of all normal subgroups of `G` that
-        contain `A` ([1], p.14). Alternatively, it is the group generated by
-        the conjugates `x^{-1}yx` for `x` a generator of `G` and `y` a
-        generator of the subgroup `\left\langle S\right\rangle` generated by
-        `S` (for some chosen generating set for `\left\langle S\right\rangle`)
+        If ``S`` is a subset of a group ``G``, the normal closure of ``A`` in ``G``
+        is defined as the intersection of all normal subgroups of ``G`` that
+        contain ``A`` ([1], p.14). Alternatively, it is the group generated by
+        the conjugates ``x^{-1}yx`` for ``x`` a generator of ``G`` and ``y`` a
+        generator of the subgroup ``\left\langle S\right\rangle`` generated by
+        ``S`` (for some chosen generating set for ``\left\langle S\right\rangle``)
         ([1], p.73).
 
         Parameters
         ==========
 
-        ``other`` - a subgroup/list of permutations/single permutation
-        ``k`` - an implementation-specific parameter that determines the number
-        of conjugates that are adjoined to ``other`` at once
+        other
+            a subgroup/list of permutations/single permutation
+        k
+            an implementation-specific parameter that determines the number
+            of conjugates that are adjoined to ``other`` at once
 
         Examples
         ========
@@ -2139,11 +2142,10 @@ class PermutationGroup(Basic):
             return self.normal_closure(PermutationGroup([other]))
 
     def orbit(self, alpha, action='tuples'):
-        r"""
-        Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
+        r"""Compute the orbit of alpha ``\{g(\alpha) | g \in G\}`` as a set.
 
-        The time complexity of the algorithm used here is `O(|Orb|*r)` where
-        `|Orb|` is the size of the orbit and `r` is the number of generators of
+        The time complexity of the algorithm used here is ``O(|Orb|*r)`` where
+        ``|Orb|`` is the size of the orbit and ``r`` is the number of generators of
         the group. For a more detailed analysis, see [1], p.78, [2], pp.19-21.
         Here alpha can be a single point, or a list of points.
 
@@ -2215,8 +2217,7 @@ class PermutationGroup(Basic):
             return set([tuple(x) for x in orb])
 
     def orbit_rep(self, alpha, beta, schreier_vector=None):
-        """
-        Return a group element which sends ``alpha`` to ``beta``.
+        """Return a group element which sends ``alpha`` to ``beta``.
 
         If ``beta`` is not in the orbit of ``alpha``, the function returns
         ``False``. This implementation makes use of the schreier vector.
@@ -2252,15 +2253,14 @@ class PermutationGroup(Basic):
         return u
 
     def orbit_transversal(self, alpha, pairs=False):
-        r"""
-        Computes a transversal for the orbit of ``alpha`` as a set.
+        r"""Computes a transversal for the orbit of ``alpha`` as a set.
 
-        For a permutation group `G`, a transversal for the orbit
-        `Orb = \{g(\alpha) | g \in G\}` is a set
-        `\{g_\beta | g_\beta(\alpha) = \beta\}` for `\beta \in Orb`.
+        For a permutation group ``G``, a transversal for the orbit
+        ``Orb = \{g(\alpha) | g \in G\}`` is a set
+        ``\{g_\beta | g_\beta(\alpha) = \beta\}`` for ``\beta \in Orb``.
         Note that there may be more than one possible transversal.
         If ``pairs`` is set to ``True``, it returns the list of pairs
-        `(\beta, g_\beta)`. For a proof of correctness, see [1], p.79
+        ``(\beta, g_\beta)``. For a proof of correctness, see [1], p.79
 
         Examples
         ========
@@ -2295,10 +2295,10 @@ class PermutationGroup(Basic):
         return [pair[1] for pair in tr]
 
     def orbits(self, rep=False):
-        """
-        compute the orbits of G;
-        if rep=False it returns a list of sets
-        else it returns a list of representatives of the orbits
+        """Compute the orbits of G.
+
+        If rep=False it returns a list of sets else it returns a list of
+        representatives of the orbits
 
         Examples
         ========
@@ -2328,8 +2328,7 @@ class PermutationGroup(Basic):
         return orbs
 
     def order(self):
-        """
-        return the order of the group
+        """Return the order of the group
 
         Examples
         ========
@@ -2360,15 +2359,14 @@ class PermutationGroup(Basic):
         return m
 
     def pointwise_stabilizer(self, points):
-        r"""
-        Return the pointwise stabilizer for a set of points.
+        r"""Return the pointwise stabilizer for a set of points.
 
-        For a permutation group `G` and a set of points
-        `\{p_1, p_2,\ldots, p_k\}`, the pointwise stabilizer of
-        `p_1, p_2, \ldots, p_k` is defined as
-        `G_{p_1,\ldots, p_k} =
+        For a permutation group ``G`` and a set of points
+        ``\{p_1, p_2,\ldots, p_k\}``, the pointwise stabilizer of
+        ``p_1, p_2, \ldots, p_k`` is defined as
+        ``G_{p_1,\ldots, p_k} =
         \{g\in G | g(p_i) = p_i \forall i\in\{1, 2,\ldots,k\}\} ([1],p20).
-        It is a subgroup of `G`.
+        It is a subgroup of ``G``.
 
         Examples
         ========
@@ -2402,16 +2400,13 @@ class PermutationGroup(Basic):
         return PermutationGroup(stab_gens)
 
     def random(self, af=False):
-        """
-        return a random group element
-
+        """Return a random group element
         """
         rank = randrange(self.order())
         return self.coset_unrank(rank, af)
 
     def random_pr(self, gen_count=11, iterations=50, _random_prec=None):
-        """
-        Return a random group element using product replacement.
+        """Return a random group element using product replacement.
 
         For the details of the product replacement algorithm, see
         ``_random_pr_init`` In ``random_pr`` the actual 'product replacement'
@@ -2454,8 +2449,7 @@ class PermutationGroup(Basic):
         return random_gens[r]
 
     def random_stab(self, alpha, schreier_vector=None, _random_prec=None):
-        """
-        Random element from the stabilizer of ``alpha``.
+        """Random element from the stabilizer of ``alpha``.
 
         The schreier vector for ``alpha`` is an optional argument used
         for speeding up repeated calls. The algorithm is described in [1], p.81
@@ -2477,13 +2471,12 @@ class PermutationGroup(Basic):
         return lmul(~h, rand)
 
     def schreier_sims(self):
-        """
-        Schreier-Sims algorithm.
+        """Schreier-Sims algorithm.
 
         It computes the generators of the stabilizers chain
         G > G_{b_1} > .. > G_{b1,..,b_r} > 1
         in which G_{b_1,..,b_i} stabilizes b_1,..,b_i,
-        and the corresponding `s` cosets.
+        and the corresponding ``s`` cosets.
         An element of the group can be written univoquely
         as the product h_1*..*h_s.
 
@@ -2581,8 +2574,7 @@ class PermutationGroup(Basic):
         self._basic_orbits = basic_orbits
 
     def schreier_sims_incremental(self, base=None, gens=None):
-        """
-        Extend a sequence of points and generating set to a base and strong
+        """Extend a sequence of points and generating set to a base and strong
         generating set.
 
         Parameters
@@ -2730,13 +2722,12 @@ class PermutationGroup(Basic):
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,\
                              _random_prec=None):
-        r"""
-        Randomized Schreier-Sims algorithm.
+        r"""Randomized Schreier-Sims algorithm.
 
         The randomized Schreier-Sims algorithm takes the sequence ``base``
         and the generating set ``gens``, and extends ``base`` to a base, and
         ``gens`` to a strong generating set relative to that base with
-        probability of a wrong answer at most `1/\text{consec\_succ}`.
+        probability of a wrong answer at most ``1/\text{consec\_succ}``.
 
         Parameters
         ==========
@@ -2787,7 +2778,7 @@ class PermutationGroup(Basic):
         used to amend ``stabs``, ``base``, ``gens`` and ``orbs`` accordingly.
         The halting condition is for ``consec_succ`` consecutive successful
         sifts to pass. This makes sure that the current ``base`` and ``gens``
-        form a BSGS with probability at least `1 - 1/\text{consec\_succ}`.
+        form a BSGS with probability at least ``1 - 1/\text{consec\_succ}``.
 
         See Also
         ========
@@ -2862,8 +2853,7 @@ class PermutationGroup(Basic):
         return base, strong_gens
 
     def schreier_vector(self, alpha):
-        """
-        Computes the schreier vector for ``alpha``.
+        """Computes the schreier vector for ``alpha``.
 
         The Schreier vector efficiently stores information
         about the orbit of ``alpha``. It can later be used to quickly obtain
@@ -2910,11 +2900,10 @@ class PermutationGroup(Basic):
         return v
 
     def stabilizer(self, alpha):
-        r"""
-        Returns the stabilizer subgroup of ``alpha``.
+        r"""Return the stabilizer subgroup of ``alpha``.
 
-        The stabilizer of `\alpha` is the group `G_\alpha =
-        \{g \in G | g(\alpha) = \alpha\}`.
+        The stabilizer of ``\alpha`` is the group ``G_\alpha =
+        \{g \in G | g(\alpha) = \alpha\}``.
         For a proof of correctness, see [1], p.79.
 
         Examples
@@ -2955,8 +2944,7 @@ class PermutationGroup(Basic):
         return PermutationGroup(list(stab_gens))
 
     def stabilizers_gens(self):
-        """
-        Schreier-Sims stabilizers generators
+        """Schreier-Sims stabilizers generators
 
         Return the generators of the stabilizers chain in the
         Schreier-Sims representation.
@@ -2980,15 +2968,14 @@ class PermutationGroup(Basic):
 
     @property
     def strong_gens(self):
-        """
-        Return a strong generating set from the Schreier-Sims algorithm.
+        """Return a strong generating set from the Schreier-Sims algorithm.
 
-        A generating set `S = \{g_1, g_2, ..., g_t\}` for a permutation group
-        `G` is a strong generating set relative to the sequence of points
-        (referred to as a "base") `(b_1, b_2, ..., b_k)` if, for
-        `1 \leq i \leq k` we have that the intersection of the pointwise
-        stabilizer `G^{(i+1)} := G_{b_1, b_2, ..., b_i}` with `S` generates
-        the pointwise stabilizer `G^{(i+1)}`. The concepts of a base and
+        A generating set ``S = \{g_1, g_2, ..., g_t\}`` for a permutation group
+        ``G`` is a strong generating set relative to the sequence of points
+        (referred to as a "base") ``(b_1, b_2, ..., b_k)`` if, for
+        ``1 \leq i \leq k`` we have that the intersection of the pointwise
+        stabilizer ``G^{(i+1)} := G_{b_1, b_2, ..., b_i}`` with ``S`` generates
+        the pointwise stabilizer ``G^{(i+1)}``. The concepts of a base and
         strong generating set and their applications are discussed in depth
         in [1], pp.87-89 and [2], pp.55-57.
 
@@ -3015,8 +3002,7 @@ class PermutationGroup(Basic):
 
     def subgroup_search(self, prop, base=None, strong_gens=None, tests=None,\
                         init_subgroup=None):
-        """
-        Find the subgroup of all elements satisfying the property ``prop``.
+        """Find the subgroup of all elements satisfying the property ``prop``.
 
         This is done by a depth-first search with respect to base images that
         uses several tests to prune the search tree.
@@ -3282,16 +3268,15 @@ class PermutationGroup(Basic):
 
     @property
     def transitivity_degree(self):
-        """
-        Compute the degree of transitivity of the group.
+        """Compute the degree of transitivity of the group.
 
-        A permutation group `G` acting on `\Omega = \{0, 2, ..., n-1\}` is
-        `k`-fold transitive, if, for any k points
-        `(a_1, a_2, ..., a_k)\in\Omega` and any k points
-        `(b_1, b_2, ..., b_k)\in\Omega` there exists `g\in G` such that
-        `g(a_1)=b_1, g(a_2)=b_2, ..., g(a_k)=b_k`
-        The degree of transitivity of `G` is the maximum `k` such that
-        `G` is `k`-fold transitive. ([8])
+        A permutation group ``G`` acting on ``\Omega = \{0, 2, ..., n-1\}`` is
+        ``k``-fold transitive, if, for any k points
+        ``(a_1, a_2, ..., a_k)\in\Omega`` and any k points
+        ``(b_1, b_2, ..., b_k)\in\Omega`` there exists ``g\in G`` such that
+        ``g(a_1)=b_1, g(a_2)=b_2, ..., g(a_k)=b_k``
+        The degree of transitivity of ``G`` is the maximum ``k`` such that
+        ``G`` is ``k``-fold transitive. ([8])
 
         Examples
         ========
