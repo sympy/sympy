@@ -60,7 +60,7 @@ def test_Permutation():
     assert p-q == Permutation([6, 3, 5, 1, 2, 4, 0])
     assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
     raises(ValueError, lambda: p - Permutation(range(10)))
-    
+
     assert p*q == Permutation(_af_mul(*[list(w) for w in (q, p)]))
     raises(ValueError, lambda: p*Permutation([]))
 
@@ -169,8 +169,8 @@ def test_Permutation():
     assert p.get_precedence_distance(q) == 6
     assert p.get_adjacency_distance(q) == 3
     assert p.get_positional_distance(q) == 8
-    p = Permutation([0, 3, 1, 2, 4]) 
-    q = Permutation.josephus(4, 5, 2) 
+    p = Permutation([0, 3, 1, 2, 4])
+    q = Permutation.josephus(4, 5, 2)
     assert p.get_adjacency_distance(q)  == 3
     raises(ValueError, lambda: p.get_adjacency_distance(Permutation([])))
     raises(ValueError, lambda: p.get_positional_distance(Permutation([])))
