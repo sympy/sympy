@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        quick_sort, minlex)
+        quick_sort, minlex, runs)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -327,3 +327,13 @@ def test_quick_sort():
     assert quick_sort((x, y)) in [(x, y), (y, x)]
     assert quick_sort((x, y)) == quick_sort((y, x))
     assert quick_sort((x, y), quick=False) == (x, y)
+
+def test_runs():
+    assert runs([]) == []
+    assert runs([1]) == [[1]]
+    assert runs([1, 1]) == [[1], [1]]
+    assert runs([1, 1, 2]) == [[1], [1, 2]]
+    assert runs([1, 2, 1]) == [[1, 2], [1]]
+    assert runs([2, 1, 1]) == [[2], [1], [1]]
+    from operator import lt
+    assert runs([2, 1, 1], lt) == [[2, 1], [1]]
