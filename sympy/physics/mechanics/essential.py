@@ -442,8 +442,8 @@ class Dyadic(object):
 
     def simplify(self):
         """Simplify the elements in the Dyadic in-place."""
-        for i in self.args:
-            i[0].simplify()
+        for i, v in enumerate(self.args):
+            self.args[i] = (v[0].simplify(), v[1], v[2])
 
     def subs(self, *args, **kwargs):
         """Substituion on the Dyadic.
