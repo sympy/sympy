@@ -16,32 +16,23 @@ def _af_mul(*a, **kwargs):
     L to R convention: given args [A, B, C], B is applied to A and
     then C is applied to the result.
 
-    If there is only one array, a copy of it is returned.
-
-    To multiply them in reverse order (R to L) set keyword ``reverse`` = True.
-
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_mul
-    >>> _af_mul([0,2,1,3], [0,1,3,2])
-    [0, 2, 3, 1]
-    >>> _af_mul([0,2,1,3], [0,1,3,2], reverse=True)
-    [0, 3, 1, 2]
+    >>> from sympy.combinatorics.permutations import _af_mul, Permutation
+    >>> a, b = [1, 0, 2], [0, 2, 1]
+    >>> _af_mul(a, b)
+    [1, 2, 0]
+    >>> list(Permutation(a)*Permutation(b))
+    [2, 0, 1]
 
     """
     m = len(a)
-    n = len(a[0])
-    reverse = kwargs.get('reverse', False)
     if m == 2:
         a, b = a
-        if reverse:
-            a, b = b, a
         return [a[i] for i in b]
-    if m == 1:
-        return list(a[0])
-    rv = range(n)
-    for ai in reversed(a) if reverse else a:
+    rv = range(len(a[0]))
+    for ai in a:
         rv = [rv[j] for j in ai]
     return rv
 
