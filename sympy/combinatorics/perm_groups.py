@@ -341,9 +341,13 @@ class PermutationGroup(Basic):
     >>> b = Permutation([1, 0, 2])
     >>> G = PermutationGroup(a, b)
     >>> G
-    PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
+    PermutationGroup([a, b])
     >>> G[0]
     Permutation([0, 2, 1])
+    >>> G.order()
+    6
+    >>> len(list(G.generate()))
+    6
 
     References
     ==========
@@ -1252,21 +1256,30 @@ class PermutationGroup(Basic):
     def degree(self):
         """Returns the size of the permutations in the group.
 
-        (The length of the group -- the number of permutations -- is
-        given by len(group).)
+        The number of permutations comprising the group is given by
+        len(group); the number of permutations that can be generated
+        by the group is given by group.order().
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,0])
+        >>> a = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a])
         >>> G.degree
-        2
+        3
         >>> len(G)
         1
+        >>> G.order()
+        2
+        >>> list(G.generate())
+        [Permutation([0, 1, 2]), Permutation([1, 0, 2])]
 
+        See Also
+        ========
+
+        order
         """
         return self._degree
 
@@ -1387,7 +1400,7 @@ class PermutationGroup(Basic):
         elif method == "dimino":
             return self.generate_dimino(af)
         else:
-            raise ValueError('there is not this method')
+            raise NotImplementedError('No generation defined for %s' % method)
 
     def generate_dimino(self, af=False):
         """Yield group elements using Dimino's algorithm
@@ -1466,9 +1479,10 @@ class PermutationGroup(Basic):
         """
         def get1(posmax):
             n = len(posmax) - 1
-            for i in range(n,-1,-1):
+            for i in range(n, -1, -1):
                 if posmax[i] != 1:
                     return i + 1
+            return 1
         n = self.degree
         u = self.coset_repr()
         # stg stack of group elements
@@ -2366,19 +2380,40 @@ class PermutationGroup(Basic):
         return orbs
 
     def order(self):
-        """Return the order of the group
+        """Return the order of the group: the number of permutations that
+        can be generated from elements of the group.
+
+        The number of permutations comprising the group is given by
+        len(group); the length of each permutation in the group is
+        given by group.size.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+
+        >>> a = Permutation([1, 0, 2])
+        >>> G = PermutationGroup([a])
+        >>> G.degree
+        3
+        >>> len(G)
+        1
+        >>> G.order()
+        2
+        >>> list(G.generate())
+        [Permutation([0, 1, 2]), Permutation([1, 0, 2])]
+
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.order()
         6
 
+        See Also
+        ========
+
+        degree
         """
         if self._order != None:
             return self._order
