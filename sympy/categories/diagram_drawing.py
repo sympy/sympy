@@ -1625,24 +1625,17 @@ class XypicDiagramDrawer(object):
             Counts how many processed morphisms there are between the
             two supplied objects.
             """
-            count = 0
-            for m in morphisms_str_info:
-                if ((m.domain, m.codomain) == (A, B) or \
-                    (m.domain, m.codomain) == (B, A)):
-                    count += 1
-            return count
+            return len([m for m in morphisms_str_info
+                        if set([m.domain, m.codomain]) == set([A, B])])
 
         def count_morphisms_filtered(dom, cod, curving):
             """
             Counts the processed morphisms which go out of ``dom``
             into ``cod`` with curving ``curving``.
             """
-            count = 0
-            for m, m_str_info in morphisms_str_info.items():
-                if ((m.domain, m.codomain) == (dom, cod)) and \
-                   (m_str_info.curving == curving):
-                    count += 1
-            return count
+            return len([m for m, m_str_info in morphisms_str_info.items()
+                        if (m.domain, m.codomain) == (dom, cod) and
+                        (m_str_info.curving == curving)])
 
         (i, j) = object_coords[morphism.domain]
         (target_i, target_j) = object_coords[morphism.codomain]
