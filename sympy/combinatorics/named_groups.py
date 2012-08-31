@@ -245,3 +245,9 @@ def SymmetricGroup(n):
     G._is_transitive = True
     G._is_sym = True
     return G
+
+def RubikGroup(n):
+    """Return a group of Rubik's cube generators."""
+    from sympy.combinatorics.generators import rubik
+    assert n > 1
+    return PermutationGroup(rubik(n))

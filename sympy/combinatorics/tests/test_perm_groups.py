@@ -3,7 +3,7 @@ import random
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-    DihedralGroup, AlternatingGroup, AbelianGroup
+    DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation, _af_mul
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
@@ -216,10 +216,9 @@ def test_orbits():
     a = Permutation(range(1, 100) + [0])
     G = PermutationGroup([a])
     assert G.orbits(rep=True) == [0]
-    gens = rubik_cube_generators()
-    g = PermutationGroup(gens)
-    assert g.orbits(rep=True) == [0, 1]
-    assert not g.is_transitive
+    G = PermutationGroup(rubik_cube_generators())
+    assert G.orbits(rep=True) == [0, 1]
+    assert not G.is_transitive
 
 def test_is_normal():
     gens_s5 = [Permutation(p) for p in [[1,2,3,4,0], [2,1,4,0,3]]]
@@ -283,7 +282,7 @@ def test_is_solvable():
 
 def test_rubik1():
     gens = rubik_cube_generators()
-    gens1 = [gens[0]] + [p**2 for p in gens[1:]]
+    gens1 = [gens[-1]] + [p**2 for p in gens[1:]]
     G1 = PermutationGroup(gens1)
     assert G1.order() == 19508428800
     gens2 = [p**2 for p in gens]
@@ -295,11 +294,13 @@ def test_rubik1():
     assert C1.is_subgroup(G1)
     assert not G2.is_subgroup(C1)
 
+    G = RubikGroup(2)
+    assert G.order() == 3674160
+
 @XFAIL
 def test_rubik():
     skip('takes too much time')
-    gens = rubik_cube_generators()
-    G = PermutationGroup(gens)
+    G = PermutationGroup(rubik_cube_generators())
     assert G.order() == 43252003274489856000
     G1 = PermutationGroup(gens[:3])
     assert G1.order() == 170659735142400
