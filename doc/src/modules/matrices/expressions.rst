@@ -3,7 +3,7 @@ Matrix Expressions
 
 .. module:: sympy.matrices.expressions
 
-The Matrix expression module allow users to write down statements like 
+The Matrix expression module allows users to write down statements like 
 
     >>> X = MatrixSymbol('X', 3, 3)
     >>> Y = MatrixSymbol('Y', 3, 3)
@@ -18,10 +18,10 @@ The Matrix expression module allow users to write down statements like
     >>> (X*Y)[1, 2]
     X_10*Y_02 + X_11*Y_12 + X_12*Y_22
 
-where `X` and `Y` are matrix symbols rather than scalar symbols.
+where ``X`` and ``Y`` are :class:`MatrixSymbol`'s rather than scalar symbols.
 
-Core Class Reference
---------------------
+Matrix Expressions Core Reference
+---------------------------------
 .. autoclass:: MatrixExpr 
    :members:
 .. autoclass:: MatrixSymbol
@@ -48,10 +48,11 @@ Core Class Reference
 Block Matrices
 --------------
 
-.. module:: sympy.matrices.expressions.blockmatrix
-
 Block matrices allow you to construct larger matrices out of smaller
-sub-blocks. They can work with MatrixExprs or ImmutableMatrices
+sub-blocks. They can work with :class:`MatrixExpr` or 
+:class:`ImmutableMatrix` objects.
+
+.. module:: sympy.matrices.expressions.blockmatrix
 
 .. autoclass:: BlockMatrix 
    :members:
