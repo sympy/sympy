@@ -8,12 +8,20 @@ from sympy.utilities.pytest import raises
 lmul = Permutation.lmul
 
 def test_Permutation():
+    # auto fill 0
     p = Permutation([1, 2, 3])
     assert p == Permutation([0, 1, 2, 3])
+    # call as bijective
     assert [p(i) for i in range(p.size)] == list(p)
+    # call as function
+    assert p(range(p.size)) == list(p)
+    # conversion to list
     assert list(p) == range(4)
+    # cycle form with size
     assert Permutation([[1, 2]], size=4) == Permutation([[1, 2], [0], [3]])
+    # random generation
     assert Permutation.random(2) in (Permutation([1, 0]), Permutation([0, 1]))
+
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
