@@ -340,10 +340,18 @@ class Permutation(Basic):
     24
 
     A given permutation has a rank among all the possible permutations of the
-    same elements:
+    same elements, but what that rank is depends on how the permutations are
+    enumerated. (There are a number of different methods of doing so.) The
+    lexicographic rank is given by the rank method:
 
     >>> p.rank()
     20
+    >>> p.next_lex()
+    Permutation([3, 1, 2, 0])
+    >>> _.rank()
+    21
+    >>> p.unrank_lex(p.size, 0)
+    Permutation([0, 1, 2, 3])
 
     The product of two permutations a and q is defined as their composition as
     functions, (p*q)(i) = p(q(i)) [6]_.
