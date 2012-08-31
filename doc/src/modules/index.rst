@@ -30,6 +30,7 @@ access any SymPy module, or use this contens:
    logic.rst
    matrices/matrices.rst
    matrices/expressions.rst
+   matrices/immutablematrices.rst
    mpmath/index.rst
    polys/index.rst
    printing.rst
