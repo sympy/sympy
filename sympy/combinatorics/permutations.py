@@ -283,8 +283,14 @@ class Permutation(Basic):
     """
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
-    mapping with itself. The number of permutations on a set of n elements is
-    given by n!.
+    mapping with itself.
+
+    >>> from sympy.combinatorics import Permutation
+    >>> p = Permutation([0, 2, 1])
+    >>> p(1)
+    2
+    >>> dict([(i, p(i)) for i in range(p.size)])
+    {0: 0, 1: 2, 2: 1}
 
     A representation of a permutation as a product of permutation cycles is
     unique (up to the ordering of the cycles). An example of a cyclic
@@ -296,17 +302,63 @@ class Permutation(Basic):
     Therefore, (320)(1), (203)(1), (032)(1), (1)(320), (1)(203), and (1)(032)
     all describe the same permutation.
 
+    >>> Permutation([[1], [0, 3, 2]])
+    Permutation([3, 1, 0, 2])
+    >>> Permutation([[1], [3, 2, 0]])
+    Permutation([3, 1, 0, 2])
+
+    An abbreviated cyclic-form shows only the non-singleton cycles:
+
+    >>> p = _
+    >>> p.cyclic_form
+    [[0, 3, 2]]
+    >>> p.full_cyclic_form
+    [[0, 3, 2], [1]]
+
     Another notation that explicitly identifies the positions occupied by
     elements before and after application of a permutation on n elements uses a
     2xn matrix, where the first row is the identity permutation and the second
-    row is the new arrangement [2]_.
+    row is the new arrangement [2]_. The Permutation class stores only the
+    second row of the matrix.
 
     Any permutation is also a product of transpositions.
 
+    >>> p.transpositions()
+    {(0, 2), (0, 3)}
+
     Permutations are commonly denoted in lexicographic or transposition order.
+
+    >>> p.array_form
+    [3, 1, 0, 2]
+
+    The number of permutations on a set of n elements is given by n! and is
+    called the cardinality.
+
+    >>> p.size
+    4
+    >>> p.cardinality
+    24
+
+    A given permutation has a rank among all the possible permutations of the
+    same elements:
+
+    >>> p.rank()
+    20
 
     The product of two permutations a and q is defined as their composition as
     functions, (p*q)(i) = p(q(i)) [6]_.
+
+    >>> q = Permutation([0, 1, 3, 2])
+    >>> list(p*q)
+    [2, 1, 0, 3]
+
+    The permutation can be 'applied' to any list-like object, not only
+    Permutations:
+
+    >>> p('zo32')
+    ['2', 'o', 'z', '3']
+    >>> p(['zero', 'one', 'three', 'two'])
+    ['two', 'one', 'zero', 'three']
 
     See Also
     ========
@@ -575,6 +627,11 @@ class Permutation(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([[3, 2], [0, 1]]).size
         4
+
+        See Also
+        ========
+
+        cardinality, length, order, rank
         """
         return self._size
 
@@ -901,11 +958,21 @@ class Permutation(Basic):
         [2, 3, 0, 1]
         >>> [p(i) for i in range(4)]
         [2, 3, 0, 1]
+
+        If an array is given then the permutation selects the items
+        from the array (i.e. the permutation is applied to the array):
+
+        >>> from sympy.abc import x
+        >>> p([x, 1, 0, x**2])
+        [0, x**2, x, 1]
         """
         # list indices can be Integer or int; leave this
         # as it is (don't test or convert it) because this
         # gets called a lot and should be fast
-        return self.array_form[i]
+        try:
+            return self.array_form[i]
+        except TypeError:
+            return [i[j] for j in self.array_form]
 
     def atoms(self):
         """
@@ -1076,7 +1143,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        next_lex, unrank_lex
+        next_lex, unrank_lex, cardinality, length, order, size
         """
         rank = 0
         rho = self.array_form[:]
@@ -1104,6 +1171,11 @@ class Permutation(Basic):
         >>> p = Permutation([0,1,2,3])
         >>> p.cardinality
         24
+
+        See Also
+        ========
+
+        length, order, rank, size
         """
         return int(ifac(self.size))
 
@@ -1504,8 +1576,9 @@ class Permutation(Basic):
         See Also
         ========
 
-        identity
+        identity, cardinality, length, rank, size
         """
+
         return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form])
 
     def length(self):
@@ -1524,8 +1597,9 @@ class Permutation(Basic):
         See Also
         ========
 
-        min, max, suppport
+        min, max, suppport, cardinality, order, rank, size
         """
+
         return len(self.support())
 
 
