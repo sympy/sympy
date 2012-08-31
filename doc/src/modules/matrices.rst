@@ -487,9 +487,12 @@ here one might want to look over the matrices.py file for all functionality.
 
 Matrix Class Reference
 ----------------------
+.. autoclass:: MatrixBase
+   :members:
 .. autoclass:: Matrix
    :members:
-
+.. autoclass:: MutableMatrix
+   :members:
 .. autoclass:: SparseMatrix
    :members:
 
