@@ -349,8 +349,6 @@ class Polyhedron(Basic):
         obj._faces = FiniteSet(faces)
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
-        if has_variety(a.size for a in pgroup) > 1:
-            raise ValueError("All permutations must be of the same size.")
         # use the identity permutation if none are given
         obj._pgroup = PermutationGroup(*(
             pgroup or [Perm(range(len(corners)))] ))
@@ -721,7 +719,7 @@ def _pgroup_calcs():
 
     icosahedron_faces = [
         [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
-        [1, 6, 7], [1, 2, 7], [2,7,  8], [2,3,8  ], [3, 8, 9 ],
+        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9 ],
         [3, 4, 9], [4,9,10 ], [4, 5,10], [5, 6, 10], [1, 5, 6 ],
         [6, 7, 11], [7, 8, 11], [8, 9, 11], [9, 10, 11], [6, 10, 11]]
 

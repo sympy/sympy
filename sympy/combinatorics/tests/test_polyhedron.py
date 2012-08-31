@@ -3,12 +3,15 @@ from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
+from sympy.utilities.pytest import raises
 
 import random
 
 lmul = Permutation.lmul
 
 def test_polyhedron():
+    raises(ValueError, lambda: Polyhedron(list('ab'),
+        pgroup=[Permutation([0])]))
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
               Permutation([[0,7,1,6],[5,2,4,3]]),\
               Permutation([[3,6,0,5],[4,1,7,2]]),\
@@ -39,6 +42,13 @@ def test_polyhedron():
     for i in range(3,7):  # add 240 degree axial corner rotations
         cube.rotate(cube.pgroup[i]**2)
 
+    assert cube.corners == corners
+    cube.rotate(1)
+    raises(ValueError, lambda: cube.rotate(Permutation([0, 1])))
+    assert cube.corners != corners
+    assert cube.array_form == [7, 6, 4, 5, 3, 2, 0, 1]
+    assert cube.cyclic_form == [[0, 7, 1, 6], [2, 4, 3, 5]]
+    cube.reset()
     assert cube.corners == corners
 
     assert cube.make_perm(5, seed=range(5)) == Permutation([4, 5, 7, 6, 0, 1, 3, 2])
