@@ -587,7 +587,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,3,1,2])
+        >>> p = Permutation([0, 3, 1, 2])
         >>> p.cyclic_form
         [[1, 3, 2]]
         >>> Permutation([1, 0, 2, 4, 3, 5]).cyclic_form
@@ -686,14 +686,14 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
-        >>> q = Permutation([2,1,3,0])
-        >>> p+q == q
+        >>> p = Permutation([0, 1, 2, 3])
+        >>> q = Permutation([2, 1, 3, 0])
+        >>> p + q == q
         True
         >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([0, 3, 1, 2])
         >>> b = Permutation([2, 1, 0, 3])
-        >>> a+b
+        >>> a + b
         Permutation([2, 0, 1, 3])
 
         See Also
@@ -724,9 +724,9 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
-        >>> q = Permutation([2,1,3,0])
-        >>> q-p==q
+        >>> p = Permutation([0, 1, 2, 3])
+        >>> q = Permutation([2, 1, 3, 0])
+        >>> q - p == q
         True
 
         See Also
@@ -804,19 +804,45 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([1,2,3,0])
-        >>> q = Permutation([3,2,0,1])
+        >>> p = Permutation([1, 2, 3, 0])
+        >>> q = Permutation([3, 2, 0, 1])
         >>> q*p
         Permutation([0, 3, 1, 2])
         >>> q*p == p*q
         False
 
         If one of the permutations is in a cyclic form then it is first
-        converted to an array form and then multiplied. ::
+        converted to an array form and then multiplied:
 
         >>> p = Permutation(p.cyclic_form)
         >>> q*p
         Permutation([0, 3, 1, 2])
+
+        It is acceptable for the arrays to have different lengths; the shorter
+        one will be padded to match the longer one:
+
+        >>> p*Permutation([[1, 0]])
+        Permutation([0, 2, 3, 1])
+        >>> Permutation([[1, 0]])*p
+        Permutation([2, 1, 3, 0])
+
+        It is also acceptable to allow coercion to handle conversion of a
+        single list to the left of a Permutation:
+
+        >>> [0, 1]*p # no change: 2-element identity
+        Permutation([1, 2, 3, 0])
+        >>> [[0, 1]]*p # exchange first two elements
+        Permutation([2, 1, 3, 0])
+
+        If you want to use more than 1 cycle notation in a product of cycles
+        can use Cycle; coercion can only handle one argument to the left.
+        Note also that with Cycles all permutations are interpreted as
+        cycles without the need for double brackets.
+
+        >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
+        >>> from sympy.combinatorics.permutations import Cycle
+        >>> print Cycle()*(1, 2)*(2, 3)
+        [(1, 3, 2)]
 
         """
         a = self.array_form
@@ -1326,13 +1352,16 @@ class Permutation(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[0],[1],[2]])
+        >>> p = Permutation([])
         >>> p.is_Identity
         True
-        >>> p = Permutation([0,1,2])
+        >>> p = Permutation([[0], [1], [2]])
         >>> p.is_Identity
         True
-        >>> p = Permutation([0,2,1])
+        >>> p = Permutation([0, 1, 2])
+        >>> p.is_Identity
+        True
+        >>> p = Permutation([0, 2, 1])
         >>> p.is_Identity
         False
 
