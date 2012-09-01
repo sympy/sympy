@@ -2024,24 +2024,25 @@ class XypicDiagramDrawer(object):
         """
         def set_label_position(free1, free2, pos1, pos2, backwards, m_str_info):
             """
-            If both ``free1`` and ``free2`` are ``True`` or ``False``,
-            does nothing.  If only ``free1`` is ``True``, sets the
-            label position to ``pos1``.  If only ``free2`` is
-            ``True``, sets the label position to ``pos2``.  This
-            behaviour is reversed, if ``backwards`` is ``True``.
+            Given the information about room available to one side and
+            to the other side of a morphism (``free1`` and ``free2``),
+            sets the position of the morphism label in such a way that
+            it is on the freer side.  This latter operations involves
+            choice between ``pos1`` and ``pos2``, taking ``backwards``
+            in consideration.
+
+            Thus this function will do nothing if either both ``free1
+            == True`` and ``free2 == True`` or both ``free1 == False``
+            and ``free2 == False``.  In either case, choosing one side
+            over the other presents no advantage.
             """
-            if free1 and free2:
-                return
-            elif free1:
-                if not backwards:
-                    m_str_info.label_position = pos1
-                else:
-                    m_str_info.label_position = pos2
-            elif free2:
-                if not backwards:
-                    m_str_info.label_position = pos2
-                else:
-                    m_str_info.label_position = pos1
+            if backwards:
+                (pos1, pos2) = (pos2, pos1)
+
+            if free1 and not free2:
+                m_str_info.label_position = pos1
+            elif free2 and not free1:
+                m_str_info.label_position = pos2
 
         def abs_xrange(start, end):
             if start < end:
