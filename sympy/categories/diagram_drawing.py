@@ -1419,7 +1419,7 @@ class ArrowStringDescription(object):
     formatters.  The user is not expected to construct instances of
     :class:`ArrowStringDescription` themselves.
 
-    To be able to properly utilise this class, the reader is welcome
+    To be able to properly utilise this class, the reader is encouraged
     to checkout the Xy-pic user guide, available at [Xypic].
 
     See Also
