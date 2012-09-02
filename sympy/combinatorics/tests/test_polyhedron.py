@@ -51,10 +51,6 @@ def test_polyhedron():
     cube.reset()
     assert cube.corners == corners
 
-    assert cube.make_perm(5, seed=range(5)) == Permutation([4, 5, 7, 6, 0, 1, 3, 2])
-    assert cube.make_perm(7, seed=range(7)) == Permutation([5, 4, 6, 7, 1, 0, 2, 3])
-
-
     def check(h, size, rpt, target):
 
         assert len(h.faces) + len(h.vertices) - len(h.edges) == 2

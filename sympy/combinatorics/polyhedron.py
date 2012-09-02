@@ -128,14 +128,14 @@ class Polyhedron(Basic):
         >>> set(got) == set(all)
         True
 
-        The make_perm method will randomly pick permutations given in
-        pgroup, multiply them together, and return the permutation that
+        The make_perm method of a PermutationGroup will randomly pick
+        permutations, multiply them together, and return the permutation that
         can be applied to the polyhedron to give the orientation produced
         by those individual permutations.
 
         Here, 3 permutations are used:
 
-        >>> tetra.make_perm(3) # doctest: +SKIP
+        >>> tetra.pgroup.make_perm(3) # doctest: +SKIP
         Permutation([0, 3, 1, 2])
 
         To select the permutations that should be used, supply a list
@@ -143,28 +143,28 @@ class Polyhedron(Basic):
         be applied:
 
         >>> use = [0, 0, 2]
-        >>> saved = tetra.make_perm(3, use)
-        >>> saved
+        >>> p002 = tetra.pgroup.make_perm(3, use)
+        >>> p002
         Permutation([1, 0, 3, 2])
 
 
         Apply them one at a time:
 
-        >>> h = Polyhedron(corners)
+        >>> tetra.reset()
         >>> for i in use:
-        ...     h.rotate(pgroup[i])
+        ...     tetra.rotate(pgroup[i])
         ...
-        >>> h.vertices
+        >>> tetra.vertices
         (x, w, z, y)
-        >>> sequentially = h.vertices
+        >>> sequentially = tetra.vertices
 
-        Apply the saved "composite" permutation:
+        Apply the composite permutation:
 
-        >>> h = Polyhedron(corners)
-        >>> h.rotate(saved)
-        >>> h.corners
+        >>> tetra.reset()
+        >>> tetra.rotate(p002)
+        >>> tetra.corners
         (x, w, z, y)
-        >>> h.corners in all and h.corners == sequentially
+        >>> tetra.corners in all and tetra.corners == sequentially
         True
 
         Notes
@@ -238,7 +238,7 @@ class Polyhedron(Basic):
         To use more than one permutation (or to use one permutation more
         than once) it is more convenient to use the make_perm method:
 
-        >>> p011 = square.make_perm([0,1,1]) # diag flip and 2 rotations
+        >>> p011 = square.pgroup.make_perm([0,1,1]) # diag flip + 2 rotations
         >>> square.reset() # return to initial orientation
         >>> square.rotate(p011); square.corners
         (4, 2, 3, 1)
@@ -498,31 +498,6 @@ class Polyhedron(Basic):
             self._edges = FiniteSet(*output)
         return self._edges
 
-    def make_perm(self, n, seed=None):
-        """A wrapper to the ``pgroup`` method of the same name which
-        multiplies ``n`` randomly selected permutations from
-        the pgroup together.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation, Polyhedron
-        >>> pgroup = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
-        >>> h = Polyhedron(list('abcd'), pgroup=pgroup)
-        >>> h.make_perm(1, [0])
-        Permutation([1, 0, 3, 2])
-        >>> h.make_perm(3, [0, 1, 0])
-        Permutation([2, 0, 3, 1])
-        >>> h.make_perm([0, 1, 0])
-        Permutation([2, 0, 3, 1])
-
-        See Also
-        ========
-
-        rotate, sympy.combinatorics.perm_groups.PermutationGroup.make_perm
-        """
-        return self.pgroup.make_perm(n, seed)
-
     def rotate(self, perm):
         """
         Apply a permutation to the polyhedron *in place*. The permutation
@@ -531,10 +506,7 @@ class Polyhedron(Basic):
         applied.
 
         This is an operation that is analogous to rotation about
-        an axis by a fixed increment. This method is like ``make_perm``
-        except instead of returning a permutation it applies the
-        permutation to the Polyhedron instance and only a single
-        permutation is applied.
+        an axis by a fixed increment.
 
         Notes
         =====
@@ -582,11 +554,6 @@ class Polyhedron(Basic):
         >>> h5.rotate(p)
         >>> h5.corners == copy.corners
         False
-
-        See Also
-        ========
-
-        make_perm
         """
         if not isinstance(perm, Perm):
             perm = self.pgroup[perm]

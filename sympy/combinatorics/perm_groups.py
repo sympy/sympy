@@ -1,5 +1,6 @@
 from random import randrange, choice
 from math import log
+from types import GeneratorType
 
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
@@ -2541,9 +2542,14 @@ class PermutationGroup(Basic):
         random
         """
         if is_sequence(n):
-            if is_sequence(seed):
+            if seed is not None:
                 raise ValueError('If n is a sequence, seed should be None')
             n, seed = len(n), n
+        else:
+            try:
+                n = int(n)
+            except TypeError:
+                raise ValueError('n must be an integer or a sequence.')
         randrange = _randrange(seed)
 
         # start with the identity permutation

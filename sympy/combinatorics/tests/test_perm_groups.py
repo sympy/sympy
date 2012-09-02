@@ -7,7 +7,7 @@ from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
 from sympy.combinatorics.permutations import Permutation, _af_mul
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
-from sympy.combinatorics.polyhedron import tetrahedron as Tetra
+from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
@@ -627,3 +627,9 @@ def test_pointwise_stabilizer():
 def test___contains__():
     assert (Permutation([]) in Tetra.pgroup) is False
     assert (Tetra.pgroup[0] in Tetra.pgroup) is True
+
+def test_make_perm():
+    assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \
+        Permutation([4, 7, 6, 5, 0, 3, 2, 1])
+    assert cube.pgroup.make_perm(7, seed=range(7)) == \
+        Permutation([6, 7, 3, 2, 5, 4, 0, 1])
