@@ -446,11 +446,14 @@ class Permutation(Basic):
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
         Permutation([0, 4, 3, 5, 1, 2, 6, 7, 8, 9])
         """
-        if isinstance(args, Perm):
-            return args.copy()
-
         if size is not None:
             size = int(size)
+
+        if isinstance(args, Perm):
+            p = args
+            if size is None or size == p.size:
+                return args.copy()
+            return Perm(p.array_form, size=size)
 
         if isinstance(args, Cycle):
             return Perm._af_new(args.as_list(size))

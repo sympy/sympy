@@ -29,11 +29,10 @@ def test_new_has():
     assert a in G
     assert b not in G
 
-    def test1():
-        a = Permutation([2, 0, 1, 3, 4, 5])
-        b = Permutation([0, 2, 1, 3, 4])
-        g = PermutationGroup([a, b])
-    raises(ValueError, lambda: test1())
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([0, 2, 1, 3, 4])
+    assert PermutationGroup(a, b).degree == \
+        PermutationGroup(a, b).degree == 6
 
 def test_generate():
     a = Permutation([1, 0])
