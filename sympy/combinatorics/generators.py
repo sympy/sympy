@@ -100,7 +100,7 @@ def dihedral(n):
 
 
 def rubik_cube_generators():
-    """Return the generators of the 3x3 Rubik cube, see
+    """Return the generators of the 3x3 Rubik's cube, see
     http://www.gap-system.org/Doc/Examples/rubik.html
     """
     a = [[(1,3,8,6),(2,5,7,4),(9,33,25,17),(10,34,26,18),(11,35,27,19)],
@@ -113,7 +113,7 @@ def rubik_cube_generators():
 
 
 def rubik(n):
-    """Return generators for an nxn Rubik cube."""
+    """Return generators for an nxn Rubik's cube."""
 
     if n < 2:
         raise ValueError('dimension of cube must be > 1')
