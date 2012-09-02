@@ -233,7 +233,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
       sgens   generators of the group of slot symmetries
       g       permutation representing the tensor
       sgs     if it is not None, sgens is a strong generating set of S
-              sgs is the tuple (S.coset_repr(), S.strong_base())
+              sgs is the tuple (S.coset_repr(), S.base)
 
     A tensor with dummy indices can be represented in a number
     of equivalent ways which typically grows exponentially with
@@ -370,7 +370,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         # strong generating set for S
         sgens = [h.array_form for h in sgens]
         sgensx = sgens + S.stabilizers_gens()
-        b_S = S.strong_base()
+        b_S = S.base
         S_cosets = S.coset_repr()
     else:
         # strong generating set for S
@@ -505,7 +505,7 @@ def canonical_free(G, p, num_free):
             K1.append(x)
     K = K1
     cosets = G.coset_repr()
-    base = list(G.strong_base())
+    base = list(G.base)
     m = len(base)
     for x in sorted(p[:-2]):
         if x not in base:
