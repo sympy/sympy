@@ -51,20 +51,24 @@ present in [3] to test the correctness of the result.
 
 run ./test_xperm > test_output
 if xperm.c gives different result from the one shown in the stderr of the
-Python program, an error message appears in stderr (in the case in which
-the result is the identity, there is an error message; in that case check
-in test_output if the result is the identity; if the stderr of the
-python program is also the identity, the result is correct)
+Python program, an error message appears in stderr.
 
 Usage as a module
 -----------------
 
+compute the canonical form of a Riemann invariant given as a string
 >>> from riemann import RiemannMonomial
 >>> s = 'R(-d12,d2,-d1,d6)*R(-d5,-d7,-d11,-d4)*R(d3,d8,-d2,d12)*R(d7,d5,d1,-d6)*R(d10,d9,d11,d4)*R(-d3,-d8,-d9,-d10)'
 >>> r = RiemannMonomial.from_string(s)
 >>> r.canonic()
 -R(d1,d2,d3,d4)*R(-d1,-d2,d5,d6)*R(-d3,-d4,d7,d8)*R(-d5,-d6,d9,d10)*R(-d7,-d8,d11,d12)*R(-d9,-d10,-d11,-d12)
 
+from a Riemann invariant given as a string write down the test file
+test_xperm.cc to check canonicalization
+>>> s = 'R(-d4,d2,d3,d4)*R(-d1,-d2,-d3,d1)'
+>>> r = RiemannMonomial.from_string(s)
+>>> s = r.xperm_code()
+>>> open('test_xperm.cc','w').write(s)
 
 References:
 
@@ -192,6 +196,8 @@ class RiemannMonomial(object):
         sgens = [Permutation(x) for x in sgens]
         sgs = get_sgens(sgens, n)
         res = double_coset_can_rep(0, sgens, g, sgs)
+        if not res:
+            return 0
         has_minus_sign = (res[-1] == size-2)
         nr = len(res)//4
         r = RiemannMonomial(res[:4])
@@ -200,6 +206,21 @@ class RiemannMonomial(object):
             r = r*RiemannMonomial(res[i:i+4])
         r.sign = has_minus_sign
         return r
+
+    def xperm_code(self):
+        """
+        compute the canonical form and return test_xperm.cc
+        """
+        g = self.indices
+        n = len(g)
+        g = g + [n+1, n] if self.sign else g + [n, n+1]
+        ind = []
+        for i in range(n//2):
+            ind.append('d%s' % (i+1))
+            ind.append('-d%s' % (i+1))
+        sgs = get_sgens(self.sgens, n)
+        sgens, g, result = riemann_canon(self.sgens, g, ind, sgs, tc=None)
+        return str_code(sgens, g, result)
 
     def __str__(self):
         n = len(self.indices)
