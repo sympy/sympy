@@ -100,7 +100,7 @@ def dihedral(n):
 
 
 def rubik_cube_generators():
-    """Return the generators of the 3x3 Rubik's cube, see
+    """Return the permutations of the 3x3 Rubik's cube, see
     http://www.gap-system.org/Doc/Examples/rubik.html
     """
     a = [[(1,3,8,6),(2,5,7,4),(9,33,25,17),(10,34,26,18),(11,35,27,19)],
@@ -113,7 +113,13 @@ def rubik_cube_generators():
 
 
 def rubik(n):
-    """Return generators for an nxn Rubik's cube."""
+    """Return permutations for an nxn Rubik's cube.
+
+    Permutations returned are for rotation of each of the slice
+    from the face up to the last face for each of the 3 sides (in this order):
+    front, right and bottom. Hence, the first n - 1 permutations are for the
+    slices from the front.
+    """
 
     if n < 2:
         raise ValueError('dimension of cube must be > 1')
@@ -229,14 +235,14 @@ def rubik(n):
     # up TO the last plane from that direction; by not including the
     # last plane, the orientation of the cube is maintained.
 
-    # F strips
+    # F slices
     for i in range(n-1):
         fcw(i)
         perm()
         fccw(i) # restore
     assert perm(1) == I
 
-    # R strips
+    # R slices
     # bring R to front
     UCW()
     for i in range(n-1):
@@ -253,7 +259,7 @@ def rubik(n):
     UCCW()
     assert perm(1) == I
 
-    # B strips
+    # D slices
     # bring up bottom
     FCW()
     UCCW()
