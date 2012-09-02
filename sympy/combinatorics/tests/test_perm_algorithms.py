@@ -4,7 +4,7 @@ from sympy.combinatorics.perm_algorithms import double_coset_can_rep, canonicali
 
 """
 References:
-[1] test_xperm.c in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
+[1] test_xperm.cc in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
 """
 
 def test_double_coset_can_rep():
