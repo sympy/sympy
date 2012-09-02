@@ -170,12 +170,18 @@ class Polyhedron(Basic):
         Notes
         =====
 
+        Defining permutation groups
+        ---------------------------
+
         It is not necessary to enter any permutations, nor is necessary to
-        enter a complete set of transforations. In fact, two permutations
-        (corresponding to a rotation on an axis through a vertex and face
-        and another for the rotation through a different vertex or from
-        one edge to the opposite edge) are sufficient to generate all
-        orientations. For simplicity of presentation, consider a square --
+        enter a complete set of transforations. In fact, for a polyhedron,
+        all configurations can be constructed from just two permutations.
+        For example, the orientations of a tetrahedron can be generated from
+        an axis passing through a vertex and face and another axis passing
+        through a different vertex or from an axis passing through the
+        midpoints of two edges opposite of each other.
+
+        For simplicity of presentation, consider a square --
         not a cube -- with vertices 1, 2, 3, and 4:
 
         1-----2  We could think of axes of rotation being:
@@ -184,8 +190,8 @@ class Polyhedron(Basic):
         3-----4  3) lines 1-4 or 2-3
 
 
-        To determine how to write the permutations, imagine 4 cameras, one at
-        each corner:
+        To determine how to write the permutations, imagine 4 cameras,
+        one at each corner, labeled A-D:
 
         A       B          A       B
          1-----2            1-----3             vertex index:
@@ -202,7 +208,7 @@ class Polyhedron(Basic):
 
         >>> pgroup = []
 
-        Imagine rotating clockwise when viewing 1-4 from camera A. The new
+        Imagine a clockwise rotation when viewing 1-4 from camera A. The new
         orientation is (in camera-order): 1, 3, 2, 4 so the permutation is
         given using the *indices* of the vertices as:
 
@@ -224,20 +230,46 @@ class Polyhedron(Basic):
 
         >>> square = Polyhedron((1, 2, 3, 4), [(0, 1, 3, 2)], pgroup)
 
-        To rotate the square a single permutation we can do:
+        To rotate the square with a single permutation we can do:
 
-        >>> sq = square.copy()
-        >>> sq.rotate(square.pgroup[0]); sq.corners
+        >>> square.rotate(square.pgroup[0]); square.corners
         (1, 3, 2, 4)
 
         To use more than one permutation (or to use one permutation more
         than once) it is more convenient to use the make_perm method:
 
         >>> p011 = square.make_perm([0,1,1]) # diag flip and 2 rotations
-        >>> sq = square.copy()
-        >>> sq.rotate(p011); sq.corners
+        >>> square.reset() # return to initial orientation
+        >>> square.rotate(p011); square.corners
         (4, 2, 3, 1)
 
+        Thinking outside the box
+        ------------------------
+
+        Although the Polyhedron object has a direct physical meaning, it
+        actually has broader application. In the most general sense it is
+        just a decorated PermutationGroup, allowing one to connect the
+        permutations to something physical. For example, a Rubik's cube is
+        not a proper polyhedron, but the Polyhedron class can be used to
+        represent it in a way that helps to visualize the Rubik's cube.
+
+        >>> from sympy.utilities.iterables import flatten, unflatten
+        >>> from sympy import symbols
+        >>> from sympy.combinatorics import RubikGroup
+        >>> facelets = flatten([symbols(s+'1:5') for s in 'UFRBLD'])
+        >>> def show():
+        ...     pairs = unflatten(r2.corners, 2)
+        ...     print pairs[::2]
+        ...     print pairs[1::2]
+        ...
+        >>> r2 = Polyhedron(facelets, pgroup=RubikGroup(2))
+        >>> show()
+        [(U1, U2), (F1, F2), (R1, R2), (B1, B2), (L1, L2), (D1, D2)]
+        [(U3, U4), (F3, F4), (R3, R4), (B3, B4), (L3, L4), (D3, D4)]
+        >>> r2.rotate(0) # cw rotation of F
+        >>> show()
+        [(U1, U2), (F3, F1), (U3, R2), (B1, B2), (L1, D1), (R3, R1)]
+        [(L4, L2), (F4, F2), (U4, R4), (B3, B4), (L3, D2), (D3, D4)]
 
         Predefined Polyhedra
         ====================
