@@ -494,8 +494,7 @@ class Polyhedron(Basic):
             for face in self.faces:
                 for i in range(len(face)):
                     edge = tuple(sorted([face[i], face[i - 1]]))
-                    if edge not in output:
-                        output.add(edge)
+                    output.add(edge)
             self._edges = FiniteSet(*output)
         return self._edges
 
