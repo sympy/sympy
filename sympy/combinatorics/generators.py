@@ -14,8 +14,8 @@ def symmetric(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
-    [Cycle(), Cycle(1, 2), Cycle(0, 1),
-     Cycle(0, 1, 2), Cycle(0, 2, 1), Cycle(0, 2)]
+    [PERM(), PERM(1, 2), PERM(0, 1),
+     PERM(0, 1, 2), PERM(0, 2, 1), PERM(0, 2)]
     """
     for perm in variations(range(n), n):
         yield Permutation(perm)
@@ -31,8 +31,8 @@ def cyclic(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
-    [Cycle(), Cycle(0, 1, 2, 3, 4), Cycle(0, 2, 4, 1, 3),
-     Cycle(0, 3, 1, 4, 2), Cycle(0, 4, 3, 2, 1)]
+    [PERM(), PERM(0, 1, 2, 3, 4), PERM(0, 2, 4, 1, 3),
+     PERM(0, 3, 1, 4, 2), PERM(0, 4, 3, 2, 1)]
 
     See Also
     ========
@@ -54,7 +54,7 @@ def alternating(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
-    [Cycle(), Cycle(0, 1, 2), Cycle(0, 2, 1)]
+    [PERM(), PERM(0, 1, 2), PERM(0, 2, 1)]
     """
     for perm in variations(range(n), n):
         p = Permutation(perm)
@@ -76,8 +76,8 @@ def dihedral(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
-    [Cycle(), Cycle(0, 2), Cycle(0, 1, 2), Cycle(1, 2),
-     Cycle(0, 2, 1), Cycle(0, 1)]
+    [PERM(), PERM(0, 2), PERM(0, 1, 2), PERM(1, 2),
+     PERM(0, 2, 1), PERM(0, 1)]
 
     See Also
     ========

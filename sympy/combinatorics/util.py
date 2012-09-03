@@ -143,11 +143,11 @@ def _distribute_gens_by_base(base, gens):
     >>> D = DihedralGroup(3)
     >>> D.schreier_sims()
     >>> D.strong_gens
-    [Cycle(0, 1, 2), Cycle(0, 2), Cycle(1, 2)]
+    [PERM(0, 1, 2), PERM(0, 2), PERM(1, 2)]
     >>> D.base
     [0, 1]
     >>> _distribute_gens_by_base(D.base, D.strong_gens)
-    [[Cycle(0, 1, 2), Cycle(0, 2), Cycle(1, 2)], [Cycle(1, 2)]]
+    [[PERM(0, 1, 2), PERM(0, 2), PERM(1, 2)], [PERM(1, 2)]]
 
     See Also
     ========
@@ -213,10 +213,10 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     >>> D.schreier_sims()
     >>> _handle_precomputed_bsgs(D.base, D.strong_gens,
     ... basic_orbits=D.basic_orbits)
-    ([{0: Cycle(), 1: Cycle(0, 1, 2), 2: Cycle(0, 2)},
-    {1: Cycle(), 2: Cycle(1, 2)}],
-    [[0, 1, 2], [1, 2]], [[Cycle(0, 1, 2), Cycle(0, 2), Cycle(1, 2)],
-    [Cycle(1, 2)]])
+    ([{0: PERM(), 1: PERM(0, 1, 2), 2: PERM(0, 2)},
+    {1: PERM(), 2: PERM(1, 2)}],
+    [[0, 1, 2], [1, 2]], [[PERM(0, 1, 2), PERM(0, 2), PERM(1, 2)],
+    [PERM(1, 2)]])
 
     See Also
     ========
@@ -274,8 +274,8 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _orbits_transversals_from_bsgs(S.base, strong_gens_distr)
     ([[0, 1, 2], [1, 2]],
-    [{0: Cycle(), 1: Cycle(0, 1, 2), 2: Cycle(0, 2, 1)},
-    {1: Cycle(), 2: Cycle(1, 2)}])
+    [{0: PERM(), 1: PERM(0, 1, 2), 2: PERM(0, 2, 1)},
+    {1: PERM(), 2: PERM(1, 2)}])
 
     See Also
     ========
@@ -415,7 +415,7 @@ def _strip(g, base, orbs, transversals):
     >>> S.schreier_sims()
     >>> g = Permutation([0, 2, 3, 1, 4])
     >>> _strip(g, S.base, S.basic_orbits, S.basic_transversals)
-    (Cycle(), 5)
+    (PERM(), 5)
 
     Notes
     =====
@@ -475,10 +475,10 @@ def _strong_gens_from_distr(strong_gens_distr):
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
     >>> S.strong_gens
-    [Cycle(0, 1, 2), Cycle(0, 1), Cycle(1, 2)]
+    [PERM(0, 1, 2), PERM(0, 1), PERM(1, 2)]
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _strong_gens_from_distr(strong_gens_distr)
-    [Cycle(0, 1, 2), Cycle(0, 1), Cycle(1, 2)]
+    [PERM(0, 1, 2), PERM(0, 1), PERM(1, 2)]
 
     See Also
     ========
