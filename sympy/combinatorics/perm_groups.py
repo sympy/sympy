@@ -93,7 +93,7 @@ class _JGraph(object):
         self.r = G._r
         self.idn = range(n)
 
-    def find_PERM(self, v, v1, v2, prev):
+    def find_cycle(self, v, v1, v2, prev):
         """Test if there is a cycle.
 
         Parameters
@@ -114,13 +114,13 @@ class _JGraph(object):
         if v2 in neighbor:
             if v2 != prev:
                 cycle.append(v2)
-                if self.find_PERM(v2, v1, v2, v):
+                if self.find_cycle(v2, v1, v2, v):
                     return True
                 cycle.pop()
         for u in neighbor:
             if u != prev:
                 cycle.append(u)
-                if self.find_PERM(u, v1, v2, v):
+                if self.find_cycle(u, v1, v2, v):
                     return True
                 cycle.pop()
         return False
@@ -147,7 +147,7 @@ class _JGraph(object):
             else:  # new edge
                 self.insert_edge(g, i, ig)
                 self.cycle = [i]
-                if self.find_PERM(i, i, ig, -1):
+                if self.find_cycle(i, i, ig, -1):
                     cycle = self.cycle
                     cycle.append(cycle[0])
                     # find the smallest point (vertex) of the cycle

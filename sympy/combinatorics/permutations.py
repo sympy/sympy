@@ -258,58 +258,156 @@ class Permutation(Basic):
     """
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
-    mapping with itself.
+    mapping with itself. The permutation of a given arrangement is given by
+    indicating the positions of the elements after re-arrrangment [2]_. For example,
+    if one started with elements [x, y, a, b] (in that order) and they were
+    reordered as [x, y, b, a] then the permutation would be [0, 1, 3, 2].
+    Notice that (in SymPy) the first element is always referred to as 0 and
+    the permutation uses the indices of the elements in the original ordering,
+    not the elements (a, b, etc...) themselves. If you choose to number items
+    starting from 1 (and thus enter the permutation as [1, 2, 4, 3]) SymPy
+    will pretend that the 0th element was not moved and store the permutation
+    as [0, 1, 2, 4, 3].
 
     >>> from sympy.combinatorics import Permutation
     >>> Permutation.print_cyclic = False
-    >>> p = Permutation([0, 2, 1])
-    >>> p(1)
-    2
-    >>> dict([(i, p(i)) for i in range(p.size)])
-    {0: 0, 1: 2, 2: 1}
 
-    A representation of a permutation as a product of permutation cycles is
-    unique (up to the ordering of the cycles). An example of a cyclic
-    decomposition is the permutation [3, 1, 0, 2] of the set [0, 1, 2, 3].
-    This is denoted as [[1], [0, 3, 2]], corresponding to the disjoint
-    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as we
-    want since the cycles are disjoint and can therefore be specified in any
-    order and a rotation of a given cycle specifies the same cycle [1]_.
-    Therefore, (320)(1), (203)(1), (032)(1), (1)(320), (1)(203), and (1)(032)
-    all describe the same permutation.
+    Entering Permutations
+    =====================
 
-    >>> Permutation([[1], [0, 3, 2]])
-    Permutation([3, 1, 0, 2])
-    >>> Permutation([[1], [3, 2, 0]])
-    Permutation([3, 1, 0, 2])
-    >>> Permutation([[2, 0, 3]])
-    Permutation([3, 1, 0, 2])
+    Permutations are commonly represented in disjoint cycle or array forms.
 
-    As the last example shows, cycles can be entered without the singletons.
-    The abbreviated cyclic form for any permutation can be seen with the
-    cyclic_form method:
 
+    Array Notation
+    --------------
+
+    In array form, the permutation is represented by an array that shows which
+    element is occupying which position after the re-arrangement. So if 3
+    elements, [0, 1, 2], rearrange as [0, 2, 1] then the array
+    form is simply [0, 2, 1]. This is entered as
+
+    >>> Permutation([0, 2, 1])
+    Permutation([0, 2, 1])
     >>> p = _
-    >>> p.cyclic_form
-    [[0, 3, 2]]
-    >>> p.full_cyclic_form
-    [[0, 3, 2], [1]]
 
-    Another notation that explicitly identifies the positions occupied by
-    elements before and after application of a permutation on n elements uses a
-    2xn matrix, where the first row is the identity permutation and the second
-    row is the new arrangement [2]_. The Permutation class stores only the
-    second row of the matrix.
+    Disjoint Cycle Notation
+    -----------------------
 
-    Any permutation is also a product of transpositions.
+    In disjoint cycle notation, only the elements that have shifted are
+    indicated. In the above case, the 2 and 1 switched places. This can
+    be entered in two ways:
 
-    >>> p.transpositions()
-    {(0, 2), (0, 3)}
+    >>> Permutation(1, 2) == Permutation([[1, 2]]) == p
+    True
 
-    Permutations are commonly denoted in lexicographic or transposition order.
+    Only the relative ordering of elements in a cycle matter:
+
+    >>> Permutation(1,2,3) == Permutation(2,3,1) == Permutation(3,1,2)
+    True
+
+    The disjoint cycle notation is convenient when representing permutations
+    that have several cycles in them:
+
+    >>> Permutation(1, 2)(3, 5) == Permutation([[1, 2], [3, 5]])
+    True
+
+    It also provides some economy in entry when computing products of
+    permutations that are written in disjoint cycle notation:
+
+    >>> Permutation(1, 2)(1, 3)(2, 3)
+    Permutation([0, 3, 2, 1])
+    >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
+    True
+
+    Representation
+    ==============
+
+    There are a few things to note about how Permutations are printed.
+
+    1) If you prefer one form (array or cycle) over another, you can set that
+    with the print_cyclic flag.
+
+    >>> Permutation(1, 2)(4, 5)(3, 4)
+    Permutation([0, 2, 1, 4, 5, 3])
+    >>> p = _
+
+    >>> Permutation.print_cyclic = True
+    >>> p
+    PERM(1, 2)(3, 4, 5)
+    >>> Permutation.print_cyclic = False
+
+    2) Regardless of the setting, a list of elements in the array for cyclic
+    form can be obtained and either of those can be copied and supplied as
+    the argument to Permutation:
 
     >>> p.array_form
-    [3, 1, 0, 2]
+    [0, 2, 1, 4, 5, 3]
+    >>> p.cyclic_form
+    [[1, 2], [3, 4, 5]]
+    >>> Permutation(_) == p
+    True
+
+    3) Printing is economical in that unmoved tail elements are not listed in
+    the array form printing and no unmoved elements (also known as singletons)
+    are shown for the disjoint cycle printing:
+
+    XXX get rid of the head, too? so [0, 1, 2, 4, 3, 5, 6] -> [4, 3]
+
+    >>> Permutation([1, 0, 2, 3])
+    Permutation([1, 0])
+    >>> p = _
+    >>> Permutation.print_cyclic = True
+    >>> p
+    PERM(0, 1)
+    >>> Permutation.print_cyclic = False
+
+    Neither the 2 nor 3 were printed, but they are still there as can be seen
+    with the array_form and size methods:
+
+    >>> p.array_form
+    [1, 0, 2, 3]
+    >>> p.size
+    4
+
+    It is important to keep such elements if one wants to generate further
+    permutations of the elements:
+
+    >>> p.next_lex()
+    Permutation([1, 0, 3, 2])
+
+    Equality testing
+    ----------------
+
+    The tail elements, however, are not considered when comparing
+    permutations:
+
+    >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
+    True
+
+    Short introduction to other methods
+    -----------------------------------
+
+    The permutation can act as a bijective function, telling what element is
+    located at a given position
+
+    >>> p.array_form
+    [1, 0, 2, 3]
+    >>> p.array_form.index(1) # the hard way
+    0
+    >>> p(1) # the easy way
+    0
+    >>> dict([(i, p(i)) for i in range(p.size)]) # showing the bijection
+    {0: 1, 1: 0, 2: 2, 3: 3}
+
+    The full cyclic form (including singletons) can be obtained:
+
+    >>> p.full_cyclic_form
+    [[0, 1], [2], [3]]
+
+    Any permutation can be represented as a set of transpositions.
+
+    >>> Permutation(1, 2)(5, 3, 4).transpositions()
+    {(1, 2), (3, 4), (3, 5)}
 
     The number of permutations on a set of n elements is given by n! and is
     called the cardinality.
@@ -325,28 +423,30 @@ class Permutation(Basic):
     lexicographic rank is given by the rank method:
 
     >>> p.rank()
-    20
+    6
     >>> p.next_lex()
-    Permutation([3, 1, 2, 0])
+    Permutation([1, 0, 3, 2])
     >>> _.rank()
-    21
-    >>> p.unrank_lex(p.size, 0)
+    7
+    >>> p.unrank_lex(p.size, rank=0) # the identity permutation
     Permutation([])
 
-    The product of two permutations a and q is defined as their composition as
+    The product of two permutations p and q is defined as their composition as
     functions, (p*q)(i) = p(q(i)) [6]_.
 
     >>> q = Permutation([0, 1, 3, 2])
     >>> list(p*q)
-    [2, 1, 0, 3]
+    [1, 0, 3, 2]
+    >>> p(q)
+    [1, 0, 3, 2]
 
     The permutation can be 'applied' to any list-like object, not only
     Permutations:
 
-    >>> p(['zero', 'one', 'three', 'two'])
-    ['two', 'one', 'zero', 'three']
-    >>> p('zo32')
-    ['2', 'o', 'z', '3']
+    >>> p(['zero', 'one', 'four', 'two'])
+     ['one', 'zero', 'four', 'two']
+    >>> p('zo42')
+    ['o', 'z', '4', '2']
 
     See Also
     ========
@@ -1036,8 +1136,20 @@ class Permutation(Basic):
                 # P(1)
                 return self.array_form[i]
             except TypeError:
-                # P([a, b, c])
-                return [i[j] for j in self.array_form]
+                try:
+                    # P([a, b, c])
+                    return [i[j] for j in self.array_form]
+                except TypeError:
+                    try:
+                        if isinstance(i, Cycle):
+                            i = Permutation(i.as_list(), size=self.size)
+                        else:
+                            i = Permutation(
+                            i.array_form, size=self.size)
+                        i = i.array_form
+                        return [i[j] for j in self.array_form]
+                    except:
+                        raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
             return self*Permutation(Cycle(*i))
