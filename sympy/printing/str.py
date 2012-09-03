@@ -281,6 +281,20 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)
 
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        if Permutation.print_cyclic:
+            cycles = expr.cyclic_form
+            if not cycles:
+                return 'Cycle()'
+            s = tuple([(str(c))[1:-1] for c in cycles])
+            return ('Cycle(%s)' + '(%s)'*(len(cycles) - 1)) % s
+        else:
+            s = expr.support()
+            if not s:
+                return 'Permutation([])'
+            return 'Permutation(%s)' % str(expr.array_form[:s[-1] + 1])
+
     def _print_PermutationGroup(self, expr):
         p = ['    Permutation(%s)' % str(a.cyclic_form) for a in expr.args[0]]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)

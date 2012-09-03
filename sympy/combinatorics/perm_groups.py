@@ -346,7 +346,9 @@ class PermutationGroup(Basic):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation, Cycle
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
+    >>> from sympy.combinatorics.permutations import Cycle
     >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -367,8 +369,8 @@ class PermutationGroup(Basic):
     objects being moved. An example involving the 2x2 Rubik's cube is
     given there, but here is a simple demonstration:
 
-    >>> a = Permutation([0, 2, 1])
-    >>> b = Permutation([1, 0, 2])
+    >>> a = Permutation([[2, 1]])
+    >>> b = Permutation([[1, 0]])
     >>> G = PermutationGroup(a, b)
     >>> P = Polyhedron(list('ABC'), pgroup=G)
     >>> P.corners
@@ -481,12 +483,13 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = [[1,2,0,3,4,5], [1,0,2,3,4,5], [2,1,0,3,4,5], [1,2,0,3,4,5]]
+        >>> a = [[0, 1, 2]], [[0, 1]], [[0, 2]], [[0, 1, 2]]
         >>> a = [Permutation(p) for p in a]
-        >>> g = Permutation([1,2,3,4,5,0])
-        >>> G1,G2,G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g,g**2]]]
+        >>> g = Permutation([[0,1,2,3,4,5]])
+        >>> G1, G2, G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g,g**2]]]
         >>> assert G1.order() == G2.order() == G3.order() == 6
         >>> assert G1 == G2 and G1 != G3
 
@@ -758,9 +761,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
-        ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]),
-        Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]),
-        Permutation([0, 3, 2, 1])])
+        ([0, 2, 1],
+        [Cycle(0, 1, 2, 3), Cycle(0, 1), Cycle(2, 3),
+         Cycle(1, 3, 2), Cycle(1, 3)])
         >>> S.base
         [0, 1, 2]
         >>> _verify_bsgs(S, S.base, S.strong_gens)
@@ -938,10 +941,13 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> A = AlternatingGroup(4)
         >>> A.basic_transversals
-        [{0: Permutation([0, 1, 2, 3]), 1: Permutation([1, 2, 0, 3]),\
-        2: Permutation([2, 0, 1, 3]), 3: Permutation([3, 0, 2, 1])},\
-        {1: Permutation([0, 1, 2, 3]), 2: Permutation([0, 2, 3, 1]),\
-        3: Permutation([0, 3, 1, 2])}]
+        [{0: Cycle(),
+          1: Cycle(0, 1, 2),
+          2: Cycle(0, 2, 1),
+          3: Cycle(0, 3, 1)},
+         {1: Cycle(),
+          2: Cycle(1, 2, 3),
+          3: Cycle(1, 3, 2)}]
 
         See Also
         ========
@@ -1162,7 +1168,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
         >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
@@ -1218,7 +1225,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
         >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
@@ -1280,7 +1288,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1331,7 +1340,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a])
@@ -1342,7 +1352,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Permutation([0, 1, 2]), Permutation([1, 0, 2])]
+        [Cycle(), Cycle(0, 1)]
 
         See Also
         ========
@@ -1408,7 +1418,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2, 4, 3])
         >>> b = Permutation([0, 1, 3, 2, 4])
@@ -1454,7 +1465,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1485,7 +1497,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1538,7 +1551,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1593,13 +1607,14 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.generators
-        [Permutation([0, 2, 1]), Permutation([1, 0, 2])]
+        [Cycle(1, 2), Cycle(0, 1)]
 
         """
         return self._generators
@@ -1610,7 +1625,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1633,7 +1649,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([[1, 2]])
         >>> b = Permutation([[2, 3, 1]])
@@ -1666,7 +1683,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1808,7 +1826,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
@@ -1928,7 +1947,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1,2,3,4,0])
         >>> b = Permutation([1,0,2,3,4])
@@ -1987,8 +2006,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> id = Permutation(range(5))
         >>> G = PermutationGroup([id, id, id])
         >>> G.is_trivial
@@ -2061,8 +2080,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> G = PermutationGroup([Permutation([0,2,1,3])])
         >>> G.max_div
         2
@@ -2283,8 +2302,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([1,2,0,4,5,6,3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
@@ -2349,11 +2368,13 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
-        >>> G.orbit_rep(0,4)
-        Permutation([4, 2, 3, 0, 1])
+        >>> G.orbit_rep(0, 4)
+        Cycle(0, 4, 1, 2, 3)
 
         See Also
         ========
@@ -2388,13 +2409,14 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
-        [Permutation([0, 1, 2, 3, 4, 5]), Permutation([1, 2, 3, 4, 5, 0]),
-        Permutation([5, 4, 3, 2, 1, 0]), Permutation([2, 3, 4, 5, 0, 1]),
-        Permutation([4, 3, 2, 1, 0, 5]), Permutation([3, 4, 5, 0, 1, 2])]
+        [Cycle(), Cycle(0, 1, 2, 3, 4, 5), Cycle(0, 5)(1, 4)(2, 3),
+         Cycle(0, 2, 4)(1, 3, 5), Cycle(0, 4)(1, 3), Cycle(0, 3)(1, 4)(2, 5)]
 
         See Also
         ========
@@ -2473,7 +2495,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Permutation([0, 1, 2]), Permutation([1, 0, 2])]
+        [Cycle(), Cycle(0, 1)]
 
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -2561,15 +2583,16 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> G = PermutationGroup([a, b])
         >>> G.make_perm(1, [0])
-        Permutation([1, 0, 3, 2])
+        Cycle(0, 1)(2, 3)
         >>> G.make_perm(3, [0, 1, 0])
-        Permutation([2, 0, 3, 1])
+        Cycle(0, 2, 3, 1)
         >>> G.make_perm([0, 1, 0])
-        Permutation([2, 0, 3, 1])
+        Cycle(0, 2, 3, 1)
 
         See Also
         ========
@@ -3182,8 +3205,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> D.strong_gens
-        [Permutation([1, 2, 3, 0]), Permutation([3, 2, 1, 0]),\
-        Permutation([0, 3, 2, 1])]
+        [Cycle(0, 1, 2, 3), Cycle(0, 3)(1, 2), Cycle(1, 3)]
         >>> D.base
         [0, 1]
 
