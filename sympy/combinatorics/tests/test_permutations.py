@@ -293,8 +293,8 @@ def test_mul():
 
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
-    assert Permutation(p) == p
     assert p._cyclic_form is None
+    assert Permutation(p) == p
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
     assert p._array_form == [3, 2, 0, 1, 5, 4]
     p = Permutation((0, 3, 1, 2))

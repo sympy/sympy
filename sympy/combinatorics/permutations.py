@@ -666,12 +666,7 @@ class Permutation(Basic):
     def __eq__(self, other):
         if not isinstance(other, self.func):
             return False
-        small = min(self.size, other.size)
-        s = self.array_form
-        o = other.array_form
-        return s[:small] == o[:small] and (
-            all(i.size == small or i[small:] == range(small, i.size + 1)
-            for i in (self, other)))
+        return self.cyclic_form == other.cyclic_form
 
     def __add__(self, other):
         """

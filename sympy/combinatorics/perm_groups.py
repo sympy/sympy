@@ -1191,7 +1191,7 @@ class PermutationGroup(Basic):
 
         >>> c = Permutation([[2, 4], [3, 5]])
         >>> c.array_form
-        [0, 1, 4, 5, 2, 3, 6, 7]
+        [0, 1, 4, 5, 2, 3]
         >>> G.has_element(c)
         True
         >>> G.coset_decomposition(c)
