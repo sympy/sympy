@@ -1168,7 +1168,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics import Permutation, Cycle
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
@@ -1177,13 +1177,27 @@ class PermutationGroup(Basic):
         >>> c = Permutation([[5, 6, 7]])
         >>> G.coset_decomposition(c)
         False
-        >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
+
+        >>> c = Permutation([[1, 2, 4], [3, 6, 5]])
         >>> G.has_element(c)
         True
         >>> G.coset_decomposition(c)
-        [[6, 4, 2, 0, 7, 5, 3, 1],
-         [0, 4, 1, 5, 2, 6, 3, 7],
-         [0, 1, 2, 3, 4, 5, 6, 7]]
+        [[0, 1, 2, 3, 4, 5, 6, 7],
+         [0, 2, 1, 3, 4, 6, 5, 7],
+         [0, 1, 4, 5, 2, 3, 6, 7]]
+
+        XXX is this a valid decomposition which is two identity
+        permutations and c itself?
+
+        >>> c = Permutation([[2, 4], [3, 5]])
+        >>> c.array_form
+        [0, 1, 4, 5, 2, 3, 6, 7]
+        >>> G.has_element(c)
+        True
+        >>> G.coset_decomposition(c)
+        [[0, 1, 2, 3, 4, 5, 6, 7],
+         [0, 1, 2, 3, 4, 5, 6, 7],
+         [0, 1, 4, 5, 2, 3, 6, 7]]
         >>> Permutation.lmul(*[Permutation(p) for p in _]) == c
         True
 
@@ -1191,9 +1205,9 @@ class PermutationGroup(Basic):
         u = self.coset_repr()
         if isinstance(g, Permutation):
             g = g.array_form
-        # XXX there is no error checking that a valid g has been
-        # given; it is assumed that elements 0..len(g) - 1 are present
-        if 0 and len(g) != self.degree:
+        # the only error checking is size adjustment; it is assumed that
+        # elements 0..len(g) - 1 are present
+        if len(g) != self.degree:
             g.extend(range(len(g), self.degree))
         g1 = g
         n = len(u)
