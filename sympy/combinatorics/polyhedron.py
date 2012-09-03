@@ -382,7 +382,7 @@ class Polyhedron(Basic):
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given
-        obj._pgroup = PermutationGroup(*(
+        obj._pgroup = PermutationGroup((
             pgroup or [Perm(range(len(corners)))] ))
         return obj
 
