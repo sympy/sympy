@@ -1245,13 +1245,11 @@ class PermutationGroup(Basic):
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation(0, 1, 2, 3, 4)(5, 6, 7)
+        >>> c = Permutation(2, 4)(3, 5)
         >>> G.coset_rank(c)
-        >>> c = Permutation(0, 6)(1, 7)(2, 4)(3, 5)
-        >>> G.coset_rank(c)
-        40
-        >>> G.coset_unrank(40, af=True)
-        [6, 7, 4, 5, 2, 3, 0, 1]
+        1
+        >>> G.coset_unrank(1, af=True)
+        [0, 1, 4, 5, 2, 3, 6, 7]
 
         See Also
         ========
@@ -1262,6 +1260,10 @@ class PermutationGroup(Basic):
         u = self.coset_repr()
         if isinstance(g, Permutation):
             g = g.array_form
+        # the only error checking is size adjustment; it is assumed that
+        # elements 0..len(g) - 1 are present
+        if len(g) != self.degree:
+            g.extend(range(len(g), self.degree))
         g1 = g
         m = len(u)
         a = []
@@ -1649,6 +1651,14 @@ class PermutationGroup(Basic):
         True
         >>> G.has(b)
         False
+
+        Testing is literal
+
+        >>> c = Permutation([1, 0])
+        >>> G.has(c)
+        False
+        >>> c == b
+        True
 
         See Also
         ========
