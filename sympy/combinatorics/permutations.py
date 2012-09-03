@@ -128,12 +128,12 @@ class Cycle(dict):
     A Cycle will automatically parse a cycle given as a tuple on the rhs:
 
     >>> print Cycle(1, 2)(2, 3)
-    [(1, 3, 2)]
+    Cycle(1, 3, 2)
 
     The identity cycle, Cycle(), can be used to start a product:
 
     >>> print Cycle()(1, 2)(2,3)
-    [(1, 3, 2)]
+    Cycle(1, 3, 2)
 
     The array form of a Cycle can be obtained with the as_list
     property. With no argument, the list will show elements 0 through
@@ -172,7 +172,7 @@ class Cycle(dict):
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> print C(1, 2)(2, 3)
-        [(1, 3, 2)]
+        Cycle(1, 3, 2)
 
         An instance of a Cycle will automatically parse list-like
         objects and Permutations that are on the right. It is more
@@ -181,9 +181,9 @@ class Cycle(dict):
 
         >>> a = C(1, 2)
         >>> print a(2, 3)
-        [(1, 3, 2)]
+        Cycle(1, 3, 2)
         >>> print a(2, 3)(4, 5)
-        [(1, 3, 2), (4, 5)]
+        Cycle(1, 3, 2)(4, 5)
 
         """
         rv = Cycle(*other)
@@ -218,6 +218,9 @@ class Cycle(dict):
         return [self[i] for i in range(size)]
 
     def __repr__(self):
+        cycles = Permutation(self).cyclic_form
+        s = tuple([(str(c))[1:-1] for c in cycles])
+        return ('Cycle(%s)' + '(%s)'*(len(cycles) - 1)) % s
         reduced = Perm(self.as_list()).cyclic_form
         return str([tuple(c) for c in reduced])
 
@@ -226,11 +229,9 @@ class Cycle(dict):
 
         Examples
         ========
-        >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> C(1, 2, 6)
-        {1: 2, 2: 6, 6: 1}
-        >>> print _
-        [(1, 2, 6)]
+        >>> from sympy.combinatorics.permutations import Cycle
+        >>> Cycle(1, 2, 6)
+        Cycle(1, 2, 6)
         """
 
         if not args:
@@ -385,7 +386,7 @@ class Permutation(Basic):
     _cyclic_form = None
     _size = None
 
-    def __new__(cls, args, size=None):
+    def __new__(cls, *args, **kwargs):
         """
         Constructor for the Permutation object from a list or a
         list of lists in which all elements of the permutation may
@@ -431,28 +432,44 @@ class Permutation(Basic):
         >>> _.array_form
         [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
+        size = kwargs.pop('size', None)
         if size is not None:
             size = int(size)
 
-        if isinstance(args, Perm):
-            p = args
-            if size is None or size == p.size:
-                return args.copy()
-            return Perm(p.array_form, size=size)
-
-        if isinstance(args, Cycle):
-            return Perm._af_new(args.as_list(size))
-
-        if any(is_sequence(a) and not a for a in args) or \
-           has_variety(is_sequence(a) for a in args):
-            raise ValueError("Permutation argument must be a list of ints, "
-                             "a list of lists, Permutation or Cycle.")
+        #() or (1) = identity
+        #(1, 2) = cycle
+        #([1, 2, 3]) = array formr
+        #([[1, 2]]) = cyclic form
+        #(Cycle) = conversion to permutation
+        #(Permutation) = adjust size or return copy
+        ok = True
+        if not args:
+            return Perm._af_new([])
+        elif len(args) > 1:
+            return Perm._af_new(Cycle(*args).as_list(size))
+        if len(args) == 1:
+            a = args[0]
+            if isinstance(a, Perm):
+                if size is None or size == a.size:
+                    return a.copy()
+                return Perm(a.array_form, size=size)
+            if isinstance(a, Cycle):
+                return Perm._af_new(a.as_list(size))
+            if not is_sequence(a):
+                return Perm._af_new([])
+            if has_variety(is_sequence(ai) for ai in a):
+                ok = False
+        else:
+            ok = False
+        if not ok:
+             raise ValueError("Permutation argument must be a list of ints, "
+                              "a list of lists, Permutation or Cycle.")
 
 
         # safe to assume args are valid
-        args = list(args)
+        args = list(args[0])
 
-        is_cycle = args and is_sequence(args[0])
+        is_cycle =  args and is_sequence(args[0])
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
         # unless a cycle notation has been provided. A 0 will be added
@@ -475,7 +492,6 @@ class Permutation(Basic):
             else:
                 args.insert(0, 0)
             temp.add(0)
-
 
         if not is_cycle and not size and \
             any(i not in temp for i in range(len(temp))):
@@ -839,7 +855,7 @@ class Permutation(Basic):
         >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
         >>> print Cycle(1, 2)(2, 3)
-        [(1, 3, 2)]
+        Cycle(1, 3, 2)
 
         """
         a = self.array_form
@@ -990,7 +1006,7 @@ class Permutation(Basic):
         for i in self.array_form:
             yield i
 
-    def __call__(self, i):
+    def __call__(self, *i):
         """
         Allows applying a permutation instance as a bijective function.
 
@@ -1014,10 +1030,17 @@ class Permutation(Basic):
         # list indices can be Integer or int; leave this
         # as it is (don't test or convert it) because this
         # gets called a lot and should be fast
-        try:
-            return self.array_form[i]
-        except TypeError:
-            return [i[j] for j in self.array_form]
+        if len(i) == 1:
+            i = i[0]
+            try:
+                # P(1)
+                return self.array_form[i]
+            except TypeError:
+                # P([a, b, c])
+                return [i[j] for j in self.array_form]
+        else:
+            # P(1, 2, 3)
+            return self*Permutation(Cycle(*i))
 
     def atoms(self):
         """

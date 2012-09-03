@@ -310,8 +310,7 @@ def test_args():
     # changed?
     assert Permutation([[1], [4,2]], size=1) == Permutation([0, 1, 4, 3, 2])
     assert Permutation([[1], [4,2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
-    assert Permutation([], 3) == Permutation([0, 1, 2])
-    raises(TypeError, lambda: Permutation(0, 1, 2)) # enclosing brackets needed
+    assert Permutation([], size=3) == Permutation([0, 1, 2])
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1,1,0]))
@@ -324,10 +323,10 @@ def test_Cycle():
     raises(ValueError, lambda: Cycle().as_list())
     assert Cycle(1,2).as_list() == [0, 2, 1]
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
-    assert Permutation(Cycle(1, 2), 4) == \
+    assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
-    assert str(Cycle(1,2)(4,5)) == '[(1, 2), (4, 5)]'
-    assert str(Cycle(1,2)) == '[(1, 2)]'
+    assert str(Cycle(1,2)(4,5)) == 'Cycle(1, 2)(4, 5)'
+    assert str(Cycle(1,2)) == 'Cycle(1, 2)'
     assert Cycle(Permutation(range(3))) == Cycle()
     assert Cycle(1,2).as_list() == [0, 2, 1]
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]

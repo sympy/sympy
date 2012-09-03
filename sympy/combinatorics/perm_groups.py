@@ -93,7 +93,7 @@ class _JGraph(object):
         self.r = G._r
         self.idn = range(n)
 
-    def find_cycle(self, v, v1, v2, prev):
+    def find_PERM(self, v, v1, v2, prev):
         """Test if there is a cycle.
 
         Parameters
@@ -114,13 +114,13 @@ class _JGraph(object):
         if v2 in neighbor:
             if v2 != prev:
                 cycle.append(v2)
-                if self.find_cycle(v2, v1, v2, v):
+                if self.find_PERM(v2, v1, v2, v):
                     return True
                 cycle.pop()
         for u in neighbor:
             if u != prev:
                 cycle.append(u)
-                if self.find_cycle(u, v1, v2, v):
+                if self.find_PERM(u, v1, v2, v):
                     return True
                 cycle.pop()
         return False
@@ -147,7 +147,7 @@ class _JGraph(object):
             else:  # new edge
                 self.insert_edge(g, i, ig)
                 self.cycle = [i]
-                if self.find_cycle(i, i, ig, -1):
+                if self.find_PERM(i, i, ig, -1):
                     cycle = self.cycle
                     cycle.append(cycle[0])
                     # find the smallest point (vertex) of the cycle
@@ -355,9 +355,9 @@ class PermutationGroup(Basic):
     The permutations corresponding to motion of the front, right and
     bottom face of a 2x2 Rubik's cube are defined:
 
-    >>> F = Cycle(2, 19, 21, 8)(3, 17, 20, 10)(4, 6, 7, 5)
-    >>> R = Cycle(1, 5, 21, 14)(3, 7, 23, 12)(8, 10, 11, 9)
-    >>> D = Cycle(6, 18, 14, 10)(7, 19, 15, 11)(20, 22, 23, 21)
+    >>> F = Permutation(2, 19, 21, 8)(3, 17, 20, 10)(4, 6, 7, 5)
+    >>> R = Permutation(1, 5, 21, 14)(3, 7, 23, 12)(8, 10, 11, 9)
+    >>> D = Permutation(6, 18, 14, 10)(7, 19, 15, 11)(20, 22, 23, 21)
 
     These are passed as permutations to PermutationGroup:
 
@@ -369,8 +369,8 @@ class PermutationGroup(Basic):
     objects being moved. An example involving the 2x2 Rubik's cube is
     given there, but here is a simple demonstration:
 
-    >>> a = Permutation([[2, 1]])
-    >>> b = Permutation([[1, 0]])
+    >>> a = Permutation(2, 1)
+    >>> b = Permutation(1, 0)
     >>> G = PermutationGroup(a, b)
     >>> P = Polyhedron(list('ABC'), pgroup=G)
     >>> P.corners
@@ -488,7 +488,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = [[0, 1, 2]], [[0, 1]], [[0, 2]], [[0, 1, 2]]
         >>> a = [Permutation(p) for p in a]
-        >>> g = Permutation([[0,1,2,3,4,5]])
+        >>> g = Permutation(0,1,2,3,4,5)
         >>> G1, G2, G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g,g**2]]]
         >>> assert G1.order() == G2.order() == G3.order() == 6
         >>> assert G1 == G2 and G1 != G3
@@ -524,8 +524,8 @@ class PermutationGroup(Basic):
         >>> H = G*G
         >>> H
         PermutationGroup([
-            Permutation([[0, 1, 2, 3, 4]]),
-            Permutation([[5, 6, 7, 8, 9]])])
+            PERM(0, 1, 2, 3, 4),
+            PERM(5, 6, 7, 8, 9)])
         >>> H.order()
         25
 
@@ -762,8 +762,8 @@ class PermutationGroup(Basic):
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
         ([0, 2, 1],
-        [Cycle(0, 1, 2, 3), Cycle(0, 1), Cycle(2, 3),
-         Cycle(1, 3, 2), Cycle(1, 3)])
+        [PERM(0, 1, 2, 3), PERM(0, 1), PERM(2, 3),
+         PERM(1, 3, 2), PERM(1, 3)])
         >>> S.base
         [0, 1, 2]
         >>> _verify_bsgs(S, S.base, S.strong_gens)
@@ -900,12 +900,12 @@ class PermutationGroup(Basic):
         >>> for g in A.basic_stabilizers:
         ...     print g
         PermutationGroup([
-            Permutation([[0, 1, 2]]),
-            Permutation([[1, 2, 3]]),
-            Permutation([[1, 3, 2]])])
+            PERM(0, 1, 2),
+            PERM(1, 2, 3),
+            PERM(1, 3, 2)])
         PermutationGroup([
-            Permutation([[1, 2, 3]]),
-            Permutation([[1, 3, 2]])])
+            PERM(1, 2, 3),
+            PERM(1, 3, 2)])
 
         See Also
         ========
@@ -941,13 +941,13 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> A = AlternatingGroup(4)
         >>> A.basic_transversals
-        [{0: Cycle(),
-          1: Cycle(0, 1, 2),
-          2: Cycle(0, 2, 1),
-          3: Cycle(0, 3, 1)},
-         {1: Cycle(),
-          2: Cycle(1, 2, 3),
-          3: Cycle(1, 3, 2)}]
+        [{0: PERM(),
+          1: PERM(0, 1, 2),
+          2: PERM(0, 2, 1),
+          3: PERM(0, 3, 1)},
+         {1: PERM(),
+          2: PERM(1, 2, 3),
+          3: PERM(1, 3, 2)}]
 
         See Also
         ========
@@ -1171,14 +1171,14 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, Cycle
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
-        >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
+        >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+        >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([[5, 6, 7]])
+        >>> c = Permutation(5, 6, 7)
         >>> G.coset_decomposition(c)
         False
 
-        >>> c = Permutation([[1, 2, 4], [3, 6, 5]])
+        >>> c = Permutation(1, 2, 4)(3, 6, 5)
         >>> G.has_element(c)
         True
         >>> G.coset_decomposition(c)
@@ -1189,7 +1189,7 @@ class PermutationGroup(Basic):
         XXX is this a valid decomposition which is two identity
         permutations and c itself?
 
-        >>> c = Permutation([[2, 4], [3, 5]])
+        >>> c = Permutation(2, 4)(3, 5)
         >>> c.array_form
         [0, 1, 4, 5, 2, 3]
         >>> G.has_element(c)
@@ -1242,12 +1242,12 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
-        >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
+        >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+        >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([[0, 1, 2, 3, 4], [5, 6, 7]])
+        >>> c = Permutation(0, 1, 2, 3, 4)(5, 6, 7)
         >>> G.coset_rank(c)
-        >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
+        >>> c = Permutation(0, 6)(1, 7)(2, 4)(3, 5)
         >>> G.coset_rank(c)
         40
         >>> G.coset_unrank(40, af=True)
@@ -1366,7 +1366,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Cycle(), Cycle(0, 1)]
+        [PERM(), PERM(0, 1)]
 
         See Also
         ========
@@ -1628,7 +1628,7 @@ class PermutationGroup(Basic):
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.generators
-        [Cycle(1, 2), Cycle(0, 1)]
+        [PERM(1, 2), PERM(0, 1)]
 
         """
         return self._generators
@@ -1666,13 +1666,13 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([[1, 2]])
-        >>> b = Permutation([[2, 3, 1]])
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(2, 3, 1)
         >>> G = PermutationGroup(a, b, degree=5)
         >>> elem = Permutation([[2, 3]], size=5) # XXX should it fail w/o size?
         >>> G.has_element(elem)
         True
-        >>> G.has_element(Permutation([[0, 1, 2, 3]]))
+        >>> G.has_element(Permutation(0, 1, 2, 3))
         False
 
         To test if a given permutation is present in the group:
@@ -2388,7 +2388,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
         >>> G.orbit_rep(0, 4)
-        Cycle(0, 4, 1, 2, 3)
+        PERM(0, 4, 1, 2, 3)
 
         See Also
         ========
@@ -2429,8 +2429,8 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
-        [Cycle(), Cycle(0, 1, 2, 3, 4, 5), Cycle(0, 5)(1, 4)(2, 3),
-         Cycle(0, 2, 4)(1, 3, 5), Cycle(0, 4)(1, 3), Cycle(0, 3)(1, 4)(2, 5)]
+        [PERM(), PERM(0, 1, 2, 3, 4, 5), PERM(0, 5)(1, 4)(2, 3),
+         PERM(0, 2, 4)(1, 3, 5), PERM(0, 4)(1, 3), PERM(0, 3)(1, 4)(2, 5)]
 
         See Also
         ========
@@ -2509,7 +2509,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Cycle(), Cycle(0, 1)]
+        [PERM(), PERM(0, 1)]
 
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -2602,11 +2602,11 @@ class PermutationGroup(Basic):
         >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> G = PermutationGroup([a, b])
         >>> G.make_perm(1, [0])
-        Cycle(0, 1)(2, 3)
+        PERM(0, 1)(2, 3)
         >>> G.make_perm(3, [0, 1, 0])
-        Cycle(0, 2, 3, 1)
+        PERM(0, 2, 3, 1)
         >>> G.make_perm([0, 1, 0])
-        Cycle(0, 2, 3, 1)
+        PERM(0, 2, 3, 1)
 
         See Also
         ========
@@ -3142,13 +3142,15 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
         PermutationGroup([
-            Permutation([[0, 4], [1, 3]]),
-            Permutation([])])
+            PERM(0, 4)(1, 3),
+            PERM()])
 
         See Also
         ========
@@ -3219,7 +3221,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> D.strong_gens
-        [Cycle(0, 1, 2, 3), Cycle(0, 3)(1, 2), Cycle(1, 3)]
+        [PERM(0, 1, 2, 3), PERM(0, 3)(1, 2), PERM(1, 3)]
         >>> D.base
         [0, 1]
 

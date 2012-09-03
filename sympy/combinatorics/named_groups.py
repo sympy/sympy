@@ -20,8 +20,8 @@ def AbelianGroup(*cyclic_orders):
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
-            Permutation([[0, 1, 2]]),
-            Permutation([[3, 4, 5, 6]])])
+            PERM(0, 1, 2),
+            PERM(3, 4, 5, 6)])
 
     See Also
     ========
