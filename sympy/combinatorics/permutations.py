@@ -18,6 +18,7 @@ def _af_mul(*a, **kwargs):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_mul, Permutation
+    >>> Permutation.print_cyclic = False
     >>> a, b = [1, 0, 2], [0, 2, 1]
     >>> _af_mul(a, b)
     [1, 2, 0]
@@ -255,6 +256,7 @@ class Cycle(dict):
         ========
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = C()*[(2, 3), (4, 5)]
         >>> p.as_list()
         [0, 1, 3, 2, 5, 4]
@@ -310,6 +312,7 @@ class Permutation(Basic):
     mapping with itself.
 
     >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = False
     >>> p = Permutation([0, 2, 1])
     >>> p(1)
     2
@@ -379,7 +382,7 @@ class Permutation(Basic):
     >>> _.rank()
     21
     >>> p.unrank_lex(p.size, 0)
-    Permutation([0, 1, 2, 3])
+    Permutation([])
 
     The product of two permutations a and q is defined as their composition as
     functions, (p*q)(i) = p(q(i)) [6]_.
@@ -444,11 +447,12 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
 
         Permutations entered in array-form are left unaltered:
 
-        >>> Permutation([0, 1, 2])
-        Permutation([0, 1, 2])
+        >>> Permutation([0, 2, 1])
+        Permutation([0, 2, 1])
 
         Permutations entered in cyclic form are converted to array form;
         singletons need not be entered:
@@ -456,11 +460,18 @@ class Permutation(Basic):
         >>> Permutation([[4, 5, 6], [0, 1]])
         Permutation([1, 0, 2, 3, 5, 6, 4])
 
+        When printing, the unchanged tail of the permutation is not shown:
+
+        >>> Permutation([1, 0, 2, 3, 4, 5])
+        Permutation([1, 0])
+        >>> _.array_form
+        [1, 0, 2, 3, 4, 5]
+
         All manipulation of permutations assumes that the smallest element
         is 0; if a permutation is not entered with a 0, one will be added:
 
         >>> Permutation([1, 2])
-        Permutation([0, 1, 2])
+        Permutation([])
 
         If a permutation is entered in cyclic form, it can be entered without
         singletons and the ``size`` specified so those values can be filled
@@ -468,7 +479,9 @@ class Permutation(Basic):
         in the cycles:
 
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
-        Permutation([0, 4, 3, 5, 1, 2, 6, 7, 8, 9])
+        Permutation([0, 4, 3, 5, 1, 2])
+        >>> _.array_form
+        [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
         if size is not None:
             size = int(size)
@@ -555,6 +568,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Perm
+        >>> Perm.print_cyclic = False
         >>> a = [2,1,3,0]
         >>> p = Perm._af_new(a)
         >>> p
@@ -576,6 +590,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([[2,0], [3,1]])
         >>> p.array_form
         [2, 3, 0, 1]
@@ -614,6 +629,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([0, 3, 1, 2])
         >>> p.cyclic_form
         [[1, 3, 2]]
@@ -723,15 +739,15 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0, 1, 2, 3])
-        >>> q = Permutation([2, 1, 3, 0])
-        >>> p + q == q
+        >>> Permutation.print_cyclic = False
+        >>> I = Permutation([0, 1, 2, 3])
+        >>> a = Permutation([2, 1, 3, 0])
+        >>> I + a == a
         True
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([0, 3, 1, 2])
         >>> b = Permutation([2, 1, 0, 3])
         >>> a + b
-        Permutation([2, 0, 1, 3])
+        Permutation([2, 0, 1])
 
         See Also
         ========
@@ -793,6 +809,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation as Perm
+        >>> Perm.print_cyclic = False
         >>> a = Perm([1, 0, 2])
         >>> b = Perm([0, 2, 1])
         >>> a.cyclic_form, b.cyclic_form
@@ -841,6 +858,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([1, 2, 3, 0])
         >>> q = Permutation([3, 2, 0, 1])
         >>> q*p
@@ -922,11 +940,12 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([2,0,3,1])
         >>> q = Permutation([1,0,3,2])
         >>> r = Permutation([0,2,3,1])
         >>> p**4
-        Permutation([0, 1, 2, 3])
+        Permutation([])
         >>> p**q == p.conjugate(q)
         True
         >>> q**p == q.conjugate(p)
@@ -1126,10 +1145,11 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
         >>> Permutation.unrank_nonlex(4, -1)
-        Permutation([0, 1, 2, 3])
+        Permutation([])
 
         See Also
         ========
@@ -1192,6 +1212,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([2, 0, 3, 1]); p.rank_nonlex()
         5
         >>> p = p.next_nonlex(); p
@@ -1565,6 +1586,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> a = Permutation([0,2,1,3])
         >>> b = Permutation([0,2,3,1])
         >>> a.conjugate(b)
@@ -1594,6 +1616,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> a = Permutation([0,2,1,3])
         >>> b = Permutation([0,2,3,1])
         >>> a.commutator(b)
@@ -1654,11 +1677,12 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([3,1,5,2,4,0])
         >>> p.order()
         4
         >>> (p**(p.order()))
-        Permutation([0, 1, 2, 3, 4, 5])
+        Permutation([])
 
         See Also
         ========
@@ -1829,8 +1853,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.unrank_trotterjohnson(5,10)
-        Permutation([0, 3, 1, 2, 4])
+        >>> Permutation.unrank_trotterjohnson(5, 10)
+        Permutation([0, 3, 1, 2])
 
         See Also
         ========
@@ -1866,6 +1890,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([3, 0, 2, 1])
         >>> p.rank_trotterjohnson()
         4
@@ -1997,7 +2022,7 @@ class Permutation(Basic):
         [0, 1, 0, 0, 0, 0]
         [1, 0, 0, 0, 0, 0]
         [0, 0, 0, 1, 0, 0]
-        >>> from sympy.combinatorics.permutations import Permutation
+
         >>> q = Permutation([0, 1, 2, 3])
         >>> q.get_adjacency_matrix()
         [0, 1, 0, 0]
@@ -2113,8 +2138,8 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.josephus(3, 6, 2)
-        Permutation([2, 5, 3, 1, 4, 0])
+        >>> Permutation.josephus(3, 6, 2).array_form
+        [2, 5, 3, 1, 4, 0]
 
         References
         ==========
@@ -2145,8 +2170,9 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> Permutation.from_inversion_vector([3,2,1,0,0])
-        Permutation([3, 2, 1, 0, 4, 5])
+        Permutation([3, 2, 1, 0])
 
         """
         size = len(inversion)
@@ -2190,6 +2216,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> a = Permutation.unrank_lex(5,10)
         >>> a.rank()
         10
@@ -2213,6 +2240,11 @@ class Permutation(Basic):
                     perm_array[j] += 1
             psize = new_psize
         return Perm._af_new(perm_array)
+
+    # global flag to control how permutations are printed
+    # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
+    # when False, Permutation([0, 2, 1, 3]) -> Permutation([0, 2, 1])
+    print_cyclic = True
 
 def _merge(arr, temp, left, mid, right):
     """
