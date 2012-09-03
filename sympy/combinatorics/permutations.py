@@ -169,6 +169,30 @@ class Cycle(dict):
         self[arg] = arg
         return arg
 
+    def __call__(self, *other):
+        """Return product of cycles processed from R to L.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Cycle as C
+        >>> from sympy.combinatorics.permutations import Permutation as Perm
+        >>> print C(1, 2)(2, 3)
+        [(1, 3, 2)]
+
+        An instance of a Cycle will automatically parse list-like
+        objects and Permutations that are on the right. It is more
+        flexible than the Permutation in that all elements need not
+        be present:
+
+        >>> a = C(1, 2)
+        >>> print a(2, 3)
+        [(1, 3, 2)]
+        >>> print a(2, 3)(4, 5)
+        [(1, 3, 2), (4, 5)]
+
+        """
+        return self*Cycle(*other)
+
     def __mul__(self, other):
         """Return product of cycles processed from R to L.
 
@@ -674,6 +698,16 @@ class Permutation(Basic):
         """
         a = self.array_form
         return [i for i, e in enumerate(self.array_form) if a[i] != i]
+
+    def __eq__(self, other):
+        if not isinstance(other, self.func):
+            return False
+        small = min(self.size, other.size)
+        s = self.array_form
+        o = other.array_form
+        return s[:small] == o[:small] and (
+            all(i.size == small or i[small:] == range(small, i.size + 1)
+            for i in (self, other)))
 
     def __add__(self, other):
         """

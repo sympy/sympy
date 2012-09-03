@@ -281,6 +281,10 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)
 
+    def _print_PermutationGroup(self, expr):
+        p = ['    Permutation(%s)' % str(a.cyclic_form) for a in expr.args[0]]
+        return 'PermutationGroup([\n%s])' % ',\n'.join(p)
+
     def _print_PDF(self, expr):
         return 'PDF(%s, (%s, %s, %s))' % \
             (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]), \

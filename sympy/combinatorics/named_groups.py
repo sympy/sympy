@@ -19,8 +19,9 @@ def AbelianGroup(*cyclic_orders):
 
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3,4)
-    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
-    Permutation([0, 1, 2, 4, 5, 6, 3])])
+    PermutationGroup([
+            Permutation([[0, 1, 2]]),
+            Permutation([[3, 4, 5, 6]])])
 
     See Also
     ========

@@ -5,7 +5,7 @@ from types import GeneratorType
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_mul)
+    _af_mul, Cycle)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -346,20 +346,20 @@ class PermutationGroup(Basic):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics.permutations import Permutation, Cycle
     >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
     The permutations corresponding to motion of the front, right and
     bottom face of a 2x2 Rubik's cube are defined:
 
-    >>> F = [(2, 19, 21, 8), (3, 17, 20, 10), (4, 6, 7, 5)]
-    >>> R = [(1, 5, 21, 14), (3, 7, 23, 12), (8, 10, 11, 9)]
-    >>> D = [(6, 18, 14, 10), (7, 19, 15, 11), (20, 22, 23, 21)]
+    >>> F = Cycle(2, 19, 21, 8)(3, 17, 20, 10)(4, 6, 7, 5)
+    >>> R = Cycle(1, 5, 21, 14)(3, 7, 23, 12)(8, 10, 11, 9)
+    >>> D = Cycle(6, 18, 14, 10)(7, 19, 15, 11)(20, 22, 23, 21)
 
     These are passed as permutations to PermutationGroup:
 
-    >>> G = PermutationGroup([Permutation(i) for i in (F, R, D)])
+    >>> G = PermutationGroup(F, R, D)
     >>> G.order()
     3674160
 
@@ -427,15 +427,19 @@ class PermutationGroup(Basic):
 
     """
 
-    def __new__(cls, *args, **kw_args):
+    def __new__(cls, *args, **kwargs):
         """The default constructor.
         """
         args = list(args[0] if is_sequence(args[0]) else args)
+        if any(isinstance(a, Cycle) for a in args):
+            args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
-            size = max([a.max() for a in args]) + 1
+            degree = kwargs.pop('degree', None)
+            if degree is None:
+                degree = max(a.size for a in args)
             for i in range(len(args)):
-                args[i] = Permutation(args[i], size=size)
-        obj = Basic.__new__(cls, *[args], **kw_args)
+                args[i] = Permutation(args[i], size=degree)
+        obj = Basic.__new__(cls, *[args], **kwargs)
         obj._generators = args
         obj._order = None
         obj._center = []
@@ -516,8 +520,9 @@ class PermutationGroup(Basic):
         >>> G = CyclicGroup(5)
         >>> H = G*G
         >>> H
-        PermutationGroup([Permutation([1, 2, 3, 4, 0, 5, 6, 7, 8, 9]),
-        Permutation([0, 1, 2, 3, 4, 6, 7, 8, 9, 5])])
+        PermutationGroup([
+            Permutation([[0, 1, 2, 3, 4]]),
+            Permutation([[5, 6, 7, 8, 9]])])
         >>> H.order()
         25
 
@@ -544,7 +549,7 @@ class PermutationGroup(Basic):
 
         The implementation uses a modification of the original product
         replacement algorithm due to Leedham-Green, as described in [1],
-        pp.69-71; also, see [2], pp.27-29 for a detailed theoretical
+        pp. 69-71; also, see [2], pp. 27-29 for a detailed theoretical
         analysis of the original product replacement algorithm, and [4].
 
         The product replacement algorithm is used for producing random,
@@ -600,7 +605,7 @@ class PermutationGroup(Basic):
         """Merges two classes in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
-        pp.83-87. The class merging process uses union by rank as an
+        pp. 83-87. The class merging process uses union by rank as an
         optimization. ([7])
 
         Notes
@@ -646,7 +651,7 @@ class PermutationGroup(Basic):
         """Find representative of a class in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
-        pp.83-87. After the representative of the class to which ``num``
+        pp. 83-87. After the representative of the class to which ``num``
         belongs is found, path compression is performed as an optimization
         ([7]).
 
@@ -690,7 +695,7 @@ class PermutationGroup(Basic):
         ``B = (b_1, b_2, ..., b_k)`` such that no element of ``G`` apart from the
         identity fixes all the points in ``B``. The concepts of a base and
         strong generating set and their applications are discussed in depth
-        in [1], pp.87-89 and [2], pp.55-57.
+        in [1], pp. 87-89 and [2], pp. 55-57.
 
         Examples
         ========
@@ -770,7 +775,7 @@ class PermutationGroup(Basic):
         =====
 
         The deterministic version of the algorithm is discussed in
-        [1], pp.102-103; the randomized version is discussed in [1], p.103, and
+        [1], pp. 102-103; the randomized version is discussed in [1], p.103, and
         [2], p.98. It is of Las Vegas type.
         Notice that [1] contains a mistake in the pseudocode and
         discussion of BASESWAP: on line 3 of the pseudocode,
@@ -850,7 +855,7 @@ class PermutationGroup(Basic):
         If ``(b_1, b_2, ..., b_k)`` is a base for a group ``G``, and
         ``G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}`` is the ``i``-th basic stabilizer
         (so that ``G^{(1)} = G``), the ``i``-th basic orbit relative to this base
-        is the orbit of ``b_i`` under ``G^{(i)}``. See [1], pp.87-89 for more
+        is the orbit of ``b_i`` under ``G^{(i)}``. See [1], pp. 87-89 for more
         information.
 
         Examples
@@ -879,7 +884,7 @@ class PermutationGroup(Basic):
 
         The ``i``-th basic stabilizer ``G^{(i)}`` relative to a base
         ``(b_1, b_2, ..., b_k)`` is ``G_{b_1, b_2, ..., b_{i-1}}``. For more
-        information, see [1], pp.87-89.
+        information, see [1], pp. 87-89.
 
         Examples
         ========
@@ -889,10 +894,15 @@ class PermutationGroup(Basic):
         >>> A.schreier_sims()
         >>> A.base
         [0, 1]
-        >>> A.basic_stabilizers
-        [PermutationGroup([Permutation([1, 2, 0, 3]),
-        Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])]),
-        PermutationGroup([Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])])]
+        >>> for g in A.basic_stabilizers:
+        ...     print g
+        PermutationGroup([
+            Permutation([[0, 1, 2]]),
+            Permutation([[1, 2, 3]]),
+            Permutation([[1, 3, 2]])])
+        PermutationGroup([
+            Permutation([[1, 2, 3]]),
+            Permutation([[1, 3, 2]])])
 
         See Also
         ========
@@ -919,7 +929,7 @@ class PermutationGroup(Basic):
         The basic transversals are transversals of the basic orbits. They
         are provided as a list of dictionaries, each dictionary having
         keys - the elements of one of the basic orbits, and values - the
-        corresponding transversal elements. See [1], pp.87-89 for more
+        corresponding transversal elements. See [1], pp. 87-89 for more
         information.
 
         Examples
@@ -983,11 +993,14 @@ class PermutationGroup(Basic):
 
         The centralizer of a set of permutations ``S`` inside
         a group ``G`` is the set of elements of ``G`` that commute with all
-        elements of ``S``:
-        ``C_G(S) = \{ g \in G | gs = sg \forall s \in S\}`` ([10])
+        elements of ``S``::
+
+            ``C_G(S) = \{ g \in G | gs = sg \forall s \in S\}`` ([10])
+
         Usually, ``S`` is a subset of ``G``, but if ``G`` is a proper subgroup of
         the full symmetric group, we allow for ``S`` to have elements outside
         ``G``.
+
         It is naturally a subgroup of ``G``; the centralizer of a permutation
         group is equal to the centralizer of any set of generators for that
         group, since any element commuting with the generators commutes with
@@ -1134,14 +1147,17 @@ class PermutationGroup(Basic):
         return res
 
     def coset_decomposition(self, g):
-        """Decompose ``g`` as h_0*...*h_{len(u)}
+        """Return the decomposition of ``g``, ``u``, such that
+        ``g = u[-1]*...*u[-n]`` where ``n = len(u)``.
 
-        The Schreier-Sims coset representation u of ``G``
+        The Schreier-Sims coset representation of ``G``, ``u``,
         gives a univoque decomposition of an element ``g``
-        as h_0*...*h_{len(u)}, where h_i belongs to u[i]
+        as h_{len(u)}*...*h_0, where h_i belongs to u[i]
 
         Output: [h_0, .., h_{len(u)}] if ``g`` belongs to ``G``
                 False otherwise
+
+        XXX clean up notation of above
 
         Examples
         ========
@@ -1151,21 +1167,27 @@ class PermutationGroup(Basic):
         >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
         >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([[0, 1, 2, 3, 4], [5, 6, 7]])
+        >>> c = Permutation([[5, 6, 7]])
         >>> G.coset_decomposition(c)
         False
         >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
+        >>> G.has_element(c)
+        True
         >>> G.coset_decomposition(c)
         [[6, 4, 2, 0, 7, 5, 3, 1],
          [0, 4, 1, 5, 2, 6, 3, 7],
          [0, 1, 2, 3, 4, 5, 6, 7]]
-        >>> G.has_element(c)
+        >>> Permutation.lmul(*[Permutation(p) for p in _]) == c
         True
 
         """
         u = self.coset_repr()
         if isinstance(g, Permutation):
             g = g.array_form
+        # XXX there is no error checking that a valid g has been
+        # given; it is assumed that elements 0..len(g) - 1 are present
+        if 0 and len(g) != self.degree:
+            g.extend(range(len(g), self.degree))
         g1 = g
         n = len(u)
         a = []
@@ -1333,9 +1355,9 @@ class PermutationGroup(Basic):
         r"""Return the derived series for the group.
 
         The derived series for a group ``G`` is defined as
-        ``G = G_0 > G_1 > G_2 > \ldots``
-        where ``G_i = [G_{i-1}, G_{i-1}]``, i.e. ``G_i`` is the derived subgroup of
-        ``G_{i-1}``, for ``i\in\mathbb{N}``. When we have ``G_k = G_{k-1}`` for some
+        ``G = G_0 > G_1 > G_2 > \ldots`` where ``G_i = [G_{i-1}, G_{i-1}]``,
+        i.e. ``G_i`` is the derived subgroup of ``G_{i-1}``, for
+        ``i\in\mathbb{N}``. When we have ``G_k = G_{k-1}`` for some
         ``k\in\mathbb{N}``, the series terminates.
 
         Returns
@@ -1422,7 +1444,8 @@ class PermutationGroup(Basic):
     def generate(self, method="coset", af=False):
         """Return iterator to generate the elements of the group
 
-        Iteration is done with one of these methods:
+        Iteration is done with one of these methods::
+
           method='coset'  using the Schreier-Sims coset representation
           method='dimino' using the Dimino method
 
@@ -1453,8 +1476,10 @@ class PermutationGroup(Basic):
 
         If af == True it yields the array form of the permutations
 
-        Reference:
-        [1] The implementation of various algorithms for Permutation Groups in
+        References
+        ==========
+
+        [1] The Implementation of Various Algorithms for Permutation Groups in
         the Computer Algebra System: AXIOM, N.J. Doye, M.Sc. Thesis
 
         Examples
@@ -1610,20 +1635,20 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1, 3])
-        >>> b = Permutation([0, 2, 3, 1])
-        >>> g = PermutationGroup([a, b])
-        >>> elem = Permutation([0, 1, 3, 2])
-        >>> g.has_element(elem)
+        >>> a = Permutation([[1, 2]])
+        >>> b = Permutation([[2, 3, 1]])
+        >>> G = PermutationGroup(a, b, degree=5)
+        >>> elem = Permutation([[2, 3]], size=5) # XXX should it fail w/o size?
+        >>> G.has_element(elem)
         True
-        >>> g.has_element(Permutation([1, 2, 3, 0]))
+        >>> G.has_element(Permutation([[0, 1, 2, 3]]))
         False
 
         To test if a given permutation is present in the group:
 
-        >>> elem in g
+        >>> elem in G
         False
-        >>> g.has(elem)
+        >>> G.has(elem)
         False
 
         See Also
@@ -1683,10 +1708,10 @@ class PermutationGroup(Basic):
         number theory:
         1) If a transitive group ``G`` of degree ``n`` contains an element
         with a cycle of length ``n/2 < p < n-2`` for ``p`` a prime, ``G`` is the
-        symmetric or alternating group ([1], pp.81-82)
+        symmetric or alternating group ([1], pp. 81-82)
         2) The proportion of elements in the symmetric/alternating group having
         the property described in 1) is approximately ``\log(2)/\log(n)``
-        ([1], p.82; [2], pp.226-227).
+        ([1], p.82; [2], pp. 226-227).
         The helper function ``_check_cycles_alt_sym`` is used to
         go over the cycles in a permutation and look for ones satisfying 1).
 
@@ -2083,7 +2108,7 @@ class PermutationGroup(Basic):
         It is an implementation of Atkinson's algorithm, as suggested in [1],
         and manipulates an equivalence relation on the set ``S`` using a
         union-find data structure. The running time is just above
-        ``O(|points||S|)``. ([1], pp.83-87; [7]).
+        ``O(|points||S|)``. ([1], pp. 83-87; [7]).
 
         Examples
         ========
@@ -2181,7 +2206,7 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The algorithm is described in [1], pp.73-74; it makes use of the
+        The algorithm is described in [1], pp. 73-74; it makes use of the
         generation of random elements for permutation groups by the product
         replacement algorithm.
 
@@ -2244,7 +2269,7 @@ class PermutationGroup(Basic):
 
         The time complexity of the algorithm used here is ``O(|Orb|*r)`` where
         ``|Orb|`` is the size of the orbit and ``r`` is the number of generators of
-        the group. For a more detailed analysis, see [1], p.78, [2], pp.19-21.
+        the group. For a more detailed analysis, see [1], p.78, [2], pp. 19-21.
         Here alpha can be a single point, or a list of points.
 
         If alpha is a single point, the ordinary orbit is computed.
@@ -2791,7 +2816,7 @@ class PermutationGroup(Basic):
         as any sequence of points is a base for the trivial group. If the
         identity is present in the generators ``gens``, it is removed as
         it is a redundant generator.
-        The implementation is described in [1], pp.90-93.
+        The implementation is described in [1], pp. 90-93.
 
         See Also
         ========
@@ -2933,7 +2958,7 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The algorithm is described in detail in [1], pp.97-98. It extends
+        The algorithm is described in detail in [1], pp. 97-98. It extends
         the orbits ``orbs`` and the permutation groups ``stabs`` to
         basic orbits and basic stabilizers for the base and strong generating
         set produced in the end.
@@ -3084,8 +3109,9 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
-        PermutationGroup([Permutation([4, 3, 2, 1, 0, 5]),
-        Permutation([0, 1, 2, 3, 4, 5])])
+        PermutationGroup([
+            Permutation([[0, 4], [1, 3]]),
+            Permutation([])])
 
         See Also
         ========
@@ -3148,7 +3174,7 @@ class PermutationGroup(Basic):
         stabilizer ``G^{(i+1)} := G_{b_1, b_2, ..., b_i}`` with ``S`` generates
         the pointwise stabilizer ``G^{(i+1)}``. The concepts of a base and
         strong generating set and their applications are discussed in depth
-        in [1], pp.87-89 and [2], pp.55-57.
+        in [1], pp. 87-89 and [2], pp. 55-57.
 
         Examples
         ========
@@ -3227,13 +3253,15 @@ class PermutationGroup(Basic):
 
         This function is extremely lenghty and complicated and will require
         some careful attention. The implementation is described in
-        [1], pp.114-117, and the comments for the code here follow the lines
+        [1], pp. 114-117, and the comments for the code here follow the lines
         of the pseudocode in the book for clarity.
+
         The complexity is exponential in general, since the search process by
         itself visits all members of the supergroup. However, there are a lot
         of tests which are used to prune the search tree, and users can define
         their own tests via the ``tests`` parameter, so in practice, and for
         some computations, it's not terrible.
+
         A crucial part in the procedure is the frequent base change performed
         (this is line 11 in the pseudocode) in order to obtain a new basic
         stabilizer. The book mentiones that this can be done by using
