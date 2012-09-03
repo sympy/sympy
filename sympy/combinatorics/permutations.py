@@ -214,7 +214,7 @@ class Cycle(dict):
             big = max([i for i in self if self[i] != i])
             size = max(size, big + 1)
         else:
-            size = max(size, max(self) + 1)
+            size = max(self) + 1
         return [self[i] for i in range(size)]
 
     def __repr__(self):
