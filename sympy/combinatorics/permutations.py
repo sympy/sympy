@@ -333,7 +333,7 @@ class Permutation(Basic):
 
     >>> Permutation.print_cyclic = True
     >>> p
-    PERM(1, 2)(3, 4, 5)
+    Permutation(1, 2)(3, 4, 5)
     >>> Permutation.print_cyclic = False
 
     2) Regardless of the setting, a list of elements in the array for cyclic
@@ -358,7 +358,7 @@ class Permutation(Basic):
     >>> p = _
     >>> Permutation.print_cyclic = True
     >>> p
-    PERM(0, 1)
+    Permutation(0, 1)
     >>> Permutation.print_cyclic = False
 
     Neither the 2 nor 3 were printed, but they are still there as can be seen

@@ -292,9 +292,9 @@ class StrPrinter(Printer):
         if Permutation.print_cyclic:
             cycles = expr.cyclic_form
             if not cycles:
-                return 'PERM()'
+                return 'Permutation()'
             s = tuple([(str(c))[1:-1] for c in cycles])
-            return ('PERM(%s)' + '(%s)'*(len(cycles) - 1)) % s
+            return ('Permutation(%s)' + '(%s)'*(len(cycles) - 1)) % s
         else:
             s = expr.support()
             if not s:
