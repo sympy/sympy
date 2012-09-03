@@ -315,6 +315,9 @@ def test_args():
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1,1,0]))
     raises(ValueError, lambda: Permutation([[1], [1, 2]]))
+    raises(ValueError, lambda: Permutation([4, 5], size=10)) # where are 0-3?
+    # but this is ok because cycles imply that only those listed moved
+    assert Permutation([[4, 5]], size=10) == Permutation(4, 5)
 
 def test_Cycle():
     assert Cycle(1, 2)(2,3) == Cycle(1, 3, 2)

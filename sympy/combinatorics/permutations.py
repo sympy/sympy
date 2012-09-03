@@ -351,8 +351,6 @@ class Permutation(Basic):
     the array form printing and no unmoved elements (also known as singletons)
     are shown for the disjoint cycle printing:
 
-    XXX get rid of the head, too? so [0, 1, 2, 4, 3, 5, 6] -> [4, 3]
-
     >>> Permutation([1, 0, 2, 3])
     Permutation([1, 0])
     >>> p = _
@@ -593,10 +591,9 @@ class Permutation(Basic):
                 args.insert(0, 0)
             temp.add(0)
 
-        if not is_cycle and not size and \
+        if not is_cycle and \
             any(i not in temp for i in range(len(temp))):
-            raise ValueError("Integers 0 through %s must be present "
-                             "or size must be given." %
+            raise ValueError("Integers 0 through %s must be present." %
                              max(temp))
 
         if is_cycle:
