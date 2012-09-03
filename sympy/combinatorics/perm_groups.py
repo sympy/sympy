@@ -524,8 +524,8 @@ class PermutationGroup(Basic):
         >>> H = G*G
         >>> H
         PermutationGroup([
-            PERM(0, 1, 2, 3, 4),
-            PERM(5, 6, 7, 8, 9)])
+            Permutation(0, 1, 2, 3, 4),
+            Permutation(5, 6, 7, 8, 9)])
         >>> H.order()
         25
 
@@ -762,8 +762,8 @@ class PermutationGroup(Basic):
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
         ([0, 2, 1],
-        [PERM(0, 1, 2, 3), PERM(0, 1), PERM(2, 3),
-         PERM(1, 3, 2), PERM(1, 3)])
+        [Permutation(0, 1, 2, 3), Permutation(0, 1), Permutation(2, 3),
+         Permutation(1, 3, 2), Permutation(1, 3)])
         >>> S.base
         [0, 1, 2]
         >>> _verify_bsgs(S, S.base, S.strong_gens)
@@ -900,12 +900,12 @@ class PermutationGroup(Basic):
         >>> for g in A.basic_stabilizers:
         ...     print g
         PermutationGroup([
-            PERM(0, 1, 2),
-            PERM(1, 2, 3),
-            PERM(1, 3, 2)])
+            Permutation(0, 1, 2),
+            Permutation(1, 2, 3),
+            Permutation(1, 3, 2)])
         PermutationGroup([
-            PERM(1, 2, 3),
-            PERM(1, 3, 2)])
+            Permutation(1, 2, 3),
+            Permutation(1, 3, 2)])
 
         See Also
         ========
@@ -941,13 +941,13 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> A = AlternatingGroup(4)
         >>> A.basic_transversals
-        [{0: PERM(),
-          1: PERM(0, 1, 2),
-          2: PERM(0, 2, 1),
-          3: PERM(0, 3, 1)},
-         {1: PERM(),
-          2: PERM(1, 2, 3),
-          3: PERM(1, 3, 2)}]
+        [{0: Permutation(),
+          1: Permutation(0, 1, 2),
+          2: Permutation(0, 2, 1),
+          3: Permutation(0, 3, 1)},
+         {1: Permutation(),
+          2: Permutation(1, 2, 3),
+          3: Permutation(1, 3, 2)}]
 
         See Also
         ========
@@ -1366,7 +1366,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [PERM(), PERM(0, 1)]
+        [Permutation(), Permutation(0, 1)]
 
         See Also
         ========
@@ -1628,7 +1628,7 @@ class PermutationGroup(Basic):
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.generators
-        [PERM(1, 2), PERM(0, 1)]
+        [Permutation(1, 2), Permutation(0, 1)]
 
         """
         return self._generators
@@ -2388,7 +2388,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
         >>> G.orbit_rep(0, 4)
-        PERM(0, 4, 1, 2, 3)
+        Permutation(0, 4, 1, 2, 3)
 
         See Also
         ========
@@ -2429,8 +2429,8 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
-        [PERM(), PERM(0, 1, 2, 3, 4, 5), PERM(0, 5)(1, 4)(2, 3),
-         PERM(0, 2, 4)(1, 3, 5), PERM(0, 4)(1, 3), PERM(0, 3)(1, 4)(2, 5)]
+        [Permutation(), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 5)(1, 4)(2, 3),
+         Permutation(0, 2, 4)(1, 3, 5), Permutation(0, 4)(1, 3), Permutation(0, 3)(1, 4)(2, 5)]
 
         See Also
         ========
@@ -2509,7 +2509,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [PERM(), PERM(0, 1)]
+        [Permutation(), Permutation(0, 1)]
 
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -2602,11 +2602,11 @@ class PermutationGroup(Basic):
         >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> G = PermutationGroup([a, b])
         >>> G.make_perm(1, [0])
-        PERM(0, 1)(2, 3)
+        Permutation(0, 1)(2, 3)
         >>> G.make_perm(3, [0, 1, 0])
-        PERM(0, 2, 3, 1)
+        Permutation(0, 2, 3, 1)
         >>> G.make_perm([0, 1, 0])
-        PERM(0, 2, 3, 1)
+        Permutation(0, 2, 3, 1)
 
         See Also
         ========
@@ -3149,8 +3149,8 @@ class PermutationGroup(Basic):
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
         PermutationGroup([
-            PERM(0, 4)(1, 3),
-            PERM()])
+            Permutation(0, 4)(1, 3),
+            Permutation()])
 
         See Also
         ========
@@ -3221,7 +3221,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> D.strong_gens
-        [PERM(0, 1, 2, 3), PERM(0, 3)(1, 2), PERM(1, 3)]
+        [Permutation(0, 1, 2, 3), Permutation(0, 3)(1, 2), Permutation(1, 3)]
         >>> D.base
         [0, 1]
 
