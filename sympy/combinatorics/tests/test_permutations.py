@@ -315,21 +315,18 @@ def test_args():
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1,1,0]))
-    raises(ValueError, lambda: Permutation([[1], [1,2]]))
+    raises(ValueError, lambda: Permutation([[1], [1, 2]]))
 
 def test_Cycle():
-    a, b = Cycle(1, 2), Cycle(2, 3)
-    ans = Cycle(1, 3, 2)
-    assert a*b == ans
-    assert a*(2, 3) == ans
-    assert a*[(2, 3), (4, 5)] == Cycle(1, 3, 2)*Cycle(4, 5)
-    assert a*Permutation([2, 1, 0, 3]) == Cycle(0, 2, 1)
+    assert Cycle(1, 2)(2,3) == Cycle(1, 3, 2)
+    assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
+    assert Permutation(Cycle(1, 2)(2, 1, 0, 3)).cyclic_form , Cycle(0, 2, 1)
     raises(ValueError, lambda: Cycle().as_list())
     assert Cycle(1,2).as_list() == [0, 2, 1]
     assert Cycle(1,2).as_list(4) == [0, 2, 1, 3]
     assert Permutation(Cycle(1, 2), 4) == \
         Permutation([0, 2, 1, 3])
-    assert str(Cycle(1,2)*Cycle(4,5)) == '[(1, 2), (4, 5)]'
+    assert str(Cycle(1,2)(4,5)) == '[(1, 2), (4, 5)]'
     assert str(Cycle(1,2)) == '[(1, 2)]'
     assert Cycle(Permutation(range(3))) == Cycle()
     assert Cycle(1,2).as_list() == [0, 2, 1]

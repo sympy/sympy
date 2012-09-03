@@ -125,34 +125,28 @@ class Cycle(dict):
     >>> from sympy.combinatorics.permutations import Perm, Cycle
     >>> a = Cycle(1, 2)
 
-    A Cycle will automatically parse a cycle given as a tuple:
+    A Cycle will automatically parse a cycle given as a tuple on the rhs:
 
-    >>> print a*(2, 3)
+    >>> print Cycle(1, 2)(2, 3)
     [(1, 3, 2)]
 
     The identity cycle, Cycle(), can be used to start a product:
 
-    >>> print Cycle()*(1, 2)*(2,3)
+    >>> print Cycle()(1, 2)(2,3)
     [(1, 3, 2)]
-
-    Cycle can also parse a list of cycles or an explicit Permutation:
-
-    >>> print a*[(2, 3), (4, 5)]
-    [(1, 3, 2), (4, 5)]
-    >>> print a*Perm([2, 1, 0, 3])
-    [(0, 2, 1)]
 
     The array form of a Cycle can be obtained with the as_list
     property. With no argument, the list will show elements 0 through
     the maximum encountered. If a larger (or smaller) range is desired
-    it can be provided:
+    it can be provided (but the Cycle cannot be truncated to a size
+    smaller than the largest element that is out of place):
 
     >>> a.as_list()
     [0, 2, 1]
     >>> a.as_list(4)
     [0, 2, 1, 3]
-    >>> a.as_list(2) # truncates
-    [0, 2]
+    >>> a.as_list(2) # can't truncate
+    [0, 2, 1]
 
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
@@ -192,80 +186,36 @@ class Cycle(dict):
         [(1, 3, 2), (4, 5)]
 
         """
-        return self*Cycle(*other)
-
-    def __mul__(self, other):
-        """Return product of cycles processed from R to L.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
-        >>> a, b = C(1, 2), C(2, 3)
-        >>> print a*b
-        [(1, 3, 2)]
-
-        This is the same result that would be obtained when multiplying
-        the corresonding permutations:
-
-        >>> A, B = [Perm(w.as_list(4)) for w in (a,b)]
-        >>> print (A*B).cyclic_form
-        [[1, 3, 2]]
-
-        An instance of a Cycle will automatically parse list-like
-        objects and Permutations that are on the right. It is more
-        flexible than the Permutation in that all elements need not
-        be present:
-
-        >>> a = C(1, 2)
-        >>> print a*(2, 3)
-        [(1, 3, 2)]
-        >>> print a*[(2, 3), (4, 5)]
-        [(1, 3, 2), (4, 5)]
-        >>> print a*Perm([2, 1, 0, 3])
-        [(0, 2, 1)]
-
-        """
-        if isinstance(other, (Tuple, tuple, list)):
-            if other and not isinstance(other[0], (list, tuple, Tuple)):
-                return self*Cycle(*other)
-        if isinstance(other, (Perm, list, tuple, Tuple)):
-            rv = self
-            cycles = other.cyclic_form if \
-                isinstance(other, Perm) else other
-            for c in cycles:
-                rv *= c
-            return rv
-        elif isinstance(other, Cycle):
-            rv = other.copy()
-            newv = []
-            for k in self:
-                newv.append(rv[self[k]])
-            for k, v in zip(self, newv):
-                rv[k] = v
-            return rv
-        else:
-            raise TypeError(
-            'expected list, tuple, Tuple, Permutation or '
-            'Cycle but got %s' % other)
+        rv = Cycle(*other)
+        for k, v in zip(self, [rv[self[k]] for k in self]):
+            rv[k] = v
+        return rv
 
     def as_list(self, size=None):
-        """Return the cycles as an explicit list starting from 0.
+        """Return the cycles as an explicit list starting from 0 up
+        to the greatr of the largest value in the cycles and size.
 
         Examples
         ========
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = C()*[(2, 3), (4, 5)]
+        >>> p = C(2, 3)(4, 5)
         >>> p.as_list()
         [0, 1, 3, 2, 5, 4]
         >>> p.as_list(10)
         [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
+        >>> p.as_list(2) # can't truncate
+        [0, 1, 3, 2, 5, 4]
         """
         if not self and not size:
-            raise ValueError('must gives size for empty Cycle')
-        return [self[i] for i in range(size or (max(self) + 1))]
+            raise ValueError('must give size for empty Cycle')
+        if size:
+            big = max([i for i in self if self[i] != i])
+            size = max(size, big + 1)
+        else:
+            size = max(size, max(self) + 1)
+        return [self[i] for i in range(size)]
 
     def __repr__(self):
         reduced = Perm(self.as_list()).cyclic_form
@@ -283,24 +233,22 @@ class Cycle(dict):
         [(1, 2, 6)]
         """
 
-        if len(args) == 1 and isinstance(args[0], Cycle):
-            for k, v in args[0].iteritems():
-                self[k] = v
-            return
-        d = self
         if not args:
             return
-        if len(args) == 1 and isinstance(args[0], Permutation):
-            args = args[0].cyclic_form
-        else:
-            args = [int(a) for a in args]
-            if has_dups(args):
-                raise ValueError('All elements must be unique in a cycle.')
-            args = [args]
-        for c in args:
-            c += [c[0]]
-            for i in range(len(c) - 1):
-                d[c[i]] = c[i + 1]
+        if len(args) == 1:
+            if isinstance(args[0], Permutation):
+                for c in args[0].cyclic_form:
+                    self.update(self(*c))
+                return
+            elif isinstance(args[0], Cycle):
+                for k, v in args[0].iteritems():
+                    self[k] = v
+                return
+        args = [int(a) for a in args]
+        if has_dups(args):
+            raise ValueError('All elements must be unique in a cycle.')
+        for i in range(-len(args), 0):
+            self[args[i]] = args[i + 1]
 
     def copy(self):
         return Cycle(self)
@@ -515,7 +463,7 @@ class Permutation(Basic):
         if has_dups(temp):
             if is_cycle:
                 raise ValueError('there were repeated elements; to resolve '
-                'cycles use Cycle()*%s.' % args)
+                'cycles use Cycle%s.' % ''.join([str(tuple(c)) for c in args]))
             else:
                 raise ValueError('there were repeated elements.')
         temp = set(temp)
@@ -540,7 +488,7 @@ class Permutation(Basic):
             # it -- use the array form instead
             c = Cycle()
             for ci in args:
-                c *= ci
+                c = c(*ci)
             aform = c.as_list()
         else:
             aform = list(args)
@@ -889,14 +837,13 @@ class Permutation(Basic):
         >>> [[0, 1]]*p # exchange first two elements
         Permutation([2, 1, 3, 0])
 
-        If you want to use more than 1 cycle notation in a product of cycles
-        can use Cycle; coercion can only handle one argument to the left.
-        Note also that with Cycles all permutations are interpreted as
-        cycles without the need for double brackets.
+        You cannot use more than 1 cycle notation in a product of cycles
+        since coercion can only handle one argument to the left. To handle
+        multiple cycles it is convenient to use Cycle instead of Permutation:
 
         >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> print Cycle()*(1, 2)*(2, 3)
+        >>> print Cycle(1, 2)(2, 3)
         [(1, 3, 2)]
 
         """
