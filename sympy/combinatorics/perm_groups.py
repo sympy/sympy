@@ -427,6 +427,8 @@ class PermutationGroup(Basic):
 
     [12] http://en.wikipedia.org/wiki/Nilpotent_group
 
+    [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+
     """
 
     def __new__(cls, *args, **kwargs):

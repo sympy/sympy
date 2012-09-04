@@ -275,8 +275,9 @@ class Permutation(Basic):
     Entering Permutations
     =====================
 
-    Permutations are commonly represented in disjoint cycle or array forms.
-
+    Permutations are commonly represented in disjoint cycle, array forms and
+    2-row matrix forms. SymPy allows them to be entered in cyclic or array
+    form.
 
     Array Notation
     --------------
@@ -318,6 +319,24 @@ class Permutation(Basic):
     Permutation([0, 3, 2, 1])
     >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
     True
+
+    Matrix Notation
+    ---------------
+
+    As there is no need to enter the identity permutation of the matrix form
+    of a permutation, one need only enter the 2nd row. But the second row is
+    just the inverse of the permutation. So to enter a permutation in terms of
+    the inverse one can, for a given matrix form,
+
+    >>> unknown = Permutation([2, 0, 3, 1])
+    >>> unknown.matrix_form
+    [0, 1, 2, 3]
+    [1, 3, 0, 2]
+
+    enter the inverse of the second row to recover the underlying permutation:
+
+    >>> ~Permutation([1, 3, 0, 2])
+    Permutation([2, 0, 3, 1])
 
     Representation
     ==============
@@ -382,8 +401,25 @@ class Permutation(Basic):
     >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
     True
 
+    Matrix Notation
+    ---------------
+
+    This 2-row matrix gives the initial position of the elements and a row
+    indicating where each of the elements appears in the final ordering. Hence,
+    the final position of the elements:
+
+    >>> a = Permutation([2, 0, 3, 1])
+    >>> a.matrix_form
+    [0, 1, 2, 3]
+    [1, 3, 0, 2]
+
+    That second row is known as the inverse of the permutation:
+
+    >>> list(~a)
+    [1, 3, 0, 2]
+
     Short introduction to other methods
-    -----------------------------------
+    ===================================
 
     The permutation can act as a bijective function, telling what element is
     located at a given position
@@ -640,6 +676,28 @@ class Permutation(Basic):
         p._array_form = perm
         p._size = len(perm)
         return p
+
+    @property
+    def matrix_form(self):
+        """Shows the permutation as a 2-row matrix containing the identity
+        permutation as the first row and the permutation's inversion as the
+        second row.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> p = Permutation([1, 0, 3, 2])
+        >>> (~p).array_form
+        [1, 0, 3, 2]
+        >>> p.matrix_form
+        [0, 1, 2, 3]
+        [1, 0, 3, 2]
+        """
+
+        from sympy.matrices import Matrix
+        dat = range(self.size) + (~self).array_form
+        return Matrix(2, self.size, dat)
 
     @property
     def array_form(self):
@@ -1718,16 +1776,20 @@ class Permutation(Basic):
         Gives the signature of the permutation needed to place the
         elements of the permutation in canonical order.
 
-        The signature is calculated as (-1)^<# no. of inversions>
+        The signature is calculated as (-1)^<number of inversions>
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0,1,2])
+        >>> p.inversions()
+        0
         >>> p.signature()
         1
         >>> q = Permutation([0,2,1])
+        >>> q.inversions()
+        1
         >>> q.signature()
         -1
 
@@ -1752,7 +1814,7 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = Permutation([3,1,5,2,4,0])
+        >>> p = Permutation([3, 1, 5, 2, 4, 0])
         >>> p.order()
         4
         >>> (p**(p.order()))
@@ -1791,8 +1853,8 @@ class Permutation(Basic):
     @property
     def cycles(self):
         """
-        Returns the number of cycles that the permutation
-        has been decomposed into (including singletons).
+        Returns the number of cycles contained in the permutation
+        (including singletons).
 
         Examples
         ========
@@ -1800,7 +1862,9 @@ class Permutation(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).cycles
         3
-        >>> Permutation([[0, 1], [2, 3]]).cycles
+        >>> Permutation([0, 1, 2]).full_cyclic_form
+        [[0], [1], [2]]
+        >>> Permutation(0, 1)(2, 3).cycles
         2
         """
         return len(self.full_cyclic_form)
@@ -1809,9 +1873,8 @@ class Permutation(Basic):
         """
         Returns the index of a permutation.
 
-        The index of a permutation is the sum of all
-        subscripts j such that p[j] is greater than
-        p[j+1].
+        The index of a permutation is the sum of all subscripts j such
+        that p[j] is greater than p[j+1].
 
         Examples
         ========
@@ -1829,7 +1892,7 @@ class Permutation(Basic):
         """
         Returns the runs of a permutation.
 
-        An ascending sequence in a permutation is called a run [5]
+        An ascending sequence in a permutation is called a run [5].
 
 
         Examples
@@ -2237,8 +2300,7 @@ class Permutation(Basic):
     @classmethod
     def from_inversion_vector(self, inversion):
         """
-        Calculates the permutation from the inversion
-        vector.
+        Calculates the permutation from the inversion vector.
 
         Examples
         ========
