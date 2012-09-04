@@ -3,6 +3,7 @@ from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.pytest import raises
 
 import random
@@ -74,6 +75,7 @@ def test_polyhedron():
                 f = [[c[i] for i in f] for f in P.faces]
                 assert h.faces == Polyhedron(c, f).faces
         assert len(got) == target
+        assert PermutationGroup([Permutation(g) for g in got]).is_group()
 
     for h, size, rpt, target in zip(
         (tetrahedron, square, octahedron, dodecahedron, icosahedron),
