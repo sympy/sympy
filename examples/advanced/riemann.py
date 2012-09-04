@@ -218,8 +218,9 @@ class RiemannMonomial(object):
         for i in range(n//2):
             ind.append('d%s' % (i+1))
             ind.append('-d%s' % (i+1))
-        sgs = get_sgens(self.sgens, n)
-        sgens, g, result = riemann_canon(self.sgens, g, ind, sgs, tc=None)
+        sgens = [Permutation(x) for x in self.sgens]
+        sgs = get_sgens(sgens, n)
+        sgens, g, result = riemann_canon(sgens, g, ind, sgs, mess=False)
         return str_code(sgens, g, result)
 
     def __str__(self):
@@ -433,7 +434,7 @@ def str_code(gens, g, result):
     s = _str_head(gens, size) + _str_perm(len(gens), g, result)
     return s
 
-def riemann_canon(sgens, g, ind, sgs):
+def riemann_canon(sgens, g, ind, sgs, mess=True):
     """
     sgens slot symmetry generators
     `g` permutation corresponding to the tensor, with the last two
@@ -447,13 +448,17 @@ def riemann_canon(sgens, g, ind, sgs):
     res = double_coset_can_rep(0, sgens, g, sgs)
     t1 = time()
     if res:
-        sys.stderr.write('\noutput %s\n' % str_riemann(ind, res))
+        if mess:
+            sys.stderr.write('\noutput %s\n' % str_riemann(ind, res))
         result = [x+1 for x in perm_af_invert(res)]
-        sys.stderr.write('%s\n' % result)
+        if mess:
+            sys.stderr.write('%s\n' % result)
     else:
-        sys.stderr.write('0\n')
+        if mess:
+            sys.stderr.write('0\n')
         result = [0]*size
-    sys.stderr.write('double_coset_can_rep: %f\n' %(t1-t0))
+    if mess:
+        sys.stderr.write('double_coset_can_rep: %f\n' %(t1-t0))
     gens = [h.array_form for h in sgens]
     return gens, g, result
 

@@ -625,3 +625,129 @@ def canonicalization(dummies, sym, sgens, g):
     for c, i in enumerate(pos_dummies):
         g3[i] = g2[c] + num_free
     return g3
+
+# SGS for symmetric and antisymmetric tensors with 2,3,4 indices
+sym2_gens = [[1,0,2,3]]
+asym2_gens = [[1,0,3,2]]
+sym3_gens = [[1,0,2,3,4],[0,2,1,3,4]]
+asym3_gens = [[1,0,2,4,3],[0,2,1,4,3]]
+sym4_gens = [[1,0,2,3,4,5], [0,2,1,3,4,5], [0,1,3,2,4,5]]
+asym4_gens = [[1,0,2,3,5,4], [0,2,1,3,5,4], [0,1,3,2,5,4]]
+riemann_gens = [[1,0,2,3,5,4], [0,1,3,2,5,4], [2,3,0,1,4,5]]
+
+def perm_af_direct_product(gens1, gens2, signed=False):
+    """
+    direct products of the generators gens1 and gens2
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.perm_algorithms import perm_af_direct_product
+    >>> gens1 = [[1,0,2,3], [0,1,3,2]]
+    >>> gens2 = [[1,0]]
+    >>> perm_af_direct_product(gens1, gens2, False)
+    [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [0, 1, 2, 3, 5, 4]]
+    >>> gens1 = [[1,0,2,3,5,4], [0,1,3,2,4,5]]
+    >>> gens2 = [[1,0,2,3]]
+    >>> perm_af_direct_product(gens1, gens2, True)
+    [[1, 0, 2, 3, 4, 5, 7, 6], [0, 1, 3, 2, 4, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7]]
+    """
+    gens1 = [list(x) for x in gens1]
+    gens2 = [list(x) for x in gens2]
+    s = 2 if signed else 0
+    n1 = len(gens1[0]) - s
+    n2 = len(gens2[0]) - s
+    start = list(range(n1))
+    end = list(range(n1, n1 + n2))
+    if signed:
+        gens1 = [gen[:-2] + end + [gen[-2]+n2, gen[-1]+n2] for gen in gens1]
+        gens2 = [start + [x + n1 for x in gen] for gen in gens2]
+    else:
+        gens1 = [gen + end for gen in gens1]
+        gens2 = [start + [x + n1 for x in gen] for gen in gens2]
+
+    res = gens1 + gens2
+
+    return res
+
+def get_sgs(sgens, n):
+    """
+    return (S.coset_repr(), S.strong_base())
+
+    sgens is a strong generating set for a permutation group of
+    signed permutations
+
+    n size of permutations without sign
+    """
+    sgensx = sgens[:]
+    b_S = []
+    S_cosets = []
+    # generate S_cosets, b_S
+    for ii in range(n-1):
+        if not sgensx:
+            S_cosets.append([range(n+2)])
+            continue
+        Sxtrav = orbit_transversal(sgensx, ii, af=True)
+        if len(Sxtrav) > 1:
+            b_S.append(ii)
+        S_cosets.append(Sxtrav)
+        nSxtrav = len(Sxtrav)
+        sgensx = [h for h in sgensx if h[ii] == ii]
+    return S_cosets, b_S
+
+
+def tensor_gens(basic_gens, num_indices, n):
+    """
+    Returns the strong generating set for n tensors of the same type
+
+    n             number of tensors
+    num_indices   number of indices for each tensor
+    basic_gens    strong generating set for the slot symmetries
+                  of a tensor
+    The tensors are assumed to be commuting.
+
+    The strong generating set for the invariant tensor made by the
+    product of n tensors of the same type is composed of
+      n*len(basic_gens) generators coming from basic_gens
+      n-1   generators for the commutation of the tensors
+    The size of each generator in n*sum_indices + 2
+    each generator having the last two indices dedicated to the sign
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.perm_algorithms import tensor_gens, sym3_gens
+    >>> tensor_gens(sym3_gens, 3, 2)
+    [[1, 0, 2, 3, 4, 5, 6, 7], [0, 2, 1, 3, 4, 5, 6, 7], [0, 1, 2, 4, 3, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7], [3, 4, 5, 0, 1, 2, 6, 7]]
+
+    """
+    res = basic_gens[:]
+    ngens = len(basic_gens)
+    size = num_indices + 2
+    size2 = num_indices + 2
+    for i in range(2, n+1):
+        size1 = num_indices*(i-1) + 2
+        res = perm_af_direct_product(res, basic_gens, 1)
+        ngens += len(basic_gens)
+        size += num_indices
+        nr = size - 2
+        a = list(range(nr-2*num_indices))
+        for j in range(num_indices):
+            a.append(nr-num_indices+j)
+        for j in range(num_indices):
+            a.append(nr-2*num_indices+j)
+        a.append(nr)
+        a.append(nr+1)
+        res.append(a)
+    return res
+
+def gens_products(vgens, nvgens):
+    """
+    SGS slot generators for tensors of different types
+
+    vgens  list of SGS of component tensors
+    nvgens list of the number of component tensors of a given type
+    """
+    sgens = tensor_gens(vgens[0], len(vgens[0][0])-2, nvgens[0])
+    for i in range(1, len(nvgens)):
+        tmp = tensor_gens(vgens[i], len(vgens[i][0])-2, nvgens[i])
+        sgens = perm_af_direct_product(sgens, tmp, 1)
+    return sgens
