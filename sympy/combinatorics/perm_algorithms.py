@@ -1,4 +1,4 @@
-from sympy.combinatorics.permutations import Permutation, perm_af_mul, perm_af_muln, perm_af_invert, _new_from_array_form
+from sympy.combinatorics.permutations import Permutation, perm_af_mul, perm_af_muln, perm_af_invert, _new_from_array_form, cyclic
 from sympy.combinatorics.perm_groups import PermutationGroup
 
 """
@@ -626,14 +626,25 @@ def canonicalization(dummies, sym, sgens, g):
         g3[i] = g2[c] + num_free
     return g3
 
-# SGS for symmetric and antisymmetric tensors with 2,3,4 indices
-sym2_gens = [[1,0,2,3]]
-asym2_gens = [[1,0,3,2]]
-sym3_gens = [[1,0,2,3,4],[0,2,1,3,4]]
-asym3_gens = [[1,0,2,4,3],[0,2,1,4,3]]
-sym4_gens = [[1,0,2,3,4,5], [0,2,1,3,4,5], [0,1,3,2,4,5]]
-asym4_gens = [[1,0,2,3,5,4], [0,2,1,3,5,4], [0,1,3,2,5,4]]
+# SGS for the slot symmetry group of the Riemann tensor
 riemann_gens = [[1,0,2,3,5,4], [0,1,3,2,5,4], [2,3,0,1,4,5]]
+
+def get_symmetric_group_sgs(n, sym=True):
+    """
+    SGS for (anti)symmetric group with n elements
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.perm_algorithms import get_symmetric_group_sgs
+    >>> get_symmetric_group_sgs(3)
+    [[1, 0, 2, 3, 4], [0, 2, 1, 3, 4]]
+    """
+    gens = [Permutation(cyclic([(i,i+1)], n)).array_form for i in range(1, n)]
+    if sym:
+        gens = [x + [n, n+1] for x in gens]
+    else:
+        gens = [x + [n+1, n] for x in gens]
+    return gens
 
 def perm_af_direct_product(gens1, gens2, signed=False):
     """
@@ -669,16 +680,15 @@ def perm_af_direct_product(gens1, gens2, signed=False):
 
     return res
 
-def get_sgs(sgens, n):
+def get_coset_repr(sgens):
     """
-    return (S.coset_repr(), S.strong_base())
+    return (coset_repr, strong_base)
 
     sgens is a strong generating set for a permutation group of
     signed permutations
-
-    n size of permutations without sign
     """
     sgensx = sgens[:]
+    n = len(sgens[0]) - 2
     b_S = []
     S_cosets = []
     # generate S_cosets, b_S
@@ -690,7 +700,6 @@ def get_sgs(sgens, n):
         if len(Sxtrav) > 1:
             b_S.append(ii)
         S_cosets.append(Sxtrav)
-        nSxtrav = len(Sxtrav)
         sgensx = [h for h in sgensx if h[ii] == ii]
     return S_cosets, b_S
 
@@ -714,7 +723,8 @@ def tensor_gens(basic_gens, num_indices, n):
 
     Examples
     ========
-    >>> from sympy.combinatorics.perm_algorithms import tensor_gens, sym3_gens
+    >>> from sympy.combinatorics.perm_algorithms import tensor_gens, get_symmetric_group_sgs
+    >>> sym3_gens = get_symmetric_group_sgs(3)
     >>> tensor_gens(sym3_gens, 3, 2)
     [[1, 0, 2, 3, 4, 5, 6, 7], [0, 2, 1, 3, 4, 5, 6, 7], [0, 1, 2, 4, 3, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7], [3, 4, 5, 0, 1, 2, 6, 7]]
 
