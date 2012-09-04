@@ -3556,5 +3556,34 @@ class PermutationGroup(Basic):
         else:
             return self._transitivity_degree
 
+    def is_group(self):
+        # identity present
+        I = Permutation()
+        for g in self:
+            if g == I:
+                break
+        else:
+            return False
+        # associativity already holds: a*(b*c) == (a*b)*c for permutations
+
+        # closure
+        from sympy.utilities.iterables import subsets
+        for a, b in subsets(self, 2):
+            c = a*b
+            for g in self:
+                if g == c:
+                    break
+            else:
+                return False
+
+        # inverse of each is present
+        for a in self:
+            for b in self:
+                if a*b == I:
+                    break
+            else:
+                return False
+
+        return True
 
 PermGroup = PermutationGroup

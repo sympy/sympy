@@ -22,6 +22,8 @@ def AbelianGroup(*cyclic_orders):
     PermutationGroup([
             Permutation(0, 1, 2),
             Permutation(3, 4, 5, 6)])
+    >>> _.is_group()
+    False
 
     See Also
     ========
@@ -56,6 +58,8 @@ def AlternatingGroup(n):
 
     >>> from sympy.combinatorics.named_groups import AlternatingGroup
     >>> G = AlternatingGroup(4)
+    >>> G.is_group()
+    False
     >>> a = list(G.generate_dimino())
     >>> len(a)
     12
@@ -112,6 +116,8 @@ def CyclicGroup(n):
 
     >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> G = CyclicGroup(6)
+    >>> G.is_group()
+    False
     >>> G.order()
     6
     >>> list(G.generate_schreier_sims(af=True))
@@ -152,6 +158,8 @@ def DihedralGroup(n):
 
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(5)
+    >>> G.is_group()
+    False
     >>> a = list(G.generate_dimino())
     >>> [perm.cyclic_form for perm in a]
     [[], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],
@@ -205,6 +213,8 @@ def SymmetricGroup(n):
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> G = SymmetricGroup(4)
+    >>> G.is_group()
+    False
     >>> G.order()
     24
     >>> list(G.generate_schreier_sims(af=True))
@@ -248,7 +258,11 @@ def SymmetricGroup(n):
     return G
 
 def RubikGroup(n):
-    """Return a group of Rubik's cube generators."""
+    """Return a group of Rubik's cube generators.
+    >>> from sympy.combinatorics.named_groups import RubikGroup
+    >>> RubikGroup(2).is_group()
+    False
+    """
     from sympy.combinatorics.generators import rubik
     assert n > 1
     return PermutationGroup(rubik(n))

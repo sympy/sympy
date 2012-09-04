@@ -425,7 +425,7 @@ class Polyhedron(Basic):
         >>> tetrahedron.array_form
         [0, 1, 2, 3]
 
-        >>> tetrahedron.rotate(tetrahedron.pgroup[0])
+        >>> tetrahedron.rotate(0)
         >>> tetrahedron.array_form
         [1, 2, 0, 3]
         >>> tetrahedron.pgroup[0].array_form
@@ -587,11 +587,76 @@ class Polyhedron(Basic):
 def _pgroup_calcs():
     """
     Although only 2 permutations are needed for a polyhedron in order to
-    generate all the possible orientations, it is customary to give a
-    list of permutations (P0, P1, ...) such that powers of them alone are
-    able to generate the orientations, e.g. P0, P0**2, P0**3, P1, P1**2,
-    etc..., instead of mixed permutations (P0*P1**2*P0). The following
-    work was used to calculate the permutation group of the polyhedra.
+    generate all the possible orientations, a group of permutations is
+    provided instead. A set of permutations is called a "group" if::
+
+    a*b = c (for any pair of permutations in the group, a and b, their
+    product, c, is in the group)
+
+    a*(b*c) = (a*b)*c (for any 3 permutations in the group associativity holds)
+
+    there is an identity permutation, I, such that I*a = a*I for all elements
+    in the group
+
+    a*b = I (the inverse of each permutation is also in the group)
+
+    None of the polyhedron groups defined follow these definitions of a group.
+    Instead, they are selected to contain those permutations whose powers
+    alone can constructed all orientations of the polyhedron, i.e. for
+    permutations ``a``, ``b``, etc... in the group, ``a, a**2, ..., a**o_a``,
+    ``b, b**2, ..., b**o_b``, etc... (where ``o_i`` is the order of
+    permutation) generate all permutations of the polyhedron instead of
+    mixed products like ``a*b``, ``a*b*c**2``, etc....
+
+    Note that for a polyhedron with n vertices, the valid permutations of the
+    vertices exclude those that do not maintain its faces. e.g. the
+    permutation BCDE of a square's four corners, ABCD, is a valid
+    permutation while CBDE is not (because this would twist the square).
+
+    The following work was used to calculate the permutation group for
+    each of the polyhedra. (This author didn't find and didn't know of a better
+    way to do it though there likely is such a way.)
+
+    Examples
+    ========
+
+    The is_group checks for: closure, the presence of the Identity permutation,
+    and the presence of the inverse for each of the elements in the group. This
+    confirms that none of the polyhedra are true groups:
+
+    >>> from sympy.combinatorics.polyhedron import (
+    ... tetrahedron, cube, octahedron, dodecahedron, icosahedron)
+    ...
+    >>> polyhedra = (tetrahedron, cube, octahedron, dodecahedron, icosahedron)
+    >>> [h.pgroup.is_group() for h in polyhedra]
+    ...
+    [False, False, False, False, False]
+
+    Although tests in polyhedron's test suite check that powers of the
+    permutations in the groups generate all permutations of the vertices
+    of the polyhedron, here we also demonstrate the powers of the given
+    permutations create a complete group for the tetrahedron:
+
+    >>> from sympy.combinatorics import Permutation, PermutationGroup
+    >>> for h in polyhedra[:1]:
+    ...     G = h.pgroup
+    ...     perms = set()
+    ...     for g in G:
+    ...         for e in range(g.order()):
+    ...             p = tuple((g**e).array_form)
+    ...             perms.add(p)
+    ...
+    ...     perms = [Permutation(p) for p in perms]
+    ...     assert PermutationGroup(perms).is_group()
+    ...
+
+    In addition to doing the above, the tests in the suite confirm that the
+    faces are all present after the application of each permutation.
+
+    References
+    ==========
+
+    http://dogschool.tripod.com/trianglegroup.html
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
@@ -627,7 +692,8 @@ def _pgroup_calcs():
         Perm([[1,2,3], [0]]),\
         Perm([[0,1], [2,3]]),\
         Perm([[0,2], [1,3]]),\
-        Perm([[0,3], [1,2]])]
+        Perm([[0,3], [1,2]]),\
+        ]
 
     tetrahedron = Polyhedron(
         range(4),
@@ -640,7 +706,8 @@ def _pgroup_calcs():
     (4, 5, 6, 7)]
 
     _c_pgroup = [Perm(p) for p in
-        [[1,2,3,0,5,6,7,4],
+        [
+        [1,2,3,0,5,6,7,4],
         [4,0,3,7,5,1,2,6],
         [4,5,1,0,7,6,2,3],
 
@@ -654,7 +721,8 @@ def _pgroup_calcs():
         [0,3,7,4,1,2,6,5],
         [5,1,0,4,6,2,3,7],
         [5,6,2,1,4,7,3,0],
-        [7,4,0,3,6,5,1,2]]]
+        [7,4,0,3,6,5,1,2],
+        ]]
 
     cube = Polyhedron(
         range(8),
@@ -725,7 +793,8 @@ def _pgroup_calcs():
     icosahedron = Polyhedron(
         range(12),
         icosahedron_faces,
-        _pgroup_of_double(dodecahedron, dodecahedron_faces, _dodeca_pgroup))
+        _pgroup_of_double(
+        dodecahedron, dodecahedron_faces, _dodeca_pgroup))
 
     return (tetrahedron, cube, octahedron, dodecahedron, icosahedron,
         tetrahedron_faces, cube_faces, octahedron_faces,
