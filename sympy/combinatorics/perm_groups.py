@@ -12,7 +12,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _strip)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import isprime, sieve
-from sympy.utilities.iterables import has_variety, is_sequence, has_dups
+from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
 
 lmul = Permutation.lmul
@@ -432,7 +432,8 @@ class PermutationGroup(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        """The default constructor.
+        """The default constructor. Accepts Cycle and Permutation forms.
+        Removes duplicates unless ``dups`` keyword is False.
         """
         args = list(args[0] if is_sequence(args[0]) else args)
         if any(isinstance(a, Cycle) for a in args):
@@ -442,9 +443,11 @@ class PermutationGroup(Basic):
             if degree is None:
                 degree = max(a.size for a in args)
             for i in range(len(args)):
-                args[i] = Permutation(args[i], size=degree)
-        if has_dups(tuple(p.array_form) for p in args):
-            raise ValueError('duplicate generators should be removed')
+                if args[i].size != degree:
+                    args[i] = Permutation(args[i], size=degree)
+        if kwargs.pop('dups', True):
+            args = [Permutation._af_new(list(a)) for a in
+                uniq(tuple(a.array_form) for a in args)]
         obj = Basic.__new__(cls, *[args], **kwargs)
         obj._generators = args
         obj._order = None

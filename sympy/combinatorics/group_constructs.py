@@ -53,4 +53,4 @@ def DirectProduct(*groups):
         current_gen += gens_count[i]
         current_deg += degrees[i]
     perm_gens = [_af_new(list(a)) for a in uniq(tuple(a) for a in array_gens)]
-    return PermutationGroup(perm_gens)
+    return PermutationGroup(perm_gens, dups=False)

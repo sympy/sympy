@@ -566,10 +566,14 @@ class Permutation(Basic):
         [1, 0, 2, 3, 4, 5]
 
         All manipulation of permutations assumes that the smallest element
-        is 0; if a permutation is not entered with a 0, one will be added:
+        is 0 (in keeping with 0-based indexing in Python) so if the 0 is
+        missing when entering a permutation in array form, an error will be
+        raised:
 
-        >>> Permutation([1, 2])
-        Permutation([])
+        >>> Permutation([2, 1])
+        Traceback (most recent call last):
+        ...
+        ValueError: Integers 0 through 2 must be present.
 
         If a permutation is entered in cyclic form, it can be entered without
         singletons and the ``size`` specified so those values can be filled
@@ -638,14 +642,6 @@ class Permutation(Basic):
                 raise ValueError('there were repeated elements.')
         temp = set(temp)
 
-        if args and 0 not in temp:
-            if is_cycle:
-                if size is None:
-                    args.append([0])
-            else:
-                args.insert(0, 0)
-            temp.add(0)
-
         if not is_cycle and \
             any(i not in temp for i in range(len(temp))):
             raise ValueError("Integers 0 through %s must be present." %
@@ -691,7 +687,7 @@ class Permutation(Basic):
         Permutation([2, 1, 3, 0])
 
         """
-        assert type(perm) is list
+        perm = list(perm)
         p = Basic.__new__(Perm, perm)
         p._array_form = perm
         p._size = len(perm)
