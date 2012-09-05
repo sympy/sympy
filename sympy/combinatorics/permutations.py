@@ -604,13 +604,17 @@ class Permutation(Basic):
         args = list(args[0])
 
         is_cycle =  args and is_sequence(args[0])
+        if is_cycle:
+            args = [[int(i) for i in c] for c in args]
+        else:
+            args = [int(i) for i in args]
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
         # unless a cycle notation has been provided. A 0 will be added
         # for convenience in case one wants to enter permutations where
         # counting starts from 1.
 
-        temp = [int(i) for i in flatten(args)]
+        temp = flatten(args)
         if has_dups(temp):
             if is_cycle:
                 raise ValueError('there were repeated elements; to resolve '
