@@ -96,7 +96,7 @@ def AlternatingGroup(n):
     gens = [gen1, gen2]
     if gen1 == gen2:
         gens = gens[:1]
-    G = PermutationGroup([_af_new(a) for a in gens])
+    G = PermutationGroup([_af_new(a) for a in gens], dups=False)
 
     if n < 4:
         G._is_abelian = True

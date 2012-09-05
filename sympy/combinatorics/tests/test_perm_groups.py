@@ -253,7 +253,7 @@ def test_eq():
     G4 = PermutationGroup([Permutation([0,1])])
     assert G1 != G4
     assert not G4.is_subgroup(G1)
-    raises(ValueError, lambda: PermutationGroup(g, g))
+    assert PermutationGroup(g, g) == PermutationGroup(g)
 
 def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])

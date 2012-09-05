@@ -8,9 +8,9 @@ from sympy.utilities.pytest import raises
 lmul = Permutation.lmul
 
 def test_Permutation():
-    # auto fill 0
-    p = Permutation([1, 2, 3])
-    assert p == Permutation([0, 1, 2, 3])
+    # don't auto fill 0
+    raises(ValueError, lambda: Permutation([1]))
+    p = Permutation([0, 1, 2, 3])
     # call as bijective
     assert [p(i) for i in range(p.size)] == list(p)
     # call as function
