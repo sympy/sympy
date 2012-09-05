@@ -2029,28 +2029,23 @@ class PermutationGroup(Basic):
     def is_trivial(self):
         """Test if the group is the trivial group.
 
-        This is true if and only if all the generators are the identity.
+        This is true if the group contains only the identity permutation.
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> id = Permutation(range(5))
-        >>> G = PermutationGroup([id, id, id])
+        >>> G = PermutationGroup([Permutation([0, 1, 2])])
         >>> G.is_trivial
         True
 
         """
         if self._is_trivial is None:
             gens = self.generators
-            degree = self.degree
-            identity = _af_new(range(degree))
-            res = [identity for gen in gens] == gens
+            res = len(gens) == 1 and gens[0].is_Identity
             self._is_trivial = res
-            return res
-        else:
-            return self._is_trivial
+        return self._is_trivial
 
     def lower_central_series(self):
         r"""Return the lower central series for the group.
