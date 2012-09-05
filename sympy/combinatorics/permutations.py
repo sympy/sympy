@@ -8,7 +8,26 @@ from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 from sympy.mpmath.libmp.libintmath import ifac
 
-def _af_mul(*a, **kwargs):
+def _af_mul(a, b):
+    """
+    Product of two permutations in array form, following the
+    L to R convention: given args A and B, B is applied to A.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import _af_mul, Permutation
+    >>> Permutation.print_cyclic = False
+    >>> a, b = [1, 0, 2], [0, 2, 1]
+    >>> _af_mul(a, b)
+    [1, 2, 0]
+    >>> list(Permutation(a)*Permutation(b))
+    [2, 0, 1]
+
+    """
+    return [a[i] for i in b]
+
+def _af_muln(*a, **kwargs):
     """
     Product of two or more permutations in array form, following the
     L to R convention: given args [A, B, C], B is applied to A and
@@ -26,13 +45,9 @@ def _af_mul(*a, **kwargs):
     [2, 0, 1]
 
     """
-    m = len(a)
-    if m == 2:
-        a, b = a
-        return [a[i] for i in b]
-    rv = range(len(a[0]))
-    for ai in a:
-        rv = [rv[j] for j in ai]
+    rv = a[0]
+    for i in range(1, len(a)):
+        rv = [rv[j] for j in a[i]]
     return rv
 
 def _af_parity(pi):

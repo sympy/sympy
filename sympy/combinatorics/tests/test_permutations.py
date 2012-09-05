@@ -1,6 +1,6 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, Cycle)
+    _af_mul, _af_muln, Cycle)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
@@ -25,7 +25,7 @@ def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
-    ans = Permutation(_af_mul(*[w.array_form for w in (p, q, r)])).array_form
+    ans = Permutation(_af_muln(*[w.array_form for w in (p, q, r)])).array_form
     assert lmul(p, q, r).array_form == ans
     # make sure no other permutation of p, q, r could have given
     # that answer
@@ -69,7 +69,7 @@ def test_Permutation():
     assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
     raises(ValueError, lambda: p - Permutation(range(10)))
 
-    assert p*q == Permutation(_af_mul(*[list(w) for w in (q, p)]))
+    assert p*q == Permutation(_af_muln(*[list(w) for w in (q, p)]))
     assert p*Permutation([]) == p
     assert Permutation([])*p == p
     assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
@@ -272,7 +272,7 @@ def test_ranking():
 def test_mul():
     a, b = [0,2,1,3], [0,1,3,2]
     assert _af_mul(a, b) == [0, 2, 3, 1]
-    assert _af_mul(a, b, range(4)) == [0, 2, 3, 1]
+    assert _af_muln(a, b, range(4)) == [0, 2, 3, 1]
     assert lmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
 
     a = Permutation([0, 2, 1, 3])
@@ -288,7 +288,7 @@ def test_mul():
     h = range(n)
     for i in range(m):
         h = _af_mul(h, a[i])
-        h2 = _af_mul(*a[:i+1])
+        h2 = _af_muln(*a[:i+1])
         assert h == h2
 
 def test_args():

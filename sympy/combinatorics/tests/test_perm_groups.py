@@ -4,7 +4,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
-from sympy.combinatorics.permutations import Permutation, _af_mul
+from sympy.combinatorics.permutations import Permutation, _af_muln
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
@@ -189,7 +189,7 @@ def test_coset_decomposition():
     assert not g.has_element(d)
     c = Permutation([1,0,2,3,5,4])
     v = g.coset_decomposition(c)
-    assert _af_mul(*v) == [1,0,2,3,5,4]
+    assert _af_muln(*v) == [1,0,2,3,5,4]
     assert g.has_element(c)
 
     a = Permutation([0,2,1])

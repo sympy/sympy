@@ -5,7 +5,7 @@ from types import GeneratorType
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_mul, Cycle)
+    _af_mul, _af_muln, Cycle)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -167,7 +167,7 @@ class _JGraph(object):
                             p = _af_invert(p)
                         ap.append(p)
                     ap.reverse()
-                    h = _af_mul(*ap)
+                    h = _af_muln(*ap)
                     self.remove_edge(cycle[cmin], cycle[cmin + 1])
                     self.insert(h, alpha)
 
@@ -1226,7 +1226,7 @@ class PermutationGroup(Basic):
                     break
             else:
                 return False
-        if _af_mul(*a) == g:
+        if _af_muln(*a) == g:
             return a
         return False
 
@@ -1295,7 +1295,7 @@ class PermutationGroup(Basic):
                     break
             else:
                 return None
-        if _af_mul(*a) == g:
+        if _af_muln(*a) == g:
             return rank
         return None
 
@@ -1343,7 +1343,7 @@ class PermutationGroup(Basic):
             rank, c = divmod(rank, un[i])
             v[j] = c
         a = [u[i][v[i]] for i in range(m)]
-        h = _af_mul(*a)
+        h = _af_muln(*a)
         if af:
             return h
         else:
@@ -1869,7 +1869,7 @@ class PermutationGroup(Basic):
         gens1 = [p.array_form for p in gr.generators]
         for g1 in gens1:
             for g2 in gens2:
-                p = _af_mul(g1, g2, _af_invert(g1))
+                p = _af_muln(g1, g2, _af_invert(g1))
                 if not self.coset_decomposition(p):
                     return False
         return True
