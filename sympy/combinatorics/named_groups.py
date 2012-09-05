@@ -83,16 +83,20 @@ def AlternatingGroup(n):
 
     a = range(n)
     a[0], a[1], a[2] = a[1], a[2], a[0]
-    gen1 = _af_new(a)
+    gen1 = a
     if n % 2:
         a = range(1, n)
         a.append(0)
-        gen2 = _af_new(a)
+        gen2 = a
     else:
         a = range(2, n)
         a.append(1)
-        gen2 = _af_new([0] + a)
-    G = PermutationGroup([gen1, gen2])
+        a.insert(0, 0)
+        gen2 = a
+    gens = [gen1, gen2]
+    if gen1 == gen2:
+        gens = gens[:1]
+    G = PermutationGroup([_af_new(a) for a in gens])
 
     if n < 4:
         G._is_abelian = True

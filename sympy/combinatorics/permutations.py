@@ -672,6 +672,7 @@ class Permutation(Basic):
         Permutation([2, 1, 3, 0])
 
         """
+        assert type(perm) is list
         p = Basic.__new__(Perm, perm)
         p._array_form = perm
         p._size = len(perm)
@@ -1560,7 +1561,8 @@ class Permutation(Basic):
 
         order
         """
-        return self.array_form == range(self.size)
+        af = self.array_form
+        return all(i == af[i] for i in xrange(self.size))
 
     def ascents(self):
         """

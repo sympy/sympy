@@ -377,32 +377,34 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     res.remove(gen)
     return res
 
-def _strip(g, base, orbs, transversals):
+def _strip(g, base, orbits, transversals):
     """
     Attempt to decompose a permutation using a (possibly partial) BSGS
     structure.
 
     This is done by treating the sequence ``base`` as an actual base, and
-    the orbits ``orbs`` and transversals ``transversals`` as basic orbits and
+    the orbits ``orbits`` and transversals ``transversals`` as basic orbits and
     transversals relative to it.
+
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
     doesn't end with the identity element.
+
     The argument ``transversals`` is a list of dictionaries that provides
-    transversal elements for the orbits ``orbs``.
+    transversal elements for the orbits ``orbits``.
 
     Parameters
     ==========
 
     ``g`` - permutation to be decomposed
     ``base`` - sequence of points
-    ``orbs`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
+    ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
     under some subgroup of the pointwise stabilizer of `
     `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
     in this function since the only infromation we need is encoded in the orbits
     and transversals
     ``transversals`` - a list of orbit transversals associated with the orbits
-    ``orbs``.
+    ``orbits``.
 
     Examples
     ========
@@ -446,7 +448,7 @@ def _strip(g, base, orbs, transversals):
         beta = h(base[i])
         if beta == base[i]:
             continue
-        if beta not in orbs[i]:
+        if beta not in orbits[i]:
             return h, i + 1
         u = transversals[i][beta]
         h = lmul(~u, h)
