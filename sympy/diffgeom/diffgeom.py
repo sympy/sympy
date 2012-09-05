@@ -485,7 +485,7 @@ class BaseVectorField(Expr):
     Use the predefined R2 manifold, setup some boilerplate.
 
     >>> from sympy import symbols, pi, Function
-    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint
     >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
@@ -574,7 +574,7 @@ class Commutator(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import Commutator
     >>> from sympy import pprint
     >>> from sympy.simplify import simplify
@@ -648,7 +648,7 @@ class Differential(Expr):
     Use the predefined R2 manifold, setup some boilerplate.
 
     >>> from sympy import Function
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import Differential
     >>> from sympy import pprint
 
@@ -757,7 +757,7 @@ class TensorProduct(Expr):
     Use the predefined R2 manifold, setup some boilerplate.
 
     >>> from sympy import Function
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import TensorProduct
     >>> from sympy import pprint
 
@@ -841,7 +841,7 @@ class WedgeProduct(TensorProduct):
     Use the predefined R2 manifold, setup some boilerplate.
 
     >>> from sympy import Function
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import WedgeProduct
     >>> from sympy import pprint
 
@@ -918,7 +918,7 @@ class BaseCovarDerivativeOp(Expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.Rn import R2, R2_r
+    >>> from sympy.diffgeom.rn import R2, R2_r
     >>> from sympy.diffgeom import BaseCovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
@@ -984,7 +984,7 @@ class CovarDerivativeOp(Expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import CovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
@@ -1061,7 +1061,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Use the predefined R2 manifold:
 
     >>> from sympy.abc import t, x, y
-    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_series
 
     Specify a starting point and a vector field:
@@ -1160,7 +1160,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     Use the predefined R2 manifold:
 
     >>> from sympy.abc import t
-    >>> from sympy.diffgeom.Rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_diffequ
 
     Specify a starting point and a vector field:
@@ -1225,7 +1225,7 @@ def contravariant_order(expr, _strict=False):
     ========
 
     >>> from sympy.diffgeom import contravariant_order
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
     >>> contravariant_order(a)
     0
@@ -1267,7 +1267,7 @@ def covariant_order(expr, _strict=False):
     ========
 
     >>> from sympy.diffgeom import covariant_order
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
     >>> covariant_order(a)
     0
@@ -1317,7 +1317,7 @@ def vectors_in_basis(expr, to_sys):
     ========
 
     >>> from sympy.diffgeom import vectors_in_basis
-    >>> from sympy.diffgeom.Rn import R2_r, R2_p
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
     (x**2 + y**2)**(-1/2)*x*e_r - y*(x**2 + y**2)**(-1)*e_theta
     >>> vectors_in_basis(R2_p.e_r, R2_r)
@@ -1346,7 +1346,7 @@ def twoform_to_matrix(expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1384,7 +1384,7 @@ def metric_to_Christoffel_1st(expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1415,7 +1415,7 @@ def metric_to_Christoffel_2nd(expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1456,7 +1456,7 @@ def metric_to_Riemann_components(expr):
     ========
 
     >>> from sympy import pprint, exp
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1509,7 +1509,7 @@ def metric_to_Ricci_components(expr):
     ========
 
     >>> from sympy import pprint, exp
-    >>> from sympy.diffgeom.Rn import R2
+    >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))

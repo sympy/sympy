@@ -1,4 +1,4 @@
-from sympy.diffgeom.Rn import R2, R2_p, R2_r, R3_r
+from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r
 from sympy.diffgeom import (intcurve_series, intcurve_diffequ, Differential,
         WedgeProduct)
 from sympy.core import symbols, Function, Derivative

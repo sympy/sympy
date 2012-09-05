@@ -1,4 +1,4 @@
-from sympy.diffgeom.Rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
+from sympy.diffgeom.rn import R2, R2_p, R2_r, R3, R3_r, R3_c, R3_s
 from sympy.diffgeom import (Manifold, Patch, CoordSystem, Point, Commutator,
         BaseScalarField, BaseVectorField, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
