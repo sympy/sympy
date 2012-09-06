@@ -39,6 +39,91 @@ def _add_factorial_tokens(name, result):
 
     return result
 
+def _implicit_multiplication_application(result):
+    # Step 1: parenthesis grouping
+    # Group sequences of '()' operators
+    # TODO recursively transform the inside of the parentheses
+    result2 = []
+    stacks = []
+    stacklevel = 0
+    for token in result:
+        if token[0] == OP:
+            if token[1] == '(':
+                stacks.append([])
+                stacklevel += 1
+            elif token[1] == ')':
+                stacks[-1].append(token)
+                if len(stacks) > 1:
+                    stacks[-2].extend(stacks.pop())
+                else:
+                    stack = stacks.pop()
+                    # Gets stuck in a loop here if we recurse
+                    result2.append(stack)
+                stacklevel -= 1
+                continue
+        if stacklevel:
+            stacks[-1].append(token)
+        else:
+            result2.append(token)
+    print result2
+
+    # Step 2: symbol/function application
+    # Group NAME followed by a list
+    result3 = []
+    symbol = None
+    for tok in result2:
+        if type(tok) == tuple and tok[0] == NAME:
+            symbol = tok
+            result3.append(tok)
+        elif type(tok) == list:
+            if symbol:
+                result3[-1] = (symbol, tok)
+                symbol = None
+            else:
+                result3.extend(tok)
+        else:
+            symbol = None
+            result3.append(tok)
+    print result3
+
+    # Step 3: implicit multiplication
+    # Look for two NAMEs in a row
+    result4 = []
+    for tok, nextTok in zip(result3, result3[1:]):
+        result4.append(tok)
+        if type(tok[0]) == type(nextTok[0]) == tuple:
+            if tok[0][0] == nextTok[0][0] == NAME:
+                result4.append((OP, '*'))
+    result4.append(result3[-1])
+    print result4
+
+    # Step 4: implicit application
+    # Look for a NAME that is not followed by an OP '(' and apply it to the
+    # following token
+    result5 = []
+    appendParen = False
+    for tok, nextTok in zip(result4, result4[1:]):
+        result5.append(tok)
+        if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
+            result5.append((OP, '('))
+            appendParen = True
+        elif appendParen:
+            result5.append((OP, ')'))
+            appendParen = False
+
+    # Step 5: Flatten
+    result6 = []
+    for tok in result5:
+        if type(tok[0]) == tuple:
+            result6.append(tok[0])
+            result6.extend(tok[1])
+        elif type(tok) == list:
+            result6.extend(tok)
+        else:
+            result6.append(tok)
+    print result6
+
+    return result6
 
 def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
@@ -132,6 +217,9 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
             result.append((toknum, tokval))
 
         prevtoken = tokval
+
+    print result
+    result = _implicit_multiplication_application(result)
 
     return untokenize(result)
 
