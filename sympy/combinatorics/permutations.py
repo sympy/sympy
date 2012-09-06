@@ -134,40 +134,57 @@ class Cycle(dict):
 
     A cycle shows the rule to use to move elements in a set to obtain
     a permutation. The Cycle class is more flexible that Permutation in
-    that all elements need not be present in order to investigate how
-    multiple cycles act in sequence:
+    that 1) all elements need not be present in order to investigate how
+    multiple cycles act in sequence and 2) it can contain singletons:
 
     >>> from sympy.combinatorics.permutations import Perm, Cycle
-    >>> a = Cycle(1, 2)
 
     A Cycle will automatically parse a cycle given as a tuple on the rhs:
 
-    >>> print Cycle(1, 2)(2, 3)
+    >>> Cycle(1, 2)(2, 3)
     Cycle(1, 3, 2)
 
     The identity cycle, Cycle(), can be used to start a product:
 
-    >>> print Cycle()(1, 2)(2,3)
+    >>> Cycle()(1, 2)(2,3)
     Cycle(1, 3, 2)
 
-    The array form of a Cycle can be obtained with the as_list
-    property. With no argument, the list will show elements 0 through
-    the maximum encountered. If a larger (or smaller) range is desired
-    it can be provided (but the Cycle cannot be truncated to a size
-    smaller than the largest element that is out of place):
+    The array form of a Cycle can be obtained by calling the as_list
+    method and all elements from 0 will be shown:
 
+    >>> a = Cycle(1, 2)
     >>> a.as_list()
     [0, 2, 1]
-    >>> a.as_list(4)
-    [0, 2, 1, 3]
-    >>> a.as_list(2) # can't truncate
+
+        Caution: the underlying structure for the Cycle is a dictionary, and
+        passing a Cycle to list() will just list the keys in the Cycle:
+
+        >>> list(a)
+        [0, 1, 2]
+
+    If a larger (or smaller) range is desired use the list method and
+    provide the desired size -- but the Cycle cannot be truncated to
+    a size smaller than the largest element that is out of place:
+
+    >>> b = Cycle(2,4)(1,2)(3,1,4)(1,3)
+    >>> b.as_list()
+    [0, 2, 1, 3, 4]
+    >>> b.as_list(-1)
     [0, 2, 1]
+
+    A singleton (though not showing in the printed form) will be
+    recorded as an unmoved element (and thus affect the size):
+
+    >>> Cycle(1, 2)(10)
+    Cycle(1, 2)
+    >>> _.as_list()
+    [0, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10]
 
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
 
-    >>> Perm(a.as_list(4)).transpositions()
-    {(1, 2)}
+    >>> Perm(Cycle(1,2)(3,4).as_list()).transpositions()
+    {(1, 2), (3, 4)}
 
     See Also
     ========
@@ -186,7 +203,7 @@ class Cycle(dict):
         ========
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
-        >>> print C(1, 2)(2, 3)
+        >>> C(1, 2)(2, 3)
         Cycle(1, 3, 2)
 
         An instance of a Cycle will automatically parse list-like
@@ -208,24 +225,28 @@ class Cycle(dict):
 
     def as_list(self, size=None):
         """Return the cycles as an explicit list starting from 0 up
-        to the greatr of the largest value in the cycles and size.
+        to the greater of the largest value in the cycles and size.
+
+        Truncation of trailing unmoved items will occur when size
+        is less than the maximum element in the cycle; if this is
+        desired, setting ``size``=-1 will guarantee such trimming.
 
         Examples
         ========
-        >>> from sympy.combinatorics.permutations import Cycle as C
+        >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = C(2, 3)(4, 5)
+        >>> p = Cycle(2, 3)(4, 5)
         >>> p.as_list()
         [0, 1, 3, 2, 5, 4]
         >>> p.as_list(10)
         [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
-        >>> p.as_list(2) # can't truncate
-        [0, 1, 3, 2, 5, 4]
+        >>> Cycle(2, 4)(1, 2, 4).as_list(-1) # trim
+        [0, 2, 1]
         """
-        if not self and not size:
+        if not self and size is None:
             raise ValueError('must give size for empty Cycle')
-        if size:
+        if size is not None:
             big = max([i for i in self if self[i] != i])
             size = max(size, big + 1)
         else:
@@ -1025,7 +1046,7 @@ class Permutation(Basic):
 
         >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> print Cycle(1, 2)(2, 3)
+        >>> Cycle(1, 2)(2, 3)
         Cycle(1, 3, 2)
 
         """
