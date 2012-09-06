@@ -1604,6 +1604,381 @@ class XypicDiagramDrawer(object):
         # each arrow independently of its properties.
         self.default_arrow_formatter = None
 
+    @staticmethod
+    def _process_loop_morphism(i, j, grid, morphisms_str_info, object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a loop morphism.  This function is invoked
+        from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        curving = ""
+        label_pos = "^"
+        looping_start = ""
+        looping_end = ""
+
+        # This is a loop morphism.  Count how many morphisms stick
+        # in each of the four quadrants.  Note that straight
+        # vertical and horizontal morphisms count in two quadrants
+        # at the same time (i.e., a morphism going up counts both
+        # in the first and the second quadrants).
+
+        # The usual numbering (counterclockwise) of quadrants
+        # applies.
+        quadrant = [0, 0, 0, 0]
+
+        obj = grid[i, j]
+
+        for m, m_str_info in morphisms_str_info.items():
+            if (m.domain == obj) and (m.codomain == obj):
+                # That's another loop morphism.  Check how it
+                # loops and mark the corresponding quadrants as
+                # busy.
+                (l_s, l_e) = (m_str_info.looping_start, m_str_info.looping_end)
+
+                if (l_s, l_e) == ("r", "u"):
+                    quadrant[0] += 1
+                elif (l_s, l_e) == ("u", "l"):
+                    quadrant[1] += 1
+                elif (l_s, l_e) == ("l", "d"):
+                    quadrant[2] += 1
+                elif (l_s, l_e) == ("d", "r"):
+                    quadrant[3] += 1
+
+                continue
+            if m.domain == obj:
+                (end_i, end_j) = object_coords[m.codomain]
+                goes_out = True
+            elif m.codomain == obj:
+                (end_i, end_j) = object_coords[m.domain]
+                goes_out = False
+            else:
+                continue
+
+            d_i = end_i - i
+            d_j = end_j - j
+            m_curving = m_str_info.curving
+
+            if (d_i != 0) and (d_j != 0):
+                # This is really a diagonal morphism.  Detect the
+                # quadrant.
+                if (d_i > 0) and (d_j > 0):
+                    quadrant[0] += 1
+                elif (d_i > 0) and (d_j < 0):
+                    quadrant[1] += 1
+                elif (d_i < 0) and (d_j < 0):
+                    quadrant[2] += 1
+                elif (d_i < 0) and (d_j > 0):
+                    quadrant[3] += 1
+            elif d_i == 0:
+                # Knowing where the other end of the morphism is
+                # and which way it goes, we now have to decide
+                # which quadrant is now the upper one and which is
+                # the lower one.
+                if d_j > 0:
+                    if goes_out:
+                        upper_quadrant = 0
+                        lower_quadrant = 3
+                    else:
+                        upper_quadrant = 3
+                        lower_quadrant = 0
+                else:
+                    if goes_out:
+                        upper_quadrant = 2
+                        lower_quadrant = 1
+                    else:
+                        upper_quadrant = 1
+                        lower_quadrant = 2
+
+                if m_curving:
+                    if m_curving == "^":
+                        quadrant[upper_quadrant] += 1
+                    elif m_curving == "_":
+                        quadrant[lower_quadrant] += 1
+                else:
+                    # This morphism counts in both upper and lower
+                    # quadrants.
+                    quadrant[upper_quadrant] += 1
+                    quadrant[lower_quadrant] += 1
+            elif d_j == 0:
+                # Knowing where the other end of the morphism is
+                # and which way it goes, we now have to decide
+                # which quadrant is now the left one and which is
+                # the right one.
+                if d_i < 0:
+                    if goes_out:
+                        left_quadrant = 1
+                        right_quadrant = 0
+                    else:
+                        left_quadrant = 0
+                        right_quadrant = 1
+                else:
+                    if goes_out:
+                        left_quadrant = 3
+                        right_quadrant = 2
+                    else:
+                        left_quadrant = 2
+                        right_quadrant = 3
+
+                if m_curving:
+                    if m_curving == "^":
+                        quadrant[left_quadrant] += 1
+                    elif m_curving == "_":
+                        quadrant[right_quadrant] += 1
+                else:
+                    # This morphism counts in both upper and lower
+                    # quadrants.
+                    quadrant[left_quadrant] += 1
+                    quadrant[right_quadrant] += 1
+
+        # Pick the freest quadrant to curve our morphism into.
+        freest_quadrant = 0
+        for i in xrange(4):
+            if quadrant[i] < quadrant[freest_quadrant]:
+                freest_quadrant = i
+
+        # Now set up proper looping.
+        (looping_start, looping_end) = [("r","u"), ("u","l"), ("l","d"),
+                                        ("d","r")][freest_quadrant]
+
+        return (curving, label_pos, looping_start, looping_end)
+
+    @staticmethod
+    def _process_horizontal_morphism(i, j, target_j, grid, morphisms_str_info,
+                                     object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a horizontal morphism.  This function is
+        invoked from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        # The arrow is horizontal.  Check if it goes from left to
+        # right (``backwards == False``) or from right to left
+        # (``backwards == True``).
+        backwards = False
+        start = j
+        end = target_j
+        if end < start:
+            (start, end) = (end, start)
+            backwards = True
+
+        # Let's see which objects are there between ``start`` and
+        # ``end``, and then count how many morphisms stick out
+        # upwards, and how many stick out downwards.
+        #
+        # For example, consider the situation:
+        #
+        #    B1 C1
+        #    |  |
+        # A--B--C--D
+        #    |
+        #    B2
+        #
+        # Between the objects `A` and `D` there are two objects:
+        # `B` and `C`.  Further, there are two morphisms which
+        # stick out upward (the ones between `B1` and `B` and
+        # between `C` and `C1`) and one morphism which sticks out
+        # downward (the one between `B and `B2`).
+        #
+        # We need this information to decide how to curve the
+        # arrow between `A` and `D`.  First of all, since there
+        # are two objects between `A` and `D``, we must curve the
+        # arrow.  Then, we will have it curve downward, because
+        # there is more space (less morphisms stick out downward
+        # than upward).
+        up = []
+        down = []
+        straight_horizontal = []
+        for k in xrange(start + 1, end):
+            obj = grid[i, k]
+            if not obj:
+                continue
+
+            for m in morphisms_str_info:
+                if m.domain == obj:
+                    (end_i, end_j) = object_coords[m.codomain]
+                elif m.codomain == obj:
+                    (end_i, end_j) = object_coords[m.domain]
+                else:
+                    continue
+
+                if end_i > i:
+                    down.append(m)
+                elif end_i < i:
+                    up.append(m)
+                elif not morphisms_str_info[m].curving:
+                    # This is a straight horizontal morphism,
+                    # because it has no curving.
+                    straight_horizontal.append(m)
+
+        if len(up) < len(down):
+            # More morphisms stick out downward than upward, let's
+            # curve the morphism up.
+            if backwards:
+                curving = "_"
+                label_pos = "_"
+            else:
+                curving = "^"
+                label_pos = "^"
+
+            # Assure that the straight horizontal morphisms have
+            # their labels on the lower side of the arrow.
+            for m in straight_horizontal:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if j1 < j2:
+                    m_str_info.label_position = "_"
+                else:
+                    m_str_info.label_position = "^"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+        else:
+            # More morphisms stick out downward than upward, let's
+            # curve the morphism up.
+            if backwards:
+                curving = "^"
+                label_pos = "^"
+            else:
+                curving = "_"
+                label_pos = "_"
+
+            # Assure that the straight horizontal morphisms have
+            # their labels on the upper side of the arrow.
+            for m in straight_horizontal:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if j1 < j2:
+                    m_str_info.label_position = "^"
+                else:
+                    m_str_info.label_position = "_"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+
+        return (curving, label_pos)
+
+    @staticmethod
+    def _process_vertical_morphism(i, j, target_i, grid, morphisms_str_info,
+                                   object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a vertical morphism.  This function is
+        invoked from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        # This arrow is vertical.  Check if it goes from top to
+        # bottom (``backwards == False``) or from bottom to top
+        # (``backwards == True``).
+        backwards = False
+        start = i
+        end = target_i
+        if end < start:
+            (start, end) = (end, start)
+            backwards = True
+
+        # Let's see which objects are there between ``start`` and
+        # ``end``, and then count how many morphisms stick out to
+        # the left, and how many stick out to the right.
+        #
+        # See the corresponding comment in the previous branch of
+        # this if-statement for more details.
+        left = []
+        right = []
+        straight_vertical = []
+        for k in xrange(start + 1, end):
+            obj = grid[k, j]
+            if not obj:
+                continue
+
+            for m in morphisms_str_info:
+                if m.domain == obj:
+                    (end_i, end_j) = object_coords[m.codomain]
+                elif m.codomain == obj:
+                    (end_i, end_j) = object_coords[m.domain]
+                else:
+                    continue
+
+                if end_j > j:
+                    right.append(m)
+                elif end_j < j:
+                    left.append(m)
+                elif not morphisms_str_info[m].curving:
+                    # This is a straight vertical morphism,
+                    # because it has no curving.
+                    straight_vertical.append(m)
+
+        if len(left) < len(right):
+            # More morphisms stick out to the left than to the
+            # right, let's curve the morphism to the right.
+            if backwards:
+                curving = "^"
+                label_pos = "^"
+            else:
+                curving = "_"
+                label_pos = "_"
+
+            # Assure that the straight vertical morphisms have
+            # their labels on the left side of the arrow.
+            for m in straight_vertical:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if i1 < i2:
+                    m_str_info.label_position = "^"
+                else:
+                    m_str_info.label_position = "_"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+        else:
+            # More morphisms stick out to the right than to the
+            # left, let's curve the morphism to the left.
+            if backwards:
+                curving = "_"
+                label_pos = "_"
+            else:
+                curving = "^"
+                label_pos = "^"
+
+            # Assure that the straight vertical morphisms have
+            # their labels on the right side of the arrow.
+            for m in straight_vertical:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if i1 < i2:
+                    m_str_info.label_position = "_"
+                else:
+                    m_str_info.label_position = "^"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+
+        return (curving, label_pos)
+
     def _process_morphism(self, diagram, grid, morphism, object_coords,
                           morphisms, morphisms_str_info):
         """
@@ -1653,334 +2028,20 @@ class XypicDiagramDrawer(object):
         label_pos = "^"
         looping_start = ""
         looping_end = ""
+
         if (delta_i == 0) and (delta_j == 0):
-            # This is a loop morphism.  Count how many morphisms stick
-            # in each of the four quadrants.  Note that straight
-            # vertical and horizontal morphisms count in two quadrants
-            # at the same time (i.e., a morphism going up counts both
-            # in the first and the second quadrants).
-
-            # The usual numbering (counterclockwise) of quadrants
-            # applies.
-            quadrant = [0, 0, 0, 0]
-
-            obj = grid[i, j]
-
-            for m, m_str_info in morphisms_str_info.items():
-                if (m.domain == obj) and (m.codomain == obj):
-                    # That's another loop morphism.  Check how it
-                    # loops and mark the corresponding quadrants as
-                    # busy.
-                    (l_s, l_e) = (m_str_info.looping_start, m_str_info.looping_end)
-
-                    if (l_s, l_e) == ("r", "u"):
-                        quadrant[0] += 1
-                    elif (l_s, l_e) == ("u", "l"):
-                        quadrant[1] += 1
-                    elif (l_s, l_e) == ("l", "d"):
-                        quadrant[2] += 1
-                    elif (l_s, l_e) == ("d", "r"):
-                        quadrant[3] += 1
-
-                    continue
-                if m.domain == obj:
-                    (end_i, end_j) = object_coords[m.codomain]
-                    goes_out = True
-                elif m.codomain == obj:
-                    (end_i, end_j) = object_coords[m.domain]
-                    goes_out = False
-                else:
-                    continue
-
-                d_i = end_i - i
-                d_j = end_j - j
-                m_curving = m_str_info.curving
-
-                if (d_i != 0) and (d_j != 0):
-                    # This is really a diagonal morphism.  Detect the
-                    # quadrant.
-                    if (d_i > 0) and (d_j > 0):
-                        quadrant[0] += 1
-                    elif (d_i > 0) and (d_j < 0):
-                        quadrant[1] += 1
-                    elif (d_i < 0) and (d_j < 0):
-                        quadrant[2] += 1
-                    elif (d_i < 0) and (d_j > 0):
-                        quadrant[3] += 1
-                elif d_i == 0:
-                    # Knowing where the other end of the morphism is
-                    # and which way it goes, we now have to decide
-                    # which quadrant is now the upper one and which is
-                    # the lower one.
-                    if d_j > 0:
-                        if goes_out:
-                            upper_quadrant = 0
-                            lower_quadrant = 3
-                        else:
-                            upper_quadrant = 3
-                            lower_quadrant = 0
-                    else:
-                        if goes_out:
-                            upper_quadrant = 2
-                            lower_quadrant = 1
-                        else:
-                            upper_quadrant = 1
-                            lower_quadrant = 2
-
-                    if m_curving:
-                        if m_curving == "^":
-                            quadrant[upper_quadrant] += 1
-                        elif m_curving == "_":
-                            quadrant[lower_quadrant] += 1
-                    else:
-                        # This morphism counts in both upper and lower
-                        # quadrants.
-                        quadrant[upper_quadrant] += 1
-                        quadrant[lower_quadrant] += 1
-                elif d_j == 0:
-                    # Knowing where the other end of the morphism is
-                    # and which way it goes, we now have to decide
-                    # which quadrant is now the left one and which is
-                    # the right one.
-                    if d_i < 0:
-                        if goes_out:
-                            left_quadrant = 1
-                            right_quadrant = 0
-                        else:
-                            left_quadrant = 0
-                            right_quadrant = 1
-                    else:
-                        if goes_out:
-                            left_quadrant = 3
-                            right_quadrant = 2
-                        else:
-                            left_quadrant = 2
-                            right_quadrant = 3
-
-                    if m_curving:
-                        if m_curving == "^":
-                            quadrant[left_quadrant] += 1
-                        elif m_curving == "_":
-                            quadrant[right_quadrant] += 1
-                    else:
-                        # This morphism counts in both upper and lower
-                        # quadrants.
-                        quadrant[left_quadrant] += 1
-                        quadrant[right_quadrant] += 1
-
-            # Pick the freest quadrant to curve our morphism into.
-            freest_quadrant = 0
-            for i in xrange(4):
-                if quadrant[i] < quadrant[freest_quadrant]:
-                    freest_quadrant = i
-
-            # Now set up proper looping.
-            (looping_start, looping_end) = [("r","u"), ("u","l"), ("l","d"),
-                                            ("d","r")][freest_quadrant]
-
+            # This is a loop morphism.
+            (curving, label_pos, looping_start,
+             looping_end) = XypicDiagramDrawer._process_loop_morphism(
+                i, j, grid, morphisms_str_info, object_coords)
         elif (delta_i == 0) and (abs(j - target_j) > 1):
-            # The arrow is horizontal.  Check if it goes from left to
-            # right (``backwards == False``) or from right to left
-            # (``backwards == True``).
-            backwards = False
-            start = j
-            end = target_j
-            if end < start:
-                (start, end) = (end, start)
-                backwards = True
-
-            # Let's see which objects are there between ``start`` and
-            # ``end``, and then count how many morphisms stick out
-            # upwards, and how many stick out downwards.
-            #
-            # For example, consider the situation:
-            #
-            #    B1 C1
-            #    |  |
-            # A--B--C--D
-            #    |
-            #    B2
-            #
-            # Between the objects `A` and `D` there are two objects:
-            # `B` and `C`.  Further, there are two morphisms which
-            # stick out upward (the ones between `B1` and `B` and
-            # between `C` and `C1`) and one morphism which sticks out
-            # downward (the one between `B and `B2`).
-            #
-            # We need this information to decide how to curve the
-            # arrow between `A` and `D`.  First of all, since there
-            # are two objects between `A` and `D``, we must curve the
-            # arrow.  Then, we will have it curve downward, because
-            # there is more space (less morphisms stick out downward
-            # than upward).
-            up = []
-            down = []
-            straight_horizontal = []
-            for k in xrange(start + 1, end):
-                obj = grid[i, k]
-                if not obj:
-                    continue
-
-                for m in morphisms:
-                    if m.domain == obj:
-                        (end_i, end_j) = object_coords[m.codomain]
-                    elif m.codomain == obj:
-                        (end_i, end_j) = object_coords[m.domain]
-                    else:
-                        continue
-
-                    if end_i > i:
-                        down.append(m)
-                    elif end_i < i:
-                        up.append(m)
-                    elif not morphisms_str_info[m].curving:
-                        # This is a straight horizontal morphism,
-                        # because it has no curving.
-                        straight_horizontal.append(m)
-
-            if len(up) < len(down):
-                # More morphisms stick out downward than upward, let's
-                # curve the morphism up.
-                if backwards:
-                    curving = "_"
-                    label_pos = "_"
-                else:
-                    curving = "^"
-                    label_pos = "^"
-
-                # Assure that the straight horizontal morphisms have
-                # their labels on the lower side of the arrow.
-                for m in straight_horizontal:
-                    (i1, j1) = object_coords[m.domain]
-                    (i2, j2) = object_coords[m.codomain]
-
-                    m_str_info = morphisms_str_info[m]
-                    if j1 < j2:
-                        m_str_info.label_position = "_"
-                    else:
-                        m_str_info.label_position = "^"
-
-                    # Don't allow any further modifications of the
-                    # position of this label.
-                    m_str_info.forced_label_position = True
-            else:
-                # More morphisms stick out downward than upward, let's
-                # curve the morphism up.
-                if backwards:
-                    curving = "^"
-                    label_pos = "^"
-                else:
-                    curving = "_"
-                    label_pos = "_"
-
-                # Assure that the straight horizontal morphisms have
-                # their labels on the upper side of the arrow.
-                for m in straight_horizontal:
-                    (i1, j1) = object_coords[m.domain]
-                    (i2, j2) = object_coords[m.codomain]
-
-                    m_str_info = morphisms_str_info[m]
-                    if j1 < j2:
-                        m_str_info.label_position = "^"
-                    else:
-                        m_str_info.label_position = "_"
-
-                    # Don't allow any further modifications of the
-                    # position of this label.
-                    m_str_info.forced_label_position = True
-
+            # This is a horizontal morphism.
+            (curving, label_pos) = XypicDiagramDrawer._process_horizontal_morphism(
+                i, j, target_j, grid, morphisms_str_info, object_coords)
         elif (delta_j == 0) and (abs(i - target_i) > 1):
-            # This arrow is vertical.  Check if it goes from top to
-            # bottom (``backwards == False``) or from bottom to top
-            # (``backwards == True``).
-            backwards = False
-            start = i
-            end = target_i
-            if end < start:
-                (start, end) = (end, start)
-                backwards = True
-
-            # Let's see which objects are there between ``start`` and
-            # ``end``, and then count how many morphisms stick out to
-            # the left, and how many stick out to the right.
-            #
-            # See the corresponding comment in the previous branch of
-            # this if-statement for more details.
-            left = []
-            right = []
-            straight_vertical = []
-            for k in xrange(start + 1, end):
-                obj = grid[k, j]
-                if not obj:
-                    continue
-
-                for m in morphisms:
-                    if m.domain == obj:
-                        (end_i, end_j) = object_coords[m.codomain]
-                    elif m.codomain == obj:
-                        (end_i, end_j) = object_coords[m.domain]
-                    else:
-                        continue
-
-                    if end_j > j:
-                        right.append(m)
-                    elif end_j < j:
-                        left.append(m)
-                    elif not morphisms_str_info[m].curving:
-                        # This is a straight vertical morphism,
-                        # because it has no curving.
-                        straight_vertical.append(m)
-
-            if len(left) < len(right):
-                # More morphisms stick out to the left than to the
-                # right, let's curve the morphism to the right.
-                if backwards:
-                    curving = "^"
-                    label_pos = "^"
-                else:
-                    curving = "_"
-                    label_pos = "_"
-
-                # Assure that the straight vertical morphisms have
-                # their labels on the left side of the arrow.
-                for m in straight_vertical:
-                    (i1, j1) = object_coords[m.domain]
-                    (i2, j2) = object_coords[m.codomain]
-
-                    m_str_info = morphisms_str_info[m]
-                    if i1 < i2:
-                        m_str_info.label_position = "^"
-                    else:
-                        m_str_info.label_position = "_"
-
-                    # Don't allow any further modifications of the
-                    # position of this label.
-                    m_str_info.forced_label_position = True
-            else:
-                # More morphisms stick out to the right than to the
-                # left, let's curve the morphism to the left.
-                if backwards:
-                    curving = "_"
-                    label_pos = "_"
-                else:
-                    curving = "^"
-                    label_pos = "^"
-
-                # Assure that the straight vertical morphisms have
-                # their labels on the right side of the arrow.
-                for m in straight_vertical:
-                    (i1, j1) = object_coords[m.domain]
-                    (i2, j2) = object_coords[m.codomain]
-
-                    m_str_info = morphisms_str_info[m]
-                    if i1 < i2:
-                        m_str_info.label_position = "_"
-                    else:
-                        m_str_info.label_position = "^"
-
-                    # Don't allow any further modifications of the
-                    # position of this label.
-                    m_str_info.forced_label_position = True
+            # This is a vertical morphism.
+            (curving, label_pos) = XypicDiagramDrawer._process_vertical_morphism(
+                i, j, target_i, grid, morphisms_str_info, object_coords)
 
         count = count_morphisms_undirected(morphism.domain, morphism.codomain)
         curving_amount = ""
