@@ -1159,18 +1159,13 @@ class PermutationGroup(Basic):
         res = self.normal_closure(commutators)
         return res
 
-    def coset_decomposition(self, g):
-        """Return the decomposition of ``g``, ``u``, such that
-        ``g = u[-1]*...*u[-n]`` where ``n = len(u)``.
+    def coset_factor(self, g):
+        """Return ``G``'s (self's) coset factorization, ``f``, of ``g``
 
-        The Schreier-Sims coset representation of ``G``, ``u``,
-        gives a univoque decomposition of an element ``g``
-        as h_{len(u)}*...*h_0, where h_i belongs to u[i]
-
-        Output: [h_0, .., h_{len(u)}] if ``g`` belongs to ``G``
-                False otherwise
-
-        XXX clean up notation of above
+        If ``g`` is an element of ``G`` then it can be written as the product
+        of permutations drawn from the Schreier-Sims coset decomposition,
+        ``u``, of ``G``. The permutations returned in ``f`` are those for which
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]``.
 
         Examples
         ========
@@ -1178,60 +1173,99 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, Cycle
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
+        >>> u = G.coset_repr()
+
+        The coset decomposition of G has a u of length 3:
+
+        >>> for i, ui in enumerate(u):
+        ...     print 'u%s:' % i
+        ...     for p in ui:
+        ...         print '    ',Permutation(p)
+        ...
+        u0:
+            Permutation(7)
+            Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+            Permutation(0, 2, 6, 4)(1, 3, 7, 5)
+            Permutation(0, 3, 6)(1, 7, 4)
+            Permutation(0, 4, 6, 7, 3, 1)(2, 5)
+            Permutation(0, 5)(2, 7)
+            Permutation(0, 6, 3)(1, 4, 7)
+            Permutation(0, 7)(1, 6)(2, 5)(3, 4)
+        u1:
+            Permutation(7)
+            Permutation(1, 2)(5, 6)(7)
+            Permutation(1, 4, 2)(3, 5, 6)(7)
+        u2:
+            Permutation(7)
+            Permutation(2, 4)(3, 5)(7)
+
+        Define g:
+
+        >>> g = Permutation(1, 2, 4)(3, 6, 5)
+
+        Confirm that it is an element of G:
+
+        >>> G.has_element(g)
+        True
+
+        Thus, it can be written as a product of factors (up to
+        3) drawn from u. See below that a factor from u1 and u2
+        and the Identity permutation have been used:
+
+        >>> f = [Permutation(fi) for fi in G.coset_factor(g)]
+        >>> for fi in f:
+        ...     print fi
+        ...
+        Permutation(7)
+        Permutation(1, 2)(5, 6)(7)
+        Permutation(2, 4)(3, 5)(7)
+
+        We confirm that the product of f gives the original g:
+
+        >>> f[2]*f[1]*f[0] == g
+        True
+
+        If g is already in the coset decomposition of G then it (and
+        Identity permutations) will be returned:
+
+        >>> g = Permutation(u[2][1])
+        >>> for fi in G.coset_factor(g):
+        ...     print Permutation(fi)
+        ...
+        Permutation(7)
+        Permutation(7)
+        Permutation(2, 4)(3, 5)(7)
+
+        If g is not an element of G then False is returned:
+
         >>> c = Permutation(5, 6, 7)
-        >>> G.coset_decomposition(c)
+        >>> G.coset_factor(c)
         False
 
-        >>> c = Permutation(1, 2, 4)(3, 6, 5)
-        >>> G.has_element(c)
-        True
-        >>> G.coset_decomposition(c)
-        [[0, 1, 2, 3, 4, 5, 6, 7],
-         [0, 2, 1, 3, 4, 6, 5, 7],
-         [0, 1, 4, 5, 2, 3, 6, 7]]
-
-        XXX is this a valid decomposition which is two identity
-        permutations and c itself?
-
-        >>> c = Permutation(2, 4)(3, 5)
-        >>> c.array_form
-        [0, 1, 4, 5, 2, 3]
-        >>> G.has_element(c)
-        True
-        >>> G.coset_decomposition(c)
-        [[0, 1, 2, 3, 4, 5, 6, 7],
-         [0, 1, 2, 3, 4, 5, 6, 7],
-         [0, 1, 4, 5, 2, 3, 6, 7]]
-        >>> Permutation.lmul(*[Permutation(p) for p in _]) == c
-        True
-
         """
-        u = self.coset_repr()
         if isinstance(g, Permutation):
             g = g.array_form
         # the only error checking is size adjustment; it is assumed that
         # elements 0..len(g) - 1 are present
         if len(g) != self.degree:
             g.extend(range(len(g), self.degree))
-        g1 = g
-        n = len(u)
-        a = []
-        for i in range(n):
-            x = g1[i]
+        u = self.coset_repr()
+        g_now = g
+        f = []
+        for i in range(len(u)):
             for h in u[i]:
-                if h[i] == x:
-                    a.append(h)
-                    p2 = _af_invert(h)
-                    g1 = _af_mul(p2, g1)
+                if h[i] == g_now[i]:
+                    f.append(h)
+                    hinv = _af_invert(h)
+                    g_now = _af_mul(hinv, g_now)
                     break
             else:
                 return False
-        if _af_muln(*a) == g:
-            return a
-        return False
+        return f if _af_muln(*f) == g else False
 
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
@@ -1261,7 +1295,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        coset_decomposition
+        coset_factor
 
         """
         u = self.coset_repr()
@@ -1702,10 +1736,10 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        coset_decomposition, has
+        coset_factor, has
 
         """
-        return bool(self.coset_decomposition(g.array_form))
+        return bool(self.coset_factor(g.array_form))
 
     @property
     def is_abelian(self):
@@ -1873,7 +1907,7 @@ class PermutationGroup(Basic):
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_muln(g1, g2, _af_invert(g1))
-                if not self.coset_decomposition(p):
+                if not self.coset_factor(p):
                     return False
         return True
 
