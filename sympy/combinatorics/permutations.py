@@ -45,10 +45,38 @@ def _af_muln(*a, **kwargs):
     [2, 0, 1]
 
     """
-    rv = a[0]
-    for i in range(1, len(a)):
-        rv = [rv[j] for j in a[i]]
-    return rv
+    m = len(a)
+    if m == 1:
+        return a[0][:]
+    if m == 2:
+        return _af_mul(a[0], a[1])
+    if m == 3:
+       p0, p1, p2 = a
+       return [p0[p1[i]] for i in p2]
+    if m == 4:
+       p0, p1, p2, p3 = a
+       return [p0[p1[p2[i]]] for i in p3]
+    if m == 5:
+       p0, p1, p2, p3, p4 = a
+       return [p0[p1[p2[p3[i]]]] for i in p4]
+    if m == 6:
+       p0, p1, p2, p3, p4, p5 = a
+       return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
+    if m == 7:
+       p0, p1, p2, p3, p4, p5, p6 = a
+       return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
+    if m == 8:
+       p0, p1, p2, p3, p4, p5, p6, p7 = a
+       return [p0[p1[p2[p3[p4[p5[p6[i]]]]]]] for i in p7]
+    if m > 8:
+        rv = a[0]
+        for i in range(1, len(a)):
+            rv = [rv[j] for j in a[i]]
+        return rv
+        # or recursively:
+        #p0 = _af_muln(*a[:m//2])
+        #p1 = _af_muln(*a[m//2:])
+        #return [p0[i] for i in p1]
 
 def _af_parity(pi):
     """
