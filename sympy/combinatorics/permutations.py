@@ -955,6 +955,9 @@ class Permutation(Basic):
     def lmul(*args):
         """
         Return product of permutations following L to R order.
+        Given lmul(A, B, C), A is applied to B and that result
+        is applied to C. This is the opposite of A*B*C which
+        applies B to C then applies A to that result.
 
         Examples
         ========
