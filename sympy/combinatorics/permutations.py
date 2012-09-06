@@ -186,7 +186,7 @@ class Cycle(dict):
     properties of the permutation can be investigated:
 
     >>> Perm(Cycle(1,2)(3,4).as_list()).transpositions()
-    {(1, 2), (3, 4)}
+    [(1, 2), (3, 4)]
 
     See Also
     ========
@@ -515,10 +515,12 @@ class Permutation(Basic):
     >>> p.full_cyclic_form
     [[0, 1], [2], [3]]
 
-    Any permutation can be represented as a set of transpositions.
+    Any permutation can be factored into transpositions of pairs of elements:
 
-    >>> Permutation(1, 2)(5, 3, 4).transpositions()
-    {(1, 2), (3, 4), (3, 5)}
+    >>> Permutation([[1, 2], [3, 4, 5]]).transpositions()
+    [(1, 2), (3, 5), (3, 4)]
+    >>> Permutation.lmul(*[Permutation([ti], size=6) for ti in _]).cyclic_form
+    [[1, 2], [3, 4, 5]]
 
     The number of permutations on a set of n elements is given by n! and is
     called the cardinality.
@@ -1176,7 +1178,7 @@ class Permutation(Basic):
 
     def transpositions(self):
         """
-        Return the permutation as a product of transpositions.
+        Return the permutation decomposed into a list of transpositions.
 
         It is always possible to express a permutation as the product of
         transpositions, see [1]
@@ -1185,9 +1187,14 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[1,2,3],[0,4,5,6,7]])
-        >>> p.transpositions()
-        {(0, 4), (0, 5), (0, 6), (0, 7), (1, 2), (1, 3)}
+        >>> p = Permutation([[1, 2, 3], [0, 4, 5, 6, 7]])
+        >>> t = p.transpositions()
+        >>> t
+        [(0, 7), (0, 6), (0, 5), (0, 4), (1, 3), (1, 2)]
+        >>> print ''.join(str(c) for c in t)
+        (0, 7)(0, 6)(0, 5)(0, 4)(1, 3)(1, 2)
+        >>> Permutation.lmul(*[Permutation([ti], size=p.size) for ti in t]) == p
+        True
 
         References
         ==========
@@ -1205,7 +1212,7 @@ class Permutation(Basic):
                 first = x[0]
                 for y in x[nx-1:0:-1]:
                     res.append((first,y))
-        return FiniteSet(res)
+        return res
 
     def __invert__(self):
         """

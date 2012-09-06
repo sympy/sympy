@@ -51,8 +51,10 @@ def test_Permutation():
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
     assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
-    assert p.transpositions() == FiniteSet([(0, 1), (0, 2), (0, 5), (3, 4), (3, 6)])
-    assert Permutation([1, 0]).transpositions() == FiniteSet([(0, 1)])
+    t = p.transpositions()
+    assert t == [(0, 5), (0, 1), (0, 2), (3, 4), (3, 6)]
+    assert Permutation.lmul(*[Permutation(Cycle(*ti)) for ti in (t)])
+    assert Permutation([1, 0]).transpositions() == [(0, 1)]
 
     assert p**13 == p
     assert q**0 == Permutation(range(q.size))
