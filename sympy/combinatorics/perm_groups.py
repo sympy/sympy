@@ -1240,11 +1240,11 @@ class PermutationGroup(Basic):
         Permutation(7)
         Permutation(2, 4)(3, 5)(7)
 
-        If g is not an element of G then False is returned:
+        If g is not an element of G then [] is returned:
 
         >>> c = Permutation(5, 6, 7)
         >>> G.coset_factor(c)
-        False
+        []
 
         """
         if isinstance(g, Permutation):
@@ -1264,8 +1264,8 @@ class PermutationGroup(Basic):
                     g_now = _af_mul(hinv, g_now)
                     break
             else:
-                return False
-        return f if _af_muln(*f) == g else False
+                return []
+        return f if _af_muln(*f) == g else []
 
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
