@@ -1165,7 +1165,9 @@ class PermutationGroup(Basic):
         If ``g`` is an element of ``G`` then it can be written as the product
         of permutations drawn from the Schreier-Sims coset decomposition,
         ``u``, of ``G``. The permutations returned in ``f`` are those for which
-        the product gives ``g``: ``g = f[n]*...f[1]*f[0]``.
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]``. The number of
+        factors returned will always be the same as the length of ``u``, which
+        might mean that repeated factors of identity permutations may appear.
 
         Examples
         ========
@@ -1253,9 +1255,18 @@ class PermutationGroup(Basic):
         # elements 0..len(g) - 1 are present
         if len(g) != self.degree:
             g.extend(range(len(g), self.degree))
+        # compute u
         u = self.coset_repr()
-        g_now = g
+        # check for quick exit
+        I = range(self.degree)
+        if g == I:
+            return [I]*(len(u))
+        # look for another quick exit
+        if any(p == g for ui in u for p in ui):
+            return [I]*(len(u) - 1) + [g]
+        # search for factors
         f = []
+        g_now = g
         for i in range(len(u)):
             for h in u[i]:
                 if h[i] == g_now[i]:
