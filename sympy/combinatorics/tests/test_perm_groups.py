@@ -156,11 +156,11 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
-def test_coset_repr():
+def test_coset_decomposition():
     a = Permutation([0, 2, 1])
     b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
-    assert G.coset_repr() == [[[0,1,2], [1,0,2], [2,0,1]], [[0,1,2], [0,2,1]]]
+    assert G.coset_decomposition() == [[[0,1,2], [1,0,2], [2,0,1]], [[0,1,2], [0,2,1]]]
     assert G.stabilizers_gens() == [[0, 2, 1]]
 
 def test_coset_rank():
@@ -183,7 +183,7 @@ def test_coset_factor():
     b = Permutation([2,1,3,4,5,0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    rep = g.coset_repr()
+    rep = g.coset_decomposition()
     d = Permutation([1,0,2,3,4,5])
     assert not g.coset_factor(d.array_form)
     assert not g.has_element(d)
