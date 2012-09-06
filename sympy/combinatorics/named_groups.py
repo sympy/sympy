@@ -20,7 +20,7 @@ def AbelianGroup(*cyclic_orders):
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
-            Permutation(0, 1, 2),
+            Permutation(0, 1, 2)(6),
             Permutation(3, 4, 5, 6)])
     >>> _.is_group()
     False

@@ -172,13 +172,15 @@ class Cycle(dict):
     >>> b.as_list(-1)
     [0, 2, 1]
 
-    A singleton (though not showing in the printed form) will be
-    recorded as an unmoved element (and thus affect the size):
+    Singletons are not shown when printing with one exception: the largest
+    element is always shown -- as a singleton if necessary:
 
-    >>> Cycle(1, 2)(10)
-    Cycle(1, 2)
+    >>> Cycle(1, 4, 10)(4, 5)
+    Cycle(1, 5, 4, 10)
     >>> _.as_list()
-    [0, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10]
+    [0, 5, 2, 3, 10, 4, 6, 7, 8, 9, 1]
+    >>> Cycle(1, 2)(4)(5)(10)
+    Cycle(1, 2)(10)
 
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
@@ -254,11 +256,27 @@ class Cycle(dict):
         return [self[i] for i in range(size)]
 
     def __repr__(self):
+        """We want it to print as a Cycle, not as a dict.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2)
+        Cycle(1, 2)
+        >>> print _
+        Cycle(1, 2)
+        >>> Cycle(1, 2).items()
+        [(1, 2), (2, 1)]
+        """
+        if not self:
+            return 'Cycle()'
         cycles = Permutation(self).cyclic_form
-        s = tuple([(str(c))[1:-1] for c in cycles])
-        return ('Cycle(%s)' + '(%s)'*(len(cycles) - 1)) % s
-        reduced = Perm(self.as_list()).cyclic_form
-        return str([tuple(c) for c in reduced])
+        s = ''.join(str(tuple(c)) for c in cycles)
+        big = max(self)
+        if not any(i == big for c in cycles for i in c):
+            s += '(%s)' % big
+        return 'Cycle%s' % s
 
     def __init__(self, *args):
         """Load up a Cycle instance with the values for the cycle.
@@ -356,6 +374,25 @@ class Permutation(Basic):
     >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
     True
 
+    Entering a singleton in a permutation is a way to indicate the size of the
+    permutation. The ``size`` keyword can also be used.
+
+    Array-form entry:
+
+    >>> Permutation([[1, 2], [9]])
+    Permutation([0, 2, 1], size=10)
+    >>> Permutation([[1, 2]], size=10)
+    Permutation([0, 2, 1], size=10)
+    >>> Permutation([], size=10) # identity permutation, size=10
+    Permutation([], size=10)
+
+    Cyclic-form entry:
+
+    >>> Permutation(1, 2, size=10)
+    Permutation([0, 2, 1], size=10)
+    >>> Permutation(size=10) # identity permutation, size=10
+    Permutation([], size=10)
+
     Matrix Notation
     ---------------
 
@@ -402,16 +439,20 @@ class Permutation(Basic):
     >>> Permutation(_) == p
     True
 
-    3) Printing is economical in that unmoved tail elements are not listed in
-    the array form printing and no unmoved elements (also known as singletons)
-    are shown for the disjoint cycle printing:
+    3) Printing is economical in that as little as possible is printed while
+    retaining all information about the size of the permutation:
 
     >>> Permutation([1, 0, 2, 3])
-    Permutation([1, 0])
-    >>> p = _
+    Permutation([1, 0, 2, 3])
+    >>> Permutation([1, 0, 2, 3], size=20)
+    Permutation([1, 0], size=20)
+    >>> Permutation([1, 0, 2, 4, 3, 5, 6], size=20)
+    Permutation([1, 0, 2, 4, 3], size=20)
+
+    >>> p = Permutation([1, 0, 2, 3])
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(0, 1)
+    Permutation(0, 1)(3)
     >>> Permutation.print_cyclic = False
 
     Neither the 2 nor 3 were printed, but they are still there as can be seen
@@ -499,7 +540,7 @@ class Permutation(Basic):
     >>> _.rank()
     7
     >>> p.unrank_lex(p.size, rank=0) # the identity permutation
-    Permutation([])
+    Permutation([0, 1, 2, 3])
 
     The product of two permutations p and q is defined as their composition as
     functions, (p*q)(i) = p(q(i)) [6]_.
@@ -574,17 +615,13 @@ class Permutation(Basic):
         Permutation([0, 2, 1])
 
         Permutations entered in cyclic form are converted to array form;
-        singletons need not be entered:
+        singletons need not be entered, but can be entered to indicate the
+        largest element:
 
         >>> Permutation([[4, 5, 6], [0, 1]])
         Permutation([1, 0, 2, 3, 5, 6, 4])
-
-        When printing, the unchanged tail of the permutation is not shown:
-
-        >>> Permutation([1, 0, 2, 3, 4, 5])
-        Permutation([1, 0])
-        >>> _.array_form
-        [1, 0, 2, 3, 4, 5]
+        >>> Permutation([[4, 5, 6], [0, 1], [19]])
+        Permutation([1, 0, 2, 3, 5, 6, 4], size=20)
 
         All manipulation of permutations assumes that the smallest element
         is 0 (in keeping with 0-based indexing in Python) so if the 0 is
@@ -602,7 +639,7 @@ class Permutation(Basic):
         in the cycles:
 
         >>> Permutation([[1, 4], [3, 5, 2]], size=10)
-        Permutation([0, 4, 3, 5, 1, 2])
+        Permutation([0, 4, 3, 5, 1, 2], size=10)
         >>> _.array_form
         [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
@@ -618,7 +655,7 @@ class Permutation(Basic):
         #(Permutation) = adjust size or return copy
         ok = True
         if not args:
-            return Perm._af_new([])
+            return Perm._af_new([], size=size)
         elif len(args) > 1:
             return Perm._af_new(Cycle(*args).as_list(size))
         if len(args) == 1:
@@ -689,7 +726,7 @@ class Permutation(Basic):
         return obj
 
     @staticmethod
-    def _af_new(perm):
+    def _af_new(perm, size=None):
         """A method to produce a Permutation object from a list;
         the list is bound to the _array_form attribute, so it must
         not be modified; this method is meant for internal use only;
@@ -711,7 +748,7 @@ class Permutation(Basic):
         perm = list(perm)
         p = Basic.__new__(Perm, perm)
         p._array_form = perm
-        p._size = len(perm)
+        p._size = size or len(perm)
         return p
 
     @property
@@ -898,7 +935,7 @@ class Permutation(Basic):
         >>> a = Permutation([0, 3, 1, 2])
         >>> b = Permutation([2, 1, 0, 3])
         >>> a + b
-        Permutation([2, 0, 1])
+        Permutation([2, 0, 1, 3])
 
         See Also
         ========
@@ -1098,7 +1135,7 @@ class Permutation(Basic):
         >>> q = Permutation([1,0,3,2])
         >>> r = Permutation([0,2,3,1])
         >>> p**4
-        Permutation([])
+        Permutation([0, 1, 2, 3])
         >>> p**q == p.conjugate(q)
         True
         >>> q**p == q.conjugate(p)
@@ -1321,7 +1358,7 @@ class Permutation(Basic):
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
         >>> Permutation.unrank_nonlex(4, -1)
-        Permutation([])
+        Permutation([0, 1, 2, 3])
 
         See Also
         ========
@@ -1859,7 +1896,7 @@ class Permutation(Basic):
         >>> p.order()
         4
         >>> (p**(p.order()))
-        Permutation([])
+        Permutation([], size=6)
 
         See Also
         ========
@@ -2032,7 +2069,7 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.unrank_trotterjohnson(5, 10)
-        Permutation([0, 3, 1, 2])
+        Permutation([0, 3, 1, 2, 4])
 
         See Also
         ========
@@ -2348,8 +2385,8 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> Permutation.from_inversion_vector([3,2,1,0,0])
-        Permutation([3, 2, 1, 0])
+        >>> Permutation.from_inversion_vector([3, 2, 1, 0, 0])
+        Permutation([3, 2, 1, 0, 4, 5])
 
         """
         size = len(inversion)

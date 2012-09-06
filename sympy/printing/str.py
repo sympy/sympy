@@ -282,24 +282,35 @@ class StrPrinter(Printer):
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)
 
     def _print_Cycle(self, expr):
-        from sympy.combinatorics.permutations import Permutation
-        cycles = Permutation(expr).cyclic_form
-        s = tuple([(str(c))[1:-1] for c in cycles])
-        return ('Cycle(%s)' + '(%s)'*(len(cycles) - 1)) % s
+        """We want it to print as Cycle in doctests for which a repr is required.
+
+        With __repr__ defined in Cycle, interactive output gives Cycle form but
+        during doctests, the dict's __repr__ form is used. Defining this _print
+        function solves that problem.
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2) # will print as a dict without this method
+        Cycle(1, 2)
+        """
+        return expr.__repr__()
 
     def _print_Permutation(self, expr):
-        from sympy.combinatorics.permutations import Permutation
+        from sympy.combinatorics.permutations import Permutation, Cycle
         if Permutation.print_cyclic:
-            cycles = expr.cyclic_form
-            if not cycles:
+            if not expr.size:
                 return 'Permutation()'
-            s = tuple([(str(c))[1:-1] for c in cycles])
-            return ('Permutation(%s)' + '(%s)'*(len(cycles) - 1)) % s
+            return Cycle(expr)(expr.size - 1).__repr__().replace('Cycle', 'Permutation')
         else:
             s = expr.support()
             if not s:
-                return 'Permutation([])'
-            return 'Permutation(%s)' % str(expr.array_form[:s[-1] + 1])
+                if expr.size < 5:
+                    return 'Permutation(%s)' % str(expr.array_form)
+                return 'Permutation([], size=%s)' % expr.size
+            trim = str(expr.array_form[:s[-1] + 1]) + ', size=%s' % expr.size
+            use = full = str(expr.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args[0]]

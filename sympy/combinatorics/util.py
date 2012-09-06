@@ -214,8 +214,8 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     >>> D.schreier_sims()
     >>> _handle_precomputed_bsgs(D.base, D.strong_gens,
     ... basic_orbits=D.basic_orbits)
-    ([{0: Permutation(), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},
-    {1: Permutation(), 2: Permutation(1, 2)}],
+    ([{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},
+    {1: Permutation(2), 2: Permutation(1, 2)}],
     [[0, 1, 2], [1, 2]], [[Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)],
     [Permutation(1, 2)]])
 
@@ -275,8 +275,8 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _orbits_transversals_from_bsgs(S.base, strong_gens_distr)
     ([[0, 1, 2], [1, 2]],
-    [{0: Permutation(), 1: Permutation(0, 1, 2), 2: Permutation(0, 2, 1)},
-    {1: Permutation(), 2: Permutation(1, 2)}])
+    [{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2, 1)},
+    {1: Permutation(2), 2: Permutation(1, 2)}])
 
     See Also
     ========
@@ -418,7 +418,7 @@ def _strip(g, base, orbits, transversals):
     >>> S.schreier_sims()
     >>> g = Permutation([0, 2, 3, 1, 4])
     >>> _strip(g, S.base, S.basic_orbits, S.basic_transversals)
-    (Permutation(), 5)
+    (Permutation(4), 5)
 
     Notes
     =====
@@ -478,10 +478,10 @@ def _strong_gens_from_distr(strong_gens_distr):
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
     >>> S.strong_gens
-    [Permutation(0, 1, 2), Permutation(0, 1), Permutation(1, 2)]
+    [Permutation(0, 1, 2), Permutation(0, 1)(2), Permutation(1, 2)]
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _strong_gens_from_distr(strong_gens_distr)
-    [Permutation(0, 1, 2), Permutation(0, 1), Permutation(1, 2)]
+    [Permutation(0, 1, 2), Permutation(0, 1)(2), Permutation(1, 2)]
 
     See Also
     ========
