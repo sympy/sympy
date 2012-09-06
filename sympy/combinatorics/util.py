@@ -1,7 +1,7 @@
 from sympy.ntheory import isprime, sieve
 from sympy.combinatorics.permutations import Permutation
 
-lmul = Permutation.lmul
+rmul = Permutation.rmul
 _af_new = Permutation._af_new
 
 ############################################
@@ -451,7 +451,7 @@ def _strip(g, base, orbits, transversals):
         if beta not in orbits[i]:
             return h, i + 1
         u = transversals[i][beta]
-        h = lmul(~u, h)
+        h = rmul(~u, h)
     return h, base_len + 1
 
 def _strong_gens_from_distr(strong_gens_distr):

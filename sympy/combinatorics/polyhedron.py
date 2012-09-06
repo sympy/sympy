@@ -7,7 +7,7 @@ from sympy.utilities.iterables import (rotate_left, has_variety,
     is_sequence, minlex, unflatten, flatten)
 from sympy.utilities.randtest import _randrange
 
-lmul = Perm.lmul
+rmul = Perm.rmul
 
 class Polyhedron(Basic):
     """
@@ -759,7 +759,7 @@ def _pgroup_calcs():
                 elif si == '1':
                     p = _f1
             rv.extend([p]*count)
-        return Perm.lmul(*rv)
+        return Perm.rmul(*rv)
 
     # top face cw
     _f0 = Perm([

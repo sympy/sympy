@@ -8,7 +8,7 @@ from sympy.utilities.pytest import raises
 
 import random
 
-lmul = Permutation.lmul
+rmul = Permutation.rmul
 
 def test_polyhedron():
     raises(ValueError, lambda: Polyhedron(list('ab'),

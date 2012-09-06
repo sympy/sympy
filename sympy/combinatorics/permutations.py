@@ -8,75 +8,100 @@ from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 from sympy.mpmath.libmp.libintmath import ifac
 
-def _af_mul(a, b):
+def _af_rmul(a, b):
     """
-    Product of two permutations in array form, following the
-    L to R convention: given args A and B, B is applied to A.
+    Return the product b*a; input and output are array forms. The ith value
+    is a[b[i]].
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_mul, Permutation
+    >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
     >>> Permutation.print_cyclic = False
+
     >>> a, b = [1, 0, 2], [0, 2, 1]
-    >>> _af_mul(a, b)
+    >>> _af_rmul(a, b)
     [1, 2, 0]
-    >>> list(Permutation(a)*Permutation(b))
+    >>> [a[b[i]] for i in range(3)]
+    [1, 2, 0]
+
+    This handles the operands in reverse order compared to the ``*`` operator:
+
+    >>> a = Permutation(a); b = Permutation(b)
+    >>> list(a*b)
+    [2, 0, 1]
+    >>> [b(a(i)) for i in range(3)]
     [2, 0, 1]
 
+    See Also
+    ========
+    rmul, _af_rmuln
     """
     return [a[i] for i in b]
 
-def _af_muln(*a, **kwargs):
+def _af_rmuln(*abc):
     """
-    Product of two or more permutations in array form, following the
-    L to R convention: given args [A, B, C], B is applied to A and
-    then C is applied to the result.
+    Given [a, b, c, ...] return the product of ...*c*b*a using array forms.
+    The ith value is a[b[c[i]]].
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_mul, Permutation
+    >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
     >>> Permutation.print_cyclic = False
+
     >>> a, b = [1, 0, 2], [0, 2, 1]
-    >>> _af_mul(a, b)
+    >>> _af_rmul(a, b)
     [1, 2, 0]
-    >>> list(Permutation(a)*Permutation(b))
+    >>> [a[b[i]] for i in range(3)]
+    [1, 2, 0]
+
+    This handles the operands in reverse order compared to the ``*`` operator:
+
+    >>> a = Permutation(a); b = Permutation(b)
+    >>> list(a*b)
+    [2, 0, 1]
+    >>> [b(a(i)) for i in range(3)]
     [2, 0, 1]
 
+    See Also
+    ========
+    rmul, _af_rmul
     """
+    a = abc
     m = len(a)
+    if m == 3:
+        p0, p1, p2 = a
+        return [p0[p1[i]] for i in p2]
+    if m == 4:
+        p0, p1, p2, p3 = a
+        return [p0[p1[p2[i]]] for i in p3]
+    if m == 5:
+        p0, p1, p2, p3, p4 = a
+        return [p0[p1[p2[p3[i]]]] for i in p4]
+    if m == 6:
+        p0, p1, p2, p3, p4, p5 = a
+        return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
+    if m == 7:
+        p0, p1, p2, p3, p4, p5, p6 = a
+        return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
+    if m == 8:
+        p0, p1, p2, p3, p4, p5, p6, p7 = a
+        return [p0[p1[p2[p3[p4[p5[p6[i]]]]]]] for i in p7]
     if m == 1:
         return a[0][:]
     if m == 2:
-        return _af_mul(a[0], a[1])
-    if m == 3:
-       p0, p1, p2 = a
-       return [p0[p1[i]] for i in p2]
-    if m == 4:
-       p0, p1, p2, p3 = a
-       return [p0[p1[p2[i]]] for i in p3]
-    if m == 5:
-       p0, p1, p2, p3, p4 = a
-       return [p0[p1[p2[p3[i]]]] for i in p4]
-    if m == 6:
-       p0, p1, p2, p3, p4, p5 = a
-       return [p0[p1[p2[p3[p4[i]]]]] for i in p5]
-    if m == 7:
-       p0, p1, p2, p3, p4, p5, p6 = a
-       return [p0[p1[p2[p3[p4[p5[i]]]]]] for i in p6]
-    if m == 8:
-       p0, p1, p2, p3, p4, p5, p6, p7 = a
-       return [p0[p1[p2[p3[p4[p5[p6[i]]]]]]] for i in p7]
-    if m > 8:
-        rv = a[0]
-        for i in range(1, len(a)):
-            rv = [rv[j] for j in a[i]]
-        return rv
-        # or recursively:
-        #p0 = _af_muln(*a[:m//2])
-        #p1 = _af_muln(*a[m//2:])
-        #return [p0[i] for i in p1]
+        return _af_rmul(a[0], a[1])
+    m -= 1
+    rv = range(len(a[0]))
+    for c in rv:
+        p = m
+        j = a[p][c]
+        while p > 0:
+            p -= 1
+            j = a[p][j]
+        rv[c] = j
+    return rv
 
 def _af_parity(pi):
     """
@@ -120,11 +145,11 @@ def _af_invert(a):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_invert, _af_mul
+    >>> from sympy.combinatorics.permutations import _af_invert, _af_rmul
     >>> A = [1, 2, 0, 3]
     >>> _af_invert(A)
     [2, 0, 1, 3]
-    >>> _af_mul(_, A)
+    >>> _af_rmul(_, A)
     [0, 1, 2, 3]
 
     See Also
@@ -421,23 +446,36 @@ class Permutation(Basic):
     >>> Permutation(size=10) # identity permutation, size=10
     Permutation([], size=10)
 
-    Matrix Notation
-    ---------------
+    Cauchy Matrix Notation and 2-Line Notation
+    ------------------------------------------
 
-    As there is no need to enter the identity permutation of the matrix form
-    of a permutation, one need only enter the 2nd row. But the second row is
-    just the inverse of the permutation. So to enter a permutation in terms of
-    the inverse one can, for a given matrix form,
+    In the 2-line notation, the identity permutation is the top row and the
+    2nd row shows where there elements appear in the permutation. So
 
-    >>> unknown = Permutation([2, 0, 3, 1])
-    >>> unknown.matrix_form
     [0, 1, 2, 3]
-    [1, 3, 0, 2]
+    [2, 0, 3, 1]    <- 2-line "before and after" notation
+
+    shows that element 2 went to position 0, element 0 went to position 1,
+    etc....  This can be thought of as a "before and after" representation.
+    In another matrix form, the Cauchy Matrix form, a row that tells where
+    the top identity elements will go to is given instead. The second row is
+    just the inverse of the permutation. So to enter a permutation that is
+    given in the Cauchy form, just enter the inverse of the 2nd line. For
+    example, given this Cauchy matrix form,
+
+    [0, 1, 2, 3]
+    [1, 3, 0, 2]   <- Cauchy matrix form
 
     enter the inverse of the second row to recover the underlying permutation:
 
-    >>> ~Permutation([1, 3, 0, 2])
+    >>> ~Permutation([1, 3, 0, 2]) # note the tilde at the start
     Permutation([2, 0, 3, 1])
+
+    Confirm that this gives the Cauchy matrix form:
+
+    >>> _.cauchy_form
+    [0, 1, 2, 3]
+    [1, 3, 0, 2]
 
     Representation
     ==============
@@ -510,15 +548,15 @@ class Permutation(Basic):
     ---------------
 
     This 2-row matrix gives the initial position of the elements and a row
-    indicating where each of the elements appears in the final ordering. Hence,
-    the final position of the elements:
+    whose values indicate where the element above will appear in the final
+    ordering.
 
     >>> a = Permutation([2, 0, 3, 1])
-    >>> a.matrix_form
+    >>> a.cauchy_form
     [0, 1, 2, 3]
     [1, 3, 0, 2]
 
-    That second row is known as the inverse of the permutation:
+    The second row is known as the inverse of the permutation:
 
     >>> list(~a)
     [1, 3, 0, 2]
@@ -547,7 +585,7 @@ class Permutation(Basic):
 
     >>> Permutation([[1, 2], [3, 4, 5]]).transpositions()
     [(1, 2), (3, 5), (3, 4)]
-    >>> Permutation.lmul(*[Permutation([ti], size=6) for ti in _]).cyclic_form
+    >>> Permutation.rmul(*[Permutation([ti], size=6) for ti in _]).cyclic_form
     [[1, 2], [3, 4, 5]]
 
     The number of permutations on a set of n elements is given by n! and is
@@ -692,7 +730,7 @@ class Permutation(Basic):
             a = args[0]
             if isinstance(a, Perm):
                 if size is None or size == a.size:
-                    return a.copy()
+                    return a
                 return Perm(a.array_form, size=size)
             if isinstance(a, Cycle):
                 return Perm._af_new(a.as_list(size))
@@ -707,7 +745,8 @@ class Permutation(Basic):
                               "a list of lists, Permutation or Cycle.")
 
 
-        # safe to assume args are valid
+        # safe to assume args are valid; this also makes a copy
+        # of the args
         args = list(args[0])
 
         is_cycle =  args and is_sequence(args[0])
@@ -782,7 +821,7 @@ class Permutation(Basic):
         return p
 
     @property
-    def matrix_form(self):
+    def cauchy_form(self):
         """Shows the permutation as a 2-row matrix containing the identity
         permutation as the first row and the permutation's inversion as the
         second row.
@@ -791,12 +830,16 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> p = Permutation([1, 0, 3, 2])
+        >>> p = Permutation([1, 3, 0, 2])
         >>> (~p).array_form
-        [1, 0, 3, 2]
-        >>> p.matrix_form
+        [2, 0, 3, 1]
+        >>> p.cauchy_form
         [0, 1, 2, 3]
-        [1, 0, 3, 2]
+        [2, 0, 3, 1]
+
+        In this form, the 2nd row tells where the items in the
+        first row will appear in the permutation: the 0 goes to position 2
+        [_, _, 0, _]; the 1 goes to position 0 [1, _, 0, _], etc...
         """
 
         from sympy.matrices import Matrix
@@ -1019,38 +1062,39 @@ class Permutation(Basic):
         return Perm.from_inversion_vector(result_inv)
 
     @staticmethod
-    def lmul(*args):
+    def rmul(*args):
         """
-        Return product of permutations following L to R order.
-        Given lmul(A, B, C), A is applied to B and that result
-        is applied to C. This is the opposite of A*B*C which
-        applies B to C then applies A to that result.
+        Return product of Permutations [a, b, c, ...] as the Permutation whose
+        ith value is a(b(c(i))).
 
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation as Perm
-        >>> Perm.print_cyclic = False
-        >>> a = Perm([1, 0, 2])
-        >>> b = Perm([0, 2, 1])
-        >>> a.cyclic_form, b.cyclic_form
-        ([[0, 1]], [[1, 2]])
-        >>> a*b
-        Permutation([2, 0, 1])
-        >>> Perm.lmul(a, b)
-        Permutation([1, 2, 0])
+        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> Permutation.print_cyclic = False
+
+        >>> a, b = [1, 0, 2], [0, 2, 1]
+        >>> a = Permutation(a); b = Permutation(b)
+        >>> list(Permutation.rmul(a, b))
+        [1, 2, 0]
+        >>> [a(b(i)) for i in range(3)]
+        [1, 2, 0]
+
+        This handles the operands in reverse order compared to the ``*`` operator:
+
+        >>> a = Permutation(a); b = Permutation(b)
+        >>> list(a*b)
+        [2, 0, 1]
+        >>> [b(a(i)) for i in range(3)]
+        [2, 0, 1]
 
         Notes
         =====
 
         All items in the sequence will be parsed by Permutation as
-        necessary as long as the first item is a Permutation. For speed
-        reasons this routine does not do any initial coersion since in
-        the codebase, places where is used already had a Permutation
-        on the left and handle the rhs operand as necessary, i.e.
-        P*foo was changed to lmul(P, foo):
+        necessary as long as the first item is a Permutation:
 
-        >>> Perm.lmul(a, [0, 2, 1]) == Perm.lmul(a, b)
+        >>> Permutation.rmul(a, [0, 2, 1]) == Permutation.rmul(a, b)
         True
 
         The reverse order of arguments will raise a TypeError.
@@ -1062,53 +1106,49 @@ class Permutation(Basic):
         return rv
 
     def __rmul__(self, other):
-        """This is needed to coerse other to Permutation in lmul."""
+        """This is needed to coerse other to Permutation in rmul."""
         return Perm(other)*self
 
     def __mul__(self, other):
         """
-        Routine for multiplication of permutations following R to L order.
-
-        Note
-        ====
-
-        a*b*c applies permutations in order c, b, a which is consistent with
-        function notation abc(x) meaning a(b(c(x))).
+        Return the product a*b as a Permutation; the ith value is b(a(i)).
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = Permutation([1, 2, 3, 0])
-        >>> q = Permutation([3, 2, 0, 1])
-        >>> q*p
-        Permutation([0, 3, 1, 2])
-        >>> q*p == p*q
-        False
 
-        If one of the permutations is in a cyclic form then it is first
-        converted to an array form and then multiplied:
+        >>> a, b = [1, 0, 2], [0, 2, 1]
+        >>> a = Permutation(a); b = Permutation(b)
+        >>> list(a*b)
+        [2, 0, 1]
+        >>> [b(a(i)) for i in range(3)]
+        [2, 0, 1]
 
-        >>> p = Permutation(p.cyclic_form)
-        >>> q*p
-        Permutation([0, 3, 1, 2])
+        This handles operands in reverse order compared to _af_rmul and rmul:
+
+        >>> al = list(a); bl = list(b)
+        >>> _af_rmul(al, bl)
+        [1, 2, 0]
+        >>> [al[bl[i]] for i in range(3)]
+        [1, 2, 0]
 
         It is acceptable for the arrays to have different lengths; the shorter
         one will be padded to match the longer one:
 
-        >>> p*Permutation([[1, 0]])
-        Permutation([0, 2, 3, 1])
-        >>> Permutation([[1, 0]])*p
-        Permutation([2, 1, 3, 0])
+        >>> b*Permutation([1, 0])
+        Permutation([1, 2, 0])
+        >>> Permutation([1, 0])*b
+        Permutation([2, 0, 1])
 
         It is also acceptable to allow coercion to handle conversion of a
         single list to the left of a Permutation:
 
-        >>> [0, 1]*p # no change: 2-element identity
-        Permutation([1, 2, 3, 0])
-        >>> [[0, 1]]*p # exchange first two elements
-        Permutation([2, 1, 3, 0])
+        >>> [0, 1]*a # no change: 2-element identity
+        Permutation([1, 0, 2])
+        >>> [[0, 1]]*a # exchange first two elements
+        Permutation([0, 1, 2])
 
         You cannot use more than 1 cycle notation in a product of cycles
         since coercion can only handle one argument to the left. To handle
@@ -1221,7 +1261,7 @@ class Permutation(Basic):
         [(0, 7), (0, 6), (0, 5), (0, 4), (1, 3), (1, 2)]
         >>> print ''.join(str(c) for c in t)
         (0, 7)(0, 6)(0, 5)(0, 4)(1, 3)(1, 2)
-        >>> Permutation.lmul(*[Permutation([ti], size=p.size) for ti in t]) == p
+        >>> Permutation.rmul(*[Permutation([ti], size=p.size) for ti in t]) == p
         True
 
         References
@@ -1823,23 +1863,40 @@ class Permutation(Basic):
                 k = k * 2
         return inversions
 
+    def __xor__(self, other):
+        return self.conjugate(other)
+
     def conjugate(self, x):
         """
-        Computes the conjugate Permutation ``x*p*~x``
+        Computes the conjugate permutation ``c = x*p*~x``
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> a = Permutation([0,2,1,3])
-        >>> b = Permutation([0,2,3,1])
-        >>> a.conjugate(b)
-        Permutation([0, 3, 2, 1])
-        >>> b*a*~b
-        Permutation([0, 3, 2, 1])
-        >>> a**b
-        Permutation([0, 3, 2, 1])
+        >>> p = Permutation([2, 0, 1, 3])
+        >>> x = Permutation([0, 2, 3, 1])
+        >>> p.conjugate(x)
+        Permutation([1, 3, 2, 0])
+        >>> x*p*~x
+        Permutation([1, 3, 2, 0])
+        >>> p**x
+        Permutation([1, 3, 2, 0])
+
+        Notes
+        =====
+
+        x*p*~x is not necessarily equal to ~x*p*x:
+
+        >>> ~x*p*x
+        Permutation([3, 1, 0, 2])
+
+        The ^ operator can be used to compute the conjugate:
+
+        >>> x^p
+        Permutation([3, 1, 0, 2])
+
         """
 
         a = self.array_form
@@ -1862,11 +1919,11 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> a = Permutation([0,2,1,3])
-        >>> b = Permutation([0,2,3,1])
-        >>> a.commutator(b)
+        >>> p = Permutation([0,2,1,3])
+        >>> x = Permutation([0,2,3,1])
+        >>> p.commutator(x)
         Permutation([0, 3, 1, 2])
-        >>> ~a*~b*a*b
+        >>> ~p*~x*p*x
         Permutation([0, 3, 1, 2])
         """
 

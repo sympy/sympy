@@ -1,11 +1,11 @@
 from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_mul, _af_muln, Cycle)
+    _af_rmul, _af_rmuln, Cycle)
 from sympy.core.compatibility import permutations
 
 from sympy.utilities.pytest import raises
 
-lmul = Permutation.lmul
+rmul = Permutation.rmul
 
 def test_Permutation():
     # don't auto fill 0
@@ -25,13 +25,13 @@ def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     r = Permutation([1,3,2,0,4,6,5])
-    ans = Permutation(_af_muln(*[w.array_form for w in (p, q, r)])).array_form
-    assert lmul(p, q, r).array_form == ans
+    ans = Permutation(_af_rmuln(*[w.array_form for w in (p, q, r)])).array_form
+    assert rmul(p, q, r).array_form == ans
     # make sure no other permutation of p, q, r could have given
     # that answer
     for a, b, c in permutations((p, q, r)):
         if (a, b, c) == (p, q, r): continue
-        assert lmul(a, b, c).array_form != ans
+        assert rmul(a, b, c).array_form != ans
 
     assert p.support() == range(7)
     assert q.support() == [0, 2, 3, 4, 5, 6]
@@ -39,12 +39,12 @@ def test_Permutation():
     assert p.cardinality == 5040
     assert q.cardinality == 5040
     assert q.cycles == 2
-    assert lmul(q, p) == Permutation([4, 6, 1, 2, 5, 3, 0])
-    assert lmul(p, q) == Permutation([6, 5, 3, 0, 2, 4, 1])
-    assert _af_mul(p.array_form, q.array_form) == \
+    assert rmul(q, p) == Permutation([4, 6, 1, 2, 5, 3, 0])
+    assert rmul(p, q) == Permutation([6, 5, 3, 0, 2, 4, 1])
+    assert _af_rmul(p.array_form, q.array_form) == \
         [6, 5, 3, 0, 2, 4, 1]
 
-    assert lmul(Permutation([[1,2,3],[0,4]]),
+    assert rmul(Permutation([[1,2,3],[0,4]]),
                 Permutation([[1,2,4],[0],[3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
@@ -53,7 +53,7 @@ def test_Permutation():
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
     t = p.transpositions()
     assert t == [(0, 5), (0, 1), (0, 2), (3, 4), (3, 6)]
-    assert Permutation.lmul(*[Permutation(Cycle(*ti)) for ti in (t)])
+    assert Permutation.rmul(*[Permutation(Cycle(*ti)) for ti in (t)])
     assert Permutation([1, 0]).transpositions() == [(0, 1)]
 
     assert p**13 == p
@@ -71,7 +71,7 @@ def test_Permutation():
     assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
     raises(ValueError, lambda: p - Permutation(range(10)))
 
-    assert p*q == Permutation(_af_muln(*[list(w) for w in (q, p)]))
+    assert p*q == Permutation(_af_rmuln(*[list(w) for w in (q, p)]))
     assert p*Permutation([]) == p
     assert Permutation([])*p == p
     assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
@@ -83,11 +83,11 @@ def test_Permutation():
 
     pq = p.conjugate(q)
     assert pq == Permutation([5, 3, 0, 4, 6, 2, 1])
-    assert pq == lmul(~q, p, q)
+    assert pq == rmul(~q, p, q)
     assert pq == p**q
     qp = q.conjugate(p)
     assert qp == Permutation([6, 3, 2, 0, 1, 4, 5])
-    assert qp == lmul(~p, q, p)
+    assert qp == rmul(~p, q, p)
     assert qp == q**p
     raises(ValueError, lambda: p.conjugate(Permutation([])))
 
@@ -126,7 +126,7 @@ def test_Permutation():
     r = Permutation([3, 2, 1, 0])
     assert (r**2).is_Identity
 
-    assert lmul(~p, p).is_Identity
+    assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
     assert ~(r**2).is_Identity
     assert p.max() == 6
@@ -155,8 +155,8 @@ def test_Permutation():
     assert p.signature() == -1
     assert q.inversions() == 11
     assert q.signature() == -1
-    assert lmul(p, ~p).inversions() == 0
-    assert lmul(p, ~p).signature() == 1
+    assert rmul(p, ~p).inversions() == 0
+    assert rmul(p, ~p).signature() == 1
 
     assert p.order() == 6
     assert q.order() == 10
@@ -194,7 +194,7 @@ def test_Permutation():
     for i in range(5):
         for j in range(i+1, 5):
             assert a[i].commutes_with(a[j]) == \
-            (lmul(a[i], a[j]) == lmul(a[j], a[i]))
+            (rmul(a[i], a[j]) == rmul(a[j], a[i]))
             if a[i].commutes_with(a[j]):
                 assert a[i].commutator(a[j]) == iden
                 assert a[j].commutator(a[i]) == iden
@@ -273,24 +273,24 @@ def test_ranking():
 
 def test_mul():
     a, b = [0,2,1,3], [0,1,3,2]
-    assert _af_mul(a, b) == [0, 2, 3, 1]
-    assert _af_muln(a, b, range(4)) == [0, 2, 3, 1]
-    assert lmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
+    assert _af_rmul(a, b) == [0, 2, 3, 1]
+    assert _af_rmuln(a, b, range(4)) == [0, 2, 3, 1]
+    assert rmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
 
     a = Permutation([0, 2, 1, 3])
     b = (0, 1, 3, 2)
     c = (3, 1, 2, 0)
-    assert Permutation.lmul(a, b, c) == Permutation([1, 2, 3, 0])
-    assert Permutation.lmul(a, c) == Permutation([3, 2, 1, 0])
-    raises (TypeError, lambda: Permutation.lmul(b, c))
+    assert Permutation.rmul(a, b, c) == Permutation([1, 2, 3, 0])
+    assert Permutation.rmul(a, c) == Permutation([3, 2, 1, 0])
+    raises (TypeError, lambda: Permutation.rmul(b, c))
 
     n = 6
     m = 8
     a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
     h = range(n)
     for i in range(m):
-        h = _af_mul(h, a[i])
-        h2 = _af_muln(*a[:i+1])
+        h = _af_rmul(h, a[i])
+        h2 = _af_rmuln(*a[:i+1])
         assert h == h2
 
 def test_args():
