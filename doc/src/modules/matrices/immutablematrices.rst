@@ -24,8 +24,10 @@ the constructor
     [1, 2, 3]
     [4, 0, 6]
     [7, 8, 9]
-    >>> # IM[1, 1] = 5
-    >>> # TypeError: Can not set values in Immutable Matrix
+    >>> IM[1, 1] = 5
+    Traceback (most recent call last):
+    ...
+    TypeError: Can not set values in Immutable Matrix
 
 Matrix Expressions
 ------------------
