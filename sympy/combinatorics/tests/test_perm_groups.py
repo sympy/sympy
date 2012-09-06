@@ -4,7 +4,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
-from sympy.combinatorics.permutations import Permutation, _af_muln
+from sympy.combinatorics.permutations import Permutation, _af_rmuln
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
@@ -12,7 +12,7 @@ from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
 
-lmul = Permutation.lmul
+rmul = Permutation.rmul
 
 def test_new_has():
     a = Permutation([1, 0])
@@ -189,7 +189,7 @@ def test_coset_factor():
     assert not g.has_element(d)
     c = Permutation([1,0,2,3,5,4])
     v = g.coset_factor(c)
-    assert _af_muln(*v) == [1,0,2,3,5,4]
+    assert _af_rmuln(*v) == [1,0,2,3,5,4]
     assert g.has_element(c)
 
     a = Permutation([0,2,1])
@@ -466,9 +466,9 @@ def test_schreier_sims_incremental():
     gens = A.generators[:]
     gen0 = gens[0]
     gen1 = gens[1]
-    gen1 = lmul(gen1, ~gen0)
-    gen0 = lmul(gen0, gen1)
-    gen1 = lmul(gen0, gen1)
+    gen1 = rmul(gen1, ~gen0)
+    gen0 = rmul(gen0, gen1)
+    gen1 = rmul(gen0, gen1)
     base, strong_gens = A.schreier_sims_incremental(base=[0,1], gens=gens)
     assert _verify_bsgs(A, base, strong_gens) == True
     C = CyclicGroup(11)
@@ -476,12 +476,12 @@ def test_schreier_sims_incremental():
     base, strong_gens = C.schreier_sims_incremental(gens=[gen**3])
     assert _verify_bsgs(C, base, strong_gens) == True
 
-def test_subgroup_search():
+def _subgroup_search(i, j, k):
     prop_true = lambda x: True
     prop_fix_points = lambda x: [x(point) for point in points] == points
-    prop_comm_g = lambda x: lmul(x, g) == lmul(g, x)
+    prop_comm_g = lambda x: rmul(x, g) == rmul(g, x)
     prop_even = lambda x: x.is_even
-    for i in range(10, 17, 2):
+    for i in range(i, j, k):
         S = SymmetricGroup(i)
         A = AlternatingGroup(i)
         C = CyclicGroup(i)
@@ -507,6 +507,14 @@ def test_subgroup_search():
              A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
+
+def test_subgroup_search():
+    _subgroup_search(10, 15, 2)
+
+@XFAIL
+def test_subgroup_search2():
+    skip('takes too much time')
+    _subgroup_search(16, 17, 1)
 
 def test_normal_closure():
     # the normal closure of the trivial group is trivial
