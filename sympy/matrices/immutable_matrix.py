@@ -30,7 +30,8 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
         return MatrixBase.__getitem__(self, (i,j))
 
     def __setitem__(self, *args):
-        raise TypeError("Can not set values in Immutable Matrix")
+        raise TypeError("Can not set values in Immutable Matrix. "
+                        "Use Matrix instead.")
 
     __getitem__ = MatrixBase.__getitem__
 

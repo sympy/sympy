@@ -27,7 +27,7 @@ the constructor
     >>> IM[1, 1] = 5
     Traceback (most recent call last):
     ...
-    TypeError: Can not set values in Immutable Matrix
+    TypeError: Can not set values in Immutable Matrix. Use Matrix instead.
 
 Matrix Expressions
 ------------------
