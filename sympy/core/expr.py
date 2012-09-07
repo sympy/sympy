@@ -5,7 +5,7 @@ from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce
+from compatibility import reduce, as_int
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 from sympy.utilities.misc import default_sort_key
 
@@ -1050,13 +1050,11 @@ class Expr(Basic, EvalfMixin):
         as_independent: a method to separate x dependent terms/factors from others
 
         """
-        from sympy.utilities.misc import int_tested
-
         x = sympify(x)
         if not isinstance(x, Basic):
             return S.Zero
 
-        n = int_tested(n)
+        n = as_int(n)
 
         if not x:
             return S.Zero

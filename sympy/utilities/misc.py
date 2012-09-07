@@ -13,64 +13,6 @@ from sympy.utilities.iterables import is_sequence
 # text should not have leading or trailing spaces.
 filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
 
-def int_tested(*j):
-    """
-    Return all args as Python integers and confirm that the input
-    was equivalent to the integer, else raise a ValueError.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.misc import int_tested
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> int_tested(_) # convert to int and test for equality
-    3
-    >>> n = sqrt(10)
-    >>> int_tested(n)
-    Traceback (most recent call last):
-    ...
-    ValueError: All arguments were not integers
-
-    Input can be a single number, multiple numbers, or a list of numbers:
-
-    >>> int_tested(1)
-    1
-    >>> int_tested(1, 2)
-    [1, 2]
-    >>> int_tested([1])
-    [1]
-    >>> int_tested([1, 2])
-    [1, 2]
-
-    """
-    try:
-        if not j:
-            raise ValueError
-        as_int = False
-        if is_sequence(j[0]):
-            try:
-                if len(j) > 1:
-                    raise TypeError
-                i = [int(i) for i in j[0]]
-                j = j[0]
-            except TypeError:
-                raise ValueError
-        else:
-            try:
-                i = [int(i) for i in j]
-                as_int = len(j) == 1
-            except TypeError:
-                raise ValueError
-        if i != list(j):
-            raise ValueError
-    except ValueError:
-        raise ValueError('all args not integers')
-    if as_int:
-        return i[0]
-    return i
-
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.
 
