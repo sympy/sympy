@@ -267,9 +267,9 @@ class Cycle(dict):
         be present:
 
         >>> a = C(1, 2)
-        >>> print a(2, 3)
+        >>> a(2, 3)
         Cycle(1, 3, 2)
-        >>> print a(2, 3)(4, 5)
+        >>> a(2, 3)(4, 5)
         Cycle(1, 3, 2)(4, 5)
 
         """
@@ -375,10 +375,7 @@ class Permutation(Basic):
     reordered as [x, y, b, a] then the permutation would be [0, 1, 3, 2].
     Notice that (in SymPy) the first element is always referred to as 0 and
     the permutation uses the indices of the elements in the original ordering,
-    not the elements (a, b, etc...) themselves. If you choose to number items
-    starting from 1 (and thus enter the permutation as [1, 2, 4, 3]) SymPy
-    will pretend that the 0th element was not moved and store the permutation
-    as [0, 1, 2, 4, 3].
+    not the elements (a, b, etc...) themselves.
 
     >>> from sympy.combinatorics import Permutation
     >>> Permutation.print_cyclic = False
@@ -388,7 +385,7 @@ class Permutation(Basic):
 
     Permutations are commonly represented in disjoint cycle, array forms and
     2-row matrix forms. SymPy allows them to be entered in cyclic or array
-    form and displayed in all 3 forms.
+    form.
 
     Array Notation
     --------------
@@ -477,36 +474,15 @@ class Permutation(Basic):
     >>> Permutation(1, 2)(3, 4) == Permutation(3, 4)(1, 2)
     True
 
-    Cauchy Matrix Notation and 2-Line Notation
-    ------------------------------------------
 
-    In the 2-line notation, the identity permutation is the top row and the
-    2nd row shows where there elements appear in the permutation. So
+    Equality testing
+    ----------------
 
-    [0, 1, 2, 3]
-    [2, 0, 3, 1]    <- 2-line "before and after" notation
+    The array forms must be the same in order for permutations to be equal:
 
-    shows that element 2 went to position 0, element 0 went to position 1,
-    etc....  This can be thought of as a "before and after" representation.
-    In another matrix form, the Cauchy Matrix form, a row that tells where
-    the top identity elements will go to is given instead. The second row is
-    just the inverse of the permutation. So to enter a permutation that is
-    given in the Cauchy form, just enter the inverse of the 2nd line. For
-    example, given this Cauchy matrix form,
+    >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
+    False
 
-    [0, 1, 2, 3]
-    [1, 3, 0, 2]   <- Cauchy matrix form
-
-    enter the inverse of the second row to recover the underlying permutation:
-
-    >>> ~Permutation([1, 3, 0, 2]) # note the tilde at the start
-    Permutation([2, 0, 3, 1])
-
-    Confirm that this gives the Cauchy matrix form:
-
-    >>> _.cauchy_form
-    [0, 1, 2, 3]
-    [1, 3, 0, 2]
 
     Identity Permutation
     --------------------
@@ -583,29 +559,19 @@ class Permutation(Basic):
     4
 
 
-    Equality testing
-    ----------------
-
-    The array forms must be the same in order for permutations to be equal:
-
-    >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
-    False
-
-
     Short introduction to other methods
     ===================================
 
     The permutation can act as a bijective function, telling what element is
     located at a given position
 
-    >>> p.array_form
-    [1, 0, 2, 3]
-    >>> p.array_form.index(1) # the hard way
-    0
-    >>> p(1) # the easy way
-    0
-    >>> dict([(i, p(i)) for i in range(p.size)]) # showing the bijection
-    {0: 1, 1: 0, 2: 2, 3: 3}
+    >>> q = Permutation([5, 2, 3, 4, 1, 0])
+    >>> q.array_form[1] # the hard way
+    2
+    >>> q(1) # the easy way
+    2
+    >>> dict([(i, q(i)) for i in range(q.size)]) # showing the bijection
+    {0: 5, 1: 2, 2: 3, 3: 4, 4: 1, 5: 0}
 
     The full cyclic form (including singletons) can be obtained:
 
@@ -642,13 +608,16 @@ class Permutation(Basic):
     Permutation([0, 1, 2, 3])
 
     The product of two permutations p and q is defined as their composition as
-    functions, (p*q)(i) = p(q(i)) [6]_.
+    functions, (p*q)(i) = q(p(i)) [6]_.
 
-    >>> q = Permutation([0, 1, 3, 2])
+    >>> p = Permutation([1, 0, 2, 3])
+    >>> q = Permutation([2, 3, 1, 0])
+    >>> list(q*p)
+    [2, 3, 0, 1]
     >>> list(p*q)
-    [1, 0, 3, 2]
-    >>> p(q)
-    [1, 0, 3, 2]
+    [3, 2, 1, 0]
+    >>> [q(p(i)) for i in range(p.size)]
+    [3, 2, 1, 0]
 
     The permutation can be 'applied' to any list-like object, not only
     Permutations:
@@ -854,32 +823,6 @@ class Permutation(Basic):
 
     def _hashable_content(self):
         return tuple(self.array_form)
-
-    @property
-    def cauchy_form(self):
-        """Shows the permutation as a 2-row matrix containing the identity
-        permutation as the first row and the permutation's inversion as the
-        second row.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> p = Permutation([1, 3, 0, 2])
-        >>> (~p).array_form
-        [2, 0, 3, 1]
-        >>> p.cauchy_form
-        [0, 1, 2, 3]
-        [2, 0, 3, 1]
-
-        In this form, the 2nd row tells where the items in the
-        first row will appear in the permutation: the 0 goes to position 2
-        [_, _, 0, _]; the 1 goes to position 0 [1, _, 0, _], etc...
-        """
-
-        from sympy.matrices import Matrix
-        dat = range(self.size) + (~self).array_form
-        return Matrix(2, self.size, dat)
 
     @property
     def array_form(self):
