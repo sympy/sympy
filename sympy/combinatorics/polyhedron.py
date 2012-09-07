@@ -706,23 +706,24 @@ def _pgroup_calcs():
     (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4),
     (4, 5, 6, 7)]
 
+    # U, D, F, B, L, R = up, down, front, back, left, right
     _c_pgroup = [Perm(p) for p in
         [
-        [1,2,3,0,5,6,7,4],
-        [4,0,3,7,5,1,2,6],
-        [4,5,1,0,7,6,2,3],
+        [1,2,3,0,5,6,7,4], # cw from top, U
+        [4,0,3,7,5,1,2,6], # cw from F face
+        [4,5,1,0,7,6,2,3], # cw from R face
 
-        [1,0,4,5,2,3,7,6],
-        [6,2,1,5,7,3,0,4],
-        [6,7,3,2,5,4,0,1],
-        [3,7,4,0,2,6,5,1],
-        [6,5,4,7,2,1,0,3],
-        [4,7,6,5,0,3,2,1],
+        [1,0,4,5,2,3,7,6], # cw through FU edge
+        [6,2,1,5,7,3,0,4], # cw through RU edge
+        [6,7,3,2,5,4,0,1], # cw through BU edge
+        [3,7,4,0,2,6,5,1], # cw through LU edge
+        [4,7,6,5,0,3,2,1], # cw through FL edge
+        [6,5,4,7,2,1,0,3], # cw through FR edge
 
-        [0,3,7,4,1,2,6,5],
-        [5,1,0,4,6,2,3,7],
-        [5,6,2,1,4,7,3,0],
-        [7,4,0,3,6,5,1,2],
+        [0,3,7,4,1,2,6,5], # cw through UFL vertex
+        [5,1,0,4,6,2,3,7], # cw through UFR vertex
+        [5,6,2,1,4,7,3,0], # cw through UBR vertex
+        [7,4,0,3,6,5,1,2], # cw through UBL
         ]]
 
     cube = Polyhedron(
