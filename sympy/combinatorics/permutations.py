@@ -574,7 +574,7 @@ class Permutation(Basic):
     >>> p = Permutation([1, 0, 2, 3])
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(0, 1)(3)
+    Permutation(3)(0, 1)
     >>> Permutation.print_cyclic = False
 
     Neither the 2 nor 3 were printed, but they are still there as can be seen

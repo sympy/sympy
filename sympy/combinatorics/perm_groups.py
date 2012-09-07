@@ -531,7 +531,7 @@ class PermutationGroup(Basic):
         >>> H = G*G
         >>> H
         PermutationGroup([
-            Permutation(0, 1, 2, 3, 4)(9),
+            Permutation(9)(0, 1, 2, 3, 4),
             Permutation(5, 6, 7, 8, 9)])
         >>> H.order()
         25
@@ -769,7 +769,7 @@ class PermutationGroup(Basic):
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
         ([0, 2, 1],
-        [Permutation(0, 1, 2, 3), Permutation(0, 1)(3), Permutation(2, 3),
+        [Permutation(0, 1, 2, 3), Permutation(3)(0, 1), Permutation(2, 3),
          Permutation(1, 3, 2), Permutation(1, 3)])
         >>> S.base
         [0, 1, 2]
@@ -907,7 +907,7 @@ class PermutationGroup(Basic):
         >>> for g in A.basic_stabilizers:
         ...     print g
         PermutationGroup([
-            Permutation(0, 1, 2)(3),
+            Permutation(3)(0, 1, 2),
             Permutation(1, 2, 3),
             Permutation(1, 3, 2)])
         PermutationGroup([
@@ -949,8 +949,8 @@ class PermutationGroup(Basic):
         >>> A = AlternatingGroup(4)
         >>> A.basic_transversals
         [{0: Permutation(3),
-          1: Permutation(0, 1, 2)(3),
-          2: Permutation(0, 2, 1)(3),
+          1: Permutation(3)(0, 1, 2),
+          2: Permutation(3)(0, 2, 1),
           3: Permutation(0, 3, 1)},
          {1: Permutation(3),
           2: Permutation(1, 2, 3),
@@ -1199,11 +1199,11 @@ class PermutationGroup(Basic):
             Permutation(0, 7)(1, 6)(2, 5)(3, 4)
         u1:
             Permutation(7)
-            Permutation(1, 2)(5, 6)(7)
-            Permutation(1, 4, 2)(3, 5, 6)(7)
+            Permutation(7)(1, 2)(5, 6)
+            Permutation(7)(1, 4, 2)(3, 5, 6)
         u2:
             Permutation(7)
-            Permutation(2, 4)(3, 5)(7)
+            Permutation(7)(2, 4)(3, 5)
 
         Define g:
 
@@ -1223,8 +1223,8 @@ class PermutationGroup(Basic):
         ...     print fi
         ...
         Permutation(7)
-        Permutation(1, 2)(5, 6)(7)
-        Permutation(2, 4)(3, 5)(7)
+        Permutation(7)(1, 2)(5, 6)
+        Permutation(7)(2, 4)(3, 5)
 
         We confirm that the product of f gives the original g:
 
@@ -1240,7 +1240,7 @@ class PermutationGroup(Basic):
         ...
         Permutation(7)
         Permutation(7)
-        Permutation(2, 4)(3, 5)(7)
+        Permutation(7)(2, 4)(3, 5)
 
         If g is not an element of G then [] is returned:
 
@@ -1373,7 +1373,7 @@ class PermutationGroup(Basic):
         ...
         coset 0:
             Permutation(2)
-            Permutation(0, 1)(2)
+            Permutation(2)(0, 1)
             Permutation(0, 2, 1)
         coset 1:
             Permutation(2)
@@ -1434,7 +1434,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Permutation(2), Permutation(0, 1)(2)]
+        [Permutation(2), Permutation(2)(0, 1)]
 
         See Also
         ========
@@ -1696,7 +1696,7 @@ class PermutationGroup(Basic):
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.generators
-        [Permutation(1, 2), Permutation(0, 1)(2)]
+        [Permutation(1, 2), Permutation(2)(0, 1)]
 
         """
         return self._generators
@@ -2504,7 +2504,7 @@ class PermutationGroup(Basic):
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
         [Permutation(5), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 5)(1, 4)(2, 3),
-         Permutation(0, 2, 4)(1, 3, 5), Permutation(0, 4)(1, 3)(5),
+         Permutation(0, 2, 4)(1, 3, 5), Permutation(5)(0, 4)(1, 3),
          Permutation(0, 3)(1, 4)(2, 5)]
 
         See Also
@@ -2584,7 +2584,7 @@ class PermutationGroup(Basic):
         >>> G.order()
         2
         >>> list(G.generate())
-        [Permutation(2), Permutation(0, 1)(2)]
+        [Permutation(2), Permutation(2)(0, 1)]
 
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -2785,8 +2785,8 @@ class PermutationGroup(Basic):
         G > G_{b_1} > .. > G_{b1,..,b_r} > 1
         in which G_{b_1,..,b_i} stabilizes b_1,..,b_i,
         and the corresponding ``s`` cosets.
-        An element of the group can be written univoquely
-        as the product h_1*..*h_s.
+        An element of the group can be written as the product
+        h_1*..*h_s.
 
         We use Jerrum's filter in our implementation of the
         Schreier-Sims algorithm. It runs in polynomial time.
@@ -3224,7 +3224,7 @@ class PermutationGroup(Basic):
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
         PermutationGroup([
-            Permutation(0, 4)(1, 3)(5),
+            Permutation(5)(0, 4)(1, 3),
             Permutation(5)])
 
         See Also
