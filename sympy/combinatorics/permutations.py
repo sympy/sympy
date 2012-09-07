@@ -91,17 +91,12 @@ def _af_rmuln(*abc):
     if m == 1:
         return a[0][:]
     if m == 2:
-        return _af_rmul(a[0], a[1])
-    m -= 1
-    rv = range(len(a[0]))
-    for c in rv:
-        p = m
-        j = a[p][c]
-        while p > 0:
-            p -= 1
-            j = a[p][j]
-        rv[c] = j
-    return rv
+        a, b = a
+        return [a[i] for i in b]
+    assert m != 0
+    p0 = _af_rmuln(*a[:m//2])
+    p1 = _af_rmuln(*a[m//2:])
+    return [p0[i] for i in p1]
 
 def _af_parity(pi):
     """
