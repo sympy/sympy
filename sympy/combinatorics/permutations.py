@@ -284,7 +284,7 @@ class Cycle(dict):
 
         Truncation of trailing unmoved items will occur when size
         is less than the maximum element in the cycle; if this is
-        desired, setting ``size``=-1 will guarantee such trimming.
+        desired, setting ``size=-1`` will guarantee such trimming.
 
         Examples
         ========
@@ -296,7 +296,11 @@ class Cycle(dict):
         [0, 1, 3, 2, 5, 4]
         >>> p.as_list(10)
         [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
-        >>> Cycle(2, 4)(1, 2, 4).as_list(-1) # trim
+
+        Passing a length too small will trim trailing, unchanged elements
+        in the permutation:
+
+        >>> Cycle(2, 4)(1, 2, 4).as_list(-1)
         [0, 2, 1]
         """
         if not self and size is None:
