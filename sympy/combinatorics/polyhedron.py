@@ -427,9 +427,9 @@ class Polyhedron(Basic):
 
         >>> tetrahedron.rotate(0)
         >>> tetrahedron.array_form
-        [1, 2, 0, 3]
+        [0, 2, 3, 1]
         >>> tetrahedron.pgroup[0].array_form
-        [1, 2, 0, 3]
+        [0, 2, 3, 1]
 
         See Also
         ========
@@ -577,7 +577,7 @@ class Polyhedron(Basic):
         (0, 1, 2, 3)
         >>> T.rotate(0)
         >>> T.corners
-        (1, 2, 0, 3)
+        (0, 2, 3, 1)
         >>> T.reset()
         >>> T.corners
         (0, 1, 2, 3)
@@ -684,14 +684,16 @@ def _pgroup_calcs():
 
     tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
+    # cw from top
+    #
     _t_pgroup = [
-        Perm([[0,1,2], [3]]),\
-        Perm([[0,1,3], [2]]),\
-        Perm([[0,2,3], [1]]),\
-        Perm([[1,2,3], [0]]),\
-        Perm([[0,1], [2,3]]),\
-        Perm([[0,2], [1,3]]),\
-        Perm([[0,3], [1,2]]),\
+        Perm([[1,2,3], [0]]), # cw from top
+        Perm([[0,1,2], [3]]), # cw from front face
+        Perm([[0,3,2], [1]]), # cw from back right face
+        Perm([[0,3,1], [2]]), # cw from back left face
+        Perm([[0,1], [2,3]]), # through front left edge
+        Perm([[0,2], [1,3]]), # through front right edge
+        Perm([[0,3], [1,2]]), # through back edge
         ]
 
     tetrahedron = Polyhedron(
