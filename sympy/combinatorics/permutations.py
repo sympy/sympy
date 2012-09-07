@@ -852,6 +852,9 @@ class Permutation(Basic):
         p._size = len(perm)
         return p
 
+    def _hashable_content(self):
+        return tuple(self.array_form)
+
     @property
     def cauchy_form(self):
         """Shows the permutation as a 2-row matrix containing the identity
