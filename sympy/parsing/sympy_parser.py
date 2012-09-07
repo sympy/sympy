@@ -39,10 +39,21 @@ def _add_factorial_tokens(name, result):
 
     return result
 
+def _flatten(result):
+    result2 = []
+    for tok in result:
+        if type(tok[0]) == tuple:
+            result2.append(tok[0])
+            result2.extend(tok[1])
+        elif type(tok) == list:
+            result2.extend(tok)
+        else:
+            result2.append(tok)
+    return result2
+
 def _implicit_multiplication_application(result):
     # Step 1: parenthesis grouping
     # Group sequences of '()' operators
-    # TODO recursively transform the inside of the parentheses
     result2 = []
     stacks = []
     stacklevel = 0
@@ -53,11 +64,13 @@ def _implicit_multiplication_application(result):
                 stacklevel += 1
             elif token[1] == ')':
                 stacks[-1].append(token)
-                if len(stacks) > 1:
-                    stacks[-2].extend(stacks.pop())
+                stack = stacks.pop()
+                if len(stacks) > 0:
+                    stacks[-1].extend(stack)
                 else:
-                    stack = stacks.pop()
-                    # Gets stuck in a loop here if we recurse
+                    temp = stack[1:-1]
+                    temp = _implicit_multiplication_application(temp)
+                    stack = [stack[0]] + temp + [stack[-1]]
                     result2.append(stack)
                 stacklevel -= 1
                 continue
@@ -65,7 +78,7 @@ def _implicit_multiplication_application(result):
             stacks[-1].append(token)
         else:
             result2.append(token)
-    print result2
+    # print 'STEP1', result2
 
     # Step 2: symbol/function application
     # Group NAME followed by a list
@@ -80,14 +93,20 @@ def _implicit_multiplication_application(result):
                 result3[-1] = (symbol, tok)
                 symbol = None
             else:
+                # Need some sort of deep-flatten
+                # If we extend, the next step can't handle implicit paren
+                # group multiplication
+                # If we append, untokenize doesn't work
+                # print 'LIST', tok
                 result3.extend(tok)
         else:
             symbol = None
             result3.append(tok)
-    print result3
+    # print 'STEP2', result3
 
     # Step 3: implicit multiplication
-    # Look for two NAMEs in a row
+    # Look for two NAMEs in a row or NAME then paren group or paren group
+    # then NAME
     result4 = []
     for tok, nextTok in zip(result3, result3[1:]):
         result4.append(tok)
@@ -95,7 +114,7 @@ def _implicit_multiplication_application(result):
             if tok[0][0] == nextTok[0][0] == NAME:
                 result4.append((OP, '*'))
     result4.append(result3[-1])
-    print result4
+    # print 'STEP3', result4
 
     # Step 4: implicit application
     # Look for a NAME that is not followed by an OP '(' and apply it to the
@@ -110,18 +129,12 @@ def _implicit_multiplication_application(result):
         elif appendParen:
             result5.append((OP, ')'))
             appendParen = False
+    result5.append(result4[-1])
+    # print 'STEP4', result5
 
     # Step 5: Flatten
-    result6 = []
-    for tok in result5:
-        if type(tok[0]) == tuple:
-            result6.append(tok[0])
-            result6.extend(tok[1])
-        elif type(tok) == list:
-            result6.extend(tok)
-        else:
-            result6.append(tok)
-    print result6
+    result6 = _flatten(result5)
+    # print 'STEP5', result6
 
     return result6
 
@@ -218,8 +231,8 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
         prevtoken = tokval
 
-    print result
     result = _implicit_multiplication_application(result)
+    print result
 
     return untokenize(result)
 
