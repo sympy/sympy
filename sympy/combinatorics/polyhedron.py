@@ -1,5 +1,6 @@
 from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.sympify import sympify
+from sympy.core.compatibility import as_int
 from sympy.combinatorics import Permutation as Perm
 from sympy.utilities.misc import default_sort_key
 from sympy.combinatorics.perm_groups import PermutationGroup
@@ -675,7 +676,7 @@ def _pgroup_calcs():
             # enumerating the faces
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
-            reorder = [tuple(int_tested(minlex(f, directed=False)))
+            reorder = [tuple(map(as_int, minlex(f, directed=False)))
                 for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double
