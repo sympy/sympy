@@ -299,7 +299,13 @@ class StrPrinter(Printer):
         if Permutation.print_cyclic:
             if not expr.size:
                 return 'Permutation()'
-            return Cycle(expr)(expr.size - 1).__repr__().replace('Cycle', 'Permutation')
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' % s
         else:
             s = expr.support()
             if not s:
