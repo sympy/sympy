@@ -273,4 +273,3 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4.simplify()
     assert (N.x & test4 & N.x) == -2 * y
-
