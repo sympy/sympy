@@ -648,7 +648,6 @@ def _pgroup_calcs():
     ...
     ...     perms = [Permutation(p) for p in perms]
     ...     assert PermutationGroup(perms).is_group()
-    ...
 
     In addition to doing the above, the tests in the suite confirm that the
     faces are all present after the application of each permutation.

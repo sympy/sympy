@@ -1207,7 +1207,7 @@ class PermutationGroup(Basic):
 
         Define g:
 
-        >>> g = Permutation(1, 2, 4)(3, 6, 5)
+        >>> g = Permutation(7)(1, 2, 4)(3, 6, 5)
 
         Confirm that it is an element of G:
 
@@ -1249,12 +1249,16 @@ class PermutationGroup(Basic):
         []
 
         """
-        if isinstance(g, Permutation):
-            g = g.array_form
-        # the only error checking is size adjustment; it is assumed that
-        # elements 0..len(g) - 1 are present
+        if isinstance(g, Cycle):
+            g = g.as_list(self.degree)
+        else:
+            if isinstance(g, Permutation):
+                g = g.array_form
         if len(g) != self.degree:
-            g.extend(range(len(g), self.degree))
+            # this could either adjust the size or return [] immediately
+            # but we don't choose between the two and just signal a possible
+            # error
+            raise ValueError('g should be the same size as permutations of G')
         # compute u
         u = self.coset_decomposition()
         # check for quick exit
@@ -1720,7 +1724,7 @@ class PermutationGroup(Basic):
         >>> G.has(c)
         False
         >>> c == b
-        True
+        False
 
         See Also
         ========
@@ -1747,7 +1751,7 @@ class PermutationGroup(Basic):
         >>> elem = Permutation([[2, 3]], size=5)
         >>> G.has_element(elem)
         True
-        >>> G.has_element(Permutation(0, 1, 2, 3))
+        >>> G.has_element(Permutation(4)(0, 1, 2, 3))
         False
 
         To test if a given permutation is present in the group:
@@ -3617,12 +3621,13 @@ class PermutationGroup(Basic):
 
     def is_group(self):
         # identity present
-        I = Permutation()
+        I = Permutation(size=self.degree)
         for g in self:
             if g == I:
                 break
         else:
             return False
+
         # associativity already holds: a*(b*c) == (a*b)*c for permutations
 
         # closure

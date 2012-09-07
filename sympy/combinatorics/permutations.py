@@ -445,6 +445,58 @@ class Permutation(Basic):
     Permutation([0, 2, 1], size=10)
     >>> Permutation(size=10) # identity permutation, size=10
     Permutation([], size=10)
+    >>> Permutation(9)(1, 2)
+    Permutation([0, 2, 1], size=10)
+
+    Caution: no singleton containing an element larger than the largest
+    in any previous cycle can be entered. This is an important difference
+    in how Permutation and Cycle handle the __call__ syntax. A singleton
+    argument at the start of a Permutation performs instantiation of the
+    Permutation and is permitted:
+
+    >>> Permutation(5)
+    Permutation([], size=6)
+
+    A singleton entered after instantiation is a call to the permutation
+    -- a function call -- and if the argument is out of range it will
+    trigger an error. For this reason, it is better to start the cycle
+    with the singleton:
+
+    No - there is no element 3
+
+    >>> Permutation(1, 2)(3)
+    Traceback (most recent call last):
+    ...
+    IndexError: list index out of range
+
+    Yes - only the call to an out of range singleton is prohibited; otherwise
+    the permutation autosizes:
+
+    >>> Permutation(3)(1, 2)
+    Permutation([0, 2, 1, 3])
+    >>> Permutation(1, 2)(3, 4) == Permutation(3, 4)(1, 2)
+    True
+
+    Identity Permutation
+    --------------------
+
+    The identity permutation is a permutation in which no element is out of
+    place. It can be entered in a variety of ways. All the following create
+    an identity permutation of size 4:
+
+    >>> I = Permutation([0, 1, 2, 3])
+    >>> all(p == I for p in [
+    ... Permutation(3),
+    ... Permutation(range(4)),
+    ... Permutation([], size=4),
+    ... Permutation(size=4)])
+    True
+
+    Watch out for entering the range *inside* a set of brackets (which is
+    cycle notation):
+
+    >>> I == Permutation([range(4)])
+    False
 
     Cauchy Matrix Notation and 2-Line Notation
     ------------------------------------------
@@ -538,11 +590,10 @@ class Permutation(Basic):
     Equality testing
     ----------------
 
-    The tail elements, however, are not considered when comparing
-    permutations:
+    The array forms must be the same in order for permutations to be equal:
 
     >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
-    True
+    False
 
     Matrix Notation
     ---------------
@@ -715,27 +766,28 @@ class Permutation(Basic):
         if size is not None:
             size = int(size)
 
-        #() or (1) = identity
-        #(1, 2) = cycle
-        #([1, 2, 3]) = array formr
-        #([[1, 2]]) = cyclic form
-        #(Cycle) = conversion to permutation
-        #(Permutation) = adjust size or return copy
+        #a) ()
+        #b) (1) = identity
+        #c) (1, 2) = cycle
+        #d) ([1, 2, 3]) = array form
+        #e) ([[1, 2]]) = cyclic form
+        #f) (Cycle) = conversion to permutation
+        #g) (Permutation) = adjust size or return copy
         ok = True
-        if not args:
-            return Perm._af_new([], size=size)
-        elif len(args) > 1:
+        if not args: # a
+            return Perm._af_new(range(size or 0))
+        elif len(args) > 1: # c
             return Perm._af_new(Cycle(*args).as_list(size))
         if len(args) == 1:
             a = args[0]
-            if isinstance(a, Perm):
+            if isinstance(a, Perm): # g
                 if size is None or size == a.size:
                     return a
                 return Perm(a.array_form, size=size)
-            if isinstance(a, Cycle):
+            if isinstance(a, Cycle): # f
                 return Perm._af_new(a.as_list(size))
-            if not is_sequence(a):
-                return Perm._af_new([])
+            if not is_sequence(a): # b
+                return Perm._af_new(range(a + 1))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
         else:
@@ -750,9 +802,9 @@ class Permutation(Basic):
         args = list(args[0])
 
         is_cycle =  args and is_sequence(args[0])
-        if is_cycle:
+        if is_cycle: # e
             args = [[int(i) for i in c] for c in args]
-        else:
+        else: # d
             args = [int(i) for i in args]
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
@@ -795,7 +847,7 @@ class Permutation(Basic):
         return obj
 
     @staticmethod
-    def _af_new(perm, size=None):
+    def _af_new(perm):
         """A method to produce a Permutation object from a list;
         the list is bound to the _array_form attribute, so it must
         not be modified; this method is meant for internal use only;
@@ -817,7 +869,7 @@ class Permutation(Basic):
         perm = list(perm)
         p = Basic.__new__(Perm, perm)
         p._array_form = perm
-        p._size = size or len(perm)
+        p._size = len(perm)
         return p
 
     @property
@@ -980,11 +1032,6 @@ class Permutation(Basic):
         """
         a = self.array_form
         return [i for i, e in enumerate(self.array_form) if a[i] != i]
-
-    def __eq__(self, other):
-        if not isinstance(other, self.func):
-            return False
-        return self.cyclic_form == other.cyclic_form
 
     def __add__(self, other):
         """
@@ -1359,7 +1406,7 @@ class Permutation(Basic):
                         raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
-            return self*Permutation(Cycle(*i))
+            return self*Permutation(Cycle(*i), size=self.size)
 
     def atoms(self):
         """
@@ -1713,7 +1760,7 @@ class Permutation(Basic):
         order
         """
         af = self.array_form
-        return all(i == af[i] for i in xrange(self.size))
+        return not af or all(i == af[i] for i in xrange(self.size))
 
     def ascents(self):
         """
