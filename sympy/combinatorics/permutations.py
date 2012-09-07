@@ -383,12 +383,12 @@ class Permutation(Basic):
     >>> from sympy.combinatorics import Permutation
     >>> Permutation.print_cyclic = False
 
-    Entering Permutations
+    Permutations Notation
     =====================
 
     Permutations are commonly represented in disjoint cycle, array forms and
     2-row matrix forms. SymPy allows them to be entered in cyclic or array
-    form.
+    form and displayed in all 3 forms.
 
     Array Notation
     --------------
@@ -440,15 +440,11 @@ class Permutation(Basic):
     Permutation([0, 2, 1], size=10)
     >>> Permutation([[1, 2]], size=10)
     Permutation([0, 2, 1], size=10)
-    >>> Permutation([], size=10) # identity permutation, size=10
-    Permutation([], size=10)
 
     Cyclic-form entry:
 
     >>> Permutation(1, 2, size=10)
     Permutation([0, 2, 1], size=10)
-    >>> Permutation(size=10) # identity permutation, size=10
-    Permutation([], size=10)
     >>> Permutation(9)(1, 2)
     Permutation([0, 2, 1], size=10)
 
@@ -481,27 +477,6 @@ class Permutation(Basic):
     >>> Permutation(1, 2)(3, 4) == Permutation(3, 4)(1, 2)
     True
 
-    Identity Permutation
-    --------------------
-
-    The identity permutation is a permutation in which no element is out of
-    place. It can be entered in a variety of ways. All the following create
-    an identity permutation of size 4:
-
-    >>> I = Permutation([0, 1, 2, 3])
-    >>> all(p == I for p in [
-    ... Permutation(3),
-    ... Permutation(range(4)),
-    ... Permutation([], size=4),
-    ... Permutation(size=4)])
-    True
-
-    Watch out for entering the range *inside* a set of brackets (which is
-    cycle notation):
-
-    >>> I == Permutation([range(4)])
-    False
-
     Cauchy Matrix Notation and 2-Line Notation
     ------------------------------------------
 
@@ -533,8 +508,30 @@ class Permutation(Basic):
     [0, 1, 2, 3]
     [1, 3, 0, 2]
 
-    Representation
-    ==============
+    Identity Permutation
+    --------------------
+
+    The identity permutation is a permutation in which no element is out of
+    place. It can be entered in a variety of ways. All the following create
+    an identity permutation of size 4:
+
+    >>> I = Permutation([0, 1, 2, 3])
+    >>> all(p == I for p in [
+    ... Permutation(3),
+    ... Permutation(range(4)),
+    ... Permutation([], size=4),
+    ... Permutation(size=4)])
+    True
+
+    Watch out for entering the range *inside* a set of brackets (which is
+    cycle notation):
+
+    >>> I == Permutation([range(4)])
+    False
+
+
+    Permutation Printing
+    ====================
 
     There are a few things to note about how Permutations are printed.
 
@@ -577,19 +574,14 @@ class Permutation(Basic):
     Permutation(3)(0, 1)
     >>> Permutation.print_cyclic = False
 
-    Neither the 2 nor 3 were printed, but they are still there as can be seen
-    with the array_form and size methods:
+    The 2 was not printed but it is still there as can be seen with the
+    array_form and size methods:
 
     >>> p.array_form
     [1, 0, 2, 3]
     >>> p.size
     4
 
-    It is important to keep such elements if one wants to generate further
-    permutations of the elements:
-
-    >>> p.next_lex()
-    Permutation([1, 0, 3, 2])
 
     Equality testing
     ----------------
@@ -599,22 +591,6 @@ class Permutation(Basic):
     >>> Permutation([1, 0, 2, 3]) == Permutation([1, 0])
     False
 
-    Matrix Notation
-    ---------------
-
-    This 2-row matrix gives the initial position of the elements and a row
-    whose values indicate where the element above will appear in the final
-    ordering.
-
-    >>> a = Permutation([2, 0, 3, 1])
-    >>> a.cauchy_form
-    [0, 1, 2, 3]
-    [1, 3, 0, 2]
-
-    The second row is known as the inverse of the permutation:
-
-    >>> list(~a)
-    [1, 3, 0, 2]
 
     Short introduction to other methods
     ===================================
