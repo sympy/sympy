@@ -2781,7 +2781,7 @@ class PermutationGroup(Basic):
     def schreier_sims(self):
         """Schreier-Sims algorithm.
 
-        It computes the generators of the stabilizers chain
+        It computes the generators of the chain of stabilizers
         G > G_{b_1} > .. > G_{b1,..,b_r} > 1
         in which G_{b_1,..,b_i} stabilizes b_1,..,b_i,
         and the corresponding ``s`` cosets.
@@ -3255,9 +3255,7 @@ class PermutationGroup(Basic):
         return PermutationGroup(list(stab_gens))
 
     def stabilizers_gens(self):
-        """Schreier-Sims stabilizers generators
-
-        Return the generators of the stabilizers chain in the
+        """Return the generators of the chain of stabilizers of the
         Schreier-Sims representation.
 
         Examples
