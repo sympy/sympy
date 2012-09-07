@@ -2,14 +2,15 @@
 Generating and counting primes.
 
 """
-
 import random
 from bisect import bisect
-from primetest import isprime
-
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
+
+from sympy.core.compatibility import as_int
+from primetest import isprime
+
 
 def _arange(a, b):
     ar = _array('l', [0]*(b - a))
@@ -99,7 +100,7 @@ class Sieve:
         >>> sieve._list
         array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
         """
-        i = int_tested(i)
+        i = as_int(i)
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
@@ -167,7 +168,7 @@ class Sieve:
 
     def __contains__(self, n):
         try:
-            n = int_tested(n)
+            n = as_int(n)
             assert n >= 2
         except (ValueError, AssertionError):
             return False
@@ -178,7 +179,7 @@ class Sieve:
 
     def __getitem__(self, n):
         """Return the nth prime number"""
-        n = int_tested(n)
+        n = as_int(n)
         self.extend_to_no(n)
         return self._list[n - 1]
 
@@ -212,7 +213,7 @@ def prime(nth):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-    n = int_tested(nth)
+    n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2");
     return sieve[n]
@@ -267,7 +268,7 @@ def nextprime(n, ith=1):
 
     """
     n = int(n)
-    i = int_tested(ith)
+    i = as_int(ith)
     if i > 1:
         pr = n
         j = 1
@@ -512,7 +513,7 @@ def primorial(n, nth=True):
 
     """
     if nth:
-        n = int_tested(n)
+        n = as_int(n)
     else:
         n = int(n)
     if n < 1:
@@ -613,5 +614,3 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
-
-from sympy.ntheory.residue_ntheory import int_tested

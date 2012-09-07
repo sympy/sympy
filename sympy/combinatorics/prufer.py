@@ -1,7 +1,6 @@
 from sympy.core import Basic
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, as_int
 from sympy.utilities.iterables import flatten
-from sympy.ntheory.residue_ntheory import int_tested
 
 from collections import defaultdict
 
@@ -325,7 +324,7 @@ class Prufer(Basic):
         Prufer([0, 0])
 
         """
-        n, rank = int_tested(n, rank)
+        n, rank = as_int(n), as_int(rank)
         L = defaultdict(int)
         for i in xrange(n - 3, -1, -1):
             L[i] = rank % n
