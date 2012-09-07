@@ -13,8 +13,10 @@ def test_Permutation():
     p = Permutation([0, 1, 2, 3])
     # call as bijective
     assert [p(i) for i in range(p.size)] == list(p)
-    # call as function
+    # call as operator
     assert p(range(p.size)) == list(p)
+    # call as function
+    assert list(p(1, 2)) == [0, 2, 1, 3]
     # conversion to list
     assert list(p) == range(4)
     # cycle form with size
@@ -24,6 +26,7 @@ def test_Permutation():
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
+    assert len(set([p, p])) == 1
     r = Permutation([1,3,2,0,4,6,5])
     ans = Permutation(_af_rmuln(*[w.array_form for w in (p, q, r)])).array_form
     assert rmul(p, q, r).array_form == ans
