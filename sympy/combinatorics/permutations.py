@@ -365,12 +365,12 @@ class Permutation(Basic):
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
     mapping with itself. The permutation of a given arrangement is given by
-    indicating the positions of the elements after re-arrrangment [2]_. For example,
-    if one started with elements [x, y, a, b] (in that order) and they were
-    reordered as [x, y, b, a] then the permutation would be [0, 1, 3, 2].
-    Notice that (in SymPy) the first element is always referred to as 0 and
-    the permutation uses the indices of the elements in the original ordering,
-    not the elements (a, b, etc...) themselves.
+    indicating the positions of the elements after re-arrrangment [2]_. For
+    example, if one started with elements [x, y, a, b] (in that order) and
+    they were reordered as [x, y, b, a] then the permutation would be
+    [0, 1, 3, 2]. Notice that (in SymPy) the first element is always referred
+    to as 0 and the permutation uses the indices of the elements in the
+    original ordering, not the elements (a, b, etc...) themselves.
 
     >>> from sympy.combinatorics import Permutation
     >>> Permutation.print_cyclic = False
@@ -378,21 +378,43 @@ class Permutation(Basic):
     Permutations Notation
     =====================
 
-    Permutations are commonly represented in disjoint cycle, array forms and
-    2-row matrix forms. SymPy allows them to be entered in cyclic or array
-    form.
+    Permutations are commonly represented in disjoint cycle, array forms,
+    static arrow diagrams and 2-row matrix forms. SymPy allows them to be
+    entered in cyclic or array form.
 
-    Array Notation
-    --------------
+    Array Notation and 2-row Matrix Form
+    ------------------------------------
 
-    In array form, the permutation is represented by an array that shows which
-    element is occupying which position after the re-arrangement. So if 3
-    elements, [0, 1, 2], rearrange as [0, 2, 1] then the array
-    form is simply [0, 2, 1]. This is entered as
+    In the 2-row matrix form, the elements and their final positions are shown
+    as a matrix with 2 rows:
+
+    [0 1 2 3]
+    [1 2 0 3]
+
+    The 2nd row is the permutation and that is what is referred to as the
+    "array form" of the permutation. This is entered in brackets as the
+    argument to the Permutation class:
 
     >>> Permutation([0, 2, 1])
     Permutation([0, 2, 1])
     >>> p = _
+
+    Static Arrow Diagram
+    --------------------
+
+    Sometimes permutations are given as "static arrow diagrams" showing which
+    position each elements moves to:
+
+    0 --> 3
+    1 --> 2
+    2 --> 0
+    3 --> 1
+
+    The final ordering of the elements -- the permutation -- is 2, 3, 1, 0;
+    this is conveniently entered as the inverse of the "destination vector":
+
+    >>> list(~Permutation([3, 2, 0, 1]))
+    [2, 3, 1, 0]
 
     Disjoint Cycle Notation
     -----------------------
