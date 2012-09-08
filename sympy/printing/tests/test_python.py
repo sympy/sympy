@@ -64,6 +64,7 @@ def test_python_basic():
     assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda_')\ne = 5*lambda_"
     assert (python(5*Symbol("lambda")+7*Symbol("lambda_")) ==
             "lambda__ = Symbol('lambda__')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
+    #assert python(5*Function("for")(8)) == "for_ = Function('for_')\ne = 5*for_(8)"
 
 def test_python_relational():
     assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
