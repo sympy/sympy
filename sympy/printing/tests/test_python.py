@@ -60,6 +60,11 @@ def test_python_basic():
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)"
             ]
 
+    # Check for escaping of keywords
+    assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda_')\ne = 5*lambda_"
+    assert (python(5*Symbol("lambda")+7*Symbol("lambda_")) ==
+            "lambda__ = Symbol('lambda__')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
+
 def test_python_relational():
     assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
     assert python(Ge(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x >= y"
