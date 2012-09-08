@@ -586,7 +586,14 @@ class Polyhedron(Basic):
         self._corners = self.args[0]
 
 def _pgroup_calcs():
-    """
+    """Return the permutation groups for each of the polyhedra and the face
+    definitions: tetrahedron, cube, octahedron, dodecahedron, icosahedron,
+    tetrahedron_faces, cube_faces, octahedron_faces, dodecahedron_faces,
+    icosahedron_faces
+
+    (This author didn't find and didn't know of a better way to do it though
+    there likely is such a way.)
+
     Although only 2 permutations are needed for a polyhedron in order to
     generate all the possible orientations, a group of permutations is
     provided instead. A set of permutations is called a "group" if::
@@ -603,20 +610,16 @@ def _pgroup_calcs():
 
     None of the polyhedron groups defined follow these definitions of a group.
     Instead, they are selected to contain those permutations whose powers
-    alone can constructed all orientations of the polyhedron, i.e. for
+    alone will construct all orientations of the polyhedron, i.e. for
     permutations ``a``, ``b``, etc... in the group, ``a, a**2, ..., a**o_a``,
     ``b, b**2, ..., b**o_b``, etc... (where ``o_i`` is the order of
-    permutation) generate all permutations of the polyhedron instead of
-    mixed products like ``a*b``, ``a*b*c**2``, etc....
+    permutation ``i``) generate all permutations of the polyhedron instead of
+    mixed products like ``a*b``, ``a*b**2``, etc....
 
     Note that for a polyhedron with n vertices, the valid permutations of the
     vertices exclude those that do not maintain its faces. e.g. the
     permutation BCDE of a square's four corners, ABCD, is a valid
     permutation while CBDE is not (because this would twist the square).
-
-    The following work was used to calculate the permutation group for
-    each of the polyhedra. (This author didn't find and didn't know of a better
-    way to do it though there likely is such a way.)
 
     Examples
     ========
@@ -683,7 +686,10 @@ def _pgroup_calcs():
             new_pgroup.append(Perm([fmap[f] for f in reorder]))
         return new_pgroup
 
-    tetrahedron_faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
+    tetrahedron_faces = [
+        (0, 1, 2), (0, 2, 3), (0, 3, 1), # upper 3
+        (1, 2, 3), # bottom
+        ]
 
     # cw from top
     #
@@ -703,9 +709,10 @@ def _pgroup_calcs():
         _t_pgroup)
 
     cube_faces = [
-    (0, 1, 2, 3),
-    (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4),
-    (4, 5, 6, 7)]
+    (0, 1, 2, 3), # upper
+    (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4), # middle 4
+    (4, 5, 6, 7), # lower
+    ]
 
     # U, D, F, B, L, R = up, down, front, back, left, right
     _c_pgroup = [Perm(p) for p in
@@ -714,10 +721,10 @@ def _pgroup_calcs():
         [4,0,3,7,5,1,2,6], # cw from F face
         [4,5,1,0,7,6,2,3], # cw from R face
 
-        [1,0,4,5,2,3,7,6], # cw through FU edge
-        [6,2,1,5,7,3,0,4], # cw through RU edge
-        [6,7,3,2,5,4,0,1], # cw through BU edge
-        [3,7,4,0,2,6,5,1], # cw through LU edge
+        [1,0,4,5,2,3,7,6], # cw through UF edge
+        [6,2,1,5,7,3,0,4], # cw through UR edge
+        [6,7,3,2,5,4,0,1], # cw through UB edge
+        [3,7,4,0,2,6,5,1], # cw through UL edge
         [4,7,6,5,0,3,2,1], # cw through FL edge
         [6,5,4,7,2,1,0,3], # cw through FR edge
 
@@ -733,8 +740,9 @@ def _pgroup_calcs():
         _c_pgroup)
 
     octahedron_faces = [
-        (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4),
-        (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5)]
+        (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4), # top 4
+        (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5), # bottom 4
+        ]
 
     octahedron = Polyhedron(
         range(6),
@@ -742,12 +750,13 @@ def _pgroup_calcs():
         _pgroup_of_double(cube, cube_faces, _c_pgroup))
 
     dodecahedron_faces = [
-         (0,1,2,3,4),
-                         (0,1,6,10,5), (1,2,7,11,6), (2,3,8,12,7),
-                         (3,4,9,13,8), (0,4,9,14,5),
-                         (5,10,16,15,14), (6,10,16,17,11), (7,11,17,18,12),
-                         (8,12,18,19,13), (9,13,19,15,14),
-         (15,16,17,18,19)]
+         (0,1,2,3,4), # top
+         (0,1,6,10,5), (1,2,7,11,6), (2,3,8,12,7), # upper 5
+         (3,4,9,13,8), (0,4,9,14,5),
+         (5,10,16,15,14), (6,10,16,17,11), (7,11,17,18,12), # lower 5
+         (8,12,18,19,13), (9,13,19,15,14),
+         (15,16,17,18,19) # bottom
+         ]
 
     def _string_to_perm(s):
         rv = [Perm(range(20))]
