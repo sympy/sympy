@@ -97,7 +97,6 @@ def _implicit_multiplication_application(result):
                 # If we extend, the next step can't handle implicit paren
                 # group multiplication
                 # If we append, untokenize doesn't work
-                # print 'LIST', tok
                 result3.extend(tok)
         else:
             symbol = None
@@ -113,6 +112,14 @@ def _implicit_multiplication_application(result):
         if type(tok[0]) == type(nextTok[0]) == tuple:
             if tok[0][0] == nextTok[0][0] == NAME:
                 result4.append((OP, '*'))
+        elif (type(tok[0]) == tuple and
+              nextTok[0] == OP and nextTok[1] == '('):
+            # Applied function followed by an open parenthesis
+            result4.append((OP, '*'))
+        elif (tok[0] == OP and tok[1] == ')' and
+              type(nextTok[0]) == tuple):
+            # Close parenthesis followed by an applied function
+            result4.append((OP, '*'))
     result4.append(result3[-1])
     # print 'STEP3', result4
 
@@ -205,12 +212,21 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     result.append((NAME, name))
                     continue
 
-            result.extend([
-                (NAME, 'Symbol'),
-                (OP, '('),
-                (NAME, repr(str(name))),
-                (OP, ')'),
-            ])
+            if name != '_kern':
+                for var in name:
+                    result.extend([
+                        (NAME, 'Symbol'),
+                        (OP, '('),
+                        (NAME, repr(str(var))),
+                        (OP, ')'),
+                    ])
+            else:
+                result.extend([
+                    (NAME, 'Symbol'),
+                    (OP, '('),
+                    (NAME, repr(str(name))),
+                    (OP, ')'),
+                ])
         elif toknum == OP:
             op = tokval
 
@@ -232,7 +248,6 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
         prevtoken = tokval
 
     result = _implicit_multiplication_application(result)
-    print result
 
     return untokenize(result)
 
