@@ -16,6 +16,7 @@ do almost everything that normal matrices can do but they inherit from
 You can turn any Matrix-like object into an :class:`ImmutableMatrix` by calling
 the constructor 
 
+    >>> from sympy import Matrix, ImmutableMatrix
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> M[1, 1] = 0
     >>> IM = ImmutableMatrix(M)
@@ -23,9 +24,10 @@ the constructor
     [1, 2, 3]
     [4, 0, 6]
     [7, 8, 9]
-    
     >>> IM[1, 1] = 5
-    TypeError: Can not set values in Immutable Matrix
+    Traceback (most recent call last):
+    ...
+    TypeError: Can not set values in Immutable Matrix. Use Matrix instead.
 
 Matrix Expressions
 ------------------
