@@ -131,8 +131,10 @@ def _implicit_multiplication_application(result):
     for tok, nextTok in zip(result4, result4[1:]):
         result5.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
-            result5.append((OP, '('))
-            appendParen = True
+            if tok[1] not in ('None', 'True', 'False'):
+                # TODO: better way to handle this
+                result5.append((OP, '('))
+                appendParen = True
         elif appendParen:
             result5.append((OP, ')'))
             appendParen = False
