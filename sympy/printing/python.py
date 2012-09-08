@@ -53,17 +53,27 @@ def python(expr, **settings):
     # Returning found symbols and functions
     renamings = {}
     for symbolname in printer.symbols:
-        variablename = symbolname
-        if kw.iskeyword(variablename):
+        newsymbolname = symbolname
+        if kw.iskeyword(newsymbolname):
             while True:
-                variablename += "_"
-                if variablename not in printer.symbols:
-                    renamings[sympy.Symbol(symbolname)] = sympy.Symbol(variablename)
+                newsymbolname += "_"
+                if newsymbolname not in printer.symbols:
+                    renamings[sympy.Symbol(symbolname)] = sympy.Symbol(newsymbolname)
                     break
-        result += variablename + ' = Symbol(\'' + variablename + '\')\n'
+        result += newsymbolname + ' = Symbol(\'' + newsymbolname + '\')\n'
 
-    for function in printer.functions:
-        result += function + ' = Function(\'' + function + '\')\n'
+    for functionname in printer.functions:
+        newfunctionname = functionname
+        # TODO
+        # Escape function names that are reserved python keywords
+        # Fix does not work because we can not xreplace functions!
+        # if kw.iskeyword(newfunctionname):
+        #     while True:
+        #         newfunctionname += "_"
+        #         if newfunctionname not in printer.functions:
+        #             renamings[sympy.Function(functionname)] = sympy.Function(newfunctionname)
+        #             break
+        result += newfunctionname + ' = Function(\'' + newfunctionname + '\')\n'
 
     if not len(renamings) == 0:
         exprp = expr.xreplace(renamings)
