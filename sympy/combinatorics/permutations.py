@@ -575,7 +575,6 @@ class Permutation(Basic):
     >>> p.size
     4
 
-
     Short introduction to other methods
     ===================================
 
@@ -643,6 +642,12 @@ class Permutation(Basic):
      ['one', 'zero', 'four', 'two']
     >>> p('zo42')
     ['o', 'z', '4', '2']
+
+    If you have a list of arbitrary elements, the corresponding permutation
+    can be found with the as_permutation method:
+
+    >>> Permutation.as_permutation('SymPy')
+    Permutation([1, 3, 2, 0, 4])
 
     See Also
     ========
@@ -1271,6 +1276,31 @@ class Permutation(Basic):
                 for y in x[nx-1:0:-1]:
                     res.append((first,y))
         return res
+
+    @classmethod
+    def as_permutation(self, i, key=None):
+        """Return the permutation needed to obtain ``i`` from the sorted
+        elements of ``i``. If custom sorting is desired, a key can be given.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+
+        >>> Permutation.as_permutation('SymPy')
+        Permutation(4)(0, 1, 3)
+        >>> _(sorted("SymPy"))
+        ['S', 'y', 'm', 'P', 'y']
+        >>> Permutation.as_permutation('SymPy', key=lambda x: x.lower())
+        Permutation(4)(0, 2)(1, 3)
+        """
+        ic = zip(i, range(len(i)))
+        if key:
+            ic.sort(key=lambda x: key(x[0]))
+        else:
+            ic.sort()
+        return ~Permutation([i[1] for i in ic])
 
     def __invert__(self):
         """
