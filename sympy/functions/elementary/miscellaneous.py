@@ -7,7 +7,7 @@ from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.core.compatibility import as_int
 
 class IdentityFunction(Lambda):
     """
@@ -208,7 +208,7 @@ def real_root(arg, n=None):
     root, sqrt
     """
     if n is not None:
-        n = int_tested(n)
+        n = as_int(n)
         rv = C.Pow(arg, Rational(1, n))
         if n % 2 == 0:
             return rv

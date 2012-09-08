@@ -3,7 +3,7 @@ import random
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable # logical location
-from sympy.core.compatibility import \
+from sympy.core.compatibility import as_int, \
     product as cartes, combinations, combinations_with_replacement
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -878,8 +878,6 @@ def partitions(n, m=None, k=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    from sympy.ntheory.residue_ntheory import int_tested
-
     if n < 0:
         raise ValueError("n must be >= 0")
     if m == 0:
@@ -894,7 +892,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
-    n, m, k = int_tested(n, m, k)
+    n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest

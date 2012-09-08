@@ -1,19 +1,18 @@
 """
 Integer factorization
 """
+import random
+import math
 
 from sympy.core import Mul
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
-import random
-import math
+from sympy.core.compatibility import as_int
 from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
-
-from operator import abs
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
     for i in range(256)]
@@ -190,9 +189,7 @@ def multiplicity(p, n):
     [0, 1, 2, 3, 3]
 
     """
-    from residue_ntheory import int_tested
-
-    p, n = int_tested(p, n)
+    p, n = as_int(p), as_int(n)
     if p == 2:
         return trailing(n)
     if p < 2:
@@ -1309,8 +1306,7 @@ def totient(n):
 
     divisor_count
     """
-    from residue_ntheory import int_tested
-    n = int_tested(n)
+    n = as_int(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
     factors = factorint(n)

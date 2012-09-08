@@ -371,3 +371,32 @@ except NameError: # Python 2.5
                 return args[1]
         else:
             raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
+
+def as_int(n):
+    """
+    Convert the argument to a builtin integer.
+
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value.
+
+    Examples
+    ========
+
+    >>> from sympy.core.compatibility import as_int
+    >>> from sympy import sqrt
+    >>> 3.0
+    3.0
+    >>> as_int(3.0) # convert to int and test for equality
+    3
+    >>> int(sqrt(10))
+    3
+    >>> as_int(sqrt(10))
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
+
+    """
+    result = int(n)
+    if result != n:
+        raise ValueError('%s is not an integer' % n)
+    return result

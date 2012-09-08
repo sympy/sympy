@@ -1,49 +1,7 @@
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import as_int
 from primetest import isprime
 from factor_ import factorint, trailing, totient
-
-def int_tested(*j):
-    """
-    Return all args as Python integers and confirm that the input
-    was equivalent to the integer, else raise a ValueError.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import int_tested
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> int_tested(_) # convert to int and test for equality
-    3
-    >>> n = sqrt(10)
-    >>> int_tested(n)
-    Traceback (most recent call last):
-    ...
-    ValueError: All arguments were not integers
-
-    Input can be a single number, multiple numbers, or a list of numbers:
-    >>> int_tested(1)
-    1
-    >>> int_tested(1, 2)
-    [1, 2]
-    >>> int_tested([1])
-    [1]
-    >>> int_tested([1, 2])
-    [1, 2]
-    """
-    try:
-        j[0][0]
-        as_int = False
-        j = j[0]
-    except TypeError:
-        as_int = len(j) == 1
-    i = [int(i) for i in j]
-    if i != list(j):
-        raise ValueError('all arguments were not integers')
-    if as_int:
-        return i[0]
-    return i
 
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
@@ -60,7 +18,7 @@ def n_order(a, n):
     >>> n_order(4, 7)
     3
     """
-    a, n = int_tested(a, n)
+    a, n = as_int(a), as_int(n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     group_order = totient(n)
@@ -101,7 +59,7 @@ def is_primitive_root(a, p):
     False
 
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
@@ -129,7 +87,7 @@ def is_quad_residue(a, p):
 
     legendre_symbol, jacobi_symbol
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if p < 1:
         raise ValueError('p must be > 0')
     if a >= p or a < 0:
@@ -181,7 +139,7 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
     _, a = divmod(a, p)
@@ -228,7 +186,7 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = int_tested(m, n)
+    m, n = as_int(m), as_int(n)
     if not n % 2:
         raise ValueError("n should be an odd integer")
     if m < 0 or m > n:
