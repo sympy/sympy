@@ -1170,7 +1170,7 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation([2,0,3,1])
-        >>> q = Permutation([1,0,3,2])
+        >>> q = Permutation([1,0,2,3])
         >>> r = Permutation([0,2,3,1])
         >>> p**4
         Permutation([0, 1, 2, 3])
