@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import keyword as kw
 import sympy
 from repr import ReprPrinter
 from str import StrPrinter
@@ -46,16 +47,26 @@ def python(expr, **settings):
     (can be passed to the exec() function without any modifications)"""
 
     printer = PythonPrinter(settings)
-    expr = printer.doprint(expr)
+    exprp = printer.doprint(expr)
 
     result = ''
     # Returning found symbols and functions
-    for symbol in printer.symbols:
-        result += symbol + ' = Symbol(\'' + symbol + '\')\n'
+    renamings = {}
+    for symbolname in printer.symbols:
+        variablename = symbolname
+        if kw.iskeyword(variablename):
+            while True:
+                variablename += "_"
+                if variablename not in printer.symbols:
+                    renamings[sympy.Symbol(symbolname)] = sympy.Symbol(variablename)
+                    break
+        result += variablename + ' = Symbol(\'' + variablename + '\')\n'
+
     for function in printer.functions:
         result += function + ' = Function(\'' + function + '\')\n'
 
-    result += 'e = ' + printer._str(expr)
+    exprr = expr.xreplace(renamings)
+    result += 'e = ' + printer._str(exprr)
     return result
 
 def print_python(expr, **settings):
