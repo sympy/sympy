@@ -65,8 +65,9 @@ def python(expr, **settings):
     for function in printer.functions:
         result += function + ' = Function(\'' + function + '\')\n'
 
-    exprr = expr.xreplace(renamings)
-    result += 'e = ' + printer._str(exprr)
+    if not len(renamings) == 0:
+        exprp = expr.xreplace(renamings)
+    result += 'e = ' + printer._str(exprp)
     return result
 
 def print_python(expr, **settings):
