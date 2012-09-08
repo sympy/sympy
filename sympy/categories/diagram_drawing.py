@@ -2078,6 +2078,155 @@ class XypicDiagramDrawer(object):
             looping_end, horizontal_direction, vertical_direction,
             label_pos, morphism_name)
 
+    @staticmethod
+    def _check_free_space_horizontal(dom_i, dom_j, cod_j, grid):
+        """
+        For a horizontal morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) above the morphism
+        or below it.
+        """
+        if dom_j < cod_j:
+            (start, end) = (dom_j, cod_j)
+            backwards = False
+        else:
+            (start, end) = (cod_j, dom_j)
+            backwards = True
+
+        # Check for free space above.
+        if dom_i == 0:
+            free_up = True
+        else:
+            free_up = all([grid[dom_i - 1, j] for j in \
+                           xrange(start, end + 1)])
+
+        # Check for free space below.
+        if dom_i == grid.height - 1:
+            free_down = True
+        else:
+            free_down = all([not grid[dom_i + 1, j] for j in \
+                             xrange(start, end + 1)])
+
+        return (free_up, free_down, backwards)
+
+    @staticmethod
+    def _check_free_space_vertical(dom_i, cod_i, dom_j, grid):
+        """
+        For a vertical morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) to the left of the
+        morphism or to the right of it.
+        """
+        if dom_i < cod_i:
+            (start, end) = (dom_i, cod_i)
+            backwards = False
+        else:
+            (start, end) = (cod_i, dom_i)
+            backwards = True
+
+        # Check if there's space to the left.
+        if dom_j == 0:
+            free_left = True
+        else:
+            free_left = all([not grid[i, dom_j - 1] for i in \
+                             xrange(start, end + 1)])
+
+        if dom_j == grid.width - 1:
+            free_right = True
+        else:
+            free_right = all([not grid[i, dom_j + 1] for i in \
+                              xrange(start, end + 1)])
+
+        return (free_left, free_right, backwards)
+
+    @staticmethod
+    def _check_free_space_diagonal(dom_i, cod_i, dom_j, cod_j, grid):
+        """
+        For a diagonal morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) above the morphism
+        or below it.
+        """
+        def abs_xrange(start, end):
+            if start < end:
+                return xrange(start, end + 1)
+            else:
+                return xrange(end, start + 1)
+
+        if dom_i < cod_i and dom_j < cod_j:
+            # This morphism goes from top-left to
+            # bottom-right.
+            (start_i, start_j) = (dom_i, dom_j)
+            (end_i, end_j) = (cod_i, cod_j)
+            backwards = False
+        elif dom_i > cod_i and dom_j > cod_j:
+            # This morphism goes from bottom-right to
+            # top-left.
+            (start_i, start_j) = (cod_i, cod_j)
+            (end_i, end_j) = (dom_i, dom_j)
+            backwards = True
+        if dom_i < cod_i and dom_j > cod_j:
+            # This morphism goes from top-right to
+            # bottom-left.
+            (start_i, start_j) = (dom_i, dom_j)
+            (end_i, end_j) = (cod_i, cod_j)
+            backwards = True
+        elif dom_i > cod_i and dom_j < cod_j:
+            # This morphism goes from bottom-left to
+            # top-right.
+            (start_i, start_j) = (cod_i, cod_j)
+            (end_i, end_j) = (dom_i, dom_j)
+            backwards = False
+
+        # This is an attempt at a fast and furious strategy to
+        # decide where there is free space on the two sides of
+        # a diagonal morphism.  For a diagonal morphism
+        # starting at ``(start_i, start_j)`` and ending at
+        # ``(end_i, end_j)`` the rectangle defined by these
+        # two points is considered.  The slope of the diagonal
+        # ``alpha`` is then computed.  Then, for every cell
+        # ``(i, j)`` within the rectangle, the slope
+        # ``alpha1`` of the line through ``(start_i,
+        # start_j)`` and ``(i, j)`` is considered.  If
+        # ``alpha1`` is between 0 and ``alpha``, the point
+        # ``(i, j)`` is above the diagonal, if ``alpha1`` is
+        # between ``alpha`` and infinity, the point is below
+        # the diagonal.  Also note that, with some beforehand
+        # precautions, this trick works for both the main and
+        # the secondary diagonals of the rectangle.
+
+        # I have considered the possibility to only follow the
+        # shorter diagonals immediately above and below the
+        # main (or secondary) diagonal.  This, however,
+        # wouldn't have resulted in much performance gain or
+        # better detection of outer edges, because of
+        # relatively small sizes of diagram grids, while the
+        # code would have become harder to understand.
+
+        alpha = float(end_i - start_i)/(end_j - start_j)
+        free_up = True
+        free_down = True
+        for i in abs_xrange(start_i, end_i):
+            if not free_up and not free_down:
+                break
+
+            for j in abs_xrange(start_j, end_j):
+                if not free_up and not free_down:
+                    break
+
+                if (i, j) == (start_i, start_j):
+                    continue
+
+                if j == start_j:
+                    alpha1 = "inf"
+                else:
+                    alpha1 = float(i - start_i)/(j - start_j)
+
+                if grid[i, j]:
+                    if (alpha1 == "inf") or (abs(alpha1) > abs(alpha)):
+                        free_down = False
+                    elif abs(alpha1) < abs(alpha):
+                        free_up = False
+
+        return (free_up, free_down, backwards)
+
     def _push_labels_out(self, morphisms_str_info, grid, object_coords):
         """
         For all straight morphisms which form the visual boundary of
@@ -2105,12 +2254,6 @@ class XypicDiagramDrawer(object):
             elif free2 and not free1:
                 m_str_info.label_position = pos2
 
-        def abs_xrange(start, end):
-            if start < end:
-                return xrange(start, end + 1)
-            else:
-                return xrange(end, start + 1)
-
         for m, m_str_info in morphisms_str_info.items():
             if m_str_info.curving or m_str_info.forced_label_position:
                 # This is either a curved morphism, and curved
@@ -2128,129 +2271,25 @@ class XypicDiagramDrawer(object):
 
             if dom_i == cod_i:
                 # Horizontal morphism.
-                if dom_j < cod_j:
-                    (start, end) = (dom_j, cod_j)
-                    backwards = False
-                else:
-                    (start, end) = (cod_j, dom_j)
-                    backwards = True
-
-                # Check for free space above.
-                if dom_i == 0:
-                    free_up = True
-                else:
-                    free_up = all([grid[dom_i - 1, j] for j in \
-                                   xrange(start, end + 1)])
-
-                # Check for free space below.
-                if dom_i == grid.height - 1:
-                    free_down = True
-                else:
-                    free_down = all([not grid[dom_i + 1, j] for j in \
-                                     xrange(start, end + 1)])
+                (free_up, free_down,
+                 backwards) = XypicDiagramDrawer._check_free_space_horizontal(
+                    dom_i, dom_j, cod_j, grid)
 
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
             elif dom_j == cod_j:
                 # Vertical morphism.
-                if dom_i < cod_i:
-                    (start, end) = (dom_i, cod_i)
-                    backwards = False
-                else:
-                    (start, end) = (cod_i, dom_i)
-                    backwards = True
-
-                # Check if there's space to the left.
-                if dom_j == 0:
-                    free_left = True
-                else:
-                    free_left = all([not grid[i, dom_j - 1] for i in \
-                                     xrange(start, end + 1)])
-
-                if dom_j == grid.width - 1:
-                    free_right = True
-                else:
-                    free_right = all([not grid[i, dom_j + 1] for i in \
-                                      xrange(start, end + 1)])
+                (free_left, free_right,
+                 backwards) = XypicDiagramDrawer._check_free_space_vertical(
+                    dom_i, cod_i, dom_j, grid)
 
                 set_label_position(free_left, free_right, "_", "^",
                                    backwards, m_str_info)
             else:
                 # A diagonal morphism.
-                if dom_i < cod_i and dom_j < cod_j:
-                    # This morphism goes from top-left to
-                    # bottom-right.
-                    (start_i, start_j) = (dom_i, dom_j)
-                    (end_i, end_j) = (cod_i, cod_j)
-                    backwards = False
-                elif dom_i > cod_i and dom_j > cod_j:
-                    # This morphism goes from bottom-right to
-                    # top-left.
-                    (start_i, start_j) = (cod_i, cod_j)
-                    (end_i, end_j) = (dom_i, dom_j)
-                    backwards = True
-                if dom_i < cod_i and dom_j > cod_j:
-                    # This morphism goes from top-right to
-                    # bottom-left.
-                    (start_i, start_j) = (dom_i, dom_j)
-                    (end_i, end_j) = (cod_i, cod_j)
-                    backwards = True
-                elif dom_i > cod_i and dom_j < cod_j:
-                    # This morphism goes from bottom-left to
-                    # top-right.
-                    (start_i, start_j) = (cod_i, cod_j)
-                    (end_i, end_j) = (dom_i, dom_j)
-                    backwards = False
-
-                # This is an attempt at a fast and furious strategy to
-                # decide where there is free space on the two sides of
-                # a diagonal morphism.  For a diagonal morphism
-                # starting at ``(start_i, start_j)`` and ending at
-                # ``(end_i, end_j)`` the rectangle defined by these
-                # two points is considered.  The slope of the diagonal
-                # ``alpha`` is then computed.  Then, for every cell
-                # ``(i, j)`` within the rectangle, the slope
-                # ``alpha1`` of the line through ``(start_i,
-                # start_j)`` and ``(i, j)`` is considered.  If
-                # ``alpha1`` is between 0 and ``alpha``, the point
-                # ``(i, j)`` is above the diagonal, if ``alpha1`` is
-                # between ``alpha`` and infinity, the point is below
-                # the diagonal.  Also note that, with some beforehand
-                # precautions, this trick works for both the main and
-                # the secondary diagonals of the rectangle.
-
-                # I have considered the possibility to only follow the
-                # shorter diagonals immediately above and below the
-                # main (or secondary) diagonal.  This, however,
-                # wouldn't have resulted in much performance gain or
-                # better detection of outer edges, because of
-                # relatively small sizes of diagram grids, while the
-                # code would have become harder to understand.
-
-                alpha = float(end_i - start_i)/(end_j - start_j)
-                free_up = True
-                free_down = True
-                for i in abs_xrange(start_i, end_i):
-                    if not free_up and not free_down:
-                        break
-
-                    for j in abs_xrange(start_j, end_j):
-                        if not free_up and not free_down:
-                            break
-
-                        if (i, j) == (start_i, start_j):
-                            continue
-
-                        if j == start_j:
-                            alpha1 = "inf"
-                        else:
-                            alpha1 = float(i - start_i)/(j - start_j)
-
-                        if grid[i, j]:
-                            if (alpha1 == "inf") or (abs(alpha1) > abs(alpha)):
-                                free_down = False
-                            elif abs(alpha1) < abs(alpha):
-                                free_up = False
+                (free_up, free_down,
+                 backwards) = XypicDiagramDrawer._check_free_space_diagonal(
+                    dom_i, cod_i, dom_j, cod_j, grid)
 
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
