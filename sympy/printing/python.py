@@ -71,8 +71,8 @@ def python(expr, **settings):
         # if kw.iskeyword(newfunctionname):
         #     while True:
         #         newfunctionname += "_"
-        #         if (newsymbolname not in printer.symbols and
-        #             newsymbolname not in printer.functions):
+        #         if (newfunctionname not in printer.symbols and
+        #             newfunctionname not in printer.functions):
         #             renamings[sympy.Function(functionname)] = sympy.Function(newfunctionname)
         #             break
         result += newfunctionname + ' = Function(\'' + newfunctionname + '\')\n'
