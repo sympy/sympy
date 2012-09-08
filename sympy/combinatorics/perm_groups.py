@@ -196,7 +196,7 @@ class _JGraph(object):
         alpha
             point for which the stabilizer is computed
         cri[i]
-            inverse of G._coset_decomposition[i] if ``i`` is not None
+            inverse of G._stabilizer_cosets[i] if ``i`` is not None
 
         Notes
         =====
@@ -249,7 +249,7 @@ class _JGraph(object):
         r = self.r
         G = self.G
         gens = self.gens
-        cosrep = G._coset_decomposition
+        cosrep = G._stabilizer_cosets
         self.jgs = 0
         for j in range(n):
             self.jg[j] = None
@@ -300,12 +300,12 @@ class _JGraph(object):
         """traversal of the orbit of alpha
 
         Compute a traversal of the orbit of alpha, storing the values
-        in G._coset_decomposition; G._coset_decomposition[i][alpha] = i if i belongs
+        in G._stabilizer_cosets; G._stabilizer_cosets[i][alpha] = i if i belongs
         to the orbit of alpha.
         """
         G = self.G
-        G._coset_decomposition[alpha] = gen
-        G._coset_decomposition_n += 1
+        G._stabilizer_cosets[alpha] = gen
+        G._stabilizer_cosets_n += 1
         genv = self.gens[:self.r]
         h = 0
         r = self.r
@@ -327,10 +327,10 @@ class _JGraph(object):
             alpha = sta[-1]
             ag = g[alpha]
 
-            if G._coset_decomposition[ag] == None:
+            if G._stabilizer_cosets[ag] == None:
                 gen1 = _af_rmul(g, stg[-1])
-                G._coset_decomposition[ag] = gen1
-                G._coset_decomposition_n += 1
+                G._stabilizer_cosets[ag] = gen1
+                G._stabilizer_cosets_n += 1
                 sta.append(ag)
                 stg.append(gen1)
                 h += 1
@@ -466,9 +466,9 @@ class PermutationGroup(Basic):
 
         # these attributes are assigned after running schreier_sims
         obj._base = []
-        obj._coset_decomposition = []
-        obj._coset_decomposition_n = []
-        obj._stabilizers_gens = []
+        obj._stabilizer_cosets = []
+        obj._stabilizer_cosets_n = []
+        obj._stabilizer_gens = []
         obj._strong_gens = []
         obj._basic_orbits = []
         obj._transversals = []
@@ -920,7 +920,7 @@ class PermutationGroup(Basic):
 
         """
 
-        if self._coset_decomposition == []:
+        if self._stabilizer_cosets == []:
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
@@ -1178,7 +1178,7 @@ class PermutationGroup(Basic):
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> u = G.coset_decomposition()
+        >>> u = G.stabilizer_cosets()
 
         The coset decomposition of G has a u of length 3:
 
@@ -1259,7 +1259,7 @@ class PermutationGroup(Basic):
             # error
             raise ValueError('g should be the same size as permutations of G')
         # compute u
-        u = self.coset_decomposition()
+        u = self.stabilizer_cosets()
         # check for quick exit
         I = range(self.degree)
         if g == I:
@@ -1312,7 +1312,7 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
-        u = self.coset_decomposition()
+        u = self.stabilizer_cosets()
         if isinstance(g, Permutation):
             g = g.array_form
         # the only error checking is size adjustment; it is assumed that
@@ -1323,7 +1323,7 @@ class PermutationGroup(Basic):
         m = len(u)
         a = []
 
-        un = self._coset_decomposition_n
+        un = self._stabilizer_cosets_n
         n = self.degree
         rank = 0
         base = [1]
@@ -1350,39 +1350,6 @@ class PermutationGroup(Basic):
             return rank
         return None
 
-    def coset_decomposition(self):
-        """Return the Schreier-Sims decomposition of the group.
-
-        The Schreier-Sims decomposition is the list of the cosets of
-        the chain of stabilizers, see schreier_sims.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1])
-        >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a, b])
-        >>> for i, ui in enumerate(G.coset_decomposition()):
-        ...     print 'coset %i:' % i
-        ...     for p in ui:
-        ...         print '   ', Permutation(p)
-        ...
-        coset 0:
-            Permutation(2)
-            Permutation(2)(0, 1)
-            Permutation(0, 2, 1)
-        coset 1:
-            Permutation(2)
-            Permutation(1, 2)
-
-        """
-        if not self._coset_decomposition:
-            self.schreier_sims()
-        return self._coset_decomposition
-
     def coset_unrank(self, rank, af=False):
         """unrank using Schreier-Sims representation
 
@@ -1390,10 +1357,10 @@ class PermutationGroup(Basic):
         if 0 <= rank < order; otherwise it returns None.
 
         """
-        u = self.coset_decomposition()
+        u = self.stabilizer_cosets()
         if rank < 0 or rank >= self.order():
             return None
-        un = self._coset_decomposition_n
+        un = self._stabilizer_cosets_n
         base = self._base
         m = len(u)
         nb = len(base)
@@ -1650,7 +1617,7 @@ class PermutationGroup(Basic):
                     return i + 1
             return 1
         n = self.degree
-        u = self.coset_decomposition()
+        u = self.stabilizer_cosets()
         # stg stack of group elements
         stg = [range(n)]
         # posmax[i] = len(u[i])
@@ -2608,7 +2575,7 @@ class PermutationGroup(Basic):
             return self._order
         self.schreier_sims()
         m = 1
-        for x in self._coset_decomposition_n:
+        for x in self._stabilizer_cosets_n:
             m *= x
         return m
 
@@ -2802,41 +2769,41 @@ class PermutationGroup(Basic):
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.schreier_sims()
-        >>> G.stabilizers_gens()
+        >>> G.stabilizer_gens()
         [[0, 2, 1]]
-        >>> G.coset_decomposition()
+        >>> G.stabilizer_cosets()
         [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
 
         """
-        if self._coset_decomposition:
+        if self._stabilizer_cosets:
             return
         JGr = _JGraph(self)
         alpha = 0
         n = JGr.n
         self._order = 1
-        coset_decomposition = []
+        stabilizer_cosets = []
         num_generators = []
         generators = []
         gen = range(n)
         base = {}
         JGr.gens += [None]*(n - len(JGr.gens))
         while 1:
-            self._coset_decomposition_n = 0
-            self._coset_decomposition = [None]*n
+            self._stabilizer_cosets_n = 0
+            self._stabilizer_cosets = [None]*n
             JGr.schreier_tree(alpha, gen)
             cri = []
-            for p in self._coset_decomposition:
+            for p in self._stabilizer_cosets:
                 if not p:
                     cri.append(p)
                 else:
                     cri.append(_af_invert(p))
             JGr.jerrum_filter(alpha, cri)
-            if self._coset_decomposition_n > 1:
-                base[alpha] = self._coset_decomposition_n
-            self._order *= self._coset_decomposition_n
-            coset_decomposition.append([p for p in self._coset_decomposition if p])
+            if self._stabilizer_cosets_n > 1:
+                base[alpha] = self._stabilizer_cosets_n
+            self._order *= self._stabilizer_cosets_n
+            stabilizer_cosets.append([p for p in self._stabilizer_cosets if p])
             d = {}
-            for p in self._coset_decomposition:
+            for p in self._stabilizer_cosets:
                 if p:
                     d[p[alpha]] = p
             num_generators.append(JGr.r)
@@ -2845,21 +2812,21 @@ class PermutationGroup(Basic):
             if JGr.r <= 0:
                 break
             alpha += 1
-        self._coset_decomposition = coset_decomposition
+        self._stabilizer_cosets = stabilizer_cosets
         a = []
         for p in generators:
             if p not in a:
                 a.append(p)
-        self._stabilizers_gens = a
+        self._stabilizer_gens = a
 
         i = len(JGr.gens) - 1
         while not JGr.gens[i]:
             i -= 1
         JGr.gens = JGr.gens[:i+1]
         self._base = base.keys()
-        self._coset_decomposition_n = base.values()
+        self._stabilizer_cosets_n = base.values()
         strong_gens = self.generators[:]
-        for gen in self._stabilizers_gens:
+        for gen in self._stabilizer_gens:
             gen = Permutation(gen)
             if gen not in strong_gens:
                 strong_gens.append(gen)
@@ -2870,7 +2837,7 @@ class PermutationGroup(Basic):
         for index in range(base_len):
             transversals[index] = {}
             base_point = self._base[index]
-            trans = self._coset_decomposition[base_point][:]
+            trans = self._stabilizer_cosets[base_point][:]
             for el in trans:
                 el = Permutation(el)
                 orbit_member = el(base_point)
@@ -3253,26 +3220,92 @@ class PermutationGroup(Basic):
                         stab_gens.append(schreier_gen)
         return PermutationGroup(list(stab_gens))
 
-    def stabilizers_gens(self):
+    def stabilizer_cosets(self):
+        """Return a list of cosets of the stabilizer chain of the group
+        as computed by the Schreir-Sims algorithm.
+
+        Each coset is a list of permutations in array form.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> G = tetrahedron.pgroup
+
+        The tetrahedron's pgroup contains a list of permutations corresponding
+        to different ways of manipulating the tetrahedron. We can look at the
+        underlying cosets with the stabilizer_cosets method:
+
+        >>> for i, ui in enumerate(G.stabilizer_cosets()):
+        ...     print 'coset %i:' % i
+        ...     for p in ui:
+        ...         print '   ', Permutation(p)
+        ...
+        coset 0:
+            Permutation(3)
+            Permutation(3)(0, 1, 2)
+            Permutation(0, 2)(1, 3)
+            Permutation(0, 3, 2)
+        coset 1:
+            Permutation(3)
+            Permutation(1, 2, 3)
+            Permutation(1, 3, 2)
+
+        Any permutation of the tetrahedron can be written as a product of
+        two permutations, one from each of the cosets. For example, the
+        first permutation in the tetrahedron pgroup corresponds to the
+        CW turning of the tetrahedron through the top vertex. This factors
+        as:
+
+        >>> for factor in G.coset_factor(G[0]):
+        ...     print Permutation(factor)
+        ...
+        Permutation(3)
+        Permutation(1, 2, 3)
+
+        And those two permutations are drawn from the cosets shown above.
+
+        See Also
+        ========
+        coset_factor
+
+        """
+        if not self._stabilizer_cosets:
+            self.schreier_sims()
+        return self._stabilizer_cosets
+
+    def stabilizer_gens(self):
         """Return the generators of the chain of stabilizers of the
         Schreier-Sims representation.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> G = tetrahedron.pgroup
+        >>> for g in G.stabilizer_gens():
+        ...     print Permutation(g)
+        ...
+        Permutation(1, 3, 2)
+        Permutation(1, 2, 3)
+
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
-        >>> G.stabilizers_gens()
+        >>> G.stabilizer_gens()
         [[0, 2, 1]]
 
         """
 
-        if not self._coset_decomposition:
+        if not self._stabilizer_cosets:
             self.schreier_sims()
-        return self._stabilizers_gens
+        return self._stabilizer_gens
 
     @property
     def strong_gens(self):
