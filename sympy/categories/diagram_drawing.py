@@ -2294,6 +2294,73 @@ class XypicDiagramDrawer(object):
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
 
+    @staticmethod
+    def _morphism_sort_key(morphism, object_coords):
+        """
+        Provides a morphism sorting key such that horizontal or
+        vertical morphisms between neighbouring objects come
+        first, then horizontal or vertical morphisms between more
+        far away objects, and finally, all other morphisms.
+        """
+        (i, j) = object_coords[morphism.domain]
+        (target_i, target_j) = object_coords[morphism.codomain]
+
+        if morphism.domain == morphism.codomain:
+            # Loop morphisms should get after diagonal morphisms
+            # so that the proper direction in which to curve the
+            # loop can be determined.
+            return (3, 0, default_sort_key(morphism))
+
+        if target_i == i:
+            return (1, abs(target_j - j), default_sort_key(morphism))
+
+        if target_j == j:
+            return (1, abs(target_i - i), default_sort_key(morphism))
+
+        # Diagonal morphism.
+        return (2, 0, default_sort_key(morphism))
+
+    @staticmethod
+    def _build_xypic_string(diagram, grid, morphisms,
+                            morphisms_str_info, diagram_format):
+        """
+        Given a collection of :class:`ArrowStringDescription`
+        describing the morphisms of a diagram and the object layout
+        information of a diagram, produces the final Xy-pic picture.
+        """
+        # Build the mapping between objects and morphisms which have
+        # them as domains.
+        object_morphisms = {}
+        for obj in diagram.objects:
+            object_morphisms[obj] = []
+        for morphism in morphisms:
+            object_morphisms[morphism.domain].append(morphism)
+
+        result = "\\xymatrix%s{\n" % diagram_format
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                obj = grid[i, j]
+                if obj:
+                    result += latex(obj) + " "
+
+                    morphisms_to_draw = object_morphisms[obj]
+                    for morphism in morphisms_to_draw:
+                        result += str(morphisms_str_info[morphism]) + " "
+
+                # Don't put the & after the last column.
+                if j < grid.width - 1:
+                    result += "& "
+
+            # Don't put the line break after the last row.
+            if i < grid.height - 1:
+                result += "\\\\"
+            result += "\n"
+
+        result += "}\n"
+
+        return result
+
     def draw(self, diagram, grid, masked=None, diagram_format=""):
         r"""
         Returns the Xy-pic representation of ``diagram`` laid out in
@@ -2344,8 +2411,6 @@ class XypicDiagramDrawer(object):
         }
 
         """
-        result = "\\xymatrix%s{\n" % diagram_format
-
         if not masked:
             morphisms_props = grid.morphisms
         else:
@@ -2363,40 +2428,9 @@ class XypicDiagramDrawer(object):
                 if grid[i, j]:
                     object_coords[grid[i, j]] = (i, j)
 
-        def morphism_sort_key(morphism):
-            """
-            Provides a morphism sorting key such that horizontal or
-            vertical morphisms between neighbouring objects come
-            first, then horizontal or vertical morphisms between more
-            far away objects, and finally, all other morphisms.
-            """
-            (i, j) = object_coords[morphism.domain]
-            (target_i, target_j) = object_coords[morphism.codomain]
-
-            if morphism.domain == morphism.codomain:
-                # Loop morphisms should get after diagonal morphisms
-                # so that the proper direction in which to curve the
-                # loop can be determined.
-                return (3, 0, default_sort_key(morphism))
-
-            if target_i == i:
-                return (1, abs(target_j - j), default_sort_key(morphism))
-
-            if target_j == j:
-                return (1, abs(target_i - i), default_sort_key(morphism))
-
-            # Diagonal morphism.
-            return (2, 0, default_sort_key(morphism))
-
-        morphisms = sorted(morphisms_props, key=morphism_sort_key)
-
-        # Build the mapping between objects and morphisms which have
-        # them as domains.
-        object_morphisms = {}
-        for obj in diagram.objects:
-            object_morphisms[obj] = []
-        for morphism in morphisms:
-            object_morphisms[morphism.domain].append(morphism)
+        morphisms = sorted(morphisms_props,
+                           key=lambda m: XypicDiagramDrawer._morphism_sort_key(
+                               m, object_coords))
 
         # Build the tuples defining the string representations of
         # morphisms.
@@ -2420,28 +2454,8 @@ class XypicDiagramDrawer(object):
         # Reposition the labels a bit.
         self._push_labels_out(morphisms_str_info, grid, object_coords)
 
-        for i in xrange(grid.height):
-            for j in xrange(grid.width):
-                obj = grid[i, j]
-                if obj:
-                    result += latex(obj) + " "
-
-                    morphisms_to_draw = object_morphisms[obj]
-                    for morphism in morphisms_to_draw:
-                        result += str(morphisms_str_info[morphism]) + " "
-
-                # Don't put the & after the last column.
-                if j < grid.width - 1:
-                    result += "& "
-
-            # Don't put the line break after the last row.
-            if i < grid.height - 1:
-                result += "\\\\"
-            result += "\n"
-
-        result += "}\n"
-
-        return result
+        return XypicDiagramDrawer._build_xypic_string(
+            diagram, grid, morphisms, morphisms_str_info, diagram_format)
 
 def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
                        groups=None, **hints):
