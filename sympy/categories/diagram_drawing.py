@@ -2411,6 +2411,36 @@ class XypicDiagramDrawer(object):
         }
 
         """
+        # This method works in several steps.  It starts by removing
+        # the masked morphisms, if necessary, and then maps objects to
+        # their positions in the grid (coordinate tuples).  Remember
+        # that objects are unique in ``Diagram`` and in the layout
+        # produced by ``DiagramGrid``, so every object is mapped to a
+        # single coordinate pair.
+        #
+        # The next step is the central step and is concerned with
+        # analysing the morphisms of the diagram and deciding how to
+        # draw them.  For example, how to curve the arrows is decided
+        # at this step.  The bulk of the analysis is implemented in
+        # ``_process_morphism``, to the result of which the
+        # appropriate formatters are applied.
+        #
+        # The result of the previous step is a list of
+        # ``ArrowStringDescription``.  After the analysis and
+        # application of formatters, some extra logic tries to assure
+        # better positioning of morphism labels (for example, an
+        # attempt is made to avoid the situations when arrows cross
+        # labels).  This functionality constitutes the next step and
+        # is implemented in ``_push_labels_out``.  Note that label
+        # positions which have been set via a formatter are not
+        # affected in this step.
+        #
+        # Finally, at the closing step, the array of
+        # ``ArrowStringDescription`` and the layout information
+        # incorporated in ``DiagramGrid`` are combined to produce the
+        # resulting Xy-pic picture.  This part of code lies in
+        # ``_build_xypic_string``.
+
         if not masked:
             morphisms_props = grid.morphisms
         else:
