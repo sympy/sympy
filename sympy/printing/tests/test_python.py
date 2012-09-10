@@ -61,11 +61,11 @@ def test_python_basic():
             ]
 
     # Check for escaping of keywords
-    assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda_')\ne = 5*lambda_"
+    assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda')\ne = 5*lambda_"
     assert (python(5*Symbol("lambda")+7*Symbol("lambda_")) ==
-            "lambda__ = Symbol('lambda__')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
+            "lambda__ = Symbol('lambda')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
     assert (python(5*Symbol("for") + Function("for_")(8)) ==
-            "for__ = Symbol('for__')\nfor_ = Function('for_')\ne = 5*for__ + for_(8)")
+            "for__ = Symbol('for')\nfor_ = Function('for_')\ne = 5*for__ + for_(8)")
     #assert python(5*Function("for")(8)) == "for_ = Function('for_')\ne = 5*for_(8)"
 
 def test_python_relational():
