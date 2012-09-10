@@ -281,10 +281,12 @@ class DiagramGrid(object):
 
     See Also
     ========
+
     Diagram
 
     References
     ==========
+
     [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
@@ -1589,6 +1591,7 @@ class XypicDiagramDrawer(object):
 
     See Also
     ========
+
     draw, ArrowStringDescription
     """
     def __init__(self):
@@ -2520,6 +2523,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
 
     See Also
     ========
+
     XypicDiagramDrawer, DiagramGrid
     """
     grid = DiagramGrid(diagram, groups, **hints)
@@ -2537,6 +2541,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None, \
 
     Examples
     ========
+
     >>> from sympy.categories import Object, NamedMorphism, Diagram
     >>> from sympy.categories import preview_diagram
     >>> A = Object("A")
@@ -2549,6 +2554,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None, \
 
     See Also
     ========
+
     xypic_diagram_drawer
     """
     from sympy.printing import preview
