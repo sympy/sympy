@@ -661,8 +661,8 @@ def rsolve(f, y, init=None):
     if isinstance(f, Equality):
         f = f.lhs - f.rhs
 
-    k = Wild('k')
     n = y.args[0]
+    k = Wild('k', exclude=(n,))
 
     h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
