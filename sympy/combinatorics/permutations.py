@@ -1885,7 +1885,7 @@ class Permutation(Basic):
 
     def conjugate(self, x):
         """
-        Computes the conjugate permutation ``c = x*p*~x``
+        Return the conjugate permutation ``x*self*~x``
 
         Examples
         ========
@@ -1923,19 +1923,19 @@ class Permutation(Basic):
 
     def commutator(self, x):
         """
-        Computes the commutator Permutation ``~p*~x*p*x``
+        Return the commutator permutation ``x*self*~x*~self``
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = Permutation([0,2,1,3])
-        >>> x = Permutation([0,2,3,1])
+        >>> p = Permutation([0,2,3,1])
+        >>> x = Permutation([2,0,3,1])
         >>> p.commutator(x)
-        Permutation([0, 3, 1, 2])
-        >>> ~p*~x*p*x
-        Permutation([0, 3, 1, 2])
+        Permutation([1, 3, 2, 0])
+        >>> x*p*~x*~p
+        Permutation([1, 3, 2, 0])
         """
 
         a = self.array_form
