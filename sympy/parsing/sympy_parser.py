@@ -51,7 +51,7 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
-def _implicit_multiplication_application(result):
+def _implicit_multiplication_application(result, global_dict):
     # Step 1: parenthesis grouping
     # Group sequences of '()' operators
     result2 = []
@@ -69,7 +69,7 @@ def _implicit_multiplication_application(result):
                     stacks[-1].extend(stack)
                 else:
                     temp = stack[1:-1]
-                    temp = _implicit_multiplication_application(temp)
+                    temp = _implicit_multiplication_application(temp, global_dict)
                     stack = [stack[0]] + temp + [stack[-1]]
                     result2.append(stack)
                 stacklevel -= 1
@@ -120,6 +120,17 @@ def _implicit_multiplication_application(result):
               type(nextTok[0]) == tuple):
             # Close parenthesis followed by an applied function
             result4.append((OP, '*'))
+        elif (tok[0] == OP and tok[1] == ')' and
+              nextTok[0] == NAME):
+            # Close parenthesis followed by an implicitly applied function
+            result4.append((OP, '*'))
+        elif (tok[0] == nextTok[0] == OP
+              and tok[1] == ')' and nextTok[1] == '('):
+            # Close parenthesis followed by an open parenthesis
+            result4.append((OP, '*'))
+        elif (type(tok[0]) == tuple and nextTok[0] == NAME):
+            # Applied function followed by implicitly applied function
+            result4.append((OP, '*'))
     result4.append(result3[-1])
     # print 'STEP3', result4
 
@@ -127,17 +138,19 @@ def _implicit_multiplication_application(result):
     # Look for a NAME that is not followed by an OP '(' and apply it to the
     # following token
     result5 = []
-    appendParen = False
+    appendParen = 0
     for tok, nextTok in zip(result4, result4[1:]):
         result5.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
-            if tok[1] not in ('None', 'True', 'False'):
-                # TODO: better way to handle this
+            if getattr(global_dict.get(tok[1]), 'is_Function', False):
                 result5.append((OP, '('))
-                appendParen = True
+                appendParen += 1
         elif appendParen:
             result5.append((OP, ')'))
-            appendParen = False
+            appendParen -= 1
+
+    if appendParen:
+        result5.append((OP, ')'))
     result5.append(result4[-1])
     # print 'STEP4', result5
 
@@ -249,8 +262,9 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
         prevtoken = tokval
 
-    result = _implicit_multiplication_application(result)
-
+    result = _implicit_multiplication_application(result, global_dict)
+    print 'Tokens:', result
+    print 'Expression:', ''.join(x[1] for x in result)
     return untokenize(result)
 
 
