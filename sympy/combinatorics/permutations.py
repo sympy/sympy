@@ -1883,9 +1883,6 @@ class Permutation(Basic):
                 k = k * 2
         return inversions
 
-    def __xor__(self, other):
-        return self.conjugate(other)
-
     def conjugate(self, x):
         """
         Computes the conjugate permutation ``c = x*p*~x``
@@ -1909,14 +1906,8 @@ class Permutation(Basic):
 
         x*p*~x is not necessarily equal to ~x*p*x:
 
-        >>> ~x*p*x
-        Permutation([3, 1, 0, 2])
-
-        The ^ operator can be used to compute the conjugate:
-
-        >>> x^p
-        Permutation([3, 1, 0, 2])
-
+        >>> ~x*p*x == x*p*~x
+        False
         """
 
         a = self.array_form
