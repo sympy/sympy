@@ -365,7 +365,7 @@ class Permutation(Basic):
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
     mapping with itself. The permutation of a given arrangement is given by
-    indicating the positions of the elements after re-arrrangment [2]_. For
+    indicating the positions of the elements after re-arrangment [2]_. For
     example, if one started with elements [x, y, a, b] (in that order) and
     they were reordered as [x, y, b, a] then the permutation would be
     [0, 1, 3, 2]. Notice that (in SymPy) the first element is always referred
@@ -378,43 +378,48 @@ class Permutation(Basic):
     Permutations Notation
     =====================
 
-    Permutations are commonly represented in disjoint cycle, array forms,
-    static arrow diagrams and 2-row matrix forms. SymPy allows them to be
-    entered in cyclic or array form.
+    Permutations are commonly represented in disjoint cycle or array forms.
 
-    Array Notation and 2-row Matrix Form
+    Array Notation and 2-line Form
     ------------------------------------
 
-    In the 2-row matrix form, the elements and their final positions are shown
+    In the 2-line form, the elements and their final positions are shown
     as a matrix with 2 rows:
 
-    [0 1 2 3]
-    [1 2 0 3]
+    [0    1    2     ... n-1]
+    [p(0) p(1) p(2)  ... p(n-1)]
 
-    The 2nd row is the permutation and that is what is referred to as the
-    "array form" of the permutation. This is entered in brackets as the
-    argument to the Permutation class:
+    Since the first line is always range(n), where n is the size of p,
+    it is sufficient to represent the permutation by the second line,
+    referred to as the "array form" of the permutation. This is entered
+    in brackets as the argument to the Permutation class:
 
-    >>> Permutation([0, 2, 1])
+    >>> p = Permutation([0, 2, 1]); p
     Permutation([0, 2, 1])
-    >>> p = _
 
-    Static Arrow Diagram
-    --------------------
+    Given i in range(p.size), the permutation maps i to i^p
 
-    Sometimes permutations are given as "static arrow diagrams" showing which
-    position each elements moves to:
+    >>> [i^p for i in range(p.size)]
+    [0, 2, 1]
 
-    0 --> 3
-    1 --> 2
-    2 --> 0
-    3 --> 1
+    The composite of two permutations p*q means first apply p, then q, so
+    i^(p*q) = (i^p)^q which is i^p^q according to Python precedence rules:
 
-    The final ordering of the elements -- the permutation -- is 2, 3, 1, 0;
-    this is conveniently entered as the inverse of the "destination vector":
+    >>> q = Permutation([2, 1, 0])
+    >>> [i^p^q for i in range(3)]
+    [2, 0, 1]
+    >>> [i^(p*q) for i in range(3)]
+    [2, 0, 1]
 
-    >>> list(~Permutation([3, 2, 0, 1]))
-    [2, 3, 1, 0]
+    One can use also the notation p(i) = i^p, but then the composition
+    rule is (p*q)(i) = q(p(i)), not p(q(i)):
+
+    >>> [(p*q)(i) for i in range(p.size)]
+    [2, 0, 1]
+    >>> [q(p(i)) for i in range(p.size)]
+    [2, 0, 1]
+    >>> [p(q(i)) for i in range(p.size)]
+    [1, 2, 0]
 
     Disjoint Cycle Notation
     -----------------------
@@ -985,11 +990,14 @@ class Permutation(Basic):
         """
         Routine for addition of permutations by their inversion vectors.
 
-        This is defined in terms of the Lehmer code of a
-        permutation. The Lehmer code is nothing but the
-        inversion vector of a permutation. In this scheme
-        the identity permutation is like a zero element.
-        See [1].
+        This is defined in terms of the Lehmer code (the inversion vector)
+        for a permutation which gives a unique set of numbers for each
+        of the n! permutations for n elements.
+
+        The elements of the inversion vectors for self and other are added
+        (mod the size of the permutations) and the result is decoded into
+        the permutation that is returned. In this scheme the identity
+        permutation is like a zero element. See [1].
 
         Examples
         ========
@@ -1000,10 +1008,19 @@ class Permutation(Basic):
         >>> a = Permutation([2, 1, 3, 0])
         >>> I + a == a
         True
+
         >>> a = Permutation([0, 3, 1, 2])
+        >>> a.inversion_vector()
+        [0, 2, 0]
         >>> b = Permutation([2, 1, 0, 3])
+        >>> b.inversion_vector()
+        [2, 1, 0]
         >>> a + b
         Permutation([2, 0, 1, 3])
+        >>> _.inversion_vector()
+        [2, 0, 0]
+        >>> Permutation.from_inversion_vector(_) == a + b
+        True
 
         See Also
         ========
@@ -1055,6 +1072,33 @@ class Permutation(Basic):
         b = other.inversion_vector()
         result_inv = [(a[i] - b[i]) % (n - i) for i in range(n - 1)]
         return Perm.from_inversion_vector(result_inv)
+
+    def __rdiv__(self, other):
+        """Return other*self**-1
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> p = Permutation(1, 3)
+        >>> q = Permutation(2, 0, 3)
+        >>> I = Permutation(3)
+        >>> 1/p == ~p == p**-1
+        True
+        >>> p/p == I
+        True
+        >>> p/q == p*~q
+        True
+
+        """
+        if isinstance(self, Permutation) or other == 1:
+            return other*self**-1
+        else:
+            raise ValueError(
+            'only a permutation or 1 may be divided by a permutation')
+
+    def __div__(self, other):
+        return other.__rdiv__(self)
 
     @staticmethod
     def rmul(*args):
@@ -1189,34 +1233,29 @@ class Permutation(Basic):
         """
         Routine for finding powers of a permutation.
 
-        Power notation is also used for conjugation.
-
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation([2,0,3,1])
-        >>> q = Permutation([1,0,2,3])
-        >>> r = Permutation([0,2,3,1])
+        >>> p.order()
+        4
         >>> p**4
         Permutation([0, 1, 2, 3])
-        >>> p**q == p.conjugate(q)
-        True
-        >>> q**p == q.conjugate(p)
-        True
-        >>> (p**q)**r == p**(r*q)
-        True
         """
         if type(n) == Perm:
-            return self.conjugate(n)
+            raise NotImplementedError(
+            'p**p is not defined; do you mean p^p (conjugate)?')
         n = int(n)
         if n == 0:
             return Perm._af_new(range(self.size))
         if n < 0:
             return pow(~self, -n)
         a = self.array_form
-        if n == 2:
+        if n == 1:
+            return Perm._af_new(a) # XXX is `return self` ok?
+        elif n == 2:
             b = [a[i] for i in a]
         elif n == 3:
             b = [a[a[i]] for i in a]
@@ -1238,6 +1277,100 @@ class Permutation(Basic):
                     a = [a[i] for i in a]
                     n = n // 2
         return Perm._af_new(b)
+
+    def __rxor__(self, i):
+        """Return self(i) when ``i`` is an int.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import Permutation
+        >>> p = Permutation(1, 2, 9)
+        >>> 2^p == p(2) == 9
+        True
+        """
+        if int(i) == i:
+            return self(i)
+        else:
+            raise NotImplementedError(
+                "i^p = p(i) when i is an integer, not %s." % i)
+
+    def __xor__(self, h):
+        """Return the conjugate permutation ``~h*self*h` `.
+
+        If ``a`` and ``b`` are conjugates, ``a = h*b*~h`` and
+        ``b = ~h*a*h`` and both have the same cycle structure.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> p = Permutation(1, 2, 9)
+        >>> q = Permutation(6, 9, 8)
+        >>> p*q != q*p
+        True
+
+        Calculate and check properties of the conjugate:
+
+        >>> c = p^q
+        >>> c == ~q*p*q and p == q*c*~q and p.conjugate_of(c) is True
+        True
+
+        The expression q^p^r is equivalent to q^(p*r):
+
+        >>> r = Permutation(9)(4,6,8)
+        >>> q^p^r == q^(p*r)
+        True
+
+        If the term to the left of the conjugate operator, i, is an integer
+        then this is interpreted as selecting the ith element from the
+        permutation to the right:
+
+        >>> all(i^p == p(i) for i in range(p.size))
+        True
+
+        Note that the * operator as higher precedence than the ^ operator:
+
+        >>> q^r*p^r == q^(r*p)^r == Permutation(9)(1, 6, 4)
+        True
+
+        Notes
+        =====
+
+        In Python the precedence rule is p^q^r = (p^q)^r which differs
+        in general from p^(q^r)
+
+        >>> q^p^r
+        Permutation(9)(1, 4, 8)
+        >>> q^(p^r)
+        Permutation(9)(1, 8, 6)
+
+        For a given r and p, both of the following are conjugates of p:
+        ~r*p*r and r*p*~r. But these are not necessarily the same:
+
+        >>> (~r*p*r).conjugate_of(p) and (r*p*~r).conjugate_of(p)
+        True
+        >>> ~r*p*r == r*p*~r
+        True
+
+        >>> p = Permutation(1, 2, 9)(5, 6)
+        >>> (~r*p*r).conjugate_of(p) and (r*p*~r).conjugate_of(p)
+        True
+        >>> ~r*p*r == r*p*~r
+        False
+
+        The former was chosen so ``p^q^r`` would be equivalent to ``p^(q*r)``
+        rather than ``p^(r*q)``.
+        """
+
+        if self.size != h.size:
+            raise ValueError("The permutations must be of equal size.")
+        invh = [None]*self.size
+        h = h.array_form
+        p = self.array_form
+        for i in range(self.size):
+            invh[h[i]] = i
+        return Perm._af_new([h[p[i]] for i in invh])
 
     def transpositions(self):
         """
@@ -1315,6 +1448,8 @@ class Permutation(Basic):
         >>> p = Permutation([[2,0], [3,1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
+        >>> _ == p**-1 == 1/p
+        True
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
@@ -1883,47 +2018,25 @@ class Permutation(Basic):
                 k = k * 2
         return inversions
 
-    def conjugate(self, x):
-        """
-        Return the conjugate permutation ``x*self*~x``
+    def conjugate_of(self, other):
+        """Return True if self and other are conjugates, else False.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
-        >>> p = Permutation([2, 0, 1, 3])
-        >>> x = Permutation([0, 2, 3, 1])
-        >>> p.conjugate(x)
-        Permutation([1, 3, 2, 0])
-        >>> x*p*~x
-        Permutation([1, 3, 2, 0])
-        >>> p**x
-        Permutation([1, 3, 2, 0])
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation(1, 3, 7)(2, 9)(10, 11)(12, 5, 8, 6)
+        >>> b = Permutation(1, 9)(2, 12)(3, 11, 7, 8)(10, 5, 4)
+        >>> a.conjugate_of(b)
+        True
 
-        Notes
-        =====
-
-        x*p*~x is not necessarily equal to ~x*p*x:
-
-        >>> ~x*p*x == x*p*~x
-        False
         """
-
-        a = self.array_form
-        b = x.array_form
-        n = len(a)
-        if len(b) != n:
-            raise ValueError("The number of elements in the permutations "
-                             "do not match.")
-        invb = [None]*n
-        for i in range(n):
-            invb[b[i]] = i
-        return Perm._af_new([invb[a[i]] for i in b])
+        return self.size == other.size and \
+            sorted([len(c) for c in self.cyclic_form]) == \
+            sorted([len(c) for c in other.cyclic_form])
 
     def commutator(self, x):
-        """
-        Return the commutator permutation ``x*self*~x*~self``
+        """Return the commutator permutation ``x*self*~x*~self``
 
         Examples
         ========
@@ -1942,8 +2055,7 @@ class Permutation(Basic):
         b = x.array_form
         n = len(a)
         if len(b) != n:
-            raise ValueError("The number of elements in the permutations "
-                             "do not match.")
+            raise ValueError("The permutations must be of equal size.")
         inva = [None]*n
         for i in range(n):
             inva[a[i]] = i
@@ -2090,23 +2202,44 @@ class Permutation(Basic):
         return runs(self.array_form)
 
     def inversion_vector(self):
-        """
-        Gets the inversion vector of the permutation.
+        """Return the inversion vector of the permutation.
 
         The inversion vector consists of elements whose value
         indicates the number of elements in the permutation
         that are lesser than it and lie on its right hand side.
 
+        The inversion vector is the same as the Lehmer encoding of a
+        permutation.
+
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([4,8,0,7,1,5,3,6,2])
+        >>> p = Permutation([4, 8, 0, 7, 1, 5, 3, 6, 2])
         >>> p.inversion_vector()
         [4, 7, 0, 5, 0, 2, 1, 1]
-        >>> p = Permutation([3,2,1,0])
+        >>> p = Permutation([3, 2, 1, 0])
         >>> p.inversion_vector()
         [3, 2, 1]
+
+        The inversion vector increases lexicographically with the rank
+        of the permutation, the -ith element cycling through 0..i.
+
+        >>> p = Permutation(2)
+        >>> while p:
+        ...     print p, p.inversion_vector(), p.rank()
+        ...     p = p.next_lex()
+        ...
+        Permutation([0, 1, 2]) [0, 0] 0
+        Permutation([0, 2, 1]) [0, 1] 1
+        Permutation([1, 0, 2]) [1, 0] 2
+        Permutation([1, 2, 0]) [1, 1] 3
+        Permutation([2, 0, 1]) [2, 0] 4
+        Permutation([2, 1, 0]) [2, 1] 5
+
+        See Also
+        ========
+        __add__, from_inversion_vector
         """
         self_array_form = self.array_form
         n = len(self_array_form)
@@ -2119,6 +2252,25 @@ class Permutation(Basic):
                     val += 1
             inversion_vector[i] = val
         return inversion_vector
+
+    def iv(self):
+        r = self.rank()
+        f = 1
+        rv = []
+        for i in range(2, self.size + 1):
+            f *= i
+            r, rr = divmod(r, i)
+            rv.insert(0, rr)
+        return rv
+
+    def ra(self):
+        iv = self.inversion_vector()
+        r = 0
+        f = 1
+        for i in range(-1, -len(iv) -1, -1):
+            f *= abs(i)
+            r += iv[i]*f
+        return r
 
     def rank_trotterjohnson(self):
         """
@@ -2307,7 +2459,7 @@ class Permutation(Basic):
         get_precedence_matrix, get_adjacency_matrix, get_adjacency_distance
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of the same size.")
+            raise ValueError("The permutations must be of equal size.")
         self_prec_mat = self.get_precedence_matrix()
         other_prec_mat = other.get_precedence_matrix()
         n_prec = 0

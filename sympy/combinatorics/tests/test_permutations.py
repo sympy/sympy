@@ -66,12 +66,19 @@ def test_Permutation():
     assert q**3 == q**2*q
     assert q**4 == q**2*q**2
 
-    assert p+q == Permutation([5, 6, 3, 1, 2, 4, 0])
-    assert q+p == p+q
+    a = Permutation(1, 3)
+    b = Permutation(2, 0, 3)
+    I = Permutation(3)
+    assert 1/a == ~a == a**-1
+    assert a/a == I
+    assert a/b == a*~b
+
+    assert p + q == Permutation([5, 6, 3, 1, 2, 4, 0])
+    assert q + p == p + q
     raises(ValueError, lambda: p + Permutation(range(10)))
 
-    assert p-q == Permutation([6, 3, 5, 1, 2, 4, 0])
-    assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
+    assert p - q == Permutation([6, 3, 5, 1, 2, 4, 0])
+    assert q - p == Permutation([1, 4, 2, 6, 5, 3, 0])
     raises(ValueError, lambda: p - Permutation(range(10)))
 
     assert p*q == Permutation(_af_rmuln(*[list(w) for w in (q, p)]))
@@ -80,23 +87,21 @@ def test_Permutation():
     assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
     assert Permutation([[0, 1]])*p == Permutation([5, 2, 1, 6, 3, 0, 4])
 
-    a = p-q
-    b = q-p
-    assert (a+b).is_Identity
+    a = p - q
+    b = q - p
+    assert (a + b).is_Identity
 
-    pq = p.conjugate(q)
-    assert pq == Permutation([5, 3, 0, 4, 6, 2, 1])
-    assert pq == rmul(~q, p, q)
-    assert pq == p**q
-    qp = q.conjugate(p)
-    assert qp == Permutation([6, 3, 2, 0, 1, 4, 5])
-    assert qp == rmul(~p, q, p)
-    assert qp == q**p
-    raises(ValueError, lambda: p.conjugate(Permutation([])))
+    pq = p^q
+    assert pq == Permutation([5, 6, 0, 4, 1, 2, 3])
+    assert pq == rmul(q, p, ~q)
+    qp = q^p
+    assert qp == Permutation([4, 3, 6, 2, 1, 5, 0])
+    assert qp == rmul(p, q, ~p)
+    raises(ValueError, lambda: p^Permutation([]))
 
     assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
     assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
-    assert p.commutator(q) == ~ q.commutator(p)
+    assert p.commutator(q) == ~q.commutator(p)
     raises(ValueError, lambda: p.commutator(Permutation([])))
 
     assert len(p.atoms()) == 7
