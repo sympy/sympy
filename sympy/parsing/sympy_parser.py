@@ -6,6 +6,7 @@ from sympy_tokenize import \
 from keyword import iskeyword
 from StringIO import StringIO
 import re
+import collections
 
 from sympy.core.basic import Basic, C
 
@@ -39,13 +40,16 @@ def _add_factorial_tokens(name, result):
 
     return result
 
+AppliedFunction = collections.namedtuple('AppliedFunction', 'function args')
+class ParenthesesGroup(list): pass
+
 def _flatten(result):
     result2 = []
     for tok in result:
-        if type(tok[0]) == tuple:
-            result2.append(tok[0])
-            result2.extend(tok[1])
-        elif type(tok) == list:
+        if isinstance(tok, AppliedFunction):
+            result2.append(tok.function)
+            result2.extend(tok.args)
+        elif isinstance(tok, ParenthesesGroup):
             result2.extend(tok)
         else:
             result2.append(tok)
@@ -60,7 +64,7 @@ def _implicit_multiplication_application(result, global_dict):
     for token in result:
         if token[0] == OP:
             if token[1] == '(':
-                stacks.append([])
+                stacks.append(ParenthesesGroup([]))
                 stacklevel += 1
             elif token[1] == ')':
                 stacks[-1].append(token)
@@ -68,10 +72,11 @@ def _implicit_multiplication_application(result, global_dict):
                 if len(stacks) > 0:
                     stacks[-1].extend(stack)
                 else:
-                    temp = stack[1:-1]
-                    temp = _implicit_multiplication_application(temp, global_dict)
-                    stack = [stack[0]] + temp + [stack[-1]]
-                    result2.append(stack)
+                    # Strip off the outer parentheses to avoid an infinite loop
+                    inner = stack[1:-1]
+                    inner = _implicit_multiplication_application(inner, global_dict)
+                    parenGroup = [stack[0]] + inner + [stack[-1]]
+                    result2.append(ParenthesesGroup(parenGroup))
                 stacklevel -= 1
                 continue
         if stacklevel:
@@ -85,18 +90,14 @@ def _implicit_multiplication_application(result, global_dict):
     result3 = []
     symbol = None
     for tok in result2:
-        if type(tok) == tuple and tok[0] == NAME:
+        if tok[0] == NAME:
             symbol = tok
             result3.append(tok)
-        elif type(tok) == list:
+        elif isinstance(tok, ParenthesesGroup):
             if symbol:
-                result3[-1] = (symbol, tok)
+                result3[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:
-                # Need some sort of deep-flatten
-                # If we extend, the next step can't handle implicit paren
-                # group multiplication
-                # If we append, untokenize doesn't work
                 result3.extend(tok)
         else:
             symbol = None
@@ -109,15 +110,15 @@ def _implicit_multiplication_application(result, global_dict):
     result4 = []
     for tok, nextTok in zip(result3, result3[1:]):
         result4.append(tok)
-        if type(tok[0]) == type(nextTok[0]) == tuple:
-            if tok[0][0] == nextTok[0][0] == NAME:
-                result4.append((OP, '*'))
-        elif (type(tok[0]) == tuple and
+        if (isinstance(tok,AppliedFunction) and
+            isinstance(nextTok,AppliedFunction)):
+            result4.append((OP, '*'))
+        elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
             # Applied function followed by an open parenthesis
             result4.append((OP, '*'))
         elif (tok[0] == OP and tok[1] == ')' and
-              type(nextTok[0]) == tuple):
+              isinstance(nextTok, AppliedFunction)):
             # Close parenthesis followed by an applied function
             result4.append((OP, '*'))
         elif (tok[0] == OP and tok[1] == ')' and
@@ -128,7 +129,7 @@ def _implicit_multiplication_application(result, global_dict):
               and tok[1] == ')' and nextTok[1] == '('):
             # Close parenthesis followed by an open parenthesis
             result4.append((OP, '*'))
-        elif (type(tok[0]) == tuple and nextTok[0] == NAME):
+        elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
             # Applied function followed by implicitly applied function
             result4.append((OP, '*'))
     result4.append(result3[-1])
