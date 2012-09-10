@@ -729,7 +729,7 @@ def rsolve(f, y, init=None):
     K_max = max(H_part.iterkeys())
     coeffs = [H_part[i] for i in xrange(K_max+1)]
 
-    result = rsolve_hyper(coeffs, i_part, n, symbols=True)
+    result = rsolve_hyper(coeffs, -i_part, n, symbols=True)
 
     if result is None:
         return None
