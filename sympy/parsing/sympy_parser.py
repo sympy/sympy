@@ -151,7 +151,7 @@ def _implicit_multiplication_application(result, global_dict):
             appendParen -= 1
 
     if appendParen:
-        result5.append((OP, ')'))
+        result5.extend([(OP, ')')] * appendParen)
     result5.append(result4[-1])
     # print 'STEP4', result5
 
