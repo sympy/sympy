@@ -1,5 +1,6 @@
-from sympy import factorial, Function, rf, S, sqrt, symbols
+from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
+from sympy.utilities.pytest import raises
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)
@@ -92,6 +93,9 @@ def test_rsolve():
     assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
     assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
+    assert rsolve(Eq(y(n), y(n-1) + y(n-2)), y(n), [0, 5]) == h
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
     f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
     g = C1*factorial(n) + C0*2**n
@@ -104,3 +108,51 @@ def test_rsolve():
     assert rsolve(f, y(n), [      0,      3 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - y(n - 1) - 2
+
+    assert rsolve(f, y(n), {y(0): 0}) == 2*n
+    assert rsolve(f, y(n), {y(0): 1}) == 2*n + 1
+    assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == None
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = 3*y(n - 1) - y(n) - 1
+
+    assert rsolve(f, y(n), {y(0): 0}) ==  -3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 1}) ==   3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 2}) == 3*3**n/2 + S.Half
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - 1/n*y(n - 1)
+    assert rsolve(f, y(n)) == C0/factorial(n)
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - 1/n*y(n - 1) - 1
+    assert rsolve(f, y(n)) == None
+
+    f = 2*y(n - 1) + (1 - n)*y(n)/n
+
+    assert rsolve(f, y(n), {y(1): 1}) == 2**(n - 1)*n
+    assert rsolve(f, y(n), {y(1): 2}) == 2**(n - 1)*n*2
+    assert rsolve(f, y(n), {y(1): 3}) == 2**(n - 1)*n*3
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
+
+    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
+    assert rsolve(f, y(n), {y(3): 6, y(4):-24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+def test_rsolve_raises():
+    x = Function('x')
+    raises(ValueError, lambda: rsolve(y(n) - y(k + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - y(n + 1), x(n)))
+    raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))
