@@ -346,7 +346,7 @@ def test_Cycle():
     p = Permutation([[1,2], [4,3]], size=5)
     assert Permutation(Cycle(p)) == p
 
-def test_as_permutation():
-    assert Permutation.as_permutation('SymPy') == Permutation(4)(0, 1, 3)
-    assert Permutation.as_permutation('SymPy', key=lambda x: x.lower()) == \
+def test_from_sequence():
+    assert Permutation.from_sequence('SymPy') == Permutation(4)(0, 1, 3)
+    assert Permutation.from_sequence('SymPy', key=lambda x: x.lower()) == \
         Permutation(4)(0, 2)(1, 3)

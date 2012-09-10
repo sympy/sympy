@@ -644,9 +644,9 @@ class Permutation(Basic):
     ['o', 'z', '4', '2']
 
     If you have a list of arbitrary elements, the corresponding permutation
-    can be found with the as_permutation method:
+    can be found with the from_sequence method:
 
-    >>> Permutation.as_permutation('SymPy')
+    >>> Permutation.from_sequence('SymPy')
     Permutation([1, 3, 2, 0, 4])
 
     See Also
@@ -1278,7 +1278,7 @@ class Permutation(Basic):
         return res
 
     @classmethod
-    def as_permutation(self, i, key=None):
+    def from_sequence(self, i, key=None):
         """Return the permutation needed to obtain ``i`` from the sorted
         elements of ``i``. If custom sorting is desired, a key can be given.
 
@@ -1288,11 +1288,11 @@ class Permutation(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
 
-        >>> Permutation.as_permutation('SymPy')
+        >>> Permutation.from_sequence('SymPy')
         Permutation(4)(0, 1, 3)
         >>> _(sorted("SymPy"))
         ['S', 'y', 'm', 'P', 'y']
-        >>> Permutation.as_permutation('SymPy', key=lambda x: x.lower())
+        >>> Permutation.from_sequence('SymPy', key=lambda x: x.lower())
         Permutation(4)(0, 2)(1, 3)
         """
         ic = zip(i, range(len(i)))
