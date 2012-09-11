@@ -2377,6 +2377,7 @@ def combsimp(expr):
         lambda n, k: rf((n - k + 1).expand(), k.expand())/rf(1, k.expand()))
     expr = expr.replace(factorial,
         lambda n: rf(1, n.expand()))
+    expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
         lambda n: rf(1, (n - 1).expand()))
 
