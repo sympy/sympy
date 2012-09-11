@@ -1,6 +1,9 @@
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
 AlternatingGroup, CyclicGroup
 from sympy.combinatorics.util import _distribute_gens_by_base
+from sympy.combinatorics import Permutation
+
+rmul = Permutation.rmul
 
 def _cmp_perm_lists(first, second):
     """
@@ -54,8 +57,8 @@ def _naive_list_centralizer(self, other):
     if hasattr(other, 'generators'):
         elements = list(self.generate_dimino())
         gens = other.generators
-        commutes_with_gens = lambda x: [x*gen for gen in gens] ==\
-                                       [gen*x for gen in gens]
+        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] ==\
+                                       [rmul(gen, x) for gen in gens]
         centralizer_list = []
         for element in elements:
             if commutes_with_gens(element):
@@ -177,7 +180,7 @@ def _verify_normal_closure(group, arg, closure=None):
         subgr_gens = [arg]
     for el in group_els:
         for gen in subgr_gens:
-            conjugate = (~el)*gen*el
+            conjugate = rmul(~el, gen, el)
             if conjugate not in conjugates:
                 conjugates.append(conjugate)
     naive_closure = PermutationGroup(conjugates)

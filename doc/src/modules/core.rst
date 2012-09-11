@@ -426,6 +426,30 @@ Dict
 .. autoclass:: Dict
    :members:
 
+compatibility
+-------------
+.. module:: sympy.core.compatibility
+
+iterable
+^^^^^^^^
+.. autofunction:: iterable
+
+is_sequence
+^^^^^^^^^^^
+.. autofunction:: is_sequence
+
+set_intersection
+^^^^^^^^^^^^^^^^
+.. autofunction:: set_intersection
+
+set_union
+^^^^^^^^^
+.. autofunction:: set_union
+
+as_int
+^^^^^^
+.. autofunction:: as_int
+
 exprtools
 ---------
 .. module:: sympy.core.exprtools

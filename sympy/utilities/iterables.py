@@ -1,9 +1,10 @@
 from collections import defaultdict
 import random
+from operator import gt
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable # logical location
-from sympy.core.compatibility import \
+from sympy.core.compatibility import as_int, \
     product as cartes, combinations, combinations_with_replacement
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -253,9 +254,9 @@ def interactive_traversal(expr):
 
     return _interactive_traversal(expr, 0)
 
-def variations(seq, n=None, repetition=False):
-    """Returns a generator of the variations (size n) of the list `seq` (size N).
-    `repetition` controls whether items in seq can appear more than once;
+def variations(seq, n, repetition=False):
+    """Returns a generator of the n-sized variations of ``seq`` (size N).
+    ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
     ========
@@ -281,7 +282,10 @@ def variations(seq, n=None, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
+    See Also
+    ========
 
+    sympy.core.compatibility.permutations
     """
     from sympy.core.compatibility import permutations
 
@@ -878,8 +882,6 @@ def partitions(n, m=None, k=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    from sympy.ntheory.residue_ntheory import int_tested
-
     if n < 0:
         raise ValueError("n must be >= 0")
     if m == 0:
@@ -894,7 +896,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
-    n, m, k = int_tested(n, m, k)
+    n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest
@@ -1014,6 +1016,27 @@ def has_dups(seq):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
+
+def has_variety(seq):
+    """Return True if there are any different elements in ``seq``.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import has_variety
+    >>> from sympy import Dict, Set
+
+    >>> has_variety((1, 2, 1))
+    True
+    >>> has_variety((1, 1, 1))
+    False
+    """
+    for i, s in enumerate(seq):
+        if i == 0:
+            sentinel = s
+        else:
+            if s != sentinel:
+                return True
+    return False
 
 def uniq(seq):
     """
@@ -1236,3 +1259,100 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def quick_sort(seq, quick=True):
+    """Sort by hash and break ties with default_sort_key (default)
+    or entirely by default_sort_key if ``quick`` is False.
+
+    When sorting for consistency between systems, ``quick`` should be
+    False; if sorting is just needed to give consistent orderings during
+    a given session ``quick`` can be True.
+
+    >>> from sympy.utilities import quick_sort
+    >>> from sympy.abc import x
+
+    For PYTHONHASHSEED=3923375334 the x came first; for
+    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+
+    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    True
+    """
+    if not quick:
+        seq = list(seq)
+        seq.sort(key=default_sort_key)
+    else:
+        d = defaultdict(list)
+        for a in seq:
+            d[hash(a)].append(a)
+        seq = []
+        for k in sorted(d.keys()):
+          if len(d[k]) > 1:
+              seq.extend(sorted(d[k], key=default_sort_key))
+          else:
+              seq.extend(d[k])
+    return tuple(seq)
+
+def minlex(seq, directed=True):
+    """Return a tuple where the smallest element appears first; if
+    ``directed`` is True (default) then the order is preserved, otherwise the
+    sequence will be reversed if that gives a lexically smaller ordering.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.polyhedron import minlex
+    >>> minlex((1, 2, 0))
+    (0, 1, 2)
+    >>> minlex((1, 0, 2))
+    (0, 2, 1)
+    >>> minlex((1, 0, 2), directed=False)
+    (0, 1, 2)
+    """
+    seq = list(seq)
+    small = min(seq)
+    i = seq.index(small)
+    if not directed:
+        n = len(seq)
+        p = (i + 1) % n
+        m = (i - 1) % n
+        if seq[p] > seq[m]:
+            seq = list(reversed(seq))
+            i = n - i - 1
+    if i:
+        seq = rotate_left(seq, i)
+    return tuple(seq)
+
+def runs(seq, op=gt):
+    """Group the sequence into lists in which successive elements
+    all compare the same with the comparison operator, ``op``:
+    op(seq[i + 1], seq[i]) is True from all elements in a run.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import runs
+    >>> from operator import ge
+    >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2])
+    [[0, 1, 2], [2], [1, 4], [3], [2], [2]]
+    >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2], op=ge)
+    [[0, 1, 2, 2], [1, 4], [3], [2, 2]]
+    """
+    cycles = []
+    seq = iter(seq)
+    try:
+        run = [seq.next()]
+    except StopIteration:
+        return []
+    while True:
+        try:
+            ei = seq.next()
+        except StopIteration:
+            break
+        if op(ei, run[-1]):
+            run.append(ei)
+            continue
+        else:
+            cycles.append(run)
+            run = [ei]
+    if run:
+        cycles.append(run)
+    return cycles

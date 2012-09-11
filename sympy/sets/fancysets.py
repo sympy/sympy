@@ -2,11 +2,10 @@ from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
         Max)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import sign
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, as_int
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
-from sympy.ntheory.residue_ntheory import int_tested
 
 oo = S.Infinity
 
@@ -210,7 +209,7 @@ class Range(Set):
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [S(int_tested(w)) for w in (start, stop, step)]
+            start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n"+
                     "Use TransformationSets of Ranges for other cases")

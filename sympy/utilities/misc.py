@@ -2,6 +2,8 @@
 
 from textwrap import fill, dedent
 
+from sympy.utilities.iterables import is_sequence
+
 # if you use
 # filldedent('''
 #             the text''')

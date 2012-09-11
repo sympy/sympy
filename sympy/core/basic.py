@@ -85,6 +85,8 @@ class Basic(object):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
         """ Pickling support."""
@@ -1070,7 +1072,8 @@ class Basic(object):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
@@ -1573,6 +1576,7 @@ class preorder_traversal(object):
             for item in node:
                 for subtree in self._preorder_traversal(item, key):
                     yield subtree
+
 
     def skip(self):
         """

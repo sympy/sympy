@@ -1,10 +1,13 @@
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
+from sympy.core.compatibility import as_int
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.matrices import Matrix
 from sympy.solvers import solve
+from sympy.utilities.iterables import has_variety, has_dups
+
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
@@ -1017,14 +1020,12 @@ class RegularPolygon(Polygon):
     __slots__ = ['_n', '_center', '_radius', '_rot']
 
     def __new__(self, c, r, n, rot=0, **kwargs):
-        from sympy.ntheory.residue_ntheory import int_tested
-
         r, n, rot = sympify([r, n, rot])
         c = Point(c)
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
-            int_tested(n) # let an error raise if necessary
+            as_int(n) # let an error raise if necessary
             if n < 3:
                 raise GeometryError("n must be a >= 3, not %s" % n)
 
@@ -1742,7 +1743,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 1
+        return not has_variety(s.length for s in self.sides)
 
     def is_isosceles(self):
         """Are two or more of the sides the same length?
@@ -1766,7 +1767,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) < 3
+        return has_dups(s.length for s in self.sides)
 
     def is_scalene(self):
         """Are all the sides of the triangle of different lengths?
@@ -1790,7 +1791,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 3
+        return not has_dups(s.length for s in self.sides)
 
     def is_right(self):
         """Is the triangle right-angled.

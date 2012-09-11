@@ -369,9 +369,10 @@ class LatticeOp(AssocOp):
             return frozenset([expr])
 
     @property
+    @cacheit
     def args(self):
-        from sympy.utilities.misc import default_sort_key
-        return tuple(sorted(self._argset, key=default_sort_key))
+        from sympy.utilities import quick_sort
+        return quick_sort(self._argset)
 
     @staticmethod
     def _compare_pretty(a, b):

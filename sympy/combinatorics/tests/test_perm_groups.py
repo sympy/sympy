@@ -1,16 +1,20 @@
+import random
+
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-DihedralGroup, AlternatingGroup, AbelianGroup
-from sympy.combinatorics.permutations import Permutation, perm_af_muln, cyclic
+    DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
+from sympy.combinatorics.permutations import Permutation, _af_rmuln
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
-import random
+from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
-_cmp_perm_lists, _verify_normal_closure
+    _cmp_perm_lists, _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
 
-def test_new():
+rmul = Permutation.rmul
+
+def test_new_has():
     a = Permutation([1, 0])
     G =  PermutationGroup([a])
     assert G.is_abelian
@@ -19,16 +23,22 @@ def test_new():
     G =  PermutationGroup([a, b])
     assert not G.is_abelian
 
-    def test1():
-        a = Permutation([2, 0, 1, 3, 4, 5])
-        b = Permutation([0, 2, 1, 3, 4])
-        g = PermutationGroup([a, b])
-    raises(ValueError, lambda: test1())
+    G =  PermutationGroup([a])
+    assert G.has(a)
+    assert not G.has(b)
+    assert a in G
+    assert b not in G
+
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([0, 2, 1, 3, 4])
+    assert PermutationGroup(a, b).degree == \
+        PermutationGroup(a, b).degree == 6
 
 def test_generate():
     a = Permutation([1, 0])
-    g = PermutationGroup([a]).generate()
-    assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
+    g = list(PermutationGroup([a]).generate())
+    assert g == [Permutation([0, 1]), Permutation([1, 0])]
+    assert len(list(PermutationGroup(Permutation((0,1))).generate())) == 1
     g = PermutationGroup([a]).generate(method='dimino')
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
     a = Permutation([2, 0, 1])
@@ -146,12 +156,12 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
-def test_coset_repr():
+def test_stabilizer_cosets():
     a = Permutation([0, 2, 1])
     b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
-    assert G.coset_repr() == [[[0,1,2], [1,0,2], [2,0,1]], [[0,1,2], [0,2,1]]]
-    assert G.stabilizers_gens() == [[0, 2, 1]]
+    assert G.stabilizer_cosets() == [[[0,1,2], [1,0,2], [2,0,1]], [[0,1,2], [0,2,1]]]
+    assert G.stabilizer_gens() == [[0, 2, 1]]
 
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
@@ -168,24 +178,24 @@ def test_coset_rank():
     assert G.coset_rank(gens[0]) == 6
     assert G.coset_unrank(6) == gens[0]
 
-def test_coset_decomposition():
+def test_coset_factor():
     a = Permutation([2,0,1,3,4,5])
     b = Permutation([2,1,3,4,5,0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    rep = g.coset_repr()
+    rep = g.stabilizer_cosets()
     d = Permutation([1,0,2,3,4,5])
-    assert not g.coset_decomposition(d.array_form)
+    assert not g.coset_factor(d.array_form)
     assert not g.has_element(d)
     c = Permutation([1,0,2,3,5,4])
-    v = g.coset_decomposition(c)
-    assert perm_af_muln(*v) == [1,0,2,3,5,4]
+    v = g.coset_factor(c)
+    assert _af_rmuln(*v) == [1,0,2,3,5,4]
     assert g.has_element(c)
 
     a = Permutation([0,2,1])
     g = PermutationGroup([a])
     c = Permutation([2,1,0])
-    assert not g.coset_decomposition(c)
+    assert not g.coset_factor(c)
     assert g.coset_rank(c) == None
 
 def test_orbits():
@@ -205,10 +215,9 @@ def test_orbits():
     a = Permutation(range(1, 100) + [0])
     G = PermutationGroup([a])
     assert G.orbits(rep=True) == [0]
-    gens = rubik_cube_generators()
-    g = PermutationGroup(gens, 48)
-    assert g.orbits(rep=True) == [0, 1]
-    assert not g.is_transitive
+    G = PermutationGroup(rubik_cube_generators())
+    assert G.orbits(rep=True) == [0, 1]
+    assert not G.is_transitive
 
 def test_is_normal():
     gens_s5 = [Permutation(p) for p in [[1,2,3,4,0], [2,1,4,0,3]]]
@@ -244,6 +253,7 @@ def test_eq():
     G4 = PermutationGroup([Permutation([0,1])])
     assert G1 != G4
     assert not G4.is_subgroup(G1)
+    assert PermutationGroup(g, g) == PermutationGroup(g)
 
 def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
@@ -272,7 +282,7 @@ def test_is_solvable():
 
 def test_rubik1():
     gens = rubik_cube_generators()
-    gens1 = [gens[0]] + [p**2 for p in gens[1:]]
+    gens1 = [gens[-1]] + [p**2 for p in gens[1:]]
     G1 = PermutationGroup(gens1)
     assert G1.order() == 19508428800
     gens2 = [p**2 for p in gens]
@@ -284,11 +294,13 @@ def test_rubik1():
     assert C1.is_subgroup(G1)
     assert not G2.is_subgroup(C1)
 
+    G = RubikGroup(2)
+    assert G.order() == 3674160
+
 @XFAIL
 def test_rubik():
     skip('takes too much time')
-    gens = rubik_cube_generators()
-    G = PermutationGroup(gens)
+    G = PermutationGroup(rubik_cube_generators())
     assert G.order() == 43252003274489856000
     G1 = PermutationGroup(gens[:3])
     assert G1.order() == 170659735142400
@@ -378,6 +390,8 @@ def test_minimal_block():
     S = SymmetricGroup(6)
     assert S.minimal_block([0, 1]) == [0, 0, 0, 0, 0, 0]
 
+    assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
+
 def test_max_div():
     S = SymmetricGroup(10)
     assert S.max_div == 5
@@ -408,6 +422,8 @@ def test_transitivity_degree():
     assert Alt.transitivity_degree == 3
 
 def test_schreier_sims_random():
+    assert Tetra.pgroup.base == [0, 1]
+
     S = SymmetricGroup(3)
     base = [0, 1]
     strong_gens = [Permutation([1, 2, 0]), Permutation([1, 0, 2]),\
@@ -450,9 +466,9 @@ def test_schreier_sims_incremental():
     gens = A.generators[:]
     gen0 = gens[0]
     gen1 = gens[1]
-    gen1 = gen1*(~gen0)
-    gen0 = gen0*gen1
-    gen1 = gen0*gen1
+    gen1 = rmul(gen1, ~gen0)
+    gen0 = rmul(gen0, gen1)
+    gen1 = rmul(gen0, gen1)
     base, strong_gens = A.schreier_sims_incremental(base=[0,1], gens=gens)
     assert _verify_bsgs(A, base, strong_gens) == True
     C = CyclicGroup(11)
@@ -460,12 +476,12 @@ def test_schreier_sims_incremental():
     base, strong_gens = C.schreier_sims_incremental(gens=[gen**3])
     assert _verify_bsgs(C, base, strong_gens) == True
 
-def test_subgroup_search():
+def _subgroup_search(i, j, k):
     prop_true = lambda x: True
     prop_fix_points = lambda x: [x(point) for point in points] == points
-    prop_comm_g = lambda x: x*g == g*x
+    prop_comm_g = lambda x: rmul(x, g) == rmul(g, x)
     prop_even = lambda x: x.is_even
-    for i in range(10, 17, 2):
+    for i in range(i, j, k):
         S = SymmetricGroup(i)
         A = AlternatingGroup(i)
         C = CyclicGroup(i)
@@ -491,6 +507,14 @@ def test_subgroup_search():
              A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
+
+def test_subgroup_search():
+    _subgroup_search(10, 15, 2)
+
+@XFAIL
+def test_subgroup_search2():
+    skip('takes too much time')
+    _subgroup_search(16, 17, 1)
 
 def test_normal_closure():
     # the normal closure of the trivial group is trivial
@@ -607,3 +631,13 @@ def test_pointwise_stabilizer():
         stab = stab.stabilizer(point)
         points.append(point)
         assert S.pointwise_stabilizer(points) == stab
+
+def test___contains__():
+    assert (Permutation([]) in Tetra.pgroup) is False
+    assert (Tetra.pgroup[0] in Tetra.pgroup) is True
+
+def test_make_perm():
+    assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \
+        Permutation([4, 7, 6, 5, 0, 3, 2, 1])
+    assert cube.pgroup.make_perm(7, seed=range(7)) == \
+        Permutation([6, 7, 3, 2, 5, 4, 0, 1])
