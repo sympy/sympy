@@ -322,7 +322,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         else:
             result = h
 
-        for c, q in zip(C, Q):
+        for c, q in list(zip(C, Q)):
             if c in solutions:
                 s = solutions[c]*q
                 C.remove(c)
