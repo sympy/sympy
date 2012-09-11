@@ -617,16 +617,19 @@ class Permutation(Basic):
     A given permutation has a rank among all the possible permutations of the
     same elements, but what that rank is depends on how the permutations are
     enumerated. (There are a number of different methods of doing so.) The
-    lexicographic rank is given by the rank method:
+    lexicographic rank is given by the rank method and this rank is used to
+    increment a partion with addition/subtraction:
 
     >>> p.rank()
     6
+    >>> p + 1
+    Permutation([1, 0, 3, 2])
     >>> p.next_lex()
     Permutation([1, 0, 3, 2])
     >>> _.rank()
     7
-    >>> p.unrank_lex(p.size, rank=0) # the identity permutation
-    Permutation([0, 1, 2, 3])
+    >>> p.unrank_lex(p.size, rank=7)
+    Permutation([1, 0, 3, 2])
 
     The product of two permutations p and q is defined as their composition as
     functions, (p*q)(i) = q(p(i)) [6]_.
@@ -691,6 +694,7 @@ class Permutation(Basic):
     _array_form = None
     _cyclic_form = None
     _size = None
+    _rank = None
 
     def __new__(cls, *args, **kwargs):
         """
@@ -987,17 +991,10 @@ class Permutation(Basic):
         return [i for i, e in enumerate(self.array_form) if a[i] != i]
 
     def __add__(self, other):
-        """
-        Routine for addition of permutations by their inversion vectors.
+        """Return permutation that is other higher in rank than self.
 
-        This is defined in terms of the Lehmer code (the inversion vector)
-        for a permutation which gives a unique set of numbers for each
-        of the n! permutations for n elements.
-
-        The elements of the inversion vectors for self and other are added
-        (mod the size of the permutations) and the result is decoded into
-        the permutation that is returned. In this scheme the identity
-        permutation is like a zero element. See [1].
+        The rank is the lexicographical rank, with the identity permutation
+        having rank of 0.
 
         Examples
         ========
@@ -1006,20 +1003,7 @@ class Permutation(Basic):
         >>> Permutation.print_cyclic = False
         >>> I = Permutation([0, 1, 2, 3])
         >>> a = Permutation([2, 1, 3, 0])
-        >>> I + a == a
-        True
-
-        >>> a = Permutation([0, 3, 1, 2])
-        >>> a.inversion_vector()
-        [0, 2, 0]
-        >>> b = Permutation([2, 1, 0, 3])
-        >>> b.inversion_vector()
-        [2, 1, 0]
-        >>> a + b
-        Permutation([2, 0, 1, 3])
-        >>> _.inversion_vector()
-        [2, 0, 0]
-        >>> Permutation.from_inversion_vector(_) == a + b
+        >>> I + a.rank() == a
         True
 
         See Also
@@ -1027,51 +1011,21 @@ class Permutation(Basic):
 
         __sub__, inversion_vector
 
-        References
-        ==========
-
-        1. http://en.wikipedia.org/wiki/Lehmer_code
         """
-        n = self.size
-        if n != other.size:
-            raise ValueError("The permutations must be of equal size.")
-        a = self.inversion_vector()
-        b = other.inversion_vector()
-        result_inv = [(a[i] + b[i]) % (n - i) for i in range(n - 1)]
-        return Perm.from_inversion_vector(result_inv)
+        rank = (self.rank() + other) % self.cardinality
+        rv = Perm.unrank_lex(self.size, rank)
+        rv._rank = rank
+        return rv
 
     def __sub__(self, other):
-        """
-        Routine for subtraction of permutations by their inversion vectors.
-
-        The idea behind this is the same as in ``__add__``
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0, 1, 2, 3])
-        >>> q = Permutation([2, 1, 3, 0])
-        >>> q - p == q
-        True
+        """Return the permutation that is other lower in rank than self.
 
         See Also
         ========
 
-        __add__, inversion_vector
-
-        References
-        ==========
-
-        1. http://en.wikipedia.org/wiki/Lehmer_code
+        __add__
         """
-        n = self.size
-        if n != other.size:
-            raise ValueError("The permutations must be of equal size.")
-        a = self.inversion_vector()
-        b = other.inversion_vector()
-        result_inv = [(a[i] - b[i]) % (n - i) for i in range(n - 1)]
-        return Perm.from_inversion_vector(result_inv)
+        return self.__add__(-other)
 
     def __rdiv__(self, other):
         """Return other*self**-1
@@ -1669,9 +1623,10 @@ class Permutation(Basic):
             return None
         return Perm.unrank_nonlex(self.size, r+1)
 
-    def rank(self):
+    def rank(self, i=None):
         """
-        Returns the lexicographic rank of the permutation.
+        Returns the lexicographic rank of the permutation (default) or
+        the ith ranked permutation of self.
 
         Examples
         ========
@@ -1680,7 +1635,9 @@ class Permutation(Basic):
         >>> p = Permutation([0,1,2,3])
         >>> p.rank()
         0
-        >>> p = Permutation([3,2,1,0])
+        >>> p.rank(23) == Permutation([3, 2, 1, 0])
+        True
+        >>> p = Permutation([3, 2, 1, 0])
         >>> p.rank()
         23
 
@@ -1689,6 +1646,10 @@ class Permutation(Basic):
 
         next_lex, unrank_lex, cardinality, length, order, size
         """
+        if i is not None:
+            return self.unrank_lex(self.size, i)
+        if not self._rank is None:
+            return self._rank
         rank = 0
         rho = self.array_form[:]
         n = self.size - 1
@@ -1701,6 +1662,7 @@ class Permutation(Basic):
                     rho[i] -= 1
             psize //= n
             n -= 1
+        self._rank = rank
         return rank
 
     @property
@@ -2036,19 +1998,38 @@ class Permutation(Basic):
             sorted([len(c) for c in other.cyclic_form])
 
     def commutator(self, x):
-        """Return the commutator permutation ``x*self*~x*~self``
+        """Return the commutator of self and x: ``~x*~self*x*self``
+
+        If f and g are part of a group, G, then the commutator of f and g
+        is the group identity iff f and g commute, i.e. fg == gf.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = Permutation([0,2,3,1])
-        >>> x = Permutation([2,0,3,1])
-        >>> p.commutator(x)
-        Permutation([1, 3, 2, 0])
-        >>> x*p*~x*~p
-        Permutation([1, 3, 2, 0])
+        >>> p = Permutation([0, 2, 3, 1])
+        >>> x = Permutation([2, 0, 3, 1])
+        >>> c = p.commutator(x); c
+        Permutation([2, 1, 3, 0])
+        >>> c == ~x*~p*x*p
+        True
+
+        >>> I = Permutation(3)
+        >>> p = [I + i for i in range(6)]
+        >>> for i in range(len(p)):
+        ...     for j in range(len(p)):
+        ...         c = p[i].commutator(p[j])
+        ...         if p[i]*p[j] == p[j]*p[i]:
+        ...             assert c == I
+        ...         else:
+        ...             assert c != I
+        ...
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/Commutator
         """
 
         a = self.array_form
@@ -2062,7 +2043,7 @@ class Permutation(Basic):
         invb = [None]*n
         for i in range(n):
             invb[b[i]] = i
-        return Perm._af_new([inva[invb[a[i]]] for i in b])
+        return Perm._af_new([a[b[inva[i]]] for i in invb])
 
     def signature(self):
         """
@@ -2119,7 +2100,7 @@ class Permutation(Basic):
         identity, cardinality, length, rank, size
         """
 
-        return reduce(lcm,[1]+[len(cycle) for cycle in self.cyclic_form])
+        return reduce(lcm, [len(cycle) for cycle in self.cyclic_form], 1)
 
     def length(self):
         """
@@ -2239,7 +2220,7 @@ class Permutation(Basic):
 
         See Also
         ========
-        __add__, from_inversion_vector
+        from_inversion_vector
         """
         self_array_form = self.array_form
         n = len(self_array_form)
@@ -2254,7 +2235,7 @@ class Permutation(Basic):
         return inversion_vector
 
     def iv(self):
-        r = self.rank()
+        r = self.rank
         f = 1
         rv = []
         for i in range(2, self.size + 1):
@@ -2686,7 +2667,7 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> a = Permutation.unrank_lex(5,10)
+        >>> a = Permutation.unrank_lex(5, 10)
         >>> a.rank()
         10
         >>> a

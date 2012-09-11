@@ -73,23 +73,21 @@ def test_Permutation():
     assert a/a == I
     assert a/b == a*~b
 
-    assert p + q == Permutation([5, 6, 3, 1, 2, 4, 0])
-    assert q + p == p + q
-    raises(ValueError, lambda: p + Permutation(range(10)))
+    ans = Permutation(0, 5, 3, 1, 6)(2, 4)
+    assert (p + q.rank()).rank() == ans.rank()
+    assert (p + q.rank())._rank == ans.rank()
+    assert (q + p.rank()).rank() == ans.rank()
+    raises(TypeError, lambda: p + Permutation(range(10)))
 
-    assert p - q == Permutation([6, 3, 5, 1, 2, 4, 0])
-    assert q - p == Permutation([1, 4, 2, 6, 5, 3, 0])
-    raises(ValueError, lambda: p - Permutation(range(10)))
+    assert (p - q.rank()).rank() == Permutation(0, 6, 3, 1, 2, 5, 4).rank()
+    assert p.rank() - q.rank() < 0 # for coverage: make sure mod is used
+    assert (q - p.rank()).rank() == Permutation(1, 4, 6, 2)(3, 5).rank()
 
     assert p*q == Permutation(_af_rmuln(*[list(w) for w in (q, p)]))
     assert p*Permutation([]) == p
     assert Permutation([])*p == p
     assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
     assert Permutation([[0, 1]])*p == Permutation([5, 2, 1, 6, 3, 0, 4])
-
-    a = p - q
-    b = q - p
-    assert (a + b).is_Identity
 
     pq = p^q
     assert pq == Permutation([5, 6, 0, 4, 1, 2, 3])
@@ -99,8 +97,8 @@ def test_Permutation():
     assert qp == rmul(p, q, ~p)
     raises(ValueError, lambda: p^Permutation([]))
 
-    assert p.commutator(q) == Permutation([1, 4, 5, 6, 3, 0, 2])
-    assert q.commutator(p) == Permutation([5, 0, 6, 4, 1, 2, 3])
+    assert p.commutator(q) == Permutation(0, 1, 3, 4, 6, 5, 2)
+    assert q.commutator(p) == Permutation(0, 2, 5, 6, 4, 3, 1)
     assert p.commutator(q) == ~q.commutator(p)
     raises(ValueError, lambda: p.commutator(Permutation([])))
 
