@@ -180,7 +180,7 @@ class Cycle(dict):
     """
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
-    A cycle shows the rule to use to move elements in a set to obtain
+    A cycle shows the rule to use to move subsets of elements to obtain
     a permutation. The Cycle class is more flexible that Permutation in
     that 1) all elements need not be present in order to investigate how
     multiple cycles act in sequence and 2) it can contain singletons:
@@ -198,17 +198,14 @@ class Cycle(dict):
     Cycle(1, 3, 2)
 
     The array form of a Cycle can be obtained by calling the as_list
-    method and all elements from 0 will be shown:
+    method (or passing it to the list function) and all elements from
+    0 will be shown:
 
     >>> a = Cycle(1, 2)
     >>> a.as_list()
     [0, 2, 1]
-
-        Caution: the underlying structure for the Cycle is a dictionary, and
-        passing a Cycle to list() will just list the keys in the Cycle:
-
-        >>> list(a)
-        [0, 1, 2]
+    >>> list(a)
+    [0, 2, 1]
 
     If a larger (or smaller) range is desired use the list method and
     provide the desired size -- but the Cycle cannot be truncated to
@@ -217,6 +214,8 @@ class Cycle(dict):
     >>> b = Cycle(2,4)(1,2)(3,1,4)(1,3)
     >>> b.as_list()
     [0, 2, 1, 3, 4]
+    >>> b.as_list(b.size + 1)
+    [0, 2, 1, 3, 4, 5]
     >>> b.as_list(-1)
     [0, 2, 1]
 
@@ -225,8 +224,6 @@ class Cycle(dict):
 
     >>> Cycle(1, 4, 10)(4, 5)
     Cycle(1, 5, 4, 10)
-    >>> _.as_list()
-    [0, 5, 2, 3, 10, 4, 6, 7, 8, 9, 1]
     >>> Cycle(1, 2)(4)(5)(10)
     Cycle(1, 2)(10)
 
@@ -245,6 +242,10 @@ class Cycle(dict):
         """Return enter arg into dictionary and return arg."""
         self[arg] = arg
         return arg
+
+    def __iter__(self):
+        for i in self.as_list():
+            yield i
 
     def __call__(self, *other):
         """Return product of cycles processed from R to L.
@@ -269,7 +270,7 @@ class Cycle(dict):
 
         """
         rv = Cycle(*other)
-        for k, v in zip(self, [rv[self[k]] for k in self]):
+        for k, v in zip(self.keys(), [rv[self[k]] for k in self.keys()]):
             rv[k] = v
         return rv
 
@@ -301,10 +302,10 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i])
             size = max(size, big + 1)
         else:
-            size = max(self) + 1
+            size = self.size
         return [self[i] for i in range(size)]
 
     def __repr__(self):
@@ -325,7 +326,7 @@ class Cycle(dict):
             return 'Cycle()'
         cycles = Permutation(self).cyclic_form
         s = ''.join(str(tuple(c)) for c in cycles)
-        big = max(self)
+        big = self.size - 1
         if not any(i == big for c in cycles for i in c):
             s += '(%s)' % big
         return 'Cycle%s' % s
@@ -356,6 +357,10 @@ class Cycle(dict):
             raise ValueError('All elements must be unique in a cycle.')
         for i in range(-len(args), 0):
             self[args[i]] = args[i + 1]
+
+    @property
+    def size(self):
+        return max(self.keys()) + 1
 
     def copy(self):
         return Cycle(self)
