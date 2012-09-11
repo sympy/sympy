@@ -1,13 +1,13 @@
 from sympy import (
-    Add, Derivative, E, Eq, Float, Function, GoldenRatio, I, Integer,
-    Integral, Matrix, Mul, O, Rational, S, Symbol, Wild, acos, atan,
-    besselsimp, binomial, collect, collect_const, combsimp, cos, cosh,
-    cot, coth, count_ops, diff, erf, exp, expand, factor, factorial,
-    fraction, gamma, hyper, hyper, hypersimp, integrate, log, logcombine,
-    nsimplify, oo, pi, posify, powdenest, powsimp, radsimp, ratsimp,
-    ratsimpmodprime, rcollect, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, symbols, sympify, tan, tanh, trigsimp, Dummy,
-    Subs, polarify, exp_polar, polar_lift, Piecewise)
+    acos, Add, atan, besselsimp, binomial, collect, collect_const, combsimp,
+    cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
+    exp_polar, expand, factor, factorial, FallingFactorial, Float, fraction,
+    Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I, Integer,
+    Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O, oo, pi,
+    Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
+    Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, S,
+    separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
+    symbols, sympify, tan, tanh, trigsimp, Wild)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -928,6 +928,16 @@ def test_combsimp():
     assert combsimp(e) == e
     assert combsimp(gamma(4*n + S(1)/2)/gamma(2*n - S(3)/4)) \
         == 2**(4*n - S(5)/2)*(8*n - 3)*gamma(2*n + S(3)/4)/sqrt(pi)
+
+    assert combsimp(6*FallingFactorial(-4, n)/factorial(n)) == (-1)**n*(n + 1)*(n + 2)*(n + 3)
+    assert combsimp(6*FallingFactorial(-4, n - 1)/factorial(n - 1)) == (-1)**(n - 1)*n*(n + 1)*(n + 2)
+    assert combsimp(6*FallingFactorial(-4, n - 3)/factorial(n - 3)) == (-1)**(n - 3)*n*(n - 1)*(n - 2)
+    assert combsimp(6*FallingFactorial(-4, -n - 1)/factorial(-n - 1)) == -(-1)**(-n - 1)*n*(n - 1)*(n - 2)
+
+    assert combsimp(6*RisingFactorial(4, n)/factorial(n)) == (n + 1)*(n + 2)*(n + 3)
+    assert combsimp(6*RisingFactorial(4, n - 1)/factorial(n - 1)) == n*(n + 1)*(n + 2)
+    assert combsimp(6*RisingFactorial(4, n - 3)/factorial(n - 3)) == n*(n - 1)*(n - 2)
+    assert combsimp(6*RisingFactorial(4, -n - 1)/factorial(-n - 1)) == -n*(n - 1)*(n - 2)
 
 def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')

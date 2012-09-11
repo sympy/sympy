@@ -56,7 +56,7 @@ from sympy.core import sympify
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
-from sympy.functions import binomial, FallingFactorial
+from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 from sympy.utilities.misc import default_sort_key
@@ -322,7 +322,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         else:
             result = h
 
-        for c, q in zip(C, Q):
+        for c, q in list(zip(C, Q)):
             if c in solutions:
                 s = solutions[c]*q
                 C.remove(c)
@@ -600,9 +600,18 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             if C is not None and C is not S.Zero:
                 ratio = z * A * C.subs(n, n + 1) / B / C
-                K = product(simplify(ratio), (n, 0, n-1))
+                ratio = simplify(ratio)
+                # If there is a nonnegative root in the denominator of the ratio,
+                # this indicates that the term y(n_root) is zero, and one should
+                # start the product with the term y(n_root + 1).
+                n0 = 0
+                for n_root in roots(ratio.as_numer_denom()[1], n).keys():
+                    n0 = max(n0, n_root + 1)
+                K = product(ratio, (n, n0, n - 1))
+                if K.has(factorial, FallingFactorial, RisingFactorial):
+                    K = simplify(K)
 
-                if casoratian(kernel+[K], n) != 0:
+                if casoratian(kernel+[K], n, zero=False) != 0:
                     kernel.append(K)
 
     symbols = numbered_symbols('C')
@@ -661,8 +670,8 @@ def rsolve(f, y, init=None):
     if isinstance(f, Equality):
         f = f.lhs - f.rhs
 
-    k = Wild('k')
     n = y.args[0]
+    k = Wild('k', exclude=(n,))
 
     h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
@@ -729,7 +738,7 @@ def rsolve(f, y, init=None):
     K_max = max(H_part.iterkeys())
     coeffs = [H_part[i] for i in xrange(K_max+1)]
 
-    result = rsolve_hyper(coeffs, i_part, n, symbols=True)
+    result = rsolve_hyper(coeffs, -i_part, n, symbols=True)
 
     if result is None:
         return None
@@ -767,4 +776,4 @@ def rsolve(f, y, init=None):
             for k, v in result.iteritems():
                 solution = solution.subs(k, v)
 
-    return (solution.expand()) / common
+    return solution
