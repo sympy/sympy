@@ -197,12 +197,12 @@ class Cycle(dict):
     >>> Cycle()(1, 2)(2,3)
     Cycle(1, 3, 2)
 
-    The array form of a Cycle can be obtained by calling the as_list
+    The array form of a Cycle can be obtained by calling the list
     method (or passing it to the list function) and all elements from
     0 will be shown:
 
     >>> a = Cycle(1, 2)
-    >>> a.as_list()
+    >>> a.list()
     [0, 2, 1]
     >>> list(a)
     [0, 2, 1]
@@ -212,11 +212,11 @@ class Cycle(dict):
     a size smaller than the largest element that is out of place:
 
     >>> b = Cycle(2,4)(1,2)(3,1,4)(1,3)
-    >>> b.as_list()
+    >>> b.list()
     [0, 2, 1, 3, 4]
-    >>> b.as_list(b.size + 1)
+    >>> b.list(b.size + 1)
     [0, 2, 1, 3, 4, 5]
-    >>> b.as_list(-1)
+    >>> b.list(-1)
     [0, 2, 1]
 
     Singletons are not shown when printing with one exception: the largest
@@ -230,8 +230,19 @@ class Cycle(dict):
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
 
-    >>> Perm(Cycle(1,2)(3,4).as_list()).transpositions()
+    >>> Perm(Cycle(1,2)(3,4).list()).transpositions()
     [(1, 2), (3, 4)]
+
+    Notes
+    =====
+
+    The underlying structure of the Cycle is a dictionary and although
+    the __iter__ method has been redefiend to give the array form of the
+    cycle, the underlying dictionary items are still available with the
+    such methods as items():
+
+    >>> Cycle(1, 2).items()
+    [(1, 2), (2, 1)]
 
     See Also
     ========
@@ -239,12 +250,12 @@ class Cycle(dict):
     Permutation
     """
     def __missing__(self, arg):
-        """Return enter arg into dictionary and return arg."""
+        """Enter arg into dictionary and return arg."""
         self[arg] = arg
         return arg
 
     def __iter__(self):
-        for i in self.as_list():
+        for i in self.list():
             yield i
 
     def __call__(self, *other):
@@ -274,7 +285,7 @@ class Cycle(dict):
             rv[k] = v
         return rv
 
-    def as_list(self, size=None):
+    def list(self, size=None):
         """Return the cycles as an explicit list starting from 0 up
         to the greater of the largest value in the cycles and size.
 
@@ -288,15 +299,15 @@ class Cycle(dict):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Cycle(2, 3)(4, 5)
-        >>> p.as_list()
+        >>> p.list()
         [0, 1, 3, 2, 5, 4]
-        >>> p.as_list(10)
+        >>> p.list(10)
         [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
 
         Passing a length too small will trim trailing, unchanged elements
         in the permutation:
 
-        >>> Cycle(2, 4)(1, 2, 4).as_list(-1)
+        >>> Cycle(2, 4)(1, 2, 4).list(-1)
         [0, 2, 1]
         """
         if not self and size is None:
@@ -762,7 +773,7 @@ class Permutation(Basic):
         if not args: # a
             return Perm._af_new(range(size or 0))
         elif len(args) > 1: # c
-            return Perm._af_new(Cycle(*args).as_list(size))
+            return Perm._af_new(Cycle(*args).list(size))
         if len(args) == 1:
             a = args[0]
             if isinstance(a, Perm): # g
@@ -770,7 +781,7 @@ class Permutation(Basic):
                     return a
                 return Perm(a.array_form, size=size)
             if isinstance(a, Cycle): # f
-                return Perm._af_new(a.as_list(size))
+                return Perm._af_new(a.list(size))
             if not is_sequence(a): # b
                 return Perm._af_new(range(a + 1))
             if has_variety(is_sequence(ai) for ai in a):
@@ -817,7 +828,7 @@ class Permutation(Basic):
             c = Cycle()
             for ci in args:
                 c = c(*ci)
-            aform = c.as_list()
+            aform = c.list()
         else:
             aform = list(args)
         if size and size > len(aform):
@@ -1463,7 +1474,7 @@ class Permutation(Basic):
                 except TypeError:
                     try:
                         if isinstance(i, Cycle):
-                            i = Permutation(i.as_list(), size=self.size)
+                            i = Permutation(i.list(), size=self.size)
                         else:
                             i = Permutation(
                             i.array_form, size=self.size)
