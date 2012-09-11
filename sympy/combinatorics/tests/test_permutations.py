@@ -69,9 +69,9 @@ def test_Permutation():
     a = Permutation(1, 3)
     b = Permutation(2, 0, 3)
     I = Permutation(3)
-    assert 1/a == ~a == a**-1
-    assert a/a == I
-    assert a/b == a*~b
+    assert ~a == a**-1
+    assert a*~a == I
+    assert a*b**-1 == a*~b
 
     ans = Permutation(0, 5, 3, 1, 6)(2, 4)
     assert (p + q.rank()).rank() == ans.rank()

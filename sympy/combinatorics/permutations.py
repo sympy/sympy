@@ -1043,33 +1043,6 @@ class Permutation(Basic):
         """
         return self.__add__(-other)
 
-    def __rdiv__(self, other):
-        """Return other*self**-1
-
-        Examples
-        ========
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> p = Permutation(1, 3)
-        >>> q = Permutation(2, 0, 3)
-        >>> I = Permutation(3)
-        >>> 1/p == ~p == p**-1
-        True
-        >>> p/p == I
-        True
-        >>> p/q == p*~q
-        True
-
-        """
-        if isinstance(self, Permutation) or other == 1:
-            return other*self**-1
-        else:
-            raise ValueError(
-            'only a permutation or 1 may be divided by a permutation')
-
-    def __div__(self, other):
-        return other.__rdiv__(self)
-
     @staticmethod
     def rmul(*args):
         """
@@ -1283,7 +1256,7 @@ class Permutation(Basic):
         Calculate and check properties of the conjugate:
 
         >>> c = p^q
-        >>> c == ~q*p*q and p == q*c*~q and p.conjugate_of(c) is True
+        >>> c == ~q*p*q and p == q*c*~q
         True
 
         The expression q^p^r is equivalent to q^(p*r):
@@ -1318,19 +1291,15 @@ class Permutation(Basic):
         For a given r and p, both of the following are conjugates of p:
         ~r*p*r and r*p*~r. But these are not necessarily the same:
 
-        >>> (~r*p*r).conjugate_of(p) and (r*p*~r).conjugate_of(p)
-        True
         >>> ~r*p*r == r*p*~r
         True
 
         >>> p = Permutation(1, 2, 9)(5, 6)
-        >>> (~r*p*r).conjugate_of(p) and (r*p*~r).conjugate_of(p)
-        True
         >>> ~r*p*r == r*p*~r
         False
 
-        The former was chosen so ``p^q^r`` would be equivalent to ``p^(q*r)``
-        rather than ``p^(r*q)``.
+        The conjugate ~r*p*r was chosen so that ``p^q^r`` would be equivalent
+        to ``p^(q*r)`` rather than ``p^(r*q)``.
         """
 
         if self.size != h.size:
@@ -1418,7 +1387,7 @@ class Permutation(Basic):
         >>> p = Permutation([[2,0], [3,1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
-        >>> _ == p**-1 == 1/p
+        >>> _ == p**-1
         True
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
@@ -1995,23 +1964,6 @@ class Permutation(Basic):
                     i = i + k * 2;
                 k = k * 2
         return inversions
-
-    def conjugate_of(self, other):
-        """Return True if self and other are conjugates, else False.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> a = Permutation(1, 3, 7)(2, 9)(10, 11)(12, 5, 8, 6)
-        >>> b = Permutation(1, 9)(2, 12)(3, 11, 7, 8)(10, 5, 4)
-        >>> a.conjugate_of(b)
-        True
-
-        """
-        return self.size == other.size and \
-            sorted([len(c) for c in self.cyclic_form]) == \
-            sorted([len(c) for c in other.cyclic_form])
 
     def commutator(self, x):
         """Return the commutator of self and x: ``~x*~self*x*self``
