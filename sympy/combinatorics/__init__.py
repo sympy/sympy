@@ -10,5 +10,4 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.graycode import GrayCode
 from sympy.combinatorics.named_groups import (SymmetricGroup, DihedralGroup,
-    CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup,
-    TetrahedralGroup, OctahedralGroup, IcosahedralGroup)
+    CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup)

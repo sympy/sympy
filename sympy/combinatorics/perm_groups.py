@@ -1517,13 +1517,10 @@ class PermutationGroup(Basic):
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics import PermutationGroup
         >>> from sympy.combinatorics.polyhedron import tetrahedron
-        >>> from sympy.combinatorics.named_groups import TetrahedralGroup
 
-        Neither the TetrahedralGroup, nor the permutation group given in the
-        tetrahedron object, are true groups:
+        The permutation group given in the tetrahedron object is not
+        true groups:
 
-        >>> TetrahedralGroup.is_group()
-        False
         >>> G = tetrahedron.pgroup
         >>> G.is_group()
         False
