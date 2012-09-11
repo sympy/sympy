@@ -359,7 +359,7 @@ def test(*paths, **kwargs):
     Force colors, even when the output is not to a terminal (this is useful,
     e.g., if you are piping to ``less -r`` and you still want colors)
 
-    >>> sympy.test(force_colors=False    # doctest: +SKIP
+    >>> sympy.test(force_colors=False)    # doctest: +SKIP
 
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
@@ -388,7 +388,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os,environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
 
     Or from the command line using
 
@@ -816,7 +816,7 @@ class SymPyTests(object):
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
-            if IS_PYTHON_3 and IS_WINDOWS:
+            if IS_PYTHON_3:
                 with open(filename, encoding="utf8") as f:
                     source = f.read()
                 c = compile(source, filename, 'exec')
@@ -1457,8 +1457,11 @@ class PyTestReporter(Reporter):
             if text[0] != "\n":
                 sys.stdout.write("\n")
 
+        # Avoid UnicodeEncodeError when printing out test failures
         if IS_PYTHON_3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
+        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+            text = text.encode(sys.stdout.encoding, 'backslashreplace').decode(sys.stdout.encoding)
 
         if color == "":
             sys.stdout.write(text)
