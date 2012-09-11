@@ -56,7 +56,7 @@ from sympy.core import sympify
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
-from sympy.functions import binomial, FallingFactorial
+from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 from sympy.utilities.misc import default_sort_key
@@ -600,9 +600,18 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             if C is not None and C is not S.Zero:
                 ratio = z * A * C.subs(n, n + 1) / B / C
-                K = product(simplify(ratio), (n, 0, n-1))
+                ratio = simplify(ratio)
+                # If there is a nonnegative root in the denominator of the ratio,
+                # this indicates that the term y(n_root) is zero, and one should
+                # start the product with the term y(n_root + 1).
+                n0 = 0
+                for n_root in roots(ratio.as_numer_denom()[1], n).keys():
+                    n0 = max(n0, n_root + 1)
+                K = product(ratio, (n, n0, n - 1))
+                if K.has(factorial, FallingFactorial, RisingFactorial):
+                    K = simplify(K)
 
-                if casoratian(kernel+[K], n) != 0:
+                if casoratian(kernel+[K], n, zero=False) != 0:
                     kernel.append(K)
 
     symbols = numbered_symbols('C')
