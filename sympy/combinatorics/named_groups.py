@@ -270,3 +270,46 @@ def RubikGroup(n):
     from sympy.combinatorics.generators import rubik
     assert n > 1
     return PermutationGroup(rubik(n))
+
+# PermutationGroup([Permutation(p) for p in
+# flatten(tetrahedron.pgroup.generate(), 1)])
+TetrahedralGroup = PermutationGroup([
+    Permutation(3),
+    Permutation(3)(0, 1, 2),
+    Permutation(0, 2)(1, 3),
+    Permutation(0, 3, 2),
+    Permutation(1, 2, 3),
+    Permutation(1, 3, 2)])
+
+# PermutationGroup([Permutation(p) for p in
+# flatten(octahedron.pgroup.stabilizer_cosets(), 1)])
+OctahedralGroup = PermutationGroup([
+    Permutation(5),
+    Permutation(0, 1, 2)(3, 4, 5),
+    Permutation(0, 2)(1, 3)(4, 5),
+    Permutation(0, 3, 2)(1, 4, 5),
+    Permutation(0, 4, 5, 2),
+    Permutation(0, 5)(1, 2)(3, 4),
+    Permutation(5)(1, 2, 3, 4),
+    Permutation(5)(1, 3)(2, 4),
+    Permutation(5)(1, 4, 3, 2)])
+
+# PermutationGroup([Permutation(p) for p in
+# flatten(icosahedron.pgroup.stabilizer_cosets(), 1)])
+IcosahedralGroup = PermutationGroup([
+    Permutation(11),
+    Permutation(0, 1, 2)(3, 5, 7)(4, 6, 8)(9, 10, 11),
+    Permutation(0, 2)(1, 3)(4, 7)(5, 8)(6, 9)(10, 11),
+    Permutation(0, 3, 2)(1, 4, 8)(5, 9, 7)(6, 10, 11),
+    Permutation(0, 4, 9, 8, 2)(1, 5, 10, 11, 7),
+    Permutation(0, 5, 6, 7, 2)(3, 4, 10, 11, 8),
+    Permutation(0, 6, 8)(1, 7, 2)(3, 5, 11)(4, 10, 9),
+    Permutation(0, 7, 3, 1, 8)(4, 6, 9, 5, 11),
+    Permutation(0, 8)(1, 9)(2, 3)(4, 7)(5, 11)(6, 10),
+    Permutation(0, 9, 2, 4, 8)(1, 10, 7, 5, 11),
+    Permutation(0, 10, 8)(1, 6, 7)(2, 5, 11)(3, 4, 9),
+    Permutation(0, 11)(1, 6)(2, 10)(3, 9)(4, 8)(5, 7),
+    Permutation(11)(1, 2, 3, 4, 5)(6, 7, 8, 9, 10),
+    Permutation(11)(1, 3, 5, 2, 4)(6, 8, 10, 7, 9),
+    Permutation(11)(1, 4, 2, 5, 3)(6, 9, 7, 10, 8),
+    Permutation(11)(1, 5, 4, 3, 2)(6, 10, 9, 8, 7)])

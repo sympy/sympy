@@ -1,6 +1,7 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
-DihedralGroup, AlternatingGroup, AbelianGroup
+from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
+DihedralGroup, AlternatingGroup, AbelianGroup,
+TetrahedralGroup, OctahedralGroup, IcosahedralGroup)
 
 def test_SymmetricGroup():
     G = SymmetricGroup(5)
@@ -52,3 +53,11 @@ def test_AbelianGroup():
     A = AbelianGroup(3, 3, 3)
     assert A.order() == 27
     assert A.is_abelian == True
+
+def test_PolyhedralGroups():
+    t = TetrahedralGroup, 12
+    o = OctahedralGroup, 24
+    i = IcosahedralGroup, 60
+    for g, order in (t, o, i):
+        assert g.order() == order
+        assert g.is_group() is False # not proper groups
