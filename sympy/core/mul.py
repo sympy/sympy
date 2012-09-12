@@ -773,8 +773,26 @@ class Mul(AssocOp):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
             return AssocOp._matches_commutative(self, expr, repl_dict)
-        # todo for commutative parts, until then use the default matches method for non-commutative products
-        return self._matches(expr, repl_dict)
+        elif self.is_commutative is not expr.is_commutative:
+            return None
+        c1, nc1 = self.args_cnc()
+        c2, nc2 = expr.args_cnc()
+        repl_dict = repl_dict.copy()
+        if c1:
+            if not c2:
+                c2 = [1]
+            a = Mul(*c1)
+            if isinstance(a, AssocOp):
+                repl_dict = a._matches_commutative(Mul(*c2), repl_dict)
+            else:
+                repl_dict = a.matches(Mul(*c2), repl_dict)
+        if repl_dict:
+            a = Mul(*nc1)
+            if isinstance(a, Mul):
+                repl_dict = a._matches(Mul(*nc2), repl_dict)
+            else:
+                repl_dict = a.matches(Mul(*nc2), repl_dict)
+        return repl_dict or None
 
     def _matches(self, expr, repl_dict={}):
         # weed out negative one prefixes

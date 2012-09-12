@@ -6,7 +6,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, expand_power_base)
+    expand_multinomial, expand_power_base, symbols)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -900,7 +900,8 @@ def trigsimp(expr, deep=False, recursive=False):
 
 def _trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
-    a, b, c = map(Wild, 'abc')
+    a, b, c = symbols('a b c', cls=Wild)
+    d = Wild('d', commutative=False)
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
     # for the simplifications like sinh/cosh -> tanh:
@@ -917,7 +918,22 @@ def _trigsimp(expr, deep=False):
         (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
         (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
         (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
-        (a*coth(b)**c*tanh(b)**c, a)
+        (a*coth(b)**c*tanh(b)**c, a),
+
+        # same as above but with noncommutative prefactor
+        (a*d*sin(b)**c/cos(b)**c, a*d*tan(b)**c),
+        (a*d*tan(b)**c*cos(b)**c, a*d*sin(b)**c),
+        (a*d*cot(b)**c*sin(b)**c, a*d*cos(b)**c),
+        (a*d*tan(b)**c/sin(b)**c, a*d/cos(b)**c),
+        (a*d*cot(b)**c/cos(b)**c, a*d/sin(b)**c),
+        (a*d*cot(b)**c*tan(b)**c, a*d),
+
+        (a*d*sinh(b)**c/cosh(b)**c, a*d*tanh(b)**c),
+        (a*d*tanh(b)**c*cosh(b)**c, a*d*sinh(b)**c),
+        (a*d*coth(b)**c*sinh(b)**c, a*d*cosh(b)**c),
+        (a*d*tanh(b)**c/sinh(b)**c, a*d/cosh(b)**c),
+        (a*d*coth(b)**c/cosh(b)**c, a*d/sinh(b)**c),
+        (a*d*coth(b)**c*tanh(b)**c, a*d),
         )
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
@@ -933,7 +949,22 @@ def _trigsimp(expr, deep=False):
         (a*coth(b)**2, a + a*(1/sinh(b))**2),
         (a*sinh(b + c),  a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
         (a*cosh(b + c),  a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
-        (a*tanh(b + c),  a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c))))
+        (a*tanh(b + c),  a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
+
+        # same as above but with noncommutative prefactor
+        (a*d*sin(b)**2,  a*d - a*d*cos(b)**2),
+        (a*d*tan(b)**2,  a*d*(1/cos(b))**2 - a*d),
+        (a*d*cot(b)**2,  a*d*(1/sin(b))**2 - a*d),
+        (a*d*sin(b + c),  a*d*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*d*cos(b + c),  a*d*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*d*tan(b + c),  a*d*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
+
+        (a*d*sinh(b)**2, a*d*cosh(b)**2 - a*d),
+        (a*d*tanh(b)**2, a*d - a*d*(1/cosh(b))**2),
+        (a*d*coth(b)**2, a*d + a*d*(1/sinh(b))**2),
+        (a*d*sinh(b + c),  a*d*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*d*cosh(b + c),  a*d*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*d*tanh(b + c),  a*d*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
         )
 
     # Reduce any lingering artefacts, such as sin(x)**2 changing
@@ -945,7 +976,16 @@ def _trigsimp(expr, deep=False):
 
         (a - a*cosh(b)**2 + c,      -a*sinh(b)**2 + c, cosh),
         (a - a*(1/cosh(b))**2 + c,   a*tanh(b)**2 + c, cosh),
-        (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh)
+        (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh),
+
+        # same as above but with noncommutative prefactor
+        (a*d - a*d*cos(b)**2 + c,        a*d*sin(b)**2 + c, cos),
+        (a*d - a*d*(1/cos(b))**2 + c,   -a*d*tan(b)**2 + c, cos),
+        (a*d - a*d*(1/sin(b))**2 + c,   -a*d*cot(b)**2 + c, sin),
+
+        (a*d - a*d*cosh(b)**2 + c,      -a*d*sinh(b)**2 + c, cosh),
+        (a*d - a*d*(1/cosh(b))**2 + c,   a*d*tanh(b)**2 + c, cosh),
+        (a*d + a*d*(1/sinh(b))**2 + c,   a*d*coth(b)**2 + c, sinh),
         )
 
     if expr.is_Mul:
@@ -976,6 +1016,7 @@ def _trigsimp(expr, deep=False):
             args.append(term)
         if args != expr.args:
             expr = Add(*args)
+            expr = min(expr, expand(expr), key=count_ops)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
@@ -992,6 +1033,8 @@ def _trigsimp(expr, deep=False):
             m = expr.match(pattern)
             while m is not None:
                 if m[a_t] == 0 or -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
+                    break
+                if d in m.keys() and m[a_t]*m[d] + m[c] == 0:
                     break
                 expr = result.subs(m)
                 m = expr.match(pattern)
@@ -2897,15 +2940,13 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             return choices[0]
         return min(choices, key=measure)
 
-    if expr.is_commutative is False:
-        expr1 = factor_terms(together(powsimp(expr)))
-        if ratio is S.Infinity:
-            return expr1
-        return shorter(expr1, expr)
-
     expr0 = powsimp(expr)
-    expr1 = cancel(expr0)
-    expr2 = together(expr1.expand(), deep=True)
+    if expr.is_commutative is False:
+        expr1 = together(expr0)
+        expr2 = factor_terms(expr1)
+    else:
+        expr1 = cancel(expr0)
+        expr2 = together(expr1.expand(), deep=True)
 
     # sometimes factors in the denominators need to be allowed to join
     # factors in numerators (see issue 3270)
@@ -2967,9 +3008,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     if measure(expr) > ratio*measure(original_expr):
         return original_expr
-
-    if original_expr.is_Matrix:
-        expr = matrixify(expr)
 
     return expr
 
