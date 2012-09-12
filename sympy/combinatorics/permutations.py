@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 
 from sympy.core import Basic, S, FiniteSet, Tuple
 from sympy.core.compatibility import is_sequence
@@ -709,6 +710,7 @@ class Permutation(Basic):
 
     _array_form = None
     _cyclic_form = None
+    _cycle_structure = None
     _size = None
     _rank = None
 
@@ -2095,35 +2097,33 @@ class Permutation(Basic):
 
         return len(self.support())
 
-    def cycle_structure(self, other=None):
-        """Return the cycle structure (default) or a boolean indicating
-        whether self and other have the same cycle structure.
-
-        The cycle structure returned is a tuple giving the size of the
-        permutation and the sorted lengths of cycles in the permutation.
+    @property
+    def cycle_structure(self):
+        """Return the cycle structure of the permutation as a dictionary
+        indicating the multiplicity of each cycle length.
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
-        >>> a = Permutation(3); a.cycle_structure()
-        (4,)
-        >>> b = Permutation(0, 4, 3)(1, 2)(5, 6); b.cycle_structure()
-        (7, 2, 2, 3)
-
-        >>> a.cycle_structure(Permutation(2))
-        False
-        >>> b.cycle_structure(Permutation(0, 3)(1, 2, 4)(5, 6))
-        True
+        >>> Permutation(3).cycle_structure
+        {1: 4}
+        >>> Permutation(0, 4, 3)(1, 2)(5, 6).cycle_structure
+        {2: 2, 3: 1}
         """
-        rv = [self.size]
-        rv.extend(list(sorted([len(c) for c in self.cyclic_form])))
-        if other:
-            o = [other.size]
-            o.extend(list(sorted([len(c) for c in other.cyclic_form])))
-            return rv == o
-        return tuple(rv)
+        if self._cycle_structure:
+            rv = self._cycle_structure
+        else:
+            rv = defaultdict(int)
+            singletons = self.size
+            for c in self.cyclic_form:
+                rv[len(c)] += 1
+                singletons -= len(c)
+            if singletons:
+                rv[1] = singletons
+            self._cycle_structure = rv
+        return dict(rv) # make a copy
 
     @property
     def cycles(self):

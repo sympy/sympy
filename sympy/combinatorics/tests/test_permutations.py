@@ -206,11 +206,9 @@ def test_Permutation():
                 assert a[j].commutator(a[i]) == iden
 
     a = Permutation(3)
-    b = Permutation(0, 4, 3)(1, 2)(5, 6)
-    assert a.cycle_structure() == (4,)
-    assert b.cycle_structure() == (7, 2, 2, 3)
-    assert a.cycle_structure(Permutation(2)) is False
-    assert b.cycle_structure(Permutation(0, 3)(1, 2, 4)(5, 6)) is True
+    b = Permutation(0, 6, 3)(1, 2)
+    assert a.cycle_structure == {1: 4}
+    assert b.cycle_structure == {2: 1, 3: 1, 1: 2}
 
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
