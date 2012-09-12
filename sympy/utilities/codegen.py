@@ -921,8 +921,8 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     >>> from sympy import symbols
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
-    >>> [(c_name, c_code), (h_name, c_header)] = \\
-    ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
+    >>> [(c_name, c_code), (h_name, c_header)] = codegen(
+    ...     ("f", x+y*z), "C", "test", header=False, empty=False)
     >>> print c_name
     test.c
     >>> print c_code,

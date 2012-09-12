@@ -64,6 +64,9 @@ relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
 relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',
                          'bin/test_import', 'bin/test_isolated')
 
+# Keep a record of destination files, used to remove any lingering files.
+dst_files = set()
+
 # ask git for a list of tracked files
 try:
     files = check_output(['git', 'ls-files'])
@@ -76,6 +79,7 @@ try:
     for filename in filenames:
         src = filename
         dst = os.path.normpath(os.path.join(destination, filename))
+        dst_files.add(dst)
 
         dstdir = os.path.split(dst)[0]
         if "mpmath" in dstdir:
@@ -126,8 +130,10 @@ args_2to3_doctests.extend(modified_rst_files)
 
 # call 2to3, once for regular files and once for doctests
 from lib2to3.main import main as main2to3
-main2to3("lib2to3.fixes", args_2to3)
-main2to3("lib2to3.fixes", args_2to3_doctests)
+if modified_files:
+    main2to3("lib2to3.fixes", args_2to3)
+if modified_files or modified_rst_files:
+    main2to3("lib2to3.fixes", args_2to3_doctests)
 
 # remove trailing spaced added to lines by 2to3
 whitespace = re.compile(" +$", re.MULTILINE)
@@ -149,6 +155,16 @@ for filepath in modified_files + modified_rst_files:
 
         with open(filepath, 'w') as f:
             f.write(text)
+
+# Remove files that no longer exist
+for root, dirs, files in os.walk(destination):
+    if "mpmath" in root:
+        continue
+    for file in files:
+        filepath = os.path.normpath(os.path.join(root, file))
+        if filepath not in dst_files:
+            sys.stdout.write("Removing lingering file %s\n" % filepath)
+            os.remove(filepath)
 
 # once we are finished with everything, we should finally copy over the files
 # provided by mpmath; these should all be in the following two directories

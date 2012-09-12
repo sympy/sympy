@@ -16,6 +16,7 @@ class Partition(C.FiniteSet):
 
     See Also
     ========
+
     sympy.utilities.iterables.partitions,
     sympy.utilities.iterables.multiset_partitions
     """
@@ -32,6 +33,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3]])
         >>> a
@@ -66,6 +68,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.utilities.iterables import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
@@ -90,6 +93,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> Partition([[1], [2, 3]]).partition
         [[1], [2, 3]]
@@ -105,6 +109,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3]])
         >>> a.rank
@@ -128,6 +133,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3]])
         >>> a.rank
@@ -146,6 +152,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> b = Partition([[1], [2, 3], [4], [5]])
@@ -164,6 +171,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3, 4, 5]])
         >>> b = Partition([[1], [2, 3], [4], [5]])
@@ -181,6 +189,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3], [4, 5]])
         >>> a.rank
@@ -203,6 +212,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([[1, 2], [3], [4, 5]])
         >>> a.members
@@ -234,6 +244,7 @@ class Partition(C.FiniteSet):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
         {{c}, {a, d}, {b, e}}
@@ -270,6 +281,7 @@ class IntegerPartition(Basic):
 
     See Also
     ========
+
     sympy.utilities.iterables.partitions,
     sympy.utilities.iterables.multiset_partitions
 
@@ -290,6 +302,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
@@ -344,6 +357,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([4])
         >>> print p.prev_lex()
@@ -380,6 +394,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([3, 1])
         >>> print p.next_lex()
@@ -430,6 +445,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> IntegerPartition([1]*3 + [2] + [3]*4).as_dict()
         {1: 3, 2: 1, 3: 4}
@@ -452,8 +468,8 @@ class IntegerPartition(Basic):
 
         Examples
         ========
-        >>> from sympy.combinatorics.partitions import \
-        IntegerPartition
+
+        >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([6, 3, 3, 2, 1])
         >>> a.conjugate
         [5, 4, 3, 1, 1, 1]
@@ -475,6 +491,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([3, 1])
         >>> a < a
@@ -493,6 +510,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([4])
         >>> a <= a
@@ -506,6 +524,7 @@ class IntegerPartition(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> print IntegerPartition([1, 1, 5]).as_ferrers()
         #####
@@ -524,6 +543,7 @@ def random_integer_partition(n, seed=None):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.partitions import random_integer_partition
 
     For the following, a seed is given so a known value can be shown; in
@@ -561,8 +581,8 @@ def RGS_generalized(m):
 
     Examples
     ========
-    >>> from sympy.combinatorics.partitions import \
-    RGS_generalized
+
+    >>> from sympy.combinatorics.partitions import RGS_generalized
     >>> RGS_generalized(6)
     [  1,   1,   1,  1,  1, 1, 1]
     [  1,   2,   3,  4,  5, 6, 0]
@@ -592,6 +612,7 @@ def RGS_enum(m):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.partitions import RGS_enum
     >>> from sympy.combinatorics.partitions import Partition
     >>> RGS_enum(4)
@@ -633,6 +654,7 @@ def RGS_unrank(rank, m):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.partitions import RGS_unrank
     >>> RGS_unrank(14, 4)
     [0, 1, 2, 3]
@@ -665,6 +687,7 @@ def RGS_rank(rgs):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.partitions import RGS_rank, RGS_unrank
     >>> RGS_rank([0, 1, 2, 1, 3])
     42
