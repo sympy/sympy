@@ -2091,6 +2091,35 @@ class Permutation(Basic):
 
         return len(self.support())
 
+    def cycle_structure(self, other=None):
+        """Return the cycle structure (default) or a boolean indicating
+        whether self and other have the same cycle structure.
+
+        The cycle structure returned is a tuple giving the size of the
+        permutation and the sorted lengths of cycles in the permutation.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> a = Permutation(3); a.cycle_structure()
+        (4,)
+        >>> b = Permutation(0, 4, 3)(1, 2)(5, 6); b.cycle_structure()
+        (7, 2, 2, 3)
+
+        >>> a.cycle_structure(Permutation(2))
+        False
+        >>> b.cycle_structure(Permutation(0, 3)(1, 2, 4)(5, 6))
+        True
+        """
+        rv = [self.size]
+        rv.extend(list(sorted([len(c) for c in self.cyclic_form])))
+        if other:
+            o = [other.size]
+            o.extend(list(sorted([len(c) for c in other.cyclic_form])))
+            return rv == o
+        return tuple(rv)
 
     @property
     def cycles(self):
