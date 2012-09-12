@@ -15,8 +15,7 @@ __all__ = [
 ]
 
 def kmp_table(word):
-    """Build the 'partial match' table of the
-       Knuth-Morris-Pratt algorithm.
+    """Build the 'partial match' table of the Knuth-Morris-Pratt algorithm.
 
     Note: This is applicable to strings or
     quantum circuits represented as tuples.
@@ -56,6 +55,7 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     Parameters
     ==========
+
     circuit : tuple, Gate or Mul
         A tuple of Gates or Mul representing a quantum circuit
     subcircuit : tuple, Gate or Mul
@@ -73,29 +73,29 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     Find the first instance of a subcircuit:
 
-        >>> from sympy.physics.quantum.circuitutils import find_subcircuit
-        >>> from sympy.physics.quantum.gate import X, Y, Z, H
-        >>> circuit = X(0)*Z(0)*Y(0)*H(0)
-        >>> subcircuit = Z(0)*Y(0)
-        >>> find_subcircuit(circuit, subcircuit)
-        1
+    >>> from sympy.physics.quantum.circuitutils import find_subcircuit
+    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> circuit = X(0)*Z(0)*Y(0)*H(0)
+    >>> subcircuit = Z(0)*Y(0)
+    >>> find_subcircuit(circuit, subcircuit)
+    1
 
     Find the first instance starting at a specific position:
 
-        >>> find_subcircuit(circuit, subcircuit, start=1)
-        1
+    >>> find_subcircuit(circuit, subcircuit, start=1)
+    1
 
-        >>> find_subcircuit(circuit, subcircuit, start=2)
-        -1
+    >>> find_subcircuit(circuit, subcircuit, start=2)
+    -1
 
-        >>> circuit = circuit*subcircuit
-        >>> find_subcircuit(circuit, subcircuit, start=2)
-        4
+    >>> circuit = circuit*subcircuit
+    >>> find_subcircuit(circuit, subcircuit, start=2)
+    4
 
     Find the subcircuit within some interval:
 
-        >>> find_subcircuit(circuit, subcircuit, start=2, end=2)
-        -1
+    >>> find_subcircuit(circuit, subcircuit, start=2, end=2)
+    -1
     """
 
     if isinstance(circuit, Mul):
@@ -140,6 +140,7 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
 
     Parameters
     ==========
+
     circuit : tuple, Gate or Mul
         A quantum circuit
     subcircuit : tuple, Gate or Mul
@@ -159,26 +160,26 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
 
     Find and remove the subcircuit:
 
-        >>> from sympy.physics.quantum.circuitutils import replace_subcircuit
-        >>> from sympy.physics.quantum.gate import X, Y, Z, H
-        >>> circuit = X(0)*Z(0)*Y(0)*H(0)*X(0)*H(0)*Y(0)
-        >>> subcircuit = Z(0)*Y(0)
-        >>> replace_subcircuit(circuit, subcircuit)
-        (X(0), H(0), X(0), H(0), Y(0))
+    >>> from sympy.physics.quantum.circuitutils import replace_subcircuit
+    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> circuit = X(0)*Z(0)*Y(0)*H(0)*X(0)*H(0)*Y(0)
+    >>> subcircuit = Z(0)*Y(0)
+    >>> replace_subcircuit(circuit, subcircuit)
+    (X(0), H(0), X(0), H(0), Y(0))
 
     Remove the subcircuit given a starting search point:
 
-        >>> replace_subcircuit(circuit, subcircuit, pos=1)
-        (X(0), H(0), X(0), H(0), Y(0))
+    >>> replace_subcircuit(circuit, subcircuit, pos=1)
+    (X(0), H(0), X(0), H(0), Y(0))
 
-        >>> replace_subcircuit(circuit, subcircuit, pos=2)
-        (X(0), Z(0), Y(0), H(0), X(0), H(0), Y(0))
+    >>> replace_subcircuit(circuit, subcircuit, pos=2)
+    (X(0), Z(0), Y(0), H(0), X(0), H(0), Y(0))
 
     Replace the subcircuit:
 
-        >>> replacement = H(0)*Z(0)
-        >>> replace_subcircuit(circuit, subcircuit, replace=replacement)
-        (X(0), H(0), Z(0), H(0), X(0), H(0), Y(0))
+    >>> replacement = H(0)*Z(0)
+    >>> replace_subcircuit(circuit, subcircuit, replace=replacement)
+    (X(0), H(0), Z(0), H(0), X(0), H(0), Y(0))
     """
 
     if pos < 0:
@@ -223,6 +224,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
 
     Parameters
     ==========
+
     seq : tuple, Gate/Integer/tuple or Mul
         A tuple of Gate, Integer, or tuple objects, or a Mul
     start : Symbol
@@ -315,6 +317,7 @@ def convert_to_real_indices(seq, qubit_map):
 
     Parameters
     ==========
+
     seq : tuple, Gate/Integer/tuple or Mul
         A tuple of Gate, Integer, or tuple objects or a Mul
     qubit_map : dict
@@ -325,14 +328,13 @@ def convert_to_real_indices(seq, qubit_map):
 
     Change the symbolic indices to real integers:
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.quantum.circuitutils import \
-                    convert_to_real_indices
-        >>> from sympy.physics.quantum.gate import X, Y, Z, H
-        >>> i0, i1 = symbols('i:2')
-        >>> index_map = {i0 : 0, i1 : 1}
-        >>> convert_to_real_indices(X(i0)*Y(i1)*H(i0)*X(i1), index_map)
-        (X(0), Y(1), H(0), X(1))
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum.circuitutils import convert_to_real_indices
+    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> i0, i1 = symbols('i:2')
+    >>> index_map = {i0 : 0, i1 : 1}
+    >>> convert_to_real_indices(X(i0)*Y(i1)*H(i0)*X(i1), index_map)
+    (X(0), Y(1), H(0), X(1))
     """
 
     if isinstance(seq, Mul):
@@ -373,6 +375,7 @@ def random_reduce(circuit, gate_ids, seed=None):
 
     Parameters
     ==========
+
     circuit : Gate tuple of Mul
         A tuple of Gates representing a quantum circuit
     gate_ids : list, GateIdentity
@@ -417,6 +420,7 @@ def random_insert(circuit, choices, seed=None):
 
     Parameters
     ==========
+
     circuit : Gate tuple or Mul
         A tuple or Mul of Gates representing a quantum circuit
     choices : list
@@ -428,6 +432,7 @@ def random_insert(circuit, choices, seed=None):
 
     Notes
     =====
+
     Indices for insertion should be [0, n] if n is the length of the
     circuit.
     """
