@@ -1442,8 +1442,8 @@ class Expr(Basic, EvalfMixin):
                 args, nc = self.args_cnc()
 
         d = sift(args, lambda x: has(x))
-        depend = d.pop(True, [])
-        indep = d.pop(False, [])
+        depend = d[True]
+        indep = d[False]
         if func is Add: # all terms were treated as commutative
             return (Add(*indep),
                     Add(*depend))

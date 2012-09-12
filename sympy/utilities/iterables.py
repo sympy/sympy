@@ -452,10 +452,18 @@ def sift(expr, keyfunc):
     []
 
     Sometimes you won't know how many keys you will get:
+
     >>> sift(sqrt(x) + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
+    If you need to sort the sifted items it might be better to use
+    the lazyDSU_sort which can economically apply multiple sort keys
+    to a squence while sorting.
+
+    See Also
+    ========
+    lazyDSU_sort
     """
     d = defaultdict(list)
     if hasattr(expr, 'args'):
@@ -1259,6 +1267,83 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def lazyDSU_sort(seq, keys, warn=False):
+    """Return sorted seq, breaking ties by applying keys only when needed.
+
+    If ``warn`` is True then an error will be raised if there were no
+    keys remaining to break ties.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import lazyDSU_sort, default_sort_key
+    >>> from sympy.abc import x, y
+
+    The count_ops is not sufficient to break ties in this list and the first
+    two items appear in their original order: Python sorting is stable.
+
+    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
+    ...    [lambda x: x.count_ops()], warn=False)
+    ...
+    [y + 2, x + 2, x**2 + y + 3]
+
+    The use of default_sort_key allows the tie to be broken (and warn can
+    be safely left False).
+
+    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
+    ...    [lambda x: x.count_ops(),
+    ...     default_sort_key])
+    ...
+    [x + 2, y + 2, x**2 + y + 3]
+
+    Here, sequences are sorted by length, then sum:
+
+    >>> seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], [
+    ...    lambda x: len(x),
+    ...    lambda x: sum(x)]]
+    ...
+    >>> lazyDSU_sort(seq, keys, warn=False)
+    [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
+
+    If ``warn`` is True, an error will be raised if there were not
+    enough keys to break ties:
+
+    >>> lazyDSU_sort(seq, keys, warn=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: not enough keys to break ties
+
+
+    Notes
+    =====
+
+    The decorated sort is one of the fastest ways to sort a sequence for
+    which special item comparison is desired: the sequence is decorated,
+    sorted on the basis of the decoration (e.g. making all letters lower
+    case) and then undecorated. If one wants to break ties for items that
+    have the same decorated value, a second key can be used. But if the
+    second key is expensive to compute then it is inefficient to decorate
+    all items with both keys: only those items having identical first key
+    values need to be decorated. This function applies keys successively
+    only when needed to break ties.
+    """
+    d = defaultdict(list)
+    keys = list(keys)
+    f = keys.pop(0)
+    for a in seq:
+        d[f(a)].append(a)
+    seq = []
+    for k in sorted(d.keys()):
+        if len(d[k]) > 1:
+            if keys:
+                d[k] = lazyDSU_sort(d[k], keys, warn)
+            elif warn:
+              raise ValueError('not enough keys to break ties')
+            seq.extend(d[k])
+        else:
+            seq.append(d[k][0])
+    return seq
 
 def quick_sort(seq, quick=True):
     """Sort by hash and break ties with default_sort_key (default)

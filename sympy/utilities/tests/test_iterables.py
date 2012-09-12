@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        quick_sort, minlex, runs)
+        quick_sort, minlex, runs, lazyDSU_sort)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -327,6 +327,14 @@ def test_quick_sort():
     assert quick_sort((x, y)) in [(x, y), (y, x)]
     assert quick_sort((x, y)) == quick_sort((y, x))
     assert quick_sort((x, y), quick=False) == (x, y)
+
+def test_lazyDSU_sort():
+    seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], (
+    lambda x: len(x),
+    lambda x: sum(x))]
+    assert lazyDSU_sort(seq, keys, warn=False) == \
+        [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
+    raises(ValueError, lambda: lazyDSU_sort(seq, keys, warn=True))
 
 def test_runs():
     assert runs([]) == []
