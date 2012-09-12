@@ -1299,7 +1299,11 @@ class Permutation(Basic):
         False
 
         The conjugate ~r*p*r was chosen so that ``p^q^r`` would be equivalent
-        to ``p^(q*r)`` rather than ``p^(r*q)``.
+        to ``p^(q*r)`` rather than ``p^(r*q)``. To obtain r*p*~r, pass ~r to
+        this method:
+
+        >>> p^~r == r*p*~r
+        True
         """
 
         if self.size != h.size:
