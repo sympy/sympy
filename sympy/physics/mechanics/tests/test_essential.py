@@ -1,4 +1,4 @@
-from sympy import cos, Matrix, sin
+from sympy import cos, Matrix, sin, symbols, pi
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
 
@@ -230,3 +230,46 @@ def test_Vector_diffs():
     assert v4.diff(q1d, B) == 0
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
+
+def test_vector_simplify():
+    x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
+    N = ReferenceFrame('N')
+
+    test1 = (1 / x + 1 / y) * N.x
+    assert (test1 & N.x) != (x + y) / (x * y)
+    test1.simplify()
+    assert (test1 & N.x) == (x + y) / (x * y)
+
+    test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * N.x
+    test2.simplify()
+    assert (test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
+
+    test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * N.x
+    test3.simplify()
+    assert (test3 & N.x) == 0
+
+    test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
+    test4.simplify()
+    assert (test4 & N.x) == -2 * y
+
+def test_dyadic_simplify():
+    x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
+    N = ReferenceFrame('N')
+
+    dy = N.x | N.x
+    test1 = (1 / x + 1 / y) * dy
+    assert (N.x & test1 & N.x) != (x + y) / (x * y)
+    test1.simplify()
+    assert (N.x & test1 & N.x) == (x + y) / (x * y)
+
+    test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * dy
+    test2.simplify()
+    assert (N.x & test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
+
+    test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * dy
+    test3.simplify()
+    assert (N.x & test3 & N.x) == 0
+
+    test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
+    test4.simplify()
+    assert (N.x & test4 & N.x) == -2 * y

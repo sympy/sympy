@@ -442,8 +442,8 @@ class Dyadic(object):
 
     def simplify(self):
         """Simplify the elements in the Dyadic in-place."""
-        for i in self.args:
-            i[0] = i[0].simplify()
+        for i, v in enumerate(self.args):
+            self.args[i] = (v[0].simplify(), v[1], v[2])
 
     def subs(self, *args, **kwargs):
         """Substituion on the Dyadic.
@@ -1595,7 +1595,7 @@ class Vector(object):
     def simplify(self):
         """Simplify the elements in the Vector in place. """
         for i in self.args:
-            i[0] = i[0].simplify()
+            i[0].simplify()
 
     def subs(self, *args, **kwargs):
         """Substituion on the Vector.
@@ -1713,58 +1713,37 @@ class MechanicsLatexPrinter(LatexPrinter):
 
             return name % ",".join(args)
 
-    def _print_Derivative(self, expr):
-        expr = Derivative(expr)
+    def _print_Derivative(self, der_expr):
+        # make sure it is an the right form
+        der_expr = der_expr.doit()
+        if not isinstance(der_expr, Derivative):
+            return self.doprint(der_expr)
+
+        # check if expr is a dynamicsymbol
+        from sympy.core.function import AppliedUndef
         t = dynamicsymbols._t
-        syms = list(reversed(expr.variables))
-        dots = 0
+        expr = der_expr.expr
+        red = expr.atoms(AppliedUndef)
+        syms = der_expr.variables
+        test1 = not all([True for i in red if i.atoms() == set([t])])
+        test2 = not all([(t == i) for i in syms])
+        if test1 or test2:
+            return LatexPrinter().doprint(der_expr)
 
-        while len(syms) > 0:
-            if syms[-1] == t:
-                syms.pop()
-                dots += 1
-            else:
-                break
-        base = self._print(expr.expr)
+        # done checking
+        dots = len(syms)
+        base = self._print_Function(expr)
+        base_split = base.split('_', 1)
+        base = base_split[0]
         if dots == 1:
-            base = r"\dot{%s}" % self._print(expr.expr)
-        if dots == 2:
-            base = r"\ddot{%s}" % self._print(expr.expr)
-        if dots == 3:
-            base = r"\dddot{%s}" % self._print(expr.expr)
-
-        expr = Derivative(expr.expr, *syms)
-
-        dim = len(expr.variables)
-
-        if dim == 1:
-            tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.variables[0])
-        else:
-            multiplicity, i, tex = [], 1, ""
-            current = expr.variables[0]
-
-            for symbol in expr.variables[1:]:
-                if symbol == current:
-                    i = i + 1
-                else:
-                    multiplicity.append((current, i))
-                    current, i = symbol, 1
-            else:
-                multiplicity.append((current, i))
-
-            for x, i in multiplicity:
-                if i == 1:
-                    tex += r"\partial %s" % self._print(x)
-                else:
-                    tex += r"\partial^{%s} %s" % (i, self._print(x))
-
-            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
-
-        if isinstance(expr.expr, C.AssocOp):
-            return r"%s\left(%s\right)" % (tex, base)
-        else:
-            return r"%s %s" % (tex, base)
+            base = r"\dot{%s}" % base
+        elif dots == 2:
+            base = r"\ddot{%s}" % base
+        elif dots == 3:
+            base = r"\dddot{%s}" % base
+        if len(base_split) is not 1:
+            base += '_' + base_split[1]
+        return base
 
 
 class MechanicsPrettyPrinter(PrettyPrinter):
