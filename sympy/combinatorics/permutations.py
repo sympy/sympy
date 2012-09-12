@@ -2202,25 +2202,6 @@ class Permutation(Basic):
             inversion_vector[i] = val
         return inversion_vector
 
-    def iv(self):
-        r = self.rank
-        f = 1
-        rv = []
-        for i in range(2, self.size + 1):
-            f *= i
-            r, rr = divmod(r, i)
-            rv.insert(0, rr)
-        return rv
-
-    def ra(self):
-        iv = self.inversion_vector()
-        r = 0
-        f = 1
-        for i in range(-1, -len(iv) -1, -1):
-            f *= abs(i)
-            r += iv[i]*f
-        return r
-
     def rank_trotterjohnson(self):
         """
         Returns the Trotter Johnson rank, which we get from the minimal
