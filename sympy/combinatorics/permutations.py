@@ -912,6 +912,46 @@ class Permutation(Basic):
         self._array_form = perm[:]
         return self.array_form
 
+    def list(self, size=None):
+        """Return the permutation as an explicit list, possibly
+        trimming unmoved elements if size is less than the maximum
+        element in the permutation; if this is desired, setting
+        ``size=-1`` will guarantee such trimming.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
+        >>> p = Permutation(2, 3)(4, 5)
+        >>> p.list()
+        [0, 1, 3, 2, 5, 4]
+        >>> p.list(10)
+        [0, 1, 3, 2, 5, 4, 6, 7, 8, 9]
+
+        Passing a length too small will trim trailing, unchanged elements
+        in the permutation:
+
+        >>> Permutation(2, 4)(1, 2, 4).list(-1)
+        [0, 2, 1]
+        >>> Permutation(3).list(-1)
+        []
+        """
+        if not self and size is None:
+            raise ValueError('must give size for empty Cycle')
+        rv = self.array_form
+        if size is not None:
+            if size > self.size:
+                rv.extend(range(self.size, size))
+            else:
+                # find first value from rhs where rv[i] != i
+                i = self.size - 1
+                while rv:
+                    if rv[-1] != i:
+                        break
+                    rv.pop()
+                    i -= 1
+        return rv
+
     @property
     def cyclic_form(self):
         """
@@ -2565,7 +2605,7 @@ class Permutation(Basic):
               01  4    253
               0   4    2531
               0        25314
-                      253140
+                       253140
 
         Examples
         ========

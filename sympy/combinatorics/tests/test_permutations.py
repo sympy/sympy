@@ -318,12 +318,13 @@ def test_args():
         Permutation(((0, ), [1]))
     assert Permutation([[1,2]]) == Permutation([0, 2, 1])
     assert Permutation([[1], [4,2]]) == Permutation([0, 1, 4, 3, 2])
-    # you can't truncate a permutation with the size parameter
-    # XXX add a trim parameter which returns only the elements that have
-    # changed?
     assert Permutation([[1], [4,2]], size=1) == Permutation([0, 1, 4, 3, 2])
     assert Permutation([[1], [4,2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
     assert Permutation([], size=3) == Permutation([0, 1, 2])
+    assert Permutation(3).list(5) == [0, 1, 2, 3, 4]
+    assert Permutation(3).list(-1) == []
+    assert Permutation(5)(1, 2).list(-1) == [0, 2, 1]
+    assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1,1,0]))
