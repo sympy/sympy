@@ -498,15 +498,15 @@ class Permutation(Basic):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    No - there is no element 3
+    The following fails because there is is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
     IndexError: list index out of range
 
-    Yes - only the call to an out of range singleton is prohibited; otherwise
-    the permutation autosizes:
+    This is ok: only the call to an out of range singleton is prohibited;
+    otherwise the permutation autosizes:
 
     >>> Permutation(3)(1, 2)
     Permutation([0, 2, 1, 3])

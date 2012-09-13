@@ -1696,7 +1696,9 @@ class PermutationGroup(Basic):
         """Test if permutation ``g`` belongs to ``G``.
 
         If ``g`` is an element of ``G`` it can be written as a product
-        of factors drawn from the cosets of ``G``'s stabilizers.
+        of factors drawn from the cosets of ``G``'s stabilizers. To see
+        if ``g`` is one of the actual generators defining the group use
+        ``G.has(g)``.
 
         Examples
         ========
