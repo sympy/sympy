@@ -27,8 +27,6 @@ def test_has():
     G =  PermutationGroup([a])
     assert G.has(a)
     assert not G.has(b)
-    assert a in G
-    assert b not in G
 
     a = Permutation([2, 0, 1, 3, 4, 5])
     b = Permutation([0, 2, 1, 3, 4])
@@ -632,10 +630,6 @@ def test_pointwise_stabilizer():
         stab = stab.stabilizer(point)
         points.append(point)
         assert S.pointwise_stabilizer(points) == stab
-
-def test___contains__():
-    assert (Permutation([]) in Tetra.pgroup) is False
-    assert (Tetra.pgroup[0] in Tetra.pgroup) is True
 
 def test_make_perm():
     assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \

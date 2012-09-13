@@ -447,7 +447,7 @@ class PermutationGroup(Basic):
                     args[i] = Permutation(args[i], size=degree)
         if kwargs.pop('dups', True):
             args = uniq([Permutation._af_new(list(a)) for a in args])
-        obj = Basic.__new__(cls, *[args], **kwargs)
+        obj = Basic.__new__(cls, *args, **kwargs)
         obj._generators = args
         obj._order = None
         obj._center = []
@@ -1690,7 +1690,7 @@ class PermutationGroup(Basic):
         return self._generators
 
     def _hashable_content(self):
-        return tuple(self.generators)
+        return tuple([g._hashable_content() for g in self.generators])
 
     def contains(self, g):
         """Test if permutation ``g`` belongs to ``G``.
