@@ -508,7 +508,7 @@ class PermutationGroup(Basic):
             return False
         gens1 = self.generators
         for g in gens1:
-            if not gr.has_element(g):
+            if not gr.contains(g):
                 return False
         return True
 
@@ -1210,7 +1210,7 @@ class PermutationGroup(Basic):
 
         Confirm that it is an element of G:
 
-        >>> G.has_element(g)
+        >>> G.contains(g)
         True
 
         Thus, it can be written as a product of factors (up to
@@ -1689,43 +1689,14 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
-    def has(self, g):
-        """Test if g is one of the permutations in self.
+    def _hashable_content(self):
+        return tuple(self.generators)
 
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1])
-        >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a])
-        >>> G.has(a)
-        True
-        >>> G.has(b)
-        False
-
-        Testing is literal
-
-        >>> c = Permutation([1, 0])
-        >>> G.has(c)
-        False
-        >>> c == b
-        False
-
-        See Also
-        ========
-
-        has_element
-        """
-        return g in self
-
-    def has_element(self, g):
+    def contains(self, g):
         """Test if permutation ``g`` belongs to ``G``.
 
         If ``g`` is an element of ``G`` it can be written as a product
-        of factors drawn from the coset decomposition of ``G``.
+        of factors drawn from the cosets of ``G``'s stabilizers.
 
         Examples
         ========
@@ -1737,9 +1708,9 @@ class PermutationGroup(Basic):
         >>> b = Permutation(2, 3, 1)
         >>> G = PermutationGroup(a, b, degree=5)
         >>> elem = Permutation([[2, 3]], size=5)
-        >>> G.has_element(elem)
+        >>> G.contains(elem)
         True
-        >>> G.has_element(Permutation(4)(0, 1, 2, 3))
+        >>> G.contains(Permutation(4)(0, 1, 2, 3))
         False
 
         To test if a given permutation is present in the group:
@@ -2045,7 +2016,7 @@ class PermutationGroup(Basic):
             return False
         gens1 = self.generators
         for g in gens1:
-            if not gr.has_element(g):
+            if not gr.contains(g):
                 return False
         return True
 
