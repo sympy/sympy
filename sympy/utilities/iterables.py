@@ -4,7 +4,7 @@ from operator import gt
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable # logical location
-from sympy.core.compatibility import as_int, \
+from sympy.core.compatibility import as_int, quick_sort,\
     product as cartes, combinations, combinations_with_replacement
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -1344,38 +1344,6 @@ def lazyDSU_sort(seq, keys, warn=False):
         else:
             seq.append(d[k][0])
     return seq
-
-def quick_sort(seq, quick=True):
-    """Sort by hash and break ties with default_sort_key (default)
-    or entirely by default_sort_key if ``quick`` is False.
-
-    When sorting for consistency between systems, ``quick`` should be
-    False; if sorting is just needed to give consistent orderings during
-    a given session ``quick`` can be True.
-
-    >>> from sympy.utilities import quick_sort
-    >>> from sympy.abc import x
-
-    For PYTHONHASHSEED=3923375334 the x came first; for
-    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
-
-    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
-    True
-    """
-    if not quick:
-        seq = list(seq)
-        seq.sort(key=default_sort_key)
-    else:
-        d = defaultdict(list)
-        for a in seq:
-            d[hash(a)].append(a)
-        seq = []
-        for k in sorted(d.keys()):
-          if len(d[k]) > 1:
-              seq.extend(sorted(d[k], key=default_sort_key))
-          else:
-              seq.extend(d[k])
-    return tuple(seq)
 
 def minlex(seq, directed=True):
     """Return a tuple where the smallest element appears first; if

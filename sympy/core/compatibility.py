@@ -1,7 +1,10 @@
 """
 Reimplementations of constructs introduced in later versions of Python than
-we support.
+we support. Also some functions that are needed SymPy-wide and are located
+here for easy import.
 """
+
+from collections import defaultdict
 
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
@@ -400,3 +403,37 @@ def as_int(n):
     if result != n:
         raise ValueError('%s is not an integer' % n)
     return result
+
+def quick_sort(seq, quick=True):
+    """Sort by hash and break ties with default_sort_key (default)
+    or entirely by default_sort_key if ``quick`` is False.
+
+    When sorting for consistency between systems, ``quick`` should be
+    False; if sorting is just needed to give consistent orderings during
+    a given session ``quick`` can be True.
+
+    >>> from sympy.core.compatibility import quick_sort
+    >>> from sympy.abc import x
+
+    For PYTHONHASHSEED=3923375334 the x came first; for
+    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+
+    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    True
+    """
+    from sympy.utilities.iterables import default_sort_key
+
+    if not quick:
+        seq = list(seq)
+        seq.sort(key=default_sort_key)
+    else:
+        d = defaultdict(list)
+        for a in seq:
+            d[hash(a)].append(a)
+        seq = []
+        for k in sorted(d.keys()):
+          if len(d[k]) > 1:
+              seq.extend(sorted(d[k], key=default_sort_key))
+          else:
+              seq.extend(d[k])
+    return tuple(seq)

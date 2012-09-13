@@ -3,7 +3,7 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp
+from sympy.core.compatibility import cmp, quick_sort
 from sympy.core.logic import fuzzy_and
 
 # from add import Add /cyclic/
@@ -371,7 +371,6 @@ class LatticeOp(AssocOp):
     @property
     @cacheit
     def args(self):
-        from sympy.utilities import quick_sort
         return quick_sort(self._argset)
 
     @staticmethod
