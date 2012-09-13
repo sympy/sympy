@@ -241,16 +241,15 @@ def test_Permutation_Cycle():
     (Permutation([], size=10),
         'Permutation(9)'),
     (Permutation([1, 0, 2]),
-        'Permutation(0, 1)(2)'),
+        'Permutation(2)(0, 1)'),
     (Permutation([1, 0, 2, 3, 4, 5]),
-        'Permutation(0, 1)(5)'),
+        'Permutation(5)(0, 1)'),
     (Permutation([1, 0, 2, 3, 4, 5], size=10),
-        'Permutation(0, 1)(9)'),
+        'Permutation(9)(0, 1)'),
     (Permutation([0, 1, 3, 2, 4, 5], size=10),
-        'Permutation(2, 3)(9)'),
+        'Permutation(9)(2, 3)'),
     ]:
-        try:assert str(p) == s
-        except:print p, s
+        assert str(p) == s
 
 def test_Pi():
     assert str(pi) == "pi"
