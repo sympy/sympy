@@ -1,18 +1,22 @@
 """Tests for noncommutative symbols and expressions."""
 
 from sympy import (
+    adjoint,
     cancel,
     collect,
     combsimp,
     conjugate,
+    cos,
     expand,
     factor,
     posify,
     radsimp,
     ratsimp,
     rcollect,
+    sin,
     simplify,
     symbols,
+    transpose,
     trigsimp,
     I,
 )
@@ -20,6 +24,26 @@ from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
 A, B, C = symbols("A B C", commutative=False)
+X = symbols("X", commutative=False, hermitian=True)
+Y = symbols("Y", commutative=False, antihermitian=True)
+
+def test_adjoint():
+    assert adjoint(A).is_commutative == False
+    assert adjoint(A*A) == adjoint(A)**2
+    assert adjoint(A*B) == adjoint(B)*adjoint(A)
+    assert adjoint(A*B**2) == adjoint(B)**2*adjoint(A)
+    assert adjoint(A*B - B*A) == adjoint(B)*adjoint(A) - adjoint(A)*adjoint(B)
+    assert adjoint(A + I*B) == adjoint(A) - I*adjoint(B)
+
+    assert adjoint(X) == X
+    assert adjoint(-I*X) == I*X
+    assert adjoint(Y) == -Y
+    assert adjoint(-I*Y) == -I*Y
+
+    assert adjoint(X) == conjugate(transpose(X))
+    assert adjoint(Y) == conjugate(transpose(Y))
+    assert adjoint(X) == transpose(conjugate(X))
+    assert adjoint(Y) == transpose(conjugate(Y))
 
 @XFAIL
 def test_cancel():
@@ -83,6 +107,18 @@ def test_subs():
     assert (A**2*B**2).subs(A*B**2, C) == A*C
     assert (A*A*A + A*B*A).subs(A*A*A, C) == C + A*B*A
 
-@XFAIL
+def test_transpose():
+    assert transpose(A).is_commutative == False
+    assert transpose(A*A) == transpose(A)**2
+    assert transpose(A*B) == transpose(B)*transpose(A)
+    assert transpose(A*B**2) == transpose(B)**2*transpose(A)
+    assert transpose(A*B - B*A) == transpose(B)*transpose(A) - transpose(A)*transpose(B)
+    assert transpose(A + I*B) == transpose(A) + I*transpose(B)
+
+    assert transpose(X) == conjugate(X)
+    assert transpose(-I*X) == -I*conjugate(X)
+    assert transpose(Y) == -conjugate(Y)
+    assert transpose(-I*Y) == I*conjugate(Y)
+
 def test_trigsimp():
     assert trigsimp(A*sin(x)**2 + A*cos(x)**2) == A

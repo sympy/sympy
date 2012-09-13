@@ -190,11 +190,7 @@ class AssocOp(Expr):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        if expr.is_Add:
-            i, d = expr.as_independent(C.Symbol)
-            expr_list = (i,) + self.make_args(expr)
-        else:
-            expr_list = self.make_args(expr)
+        expr_list = (self.identity,) + self.make_args(expr)
         for last_op in reversed(expr_list):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
