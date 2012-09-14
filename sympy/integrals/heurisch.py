@@ -105,7 +105,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
     preprocessing steps and otherwise may fail.
 
     Specification
-    ============
+    =============
 
      heurisch(f, x, rewrite=False, hints=None)
 
