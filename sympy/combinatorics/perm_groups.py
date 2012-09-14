@@ -2004,7 +2004,8 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ...    CyclicGroup)
         >>> S3 = SymmetricGroup(3)
         >>> S5 = SymmetricGroup(5)
         >>> S3.is_subgroup(S5)
