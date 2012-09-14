@@ -1,6 +1,6 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -20,13 +20,14 @@ def test_printmethod():
 def test_ccode_sqrt():
     assert ccode(sqrt(x)) == "sqrt(x)"
     assert ccode(x**0.5) == "sqrt(x)"
-    assert ccode(x**Rational(1,2)) == "sqrt(x)"
+    assert ccode(sqrt(x)) == "sqrt(x)"
 
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x, 3)"
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+    assert ccode(x**-1.0) == '1.0/x'
 
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
@@ -72,16 +73,16 @@ def test_ccode_exceptions():
     assert ccode(Abs(x)) == "fabs(x)"
 
 def test_ccode_boolean():
-    assert ccode(x&y) == "x&&y"
-    assert ccode(x|y) == "x||y"
+    assert ccode(x & y) == "x && y"
+    assert ccode(x | y) == "x || y"
     assert ccode(~x) == "!x"
-    assert ccode(x&y&z) == "x&&y&&z"
-    assert ccode(x|y|z) == "x||y||z"
-    assert ccode((x&y)|z) == "x&&y||z"
-    assert ccode((x|y)&z) == "(x||y)&&z"
+    assert ccode(x & y & z) == "x && y && z"
+    assert ccode(x | y | z) == "x || y || z"
+    assert ccode((x & y) | z) == "z || x && y"
+    assert ccode((x | y) & z) == "z && (x || y)"
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x,x<1),(x**2,True)))
+    p = ccode(Piecewise((x, x<1), (x**2, True)))
     s = \
 """\
 if (x < 1) {
@@ -107,7 +108,7 @@ else {
     assert p == s
 
 def test_ccode_settings():
-    raises(TypeError, 'ccode(sin(x),method="garbage")')
+    raises(TypeError, lambda: ccode(sin(x),method="garbage"))
 
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx

@@ -29,4 +29,3 @@ for test in INPUT:
     for alg in ALGORITHMS:
         line += ",%f" % results[test][alg]
     print line
-

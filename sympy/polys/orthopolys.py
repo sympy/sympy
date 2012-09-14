@@ -9,10 +9,77 @@ from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densearith import (
-    dup_mul, dup_mul_ground, dup_lshift, dup_sub
+    dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add
 )
 
 from sympy.polys.domains import ZZ, QQ
+
+@cythonized("n,i")
+def dup_jacobi(n, a, b, K):
+    """Low-level implementation of Jacobi polynomials. """
+    seq = [[K.one], [(a+b+K(2))/K(2), (a-b)/K(2)]]
+
+    for i in xrange(2, n+1):
+        den = K(i)*(a+b+i)*(a+b+K(2)*i-K(2))
+        f0 = (a+b+K(2)*i-K.one) * (a*a-b*b) / (K(2)*den)
+        f1 = (a+b+K(2)*i-K.one) * (a+b+K(2)*i-K(2)) * (a+b+K(2)*i) / (K(2)*den)
+        f2 = (a+i-K.one)*(b+i-K.one)*(a+b+K(2)*i) / den
+        p0 = dup_mul_ground(seq[-1], f0, K)
+        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
+        p2 = dup_mul_ground(seq[-2], f2, K)
+        seq.append(dup_sub(dup_add(p0, p1, K), p2, K))
+
+    return seq[n]
+
+def jacobi_poly(n, a, b, x=None, **args):
+    """Generates Jacobi polynomial of degree `n` in `x`. """
+    if n < 0:
+        raise ValueError("can't generate Jacobi polynomial of degree %s" % n)
+
+    K, v = construct_domain([a, b], field=True)
+    poly = DMP(dup_jacobi(int(n), v[0], v[1], K), K)
+
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
+
+    if not args.get('polys', False):
+        return poly.as_expr()
+    else:
+        return poly
+
+@cythonized("n,i")
+def dup_gegenbauer(n, a, K):
+    """Low-level implementation of Gegenbauer polynomials. """
+    seq = [[K.one], [K(2)*a, K.zero]]
+
+    for i in xrange(2, n+1):
+        f1 = K(2) * (i + a - K.one) / i
+        f2 = (i + K(2)*a - K(2)) / i
+        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
+        p2 = dup_mul_ground(seq[-2], f2, K)
+        seq.append(dup_sub(p1, p2, K))
+
+    return seq[n]
+
+def gegenbauer_poly(n, a, x=None, **args):
+    """Generates Gegenbauer polynomial of degree `n` in `x`. """
+    if n < 0:
+        raise ValueError("can't generate Gegenbauer polynomial of degree %s" % n)
+
+    K, a = construct_domain(a, field=True)
+    poly = DMP(dup_gegenbauer(int(n), a, K), K)
+
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
+
+    if not args.get('polys', False):
+        return poly.as_expr()
+    else:
+        return poly
 
 @cythonized("n,i")
 def dup_chebyshevt(n, K):
@@ -167,3 +234,70 @@ def laguerre_poly(n, x=None, alpha=None, **args):
     else:
         return poly
 
+@cythonized("n,i")
+def dup_spherical_bessel_fn(n, K):
+    """ Low-level implementation of fn(n, x) """
+    seq = [[K.one], [K.one, K.zero]]
+
+    for i in xrange(2, n+1):
+        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2*i-1), K)
+        seq.append(dup_sub(a, seq[-2], K))
+
+    return dup_lshift(seq[n], 1, K)
+
+@cythonized("n,i")
+def dup_spherical_bessel_fn_minus(n, K):
+    """ Low-level implementation of fn(-n, x) """
+    seq = [[K.one, K.zero], [K.zero]]
+
+    for i in xrange(2, n+1):
+        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(3 - 2*i), K)
+        seq.append(dup_sub(a, seq[-2], K))
+
+    return seq[n]
+
+def spherical_bessel_fn(n, x=None, **args):
+    """
+    Coefficients for the spherical Bessel functions.
+
+    Those are only needed in the jn() function.
+
+    The coefficients are calculated from:
+
+    fn(0, z) = 1/z
+    fn(1, z) = 1/z**2
+    fn(n-1, z) + fn(n+1, z) == (2*n+1)/z * fn(n, z)
+
+    Examples
+    ========
+
+    >>> from sympy.polys.orthopolys import spherical_bessel_fn as fn
+    >>> from sympy import Symbol
+    >>> z = Symbol("z")
+    >>> fn(1, z)
+    z**(-2)
+    >>> fn(2, z)
+    -1/z + 3/z**3
+    >>> fn(3, z)
+    -6/z**2 + 15/z**4
+    >>> fn(4, z)
+    1/z - 45/z**3 + 105/z**5
+
+    """
+
+    if n < 0:
+        dup = dup_spherical_bessel_fn_minus(-int(n), ZZ)
+    else:
+        dup = dup_spherical_bessel_fn(int(n), ZZ)
+
+    poly = DMP(dup, ZZ)
+
+    if x is not None:
+        poly = Poly.new(poly, 1/x)
+    else:
+        poly = PurePoly.new(poly, 1/Dummy('x'))
+
+    if not args.get('polys', False):
+        return poly.as_expr()
+    else:
+        return poly

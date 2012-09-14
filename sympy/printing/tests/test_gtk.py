@@ -11,4 +11,4 @@ def test_1():
 
 def test_settings():
     from sympy.abc import x
-    raises(TypeError, 'print_gtk(x, method="garbage")')
+    raises(TypeError, lambda: print_gtk(x, method="garbage"))

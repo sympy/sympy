@@ -22,6 +22,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
+from sympy.mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -30,6 +31,7 @@ __all__ = [
     'IntQubitBra',
     'qubit_to_matrix',
     'matrix_to_qubit',
+    'matrix_to_density',
     'measure_all',
     'measure_partial',
     'measure_partial_oneshot',
@@ -118,10 +120,11 @@ class Qubit(QubitState, Ket):
     """A multi-qubit ket in the computational (z) basis.
 
     We use the normal convention that the least significant qubit is on the
-    right, so |00001> has a 1 in the least significant qubit.
+    right, so ``|00001>`` has a 1 in the least significant qubit.
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
@@ -169,7 +172,7 @@ class Qubit(QubitState, Ket):
     """
 
 
-    @property
+    @classmethod
     def dual_class(self):
         return QubitBra
 
@@ -202,24 +205,71 @@ class Qubit(QubitState, Ket):
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()
 
+    def _eval_trace(self, bra, **kwargs):
+        indices = kwargs.get('indices', [])
+
+        #sort index list to begin trace from most-significant
+        #qubit
+        sorted_idx = list(indices)
+        if len(sorted_idx) == 0:
+            sorted_idx = range(0, self.nqubits)
+        sorted_idx.sort()
+
+        #trace out for each of index
+        new_mat = self*bra
+        for i in xrange(len(sorted_idx)-1, -1, -1):
+            # start from tracing out from leftmost qubit
+            new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
+
+        if (len(sorted_idx) == self.nqubits):
+            #in case full trace was requested
+            return new_mat[0]
+        else:
+            return matrix_to_density(new_mat)
+
+    def _reduced_density(self, matrix, qubit, **options):
+        """Compute the reduced density matrix by tracing out one qubit.
+           The qubit argument should be of type python int, since it is used
+           in bit operations
+        """
+        def find_index_that_is_projected(j, k, qubit):
+            bit_mask = 2**qubit - 1
+            return ((j >> qubit) << (1 + qubit)) + (j & bit_mask) + (k << qubit)
+
+        old_matrix = represent(matrix, **options)
+        old_size = old_matrix.cols
+        #we expect the old_size to be even
+        new_size = old_size//2
+        new_matrix = Matrix().zeros(new_size)
+
+        for i in xrange(new_size):
+            for j in xrange(new_size):
+                for k in xrange(2):
+                    col = find_index_that_is_projected(j, k, qubit)
+                    row = find_index_that_is_projected(i, k, qubit)
+                    new_matrix[i,j] += old_matrix[row,col]
+
+        return new_matrix
 
 class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
 
     We use the normal convention that the least significant qubit is on the
-    right, so |00001> has a 1 in the least significant qubit.
+    right, so ``|00001>`` has a 1 in the least significant qubit.
 
     Parameters
     ==========
+
     values : list, str
         The qubit values as a list of ints ([0,0,0,1,1,]) or a string ('011').
 
-    Examples
+    See also
     ========
-    See ``Qubit`` for examples.
+
+    Qubit: Examples using qubits
 
     """
-    @property
+    @classmethod
     def dual_class(self):
         return Qubit
 
@@ -236,15 +286,15 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(
-                range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
-            )
+            rvalues = reversed(xrange(bitcount(abs(args[0]))))
             qubit_values = [(args[0]>>i)&1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
-            #TODO Raise error if there are not enough bits
+            need = bitcount(abs(args[0]))
+            if args[1] < need:
+                raise ValueError('cannot represent %s with %s bits' % (args[0], args[1]))
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
@@ -282,6 +332,7 @@ class IntQubit(IntQubitState, Qubit):
 
     Parameters
     ==========
+
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
@@ -317,7 +368,7 @@ class IntQubit(IntQubitState, Qubit):
         >>> Qubit(q)
         |101>
     """
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubitBra
 
@@ -325,7 +376,7 @@ class IntQubit(IntQubitState, Qubit):
 class IntQubitBra(IntQubitState, QubitBra):
     """A qubit bra that store integers as binary numbers in qubit values."""
 
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubit
 
@@ -405,6 +456,19 @@ def matrix_to_qubit(matrix):
 
     return result
 
+def matrix_to_density(mat):
+    """
+    Works by finding the eigenvectors and eigenvalues of the matrix.
+    We know we can decompose rho by doing:
+    sum(EigenVal*|Eigenvect><Eigenvect|)
+    """
+    from sympy.physics.quantum.density import Density
+    eigen = mat.eigenvects()
+    args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
+    if (len(args) == 0):
+        return 0
+    else:
+        return Density(*args)
 
 def qubit_to_matrix(qubit, format='sympy'):
     """Coverts an Add/Mul of Qubit objects into it's matrix representation
@@ -425,6 +489,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -435,6 +500,7 @@ def measure_all(qubit, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
@@ -479,6 +545,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Parameters
     ==========
+
     qubits : Qubit
         The qubit to measure.  This can be any Qubit or a linear combination
         of them.
@@ -491,6 +558,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
 
     Returns
     =======
+
     result : list
         A list that consists of primitive states and their probabilities.
 
@@ -506,7 +574,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_partial(q, (0,))
-        [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
+        [(sqrt(2)*|00>/2 + sqrt(2)*|10>/2, 1/2), (sqrt(2)*|01>/2 + sqrt(2)*|11>/2, 1/2)]
     """
     m = qubit_to_matrix(qubit, format)
 
@@ -625,7 +693,7 @@ def _get_possible_outcomes(m, bits):
     # bit being true
     output_matrices = []
     for i in range(1<<len(bits)):
-        output_matrices.append(zeros((2**nqubits, 1)))
+        output_matrices.append(zeros(2**nqubits, 1))
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,

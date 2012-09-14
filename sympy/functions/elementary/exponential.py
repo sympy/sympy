@@ -2,16 +2,16 @@ from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import any
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
-# algorithm for determining limits. _eval_nseries has to return a generalised
+# algorithm for determining limits. _eval_nseries has to return a generalized
 # power series with coefficients in C(log(x), log).
 # In more detail, the result of _eval_nseries(self, x, n) must be
 #   c_0*x**e_0 + ... (finitely many terms)
@@ -20,24 +20,189 @@ from sympy.ntheory import multiplicity, perfect_power
 # log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
 # p.is_positive.]
 
-class exp(Function):
+class ExpBase(Function):
 
     nargs = 1
+    unbranched = True
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse function of ``exp(x)``.
+        """
+        return log
+
+    def as_numer_denom(self):
+        """
+        Returns this with a positive exponent as a 2-tuple (a fraction).
+
+        Examples
+        ========
+
+        >>> from sympy.functions import exp
+        >>> from sympy.abc import x
+        >>> exp(-x).as_numer_denom()
+        (1, exp(x))
+        >>> exp(x).as_numer_denom()
+        (exp(x), 1)
+        """
+        # this should be the same as Pow.as_numer_denom wrt
+        # exponent handling
+        exp = self.exp
+        neg_exp = exp.is_negative
+        if not neg_exp and not exp.is_real:
+            neg_exp = _coeff_isneg(exp)
+        if neg_exp:
+            return S.One, self.func(-exp)
+        return self, S.One
+
+    @property
+    def exp(self):
+        """
+        Returns the exponent of the function.
+        """
+        return self.args[0]
+
+    def as_base_exp(self):
+        """
+        Returns the 2-tuple (base, exponent).
+        """
+        return self.func(1), Mul(*self.args)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_unbounded:
+            if arg.is_negative:
+                return True
+            if arg.is_positive:
+                return False
+        if arg.is_bounded:
+            return True
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
+    def _eval_is_zero(self):
+        return (self.args[0] is S.NegativeInfinity)
+
+    def _eval_power(b, e):
+        """exp(arg)**e -> exp(arg*e) if assumptions allow it.
+        """
+        f = b.func
+        be = b.exp
+        rv = f(be*e)
+        if e.is_integer:
+            return rv
+        if be.is_real:
+            return rv
+        # "is True" needed below; exp.is_polar returns <property object ...>
+        if f.is_polar is True:
+            return rv
+        if e.is_polar:
+            return rv
+        if be.is_polar:
+            return rv
+        besmall = abs(be) <= S.Pi
+        if besmall:
+            return rv
+        elif besmall is False and e.is_Rational and e.q == 2:
+            return -rv
+
+    def _eval_expand_power_exp(self, **hints):
+        arg = self.args[0]
+        if arg.is_Add and arg.is_commutative:
+            expr = 1
+            for x in arg.args:
+                expr *= self.func(x)
+            return expr
+        return self.func(arg)
+
+class exp_polar(ExpBase):
+    r"""
+    Represent a 'polar number' (see g-function Sphinx documentation).
+
+    ``exp_polar`` represents the function
+    `Exp: \mathbb{C} \rightarrow \mathcal{S}`, sending the complex number
+    `z = a + bi` to the polar number `r = exp(a), \theta = b`. It is one of
+    the main functions to construct polar numbers.
+
+    >>> from sympy import exp_polar, pi, I, exp
+
+    The main difference is that polar numbers don't "wrap around" at `2 \pi`:
+
+    >>> exp(2*pi*I)
+    1
+    >>> exp_polar(2*pi*I)
+    exp_polar(2*I*pi)
+
+    apart from that they behave mostly like classical complex numbers:
+
+    >>> exp_polar(2)*exp_polar(3)
+    exp_polar(5)
+
+    See also
+    ========
+
+    sympy.simplify.simplify.powsimp
+    sympy.functions.elementary.complexes.polar_lift
+    sympy.functions.elementary.complexes.periodic_argument
+    sympy.functions.elementary.complexes.principal_branch
+    """
+
+    is_polar = True
+    is_comparable = False # cannot be evalf'd
+
+    def _eval_Abs(self):
+        from sympy import expand_mul
+        return sqrt( expand_mul(self * self.conjugate()) )
+
+    def _eval_evalf(self, prec):
+        """ Careful! any evalf of polar numbers is flaky """
+        from sympy import im, pi, re
+        i = im(self.args[0])
+        if i <= -pi or i > pi:
+            return self # cannot evalf for this argument
+        res = exp(self.args[0])._eval_evalf(prec)
+        if i > 0 and im(res) < 0:
+            # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
+            return re(res)
+        return res
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
+
+    def as_base_exp(self):
+        # XXX exp_polar(0) is special!
+        if self.args[0] == 0:
+            return self, S(1)
+        return ExpBase.as_base_exp(self)
+
+class exp(ExpBase):
+    """
+    The exponential function, :math:`e^x`.
+
+    See Also
+    ========
+
+    log
+    """
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
         if argindex == 1:
             return self
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return log
-
-    def as_numer_denom(self):
-        c, t = self.args[0].as_coeff_mul()
-        if c.is_negative:
-            return S.One, exp(-self.args[0])
-        return self, S.One
 
     @classmethod
     def eval(cls, arg):
@@ -55,9 +220,12 @@ class exp(Function):
         elif arg.func is log:
             return arg.args[0]
         elif arg.is_Mul:
-            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            Ioo = S.ImaginaryUnit*S.Infinity
+            if arg in [Ioo, -Ioo]:
+                return S.NaN
 
-            if coeff is not None:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff:
                 if (2*coeff).is_integer:
                     if coeff.is_even:
                         return S.One
@@ -67,61 +235,64 @@ class exp(Function):
                         return -S.ImaginaryUnit
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
-            I = S.ImaginaryUnit
-            oo = S.Infinity
-            a = Wild("a", exclude=[I, oo])
-            r = arg.match(I*a*oo)
-            if r and r[a] != 0:
-                return S.NaN
 
-        args = Add.make_args(arg)
-
-        included, excluded = [], []
-
-        for arg in args:
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
-            coeff, terms = arg.as_coeff_mul()
 
-            if coeff is S.Infinity:
-                excluded.append(coeff**Mul(*terms))
-            else:
-                coeffs, log_term = [coeff], None
+            # look for a single log factor
 
-                for term in terms:
-                    if term.func is log:
-                        if log_term is None:
-                            log_term = term.args[0]
-                        else:
-                            log_term = None
-                            break
-                    elif term.is_comparable:
-                        coeffs.append(term)
+            coeff, terms = arg.as_coeff_Mul()
+
+            # but it can't be multiplied by oo
+            if coeff in [S.NegativeInfinity, S.Infinity]:
+                return None
+
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if term.func is log:
+                    if log_term is None:
+                        log_term = term.args[0]
                     else:
-                        log_term = None
-                        break
-
-                if log_term is not None:
-                    excluded.append(log_term**Mul(*coeffs))
+                        return None
+                elif term.is_comparable:
+                    coeffs.append(term)
                 else:
-                    included.append(arg)
+                    return None
 
-        if excluded:
-            return Mul(*(excluded + [cls(Add(*included))]))
+            return log_term**Mul(*coeffs) if log_term else None
+
+        elif arg.is_Add:
+            out = []
+            add = []
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = cls(a)
+                if newa.func is cls:
+                    add.append(a)
+                else:
+                    out.append(newa)
+            if out:
+                return Mul(*out)*cls(Add(*add), evaluate=False)
 
     @property
     def base(self):
+        """
+        Returns the base of the exponential function.
+        """
         return S.Exp1
-
-    @property
-    def exp(self):
-        return self.args[0]
 
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        if n<0: return S.Zero
-        if n==0: return S.One
+        """
+        Calculates the next term in the Taylor series expansion.
+        """
+        if n < 0:
+            return S.Zero
+        if n == 0:
+            return S.One
         x = sympify(x)
         if previous_terms:
             p = previous_terms[-1]
@@ -129,11 +300,31 @@ class exp(Function):
                 return p * x / n
         return x**n/C.factorial()(n)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a 2-tuple representing a complex number.
+
+        Examples
+        ========
+
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> from sympy.functions import exp
+        >>> exp(x).as_real_imag()
+        (exp(re(x))*cos(im(x)), exp(re(x))*sin(im(x)))
+        >>> exp(1).as_real_imag()
+        (E, 0)
+        >>> exp(I).as_real_imag()
+        (cos(1), sin(1))
+        >>> exp(1+I).as_real_imag()
+        (E*cos(1), E*sin(1))
+
+        See Also
+        ========
+
+        sympy.functions.elementary.complexes.re
+        sympy.functions.elementary.complexes.im
+        """
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
@@ -141,27 +332,15 @@ class exp(Function):
         cos, sin = C.cos(im), C.sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
-
-    def as_base_exp(self):
-        return S.Exp1, Mul(*self.args)
-
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        else:
-            # Temporarily hack, only allow exact substitution to make the
-            # Risch algorithm work.
-            return Function._eval_subs(self, old, new)
         arg = self.args[0]
         o = old
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            old = exp(old.exp*log(old.base))
-        if old.func is exp:
+            o = exp(o.exp*log(o.base))
+        if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
             a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_= old.args[0].as_coeff_mul()
+            b, expr_terms_= o.args[0].as_coeff_mul()
 
             if expr_terms == expr_terms_:
                 return new**(a/b)
@@ -169,49 +348,41 @@ class exp(Function):
 
             if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
-                oarg = old.args[0]
+                oarg = o.args[0]
                 new_l = []
-                old_al = []
+                o_al = []
                 coeff2, terms2 = oarg.as_coeff_mul()
                 for a in arg.args:
-                    a = a._eval_subs(old, new)
+                    a = a._subs(o, new)
                     coeff1, terms1 = a.as_coeff_mul()
                     if terms1 == terms2:
                         new_l.append(new**(coeff1/coeff2))
                     else:
-                        old_al.append(a._eval_subs(old, new))
+                        o_al.append(a._subs(o, new))
                 if new_l:
-                    new_l.append(self.func(Add(*old_al)))
+                    new_l.append(self.func(Add(*o_al)))
                     r = Mul(*new_l)
                     return r
-        if old is S.Exp1:
+        if o is S.Exp1:
             # treat this however Pow is being treated
             u = C.Dummy('u')
             return (u**self.args[0]).subs(u, new)
 
-        old = o
-        return Function._eval_subs(self, old, new)
+        return Function._eval_subs(self, o, new)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_is_positive(self):
         if self.args[0].is_real:
-            return True
-
-    def _eval_is_bounded(self):
-        arg = self.args[0]
-        if arg.is_unbounded:
-            if arg.is_negative: return True
-            if arg.is_positive: return False
-        if arg.is_bounded:
-            return True
-    def _eval_is_zero(self):
-        return (self.args[0] is S.NegativeInfinity)
-
-    def _eval_power(b, e):
-        """exp(b[0])**e -> exp(b[0]*e)"""
-        return exp(b.args[0] * e)
+            return not self.args[0] is S.NegativeInfinity
+        elif self.args[0].is_imaginary:
+            arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
 
     def _eval_lseries(self, x):
         s = self.args[0]
@@ -260,20 +431,6 @@ class exp(Function):
             return S.One
         return exp(arg)
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
-        if arg.is_Add and arg.is_commutative:
-            expr = 1
-            for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
-                expr *= self.func(x)
-            return expr
-        return self.func(arg)
-
     def _eval_rewrite_as_sin(self, arg):
         I = S.ImaginaryUnit
         return C.sin(I*arg+S.Pi/2) - I*C.sin(I*arg)
@@ -287,10 +444,21 @@ class exp(Function):
         return sage.exp(self.args[0]._sage_())
 
 class log(Function):
+    """
+    The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+
+    See Also
+    ========
+
+    exp
+    """
 
     nargs = (1,2)
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
         if argindex == 1:
             return 1/self.args[0]
             s = C.Dummy('x')
@@ -299,25 +467,34 @@ class log(Function):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse function, log(x) (or ln(x)).
+        """
         return exp
 
     @classmethod
     def eval(cls, arg, base=None):
+        from sympy import unpolarify
+        arg = sympify(arg)
+
         if base is not None:
             base = sympify(base)
-
-            if arg.is_positive and arg.is_Integer and \
-               base.is_positive and base.is_Integer:
-                base = int(base)
-                arg = int(arg)
+            if base == 1:
+                if arg == 1:
+                    return S.NaN
+                else:
+                    return S.ComplexInfinity
+            try:
+                if not (base.is_positive and arg.is_positive):
+                    raise ValueError
                 n = multiplicity(base, arg)
-                return S(n) + log(arg // base ** n) / log(base)
+                return n + log(arg // base ** n) / log(base)
+            except ValueError:
+                pass
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
-
-        arg = sympify(arg)
 
         if arg.is_Number:
             if arg is S.Zero:
@@ -345,6 +522,8 @@ class log(Function):
             return S.One
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
+        elif arg.func is exp_polar:
+            return unpolarify(arg.exp)
         #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -361,15 +540,23 @@ class log(Function):
                         return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
 
     def as_base_exp(self):
+        """
+        Returns this function in the form (base, exponent).
+        """
         return self, S.One
 
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms): # of log(1+x)
+        """
+        Returns the next term in the Taylor series expansion of log(1+x).
+        """
         from sympy import powsimp
-        if n<0: return S.Zero
+        if n < 0:
+            return S.Zero
         x = sympify(x)
-        if n==0: return x
+        if n == 0:
+            return x
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
@@ -377,36 +564,51 @@ class log(Function):
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
     def _eval_expand_log(self, deep=True, **hints):
+        from sympy import unpolarify
         force = hints.get('force', False)
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+        arg = self.args[0]
         if arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
-                if force or x.is_positive:
-                    expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
+                if force or x.is_positive or x.is_polar:
+                    a = self.func(x)
+                    if isinstance(a, log):
+                        expr.append(self.func(x)._eval_expand_log(**hints))
+                    else:
+                        expr.append(a)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
-            if force or arg.exp.is_real and arg.base.is_positive:
-                if deep:
-                    b = arg.base.expand(deep=deep, **hints)
-                    e = arg.exp.expand(deep=deep, **hints)
-                else:
-                    b = arg.base
-                    e = arg.exp
-                return e * self.func(b)._eval_expand_log(deep=deep,\
-                **hints)
+            if force or (arg.exp.is_real and arg.base.is_positive) or \
+                        arg.base.is_polar:
+                b = arg.base
+                e = arg.exp
+                return unpolarify(e) * self.func(b)._eval_expand_log(**hints)
 
         return self.func(arg)
 
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+
+        Examples
+        ========
+
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> from sympy.functions import log
+        >>> log(x).as_real_imag()
+        (log(Abs(x)), arg(x))
+        >>> log(I).as_real_imag()
+        (0, pi/2)
+        >>> log(1+I).as_real_imag()
+        (log(sqrt(2)), pi/4)
+        >>> log(I*x).as_real_imag()
+        (log(Abs(x)), arg(I*x))
+
+        """
         if deep:
             abs = C.Abs(self.args[0].expand(deep, **hints))
             arg = C.arg(self.args[0].expand(deep, **hints))
@@ -419,9 +621,13 @@ class log(Function):
         else:
             return (log(abs), arg)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     def _eval_is_real(self):
         return self.args[0].is_positive
@@ -435,10 +641,12 @@ class log(Function):
     def _eval_is_positive(self):
         arg = self.args[0]
         if arg.is_positive:
-            if arg.is_unbounded: return True
-            if arg.is_infinitesimal: return False
+            if arg.is_unbounded:
+                return True
+            if arg.is_infinitesimal:
+                return False
             if arg.is_Number:
-                return arg>1
+                return arg > 1
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -508,16 +716,25 @@ class LambertW(Function):
 
     @classmethod
     def eval(cls, x):
-        if x == S.Zero: return S.Zero
-        if x == S.Exp1: return S.One
-        if x == -1/S.Exp1: return S.NegativeOne
-        if x == -log(2)/2: return -log(2)
-        if x == S.Infinity: return S.Infinity
+        if x == S.Zero:
+            return S.Zero
+        if x == S.Exp1:
+            return S.One
+        if x == -1/S.Exp1:
+            return S.NegativeOne
+        if x == -log(2)/2:
+            return -log(2)
+        if x == S.Infinity:
+            return S.Infinity
 
     def fdiff(self, argindex=1):
+        """
+        Return the first derivative of this function.
+        """
         if argindex == 1:
             x = self.args[0]
             return LambertW(x)/(x*(1+LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
 
+from sympy.core.function import _coeff_isneg

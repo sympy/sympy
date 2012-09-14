@@ -1,11 +1,12 @@
 """An implementation of qubits and gates acting on them.
 
 Todo:
+
 * Update docstrings.
 * Update tests.
 * Implement apply using decompose.
-* Implement represent using decompose or something smarter. For this to work
-  we first have to implement represent for SWAP.
+* Implement represent using decompose or something smarter. For this to
+  work we first have to implement represent for SWAP.
 * Decide if we want upper index to be inclusive in the constructor.
 * Fix the printing of Rk gates in plotting.
 """
@@ -36,11 +37,10 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-
     gate_name = u'Rk'
     gate_name_latex = u'R'
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args):
         if len(args) != 2:
             raise QuantumError(
                 'Rk gates only take two arguments, got: %r' % args
@@ -57,7 +57,7 @@ class RkGate(OneQubitGate):
         elif k == 3:
             return TGate(target)
         args = cls._eval_args(args)
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args)
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
@@ -163,7 +163,7 @@ class QFT(Fourier):
             circuit = HadamardGate(level)*circuit
             for i in range(level-start):
                 circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
-        for i in range((finish-start)/2):
+        for i in range((finish-start)//2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         return circuit
 
@@ -189,7 +189,7 @@ class IQFT(Fourier):
         start = self.args[0]
         finish = self.args[1]
         circuit = 1
-        for i in range((finish-start)/2):
+        for i in range((finish-start)//2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         for level in range(start, finish):
             for i in reversed(range(level-start)):
@@ -203,4 +203,3 @@ class IQFT(Fourier):
     @property
     def omega(self):
         return exp(-2*pi*I/self.size)
-

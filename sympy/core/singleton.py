@@ -1,6 +1,7 @@
 """Singleton mechanism"""
 
-from core import BasicMeta, Registry
+from core import Registry
+from assumptions import ManagedProperties
 from sympify import sympify
 
 class SingletonRegistry(Registry):
@@ -18,7 +19,7 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class Singleton(BasicMeta):
+class Singleton(ManagedProperties):
     """
     Metaclass for singleton classes.
 
@@ -26,7 +27,9 @@ class Singleton(BasicMeta):
     class is instantiated. Additionally, this instance can be accessed through
     the global registry object S as S.<class_name>.
 
-    Example::
+    Examples
+    ========
+
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> class MySingleton(Basic):

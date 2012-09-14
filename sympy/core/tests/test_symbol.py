@@ -1,7 +1,9 @@
-from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, S, Function, flatten)
+from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+)
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")
@@ -23,7 +25,7 @@ def test_Symbol():
     c,d = symbols('c,d', cls=Dummy)
     assert isinstance(c, Dummy)
     assert isinstance(d, Dummy)
-    raises(TypeError, 'Symbol()')
+    raises(TypeError, lambda: Symbol())
 
 def test_Dummy():
     assert Dummy() != Dummy()
@@ -32,40 +34,121 @@ def test_Dummy():
     Dummy._count = 0
     assert d1 == Dummy()
 
-def test_as_dummy_nondummy():
+def test_as_dummy():
     x = Symbol('x')
     x1 = x.as_dummy()
     assert x1 != x
     assert x1 != x.as_dummy()
-    # assert x == x1.as_nondummy()
 
     x = Symbol('x', commutative = False)
     x1 = x.as_dummy()
     assert x1 != x
     assert x1.is_commutative == False
-    # assert x == x1.as_nondummy()
 
 def test_lt_gt():
+    from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')
 
-    assert (x <= y) == Inequality(x, y)
-    assert (x >= y) == Inequality(y, x)
-    assert (x <= 0) == Inequality(x, 0)
-    assert (x >= 0) == Inequality(0, x)
+    assert (x >= y)    == GreaterThan(x, y)
+    assert (x >= 0)    == GreaterThan(x, 0)
+    assert (x <= y)    == LessThan(x, y)
+    assert (x <= 0)    == LessThan(x, 0)
 
-    assert (x < y) == StrictInequality(x, y)
-    assert (x > y) == StrictInequality(y, x)
-    assert (x < 0) == StrictInequality(x, 0)
-    assert (x > 0) == StrictInequality(0, x)
+    assert (0 <= x)    == GreaterThan(x, 0)
+    assert (0 >= x)    == LessThan(x, 0)
+    assert (S(0) >= x) == GreaterThan(0, x)
+    assert (S(0) <= x) == LessThan(0, x)
 
-    assert (x**2+4*x+1 > 0) == StrictInequality(0, x**2+4*x+1)
+    assert (x > y)    == StrictGreaterThan(x, y)
+    assert (x > 0)    == StrictGreaterThan(x, 0)
+    assert (x < y)    == StrictLessThan(x, y)
+    assert (x < 0)    == StrictLessThan(x, 0)
+
+    assert (0 < x)    == StrictGreaterThan(x, 0)
+    assert (0 > x)    == StrictLessThan(x, 0)
+    assert (S(0) > x) == StrictGreaterThan(0, x)
+    assert (S(0) < x) == StrictLessThan(0, x)
+
+    e = x**2 + 4*x + 1
+    assert (e >= 0) == GreaterThan(e, 0)
+    assert (0 <= e) == GreaterThan(e, 0)
+    assert (e >  0) == StrictGreaterThan(e, 0)
+    assert (0 <  e) == StrictGreaterThan(e, 0)
+
+    assert (e <= 0) == LessThan(e, 0)
+    assert (0 >= e) == LessThan(e, 0)
+    assert (e <  0) == StrictLessThan(e, 0)
+    assert (0 >  e) == StrictLessThan(e, 0)
+
+    assert (S(0) >= e) == GreaterThan(0, e)
+    assert (S(0) <= e) == LessThan(0, e)
+    assert (S(0) <  e) == StrictLessThan(0, e)
+    assert (S(0) >  e) == StrictGreaterThan(0, e)
 
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
-    xxl = Symbol('xxl')
-    raises(TypeError, "len(x)")
-    raises(TypeError, "len(xxl)")
+    raises(TypeError, lambda: len(x))
+
+def test_ineq_unequal():
+    S = sympify
+
+    x, y, z = symbols('x,y,z')
+
+    e = (
+      S(-1)    >=  x,   S(-1)    >=  y,   S(-1)    >=  z,
+      S(-1)    >   x,   S(-1)    >   y,   S(-1)    >   z,
+      S(-1)    <=  x,   S(-1)    <=  y,   S(-1)    <=  z,
+      S(-1)    <   x,   S(-1)    <   y,   S(-1)    <   z,
+      S(0)     >=  x,   S(0)     >=  y,   S(0)     >=  z,
+      S(0)     >   x,   S(0)     >   y,   S(0)     >   z,
+      S(0)     <=  x,   S(0)     <=  y,   S(0)     <=  z,
+      S(0)     <   x,   S(0)     <   y,   S(0)     <   z,
+      S('3/7') >=  x,   S('3/7') >=  y,   S('3/7') >=  z,
+      S('3/7') >   x,   S('3/7') >   y,   S('3/7') >   z,
+      S('3/7') <=  x,   S('3/7') <=  y,   S('3/7') <=  z,
+      S('3/7') <   x,   S('3/7') <   y,   S('3/7') <   z,
+      S(1.5)   >=  x,   S(1.5)   >=  y,   S(1.5)   >=  z,
+      S(1.5)   >   x,   S(1.5)   >   y,   S(1.5)   >   z,
+      S(1.5)   <=  x,   S(1.5)   <=  y,   S(1.5)   <=  z,
+      S(1.5)   <   x,   S(1.5)   <   y,   S(1.5)   <   z,
+      S(2)     >=  x,   S(2)     >=  y,   S(2)     >=  z,
+      S(2)     >   x,   S(2)     >   y,   S(2)     >   z,
+      S(2)     <=  x,   S(2)     <=  y,   S(2)     <=  z,
+      S(2)     <   x,   S(2)     <   y,   S(2)     <   z,
+      x      >= -1,   y      >= -1,   z      >= -1,
+      x      >  -1,   y      >  -1,   z      >  -1,
+      x      <= -1,   y      <= -1,   z      <= -1,
+      x      <  -1,   y      <  -1,   z      <  -1,
+      x      >=  0,   y      >=  0,   z      >=  0,
+      x      >   0,   y      >   0,   z      >   0,
+      x      <=  0,   y      <=  0,   z      <=  0,
+      x      <   0,   y      <   0,   z      <   0,
+      x      >=  1.5, y      >=  1.5, z      >=  1.5,
+      x      >   1.5, y      >   1.5, z      >   1.5,
+      x      <=  1.5, y      <=  1.5, z      <=  1.5,
+      x      <   1.5, y      <   1.5, z      <   1.5,
+      x      >=  2,   y      >=  2,   z      >=  2,
+      x      >   2,   y      >   2,   z      >   2,
+      x      <=  2,   y      <=  2,   z      <=  2,
+      x      <   2,   y      <   2,   z      <   2,
+
+      x >= y,  x >= z,  y >= x, y >= z, z >= x, z >= y,
+      x >  y,  x >  z,  y >  x, y >  z, z >  x, z >  y,
+      x <= y,  x <= z,  y <= x, y <= z, z <= x, z <= y,
+      x <  y,  x <  z,  y <  x, y <  z, z <  x, z <  y,
+
+      x - pi >= y + z,  y - pi >= x + z,  z - pi >= x + y,
+      x - pi >  y + z,  y - pi >  x + z,  z - pi >  x + y,
+      x - pi <= y + z,  y - pi <= x + z,  z - pi <= x + y,
+      x - pi <  y + z,  y - pi <  x + z,  z - pi <  x + y,
+      True, False
+    )
+
+    left_e = e[:-1]
+    for i, e1 in enumerate( left_e ):
+        for e2 in e[i +1:]:
+            assert e1 != e2
 
 def test_Wild_properties():
     # these tests only include Atoms
@@ -73,15 +156,14 @@ def test_Wild_properties():
     y   = Symbol("y")
     p   = Symbol("p", positive=True)
     k   = Symbol("k", integer=True)
-    r   = Symbol("r", real=True)
     n   = Symbol("n", integer=True, positive=True)
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
 
-    integerp = lambda k : k.is_integer
-    positivep = lambda k : k.is_positive
-    symbolp = lambda k : k.is_Symbol
-    realp = lambda k : k.is_real
+    integerp = lambda k: k.is_integer
+    positivep = lambda k: k.is_positive
+    symbolp = lambda k: k.is_Symbol
+    realp = lambda k: k.is_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
@@ -121,13 +203,11 @@ def test_symbols_each_char():
     z = Symbol('z')
 
     # First, test the warning
-    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    raises(DeprecationWarning, "symbols('xyz', each_char=True)")
-    raises(DeprecationWarning, "symbols('xyz', each_char=False)")
+    warnings.filterwarnings("error")
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
+    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
-    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
+    warnings.filterwarnings("ignore")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
     assert symbols('xyz', each_char=True) == (x, y, z)
@@ -193,10 +273,10 @@ def test_symbols():
     assert symbols(['x', 'y', 'z']) == [x, y, z]
     assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
 
-    raises(ValueError, "symbols('')")
-    raises(ValueError, "symbols(',')")
-    raises(ValueError, "symbols('x,,y,,z')")
-    raises(ValueError, "symbols(('x', '', 'y', '', 'z'))")
+    raises(ValueError, lambda: symbols(''))
+    raises(ValueError, lambda: symbols(','))
+    raises(ValueError, lambda: symbols('x,,y,,z'))
+    raises(ValueError, lambda: symbols(('x', '', 'y', '', 'z')))
 
     a, b = symbols('x,y', real=True)
     assert a.is_real and b.is_real
@@ -239,3 +319,4 @@ def test_symbols():
 def test_call():
     f = Symbol('f')
     assert f(2)
+    raises(TypeError, lambda: Wild('x')(1))

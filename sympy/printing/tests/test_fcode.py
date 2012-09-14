@@ -27,8 +27,9 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
-    assert fcode(x**Rational(1,2)) == '      sqrt(x)'
+    assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
+    assert fcode(x**-1.0) == '      1.0/x'
 
 def test_fcode_Rational():
     assert fcode(Rational(3,7)) == "      3.0d0/7.0d0"
@@ -175,7 +176,7 @@ def test_fcode_Piecewise():
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
         "      if (x < 1) then\n"
         "         x\n"
-        "      else if (1 < x) then\n"
+        "      else if (x > 1) then\n"
         "         x**2\n"
         "      else\n"
         "         sin(x)\n"
@@ -184,9 +185,9 @@ def test_fcode_Piecewise():
     assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),x>0))) == (
         "      if (x < 1) then\n"
         "         x\n"
-        "      else if (1 < x) then\n"
+        "      else if (x > 1) then\n"
         "         x**2\n"
-        "      else if (0 < x) then\n"
+        "      else if (x > 0) then\n"
         "         sin(x)\n"
         "      end if"
     )
@@ -276,7 +277,7 @@ def test_wrap_fortran_keep_d0():
     assert printer._wrap_fortran(lines) == expected
 
 def test_settings():
-    raises(TypeError, 'fcode(S(4), method="garbage")')
+    raises(TypeError, lambda: fcode(S(4), method="garbage"))
 
 def test_free_form_code_line():
     x, y = symbols('x,y')

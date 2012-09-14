@@ -1,18 +1,26 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
+from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
+from sympy.core.rules import Transform
+from sympy.ntheory.residue_ntheory import int_tested
 
 class IdentityFunction(Lambda):
-    """The identity function
+    """
+    The identity function
+
+    Examples
+    ========
 
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
     >>> Id(x)
     x
+
     """
     __metaclass__ = Singleton
     __slots__ = []
@@ -24,12 +32,195 @@ class IdentityFunction(Lambda):
 Id = S.IdentityFunction
 
 ###############################################################################
-############################# SQUARE ROOT FUNCTION ############################
+############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
 
 def sqrt(arg):
+    """The square root function
+
+    sqrt(x) -> Returns the principal square root of x.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Symbol
+    >>> x = Symbol('x')
+
+    >>> sqrt(x)
+    sqrt(x)
+
+    >>> sqrt(x)**2
+    x
+
+    Note that sqrt(x**2) does not simplify to x.
+
+    >>> sqrt(x**2)
+    sqrt(x**2)
+
+    This is because the two are not equal to each other in general.
+    For example, consider x == -1:
+
+    >>> sqrt(x**2).subs(x, -1)
+    1
+    >>> x.subs(x, -1)
+    -1
+
+    This is because sqrt computes the principal square root, so the square may
+    put the argument in a different branch.  This identity does hold if x is
+    positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> sqrt(y**2)
+    y
+
+    You can force this simplification by using the powdenest() function with
+    the force option set to True:
+
+    >>> from sympy import powdenest
+    >>> sqrt(x**2)
+    sqrt(x**2)
+    >>> powdenest(sqrt(x**2), force=True)
+    x
+
+    To get both branches of the square root you can use the RootOf function:
+
+    >>> from sympy import RootOf
+
+    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    [-sqrt(3), sqrt(3)]
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf, root
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/Principal_value
+
+    """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
+
+
+def root(arg, n):
+    """The n-th root function (a shortcut for arg**(1/n))
+
+    root(x, n) -> Returns the principal n-th root of x.
+
+
+    Examples
+    ========
+
+    >>> from sympy import root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> root(x, 2)
+    sqrt(x)
+
+    >>> root(x, 3)
+    x**(1/3)
+
+    >>> root(x, n)
+    x**(1/n)
+
+    >>> root(x, -Rational(2, 3))
+    x**(-3/2)
+
+
+    To get all n n-th roots you can use the RootOf function.
+    The following examples show the roots of unity for n
+    equal 2, 3 and 4:
+
+    >>> from sympy import RootOf, I
+
+    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    [-1, 1]
+
+    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
+
+    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    [-1, 1, -I, I]
+
+    SymPy, like other symbolic algebra systems, returns the
+    complex root of negative numbers. This is the principal
+    root and differs from the text-book result that one might
+    be expecting. For example, the cube root of -8 does not
+    come back as -2:
+
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+
+    The real_root function can be used to either make such a result
+    real or simply return the real root in the first place:
+
+    >>> from sympy import real_root
+    >>> real_root(_)
+    -2
+    >>> real_root(-32, 5)
+    -2
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    sqrt, real_root
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Root_of_unity
+    * http://en.wikipedia.org/wiki/Principal_value
+    * http://mathworld.wolfram.com/CubeRoot.html
+
+    """
+    n = sympify(n)
+    return C.Pow(arg, 1/n)
+
+def real_root(arg, n=None):
+    """Return the real nth-root of arg if possible. If n is omitted then
+    all instances of -1**(1/odd) will be changed to -1.
+
+    Examples
+    ========
+
+    >>> from sympy import root, real_root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> real_root(-8, 3)
+    -2
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+    >>> real_root(_)
+    -2
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf
+    sympy.core.power.integer_nthroot
+    root, sqrt
+    """
+    if n is not None:
+        n = int_tested(n)
+        rv = C.Pow(arg, Rational(1, n))
+        if n % 2 == 0:
+            return rv
+    else:
+        rv = sympify(arg)
+    n1pow = Transform(lambda x: S.NegativeOne,
+                      lambda x:
+                      x.is_Pow and
+                      x.base is S.NegativeOne and
+                      x.exp.is_Rational and
+                      x.exp.p == 1 and x.exp.q % 2)
+    return rv.xreplace(n1pow)
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
@@ -98,16 +289,15 @@ class MinMaxBase(LatticeOp):
         """
         Sequentially allocate values to localzeros.
 
-        If value is greter than all of the localzeros, then it is new localzero
-        and it is apending to them.
-
-        if value is greter than one of the localzeros,
-        then update localzero's set.
+        When a value is identified as being more extreme than another member it
+        replaces that member; if this is never true, then the value is simply
+        appended to the localzeros.
         """
         localzeros = set()
         for v in values:
             is_newzero = True
-            for z in localzeros:
+            localzeros_ = list(localzeros)
+            for z in localzeros_:
                 if id(v) == id(z):
                     is_newzero = False
                 elif cls._is_connected(v, z):
@@ -115,7 +305,6 @@ class MinMaxBase(LatticeOp):
                     if cls._is_asneeded(v, z):
                         localzeros.remove(z)
                         localzeros.update([v])
-                        break
             if is_newzero:
                 localzeros.update([v])
         return localzeros
@@ -178,8 +367,8 @@ class Max(MinMaxBase, Application, Basic):
 
     Also, only comparable arguments are permitted.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
@@ -211,7 +400,7 @@ class Max(MinMaxBase, Application, Basic):
     oo
 
     Algorithm
-    ---------
+
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
 
@@ -234,13 +423,16 @@ class Max(MinMaxBase, Application, Basic):
        - if A > B > C then A > C
        - if A==B then B can be removed
 
-    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
 
     See Also
-    --------
-    Min() : find minimum values
+    ========
 
+    Min : find minimum values
     """
     zero = S.Infinity
     identity = S.NegativeInfinity
@@ -264,8 +456,8 @@ class Min(MinMaxBase, Application, Basic):
     """
     Return, if possible, the minimum value of the list.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
@@ -288,8 +480,9 @@ class Min(MinMaxBase, Application, Basic):
     Min(n, -7)
 
     See Also
-    --------
-    Max() : find maximum values
+    ========
+
+    Max : find maximum values
     """
     zero = S.NegativeInfinity
     identity = S.Infinity
@@ -307,4 +500,3 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
-

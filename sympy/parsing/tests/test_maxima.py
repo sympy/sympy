@@ -23,7 +23,7 @@ def test_maxima_functions():
     assert parse_maxima('factor( x**2 + 2*x + 1)') == (x+1)**2
     assert parse_maxima('trigsimp(2*cos(x)^2 + sin(x)^2)') == 2 - sin(x)**2
     assert parse_maxima('trigexpand(sin(2*x)+cos(2*x))') == (-1) + 2*cos(x)**2 + 2*cos(x)*sin(x)
-    assert parse_maxima('solve(x^2-4,x)') == [2, -2]
+    assert parse_maxima('solve(x^2-4,x)') == [-2, 2]
     assert parse_maxima('limit((1+1/x)^x,x,inf)') == E
     assert parse_maxima('limit(sqrt(-x)/x,x,0,minus)') == -oo
     assert parse_maxima('diff(x^x, x)') == x**x*(1 + log(x))

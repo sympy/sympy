@@ -1,11 +1,9 @@
-from sympy.solvers.pde import pde_separate_add, pde_separate_mul, _separate
-from sympy import Eq, exp, Function, Symbol, symbols
-from sympy import Derivative as D
+from sympy import Derivative as D, Eq, exp, Function, Symbol, symbols
+from sympy.solvers.pde import pde_separate_add, pde_separate_mul
 from sympy.utilities.pytest import raises
 
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
-    c = Symbol("C", real=True)
     F, T, X, Y, Z, u = map(Function, 'FTXYZu')
 
     eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
@@ -23,11 +21,11 @@ def test_pde_separate_mul():
     eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
 
     # Duplicate arguments in functions
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)])")
+    raises (ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)]))
     # Wrong number of arguments
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(x), Y(y)])")
+    raises (ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), Y(y)]))
     # Wrong variables: [x, y] -> [x, z]
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)])")
+    raises (ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)]))
 
     assert pde_separate_mul(eq, F(x, y, z), [Y(y), u(x, z)]) == \
             [D(Y(y), y)/Y(y), -D(u(x, z), x)/u(x, z) - D(u(x, z), z)/u(x, z)]

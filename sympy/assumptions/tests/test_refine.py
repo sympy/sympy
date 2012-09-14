@@ -1,8 +1,7 @@
-from sympy import S, symbols, exp, pi, sqrt, Rational, I, Q, refine, Abs
-from sympy.utilities.pytest import XFAIL
+from sympy import Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt
+from sympy.abc import x, y, z
 
 def test_Abs():
-    x = symbols('x')
     assert refine(Abs(x), Q.positive(x)) == x
     assert refine(1+Abs(x), Q.positive(x)) == 1+x
     assert refine(Abs(x), Q.negative(x)) == -x
@@ -12,7 +11,6 @@ def test_Abs():
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 def test_pow():
-    x, y, z = symbols('x,y,z')
     assert refine((-1)**x, Q.even(x)) == 1
     assert refine((-1)**x, Q.odd(x)) == -1
     assert refine((-2)**x, Q.even(x)) == 2**x
@@ -39,7 +37,6 @@ def test_pow():
 
 
 def test_exp():
-    x = symbols('x')
     assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
     assert refine(exp(pi*I*2*(x+Rational(1,2))), Q.integer(x)) == -1
     assert refine(exp(pi*I*2*(x+Rational(1,4))), Q.integer(x)) == I
@@ -47,7 +44,6 @@ def test_exp():
 
 
 def test_func_args():
-    from sympy.core import Expr
     class MyClass(Expr):
         # A class with nontrivial .func
 

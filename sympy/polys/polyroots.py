@@ -1,21 +1,21 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
 from sympy.core.symbol import Dummy
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import S, I, Basic
+from sympy.core import S, I
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im
+from sympy.functions import exp, sqrt
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
-from sympy.utilities import all, default_sort_key
+from sympy.utilities import default_sort_key
+
+from sympy.core.compatibility import reduce
 
 import math
 
@@ -139,7 +139,8 @@ def roots_quartic(f):
         a) `p == 0`
         b) `p != 0`
 
-    **Examples**
+    Examples
+    ========
 
         >>> from sympy import Poly, symbols, I
         >>> from sympy.polys.polyroots import roots_quartic
@@ -150,7 +151,8 @@ def roots_quartic(f):
         >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
         ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + 1.0*I', '2.0 - 1.0*I']
 
-    **References**
+    References
+    ==========
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
@@ -187,7 +189,7 @@ def roots_quartic(f):
         ans = []
 
         if f is S.Zero:
-            y1, y2 = [tmp**S.Half for tmp in
+            y1, y2 = [sqrt(tmp) for tmp in
                       roots([1, e, g], multiple = True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
         if g is S.Zero:
@@ -237,7 +239,8 @@ def _inv_totient_estimate(m):
     """
     Find ``(L, U)`` such that ``L <= phi^-1(m) <= U``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyroots import _inv_totient_estimate
 
@@ -387,7 +390,7 @@ def preprocess_roots(poly):
 
         base, strips = strips[0], strips[1:]
 
-        for gen, strip in zip(gens, strips):
+        for gen, strip in zip(list(gens), strips):
             reverse = False
 
             if strip[0] < strip[-1]:
@@ -427,8 +430,8 @@ def preprocess_roots(poly):
         if basis is not None:
             n = poly.degree()
 
-            def func((k,), coeff):
-                return coeff//basis**(n-k)
+            def func(k, coeff):
+                return coeff//basis**(n-k[0])
 
             poly = poly.termwise(func)
             coeff *= basis
@@ -447,17 +450,18 @@ def roots(f, *gens, **flags):
     a complete set of roots use RootOf class or numerical methods
     instead. By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
-    set `cubics=False` or `quartics=False` respectively.
+    set ``cubics=False`` or ``quartics=False`` respectively.
 
-    To get roots from a specific domain set the `filter` flag with
+    To get roots from a specific domain set the ``filter`` flag with
     one of the following specifiers: Z, Q, R, I, C. By default all
-    roots are returned (this is equivalent to setting `filter='C'`).
+    roots are returned (this is equivalent to setting ``filter='C'``).
 
     By default a dictionary is returned giving a compact result in
     case of multiple roots.  However to get a tuple containing all
-    those roots set the `multiple` flag to True.
+    those roots set the ``multiple`` flag to True.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import Poly, roots
     >>> from sympy.abc import x, y
@@ -472,10 +476,10 @@ def roots(f, *gens, **flags):
     >>> p = Poly(x**2-y, x, y)
 
     >>> roots(Poly(p, x))
-    {-y**(1/2): 1, y**(1/2): 1}
+    {-sqrt(y): 1, sqrt(y): 1}
 
     >>> roots(x**2 - y, x)
-    {-y**(1/2): 1, y**(1/2): 1}
+    {-sqrt(y): 1, sqrt(y): 1}
 
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
@@ -655,13 +659,14 @@ def root_factors(f, *gens, **args):
     """
     Returns all factors of a univariate polynomial.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.polys.polyroots import root_factors
 
-    >>> root_factors(x**2-y, x)
-    [x - y**(1/2), x + y**(1/2)]
+    >>> root_factors(x**2 - y, x)
+    [x - sqrt(y), x + sqrt(y)]
 
     """
     args = dict(args)
@@ -692,7 +697,6 @@ def root_factors(f, *gens, **args):
             factors.append(F.quo(G))
 
     if not isinstance(f, Poly):
-        return [ f.as_expr() for f in factors ]
-    else:
-        return factors
+        factors = [ f.as_expr() for f in factors ]
 
+    return sorted(factors, key=default_sort_key)

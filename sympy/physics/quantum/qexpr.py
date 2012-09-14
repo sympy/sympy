@@ -2,7 +2,9 @@
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import is_sequence
 
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
     to_sympy, to_numpy, to_scipy_sparse
@@ -35,14 +37,14 @@ def _qsympify_sequence(seq):
     * other => sympify
 
     Strings are passed to Symbol, not sympify to make sure that variables like
-    'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+    'pi' are kept as Symbols, not the SymPy built-in number subclasses.
 
     Examples
     ========
 
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
-    (1, 2, Tuple(3, 4, Tuple(1)))
+    (1, 2, (3, 4, (1,)))
 
     """
 
@@ -54,13 +56,18 @@ def __qsympify_sequence_helper(seq):
        This function does the actual work.
     """
     #base case. If not a list, do Sympification
-    if not isinstance(seq, (list, tuple, Tuple)):
+    if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
         elif isinstance(seq, basestring):
             return Symbol(seq)
         else:
             return sympify(seq)
+
+    # base condition, when seq is QExpr and also
+    # is iterable.
+    if isinstance(seq, QExpr):
+        return seq
 
     #if list, recurse on each item in the list
     result = [__qsympify_sequence_helper(item) for item in seq]
@@ -82,14 +89,19 @@ class QExpr(Expr):
     # The Hilbert space a quantum Object belongs to.
     __slots__ = ['hilbert_space']
 
+    is_commutative = False
+
     # The separator used in printing the label.
     _label_separator = u''
+
+    is_commutative = False
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
 
         Parameters
         ==========
+
         args : tuple
             The list of numbers or parameters that uniquely specify the
             quantum object. For a state, this will be its symbol or its
@@ -114,13 +126,15 @@ class QExpr(Expr):
 
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        if len(args) == 0:
+            args = cls._eval_args(tuple(cls.default_args()))
+        inst = Expr.__new__(cls, *args, **old_assumptions)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
     @classmethod
-    def _new_rawargs(cls, hilbert_space, *args):
+    def _new_rawargs(cls, hilbert_space, *args, **old_assumptions):
         """Create new instance of this class with hilbert_space and args.
 
         This is used to bypass the more complex logic in the ``__new__``
@@ -130,7 +144,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args, **{'commutative':False})
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = hilbert_space
         return obj
 
@@ -147,15 +161,36 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        return self.args
+        if len(self.args) == 0: # If there is no label specified, return the default
+            return self._eval_args(list(self.default_args()))
+        else:
+            return self.args
 
     @property
     def is_symbolic(self):
         return True
 
+    @classmethod
+    def default_args(self):
+        """If no arguments are specified, then this will return a default set
+        of arguments to be run through the constructor.
+
+        NOTE: Any classes that override this MUST return a tuple of arguments.
+        Should be overidden by subclasses to specify the default arguments for kets and operators
+        """
+        raise NotImplementedError("No default arguments for this class!")
+
     #-------------------------------------------------------------------------
     # _eval_* methods
     #-------------------------------------------------------------------------
+
+    def _eval_adjoint(self):
+        obj = Expr._eval_adjoint(self)
+        if obj is None:
+            obj = Expr.__new__(Dagger, self)
+        if isinstance(obj, QExpr):
+            obj.hilbert_space = self.hilbert_space
+        return obj
 
     @classmethod
     def _eval_args(cls, args):
@@ -171,10 +206,6 @@ class QExpr(Expr):
         """
         from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
-
-    def _eval_dagger(self):
-        """Compute the Dagger of this state."""
-        raise NotImplementedError('_eval_dagger not defined on: %r' % self)
 
     #-------------------------------------------------------------------------
     # Printing
@@ -208,9 +239,15 @@ class QExpr(Expr):
     def _print_parens_pretty(self, pform, left='(', right=')'):
         return prettyForm(*pform.parens(left=left, right=right))
 
-    # Printing of labels
+    # Printing of labels (i.e. args)
 
     def _print_label(self, printer, *args):
+        """Prints the label of the QExpr
+
+        This method prints self.label, using self._label_separator to separate
+        the elements. This method should not be overridden, instead, override
+        _print_contents to change printing behavior.
+        """
         return self._print_sequence(
             self.label, self._label_separator, printer, *args
         )
@@ -230,13 +267,17 @@ class QExpr(Expr):
             self.label, self._label_separator, printer, *args
         )
 
-    # Printing of contents
+    # Printing of contents (default to label)
 
     def _print_contents(self, printer, *args):
-        return self._print_label(printer, *args)
+        """Printer for contents of QExpr
 
-    def _print_contents_repr(self, printer, *args):
-        return self._print_label_repr(printer, *args)
+        Handles the printing of any unique identifying contents of a QExpr to
+        print as its contents, such as any variables or quantum numbers. The
+        default is to print the label, which is almost always the args. This
+        should not include printing of any brackets or parenteses.
+        """
+        return self._print_label(printer, *args)
 
     def _print_contents_pretty(self, printer, *args):
         return self._print_label_pretty(printer, *args)
@@ -244,15 +285,24 @@ class QExpr(Expr):
     def _print_contents_latex(self, printer, *args):
         return self._print_label_latex(printer, *args)
 
-    # Main methods
+    # Main printing methods
 
     def _sympystr(self, printer, *args):
+        """Default printing behavior of QExpr objects
+
+        Handles the default printing of a QExpr. To add other things to the
+        printing of the object, such as an operator name to operators or
+        brackets to states, the class should override the _print/_pretty/_latex
+        functions directly and make calls to _print_contents where appropriate.
+        This allows things like InnerProduct to easily control its printing the
+        printing of contents.
+        """
         return self._print_contents(printer, *args)
 
     def _sympyrepr(self, printer, *args):
         classname = self.__class__.__name__
-        contents = self._print_contents_repr(printer, *args)
-        return '%s(%s)' % (classname, contents)
+        label = self._print_label_repr(printer, *args)
+        return '%s(%s)' % (classname, label)
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
@@ -273,13 +323,13 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
             args = self.args
 
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
+                rewritten = getattr(self, rule)(*args, **hints)
 
                 if rewritten is not None:
                     return rewritten
@@ -318,6 +368,7 @@ class QExpr(Expr):
 
         Parameters
         ==========
+
         basis : Operator
             The Operator whose basis functions will be used as the basis for
             representation.
@@ -334,22 +385,25 @@ class QExpr(Expr):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')
-        if format == 'sympy' and not isinstance(result, Matrix):
-            result = to_sympy(result)
-        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
-            result = to_numpy(result)
-        elif format == 'scipy.sparse' and\
-            not isinstance(result, scipy_sparse_matrix):
-            result = to_scipy_sparse(result)
+        result = self._format_represent(result, format)
         return result
 
+    def _format_represent(self, result, format):
+        if format == 'sympy' and not isinstance(result, Matrix):
+            return to_sympy(result)
+        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
+            return to_numpy(result)
+        elif format == 'scipy.sparse' and\
+        not isinstance(result, scipy_sparse_matrix):
+            return to_scipy_sparse(result)
+
+        return result
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
-    c_part = [p for p in e.args if p.is_commutative]
-    nc_part = [p for p in e.args if not p.is_commutative]
+    c_part, nc_part = e.args_cnc()
+    c_part = list(c_part)
     return c_part, nc_part
-
 
 def split_qexpr_parts(e):
     """Split an expression into Expr and noncommutative QExpr parts."""
@@ -376,4 +430,3 @@ def dispatch_method(self, basename, arg, **options):
         "%s.%s can't handle: %r" % \
             (self.__class__.__name__, basename, arg)
     )
-

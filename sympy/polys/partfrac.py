@@ -2,12 +2,13 @@
 
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.polys.polyoptions import allowed_flags, set_defaults
 
-from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
-def apart(f, x=None, full=False):
+def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
 
@@ -16,7 +17,8 @@ def apart(f, x=None, full=False):
     coefficients method and the other is Bronstein's full partial fraction
     decomposition algorithm.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
@@ -25,6 +27,8 @@ def apart(f, x=None, full=False):
     -y/(x + 2) + y/(x + 1)
 
     """
+    allowed_flags(options, [])
+
     f = sympify(f)
 
     if f.is_Atom:
@@ -32,7 +36,8 @@ def apart(f, x=None, full=False):
     else:
         P, Q = f.as_numer_denom()
 
-    (P, Q), opt = parallel_poly_from_expr((P, Q), x)
+    options = set_defaults(options, extension=True)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")
@@ -53,7 +58,10 @@ def apart(f, x=None, full=False):
     terms = S.Zero
 
     for term in Add.make_args(partial):
-        terms += factor(term)
+        if term.has(RootSum):
+            terms += term
+        else:
+            terms += factor(term)
 
     return common*(poly.as_expr() + terms)
 
@@ -108,7 +116,8 @@ def apart_full_decomposition(P, Q):
     performed. The final decomposition is formed in terms of a sum of
     :class:`RootSum` instances.
 
-    **References**
+    References
+    ==========
 
     1. [Bronstein93]_
 
@@ -154,8 +163,7 @@ def apart_full_decomposition(P, Q):
             numer = b.as_expr()
             denom = (x-a)**(n-j)
 
-            expr = numer.subs(x, a) / denom
-
-            partial += RootSum(D, Lambda(a, expr))
+            func = Lambda(a, numer.subs(x, a)/denom)
+            partial += RootSum(D, func, auto=False)
 
     return partial

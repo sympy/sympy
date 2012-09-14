@@ -8,11 +8,11 @@ cases are also provided.
 import operator
 import math
 
-from backend import MPZ_ZERO, MPZ_ONE, BACKEND
+from .backend import MPZ_ZERO, MPZ_ONE, BACKEND, xrange, exec_
 
-from libintmath import gcd
+from .libintmath import gcd
 
-from libmpf import (\
+from .libmpf import (\
     ComplexResult, round_fast, round_nearest,
     negative_rnd, bitcount, to_fixed, from_man_exp, from_int, to_int,
     from_rational,
@@ -24,12 +24,12 @@ from libmpf import (\
     to_rational,
 )
 
-from libelefun import (\
+from .libelefun import (\
     mpf_pi, mpf_exp, mpf_log, pi_fixed, mpf_cos_sin, mpf_cos, mpf_sin,
     mpf_sqrt, agm_fixed,
 )
 
-from libmpc import (\
+from .libmpc import (\
     mpc_one, mpc_sub, mpc_mul_mpf, mpc_mul, mpc_neg, complex_int_pow,
     mpc_div, mpc_add_mpf, mpc_sub_mpf,
     mpc_log, mpc_add, mpc_pos, mpc_shift,
@@ -37,8 +37,8 @@ from libmpc import (\
     mpc_mpf_div, mpc_square, mpc_exp
 )
 
-from libintmath import ifac
-from gammazeta import mpf_gamma_int, mpf_euler, euler_fixed
+from .libintmath import ifac
+from .gammazeta import mpf_gamma_int, mpf_euler, euler_fixed
 
 class NoConvergence(Exception):
     pass
@@ -301,9 +301,9 @@ def make_hyp_summator(key):
 
     namespace = {}
 
-    exec source in globals(), namespace
-    #print source
+    exec_(source, globals(), namespace)
 
+    #print source
     return source, namespace[fname]
 
 

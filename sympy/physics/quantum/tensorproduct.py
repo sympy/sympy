@@ -1,9 +1,9 @@
 """Abstract tensor product."""
 
-from sympy import Expr, Add, Mul, Matrix, Pow
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import QuantumError, split_commutative_parts
+from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -12,6 +12,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.core.trace import Tr
 
 __all__ = [
     'TensorProduct',
@@ -26,19 +27,20 @@ __all__ = [
 class TensorProduct(Expr):
     """The tensor product of two or more arguments.
 
-    For matrices, this uses ``matrix_tensor_product`` to compute the
-    Kronecker or tensor product matrix. For other objects a symbolic
-    ``TensorProduct`` instance is returned. The tensor product is a
-    non-commutative multiplication that is used primarily with operators
-    and states in quantum mechanics.
+    For matrices, this uses ``matrix_tensor_product`` to compute the Kronecker
+    or tensor product matrix. For other objects a symbolic ``TensorProduct``
+    instance is returned. The tensor product is a non-commutative
+    multiplication that is used primarily with operators and states in quantum
+    mechanics.
 
     Currently, the tensor product distinguishes between commutative and non-
-    commutative arguments.  Commutative arguments are assumed to be scalars
-    and are pulled out in front of the ``TensorProduct``. Non-commutative
-    arguments remain in the resulting ``TensorProduct``.
+    commutative arguments.  Commutative arguments are assumed to be scalars and
+    are pulled out in front of the ``TensorProduct``. Non-commutative arguments
+    remain in the resulting ``TensorProduct``.
 
     Parameters
     ==========
+
     args : tuple
         A sequence of the objects to take the tensor product of.
 
@@ -63,7 +65,7 @@ class TensorProduct(Expr):
         [0, 0, 1, 2]
         [0, 0, 3, 4]
 
-    We can also construct tensor products of non-commutative symbols::
+    We can also construct tensor products of non-commutative symbols:
 
         >>> from sympy import Symbol
         >>> A = Symbol('A',commutative=False)
@@ -72,14 +74,14 @@ class TensorProduct(Expr):
         >>> tp
         AxB
 
-    We can take the dagger of a tensor product (note the order does NOT
-    reverse like the dagger of a normal product)::
+    We can take the dagger of a tensor product (note the order does NOT reverse
+    like the dagger of a normal product):
 
         >>> from sympy.physics.quantum import Dagger
         >>> Dagger(tp)
         Dagger(A)xDagger(B)
 
-    Expand can be used to distribute a tensor product across addition::
+    Expand can be used to distribute a tensor product across addition:
 
         >>> C = Symbol('C',commutative=False)
         >>> tp = TensorProduct(A+B,C)
@@ -88,18 +90,19 @@ class TensorProduct(Expr):
         >>> tp.expand(tensorproduct=True)
         AxC + BxC
     """
+    is_commutative = False
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
-        c_part, new_args = cls.flatten(args)
+        c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)
         if len(new_args) == 0:
             return c_part
         elif len(new_args) == 1:
             return c_part*new_args[0]
         else:
-            tp = Expr.__new__(cls, *new_args, **{'commutative': False})
+            tp = Expr.__new__(cls, *new_args)
             return c_part*tp
 
     @classmethod
@@ -108,20 +111,18 @@ class TensorProduct(Expr):
         c_part = []
         nc_parts = []
         for arg in args:
-            if isinstance(arg, Mul):
-                cp, ncp = split_commutative_parts(arg)
-                ncp = Mul(*ncp)
-            else:
-                if arg.is_commutative:
-                    cp = [arg]; ncp = 1
-                else:
-                    cp = []; ncp = arg
-            c_part.extend(cp)
-            nc_parts.append(ncp)
+            cp, ncp = arg.args_cnc()
+            c_part.extend(list(cp))
+            nc_parts.append(Mul._from_args(ncp))
         return c_part, nc_parts
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
+
+    def _eval_rewrite(self, pattern, rule, **hints):
+        sargs = self.args
+        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
+        return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
         from sympy.printing.str import sstr
@@ -148,7 +149,10 @@ class TensorProduct(Expr):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                else:
+                    pform = prettyForm(*pform.right('x' + ' '))
         return pform
 
     def _latex(self, printer, *args):
@@ -177,39 +181,45 @@ class TensorProduct(Expr):
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
-                    add_args.append(
-                        TensorProduct(
-                            *args[:i]+(aa,)+args[i+1:]
-                        ).expand(**hints)
-                    )
-                stop = True
-            if stop: break
+                    tp = TensorProduct(*args[:i]+(aa,)+args[i+1:])
+                    if isinstance(tp, TensorProduct):
+                        tp = tp._eval_expand_tensorproduct()
+                    add_args.append(tp)
+                break
+
         if add_args:
-            return Add(*add_args).expand(**hints)
+            return Add(*add_args)
         else:
             return self
 
-    def expand(self, **hints):
-        tp = TensorProduct(*[item.expand(**hints) for item in self.args])
-        return Expr.expand(tp, **hints)
+    def _eval_trace(self, **kwargs):
+        indices = kwargs.get('indices', None)
+        exp = tensor_product_simp(self)
 
+        if indices is None or len(indices) == 0:
+            return Mul(*[Tr(arg).doit() for arg in exp.args])
+        else:
+            return Mul(*[Tr(value).doit() if idx in indices else value
+                        for idx, value in enumerate(exp.args)])
 
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.
 
-    Current the main use of this is to simplify a ``Mul`` of
-    ``TensorProduct``s to a ``TensorProduct`` of ``Muls``. It currently only
-    works for relatively simple cases where the initial ``Mul`` only has
-    scalars and raw ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s
-    of ``TensorProduct``s.
+    Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s
+    to a ``TensorProduct`` of ``Muls``. It currently only works for relatively
+    simple cases where the initial ``Mul`` only has scalars and raw
+    ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s of
+    ``TensorProduct``s.
 
     Parameters
     ==========
+
     e : Expr
         A ``Mul`` of ``TensorProduct``s to be simplified.
 
     Returns
     =======
+
     e : Expr
         A ``TensorProduct`` of ``Mul``s.
 
@@ -237,7 +247,7 @@ def tensor_product_simp_Mul(e):
     # TODO: This only works for the equivalent of single Qbit gates.
     if not isinstance(e, Mul):
         return e
-    c_part, nc_part = split_commutative_parts(e)
+    c_part, nc_part = e.args_cnc()
     n_nc = len(nc_part)
     if n_nc == 0 or n_nc == 1:
         return e
@@ -271,35 +281,35 @@ def tensor_product_simp(e, **hints):
     """Try to simplify and combine TensorProducts.
 
     In general this will try to pull expressions inside of ``TensorProducts``.
-    It currently only works for relatively simple cases where the products
-    have only scalars, raw ``TensorProduct``s, not ``Add``, ``Pow``,
-    ``Commutator``s of ``TensorProduct``s. It is best to see what it does by
-    showing examples.
+    It currently only works for relatively simple cases where the products have
+    only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``, ``Commutators``
+    of ``TensorProducts``. It is best to see what it does by showing examples.
 
     Examples
     ========
 
-        >>> from sympy.physics.quantum import tensor_product_simp
-        >>> from sympy.physics.quantum import TensorProduct
-        >>> from sympy import Symbol
-        >>> A = Symbol('A',commutative=False)
-        >>> B = Symbol('B',commutative=False)
-        >>> C = Symbol('C',commutative=False)
-        >>> D = Symbol('D',commutative=False)
+    >>> from sympy.physics.quantum import tensor_product_simp
+    >>> from sympy.physics.quantum import TensorProduct
+    >>> from sympy import Symbol
+    >>> A = Symbol('A',commutative=False)
+    >>> B = Symbol('B',commutative=False)
+    >>> C = Symbol('C',commutative=False)
+    >>> D = Symbol('D',commutative=False)
 
-    First see what happens to products of tensor products::
+    First see what happens to products of tensor products:
 
-        >>> e = TensorProduct(A,B)*TensorProduct(C,D)
-        >>> e
-        AxB*CxD
-        >>> tensor_product_simp(e)
-        (A*C)x(B*D)
+    >>> e = TensorProduct(A,B)*TensorProduct(C,D)
+    >>> e
+    AxB*CxD
+    >>> tensor_product_simp(e)
+    (A*C)x(B*D)
 
-    This is the core logic of this function, and it works inside, powers,
-    sums, commutators and anticommutators as well::
+    This is the core logic of this function, and it works inside, powers, sums,
+    commutators and anticommutators as well:
 
-        >>> tensor_product_simp(e**2)
-        (A*C)x(B*D)**2
+    >>> tensor_product_simp(e**2)
+    (A*C)x(B*D)**2
+
     """
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])
@@ -313,4 +323,3 @@ def tensor_product_simp(e, **hints):
         return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
     else:
         return e
-

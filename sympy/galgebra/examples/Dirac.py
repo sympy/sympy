@@ -3,9 +3,7 @@
 
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
-import sys
-
-GA.set_main(sys.modules[__name__])
+import sys, sympy
 
 if __name__ == '__main__':
 
@@ -14,10 +12,10 @@ if __name__ == '__main__':
              '0  0 -1  0,'+\
              '0  0  0 -1'
 
-    vars = GA.make_symbols('t x y z')
-    GA.MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
+    vars = sympy.symbols('t x y z')
+    gamma_t,gamma_x,gamma_y,gamma_z = GA.MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
 
-    parms = GA.make_symbols('m e')
+    m,e = sympy.symbols('m e')
     tex.Format()
     I = GA.MV(GA.ONE,'pseudo')
     nvars = len(vars)

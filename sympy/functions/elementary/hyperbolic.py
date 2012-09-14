@@ -1,5 +1,5 @@
 from sympy.core import S, C, sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -10,21 +10,34 @@ from sympy.functions.elementary.miscellaneous import sqrt
 class HyperbolicFunction(Function):
     """Base class for hyperbolic functions. """
 
+    unbranched = True
+
 class sinh(HyperbolicFunction):
     """
-    Usage
-    =====
-      sinh(x) -> Returns the hyperbolic sine of x
+    The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
+
+    * sinh(x) -> Returns the hyperbolic sine of x
+
+    See Also
+    ========
+
+    cosh, tanh, asinh
     """
     nargs = 1
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
         if argindex == 1:
             return cosh(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return asinh
 
     @classmethod
@@ -51,7 +64,7 @@ class sinh(HyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.sin(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -72,6 +85,9 @@ class sinh(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
+        """
+        Returns the next term in the Taylor series expansion.
+        """
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -87,6 +103,9 @@ class sinh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+        """
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -98,10 +117,6 @@ class sinh(HyperbolicFunction):
         else:
             re, im = self.args[0].as_real_imag()
         return (sinh(re)*C.cos(im), cosh(re)*C.sin(im))
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
@@ -120,7 +135,7 @@ class sinh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -139,9 +154,14 @@ class sinh(HyperbolicFunction):
 
 class cosh(HyperbolicFunction):
     """
-    Usage
-    =====
-      cosh(x) -> Returns the hyperbolic cosine of x
+    The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
+
+    * cosh(x) -> Returns the hyperbolic cosine of x
+
+    See Also
+    ========
+
+    sinh, tanh, acosh
     """
     nargs = 1
 
@@ -152,6 +172,9 @@ class cosh(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return acosh
 
     @classmethod
@@ -178,7 +201,7 @@ class cosh(HyperbolicFunction):
             if i_coeff is not None:
                 return C.cos(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return cls(-arg)
 
             if arg.func == asinh:
@@ -225,10 +248,6 @@ class cosh(HyperbolicFunction):
 
         return (cosh(re)*C.cos(im), sinh(re)*C.sin(im))
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2
 
@@ -246,7 +265,7 @@ class cosh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -265,9 +284,14 @@ class cosh(HyperbolicFunction):
 
 class tanh(HyperbolicFunction):
     """
-    Usage
-    =====
-      tanh(x) -> Returns the hyperbolic tangent of x
+    The hyperbolic tangent function, :math:`\\frac{sinh(x)}{cosh(x)}`.
+
+    * tanh(x) -> Returns the hyperbolic tangent of x
+
+    See Also
+    ========
+
+    sinh, cosh, atanh
     """
     nargs = 1
 
@@ -278,6 +302,9 @@ class tanh(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return atanh
 
     @classmethod
@@ -302,11 +329,11 @@ class tanh(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if i_coeff.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(i_coeff):
                     return -S.ImaginaryUnit * C.tan(-i_coeff)
                 return S.ImaginaryUnit * C.tan(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -355,10 +382,6 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + C.cos(im)**2
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
@@ -375,7 +398,7 @@ class tanh(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -394,19 +417,22 @@ class tanh(HyperbolicFunction):
 
 class coth(HyperbolicFunction):
     """
-    Usage
-    =====
-      coth(x) -> Returns the hyperbolic cotangent of x
+    The hyperbolic tangent function, :math:`\\frac{cosh(x)}{sinh(x)}`.
+
+    * coth(x) -> Returns the hyperbolic cotangent of x
     """
     nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/sinh(self.args[0])**2
+            return -1/sinh(self.args[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return acoth
 
     @classmethod
@@ -431,11 +457,11 @@ class coth(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if i_coeff.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(i_coeff):
                     return S.ImaginaryUnit * C.cot(-i_coeff)
                 return -S.ImaginaryUnit * C.cot(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
             if arg.func == asinh:
@@ -473,6 +499,7 @@ class coth(HyperbolicFunction):
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
+                hints['complex'] = False
                 return (self.expand(deep, **hints), S.Zero)
             else:
                 return (self, S.Zero)
@@ -482,10 +509,6 @@ class coth(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
         denom = sinh(re)**2 + C.sin(im)**2
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
@@ -503,7 +526,7 @@ class coth(HyperbolicFunction):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -519,15 +542,20 @@ class coth(HyperbolicFunction):
 
 class asinh(Function):
     """
-    Usage
-    =====
-      asinh(x) -> Returns the inverse hyperbolic sine of x
+    The inverse hyperbolic sine function.
+
+    * asinh(x) -> Returns the inverse hyperbolic sine of x
+
+    See Also
+    ========
+
+    acosh, atanh, sinh
     """
     nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (self.args[0]**2 + 1)**(-S.Half)
+            return 1/sqrt(self.args[0]**2 + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -545,9 +573,9 @@ class asinh(Function):
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.One:
-                return C.log(2**S.Half + 1)
+                return C.log(sqrt(2) + 1)
             elif arg is S.NegativeOne:
-                return C.log(2**S.Half - 1)
+                return C.log(sqrt(2) - 1)
             elif arg.is_negative:
                 return -cls(-arg)
         else:
@@ -559,7 +587,7 @@ class asinh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.asin(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
@@ -581,7 +609,7 @@ class asinh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -592,15 +620,20 @@ class asinh(Function):
 
 class acosh(Function):
     """
-    Usage
-    =====
-      acosh(x) -> Returns the inverse hyperbolic cosine of x
+    The inverse hyperbolic cosine function.
+
+    * acosh(x) -> Returns the inverse hyperbolic cosine of x
+
+    See Also
+    ========
+
+    asinh, atanh, cosh
     """
     nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (self.args[0]**2 - 1)**(-S.Half)
+            return 1/sqrt(self.args[0]**2 - 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -657,11 +690,11 @@ class acosh(Function):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
         if i_coeff is not None:
-            if i_coeff.as_coeff_mul()[0].is_negative:
+            if _coeff_isneg(i_coeff):
                 return S.ImaginaryUnit * C.acos(i_coeff)
             return S.ImaginaryUnit * C.acos(-i_coeff)
         else:
-            if arg.as_coeff_mul()[0].is_negative:
+            if _coeff_isneg(arg):
                 return -cls(-arg)
 
     @staticmethod
@@ -685,7 +718,7 @@ class acosh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -696,9 +729,14 @@ class acosh(Function):
 
 class atanh(Function):
     """
-    Usage
-    =====
-      atanh(x) -> Returns the inverse hyperbolic tangent of x
+    The inverse hyperbolic tangent function.
+
+    * atanh(x) -> Returns the inverse hyperbolic tangent of x
+
+    See Also
+    ========
+
+    asinh, acosh, tanh
     """
     nargs = 1
 
@@ -736,7 +774,7 @@ class atanh(Function):
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.atan(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
@@ -751,7 +789,7 @@ class atanh(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -762,9 +800,9 @@ class atanh(Function):
 
 class acoth(Function):
     """
-    Usage
-    =====
-      acoth(x) -> Returns the inverse hyperbolic cotangent of x
+    The inverse hyperbolic cotangent function.
+
+    * acoth(x) -> Returns the inverse hyperbolic cotangent of x
     """
     nargs = 1
 
@@ -802,7 +840,7 @@ class acoth(Function):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * C.acot(i_coeff)
             else:
-                if arg.as_coeff_mul()[0].is_negative:
+                if _coeff_isneg(arg):
                     return -cls(-arg)
 
     @staticmethod
@@ -819,7 +857,7 @@ class acoth(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if C.Order(1,x).contains(arg):
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
             return arg
         else:
             return self.func(arg)

@@ -1,9 +1,9 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients, Mul, S, Pow
+        multinomial_coefficients, Mul, S, Pow, sieve
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
-    is_quad_residue, legendre_symbol, npartitions, totient, \
+    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1
@@ -11,10 +11,11 @@ from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
+from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
 def test_trailing():
     assert trailing(0) == 0
@@ -37,8 +38,12 @@ def test_multiplicity():
             assert multiplicity(b, (b**i) * 1000249) == i
     # Should be fast
     assert multiplicity(10, 10**10023) == 10023
-    # Should exit quick
-    assert multiplicity(1, 1) == 1
+    # Should exit quickly
+    assert multiplicity(10**10, 10**10) == 1
+    # Should raise errors for bad input
+    raises(ValueError, lambda: multiplicity(1, 1))
+    raises(ValueError, lambda: multiplicity(1, 2))
+    raises(ValueError, lambda: multiplicity(1.3, 2))
 
 def test_perfect_power():
     assert perfect_power(0) is False
@@ -117,6 +122,7 @@ def test_prime():
     assert prime(4096) == 38873
     assert prime(9096) == 94321
     assert prime(25023) == 287341
+    raises(ValueError, lambda: prime(0))
 
 def test_primepi():
     assert primepi(1) == 0
@@ -158,9 +164,9 @@ def test_generate():
 
     assert nextprime(2, 2) == 5
 
-    raises(ValueError, 'totient(0)')
+    raises(ValueError, lambda: totient(0))
 
-    raises(ValueError, 'primorial(0)')
+    raises(ValueError, lambda: primorial(0))
 
     assert mr(1, [2]) == False
 
@@ -178,7 +184,7 @@ def test_randprime():
     assert randprime(2, 3) == 2
     assert randprime(1, 3) == 2
     assert randprime(3, 5) == 3
-    raises(ValueError, 'randprime(20, 22)')
+    raises(ValueError, lambda: randprime(20, 22))
     for a in [100, 300, 500, 250000]:
         for b in [100, 300, 500, 250000]:
             p = randprime(a, a+b)
@@ -272,11 +278,11 @@ def test_factorint():
     # "close" and have a trivial factorization
     a=nextprime(2**2**8) # 78 digits
     b=nextprime(a + 2**2**4)
-    assert 'Fermat' in capture(lambda : factorint(a*b, verbose=1))
+    assert 'Fermat' in capture(lambda: factorint(a*b, verbose=1))
 
-    raises(ValueError, 'pollard_rho(4)')
-    raises(ValueError, 'pollard_pm1(3)')
-    raises(ValueError, 'pollard_pm1(10, B=2)')
+    raises(ValueError, lambda: pollard_rho(4))
+    raises(ValueError, lambda: pollard_pm1(3))
+    raises(ValueError, lambda: pollard_pm1(10, B=2))
     # verbose coverage
     n = nextprime(2**16)*nextprime(2**17)*nextprime(1901)
     assert 'with primes' in capture(lambda: factorint(n, verbose=1))
@@ -289,14 +295,14 @@ def test_factorint():
     # exceed 1st
     n=nextprime(2**17)
     n*=nextprime(n)
-    assert '1000' in capture(lambda : factorint(n, limit=1000, verbose=1))
+    assert '1000' in capture(lambda: factorint(n, limit=1000, verbose=1))
     n*=nextprime(n)
     assert len(factorint(n)) == 3
     assert len(factorint(n, limit=p1)) == 3
     n*=nextprime(2*n)
     # exceed 2nd
-    assert '2001' in capture(lambda : factorint(n, limit=2000, verbose=1))
-    assert capture(lambda : factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
+    assert '2001' in capture(lambda: factorint(n, limit=2000, verbose=1))
+    assert capture(lambda: factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
     # non-prime pm1 result
     n=nextprime(8069)
     n*=nextprime(2*n)*nextprime(2*n, 2)
@@ -322,6 +328,9 @@ def divisors_and_divisor_count():
     assert divisor_count(1) == 1
     assert divisor_count(6) == 4
     assert divisor_count(12) == 6
+
+    assert divisor_count(180, 3) == divisor_count(180//3)
+    assert divisor_count(2*3*5, 7) == 0
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
@@ -355,12 +364,35 @@ def test_residue():
 
     assert is_quad_residue(3, 7) == False
     assert is_quad_residue(10, 13) == True
-    assert is_quad_residue(12364, 139) == is_quad_residue(132, 139)
+    assert is_quad_residue(12364, 139) == is_quad_residue(12364 % 139, 139)
     assert is_quad_residue(207, 251) == True
+    assert is_quad_residue(0, 1) == True
+    assert is_quad_residue(1, 1) == True
+    assert is_quad_residue(0, 2) == is_quad_residue(1, 2) == True
+    assert is_quad_residue(1, 4) == True
+    assert is_quad_residue(2, 27) == False
+    assert [j for j in range(14) if is_quad_residue(j, 14)] == \
+           [0, 1, 2, 4, 7, 8, 9, 11]
+    raises(ValueError, lambda: is_quad_residue(1.1, 2))
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
     assert legendre_symbol(67, 101) == -1
+    assert legendre_symbol(0, 13) == 0
+    assert legendre_symbol(9, 3) == 0
+    raises(ValueError, lambda: legendre_symbol(2, 4))
+
+    assert jacobi_symbol(25, 41) == 1
+    assert jacobi_symbol(-23, 83) == -1
+    assert jacobi_symbol(3, 9) == 0
+    assert jacobi_symbol(42, 97) == -1
+    assert jacobi_symbol(3, 5) == -1
+    assert jacobi_symbol(7, 9) == 1
+    assert jacobi_symbol(0, 3) == 0
+    assert jacobi_symbol(0, 1) == 1
+    assert jacobi_symbol(2, 1) == 1
+    assert jacobi_symbol(1, 3) == 1
+    raises(ValueError, lambda: jacobi_symbol(3, 8))
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
@@ -369,9 +401,9 @@ def test_hex_pi_nth_digits():
 
 def test_crt():
     def mcrt(m, v, r, symmetric=False):
-        assert crt(m, v, symmetric) == r
+        assert crt(m, v, symmetric)[0] == r
         mm, e, s = crt1(m)
-        assert crt2(m, v, mm, e, s, symmetric) == r
+        assert crt2(m, v, mm, e, s, symmetric) == (r, mm)
 
     mcrt([2, 3, 5], [0, 0, 0], 0)
     mcrt([2, 3, 5], [1, 1, 1], 1)
@@ -379,6 +411,7 @@ def test_crt():
     mcrt([2, 3, 5], [-1, -1, -1], -1, True)
     mcrt([2, 3, 5], [-1, -1, -1], 2*3*5 - 1, False)
 
+    assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
 def test_binomial_coefficients_list():
     assert binomial_coefficients_list(0) == [1]
@@ -399,6 +432,7 @@ def test_multinomial_coefficients():
     assert multinomial_coefficients(1, 1) == {(1,): 1}
     assert multinomial_coefficients(1, 2) == {(2,): 1}
     assert multinomial_coefficients(1, 3) == {(3,): 1}
+    assert multinomial_coefficients(2, 0) == {(0, 0): 1}
     assert multinomial_coefficients(2, 1) == {(0, 1): 1, (1, 0): 1}
     assert multinomial_coefficients(2, 2) == {(2, 0): 1, (0, 2): 1, (1, 1): 2}
     assert multinomial_coefficients(2, 3) == {(3, 0): 1, (1, 2): 3, (0, 3): 1,
@@ -407,9 +441,19 @@ def test_multinomial_coefficients():
             (0, 0, 1): 1}
     assert multinomial_coefficients(3, 2) == {(0, 1, 1): 2, (0, 0, 2): 1,
             (1, 1, 0): 2, (0, 2, 0): 1, (1, 0, 1): 2, (2, 0, 0): 1}
-    assert multinomial_coefficients(3, 3) == {(2, 1, 0): 3, (0, 3, 0): 1,
+    mc = multinomial_coefficients(3, 3)
+    assert mc == {(2, 1, 0): 3, (0, 3, 0): 1,
             (1, 0, 2): 3, (0, 2, 1): 3, (0, 1, 2): 3, (3, 0, 0): 1,
             (2, 0, 1): 3, (1, 2, 0): 3, (1, 1, 1): 6, (0, 0, 3): 1}
+    assert dict(multinomial_coefficients_iterator(2, 0)) == {(0, 0): 1}
+    assert dict(multinomial_coefficients_iterator(2, 1)) == {(0, 1): 1, (1, 0): 1}
+    assert dict(multinomial_coefficients_iterator(2, 2)) == \
+        {(2, 0): 1, (0, 2): 1, (1, 1): 2}
+    assert dict(multinomial_coefficients_iterator(3, 3)) == mc
+    it = multinomial_coefficients_iterator(7, 2)
+    assert [it.next() for i in range(4)] == \
+    [((2, 0, 0, 0, 0, 0, 0), 1), ((1, 1, 0, 0, 0, 0, 0), 2),
+      ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
 def test_issue1257():
     assert factorint(1030903) == {53: 2, 367: 1}
@@ -454,7 +498,7 @@ def test_visual_factorint():
     assert factorint(42**2, visual=True) == Mul(Pow(2, 2, **no),
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
-    assert Pow(-1, 1, **no) in factorint(-42, visual=True).args
+    assert -1 in factorint(-42, visual=True).args
 
 def test_visual_io():
     sm = smoothness_p
@@ -491,3 +535,22 @@ def test_visual_io():
     assert fi({4: 2}, visual=False) == fi(16)
     assert fi(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == fi(2**10)
+
+def test_modular():
+    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
+    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
+    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
+    raises(ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
+
+def test_search():
+    assert 2 in sieve
+    assert 2.1 not in sieve
+    assert 1 not in sieve
+    assert 2**1000 not in sieve
+    raises(ValueError, lambda: sieve.search(1))

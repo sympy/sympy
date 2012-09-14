@@ -1,3 +1,5 @@
+from ..libmp.backend import xrange
+
 # TODO: should use diagonalization-based algorithms
 
 class MatrixCalculusMethods:
@@ -109,9 +111,13 @@ class MatrixCalculusMethods:
             42.0927851137247
 
         """
-        A = ctx.matrix(A)
         if method == 'pade':
-            return ctx._exp_pade(A)
+            prec = ctx.prec
+            ctx.prec += 2*A.rows
+            A = ctx.matrix(A)
+            res = ctx._exp_pade(A)
+            return res
+        A = ctx.matrix(A)
         prec = ctx.prec
         j = int(max(1, ctx.mag(ctx.mnorm(A,'inf'))))
         j += int(0.5*prec**0.5)

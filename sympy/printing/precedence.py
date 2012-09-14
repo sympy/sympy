@@ -1,5 +1,8 @@
 """A module providing information about the necessity of brackets"""
 
+from sympy import S
+from sympy.core.function import _coeff_isneg
+
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda":1,
@@ -24,6 +27,9 @@ PRECEDENCE_VALUES = {
     "Relational" : PRECEDENCE["Relational"],
     "Sub" : PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
+    "factorial": PRECEDENCE["Pow"],
+    "factorial2": PRECEDENCE["Pow"],
+    "NegativeInfinity": PRECEDENCE["Add"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -33,7 +39,7 @@ PRECEDENCE_VALUES = {
 
 # Precedence functions
 def precedence_Mul(item):
-    if item.as_coeff_mul()[0].is_negative:
+    if _coeff_isneg(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
@@ -47,10 +53,16 @@ def precedence_Integer(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
+def precedence_Float(item):
+    if item < 0:
+        return PRECEDENCE["Add"]
+    return PRECEDENCE["Atom"]
+
 PRECEDENCE_FUNCTIONS = {
     "Integer" : precedence_Integer,
     "Mul" : precedence_Mul,
     "Rational" : precedence_Rational,
+    "Float": precedence_Float,
 }
 
 

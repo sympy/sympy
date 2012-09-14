@@ -1,7 +1,7 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
     compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
 from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 def test_overloading():
     """Test that |, & are overloaded as expected"""
@@ -105,7 +105,7 @@ def test_Nor():
 def test_Implies():
     A, B, C = map(Boolean, symbols('A,B,C'))
 
-    raises(ValueError, "Implies(A,B,C)")
+    raises(ValueError, lambda: Implies(A,B,C))
     assert Implies(True, True) == True
     assert Implies(True, False) == False
     assert Implies(False, True) == True
@@ -157,7 +157,7 @@ see http://en.wikipedia.org/wiki/Boolean_algebra_(structure)
 """
 
 def test_commutative():
-    """Test for commutivity of And and Or"""
+    """Test for commutativity of And and Or"""
     A, B = map(Boolean, symbols('A,B'))
 
     assert A & B == B & A

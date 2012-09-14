@@ -144,10 +144,10 @@ def test_exp():
     assert exp(0) == 1
     assert exp(10000).ae(mpf('8.8068182256629215873e4342'))
     assert exp(-10000).ae(mpf('1.1354838653147360985e-4343'))
-    a = exp(mpf((1, 8198646019315405L, -53, 53)))
+    a = exp(mpf((1, 8198646019315405, -53, 53)))
     assert(a.bc == bitcount(a.man))
     mp.prec = 67
-    a = exp(mpf((1, 1781864658064754565L, -60, 61)))
+    a = exp(mpf((1, 1781864658064754565, -60, 61)))
     assert(a.bc == bitcount(a.man))
     mp.prec = 53
     assert exp(ln2 * 10).ae(1024)
@@ -199,7 +199,7 @@ def test_log():
     assert isnan(log(mpc(1,nan)).imag)
 
 def test_trig_hyperb_basic():
-    for x in (range(100) + range(-100,0)):
+    for x in (list(range(100)) + list(range(-100,0))):
         t = x / 4.1
         assert cos(mpf(t)).ae(math.cos(t))
         assert sin(mpf(t)).ae(math.sin(t))
@@ -380,8 +380,8 @@ def test_invhyperb_inaccuracy():
     assert (atanh(-1e-10)*10**10).ae(-1)
 
 def test_complex_functions():
-    for x in (range(10) + range(-10,0)):
-        for y in (range(10) + range(-10,0)):
+    for x in (list(range(10)) + list(range(-10,0))):
+        for y in (list(range(10)) + list(range(-10,0))):
             z = complex(x, y)/4.3 + 0.01j
             assert exp(mpc(z)).ae(cmath.exp(z))
             assert log(mpc(z)).ae(cmath.log(z))
@@ -393,6 +393,8 @@ def test_complex_functions():
             assert tanh(mpc(z)).ae(cmath.tanh(z))
 
 def test_complex_inverse_functions():
+    mp.dps = 15
+    iv.dps = 15
     for (z1, z2) in random_complexes(30):
         # apparently cmath uses a different branch, so we
         # can't use it for comparison
@@ -474,7 +476,7 @@ def test_arg_sign():
     assert arg(inf) == 0
     assert arg(-inf).ae(pi)
     assert isnan(arg(nan))
-    #assert arg(inf*j).ae(pi/2)
+    assert arg(inf*j).ae(pi/2)
     assert sign(0) == 0
     assert sign(3) == 1
     assert sign(-3) == -1
@@ -568,7 +570,7 @@ def test_root():
         mp.rounding = rnd
         for n in [-5, -3, 3, 5]:
             prec = 50
-            for i in xrange(10):
+            for i in range(10):
                 mp.prec = prec
                 a = rand()
                 mp.prec = 2*prec

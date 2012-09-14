@@ -3,7 +3,9 @@ Computational functions for interval arithmetic.
 
 """
 
-from libmpf import (
+from .backend import xrange
+
+from .libmpf import (
     ComplexResult,
     round_down, round_up, round_floor, round_ceiling, round_nearest,
     prec_to_dps, repr_dps, dps_to_prec,
@@ -17,12 +19,12 @@ from libmpf import (
     mpf_div, mpf_shift, mpf_pow_int,
     from_man_exp, MPZ_ONE)
 
-from libelefun import (
+from .libelefun import (
     mpf_log, mpf_exp, mpf_sqrt, mpf_atan, mpf_atan2,
     mpf_pi, mod_pi2, mpf_cos_sin
 )
 
-from gammazeta import mpf_gamma, mpf_rgamma, mpf_loggamma, mpc_loggamma
+from .gammazeta import mpf_gamma, mpf_rgamma, mpf_loggamma, mpc_loggamma
 
 def mpi_str(s, prec):
     sa, sb = s

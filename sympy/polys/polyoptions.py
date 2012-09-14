@@ -1,7 +1,8 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import any, all, numbered_symbols, topological_sort
+from sympy.utilities import numbered_symbols, topological_sort
+from sympy.utilities.iterables import has_dups
 
 from sympy.polys.polyerrors import (
     GeneratorsError,
@@ -48,7 +49,7 @@ class BooleanOption(Option):
 
     @classmethod
     def preprocess(cls, value):
-        if value is True or value is False or value is 1 or value is 0:
+        if value in [True, False]:
             return bool(value)
         else:
             raise OptionError("'%s' must have a boolean value assigned, got %s" % (cls.option, value))
@@ -71,7 +72,8 @@ class Options(dict):
     """
     Options manager for polynomial manipulation module.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyoptions import Options
     >>> from sympy.polys.polyoptions import build_options
@@ -100,7 +102,6 @@ class Options(dict):
     * Modulus --- option
     * Symmetric --- boolean option
     * Strict --- boolean option
-    * Repr --- option
 
     **Flags**
 
@@ -126,19 +127,37 @@ class Options(dict):
             args = dict(args)
             args['gens'] = gens
 
-        for option, value in args.iteritems():
-            try:
-                cls = self.__options__[option]
-            except KeyError:
-                raise OptionError("'%s' is not a valid option" % option)
+        defaults = args.pop('defaults', {})
 
-            if issubclass(cls, Flag):
-                if flags is None or option not in flags:
-                    if strict:
-                        raise OptionError("'%s' flag is not allowed in this context" % option)
+        def preprocess_options(args):
+            for option, value in args.iteritems():
+                try:
+                    cls = self.__options__[option]
+                except KeyError:
+                    raise OptionError("'%s' is not a valid option" % option)
 
-            if value is not None:
-                self[option] = cls.preprocess(value)
+                if issubclass(cls, Flag):
+                    if flags is None or option not in flags:
+                        if strict:
+                            raise OptionError("'%s' flag is not allowed in this context" % option)
+
+                if value is not None:
+                    self[option] = cls.preprocess(value)
+
+        preprocess_options(args)
+
+        for key, value in dict(defaults).iteritems():
+            if key in self:
+                del defaults[key]
+            else:
+                for option in self.keys():
+                    cls = self.__options__[option]
+
+                    if key in cls.excludes:
+                        del defaults[key]
+                        break
+
+        preprocess_options(defaults)
 
         for option in self.keys():
             cls = self.__options__[option]
@@ -262,7 +281,7 @@ class Gens(Option):
 
         if gens == (None,):
             gens = ()
-        elif len(set(gens)) != len(gens):
+        elif has_dups(gens):
             raise GeneratorsError("duplicated generators: %s" % str(gens))
         elif any(gen.is_commutative is False for gen in gens):
             raise GeneratorsError("non-commutative generators: %s" % str(gens))
@@ -332,7 +351,7 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.monomial_key('lex')
+        return sympy.polys.monomialtools.lex
 
     @classmethod
     def preprocess(cls, order):
@@ -489,9 +508,9 @@ class Extension(Option):
 
     @classmethod
     def preprocess(cls, extension):
-        if extension is True or extension is 1:
+        if extension == 1:
             return bool(extension)
-        elif extension is False or extension is 0:
+        elif extension == 0:
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
@@ -555,31 +574,6 @@ class Strict(BooleanOption):
     @classmethod
     def default(cls):
         return True
-
-class Repr(Option):
-    """``repr`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
-
-    option = 'repr'
-
-    @classmethod
-    def default(cls):
-        return sympy.polys.densepolys.DensePoly
-
-    @classmethod
-    def preprocess(cls, repr):
-        if isinstance(repr, str):
-            if repr == 'sparse':
-                return sympy.polys.sparsepolys.SparsePoly
-            elif repr == 'dense':
-                return sympy.polys.densepolys.DensePoly
-            else:
-                raise OptionError("'%s' is not a valid value 'repr' option" % repr)
-        elif isinstance(repr, sympy.polys.polyclasses.GenericPoly):
-            return repr
-        else:
-            raise OptionError("'repr' must a string or a class, got %s" % repr)
 
 class Auto(BooleanOption, Flag):
     """``auto`` flag to polynomial manipulation functions. """
@@ -686,6 +680,20 @@ class Symbols(Flag):
         else:
             raise OptionError("expected an iterator or iterable container, got %s" % symbols)
 
+class Method(Flag):
+    """``method`` flag to polynomial manipulation functions. """
+
+    __metaclass__ = OptionType
+
+    option = 'method'
+
+    @classmethod
+    def preprocess(cls, method):
+        if isinstance(method, str):
+            return method.lower()
+        else:
+            raise OptionError("expected a string, got %s" % method)
+
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
     if args is None:
@@ -700,7 +708,8 @@ def allowed_flags(args, flags):
     """
     Allow specified flags to be used in the given context.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyoptions import allowed_flags
     >>> from sympy.polys.domains import ZZ
@@ -724,5 +733,12 @@ def allowed_flags(args, flags):
         except KeyError:
             raise OptionError("'%s' is not a valid option" % arg)
 
-Options._init_dependencies_order()
+def set_defaults(options, **defaults):
+    """Update options with default values. """
+    if 'defaults' not in options:
+        options = dict(options)
+        options['defaults'] = defaults
 
+    return options
+
+Options._init_dependencies_order()

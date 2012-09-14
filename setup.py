@@ -30,20 +30,24 @@ sympy@googlegroups.com and ask for help.
 from distutils.core import setup
 from distutils.core import Command
 import sys
+import subprocess
+import os
 
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2,4):
-    print "Sympy requires Python 2.4 or newer. Python %d.%d detected" % \
-          sys.version_info[:2]
+if sys.version_info[:2] < (2,5):
+    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" % \
+          sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find * -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$ | thirdparty" `; do echo "'${i//\//.}',"; done | sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.categories',
+    'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
     'sympy.external',
@@ -59,6 +63,7 @@ modules = [
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
     'sympy.matrices',
+    'sympy.matrices.expressions',
     'sympy.mpmath',
     'sympy.mpmath.calculus',
     'sympy.mpmath.functions',
@@ -68,29 +73,34 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
+    'sympy.plotting.intervalmath',
+    'sympy.plotting.pygletplot',
     'sympy.polys',
+    'sympy.polys.agca',
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.series',
+    'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
+    'sympy.stats',
     'sympy.tensor',
-    'sympy.thirdparty',
     'sympy.utilities',
     'sympy.utilities.mathml',
-    ]
+  ]
 
 class audit(Command):
-    """Audits Sympy's source code for following issues:
+    """Audits SymPy's source code for following issues:
         - Names which are used but not defined or used before they are defined.
         - Names which are redefined without having been used.
     """
 
-    description = "Audit Sympy source with PyFlakes"
+    description = "Audit SymPy source with PyFlakes"
     user_options = []
 
     def initialize_options(self):
@@ -103,8 +113,8 @@ class audit(Command):
         import os
         try:
             import pyflakes.scripts.pyflakes as flakes
-        except:
-            print """In order to run the audit, you need to have PyFlakes installed."""
+        except ImportError:
+            print("In order to run the audit, you need to have PyFlakes installed.")
             sys.exit(-1)
         # We don't want to audit external dependencies
         ext = ('mpmath',)
@@ -160,11 +170,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if sympy.test():
-            # all regular tests run successfuly, so let's also run doctests
-            # (if some regular test fails, the doctests are not run)
-            sympy.doctest()
-
+        sympy.utilities.runtests.run_all_tests()
 
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""
@@ -198,6 +204,8 @@ class run_benchmarks(Command):
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.categories.tests',
+    'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.external.tests',
@@ -208,6 +216,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.logic.tests',
+    'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
@@ -215,52 +224,50 @@ tests = [
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
+    'sympy.plotting.intervalmath.tests',
     'sympy.polys.tests',
+    'sympy.polys.agca.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
     'sympy.series.tests',
     'sympy.simplify.tests',
-    'sympy.slow_tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.tensor.tests',
     'sympy.utilities.tests',
     ]
 
-# update the following list from:
-# http://pyglet.googlecode.com/svn/trunk/setup.py
-# (whenever we update pyglet in sympy)
-# try ./setup.py sdist to see if it works
-pyglet_packages=[
-        'pyglet',
-        'pyglet.app',
-        'pyglet.font',
-        'pyglet.gl',
-        'pyglet.graphics',
-        'pyglet.image',
-        'pyglet.image.codecs',
-        'pyglet.media',
-        'pyglet.media.drivers',
-        'pyglet.media.drivers.directsound',
-        'pyglet.media.drivers.openal',
-        'pyglet.text',
-        'pyglet.text.formats',
-        'pyglet.window',
-        'pyglet.window.carbon',
-        'pyglet.window.win32',
-        'pyglet.window.xlib',
-]
-pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
+classifiers = [
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.5',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    ]
+
+long_description = '''SymPy is a Python library for symbolic mathematics. It aims
+to become a full-featured computer algebra system (CAS) while keeping the code
+as simple as possible in order to be comprehensible and easily extensible.
+SymPy is written entirely in Python and does not require any external libraries.'''
 
 setup(
       name = 'sympy',
       version = sympy.__version__,
       description = 'Computer algebra system (CAS) in Python',
+      long_description = long_description,
       author = 'SymPy development team',
       author_email = 'sympy@googlegroups.com',
       license = 'BSD',
+      keywords = "Math CAS",
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + modules + tests + pyglet_packages,
+      packages = ['sympy'] + modules + tests,
       scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
@@ -270,5 +277,5 @@ setup(
                      'clean': clean,
                      'audit' : audit,
                      },
+      classifiers = classifiers,
       )
-

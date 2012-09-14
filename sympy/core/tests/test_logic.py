@@ -1,6 +1,7 @@
-from sympy.core.logic import fuzzy_not, name_not, Logic, And, Or, Not, \
-                             fuzzy_and
+from sympy.core.logic import fuzzy_not, Logic, And, Or, Not, fuzzy_and
 from sympy.utilities.pytest import raises
+
+from sympy.core.compatibility import cmp
 
 T = True
 F = False
@@ -24,10 +25,9 @@ def test_fuzzy_and():
     assert fuzzy_and([F, F]) == F
     assert fuzzy_and([F, U]) == F
     assert fuzzy_and([U, U]) == U
-
-def test_name_not():
-    assert name_not('zero')  == '!zero'
-    assert name_not('!zero') == 'zero'
+    assert [fuzzy_and(w) for w in [U, T, F]] == [U, T, F]
+    raises(ValueError, lambda: fuzzy_and([]))
+    raises(ValueError, lambda: fuzzy_and())
 
 def test_logic_cmp():
     l1 = And('a', Not('b'))
@@ -43,8 +43,8 @@ def test_logic_cmp():
     assert And('a','b','c') == And('c','a','b')
 
 def test_logic_onearg():
-    raises(TypeError, 'And()')
-    raises(TypeError, 'Or ()')
+    assert And() == True
+    assert Or() == False
 
     assert And(T)   == T
     assert And(F)   == F
@@ -55,8 +55,8 @@ def test_logic_onearg():
     assert Or ('a') == 'a'
 
 def test_logic_xnotx():
-    assert And('a', '!a') == F
-    assert Or ('a', '!a') == T
+    assert And('a', Not('a')) == F
+    assert Or('a', Not('a')) == T
 
 def test_logic_eval_TF():
     assert And(F, F)   == F
@@ -88,7 +88,7 @@ def test_logic_expand():
     t = And(Or('a','b'), 'c')
     assert t.expand()  == Or(And('a','c'), And('b','c'))
 
-    t = And(Or('a','!b'),'b')
+    t = And(Or('a', Not('b')), 'b')
     assert t.expand()  == And('a','b')
 
     t = And(Or('a','b'), Or('c','d'))
@@ -98,7 +98,7 @@ def test_logic_fromstring():
     S = Logic.fromstring
 
     assert S('a')           == 'a'
-    assert S('!a')          == '!a'
+    assert S('!a')          == Not('a')
     assert S('a & b')       == And('a','b')
     assert S('a | b')       == Or ('a','b')
     assert S('a | b & c')   == And(Or ('a','b'), 'c')
@@ -106,18 +106,18 @@ def test_logic_fromstring():
     assert S('a & b & c')   == And('a','b','c')
     assert S('a | b | c')   == Or ('a','b','c')
 
-    raises(ValueError, "S('| a')")
-    raises(ValueError, "S('& a')")
-    raises(ValueError, "S('a | | b')")
-    raises(ValueError, "S('a | & b')")
-    raises(ValueError, "S('a & & b')")
-    raises(ValueError, "S('a |')")
+    raises(ValueError, lambda: S('| a'))
+    raises(ValueError, lambda: S('& a'))
+    raises(ValueError, lambda: S('a | | b'))
+    raises(ValueError, lambda: S('a | & b'))
+    raises(ValueError, lambda: S('a & & b'))
+    raises(ValueError, lambda: S('a |'))
 
 def test_logic_not():
-    assert Not('a')     == '!a'
-    assert Not('!a')    == 'a'
+    assert Not('a') != '!a'
+    assert Not('!a') != 'a'
 
     # NOTE: we may want to change default Not behaviour and put this
     # functionality into some method.
-    assert Not(And('a','b'))  == Or ('!a','!b')
-    assert Not(Or ('a','b'))  == And('!a','!b')
+    assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
+    assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))

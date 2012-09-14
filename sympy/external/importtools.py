@@ -6,8 +6,8 @@ import sys
 # For example, you might set both to False before running the tests so that
 # warnings are not printed to the console, or set both to True for debugging.
 
-WARN_NOT_INSTALLED = False
-WARN_OLD_VERSION = True
+WARN_NOT_INSTALLED = None # Default is False
+WARN_OLD_VERSION = None # Default is True
 
 def __sympy_debug():
     # helper function from sympy/__init__.py
@@ -23,7 +23,7 @@ if __sympy_debug():
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=None, warn_old_version=None,
         module_version_attr='__version__', module_version_attr_call_args=None,
-        __import__kwargs={}):
+        __import__kwargs={}, catch=()):
     """
     Import and return a module if it is installed.
 
@@ -64,7 +64,12 @@ def import_module(module, min_module_version=None, min_python_version=None,
     example, to import a submodule A.B, you must pass a nonempty fromlist option
     to __import__.  See the docstring of __import__().
 
-    **Example**
+    This catches ImportError to determine if the module is not installed.  To
+    catch additional errors, pass them as a tuple to the catch keyword
+    argument.
+
+    Examples
+    ========
 
     >>> from sympy.external import import_module
 
@@ -87,11 +92,18 @@ def import_module(module, min_module_version=None, min_python_version=None,
     >>> p3 = import_module('mpl_toolkits.mplot3d',
     ... __import__kwargs={'fromlist':['something']})
 
+    >>> # matplotlib.pyplot can raise RuntimeError when the display cannot be opened
+    >>> matplotlib = import_module('matplotlib',
+    ... __import__kwargs={'fromlist':['pyplot']}, catch=(RuntimeError,))
+
     """
-    if warn_old_version is None:
-        warn_old_version = WARN_OLD_VERSION
-    if warn_not_installed is None:
-        warn_not_installed = WARN_NOT_INSTALLED
+    # keyword argument overrides default, and global variable overrides
+    # keyword argument.
+    warn_old_version = (WARN_OLD_VERSION if WARN_OLD_VERSION is not None
+        else warn_old_version or True)
+    warn_not_installed = (WARN_NOT_INSTALLED if WARN_NOT_INSTALLED is not None
+        else warn_not_installed or False)
+
     import warnings
 
     # Check Python first so we don't waste time importing a module we can't use
@@ -103,30 +115,21 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning)
             return
 
-    # This is needed for Python 2.4 compability, because in Python 2.4
-    # __import__() is a four-arg function (in 2.5+ all but the first arg are
-    # keyword arguments).
-    if sys.version_info[:2] <= (2, 4):
-        globals = __import__kwargs.get('globals', {})
-        locals = __import__kwargs.get('locals', {})
-        fromlist = __import__kwargs.get('fromlist', [])
-        try:
-            mod = __import__(module, globals, locals, fromlist)
-        except ImportError:
-            installed = False
-        else:
-            installed = True
-    else:
-        try:
-            mod = __import__(module, **__import__kwargs)
-        except ImportError:
-            installed = False
-        else:
-            installed = True
+    # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
+    if module == 'numpy' and '__pypy__' in sys.builtin_module_names:
+        return
 
-    if not installed:
+    try:
+        mod = __import__(module, **__import__kwargs)
+    except ImportError:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
+        return
+    # TODO: After 2.5 is dropped, use new 'as' keyword
+    #except catch as e:
+    except catch, e:
+        if warn_not_installed:
+            warnings.warn("%s module could not be used (%s)" % (module, repr(e)))
         return
 
     if min_module_version:
@@ -137,7 +140,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
                 if isinstance(min_module_version, basestring):
-                   verstr = min_module_version
+                    verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))
                 else:

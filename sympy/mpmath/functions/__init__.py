@@ -1,13 +1,13 @@
-import functions
+from . import functions
 # Hack to update methods
-import factorials
-import hypergeometric
-import expintegrals
-import bessel
-import orthogonal
-import theta
-import elliptic
-import zeta
-import rszeta
-import zetazeros
-import qfunctions
+from . import factorials
+from . import hypergeometric
+from . import expintegrals
+from . import bessel
+from . import orthogonal
+from . import theta
+from . import elliptic
+from . import zeta
+from . import rszeta
+from . import zetazeros
+from . import qfunctions

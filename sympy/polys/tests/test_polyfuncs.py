@@ -78,8 +78,7 @@ def test_viete():
 
     assert viete(a*x**2 + b*x + c, [r1, r2], x) == [(r1 + r2, -b/a), (r1*r2, c/a)]
 
-    raises(ValueError, "viete(1, [], x)")
-    raises(ValueError, "viete(x**2 + 1, [r1])")
+    raises(ValueError, lambda: viete(1, [], x))
+    raises(ValueError, lambda: viete(x**2 + 1, [r1]))
 
-    raises(MultivariatePolynomialError, "viete(x + y, [r1])")
-
+    raises(MultivariatePolynomialError, lambda: viete(x + y, [r1]))

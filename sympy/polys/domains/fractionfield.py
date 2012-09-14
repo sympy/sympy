@@ -5,7 +5,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMF
-from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError
+from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 class FractionField(Field, CharacteristicZero, CompositeDomain):
@@ -23,8 +23,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         lev = len(gens) - 1
 
-        self.zero = self.dtype.zero(lev, dom)
-        self.one  = self.dtype.one(lev, dom)
+        self.zero = self.dtype.zero(lev, dom, ring=self)
+        self.one  = self.dtype.one(lev, dom, ring=self)
 
         self.dom  = dom
         self.gens = gens
@@ -36,24 +36,26 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
 
     def __call__(self, a):
-        """Construct an element of `self` domain from `a`. """
-        return DMF(a, self.dom, len(self.gens)-1)
+        """Construct an element of ``self`` domain from ``a``. """
+        return DMF(a, self.dom, len(self.gens)-1, ring=self)
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
+        if not isinstance(other, FractionField):
+            return False
         return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
     def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
+        """Returns ``False`` if two domains are equivalent. """
         return not self.__eq__(other)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
                 basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         p, q = a.as_numer_denom()
 
         num, _ = dict_from_basic(p, gens=self.gens)
@@ -68,39 +70,39 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         return self((num, den)).cancel()
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert a Python ``int`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """Convert a SymPy ``Integer`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """Convert a SymPy ``Rational`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Float` object to `dtype`. """
+        """Convert a SymPy ``Float`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert a ``DMF`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return K1(a.rep)
@@ -118,7 +120,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """
         Convert a fraction field element to another fraction field.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMF
         >>> from sympy.polys.domains import ZZ, QQ
@@ -130,7 +133,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        DMF(([1/1, 2/1], [1/1, 1/1]), QQ)
+        (x + 2)/(x + 1)
 
         """
         if K1.gens == K0.gens:
@@ -150,7 +153,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             return K1((dict(zip(nmonoms, ncoeffs)), dict(zip(dmonoms, dcoeffs))))
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """Returns a ring associated with ``self``. """
         from sympy.polys.domains import PolynomialRing
         return PolynomialRing(self.dom, *self.gens)
 
@@ -163,29 +166,29 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         raise NotImplementedError('nested domains not allowed')
 
     def is_positive(self, a):
-        """Returns True if `a` is positive. """
+        """Returns True if ``a`` is positive. """
         return self.dom.is_positive(a.numer().LC())
 
     def is_negative(self, a):
-        """Returns True if `a` is negative. """
+        """Returns True if ``a`` is negative. """
         return self.dom.is_negative(a.numer().LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `a` is non-positive. """
+        """Returns True if ``a`` is non-positive. """
         return self.dom.is_nonpositive(a.numer().LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `a` is non-negative. """
+        """Returns True if ``a`` is non-negative. """
         return self.dom.is_nonnegative(a.numer().LC())
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """Returns numerator of ``a``. """
         return a.numer()
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """Returns denominator of ``a``. """
         return a.denom()
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns factorial of ``a``. """
         return self.dtype(self.dom.factorial(a))

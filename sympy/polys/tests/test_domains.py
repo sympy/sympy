@@ -1,22 +1,27 @@
-"""Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
+"""Tests for classes defining properties of ground domains, e.g. ZZ, QQ,
+ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, all, Poly, Integer, Rational
+from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
-    ZZ, QQ, RR, PolynomialRing, FractionField, EX,
-    PythonRationalType as Q, ZZ_sympy, QQ_sympy
-)
+    ZZ, QQ, RR, FF, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+    RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
+
+from sympy.polys.domains.modularinteger import ModularIntegerFactory
+
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
     GeneratorsError,
-    DomainError,
-)
+    CoercionFailed,
+    NotInvertible,
+    DomainError)
+
 from sympy.polys.polyclasses import DMP, DMF
 from sympy.utilities.pytest import raises, XFAIL
 
-ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
+ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
 
 def test_Domain__unify():
     assert ZZ.unify(ZZ) == ZZ
@@ -182,10 +187,10 @@ def test_Domain__unify():
 
     ext = QQ.algebraic_field(sqrt(7))
 
-    raises(NotImplementedError, "alg.unify(ext)")
+    raises(NotImplementedError, lambda: alg.unify(ext))
 
-    raises(UnificationFailed, "ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z'))")
-    raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
+    raises(UnificationFailed, lambda: ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z')))
+    raises(UnificationFailed, lambda: ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z')))
 
 def test_Domain__contains__():
     assert (0 in EX) == True
@@ -349,9 +354,9 @@ def test_Domain_get_ring():
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
     assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
-    raises(DomainError, "EX.get_ring()")
-    raises(DomainError, "RR.get_ring()")
-    raises(DomainError, "ALG.get_ring()")
+    raises(DomainError, lambda: EX.get_ring())
+    raises(DomainError, lambda: RR.get_ring())
+    raises(DomainError, lambda: ALG.get_ring())
 
 def test_Domain_get_field():
     assert EX.has_assoc_Field == True
@@ -367,7 +372,7 @@ def test_Domain_get_field():
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
     assert QQ.get_field() == QQ
-    raises(DomainError, "RR.get_field()")
+    raises(DomainError, lambda: RR.get_field())
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
     assert QQ[x].get_field() == QQ.frac_field(x)
@@ -394,7 +399,7 @@ def test_Domain_convert():
     assert ZZ.convert(DMP([[ZZ(1)]], ZZ)) == ZZ(1)
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, "ZZ.poly_ring()")
+    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
 
 def test_PolynomialRing_from_FractionField():
     x = DMF(([1, 0, 1], [1, 1]), ZZ)
@@ -404,7 +409,7 @@ def test_PolynomialRing_from_FractionField():
     assert ZZ['x'].from_FractionField(y, ZZ['x']) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, "ZZ.frac_field()")
+    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
 
 @XFAIL
 def test_CC_to_from_sympy():
@@ -420,16 +425,16 @@ def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
     assert ZZ.frac_field(x).inject(y, z) == ZZ.frac_field(x, y, z)
-    raises(GeneratorsError, "ZZ[x].inject(x)")
+    raises(GeneratorsError, lambda: ZZ[x].inject(x))
 
 def test_Domain_map():
     seq = ZZ.map([1, 2, 3, 4])
 
-    assert all([ ZZ.of_type(elt) for elt in seq ])
+    assert all(ZZ.of_type(elt) for elt in seq)
 
     seq = ZZ.map([[1, 2, 3, 4]])
 
-    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
+    assert all(ZZ.of_type(elt) for elt in seq[0]) and len(seq) == 1
 
 def test_Domain___eq__():
     assert (ZZ[x,y] == ZZ[x,y]) is True
@@ -571,8 +576,8 @@ def test_PythonRationalType__div__():
     assert 2 / Q(1, 2) == Q(4)
     assert Q(1, 2) / 2 == Q(1, 4)
 
-    raises(ZeroDivisionError, "Q(1, 2) / Q(0)")
-    raises(ZeroDivisionError, "Q(1, 2) / 0")
+    raises(ZeroDivisionError, lambda: Q(1, 2) / Q(0))
+    raises(ZeroDivisionError, lambda: Q(1, 2) / 0)
 
 def test_PythonRationalType__pow__():
     assert Q(1)**10 == Q(1)
@@ -612,6 +617,178 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
 
+def test_FF_of_type():
+    assert FF(3).of_type(FF(3)(1)) is True
+    assert FF(5).of_type(FF(5)(3)) is True
+    assert FF(5).of_type(FF(7)(3)) is False
+
 def test___eq__():
     assert not QQ['x'] == ZZ['x']
     assert not QQ.frac_field(x) == ZZ.frac_field(x)
+
+def test_RealDomain_from_sympy():
+    RR = RR_mpmath()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    raises(CoercionFailed, lambda: RR.convert(x))
+    raises(CoercionFailed, lambda: RR.convert(oo))
+    raises(CoercionFailed, lambda: RR.convert(-oo))
+
+    RR = RR_sympy()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    assert RR.n(3, 2) == RR.evalf(3, 2) == Rational(3).n(2)
+    raises(CoercionFailed, lambda: RR.convert(x))
+    raises(CoercionFailed, lambda: RR.convert(oo))
+    raises(CoercionFailed, lambda: RR.convert(-oo))
+
+def test_ModularInteger():
+    GF = ModularIntegerFactory(3)
+
+    a = GF(0)
+    assert isinstance(a, GF) and a == 0
+    a = GF(1)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)
+    assert isinstance(a, GF) and a == 2
+    a = GF(3)
+    assert isinstance(a, GF) and a == 0
+    a = GF(4)
+    assert isinstance(a, GF) and a == 1
+
+    a = GF(GF(0))
+    assert isinstance(a, GF) and a == 0
+    a = GF(GF(1))
+    assert isinstance(a, GF) and a == 1
+    a = GF(GF(2))
+    assert isinstance(a, GF) and a == 2
+    a = GF(GF(3))
+    assert isinstance(a, GF) and a == 0
+    a = GF(GF(4))
+    assert isinstance(a, GF) and a == 1
+
+    a = -GF(1)
+    assert isinstance(a, GF) and a == 2
+    a = -GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2 + GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 3 - GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2*GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2/GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 1 % GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = GF(2)**0
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)**1
+    assert isinstance(a, GF) and a == 2
+    a = GF(2)**2
+    assert isinstance(a, GF) and a == 1
+
+    assert bool(GF(3)) is False
+    assert bool(GF(4)) is True
+
+    GF = ModularIntegerFactory(5)
+
+    a = GF(1)**(-1)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)**(-1)
+    assert isinstance(a, GF) and a == 3
+    a = GF(3)**(-1)
+    assert isinstance(a, GF) and a == 2
+    a = GF(4)**(-1)
+    assert isinstance(a, GF) and a == 4
+
+    assert (GF(1) <  GF(2)) == True
+    assert (GF(1) <= GF(2)) == True
+    assert (GF(1) >  GF(2)) == False
+    assert (GF(1) >= GF(2)) == False
+
+    assert (GF(3) <  GF(2)) == False
+    assert (GF(3) <= GF(2)) == False
+    assert (GF(3) >  GF(2)) == True
+    assert (GF(3) >= GF(2)) == True
+
+    assert (GF(1) <  GF(7)) == True
+    assert (GF(1) <= GF(7)) == True
+    assert (GF(1) >  GF(7)) == False
+    assert (GF(1) >= GF(7)) == False
+
+    assert (GF(3) <  GF(7)) == False
+    assert (GF(3) <= GF(7)) == False
+    assert (GF(3) >  GF(7)) == True
+    assert (GF(3) >= GF(7)) == True
+
+    assert (GF(1) <  2) == True
+    assert (GF(1) <= 2) == True
+    assert (GF(1) >  2) == False
+    assert (GF(1) >= 2) == False
+
+    assert (GF(3) <  2) == False
+    assert (GF(3) <= 2) == False
+    assert (GF(3) >  2) == True
+    assert (GF(3) >= 2) == True
+
+    assert (GF(1) <  7) == True
+    assert (GF(1) <= 7) == True
+    assert (GF(1) >  7) == False
+    assert (GF(1) >= 7) == False
+
+    assert (GF(3) <  7) == False
+    assert (GF(3) <= 7) == False
+    assert (GF(3) >  7) == True
+    assert (GF(3) >= 7) == True
+
+    raises(NotInvertible, lambda: GF(0)**(-1))
+    raises(NotInvertible, lambda: GF(5)**(-1))
+
+    raises(ValueError, lambda: ModularIntegerFactory(0))
+    raises(ValueError, lambda: ModularIntegerFactory(2.1))
+    raises(TypeError, lambda: ModularIntegerFactory(3, QQ))

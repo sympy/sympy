@@ -70,21 +70,21 @@ def test_RootOf___new__():
     assert RootOf(x**4 + 3*x**3, 2) == 0
     assert RootOf(x**4 + 3*x**3, 3) == 0
 
-    raises(GeneratorsNeeded, "RootOf(0, 0)")
-    raises(GeneratorsNeeded, "RootOf(1, 0)")
+    raises(GeneratorsNeeded, lambda: RootOf(0, 0))
+    raises(GeneratorsNeeded, lambda: RootOf(1, 0))
 
-    raises(PolynomialError, "RootOf(Poly(0, x), 0)")
-    raises(PolynomialError, "RootOf(Poly(1, x), 0)")
+    raises(PolynomialError, lambda: RootOf(Poly(0, x), 0))
+    raises(PolynomialError, lambda: RootOf(Poly(1, x), 0))
 
-    raises(PolynomialError, "RootOf(x - y, 0)")
+    raises(PolynomialError, lambda: RootOf(x - y, 0))
 
-    raises(NotImplementedError, "RootOf(x**3 - x + sqrt(2), 0)")
-    raises(NotImplementedError, "RootOf(x**3 - x + I, 0)")
+    raises(NotImplementedError, lambda: RootOf(x**3 - x + sqrt(2), 0))
+    raises(NotImplementedError, lambda: RootOf(x**3 - x + I, 0))
 
-    raises(IndexError, "RootOf(x**2 - 1,-4)")
-    raises(IndexError, "RootOf(x**2 - 1,-3)")
-    raises(IndexError, "RootOf(x**2 - 1, 2)")
-    raises(IndexError, "RootOf(x**2 - 1, 3)")
+    raises(IndexError, lambda: RootOf(x**2 - 1,-4))
+    raises(IndexError, lambda: RootOf(x**2 - 1,-3))
+    raises(IndexError, lambda: RootOf(x**2 - 1, 2))
+    raises(IndexError, lambda: RootOf(x**2 - 1, 3))
 
     assert RootOf(Poly(x - y, x), 0) == y
 
@@ -94,7 +94,7 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
-    raises(NotImplementedError, "RootOf(x**3 + x + 2*y, x, 0)")
+    raises(NotImplementedError, lambda: RootOf(x**3 + x + 2*y, x, 0))
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
@@ -153,8 +153,8 @@ def test_RootOf_real_roots():
 def test_RootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         RootOf(x**3 - x**2 + 1, 0),
-        -S(1)/2 - 3**(S(1)/2)*I/2,
-        -S(1)/2 + 3**(S(1)/2)*I/2,
+        -S(1)/2 - sqrt(3)*I/2,
+        -S(1)/2 + sqrt(3)*I/2,
         RootOf(x**3 - x**2 + 1, 1),
         RootOf(x**3 - x**2 + 1, 2),
     ]
@@ -173,21 +173,16 @@ def test_RootSum___new__():
     g = Lambda(r, log(r*x))
     s = RootSum(f, g)
 
-    rootofs = sum(log(RootOf(f, i)*x) for i in (0, 1, 2))
-
     assert isinstance(s, RootSum) == True
-    assert s.doit() == rootofs
 
     assert RootSum(f**2, g) == 2*RootSum(f, g)
-    assert RootSum(f**2, g).doit() == 2*rootofs
-
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
-    assert RootSum((x - 7)*f**3, g).doit() == log(7*x) + 3*rootofs
+
     # Issue 2472
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
-    raises(MultivariatePolynomialError, "RootSum(x**3 + x + y)")
-    raises(ValueError, "RootSum(x**2 + 3, lambda x: x)")
+    raises(MultivariatePolynomialError, lambda: RootSum(x**3 + x + y))
+    raises(ValueError, lambda: RootSum(x**2 + 3, lambda x: x))
 
     assert RootSum(f, exp) == RootSum(f, Lambda(x, exp(x)))
     assert RootSum(f, log) == RootSum(f, Lambda(x, log(x)))
@@ -231,6 +226,27 @@ def test_RootSum___eq__():
     assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
     assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
 
+def test_RootSum_doit():
+    rs = RootSum(x**2 + 1, exp)
+
+    assert isinstance(rs, RootSum) == True
+    assert rs.doit() == exp(-I) + exp(I)
+
+    rs = RootSum(x**2 + a, exp, x)
+
+    assert isinstance(rs, RootSum) == True
+    assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
+
+def test_RootSum_evalf():
+    rs = RootSum(x**2 + 1, exp)
+
+    assert rs.evalf(n=20, chop=True).epsilon_eq(Float("1.0806046117362794348", 20), Float("1e-20")) == True
+    assert rs.evalf(n=15, chop=True).epsilon_eq(Float("1.08060461173628", 15), Float("1e-15")) == True
+
+    rs = RootSum(x**2 + a, exp, x)
+
+    assert rs.evalf() == rs
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
@@ -267,4 +283,3 @@ def test_RootSum_independent():
     r1 = RootSum(x**4 - b, h, x)
 
     assert RootSum(f, g, x).as_ordered_terms() == [10*r0, 15*r1, 126]
-

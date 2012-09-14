@@ -2,9 +2,11 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
 
+from sympy.series.limits import heuristics
+from sympy.series.order import Order
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.iterables import cartes
+from sympy.core.compatibility import product as cartes
 
 def test_basic1():
     assert limit(x, x, oo) == oo
@@ -26,9 +28,27 @@ def test_basic1():
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
     assert limit(y/x/log(x), x, 0) == -y*oo
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
-    raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - log(y), y, oo))
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
+    assert limit(S.NaN, x, -oo) == S.NaN
+    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    assert limit(gamma(1/x + 3), x, oo) == 2
+    assert limit(S.NaN, x, -oo) == S.NaN
+    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    assert limit(1/(x-1), x, 1, dir="+") == oo
+    assert limit(1/(x-1), x, 1, dir="-") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="+") == -oo
+    assert limit(1/(5-x)**3, x, 5, dir="-") == oo
+    assert limit(1/sin(x), x, pi, dir="+") == -oo
+    assert limit(1/sin(x), x, pi, dir="-") == oo
+    assert limit(1/cos(x), x, pi/2, dir="+") == -oo
+    assert limit(1/cos(x), x, pi/2, dir="-") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="+") == oo
+    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
+    assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
     # approaching 0
     # from dir="+"
@@ -39,9 +59,9 @@ def test_basic1():
     # Pow
     assert limit(x**(-2), x, 0, dir='-') == oo
     assert limit(x**(-3), x, 0, dir='-') == -oo
-    assert limit(x**(-Rational(1, 2)), x, 0, dir='-') == (-oo)*I
+    assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
-    assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
+    assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
     assert limit((1 + cos(x))**oo, x, 0) == oo
 
@@ -87,20 +107,16 @@ def test_floor():
     assert limit(floor(x), x, 248, "+") == 248
     assert limit(floor(x), x, 248, "-") == 247
 
-    # note: if any of the tests below fails, just comment it out. General fix
-    # needs better assumptions handling.
-
-    # this doesn't work, it requires robust assumptions:
+@XFAIL
+def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
     assert limit(floor(cos(x)), x, 0, "+") == 0
     assert limit(floor(cos(x)), x, 0, "-") == 0
-
-    # this doesn't work, it requires robust assumptions:
     assert limit(floor(5+sin(x)), x, 0, "+") == 5
-    #assert limit(floor(5+sin(x)), x, 0, "-") == 4
-    #assert limit(floor(5+cos(x)), x, 0, "+") == 5
-    #assert limit(floor(5+cos(x)), x, 0, "-") == 5
+    assert limit(floor(5+sin(x)), x, 0, "-") == 4
+    assert limit(floor(5+cos(x)), x, 0, "+") == 5
+    assert limit(floor(5+cos(x)), x, 0, "-") == 5
 
 def test_ceiling():
     assert limit(ceiling(x), x, -2, "+") == -1
@@ -116,20 +132,17 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "+") == 249
     assert limit(ceiling(x), x, 248, "-") == 248
 
-    # note: if any of the tests below fails, just comment it out. General fix
-    # needs better assumptions handling.
-
-    # this doesn't work, it requires robust assumptions:
-    #assert limit(ceiling(sin(x)), x, 0, "+") == 1
+@XFAIL
+def test_ceiling_requires_robust_assumptions():
+    assert limit(ceiling(sin(x)), x, 0, "+") == 1
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
     assert limit(ceiling(cos(x)), x, 0, "+") == 1
     assert limit(ceiling(cos(x)), x, 0, "-") == 1
-
-    # this doesn't work, it requires robust assumptions:
-    #assert limit(ceiling(5+sin(x)), x, 0, "+") == 6
+    assert limit(ceiling(5+sin(x)), x, 0, "+") == 6
     assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5+cos(x)), x, 0, "-") == 6
+
 
 def test_atan():
     x = Symbol("x", real=True)
@@ -144,6 +157,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
+    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == sin(oo)
     assert limit(log(2+sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 def test_issue772():
@@ -154,6 +168,7 @@ def test_issue772():
 
 def test_exponential():
     n = Symbol('n')
+    x = Symbol('x', real=True)
     assert limit((1+x/n)**n,n,oo) == exp(x)
     assert limit((1+x/(2*n))**n,n,oo) == exp(x/2)
     assert limit((1+x/(2*n+1))**n,n,oo) == exp(x/2)
@@ -237,7 +252,6 @@ def test_issue2130():
 
 def test_issue1447():
     # using list(...) so py.test can recalculate values
-    from sympy import sign
     tests = list(cartes([cot, tan],
                         [-pi/2, 0, pi/2, pi, 3*pi/2],
                         ['-', '+']))
@@ -260,6 +274,18 @@ def test_issue835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
+def test_calculate_series():
+    # needs gruntz calculate_series to go to n = 32
+    assert limit(x**(S(77)/3)/(1 + x**(S(77)/3)), x, oo) == 1
+    # needs gruntz calculate_series to go to n = 128
+    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
+
+def test_issue2856():
+    assert limit((x**16)/(1 + x**16), x, oo) == 1
+    assert limit((x**100)/(1 + x**100), x, oo) == 1
+    assert limit((x**1885)/(1 + x**1885), x, oo) == 1
+    assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
+
 def test_newissue():
     assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
 
@@ -268,9 +294,12 @@ def test_extended_real_line():
     assert limit(oo - x, x, -oo) == oo
     assert limit(x**2/(x-5) - oo, x, oo) == -oo
     assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(oo/x, x, oo) == oo
+
+@XFAIL
+def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
-    assert limit(oo/x, x, oo) == oo
 
 @XFAIL
 def test_order_oo():
@@ -280,5 +309,21 @@ def test_order_oo():
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 def test_issue2337():
-    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
-    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
+    raises(NotImplementedError, lambda: limit(exp(x*y), x, oo))
+    raises(NotImplementedError, lambda: limit(exp(-x*y), x, oo))
+
+def test_Limit_dir():
+    raises(TypeError, lambda: Limit(x, x, 0, dir=0))
+    raises(ValueError, lambda: Limit(x, x, 0, dir='0'))
+
+def test_polynomial():
+    assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
+    assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+
+def test_issue_2641():
+    assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
+
+def test_issue_3267():
+    n = Symbol('n', integer=True, positive=True)
+    r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
+    assert limit(r, x, 1) == n/2

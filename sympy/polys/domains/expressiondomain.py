@@ -5,6 +5,7 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.core import sympify
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
@@ -12,7 +13,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     is_EX = True
 
-    class Expression(object):
+    class Expression(PicklableWithSlots):
         """An arbitrary expression. """
 
         __slots__ = ['ex']
@@ -36,10 +37,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.ex
 
         def numer(f):
-            return f.ex.as_numer_denom()[0]
+            return f.__class__(f.ex.as_numer_denom()[0])
 
         def denom(f):
-            return f.ex.as_numer_denom()[1]
+            return f.__class__(f.ex.as_numer_denom()[1])
 
         def simplify(f, ex):
             return f.__class__(ex.cancel())
@@ -112,85 +113,85 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         pass
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return a.as_expr()
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         return self.dtype(a)
 
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert a Python ``int`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
+        """Convert a SymPy ``Integer`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
+        """Convert a SymPy ``Rational`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Float` object to `dtype`. """
+        """Convert a SymPy ``Float`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
-    def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert a ``DMP`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        """Convert a ``DMF`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_ExpressionDomain(K1, a, K0):
-        """Convert a `EX` object to `dtype`. """
+        """Convert a ``EX`` object to ``dtype``. """
         return a
 
     def get_ring(self):
-        """Returns a ring associated with `self`. """
+        """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         return self
 
     def is_positive(self, a):
-        """Returns True if `a` is positive. """
+        """Returns True if ``a`` is positive. """
         return a.ex.as_coeff_mul()[0].is_positive
 
     def is_negative(self, a):
-        """Returns True if `a` is negative. """
+        """Returns True if ``a`` is negative. """
         return a.ex.as_coeff_mul()[0].is_negative
 
     def is_nonpositive(self, a):
-        """Returns True if `a` is non-positive. """
+        """Returns True if ``a`` is non-positive. """
         return a.ex.as_coeff_mul()[0].is_nonpositive
 
     def is_nonnegative(self, a):
-        """Returns True if `a` is non-negative. """
+        """Returns True if ``a`` is non-negative. """
         return a.ex.as_coeff_mul()[0].is_nonnegative
 
     def numer(self, a):
-        """Returns numerator of `a`. """
+        """Returns numerator of ``a``. """
         return a.numer()
 
     def denom(self, a):
-        """Returns denominator of `a`. """
+        """Returns denominator of ``a``. """
         return a.denom()

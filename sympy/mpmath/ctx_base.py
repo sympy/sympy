@@ -1,18 +1,20 @@
 from operator import gt, lt
 
-from functions.functions import SpecialFunctions
-from functions.rszeta import RSCache
-from calculus.quadrature import QuadratureMethods
-from calculus.calculus import CalculusMethods
-from calculus.optimization import OptimizationMethods
-from calculus.odes import ODEMethods
-from matrices.matrices import MatrixMethods
-from matrices.calculus import MatrixCalculusMethods
-from matrices.linalg import LinearAlgebraMethods
-from identification import IdentificationMethods
-from visualization import VisualizationMethods
+from .libmp.backend import xrange
 
-import libmp
+from .functions.functions import SpecialFunctions
+from .functions.rszeta import RSCache
+from .calculus.quadrature import QuadratureMethods
+from .calculus.calculus import CalculusMethods
+from .calculus.optimization import OptimizationMethods
+from .calculus.odes import ODEMethods
+from .matrices.matrices import MatrixMethods
+from .matrices.calculus import MatrixCalculusMethods
+from .matrices.linalg import LinearAlgebraMethods
+from .identification import IdentificationMethods
+from .visualization import VisualizationMethods
+
+from . import libmp
 
 class Context(object):
     pass
@@ -55,7 +57,7 @@ class StandardBaseContext(Context,
     verbose = False
 
     def warn(ctx, msg):
-        print "Warning:", msg
+        print("Warning:", msg)
 
     def bad_domain(ctx, msg):
         raise ValueError(msg)
@@ -114,9 +116,9 @@ class StandardBaseContext(Context,
 
     def nprint(ctx, x, n=6, **kwargs):
         """
-        Equivalent to ``print nstr(x, n)``.
+        Equivalent to ``print(nstr(x, n))``.
         """
-        print ctx.nstr(x, n, **kwargs)
+        print(ctx.nstr(x, n, **kwargs))
 
     def chop(ctx, x, tol=None):
         """
@@ -335,6 +337,7 @@ class StandardBaseContext(Context,
 
     _gcd = staticmethod(libmp.gcd)
     list_primes = staticmethod(libmp.list_primes)
+    isprime = staticmethod(libmp.isprime)
     bernfrac = staticmethod(libmp.bernfrac)
     moebius = staticmethod(libmp.moebius)
     _ifac = staticmethod(libmp.ifac)
@@ -429,7 +432,7 @@ class StandardBaseContext(Context,
             >>> from mpmath import *
             >>> mp.dps = 15
             >>> f = maxcalls(sin, 10)
-            >>> print sum(f(n) for n in range(10))
+            >>> print(sum(f(n) for n in range(10)))
             1.95520948210738
             >>> f(10)
             Traceback (most recent call last):

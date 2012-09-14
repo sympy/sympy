@@ -1,6 +1,9 @@
 """OO layer for several polynomial representations. """
 
-class GenericPoly(object):
+from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
+
+class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 
     def ground_to_ring(f):
@@ -29,95 +32,88 @@ class GenericPoly(object):
         else:
             return factors
 
-from sympy.utilities import any, all
-
 from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
-    dup_from_sympy, dmp_from_sympy,
-    dup_strip, dmp_strip,
+    dmp_from_sympy,
+    dup_strip,
     dup_degree, dmp_degree_in,
     dmp_degree_list,
-    dmp_negative_p, dmp_positive_p,
+    dmp_negative_p,
     dup_LC, dmp_ground_LC,
     dup_TC, dmp_ground_TC,
-    dup_nth, dmp_ground_nth,
-    dmp_zero, dmp_one, dmp_ground,
+    dmp_ground_nth,
+    dmp_one, dmp_ground,
     dmp_zero_p, dmp_one_p, dmp_ground_p,
     dup_from_dict, dmp_from_dict,
-    dup_to_raw_dict, dmp_to_dict,
-    dup_deflate, dmp_deflate,
+    dmp_to_dict,
+    dmp_deflate,
     dmp_inject, dmp_eject,
-    dup_terms_gcd, dmp_terms_gcd,
+    dmp_terms_gcd,
     dmp_list_terms, dmp_exclude,
     dmp_slice_in, dmp_permute,
     dmp_to_tuple,)
 
 from sympy.polys.densearith import (
-    dup_add_term, dmp_add_term,
-    dup_sub_term, dmp_sub_term,
-    dup_mul_term, dmp_mul_term,
-    dup_add_ground, dmp_add_ground,
-    dup_sub_ground, dmp_sub_ground,
-    dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground,
-    dup_exquo_ground, dmp_exquo_ground,
-    dup_abs, dmp_abs,
+    dmp_add_ground,
+    dmp_sub_ground,
+    dmp_mul_ground,
+    dmp_quo_ground,
+    dmp_exquo_ground,
+    dmp_abs,
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
+    dmp_sqr,
     dup_pow, dmp_pow,
-    dup_pdiv, dmp_pdiv,
-    dup_prem, dmp_prem,
-    dup_pquo, dmp_pquo,
-    dup_pexquo, dmp_pexquo,
-    dup_div, dmp_div,
+    dmp_pdiv,
+    dmp_prem,
+    dmp_pquo,
+    dmp_pexquo,
+    dmp_div,
     dup_rem, dmp_rem,
-    dup_quo, dmp_quo,
-    dup_exquo, dmp_exquo,
+    dmp_quo,
+    dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
-    dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm)
+    dmp_max_norm,
+    dmp_l1_norm)
 
 from sympy.polys.densetools import (
-    dup_clear_denoms, dmp_clear_denoms,
-    dup_integrate, dmp_integrate_in,
-    dup_diff, dmp_diff_in,
-    dup_eval, dmp_eval_in,
+    dmp_clear_denoms,
+    dmp_integrate_in,
+    dmp_diff_in,
+    dmp_eval_in,
     dup_revert,
-    dup_trunc, dmp_ground_trunc,
-    dup_content, dmp_ground_content,
-    dup_primitive, dmp_ground_primitive,
-    dup_monic, dmp_ground_monic,
-    dup_compose, dmp_compose,
+    dmp_ground_trunc,
+    dmp_ground_content,
+    dmp_ground_primitive,
+    dmp_ground_monic,
+    dmp_compose,
     dup_decompose,
     dup_shift,
     dmp_lift)
 
 from sympy.polys.euclidtools import (
     dup_half_gcdex, dup_gcdex, dup_invert,
-    dup_subresultants, dmp_subresultants,
-    dup_resultant, dmp_resultant,
-    dup_discriminant, dmp_discriminant,
-    dup_inner_gcd, dmp_inner_gcd,
-    dup_gcd, dmp_gcd,
-    dup_lcm, dmp_lcm,
-    dup_cancel, dmp_cancel)
+    dmp_subresultants,
+    dmp_resultant,
+    dmp_discriminant,
+    dmp_inner_gcd,
+    dmp_gcd,
+    dmp_lcm,
+    dmp_cancel)
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
-    dup_sqf_p, dmp_sqf_p,
-    dup_sqf_norm, dmp_sqf_norm,
-    dup_sqf_part, dmp_sqf_part,
-    dup_sqf_list, dup_sqf_list_include,
+    dmp_sqf_p,
+    dmp_sqf_norm,
+    dmp_sqf_part,
     dmp_sqf_list, dmp_sqf_list_include)
 
 from sympy.polys.factortools import (
-    dup_zz_cyclotomic_p,
-    dup_factor_list, dup_factor_list_include,
+    dup_cyclotomic_p, dmp_irreducible_p,
     dmp_factor_list, dmp_factor_list_include)
 
 from sympy.polys.rootisolation import (
@@ -132,18 +128,17 @@ from sympy.polys.rootisolation import (
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    PolynomialError,
-    DomainError)
+    PolynomialError)
 
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
 
-class DMP(object):
-    """Dense Multivariate Polynomials over ``K``. """
+class DMP(PicklableWithSlots):
+    """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ['rep', 'lev', 'dom']
+    __slots__ = ['rep', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
@@ -155,40 +150,29 @@ class DMP(object):
         self.rep = rep
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     def __repr__(f):
-        return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
+        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
-
-    def __getstate__(self):
-        return (self.rep, self.lev, self.dom)
-
-    def __getnewargs__(self):
-        return (self.rep, self.lev, self.dom)
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom, f.ring))
 
     def unify(f, g):
-        """
-        Unify representations of two multivariate polynomials.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([ZZ(1), ZZ(2)], ZZ).unify(DMP([[QQ(1)], [QQ(2)]], QQ)) # doctest: +SKIP
-        (0, ZZ, <bound method DMP.per of DMP([1, 2], ZZ)>, [1, 2], [[1/1], [2/1]])
-        """
-        # XXX: ???
-        return f.lev, f.dom, f.per, f.rep, g.rep
-
+        """Unify representations of two multivariate polynomials. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return f.lev, f.dom, f.per, f.rep, g.rep
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
@@ -200,26 +184,12 @@ class DMP(object):
                     else:
                         lev -= 1
 
-                return DMP(rep, dom, lev)
+                return DMP(rep, dom, lev, ring)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, kill=False):
-        r"""
-        Create a DMP out of the given representation.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> a = DMP([[ZZ(1)], [ZZ(2), ZZ(0)]], ZZ)
-        >>> a.per([[ZZ(1), ZZ(0)], [ZZ(1)]]) == \
-        ... DMP([[ZZ(1), ZZ(0)], [ZZ(1)]], ZZ)
-        True
-        >>> a.per([ZZ(1), ZZ(0)], ZZ, kill=True) == \
-        ... DMP([ZZ(1), ZZ(0)], ZZ)
-        True
-        """
+    def per(f, rep, dom=None, kill=False, ring=None):
+        """Create a DMP out of the given representation. """
         lev = f.lev
 
         if kill:
@@ -231,92 +201,35 @@ class DMP(object):
         if dom is None:
             dom = f.dom
 
-        return DMP(rep, dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return DMP(rep, dom, lev, ring)
 
     @classmethod
-    def zero(cls, lev, dom):
-        """
-        Returns a multivariate zero with level ``lev`` and domain ``dom``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP.zero(3, ZZ)
-        DMP([[[[]]]], ZZ)
-        """
-        return DMP(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return DMP(0, dom, lev, ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        r"""
-        Returns a multivariate one with level ``lev`` and domain ``dom``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP.one(3, ZZ) == \
-        ... DMP([[[[ZZ(1)]]]], ZZ)
-        True
-        """
-        return DMP(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return DMP(1, dom, lev, ring)
 
     @classmethod
     def from_list(cls, rep, lev, dom):
-        r"""
-        Create an instance of ``cls`` given a list of native coefficients.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP.from_list([[1], [2, 3]], 1, ZZ) == \
-        ... DMP([[ZZ(1)], [ZZ(2), ZZ(3)]], ZZ)
-        True
-        """
+        """Create an instance of ``cls`` given a list of native coefficients. """
         return cls(dmp_convert(rep, lev, None, dom), dom, lev)
 
     @classmethod
     def from_sympy_list(cls, rep, lev, dom):
-        r"""
-        Create an instance of ``cls`` given a list of SymPy coefficients.
-
-        **Example**
-
-        >>> from sympy import S
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP.from_sympy_list([[S(1)], [S(2), S(3)]], 1, ZZ) == \
-        ... DMP([[ZZ(1)], [ZZ(2), ZZ(3)]], ZZ)
-        True
-        """
+        """Create an instance of ``cls`` given a list of SymPy coefficients. """
         return cls(dmp_from_sympy(rep, lev, dom), dom, lev)
 
     def to_dict(f, zero=False):
-        """
-        Convert ``f`` to a dict representation with native coefficients.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0)]], ZZ).to_dict()
-        {(0, 1): 2, (1, 0): 1}
-        """
+        """Convert ``f`` to a dict representation with native coefficients. """
         return dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
     def to_sympy_dict(f, zero=False):
-        """
-        Convert ``f`` to a dict representation with SymPy coefficients.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0)]], ZZ).to_sympy_dict()
-        {(0, 1): 2, (1, 0): 1}
-        """
+        """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
         for k, v in rep.iteritems():
@@ -338,63 +251,23 @@ class DMP(object):
         return cls(dmp_from_dict(rep, lev, dom), dom, lev)
 
     @classmethod
-    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
-        return DMP(dict(zip(monoms, coeffs)), dom, lev)
+    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom, ring=None):
+        return DMP(dict(zip(monoms, coeffs)), dom, lev, ring)
 
     def to_ring(f):
-        r"""
-        Make the ground domain a ring.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ, ZZ
-        >>> DMP([[QQ(1)], [QQ(2), QQ(0)]], QQ).to_ring() == \
-        ... DMP([[ZZ(1)], [ZZ(2), ZZ(0)]], ZZ)
-        True
-        """
+        """Make the ground domain a ring. """
         return f.convert(f.dom.get_ring())
 
     def to_field(f):
-        r"""
-        Make the ground domain a field.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0)]], ZZ).to_field() == \
-        ... DMP([[QQ(1)], [QQ(2), QQ(0)]], QQ)
-        True
-        """
+        """Make the ground domain a field. """
         return f.convert(f.dom.get_field())
 
     def to_exact(f):
-        r"""
-        Make the ground domain exact.
-
-        Example
-        =======
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import RR, QQ
-        >>> DMP([RR(1.5), RR(1.0)], RR).to_exact() == \
-        ... DMP([QQ(3, 2), QQ(1)], QQ)
-        True
-        """
+        """Make the ground domain exact. """
         return f.convert(f.dom.get_exact())
 
     def convert(f, dom):
-        r"""
-        Convert the ground domain of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([ZZ(1), ZZ(2)], ZZ).convert(QQ) == \
-        ... DMP([QQ(1), QQ(2)], QQ)
-        True
-        """
+        """Convert the ground domain of ``f``. """
         if f.dom == dom:
             return f
         else:
@@ -405,55 +278,19 @@ class DMP(object):
         return f.per(dmp_slice_in(f.rep, m, n, j, f.lev, f.dom))
 
     def coeffs(f, order=None):
-        """
-        Returns all non-zero coefficients from ``f`` in lex order.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0), ZZ(-1)]], ZZ).coeffs()
-        [1, 2, -1]
-        """
+        """Returns all non-zero coefficients from ``f`` in lex order. """
         return [ c for _, c in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
     def monoms(f, order=None):
-        """
-        Returns all non-zero monomials from ``f`` in lex order.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0), ZZ(-1)]], ZZ).monoms()
-        [(1, 0), (0, 2), (0, 0)]
-        """
+        """Returns all non-zero monomials from ``f`` in lex order. """
         return [ m for m, _ in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
     def terms(f, order=None):
-        """
-        Returns all non-zero terms from ``f`` in lex order.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(0), ZZ(-1)]], ZZ).terms()
-        [((1, 0), 1), ((0, 2), 2), ((0, 0), -1)]
-        """
+        """Returns all non-zero terms from ``f`` in lex order. """
         return dmp_list_terms(f.rep, f.lev, f.dom, order=order)
 
     def all_coeffs(f):
-        """
-        Returns all coefficients from ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(0), ZZ(-1)], ZZ).all_coeffs()
-        [2, 0, -1]
-        """
+        """Returns all coefficients from ``f``. """
         if not f.lev:
             if not f:
                 return [f.dom.zero]
@@ -463,16 +300,7 @@ class DMP(object):
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_monoms(f):
-        """
-        Returns all monomials from ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(0), ZZ(-1)], ZZ).all_monoms()
-        [(2,), (1,), (0,)]
-        """
+        """Returns all monomials from ``f``. """
         if not f.lev:
             n = dup_degree(f.rep)
 
@@ -484,16 +312,7 @@ class DMP(object):
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_terms(f):
-        """
-        Returns all terms from a ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(0), ZZ(-1)], ZZ).all_terms()
-        [((2,), 2), ((1,), 0), ((0,), -1)]
-        """
+        """Returns all terms from a ``f``. """
         if not f.lev:
             n = dup_degree(f.rep)
 
@@ -505,39 +324,11 @@ class DMP(object):
             raise PolynomialError('multivariate polynomials not supported')
 
     def lift(f):
-        r"""
-        Convert algebraic coefficients to rationals.
-
-        **Example**
-
-        >>> from sympy import I
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> K = QQ.algebraic_field(I)
-        >>> DMP([K(1), K([QQ(1), QQ(0)]), K([QQ(2), QQ(0)])], K).lift() == \
-        ... DMP([QQ(1), QQ(0), QQ(2), QQ(0), QQ(9), QQ(0), QQ(-8), QQ(0),
-        ... QQ(16)], QQ)
-        True
-        """
+        """Convert algebraic coefficients to rationals. """
         return f.per(dmp_lift(f.rep, f.lev, f.dom), dom=f.dom.dom)
 
     def deflate(f):
-        r"""
-        Reduce degree of ``f`` by mapping ``x_i**m`` to ``y_i``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(0), ZZ(1), ZZ(0), ZZ(0), ZZ(1)],
-        ... ZZ).deflate() == \
-        ... ((3,), DMP([ZZ(1), ZZ(1), ZZ(1)], ZZ))
-        True
-        >>> DMP([[ZZ(1), ZZ(0), ZZ(0), ZZ(2)], [],
-        ... [ZZ(3), ZZ(0), ZZ(0), ZZ(4)]], ZZ).deflate() == \
-        ... ((2, 3), DMP([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], ZZ))
-        True
-        """
+        """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
         J, F = dmp_deflate(f.rep, f.lev, f.dom)
         return J, f.per(F)
 
@@ -557,13 +348,14 @@ class DMP(object):
 
         Returns the removed generators and the new excluded ``f``.
 
-        **Example**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
-        ([2], DMP([[1], [1, 2]], ZZ))
+        ([2], DMP([[1], [1, 2]], ZZ, None))
 
         """
         J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
@@ -571,35 +363,25 @@ class DMP(object):
 
     def permute(f, P):
         r"""
-        Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
+        Returns a polynomial in `K[x_{P(1)}, ..., x_{P(n)}]`.
 
-        **Example**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
-        DMP([[[2], []], [[1, 0], []]], ZZ)
+        DMP([[[2], []], [[1, 0], []]], ZZ, None)
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
-        DMP([[[1], []], [[2, 0], []]], ZZ)
+        DMP([[[1], []], [[2, 0], []]], ZZ, None)
 
         """
         return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
 
     def terms_gcd(f):
-        r"""
-        Remove GCD of terms from the polynomial ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1), ZZ(0)], [ZZ(1), ZZ(0), ZZ(0)], [], []],
-        ... ZZ).terms_gcd() == \
-        ... ((2, 1), DMP([[ZZ(1)], [ZZ(1), ZZ(0)]], ZZ))
-        True
-        """
+        """Remove GCD of terms from the polynomial ``f``. """
         J, F = dmp_terms_gcd(f.rep, f.lev, f.dom)
         return J, f.per(F)
 
@@ -612,442 +394,158 @@ class DMP(object):
         return f.per(dmp_sub_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def mul_ground(f, c):
-        r"""
-        Multiply ``f`` by a an element of the ground domain.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2)], [ZZ(2), ZZ(0)]], ZZ).mul_ground(3) == \
-        ... DMP([[ZZ(6)], [ZZ(6), ZZ(0)]], ZZ)
-        True
-        """
+        """Multiply ``f`` by a an element of the ground domain. """
         return f.per(dmp_mul_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def quo_ground(f, c):
-        r"""
-        Quotient of ``f`` by a an element of the ground domain.
-
-        **Example**
-
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([ZZ(3), ZZ(0), ZZ(2)], ZZ).quo_ground(ZZ(2)) == \
-        ... DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
-        True
-        >>> DMP([QQ(3), QQ(0), QQ(2)], QQ).quo_ground(QQ(2)) == \
-        ... DMP([QQ(3, 2), QQ(0), QQ(1)], QQ)
-        True
-
-        """
+        """Quotient of ``f`` by a an element of the ground domain. """
         return f.per(dmp_quo_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def exquo_ground(f, c):
-        r"""
-        Exact quotient of ``f`` by a an element of the ground domain.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([[QQ(1), QQ(0)], [QQ(2)], []], QQ).exquo_ground(QQ(2)) == \
-        ... DMP([[QQ(1, 2), QQ(0)], [QQ(1)], []], QQ)
-        True
-
-        """
+        """Exact quotient of ``f`` by a an element of the ground domain. """
         return f.per(dmp_exquo_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def abs(f):
-        r"""
-        Make all coefficients in ``f`` positive.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1), ZZ(0)], [ZZ(-1)], []], ZZ).abs() == \
-        ... DMP([[ZZ(1), ZZ(0)], [ZZ(1)], []], ZZ)
-        True
-        """
+        """Make all coefficients in ``f`` positive. """
         return f.per(dmp_abs(f.rep, f.lev, f.dom))
 
     def neg(f):
-        r"""
-        Negate all cefficients in ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1), ZZ(0)], [ZZ(-1)], []], ZZ).neg() == \
-        ... DMP([[ZZ(-1), ZZ(0)], [ZZ(1)], []], ZZ)
-        True
-        """
+        """Negate all cefficients in ``f``. """
         return f.per(dmp_neg(f.rep, f.lev, f.dom))
 
     def add(f, g):
-        r"""
-        Add two multivariate polynomials ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).add(DMP([ZZ(1), ZZ(-2)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(1), ZZ(-3)], ZZ)
-        True
-        """
+        """Add two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_add(F, G, lev, dom))
 
     def sub(f, g):
-        r"""
-        Subtract two multivariate polynomials ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).sub(DMP([ZZ(1), ZZ(-2)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(-1), ZZ(1)], ZZ)
-        True
-        """
+        """Subtract two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_sub(F, G, lev, dom))
 
     def mul(f, g):
-        r"""
-        Multiply two multivariate polynomials ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(2)], ZZ).mul(DMP([ZZ(1), ZZ(-2)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(0), ZZ(-4)], ZZ)
-        True
-        """
+        """Multiply two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_mul(F, G, lev, dom))
 
     def sqr(f):
-        r"""
-        Square a multivariate polynomial ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).sqr() == \
-        ... DMP([ZZ(1), ZZ(0), ZZ(2), ZZ(0), ZZ(1)], ZZ)
-        True
-        """
+        """Square a multivariate polynomial ``f``. """
         return f.per(dmp_sqr(f.rep, f.lev, f.dom))
 
     def pow(f, n):
-        r"""
-        Raise ``f`` to a non-negative power ``n``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(-2)], ZZ).pow(3) == \
-        ... DMP([ZZ(1), ZZ(-6), ZZ(12), ZZ(-8)], ZZ)
-        True
-        """
+        """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             return f.per(dmp_pow(f.rep, n, f.lev, f.dom))
         else:
             raise TypeError("``int`` expected, got %s" % type(n))
 
     def pdiv(f, g):
-        r"""
-        Polynomial pseudo-division of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).pdiv(DMP([ZZ(2), ZZ(-4)], ZZ)) == \
-        ... (DMP([ZZ(2), ZZ(4)], ZZ), DMP([ZZ(20)], ZZ))
-        True
-        """
+        """Polynomial pseudo-division of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         q, r = dmp_pdiv(F, G, lev, dom)
         return per(q), per(r)
 
     def prem(f, g):
-        r"""
-        Polynomial pseudo-remainder of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).prem(DMP([ZZ(2), ZZ(-4)], ZZ)) == \
-        ... DMP([ZZ(20)], ZZ)
-        True
-        """
+        """Polynomial pseudo-remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_prem(F, G, lev, dom))
 
     def pquo(f, g):
-        r"""
-        Polynomial pseudo-quotient of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).pquo(DMP([ZZ(2), ZZ(-4)], ZZ)) == \
-        ... DMP([ZZ(2), ZZ(4)], ZZ)
-        True
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).pquo(DMP([ZZ(2), ZZ(-2)], ZZ)) == \
-        ... DMP([ZZ(2), ZZ(2)], ZZ)
-        True
-
-        """
+        """Polynomial pseudo-quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pquo(F, G, lev, dom))
 
     def pexquo(f, g):
-        r"""
-        Polynomial exact pseudo-quotient of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).pexquo(DMP([ZZ(2), ZZ(-4)], ZZ))
-        Traceback (most recent call last):
-        ...
-        ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).pexquo(DMP([ZZ(2), ZZ(-2)], ZZ)) == \
-        ... DMP([ZZ(2), ZZ(2)], ZZ)
-        True
-
-        """
+        """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pexquo(F, G, lev, dom))
 
     def div(f, g):
-        r"""
-        Polynomial division with remainder of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(0), QQ(1)], QQ).div(DMP([QQ(2), QQ(-4)], QQ)) == \
-        ... (DMP([QQ(1, 2), QQ(1)], QQ), DMP([QQ(5)], QQ))
-        True
-        """
+        """Polynomial division with remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         q, r = dmp_div(F, G, lev, dom)
         return per(q), per(r)
 
     def rem(f, g):
-        r"""
-        Computes polynomial remainder of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(0), QQ(1)], QQ).rem(DMP([QQ(2), QQ(-4)], QQ)) == \
-        ... DMP([QQ(5)], QQ)
-        True
-        """
+        """Computes polynomial remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_rem(F, G, lev, dom))
 
     def quo(f, g):
-        r"""
-        Computes polynomial quotient of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(0), QQ(1)], QQ).quo(DMP([QQ(2), QQ(-4)], QQ)) == \
-        ... DMP([QQ(1, 2), QQ(1)], QQ)
-        True
-        >>> DMP([QQ(1), QQ(0), QQ(-1)], QQ).quo(DMP([QQ(1), QQ(-1)], QQ)) == \
-        ... DMP([QQ(1), QQ(1)], QQ)
-        True
-
-        """
+        """Computes polynomial quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_quo(F, G, lev, dom))
 
     def exquo(f, g):
-        r"""
-        Computes polynomial exact quotient of ``f`` and ``g``
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(0), QQ(1)], QQ).exquo(DMP([QQ(2), QQ(-4)], QQ))
-        Traceback (most recent call last):
-        ...
-        ExactQuotientFailed: [2/1, -4/1] does not divide [1/1, 0/1, 1/1]
-        >>> DMP([QQ(1), QQ(0), QQ(-1)], QQ).exquo(DMP([QQ(1), QQ(-1)], QQ)) == \
-        ... DMP([QQ(1), QQ(1)], QQ)
-        True
-
-        """
+        """Computes polynomial exact quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
-        return per(dmp_exquo(F, G, lev, dom))
+        res = per(dmp_exquo(F, G, lev, dom))
+        if f.ring and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     def degree(f, j=0):
-        """
-        Returns the leading degree of ``f`` in ``x_j``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2)], [ZZ(1), ZZ(2), ZZ(3)]], ZZ).degree()
-        1
-        >>> DMP([[ZZ(2)], [ZZ(1), ZZ(2), ZZ(3)]], ZZ).degree(1)
-        2
-        """
+        """Returns the leading degree of ``f`` in ``x_j``. """
         if isinstance(j, int):
             return dmp_degree_in(f.rep, j, f.lev)
         else:
             raise TypeError("``int`` expected, got %s" % type(j))
 
     def degree_list(f):
-        """
-        Returns a list of degrees of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2)], [ZZ(1), ZZ(2), ZZ(3)]], ZZ).degree_list()
-        (1, 2)
-        """
+        """Returns a list of degrees of ``f``. """
         return dmp_degree_list(f.rep, f.lev)
 
     def total_degree(f):
-        """
-        Returns the total degree of ``f``.
+        """Returns the total degree of ``f``. """
+        return max([sum(m) for m in f.monoms()])
 
-        **Example**
+    def homogeneous_order(f):
+        """Returns the homogeneous order of ``f``. """
+        if f.is_zero:
+            return -1
 
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2)], [ZZ(1), ZZ(2), ZZ(3)]], ZZ).total_degree()
-        3
-        """
-        return sum(dmp_degree_list(f.rep, f.lev))
+        monoms = f.monoms()
+        tdeg = sum(monoms[0])
+
+        for monom in monoms:
+            _tdeg = sum(monom)
+
+            if _tdeg != tdeg:
+                return None
+
+        return tdeg
 
     def LC(f):
-        """
-        Returns the leading coefficent of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(3)]], ZZ).LC()
-        1
-        """
+        """Returns the leading coefficient of ``f``. """
         return dmp_ground_LC(f.rep, f.lev, f.dom)
 
     def TC(f):
-        """
-        Returns the trailing coefficent of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(3)]], ZZ).TC()
-        3
-        """
+        """Returns the trailing coefficient of ``f``. """
         return dmp_ground_TC(f.rep, f.lev, f.dom)
 
     def nth(f, *N):
-        """
-        Returns the ``n``-th coefficient of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2), ZZ(3)]], ZZ).nth(0, 1)
-        2
-        """
-        if all(isinstance(n, (int, long)) for n in N):
+        """Returns the ``n``-th coefficient of ``f``. """
+        if all(isinstance(n, int) for n in N):
             return dmp_ground_nth(f.rep, N, f.lev, f.dom)
         else:
             raise TypeError("a sequence of integers expected")
 
     def max_norm(f):
-        """
-        Returns maximum norm of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(-1), ZZ(2), ZZ(3)], ZZ).max_norm()
-        3
-        """
+        """Returns maximum norm of ``f``. """
         return dmp_max_norm(f.rep, f.lev, f.dom)
 
     def l1_norm(f):
-        """
-        Returns l1 norm of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(-3), ZZ(0), ZZ(1)], ZZ).l1_norm()
-        6
-        """
+        """Returns l1 norm of ``f``. """
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
     def clear_denoms(f):
-        r"""
-        Clear denominators, but keep the ground domain.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ, ZZ
-        >>> DMP([QQ(1, 2), QQ(1, 3)], QQ).clear_denoms() == \
-        ... (ZZ(6), DMP([QQ(3), QQ(2)], QQ))
-        True
-        """
+        """Clear denominators, but keep the ground domain. """
         coeff, F = dmp_clear_denoms(f.rep, f.lev, f.dom)
         return coeff, f.per(F)
 
     def integrate(f, m=1, j=0):
-        r"""
-        Computes ``m``-th order indefinite integral of ``f`` in ``x_j``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(2), QQ(0)], QQ).integrate() == \
-        ... DMP([QQ(1, 3), QQ(1), QQ(0), QQ(0)], QQ)
-        True
-        >>> DMP([QQ(1), QQ(2), QQ(0)], QQ).integrate(m=2) == \
-        ... DMP([QQ(1, 12), QQ(1, 3), QQ(0), QQ(0), QQ(0)], QQ)
-        True
-        >>> DMP([[QQ(1)], [QQ(2), QQ(0)]], QQ).integrate(j=0) == \
-        ... DMP([[QQ(1, 2)], [QQ(2), QQ(0)], []], QQ)
-        True
-        """
+        """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
         if not isinstance(m, int):
             raise TypeError("``int`` expected, got %s" % type(m))
 
@@ -1057,23 +555,7 @@ class DMP(object):
         return f.per(dmp_integrate_in(f.rep, m, j, f.lev, f.dom))
 
     def diff(f, m=1, j=0):
-        r"""
-        Computes ``m``-th order derivative of ``f`` in ``x_j``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], ZZ).diff() == \
-        ... DMP([ZZ(3), ZZ(4), ZZ(3)], ZZ)
-        True
-        >>> DMP([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], ZZ).diff(m=2) == \
-        ... DMP([ZZ(6), ZZ(4)], ZZ)
-        True
-        >>> DMP([[1, 2, 3], [2, 3, 1]], ZZ).diff(j=1) == \
-        ... DMP([[ZZ(2), ZZ(2)], [ZZ(4), ZZ(3)]], ZZ)
-        True
-        """
+        """Computes the ``m``-th order derivative of ``f`` in ``x_j``. """
         if not isinstance(m, int):
             raise TypeError("``int`` expected, got %s" % type(m))
 
@@ -1083,20 +565,7 @@ class DMP(object):
         return f.per(dmp_diff_in(f.rep, m, j, f.lev, f.dom))
 
     def eval(f, a, j=0):
-        r"""
-        Evaluates ``f`` at the given point ``a`` in ``x_j``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2), ZZ(3)], [ZZ(1), ZZ(2)]], ZZ).eval(2) == \
-        ... DMP([ZZ(5), ZZ(8)], ZZ)
-        True
-        >>> DMP([[ZZ(2), ZZ(3)], [ZZ(1), ZZ(2)]], ZZ).eval(2, j=1) == \
-        ... DMP([ZZ(7), ZZ(4)], ZZ)
-        True
-        """
+        """Evaluates ``f`` at the given point ``a`` in ``x_j``. """
         if not isinstance(j, int):
             raise TypeError("``int`` expected, got %s" % type(j))
 
@@ -1104,18 +573,7 @@ class DMP(object):
             f.dom.convert(a), j, f.lev, f.dom), kill=True)
 
     def half_gcdex(f, g):
-        r"""
-        Half extended Euclidean algorithm, if univariate.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(1), QQ(0)], QQ).half_gcdex(
-        ... DMP([QQ(1), QQ(3), QQ(2)], QQ)) == \
-        ... (DMP([QQ(-1, 2)], QQ), DMP([QQ(1), QQ(1)], QQ))
-        True
-        """
+        """Half extended Euclidean algorithm, if univariate. """
         lev, dom, per, F, G = f.unify(g)
 
         if not lev:
@@ -1125,18 +583,7 @@ class DMP(object):
             raise ValueError('univariate polynomial expected')
 
     def gcdex(f, g):
-        r"""
-        Extended Euclidean algorithm, if univariate.
-
-        Example
-        =======
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(1), QQ(0)], QQ).gcdex(
-        ... DMP([QQ(1), QQ(3), QQ(2)], QQ)) == \
-        ... (DMP([QQ(-1, 2)], QQ), DMP([QQ(1, 2)], QQ), DMP([QQ(1), QQ(1)], QQ))
-        True
-        """
+        """Extended Euclidean algorithm, if univariate. """
         lev, dom, per, F, G = f.unify(g)
 
         if not lev:
@@ -1146,21 +593,7 @@ class DMP(object):
             raise ValueError('univariate polynomial expected')
 
     def invert(f, g):
-        r"""
-        Invert ``f`` modulo ``g``, if possible.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(0), QQ(-1)], QQ).invert(DMP([QQ(2), QQ(-1)], QQ)) == \
-        ... DMP([QQ(-4, 3)], QQ)
-        True
-        >>> DMP([QQ(1), QQ(0), QQ(-1)], QQ).invert(DMP([QQ(1), QQ(-1)], QQ))
-        Traceback (most recent call last):
-        ...
-        NotInvertible: zero divisor
-        """
+        """Invert ``f`` modulo ``g``, if possible. """
         lev, dom, per, F, G = f.unify(g)
 
         if not lev:
@@ -1176,35 +609,13 @@ class DMP(object):
             raise ValueError('univariate polynomial expected')
 
     def subresultants(f, g):
-        r"""
-        Computes subresultant PRS sequence of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).subresultants(
-        ... DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ)) == \
-        ... [DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ), DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ),
-        ...  DMP([ZZ(-2)], ZZ)]
-        True
-        """
+        """Computes subresultant PRS sequence of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         R = dmp_subresultants(F, G, lev, dom)
         return map(per, R)
 
     def resultant(f, g, includePRS=False):
-        r"""
-        Computes resultant of ``f`` and ``g`` via PRS.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ).resultant(
-        ... DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ))
-        4
-        """
+        """Computes resultant of ``f`` and ``g`` via PRS. """
         lev, dom, per, F, G = f.unify(g)
         if includePRS:
             res, R = dmp_resultant(F, G, lev, dom, includePRS=includePRS)
@@ -1212,65 +623,22 @@ class DMP(object):
         return per(dmp_resultant(F, G, lev, dom), kill=True)
 
     def discriminant(f):
-        """
-        Computes discriminant of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(2), ZZ(3)], ZZ).discriminant()
-        -8
-        """
+        """Computes discriminant of ``f``. """
         return f.per(dmp_discriminant(f.rep, f.lev, f.dom), kill=True)
 
     def cofactors(f, g):
-        r"""
-        Returns GCD of ``f`` and ``g`` and their cofactors.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).cofactors(
-        ... DMP([ZZ(1), ZZ(-3), ZZ(2)], ZZ)) == \
-        ... (DMP([ZZ(1), ZZ(-1)], ZZ), DMP([ZZ(1), ZZ(1)], ZZ),
-        ...  DMP([ZZ(1), ZZ(-2)], ZZ))
-        True
-        """
+        """Returns GCD of ``f`` and ``g`` and their cofactors. """
         lev, dom, per, F, G = f.unify(g)
         h, cff, cfg = dmp_inner_gcd(F, G, lev, dom)
         return per(h), per(cff), per(cfg)
 
     def gcd(f, g):
-        r"""
-        Returns polynomial GCD of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).gcd(
-        ... DMP([ZZ(1), ZZ(-3), ZZ(2)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(-1)], ZZ)
-        True
-        """
+        """Returns polynomial GCD of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_gcd(F, G, lev, dom))
 
     def lcm(f, g):
-        r"""
-        Returns polynomial LCM of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).lcm(
-        ... DMP([ZZ(1), ZZ(-3), ZZ(2)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(-2), ZZ(-1), ZZ(2)], ZZ)
-        True
-        """
+        """Returns polynomial LCM of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
 
@@ -1279,7 +647,7 @@ class DMP(object):
         lev, dom, per, F, G = f.unify(g)
 
         if include:
-                    F, G = dmp_cancel(F, G, lev, dom, include=True)
+            F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
             cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 
@@ -1291,91 +659,29 @@ class DMP(object):
             return cF, cG, F, G
 
     def trunc(f, p):
-        r"""
-        Reduce ``f`` modulo a constant ``p``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(3), ZZ(5), ZZ(7)], ZZ).trunc(3) == \
-        ... DMP([ZZ(-1), ZZ(0), ZZ(-1), ZZ(1)], ZZ)
-        True
-        """
+        """Reduce ``f`` modulo a constant ``p``. """
         return f.per(dmp_ground_trunc(f.rep, f.dom.convert(p), f.lev, f.dom))
 
     def monic(f):
-        r"""
-        Divides all coefficients by ``LC(f)``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ, ZZ
-        >>> DMP([ZZ(3), ZZ(6), ZZ(9)], ZZ).monic() == \
-        ... DMP([ZZ(1), ZZ(2), ZZ(3)], ZZ)
-        True
-        >>> DMP([QQ(3), QQ(4), QQ(2)], QQ).monic() == \
-        ... DMP([QQ(1), QQ(4, 3), QQ(2, 3)], QQ)
-        True
-        """
+        """Divides all coefficients by ``LC(f)``. """
         return f.per(dmp_ground_monic(f.rep, f.lev, f.dom))
 
     def content(f):
-        """
-        Returns GCD of polynomial coefficients.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2), ZZ(6)], [ZZ(4), ZZ(12)]], ZZ).content()
-        2
-        """
+        """Returns GCD of polynomial coefficients. """
         return dmp_ground_content(f.rep, f.lev, f.dom)
 
     def primitive(f):
-        r"""
-        Returns content and a primitive form of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(2), ZZ(6)], [ZZ(4), ZZ(12)]], ZZ).primitive() == \
-        ... (2, DMP([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(6)]], ZZ))
-        True
-        """
+        """Returns content and a primitive form of ``f``. """
         cont, F = dmp_ground_primitive(f.rep, f.lev, f.dom)
         return cont, f.per(F)
 
     def compose(f, g):
-        r"""
-        Computes functional composition of ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(1), ZZ(0)], ZZ).compose(DMP([ZZ(1), ZZ(-1)], ZZ)) == \
-        ... DMP([ZZ(1), ZZ(-1), ZZ(0)], ZZ)
-        True
-        """
+        """Computes functional composition of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_compose(F, G, lev, dom))
 
     def decompose(f):
-        r"""
-        Computes functional decomposition of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(-2), ZZ(1), ZZ(0), ZZ(0)], ZZ).decompose() == \
-        ... [DMP([ZZ(1), ZZ(0), ZZ(0)], ZZ), DMP([ZZ(1), ZZ(-1), ZZ(0)], ZZ)]
-        True
-        """
+        """Computes functional decomposition of ``f``. """
         if not f.lev:
             return map(f.per, dup_decompose(f.rep, f.dom))
         else:
@@ -1389,19 +695,7 @@ class DMP(object):
             raise ValueError('univariate polynomial expected')
 
     def sturm(f):
-        r"""
-        Computes the Sturm sequence of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> DMP([QQ(1), QQ(-2), QQ(1), QQ(-3)], QQ).sturm() == \
-        ... [DMP([QQ(1), QQ(-2), QQ(1), QQ(-3)], QQ),
-        ...  DMP([QQ(3), QQ(-4), QQ(1)], QQ),
-        ...  DMP([QQ(2, 9), QQ(25, 9)], QQ), DMP([QQ(-2079, 4)], QQ)]
-        True
-        """
+        """Computes the Sturm sequence of ``f``. """
         if not f.lev:
             return map(f.per, dup_sturm(f.rep, f.dom))
         else:
@@ -1415,126 +709,36 @@ class DMP(object):
             raise ValueError('univariate polynomial expected')
 
     def sqf_norm(f):
-        r"""
-        Computes square-free norm of ``f``.
-
-        **Example**
-
-        >>> from sympy import sqrt
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import QQ
-        >>> K = QQ.algebraic_field(sqrt(3))
-        >>> DMP([K(1), K(0), K(-2)], K).sqf_norm() == \
-        ... (1, DMP([K(1), K([QQ(-2), QQ(0)]), K(1)], K),
-        ...  DMP([QQ(1), QQ(0), QQ(-10), QQ(0), QQ(1)], QQ))
-        True
-        """
+        """Computes square-free norm of ``f``. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
         return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
-        r"""
-        Computes square-free part of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-3), ZZ(-2)], ZZ).sqf_part() == \
-        ... DMP([ZZ(1), ZZ(-1), ZZ(-2)], ZZ)
-        True
-        """
+        """Computes square-free part of ``f``. """
         return f.per(dmp_sqf_part(f.rep, f.lev, f.dom))
 
     def sqf_list(f, all=False):
-        r"""
-        Returns a list of square-free factors of `f`.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
-        ... ZZ).sqf_list() == \
-        ... (2, [(DMP([ZZ(1), ZZ(1)], ZZ), 2), (DMP([ZZ(1), ZZ(2)], ZZ), 3)])
-        True
-        >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
-        ... ZZ).sqf_list(all=True) == \
-        ... (2, [(DMP([ZZ(1)], ZZ), 1), (DMP([ZZ(1), ZZ(1)], ZZ), 2),
-        ... (DMP([ZZ(1), ZZ(2)], ZZ), 3)])
-        True
-        """
+        """Returns a list of square-free factors of ``f``. """
         coeff, factors = dmp_sqf_list(f.rep, f.lev, f.dom, all)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list_include(f, all=False):
-        r"""
-        Returns a list of square-free factors of `f`.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
-        ... ZZ).sqf_list_include() == \
-        ... [(DMP([ZZ(2)], ZZ), 1), (DMP([ZZ(1), ZZ(1)], ZZ), 2),
-        ... (DMP([ZZ(1), ZZ(2)], ZZ), 3)]
-        True
-        >>> DMP([ZZ(2), ZZ(16), ZZ(50), ZZ(76), ZZ(56), ZZ(16)],
-        ... ZZ).sqf_list_include(all=True) == \
-        ... [(DMP([ZZ(2)], ZZ), 1), (DMP([ZZ(1), ZZ(1)], ZZ), 2),
-        ... (DMP([ZZ(1), ZZ(2)], ZZ), 3)]
-        True
-        """
+        """Returns a list of square-free factors of ``f``. """
         factors = dmp_sqf_list_include(f.rep, f.lev, f.dom, all)
         return [ (f.per(g), k) for g, k in factors ]
 
     def factor_list(f):
-        r"""
-        Returns a list of irreducible factors of `f`.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(2), ZZ(2), ZZ(2), ZZ(0), ZZ(0)],
-        ... ZZ).factor_list() == \
-        ... (2, [(DMP([ZZ(1), ZZ(1)], ZZ), 1), (DMP([ZZ(1), ZZ(0)], ZZ), 2),
-        ... (DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ), 1)])
-        True
-        """
+        """Returns a list of irreducible factors of ``f``. """
         coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def factor_list_include(f):
-        r"""
-        Returns a list of irreducible factors of `f`.
-
-        Example
-        =======
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(2), ZZ(2), ZZ(2), ZZ(0), ZZ(0)],
-        ... ZZ).factor_list_include() == \
-        ... [(DMP([ZZ(2), ZZ(2)], ZZ), 1), (DMP([ZZ(1), ZZ(0)], ZZ), 2),
-        ... (DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ), 1)]
-        True
-        """
+        """Returns a list of irreducible factors of ``f``. """
         factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
         return [ (f.per(g), k) for g, k in factors ]
 
     def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
-        r"""
-        Compute isolating intervals for roots of `f`.
-
-        Example
-        =======
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-2)], ZZ).intervals() == \
-        ... [((QQ(-2), QQ(-1)), 1), ((QQ(1), QQ(2)), 1)]
-        True
-        """
+        """Compute isolating intervals for roots of ``f``. """
         if not f.lev:
             if not all:
                 if not sqf:
@@ -1550,20 +754,11 @@ class DMP(object):
             raise PolynomialError("can't isolate roots of a multivariate polynomial")
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False):
-        r"""
+        """
         Refine an isolating interval to the given precision.
 
-        eps should be a rational number.
+        ``eps`` should be a rational number.
 
-        **Example**
-
-        >>> from sympy import S
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ, QQ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-2)], ZZ).refine_root(QQ(1), QQ(2),
-        ... eps=QQ(1, 100)) == \
-        ... (QQ(24, 17), QQ(17, 12))
-        True
         """
         if not f.lev:
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
@@ -1571,148 +766,52 @@ class DMP(object):
             raise PolynomialError("can't refine a root of a multivariate polynomial")
 
     def count_real_roots(f, inf=None, sup=None):
-        """
-        Return the number of real roots of ``f`` in ``[inf, sup]``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(0), ZZ(0), ZZ(-4)], ZZ).count_real_roots()
-        2
-        """
+        """Return the number of real roots of ``f`` in ``[inf, sup]``. """
         return dup_count_real_roots(f.rep, f.dom, inf=inf, sup=sup)
 
     def count_complex_roots(f, inf=None, sup=None):
-        """
-        Return the number of complex roots of ``f`` in ``[inf, sup]``.
-
-        **Example**
-
-        >>> from sympy import I
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(0), ZZ(0), ZZ(0), ZZ(-4)], ZZ).count_complex_roots()
-        4
-        """
+        """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return dup_count_complex_roots(f.rep, f.dom, inf=inf, sup=sup)
 
     @property
     def is_zero(f):
-        """
-        Returns ``True`` if ``f`` is a zero polynomial.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[[[[[[]]]]]]], ZZ).is_zero
-        True
-        >>> DMP([[[[[[[ZZ(1)]]]]]]], ZZ).is_zero
-        False
-        """
+        """Returns ``True`` if ``f`` is a zero polynomial. """
         return dmp_zero_p(f.rep, f.lev)
 
     @property
     def is_one(f):
-        """
-        Returns ``True`` if ``f`` is a unit polynomial.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[[[[[[]]]]]]], ZZ).is_one
-        False
-        >>> DMP([[[[[[[ZZ(1)]]]]]]], ZZ).is_one
-        True
-        """
+        """Returns ``True`` if ``f`` is a unit polynomial. """
         return dmp_one_p(f.rep, f.lev, f.dom)
 
     @property
     def is_ground(f):
-        """
-        Returns ``True`` if ``f`` is an element of the ground domain.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[[ZZ(3)]]], ZZ).is_ground
-        True
-        >>> DMP([[ZZ(1)], []], ZZ).is_ground
-        False
-        """
+        """Returns ``True`` if ``f`` is an element of the ground domain. """
         return dmp_ground_p(f.rep, None, f.lev)
 
     @property
     def is_sqf(f):
-        """
-        Returns ``True`` if ``f`` is a square-free polynomial.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(-2), ZZ(1)], ZZ).is_sqf
-        False
-        >>> DMP([ZZ(1), ZZ(0), ZZ(-1)], ZZ).is_sqf
-        True
-        """
+        """Returns ``True`` if ``f`` is a square-free polynomial. """
         return dmp_sqf_p(f.rep, f.lev, f.dom)
 
     @property
     def is_monic(f):
-        """
-        Returns ``True`` if the leading coefficient of ``f`` is one.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(1), ZZ(2)], ZZ).is_monic
-        True
-        >>> DMP([ZZ(2), ZZ(2)], ZZ).is_monic
-        False
-        """
+        """Returns ``True`` if the leading coefficient of ``f`` is one. """
         return f.dom.is_one(dmp_ground_LC(f.rep, f.lev, f.dom))
 
     @property
     def is_primitive(f):
-        """
-        Returns ``True`` if the GCD of the coefficients of ``f`` is one.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([ZZ(2), ZZ(6), ZZ(12)], ZZ).is_primitive
-        False
-        >>> DMP([ZZ(1), ZZ(3), ZZ(6)], ZZ).is_primitive
-        True
-        """
+        """Returns ``True`` if the GCD of the coefficients of ``f`` is one. """
         return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
 
     @property
     def is_linear(f):
-        """
-        Returns `True` if `f` is linear in all its variables.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1)], [ZZ(2)]], ZZ).is_linear
-        True
-        >>> DMP([[ZZ(1), ZZ(0)], [ZZ(2)], []], ZZ).is_linear
-        False
-        """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+        """Returns ``True`` if ``f`` is linear in all its variables. """
+        return all(sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_quadratic(f):
         """Returns ``True`` if ``f`` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all(sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_monomial(f):
@@ -1721,28 +820,19 @@ class DMP(object):
 
     @property
     def is_homogeneous(f):
-        """
-        Returns ``True`` if ``f`` has zero trailing coefficient.
+        """Returns ``True`` if ``f`` is a homogeneous polynomial. """
+        return f.homogeneous_order() is not None
 
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMP([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(0)]], ZZ).is_homogeneous
-        True
-        >>> DMP([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], ZZ).is_homogeneous
-        False
-        """
-        # XXX: This is not the same as the definition of homogeneous at
-        # http://en.wikipedia.org/wiki/Homogeneous_polynomial.
-        # c.f. also the homogeneous_order() function in ode.py.
-        return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
+    @property
+    def is_irreducible(f):
+        """Returns ``True`` if ``f`` has no factors over its domain. """
+        return dmp_irreducible_p(f.rep, f.lev, f.dom)
 
     @property
     def is_cyclotomic(f):
-        """Returns ``True`` if ``f`` is a cyclotomic polnomial. """
+        """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
         if not f.lev:
-            return dup_zz_cyclotomic_p(f.rep, f.dom)
+            return dup_cyclotomic_p(f.rep, f.dom)
         else:
             return False
 
@@ -1758,6 +848,12 @@ class DMP(object):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        g = f.ring.convert(g)
+                    except (CoercionFailed, NotImplementedError):
+                        return NotImplemented
 
         return f.add(g)
 
@@ -1770,6 +866,12 @@ class DMP(object):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        g = f.ring.convert(g)
+                    except (CoercionFailed, NotImplementedError):
+                        return NotImplemented
 
         return f.sub(g)
 
@@ -1784,6 +886,42 @@ class DMP(object):
                 return f.mul_ground(g)
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        return f.mul(f.ring.convert(g))
+                    except (CoercionFailed, NotImplementedError):
+                        pass
+                return NotImplemented
+
+    def __div__(f, g):
+        if isinstance(g, DMP):
+            return f.exquo(g)
+        else:
+            try:
+                return f.mul_ground(g)
+            except TypeError:
+                return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        return f.exquo(f.ring.convert(g))
+                    except (CoercionFailed, NotImplementedError):
+                        pass
+                return NotImplemented
+
+    def __rdiv__(f, g):
+        if isinstance(g, DMP):
+            return g.exquo(f)
+        elif f.ring is not None:
+            try:
+                return f.ring.convert(g).exquo(f)
+            except (CoercionFailed, NotImplementedError):
+                pass
+        return NotImplemented
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -1818,19 +956,25 @@ class DMP(object):
         return False
 
     def __ne__(f, g):
-        try:
-            _, _, _, F, G = f.unify(g)
+        return not f.__eq__(g)
 
-            if f.lev == g.lev:
-                return F != G
-        except UnificationFailed:
-            pass
+    def eq(f, g, strict=False):
+        if not strict:
+            return f.__eq__(g)
+        else:
+            return f._strict_eq(g)
 
-        return True
+    def ne(f, g, strict=False):
+        return not f.eq(g, strict=strict)
+
+    def _strict_eq(f, g):
+        return isinstance(g, f.__class__) and f.lev == g.lev \
+                                          and f.dom == g.dom \
+                                          and f.rep == g.rep
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(g)
+        return F.__lt__(G)
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -1851,12 +995,12 @@ def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
-class DMF(object):
-    """Dense Multivariate Fractions over ``K``. """
+class DMF(PicklableWithSlots):
+    """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ['num', 'den', 'lev', 'dom']
+    __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         num, den, lev = self._parse(rep, dom, lev)
         num, den = dmp_cancel(num, den, lev, dom)
 
@@ -1864,9 +1008,10 @@ class DMF(object):
         self.den = den
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     @classmethod
-    def new(cls, rep, dom, lev=None):
+    def new(cls, rep, dom, lev=None, ring=None):
         num, den, lev = cls._parse(rep, dom, lev)
 
         obj = object.__new__(cls)
@@ -1875,6 +1020,7 @@ class DMF(object):
         obj.den = den
         obj.lev = lev
         obj.dom = dom
+        obj.ring = ring
 
         return obj
 
@@ -1923,34 +1069,35 @@ class DMF(object):
         return num, den, lev
 
     def __repr__(f):
-        return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
+        return "%s((%s, %s), %s, %s)" % (f.__class__.__name__, f.num, f.den,
+                                         f.dom, f.ring)
 
     def __hash__(f):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
-            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
-
-    def __getstate__(self):
-        return (self.num, self.den, self.lev, self.dom)
-
-    def __getnewargs__(self):
-        return (self.num, self.den, self.lev, self.dom)
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom, f.ring))
 
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
 
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1960,7 +1107,7 @@ class DMF(object):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
@@ -1969,11 +1116,17 @@ class DMF(object):
         if not isinstance(g, DMF) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den),
                                          (g.num, g.den))
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
@@ -1981,7 +1134,7 @@ class DMF(object):
             G = (dmp_convert(g.num, lev, g.dom, dom),
                  dmp_convert(g.den, lev, g.dom, dom))
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1991,11 +1144,11 @@ class DMF(object):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
-    def per(f, num, den, cancel=True, kill=False):
+    def per(f, num, den, cancel=True, kill=False, ring=None):
         """Create a DMF out of the given representation. """
         lev, dom = f.lev, f.dom
 
@@ -2008,7 +1161,10 @@ class DMF(object):
         if cancel:
             num, den = dmp_cancel(num, den, lev, dom)
 
-        return f.__class__.new((num, den), dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return f.__class__.new((num, den), dom, lev, ring=ring)
 
     def half_per(f, rep, kill=False):
         """Create a DMP out of the given representation. """
@@ -2023,104 +1179,31 @@ class DMF(object):
         return DMP(rep, f.dom, lev)
 
     @classmethod
-    def zero(cls, lev, dom):
-        r"""
-        Returns a multivariate zero fraction with level `lev` and domain `dom`.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF.zero(3, ZZ) == \
-        ... DMF(([[[[]]]], [[[[ZZ(1)]]]]), ZZ)
-        True
-        """
-        return cls.new(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return cls.new(0, dom, lev, ring=ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        r"""
-        Returns a multivariate zero fraction with level `lev` and domain `dom`.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF.one(3, ZZ) == \
-        ... DMF(([[[[ZZ(1)]]]], [[[[ZZ(1)]]]]), ZZ)
-        True
-        """
-        return cls.new(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return cls.new(1, dom, lev, ring=ring)
 
     def numer(f):
-        r"""
-        Returns the numerator of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF, DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(-2)]), ZZ).numer() == \
-        ... DMP([ZZ(1), ZZ(2)], ZZ)
-        True
-        """
+        """Returns the numerator of ``f``. """
         return f.half_per(f.num)
 
     def denom(f):
-        r"""
-        Returns the denominator of ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF, DMP
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(-2)]), ZZ).denom() == \
-        ... DMP([ZZ(1), ZZ(-2)], ZZ)
-        True
-        """
+        """Returns the denominator of ``f``. """
         return f.half_per(f.den)
 
     def cancel(f):
-        r"""
-        Remove common factors from ``f.num`` and ``f.den``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(0), ZZ(-1)], [ZZ(1), ZZ(1)]), ZZ).cancel() == \
-        ... DMF(([ZZ(1), ZZ(-1)], [ZZ(1)]), ZZ)
-        True
-        """
+        """Remove common factors from ``f.num`` and ``f.den``. """
         return f.per(f.num, f.den)
 
     def neg(f):
-        r"""
-        Negate all cefficients in ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(0), ZZ(-1)], [ZZ(1), ZZ(-2)]), ZZ).neg() == \
-        ... DMF(([ZZ(-1), ZZ(0), ZZ(1)], [ZZ(1), ZZ(-2)]), ZZ)
-        True
-        """
+        """Negate all cefficients in ``f``. """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
     def add(f, g):
-        r"""
-        Add two multivariate fractions ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).add(
-        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1)]), ZZ)) == \
-        ... DMF(([ZZ(1), ZZ(2), ZZ(-1)], [ZZ(1), ZZ(-1)]), ZZ)
-        True
-        """
+        """Add two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_add_mul(F_num, F_den, G, lev, dom), F_den
@@ -2135,18 +1218,7 @@ class DMF(object):
         return per(num, den)
 
     def sub(f, g):
-        r"""
-        Subtract two multivariate fractions ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).sub(
-        ... DMF(([ZZ(1), ZZ(2)], [ZZ(1)]), ZZ)) == \
-        ... DMF(([ZZ(-1), ZZ(0), ZZ(3)], [ZZ(1), ZZ(-1)]), ZZ)
-        True
-        """
+        """Subtract two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_sub_mul(F_num, F_den, G, lev, dom), F_den
@@ -2161,18 +1233,7 @@ class DMF(object):
         return per(num, den)
 
     def mul(f, g):
-        r"""
-        Multiply two multivariate fractions ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(1)], [ZZ(1), ZZ(-1)]), ZZ).mul(
-        ... DMF(([ZZ(1), ZZ(2)], [ZZ(2), ZZ(-1)]), ZZ)) == \
-        ... DMF(([ZZ(1), ZZ(3), ZZ(2)], [ZZ(2), ZZ(-3), ZZ(1)]), ZZ)
-        True
-        """
+        """Multiply two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_mul(F_num, G, lev, dom), F_den
@@ -2186,17 +1247,7 @@ class DMF(object):
         return per(num, den)
 
     def pow(f, n):
-        r"""
-        Raise ``f`` to a non-negative power ``n``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(-1)], [ZZ(1), ZZ(-2)]), ZZ).pow(2) == \
-        ... DMF(([ZZ(1), ZZ(-2), ZZ(1)], [ZZ(1), ZZ(-4), ZZ(4)]), ZZ)
-        True
-        """
+        """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             return f.per(dmp_pow(f.num, n, f.lev, f.dom),
                          dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
@@ -2204,18 +1255,7 @@ class DMF(object):
             raise TypeError("``int`` expected, got %s" % type(n))
 
     def quo(f, g):
-        r"""
-        Computes quotient of fractions ``f`` and ``g``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(-1)], [ZZ(1), ZZ(2)]), ZZ).quo(
-        ... DMF(([ZZ(1), ZZ(2)], [ZZ(2), ZZ(-1)]), ZZ)) == \
-        ... DMF(([ZZ(2), ZZ(-3), ZZ(1)], [ZZ(1), ZZ(4), ZZ(4)]), ZZ)
-        True
-        """
+        """Computes quotient of fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = F_num, dmp_mul(F_den, G, lev, dom)
@@ -2226,54 +1266,29 @@ class DMF(object):
             num = dmp_mul(F_num, G_den, lev, dom)
             den = dmp_mul(F_den, G_num, lev, dom)
 
-        return per(num, den)
+        res = per(num, den)
+        if f.ring is not None and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     exquo = quo
 
-    def invert(f):
-        r"""
-        Computes inverse of a fraction ``f``.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]), ZZ).invert() == \
-        ... DMF(([ZZ(3), ZZ(4)], [ZZ(1), ZZ(2)]), ZZ)
-        True
-        """
-        return f.per(f.den, f.num, cancel=False)
+    def invert(f, check=True):
+        """Computes inverse of a fraction ``f``. """
+        if check and f.ring is not None and not f.ring.is_unit(f):
+            raise NotReversible(f, f.ring)
+        res = f.per(f.den, f.num, cancel=False)
+        return res
 
     @property
     def is_zero(f):
-        """
-        Returns ``True`` if ``f`` is a zero fraction.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([[]], [[ZZ(1)]]), ZZ).is_zero
-        True
-        >>> DMF(([[ZZ(1)]], [[ZZ(1)]]), ZZ).is_zero
-        False
-        """
+        """Returns ``True`` if ``f`` is a zero fraction. """
         return dmp_zero_p(f.num, f.lev)
 
     @property
     def is_one(f):
-        """
-        Returns ``True`` if ``f`` is a unit fraction.
-
-        **Example**
-
-        >>> from sympy.polys.polyclasses import DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> DMF(([[]], [[ZZ(1)]]), ZZ).is_one
-        False
-        >>> DMF(([[ZZ(1)]], [[ZZ(1)]]), ZZ).is_one
-        True
-        """
+        """Returns ``True`` if ``f`` is a unit fraction. """
         return dmp_one_p(f.num, f.lev, f.dom) and \
                dmp_one_p(f.den, f.lev, f.dom)
 
@@ -2288,6 +1303,13 @@ class DMF(object):
             return f.add(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.add(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
+            return NotImplemented
 
     def __radd__(f, g):
         return f.__add__(g)
@@ -2300,6 +1322,13 @@ class DMF(object):
             return f.sub(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.sub(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
+            return NotImplemented
 
     def __rsub__(f, g):
         return (-f).__add__(g)
@@ -2311,6 +1340,13 @@ class DMF(object):
         try:
             return f.mul(f.half_per(g))
         except TypeError:
+            return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.mul(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
             return NotImplemented
 
     def __rmul__(f, g):
@@ -2327,8 +1363,23 @@ class DMF(object):
             return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.quo(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
+            return NotImplemented
+
+    def __rdiv__(self, g):
+        r = self.invert(check=False)*g
+        if self.ring and r not in self.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(g, self, self.ring)
+        return r
 
     __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __eq__(f, g):
         try:
@@ -2364,6 +1415,22 @@ class DMF(object):
 
         return True
 
+    def __lt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
@@ -2371,7 +1438,7 @@ def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
                dup_normal(mod, dom), dom)
 
-class ANP(object):
+class ANP(PicklableWithSlots):
     """Dense Algebraic Number Polynomials over a field. """
 
     __slots__ = ['rep', 'mod', 'dom']
@@ -2401,21 +1468,6 @@ class ANP(object):
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
 
-    def __getstate__(self):
-        return (self.rep, self.mod, self.dom)
-
-    def __getnewargs__(self):
-        return (self.rep, self.mod, self.dom)
-
-    def __cmp__(f, g):
-        """Make sorting deterministic. """
-        k = len(f.rep) - len(g.rep)
-
-        if not k:
-            return cmp(f.rep, g.rep)
-        else:
-            return k
-
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
         if not isinstance(g, ANP) or f.mod != g.mod:
@@ -2433,9 +1485,9 @@ class ANP(object):
                 mod = dup_convert(f.mod, f.dom, dom)
             else:
                 if dom == f.dom:
-                    H = f.mod
+                    mod = f.mod
                 else:
-                    H = g.mod
+                    mod = g.mod
 
             per = lambda rep: ANP(rep, mod, dom)
 
@@ -2527,11 +1579,11 @@ class ANP(object):
     exquo = quo
 
     def LC(f):
-        """Returns the leading coefficent of ``f``. """
+        """Returns the leading coefficient of ``f``. """
         return dup_LC(f.rep, f.dom)
 
     def TC(f):
-        """Returns the trailing coefficent of ``f``. """
+        """Returns the trailing coefficient of ``f``. """
         return dup_TC(f.rep, f.dom)
 
     @property
@@ -2624,6 +1676,21 @@ class ANP(object):
         except UnificationFailed:
             return True
 
+    def __lt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return bool(f.rep)
-

@@ -5,7 +5,7 @@ from sympy import Symbol, pi, sqrt, sin, Interval, S
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import L2
 
 m = Symbol('m')
@@ -38,7 +38,7 @@ class PIABKet(Ket):
     def _eval_hilbert_space(cls, args):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABBra
 
@@ -62,7 +62,6 @@ class PIABBra(Bra):
     def _eval_hilbert_space(cls, label):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABKet
-

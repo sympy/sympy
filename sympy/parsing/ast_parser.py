@@ -12,14 +12,14 @@ Integer(1)/Integer(2)
 We use the Python ast module for that, which is in python2.6 and later. It is
 well documented at docs.python.org.
 
-Some tips to understand how this works: use dump() to get a nice representation
-of any node. Then write a string of what you want to get, e.g.
-"Integer(1)", parse it, dump it and you'll see that you need to do
-"Call(Name('Integer', Load()), [node], [], None, None)". You don't need to
-bother with lineno and col_offset, just call fix_missing_locations() before
-returning the node.
+Some tips to understand how this works: use dump() to get a nice
+representation of any node. Then write a string of what you want to get,
+e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
+"Call(Name('Integer', Load()), [node], [], None, None)". You don't need
+to bother with lineno and col_offset, just call fix_missing_locations()
+before returning the node.
 
-If the ast module is not available (python2.4 and 2.5), we use the old compiler
+If the ast module is not available (Python 2.5), we use the old compiler
 module.
 """
 
@@ -88,9 +88,9 @@ def parse_expr(s, local_dict):
         e = compile(a, "<string>", "eval")
         return eval(e, global_dict, local_dict)
     else:
-        # in python2.4 and 2.5, the "ast" module is not available, so we need
+        # in Python 2.5, the "ast" module is not available, so we need
         # to use our old implementation:
-        from ast_parser_python24 import SymPyParser
+        from ast_parser_python25 import SymPyParser
         try:
             return SymPyParser(local_dict=local_dict).parse_expr(s)
         except SyntaxError:

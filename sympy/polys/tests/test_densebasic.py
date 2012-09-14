@@ -46,7 +46,6 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
-from sympy.utilities import all
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
@@ -119,7 +118,7 @@ def test_dmp_degree_in():
     assert dmp_degree_in(f_6, 2, 2) == 6
     assert dmp_degree_in(f_6, 3, 3) == 3
 
-    raises(IndexError, "dmp_degree_in([[1]], -5, 1)")
+    raises(IndexError, lambda: dmp_degree_in([[1]], -5, 1))
 
 def test_dmp_degree_list():
     assert dmp_degree_list([[[[ ]]]], 3) == (-1,-1,-1,-1)
@@ -168,7 +167,7 @@ def test_dmp_validate():
     assert dmp_validate([[[]]]) == ([[[]]], 2)
     assert dmp_validate([[0],[],[0],[1],[0]]) == ([[1],[]], 1)
 
-    raises(ValueError, 'dmp_validate([[0],0,[0],[1],[0]])')
+    raises(ValueError, lambda: dmp_validate([[0],0,[0],[1],[0]]))
 
 def test_dup_reverse():
     assert dup_reverse([1,2,0,3]) == [3,0,2,1]
@@ -233,7 +232,7 @@ def test_dup_nth():
 
     assert dup_nth([1,2,3], 9, ZZ) == 0
 
-    raises(IndexError, 'dup_nth([3,4,5], -1, ZZ)')
+    raises(IndexError, lambda: dup_nth([3,4,5], -1, ZZ))
 
 def test_dmp_nth():
     assert dmp_nth([[1],[2],[3]], 0, 1, ZZ) == [3]
@@ -242,7 +241,7 @@ def test_dmp_nth():
 
     assert dmp_nth([[1],[2],[3]], 9, 1, ZZ) == []
 
-    raises(IndexError, 'dmp_nth([[3],[4],[5]], -1, 1, ZZ)')
+    raises(IndexError, lambda: dmp_nth([[3],[4],[5]], -1, 1, ZZ))
 
 def test_dmp_ground_nth():
     assert dmp_ground_nth([[1],[2],[3]], (0,0), 1, ZZ) == 3
@@ -252,7 +251,7 @@ def test_dmp_ground_nth():
     assert dmp_ground_nth([[1],[2],[3]], (2,1), 1, ZZ) == 0
     assert dmp_ground_nth([[1],[2],[3]], (3,0), 1, ZZ) == 0
 
-    raises(IndexError, 'dmp_ground_nth([[3],[4],[5]], (2,-1), 1, ZZ)')
+    raises(IndexError, lambda: dmp_ground_nth([[3],[4],[5]], (2,-1), 1, ZZ))
 
 def test_dmp_zero_p():
     assert dmp_zero_p([], 0) == True
@@ -384,7 +383,7 @@ def test_dmp_swap():
     assert dmp_swap(f, 0, 1, 1, ZZ) == g
     assert dmp_swap(g, 0, 1, 1, ZZ) == f
 
-    raises(IndexError, "dmp_swap(f, -1, -7, 1, ZZ)")
+    raises(IndexError, lambda: dmp_swap(f, -1, -7, 1, ZZ))
 
 def test_dmp_permute():
     f = dmp_normal([[1,0,0],[],[1,0],[],[1]], 1, ZZ)
@@ -495,7 +494,7 @@ def test_dup_inflate():
     assert dup_inflate([1,2,3], 3, ZZ) == [1,0,0,2,0,0,3]
     assert dup_inflate([1,2,3], 4, ZZ) == [1,0,0,0,2,0,0,0,3]
 
-    raises(IndexError, 'dup_inflate([1,2,3], 0, ZZ)')
+    raises(IndexError, lambda: dup_inflate([1,2,3], 0, ZZ))
 
 def test_dmp_inflate():
     assert dmp_inflate([1], (3,), 0, ZZ) == [1]
@@ -510,7 +509,7 @@ def test_dmp_inflate():
     assert dmp_inflate([[1, 0, 0], [1], [1, 0]], (2, 1), 1, ZZ) == \
         [[1, 0, 0], [], [1], [], [1, 0]]
 
-    raises(IndexError, "dmp_inflate([[]], (-3, 7), 1, ZZ)")
+    raises(IndexError, lambda: dmp_inflate([[]], (-3, 7), 1, ZZ))
 
 def test_dmp_exclude():
     assert dmp_exclude([[[]]], 2, ZZ) == ([], [[[]]], 2)
@@ -637,19 +636,19 @@ def test_dup_random():
     f = dup_random(0, -10, 10, ZZ)
 
     assert dup_degree(f) == 0
-    assert all([ -10 <= c <= 10 for c in f ])
+    assert all(-10 <= c <= 10 for c in f)
 
     f = dup_random(1, -20, 20, ZZ)
 
     assert dup_degree(f) == 1
-    assert all([ -20 <= c <= 20 for c in f ])
+    assert all(-20 <= c <= 20 for c in f)
 
     f = dup_random(2, -30, 30, ZZ)
 
     assert dup_degree(f) == 2
-    assert all([ -30 <= c <= 30 for c in f ])
+    assert all(-30 <= c <= 30 for c in f)
 
     f = dup_random(3, -40, 40, ZZ)
 
     assert dup_degree(f) == 3
-    assert all([ -40 <= c <= 40 for c in f ])
+    assert all(-40 <= c <= 40 for c in f)

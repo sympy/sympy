@@ -55,6 +55,7 @@ if not sys.argv[-1].endswith(".py"):
     filt = sys.argv[-1]
 
 from mpmath import *
+from mpmath.libmp.backend import exec_
 
 def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
     dps = [5,15,25,50,90,150,500,1500,5000,10000]
@@ -62,21 +63,21 @@ def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
     def check(x,y,p,inpt):
         if abs(x-y)/abs(y) < workprec(20)(power)(10, -p+1):
             return
-        print
-        print "Error!"
-        print "Input:", inpt
-        print "dps =", p
-        print "Result 1:", x
-        print "Result 2:", y
-        print "Absolute error:", abs(x-y)
-        print "Relative error:", abs(x-y)/abs(y)
+        print()
+        print("Error!")
+        print("Input:", inpt)
+        print("dps =", p)
+        print("Result 1:", x)
+        print("Result 2:", y)
+        print("Absolute error:", abs(x-y))
+        print("Relative error:", abs(x-y)/abs(y))
         raise AssertionError
     exponents = range(-20,20)
     if huge_range:
         exponents += [-1000, -100, -50, 50, 100, 1000]
     for n in exponents:
         if verbose:
-            print ".",
+            print(".", end=' ')
         mp.dps = 25
         xpos = mpf(10)**n / 1.1287
         xneg = -xpos
@@ -85,7 +86,7 @@ def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
         xcomplex2 = xpos*(-1+j)
         for i in range(len(dps)):
             if verbose:
-                print "Testing dps = %s" % dps[i]
+                print("Testing dps = %s" % dps[i])
             mp.dps = dps[i]
             new = f(xpos), f(xneg), f(ximag), f(xcomplex1), f(xcomplex2)
             if i != 0:
@@ -97,7 +98,7 @@ def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
                 check(prev[4], new[4], p, xcomplex2)
             prev = new
     if verbose:
-        print
+        print()
 
 a1, a2, a3, a4, a5 = 1.5, -2.25, 3.125, 4, 2
 
@@ -206,24 +207,24 @@ test_asymp(barnesg, maxdps=90)
 
 def testit(line):
     if filt in line:
-        print line
+        print(line)
         t1 = clock()
-        exec line
+        exec_(line)
         t2 = clock()
         elapsed = t2-t1
-        print "Time:", elapsed, "for", line, "(OK)"
+        print("Time:", elapsed, "for", line, "(OK)")
 
 if __name__ == '__main__':
     try:
         from multiprocessing import Pool
         mapf = Pool(None).map
-        print "Running tests with multiprocessing"
+        print("Running tests with multiprocessing")
     except ImportError:
-        print "Not using multiprocessing"
+        print("Not using multiprocessing")
         mapf = map
     t1 = clock()
     tasks = cases.splitlines()
     mapf(testit, tasks)
     t2 = clock()
-    print "Cumulative wall time:", t2-t1
+    print("Cumulative wall time:", t2-t1)
 

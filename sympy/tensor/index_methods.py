@@ -6,14 +6,15 @@
     etc.
 
     Methods in this module could be implemented by calling methods on Expr
-    objects instead.  When things stabilize this could be a useful refactoring.
+    objects instead.  When things stabilize this could be a useful
+    refactoring.
 """
 
-from sympy.tensor.indexed import Idx, IndexedBase, Indexed
-from sympy.utilities import all
+from sympy.tensor.indexed import Idx, Indexed
 from sympy.functions import exp
 from sympy.core import C
 
+from sympy.core.compatibility import reduce
 
 class IndexConformanceException(Exception):
     pass
@@ -54,8 +55,7 @@ def _get_indices_Mul(expr, return_dummies=False):
 
     """
 
-    junk, factors = expr.as_coeff_mul()
-    inds = map(get_indices, factors)
+    inds = map(get_indices, expr.args)
     inds, syms = zip(*inds)
 
     inds = map(list, inds)
@@ -172,7 +172,8 @@ def get_indices(expr):
     and a dict.  The set contains outer indices and the dict contains
     information about index symmetries.
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
@@ -209,7 +210,7 @@ def get_indices(expr):
        (set([i, j]), {})
 
        This is correct and may appear convenient, but you need to be careful
-       with this as Sympy wil happily .expand() the product, if requested.  The
+       with this as SymPy will happily .expand() the product, if requested.  The
        resulting expression would mix the outer ``j`` with the dummies inside
        the parenthesis, which makes it a different expression.  To be on the
        safe side, it is best to avoid such ambiguities by using unique indices
@@ -268,9 +269,9 @@ def get_contraction_structure(expr):
     1) A conforming summation of Indexed objects is described with a dict where
        the keys are summation indices and the corresponding values are sets
        containing all terms for which the summation applies.  All Add objects
-       in the Sympy expression tree are described like this.
+       in the SymPy expression tree are described like this.
 
-    2) For all nodes in the Sympy expression tree that are *not* of type Add, the
+    2) For all nodes in the SymPy expression tree that are *not* of type Add, the
        following applies:
 
        If a node discovers contractions in one of it's arguments, the node
@@ -287,10 +288,11 @@ def get_contraction_structure(expr):
        calculated first so that the outer expression can access the resulting
        indexed object.
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
@@ -303,11 +305,11 @@ def get_contraction_structure(expr):
     the internal contractions.
 
     >>> d = get_contraction_structure(x[i, i]*y[j, j])
-    >>> sorted(d.keys())
+    >>> sorted(d.keys(), key=default_sort_key)
     [None, x[i, i]*y[j, j]]
     >>> d[None]  # Note that the product has no contractions
     set([x[i, i]*y[j, j]])
-    >>> sorted(d[x[i, i]*y[j, j]])  # factors are contracted ``first''
+    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ''first''
     [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The
@@ -316,8 +318,8 @@ def get_contraction_structure(expr):
     dictionary resulting from a recursive call on the Add expression.
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
-    >>> sorted(d.keys())
-    [(i,), x[i]*(y[i] + A[i, j]*x[j])]
+    >>> sorted(d.keys(), key=default_sort_key)
+    [x[i]*(y[i] + A[i, j]*x[j]), (i,)]
     >>> d[(i,)]
     set([x[i]*(y[i] + A[i, j]*x[j])])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]

@@ -2,7 +2,8 @@
 A MathML printer.
 """
 
-from sympy import Basic, sympify, S
+from sympy import sympify, S, Mul
+from sympy.core.function import _coeff_isneg
 from sympy.simplify import fraction
 from printer import Printer
 from conventions import split_super_sub
@@ -27,8 +28,14 @@ class MathMLPrinter(Printer):
         self.dom = Document()
 
     def doprint(self, expr):
+        """
+        Prints the expression as MathML.
+        """
         mathML = Printer._print(self, expr)
-        return mathML.toxml(encoding=self._settings['encoding'])
+        unistr = mathML.toxml()
+        xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
+        res = xmlbstr.decode()
+        return res
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -57,8 +64,10 @@ class MathMLPrinter(Printer):
             'log': 'ln',
             'Equality': 'eq',
             'Unequality': 'neq',
-            'StrictInequality': 'lt',
-            'Inequality': 'leq'
+            'GreaterThan': 'geq',
+            'LessThan': 'leq',
+            'StrictGreaterThan': 'gt',
+            'StrictLessThan': 'lt',
         }
 
         for cls in e.__class__.__mro__:
@@ -70,9 +79,8 @@ class MathMLPrinter(Printer):
         return n.lower()
 
     def _print_Mul(self, expr):
-        coeff, terms  = expr.as_coeff_mul()
 
-        if coeff.is_negative:
+        if _coeff_isneg(expr):
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('minus'))
             x.appendChild(self._print_Mul(-expr))
@@ -80,18 +88,22 @@ class MathMLPrinter(Printer):
 
         numer, denom = fraction(expr)
 
-        if not denom is S.One:
+        if denom is not S.One:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('divide'))
             x.appendChild(self._print(numer))
             x.appendChild(self._print(denom))
             return x
 
-        if self.order != 'old':
-            terms = expr._new_rawargs(*terms).as_ordered_factors()
-
-        if coeff == 1 and len(terms) == 1:
+        coeff, terms  = expr.as_coeff_mul()
+        if coeff is S.One and len(terms) == 1:
+            # XXX since the negative coefficient has been handled, I don't
+            # thing a coeff of 1 can remain
             return self._print(terms[0])
+
+        if self.order != 'old':
+            terms = Mul._from_args(terms).as_ordered_factors()
+
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('times'))
         if(coeff != 1):
@@ -105,14 +117,13 @@ class MathMLPrinter(Printer):
         lastProcessed = self._print(args[0])
         plusNodes = []
         for arg in args[1:]:
-            coeff, _ = arg.as_coeff_mul()
-            if(coeff.is_negative):
+            if _coeff_isneg(arg):
                 #use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))
                 x.appendChild(lastProcessed)
                 x.appendChild(self._print(-arg))
-                #invert expression  since this is now minused
+                #invert expression since this is now minused
                 lastProcessed = x;
                 if(arg == args[-1]):
                     plusNodes.append(lastProcessed)
@@ -129,7 +140,7 @@ class MathMLPrinter(Printer):
             x.appendChild(plusNodes.pop(0))
         return x
 
-    def _print_Matrix(self, m):
+    def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
         for i in range(m.lines):
             x_r = self.dom.createElement('matrixrow')
@@ -178,7 +189,7 @@ class MathMLPrinter(Printer):
 
     def _print_GoldenRatio(self,e):
         """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/Math/characters/"""
+        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode(u"\u03c6"))
         return x
@@ -252,7 +263,47 @@ class MathMLPrinter(Printer):
                 mi.appendChild(self.dom.createTextNode(items[0]))
                 return mi
 
+        # translate name, supers and subs to unicode characters
+        # taken from http://www.w3.org/2003/entities/2007doc/isogrk1.html
+        unitr = {
+            'Alpha'   : u'\u0391', 'Beta'     : u'\u0392',
+            'Gamma'   : u'\u0393', 'Delta'    : u'\u0394',
+            'Epsilon' : u'\u0395', 'Zeta'     : u'\u0396',
+            'Eta'     : u'\u0397', 'Theta'    : u'\u0398',
+            'Iota'    : u'\u0399', 'Kappa'    : u'\u039A',
+            'Lambda'  : u'\u039B', 'Mu'       : u'\u039C',
+            'Nu'      : u'\u039D', 'Xi'       : u'\u039E',
+            'Omicron' : u'\u039F', 'Pi'       : u'\u03A0',
+            'Rho'     : u'\u03A1', 'Sigma'    : u'\u03A3',
+            'Tau'     : u'\u03A4', 'Upsilon'  : u'\u03A5',
+            'Phi'     : u'\u03A6', 'Chi'      : u'\u03A7',
+            'Psi'     : u'\u03A8', 'Omega'    : u'\u03A9',
+            'alpha'   : u'\u03B1', 'beta'     : u'\u03B2',
+            'gamma'   : u'\u03B3', 'delta'    : u'\u03B4',
+            'epsilon' : u'\u03B5', 'zeta'     : u'\u03B6',
+            'eta'     : u'\u03B7', 'theta'    : u'\u03B8',
+            'iota'    : u'\u03B9', 'kappa'    : u'\u03BA',
+            'lambda'  : u'\u03BB', 'mu'       : u'\u03BC',
+            'nu'      : u'\u03BD', 'xi'       : u'\u03BE',
+            'omicron' : u'\u03BF', 'pi'       : u'\u03C0',
+            'rho'     : u'\u03C1', 'varsigma' : u'\u03C2',
+            'sigma'   : u'\u03C3', 'tau'      : u'\u03C4',
+            'upsilon' : u'\u03C5', 'phi'      : u'\u03C6',
+            'chi'     : u'\u03C7', 'psi'      : u'\u03C8',
+            'omega'   : u'\u03C9',
+        }
+
+        def translate(s):
+            if s in unitr:
+                return unitr[s]
+            else:
+                return s
+
         name, supers, subs = split_super_sub(sym.name)
+        name = translate(name)
+        supers = [translate(sup) for sup in supers]
+        subs = [translate(sub) for sub in subs]
+
         mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
         if len(supers) == 0:
@@ -356,6 +407,57 @@ class MathMLPrinter(Printer):
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
 
+    def apply_patch(self):
+        # Applying the patch of xml.dom.minidom bug
+        # Date: 2011-11-18
+        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom-\
+        #                   toprettyxml-and-silly-whitespace/#best-solution
+        # Issue: http://bugs.python.org/issue4147
+        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
+
+        from xml.dom.minidom import Element, Text, Node, _write_data
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            # indent = current indentation
+            # addindent = indentation to add to higher levels
+            # newl = newline string
+            writer.write(indent+"<" + self.tagName)
+
+            attrs = self._get_attributes()
+            a_names = attrs.keys()
+            a_names.sort()
+
+            for a_name in a_names:
+                writer.write(" %s=\"" % a_name)
+                _write_data(writer, attrs[a_name].value)
+                writer.write("\"")
+            if self.childNodes:
+                writer.write(">")
+                if (len(self.childNodes) == 1 and
+                    self.childNodes[0].nodeType == Node.TEXT_NODE):
+                    self.childNodes[0].writexml(writer, '', '', '')
+                else:
+                    writer.write(newl)
+                    for node in self.childNodes:
+                        node.writexml(writer, indent+addindent, addindent, newl)
+                    writer.write(indent)
+                writer.write("</%s>%s" % (self.tagName, newl))
+            else:
+                writer.write("/>%s"%(newl))
+        self._Element_writexml_old = Element.writexml
+        Element.writexml = writexml
+
+        def writexml(self, writer, indent="", addindent="", newl=""):
+            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+        self._Text_writexml_old = Text.writexml
+        Text.writexml = writexml
+
+    def restore_patch(self):
+        from xml.dom.minidom import Element, Text
+        Element.writexml = self._Element_writexml_old
+        Text.writexml = self._Text_writexml_old
+
+
 def mathml(expr, **settings):
     """Returns the MathML representation of expr"""
     return MathMLPrinter(settings).doprint(expr)
@@ -364,21 +466,24 @@ def print_mathml(expr, **settings):
     """
     Prints a pretty representation of the MathML code for expr
 
+    Examples
+    ========
+
     >>> ##
     >>> from sympy.printing.mathml import print_mathml
     >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <ci>
-                x
-        </ci>
-        <cn>
-                1
-        </cn>
+        <ci>x</ci>
+        <cn>1</cn>
     </apply>
 
     """
     s = MathMLPrinter(settings)
-    print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
+    xml = s._print(sympify(expr))
+    s.apply_patch()
+    pretty_xml = xml.toprettyxml()
+    s.restore_patch()
 
+    print pretty_xml

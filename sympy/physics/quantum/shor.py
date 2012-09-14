@@ -7,11 +7,10 @@ Todo:
 * Update docstrings and reformat.
 * Remove print statements. We may want to think about a better API for this.
 """
-
 import math
 import random
 
-from sympy import Mul
+from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
 
@@ -73,7 +72,7 @@ class CMod(Gate):
         out = int(self.a**k%self.N)
 
         # Create array for new qbit-ket which will have high memory unaffected
-        outarray = list(qubits.args[0][0:self.t])
+        outarray = list(qubits.args[0][:self.t])
 
         # Place out in low memory
         for i in reversed(range(self.t)):
@@ -131,7 +130,7 @@ def getr(x, y, N):
 
 def ratioize(list, N):
     if list[0] > N:
-        return 0
+        return S.Zero
     if len(list) == 1:
         return list[0]
     return list[0] + ratioize(list[1:], N)
@@ -148,7 +147,7 @@ def continued_fraction(x, y):
     """
     x = int(x)
     y = int(y)
-    temp = x/y
+    temp = x//y
     if temp*y == x:
         return [temp,]
 
@@ -161,7 +160,7 @@ def period_find(a, N):
     """Finds the period of a in modulo N arithmetic
 
     This is quantum part of Shor's algorithm.It takes two registers,
-    puts first in superposition of states with Hadamards so: |k>|0>
+    puts first in superposition of states with Hadamards so: ``|k>|0>``
     with k being all possible choices. It then does a controlled mod and
     a QFT to determine the order of a.
     """
@@ -215,4 +214,3 @@ def period_find(a, N):
     g = getr(answer, 2**t, N)
     print g
     return g
-

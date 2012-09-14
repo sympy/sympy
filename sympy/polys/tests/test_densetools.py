@@ -231,7 +231,7 @@ def test_dup_revert():
 
     assert dup_revert(f, 8, QQ) == g
 
-    raises(NotReversible, "dup_revert([QQ(1), QQ(0)], 3, QQ)")
+    raises(NotReversible, lambda: dup_revert([QQ(1), QQ(0)], 3, QQ))
 
 def test_dmp_revert():
     f = [-QQ(1,720),QQ(0),QQ(1,24),QQ(0),-QQ(1,2),QQ(0),QQ(1)]
@@ -239,7 +239,7 @@ def test_dmp_revert():
 
     assert dmp_revert(f, 8, 0, QQ) == g
 
-    raises(MultivariatePolynomialError, "dmp_revert([[1]], 2, 1, QQ)")
+    raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
 
 def test_dup_trunc():
     assert dup_trunc([1,2,3,4,5,6], ZZ(3), ZZ) == [1, -1, 0, 1, -1, 0]
@@ -256,7 +256,7 @@ def test_dmp_ground_trunc():
 def test_dup_monic():
     assert dup_monic([3,6,9], ZZ) == [1,2,3]
 
-    raises(ExactQuotientFailed, 'dup_monic([3,4,5], ZZ)')
+    raises(ExactQuotientFailed, lambda: dup_monic([3,4,5], ZZ))
 
     assert dup_monic([], QQ) == []
     assert dup_monic([QQ(1)], QQ) == [QQ(1)]
@@ -265,7 +265,7 @@ def test_dup_monic():
 def test_dmp_ground_monic():
     assert dmp_ground_monic([[3],[6],[9]], 1, ZZ) == [[1],[2],[3]]
 
-    raises(ExactQuotientFailed, 'dmp_ground_monic([[3],[4],[5]], 1, ZZ)')
+    raises(ExactQuotientFailed, lambda: dmp_ground_monic([[3],[4],[5]], 1, ZZ))
 
     assert dmp_ground_monic([[]], 1, QQ) == [[]]
     assert dmp_ground_monic([[QQ(1)]], 1, QQ) == [[QQ(1)]]
@@ -280,7 +280,8 @@ def test_dup_content():
     assert dup_content([1,2,1], ZZ) == ZZ(1)
     assert dup_content([2,4,2], ZZ) == ZZ(2)
 
-    assert dup_content([QQ(2,3),QQ(4,5)], QQ) == QQ(1)
+    assert dup_content([QQ(2,3),QQ(4,9)], QQ) == QQ(2,9)
+    assert dup_content([QQ(2,3),QQ(4,5)], QQ) == QQ(2,15)
 
 def test_dmp_ground_content():
     assert dmp_ground_content([[]], 1, ZZ) == ZZ(0)
@@ -292,7 +293,8 @@ def test_dmp_ground_content():
     assert dmp_ground_content([[1],[2],[1]], 1, ZZ) == ZZ(1)
     assert dmp_ground_content([[2],[4],[2]], 1, ZZ) == ZZ(2)
 
-    assert dmp_ground_content([[QQ(2,3)],[QQ(4,5)]], 1, QQ) == QQ(1)
+    assert dmp_ground_content([[QQ(2,3)],[QQ(4,9)]], 1, QQ) == QQ(2,9)
+    assert dmp_ground_content([[QQ(2,3)],[QQ(4,5)]], 1, QQ) == QQ(2,15)
 
     assert dmp_ground_content(f_0, 2, ZZ) == ZZ(1)
     assert dmp_ground_content(dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == ZZ(2)
@@ -326,11 +328,12 @@ def test_dup_primitive():
     assert dup_primitive([], QQ) == (QQ(0), [])
     assert dup_primitive([QQ(1)], QQ) == (QQ(1), [QQ(1)])
     assert dup_primitive([QQ(1),QQ(1)], QQ) == (QQ(1), [QQ(1),QQ(1)])
-    assert dup_primitive([QQ(2),QQ(2)], QQ) == (QQ(1), [QQ(2),QQ(2)])
+    assert dup_primitive([QQ(2),QQ(2)], QQ) == (QQ(2), [QQ(1),QQ(1)])
     assert dup_primitive([QQ(1),QQ(2),QQ(1)], QQ) == (QQ(1), [QQ(1),QQ(2),QQ(1)])
-    assert dup_primitive([QQ(2),QQ(4),QQ(2)], QQ) == (QQ(1), [QQ(2),QQ(4),QQ(2)])
+    assert dup_primitive([QQ(2),QQ(4),QQ(2)], QQ) == (QQ(2), [QQ(1),QQ(2),QQ(1)])
 
-    assert dup_primitive([QQ(2,3),QQ(4,5)], QQ) == (QQ(1), [QQ(2,3),QQ(4,5)])
+    assert dup_primitive([QQ(2,3),QQ(4,9)], QQ) == (QQ(2,9), [QQ(3),QQ(2)])
+    assert dup_primitive([QQ(2,3),QQ(4,5)], QQ) == (QQ(2,15), [QQ(5),QQ(6)])
 
 def test_dmp_ground_primitive():
     assert dmp_ground_primitive([[]], 1, ZZ) == (ZZ(0), [[]])
@@ -357,7 +360,10 @@ def test_dmp_ground_primitive():
     assert dmp_ground_primitive(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == (ZZ(8), f_6)
 
     assert dmp_ground_primitive([[ZZ(2)]], 1, ZZ) == (ZZ(2), [[ZZ(1)]])
-    assert dmp_ground_primitive([[QQ(2)]], 1, QQ) == (QQ(1), [[QQ(2)]])
+    assert dmp_ground_primitive([[QQ(2)]], 1, QQ) == (QQ(2), [[QQ(1)]])
+
+    assert dmp_ground_primitive([[QQ(2,3)], [QQ(4,9)]], 1, QQ) == (QQ(2,9), [[QQ(3)], [QQ(2)]])
+    assert dmp_ground_primitive([[QQ(2,3)], [QQ(4,5)]], 1, QQ) == (QQ(2,15), [[QQ(5)], [QQ(6)]])
 
 def test_dup_extract():
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)
@@ -386,7 +392,7 @@ def test_dup_real_imag():
 
     assert dup_real_imag([1,2,3], ZZ) == ([[1], [2], [-1,0,3]], [[2,0], [2,0]])
 
-    raises(DomainError, "dup_real_imag([EX(1), EX(2)], EX)")
+    raises(DomainError, lambda: dup_real_imag([EX(1), EX(2)], EX))
 
 def test_dup_mirror():
     assert dup_mirror([], ZZ) == []
@@ -493,7 +499,7 @@ def test_dmp_lift():
         [QQ(1),QQ(0),QQ(0),QQ(0),QQ(0),QQ(0),QQ(2),QQ(0),QQ(578),
          QQ(0),QQ(0),QQ(0),QQ(1),QQ(0),QQ(-578),QQ(0),QQ(83521)]
 
-    raises(DomainError, "dmp_lift([EX(1), EX(2)], 0, EX)")
+    raises(DomainError, lambda: dmp_lift([EX(1), EX(2)], 0, EX))
 
 def test_dup_sign_variations():
     assert dup_sign_variations([], ZZ) == 0

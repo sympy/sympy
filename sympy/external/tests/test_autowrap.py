@@ -12,7 +12,7 @@ f2pyworks = False
 if f2py:
     try:
         autowrap(symbols('x'), 'f95', 'f2py')
-    except CodeWrapError:
+    except (CodeWrapError, ImportError):
         f2pyworks = False
     else:
         f2pyworks = True
@@ -125,6 +125,9 @@ def test_ufuncify_f95_f2py():
 
 # Cython
 
+# See issue 3008.  This XFAIL can be removed if we can accurately determine the
+# correct minimum Cython version required.
+@XFAIL
 def test_wrap_twice_c_cython():
     has_module('Cython')
     runtest_autowrap_twice('C', 'cython')

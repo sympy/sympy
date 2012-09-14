@@ -7,12 +7,14 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 
 class Q:
     """Supported ask keys."""
+    antihermitian = Predicate('antihermitian')
     bounded = Predicate('bounded')
     commutative = Predicate('commutative')
     complex = Predicate('complex')
     composite = Predicate('composite')
     even = Predicate('even')
     extended_real = Predicate('extended_real')
+    hermitian = Predicate('hermitian')
     imaginary = Predicate('imaginary')
     infinitesimal = Predicate('infinitesimal')
     infinity = Predicate('infinity')
@@ -53,22 +55,26 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         * ask(proposition, assumptions)
 
-            where `proposition` is any boolean expression
+            where ``proposition`` is any boolean expression
 
-    **Examples**
-        >>> from sympy import ask, Q, pi
-        >>> from sympy.abc import x, y
-        >>> ask(Q.rational(pi))
-        False
-        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
-        True
-        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
-        False
+    Examples
+    ========
+
+    >>> from sympy import ask, Q, pi
+    >>> from sympy.abc import x, y
+    >>> ask(Q.rational(pi))
+    False
+    >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
+    True
+    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(Q.positive(x), Q.is_true(x > 0))
+
+        >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
+
         It is however a work in progress and should be available before
         the official release
 
@@ -100,7 +106,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif local_facts.func is And:
+    elif local_facts.func is And and all(k in known_facts_dict for k in local_facts.args):
         for assum in local_facts.args:
             if assum.is_Atom:
                 if key in known_facts_dict[assum]:
@@ -135,8 +141,9 @@ def ask_full_inference(proposition, assumptions):
 
 
 def register_handler(key, handler):
-    """Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler.
+    """
+    Register a handler in the ask system. key must be a string and handler a
+    class inheriting from AskHandler::
 
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
@@ -192,12 +199,14 @@ def compute_known_facts():
 # handlers_dict tells us what ask handler we should use
 # for a particular key
 _handlers_dict = {
+    'antihermitian'  : ['sympy.assumptions.handlers.sets.AskAntiHermitianHandler'],
     'bounded'        : ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
     'commutative'    : ['sympy.assumptions.handlers.AskCommutativeHandler'],
     'complex'        : ['sympy.assumptions.handlers.sets.AskComplexHandler'],
     'composite'      : ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
     'even'           : ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
     'extended_real'  : ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
+    'hermitian'      : ['sympy.assumptions.handlers.sets.AskHermitianHandler'],
     'imaginary'      : ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
     'infinitesimal'  : ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
     'integer'        : ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
@@ -220,12 +229,15 @@ known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__ \
                                                 if not attr.startswith('__')]
 known_facts = And(
     Implies   (Q.real, Q.complex),
+    Implies   (Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
     Equivalent(Q.extended_real, Q.real | Q.infinity),
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
     Implies   (Q.integer, Q.rational),
     Implies   (Q.imaginary, Q.complex & ~Q.real),
+    Implies   (Q.imaginary, Q.antihermitian),
+    Implies   (Q.antihermitian, ~Q.hermitian),
     Equivalent(Q.negative, Q.nonzero & ~Q.positive),
     Equivalent(Q.positive, Q.nonzero & ~Q.negative),
     Equivalent(Q.rational, Q.real & ~Q.irrational),
@@ -240,51 +252,56 @@ known_facts = And(
 # -{ Known facts in CNF }-
 known_facts_cnf = And(
     Or(Not(Q.integer), Q.even, Q.odd),
-    Or(Not(Q.extended_real), Q.infinity, Q.real),
+    Or(Not(Q.extended_real), Q.real, Q.infinity),
     Or(Not(Q.real), Q.irrational, Q.rational),
     Or(Not(Q.real), Q.complex),
-    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime),
+    Or(Not(Q.integer), Not(Q.positive), Q.prime, Q.composite),
+    Or(Not(Q.imaginary), Q.antihermitian),
     Or(Not(Q.integer), Q.rational),
+    Or(Not(Q.real), Q.hermitian),
     Or(Not(Q.imaginary), Q.complex),
     Or(Not(Q.even), Q.integer),
     Or(Not(Q.positive), Q.nonzero),
     Or(Not(Q.nonzero), Q.negative, Q.positive),
     Or(Not(Q.prime), Q.positive),
     Or(Not(Q.rational), Q.real),
-    Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.real), Not(Q.imaginary)),
     Or(Not(Q.odd), Q.integer),
     Or(Not(Q.real), Q.extended_real),
     Or(Not(Q.composite), Not(Q.prime)),
     Or(Not(Q.negative), Q.nonzero),
-    Or(Not(Q.negative), Not(Q.positive)),
+    Or(Not(Q.positive), Not(Q.negative)),
     Or(Not(Q.prime), Q.integer),
     Or(Not(Q.even), Not(Q.odd)),
     Or(Not(Q.nonzero), Q.real),
     Or(Not(Q.irrational), Q.real),
-    Or(Not(Q.irrational), Not(Q.rational)),
-    Or(Not(Q.infinity), Q.extended_real)
+    Or(Not(Q.rational), Not(Q.irrational)),
+    Or(Not(Q.infinity), Q.extended_real),
+    Or(Not(Q.antihermitian), Not(Q.hermitian))
 )
 
 # -{ Known facts in compressed sets }-
 known_facts_dict = {
-    Q.is_true: set([Q.is_true]),
-    Q.complex: set([Q.complex]),
-    Q.odd: set([Q.complex, Q.odd, Q.real, Q.rational, Q.extended_real, Q.integer]),
-    Q.positive: set([Q.real, Q.complex, Q.extended_real, Q.positive, Q.nonzero]),
-    Q.real: set([Q.real, Q.complex, Q.extended_real]),
-    Q.composite: set([Q.composite]),
-    Q.bounded: set([Q.bounded]),
-    Q.prime: set([Q.real, Q.complex, Q.positive, Q.nonzero, Q.prime, Q.rational, Q.extended_real, Q.integer]),
+    Q.odd: set([Q.complex, Q.odd, Q.hermitian, Q.real, Q.rational, Q.extended_real, Q.integer]),
+    Q.antihermitian: set([Q.antihermitian]),
     Q.infinitesimal: set([Q.infinitesimal]),
-    Q.even: set([Q.complex, Q.real, Q.even, Q.rational, Q.extended_real, Q.integer]),
-    Q.negative: set([Q.real, Q.negative, Q.complex, Q.extended_real, Q.nonzero]),
-    Q.rational: set([Q.real, Q.rational, Q.complex, Q.extended_real]),
+    Q.hermitian: set([Q.hermitian]),
+    Q.bounded: set([Q.bounded]),
+    Q.even: set([Q.complex, Q.real, Q.hermitian, Q.even, Q.rational, Q.extended_real, Q.integer]),
+    Q.algebraic: set([Q.algebraic]),
+    Q.is_true: set([Q.is_true]),
+    Q.real: set([Q.real, Q.complex, Q.extended_real, Q.hermitian]),
+    Q.rational: set([Q.real, Q.rational, Q.complex, Q.extended_real, Q.hermitian]),
     Q.extended_real: set([Q.extended_real]),
-    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real]),
-    Q.integer: set([Q.real, Q.rational, Q.complex, Q.extended_real, Q.integer]),
-    Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real]),
+    Q.integer: set([Q.complex, Q.hermitian, Q.real, Q.rational, Q.extended_real, Q.integer]),
     Q.commutative: set([Q.commutative]),
     Q.infinity: set([Q.extended_real, Q.infinity]),
-    Q.algebraic: set([Q.algebraic]),
-    Q.imaginary: set([Q.complex, Q.imaginary])
+    Q.complex: set([Q.complex]),
+    Q.positive: set([Q.complex, Q.positive, Q.nonzero, Q.hermitian, Q.real, Q.extended_real]),
+    Q.composite: set([Q.composite]),
+    Q.prime: set([Q.complex, Q.positive, Q.real, Q.hermitian, Q.prime, Q.rational, Q.extended_real, Q.nonzero, Q.integer]),
+    Q.negative: set([Q.complex, Q.nonzero, Q.hermitian, Q.real, Q.negative, Q.extended_real]),
+    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real, Q.hermitian]),
+    Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real, Q.hermitian]),
+    Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary])
 }

@@ -1,4 +1,5 @@
-"""Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
+"""Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder
+sequences. """
 
 from sympy.polys.euclidtools import (
     dup_gcdex, dup_half_gcdex, dup_invert,
@@ -607,8 +608,17 @@ def test_dup_cancel():
     F = [ ZZ(1), ZZ(2)]
     G = [-ZZ(3), ZZ(4)]
 
-    dup_cancel(f, g, ZZ) == (f, g)
-    dup_cancel(F, G, ZZ) == (f, g)
+    assert dup_cancel(f, g, ZZ) == (f, g)
+    assert dup_cancel(F, G, ZZ) == (f, g)
+
+    assert dup_cancel([], [], ZZ) == ([], [])
+    assert dup_cancel([], [], ZZ, include=False) == (ZZ(1), ZZ(1), [], [])
+
+    assert dup_cancel([ZZ(1), ZZ(0)], [], ZZ) == ([ZZ(1)], [])
+    assert dup_cancel([ZZ(1), ZZ(0)], [], ZZ, include=False) == (ZZ(1), ZZ(1), [ZZ(1)], [])
+
+    assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ) == ([], [ZZ(1)])
+    assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ, include=False) == (ZZ(1), ZZ(1), [], [ZZ(1)])
 
     f = ZZ.map([])
     g = ZZ.map([1, 0])
@@ -625,3 +635,12 @@ def test_dmp_cancel():
 
     assert dmp_cancel(f, g, 1, ZZ) == (p, q)
     assert dmp_cancel(f, g, 1, ZZ, include=False) == (ZZ(1), ZZ(1), p, q)
+
+    assert dmp_cancel([[]], [[]], 1, ZZ) == ([[]], [[]])
+    assert dmp_cancel([[]], [[]], 1, ZZ, include=False) == (ZZ(1), ZZ(1), [[]], [[]])
+
+    assert dmp_cancel([[ZZ(1), ZZ(0)]], [[]], 1, ZZ) == ([[ZZ(1)]], [[]])
+    assert dmp_cancel([[ZZ(1), ZZ(0)]], [[]], 1, ZZ, include=False) == (ZZ(1), ZZ(1), [[ZZ(1)]], [[]])
+
+    assert dmp_cancel([[]], [[ZZ(1), ZZ(0)]], 1, ZZ) == ([[]], [[ZZ(1)]])
+    assert dmp_cancel([[]], [[ZZ(1), ZZ(0)]], 1, ZZ, include=False) == (ZZ(1), ZZ(1), [[]], [[ZZ(1)]])

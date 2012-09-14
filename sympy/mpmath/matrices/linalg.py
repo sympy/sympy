@@ -105,6 +105,8 @@ and equation solving with rigorous error bounds::
 
 from copy import copy
 
+from ..libmp.backend import xrange
+
 class LinearAlgebraMethods(object):
 
     def LU_decomp(ctx, A, overwrite=False, use_cache=True):

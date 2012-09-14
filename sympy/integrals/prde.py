@@ -29,8 +29,6 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
-from sympy.utilities.iterables import all
-
 #    from pudb import set_trace; set_trace() # Debugging
 
 def prde_normal_denom(fa, fd, G, DE):

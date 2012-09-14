@@ -1,17 +1,20 @@
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
-    Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
-    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy)
+from __future__ import division
+
+from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
+    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum
+from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
+from sympy.core.trace import Tr
 
 x, y, z, w = symbols('x,y,z,w')
 d = Dummy('d')
@@ -53,14 +56,20 @@ def test_ComplexInfinity():
     assert str(zoo) == "zoo"
 
 def test_Derivative():
-    assert str(Derivative(x, y)) == "D(x, y)"
-    assert str(Derivative(x**2, x, evaluate=False)) == "D(x**2, x)"
-    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(x**2/y, x, y)"
+    assert str(Derivative(x, y)) == "Derivative(x, y)"
+    assert str(Derivative(x**2, x, evaluate=False)) == "Derivative(x**2, x)"
+    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "Derivative(x**2/y, x, y)"
 
 def test_dict():
     assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: x + 1}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
+
+def test_Dict():
+    assert str(Dict({1: 1+x})) == sstr({1: 1+x}) == "{1: x + 1}"
+    assert str(Dict({1: x**2, 2: y*x})) in (
+            "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
+    assert sstr(Dict({1: x**2, 2: y*x})) == "{1: x**2, 2: x*y}"
 
 def test_Dummy():
     assert str(d) == "_d"
@@ -79,6 +88,10 @@ def test_factorial():
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "n!"
     assert str(factorial(2*n)) == "(2*n)!"
+    assert str(factorial(factorial(n))) == '(n!)!'
+    assert str(factorial(factorial2(n))) == '(n!!)!'
+    assert str(factorial2(factorial(n))) == '(n!)!!'
+    assert str(factorial2(factorial2(n))) == '(n!!)!!'
 
 def test_Function():
     f = Function('f')
@@ -101,7 +114,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
-    assert str(I * oo) == "(oo)*I"
+    assert str(oo*I) == "oo*I"
 
 def test_Integer():
     assert str(Integer(-1)) == "-1"
@@ -152,11 +165,11 @@ def test_Mul():
     assert str(-2*x/3)  == '-2*x/3'
 
     class CustomClass1(Expr):
-        pass
+        is_commutative = True
     class CustomClass2(Expr):
-        pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
+        is_commutative = True
+    cc1 = CustomClass1()
+    cc2 = CustomClass2()
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
     assert str(cc1*Float("1.5")) == '1.5*CustomClass1()'
@@ -218,6 +231,19 @@ def test_Pow():
     assert str((x+y)**-2) == "(x + y)**(-2)"
     assert str((x+y)**2) == "(x + y)**2"
     assert str((x+y)**(1+x)) == "(x + y)**(x + 1)"
+    assert str(x**Rational(1, 3)) == "x**(1/3)"
+    assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
+    assert str(sqrt(sqrt(x))) == "x**(1/4)"
+    assert str(x**-1.0) == '1/x'
+
+def test_sqrt():
+    assert str(sqrt(x)) == "sqrt(x)"
+    assert str(sqrt(x**2)) == "sqrt(x**2)"
+    assert str(1/sqrt(x)) == "1/sqrt(x)"
+    assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
+    assert str(y/sqrt(x)) == "y/sqrt(x)"
+    assert str(x**(1/2)) == "x**0.5"
+    assert str(1/x**(1/2)) == "x**(-0.5)"
 
 def test_Rational():
     n1 = Rational(1,4)
@@ -255,18 +281,18 @@ def test_Rational():
     assert str(S("0.[9]", rational=1)) == "1"
     assert str(S("-0.[9]", rational=1)) == "-1"
 
-    assert str(Rational(1,4) ** Rational(1,2)) == "1/2"
-    assert str(Rational(1,36) ** Rational(1,2)) == "1/6"
+    assert str(sqrt(Rational(1,4))) == "1/2"
+    assert str(sqrt(Rational(1,36))) == "1/6"
 
     assert str((123**25) ** Rational(1,25)) == "123"
     assert str((123**25+1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "122"
 
-    assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
-    assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
+    assert str(sqrt(Rational(81,36))**3) == "27/8"
+    assert str(1/sqrt(Rational(81,36))**3) == "8/27"
 
-    assert str((-4)**Rational(1,2)) == str(2*I)
+    assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
 
 def test_Float():
@@ -277,6 +303,8 @@ def test_Float():
     assert str(pi.evalf(1+2))   == '3.14'
     assert str(pi.evalf(1+14))  == '3.14159265358979'
     assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
+    assert str(pi.round(-1)) == '0.'
+    assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
@@ -290,6 +318,16 @@ def test_RootSum():
 
     assert str(RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+
+def test_GroebnerBasis():
+    assert str(groebner([], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"
+
+    F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+
+    assert str(groebner(F, order='grlex')) == \
+        "GroebnerBasis([x**2 - x - 3*y + 1, y**2 - 2*x + y - 1], x, y, domain='ZZ', order='grlex')"
+    assert str(groebner(F, order='lex')) == \
+        "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [
@@ -355,17 +393,12 @@ def test_bug2():
     b = str(e)
     assert a == b
 
-def test_bug3():
-    e = sqrt(x)
-    assert str(e) == "x**(1/2)"
 
 def test_bug4():
     e = -2*sqrt(x)-y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y","-2*x**1/2-1/2*x**-1/2*w"]
-    assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*y", "-2*x**(1/2) - 1/2*y*x**(-1/2)",
-                      "-1/2*x**(-1/2)*y - 2*x**(1/2)", "-1/2*y*x**(-1/2) - 2*x**(1/2)",
-                      "-2*x**(1/2) - y/(2*x**(1/2))"]
+    assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 def test_issue922():
     e = Integral(x,x) + 1
@@ -380,7 +413,7 @@ def test_sstrrepr():
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
 
 def test_infinity():
-    assert sstr(I*oo) == "(oo)*I"
+    assert sstr(oo*I) == "oo*I"
 
 def test_full_prec():
     assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"
@@ -399,6 +432,15 @@ def test_full_prec():
             "x*0.3"
             ]
 
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert sstr(A*B*C**-1) == "A*B*C**(-1)"
+    assert sstr(C**-1*A*B) == "C**(-1)*A*B"
+    assert sstr(A*C**-1*B) == "A*C**(-1)*B"
+    assert sstr(sqrt(A)) == "sqrt(A)"
+    assert sstr(1/sqrt(A)) == "A**(-1/2)"
+
 def test_empty_printer():
     str_printer = StrPrinter()
     assert str_printer.emptyPrinter("foo") == "foo"
@@ -406,4 +448,50 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(32) == "32"
 
 def test_settings():
-    raises(TypeError, 'sstr(S(4), method="garbage")')
+    raises(TypeError, lambda: sstr(S(4), method="garbage"))
+
+def test_RandomDomain():
+    from sympy.stats import Normal, Die, Exponential, pspace, where
+    X = Normal('x1', 0, 1)
+    assert str(where(X>0)) == "Domain: 0 < x1"
+
+    D = Die('d1', 6)
+    assert str(where(D>4)) == "Domain: Or(d1 == 5, d1 == 6)"
+
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
+    assert str(pspace(Tuple(A,B)).domain) =="Domain: And(0 <= a, 0 <= b)"
+
+def test_FiniteSet():
+    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+def test_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+    assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
+    assert sstr(R.convert(x + y)) == sstr(x + y)
+
+def test_categories():
+    from sympy.categories import (Object, Morphism, NamedMorphism,
+                                  IdentityMorphism, Category)
+
+    A = Object("A")
+    B = Object("B")
+
+    f = NamedMorphism(A, B, "f")
+    id_A = IdentityMorphism(A)
+
+    K = Category("K")
+
+    assert str(A) == 'Object("A")'
+    assert str(f) == 'NamedMorphism(Object("A"), Object("B"), "f")'
+    assert str(id_A) == 'IdentityMorphism(Object("A"))'
+
+    assert str(K) == 'Category("K")'
+
+def test_Tr():
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert str(t) == 'Tr(A*B)'

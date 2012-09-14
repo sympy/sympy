@@ -1,10 +1,10 @@
-__version__ = '0.16'
+__version__ = '0.17'
 
-from usertools import monitor, timing
+from .usertools import monitor, timing
 
-from ctx_fp import FPContext
-from ctx_mp import MPContext
-from ctx_iv import MPIntervalContext
+from .ctx_fp import FPContext
+from .ctx_mp import MPContext
+from .ctx_iv import MPIntervalContext
 
 fp = FPContext()
 mp = MPContext()
@@ -20,7 +20,7 @@ fp._iv = iv
 iv._iv = iv
 
 # XXX: extremely bad pickle hack
-import ctx_mp as _ctx_mp
+from . import ctx_mp as _ctx_mp
 _ctx_mp._mpf_module.mpf = mp.mpf
 _ctx_mp._mpf_module.mpc = mp.mpc
 
@@ -397,7 +397,11 @@ expm1 = mp.expm1
 powm1 = mp.powm1
 unitroots = mp.unitroots
 cyclotomic = mp.cyclotomic
-
+mangoldt = mp.mangoldt
+secondzeta = mp.secondzeta
+nzeros = mp.nzeros
+backlunds = mp.backlunds
+lerchphi = mp.lerchphi
 
 # be careful when changing this name, don't use test*!
 def runtests():
@@ -406,7 +410,7 @@ def runtests():
     """
     import os.path
     from inspect import getsourcefile
-    import tests.runtests as tests
+    from .tests import runtests as tests
     testdir = os.path.dirname(os.path.abspath(getsourcefile(tests)))
     importdir = os.path.abspath(testdir + '/../..')
     tests.testit(importdir, testdir)
@@ -429,11 +433,12 @@ def doctests():
         if filter:
             if not sum([pat in obj for pat in filter]):
                 continue
-        print obj,
+        sys.stdout.write(str(obj) + " ")
+        sys.stdout.flush()
         t1 = clock()
         doctest.run_docstring_examples(globs[obj], {}, verbose=("-v" in sys.argv))
         t2 = clock()
-        print round(t2-t1, 3)
+        print(round(t2-t1, 3))
 
 if __name__ == '__main__':
     doctests()

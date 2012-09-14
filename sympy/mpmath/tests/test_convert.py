@@ -45,8 +45,12 @@ def test_str_whitespace():
 
 def test_unicode():
     mp.dps = 15
-    assert mpf(u'2.76') == 2.76
-    assert mpf(u'inf') == inf
+    try:
+        unicode = unicode
+    except NameError:
+        unicode = str
+    assert mpf(unicode('2.76')) == 2.76
+    assert mpf(unicode('inf')) == inf
 
 def test_str_format():
     assert to_str(from_float(0.1),15,strip_zeros=False) == '0.100000000000000'
@@ -75,7 +79,7 @@ def test_eval_repr_invariant():
     random.seed(123)
     for dps in [10, 15, 20, 50, 100]:
         mp.dps = dps
-        for i in xrange(1000):
+        for i in range(1000):
             a = mpf(random.random())**0.5 * 10**random.randint(-100, 100)
             assert eval(repr(a)) == a
     mp.dps = 15
@@ -185,3 +189,4 @@ def test_mpmathify():
     assert mpmathify('(1.0+1.0j)') == mpc(1, 1)
     assert mpmathify('(1.2e-10 - 3.4e5j)') == mpc('1.2e-10', '-3.4e5')
     assert mpmathify('1j') == mpc(1j)
+

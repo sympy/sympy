@@ -1,6 +1,7 @@
 """Gosper's algorithm for hypergeometric summation. """
 
 from sympy.core import S, Dummy, symbols
+from sympy.core.compatibility import is_sequence
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
@@ -10,18 +11,17 @@ def gosper_normal(f, g, n, polys=True):
     Compute the Gosper's normal form of ``f`` and ``g``.
 
     Given relatively prime univariate polynomials ``f`` and ``g``,
-    rewrite their quotient to a normal form defined as follows::
+    rewrite their quotient to a normal form defined as follows:
 
     .. math::
-
         \frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}
 
     where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
     monic polynomials in ``n`` with the following properties:
 
-    1. $\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}$
-    2. $\gcd(B(n), C(n+1)) = 1$
-    3. $\gcd(A(n), C(n)) = 1$
+    1. `\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}`
+    2. `\gcd(B(n), C(n+1)) = 1`
+    3. `\gcd(A(n), C(n)) = 1`
 
     This normal form, or rational factorization in other words, is a
     crucial step in Gosper's algorithm and in solving of difference
@@ -31,7 +31,8 @@ def gosper_normal(f, g, n, polys=True):
     This procedure will return a tuple containing elements of this
     factorization in the form ``(Z*A, B, C)``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_normal
     >>> from sympy.abc import n
@@ -76,19 +77,19 @@ def gosper_normal(f, g, n, polys=True):
     return A, B, C
 
 def gosper_term(f, n):
-    """
+    r"""
     Compute Gosper's hypergeometric term for ``f``.
 
-    Suppose ``f`` is a hypergeometric term such that::
+    Suppose ``f`` is a hypergeometric term such that:
 
     .. math::
-
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and $f_k$ doesn't depend on $n$. Returns a hypergeometric
-    term $g_n$ such that $g_{n+1} - g_n = f_n$.
+    and `f_k` doesn't depend on `n`. Returns a hypergeometric
+    term `g_n` such that `g_{n+1} - g_n = f_n`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_term
     >>> from sympy.functions import factorial
@@ -151,29 +152,37 @@ def gosper_term(f, n):
         return B.as_expr()*x/C.as_expr()
 
 def gosper_sum(f, k):
-    """
+    r"""
     Gosper's hypergeometric summation algorithm.
 
-    Given a hypergeometric term ``f`` such that::
+    Given a hypergeometric term ``f`` such that:
 
-    .. math::
-
+    .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and $f(n)$ doesn't depend on $n$, returns $g_{n} - g(0)$ where
-    $g_{n+1} - g_n = f_n$, or ``None`` if $s_n$ can not be expressed
+    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
+    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
     in closed form as a sum of hypergeometric terms.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
-    >>> from sympy.abc import n, k
+    >>> from sympy.abc import i, n, k
 
-    >>> gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n))
+    >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
+    >>> gosper_sum(f, (k, 0, n))
     (-n! + 2*(2*n + 1)!)/(2*n + 1)!
+    >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
+    True
+    >>> gosper_sum(f, (k, 3, n))
+    (-60*n! + (2*n + 1)!)/(60*(2*n + 1)!)
+    >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
+    True
 
-    **References**
+    References
+    ==========
 
     .. [1] Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,
            AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73--100
@@ -181,7 +190,7 @@ def gosper_sum(f, k):
     """
     indefinite = False
 
-    if isinstance(k, tuple):
+    if is_sequence(k):
         k, a, b = k
     else:
         indefinite = True

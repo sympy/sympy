@@ -1,18 +1,20 @@
 """Grover's algorithm and helper functions.
 
 Todo:
+
 * W gate construction (or perhaps -W gate based on Mermin's book)
-* Generalize the algorithm for an unknown function that returns 1 on
-  multiple qubit states, not just one.
+* Generalize the algorithm for an unknown function that returns 1 on multiple
+  qubit states, not just one.
 * Implement _represent_ZGate in OracleGate
 """
 
-from sympy import sqrt, pi, floor
+from sympy import floor, pi, sqrt, sympify
+from sympy.core.compatibility import callable
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
-from sympy.physics.quantum.gate import Gate, HadamardGate
+from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import IntQubit
 
 __all__ = [
@@ -28,11 +30,13 @@ def superposition_basis(nqubits):
 
     Parameters
     ==========
+
     nqubits : int
         The number of qubits.
 
-    Return
-    ======
+    Returns
+    =======
+
     state : Qubit
         An equal superposition of the computational basis with nqubits.
 
@@ -58,6 +62,7 @@ class OracleGate(Gate):
 
     Parameters
     ==========
+
     qubits : int
         Number of qubits.
 
@@ -67,7 +72,7 @@ class OracleGate(Gate):
     Examples
     ========
 
-    Apply an Oracle gate that flips the sign of |2> on different qubits::
+    Apply an Oracle gate that flips the sign of ``|2>`` on different qubits::
 
         >>> from sympy.physics.quantum.qubit import IntQubit
         >>> from sympy.physics.quantum.qapply import qapply
@@ -89,24 +94,25 @@ class OracleGate(Gate):
 
     @classmethod
     def _eval_args(cls, args):
+        # TODO: args[1] is not a subclass of Basic
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
                     'supply the number of qubits and an unknown function.'
             )
-        sub_args = args[0],
+        sub_args = (args[0],)
         sub_args = UnitaryOperator._eval_args(sub_args)
         if not sub_args[0].is_Integer:
-           raise TypeError('Integer expected, got: %r' % sub_args[0])
+            raise TypeError('Integer expected, got: %r' % sub_args[0])
+
         if not callable(args[1]):
-           raise TypeError('Callable expected, got: %r' % args[1])
-        sub_args = UnitaryOperator._eval_args(tuple(range(args[0])))
-        return (sub_args, args[1])
+            raise TypeError('Callable expected, got: %r' % args[1])
+        return (sub_args[0], args[1])
 
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args[0])+1)
+        return ComplexSpace(2)**args[0]
 
     #-------------------------------------------------------------------------
     # Properties
@@ -120,7 +126,7 @@ class OracleGate(Gate):
     @property
     def targets(self):
         """A tuple of target qubits."""
-        return self.label[0]
+        return sympify(tuple(range(self.args[0])))
 
     #-------------------------------------------------------------------------
     # Apply
@@ -131,11 +137,13 @@ class OracleGate(Gate):
 
         Parameters
         ==========
+
         qubits : Qubit
             The qubit subclass to apply this operator to.
 
         Returns
         =======
+
         state : Expr
             The resulting quantum state.
         """
@@ -163,11 +171,12 @@ class OracleGate(Gate):
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
 
-    The gate performs the operation 2|phi><phi| - 1 on some qubits.
-    |phi> = (tensor product of n Hadamards)*(|0> with n qubits)
+    The gate performs the operation ``2|phi><phi| - 1`` on some qubits.
+    ``|phi> = (tensor product of n Hadamards)*(|0> with n qubits)``
 
     Parameters
     ==========
+
     nqubits : int
         The number of qubits to operate on
 
@@ -185,8 +194,16 @@ class WGate(Gate):
             )
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
-           raise TypeError('Integer expected, got: %r' % args[0])
-        return tuple(reversed(range(args[0])))
+            raise TypeError('Integer expected, got: %r' % args[0])
+        return args
+
+    #-------------------------------------------------------------------------
+    # Properties
+    #-------------------------------------------------------------------------
+
+    @property
+    def targets(self):
+        return sympify(tuple(reversed(range(self.args[0]))))
 
     #-------------------------------------------------------------------------
     # Apply
@@ -216,6 +233,7 @@ def grover_iteration(qstate, oracle):
 
     Parameters
     ==========
+
     qstate : Qubit
         A superposition of qubits.
     oracle : OracleGate
@@ -223,6 +241,7 @@ def grover_iteration(qstate, oracle):
 
     Returns
     =======
+
     Qubit : The qubits after applying the Oracle and W gate.
 
     Examples
@@ -251,12 +270,14 @@ def apply_grover(oracle, nqubits, iterations=None):
 
     Parameters
     ==========
+
     oracle : callable
         The unknown callable function that returns true when applied to the
         desired qubits and false otherwise.
 
     Returns
     =======
+
     state : Expr
         The resulting state after Grover's algorithm has been iterated.
 

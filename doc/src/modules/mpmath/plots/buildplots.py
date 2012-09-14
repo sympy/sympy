@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os.path
 import glob
 
@@ -11,7 +13,10 @@ for f in glob.glob("*.py"):
     if "buildplots" in f or os.path.exists(f[:-3]+".png"):
         continue
     print "Processing", f
-    code = open(f).readlines()
+
+    with open(f) as file:
+        code = file.readlines()
+
     code = ["from mpmath import *; mp.dps=5"] + code
     for i in range(len(code)):
         l = code[i].rstrip()

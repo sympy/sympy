@@ -2,9 +2,9 @@
 
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import ComputationFailed, PolificationFailed
-from sympy.utilities import any, all, postfixes
-from sympy.utilities.iterables import minkey
+from sympy.polys.polyerrors import (ComputationFailed,
+    PolificationFailed, CoercionFailed)
+from sympy.utilities import postfixes
 from sympy.simplify import rcollect
 from sympy.core import S
 
@@ -15,14 +15,14 @@ def solve_poly_system(seq, *gens, **args):
     """
     Solve a system of polynomial equations.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import solve_poly_system
     >>> from sympy.abc import x, y
 
     >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
-    [(0, 0), (2, -2**(1/2)), (2, 2**(1/2))]
+    [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     """
     try:
@@ -45,7 +45,26 @@ def solve_poly_system(seq, *gens, **args):
     return solve_generic(polys, opt)
 
 def solve_biquadratic(f, g, opt):
-    """Solve a system of two bivariate quadratic polynomial equations. """
+    """Solve a system of two bivariate quadratic polynomial equations.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import Options, Poly
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.polysys import solve_biquadratic
+    >>> NewOption = Options((x, y), {'domain': 'ZZ'})
+
+    >>> a = Poly(y**2 - 4 + x, y, x, domain='ZZ')
+    >>> b = Poly(y*2 + 3*x - 7, y, x, domain='ZZ')
+    >>> solve_biquadratic(a, b, NewOption)
+    [(1/3, 3), (41/27, 11/9)]
+
+    >>> a = Poly(y + x**2 - 3, y, x, domain='ZZ')
+    >>> b = Poly(-y + x - 4, y, x, domain='ZZ')
+    >>> solve_biquadratic(a, b, NewOption)
+    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + sqrt(29)/2)]
+    """
     G = groebner([f, g])
 
     if len(G) == 1 and G[0].is_ground:
@@ -109,8 +128,30 @@ def solve_generic(polys, opt):
     .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties
     and Algorithms, Springer, Second Edition, 1997, pp. 112
 
+    Examples
+    ========
+
+    >>> from sympy.polys import Poly, Options
+    >>> from sympy.solvers.polysys import solve_generic
+    >>> from sympy.abc import x, y
+    >>> NewOption = Options((x, y), {'domain': 'ZZ'})
+
+    >>> a = Poly(x - y + 5, x, y, domain='ZZ')
+    >>> b = Poly(x + y - 3, x, y, domain='ZZ')
+    >>> solve_generic([a, b], NewOption)
+    [(-1, 4)]
+
+    >>> a = Poly(x - 2*y + 5, x, y, domain='ZZ')
+    >>> b = Poly(2*x - y - 3, x, y, domain='ZZ')
+    >>> solve_generic([a, b], NewOption)
+    [(11/3, 13/3)]
+
+    >>> a = Poly(x**2 + y, x, y, domain='ZZ')
+    >>> b = Poly(x + y*4, x, y, domain='ZZ')
+    >>> solve_generic([a, b], NewOption)
+    [(0, 0), (1/4, -1/16)]
     """
-    def is_univariate(f):
+    def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
             if any(m > 0 for m in monom[:-1]):
@@ -118,7 +159,7 @@ def solve_generic(polys, opt):
 
         return True
 
-    def subs_root(f, gen, zero):
+    def _subs_root(f, gen, zero):
         """Replace generator with a root so that the result is nice. """
         p = f.as_expr({gen: zero})
 
@@ -127,7 +168,7 @@ def solve_generic(polys, opt):
 
         return p
 
-    def solve_reduced_system(system, gens, entry=False):
+    def _solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = roots(system[0], gens[-1]).keys()
@@ -141,7 +182,7 @@ def solve_generic(polys, opt):
             else:
                 return None
 
-        univariate = filter(is_univariate, basis)
+        univariate = filter(_is_univariate, basis)
 
         if len(univariate) == 1:
             f = univariate.pop()
@@ -166,17 +207,20 @@ def solve_generic(polys, opt):
             new_gens = gens[:-1]
 
             for b in basis[:-1]:
-                eq = subs_root(b, gen, zero)
+                eq = _subs_root(b, gen, zero)
 
                 if eq is not S.Zero:
                     new_system.append(eq)
 
-            for solution in solve_reduced_system(new_system, new_gens):
+            for solution in _solve_reduced_system(new_system, new_gens):
                 solutions.append(solution + (zero,))
 
         return solutions
 
-    result = solve_reduced_system(polys, opt.gens, entry=True)
+    try:
+        result = _solve_reduced_system(polys, opt.gens, entry=True)
+    except CoercionFailed:
+        raise NotImplementedError
 
     if result is not None:
         return sorted(result)
@@ -191,8 +235,8 @@ def solve_triangulated(polys, *gens, **args):
     domain and then by iteratively computing polynomial factorizations in
     appropriately constructed algebraic extensions of the ground domain.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.solvers.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
@@ -205,7 +249,7 @@ def solve_triangulated(polys, *gens, **args):
     References
     ==========
 
-    .. [Gianni89] Patrizia Gianni, Teo Mora, Algebraic Solution of System of
+    1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of
     Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989
 
@@ -241,12 +285,12 @@ def solve_triangulated(polys, *gens, **args):
                 _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
-                    h = g.ltrim(var).eval(mapping)
+                    h = g.ltrim(var).eval(dict(mapping))
 
                     if g.degree(var) == h.degree():
                         H.append(h)
 
-            p = minkey(H, key=lambda h: h.degree())
+            p = min(H, key=lambda h: h.degree())
             zeros = p.ground_roots()
 
             for zero in zeros:

@@ -26,15 +26,12 @@ __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = \
     'GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger'
 
-from sympy.core.compatibility import iff
-
 import string, re
 from token import *
 
 import token
 __all__ = [x for x in dir(token) if x[0] != '_'] + ["COMMENT", "tokenize",
            "generate_tokens", "NL", "untokenize"]
-del x
 del token
 
 COMMENT = N_TOKENS
@@ -87,7 +84,7 @@ Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"<>", r"!=",
                  r"~")
 
 Bracket = '[][(){}]'
-Special = group(r'\r?\n', r'[:;.,`@]')
+Special = group(r'\r?\n', r'[:;.,`@]', r'\!\!', r'\!')
 Funny = group(Operator, Bracket, Special)
 
 PlainToken = group(Number, Funny, String, Name)
@@ -253,7 +250,8 @@ def untokenize(iterable):
     Round-trip invariant for full input:
         Untokenized source will match input source exactly
 
-    Round-trip invariant for limited intput:
+    Round-trip invariant for limited intput::
+
         # Output text will tokenize the back to the input
         t1 = [tok[:2] for tok in generate_tokens(f.readline)]
         newcode = untokenize(t1)
@@ -270,7 +268,8 @@ def generate_tokens(readline):
     must be a callable object which provides the same interface as the
     readline() method of built-in file objects. Each call to the function
     should return one line of input as a string.  Alternately, readline
-    can be a callable function terminating with StopIteration:
+    can be a callable function terminating with StopIteration::
+
         readline = open(myfile).next    # Example of alternate readline
 
     The generator produces 5-tuples with these members: the token type; the
@@ -366,7 +365,7 @@ def generate_tokens(readline):
                    (initial == '.' and token != '.'):      # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
-                    yield iff(parenlev > 0, NL, NEWLINE, token, spos, epos, line)
+                    yield (NL if parenlev > 0 else NEWLINE, token, spos, epos, line)
                 elif initial == '#':
                     assert not token.endswith("\n")
                     yield (COMMENT, token, spos, epos, line)
@@ -378,7 +377,6 @@ def generate_tokens(readline):
                         token = line[start:pos]
                         yield (STRING, token, spos, (lnum, pos), line)
                     else:
-                        strstart = (lnum, start)           # multiple lines
                         contstr = line[start:]
                         contline = line
                         break
@@ -386,7 +384,6 @@ def generate_tokens(readline):
                     token[:2] in single_quoted or \
                     token[:3] in single_quoted:
                     if token[-1] == '\n':                  # continued string
-                        strstart = (lnum, start)
                         endprog = (endprogs[initial] or endprogs[token[1]] or
                                    endprogs[token[2]])
                         contstr, needcont = line[start:], 1

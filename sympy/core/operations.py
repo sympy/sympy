@@ -1,11 +1,13 @@
-from core import C
-from expr import Expr
-from sympify import _sympify, sympify
-from cache import cacheit
-from compatibility import all
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.sympify import _sympify, sympify
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import cmp
+from sympy.core.logic import fuzzy_and
 
-# from add import Add   /cyclic/
-# from mul import Mul   /cyclic/
+# from add import Add /cyclic/
+# from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
 
 class AssocOp(Expr):
@@ -26,37 +28,42 @@ class AssocOp(Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
+        args = map(_sympify, args)
+        args = [a for a in args if a is not cls.identity]
+
+        if not options.pop('evaluate', True):
+            return cls._from_args(args)
+
         if len(args) == 0:
             return cls.identity
-
-        args = map(_sympify, args)
         if len(args) == 1:
             return args[0]
 
-        if not options.pop('evaluate', True):
-            obj = Expr.__new__(cls, *args)
-            obj.is_commutative = all(a.is_commutative for a in args)
-            return obj
-
         c_part, nc_part, order_symbols = cls.flatten(args)
-        if len(c_part) + len(nc_part) <= 1:
-            if c_part:
-                obj = c_part[0]
-            elif nc_part:
-                obj = nc_part[0]
-            else:
-                obj = cls.identity
-        else:
-            obj = Expr.__new__(cls, *(c_part + nc_part))
-            obj.is_commutative = not nc_part
+        is_commutative = not nc_part
+        obj = cls._from_args(c_part + nc_part, is_commutative)
 
         if order_symbols is not None:
-            obj = C.Order(obj, *order_symbols)
+            return C.Order(obj, *order_symbols)
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        """Create new instance with already-processed args"""
+        if len(args) == 0:
+            return cls.identity
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Expr.__new__(cls, *args)
+        if is_commutative is None:
+            is_commutative = fuzzy_and(a.is_commutative for a in args)
+        obj.is_commutative = is_commutative
         return obj
 
     def _new_rawargs(self, *args, **kwargs):
-        """create new instance of own class with args exactly as provided by caller
-           but returning the self class identity if args is empty.
+        """Create new instance of own class with args exactly as provided by
+        caller but returning the self class identity if args is empty.
 
            This is handy when we want to optimize things, e.g.
 
@@ -93,80 +100,37 @@ class AssocOp(Expr):
            Although this routine tries to do as little as possible with the
            input, getting the commutativity right is important, so this level
            of safety is enforced: commutativity will always be recomputed if
-           either a) self has no is_commutate attribute or b) self is
-           non-commutative and kwarg `reeval=False` has not been passed.
-
-           If you don't have an existing Add or Mul and need one quickly, try
-           the following.
-
-               >>> m = object.__new__(Mul)
-               >>> m._new_rawargs(x, y)
-               x*y
-
-           Note that the commutativity is always computed in this case since
-           m doesn't have an is_commutative attribute; reeval is ignored:
-
-               >>> _.is_commutative
-               True
-               >>> hasattr(m, 'is_commutative')
-               False
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               True
-
-           It is possible to define the commutativity of m. If it's False then
-           the new Mul's commutivity will be re-evaluated:
-
-               >>> m.is_commutative = False
-               >>> m._new_rawargs(x, y).is_commutative
-               True
-
-           But if reeval=False then a non-commutative self can pass along
-           its non-commutativity to the result (but at least you have to *work*
-           to get this wrong):
-
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               False
-
+           self is non-commutative and kwarg `reeval=False` has not been
+           passed.
         """
-        if len(args) > 1:
-            obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-
-            if (hasattr(self, 'is_commutative') and
-                (self.is_commutative or
-                not kwargs.pop('reeval', True))):
-                obj.is_commutative = self.is_commutative
-            else:
-                obj.is_commutative = all(a.is_commutative for a in args)
-
-        elif len(args) == 1:
-            obj = args[0]
+        if kwargs.pop('reeval', True) and self.is_commutative is False:
+            is_commutative = None
         else:
-            obj = self.identity
-
-        return obj
-
+            is_commutative = self.is_commutative
+        return self._from_args(args, is_commutative)
 
     @classmethod
     def flatten(cls, seq):
-        # apply associativity, no commutivity property is used
+        """Return seq so that none of the elements are of type `cls`. This is
+        the vanilla routine that will be used if a class derived from AssocOp
+        does not define its own flatten routine."""
+        # apply associativity, no commutativity property is used
         new_seq = []
         while seq:
-            o = seq.pop(0)
+            o = seq.pop()
             if o.__class__ is cls: # classes must match exactly
-                seq = list(o[:]) + seq
-                continue
-            new_seq.append(o)
+                seq.extend(o.args)
+            else:
+                new_seq.append(o)
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
+    def _matches_commutative(self, expr, repl_dict={}):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
         repl_dict ... a dictionary of (wild: expression) pairs, that get
                       returned with the results
-        evaluate .... if True, then repl_dict is first substituted into the
-                      pattern, and then _matches_commutative is run
 
         This function is the main workhorse for Add/Mul.
 
@@ -180,23 +144,16 @@ class AssocOp(Expr):
         >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {a_: x, b_: y, c_: z}
 
-        In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is the
-        expression.
+        In the example above, "a+sin(b)*c" is the pattern, and "x+sin(y)*z" is
+        the expression.
 
-        The repl_dict contains parts that were already matched, and the
-        "evaluate=True" kwarg tells _matches_commutative to substitute this
-        repl_dict into pattern. For example here:
-
-        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x}, evaluate=True)
-        {a_: x, b_: y, c_: z}
-
-        _matches_commutative substitutes "x" for "a" in the pattern and calls
-        itself again with the new pattern "x+b*c" and evaluate=False (default):
+        The repl_dict contains parts that were already matched. For example
+        here:
 
         >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z, repl_dict={a: x})
         {a_: x, b_: y, c_: z}
 
-        the only function of the repl_dict now is just to return it in the
+        the only function of the repl_dict is to return it in the
         result, e.g. if you omit it:
 
         >>> (x+sin(b)*c)._matches_commutative(x+sin(y)*z)
@@ -206,10 +163,6 @@ class AssocOp(Expr):
         equivalent.
 
         """
-        # apply repl_dict to pattern to eliminate fixed wild parts
-        if evaluate:
-            return self.subs(repl_dict.items()).matches(expr, repl_dict)
-
         # handle simple patterns
         if self == expr:
             return repl_dict
@@ -224,7 +177,7 @@ class AssocOp(Expr):
         from function import WildFunction
         from symbol import Wild
         for p in self.args:
-            if p.has(Wild, WildFunction) and (not p in expr):
+            if p.has(Wild, WildFunction) and (not expr.has(p)):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
                 wild_part.append(p)
@@ -237,26 +190,68 @@ class AssocOp(Expr):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        expr_list = self.make_args(expr)
-
+        expr_list = (self.identity,) + self.make_args(expr)
         for last_op in reversed(expr_list):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
-                    d2 = self.subs(d1.items()).matches(expr, d1)
+                    d2 = self.xreplace(d1).matches(expr, d1)
                     if d2 is not None:
                         return d2
 
         return
 
-    def _eval_template_is_attr(self, is_attr):
-        # return True if all elements have the property
-        r = True
+    def _has_matcher(self):
+        """Helper for .has()"""
+        def _ncsplit(expr):
+            # this is not the same as args_cnc because here
+            # we don't assume expr is a Mul -- hence deal with args --
+            # and always return a set.
+            cpart, ncpart = [], []
+            for arg in expr.args:
+                if arg.is_commutative:
+                    cpart.append(arg)
+                else:
+                    ncpart.append(arg)
+            return set(cpart), ncpart
+
+        c, nc = _ncsplit(self)
+        cls = self.__class__
+        def is_in(expr):
+            if expr == self:
+                return True
+            elif not isinstance(expr, Basic):
+                return False
+            elif isinstance(expr, cls):
+                _c, _nc = _ncsplit(expr)
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i+len(nc)] == nc:
+                                return True
+            return False
+        return is_in
+
+    def _eval_template_is_attr(self, is_attr, when_multiple=False):
+        # return True if all elements have the property;
+        # False if one doesn't have the property; and
+        # if more than one doesn't have property, return
+        #    False if when_multiple = False
+        #    None if when_multiple is not False
+        quick = when_multiple is None
+        multi = False
         for t in self.args:
             a = getattr(t, is_attr)
-            if a is None: return
-            if r and not a: r = False
-        return r
+            if a is True:
+                continue
+            if a is None:
+                return
+            if quick and multi:
+                return None
+            multi = True
+        return not multi
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -371,7 +366,8 @@ class LatticeOp(AssocOp):
 
     @property
     def args(self):
-        return tuple(self._argset)
+        from sympy.utilities.misc import default_sort_key
+        return tuple(sorted(self._argset, key=default_sort_key))
 
     @staticmethod
     def _compare_pretty(a, b):

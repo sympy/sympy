@@ -1,17 +1,11 @@
-from sympy.core.evalf import PrecisionExhausted, complex_accuracy
-
-from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
-    fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
-    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
-    sstr, Function, Eq, Mul, Pow, Derivative
-
+from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
+                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
+                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
+from sympy.mpmath import inf, ninf, nan
+from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
-
-from sympy.utilities.pytest import raises
-
-x = Symbol('x')
-y = Symbol('y')
-n = Symbol('n')
+from sympy.utilities.pytest import raises, XFAIL
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -51,22 +45,27 @@ def test_evalf_complex():
     assert NS('E+pi*I',15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)',15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)',15) == '-1.00000000000000 + 2.00000000000000*I'
-    #assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
-    assert NS('(pi+E*I)*(E+pi*I)',15,chop=True) == '17.2586605000200*I'
+
+@XFAIL
+def test_evalf_complex_bug():
+    assert NS('(pi+E*I)*(E+pi*I)',15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
     # XXX: rewrite if a+a*I simplification introduced in sympy
-    #assert NS('(pi + pi*I)**2') in ('.0e-15 + 19.7392088021787*I', '.0e-16 + 19.7392088021787*I')
+    #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS('(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
-    #assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
     assert NS('(pi + pi*I)**4', chop=True) == '-389.636364136010'
     assert NS('(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
     assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
+
+@XFAIL
+def test_evalf_complex_powers_bug():
+    assert NS('(pi + pi*I)**4') == '-389.63636413601 + 0.e-14*I'
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
@@ -89,10 +88,14 @@ def test_evalf_complex_cancellation():
     F = Rational('2231321613/2500000000')
     # XXX: the number of returned mantissa digits in the real part could
     # change with the implementation. What matters is that the returned digits are
-    # correct.
-    assert NS((A+B*I)*(C+D*I),6) == '6.44862e-6 + 0.892529*I'
-    assert NS((A+B*I)*(C+D*I),10) == '6.447099821e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 - .0e-15*I', '6.4471e-6 + .0e-15*I')
+    # correct; those that are showing now are correct.
+    # >>> ((A+B*I)*(C+D*I)).expand()
+    # 64471/10000000000 + 2231321613*I/2500000000
+    # >>> 2231321613*4
+    # 8925286452L
+    assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
+    assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
+    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
@@ -141,11 +144,11 @@ def test_evalf_bugs():
     assert NS('(sin(x)-x)/x**3', 15, subs={x:'1/10**50'}) == '-0.166666666666667'
     assert NS(sin(1)+Rational(1,10**100)*I,15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
-    assert NS((1+I)**2*I,6) == '-2.00000 + 2.32831e-10*I'
+    assert NS((1+I)**2*I, 6) == '-2.00000'
     d={n: (-1)**Rational(6,7), y: (-1)**Rational(4,7), x: (-1)**Rational(2,7)}
     assert NS((x*(1+y*(1 + n))).subs(d).evalf(),6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
-    assert NS((1+I)**2*I,15) == '-2.00000000000000 + 2.16840434497101e-19*I'
+    assert NS((1+I)**2*I,15) == '-2.00000000000000'
     #1659 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
     #1659 (2/2): With the bug present, this still only fails if the
@@ -153,16 +156,21 @@ def test_evalf_bugs():
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n:.01}) == '19.8100000000000'
+    assert NS(((x - 1)*((1 - x))**1000).n()) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+    assert NS((-x).n()) == '-x'
+    assert NS((-2*x).n()) == '-2.00000000000000*x'
+    assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    raises(PrecisionExhausted, "a.evalf()")
+    raises(PrecisionExhausted, lambda: a.evalf())
     assert a.evalf(chop=True) == 3
     assert a.evalf(maxn=500) == 2
-    raises(PrecisionExhausted, "b.evalf()")
-    raises(PrecisionExhausted, "b.evalf(maxn=500)")
-    assert b.evalf(chop=True) == 3
+    assert b.evalf() == 3
+    # equals, as a fallback, can still fail but it might succeed as here
+    assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
+
     assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336800L
     assert int(ceiling(factorial(50)/E,evaluate=False).evalf()) == \
@@ -176,26 +184,24 @@ def test_evalf_trig_zero_detection():
     assert abs(t) < 1e-100
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
-    raises(PrecisionExhausted, "a.evalf(strict=True)")
+    raises(PrecisionExhausted, lambda: a.evalf(strict=True))
 
 def test_evalf_divergent_series():
-    n = Symbol('n', integer=True)
-    raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
-    raises(ValueError, 'Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf()')
-    raises(ValueError, 'Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf()')
+    raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(n/(n**2+1), (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(n**2, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(2**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf())
+    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf())
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
-    raises(ValueError, "float(pi+x)")
-    raises(ValueError, "complex(pi+x)")
+    raises(TypeError, lambda: float(pi+x))
 
 def test_evalf_power_subs_bugs():
     assert (x**2).evalf(subs={x:0}) == 0
@@ -208,12 +214,11 @@ def test_evalf_power_subs_bugs():
     assert (0**x).evalf(subs={x:0}) == 1
 
 def test_evalf_arguments():
-    raises(TypeError, 'pi.evalf(method="garbage")')
+    raises(TypeError, lambda: pi.evalf(method="garbage"))
 
 def test_implemented_function_evalf():
     from sympy.utilities.lambdify import implemented_function
     f = Function('f')
-    x = Symbol('x')
     f = implemented_function(f, lambda x: x + 1)
     assert str(f(x)) == "f(x)"
     assert str(f(2)) == "f(2)"
@@ -222,7 +227,7 @@ def test_implemented_function_evalf():
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 def test_evaluate_false():
-    for no in [[], 0, False, None]:
+    for no in [0, False, None]:
         assert Add(3, 2, evaluate=no).is_Add
         assert Mul(3, 2, evaluate=no).is_Mul
         assert Pow(3, 2, evaluate=no).is_Pow
@@ -233,3 +238,80 @@ def test_evalf_relational():
 
 def test_issue_2387():
     assert not cos(sqrt(0.5 + I)).n().is_Function
+
+def test_issue_2387_bug():
+    from sympy import I, Expr
+    assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
+
+def test_bugs():
+    from sympy import polar_lift, re
+
+    assert abs(re((1+I)**2)) < 1e-15
+
+    # anything that evalf's to 0 will do in place of polar_lift
+    assert abs(polar_lift(0)).n() == 0
+
+def test_subs_bugs():
+    from sympy import besseli
+    assert NS('besseli(-x, y) - besseli(x, y)', subs={x:3.5, y:20.0}) == \
+           '-4.92535585957223e-10'
+    assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
+           '1.00000000000000'
+
+def test_issue_1857_2105():
+    # 1857
+    v = S('''(-27*12**(1/3)*sqrt(31)*I +
+    27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
+    (29*18**(1/3) + 9*2**(1/3)*3**(2/3)*sqrt(31)*I +
+    87*2**(1/3)*3**(1/6)*I)**2)''')
+    assert NS(v, 1) == '0.e-118 - 0.e-118*I'
+
+    # 2105
+    v = S('''-(357587765856 + 18873261792*249**(1/2) + 56619785376*I*83**(1/2) +
+    108755765856*I*3**(1/2) + 41281887168*6**(1/3)*(1422 +
+    54*249**(1/2))**(1/3) - 1239810624*6**(1/3)*249**(1/2)*(1422 +
+    54*249**(1/2))**(1/3) - 3110400000*I*6**(1/3)*83**(1/2)*(1422 +
+    54*249**(1/2))**(1/3) + 13478400000*I*3**(1/2)*6**(1/3)*(1422 +
+    54*249**(1/2))**(1/3) + 1274950152*6**(2/3)*(1422 +
+    54*249**(1/2))**(2/3) + 32347944*6**(2/3)*249**(1/2)*(1422 +
+    54*249**(1/2))**(2/3) - 1758790152*I*3**(1/2)*6**(2/3)*(1422 +
+    54*249**(1/2))**(2/3) - 304403832*I*6**(2/3)*83**(1/2)*(1422 +
+    4*249**(1/2))**(2/3))/(175732658352 + (1106028 + 25596*249**(1/2) +
+    76788*I*83**(1/2))**2)''')
+    assert NS(v, 5) == '0.077284 + 1.1104*I'
+    assert NS(v, 1) == '0.08 + 1.*I'
+
+def test_old_docstring():
+    a = (E + pi*I)*(E - pi*I)
+    assert NS(a) == '17.2586605000200'
+    assert a.n() == 17.25866050002001
+
+def test_issue_1707():
+    assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
+    assert atan(0, evaluate=False).n() == 0
+
+def test_evalf_mul():
+    # sympy should not try to expand this; it should be handled term-wise
+    # in evalf through mpmath
+    assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
+def test_scaled_zero():
+    a, b = (([0], 1, 100, 1), -1)
+    assert scaled_zero(100) == (a, b)
+    assert scaled_zero(a) == (0, 1, 100, 1)
+    a, b = (([1], 1, 100, 1), -1)
+    assert scaled_zero(100, -1) == (a, b)
+    assert scaled_zero(a) == (1, 1, 100, 1)
+    raises(ValueError, lambda: scaled_zero(scaled_zero(100)))
+    raises(ValueError, lambda: scaled_zero(100, 2))
+    raises(ValueError, lambda: scaled_zero(100, 0))
+    raises(ValueError, lambda: scaled_zero((1, 5, 1, 3)))
+
+def test_chop_value():
+    for i in range(-27, 28):
+        assert (Pow(10, i)*2).n(chop=10**i) and not (Pow(10, i)).n(chop=10**i)
+
+def test_infinities():
+    assert oo.evalf(chop=True) == inf
+    assert (-oo).evalf(chop=True) == ninf
+    assert S.NaN.evalf(chop=True) == nan

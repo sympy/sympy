@@ -41,9 +41,11 @@ class stringPict(object):
         return [line.center(width) for line in lines]
 
     def height(self):
+        """The height of the picture in characters."""
         return len(self.picture)
 
     def width(self):
+        """The width of the picture in characters."""
         return len(self.picture[0])
 
     @staticmethod
@@ -81,6 +83,10 @@ class stringPict(object):
         r"""Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
+
+        Examples
+        ========
+
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
              1
@@ -139,6 +145,10 @@ class stringPict(object):
         """Put pictures under this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of top picture
+
+        Examples
+        ========
+
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
         x+3
@@ -241,8 +251,13 @@ class stringPict(object):
         if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 
-        # Attempt to get a terminal width
-        ncols = self.terminal_width()
+        if kwargs["num_columns"] is not None:
+            # Read the argument num_columns if it is not None
+            ncols = kwargs["num_columns"]
+        else:
+            # Attempt to get a terminal width
+            ncols = self.terminal_width()
+
         ncols -= 2
         if ncols <= 0:
             ncols = 78
@@ -282,6 +297,7 @@ class stringPict(object):
         ncols = 0
         try:
             import curses
+            import io
             try:
                 curses.setupterm()
                 ncols = curses.tigetnum('cols')
@@ -302,6 +318,8 @@ class stringPict(object):
                      left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
                     ncols = right - left + 1
             except curses.error:
+                pass
+            except io.UnsupportedOperation:
                 pass
         except (ImportError, TypeError):
             pass
@@ -335,14 +353,17 @@ class stringPict(object):
 class prettyForm(stringPict):
     """Extension of the stringPict class that knows about
     basic math applications, optimizing double minus signs.
-    "Binding" is interpreted as follows:
-    ATOM this is an atom: never needs to be parenthesized
-    FUNC this is a function application: parenthesize if added (?)
-    DIV  this is a division: make wider division if divided
-    POW  this is a power: only parenthesize if exponent
-    MUL  this is a multiplication: parenthesize if powered
-    ADD  this is an addition: parenthesize if multiplied or powered
-    NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
+
+    "Binding" is interpreted as follows::
+
+        ATOM this is an atom: never needs to be parenthesized
+        FUNC this is a function application: parenthesize if added (?)
+        DIV  this is a division: make wider division if divided
+        POW  this is a power: only parenthesize if exponent
+        MUL  this is a multiplication: parenthesize if powered
+        ADD  this is an addition: parenthesize if multiplied or powered
+        NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
+
     """
     ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
 

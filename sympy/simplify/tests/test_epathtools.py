@@ -73,10 +73,10 @@ def test_EPath():
 
     assert repr(EPath("/*/[0]")) == "EPath('/*/[0]')"
 
-    raises(ValueError, 'EPath("")')
-    raises(ValueError, 'EPath("/")')
-    raises(ValueError, 'EPath("/|x")')
-    raises(ValueError, 'EPath("/[")')
-    raises(ValueError, 'EPath("/[0]%")')
+    raises(ValueError, lambda: EPath(""))
+    raises(ValueError, lambda: EPath("/"))
+    raises(ValueError, lambda: EPath("/|x"))
+    raises(ValueError, lambda: EPath("/["))
+    raises(ValueError, lambda: EPath("/[0]%"))
 
-    raises(NotImplementedError, 'EPath("Symbol")')
+    raises(NotImplementedError, lambda: EPath("Symbol"))

@@ -2,7 +2,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
     LambertW
 from sympy.integrals.heurisch import heurisch, components
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, skip, slow
 
 x, y, z = symbols('x,y,z')
 f = Function('f')
@@ -218,4 +218,3 @@ def test_pmint_lambertw():
 # g = x/2 - mu*ln(x) - ln(WhittakerW(mu, nu, x))
 
 # - Wright omega
-

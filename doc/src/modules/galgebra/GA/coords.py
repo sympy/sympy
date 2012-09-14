@@ -7,17 +7,15 @@ from sympy import *
 
 import sympy,numpy,sys
 
-set_main(sys.modules[__name__])
-
 if __name__ == '__main__':
     metric = '1 0 0,'+\
              '0 1 0,'+\
              '0 0 1'
 
-    MV.setup('gamma_x gamma_y gamma_z',metric,True)
+    gamma_x,gamma_y,gamma_z = MV.setup('gamma_x gamma_y gamma_z',metric,True)
     Format('1 1 1 1')
 
-    coords = make_symbols('r theta phi')
+    coords = r,theta,phi = symbols('r theta phi')
     x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*\
         (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
     x.set_name('x')
@@ -30,13 +28,13 @@ if __name__ == '__main__':
     dpsi = psi.grad()
     print 'Gradient of Scalar Function $\\psi$'
     print '\\nabla\\psi =',dpsi
-    
+
     #A = MV.vector_fct('A')
     A = MV('A','vector',fct=True)
     #A.name = 'A'
     print 'Div and Curl of Vector Function $A$'
     print A
-        
+
     gradA = A.grad()
     I = MV(ONE,'pseudo')
     divA = A.grad_int()
@@ -44,5 +42,5 @@ if __name__ == '__main__':
     print '\\nabla \\cdot A =',divA
     Format('mv=3')
     print '-I\\lp\\nabla \\W A\\rp =',curlA
-    
+
     xdvi(filename='coords.tex')

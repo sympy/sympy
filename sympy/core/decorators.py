@@ -4,21 +4,9 @@ SymPy core decorators.
 The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
-from sympify import SympifyError, sympify
-import warnings
 
-try:
-    from functools import wraps
-except ImportError:
-    def wraps(old_func):
-        """Copy private data from ``old_func`` to ``new_func``. """
-        def decorate(new_func):
-            new_func.__dict__.update(old_func.__dict__)
-            new_func.__module__ = old_func.__module__
-            new_func.__name__   = old_func.__name__
-            new_func.__doc__    = old_func.__doc__
-            return new_func
-        return decorate
+from functools import wraps
+from sympify import SympifyError, sympify
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
@@ -26,8 +14,11 @@ def deprecated(func):
     when the function is used."""
     @wraps(func)
     def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=DeprecationWarning)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            "Call to deprecated function.",
+            feature=func.__name__ + "()"
+            ).warn()
         return func(*args, **kwargs)
     return new_func
 
@@ -115,4 +106,3 @@ def call_highest_priority(method_name):
             return func(self, other)
         return binary_op_wrapper
     return priority_decorator
-

@@ -22,6 +22,7 @@
 # is somewhere in the path and that it can compile ANSI C code.
 
 
+from __future__ import with_statement
 
 from sympy import symbols
 from sympy.utilities.pytest import skip
@@ -33,11 +34,6 @@ import os
 import tempfile
 import subprocess
 
-if sys.platform == 'win32' and sys.version_info < (2, 5):
-    # subprocess has problems in Windows Python 2.4, so skip the tests there
-    disabled = True
-else:
-    disabled = False
 
 # templates for the main program that will test the generated code.
 
@@ -179,14 +175,15 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         })
 
     if language == "F95":
-        f = file("main.f90", "w")
+        f_name = "main.f90"
     elif language == "C":
-        f = file("main.c", "w")
+        f_name = "main.c"
     else:
         raise NotImplemented(
                 "FIXME: filename extension unknown for language: %s"%language)
-    f.write(main_template[language] % {'statements': "".join(test_strings)})
-    f.close()
+
+    with open(f_name, "w") as f:
+        f.write(main_template[language] % {'statements': "".join(test_strings)})
 
     # 4) Compile and link
     compiled = try_run(commands)
@@ -256,15 +253,14 @@ def is_feasible(language, commands):
     except AssertionError:
         return False
 
-if not disabled:
-    valid_lang_commands = []
-    invalid_lang_compilers = []
-    for lang, compiler in combinations_lang_compiler:
-        commands = compile_commands[compiler]
-        if is_feasible(lang, commands):
-            valid_lang_commands.append((lang, commands))
-        else:
-            invalid_lang_compilers.append((lang, compiler))
+valid_lang_commands = []
+invalid_lang_compilers = []
+for lang, compiler in combinations_lang_compiler:
+    commands = compile_commands[compiler]
+    if is_feasible(lang, commands):
+        valid_lang_commands.append((lang, commands))
+    else:
+        invalid_lang_compilers.append((lang, compiler))
 
 # We test all language-compiler combinations, just to report what is skipped
 

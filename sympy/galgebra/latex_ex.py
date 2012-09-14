@@ -1,12 +1,15 @@
 #latex_ex.py
 
+from __future__ import with_statement
+
 import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
 import os,types,StringIO
 
-from sympy.core import S, C, Basic, Symbol, Mul
+from sympy.core import S, C, Basic, Symbol
+from sympy.core.function import _coeff_isneg
 from sympy.printing.printer import Printer
 from sympy.simplify import fraction
 import re as regrep
@@ -14,6 +17,11 @@ import re as regrep
 import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
+
+from sympy.core.compatibility import cmp_to_key
+from sympy.utilities import default_sort_key
+
+from sympy.printing.latex import accepted_latex_functions
 
 def debug(txt):
     sys.stderr.write(txt+'\n')
@@ -52,9 +60,6 @@ def find_executable(executable, path=None):
     else:
         return None
 
-def debug(tstr):
-    return
-
 def len_cmp(str1,str2):
     return(len(str2)-len(str1))
 
@@ -67,46 +72,62 @@ def process_equals(xstr):
     return(xstr)
 
 class LatexPrinter(Printer):
-    """
-    A printer class which converts an expression into its LaTeX equivalent. This
-    class extends the LatexPrinter class currently in sympy in the following ways:
+    r"""
+    A printer class which converts an expression into its LaTeX equivalent.
+    This class extends the LatexPrinter class currently in sympy in the
+    following ways:
 
-        1. Variable and function names can now encode multiple Greek symbols,
-           number, Greek, and roman super and subscripts and accents plus bold
-           math in an alphanumeric ASCII string consisting of [A-Za-z0-9_]
-           symbols
-            1 - Accents and bold math are implemented in reverse notation. For
-                example if you wished the LaTeX output to be '\bm{\hat{\sigma}}'
+        1.  Variable and function names can now encode multiple Greek symbols,
+            number, Greek, and roman super and subscripts and accents plus bold
+            math in an alphanumeric ASCII string consisting of ``[A-Za-z0-9_]``
+            symbols
+
+            a)  Accents and bold math are implemented in reverse notation. For
+                example if you wished the LaTeX output to be ``\bm{\hat{\sigma}}``
                 you would give the variable the name sigmahatbm.
-            2 - Subscripts are denoted by a single underscore and superscripts
-                by a double underscore so that A_{\rho\beta}^{25} would be
+
+            b)  Subscripts are denoted by a single underscore and superscripts
+                by a double underscore so that ``A_{\rho\beta}^{25}`` would be
                 input as A_rhobeta__25.
-        2. Some standard function names have been improved such as asin is now
-           denoted by Sin^{-1} and log by ln.
-        3. Several LaTeX formats for multivectors are available:
-            1 - Print multivector on one line
-            2 - Print each grade of multivector on one line
-            3 - Print each base of multivector on one line
-        4. A LaTeX output for numpy arrays containing sympy expressions is
-           implemented for up to a three dimensional array.
-        5. LaTeX formatting for raw LaTeX, eqnarray, and array is available
-           in simple output strings.
-            1 - The delimiter for raw LaTeX input is '%'.  The raw input starts
+
+        2.  Some standard function names have been improved such as asin is now
+            denoted by sin^{-1} and log by ln.
+
+        3.  Several LaTeX formats for multivectors are available:
+
+            a)  Print multivector on one line
+
+            b)  Print each grade of multivector on one line
+
+            c)  Print each base of multivector on one line
+
+        4.  A LaTeX output for numpy arrays containing sympy expressions is
+            implemented for up to a three dimensional array.
+
+        5.  LaTeX formatting for raw LaTeX, eqnarray, and array is available
+            in simple output strings.
+
+            a)  The delimiter for raw LaTeX input is '%'.  The raw input starts
                 on the line where '%' is first encountered and continues until
                 the next line where '%' is encountered. It does not matter where
                 '%' is in the line.
-            2 - The delimiter for eqnarray input is '@'. The rules are the same
+
+            b)  The delimiter for eqnarray input is '@'. The rules are the same
                 as for raw input except that '=' in the first line is replaced
                 be '&=&' and '\begin{eqnarray*}' is added before the first line
                 and '\end{eqnarray*}' to after the last line in the group of
                 lines.
-            3 - The delimiter for array input is '#'. The rules are the same
+
+            c)  The delimiter for array input is '#'. The rules are the same
                 as for raw input except that '\begin{equation*}' is added before
                 the first line and '\end{equation*}' to after the last line in
                 the group of lines.
-        6. Additional formats for partial derivatives:
-            0 - Same as sympy latex module
-            1 - Use subscript notation with partial symbol to indicate which
+
+        6.  Additional formats for partial derivatives:
+
+            a)  Same as sympy latex module
+
+            b)  Use subscript notation with partial symbol to indicate which
                 variable the differentiation is with respect to.  Symbol is of
                 form \partial_{differentiation variable}
     """
@@ -138,10 +159,10 @@ class LatexPrinter(Printer):
                          'varpi','pi','rho','varrho','varsigma','sigma','tau','upsilon',\
                          'varphi','phi','chi','psi','omega','Gamma','Delta','Theta',\
                          'Lambda','Xi','Pi','Sigma','Upsilon','Phi','Psi','Omega','partial',\
-                         'nabla','eta'),len_cmp)
+                         'nabla','eta'),key=cmp_to_key(len_cmp))
 
     accent_keys = sorted(('hat','check','dot','breve','acute','ddot','grave','tilde',\
-                          'mathring','bar','vec','bm','prm','abs'),len_cmp)
+                          'mathring','bar','vec','bm','prm','abs'),key=cmp_to_key(len_cmp))
 
     greek_cnt = 0
     greek_dict = {}
@@ -400,9 +421,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(expr.args[0]))
 
         for term in expr.args[1:]:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff.is_negative:
+            if _coeff_isneg(term):
                 tex += r" %s" % self._print(term)
             else:
                 tex += r" + %s" % self._print(term)
@@ -410,13 +429,13 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, tail = expr.as_two_terms()
+        coeff, tail = expr.as_coeff_Mul()
 
-        if not coeff.is_negative:
-            tex = ""
-        else:
+        if coeff.is_negative:
             coeff = -coeff
             tex = "- "
+        else:
+            tex = ""
 
         numer, denom = fraction(tail)
 
@@ -579,9 +598,15 @@ class LatexPrinter(Printer):
             if LatexPrinter.fmt_dict['fct'] == 1:
                 if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
-                        name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
+                        if func in accepted_latex_functions:
+                            name = r"\%s^{%s}" %  (LatexPrinter.fct_dict[func], exp)
+                        else:
+                            name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:
-                        name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
+                        if LatexPrinter.fct_dict[func] in accepted_latex_functions:
+                            name = r"\%s" % LatexPrinter.fct_dict[func]
+                        else:
+                            name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
                     name += r"\left(%s\right)" % ",".join(args)
                     return name
                 else:
@@ -593,9 +618,15 @@ class LatexPrinter(Printer):
                     return name
             else:
                 if exp is not None:
-                    name = r"\operatorname{%s}^{%s}" % (func, exp)
+                    if func in accepted_latex_functions:
+                        name = r"\%s^{%s}" % (func, exp)
+                    else:
+                        name = r"\operatorname{%s}^{%s}" % (func, exp)
                 else:
-                    name = r"\operatorname{%s}" % func
+                    if func in accepted_latex_functions:
+                        name = r"\%s" % func
+                    else:
+                        name = r"\operatorname{%s}" % func
                 return name + r"\left(%s\right)" % ",".join(args)
 
     def _print_floor(self, expr, exp=None):
@@ -654,9 +685,9 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+            return r"\Gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\Gamma}%s" % tex
+            return r"\Gamma%s" % tex
 
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
@@ -727,7 +758,7 @@ class LatexPrinter(Printer):
         return r"\gamma"
 
     def _print_Order(self, expr):
-        return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
+        return r"\\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
 
     @staticmethod
@@ -952,7 +983,7 @@ class LatexPrinter(Printer):
         items = []
 
         keys = expr.keys()
-        keys.sort(Basic.compare_pretty)
+        keys.sort(key=default_sort_key)
         for key in keys:
             val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
@@ -1135,9 +1166,9 @@ def xdvi(filename='tmplatex.tex',debug=False):
             except StopIteration:
                 break
     body = LatexPrinter.preamble+body+LatexPrinter.postscript
-    latex_file = open(filename,'w')
-    latex_file.write(body)
-    latex_file.close()
+
+    with open(filename,'w') as latex_file:
+        latex_file.write(body)
 
     latex_str = None
     xdvi_str  = None
@@ -1155,7 +1186,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
         if debug: #Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
         else: #Works for Linux don't know about Windows
-            if sys.platform == 'linux2':
+            if sys.platform.startswith('linux'):
                 os.system(latex_str+' '+filename[:-4]+' > /dev/null')
             else:
                 os.system(latex_str+' '+filename[:-4]+' > NUL')
@@ -1166,7 +1197,9 @@ def xdvi(filename='tmplatex.tex',debug=False):
 def MV_format(mv_fmt):
     """
     0 or 1 - Print multivector on one line
+
     2      - Print each multivector grade on one line
+
     3      - Print each multivector base on one line
     """
     if LatexPrinter.LaTeX_flg:
@@ -1176,10 +1209,12 @@ def MV_format(mv_fmt):
 def fct_format(fct_fmt):
     """
     0 - Default sympy latex format
+
     1 - Do not print arguments of arbitrary functions.
         Use symbol font for arbitrary functions.
         Use enhanced symbol naming for arbitrary functions.
         Use new names for standard functions (acos -> Cos^{-1})
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fct = fct_fmt
@@ -1188,6 +1223,7 @@ def fct_format(fct_fmt):
 def pdiff_format(pdiff_fmt):
     """
     0 - Use default sympy partial derivative format
+
     1 - Contracted derivative format (no fraction symbols)
     """
     if LatexPrinter.LaTeX_flg:
@@ -1197,9 +1233,11 @@ def pdiff_format(pdiff_fmt):
 def sym_format(sym_fmt):
     """
     0 - Use default sympy format
+
     1 - Use extended symbol format including multiple Greek letters in
         basic symbol (symbol preceding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['sym'] = sym_fmt
@@ -1208,9 +1246,11 @@ def sym_format(sym_fmt):
 def str_format(str_fmt):
     """
     0 - Use default sympy format
+
     1 - Use extended symbol format including multiple Greek letters in
         basic symbol (symbol preceding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
+
     """
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['str'] = str_fmt

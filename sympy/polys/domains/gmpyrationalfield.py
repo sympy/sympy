@@ -5,7 +5,6 @@ from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.domains.groundtypes import (
     GMPYRationalType, SymPyRationalType,
     gmpy_numer, gmpy_denom, gmpy_factorial,
-    gmpy_gcdex, gmpy_gcd, gmpy_lcm, gmpy_sqrt,
 )
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -28,7 +27,7 @@ class GMPYRationalField(RationalField):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to `dtype`. """
-        if a.is_Rational and a.q != 0:
+        if a.is_Rational:
             return GMPYRationalType(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR

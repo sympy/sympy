@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, Abs)
+    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs)
 
 from sympy.printing.python import python
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x, y = symbols('x,y')
 th  = Symbol('theta')
@@ -21,7 +21,7 @@ def test_python_basic():
     assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
-    assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**(Rational(-5, 2))"
+    assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
 
     # Sums of terms
     assert python((x**2 + x + 1)) in [
@@ -62,8 +62,10 @@ def test_python_basic():
 
 def test_python_relational():
     assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
+    assert python(Ge(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x >= y"
     assert python(Le(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
-    assert python(Gt(x, y)) == "y = Symbol('y')\nx = Symbol('x')\ne = y < x"
+    assert python(Gt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x > y"
+    assert python(Lt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x < y"
     assert python(Ne(x/(y+1), y**2)) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
@@ -71,8 +73,11 @@ def test_python_relational():
 def test_python_functions():
     # Simple
     assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
-    assert python(sqrt(2)) == 'e = 2**(Rational(1, 2))'
-    assert python(sqrt(2+pi)) == 'e = (2 + pi)**(Rational(1, 2))'
+    assert python(sqrt(2)) == 'e = sqrt(2)'
+    assert python(2**Rational(1, 3)) == 'e = 2**Rational(1, 3)'
+    assert python(sqrt(2 + pi)) == 'e = sqrt(2 + pi)'
+    assert python((2 + pi)**Rational(1, 3)) == 'e = (2 + pi)**Rational(1, 3)'
+    assert python(2**Rational(1, 4)) == 'e = 2**Rational(1, 4)'
     assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
     assert python(Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
             "x = Symbol('x')\ne = Abs(x/(x**2 + 1))"]
@@ -87,23 +92,30 @@ def test_python_functions():
 
     # Nesting of square roots
     assert python(sqrt((sqrt(x+1))+1)) in [
-            "x = Symbol('x')\ne = (1 + (1 + x)**(Rational(1, 2)))**(Rational(1, 2))",
-            "x = Symbol('x')\ne = ((x + 1)**(Rational(1, 2)) + 1)**(Rational(1, 2))"]
+            "x = Symbol('x')\ne = sqrt(1 + sqrt(1 + x))",
+            "x = Symbol('x')\ne = sqrt(sqrt(x + 1) + 1)"]
+
+    # Nesting of powers
+    assert python((((x+1)**Rational(1, 3))+1)**Rational(1, 3)) in [
+            "x = Symbol('x')\ne = (1 + (1 + x)**Rational(1, 3))**Rational(1, 3)",
+            "x = Symbol('x')\ne = ((x + 1)**Rational(1, 3) + 1)**Rational(1, 3)"]
+
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
-    # Conjugates
+@XFAIL
+def test_python_functions_conjugates():
     a, b = map(Symbol, 'ab')
-    #assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
-    #assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
+    assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
+    assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
 
 def test_python_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)
-    assert python(f_1) == "x = Symbol('x')\ne = D(log(x), x)"
+    assert python(f_1) == "x = Symbol('x')\ne = Derivative(log(x), x)"
 
     f_2 = Derivative(log(x), x, evaluate=False) + x
-    assert python(f_2) == "x = Symbol('x')\ne = x + D(log(x), x)"
+    assert python(f_2) == "x = Symbol('x')\ne = x + Derivative(log(x), x)"
 
     # Multiple symbols
     f_3 = Derivative(log(x) + x**2, x, y, evaluate=False)
@@ -111,8 +123,8 @@ def test_python_derivatives():
 
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert python(f_4) in [
-            "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + D(2*x*y, y, x)",
-            "x = Symbol('x')\ny = Symbol('y')\ne = D(2*x*y, y, x) + x**2"]
+            "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + Derivative(2*x*y, y, x)",
+            "x = Symbol('x')\ny = Symbol('y')\ne = Derivative(2*x*y, y, x) + x**2"]
 
 def test_python_integrals():
     # Simple
@@ -149,4 +161,4 @@ def test_python_limits():
     assert python(limit(x**2, x, 0)) == 'e = 0'
 
 def test_settings():
-    raises(TypeError, 'python(x, method="garbage")')
+    raises(TypeError, lambda: python(x, method="garbage"))

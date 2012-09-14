@@ -1,15 +1,19 @@
-from sympy.physics.quantum.qubit import (measure_all, measure_partial,
-        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
-from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
-        YGate, PhaseGate)
-from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.qapply import qapply
-from sympy import symbols, Rational, sqrt
-from sympy.core.numbers import Integer
-from sympy.physics.quantum.shor import Qubit
-from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
 import random
+
+from sympy import Integer, Matrix, Rational, sqrt, symbols
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+                                         matrix_to_qubit, matrix_to_density,
+                                         qubit_to_matrix, IntQubit,
+                                         IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
+                                        ZGate, PhaseGate)
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.shor import Qubit
+from sympy.utilities.pytest import raises
+from sympy.physics.quantum.density import Density
+from sympy.core.trace import Tr
+
 x, y = symbols('x,y')
 
 epsilon = .000001
@@ -27,8 +31,8 @@ def test_Qubit():
     qb = Qubit('110')
 
 def test_QubitBra():
-    assert Qubit(0).dual_class == QubitBra
-    assert QubitBra(0).dual_class == Qubit
+    assert Qubit(0).dual_class() == QubitBra
+    assert QubitBra(0).dual_class() == Qubit
     assert represent(Qubit(1,1,0), nqubits=3).H ==\
            represent(QubitBra(1,1,0), nqubits=3)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
@@ -41,8 +45,10 @@ def test_IntQubit():
     assert IntQubit(3) == IntQubit(3,2)
 
     #test Dual Classes
-    assert IntQubit(3).dual_class == IntQubitBra
-    assert IntQubitBra(3).dual_class == IntQubit
+    assert IntQubit(3).dual_class() == IntQubitBra
+    assert IntQubitBra(3).dual_class() == IntQubit
+
+    raises(ValueError, lambda: IntQubit(4, 1))
 
 def test_superposition_of_states():
     assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
@@ -129,3 +135,64 @@ def test_measure_all():
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
     assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1,5)), \
            (Qubit('00'), Rational(4,5))])
+
+def test_eval_trace():
+
+    q1 = Qubit('10110')
+    q2 = Qubit('01010')
+    d = Density([q1, 0.6], [q2, 0.4])
+
+    t = Tr(d)
+    assert t.doit() == 1
+
+    # extreme bits
+    t = Tr(d, 0)
+    assert t.doit() == (0.4*Density([Qubit('0101'), 1]) +
+                        0.6*Density([Qubit('1011'), 1]))
+    t = Tr(d, 4)
+    assert t.doit() == (0.4*Density([Qubit('1010'), 1]) +
+                        0.6*Density([Qubit('0110'), 1]))
+    # index somewhere in between
+    t = Tr(d, 2)
+    assert t.doit() == (0.4*Density([Qubit('0110'), 1]) +
+                        0.6*Density([Qubit('1010'), 1]))
+    #trace all indices
+    t = Tr(d, [0,1,2,3,4])
+    assert t.doit() == 1
+
+    # trace some indices, initialized in
+    # non-canonical order
+    t = Tr(d, [2, 1, 3])
+    assert t.doit() == (0.4*Density([Qubit('00'), 1]) +
+                        0.6*Density([Qubit('10'), 1]))
+
+    # mixed states
+    q = (1/sqrt(2)) * (Qubit('00') + Qubit('11'))
+    d = Density ( [q, 1.0] )
+    t = Tr(d, 0)
+    assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
+                        0.5*Density([Qubit('1'), 1]))
+
+def test_matrix_to_density():
+    mat = Matrix([[0, 0], [0, 1]])
+    assert matrix_to_density(mat) == Density([Qubit('1'), 1])
+
+    mat = Matrix([[1, 0], [0, 0]])
+    assert matrix_to_density(mat) == Density([Qubit('0'), 1])
+
+    mat = Matrix([[0, 0], [0, 0]])
+    assert matrix_to_density(mat) == 0
+
+    mat = Matrix([[0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 0]])
+
+    assert matrix_to_density(mat) == Density([Qubit('10'), 1])
+
+    mat = Matrix([[1, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0]])
+
+    assert matrix_to_density(mat) == Density([Qubit('00'), 1])

@@ -41,7 +41,7 @@ def test_dup_refine_real_root():
     assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, steps=1) == (QQ(1), QQ(1))
     assert dup_refine_real_root(f, QQ(1), QQ(1), ZZ, steps=9) == (QQ(1), QQ(1))
 
-    raises(ValueError, "dup_refine_real_root(f, QQ(-2), QQ(2), ZZ)")
+    raises(ValueError, lambda: dup_refine_real_root(f, QQ(-2), QQ(2), ZZ))
 
     s, t = QQ(1,1), QQ(2,1)
 
@@ -75,7 +75,7 @@ def test_dup_refine_real_root():
     assert dup_refine_real_root(f, s, t, ZZ, steps=3) == (-QQ(3, 2), -QQ(7, 5))
     assert dup_refine_real_root(f, s, t, ZZ, steps=4) == (-QQ(10, 7), -QQ(7, 5))
 
-    raises(RefinementFailed, "dup_refine_real_root(f, QQ(0), QQ(1), ZZ)")
+    raises(RefinementFailed, lambda: dup_refine_real_root(f, QQ(0), QQ(1), ZZ))
 
     s, t, u, v, w = QQ(1), QQ(2), QQ(24,17), QQ(17,12), QQ(7,5)
 
@@ -276,7 +276,7 @@ def test_dup_isolate_real_roots_sqf():
 
     assert dup_isolate_real_roots_sqf(f, ZZ, inf=-2, sup=2) == I
 
-    raises(DomainError, "dup_isolate_real_roots_sqf([EX(1), EX(2)], EX)")
+    raises(DomainError, lambda: dup_isolate_real_roots_sqf([EX(1), EX(2)], EX))
 
 def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots([], ZZ) == []
@@ -342,7 +342,7 @@ def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots(f, ZZ, basis=True) == \
         [((-2, -1), 2, [1, 0, -2]), ((0, 0), 4, [1, 0]), ((1, 1), 3, [1, -1]), ((1, 2), 2, [1, 0, -2])]
 
-    raises(DomainError, "dup_isolate_real_roots([EX(1), EX(2)], EX)")
+    raises(DomainError, lambda: dup_isolate_real_roots([EX(1), EX(2)], EX))
 
 def test_dup_isolate_real_roots_list():
     assert dup_isolate_real_roots_list([[1, 1,0], [1,0]], ZZ) == \
@@ -403,7 +403,7 @@ def test_dup_isolate_real_roots_list():
     assert dup_isolate_real_roots_list([f, g], ZZ, basis=True) == \
         [((-2, -1), {0: 2}, [1, 0, -2]), ((0, 0), {0: 2, 1: 1}, [1, 0]), ((1, 1), {0: 3, 1: 2}, [1, -1]), ((1, 2), {0: 2}, [1, 0, -2])]
 
-    raises(DomainError, "dup_isolate_real_roots_list([[EX(1), EX(2)]], EX)")
+    raises(DomainError, lambda: dup_isolate_real_roots_list([[EX(1), EX(2)]], EX))
 
 def test_dup_count_real_roots():
     assert dup_count_real_roots([], ZZ) == 0
@@ -682,4 +682,4 @@ def test_dup_isolate_all_roots():
     assert dup_isolate_all_roots(f, ZZ, eps=QQ(1,10)) == \
         ([((QQ(-7,8), QQ(-6,7)), 1), ((0, 0), 1)], [(((QQ(35,64), -QQ(35,32)), (QQ(5,8), -QQ(65,64))), 1), (((QQ(35,64), QQ(65,64)), (QQ(5,8), QQ(35,32))), 1)])
 
-    raises(NotImplementedError, "dup_isolate_all_roots([1, 1, -2, -2, 1, 1], ZZ)")
+    raises(NotImplementedError, lambda: dup_isolate_all_roots([1, 1, -2, -2, 1, 1], ZZ))

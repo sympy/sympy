@@ -5,7 +5,10 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
 from sympy.physics.quantum.dagger import Dagger
-
+from sympy.physics.quantum.qubit import Qubit, QubitBra
+from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.density import Density
+from sympy.core.trace import Tr
 
 A,B,C = symbols('A,B,C', commutative=False)
 x = symbols('x')
@@ -42,3 +45,59 @@ def test_tensor_product_commutator():
 
 def test_tensor_product_simp():
     assert tensor_product_simp(TP(A,B)*TP(B,C)) == TP(A*B,B*C)
+
+def test_issue_2824():
+    # most of the issue regarding sympification of args has been handled
+    # and is tested internally by the use of args_cnc through the quantum
+    # module, but the following is a test from the issue that used to raise.
+    assert TensorProduct(1, Qubit('1')*Qubit('1').dual) == \
+    TensorProduct(1, OuterProduct(Qubit(1), QubitBra(1)))
+
+def test_eval_trace():
+    # This test includes tests with dependencies between TensorProducts
+    #and density operators. Since, the test is more to test the behavior of
+    #TensorProducts it remains here
+
+    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
+
+    # Density with simple tensor products as args
+    t = TensorProduct(A, B)
+    d = Density([t, 1.0])
+    tr = Tr(d)
+    assert tr.doit() == 1.0*Tr(A*Dagger(A))*Tr(B*Dagger(B))
+
+    ## partial trace with simple tensor products as args
+    t = TensorProduct(A, B, C)
+    d = Density([t, 1.0])
+    tr = Tr(d,[1])
+    assert tr.doit() == 1.0*A*Dagger(A)*Tr(B*Dagger(B))*C*Dagger(C)
+
+    tr = Tr(d, [0, 2])
+    assert tr.doit() == 1.0*Tr(A*Dagger(A))*B*Dagger(B)*Tr(C*Dagger(C))
+
+    # Density with multiple Tensorproducts as states
+    t2 = TensorProduct(A, B)
+    t3 = TensorProduct(C, D)
+
+    d = Density([t2, 0.5], [t3, 0.5])
+    t = Tr(d)
+    assert t.doit() == (0.5*Tr(A*Dagger(A))*Tr(B*Dagger(B)) +
+                        0.5*Tr(C*Dagger(C))*Tr(D*Dagger(D)))
+
+    t = Tr(d, [0])
+    assert t.doit() == (0.5*Tr(A*Dagger(A))*B*Dagger(B) +
+                        0.5*Tr(C*Dagger(C))*D*Dagger(D))
+
+    #Density with mixed states
+    d = Density([t2+t3, 1.0])
+    t = Tr(d)
+    assert t.doit() == ( 1.0*Tr(A*Dagger(A))*Tr(B*Dagger(B)) +
+                        1.0*Tr(A*Dagger(C))*Tr(B*Dagger(D)) +
+                        1.0*Tr(C*Dagger(A))*Tr(D*Dagger(B)) +
+                        1.0*Tr(C*Dagger(C))*Tr(D*Dagger(D)))
+
+    t = Tr(d, [1] )
+    assert t.doit() == ( 1.0*A*Dagger(A)*Tr(B*Dagger(B)) +
+                        1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
+                        1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
+                        1.0*C*Dagger(C)*Tr(D*Dagger(D)))

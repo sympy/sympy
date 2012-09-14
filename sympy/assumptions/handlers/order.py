@@ -1,7 +1,6 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
-from sympy.utilities import all # python2.4 compatibility
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
@@ -101,8 +100,8 @@ class AskNonZeroHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
-        if all([ask(Q.positive(x), assumptions) for x in expr.args]) \
-            or all([ask(Q.negative(x), assumptions) for x in expr.args]):
+        if all(ask(Q.positive(x), assumptions) for x in expr.args) \
+            or all(ask(Q.negative(x), assumptions) for x in expr.args):
             return True
 
     @staticmethod

@@ -1,9 +1,10 @@
-"""Some utilities that may help.
+"""This module contains some general purpose utilities that are used across
+SymPy.
 """
-from iterables import (iff, flatten, group, take, subsets,
-    variations, numbered_symbols, cartes, capture, any, all, dict_merge,
-    postorder_traversal, preorder_traversal, interactive_traversal,
-    prefixes, postfixes, sift, topological_sort)
+from iterables import (flatten, group, take, subsets,
+    variations, numbered_symbols, cartes, capture, dict_merge,
+    postorder_traversal, interactive_traversal,
+    prefixes, postfixes, sift, topological_sort, unflatten)
 
 from lambdify import lambdify
 from source import source

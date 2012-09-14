@@ -1,18 +1,17 @@
+from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
 from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
-from sympy import Symbol, Matrix, sqrt, Eq
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_nsolve():
     # onedimensional
-    from sympy import Symbol, sin, pi
     x = Symbol('x')
-    assert nsolve(sin(x), 2) - pi.evalf() < 1e-16
+    assert nsolve(sin(x), 2) - pi.evalf() < 1e-15
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
     # Testing checks on number of inputs
-    raises(TypeError, "nsolve(Eq(2*x,2))")
-    raises(TypeError, "nsolve(Eq(2*x,2),x,1,2)")
+    raises(TypeError, lambda: nsolve(Eq(2*x,2)))
+    raises(TypeError, lambda: nsolve(Eq(2*x,2),x,1,2))
     # Issue 1730
     assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
     # multidimensional
@@ -36,7 +35,7 @@ def test_nsolve():
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x, y, z), f.T, modules='mpmath')
     def getroot(x0):
-        root = nsolve((f1, f2, f3), (x, y, z), x0)
+        root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root),1) <= 1.e-8
         return root
     assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
@@ -44,3 +43,12 @@ def test_nsolve():
     a = Symbol('a')
     assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
         mpf('0.31883011387318591'))
+
+def test_issue_3309():
+    x = Symbol('x')
+    assert nsolve(Piecewise((x,x<1),(x**2,True)),x,2) == 0.0
+
+@XFAIL
+def test_issue_3309_fail():
+    x, y = symbols('x y')
+    assert nsolve(Integral(x*y,(x,0,5)),y,2) == 0.0

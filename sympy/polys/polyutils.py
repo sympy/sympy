@@ -5,9 +5,8 @@ from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power
 
-from sympy.core import S, Add, Mul, Pow
+from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
-from sympy.utilities import any
 
 import re
 
@@ -116,7 +115,8 @@ def _analyze_gens(gens):
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
-    def order_if_multiple_key((f, n)):
+    def order_if_multiple_key(factor):
+        (f, n) = factor
         return (len(f), n, f)
 
     def order_no_multiple_key(f):
@@ -126,6 +126,10 @@ def _sort_factors(factors, **args):
         return sorted(factors, key=order_if_multiple_key)
     else:
         return sorted(factors, key=order_no_multiple_key)
+
+def _not_a_coeff(expr):
+    """Do not treat NaN and infinities as valid polynomial coefficients. """
+    return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
 
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
@@ -139,11 +143,14 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     for expr in exprs:
         poly = {}
 
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
+
         for term in Add.make_args(expr):
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
-                if factor.is_Number:
+                if not _not_a_coeff(factor) and factor.is_Number:
                     coeff.append(factor)
                 else:
                     try:
@@ -154,7 +161,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.has(*opt.gens):
+                        if not factor.free_symbols.intersection(opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of the generators set" % factor)
@@ -190,11 +197,14 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
     for expr in exprs:
         terms = []
 
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
+
         for term in Add.make_args(expr):
             coeff, elements = [], {}
 
             for factor in Mul.make_args(term):
-                if factor.is_Number or _is_coeff(factor):
+                if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
                     base, exp = decompose_power(factor)
@@ -282,11 +292,23 @@ def dict_from_expr(expr, **args):
 
 def _dict_from_expr(expr, opt):
     """Transform an expression into a multinomial form. """
-    if opt.expand is not False:
-        expr = expr.expand()
-
     if expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
+
+    def _is_expandable_pow(expr):
+        return (expr.is_Pow and expr.exp.is_positive and expr.exp.is_Integer
+                and expr.base.is_Add)
+
+    if opt.expand is not False:
+        expr = expr.expand()
+        # TODO: Integrate this into expand() itself
+        while any(_is_expandable_pow(i) or i.is_Mul and
+            any(_is_expandable_pow(j) for j in i.args) for i in
+            Add.make_args(expr)):
+
+            expr = expand_multinomial(expr)
+        while any(i.is_Mul and any(j.is_Add for j in i.args) for i in Add.make_args(expr)):
+            expr = expand_mul(expr)
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)
@@ -301,9 +323,9 @@ def expr_from_dict(rep, *gens):
 
     for monom, coeff in rep.iteritems():
         term = [coeff]
-
         for g, m in zip(gens, monom):
-            term.append(Pow(g, m))
+            if m:
+                term.append(Pow(g, m))
 
         result.append(Mul(*term))
 
@@ -333,3 +355,68 @@ def _dict_reorder(rep, gens, new_gens):
                 new_M.append(0)
 
     return map(tuple, new_monoms), coeffs
+
+class PicklableWithSlots(object):
+    """
+    Mixin class that allows to pickle objects with ``__slots__``.
+
+    Examples
+    --------
+
+    First define a class that mixes :class:`PicklableWithSlots` in::
+
+        >>> from sympy.polys.polyutils import PicklableWithSlots
+        >>> class Some(PicklableWithSlots):
+        ...     __slots__ = ['foo', 'bar']
+        ...
+        ...     def __init__(self, foo, bar):
+        ...         self.foo = foo
+        ...         self.bar = bar
+
+    To make :mod:`pickle` happy in doctest we have to use this hack::
+
+        >>> import __builtin__ as builtin
+        >>> builtin.Some = Some
+
+    Next lets see if we can create an instance, pickle it and unpickle::
+
+        >>> some = Some('abc', 10)
+        >>> some.foo, some.bar
+        ('abc', 10)
+
+        >>> from pickle import dumps, loads
+        >>> some2 = loads(dumps(some))
+
+        >>> some2.foo, some2.bar
+        ('abc', 10)
+
+    """
+
+    __slots__ = []
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dict
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except AttributeError:    # This is needed in cases like Rational :> Half
+                pass

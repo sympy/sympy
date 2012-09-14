@@ -32,7 +32,7 @@ from sympy.core.numbers import (
 )
 
 from sympy import (
-    Float     as SymPyRealType,
+    Float    as SymPyRealType,
     Integer  as SymPyIntegerType,
     Rational as SymPyRationalType,
 )

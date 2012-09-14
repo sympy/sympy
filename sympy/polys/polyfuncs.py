@@ -11,8 +11,7 @@ from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError)
 
-from sympy.utilities import (
-    all, any, numbered_symbols, take)
+from sympy.utilities import numbered_symbols, take
 
 from sympy.core import S, Basic, Add, Mul
 
@@ -29,7 +28,8 @@ def symmetrize(F, *gens, **args):
     Returns a tuple of symmetric polynomials ``(f1, f2, ..., fn)`` such that
     ``f = f1 + f2 + ... + fn``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyfuncs import symmetrize
     >>> from sympy.abc import x, y
@@ -153,7 +153,8 @@ def horner(f, *gens, **args):
     Among other applications, evaluation of a polynomial at a point is optimal
     when it is applied using the Horner scheme ([1]).
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyfuncs import horner
     >>> from sympy.abc import x, y, a, b, c, d, e
@@ -201,7 +202,8 @@ def interpolate(data, x):
     """
     Construct an interpolating polynomial for the data points.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyfuncs import interpolate
     >>> from sympy.abc import x
@@ -235,7 +237,8 @@ def viete(f, roots=None, *gens, **args):
     """
     Generate Viete's formulas for ``f``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyfuncs import viete
     >>> from sympy import symbols

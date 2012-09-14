@@ -12,13 +12,13 @@ def test_Idx_construction():
     assert Idx(i, oo) == Idx(i, (0, oo))
 
     x = symbols('x')
-    raises(TypeError, "Idx(x)")
-    raises(TypeError, "Idx(0.5)")
-    raises(TypeError, "Idx(i, x)")
-    raises(TypeError, "Idx(i, 0.5)")
-    raises(TypeError, "Idx(i, (x, 5))")
-    raises(TypeError, "Idx(i, (2, x))")
-    raises(TypeError, "Idx(i, (2, 3.5))")
+    raises(TypeError, lambda: Idx(x))
+    raises(TypeError, lambda: Idx(0.5))
+    raises(TypeError, lambda: Idx(i, x))
+    raises(TypeError, lambda: Idx(i, 0.5))
+    raises(TypeError, lambda: Idx(i, (x, 5)))
+    raises(TypeError, lambda: Idx(i, (2, x)))
+    raises(TypeError, lambda: Idx(i, (2, 3.5)))
 
 def test_Idx_properties():
     i, a, b = symbols('i a b', integer=True)
@@ -102,16 +102,16 @@ def test_IndexedBase_shape():
     assert a[i, j] == b[i, j].subs(n, m)
     assert b.func(*b.args) == b
     assert b[i, j].func(*b[i, j].args) == b[i, j]
-    raises(IndexException, 'b[i]')
-    raises(IndexException, 'b[i, i, j]')
+    raises(IndexException, lambda: b[i])
+    raises(IndexException, lambda: b[i, i, j])
 
 def test_Indexed_constructor():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
     assert A == Indexed(Symbol('A'), i, j)
     assert A == Indexed(IndexedBase('A'), i, j)
-    raises(TypeError, 'Indexed(A, i, j)')
-    raises(IndexException, 'Indexed("A")')
+    raises(TypeError, lambda: Indexed(A, i, j))
+    raises(IndexException, lambda: Indexed("A"))
 
 def test_Indexed_func_args():
     i, j = symbols('i j', integer=True)
@@ -134,12 +134,12 @@ def test_Indexed_properties():
     assert A.indices == (i, j)
     assert A.base == IndexedBase('A')
     assert A.ranges == [None, None]
-    raises(IndexException, 'A.shape')
+    raises(IndexException, lambda: A.shape)
 
     n, m = symbols('n m', integer=True)
     assert Indexed('A', Idx(i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
     assert Indexed('A', Idx(i, m), Idx(j, n)).shape == Tuple(m, n)
-    raises(IndexException, 'Indexed("A", Idx(i, m), Idx(j)).shape')
+    raises(IndexException, lambda: Indexed("A", Idx(i, m), Idx(j)).shape)
 
 def test_Indexed_shape_precedence():
     i, j = symbols('i j', integer=True)

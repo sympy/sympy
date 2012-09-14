@@ -7,6 +7,9 @@ Currently implemented methods:
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
+from sympy.core.compatibility import reduce
+from sympy.utilities.iterables import has_dups
+
 import operator
 
 def pde_separate(eq, fun, sep, strategy='mul'):
@@ -24,6 +27,25 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     :param strategy: Separation strategy. You can choose between additive
         separation ('add') and multiplicative separation ('mul') which is
         default.
+
+    Examples
+    ========
+
+    >>> from sympy import E, Eq, Function, pde_separate, Derivative as D
+    >>> from sympy.abc import x, t
+    >>> u, X, T = map(Function, 'uXT')
+
+    >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
+    >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='add')
+    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]
+
+    >>> eq = Eq(D(u(x, t), x, 2), D(u(x, t), t, 2))
+    >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='mul')
+    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]
+
+    See Also
+    ========
+    pde_separate_add, pde_separate_mul
     """
 
 
@@ -56,7 +78,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if len(subs_args) != len(orig_args):
         raise ValueError("Variable counts do not match")
     # Check for duplicate arguments like  [X(x), u(x, y)]
-    if len(subs_args) != len(set(subs_args)):
+    if has_dups(subs_args):
         raise ValueError("Duplicate substitution arguments detected")
     # Check whether the variables match
     if set(orig_args) != set(subs_args):
@@ -86,7 +108,8 @@ def pde_separate_add(eq, fun, sep):
 
     `w(x, y, z) = X(x) + y(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import E, Eq, Function, pde_separate_add, Derivative as D
     >>> from sympy.abc import x, t
@@ -94,7 +117,7 @@ def pde_separate_add(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
     >>> pde_separate_add(eq, u(x, t), [X(x), T(t)])
-    [exp(-X(x))*D(X(x), x), exp(T(t))*D(T(t), t)]
+    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]
 
     """
     return pde_separate(eq, fun, sep, strategy='add')
@@ -109,7 +132,8 @@ def pde_separate_mul(eq, fun, sep):
 
     `w(x, y, z) = X(x)*u(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Function, Eq, pde_separate_mul, Derivative as D
     >>> from sympy.abc import x, y
@@ -117,7 +141,7 @@ def pde_separate_mul(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
     >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
-    [D(X(x), x, x)/X(x), D(Y(y), y, y)/Y(y)]
+    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')

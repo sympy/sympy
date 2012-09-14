@@ -1,4 +1,5 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
+from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
+    S, Integral, sin)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -22,7 +23,7 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
-    raises(NotImplementedError, 'Order(x, 2 - x)')
+    raises(NotImplementedError, lambda: Order(x, 2 - x))
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
@@ -178,6 +179,11 @@ def test_leading_order2():
 def test_order_leadterm():
     assert O(x**2)._eval_as_leading_term(x) == O(x**2)
 
+def test_order_symbols():
+    e = x*y*sin(x)*Integral(x, (x, 1, 2))
+    assert O(e) == O(x**2*y, x, y)
+    assert O(e, x) == O(x**2)
+
 def test_nan():
     assert not O(x).contains(nan)
 
@@ -191,7 +197,7 @@ def test_getn():
     assert O(x/log(x)).getn() == 1
     assert O(x**2/log(x)**2).getn() == 2
     assert O(x*log(x)).getn() == 1
-    raises(NotImplementedError, '(O(x) + O(y)).getn()')
+    raises(NotImplementedError, lambda: (O(x) + O(y)).getn())
 
 def test_diff():
     assert O(x**2).diff(x) == O(x)
@@ -203,8 +209,32 @@ def test_getO():
     assert (O(x)).removeO() == 0
     assert (z + O(x) + O(y)).getO() == O(x) + O(y)
     assert (z + O(x) + O(y)).removeO() == z
-    raises(NotImplementedError, '(O(x)+O(y)).getn()')
+    raises(NotImplementedError, lambda: (O(x)+O(y)).getn())
 
 def test_leading_term():
     from sympy import digamma
     assert O(1/digamma(1/x)) == O(1/log(x))
+
+def test_eval():
+    y = Symbol('y')
+    from sympy import Basic
+    assert Order(x).subs(Order(x), 1) == 1
+    assert Order(x).subs(x, y) == Order(y)
+    assert (O(1)**x).is_Pow
+
+def test_oseries():
+    assert Order(x).oseries(x) == Order(x)
+
+@XFAIL
+def test_issue_1180():
+    a, b = symbols('a b')
+    assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
+
+@XFAIL
+def test_issue_1756():
+    x = Symbol('x')
+    f = Function('f')
+    g = Function('g')
+    assert 1/O(1) != O(1)
+    assert 1/O(x) != O(1/x)
+    assert 1/O(f(x)) != O(1/x)

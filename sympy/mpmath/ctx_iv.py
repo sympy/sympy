@@ -1,7 +1,10 @@
 import operator
-import libmp
 
-from libmp import (
+from . import libmp
+
+from .libmp.backend import basestring
+
+from .libmp import (
     int_types, MPZ_ONE,
     prec_to_dps, dps_to_prec, repr_dps,
     round_floor, round_ceiling,
@@ -18,7 +21,7 @@ from libmp import (
 
 mpi_zero = (fzero, fzero)
 
-from ctx_base import StandardBaseContext
+from .ctx_base import StandardBaseContext
 
 new = object.__new__
 
@@ -255,7 +258,8 @@ ivmpf.__mul__, ivmpf.__rmul__, ivmpc.__mul__, ivmpc.__rmul__ = _binary_op(mpi_mu
 ivmpf.__div__, ivmpf.__rdiv__, ivmpc.__div__, ivmpc.__rdiv__ = _binary_op(mpi_div, mpci_div)
 ivmpf.__pow__, ivmpf.__rpow__, ivmpc.__pow__, ivmpc.__rpow__ = _binary_op(mpi_pow, mpci_pow)
 
-
+ivmpf.__truediv__ = ivmpf.__div__; ivmpf.__rtruediv__ = ivmpf.__rdiv__
+ivmpc.__truediv__ = ivmpc.__div__; ivmpc.__rtruediv__ = ivmpc.__rdiv__
 
 class ivmpf_constant(ivmpf):
     def __new__(cls, f):

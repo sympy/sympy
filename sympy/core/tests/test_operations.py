@@ -21,7 +21,7 @@ def test_lattice_simple():
     assert join(1, 4, 2, 3, 1, 3, 2) == join(2, 3, 4)
 
 def test_lattice_shortcircuit():
-    raises(SympifyError, 'join(object)')
+    raises(SympifyError, lambda: join(object))
     assert join(0, object) == 0
 
 def test_lattice_print():

@@ -2,7 +2,6 @@
 
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import matrices
-from sympy.core.compatibility import all
 from sympy.external import import_module
 
 __all__ = [
@@ -148,11 +147,13 @@ def _sympy_tensor_product(*matrices):
 
     Parameters
     ==========
+
     matrices : tuple of Matrix instances
         The matrices to take the tensor product of.
 
     Returns
     =======
+
     matrix : Matrix
         The tensor product matrix.
 
@@ -296,7 +297,7 @@ def _scipy_sparse_matrix_to_zero(e):
 def matrix_to_zero(e):
     """Convert a zero matrix to the scalar zero."""
     if isinstance(e, Matrix):
-        if matrices.zeros(e.shape) == e:
+        if matrices.zeros(*e.shape) == e:
             e = Integer(0)
     elif isinstance(e, numpy_ndarray):
         e = _numpy_matrix_to_zero(e)

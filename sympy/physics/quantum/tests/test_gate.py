@@ -1,4 +1,4 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
+from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
 from sympy.matrices.matrices import Matrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
@@ -11,6 +11,7 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix,\
      matrix_to_qubit
 from sympy.physics.quantum.matrixutils import matrix_to_zero
+from sympy.physics.quantum.matrixcache import sqrt2_inv
 from sympy.physics.quantum import Dagger
 
 def test_gate():
@@ -18,6 +19,24 @@ def test_gate():
     h = HadamardGate(1)
     assert h.min_qubits == 2
     assert h.nqubits == 1
+
+    i0 = Wild('i0')
+    i1 = Wild('i1')
+    h0_w1 = HadamardGate(i0)
+    h0_w2 = HadamardGate(i0)
+    h1_w1 = HadamardGate(i1)
+
+    assert h0_w1 == h0_w2
+    assert h0_w1 != h1_w1
+    assert h1_w1 != h0_w2
+
+    cnot_10_w1 = CNOT(i1, i0)
+    cnot_10_w2 = CNOT(i1, i0)
+    cnot_01_w1 = CNOT(i0, i1)
+
+    assert cnot_10_w1 == cnot_10_w2
+    assert cnot_10_w1 != cnot_01_w1
+    assert cnot_10_w2 != cnot_01_w1
 
 def test_UGate():
     a,b,c,d = symbols('a,b,c,d')
@@ -75,6 +94,15 @@ def test_cgate():
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
 
+    # Test that the dagger, inverse, and power of CGate is evaluated properly
+    assert Dagger(CZGate) == CZGate
+    assert pow(CZGate, 1) == Dagger(CZGate)
+    assert Dagger(CZGate) == CZGate.inverse()
+    assert Dagger(CPhaseGate) != CPhaseGate
+    assert Dagger(CPhaseGate) == CPhaseGate.inverse()
+    assert Dagger(CPhaseGate) == pow(CPhaseGate, -1)
+    assert pow(CPhaseGate, -1) == CPhaseGate.inverse()
+
 def test_UGate_CGate_combo():
     a,b,c,d = symbols('a,b,c,d')
     uMat = Matrix([[a,b],[c,d]])
@@ -102,8 +130,7 @@ def test_represent_hadamard():
     circuit = HadamardGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
     # Check that the answers are same to within an epsilon.
-    assert answer == Matrix([1/sqrt(2),1/sqrt(2), 0, 0])
-
+    assert answer == Matrix([sqrt2_inv, sqrt2_inv, 0, 0])
 
 def test_represent_xgate():
     """Test the representation of the X gate."""
@@ -156,6 +183,10 @@ def test_cnot_gate():
     assert matrix_to_qubit(represent(circuit, nqubits=3)) ==\
         qapply(circuit)
 
+    circuit = CNotGate(1,0)
+    assert Dagger(circuit) == circuit
+    assert Dagger(Dagger(circuit)) == circuit
+    assert circuit*circuit == 1
 
 def test_gate_sort():
     """Test gate_sort."""
@@ -218,9 +249,9 @@ def test_one_qubit_commutators():
             a = matrix_to_zero(represent(e, nqubits=1, format='sympy'))
             b = matrix_to_zero(represent(e.doit(), nqubits=1, format='sympy'))
             assert a == b
+
             e = Commutator(g1(0),g2(1))
             assert e.doit() == 0
-
 
 def test_one_qubit_anticommutators():
     """Test single qubit gate anticommutation relations."""

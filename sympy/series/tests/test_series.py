@@ -28,8 +28,8 @@ def test_2124():
     assert series(1, x) == 1
     assert S(0).lseries(x).next() == 0
     assert cos(x).series() == cos(x).series(x)
-    raises(ValueError, 'cos(x+y).series()')
-    raises(ValueError, 'x.series(dir="")')
+    raises(ValueError, lambda: cos(x+y).series())
+    raises(ValueError, lambda: x.series(dir=""))
 
     assert (cos(x).series(x, 1).removeO().subs(x, x - 1) -
             cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
@@ -57,7 +57,7 @@ def test_2124():
     assert ((sin(x))**y).nseries(x, n=1, logx = logx) \
            == exp(y*logx) + O(x*exp(y*logx), x)
 
-    raises(NotImplementedError, 'series(Function("f")(x))')
+    raises(NotImplementedError, lambda: series(Function("f")(x)))
 
     assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3)
     assert abs(x).series(x, oo, n=5, dir='+') == x
@@ -84,3 +84,16 @@ def test_acceleration():
     A = Sum(Integer(-1)**(k+1) / k, (k, 1, n))
     assert round(shanks(A, n, 25).evalf(), 4) == round(log(2).evalf(), 4)
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
+
+def test_1484():
+    assert cos(1+x+x**2).series(x,0,5) == cos(1) - x*sin(1) + x**2*(-sin(1) - \
+                                          cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
+                                          x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
+
+def test_issue_3219():
+    eq = (1/x)**(S(2)/3)
+    assert (eq + 1).as_leading_term(x) == eq
+
+def test_x_is_base_detection():
+    eq = (x**2)**(S(2)/3)
+    assert eq.series() == eq

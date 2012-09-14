@@ -1,12 +1,14 @@
 # This testfile tests SymPy <-> Sage compatibility
 #
 # Execute this test inside Sage, e.g. with:
-# sage -python bin/test sympy/test_external/test_sage.py
+# sage -python bin/test sympy/external/tests/test_sage.py
 #
 # This file can be tested by Sage itself by:
-# sage -t sympy/test_external/test_sage.py
+# sage -t sympy/external/tests/test_sage.py
 # and if all tests pass, it should be copied (verbatim) to Sage, so that it is
-# automatically doctested by Sage.
+# automatically doctested by Sage.  Note that this second method imports the
+# version of SymPy in Sage, whereas the -python method imports the local version
+# of SymPy (both use the local version of the tests, however).
 #
 # Don't test any SymPy features here. Just pure interaction with Sage.
 # Always write regular SymPy tests for anything, that can be tested in pure
@@ -21,8 +23,18 @@ from sympy.external import import_module
 
 sage = import_module('sage.all', __import__kwargs={'fromlist':['all']})
 if not sage:
-    #py.test will not execute any tests now
+    #bin/test will not execute any tests now
     disabled = True
+
+if sys.version_info[0] == 3:
+    # Sage does not support Python 3 currently
+    disabled = True
+
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("Sage isn't available.")
 
 import sympy
 
@@ -32,7 +44,8 @@ def check_expression(expr, var_symbols):
     """Does eval(expr) both in Sage and SymPy and does other checks."""
 
     # evaluate the expression in the context of Sage:
-    sage.var(var_symbols)
+    if var_symbols:
+        sage.var(var_symbols)
     a = globals().copy()
     # safety checks...
     assert not "sin" in a
@@ -42,7 +55,8 @@ def check_expression(expr, var_symbols):
     assert not isinstance(e_sage, sympy.Basic)
 
     # evaluate the expression in the context of SymPy:
-    sympy.var(var_symbols)
+    if var_symbols:
+        sympy.var(var_symbols)
     b = globals().copy()
     assert not "sin" in b
     b.update(sympy.__dict__)
@@ -96,6 +110,8 @@ def test_euler_gamma():
 def test_oo():
     assert sympy.sympify(sage.oo) == sympy.oo
     assert sage.oo == sage.SR(sympy.oo)
+    assert sympy.sympify(-sage.oo) == -sympy.oo
+    assert -sage.oo == sage.SR(-sympy.oo)
 
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan

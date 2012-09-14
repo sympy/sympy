@@ -1,6 +1,6 @@
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
-    Rational, Float, S, WildFunction
+    Rational, Float, S, WildFunction, ImmutableMatrix
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
@@ -22,10 +22,6 @@ def sT(expr, string):
     assert eval(string, ENV) == expr
 
 def test_printmethod():
-    class R(oo.__class__):
-        def _sympyrepr(self, printer):
-            return "foo"
-    assert srepr(R()) == "foo"
     class R(Abs):
         def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
@@ -69,11 +65,14 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    sT(Matrix([[x**+1, 1], [y, x+y]]),
-       "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
-    sT(Matrix(), "Matrix([])")
+    # Matrix is really MutableMatrix
+    for cls, name in [(Matrix, "Matrix"), (ImmutableMatrix, "ImmutableMatrix")]:
+        sT(cls([[x**+1, 1], [y, x+y]]),
+           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
-    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+        sT(cls(), "%s([])"%name)
+
+        sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
 def test_Rational():
     sT(Rational(1,3), "Rational(1, 3)")
@@ -97,7 +96,7 @@ def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
 def test_settins():
-    raises(TypeError, 'srepr(x, method="garbage")')
+    raises(TypeError, lambda: srepr(x, method="garbage"))
 
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")

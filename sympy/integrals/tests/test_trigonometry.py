@@ -1,6 +1,6 @@
-from sympy import Symbol, Rational, sin, cos
+from sympy import Symbol, Rational, sin, cos, tan, csc, sec, cot
 from sympy.integrals.trigonometry import trigintegrate
-
+from sympy.functions.elementary.exponential import log
 x = Symbol('x')
 y = Symbol('y')
 
@@ -54,3 +54,22 @@ def test_trigintegrate_even():
     assert trigintegrate(cos(x)**(-6),x) == sin(x)/(5*cos(x)**5)\
                                             + 4*sin(x)/(15*cos(x)**3)\
                                             + 8*sin(x)/(15*cos(x))
+
+
+def test_trigintegrate_mixed():
+    assert trigintegrate(sin(x)*sec(x), x)  == -log(sin(x)**2 - 1)/2
+    assert trigintegrate(sin(x)*csc(x), x)  == x
+    assert trigintegrate(sin(x)*cot(x), x)  == sin(x)
+
+    assert trigintegrate(cos(x)*sec(x), x)  == x
+    assert trigintegrate(cos(x)*csc(x), x)  == log(cos(x)**2 - 1)/2
+    assert trigintegrate(cos(x)*tan(x), x)  == -cos(x)
+    assert trigintegrate(cos(x)*cot(x), x)  == log(cos(x) - 1)/2  \
+                                                - log(cos(x) + 1)/2 \
+                                                  + cos(x)
+
+def test_trigintegrate_symbolic():
+    n = Symbol('n', integer=True)
+    assert trigintegrate(cos(x)**n, x) is None
+    assert trigintegrate(sin(x)**n, x) is None
+    assert trigintegrate(cot(x)**n, x) is None

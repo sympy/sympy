@@ -62,7 +62,7 @@ between the various parameters (:func:`~mpmath.qfrom`, :func:`~mpmath.mfrom`,
 
 """
 
-from functions import defun, defun_wrapped
+from .functions import defun, defun_wrapped
 
 def nome(ctx, m):
     m = ctx.convert(m)

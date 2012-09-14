@@ -3,9 +3,9 @@ If the arbitrary constant class from issue 1336 is ever implemented, this
 should serve as a set of test cases.
 """
 
-from sympy import sin, exp, Function, Symbol, S, Pow, Eq, I, sinh, cosh, acos,\
-cos, log, Rational, sqrt, Integral
-from sympy.solvers.ode import constantsimp, constant_renumber
+from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
+                   S, sin, sinh, sqrt, Symbol)
+from sympy.solvers.ode import constant_renumber, constantsimp
 from sympy.utilities.pytest import XFAIL
 
 
@@ -57,7 +57,7 @@ def test_constant_add():
     assert constant_renumber(constantsimp(C1 + y, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + x, x, 1), 'C', 1, 1) == C1 + x
     assert constant_renumber(constantsimp(C1 + x + y + x*y + 2, x, 1), 'C', 1, 1) == \
-        C1 + x + x*y
+        C1 + x*(y + 1)
     assert constant_renumber(constantsimp(C1 + x + 2**x + y + 2, x, 1), 'C', 1, 1) == \
         C1 + x + 2**x
     assert constant_renumber(constantsimp(C1 + C1, x, 1), 'C', 1, 1) == C1
@@ -89,7 +89,7 @@ def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(2**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(S(2)**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(exp(C1), x, 1), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == exp(C1+x)
+    assert constant_renumber(constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == C1*exp(x)
     assert constant_renumber(constantsimp(Pow(2, C1), x, 1), 'C', 1, 1) == C1
 
 def test_constant_function():
@@ -120,29 +120,28 @@ def test_constant_multiple():
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
     assert constant_renumber(constantsimp(C1*exp(2*x)+exp(x)*(C2+C3), x, 3), 'C', 1, 3) == \
-        constant_renumber(C1*exp(x)+C2*exp(2*x), 'C', 1, 2)
+        constant_renumber((C1*exp(x) + C2*exp(2*x)), 'C', 1, 2)
     assert constant_renumber(constantsimp(Eq(f(x),I*C1*sinh(x/3) + C2*cosh(x/3)), x, 2),
         'C', 1, 2) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)), 'C', 1, 2)
     assert constant_renumber(constantsimp(Eq(f(x),acos((-C1)/cos(x))), x, 1), 'C', 1, 1) == \
         Eq(f(x),acos(C1/cos(x)))
     assert constant_renumber(constantsimp(Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0), x, 1),
         'C', 1, 1) ==  Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
-    assert constant_renumber(constantsimp(Eq(log(x*2**Rational(1,2)*(1/x)**Rational(1,2)*f(x)\
-        **Rational(1,2)/C1) + x**2/(2*f(x)**2), 0), x, 1), 'C', 1, 1) == \
-        Eq(log(C1*x*(1/x)**Rational(1,2)*f(x)**Rational(1,2)) + x**2/(2*f(x)**2), 0)
+    assert constant_renumber(constantsimp(Eq(log(x*sqrt(2)*sqrt(1/x)*sqrt(f(x))\
+        /C1) + x**2/(2*f(x)**2), 0), x, 1), 'C', 1, 1) == \
+        Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     assert constant_renumber(constantsimp(Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(x/C1) - \
         cos(f(x)/x)*exp(-f(x)/x)/2, 0), x, 1), 'C', 1, 1) == \
         Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     u2 = Symbol('u2')
     _a = Symbol('_a')
-    assert constant_renumber(constantsimp(Eq(-Integral(-1/((1 - u2**2)**Rational(1,2)*u2), \
+    assert constant_renumber(constantsimp(Eq(-Integral(-1/(sqrt(1 - u2**2)*u2), \
         (u2, _a, x/f(x))) + log(f(x)/C1), 0), x, 1), 'C', 1, 1) == \
-        Eq(-Integral(-1/(u2*(1 - u2**2)**Rational(1,2)), (u2, _a, x/f(x))) + \
+        Eq(-Integral(-1/(u2*sqrt(1 - u2**2)), (u2, _a, x/f(x))) + \
         log(C1*f(x)), 0)
     assert [constant_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
-        [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x +
-        x**2)**Rational(1,2))]] == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
-        Eq(f(x), -(C1*x + x**2)**Rational(1,2))]
+        [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x + x**2))]] == \
+        [Eq(f(x), sqrt(x*(C1 + x))), Eq(f(x), -sqrt(x*(C1 + x)))]
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here

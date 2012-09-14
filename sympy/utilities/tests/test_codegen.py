@@ -4,7 +4,7 @@ from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
 # import test:
@@ -28,8 +28,8 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
     expr = (x+y)*z
-    raises(CodeGenArgumentListError, 'Routine("test", expr, argument_sequence=[z, x])')
-    raises(CodeGenArgumentListError, 'Routine("test", Eq(a, expr), argument_sequence=[z, x, y])')
+    raises(CodeGenArgumentListError, lambda: Routine("test", expr, argument_sequence=[z, x]))
+    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a, expr), argument_sequence=[z, x, y]))
     r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
@@ -57,7 +57,7 @@ def test_empty_c_code_with_comment():
     assert source[:82] == (
             "/******************************************************************************\n *"
             )
-          #   "                    Code generated with sympy 0.7.0                    "
+          #   "                    Code generated with sympy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             " *                                                                            *\n"
             " *              See http://www.sympy.org/ for more information.               *\n"
@@ -159,10 +159,10 @@ def test_multiple_results_c():
         [expr1,expr2]
     )
     code_gen = CCodeGen()
-    raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
+    raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
 
 def test_no_results_c():
-    raises(ValueError, 'Routine("test", [])')
+    raises(ValueError, lambda: Routine("test", []))
 
 def test_ansi_math1_codegen():
     # not included: log10
@@ -440,7 +440,7 @@ def test_empty_f_code_with_header():
     assert source[:82] == (
             "!******************************************************************************\n!*"
             )
-          #   "                    Code generated with sympy 0.7.0                    "
+          #   "                    Code generated with sympy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             "!*                                                                            *\n"
             "!*              See http://www.sympy.org/ for more information.               *\n"
@@ -554,10 +554,10 @@ def test_multiple_results_f():
         [expr1,expr2]
     )
     code_gen = FCodeGen()
-    raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
+    raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
 
 def test_no_results_f():
-    raises(ValueError, 'Routine("test", [])')
+    raises(ValueError, lambda: Routine("test", []))
 
 def test_intrinsic_math_codegen():
     # not included: log10
@@ -1053,10 +1053,10 @@ def test_inline_function():
 
 def test_check_case():
     x, X = symbols('x,X')
-    raises(CodeGenError, "codegen(('test', x*X), 'f95', 'prefix')")
+    raises(CodeGenError, lambda: codegen(('test', x*X), 'f95', 'prefix'))
 
 def test_check_case_false_positive():
-    # The upper case/lower case exception should not be triggered by Sympy
+    # The upper case/lower case exception should not be triggered by SymPy
     # objects that differ only because of assumptions.  (It may be useful to
     # have a check for that as well, but here we only want to test against
     # false positives with respect to case checking.)
@@ -1065,6 +1065,5 @@ def test_check_case_false_positive():
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
     except CodeGenError, e:
-        if e.args[0][0:21] == "Fortran ignores case.":
+        if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")
-

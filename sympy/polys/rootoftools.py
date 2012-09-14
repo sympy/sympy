@@ -1,6 +1,6 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy.core import S, Basic, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
+from sympy.core import S, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -11,71 +11,21 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_sqf)
 
 from sympy.polys.polyroots import (
-    roots_linear, roots_quadratic,
-    roots_binomial, preprocess_roots)
+    roots_linear, roots_quadratic, roots_binomial,
+    preprocess_roots, roots)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
-    PolynomialError)
+    PolynomialError,
+    DomainError)
 
 from sympy.polys.domains import QQ
 
-from sympy.mpmath import (
-    mp, mpf, mpc, findroot)
+from sympy.mpmath import mp, mpf, mpc, findroot
+from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify
-
-import operator
-
-def dup_minpoly_add(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[-K.one], [K.one, K.zero]]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_sub(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[K.one], [K.one, K.zero]]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_mul(f, g, K):
-    f, F = reversed(f), []
-
-    for i, c in enumerate(f):
-        if not c:
-            F.append([])
-        else:
-            F.append(dup_lshift([c], i, K))
-
-    F = dmp_strip(F)
-    G = dmp_raise(g, 1, 0, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_div(f, g, K):
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_raise(g, 1, 0, K)
-
-    H = [[K.one, K.zero], []]
-    F = dmp_compose(F, H, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
-
-def dup_minpoly_pow(f, p, q, K):
-    d = {(p, 0): -K.one, (0, q): K.one}
-
-    F = dmp_raise(f, 1, 0, K)
-    G = dmp_from_dict(d, 1, K)
-
-    return dmp_resultant(F, G, 1, K)
 
 _reals_cache = {}
 _complexes_cache = {}
@@ -653,10 +603,23 @@ class RootSum(Expr):
         return True
 
     def doit(self, **hints):
-        if hints.get('roots', True):
-            return Add(*map(self.fun, self.poly.all_roots()))
-        else:
+        if not hints.get('roots', True):
             return self
+
+        _roots = roots(self.poly, multiple=True)
+
+        if len(_roots) < self.poly.degree():
+            return self
+        else:
+            return Add(*[ self.fun(r) for r in _roots ])
+
+    def _eval_evalf(self, prec):
+        try:
+            _roots = self.poly.nroots(n=prec_to_dps(prec))
+        except (DomainError, PolynomialError):
+            return self
+        else:
+            return Add(*[ self.fun(r) for r in _roots ])
 
     def _eval_derivative(self, x):
         var, expr = self.fun.args

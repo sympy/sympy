@@ -1,11 +1,17 @@
-from sympy.core import S, C, Add
+from sympy.core import C, Add
 from sympy.printing.str import StrPrinter
 from sympy.tensor import get_indices, get_contraction_structure
 
 class AssignmentError(Exception):
+    """
+    Raised if an assignment variable for a loop is missing.
+    """
     pass
 
 class CodePrinter(StrPrinter):
+    """
+    The base class for code-printing subclasses.
+    """
 
     def _doprint_a_piece(self, expr, assign_to=None):
         # Here we print an expression that may contain Indexed objects, they

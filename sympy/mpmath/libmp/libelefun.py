@@ -12,9 +12,10 @@ see libmpc and libmpi.
 import math
 from bisect import bisect
 
-from backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE, BACKEND
+from .backend import xrange
+from .backend import MPZ, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE, BACKEND
 
-from libmpf import (
+from .libmpf import (
     round_floor, round_ceiling, round_down, round_up,
     round_nearest, round_fast,
     ComplexResult,
@@ -29,7 +30,7 @@ from libmpf import (
     isqrt_fast
 )
 
-from libintmath import ifib
+from .libintmath import ifib
 
 
 #-------------------------------------------------------------------------------
@@ -220,7 +221,7 @@ def bs_chudnovsky(a, b, level, verbose):
         q = (-1)**b * g * (CHUD_A+CHUD_B*b)
     else:
         if verbose and level < 4:
-            print "  binary splitting", a, b
+            print("  binary splitting", a, b)
         mid = (a+b)//2
         g1, p1, q1 = bs_chudnovsky(a, mid, level+1, verbose)
         g2, p2, q2 = bs_chudnovsky(mid, b, level+1, verbose)
@@ -240,7 +241,7 @@ def pi_fixed(prec, verbose=False, verbose_base=None):
     # The Chudnovsky series gives 14.18 digits per term
     N = int(prec/3.3219280948/14.181647462 + 2)
     if verbose:
-        print "binary splitting with N =", N
+        print("binary splitting with N =", N)
     g, p, q = bs_chudnovsky(0, N, 0, verbose)
     sqrtC = isqrt_fast(CHUD_C<<(2*prec))
     v = p*CHUD_C*sqrtC//((q+CHUD_A*p)*CHUD_D)
@@ -1424,4 +1425,4 @@ if BACKEND == 'sage':
         cos_sin_fixed = _lbmp.cos_sin_fixed
         log_int_fixed = _lbmp.log_int_fixed
     except (ImportError, AttributeError):
-        print "Warning: Sage imports in libelefun failed"
+        print("Warning: Sage imports in libelefun failed")

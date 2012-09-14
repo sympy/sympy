@@ -29,16 +29,17 @@ from sympy.polys.factortools import (
     dmp_zz_wang_lead_coeffs,
     dmp_zz_wang_hensel_lifting,
     dup_zz_diophantine, dmp_zz_diophantine,
-    dup_zz_cyclotomic_p, dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
+    dup_cyclotomic_p, dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
-    dup_factor_list_include, dmp_factor_list_include)
+    dup_factor_list_include, dmp_factor_list_include,
+    dup_irreducible_p, dmp_irreducible_p)
 
 from sympy.polys.specialpolys import (
     f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2)
 
-from sympy.polys.polyconfig import setup
+from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
@@ -98,32 +99,36 @@ def test_dup_zz_irreducible_p():
     assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
 
-def test_dup_zz_cyclotomic_p():
-    assert dup_zz_cyclotomic_p([1,-1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,1,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,0,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,1,1,1,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,-1,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,0,0,0,1], ZZ) == True
-    assert dup_zz_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
+def test_dup_cyclotomic_p():
+    assert dup_cyclotomic_p([1,-1], ZZ) == True
+    assert dup_cyclotomic_p([1,1], ZZ) == True
+    assert dup_cyclotomic_p([1,1,1], ZZ) == True
+    assert dup_cyclotomic_p([1,0,1], ZZ) == True
+    assert dup_cyclotomic_p([1,1,1,1,1], ZZ) == True
+    assert dup_cyclotomic_p([1,-1,1], ZZ) == True
+    assert dup_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
+    assert dup_cyclotomic_p([1,0,0,0,1], ZZ) == True
+    assert dup_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
 
-    assert dup_zz_cyclotomic_p([], ZZ) == False
-    assert dup_zz_cyclotomic_p([1], ZZ) == False
-    assert dup_zz_cyclotomic_p([1, 0], ZZ) == False
-    assert dup_zz_cyclotomic_p([1, 2], ZZ) == False
-    assert dup_zz_cyclotomic_p([3, 1], ZZ) == False
-    assert dup_zz_cyclotomic_p([1, 0, -1], ZZ) == False
+    assert dup_cyclotomic_p([], ZZ) == False
+    assert dup_cyclotomic_p([1], ZZ) == False
+    assert dup_cyclotomic_p([1, 0], ZZ) == False
+    assert dup_cyclotomic_p([1, 2], ZZ) == False
+    assert dup_cyclotomic_p([3, 1], ZZ) == False
+    assert dup_cyclotomic_p([1, 0, -1], ZZ) == False
 
     f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
-    assert dup_zz_cyclotomic_p(f, ZZ) == False
+    assert dup_cyclotomic_p(f, ZZ) == False
 
     g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
-    assert dup_zz_cyclotomic_p(g, ZZ) == True
+    assert dup_cyclotomic_p(g, ZZ) == True
 
-    assert dup_zz_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
-    assert dup_zz_cyclotomic_p([QQ(1,2),QQ(1),QQ(1)], QQ) == False
+    assert dup_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
+    assert dup_cyclotomic_p([QQ(1,2),QQ(1),QQ(1)], QQ) == False
+
+    K = ZZ['y']
+
+    assert dup_cyclotomic_p([K([ZZ(1)]),K([ZZ(1)]),K([ZZ(1)])], K) == False
 
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1,-1]
@@ -262,10 +267,10 @@ def test_dup_zz_factor():
 
     f = dup_from_raw_dict({10:1, 0:-1}, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', True)
+    config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', False)
+    config.setup('USE_CYCLOTOMIC_FACTOR', False)
     F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
@@ -274,21 +279,21 @@ def test_dup_zz_factor():
              ([1,-1, 1,-1, 1], 1),
              ([1, 1, 1, 1, 1], 1)])
 
-    setup('USE_CYCLOTOMIC_FACTOR')
+    config.setup('USE_CYCLOTOMIC_FACTOR')
 
     f = dup_from_raw_dict({10:1, 0:1}, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', True)
+    config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
 
-    setup('USE_CYCLOTOMIC_FACTOR', False)
+    config.setup('USE_CYCLOTOMIC_FACTOR', False)
     F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
         (1, [([1, 0, 1], 1),
              ([1, 0, -1, 0, 1, 0, -1, 0, 1], 1)])
 
-    setup('USE_CYCLOTOMIC_FACTOR')
+    config.setup('USE_CYCLOTOMIC_FACTOR')
 
 def test_dmp_zz_wang():
     p = ZZ(nextprime(dmp_zz_mignotte_bound(w_1, 2, ZZ)))
@@ -352,6 +357,15 @@ def test_dmp_zz_wang():
     factors = dmp_zz_wang_hensel_lifting(w_1, H, LC, A, p, 2, ZZ)
 
     assert dmp_expand(factors, 2, ZZ) == w_1
+
+def test_issue_3256():
+    # This tests a bug in the Wang algorithm that occured only with a very
+    # specific set of random numbers.
+    random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
+    f = [[[ZZ(2)]], [[]], [[ZZ(1), ZZ(-1)], [ZZ(-1), ZZ(1), ZZ(0)]]]
+    u = 2
+    K = ZZ
+    assert dmp_zz_wang(f, u, K, seed=random_sequence) == [f]
 
 def test_dmp_zz_factor():
     assert dmp_zz_factor([], 0, ZZ) == (0, [])
@@ -622,7 +636,7 @@ def test_dup_factor_list():
         (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
                                  ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
 
-    raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
+    raises(DomainError, lambda: dup_factor_list([EX(sin(1))], EX))
 
 def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ) == (ZZ(0), [])
@@ -698,6 +712,13 @@ def test_dmp_factor_list():
 
     K = FF(2)
 
-    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
-    raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
+    raises(DomainError, lambda: dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K))
+    raises(DomainError, lambda: dmp_factor_list([[EX(sin(1))]], 1, EX))
 
+def test_dup_irreducible_p():
+    assert dup_irreducible_p([ZZ(1),ZZ(1),ZZ(1)], ZZ) == True
+    assert dup_irreducible_p([ZZ(1),ZZ(2),ZZ(1)], ZZ) == False
+
+def test_dmp_irreducible_p():
+    assert dmp_irreducible_p([[ZZ(1)],[ZZ(1)],[ZZ(1)]], 1, ZZ) == True
+    assert dmp_irreducible_p([[ZZ(1)],[ZZ(2)],[ZZ(1)]], 1, ZZ) == False

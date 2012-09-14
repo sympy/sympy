@@ -6,7 +6,6 @@ relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
 from printer import Printer
-from sympy.core import Basic
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
 
@@ -18,9 +17,15 @@ class ReprPrinter(Printer):
     }
 
     def reprify(self, args, sep):
+        """
+        Prints each item in `args` and joins them with `sep`.
+        """
         return sep.join([self.doprint(item) for item in args])
 
     def emptyPrinter(self, expr):
+        """
+        The fallback printer.
+        """
         if isinstance(expr, str):
             return expr
         elif hasattr(expr, "__srepr__"):
@@ -48,10 +53,6 @@ class ReprPrinter(Printer):
     def _print_FunctionClass(self, expr):
         return 'Function(%r)'%(expr.__name__)
 
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- its base is tuple
-        return type(expr).__name__ + srepr(tuple(expr))
-
     def _print_Half(self, expr):
         return 'Rational(1, 2)'
 
@@ -70,13 +71,24 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
-    def _print_Matrix(self, expr):
+    def _print_MatrixBase(self, expr):
         l = []
         for i in range(expr.rows):
             l.append([])
             for j in range(expr.cols):
                 l[-1].append(expr[i,j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
+
+    def _print_MutableMatrix(self, expr):
+        """
+        Same as _print_MatrixBase except treat the name as Matrix
+        """
+        l = []
+        for i in range(expr.rows):
+            l.append([])
+            for j in range(expr.cols):
+                l[-1].append(expr[i,j])
+        return 'Matrix(%s)' % self._print(l)
 
     def _print_NaN(self, expr):
         return "nan"
