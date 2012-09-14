@@ -251,8 +251,12 @@ def test_eq():
     assert G1 != G3
     G4 = PermutationGroup([Permutation([0,1])])
     assert G1 != G4
-    assert not G4.is_subgroup(G1)
+    assert G4.is_subgroup(G1)
     assert PermutationGroup(g, g) == PermutationGroup(g)
+    assert SymmetricGroup(3).is_subgroup(SymmetricGroup(4))
+    assert SymmetricGroup(3).is_subgroup(SymmetricGroup(3)*CyclicGroup(5))
+    assert not CyclicGroup(5).is_subgroup(SymmetricGroup(3)*CyclicGroup(5))
+    assert CyclicGroup(3).is_subgroup(SymmetricGroup(3)*CyclicGroup(5))
 
 def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
@@ -546,7 +550,7 @@ def test_normal_closure():
         small.append(CyclicGroup(i))
     for gp in small:
         for gp2 in small:
-            if gp2.is_subgroup(gp):
+            if gp2.is_subgroup(gp) and gp2.degree == gp.degree:
                 assert _verify_normal_closure(gp, gp2)
 
 def test_derived_series():
