@@ -306,7 +306,10 @@ except ImportError: # < python 2.6
 def set_intersection(*sets):
     """Return the intersection of all the given sets.
 
-    As of Python 2.6 you can write set.intersection(*sets).
+    As of Python 2.6 you can write ``set.intersection(*sets)``.
+
+    Examples
+    ========
 
     >>> from sympy.core.compatibility import set_intersection
     >>> set_intersection(set([1, 2]), set([2, 3]))
@@ -324,7 +327,7 @@ def set_intersection(*sets):
 def set_union(*sets):
     """Return the union of all the given sets.
 
-    As of Python 2.6 you can write set.union(*sets).
+    As of Python 2.6 you can write ``set.union(*sets)``.
 
     >>> from sympy.core.compatibility import set_union
     >>> set_union(set([1, 2]), set([2, 3]))
