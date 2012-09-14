@@ -1,6 +1,7 @@
 from random import randrange, choice
 from math import log
 from types import GeneratorType
+from bisect import insort
 
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
@@ -19,7 +20,7 @@ rmul = Permutation.rmul
 _af_new = Permutation._af_new
 
 def _smallest_change(h, alpha):
-    """find the smallest point not fixed by ``h``."""
+    """Return smallest point not fixed by ``h`` else return None."""
     for i in range(alpha, len(h)):
         if h[i] != i:
             return i
@@ -91,7 +92,6 @@ class _JGraph(object):
         self.G = G
         self.n = G._degree
         self.r = G._r
-        self.idn = range(n)
 
     def find_cycle(self, v, v1, v2, prev):
         """Test if there is a cycle.
@@ -129,63 +129,64 @@ class _JGraph(object):
         """insert permutation ``g`` in stabilizer chain at point alpha
         """
         n = len(g)
-        if not g == self.idn:
-            vertex = self.vertex
-            jg = self.jg
-            i = _smallest_change(g, alpha)
-            ig = g[i]
-            nn = vertex[i].index_neighbor[ig]
-            if nn >= 0:  # if ig is already neighbor of i
-                jginn = jg[vertex[i].perm[nn]]
-                if g != jginn:
-                    # cycle consisting of two edges;
-                    # replace jginn by g and insert h = g**-1*jginn
-                    g1 = _af_invert(g)
-                    h = _af_rmul(g1, jginn)
-                    jg[ vertex[i].perm[nn] ] = g
-                    self.insert(h, alpha)
-            else:  # new edge
-                self.insert_edge(g, i, ig)
-                self.cycle = [i]
-                if self.find_cycle(i, i, ig, -1):
-                    cycle = self.cycle
-                    cycle.append(cycle[0])
-                    # find the smallest point (vertex) of the cycle
-                    cmin = cycle.index(min(cycle))
+        i = _smallest_change(g, alpha)
+        if i is None:
+            return
 
-                    # now walk around the cycle starting from the smallest
-                    # point, and multiply around the cycle to obtain h
-                    # satisfying h[cmin] = cmin
-                    ap = []
-                    for c in range(cmin, len(cycle) - 1) + range(cmin):
-                        i = cycle[c]
-                        j = cycle[c + 1]
-                        nn = vertex[i].index_neighbor[j]
-                        p = jg[ vertex[i].perm[nn] ]
+        vertex = self.vertex
+        jg = self.jg
+        gi = g[i]
+        nn = vertex[i].index_neighbor[gi]
+        if nn >= 0:  # if gi is already neighbor of i
+            jginn = jg[vertex[i].perm[nn]]
+            if g != jginn:
+                # cycle consisting of two edges;
+                # replace jginn by g and insert h = g**-1*jginn
+                g1 = _af_invert(g)
+                h = _af_rmul(g1, jginn)
+                jg[ vertex[i].perm[nn] ] = g
+                self.insert(h, alpha)
+        else:  # new edge
+            self.insert_edge(g, i, gi)
+            self.cycle = [i]
+            if self.find_cycle(i, i, gi, -1):
+                cycle = self.cycle
+                cycle.append(cycle[0])
+                # find the smallest point (vertex) of the cycle
+                cmin = cycle.index(min(cycle))
 
-                        if i > j:
-                            p = _af_invert(p)
-                        ap.append(p)
-                    ap.reverse()
-                    h = _af_rmuln(*ap)
-                    self.remove_edge(cycle[cmin], cycle[cmin + 1])
-                    self.insert(h, alpha)
+                # now walk around the cycle starting from the smallest
+                # point, and multiply around the cycle to obtain h
+                # satisfying h[cmin] = cmin
+                ap = []
+                for c in range(cmin - len(cycle), cmin - 1):
+                    i = cycle[c]
+                    j = cycle[c + 1]
+                    nn = vertex[i].index_neighbor[j]
+                    p = jg[ vertex[i].perm[nn] ]
+                    if i > j:
+                        p = _af_invert(p)
+                    ap.append(p)
+                ap.reverse()
+                h = _af_rmuln(*ap)
+                self.remove_edge(cycle[cmin], cycle[cmin + 1])
+                self.insert(h, alpha)
 
-    def insert_edge(self, g, i, ig):
-        """insert edge (permutation g) moving i to ig (i < ig)
+    def insert_edge(self, g, i, gi):
+        """insert edge (permutation g) moving i to gi (i < gi)
         """
         vertex = self.vertex
         self.jgs += 1
         jgslot = self.freejg.pop() # the last free generator place
         self.jg[jgslot] = g
         nn = len(vertex[i].neighbor)
-        vertex[i].neighbor.append(ig)
+        vertex[i].neighbor.append(gi)
         vertex[i].perm.append(jgslot)
-        vertex[i].index_neighbor[ig] = nn
-        nn = len(vertex[ig].neighbor)
-        vertex[ig].neighbor.append(i)
-        vertex[ig].perm.append(jgslot)
-        vertex[ig].index_neighbor[i] = nn
+        vertex[i].index_neighbor[gi] = nn
+        nn = len(vertex[gi].neighbor)
+        vertex[gi].neighbor.append(i)
+        vertex[gi].perm.append(jgslot)
+        vertex[gi].index_neighbor[i] = nn
 
     def jerrum_filter(self, alpha, cri):
         """filter the generators of the stabilizer subgroup G_alpha
@@ -276,17 +277,17 @@ class _JGraph(object):
                 r += 1
         self.r = r
 
-    def remove_edge(self, i, ig):
-        """remove edge from i to ig
+    def remove_edge(self, i, gi):
+        """remove edge from i to gi
         """
         vertex = self.vertex
         # remove the permutation labeling this edge
         self.jgs -= 1
-        jgslot = vertex[i].perm[ vertex[i].index_neighbor[ig] ]
+        jgslot = vertex[i].perm[ vertex[i].index_neighbor[gi] ]
         self.jg[jgslot] = None
         self.freejg.append(jgslot) # now we gained a free place
 
-        for i1, i2 in ((i, ig), (ig, i)):
+        for i1, i2 in ((i, gi), (gi, i)):
             v = vertex[i1]
             j0 = v.index_neighbor[i2]
             v.neighbor.pop(j0)
@@ -294,7 +295,7 @@ class _JGraph(object):
             # the index of the vertices >= j0  in vertex[i] has changed
             for j in range(j0, len(v.neighbor)):
                 v.index_neighbor[ v.neighbor[j] ] = j
-            v.index_neighbor[ig] = -1
+            v.index_neighbor[gi] = -1
 
     def schreier_tree(self, alpha, gen):
         """traversal of the orbit of alpha
