@@ -1996,27 +1996,34 @@ class PermutationGroup(Basic):
             return self._is_solvable
 
     def is_subgroup(self, gr):
-        """Test if self is a subgroup of gr.
+        """Test if self is a subgroup of gr;
+        by this we mean that the elements of self belong to gr,
+        eventually after bringing them to the size of gr.degree
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,2,3,4,0])
-        >>> b = Permutation([1,0,2,3,4])
-        >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([1,0,3,2,4])
-        >>> G1 = PermutationGroup([a, c])
-        >>> G1.is_subgroup(G)
+        >>> S3 = SymmetricGroup(3)
+        >>> S5 = SymmetricGroup(5)
+        >>> S3.is_subgroup(S5)
         True
-
+        >>> C7 = CyclicGroup(7)
+        >>> G = S5*C7
+        >>> S5.is_subgroup(G)
+        True
+        >>> C7.is_subgroup(G)
+        False
         """
-        if self.degree != gr.degree:
+        if gr.order() % self.order() != 0:
             return False
-        if self.order() > gr.order():
+        if self.degree == gr.degree:
+            gens1 = self.generators
+        elif self.degree < gr.degree:
+            gens1 = PermutationGroup([Permutation(x, size=gr.degree) for x in self])
+        else:
             return False
-        gens1 = self.generators
         for g in gens1:
             if not gr.contains(g):
                 return False
