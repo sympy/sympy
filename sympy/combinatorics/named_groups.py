@@ -17,6 +17,8 @@ def AbelianGroup(*cyclic_orders):
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
@@ -63,8 +65,8 @@ def AlternatingGroup(n):
     >>> a = list(G.generate_dimino())
     >>> len(a)
     12
-    >>> [perm.is_even for perm in a]
-    [True, True, True, True, True, True, True, True, True, True, True, True]
+    >>> all(perm.is_even for perm in a)
+    True
 
     See Also
     ========
