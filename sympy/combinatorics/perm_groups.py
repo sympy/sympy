@@ -1709,6 +1709,8 @@ class PermutationGroup(Basic):
         >>> a = Permutation(1, 2)
         >>> b = Permutation(2, 3, 1)
         >>> G = PermutationGroup(a, b, degree=5)
+        >>> G.contains(G[0]) # trivial check
+        True
         >>> elem = Permutation([[2, 3]], size=5)
         >>> G.contains(elem)
         True
@@ -1728,6 +1730,8 @@ class PermutationGroup(Basic):
         coset_factor, has
 
         """
+        if self.has(g):
+            return True
         return bool(self.coset_factor(g.array_form))
 
     @property
