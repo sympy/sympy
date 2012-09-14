@@ -82,12 +82,13 @@ References
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
 
-from sympy.core import Basic, FiniteSet, Dict
+from sympy.core import Basic, FiniteSet, Dict, Symbol
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
 from itertools import chain
 from sympy.core.compatibility import iterable
+from sympy.printing import latex
 
 class _GrowableGrid(object):
     """
@@ -280,10 +281,12 @@ class DiagramGrid(object):
 
     See Also
     ========
+
     Diagram
 
     References
     ==========
+
     [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
@@ -1337,3 +1340,1224 @@ class DiagramGrid(object):
 
         """
         return repr(self._grid._array)
+
+class ArrowStringDescription(object):
+    r"""
+    Stores the information necessary for producing an Xy-pic
+    description of an arrow.
+
+    The principal goal of this class is to abstract away the string
+    representation of an arrow and to also provide the functionality
+    to produce the actual Xy-pic string.
+
+    ``unit`` sets the unit which will be used to specify the amount of
+    curving and other distances.  ``horizontal_direction`` should be a
+    string of ``"r"`` or ``"l"`` specifying the horizontal offset of the
+    target cell of the arrow relatively to the current one.
+    ``vertical_direction`` should  specify the vertical offset using a
+    series of either ``"d"`` or ``"u"``.  ``label_position`` should be
+    either ``"^"``, ``"_"``,  or ``"|"`` to specify that the label should
+    be positioned above the arrow, below the arrow or just over the arrow,
+    in a break.  Note that the notions "above" and "below" are relative
+    to arrow direction.  ``label`` stores the morphism label.
+
+    This works as follows (disregard the yet unexplained arguments):
+
+    >>> from sympy.categories.diagram_drawing import ArrowStringDescription
+    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> print str(astr)
+    \ar[dr]_{f}
+
+    ``curving`` should be one of ``"^"``, ``"_"`` to specify in which
+    direction the arrow is going to curve. ``curving_amount`` is a number
+    describing how many ``unit``'s the morphism is going to curve:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> print str(astr)
+    \ar@/^12mm/[dr]_{f}
+
+    ``looping_start`` and ``looping_end`` are currently only used for
+    loop morphisms, those which have the same domain and codomain.
+    These two attributes should store a valid Xy-pic direction and
+    specify, correspondingly, the direction the arrow gets out into
+    and the direction the arrow gets back from:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    ... looping_start="u", looping_end="l", horizontal_direction="",
+    ... vertical_direction="", label_position="_", label="f")
+    >>> print str(astr)
+    \ar@(u,l)[]_{f}
+
+    ``label_displacement`` controls how far the arrow label is from
+    the ends of the arrow.  For example, to position the arrow label
+    near the arrow head, use ">":
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> astr.label_displacement = ">"
+    >>> print str(astr)
+    \ar@/^12mm/[dr]_>{f}
+
+    Finally, ``arrow_style`` is used to specify the arrow style.  To
+    get a dashed arrow, for example, use "{-->}" as arrow style:
+
+    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    ... looping_start=None, looping_end=None, horizontal_direction="d",
+    ... vertical_direction="r", label_position="_", label="f")
+    >>> astr.arrow_style = "{-->}"
+    >>> print str(astr)
+    \ar@/^12mm/@{-->}[dr]_{f}
+
+    Notes
+    =====
+
+    Instances of :class:`ArrowStringDescription` will be constructed
+    by :class:`XypicDiagramDrawer` and provided for further use in
+    formatters.  The user is not expected to construct instances of
+    :class:`ArrowStringDescription` themselves.
+
+    To be able to properly utilise this class, the reader is encouraged
+    to checkout the Xy-pic user guide, available at [Xypic].
+
+    See Also
+    ========
+
+    XypicDiagramDrawer
+
+    References
+    ==========
+
+    [Xypic] http://www.tug.org/applications/Xy-pic/
+    """
+    def __init__(self, unit, curving, curving_amount, looping_start,
+                 looping_end, horizontal_direction, vertical_direction,
+                 label_position, label):
+        self.unit = unit
+        self.curving = curving
+        self.curving_amount = curving_amount
+        self.looping_start = looping_start
+        self.looping_end = looping_end
+        self.horizontal_direction = horizontal_direction
+        self.vertical_direction = vertical_direction
+        self.label_position = label_position
+        self.label = label
+
+        self.label_displacement = ""
+        self.arrow_style = ""
+
+        # This flag shows that the position of the label of this
+        # morphism was set while typesetting a curved morphism and
+        # should not be modified later.
+        self.forced_label_position = False
+
+    def __str__(self):
+        if self.curving:
+            curving_str = "@/%s%d%s/" % (self.curving, self.curving_amount,
+                                         self.unit)
+        else:
+            curving_str = ""
+
+        if self.looping_start and self.looping_end:
+            looping_str = "@(%s,%s)" % (self.looping_start, self.looping_end)
+        else:
+            looping_str = ""
+
+        if self.arrow_style:
+
+            style_str = "@" + self.arrow_style
+        else:
+            style_str = ""
+
+        return "\\ar%s%s%s[%s%s]%s%s{%s}" % \
+               (curving_str, looping_str, style_str, self.horizontal_direction,
+                self.vertical_direction, self.label_position,
+                self.label_displacement, self.label)
+
+class XypicDiagramDrawer(object):
+    r"""
+    Given a :class:`Diagram` and the corresponding
+    :class:`DiagramGrid`, produces the Xy-pic representation of the
+    diagram.
+
+    The most important method in this class is ``draw``.  Consider the
+    following triangle diagram:
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy.categories import DiagramGrid, XypicDiagramDrawer
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> diagram = Diagram([f, g], {g * f: "unique"})
+
+    To draw this diagram, its objects need to be laid out with a
+    :class:`DiagramGrid`::
+
+    >>> grid = DiagramGrid(diagram)
+
+    Finally, the drawing:
+
+    >>> drawer = XypicDiagramDrawer()
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
+
+    For further details see the docstring of this method.
+
+    To control the appearance of the arrows, formatters are used.  The
+    dictionary ``arrow_formatters`` maps morphisms to formatter
+    functions.  A formatter is accepts an
+    :class:`ArrowStringDescription` and is allowed to modify any of
+    the arrow properties exposed thereby.  For example, to have all
+    morphisms with the property ``unique`` appear as dashed arrows,
+    and to have their names prepended with `\exists !`, the following
+    should be done:
+
+    >>> def formatter(astr):
+    ...   astr.label = "\exists !" + astr.label
+    ...   astr.arrow_style = "{-->}"
+    >>> drawer.arrow_formatters["unique"] = formatter
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar@{-->}[d]_{\exists !g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
+
+    To modify the appearance of all arrows in the diagram, set
+    ``default_arrow_formatter``.  For example, to place all morphism
+    labels a little bit farther from the arrow head so that they look
+    more centred, do as follows:
+
+    >>> def default_formatter(astr):
+    ...   astr.label_displacement = "(0.45)"
+    >>> drawer.default_arrow_formatter = default_formatter
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar@{-->}[d]_(0.45){\exists !g\circ f} \ar[r]^(0.45){f} & B \ar[ld]^(0.45){g} \\
+    C &
+    }
+
+    In some diagrams some morphisms are drawn as curved arrows.
+    Consider the following diagram:
+
+    >>> D = Object("D")
+    >>> E = Object("E")
+    >>> h = NamedMorphism(D, A, "h")
+    >>> k = NamedMorphism(D, B, "k")
+    >>> diagram = Diagram([f, g, h, k])
+    >>> grid = DiagramGrid(diagram)
+    >>> drawer = XypicDiagramDrawer()
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_3mm/[ll]_{h} \\
+    & C &
+    }
+
+    To control how far the morphisms are curved by default, one can
+    use the ``unit`` and ``default_curving_amount`` attributes:
+
+    >>> drawer.unit = "cm"
+    >>> drawer.default_curving_amount = 1
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_1cm/[ll]_{h} \\
+    & C &
+    }
+
+    In some diagrams, there are multiple curved morphisms between the
+    same two objects.  To control by how much the curving changes
+    between two such successive morphisms, use
+    ``default_curving_step``:
+
+    >>> drawer.default_curving_step = 1
+    >>> h1 = NamedMorphism(A, D, "h1")
+    >>> diagram = Diagram([f, g, h, k, h1])
+    >>> grid = DiagramGrid(diagram)
+    >>> print drawer.draw(diagram, grid)
+    \xymatrix{
+    A \ar[r]_{f} \ar@/^1cm/[rr]^{h_{1}} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_2cm/[ll]_{h} \\
+    & C &
+    }
+
+    The default value of ``default_curving_step`` is 4 units.
+
+    See Also
+    ========
+
+    draw, ArrowStringDescription
+    """
+    def __init__(self):
+        self.unit = "mm"
+        self.default_curving_amount = 3
+        self.default_curving_step = 4
+
+        # This dictionary maps properties to the corresponding arrow
+        # formatters.
+        self.arrow_formatters = {}
+
+        # This is the default arrow formatter which will be applied to
+        # each arrow independently of its properties.
+        self.default_arrow_formatter = None
+
+    @staticmethod
+    def _process_loop_morphism(i, j, grid, morphisms_str_info, object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a loop morphism.  This function is invoked
+        from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        curving = ""
+        label_pos = "^"
+        looping_start = ""
+        looping_end = ""
+
+        # This is a loop morphism.  Count how many morphisms stick
+        # in each of the four quadrants.  Note that straight
+        # vertical and horizontal morphisms count in two quadrants
+        # at the same time (i.e., a morphism going up counts both
+        # in the first and the second quadrants).
+
+        # The usual numbering (counterclockwise) of quadrants
+        # applies.
+        quadrant = [0, 0, 0, 0]
+
+        obj = grid[i, j]
+
+        for m, m_str_info in morphisms_str_info.items():
+            if (m.domain == obj) and (m.codomain == obj):
+                # That's another loop morphism.  Check how it
+                # loops and mark the corresponding quadrants as
+                # busy.
+                (l_s, l_e) = (m_str_info.looping_start, m_str_info.looping_end)
+
+                if (l_s, l_e) == ("r", "u"):
+                    quadrant[0] += 1
+                elif (l_s, l_e) == ("u", "l"):
+                    quadrant[1] += 1
+                elif (l_s, l_e) == ("l", "d"):
+                    quadrant[2] += 1
+                elif (l_s, l_e) == ("d", "r"):
+                    quadrant[3] += 1
+
+                continue
+            if m.domain == obj:
+                (end_i, end_j) = object_coords[m.codomain]
+                goes_out = True
+            elif m.codomain == obj:
+                (end_i, end_j) = object_coords[m.domain]
+                goes_out = False
+            else:
+                continue
+
+            d_i = end_i - i
+            d_j = end_j - j
+            m_curving = m_str_info.curving
+
+            if (d_i != 0) and (d_j != 0):
+                # This is really a diagonal morphism.  Detect the
+                # quadrant.
+                if (d_i > 0) and (d_j > 0):
+                    quadrant[0] += 1
+                elif (d_i > 0) and (d_j < 0):
+                    quadrant[1] += 1
+                elif (d_i < 0) and (d_j < 0):
+                    quadrant[2] += 1
+                elif (d_i < 0) and (d_j > 0):
+                    quadrant[3] += 1
+            elif d_i == 0:
+                # Knowing where the other end of the morphism is
+                # and which way it goes, we now have to decide
+                # which quadrant is now the upper one and which is
+                # the lower one.
+                if d_j > 0:
+                    if goes_out:
+                        upper_quadrant = 0
+                        lower_quadrant = 3
+                    else:
+                        upper_quadrant = 3
+                        lower_quadrant = 0
+                else:
+                    if goes_out:
+                        upper_quadrant = 2
+                        lower_quadrant = 1
+                    else:
+                        upper_quadrant = 1
+                        lower_quadrant = 2
+
+                if m_curving:
+                    if m_curving == "^":
+                        quadrant[upper_quadrant] += 1
+                    elif m_curving == "_":
+                        quadrant[lower_quadrant] += 1
+                else:
+                    # This morphism counts in both upper and lower
+                    # quadrants.
+                    quadrant[upper_quadrant] += 1
+                    quadrant[lower_quadrant] += 1
+            elif d_j == 0:
+                # Knowing where the other end of the morphism is
+                # and which way it goes, we now have to decide
+                # which quadrant is now the left one and which is
+                # the right one.
+                if d_i < 0:
+                    if goes_out:
+                        left_quadrant = 1
+                        right_quadrant = 0
+                    else:
+                        left_quadrant = 0
+                        right_quadrant = 1
+                else:
+                    if goes_out:
+                        left_quadrant = 3
+                        right_quadrant = 2
+                    else:
+                        left_quadrant = 2
+                        right_quadrant = 3
+
+                if m_curving:
+                    if m_curving == "^":
+                        quadrant[left_quadrant] += 1
+                    elif m_curving == "_":
+                        quadrant[right_quadrant] += 1
+                else:
+                    # This morphism counts in both upper and lower
+                    # quadrants.
+                    quadrant[left_quadrant] += 1
+                    quadrant[right_quadrant] += 1
+
+        # Pick the freest quadrant to curve our morphism into.
+        freest_quadrant = 0
+        for i in xrange(4):
+            if quadrant[i] < quadrant[freest_quadrant]:
+                freest_quadrant = i
+
+        # Now set up proper looping.
+        (looping_start, looping_end) = [("r","u"), ("u","l"), ("l","d"),
+                                        ("d","r")][freest_quadrant]
+
+        return (curving, label_pos, looping_start, looping_end)
+
+    @staticmethod
+    def _process_horizontal_morphism(i, j, target_j, grid, morphisms_str_info,
+                                     object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a horizontal morphism.  This function is
+        invoked from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        # The arrow is horizontal.  Check if it goes from left to
+        # right (``backwards == False``) or from right to left
+        # (``backwards == True``).
+        backwards = False
+        start = j
+        end = target_j
+        if end < start:
+            (start, end) = (end, start)
+            backwards = True
+
+        # Let's see which objects are there between ``start`` and
+        # ``end``, and then count how many morphisms stick out
+        # upwards, and how many stick out downwards.
+        #
+        # For example, consider the situation:
+        #
+        #    B1 C1
+        #    |  |
+        # A--B--C--D
+        #    |
+        #    B2
+        #
+        # Between the objects `A` and `D` there are two objects:
+        # `B` and `C`.  Further, there are two morphisms which
+        # stick out upward (the ones between `B1` and `B` and
+        # between `C` and `C1`) and one morphism which sticks out
+        # downward (the one between `B and `B2`).
+        #
+        # We need this information to decide how to curve the
+        # arrow between `A` and `D`.  First of all, since there
+        # are two objects between `A` and `D``, we must curve the
+        # arrow.  Then, we will have it curve downward, because
+        # there is more space (less morphisms stick out downward
+        # than upward).
+        up = []
+        down = []
+        straight_horizontal = []
+        for k in xrange(start + 1, end):
+            obj = grid[i, k]
+            if not obj:
+                continue
+
+            for m in morphisms_str_info:
+                if m.domain == obj:
+                    (end_i, end_j) = object_coords[m.codomain]
+                elif m.codomain == obj:
+                    (end_i, end_j) = object_coords[m.domain]
+                else:
+                    continue
+
+                if end_i > i:
+                    down.append(m)
+                elif end_i < i:
+                    up.append(m)
+                elif not morphisms_str_info[m].curving:
+                    # This is a straight horizontal morphism,
+                    # because it has no curving.
+                    straight_horizontal.append(m)
+
+        if len(up) < len(down):
+            # More morphisms stick out downward than upward, let's
+            # curve the morphism up.
+            if backwards:
+                curving = "_"
+                label_pos = "_"
+            else:
+                curving = "^"
+                label_pos = "^"
+
+            # Assure that the straight horizontal morphisms have
+            # their labels on the lower side of the arrow.
+            for m in straight_horizontal:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if j1 < j2:
+                    m_str_info.label_position = "_"
+                else:
+                    m_str_info.label_position = "^"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+        else:
+            # More morphisms stick out downward than upward, let's
+            # curve the morphism up.
+            if backwards:
+                curving = "^"
+                label_pos = "^"
+            else:
+                curving = "_"
+                label_pos = "_"
+
+            # Assure that the straight horizontal morphisms have
+            # their labels on the upper side of the arrow.
+            for m in straight_horizontal:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if j1 < j2:
+                    m_str_info.label_position = "^"
+                else:
+                    m_str_info.label_position = "_"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+
+        return (curving, label_pos)
+
+    @staticmethod
+    def _process_vertical_morphism(i, j, target_i, grid, morphisms_str_info,
+                                   object_coords):
+        """
+        Produces the information required for constructing the string
+        representation of a vertical morphism.  This function is
+        invoked from ``_process_morphism``.
+
+        See Also
+        ========
+
+        _process_morphism
+        """
+        # This arrow is vertical.  Check if it goes from top to
+        # bottom (``backwards == False``) or from bottom to top
+        # (``backwards == True``).
+        backwards = False
+        start = i
+        end = target_i
+        if end < start:
+            (start, end) = (end, start)
+            backwards = True
+
+        # Let's see which objects are there between ``start`` and
+        # ``end``, and then count how many morphisms stick out to
+        # the left, and how many stick out to the right.
+        #
+        # See the corresponding comment in the previous branch of
+        # this if-statement for more details.
+        left = []
+        right = []
+        straight_vertical = []
+        for k in xrange(start + 1, end):
+            obj = grid[k, j]
+            if not obj:
+                continue
+
+            for m in morphisms_str_info:
+                if m.domain == obj:
+                    (end_i, end_j) = object_coords[m.codomain]
+                elif m.codomain == obj:
+                    (end_i, end_j) = object_coords[m.domain]
+                else:
+                    continue
+
+                if end_j > j:
+                    right.append(m)
+                elif end_j < j:
+                    left.append(m)
+                elif not morphisms_str_info[m].curving:
+                    # This is a straight vertical morphism,
+                    # because it has no curving.
+                    straight_vertical.append(m)
+
+        if len(left) < len(right):
+            # More morphisms stick out to the left than to the
+            # right, let's curve the morphism to the right.
+            if backwards:
+                curving = "^"
+                label_pos = "^"
+            else:
+                curving = "_"
+                label_pos = "_"
+
+            # Assure that the straight vertical morphisms have
+            # their labels on the left side of the arrow.
+            for m in straight_vertical:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if i1 < i2:
+                    m_str_info.label_position = "^"
+                else:
+                    m_str_info.label_position = "_"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+        else:
+            # More morphisms stick out to the right than to the
+            # left, let's curve the morphism to the left.
+            if backwards:
+                curving = "_"
+                label_pos = "_"
+            else:
+                curving = "^"
+                label_pos = "^"
+
+            # Assure that the straight vertical morphisms have
+            # their labels on the right side of the arrow.
+            for m in straight_vertical:
+                (i1, j1) = object_coords[m.domain]
+                (i2, j2) = object_coords[m.codomain]
+
+                m_str_info = morphisms_str_info[m]
+                if i1 < i2:
+                    m_str_info.label_position = "_"
+                else:
+                    m_str_info.label_position = "^"
+
+                # Don't allow any further modifications of the
+                # position of this label.
+                m_str_info.forced_label_position = True
+
+        return (curving, label_pos)
+
+    def _process_morphism(self, diagram, grid, morphism, object_coords,
+                          morphisms, morphisms_str_info):
+        """
+        Given the required information, produces the string
+        representation of ``morphism``.
+        """
+        def repeat_string_cond(times, str_gt, str_lt):
+            """
+            If ``times > 0``, repeats ``str_gt`` ``times`` times.
+            Otherwise, repeats ``str_lt`` ``-times`` times.
+            """
+            if times > 0:
+                return str_gt * times
+            else:
+                return str_lt * (-times)
+
+        def count_morphisms_undirected(A, B):
+            """
+            Counts how many processed morphisms there are between the
+            two supplied objects.
+            """
+            return len([m for m in morphisms_str_info
+                        if set([m.domain, m.codomain]) == set([A, B])])
+
+        def count_morphisms_filtered(dom, cod, curving):
+            """
+            Counts the processed morphisms which go out of ``dom``
+            into ``cod`` with curving ``curving``.
+            """
+            return len([m for m, m_str_info in morphisms_str_info.items()
+                        if (m.domain, m.codomain) == (dom, cod) and
+                        (m_str_info.curving == curving)])
+
+        (i, j) = object_coords[morphism.domain]
+        (target_i, target_j) = object_coords[morphism.codomain]
+
+        # We now need to determine the direction of
+        # the arrow.
+        delta_i = target_i - i
+        delta_j = target_j - j
+        vertical_direction = repeat_string_cond(delta_i,
+                                                "d", "u")
+        horizontal_direction = repeat_string_cond(delta_j,
+                                                  "r", "l")
+
+        curving = ""
+        label_pos = "^"
+        looping_start = ""
+        looping_end = ""
+
+        if (delta_i == 0) and (delta_j == 0):
+            # This is a loop morphism.
+            (curving, label_pos, looping_start,
+             looping_end) = XypicDiagramDrawer._process_loop_morphism(
+                i, j, grid, morphisms_str_info, object_coords)
+        elif (delta_i == 0) and (abs(j - target_j) > 1):
+            # This is a horizontal morphism.
+            (curving, label_pos) = XypicDiagramDrawer._process_horizontal_morphism(
+                i, j, target_j, grid, morphisms_str_info, object_coords)
+        elif (delta_j == 0) and (abs(i - target_i) > 1):
+            # This is a vertical morphism.
+            (curving, label_pos) = XypicDiagramDrawer._process_vertical_morphism(
+                i, j, target_i, grid, morphisms_str_info, object_coords)
+
+        count = count_morphisms_undirected(morphism.domain, morphism.codomain)
+        curving_amount = ""
+        if curving:
+            # This morphisms should be curved anyway.
+            curving_amount = self.default_curving_amount + count * \
+                             self.default_curving_step
+        elif count:
+            # There are no objects between the domain and codomain of
+            # the current morphism, but this is not there already are
+            # some morphisms with the same domain and codomain, so we
+            # have to curve this one.
+            curving = "^"
+            filtered_morphisms = count_morphisms_filtered(
+                morphism.domain, morphism.codomain, curving)
+            curving_amount = self.default_curving_amount + \
+                             filtered_morphisms * \
+                             self.default_curving_step
+
+        # Let's now get the name of the morphism.
+        morphism_name = ""
+        if isinstance(morphism, IdentityMorphism):
+            morphism_name = "id_{%s}" + latex(obj)
+        elif isinstance(morphism, CompositeMorphism):
+            component_names = [latex(Symbol(component.name)) for \
+                               component in morphism.components]
+            component_names.reverse()
+            morphism_name = "\\circ ".join(component_names)
+        elif isinstance(morphism, NamedMorphism):
+            morphism_name = latex(Symbol(morphism.name))
+
+        return ArrowStringDescription(
+            self.unit, curving, curving_amount, looping_start,
+            looping_end, horizontal_direction, vertical_direction,
+            label_pos, morphism_name)
+
+    @staticmethod
+    def _check_free_space_horizontal(dom_i, dom_j, cod_j, grid):
+        """
+        For a horizontal morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) above the morphism
+        or below it.
+        """
+        if dom_j < cod_j:
+            (start, end) = (dom_j, cod_j)
+            backwards = False
+        else:
+            (start, end) = (cod_j, dom_j)
+            backwards = True
+
+        # Check for free space above.
+        if dom_i == 0:
+            free_up = True
+        else:
+            free_up = all([grid[dom_i - 1, j] for j in \
+                           xrange(start, end + 1)])
+
+        # Check for free space below.
+        if dom_i == grid.height - 1:
+            free_down = True
+        else:
+            free_down = all([not grid[dom_i + 1, j] for j in \
+                             xrange(start, end + 1)])
+
+        return (free_up, free_down, backwards)
+
+    @staticmethod
+    def _check_free_space_vertical(dom_i, cod_i, dom_j, grid):
+        """
+        For a vertical morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) to the left of the
+        morphism or to the right of it.
+        """
+        if dom_i < cod_i:
+            (start, end) = (dom_i, cod_i)
+            backwards = False
+        else:
+            (start, end) = (cod_i, dom_i)
+            backwards = True
+
+        # Check if there's space to the left.
+        if dom_j == 0:
+            free_left = True
+        else:
+            free_left = all([not grid[i, dom_j - 1] for i in \
+                             xrange(start, end + 1)])
+
+        if dom_j == grid.width - 1:
+            free_right = True
+        else:
+            free_right = all([not grid[i, dom_j + 1] for i in \
+                              xrange(start, end + 1)])
+
+        return (free_left, free_right, backwards)
+
+    @staticmethod
+    def _check_free_space_diagonal(dom_i, cod_i, dom_j, cod_j, grid):
+        """
+        For a diagonal morphism, checks whether there is free space
+        (i.e., space not occupied by any objects) above the morphism
+        or below it.
+        """
+        def abs_xrange(start, end):
+            if start < end:
+                return xrange(start, end + 1)
+            else:
+                return xrange(end, start + 1)
+
+        if dom_i < cod_i and dom_j < cod_j:
+            # This morphism goes from top-left to
+            # bottom-right.
+            (start_i, start_j) = (dom_i, dom_j)
+            (end_i, end_j) = (cod_i, cod_j)
+            backwards = False
+        elif dom_i > cod_i and dom_j > cod_j:
+            # This morphism goes from bottom-right to
+            # top-left.
+            (start_i, start_j) = (cod_i, cod_j)
+            (end_i, end_j) = (dom_i, dom_j)
+            backwards = True
+        if dom_i < cod_i and dom_j > cod_j:
+            # This morphism goes from top-right to
+            # bottom-left.
+            (start_i, start_j) = (dom_i, dom_j)
+            (end_i, end_j) = (cod_i, cod_j)
+            backwards = True
+        elif dom_i > cod_i and dom_j < cod_j:
+            # This morphism goes from bottom-left to
+            # top-right.
+            (start_i, start_j) = (cod_i, cod_j)
+            (end_i, end_j) = (dom_i, dom_j)
+            backwards = False
+
+        # This is an attempt at a fast and furious strategy to
+        # decide where there is free space on the two sides of
+        # a diagonal morphism.  For a diagonal morphism
+        # starting at ``(start_i, start_j)`` and ending at
+        # ``(end_i, end_j)`` the rectangle defined by these
+        # two points is considered.  The slope of the diagonal
+        # ``alpha`` is then computed.  Then, for every cell
+        # ``(i, j)`` within the rectangle, the slope
+        # ``alpha1`` of the line through ``(start_i,
+        # start_j)`` and ``(i, j)`` is considered.  If
+        # ``alpha1`` is between 0 and ``alpha``, the point
+        # ``(i, j)`` is above the diagonal, if ``alpha1`` is
+        # between ``alpha`` and infinity, the point is below
+        # the diagonal.  Also note that, with some beforehand
+        # precautions, this trick works for both the main and
+        # the secondary diagonals of the rectangle.
+
+        # I have considered the possibility to only follow the
+        # shorter diagonals immediately above and below the
+        # main (or secondary) diagonal.  This, however,
+        # wouldn't have resulted in much performance gain or
+        # better detection of outer edges, because of
+        # relatively small sizes of diagram grids, while the
+        # code would have become harder to understand.
+
+        alpha = float(end_i - start_i)/(end_j - start_j)
+        free_up = True
+        free_down = True
+        for i in abs_xrange(start_i, end_i):
+            if not free_up and not free_down:
+                break
+
+            for j in abs_xrange(start_j, end_j):
+                if not free_up and not free_down:
+                    break
+
+                if (i, j) == (start_i, start_j):
+                    continue
+
+                if j == start_j:
+                    alpha1 = "inf"
+                else:
+                    alpha1 = float(i - start_i)/(j - start_j)
+
+                if grid[i, j]:
+                    if (alpha1 == "inf") or (abs(alpha1) > abs(alpha)):
+                        free_down = False
+                    elif abs(alpha1) < abs(alpha):
+                        free_up = False
+
+        return (free_up, free_down, backwards)
+
+    def _push_labels_out(self, morphisms_str_info, grid, object_coords):
+        """
+        For all straight morphisms which form the visual boundary of
+        the laid out diagram, puts their labels on their outer sides.
+        """
+        def set_label_position(free1, free2, pos1, pos2, backwards, m_str_info):
+            """
+            Given the information about room available to one side and
+            to the other side of a morphism (``free1`` and ``free2``),
+            sets the position of the morphism label in such a way that
+            it is on the freer side.  This latter operations involves
+            choice between ``pos1`` and ``pos2``, taking ``backwards``
+            in consideration.
+
+            Thus this function will do nothing if either both ``free1
+            == True`` and ``free2 == True`` or both ``free1 == False``
+            and ``free2 == False``.  In either case, choosing one side
+            over the other presents no advantage.
+            """
+            if backwards:
+                (pos1, pos2) = (pos2, pos1)
+
+            if free1 and not free2:
+                m_str_info.label_position = pos1
+            elif free2 and not free1:
+                m_str_info.label_position = pos2
+
+        for m, m_str_info in morphisms_str_info.items():
+            if m_str_info.curving or m_str_info.forced_label_position:
+                # This is either a curved morphism, and curved
+                # morphisms have other magic, or the position of this
+                # label has already been fixed.
+                continue
+
+            if m.domain == m.codomain:
+                # This is a loop morphism, their labels, again have a
+                # different magic.
+                continue
+
+            (dom_i, dom_j) = object_coords[m.domain]
+            (cod_i, cod_j) = object_coords[m.codomain]
+
+            if dom_i == cod_i:
+                # Horizontal morphism.
+                (free_up, free_down,
+                 backwards) = XypicDiagramDrawer._check_free_space_horizontal(
+                    dom_i, dom_j, cod_j, grid)
+
+                set_label_position(free_up, free_down, "^", "_",
+                                   backwards, m_str_info)
+            elif dom_j == cod_j:
+                # Vertical morphism.
+                (free_left, free_right,
+                 backwards) = XypicDiagramDrawer._check_free_space_vertical(
+                    dom_i, cod_i, dom_j, grid)
+
+                set_label_position(free_left, free_right, "_", "^",
+                                   backwards, m_str_info)
+            else:
+                # A diagonal morphism.
+                (free_up, free_down,
+                 backwards) = XypicDiagramDrawer._check_free_space_diagonal(
+                    dom_i, cod_i, dom_j, cod_j, grid)
+
+                set_label_position(free_up, free_down, "^", "_",
+                                   backwards, m_str_info)
+
+    @staticmethod
+    def _morphism_sort_key(morphism, object_coords):
+        """
+        Provides a morphism sorting key such that horizontal or
+        vertical morphisms between neighbouring objects come
+        first, then horizontal or vertical morphisms between more
+        far away objects, and finally, all other morphisms.
+        """
+        (i, j) = object_coords[morphism.domain]
+        (target_i, target_j) = object_coords[morphism.codomain]
+
+        if morphism.domain == morphism.codomain:
+            # Loop morphisms should get after diagonal morphisms
+            # so that the proper direction in which to curve the
+            # loop can be determined.
+            return (3, 0, default_sort_key(morphism))
+
+        if target_i == i:
+            return (1, abs(target_j - j), default_sort_key(morphism))
+
+        if target_j == j:
+            return (1, abs(target_i - i), default_sort_key(morphism))
+
+        # Diagonal morphism.
+        return (2, 0, default_sort_key(morphism))
+
+    @staticmethod
+    def _build_xypic_string(diagram, grid, morphisms,
+                            morphisms_str_info, diagram_format):
+        """
+        Given a collection of :class:`ArrowStringDescription`
+        describing the morphisms of a diagram and the object layout
+        information of a diagram, produces the final Xy-pic picture.
+        """
+        # Build the mapping between objects and morphisms which have
+        # them as domains.
+        object_morphisms = {}
+        for obj in diagram.objects:
+            object_morphisms[obj] = []
+        for morphism in morphisms:
+            object_morphisms[morphism.domain].append(morphism)
+
+        result = "\\xymatrix%s{\n" % diagram_format
+
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                obj = grid[i, j]
+                if obj:
+                    result += latex(obj) + " "
+
+                    morphisms_to_draw = object_morphisms[obj]
+                    for morphism in morphisms_to_draw:
+                        result += str(morphisms_str_info[morphism]) + " "
+
+                # Don't put the & after the last column.
+                if j < grid.width - 1:
+                    result += "& "
+
+            # Don't put the line break after the last row.
+            if i < grid.height - 1:
+                result += "\\\\"
+            result += "\n"
+
+        result += "}\n"
+
+        return result
+
+    def draw(self, diagram, grid, masked=None, diagram_format=""):
+        r"""
+        Returns the Xy-pic representation of ``diagram`` laid out in
+        ``grid``.
+
+        Consider the following simple triangle diagram.
+
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy.categories import DiagramGrid, XypicDiagramDrawer
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> diagram = Diagram([f, g], {g * f: "unique"})
+
+        To draw this diagram, its objects need to be laid out with a
+        :class:`DiagramGrid`::
+
+        >>> grid = DiagramGrid(diagram)
+
+        Finally, the drawing:
+
+        >>> drawer = XypicDiagramDrawer()
+        >>> print drawer.draw(diagram, grid)
+        \xymatrix{
+        A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
+        The argument ``masked`` can be used to skip morphisms in the
+        presentation of the diagram:
+
+        >>> print drawer.draw(diagram, grid, masked=[g * f])
+        \xymatrix{
+        A \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
+        Finally, the ``diagram_format`` argument can be used to
+        specify the format string of the diagram.  For example, to
+        increase the spacing by 1 cm, proceeding as follows:
+
+        >>> print drawer.draw(diagram, grid, diagram_format="@+1cm")
+        \xymatrix@+1cm{
+        A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+        C &
+        }
+
+        """
+        # This method works in several steps.  It starts by removing
+        # the masked morphisms, if necessary, and then maps objects to
+        # their positions in the grid (coordinate tuples).  Remember
+        # that objects are unique in ``Diagram`` and in the layout
+        # produced by ``DiagramGrid``, so every object is mapped to a
+        # single coordinate pair.
+        #
+        # The next step is the central step and is concerned with
+        # analysing the morphisms of the diagram and deciding how to
+        # draw them.  For example, how to curve the arrows is decided
+        # at this step.  The bulk of the analysis is implemented in
+        # ``_process_morphism``, to the result of which the
+        # appropriate formatters are applied.
+        #
+        # The result of the previous step is a list of
+        # ``ArrowStringDescription``.  After the analysis and
+        # application of formatters, some extra logic tries to assure
+        # better positioning of morphism labels (for example, an
+        # attempt is made to avoid the situations when arrows cross
+        # labels).  This functionality constitutes the next step and
+        # is implemented in ``_push_labels_out``.  Note that label
+        # positions which have been set via a formatter are not
+        # affected in this step.
+        #
+        # Finally, at the closing step, the array of
+        # ``ArrowStringDescription`` and the layout information
+        # incorporated in ``DiagramGrid`` are combined to produce the
+        # resulting Xy-pic picture.  This part of code lies in
+        # ``_build_xypic_string``.
+
+        if not masked:
+            morphisms_props = grid.morphisms
+        else:
+            morphisms_props = {}
+            for m, props in grid.morphisms.items():
+                if m in masked:
+                    continue
+                morphisms_props[m] = props
+
+        # Build the mapping between objects and their position in the
+        # grid.
+        object_coords = {}
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
+                if grid[i, j]:
+                    object_coords[grid[i, j]] = (i, j)
+
+        morphisms = sorted(morphisms_props,
+                           key=lambda m: XypicDiagramDrawer._morphism_sort_key(
+                               m, object_coords))
+
+        # Build the tuples defining the string representations of
+        # morphisms.
+        morphisms_str_info = {}
+        for morphism in morphisms:
+            string_description = self._process_morphism(
+                diagram, grid, morphism, object_coords, morphisms,
+                morphisms_str_info)
+
+            if self.default_arrow_formatter:
+                self.default_arrow_formatter(string_description)
+
+            for prop in morphisms_props[morphism]:
+                # prop is a Symbol.  TODO: Find out why.
+                if prop.name in self.arrow_formatters:
+                    formatter = self.arrow_formatters[prop.name]
+                    formatter(string_description)
+
+            morphisms_str_info[morphism] = string_description
+
+        # Reposition the labels a bit.
+        self._push_labels_out(morphisms_str_info, grid, object_coords)
+
+        return XypicDiagramDrawer._build_xypic_string(
+            diagram, grid, morphisms, morphisms_str_info, diagram_format)
+
+def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
+                       groups=None, **hints):
+    r"""
+    Provides a shortcut combining :class:`DiagramGrid` and
+    :class:`XypicDiagramDrawer`.  Returns an Xy-pic presentation of
+    ``diagram``.  The argument ``masked`` is a list of morphisms which
+    will be not be drawn.  The argument ``diagram_format`` is the
+    format string inserted after "\xymatrix".  ``groups`` should be a
+    set of logical groups.  The ``hints`` will be passed directly to
+    the constructor of :class:`DiagramGrid`.
+
+    For more information about the arguments, see the docstrings of
+    :class:`DiagramGrid` and ``XypicDiagramDrawer.draw``.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy.categories import xypic_draw_diagram
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> diagram = Diagram([f, g], {g * f: "unique"})
+    >>> print xypic_draw_diagram(diagram)
+    \xymatrix{
+    A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
+    C &
+    }
+
+    See Also
+    ========
+
+    XypicDiagramDrawer, DiagramGrid
+    """
+    grid = DiagramGrid(diagram, groups, **hints)
+    drawer = XypicDiagramDrawer()
+    return drawer.draw(diagram, grid, masked, diagram_format)
+
+def preview_diagram(diagram, masked=None, diagram_format="", groups=None, \
+                    output='png', viewer=None, euler=True, **hints):
+    """
+    Combines the functionality of ``xypic_draw_diagram`` and
+    ``sympy.printing.preview``.  The arguments ``masked``,
+    ``diagram_format``, ``groups``, and ``hints`` are passed to
+    ``xypic_draw_diagram``, while ``output``, ``viewer, and ``euler``
+    are passed to ``preview``.
+
+    Examples
+    ========
+
+    >>> from sympy.categories import Object, NamedMorphism, Diagram
+    >>> from sympy.categories import preview_diagram
+    >>> A = Object("A")
+    >>> B = Object("B")
+    >>> C = Object("C")
+    >>> f = NamedMorphism(A, B, "f")
+    >>> g = NamedMorphism(B, C, "g")
+    >>> d = Diagram([f, g], {g * f: "unique"})
+    >>> preview_diagram(d)  #doctest: +SKIP
+
+    See Also
+    ========
+
+    xypic_diagram_drawer
+    """
+    from sympy.printing import preview
+    latex_output = xypic_draw_diagram(diagram, masked, diagram_format, \
+                                      groups, **hints)
+    preview(latex_output, output, viewer, euler, ("xypic",))
