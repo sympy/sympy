@@ -6,6 +6,7 @@ from sympy import (
 from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
+z = symbols('z', nonzero=True)
 
 
 def test_piecewise():
@@ -43,6 +44,13 @@ def test_piecewise():
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
     pg = Piecewise((g(x), x < -1), (g(x) + h(x) + 2, x <= 1))
     assert pg.subs(g, f) == pf
+
+    assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 0) == 1
+    assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 1) == 0
+    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, y) == 1
+    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == Piecewise((1, Eq(y, 0)), (0, True))
+    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
+    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
 
     # Test evalf
     assert p.evalf() == p
