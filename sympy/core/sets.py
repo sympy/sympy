@@ -630,11 +630,7 @@ class Interval(Set, EvalfMixin):
     def _measure(self):
         return self.end - self.start
 
-    @deprecated
     def to_mpi(self, prec=53):
-      return self._mpi_(prec)
-
-    def _mpi_(self, prec=53):
         return mpi(mpf(self.start.evalf(prec)), mpf(self.end.evalf(prec)))
 
     def _eval_evalf(self, prec):

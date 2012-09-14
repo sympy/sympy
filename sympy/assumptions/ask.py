@@ -75,8 +75,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
 
-        It is however a work in progress and should be available before
-        the official release
+        It is however a work in progress.
 
     """
     assumptions = And(assumptions, And(*context))

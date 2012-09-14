@@ -6,7 +6,6 @@ from sympy import (
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_interval_arguments():
@@ -211,17 +210,10 @@ def test_interval_subs():
     assert Interval(0, a).subs(a, 2) == Interval(0, 2)
     assert Interval(a, 0).subs(a, 2) == S.EmptySet
 
-@XFAIL
 def test_interval_to_mpi():
-    raises(SymPyDeprecationWarning, "Interval(0, 1).to_mpi()")
     assert Interval(0, 1).to_mpi() == mpi(0, 1)
     assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
     assert type(Interval(0,1).to_mpi()) == type(mpi(0,1))
-
-def test_interval_mpi():
-    assert Interval(0,1)._mpi_() == mpi(0,1)
-    assert Interval(0,1,True,False)._mpi_() == mpi(0,1)
-    assert type(Interval(0,1)._mpi_()) == type(mpi(0,1))
 
 def test_measure():
     a = Symbol('a', real=True)

@@ -57,7 +57,8 @@ def is_quasi_unit_numpy_array(array):
     else:
         return(False)
 
-@deprecated
+@deprecated(value="This function is no longer needed.", issue=3379,
+            deprecated_since_version="0.7.2")
 def set_main(main_program):
     pass
 
@@ -174,7 +175,8 @@ def make_scalars(symnamelst):
         scalar_lst.append(tmp)
     return(scalar_lst)
 
-@deprecated
+@deprecated(useinstead="sympy.symbols()", issue=3379,
+            deprecated_since_version="0.7.2")
 def make_symbols(symnamelst):
     return sympy.symbols(symnamelst)
 
