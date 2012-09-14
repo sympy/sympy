@@ -78,6 +78,61 @@ def unflatten(iter, n=2):
         raise ValueError('iter length is not a multiple of %i' % n)
     return zip(*(iter[i::n] for i in xrange(n)))
 
+def reshape(seq, how):
+    """Reshape the sequence according to the template in ``how``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities import reshape
+    >>> seq = range(1, 9)
+
+    >>> reshape(seq, [4]) # lists of 4
+    [[1, 2, 3, 4], [5, 6, 7, 8]]
+
+    >>> reshape(seq, (4,)) # tuples of 4
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+
+    >>> reshape(seq, (2, 2)) # tuples of 4
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+
+    >>> reshape(seq, (2, [2])) # (i, i, [i, i])
+    [(1, 2, [3, 4]), (5, 6, [7, 8])]
+
+    >>> reshape(seq, ((2,), [2])) # etc....
+    [((1, 2), [3, 4]), ((5, 6), [7, 8])]
+
+    >>> reshape(seq, (1, [2], 1))
+    [(1, [2, 3], 4), (5, [6, 7], 8)]
+
+    >>> reshape(tuple(seq), ([[1], 1, (2,)],))
+    (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
+
+    >>> reshape(tuple(seq), ([1], 1, (2,)))
+    (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+    """
+    m = sum(flatten(how))
+    n, rem = divmod(len(seq), m)
+    if m < 0 or rem:
+        raise ValueError('template must sum to positive number '
+        'that divides the length of the sequence')
+    i = 0
+    container = type(how)
+    rv = [None]*n
+    for k in range(len(rv)):
+        rv[k] = []
+        for hi in how:
+            if type(hi) is int:
+                rv[k].extend(seq[i: i + hi])
+                i += hi
+            else:
+                n = sum(flatten(hi))
+                fg = type(hi)
+                rv[k].append(fg(reshape(seq[i: i + n], hi))[0])
+                i += n
+        rv[k] = container(rv[k])
+    return type(seq)(rv)
+
 def group(container, multiple=True):
     """
     Splits a container into a list of lists of equal, adjacent elements.

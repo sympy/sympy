@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        quick_sort, minlex, runs, lazyDSU_sort)
+        quick_sort, minlex, runs, lazyDSU_sort, reshape)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -345,3 +345,22 @@ def test_runs():
     assert runs([2, 1, 1]) == [[2], [1], [1]]
     from operator import lt
     assert runs([2, 1, 1], lt) == [[2, 1], [1]]
+
+def test_reshape():
+    seq = range(1, 9)
+    assert reshape(seq, [4]) == \
+    [[1, 2, 3, 4], [5, 6, 7, 8]]
+    assert reshape(seq, (4,)) == \
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+    assert reshape(seq, (2, 2)) == \
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+    assert reshape(seq, (2, [2])) == \
+    [(1, 2, [3, 4]), (5, 6, [7, 8])]
+    assert reshape(seq, ((2,), [2])) == \
+    [((1, 2), [3, 4]), ((5, 6), [7, 8])]
+    assert reshape(seq, (1, [2], 1)) == \
+    [(1, [2, 3], 4), (5, [6, 7], 8)]
+    assert reshape(tuple(seq), ([[1], 1, (2,)],)) == \
+    (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
+    assert reshape(tuple(seq), ([1], 1, (2,))) == \
+    (([1], 2, (3, 4)), ([5], 6, (7, 8)))
