@@ -319,7 +319,7 @@ class StrPrinter(Printer):
             return 'Permutation(%s)' % use
 
     def _print_PermutationGroup(self, expr):
-        p = ['    %s' % str(a) for a in expr.args[0]]
+        p = ['    %s' % str(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
 
     def _print_PDF(self, expr):
