@@ -1,7 +1,6 @@
 from random import randrange, choice
 from math import log
 from types import GeneratorType
-from bisect import insort
 
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
