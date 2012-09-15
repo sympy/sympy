@@ -15,7 +15,7 @@ the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
 from __future__ import with_statement
-from sympy.core import Symbol, ilcm, Add, Mul, Pow, S
+from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
@@ -171,7 +171,7 @@ def constant_system(A, u, DE):
     all matrix entries are Basic expressions.
     """
     Au = A.row_join(u)
-    Au = Au.rref(simplified=True, simplify=cancel)[0]
+    Au = Au.rref(simplify=cancel)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
     # an identically zero expression to 0.  The danger is that we might
     # incorrectly prove that an integral is nonelementary (such as
@@ -266,13 +266,13 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
     if all(qi.is_zero for qi in Q):
         dc = -1
-        M = zeros([0, 2])
+        M = zeros(0, 2)
     else:
         dc = max([qi.degree(t) for qi in Q])
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
-    A, u = constant_system(M, zeros([dc + 1, 1]), DE)
+    A, u = constant_system(M, zeros(dc + 1, 1), DE)
     c = eye(m)
-    A = A.row_join(zeros([A.rows, m])).col_join(c.row_join(-c))
+    A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
 
     return (H, A)
 
@@ -310,9 +310,9 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         else:
             dc = max([qi.degree(DE.t) for qi in Q])
             M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
-        A, u = constant_system(M, zeros([dc + 1, 1]), DE)
+        A, u = constant_system(M, zeros(dc + 1, 1), DE)
         c = eye(m)
-        A = A.row_join(zeros([A.rows, m])).col_join(c.row_join(-c))
+        A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
         return (H, A)
     else:
         # TODO: implement this (requires recursive param_rischDE() call)
@@ -329,7 +329,7 @@ def param_rischDE(fa, fd, G, DE):
     A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
         gia, gid in G]
     Q, M = prde_linear_constraints(A, B, G, DE)
-    M, _ = constant_system(M, zeros([M.rows, 1]), DE)
+    M, _ = constant_system(M, zeros(M.rows, 1), DE)
     # Reduce number of constants at this point
     try:
         # Similar to rischDE(), we try oo, even though it might lead to
@@ -401,7 +401,7 @@ def limited_integrate(fa, fd, G, DE):
     A, B, V = A.quo(g), B.quo(g), [via.cancel(vid*g, include=True) for
         via, vid in V]
     Q, M = prde_linear_constraints(A, B, V, DE)
-    M, _ = constant_system(M, zeros([M.rows, 1]), DE)
+    M, _ = constant_system(M, zeros(M.rows, 1), DE)
     l = M.nullspace()
     if M == Matrix() or len(l) > 1:
         # Continue with param_rischDE()
@@ -426,7 +426,7 @@ def limited_integrate(fa, fd, G, DE):
         raise NotImplementedError
 
 
-def parametric_log_deriv_heu(fa, fd, wa, wd, DE):
+def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     """
     Parametric logarithmic derivative heuristic.
 
@@ -442,7 +442,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE):
     The argument w == Dtheta/theta
     """
     # TODO: finish writing this and write tests
-    c1 = Symbol('c', dummy=True)
+    c1 = c1 or Dummy('c1')
 
     p, a = fa.div(fd)
     q, b = wa.div(wd)
@@ -731,7 +731,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
             return (ans, result, n, const)
 
-def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
+def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
 
@@ -752,7 +752,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
         pass
         #return None
 
-    z = Symbol('z', dummy=True)
+    z = z or Dummy('z')
     H, b = residue_reduce(fa, fd, DE, z=z)
     if not b:
         # I will have to verify, but I believe that the answer should be

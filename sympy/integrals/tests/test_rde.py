@@ -44,8 +44,8 @@ def test_weak_normalizer():
 
 def test_normal_denom():
     DE = DifferentialExtension(extension={'D':[Poly(1, x)]})
-    raises(NonElementaryIntegralException, """normal_denom(Poly(1, x), Poly(1, x),
-    Poly(1, x), Poly(x, x), DE)""")
+    raises(NonElementaryIntegralException, lambda: normal_denom(Poly(1, x), Poly(1, x),
+    Poly(1, x), Poly(x, x), DE))
     fa, fd = Poly(t**2 + 1, t), Poly(1, t)
     ga, gd = Poly(1, t), Poly(t**2, t)
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
@@ -99,8 +99,7 @@ def test_bound_degree():
 
 def test_spde():
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t**2 + 1, t)]})
-    raises(NonElementaryIntegralException, "spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), " +
-        "t), Poly(1, t), 0, DE)")
+    raises(NonElementaryIntegralException, lambda: spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
     assert spde(Poly(t**2 + x*t*2 + x**2, t), Poly(t**2/x**2 + (2/x - 1)*t, t),
     Poly(t**2/x**2 + (2/x - 1)*t, t), 0, DE) == \
@@ -150,8 +149,7 @@ def test_solve_poly_rde_cancel():
 
     # If the DecrementLevel context manager is working correctly, this shouldn't
     # cause any problems with the further tests.
-    raises(NonElementaryIntegralException,
-    "cancel_primitive(Poly(1, t), Poly(t, t), oo, DE)")
+    raises(NonElementaryIntegralException, lambda: cancel_primitive(Poly(1, t), Poly(t, t), oo, DE))
 
     assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, DE) == \
         Poly(t, t)

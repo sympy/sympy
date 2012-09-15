@@ -22,7 +22,7 @@ Manuel Bronstein.  See also the docstring of risch.py.
 """
 from __future__ import with_statement
 from sympy.core import oo
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
@@ -90,7 +90,7 @@ def weak_normalizer(a, d, DE, z=None):
 
     Returns (q, f - Dq/q)
     """
-    z = z or Symbol('z', dummy=True)
+    z = z or Dummy('z')
     dn, ds = splitfactor(d, DE)
 
     # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free

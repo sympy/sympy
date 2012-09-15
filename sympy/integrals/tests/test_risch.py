@@ -26,7 +26,7 @@ def test_frac_in():
         (Poly(t*x + t, x), Poly(x, x))
     assert frac_in((Poly((x + 1)/x*t, t), Poly(t + 1, t)), x) == \
         (Poly(t*x + t, x), Poly((1 + t)*x, x))
-    raises(ValueError, "frac_in((x + 1)/log(x)*t, x)")
+    raises(ValueError, lambda: frac_in((x + 1)/log(x)*t, x))
     assert frac_in(Poly((2 + 2*x + x*(1 + x))/(1 + x)**2, t), x, cancel=True) == \
         (Poly(x + 2, x), Poly(x + 1, x))
 
@@ -374,7 +374,7 @@ def test_DifferentialExtension():
     assert DE.level == -1
     assert DE.t == t1 == DE.T[DE.level]
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
-    raises(ValueError, 'DE.increment_level()')
+    raises(ValueError, lambda: DE.increment_level())
     DE.decrement_level()
     assert DE.level == -2
     assert DE.t == t0 == DE.T[DE.level]
@@ -385,7 +385,7 @@ def test_DifferentialExtension():
     assert DE.t == x == DE.T[DE.level] == DE.x
     assert DE.d == Poly(1, x) == DE.D[DE.level]
     assert DE.case == 'base'
-    raises(ValueError, 'DE.decrement_level()')
+    raises(ValueError, lambda: DE.decrement_level())
     DE.increment_level()
     DE.increment_level()
     assert DE.level == -1
@@ -394,7 +394,7 @@ def test_DifferentialExtension():
     assert DE.case == 'primitive'
 
     # Test the extension flag
-    raises(ValueError, "DifferentialExtension(extension={'T':[x, t]})")
+    raises(ValueError, lambda: DifferentialExtension(extension={'T':[x, t]}))
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t, t)]})
     assert DE._important_attrs == (None, None, [Poly(1, x), Poly(t, t)], [x, t],
         None, None, None, None, None, None)
@@ -409,14 +409,14 @@ def test_DifferentialExtension():
         'E_K':[1], 'E_args':[x], 'L_K':[], 'L_args':[]})
     assert DE._important_attrs == (None, None, [Poly(1, x), Poly(t, t)], [x, t],
         None, None, [1], [x], [], [])
-    raises(ValueError, "DifferentialExtension()")
+    raises(ValueError, lambda: DifferentialExtension())
 
     # Odd ends
     assert DifferentialExtension(sin(y)*exp(x), x, dummy=False)._important_attrs == \
         (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
         [Lambda(i, exp(i))], [], [1], [x], [], [])
-    raises(NotImplementedError, "DifferentialExtension(sin(x), x)")
+    raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
     assert DifferentialExtension(10**x, x, dummy=False)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [1], [x*log(10)],

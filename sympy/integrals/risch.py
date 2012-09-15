@@ -363,7 +363,7 @@ class DifferentialExtension(object):
                 self.backsubs.append((new, i))
 
             if handle_first == 'exp' or not log_new_extension:
-                exp_new_extension = self._exp_part(exps)
+                exp_new_extension = self._exp_part(exps, dummy=dummy)
                 if exp_new_extension is None:
                     # reset and restart
                     self.f = self.newf
@@ -371,7 +371,7 @@ class DifferentialExtension(object):
                     exp_new_extension = True
                     continue
             if handle_first == 'log' or not exp_new_extension:
-                log_new_extension = self._log_part(logs)
+                log_new_extension = self._log_part(logs, dummy=dummy)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -399,7 +399,7 @@ class DifferentialExtension(object):
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
 
-    def _exp_part(self, exps):
+    def _exp_part(self, exps, dummy=True):
         """
         Try to build an exponential extension.
 
@@ -493,7 +493,10 @@ class DifferentialExtension(object):
                 self.E_K.append(len(self.T) - 1)
                 self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
                     self.t, expand=False))
-                i = Symbol('i', dummy=True)
+                if dummy:
+                    i = Dummy("i")
+                else:
+                    i = Symbol('i', dummy=True)
                 self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(dict((exp(expargs[i]), self.t**p) for i,
                                                     p in others))
@@ -503,7 +506,7 @@ class DifferentialExtension(object):
             return None
         return new_extension
 
-    def _log_part(self, logs):
+    def _log_part(self, logs, dummy=True):
         """
         Try to build a logarithmic extension.
 
@@ -544,7 +547,10 @@ class DifferentialExtension(object):
                 self.L_K.append(len(self.T) - 1)
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
-                i = Symbol('i', dummy=True)
+                if dummy:
+                    i = Dummy("i")
+                else:
+                    i = Symbol('i', dummy=True)
                 self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
@@ -998,7 +1004,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_expr()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
 
-    z = z or Symbol('z', dummy=True)
+    z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
@@ -1062,7 +1068,7 @@ def residue_reduce_to_basic(H, DE, z):
     Converts the tuple returned by residue_reduce() into a Basic expression.
     """
     # TODO: check what Lambda does with RootOf
-    i = Symbol('i', dummy=True)
+    i = Dummy('i')
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
@@ -1076,7 +1082,7 @@ def residue_reduce_derivation(H, DE, z):
     as_expr() result.
     """
     # TODO: verify that this is correct for multiple extensions
-    i = Symbol('i', dummy=True)
+    i = Dummy('i')
     return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
         DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H)))
 
@@ -1119,7 +1125,7 @@ def integrate_primitive_polynomial(p, DE):
     q, r, b = integrate_primitive_polynomial(p - derivation(q0, DE), DE)
     return (q + q0, r, b)
 
-def integrate_primitive(a, d, DE):
+def integrate_primitive(a, d, DE, z=None):
     """
     Integration of primitive functions.
 
@@ -1134,7 +1140,7 @@ def integrate_primitive(a, d, DE):
     been proven to be nonelementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
-    z = Symbol('z', dummy=True)
+    z = z or Dummy("z")
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, DE)
@@ -1209,7 +1215,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
 
     return (qa, qd, b)
 
-def integrate_hyperexponential(a, d, DE):
+def integrate_hyperexponential(a, d, DE, z=None):
     """
     Integration of hyperexponential functions.
 
@@ -1224,7 +1230,7 @@ def integrate_hyperexponential(a, d, DE):
     been proven to be nonelementary.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
-    z = Symbol('z', dummy=True)
+    z = z or Dummy("z")
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, DE)
@@ -1272,7 +1278,7 @@ def integrate_hypertangent_polynomial(p, DE):
     c = Poly(r.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
 
-def integrate_nonlinear_no_specials(a, d, DE):
+def integrate_nonlinear_no_specials(a, d, DE, z=None):
     """
     Integration of nonlinear monomials with no specials.
 
@@ -1291,7 +1297,7 @@ def integrate_nonlinear_no_specials(a, d, DE):
     # TODO: Integral from k?
     # TODO: split out nonelementary integral
     # XXX: a and d must be canceled, or this might not return correct results
-    z = Symbol('z', dummy=True)
+    z = z or Dummy("z")
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(a, d, DE)
