@@ -207,10 +207,6 @@ class DifferentialExtension(object):
         self-consistent.  Therefore, this should only be used for
         testing/debugging purposes.
         """
-        for attr in self.__slots__:
-            # Always do this, regardless if extension=True or False, because
-            # otherwise we get AttributeError when debugging.
-            setattr(self, attr, None)
         # XXX: If you need to debug this function, set the break point here
 
         if extension:
@@ -364,6 +360,12 @@ class DifferentialExtension(object):
         self._auto_attrs()
 
         return
+
+    def __getattr__(self, attr):
+        # Avoid AttributeErrors when debugging
+        if attr not in self.__slots__:
+            raise AttributeError("%s has no attribute %s" % (repr(self), repr(attr)))
+        return None
 
     def _auto_attrs(self):
         """
