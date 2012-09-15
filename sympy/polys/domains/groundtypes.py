@@ -21,10 +21,6 @@ from __builtin__ import (
 
 from pythonrationaltype import PythonRationalType
 
-def python_factorial(n):
-    from sympy.functions.combinatorial.factorials import factorial
-    return int(factorial(n))
-
 from sympy.core.numbers import (
     igcdex     as python_gcdex,
     igcd       as python_gcd,
@@ -72,7 +68,10 @@ from sympy.mpmath import (
     mpi as MPmathIntervalType,
 )
 
-from sympy.mpmath.libmp.libmpf import isqrt
+import sympy.mpmath.libmp as mlib
 
-def python_sqrt(a):
-    return int(isqrt(a))
+def python_sqrt(n):
+    return int(mlib.isqrt(n))
+
+def python_factorial(n):
+    return int(mlib.ifac(n))

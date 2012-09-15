@@ -4272,15 +4272,14 @@ def half_gcdex(f, g, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'half_gcdex'):
-            try:
-                return f.half_gcdex(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('half_gcdex', 2, exc)
+        try:
+            s, h = domain.half_gcdex(a, b)
+        except NotImplementedError:
+            raise ComputationFailed('half_gcdex', 2, exc)
+        else:
+            return domain.to_sympy(s), domain.to_sympy(h)
 
     s, h = F.half_gcdex(G, auto=opt.auto)
 
@@ -4310,15 +4309,14 @@ def gcdex(f, g, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'gcdex'):
-            try:
-                return f.gcdex(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('gcdex', 2, exc)
+        try:
+            s, t, h = domain.gcdex(a, b)
+        except NotImplementedError:
+            raise ComputationFailed('gcdex', 2, exc)
+        else:
+            return domain.to_sympy(s), domain.to_sympy(t),domain.to_sympy(h)
 
     s, t, h = F.gcdex(G, auto=opt.auto)
 
@@ -4351,15 +4349,12 @@ def invert(f, g, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'invert'):
-            try:
-                return f.invert(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('invert', 2, exc)
+        try:
+            return domain.to_sympy(domain.invert(a, b))
+        except NotImplementedError:
+            raise ComputationFailed('invert', 2, exc)
 
     h = F.invert(G, auto=opt.auto)
 
@@ -4475,15 +4470,14 @@ def cofactors(f, g, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'cofactors'):
-            try:
-                return f.cofactors(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('cofactors', 2, exc)
+        try:
+            h, cff, cfg = domain.cofactors(a, b)
+        except NotImplementedError:
+            raise ComputationFailed('cofactors', 2, exc)
+        else:
+            return domain.to_sympy(h), domain.to_sympy(cff), domain.to_sympy(cfg)
 
     h, cff, cfg = F.cofactors(G)
 
@@ -4506,22 +4500,23 @@ def gcd_list(seq, *gens, **args):
     x - 1
 
     """
+    seq = sympify(seq)
+
     if not gens and not args:
-        if not seq:
-            return S.Zero
+        domain, numbers = construct_domain(seq)
 
-        seq = sympify(seq)
-
-        if all(s.is_Number for s in seq):
-            result, numbers = seq[0], seq[1:]
+        if not numbers:
+            return domain.zero
+        elif domain.is_Numerical:
+            result, numbers = numbers[0], numbers[1:]
 
             for number in numbers:
-                result = result.gcd(number)
+                result = domain.gcd(result, number)
 
-                if result is S.One:
+                if domain.is_one(result):
                     break
 
-            return result
+            return domain.to_sympy(result)
 
     options.allowed_flags(args, ['polys'])
 
@@ -4568,25 +4563,20 @@ def gcd(f, g=None, *gens, **args):
             gens = (g,) + gens
 
         return gcd_list(f, *gens, **args)
+    elif g is None:
+        raise TypeError("gcd() takes 2 arguments or a sequence of arguments")
 
     options.allowed_flags(args, ['polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'gcd'):
-            try:
-                if f.is_Float:
-                    f = Rational(str(f))
-                if g.is_Float:
-                    g = Rational(str(g))
-                return f.gcd(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('gcd', 2, exc)
+        try:
+            return domain.to_sympy(domain.gcd(a, b))
+        except NotImplementedError:
+            raise ComputationFailed('gcd', 2, exc)
 
     result = F.gcd(G)
 
@@ -4609,19 +4599,20 @@ def lcm_list(seq, *gens, **args):
     x**5 - x**4 - 2*x**3 - x**2 + x + 2
 
     """
+    seq = sympify(seq)
+
     if not gens and not args:
-        if not seq:
-            return S.One
+        domain, numbers = construct_domain(seq)
 
-        seq = sympify(seq)
-
-        if all(s.is_Number for s in seq):
-            result, numbers = seq[0], seq[1:]
+        if not numbers:
+            return domain.one
+        elif domain.is_Numerical:
+            result, numbers = numbers[0], numbers[1:]
 
             for number in numbers:
-                result = result.lcm(number)
+                result = domain.lcm(result, number)
 
-            return result
+            return domain.to_sympy(result)
 
     options.allowed_flags(args, ['polys'])
 
@@ -4665,21 +4656,20 @@ def lcm(f, g=None, *gens, **args):
             gens = (g,) + gens
 
         return lcm_list(f, *gens, **args)
+    elif g is None:
+        raise TypeError("lcm() takes 2 arguments or a sequence of arguments")
 
     options.allowed_flags(args, ['polys'])
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
     except PolificationFailed, exc:
-        f, g = exc.exprs
+        domain, (a, b) = construct_domain(exc.exprs)
 
-        if hasattr(f, 'lcm'):
-            try:
-                return f.lcm(g)
-            except (SympifyError, ValueError):
-                pass
-
-        raise ComputationFailed('lcm', 2, exc)
+        try:
+            return domain.to_sympy(domain.lcm(a, b))
+        except NotImplementedError:
+            raise ComputationFailed('lcm', 2, exc)
 
     result = F.lcm(G)
 

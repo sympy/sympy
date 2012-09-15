@@ -633,9 +633,7 @@ def test_issue_841():
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
     # pulls out the coefficient.
-    assert integrate(-a/(a**2+x**2), x) == \
-        -a*(sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - \
-            sqrt(-1/a**2)*log(x - a**2*sqrt(-1/a**2))/2)
+    assert integrate(-a/(a**2+x**2), x) == I*log(-I*a + x)/2 - I*log(I*a + x)/2
 
 def test_issue_1793a():
     A, z, c = symbols('A z c')
@@ -647,8 +645,10 @@ def test_issue_1793a():
     h2 = -sin(x)**2 + sin(y)**2 - 1
 
     assert integrate(c*(P2 - P1), t) in [
-        c*(A*h1*log(c*t)/c + A*t*exp(-z)),
-        c*(A*h2*log(c*t)/c + A*t*exp(-z)),
+        c*(-A*(-h1)*log(c*t)/c + A*t*exp(-z)),
+        c*(-A*(-h2)*log(c*t)/c + A*t*exp(-z)),
+        c*( A*  h1 *log(c*t)/c + A*t*exp(-z)),
+        c*( A*  h2 *log(c*t)/c + A*t*exp(-z)),
     ]
 
 def test_issue_1793b():

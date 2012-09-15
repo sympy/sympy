@@ -6,7 +6,7 @@ from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
     ZZ, QQ, RR, FF, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
-    RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
+    RR_mpmath, PolynomialRing, FractionField, EX)
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
@@ -354,7 +354,8 @@ def test_Domain_get_ring():
     assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
     assert QQ.frac_field(x,y).get_ring() == QQ[x,y]
 
-    raises(DomainError, lambda: EX.get_ring())
+    assert EX.get_ring() == EX
+
     raises(DomainError, lambda: RR.get_ring())
     raises(DomainError, lambda: ALG.get_ring())
 
@@ -624,18 +625,6 @@ def test_RealDomain_from_sympy():
     assert RR.convert(S(1)) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    raises(CoercionFailed, lambda: RR.convert(x))
-    raises(CoercionFailed, lambda: RR.convert(oo))
-    raises(CoercionFailed, lambda: RR.convert(-oo))
-
-    RR = RR_sympy()
-
-    assert RR.convert(S(0)) == RR.dtype(0)
-    assert RR.convert(S(0.0)) == RR.dtype(0.0)
-    assert RR.convert(S(1)) == RR.dtype(1)
-    assert RR.convert(S(1.0)) == RR.dtype(1.0)
-    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    assert RR.n(3, 2) == RR.evalf(3, 2) == Rational(3).n(2)
     raises(CoercionFailed, lambda: RR.convert(x))
     raises(CoercionFailed, lambda: RR.convert(oo))
     raises(CoercionFailed, lambda: RR.convert(-oo))
