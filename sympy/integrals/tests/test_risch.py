@@ -301,12 +301,20 @@ def test_DifferentialExtension():
     dummy=False)._important_attrs == \
         (Poly(t1**2 + t0*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
-        Lambda(i, exp(i/2))], [], [1, 2], [x**2, x/2], [], [])
+        Lambda(i, exp(i/2))], [(exp(x/2), sqrt(exp(x)))], [1, 2], [x**2, x/2], [], [])
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x,
     dummy=False)._important_attrs == \
         (Poly(t1**2 + t0*exp(3)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(2*x*t0, t0), Poly(t1/2, t1)], [x, t0, t1], [Lambda(i, exp(i**2)),
-        Lambda(i, exp(i/2))], [], [1, 2], [x**2, x/2], [], [])
+        Lambda(i, exp(i/2))], [(exp(x/2), sqrt(exp(x)))], [1, 2], [x**2, x/2],
+        [], [])
+    assert DifferentialExtension(sqrt(exp(x)), x, dummy=False)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
+        [Lambda(i, exp(i/2))], [(exp(x/2), sqrt(exp(x)))], [1], [x/2], [], [])
+
+    assert DifferentialExtension(exp(x/2), x, dummy=False)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
+        [Lambda(i, exp(i/2))], [], [1], [x/2], [], [])
 
     # Logarithms
     assert DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x,

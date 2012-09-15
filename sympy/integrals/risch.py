@@ -257,6 +257,20 @@ class DifferentialExtension(object):
             # Get all exp arguments, so we can avoid ahead of time doing
             # something like t1 = exp(x), t2 = exp(x/2) == sqrt(t1).
 
+            # Things like sqrt(exp(x)) do not automatically simplify to
+            # exp(x/2), so they will be viewed as algebraic.  The easiest way
+            # to handle this is to convert all instances of (a**b)**Rational
+            # to a**(Rational*b) before doing anything else.  Note that the
+            # _exp_part code can generate terms of this form, so we do need to
+            # do this at each pass (or else modify it to not do that).
+
+            ratpows = filter(lambda i: (i.base.is_Pow or i.base.func is exp)
+                and i.exp.is_Rational, self.newf.atoms(Pow).union(self.newf.atoms(exp)))
+
+            ratpows_repl = [(i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
+            self.backsubs += [(j, i) for i, j in ratpows_repl]
+            self.newf = self.newf.xreplace(dict(ratpows_repl))
+
             # XXX: This is *very* non-deterministic (hash dependent), because
             # the order of the args is based on the order of iteration through a
             # set. So something like log(x) + log(x**2) could be written in
@@ -264,6 +278,9 @@ class DifferentialExtension(object):
             # machine, it does one if you use x, and the other if you replace x
             # with y).  To avoid all manner of future problems, the sets should
             # be ordered in some canonical, platform independent way.
+
+            # TODO: This probably doesn't need to be completely recomputed at
+            # each pass.
             exps = filter(lambda i: i.exp.is_rational_function(*self.T) and
                 i.exp.has(*self.T), self.newf.atoms(exp))
             # 2**x
@@ -310,7 +327,7 @@ class DifferentialExtension(object):
                     # auto-simplification should be removed.  See
                     # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
-                    self.newf = self.newf.subs(i, newterm)
+                    self.newf = self.newf.xreplace({i: newterm})
 
                 elif i not in numpows:
                     continue
@@ -319,7 +336,7 @@ class DifferentialExtension(object):
                     newterm = new
                 # TODO: Just put it in self.Tfuncs
                 self.backsubs.append((new, old))
-                self.newf = self.newf.subs(old, newterm)
+                self.newf = self.newf.xreplace({old: newterm})
                 exps.append(newterm)
 
             logs = filter(lambda i: i.args[0].is_rational_function(*self.T) and
@@ -342,7 +359,7 @@ class DifferentialExtension(object):
                 new = i.args[0].exp*log(i.args[0].base)
                 logs.append(log(i.args[0].base))
                 logs = list(set(logs)) # Don't waste time if it's already in there
-                self.newf = self.newf.subs(i, new)
+                self.newf = self.newf.xreplace({i: new})
                 self.backsubs.append((new, i))
 
             if handle_first == 'exp' or not log_new_extension:
@@ -418,17 +435,19 @@ class DifferentialExtension(object):
                     u **= -1
                     const *= -1
                     ans = [(i, -j) for i, j in ans]
+
                 if n == 1:
                     # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
-                    self.newf = self.newf.subs(exp(arg), exp(const)*Mul(*[
-                        u**power for u, power in ans]))
-                    self.newf = self.newf.subs([(exp(p*expargs[i]),
+                    self.newf = self.newf.xreplace({exp(arg): exp(const)*Mul(*[
+                        u**power for u, power in ans])})
+                    self.newf = self.newf.xreplace(dict([(exp(p*expargs[i]),
                         exp(const*p)*Mul(*[u**power for u, power in ans]))
-                        for i, p in others])
+                        for i, p in others]))
                     # TODO: Add something to backsubs to put exp(const*p)
                     # back together.
 
                     continue
+
                 else:
                     # Bad news: we have an algebraic radical.  But maybe we
                     # could still avoid it by choosing a different extension.
@@ -447,18 +466,20 @@ class DifferentialExtension(object):
                     # integer_powers() or n == 1 above if it could be handled,
                     # so we give up at that point.  For example, you can never
                     # handle exp(log(x)/2) because it equals sqrt(x).
+
                     if const or len(ans) > 1:
                         rad = Mul(*[term**(power/n) for term, power in ans])
-                        self.newf = self.newf.subs([(exp(p*expargs[i]),
-                            exp(const*p)*rad) for i, p in others])
-                        self.newf = self.newf.subs(zip(reversed(self.T),
-                            reversed([f(self.x) for f in self.Tfuncs])))
+                        self.newf = self.newf.xreplace(dict((exp(p*expargs[i]),
+                            exp(const*p)*rad) for i, p in others))
+                        self.newf = self.newf.xreplace(dict(zip(reversed(self.T),
+                            reversed([f(self.x) for f in self.Tfuncs]))))
                         restart = True
                         break
                     else:
                         # TODO: give algebraic dependence in error string
-                        raise NotImplementedError("Cannot integrate over " +
-                        "algebraic extensions.")
+                        raise NotImplementedError("Cannot integrate over "
+                            "algebraic extensions.")
+
             else:
                 arga, argd = frac_in(arg, self.t)
                 darga = (argd*derivation(Poly(arga, self.t), self) -
@@ -474,8 +495,8 @@ class DifferentialExtension(object):
                     self.t, expand=False))
                 i = Symbol('i', dummy=True)
                 self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
-                self.newf = self.newf.subs([(exp(expargs[i]), self.t**p) for i,
-                    p in others])
+                self.newf = self.newf.xreplace(dict((exp(expargs[i]), self.t**p) for i,
+                                                    p in others))
                 new_extension = True
 
         if restart:
@@ -508,7 +529,7 @@ class DifferentialExtension(object):
             if A is not None:
                 ans, u, const = A
                 newterm = log(const) + u
-                self.newf = self.newf.subs(log(arg), newterm)
+                self.newf = self.newf.xreplace({log(arg): newterm})
                 continue
 
             else:
@@ -525,7 +546,7 @@ class DifferentialExtension(object):
                     expand=False))
                 i = Symbol('i', dummy=True)
                 self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
-                self.newf = self.newf.subs(log(arg), self.t)
+                self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
 
         return new_extension
