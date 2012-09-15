@@ -1024,7 +1024,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(6)
         >>> C = CyclicGroup(6)
         >>> H = S.centralizer(C)
-        >>> H.is_in(C)
+        >>> H.is_subgroup(C)
         True
 
         See Also
@@ -1123,7 +1123,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(5)
         >>> A = AlternatingGroup(5)
         >>> G = S.commutator(S, A)
-        >>> G.is_in(A)
+        >>> G.is_subgroup(A)
         True
 
         See Also
@@ -1427,9 +1427,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> len(S.derived_series())
         4
-        >>> S.derived_series()[1].is_in(AlternatingGroup(4))
+        >>> S.derived_series()[1].is_subgroup(AlternatingGroup(4))
         True
-        >>> S.derived_series()[2].is_in(DihedralGroup(2))
+        >>> S.derived_series()[2].is_subgroup(DihedralGroup(2))
         True
 
         See Also
@@ -1441,7 +1441,7 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.derived_subgroup()
-        while not current.is_in(next):
+        while not current.is_subgroup(next):
             res.append(next)
             current = next
             next = next.derived_subgroup()
@@ -1680,47 +1680,6 @@ class PermutationGroup(Basic):
 
         """
         return self._generators
-
-    def is_in(self, G):
-        """Test if group ``self`` is contained in ``G``.
-
-        One group is contained in another if all its generators are contained
-        in the other's. This is not the same thing as a naive equality check.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> p = Permutation(0, 1, 2, 3, 4, 5)
-        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
-        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
-        >>> G3 = PermutationGroup([p, p**2])
-        >>> assert G1.order() == G2.order() == G3.order() == 6
-        >>> G1.is_in(G2)
-        True
-        >>> G1.is_in(G3)
-        False
-        >>> PermutationGroup(G3[1]).is_in(G3)
-        False
-        >>> PermutationGroup(G3[0]).is_in(G3)
-        True
-
-        See Also
-        ========
-
-        contains
-        """
-        if not isinstance(G, PermutationGroup):
-            return False
-        if self == G:
-            return True
-        if self.degree != G.degree:
-            return False
-        if self.order() != G.order():
-            return False
-        return all(G.contains(g) for g in self)
 
     def contains(self, g):
         """Test if permutation ``g`` belong to self, ``G``.
@@ -2033,40 +1992,63 @@ class PermutationGroup(Basic):
         else:
             return self._is_solvable
 
-    def is_subgroup(self, gr):
-        """Test if self is a subgroup of gr;
-        by this we mean that the elements of self belong to gr,
-        eventually after bringing them to the size of gr.degree
+    def is_subgroup(self, G, strict=True):
+        """Return True if all elements of self belong to G.
+
+        If ``strict`` is False then if ``self``'s degree is smaller
+        than ``G``'s, the elements will be resized to have the same degree.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
         ...    CyclicGroup)
+
+        Testing is strict by default: the degree of each group must be the
+        same:
+
+        >>> p = Permutation(0, 1, 2, 3, 4, 5)
+        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
+        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
+        >>> G3 = PermutationGroup([p, p**2])
+        >>> assert G1.order() == G2.order() == G3.order() == 6
+        >>> G1.is_subgroup(G2)
+        True
+        >>> G1.is_subgroup(G3)
+        False
+        >>> G3.is_subgroup(PermutationGroup(G3[1]))
+        False
+        >>> G3.is_subgroup(PermutationGroup(G3[0]))
+        True
+
+        To ignore the size, set ``strict`` to False:
+
         >>> S3 = SymmetricGroup(3)
         >>> S5 = SymmetricGroup(5)
-        >>> S3.is_subgroup(S5)
+        >>> S3.is_subgroup(S5, strict=False)
         True
         >>> C7 = CyclicGroup(7)
         >>> G = S5*C7
-        >>> S5.is_subgroup(G)
+        >>> S5.is_subgroup(G, False)
         True
-        >>> C7.is_subgroup(G)
+        >>> C7.is_subgroup(G, 0)
         False
         """
-        if gr.order() % self.order() != 0:
+        if not isinstance(G, PermutationGroup):
             return False
-        if self.degree == gr.degree:
-            gens1 = self.generators
-        elif self.degree < gr.degree:
-            gens1 = PermutationGroup([Permutation(x, size=gr.degree) for x in self])
+        if self == G:
+            return True
+        if G.order() % self.order() != 0:
+            return False
+        if self.degree == G.degree:
+            gens = self.generators
+        elif self.degree < G.degree and not strict:
+            gens = PermutationGroup(
+                [Permutation(x, size=G.degree) for x in self])
         else:
             return False
-        for g in gens1:
-            if not gr.contains(g):
-                return False
-        return True
+        return all(G.contains(g) for g in gens)
 
     @property
     def is_transitive(self):
@@ -2139,7 +2121,7 @@ class PermutationGroup(Basic):
         >>> A = AlternatingGroup(4)
         >>> len(A.lower_central_series())
         2
-        >>> A.lower_central_series()[1].is_in(DihedralGroup(2))
+        >>> A.lower_central_series()[1].is_subgroup(DihedralGroup(2))
         True
 
         See Also
@@ -2151,7 +2133,7 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.commutator(self, current)
-        while not current.is_in(next):
+        while not current.is_subgroup(next):
             res.append(next)
             current = next
             next = self.commutator(self, current)
@@ -2307,7 +2289,7 @@ class PermutationGroup(Basic):
         >>> G = S.normal_closure(C)
         >>> G.order()
         60
-        >>> G.is_in(AlternatingGroup(5))
+        >>> G.is_subgroup(AlternatingGroup(5))
         True
 
         See Also
@@ -2633,7 +2615,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(7)
         >>> Stab = S.pointwise_stabilizer([2, 3, 5])
-        >>> Stab.is_in(S.stabilizer(2).stabilizer(3).stabilizer(5))
+        >>> Stab.is_subgroup(S.stabilizer(2).stabilizer(3).stabilizer(5))
         True
 
         See Also
@@ -3424,7 +3406,7 @@ class PermutationGroup(Basic):
         >>> prop_even = lambda x: x.is_even
         >>> base, strong_gens = S.schreier_sims_incremental()
         >>> G = S.subgroup_search(prop_even, base=base, strong_gens=strong_gens)
-        >>> G.is_in(AlternatingGroup(7))
+        >>> G.is_subgroup(AlternatingGroup(7))
         True
         >>> _verify_bsgs(G, base, G.generators)
         True
