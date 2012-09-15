@@ -438,11 +438,11 @@ class cos(TrigonometricFunction):
             if pi_coeff.is_Rational:
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
-                if p>q:
-                    narg = (pi_coeff-1)*S.Pi
+                if p > q:
+                    narg = (pi_coeff - 1)*S.Pi
                     return -cls(narg)
                 if 2*p > q:
-                    narg = (1-pi_coeff)*S.Pi
+                    narg = (1 - pi_coeff)*S.Pi
                     return -cls(narg)
 
                 # If nested sqrt's are worse than un-evaluation
@@ -456,14 +456,14 @@ class cos(TrigonometricFunction):
                     return C.chebyshevt(pi_coeff.p,cts).expand()
 
 
-                if 0==q%2:
+                if 0 == q%2:
                     narg = (pi_coeff*2)*S.Pi
                     nval = cls(narg)
                     if None == nval:
                         return None
-                    x = (2*pi_coeff+1)/2
+                    x = (2*pi_coeff + 1)/2
                     sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
-                    return sign_cos*sqrt( (1+nval)/2 )
+                    return sign_cos*sqrt( (1 + nval)/2 )
             return None
 
         if arg.is_Add:
@@ -548,13 +548,13 @@ class cos(TrigonometricFunction):
                 return igcdex(x[0], x[-1])
             g = migcdex(x[1:])
             u,v,h = igcdex(x[0], g[-1])
-            return tuple([u]+[v*i for i in g[0:-1]]+[h])
+            return tuple([u] + [v*i for i in g[0:-1] ] + [h])
         def ipartfrac(r,factors=None):
             if isinstance(r,int):
                 return r
             assert isinstance(r,C.Rational)
             n = r.q
-            if r.q*r.q < 2:
+            if 2 > r.q*r.q:
                 return r.q
 
             if None == factors:
@@ -579,9 +579,9 @@ class cos(TrigonometricFunction):
         cst_table_some = {
             3 : S.Half,
             5 : (sqrt(5) + 1)/4,
-            17 : sqrt((15+sqrt(17))/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) +\
-                sqrt(sqrt(2)*(-8*sqrt(sqrt(17) + 17) + (-1 + sqrt(17))\
-                *sqrt(-sqrt(17) + 17)) + 6*sqrt(17) + 34))/32)
+            17 : sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) + \
+                sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17)) \
+                *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32)
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them
         }
