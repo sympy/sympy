@@ -70,7 +70,7 @@ class Basic(object):
     is_Matrix = False
 
     @property
-    @deprecated
+    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
         # When this is removed, remove the piece of code disabling the warning
@@ -215,10 +215,12 @@ class Basic(object):
         return Basic.compare(a,b)
 
     @staticmethod
-    @deprecated
+    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
+
+        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
 
         ::
 
@@ -1026,7 +1028,7 @@ class Basic(object):
                 return self.func(*args)
         return self
 
-    @deprecated
+    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1419,10 +1421,6 @@ class Atom(Basic):
 
     def doit(self, **hints):
         return self
-
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
 
     @classmethod
     def class_key(cls):

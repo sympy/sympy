@@ -1129,11 +1129,15 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     #     raise ValueError("func must be a function of one variable, not %s" % func)
     # ----------
     # assume, during deprecation that sol and func are reversed
-    if hasattr(sol, '_is_Function') and isinstance(sol, AppliedUndef) and len(sol.args) == 1:
-        msg = "sol appears to be a valid function. " +\
-              "The order of sol and func will be reversed. " +\
-              "If this is not desired, send sol as Eq(sol, 0)."
-        SymPyDeprecationWarning(msg
+    if isinstance(sol, AppliedUndef) and len(sol.args) == 1:
+        if isinstance(func, AppliedUndef) and len(func.args) == 1:
+            msg = "If you really do want sol to be just %s, use Eq(%s, 0) " % \
+            (sol, sol) + "instead."
+        else:
+            msg = ""
+        SymPyDeprecationWarning(msg, feature="The order of the "
+            "arguments sol and func to checkodesol()",
+            useinstead="checkodesol(ode, sol, func)", issue=3384,
         ).warn()
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):

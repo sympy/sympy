@@ -1930,7 +1930,8 @@ class MatrixBase(object):
         """
         if is_sequence(r):
             SymPyDeprecationWarning(
-            "Pass row and column count as zeros(%i, %i)." % r
+                feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
             ).warn()
             r, c = r
         else:
@@ -2619,9 +2620,10 @@ class MatrixBase(object):
         """
         if simplified is not False:
             SymPyDeprecationWarning(
-            feature="'simplified' as a keyword to rref",
-            useinstead="simplify=True or set simplify equal to your " +
-                       "own custom simplification function"
+                feature="'simplified' as a keyword to rref",
+                useinstead="simplify=True, or set simplify equal to your "
+                       "own custom simplification function",
+                issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
@@ -2658,9 +2660,10 @@ class MatrixBase(object):
         """
         if simplified is not False:
             SymPyDeprecationWarning(
-            feature="'simplified' as a keyword to rref",
-            useinstead="simplify=True or set simplify equal to your " +
-                       "own custom simplification function"
+                feature="'simplified' as a keyword to nullspace",
+                useinstead="simplify=True, or set simplify equal to your "
+                       "own custom simplification function",
+                issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
@@ -4011,7 +4014,8 @@ def zeros(r, c=None, cls=MutableMatrix):
     """
     if is_sequence(r):
         SymPyDeprecationWarning(
-        "Pass row and column count as zeros(%i, %i)." % r
+            feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+            issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
     else:
@@ -4033,7 +4037,8 @@ def ones(r, c=None):
 
     if is_sequence(r):
         SymPyDeprecationWarning(
-        "Pass row and column count as ones(%i, %i)." % r
+                feature="The syntax ones([%i, %i])" % tuple(r), useinstead="ones(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
     else:
@@ -4721,7 +4726,8 @@ class SparseMatrix(MatrixBase):
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
             SymPyDeprecationWarning(
-            "Pass row and column count as zeros(%i, %i)." % r
+                feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
             ).warn()
             r, c = r
         else:

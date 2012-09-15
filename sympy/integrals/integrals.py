@@ -496,7 +496,8 @@ class Integral(Expr):
             from sympy.utilities.exceptions import SymPyDeprecationWarning
             SymPyDeprecationWarning(
             feature="transform(x, f(x), inverse=True)",
-            useinstead="transform(f(x), x)"
+            useinstead="transform(f(x), x)",
+            issue=3380, deprecated_since_version="0.7.2",
             ).warn()
             # in the old style x and u contained the same variable so
             # don't worry about using the old-style feature with the

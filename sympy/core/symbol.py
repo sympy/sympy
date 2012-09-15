@@ -62,7 +62,8 @@ class Symbol(AtomicExpr, Boolean):
         if 'dummy' in assumptions:
             SymPyDeprecationWarning(
                 feature="Symbol('x', dummy=True)",
-                useinstead="Dummy() or symbols(..., cls=Dummy)"
+                useinstead="Dummy() or symbols(..., cls=Dummy)",
+                issue=3378, deprecated_since_version="0.7.0",
                 ).warn()
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
@@ -309,9 +310,14 @@ def symbols(names, **args):
     """
     result = []
     if 'each_char' in args:
+        if args['each_char']:
+            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
+        else:
+            value = ""
         SymPyDeprecationWarning(
             feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names"
+            useinstead="spaces or commas between symbol names",
+            issue=1919, deprecated_since_version="0.7.0", value=value
             ).warn()
 
     if isinstance(names, basestring):

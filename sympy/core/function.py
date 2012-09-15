@@ -38,7 +38,7 @@ from basic import Basic
 from singleton import S
 from sympify import sympify
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
+from decorators import _sympifyit
 from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational, Float
@@ -96,11 +96,6 @@ class FunctionClass(ManagedProperties):
 
     def __repr__(cls):
         return cls.__name__
-
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
-
 
 class Application(Basic):
     """
@@ -168,11 +163,6 @@ class Application(Basic):
              isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
             return new(*self.args)
 
-    @deprecated
-    def __contains__(self, obj):
-        if self.func == obj:
-            return True
-        return super(Application, self).__contains__(obj)
 
 
 class Function(Application, Expr):
