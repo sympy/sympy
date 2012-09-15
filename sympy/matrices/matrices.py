@@ -1930,7 +1930,7 @@ class MatrixBase(object):
         """
         if is_sequence(r):
             SymPyDeprecationWarning(
-            "Pass row and column count as zeros(%i, %i)." % r
+            "Pass row and column count as zeros(%i, %i)." % tuple(r)
             ).warn()
             r, c = r
         else:
@@ -4011,7 +4011,7 @@ def zeros(r, c=None, cls=MutableMatrix):
     """
     if is_sequence(r):
         SymPyDeprecationWarning(
-        "Pass row and column count as zeros(%i, %i)." % r
+        "Pass row and column count as zeros(%i, %i)." % tuple(r)
         ).warn()
         r, c = r
     else:
@@ -4033,7 +4033,7 @@ def ones(r, c=None):
 
     if is_sequence(r):
         SymPyDeprecationWarning(
-        "Pass row and column count as ones(%i, %i)." % r
+        "Pass row and column count as ones(%i, %i)." % tuple(r)
         ).warn()
         r, c = r
     else:
@@ -4721,7 +4721,7 @@ class SparseMatrix(MatrixBase):
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
             SymPyDeprecationWarning(
-            "Pass row and column count as zeros(%i, %i)." % r
+            "Pass row and column count as zeros(%i, %i)." % tuple(r)
             ).warn()
             r, c = r
         else:
