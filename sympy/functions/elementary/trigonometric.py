@@ -426,6 +426,11 @@ class cos(TrigonometricFunction):
 
             # cosine formula #####################
             # http://code.google.com/p/sympy/issues/detail?id=2949
+            # explicit calculations are preformed for
+            # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
+            # Some other exact values like cos(k pi/15) can be
+            # calculated using a partial-fraction decomposition
+            # by calling cos( X ).rewrite(sqrt)
             cst_table_some = {
                 3 : S.Half,
                 5 : (sqrt(5) + 1)/4,
@@ -440,12 +445,16 @@ class cos(TrigonometricFunction):
                     narg = (1-pi_coeff)*S.Pi
                     return -cls(narg)
 
+                # If nested sqrt's are worse than un-evaluation
+                # you can require q in (1,2,3,4,6)
+                # q <= 12 returns expressions with 2 or fewer nestings.
+                if q > 12:
+                    return None
+
                 if q in cst_table_some:
                     cts = cst_table_some[pi_coeff.q]
                     return C.chebyshevt(pi_coeff.p,cts).expand()
 
-                if q > 10:
-                    return None
 
                 if 0==q%2:
                     narg = (pi_coeff*2)*S.Pi
@@ -534,11 +543,11 @@ class cos(TrigonometricFunction):
             # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
             # Note, that this is only one such linear combination.
             if len(x) == 1:
-                return (1,x[0])
+                return (1, x[0])
             if len(x) == 2:
-                return igcdex(x[0],x[-1])
+                return igcdex(x[0], x[-1])
             g = migcdex(x[1:])
-            u,v,h = igcdex(x[0],g[-1])
+            u,v,h = igcdex(x[0], g[-1])
             return tuple([u]+[v*i for i in g[0:-1]]+[h])
         def ipartfrac(r,factors=None):
             if isinstance(r,int):
@@ -568,7 +577,6 @@ class cos(TrigonometricFunction):
             return None
 
         cst_table_some = {
-            #1 : -S.One,
             3 : S.Half,
             5 : (sqrt(5) + 1)/4,
             17 : sqrt((15+sqrt(17))/32 + sqrt(2)*(sqrt(-sqrt(17) + 17) +\
@@ -615,7 +623,7 @@ class cos(TrigonometricFunction):
             decomp = ipartfrac(pi_coeff,FC)
             X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
-            return pcls
+            return pcls.rewrite(sqrt)
         if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
             X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
