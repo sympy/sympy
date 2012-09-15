@@ -98,7 +98,7 @@ def test_center():
         for j in (1, 5, 7):
             for k in (1, 1, 11):
                 G = AbelianGroup(i, j, k)
-                assert G.center() == G
+                assert G.center().contains(G, 1)
     # the center of a nonabelian simple group is trivial
     for i in(1, 5, 9):
         A = AlternatingGroup(i)
@@ -107,19 +107,19 @@ def test_center():
     D = DihedralGroup(5)
     A = AlternatingGroup(3)
     C = CyclicGroup(4)
-    G = D*A*C
+    G.contains(D*A*C, 1)
     assert _verify_centralizer(G, G)
 
 def test_centralizer():
     # the centralizer of the trivial group is the entire group
     S = SymmetricGroup(2)
-    assert S.centralizer(Permutation(range(2))) == S
+    assert S.centralizer(Permutation(range(2))).contains(S, 1)
     A = AlternatingGroup(5)
-    assert A.centralizer(Permutation(range(5))) == A
+    assert A.centralizer(Permutation(range(5))).contains(A, 1)
     # a centralizer in the trivial group is the trivial group itself
     triv = PermutationGroup([Permutation([0,1,2,3])])
     D = DihedralGroup(4)
-    assert triv.centralizer(D) == triv
+    assert triv.centralizer(D).contains(triv, 1)
     # brute-force verifications for centralizers of groups
     for i in (4, 5, 6):
         S = SymmetricGroup(i)
@@ -128,7 +128,7 @@ def test_centralizer():
         D = DihedralGroup(i)
         for gp in (S, A, C, D):
             for gp2 in (S, A, C, D):
-                if gp2 != gp:
+                if not gp2.contains(gp, 1):
                     assert _verify_centralizer(gp, gp2)
     # verify the centralizer for all elements of several groups
     S = SymmetricGroup(5)
@@ -237,9 +237,9 @@ def test_is_normal():
     assert G5.order() == 24
     G6 = G1.normal_closure(G5.generators)
     assert G6.order() == 120
-    assert G1 == G6
-    assert G1 != G4
-    assert G2 == G4
+    assert G1.contains(G6, 1)
+    assert not G1.contains(G4, 1)
+    assert G2.contains(G4, 1)
 
 def test_eq():
     a = [[1,2,0,3,4,5], [1,0,2,3,4,5], [2,1,0,3,4,5], [1,2,0,3,4,5]]
@@ -247,12 +247,12 @@ def test_eq():
     g = Permutation([1,2,3,4,5,0])
     G1, G2, G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g, g**2]]]
     assert G1.order() == G2.order() == G3.order() == 6
-    assert G1 == G2
-    assert G1 != G3
+    assert G1.contains(G2, 1)
+    assert not G1.contains(G3, 1)
     G4 = PermutationGroup([Permutation([0,1])])
-    assert G1 != G4
+    assert not G1.contains(G4, 1)
     assert G4.is_subgroup(G1)
-    assert PermutationGroup(g, g) == PermutationGroup(g)
+    assert PermutationGroup(g, g).contains(PermutationGroup(g), 1)
     assert SymmetricGroup(3).is_subgroup(SymmetricGroup(4))
     assert SymmetricGroup(3).is_subgroup(SymmetricGroup(3)*CyclicGroup(5))
     assert not CyclicGroup(5).is_subgroup(SymmetricGroup(3)*CyclicGroup(5))
@@ -309,7 +309,7 @@ def test_rubik():
     assert G1.order() == 170659735142400
     assert not G1.is_normal(G)
     G2 = G.normal_closure(G1.generators)
-    assert G2 == G
+    assert G2.contains(G, 1)
 
 def test_direct_product():
     C = CyclicGroup(4)
@@ -489,21 +489,22 @@ def _subgroup_search(i, j, k):
         A = AlternatingGroup(i)
         C = CyclicGroup(i)
         Sym = S.subgroup_search(prop_true)
-        assert Sym == S
+        assert Sym.contains(S, 1)
         Alt = S.subgroup_search(prop_even)
-        assert Alt == A
+        assert Alt.contains(A, 1)
         Sym = S.subgroup_search(prop_true, init_subgroup=C)
-        assert Sym == S
+        assert Sym.contains(S, 1)
         points = [7]
-        assert S.stabilizer(7) == S.subgroup_search(prop_fix_points)
+        assert S.stabilizer(7).contains(S.subgroup_search(prop_fix_points), 1)
         points = [3, 4]
-        assert S.stabilizer(3).stabilizer(4) ==\
-               S.subgroup_search(prop_fix_points)
+        assert S.stabilizer(3).stabilizer(4).contains(
+               S.subgroup_search(prop_fix_points), 1)
         points = [3, 5]
         fix35 = A.subgroup_search(prop_fix_points)
         points = [5]
         fix5 = A.subgroup_search(prop_fix_points)
-        assert A.subgroup_search(prop_fix_points, init_subgroup=fix35) == fix5
+        assert A.subgroup_search(prop_fix_points, init_subgroup=fix35
+            ).contains(fix5, 1)
         base, strong_gens = A.schreier_sims_incremental()
         g = A.generators[0]
         comm_g =\
@@ -527,7 +528,7 @@ def test_normal_closure():
     assert closure.is_trivial
     # the normal closure of the entire group is the entire group
     A = AlternatingGroup(4)
-    assert A.normal_closure(A) == A
+    assert A.normal_closure(A).contains(A, 1)
     # brute-force verifications for subgroups
     for i in (3, 4, 5):
         S = SymmetricGroup(i)
@@ -556,58 +557,58 @@ def test_normal_closure():
 def test_derived_series():
     # the derived series of the trivial group consists only of the trivial group
     triv = PermutationGroup([Permutation([0, 1, 2])])
-    assert triv.derived_series() == [triv]
+    assert triv.derived_series()[0].contains(triv, 1)
     # the derived series for a simple group consists only of the group itself
     for i in (5, 6, 7):
         A = AlternatingGroup(i)
-        assert A.derived_series() == [A]
+        assert A.derived_series()[0].contains(A, 1)
     # the derived series for S_4 is S_4 > A_4 > K_4 > triv
     S = SymmetricGroup(4)
     series = S.derived_series()
-    assert series[1] == AlternatingGroup(4)
-    assert series[2] == DihedralGroup(2)
+    assert series[1].contains(AlternatingGroup(4), 1)
+    assert series[2].contains(DihedralGroup(2), 1)
     assert series[3].is_trivial
 
 def test_lower_central_series():
     # the lower central series of the trivial group consists of the trivial
     # group
     triv = PermutationGroup([Permutation([0, 1, 2])])
-    assert triv.lower_central_series() == [triv]
+    assert triv.lower_central_series()[0].contains(triv, 1)
     # the lower central series of a simple group consists of the group itself
     for i in (5, 6, 7):
         A = AlternatingGroup(i)
-        assert A.lower_central_series() == [A]
+        assert A.lower_central_series()[0].contains(A, 1)
     # GAP-verified example
     S = SymmetricGroup(6)
     series = S.lower_central_series()
     assert len(series) == 2
-    assert series[1] == AlternatingGroup(6)
+    assert series[1].contains(AlternatingGroup(6), 1)
 
 def test_commutator():
     # the commutator of the trivial group and the trivial group is trivial
     S = SymmetricGroup(3)
     triv = PermutationGroup([Permutation([0, 1, 2])])
-    assert S.commutator(triv, triv) == triv
+    assert S.commutator(triv, triv).contains(triv, 1)
     # the commutator of the trivial group and any other group is again trivial
     A = AlternatingGroup(3)
-    assert S.commutator(triv, A) == triv
+    assert S.commutator(triv, A).contains(triv, 1)
     # the commutator is commutative
     for i in (3, 4, 5):
         S = SymmetricGroup(i)
         A = AlternatingGroup(i)
         D = DihedralGroup(i)
-        assert S.commutator(A, D) == S.commutator(D, A)
+        assert S.commutator(A, D).contains(S.commutator(D, A), 1)
     # the commutator of an abelian group is trivial
     S = SymmetricGroup(7)
     A1 = AbelianGroup(2, 5)
     A2 = AbelianGroup(3, 4)
     triv = PermutationGroup([Permutation([0, 1, 2, 3, 4, 5, 6])])
-    assert S.commutator(A1, A1) == triv
-    assert S.commutator(A2, A2) == triv
+    assert S.commutator(A1, A1).contains(triv, 1)
+    assert S.commutator(A2, A2).contains(triv, 1)
     # examples calculated by hand
     S = SymmetricGroup(3)
     A = AlternatingGroup(3)
-    assert S.commutator(A, S) == A
+    assert S.commutator(A, S).contains(A, 1)
 
 def test_is_nilpotent():
     # every abelian group is nilpotent
@@ -633,7 +634,7 @@ def test_pointwise_stabilizer():
     for point in (2, 0, 3, 4, 1):
         stab = stab.stabilizer(point)
         points.append(point)
-        assert S.pointwise_stabilizer(points) == stab
+        assert S.pointwise_stabilizer(points).contains(stab, 1)
 
 def test_make_perm():
     assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \

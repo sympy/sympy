@@ -183,4 +183,4 @@ def _verify_normal_closure(group, arg, closure=None):
             if conjugate not in conjugates:
                 conjugates.append(conjugate)
     naive_closure = PermutationGroup(conjugates)
-    return closure == naive_closure
+    return closure.contains(naive_closure, 1)

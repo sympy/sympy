@@ -483,45 +483,26 @@ class PermutationGroup(Basic):
     def __len__(self):
         return len(self._generators)
 
-    def __ne__(self, gr):
-        return not self == gr
-
     def __eq__(self, other):
-        """Test if all the permutations in self are contained in other.
-
-        This is a non-trivial equality test. To see if the generators are
-        the same between groups G and H, compare the set of generators from
-        each: ``set(G.generators) == set(H.generators)``.
+        """Return True if self and other have the same generators.
 
         Examples
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> p = Permutation(0,1,2,3,4,5)
-        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
-        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
-        >>> G3 = PermutationGroup([p, p**2])
-        >>> assert G1.order() == G2.order() == G3.order() == 6
-        >>> assert G1 == G2 and G1 != G3
-        >>> G4 = PermutationGroup([p**2, p])
-        >>> G3.generators == G4.generators
+        >>> p = Permutation(0, 1, 2, 3, 4, 5)
+        >>> G = PermutationGroup([p, p**2])
+        >>> H = PermutationGroup([p**2, p])
+        >>> G.generators == H.generators
         False
-        >>> not set(G3.generators).difference(G4.generators)
+        >>> G == H
         True
 
         """
         if not isinstance(other, PermutationGroup):
             return False
-        if self.degree != other.degree:
-            return False
-        if self.order() != other.order():
-            return False
-        for g in self.generators:
-            if not other.contains(g):
-                return False
-        return True
+        return set(self.generators) == set(other.generators)
 
     def __hash__(self):
         return super(PermutationGroup, self).__hash__()
@@ -1043,7 +1024,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(6)
         >>> C = CyclicGroup(6)
         >>> H = S.centralizer(C)
-        >>> H == C
+        >>> H.contains(C, 1)
         True
 
         See Also
@@ -1142,7 +1123,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(5)
         >>> A = AlternatingGroup(5)
         >>> G = S.commutator(S, A)
-        >>> G == A
+        >>> G.contains(A, 1)
         True
 
         See Also
@@ -1446,9 +1427,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> len(S.derived_series())
         4
-        >>> S.derived_series()[1] == AlternatingGroup(4)
+        >>> S.derived_series()[1].contains(AlternatingGroup(4), 1)
         True
-        >>> S.derived_series()[2] == DihedralGroup(2)
+        >>> S.derived_series()[2].contains(DihedralGroup(2), 1)
         True
 
         See Also
@@ -1460,7 +1441,7 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.derived_subgroup()
-        while current != next:
+        while not current.contains(next, 1):
             res.append(next)
             current = next
             next = next.derived_subgroup()
@@ -1700,8 +1681,8 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
-    def contains(self, g):
-        """Test if permutation ``g`` belongs to ``G``.
+    def contains(self, g, foo=None):
+        """Test if permutation (or group) ``g`` belong to self, ``G``.
 
         If ``g`` is an element of ``G`` it can be written as a product
         of factors drawn from the cosets of ``G``'s stabilizers. To see
@@ -1714,6 +1695,9 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+
+        A group might contain a permutation:
+
         >>> a = Permutation(1, 2)
         >>> b = Permutation(2, 3, 1)
         >>> G = PermutationGroup(a, b, degree=5)
@@ -1732,15 +1716,44 @@ class PermutationGroup(Basic):
         >>> G.has(elem)
         False
 
+        A group might also contain another group:
+
+        >>> p = Permutation(0, 1, 2, 3, 4, 5)
+        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
+        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
+        >>> G3 = PermutationGroup([p, p**2])
+        >>> assert G1.order() == G2.order() == G3.order() == 6
+        >>> assert G1.contains(G2, 1) and not G1.contains(G3, 1)
+
         See Also
         ========
 
         coset_factor, has
 
         """
-        if g in self.generators:
-            return True
-        return bool(self.coset_factor(g.array_form))
+        if isinstance(g, Permutation):
+            if g in self.generators:
+                return True
+            return bool(self.coset_factor(g.array_form))
+        elif isinstance(g, PermutationGroup):
+            if self == g:
+                return True
+            if self.degree != g.degree:
+                return False
+            if self.order() != g.order():
+                return False
+            # if A.contains(B) == B.contains(A) then we
+            # can process the generators of the shorter one;
+            # if that is not True, the following swap should be
+            # removed and all "A.contains(B, 1)" in combinatorics
+            # should be re-written as B.contains(A) and the foo=None
+            # parameter can be removed.
+            if len(self) < len(g):
+                g, self = self, g
+            return all(self.contains(gi) for gi in g)
+        else:
+            raise ValueError('expecting permutation or '
+            'permutation group, not %s' % g)
 
     @property
     def is_abelian(self):
@@ -2112,7 +2125,7 @@ class PermutationGroup(Basic):
         >>> A = AlternatingGroup(4)
         >>> len(A.lower_central_series())
         2
-        >>> A.lower_central_series()[1] == DihedralGroup(2)
+        >>> A.lower_central_series()[1].contains(DihedralGroup(2), 1)
         True
 
         See Also
@@ -2124,7 +2137,7 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.commutator(self, current)
-        while current != next:
+        while not current.contains(next, 1):
             res.append(next)
             current = next
             next = self.commutator(self, current)
@@ -2280,7 +2293,7 @@ class PermutationGroup(Basic):
         >>> G = S.normal_closure(C)
         >>> G.order()
         60
-        >>> G == AlternatingGroup(5)
+        >>> G.contains(AlternatingGroup(5), 1)
         True
 
         See Also
@@ -2307,10 +2320,11 @@ class PermutationGroup(Basic):
             strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
             basic_orbits, basic_transversals =\
                     _orbits_transversals_from_bsgs(base, strong_gens_distr)
-            C = False
+
             self._random_pr_init(r=10, n=20)
 
-            while C == False:
+            _loop = True
+            while _loop:
                 Z._random_pr_init(r=10, n=10)
                 for i in range(k):
                     g = self.random_pr()
@@ -2330,16 +2344,16 @@ class PermutationGroup(Basic):
                         basic_orbits, basic_transversals =\
                                 _orbits_transversals_from_bsgs(base,\
                                 strong_gens_distr)
-                C = True
+                _loop = False
                 for g in self.generators:
                     for h in Z.generators:
                         conj = rmul(~g, h, g)
                         res = _strip(conj, base, basic_orbits,\
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
-                            C = False
+                            _loop = True
                             break
-                    if not C:
+                    if _loop:
                         break
             return Z
         elif hasattr(other, '__getitem__'):
@@ -2605,7 +2619,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(7)
         >>> Stab = S.pointwise_stabilizer([2, 3, 5])
-        >>> Stab == S.stabilizer(2).stabilizer(3).stabilizer(5)
+        >>> Stab.contains(S.stabilizer(2).stabilizer(3).stabilizer(5), 1)
         True
 
         See Also
@@ -3396,7 +3410,7 @@ class PermutationGroup(Basic):
         >>> prop_even = lambda x: x.is_even
         >>> base, strong_gens = S.schreier_sims_incremental()
         >>> G = S.subgroup_search(prop_even, base=base, strong_gens=strong_gens)
-        >>> G == AlternatingGroup(7)
+        >>> G.contains(AlternatingGroup(7), 1)
         True
         >>> _verify_bsgs(G, base, G.generators)
         True
