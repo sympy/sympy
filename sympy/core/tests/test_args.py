@@ -8,10 +8,12 @@ from __future__ import with_statement
 
 import os
 import re
+import warnings
 
 from sympy import Basic, S, symbols, sqrt, sin
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval
 from sympy.utilities.pytest import XFAIL, SKIP
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 x, y, z = symbols('x,y,z')
 
@@ -24,6 +26,9 @@ def test_all_classes_are_tested():
     re_cls = re.compile("^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
 
     modules = {}
+
+    # Ignore sympy.statistics import warning
+    warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
@@ -68,6 +73,8 @@ def test_all_classes_are_tested():
 
             if test not in ns:
                 failed.append(module + '.' + name)
+
+    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
