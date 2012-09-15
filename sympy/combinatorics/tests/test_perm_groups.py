@@ -9,7 +9,7 @@ from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
-    _cmp_perm_lists, _verify_normal_closure
+     _verify_normal_closure
 from sympy.combinatorics.util import _distribute_gens_by_base
 
 rmul = Permutation.rmul
@@ -389,7 +389,7 @@ def test_minimal_block():
     D = DihedralGroup(6)
     block_system = D.minimal_block([0,3])
     for i in range(3):
-        assert block_system[i] == block_system[i+3]
+        assert block_system[i] == block_system[i + 3]
     S = SymmetricGroup(6)
     assert S.minimal_block([0, 1]) == [0, 0, 0, 0, 0, 0]
 

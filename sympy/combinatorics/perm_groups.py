@@ -327,7 +327,7 @@ class _JGraph(object):
             alpha = sta[-1]
             ag = g[alpha]
 
-            if G._stabilizer_cosets[ag] == None:
+            if G._stabilizer_cosets[ag] is None:
                 gen1 = _af_rmul(g, stg[-1])
                 G._stabilizer_cosets[ag] = gen1
                 G._stabilizer_cosets_n += 1
@@ -1997,7 +1997,7 @@ class PermutationGroup(Basic):
             gens = terminator.generators
             degree = self.degree
             identity = _af_new(range(degree))
-            if [identity for gen in gens] == gens:
+            if all(g == identity for g in gens):
                 self._is_solvable = True
                 return True
             else:
@@ -2300,7 +2300,7 @@ class PermutationGroup(Basic):
             degree = self.degree
             identity = _af_new(range(degree))
 
-            if other.generators == [identity for gen in other.generators]:
+            if all(g == identity for g in other.generators):
                 return other
             Z = PermutationGroup(other.generators[:])
             base, strong_gens = Z.schreier_sims_incremental()
@@ -2331,7 +2331,6 @@ class PermutationGroup(Basic):
                                 _orbits_transversals_from_bsgs(base,\
                                 strong_gens_distr)
                 C = True
-                break_flag = False
                 for g in self.generators:
                     for h in Z.generators:
                         conj = rmul(~g, h, g)
@@ -2339,9 +2338,8 @@ class PermutationGroup(Basic):
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
                             C = False
-                            break_flag = True
                             break
-                    if break_flag == True:
+                    if not C:
                         break
             return Z
         elif hasattr(other, '__getitem__'):
@@ -3080,7 +3078,7 @@ class PermutationGroup(Basic):
         n = self.degree
         # make sure no generator fixes all base points
         for gen in gens:
-            if [gen(x) for x in base] == [x for x in base]:
+            if all(gen(x) == x for x in base):
                 new = 0
                 while gen(new) == new:
                     new += 1
@@ -3121,7 +3119,7 @@ class PermutationGroup(Basic):
                 strong_gens_distr.append([])
             # if the element doesn't sift, amend the strong generators and
             # associated stabilizers and orbits
-            if y == False:
+            if y is False:
                 for l in range(1, j):
                     strong_gens_distr[l].append(h)
                     stabs[l] = PermutationGroup(strong_gens_distr[l])
@@ -3179,7 +3177,7 @@ class PermutationGroup(Basic):
         for b in orb:
             for i in range(r):
                 temp = gens[i](b)
-                if used[temp] == False:
+                if used[temp] is False:
                     orb.append(temp)
                     used[temp] = True
                     v[temp] = i
@@ -3221,7 +3219,7 @@ class PermutationGroup(Basic):
         for b in orb:
             for gen in gens:
                 temp = gen(b)
-                if used[temp] == False:
+                if used[temp] is False:
                     gen_temp = rmul(gen, table[b])
                     orb.append(temp)
                     table[temp] = gen_temp

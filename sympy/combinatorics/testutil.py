@@ -27,9 +27,8 @@ def _cmp_perm_lists(first, second):
     True
 
     """
-    first.sort(key = lambda x: x.array_form)
-    second.sort(key = lambda x: x.array_form)
-    return first == second
+    return set([tuple(a) for a in first]) == \
+           set([tuple(a) for a in second])
 
 def _naive_list_centralizer(self, other):
     from sympy.combinatorics.perm_groups import PermutationGroup
