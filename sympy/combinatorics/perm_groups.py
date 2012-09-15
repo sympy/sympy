@@ -483,8 +483,15 @@ class PermutationGroup(Basic):
     def __len__(self):
         return len(self._generators)
 
-    def __eq__(self, gr):
-        """Test if two groups have the same elements
+    def __ne__(self, gr):
+        return not self == gr
+
+    def __eq__(self, other):
+        """Test if all the permutations in self are contained in other.
+
+        This is a non-trivial equality test. To see if the generators are
+        the same between groups G and H, compare the set of generators from
+        each: ``set(G.generators) == set(H.generators)``.
 
         Examples
         ========
@@ -492,25 +499,32 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation
         >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = [[0, 1, 2]], [[0, 1]], [[0, 2]], [[0, 1, 2]]
-        >>> a = [Permutation(p) for p in a]
-        >>> g = Permutation(0,1,2,3,4,5)
-        >>> G1, G2, G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g,g**2]]]
+        >>> p = Permutation(0,1,2,3,4,5)
+        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
+        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
+        >>> G3 = PermutationGroup([p, p**2])
         >>> assert G1.order() == G2.order() == G3.order() == 6
         >>> assert G1 == G2 and G1 != G3
+        >>> G4 = PermutationGroup([p**2, p])
+        >>> G3.generators == G4.generators
+        False
+        >>> not set(G3.generators).difference(G4.generators)
+        True
 
         """
-        if not isinstance(gr, PermutationGroup):
+        if not isinstance(other, PermutationGroup):
             return False
-        if self.degree != gr.degree:
+        if self.degree != other.degree:
             return False
-        if self.order() != gr.order():
+        if self.order() != other.order():
             return False
-        gens1 = self.generators
-        for g in gens1:
-            if not gr.contains(g):
+        for g in self.generators:
+            if not other.contains(g):
                 return False
         return True
+
+    def __hash__(self):
+        return super(PermutationGroup, self).__hash__()
 
     def __mul__(self, other):
         """Return the direct product of two permutation groups as a permutation
@@ -549,9 +563,6 @@ class PermutationGroup(Basic):
         together = gens1 + gens2
         gens = [_af_new(x) for x in together]
         return PermutationGroup(gens)
-
-    def __ne__(self, gr):
-        return not self == gr
 
     def _random_pr_init(self, r, n, _random_prec_n=None):
         r"""Initialize random generators for the product replacement algorithm.
@@ -1672,7 +1683,7 @@ class PermutationGroup(Basic):
 
     @property
     def generators(self):
-        """Returns the generators of the group in array form.
+        """Returns the generators of the group.
 
         Examples
         ========
@@ -1688,9 +1699,6 @@ class PermutationGroup(Basic):
 
         """
         return self._generators
-
-    def _hashable_content(self):
-        return tuple([g._hashable_content() for g in self.generators])
 
     def contains(self, g):
         """Test if permutation ``g`` belongs to ``G``.
@@ -1719,7 +1727,7 @@ class PermutationGroup(Basic):
 
         To test if a given permutation is present in the group:
 
-        >>> elem in G
+        >>> elem in G.generators
         False
         >>> G.has(elem)
         False
@@ -1730,7 +1738,7 @@ class PermutationGroup(Basic):
         coset_factor, has
 
         """
-        if self.has(g):
+        if g in self.generators:
             return True
         return bool(self.coset_factor(g.array_form))
 
@@ -1863,7 +1871,7 @@ class PermutationGroup(Basic):
             gens = terminator.generators
             degree = self.degree
             identity = _af_new(range(degree))
-            if [identity for gen in gens] == gens:
+            if all(g == identity for g in gens):
                 self._is_solvable = True
                 self._is_nilpotent = True
                 return True
@@ -1946,10 +1954,9 @@ class PermutationGroup(Basic):
             return self._is_primitive
         n = self.degree
         if randomized:
-            r = len(self.generators)
             random_stab_gens = []
             v = self.schreier_vector(0)
-            for i in range(r):
+            for i in range(len(self)):
                 random_stab_gens.append(self.random_stab(0, v))
             stab = PermutationGroup(random_stab_gens)
         else:
@@ -2080,9 +2087,7 @@ class PermutationGroup(Basic):
 
         """
         if self._is_trivial is None:
-            gens = self.generators
-            res = len(gens) == 1 and gens[0].is_Identity
-            self._is_trivial = res
+            self._is_trivial = len(self) == 1 and self[0].is_Identity
         return self._is_trivial
 
     def lower_central_series(self):

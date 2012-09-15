@@ -870,6 +870,8 @@ class Permutation(Basic):
         return p
 
     def _hashable_content(self):
+        # the array_form (a list) is the Permutation arg, so we need to
+        # return a tuple, instead
         return tuple(self.array_form)
 
     @property
