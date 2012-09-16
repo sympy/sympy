@@ -2805,7 +2805,8 @@ class PermutationGroup(Basic):
         num_generators = []
         generators = []
         gen = range(n)
-        base = {}
+        base = []
+        scn = []
         JGr.gens += [None]*(n - len(JGr.gens))
         while 1:
             self._stabilizer_cosets_n = 0
@@ -2819,8 +2820,9 @@ class PermutationGroup(Basic):
                     cri.append(_af_invert(p))
             JGr.jerrum_filter(alpha, cri)
             if self._stabilizer_cosets_n > 1:
-                base[alpha] = self._stabilizer_cosets_n
-            self._order *= self._stabilizer_cosets_n
+                base.append(alpha)
+                scn.append(self._stabilizer_cosets_n)
+                self._order *= self._stabilizer_cosets_n
             stabilizer_cosets.append([p for p in self._stabilizer_cosets if p])
             d = {}
             for p in self._stabilizer_cosets:
@@ -2843,8 +2845,8 @@ class PermutationGroup(Basic):
         while not JGr.gens[i]:
             i -= 1
         JGr.gens = JGr.gens[:i+1]
-        self._base = base.keys()
-        self._stabilizer_cosets_n = base.values()
+        self._base = base
+        self._stabilizer_cosets_n = scn
         strong_gens = self.generators[:]
         for gen in self._stabilizer_gens:
             gen = Permutation(gen)
