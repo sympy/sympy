@@ -1804,7 +1804,7 @@ class PermutationGroup(Basic):
             n = self.degree
             if n < 8:
                 return False
-            if not self.is_transitive:
+            if not self.is_transitive():
                 return False
             if n < 17:
                 c_n = 0.34
@@ -2050,11 +2050,13 @@ class PermutationGroup(Basic):
             return False
         return all(G.contains(g) for g in gens)
 
-    @property
-    def is_transitive(self):
+    def is_transitive(self, strict=True):
         """Test if the group is transitive.
 
         A group is transitive if it has a single orbit.
+
+        If ``strict`` is False the group is transitive if it has
+        a single orbit of length different from 1.
 
         Examples
         ========
@@ -2064,20 +2066,39 @@ class PermutationGroup(Basic):
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([2, 0, 1, 3])
         >>> G1 = PermutationGroup([a, b])
-        >>> G1.is_transitive
+        >>> G1.is_transitive()
         False
+        >>> G1.is_transitive(strict=False)
+        True
         >>> c = Permutation([2, 3, 0, 1])
         >>> G2 = PermutationGroup([a, c])
         >>> G2.is_transitive
         True
-
+        >>> d = Permutation([1,0,2,3])
+        >>> e = Permutation([0,1,3,2])
+        >>> G3 = PermutationGroup([d, e])
+        >>> G3.is_transitive() or G3.is_transitive(strict=False)
+        False
         """
-        if self._is_transitive is not None:
+        if self._is_transitive:
             return self._is_transitive
+        if strict:
+            if self._is_transitive is not None:
+                return self._is_transitive
 
-        ans = len(self.orbit(0)) == self.degree
-        self._is_transitive = ans
-        return ans
+            ans = len(self.orbit(0)) == self.degree
+            self._is_transitive = ans
+            return ans
+        orbits = self.orbits()
+        n_orbs = 0
+        for x in orbits:
+            if len(x) > 1:
+                n_orbs += 1
+                if n_orbs > 1:
+                    return False
+        return True
+
+
 
     @property
     def is_trivial(self):
@@ -2221,7 +2242,7 @@ class PermutationGroup(Basic):
         _union_find_rep, _union_find_merge, is_transitive, is_primitive
 
         """
-        if not self.is_transitive:
+        if not self.is_transitive():
             return False
         n = self.degree
         gens = self.generators
