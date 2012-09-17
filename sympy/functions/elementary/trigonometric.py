@@ -174,7 +174,7 @@ class sin(TrigonometricFunction):
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
-                return        # for test_sin in test_trigonometric
+                return
 
 
         if arg.could_extract_minus_sign():
@@ -446,14 +446,14 @@ class cos(TrigonometricFunction):
                     return -cls(narg)
 
                 # If nested sqrt's are worse than un-evaluation
-                # you can require q in (1,2,3,4,6)
+                # you can require q in (1, 2, 3, 4, 6)
                 # q <= 12 returns expressions with 2 or fewer nestings.
                 if q > 12:
                     return None
 
                 if q in cst_table_some:
                     cts = cst_table_some[pi_coeff.q]
-                    return C.chebyshevt(pi_coeff.p,cts).expand()
+                    return C.chebyshevt(pi_coeff.p, cts).expand()
 
 
                 if 0 == q%2:
@@ -547,24 +547,24 @@ class cos(TrigonometricFunction):
             if len(x) == 2:
                 return igcdex(x[0], x[-1])
             g = migcdex(x[1:])
-            u,v,h = igcdex(x[0], g[-1])
+            u, v, h = igcdex(x[0], g[-1])
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
-        def ipartfrac(r,factors=None):
-            if isinstance(r,int):
+        def ipartfrac(r, factors=None):
+            if isinstance(r, int):
                 return r
-            assert isinstance(r,C.Rational)
+            assert isinstance(r, C.Rational)
             n = r.q
             if 2 > r.q*r.q:
                 return r.q
 
             if None == factors:
-                a=[n/x**y for x,y in factorint(r.q).iteritems()]
+                a=[n/x**y for x, y in factorint(r.q).iteritems()]
             else:
                 a=[n/x for x in factors]
             if len(a) == 1:
                 return [ r ]
             h = migcdex(a)
-            ans = [ r.p*C.Rational(i*j,r.q) for i,j in zip(h[:-1],a) ]
+            ans = [ r.p*C.Rational(i*j, r.q) for i, j in zip(h[:-1], a) ]
             assert r == sum(ans)
             return ans
         pi_coeff = _pi_coeff(arg)
@@ -586,11 +586,11 @@ class cos(TrigonometricFunction):
             # Please add if you would like them
         }
         def fermatCoords(n):
-            assert isinstance(n,int)
+            assert isinstance(n, int)
             assert n > 0
             if n == 1 or 0 == n%2:
                 return False
-            primes = dict( [(p,0) for p in cst_table_some ] )
+            primes = dict( [(p, 0) for p in cst_table_some ] )
             assert 1 not in primes
             for p_i in primes:
                 while 0 == n%p_i:
@@ -603,7 +603,7 @@ class cos(TrigonometricFunction):
             return tuple([ p for p in primes if primes[p]==1])
 
         if pi_coeff.q in cst_table_some:
-            return C.chebyshevt(pi_coeff.p,cst_table_some[pi_coeff.q]).expand()
+            return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]).expand()
 
         if 0==pi_coeff.q%2: # recursively remove powers of 2
             narg = (pi_coeff*2)*S.Pi
@@ -612,7 +612,7 @@ class cos(TrigonometricFunction):
                 return None
             nval = nval.rewrite(sqrt)
             if not _EXPAND_INTS:
-                if (isinstance(nval,cos) or isinstance(-nval,cos)):
+                if (isinstance(nval, cos) or isinstance(-nval, cos)):
                     return None
             x = (2*pi_coeff+1)/2
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
@@ -620,13 +620,13 @@ class cos(TrigonometricFunction):
 
         FC = fermatCoords(pi_coeff.q)
         if FC:
-            decomp = ipartfrac(pi_coeff,FC)
-            X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
+            decomp = ipartfrac(pi_coeff, FC)
+            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls.rewrite(sqrt)
         if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
-            X=[ (x[1],x[0]*S.Pi) for x in zip(decomp,numbered_symbols('z'))]
+            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
         return None
