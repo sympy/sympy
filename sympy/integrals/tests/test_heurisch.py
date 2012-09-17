@@ -1,6 +1,6 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
-    LambertW
+    LambertW, Eq, Piecewise, Symbol
 from sympy.integrals.heurisch import heurisch, components
 from sympy.utilities.pytest import XFAIL, skip, slow
 
@@ -116,6 +116,11 @@ def test_heurisch_radicals():
     assert heurisch(sqrt(x)**3, x) == 2*sqrt(x)**5/5
 
     assert heurisch(sin(x)*sqrt(cos(x)), x) == -2*sqrt(cos(x))**3/3
+    y = Symbol('y')
+    assert heurisch(sin(y*sqrt(x)), x) == Piecewise(
+        (0, Eq(y, 0)),
+        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, True))
+    y = Symbol('y', positive=True)
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
 
@@ -132,6 +137,11 @@ def test_heurisch_symbolic_coeffs():
 
 
 def test_heurisch_symbolic_coeffs_1130():
+    y = Symbol('y')
+    assert heurisch(1/(x**2 + y), x) == Piecewise(
+        (-1/x, Eq(y, 0)),
+        (-I*log(x - I*sqrt(y))/(2*sqrt(y)) + I*log(x + I*sqrt(y))/(2*sqrt(y)), True))
+    y = Symbol('y', positive=True)
     assert heurisch(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
     I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
         (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]

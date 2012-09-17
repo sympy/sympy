@@ -158,8 +158,42 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     sympy.integrals.integrals.Integral
     components
     """
+    from sympy import And, Basic, Eq, Piecewise
     f = sympify(f)
+    r = (x,)
+    r0 = (x,)
+    res = _heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
+    if not isinstance(res, Basic):
+        return res
+    if res.free_symbols == f.free_symbols:
+        try:
+            slns = solve(res.as_numer_denom()[1], dict=True, exclude=r0)
+        except NotImplementedError:
+            slns = []
+        if not slns:
+            return res
+    n, d = _heurisch(f, x, rewrite, hints, mappings, retries, degree_offset).as_numer_denom()
+    try:
+        slns = solve(d, dict=True, exclude=r0)
+    except NotImplementedError:
+        slns = []
+    if len(slns) > 1:
+        eqs = []
+        for sub_dict in slns:
+            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
+        slns = solve(eqs, dict=True, exclude=r0) + slns
+    pairs = []
+    for sub_dict in slns:
+        expr = _heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries, degree_offset)
 
+
+        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
+        pairs.append((expr, cond))
+    pairs.append((_heurisch(f, x, rewrite, hints, mappings, retries, degree_offset), True))
+    return Piecewise(*pairs)
+
+
+def _heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
     if not f.is_Add:
         indep, f = f.as_independent(x)
     else:
@@ -277,7 +311,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
             break
     else:
         if not rewrite:
-            result = heurisch(f, x, rewrite=True, hints=hints)
+            result = _heurisch(f, x, rewrite=True, hints=hints)
 
             if result is not None:
                 return indep*result
@@ -460,7 +494,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         return indep * antideriv
     else:
         if retries >= 0:
-            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
+            result = _heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
 
             if result is not None:
                 return indep*result
