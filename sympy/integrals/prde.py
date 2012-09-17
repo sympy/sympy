@@ -42,7 +42,8 @@ def prde_normal_denom(fa, fd, G, DE):
     q == y*h in k<t> satisfies a*Dq + b*q == Sum(ci*Gi, (i, 1, m)).
     """
     dn, ds = splitfactor(fd, DE)
-    gd = reduce(lambda i, j: i.lcm(j), zip(*G)[1])
+    Gas, Gds = zip(*G)
+    gd = reduce(lambda i, j: i.lcm(j), Gds, Poly(1, DE.t))
     en, es = splitfactor(gd, DE)
 
     p = dn.gcd(en)
@@ -139,7 +140,8 @@ def prde_linear_constraints(a, b, G, DE):
     """
     m = len(G)
 
-    d = reduce(lambda i, j: i.lcm(j), zip(*G)[1])
+    Gns, Gds = zip(*G)
+    d = reduce(lambda i, j: i.lcm(j), Gds)
     d = Poly(d, field=True)
     Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
 
@@ -149,7 +151,8 @@ def prde_linear_constraints(a, b, G, DE):
     else:
         M = Matrix() # No constraints, return the empty matrix.
 
-    return (zip(*Q)[0], M)
+    qs, _ = zip(*Q)
+    return (qs, M)
 
 def constant_system(A, u, DE):
     """
@@ -365,7 +368,8 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
-    c = reduce(lambda i, j: i.lcm(j), (dn,) + zip(*E)[0]) # lcm(dn, en1, ..., enm)
+    En, Es = zip(*E)
+    c = reduce(lambda i, j: i.lcm(j), (dn,) + En) # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
     b = -derivation(hn, DE)
@@ -374,7 +378,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     # These are the cases where we know that S1irr = Sirr, but there could be
     # others, and this algorithm will need to be extended to handle them.
     if DE.case in ['base', 'primitive', 'exp', 'tan']:
-        hs = reduce(lambda i, j: i.lcm(j), (ds,) + zip(*E)[1]) # lcm(ds, es1, ..., esm)
+        hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es) # lcm(ds, es1, ..., esm)
         a = hn*hs
         b = -derivation(hn, DE) - (hn*derivation(hs, DE)).quo(hs)
         mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
@@ -769,9 +773,13 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             # roots of the resultant must be rational numbers.
             return None
 
-    # [(a, i), ...], where i*log(a) is a term in the log-part of the integral of f
+    # [(a, i), ...], where i*log(a) is a term in the log-part of the integral
+    # of f
+    respolys, residues = zip(*roots) or [[], []]
+    # Note: this might be empty, but everything below should work find in that
+    # case (it should be the same as if it were [[1, 1]])
     residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
-        i in zip(*roots)[1][j]]
+        i in residues[j]]
 
     # TODO: finish writing this and write tests
 
@@ -831,11 +839,11 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         raise ValueError("The %s case is not supported in this function." % case)
 
     else:
-        raise ValueError("case must be one of {'primitive', 'exp', 'tan', " +
-        "'base', 'auto'}, not %s""" % case)
+        raise ValueError("case must be one of {'primitive', 'exp', 'tan', "
+        "'base', 'auto'}, not %s" % case)
 
-    common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in
-        zip(*residueterms or [[S(1), S(1)]])[1]] + [n])
+    common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
+        residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
     assert common_denom == n*m # Verify exact division
