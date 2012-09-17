@@ -1773,17 +1773,23 @@ def _handle_Integral(expr, func, order, hint):
     """
     x = func.args[0]
     f = func.func
+    def remove0(expr):
+        from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+        if expr.has(Piecewise):
+            return Piecewise( *[(remove0(e), c) for e, c in piecewise_fold(expr).args] )
+        assert expr.is_Add
+        sol = 0
+        for i in expr.args:
+            if not i.has(x0) and not i.has(y0):
+                sol += i
+        return sol
     if hint == "1st_exact":
         global exactvars
         x0 = exactvars['x0']
         y0 = exactvars['y0']
         y = exactvars['y']
         tmpsol = expr.lhs.doit()
-        sol = 0
-        assert tmpsol.is_Add
-        for i in tmpsol.args:
-            if not i.has(x0) and not i.has(y0):
-                sol += i
+        sol = remove0(tmpsol)
         assert sol != 0
         sol = Eq(sol.subs(y, f(x)), expr.rhs)  # expr.rhs == C1
         del exactvars
