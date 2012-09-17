@@ -9,7 +9,7 @@ def test_SymmetricGroup():
     assert len(elements) == 120
     assert G.is_solvable == False
     assert G.is_abelian == False
-    assert G.is_transitive == True
+    assert G.is_transitive() == True
     H = SymmetricGroup(1)
     assert H.order() == 1
     L = SymmetricGroup(2)
@@ -30,7 +30,7 @@ def test_DihedralGroup():
     G = DihedralGroup(6)
     elements = list(G.generate())
     assert len(elements) == 12
-    assert G.is_transitive == True
+    assert G.is_transitive() == True
     assert G.is_abelian == False
     H = DihedralGroup(1)
     assert H.order() == 2

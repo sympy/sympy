@@ -219,6 +219,7 @@ def test_orbits():
     assert not G.is_transitive() and not G.is_transitive(strict=False)
     G = PermutationGroup([Permutation(0, 1, 3), Permutation(3)(0, 1)])
     assert not G.is_transitive() and G.is_transitive(strict=False)
+    assert PermutationGroup(Permutation(3)).is_transitive(strict=False) is False
 
 def test_is_normal():
     gens_s5 = [Permutation(p) for p in [[1,2,3,4,0], [2,1,4,0,3]]]

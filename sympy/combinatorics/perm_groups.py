@@ -436,6 +436,9 @@ class PermutationGroup(Basic):
         Removes duplicates unless ``dups`` keyword is False.
         """
         args = list(args[0] if is_sequence(args[0]) else args)
+        if not args:
+            raise ValueError('must supply one or more permutations '
+            'to define the group')
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
@@ -2072,7 +2075,7 @@ class PermutationGroup(Basic):
         True
         >>> c = Permutation([2, 3, 0, 1])
         >>> G2 = PermutationGroup([a, c])
-        >>> G2.is_transitive
+        >>> G2.is_transitive()
         True
         >>> d = Permutation([1,0,2,3])
         >>> e = Permutation([0,1,3,2])
@@ -2080,23 +2083,23 @@ class PermutationGroup(Basic):
         >>> G3.is_transitive() or G3.is_transitive(strict=False)
         False
         """
-        if self._is_transitive:
+        if self._is_transitive: # strict or not, if True then True
             return self._is_transitive
         if strict:
-            if self._is_transitive is not None:
+            if self._is_transitive is not None: # we only store strict=True
                 return self._is_transitive
 
             ans = len(self.orbit(0)) == self.degree
             self._is_transitive = ans
             return ans
-        orbits = self.orbits()
-        n_orbs = 0
-        for x in orbits:
+
+        got_orb = False
+        for x in self.orbits():
             if len(x) > 1:
-                n_orbs += 1
-                if n_orbs > 1:
+                if got_orb:
                     return False
-        return True
+                got_orb = True
+        return got_orb
 
 
 
