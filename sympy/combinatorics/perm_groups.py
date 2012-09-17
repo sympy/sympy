@@ -2058,14 +2058,12 @@ class PermutationGroup(Basic):
             return True
         if G.order() % self.order() != 0:
             return False
-        if self.degree == G.degree:
+        if self.degree == G.degree or \
+           (self.degree < G.degree and not strict):
             gens = self.generators
-        elif self.degree < G.degree and not strict:
-            gens = PermutationGroup(
-                [Permutation(x, size=G.degree) for x in self])
         else:
             return False
-        return all(G.contains(g) for g in gens)
+        return all(G.contains(g, strict=strict) for g in gens)
 
     def is_transitive(self, strict=True):
         """Test if the group is transitive.
