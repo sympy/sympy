@@ -198,12 +198,12 @@ class sin(TrigonometricFunction):
             # http://code.google.com/p/sympy/issues/detail?id=2949
             # transform a sine to a cosine, to avoid redundant code
             if pi_coeff.is_Rational:
-                x = pi_coeff%2
+                x = pi_coeff % 2
                 if x > 1:
-                    return -cls(x%1*S.Pi)
+                    return -cls((x%1)*S.Pi)
                 if 2*x > 1:
                     return cls((1-x)*S.Pi)
-                narg = ((pi_coeff + C.Rational(3,2))%2)*S.Pi
+                narg = ((pi_coeff + C.Rational(3,2)) % 2)*S.Pi
                 result = cos(narg)
                 if not isinstance(result,cos):
                     return result
@@ -456,7 +456,7 @@ class cos(TrigonometricFunction):
                     return C.chebyshevt(pi_coeff.p, cts).expand()
 
 
-                if 0 == q%2:
+                if 0 == q % 2:
                     narg = (pi_coeff*2)*S.Pi
                     nval = cls(narg)
                     if None == nval:
@@ -588,24 +588,24 @@ class cos(TrigonometricFunction):
         def fermatCoords(n):
             assert isinstance(n, int)
             assert n > 0
-            if n == 1 or 0 == n%2:
+            if n == 1 or 0 == n % 2:
                 return False
             primes = dict( [(p, 0) for p in cst_table_some ] )
             assert 1 not in primes
             for p_i in primes:
-                while 0 == n%p_i:
+                while 0 == n % p_i:
                     n = n/p_i;
                     primes[p_i] += 1;
             if 1 != n:
                 return False
             if max(primes.values()) > 1:
                 return False
-            return tuple([ p for p in primes if primes[p]==1])
+            return tuple([ p for p in primes if primes[p] == 1])
 
         if pi_coeff.q in cst_table_some:
             return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]).expand()
 
-        if 0==pi_coeff.q%2: # recursively remove powers of 2
+        if 0 == pi_coeff.q % 2: # recursively remove powers of 2
             narg = (pi_coeff*2)*S.Pi
             nval = cos(narg)
             if None == nval:
