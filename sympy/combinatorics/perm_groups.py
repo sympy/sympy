@@ -696,18 +696,26 @@ class PermutationGroup(Basic):
         """Return a base from the Schreier-Sims algorithm.
 
         For a permutation group ``G``, a base is a sequence of points
-        ``B = (b_1, b_2, ..., b_k)`` such that no element of ``G`` apart from the
-        identity fixes all the points in ``B``. The concepts of a base and
-        strong generating set and their applications are discussed in depth
-        in [1], pp. 87-89 and [2], pp. 55-57.
+        ``B = (b_1, b_2, ..., b_k)`` such that no element of ``G`` apart
+        from the identity fixes all the points in ``B``. The concepts of
+        a base and strong generating set and their applications are
+        discussed in depth in [1], pp. 87-89 and [2], pp. 55-57.
+
+        An alternative way to think of ``B`` is that it gives the
+        indices of the stabilizer cosets that contain more than the
+        identity permutation.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> S = SymmetricGroup(4)
-        >>> S.base
-        [0, 1, 2]
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> G = PermutationGroup([Permutation(0, 1, 3)(2, 4)])
+        >>> G.base
+        [0, 2]
+        >>> I = [Permutation(G.degree - 1)]
+        >>> c = [[Permutation(i) for i in c] for c in G.stabilizer_cosets()]
+        >>> [i for i in range(len(c)) if c[i] != I]
+        [0, 2]
 
         See Also
         ========
@@ -1159,9 +1167,8 @@ class PermutationGroup(Basic):
         If ``g`` is an element of ``G`` then it can be written as the product
         of permutations drawn from the Schreier-Sims coset decomposition,
         ``u``, of ``G``. The permutations returned in ``f`` are those for which
-        the product gives ``g``: ``g = f[n]*...f[1]*f[0]``. The number of
-        factors returned will always be the same as the length of ``u``, which
-        might mean that repeated factors of identity permutations may appear.
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]`` where ``n = len(B)``
+        and ``B = G.base``. f[i] is one of the permutations in coset[B[i]].
 
         Examples
         ========
@@ -1243,28 +1250,19 @@ class PermutationGroup(Basic):
         []
 
         """
-        if isinstance(g, Cycle):
-            g = g.as_list(self.degree)
-        else:
-            if isinstance(g, Permutation):
-                g = g.array_form
+        if isinstance(g, (Cycle, Permutation)):
+            g = g.list()
         if len(g) != self.degree:
             # this could either adjust the size or return [] immediately
             # but we don't choose between the two and just signal a possible
             # error
             raise ValueError('g should be the same size as permutations of G')
+        I = range(self.degree)
         # compute u
         u = self.stabilizer_cosets()
-        # check for quick exit
-        I = range(self.degree)
-        if g == I:
-            return [I]*(len(u))
-        # look for another quick exit
-        if any(p == g for ui in u for p in ui):
-            return [I]*(len(u) - 1) + [g]
         # search for factors
-        f = []
         g_now = g
+        f = []
         for i in range(len(u)):
             for h in u[i]:
                 if h[i] == g_now[i]:
@@ -1274,7 +1272,7 @@ class PermutationGroup(Basic):
                     break
             else:
                 return []
-        return f if _af_rmuln(*f) == g else []
+        return [f[j] for j in self.base] if g_now == I else []
 
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
@@ -1341,7 +1339,7 @@ class PermutationGroup(Basic):
                     break
             else:
                 return None
-        if _af_rmuln(*a) == g:
+        if g1 == range(self.degree):
             return rank
         return None
 
@@ -2112,8 +2110,6 @@ class PermutationGroup(Basic):
                     return False
                 got_orb = True
         return got_orb
-
-
 
     @property
     def is_trivial(self):
@@ -3670,7 +3666,7 @@ class PermutationGroup(Basic):
     def transitivity_degree(self):
         """Compute the degree of transitivity of the group.
 
-        A permutation group ``G`` acting on ``\Omega = \{0, 2, ..., n-1\}`` is
+        A permutation group ``G`` acting on ``\Omega = \{0, 1, ..., n-1\}`` is
         ``k``-fold transitive, if, for any k points
         ``(a_1, a_2, ..., a_k)\in\Omega`` and any k points
         ``(b_1, b_2, ..., b_k)\in\Omega`` there exists ``g\in G`` such that
@@ -3708,7 +3704,7 @@ class PermutationGroup(Basic):
             return self._transitivity_degree
 
     def is_group(self):
-        """Return True if the group meets three crtieria: identity is present,
+        """Return True if the group meets three criteria: identity is present,
         the inverse of every element is also an element, and the product of
         any two elements is also an element. If any of the tests fail, False
         is returned.
