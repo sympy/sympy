@@ -212,7 +212,7 @@ def test_issue536():
 
 def test_integrate_linearterm_pow():
     # check integrate((a*x+b)^c, x)  --  #400
-    y = Symbol('y')
+    y = Symbol('y', positive=True)
     assert integrate(x**y, x) == x**(y + 1)/(y + 1)
     assert integrate((exp(y)*x + 1/y)**(1 + sin(y)), x) == \
         exp(-y)*(exp(y)*x + 1/y)**(2 + sin(y)) / (2 + sin(y))
@@ -233,8 +233,9 @@ def test_issue524():
 
 
 def test_issue565():
-    assert integrate(
-        -1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == 2*cos(pi*n)/(pi*n)
+    n = Symbol('n', integer=True, nonzero=True)
+    assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
+        2*cos(pi*n)/(pi*n)
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
         2*cos(pi*n)/(pi*n)
 
@@ -724,6 +725,7 @@ def test_issue_1791():
 
 
 def test_issue_1277():
+    n = Symbol('n', integer=True, positive=True)
     assert simplify(integrate(n*(x**(1/n) - 1), (x, 0, S.Half)) -
                 (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
@@ -755,7 +757,8 @@ def test_issue_2314():
 
 
 def test_issue_1793a():
-    A, z, c = symbols('A z c')
+    A, z = symbols('A z')
+    c = Symbol('c', nonzero=True)
     P1 = -A*exp(-z)
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
 
@@ -809,6 +812,7 @@ def test_atom_bug():
 
 
 def test_limit_bug():
+    z = Symbol('z', nonzero=True)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
         -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
         log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
@@ -842,6 +846,8 @@ def test_issue841():
 
 
 def test_issue1304():
+    x = Symbol('x', real=True)
+    y = Symbol('y', nonzero=True, real=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
         1/(y**2*sqrt(1 + y**2/x**2))
 
@@ -880,6 +886,7 @@ def test_issue_1116():
 
 
 def test_issue_1301():
+    n = Symbol('n', integer=True, positive=True)
     assert integrate((x**n)*log(x), x) == \
         n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
         x*x**n/(n**2 + 2*n + 1)
