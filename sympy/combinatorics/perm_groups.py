@@ -1684,13 +1684,16 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
-    def contains(self, g):
+    def contains(self, g, strict=True):
         """Test if permutation ``g`` belong to self, ``G``.
 
         If ``g`` is an element of ``G`` it can be written as a product
         of factors drawn from the cosets of ``G``'s stabilizers. To see
         if ``g`` is one of the actual generators defining the group use
         ``G.has(g)``.
+
+        If ``strict`` is not True, ``g`` will be resized, if necessary,
+        to match the size of permutations in ``self``.
 
         Examples
         ========
@@ -1710,6 +1713,15 @@ class PermutationGroup(Basic):
         >>> G.contains(Permutation(4)(0, 1, 2, 3))
         False
 
+        If strict is False, a permutation will be resized, if
+        necessary:
+
+        >>> H = PermutationGroup(Permutation(5))
+        >>> H.contains(Permutation(3))
+        False
+        >>> H.contains(Permutation(3), strict=False)
+        True
+
         To test if a given permutation is present in the group:
 
         >>> elem in G.generators
@@ -1726,7 +1738,9 @@ class PermutationGroup(Basic):
         if not isinstance(g, Permutation):
             return False
         if g.size != self.degree:
-            return False
+            if strict:
+                return False
+            g = Permutation(g, size=self.degree)
         if g in self.generators:
             return True
         return bool(self.coset_factor(g.array_form))
