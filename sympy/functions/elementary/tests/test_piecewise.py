@@ -13,14 +13,16 @@ def test_piecewise():
 
     # Test canonization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise(
-        (x, x < 1), (0, True), (1, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise(
-        (x, x < 1), (0, False), (-1, 1 > 2)) == Piecewise((x, x < 1))
-    assert Piecewise(
-        (x, x < 1), (0, x < 2), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise((x, x < 1), (
-        x, x < 2), (0, True)) == Piecewise((x, Or(x < 1, x < 2)), (0, True))
+    assert Piecewise((x, x < 1), (0, True), (1, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \
+        Piecewise((x, x < 1))
+    assert Piecewise((x, x < 1), (0, x < 1), (0, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, x < 2), (0, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (x, x < 2), (0, True)) == \
+        Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
     raises(TypeError, lambda: Piecewise(x))

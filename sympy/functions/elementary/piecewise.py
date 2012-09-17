@@ -148,11 +148,14 @@ class Piecewise(Function):
             elif cond_eval:
                 if all_conds_evaled:
                     return expr
-            if len(non_false_ecpairs) != 0 and non_false_ecpairs[-1].expr == expr:
-                non_false_ecpairs[-1] = ExprCondPair(
-                    expr, Or(cond, non_false_ecpairs[-1].cond))
-            else:
-                non_false_ecpairs.append( ExprCondPair(expr, cond) )
+            if len(non_false_ecpairs) != 0:
+                if non_false_ecpairs[-1].cond == cond:
+                    continue
+                elif non_false_ecpairs[-1].expr == expr:
+                    non_false_ecpairs[-1] = ExprCondPair(
+                        expr, Or(cond, non_false_ecpairs[-1].cond))
+                    continue
+            non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
