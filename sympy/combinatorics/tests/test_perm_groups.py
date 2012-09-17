@@ -203,7 +203,7 @@ def test_orbits():
     g = PermutationGroup([a, b])
     assert g.orbit(0) == set([0, 1, 2])
     assert g.orbits() == [set([0, 1, 2])]
-    assert g.is_transitive
+    assert g.is_transitive() and g.is_transitive(strict=False)
     assert g.orbits(rep=True) == [0]
     assert g.orbit_transversal(0) == \
         [Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 2, 0])]
@@ -216,7 +216,9 @@ def test_orbits():
     assert G.orbits(rep=True) == [0]
     G = PermutationGroup(rubik_cube_generators())
     assert G.orbits(rep=True) == [0, 1]
-    assert not G.is_transitive
+    assert not G.is_transitive() and not G.is_transitive(strict=False)
+    G = PermutationGroup([Permutation(0, 1, 3), Permutation(3)(0, 1)])
+    assert not G.is_transitive() and G.is_transitive(strict=False)
 
 def test_is_normal():
     gens_s5 = [Permutation(p) for p in [[1,2,3,4,0], [2,1,4,0,3]]]
