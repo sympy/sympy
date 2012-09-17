@@ -2893,7 +2893,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
         the expression listed first is selected.'''
-        if not has_variety(choices) == 1:
+        if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
 
