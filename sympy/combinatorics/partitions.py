@@ -3,7 +3,7 @@ from sympy.core.compatibility import as_int
 from sympy.matrices import zeros
 from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
-from sympy.utilities.iterables import has_dups, flatten
+from sympy.utilities.iterables import has_dups, flatten, group
 
 import random
 from collections import defaultdict
@@ -449,14 +449,9 @@ class IntegerPartition(Basic):
         {1: 3, 2: 1, 3: 4}
         """
         if self._dict is None:
-            d = {}
-            self._keys = []
-            for i in self.partition:
-                if not i in d:
-                    d[i] = 0
-                    self._keys.append(i)
-                d[i] += 1
-            self._dict = d
+            groups = group(self.partition, multiple=False)
+            self._keys = [g[0] for g in groups]
+            self._dict = dict(groups)
         return self._dict
 
     @property

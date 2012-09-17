@@ -2,6 +2,13 @@ from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
     random_bitstring, get_subset_from_bitstring, graycode_subsets)
 
 def test_graycode():
+    g=GrayCode(2)
+    got = []
+    for i in g.generate_gray():
+        if i.startswith('0'):
+            g.skip()
+        got.append(i)
+    assert got == '00 11 10'.split()
     a = GrayCode(6)
     assert a.current == '0'*6
     assert a.rank == 0
