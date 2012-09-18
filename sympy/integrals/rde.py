@@ -186,7 +186,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
         C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, DE.t))
     else:
-        raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
     # assert a.div(p)[1]
 
@@ -209,7 +209,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                     if a == 1:
                         n = min(n, m)
         else:
-            raise NotImplementedError("Tangent case not implemented yet for " +
+            raise NotImplementedError("Tangent case not implemented yet for "
                 "RDE special_denom().")
         #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
         #         n = min(n, m)
@@ -338,7 +338,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
             n = max(0, alpha, dc - db)
 
     else:
-        raise ValueError("case must be one of {'exp', 'tan', 'primitive', " +
+        raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'other_nonlinear', 'base'}, not %s." % case)
 
     return n
@@ -513,7 +513,7 @@ def cancel_primitive(b, c, n, DE):
             print b, c, n, DE
             n, z = A
             if n == 1: # b == Dz/z
-                raise NotImplementedError("is_deriv_in_field() is required to " +
+                raise NotImplementedError("is_deriv_in_field() is required to "
                     " solve this problem.")
                 # if z*c == Dp for p in k[t] and deg(p) <= n:
                 #     return p/z
@@ -562,7 +562,7 @@ def cancel_exp(b, c, n, DE):
         if A is not None:
             a, m, z = A
             if a == 1:
-                raise NotImplementedError("is_deriv_in_field() is required to " +
+                raise NotImplementedError("is_deriv_in_field() is required to "
                     "solve this problem.")
                 # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
                 # deg(q) <= n:
@@ -646,7 +646,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
         assert b.as_poly(DE.t).LC().is_number
 
         if parametric:
-            raise NotImplementedError("prde_no_cancel_b_equal() is not yet " +
+            raise NotImplementedError("prde_no_cancel_b_equal() is not yet "
                 "implemented.")
 
         R = no_cancel_equal(b, cQ, n, DE)
@@ -662,29 +662,29 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     else:
         # Cancelation
         if b.is_zero:
-            raise NotImplementedError("Remaining cases for Poly (P)RDE are " +
+            raise NotImplementedError("Remaining cases for Poly (P)RDE are "
             "not yet implemented (is_deriv_in_field() required).")
         else:
             if DE.case == 'exp':
                 if parametric:
-                    raise NotImplementedError("Parametric RDE cancelation " +
+                    raise NotImplementedError("Parametric RDE cancelation "
                         "hyperexponential case is not yet implemeted.")
                 return cancel_exp(b, cQ, n, DE)
 
             elif DE.case == 'primitive':
                 if parametric:
-                    raise NotImplementedError("Parametric RDE cancelation " +
+                    raise NotImplementedError("Parametric RDE cancelation "
                         "primitive case is not yet implemented.")
                 return cancel_primitive(b, cQ, n, DE)
 
             else:
-                raise NotImplementedError("Other Poly (P)RDE cancelation " +
+                raise NotImplementedError("Other Poly (P)RDE cancelation "
                     "cases are not yet implemented (%s)." % case)
 
         if parametric:
-            raise NotImplementedError("Remaining cases for Poly PRDE not yet " +
+            raise NotImplementedError("Remaining cases for Poly PRDE not yet "
                 "implemented.")
-        raise NotImplementedError("Remaining cases for Poly RDE not yet " +
+        raise NotImplementedError("Remaining cases for Poly RDE not yet "
             "implemented.")
 
 def rischDE(fa, fd, ga, gd, DE):
@@ -713,7 +713,7 @@ def rischDE(fa, fd, ga, gd, DE):
     except NotImplementedError:
         # Useful for debugging:
         # import warnings
-        # warnings.warn("rischDE: Proceeding with n = oo; may cause " +
+        # warnings.warn("rischDE: Proceeding with n = oo; may cause "
         #     "non-termination.")
         n = oo
 

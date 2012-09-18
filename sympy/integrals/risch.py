@@ -211,7 +211,7 @@ class DifferentialExtension(object):
 
         if extension:
             if not extension.has_key('D'):
-                raise ValueError("At least the key D must be included with " +
+                raise ValueError("At least the key D must be included with "
                     "the extension flag to DifferentialExtension.")
             for attr in extension:
                 setattr(self, attr, extension[attr])
@@ -220,7 +220,7 @@ class DifferentialExtension(object):
 
             return
         elif f is None or x is None:
-            raise ValueError("Either both f and x or a manual extension must " +
+            raise ValueError("Either both f and x or a manual extension must "
             "be given.")
 
         from sympy.integrals.prde import is_deriv_k
@@ -236,7 +236,7 @@ class DifferentialExtension(object):
 
         # Get common cases out of the way:
         if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-            raise NotImplementedError("Trigonometric extensions are not " +
+            raise NotImplementedError("Trigonometric extensions are not "
             "supported (yet!)")
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
@@ -248,7 +248,7 @@ class DifferentialExtension(object):
             if not exp_new_extension and not log_new_extension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
-                raise NotImplementedError("Couldn't find an elementary " +
+                raise NotImplementedError("Couldn't find an elementary "
                     "transcendental extension for %s.  Try using a " % str(f) +
                     "manual extension with the extension flag.")
 
@@ -301,7 +301,7 @@ class DifferentialExtension(object):
                 # exp to do that :)
                 if i in sympows:
                     if i.exp.is_Rational:
-                        raise NotImplementedError("Algebraic extensions are " +
+                        raise NotImplementedError("Algebraic extensions are "
                             "not supported (%s)." % str(i))
                     # We can add a**b only if log(a) in the extension, because
                     # a**b == exp(b*log(a)).
@@ -609,7 +609,7 @@ class DifferentialExtension(object):
         do worry about it when building the extension.
         """
         if self.level >= -1:
-            raise ValueError("The level of the differential extension cannot " +
+            raise ValueError("The level of the differential extension cannot "
                 "be incremented any further.")
 
         self.level += 1
@@ -627,7 +627,7 @@ class DifferentialExtension(object):
         do worry about it when building the extension.
         """
         if self.level <= -len(self.T):
-            raise ValueError("The level of the differential extension cannot " +
+            raise ValueError("The level of the differential extension cannot "
                 "be decremented any further.")
 
         self.level -= 1
@@ -1429,7 +1429,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             b = False
             i = S(0)
         else:
-            raise NotImplementedError("Only exponential and logarithmic " +
+            raise NotImplementedError("Only exponential and logarithmic "
             "extensions are currently supported.")
 
         result += ans
