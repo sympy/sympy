@@ -60,7 +60,7 @@ dup_TC = dmp_TC = poly_TC
 @cythonized("u")
 def dmp_ground_LC(f, u, K):
     """
-    Return ground leading coefficient.
+    Return the ground leading coefficient.
 
     Examples
     ========
@@ -83,7 +83,7 @@ def dmp_ground_LC(f, u, K):
 @cythonized("u")
 def dmp_ground_TC(f, u, K):
     """
-    Return ground trailing coefficient.
+    Return the ground trailing coefficient.
 
     Examples
     ========
@@ -106,7 +106,7 @@ def dmp_ground_TC(f, u, K):
 @cythonized("u")
 def dmp_true_LT(f, u, K):
     """
-    Return leading term ``c * x_1**n_1 ... x_k**n_k``.
+    Return the leading term ``c * x_1**n_1 ... x_k**n_k``.
 
     Examples
     ========
@@ -135,7 +135,7 @@ def dmp_true_LT(f, u, K):
 
 def dup_degree(f):
     """
-    Return leading degree of ``f`` in ``K[x]``.
+    Return the leading degree of ``f`` in ``K[x]``.
 
     Examples
     ========
@@ -154,7 +154,7 @@ def dup_degree(f):
 @cythonized("u")
 def dmp_degree(f, u):
     """
-    Return leading degree of ``f`` in ``x_0`` in ``K[X]``.
+    Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
 
     Examples
     ========
@@ -189,7 +189,7 @@ def _rec_degree_in(g, v, i, j):
 @cythonized("j,u")
 def dmp_degree_in(f, j, u):
     """
-    Return leading degree of ``f`` in ``x_j`` in ``K[X]``.
+    Return the leading degree of ``f`` in ``x_j`` in ``K[X]``.
 
     Examples
     ========
@@ -208,7 +208,7 @@ def dmp_degree_in(f, j, u):
     if not j:
         return dmp_degree(f, u)
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_degree_in(f, u, 0, j)
 
@@ -335,7 +335,7 @@ def _rec_strip(g, v):
 @cythonized("u")
 def dmp_validate(f, K=None):
     """
-    Return number of levels in ``f`` and recursively strips it.
+    Return the number of levels in ``f`` and recursively strip it.
 
     Examples
     ========
@@ -484,7 +484,7 @@ def dup_normal(f, K):
 @cythonized("u,v")
 def dmp_normal(f, u, K):
     """
-    Normalize multivariate polynomial in the given domain.
+    Normalize a multivariate polynomial in the given domain.
 
     Examples
     ========
@@ -505,7 +505,7 @@ def dmp_normal(f, u, K):
 
 def dup_convert(f, K0, K1):
     """
-    Convert ground domain of ``f`` from ``K0`` to ``K1``.
+    Convert the ground domain of ``f`` from ``K0`` to ``K1``.
 
     Examples
     ========
@@ -529,7 +529,7 @@ def dup_convert(f, K0, K1):
 @cythonized("u,v")
 def dmp_convert(f, u, K0, K1):
     """
-    Convert ground domain of ``f`` from ``K0`` to ``K1``.
+    Convert the ground domain of ``f`` from ``K0`` to ``K1``.
 
     Examples
     ========
@@ -559,7 +559,7 @@ def dmp_convert(f, u, K0, K1):
 
 def dup_from_sympy(f, K):
     """
-    Convert ground domain of ``f`` from SymPy to ``K``.
+    Convert the ground domain of ``f`` from SymPy to ``K``.
 
     Examples
     ========
@@ -577,7 +577,7 @@ def dup_from_sympy(f, K):
 @cythonized("u,v")
 def dmp_from_sympy(f, u, K):
     """
-    Convert ground domain of ``f`` from SymPy to ``K``.
+    Convert the ground domain of ``f`` from SymPy to ``K``.
 
     Examples
     ========
@@ -600,7 +600,7 @@ def dmp_from_sympy(f, u, K):
 @cythonized("n")
 def dup_nth(f, n, K):
     """
-    Return ``n``-th coefficient of ``f`` in ``K[x]``.
+    Return the ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Examples
     ========
@@ -626,7 +626,7 @@ def dup_nth(f, n, K):
 @cythonized("n,u")
 def dmp_nth(f, n, u, K):
     """
-    Return ``n``-th coefficient of ``f`` in ``K[x]``.
+    Return the ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Examples
     ========
@@ -652,7 +652,7 @@ def dmp_nth(f, n, u, K):
 @cythonized("n,u,v")
 def dmp_ground_nth(f, N, u, K):
     """
-    Return ground ``n``-th coefficient of ``f`` in ``K[x]``.
+    Return the ground ``n``-th coefficient of ``f`` in ``K[x]``.
 
     Examples
     ========
@@ -903,7 +903,7 @@ def dmp_positive_p(f, u, K):
 @cythonized("n,k")
 def dup_from_dict(f, K):
     """
-    Create ``K[x]`` polynomial from a ``dict``.
+    Create a ``K[x]`` polynomial from a ``dict``.
 
     Examples
     ========
@@ -936,7 +936,7 @@ def dup_from_dict(f, K):
 @cythonized("n,k")
 def dup_from_raw_dict(f, K):
     """
-    Create ``K[x]`` polynomial from a raw ``dict``.
+    Create a ``K[x]`` polynomial from a raw ``dict``.
 
     Examples
     ========
@@ -961,7 +961,7 @@ def dup_from_raw_dict(f, K):
 @cythonized("u,v,n,k")
 def dmp_from_dict(f, u, K):
     """
-    Create ``K[X]`` polynomial from a ``dict``.
+    Create a ``K[X]`` polynomial from a ``dict``.
 
     Examples
     ========
@@ -1032,7 +1032,7 @@ def dup_to_dict(f, K=None, zero=False):
 @cythonized("n,k")
 def dup_to_raw_dict(f, K=None, zero=False):
     """
-    Convert ``K[x]`` polynomial to a raw ``dict``.
+    Convert a ``K[x]`` polynomial to a raw ``dict``.
 
     Examples
     ========
@@ -1057,7 +1057,7 @@ def dup_to_raw_dict(f, K=None, zero=False):
 @cythonized("u,v,n,k")
 def dmp_to_dict(f, u, K=None, zero=False):
     """
-    Convert ``K[X]`` polynomial to a ``dict````.
+    Convert a ``K[X]`` polynomial to a ``dict````.
 
     Examples
     ========
@@ -1155,7 +1155,7 @@ def dmp_permute(f, P, u, K):
 @cythonized("i,l")
 def dmp_nest(f, l, K):
     """
-    Return multivariate value nested ``l``-levels.
+    Return a multivariate value nested ``l``-levels.
 
     Examples
     ========
@@ -1178,7 +1178,7 @@ def dmp_nest(f, l, K):
 @cythonized("l,k,u,v")
 def dmp_raise(f, l, u, K):
     """
-    Return multivariate polynomial raised ``l``-levels.
+    Return a multivariate polynomial raised ``l``-levels.
 
     Examples
     ========
@@ -1794,8 +1794,14 @@ def dup_slice(f, m, n, K):
     """Take a continuous subsequence of terms of ``f`` in ``K[x]``. """
     k = len(f)
 
-    M = k - m
-    N = k - n
+    if k >= m:
+        M = k - m
+    else:
+        M = 0
+    if k >= n:
+        N = k - n
+    else:
+        N = 0
 
     f = f[N:M]
 

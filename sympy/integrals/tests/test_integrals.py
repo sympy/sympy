@@ -6,7 +6,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
-x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
+x, y, a, b, c, d, k, m, t, x_1, x_2, z = symbols('x, y, a, b, c, d, k, m, t, x_1, x_2, z')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -678,7 +678,7 @@ def test_integrate_series():
 
 def test_atom_bug():
     from sympy import meijerg
-    from sympy.integrals.risch import heurisch
+    from sympy.integrals.heurisch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
 
 def test_limit_bug():
@@ -736,3 +736,7 @@ def test_issue_3154():
     # Note: this used to raise NotImplementedError
     assert integrate((sqrt(1-x)+sqrt(1+x))**2/x, x, meijerg=True) == \
            Integral((sqrt(-x + 1) + sqrt(x + 1))**2/x, x)
+
+def test_issue1054():
+    assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
+        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2]

@@ -620,6 +620,12 @@ def test_dup_cancel():
     assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ) == ([], [ZZ(1)])
     assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ, include=False) == (ZZ(1), ZZ(1), [], [ZZ(1)])
 
+    f = ZZ.map([])
+    g = ZZ.map([1, 0])
+    one = ZZ.map([1])
+
+    assert dup_cancel(f, g, ZZ, include=True) == (f, one)
+
 def test_dmp_cancel():
     f = ZZ.map([[2], [0], [-2]])
     g = ZZ.map([[1], [-2], [1]])

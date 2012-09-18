@@ -19,7 +19,7 @@ from sympy.polys.polyerrors import (
     DomainError)
 
 from sympy.polys.polyclasses import DMP, DMF
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
 
@@ -411,6 +411,16 @@ def test_PolynomialRing_from_FractionField():
 def test_FractionField__init():
     raises(GeneratorsNeeded, lambda: ZZ.frac_field())
 
+@XFAIL
+def test_CC_to_from_sympy():
+    assert CC.from_sympy(Real(1.0)) == 1+0j
+    assert CC.from_sympy(I) == 1j
+    assert CC.from_sympy(2*I) == 2j
+    assert CC.from_sympy(1 + 2*I) == 1+2j
+    assert CC.to_sympy(1+0j) == S.One
+    assert CC.to_sympy(1+2j) == S.One + S(2)*I
+    assert CC.to_sympy(2j) == S(2)*I
+
 def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
@@ -427,17 +437,17 @@ def test_Domain_map():
     assert all(ZZ.of_type(elt) for elt in seq[0]) and len(seq) == 1
 
 def test_Domain___eq__():
-    assert (ZZ[x,y] == ZZ[x,y]) == True
-    assert (QQ[x,y] == QQ[x,y]) == True
+    assert (ZZ[x,y] == ZZ[x,y]) is True
+    assert (QQ[x,y] == QQ[x,y]) is True
 
-    assert (ZZ[x,y] == QQ[x,y]) == False
-    assert (QQ[x,y] == ZZ[x,y]) == False
+    assert (ZZ[x,y] == QQ[x,y]) is False
+    assert (QQ[x,y] == ZZ[x,y]) is False
 
-    assert (ZZ.frac_field(x,y) == ZZ.frac_field(x,y)) == True
-    assert (QQ.frac_field(x,y) == QQ.frac_field(x,y)) == True
+    assert (ZZ.frac_field(x,y) == ZZ.frac_field(x,y)) is True
+    assert (QQ.frac_field(x,y) == QQ.frac_field(x,y)) is True
 
-    assert (ZZ.frac_field(x,y) == QQ.frac_field(x,y)) == False
-    assert (QQ.frac_field(x,y) == ZZ.frac_field(x,y)) == False
+    assert (ZZ.frac_field(x,y) == QQ.frac_field(x,y)) is False
+    assert (QQ.frac_field(x,y) == ZZ.frac_field(x,y)) is False
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))

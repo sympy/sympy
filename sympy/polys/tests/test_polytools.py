@@ -99,6 +99,15 @@ def test_Poly_from_dict():
     assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, domain=ZZ).rep == DMP([ZZ(2),ZZ(1)], ZZ)
     assert Poly.from_dict({(0,): 1, (1,): 2}, gens=x, domain=QQ).rep == DMP([QQ(2),QQ(1)], QQ)
 
+    assert Poly.from_dict({(1,): sin(y)}, gens=x, composite=False) == \
+        Poly(sin(y)*x, x, domain='EX')
+    assert Poly.from_dict({(1,): y}, gens=x, composite=False) == \
+        Poly(y*x, x, domain='EX')
+    assert Poly.from_dict({(1, 1): 1}, gens=(x, y), composite=False) == \
+        Poly(x*y, x, y, domain='ZZ')
+    assert Poly.from_dict({(1, 0): y}, gens=(x, z), composite=False) == \
+        Poly(y*x, x, z, domain='EX')
+
 def test_Poly_from_list():
     K = FF(3)
 
@@ -1160,6 +1169,10 @@ def test_Poly_clear_denoms():
 
     assert coeff == y and poly == Poly(x + y, x, domain='ZZ[y]') and poly.get_domain() == ZZ[y]
 
+    coeff, poly = Poly(sin(x)/x*y, y, domain='EX').clear_denoms()
+
+    assert coeff == x and poly == Poly(sin(x)*y, y) and poly.get_domain() == EX
+
 def test_Poly_rat_clear_denoms():
     f = Poly(x**2/y + 1, x)
     g = Poly(x**3 + y, x)
@@ -1515,6 +1528,7 @@ def test_resultant():
     assert resultant(F, G) == h
     assert resultant(f, g, polys=True) == h
     assert resultant(F, G, polys=False) == h
+    assert resultant(f, g, includePRS=True) == (h, [f, g, 2*x - 2])
 
     f, g, h = x - a, x - b, a - b
     F, G, H = Poly(f), Poly(g), Poly(h)
@@ -2016,6 +2030,12 @@ def test_factor():
 
     assert factor(x - 1) == x - 1
     assert factor(-x - 1) == -x - 1
+
+    # We can't use this, because Mul clears out 1, even with evaluate=False
+    # assert factor(x - 1) != Mul(1, x - 1, evaluate=False)
+    assert not factor(x - 1).is_Mul
+
+    assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
     assert factor(x**11 + x + 1, modulus=65537, symmetric=True) == \
         (x**2 + x + 1)*(x**9 - x**8 + x**6 - x**5 + x**3 - x** 2 + 1)

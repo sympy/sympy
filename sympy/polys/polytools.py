@@ -1964,7 +1964,9 @@ class Poly(Expr):
         if not f.rep.dom.has_Field:
             return S.One, f
 
-        dom = f.rep.dom.get_ring()
+        dom = f.get_domain()
+        if dom.has_assoc_Ring:
+            dom = f.rep.dom.get_ring()
 
         if hasattr(f.rep, 'clear_denoms'):
             coeff, result = f.rep.clear_denoms()
@@ -2285,7 +2287,7 @@ class Poly(Expr):
 
     def subresultants(f, g):
         """
-        Computes the subresultant PRS sequence of ``f`` and ``g``.
+        Computes the subresultant PRS of ``f`` and ``g``.
 
         Examples
         ========
@@ -2308,9 +2310,13 @@ class Poly(Expr):
 
         return map(per, result)
 
-    def resultant(f, g):
+    def resultant(f, g, includePRS=False):
         """
         Computes the resultant of ``f`` and ``g`` via PRS.
+
+        If includePRS=True, it includes the subresultant PRS in the result.
+        Because the PRS is used to calculate the resultant, this is more
+        efficient than calling :func:`subresultants` separately.
 
         Examples
         ========
@@ -2318,17 +2324,27 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + 1, x).resultant(Poly(x**2 - 1, x))
+        >>> f = Poly(x**2 + 1, x)
+
+        >>> f.resultant(Poly(x**2 - 1, x))
         4
+        >>> f.resultant(Poly(x**2 - 1, x), includePRS=True)
+        (4, [Poly(x**2 + 1, x, domain='ZZ'), Poly(x**2 - 1, x, domain='ZZ'),
+             Poly(-2, x, domain='ZZ')])
 
         """
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'resultant'):
-            result = F.resultant(G)
+            if includePRS:
+                result, R = F.resultant(G, includePRS=includePRS)
+            else:
+                result = F.resultant(G)
         else: # pragma: no cover
             raise OperationNotSupported(f, 'resultant')
 
+        if includePRS:
+            return (per(result, remove=0), map(per, R))
         return per(result, remove=0)
 
     def discriminant(f):
@@ -4088,7 +4104,10 @@ def pquo(f, g, *gens, **args):
     except PolificationFailed, exc:
         raise ComputationFailed('pquo', 2, exc)
 
-    q = F.pquo(G)
+    try:
+        q = F.pquo(G)
+    except ExactQuotientFailed:
+        raise ExactQuotientFailed(f, g)
 
     if not opt.polys:
         return q.as_expr()
@@ -4410,6 +4429,7 @@ def resultant(f, g, *gens, **args):
     4
 
     """
+    includePRS = args.pop('includePRS', False)
     options.allowed_flags(args, ['polys'])
 
     try:
@@ -4417,11 +4437,18 @@ def resultant(f, g, *gens, **args):
     except PolificationFailed, exc:
         raise ComputationFailed('resultant', 2, exc)
 
-    result = F.resultant(G)
+    if includePRS:
+        result, R = F.resultant(G, includePRS=includePRS)
+    else:
+        result = F.resultant(G)
 
     if not opt.polys:
+        if includePRS:
+            return result.as_expr(), [r.as_expr() for r in R]
         return result.as_expr()
     else:
+        if includePRS:
+            return result, R
         return result
 
 def discriminant(f, *gens, **args):
@@ -5636,8 +5663,13 @@ def groebner(F, *gens, **args):
     used to compute the basis. Allowed orders are ``lex``, ``grlex`` and
     ``grevlex``. If no order is specified, it defaults to ``lex``.
 
+    For more information on Groebner bases, see the references and the docstring
+    of `solve_poly_system()`.
+
     Examples
     ========
+
+    Example taken from [1].
 
     >>> from sympy import groebner
     >>> from sympy.abc import x, y

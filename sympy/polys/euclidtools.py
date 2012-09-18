@@ -364,6 +364,7 @@ def dup_inner_subresultants(f, g, K):
         D.append(d)
 
         h = dup_prem(f, g, K)
+
         h = dup_quo_ground(h, b, K)
 
     return R, B, D
@@ -437,11 +438,12 @@ def dup_prs_resultant(f, g, K):
     i = dup_degree(R[-2])
 
     res = dup_LC(R[-1], K)**i
+
     res = K.quo(res*p, q)
 
     return res, R
 
-def dup_resultant(f, g, K):
+def dup_resultant(f, g, K, includePRS=False):
     """
     Computes resultant of two polynomials in `K[x]`.
 
@@ -458,6 +460,8 @@ def dup_resultant(f, g, K):
     4
 
     """
+    if includePRS:
+        return dup_prs_resultant(f, g, K)
     return dup_prs_resultant(f, g, K)[0]
 
 @cythonized("u,v,n,m,d,k")
@@ -533,6 +537,7 @@ def dmp_inner_subresultants(f, g, u, K):
         D.append(d)
 
         h = dmp_prem(f, g, u, K)
+
         h = [ dmp_quo(ch, b, v, K) for ch in h ]
 
     return R, B, D
@@ -801,7 +806,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     return dmp_quo_ground(r, c, u-1, K0)
 
 @cythonized("u")
-def dmp_resultant(f, g, u, K):
+def dmp_resultant(f, g, u, K, includePRS=False):
     """
     Computes resultant of two polynomials in `K[X]`.
 
@@ -819,7 +824,10 @@ def dmp_resultant(f, g, u, K):
 
     """
     if not u:
-        return dup_resultant(f, g, K)
+        return dup_resultant(f, g, K, includePRS=includePRS)
+
+    if includePRS:
+        return dmp_prs_resultant(f, g, u, K)
 
     if K.has_Field:
         if K.is_QQ and query('USE_COLLINS_RESULTANT'):

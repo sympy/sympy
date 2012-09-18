@@ -50,7 +50,9 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
 
-from sympy import I
+from sympy import I, sin
+
+from sympy.abc import x
 
 from sympy.utilities.pytest import raises
 
@@ -543,7 +545,8 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms([QQ(3),QQ(1),QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
     assert dup_clear_denoms([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
 
-    raises(DomainError, lambda: dup_clear_denoms([EX(7)], EX))
+    assert dup_clear_denoms([EX(7)], EX) == (EX(1), [EX(7)])
+    assert dup_clear_denoms([EX(sin(x)/x), EX(0)], EX) == (EX(x), [EX(sin(x)), EX(0)])
 
 def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
@@ -563,4 +566,5 @@ def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
-    raises(DomainError, lambda: dmp_clear_denoms([[EX(7)]], 1, EX))
+    assert dmp_clear_denoms([[EX(7)]], 1, EX) == (EX(1), [[EX(7)]])
+    assert dmp_clear_denoms([[EX(sin(x)/x), EX(0)]], 1, EX) == (EX(x), [[EX(sin(x)), EX(0)]])

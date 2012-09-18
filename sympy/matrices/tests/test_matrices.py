@@ -1319,7 +1319,7 @@ def test_inv_iszerofunc():
         assert A.inv(method, iszerofunc=lambda x: x == 0) == A.inv("ADJ")
 
 def test_jacobian_metrics():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi)])
     Y = Matrix([rho, phi])
     J = X.jacobian(Y)
@@ -1331,7 +1331,7 @@ def test_jacobian_metrics():
     assert g == Matrix([[1, 0], [0, rho**2]])
 
 def test_jacobian2():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
     Y = Matrix([rho, phi])
     J = Matrix([
@@ -1442,7 +1442,7 @@ def test_diag():
             ])
 
 def test_get_diag_blocks1():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
@@ -1451,7 +1451,7 @@ def test_get_diag_blocks1():
     assert c.get_diag_blocks() == [c]
 
 def test_get_diag_blocks2():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
@@ -1461,7 +1461,7 @@ def test_get_diag_blocks2():
     assert diag(c, c, b).get_diag_blocks() == [c, c, b]
 
 def test_inv_block():
-    x, y, z = symbols("x y z")
+    x, y, z = symbols("x,y,z")
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])

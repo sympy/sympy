@@ -808,7 +808,7 @@ class MatrixBase(object):
         inverse_ADJ
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
         if try_block_diag:
             blocks = self.get_diag_blocks()
             r = []
@@ -989,7 +989,7 @@ class MatrixBase(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to compute the trace.")
 
         trace = 0
         for i in range(self.cols):
@@ -1316,7 +1316,7 @@ class MatrixBase(object):
         LUsolve
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
         n = self.rows
         A = self.as_mutable()
         p = []
@@ -2568,7 +2568,7 @@ class MatrixBase(object):
         inverse_ADJ
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         big = self.row_join(self.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
@@ -2589,7 +2589,7 @@ class MatrixBase(object):
         inverse_GE
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         d = self.berkowitz_det()
         zero = d.equals(0)
