@@ -38,7 +38,6 @@ from sympy.integrals import Integral, integrate
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum
 
 from sympy.utilities.iterables import numbered_symbols
-#    from pudb import set_trace; set_trace() # Debugging
 
 # TODO: Should this go in the regular namespace?
 # If so, index should default to False, I think.

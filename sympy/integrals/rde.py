@@ -31,8 +31,6 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 
 from operator import mul
 
-#    from pudb import set_trace; set_trace() # Debugging
-
 # TODO: Add messages to NonElementaryIntegralException errors
 def order_at(a, p, t):
     """
