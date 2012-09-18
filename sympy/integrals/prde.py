@@ -536,7 +536,7 @@ def is_deriv_k(fa, fd, DE):
     such that a = Db.  Either returns (ans, u), such that Df/f == Du, or None,
     which means that Df/f is not the derivative of an element of k(t).  ans is
     a list of tuples such that Add(*[i*j for i, j in ans]) == u.  This is useful
-    for seeing exactly what elements of k(t) produce u.
+    for seeing exactly which elements of k(t) produce u.
 
     This function uses the structure theorem approach, which says that for any
     f in K, Df/f is the derivative of a element of K if and only if there are ri

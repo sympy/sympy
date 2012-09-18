@@ -24,6 +24,7 @@ will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
 from __future__ import with_statement
+
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
@@ -710,8 +711,9 @@ def as_poly_1t(p, t, z):
 
     See issue 2032.
 
-    Doctest
-    =======
+    Examples
+    ========
+
     >>> from sympy import Symbol, random_poly
     >>> from sympy.integrals.risch import as_poly_1t
     >>> from sympy.abc import x, z

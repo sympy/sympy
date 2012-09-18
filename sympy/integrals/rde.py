@@ -21,6 +21,9 @@ See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
 from __future__ import with_statement
+
+from operator import mul
+
 from sympy.core import oo
 from sympy.core.symbol import Dummy
 
@@ -29,9 +32,8 @@ from sympy.polys import Poly, gcd, ZZ, cancel
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel)
 
-from operator import mul
-
 # TODO: Add messages to NonElementaryIntegralException errors
+
 def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
@@ -292,7 +294,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     assert len(m) == 1
                     n = max(n, m[0])
 
-            if db == da:
+            elif db == da:
                 # if alpha == Dz/z for z in k*:
                     # beta = -lc(a*Dz + b*z)/(z*lc(a))
                     # if beta == m*Dt + Dw for w in k and m in ZZ:
@@ -507,8 +509,6 @@ def cancel_primitive(b, c, n, DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
         if A is not None:
-            print "Add a cancel_primitive() test."
-            print b, c, n, DE
             n, z = A
             if n == 1: # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
