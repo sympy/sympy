@@ -259,13 +259,12 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    while n >= 0:
+    for N in xrange(n, -1, -1): # [n, ..., 0]
         for i in range(m):
-            si = Q[i].nth(n + db)/b.LC()
-            sitn = Poly(si*DE.t**n, DE.t)
+            si = Q[i].nth(N + db)/b.LC()
+            sitn = Poly(si*DE.t**N, DE.t)
             H[i] = H[i] + sitn
             Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
-        n -= 1
 
     if all(qi.is_zero for qi in Q):
         dc = -1
@@ -293,14 +292,13 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    # TODO: Make this a for loop
-    while n > 0:
+    for N in xrange(n, 0, -1): # [n, ..., 1]
         for i in range(m):
-            si = Q[i].nth(n + DE.d.degree(DE.t) - 1)/(n*DE.d.LC())
-            sitn = Poly(si*DE.t**n, DE.t)
+            si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
+            sitn = Poly(si*DE.t**N, DE.t)
             H[i] = H[i] + sitn
             Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
-        n -= 1
+
 
     if b.degree(DE.t) > 0:
         for i in range(m):
