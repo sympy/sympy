@@ -203,7 +203,7 @@ def test_integrate_hyperexponential():
         (0, Integral(x/(1 + exp(x)), x), False)
 
 def test_integrate_hyperexponential_polynomial():
-    # Without proper cancelation within integrate_hyperexponential_polynomial(),
+    # Without proper cancellation within integrate_hyperexponential_polynomial(),
     # this will take a long time to complete, and will return a complicated
     # expression
     p = Poly((-28*x**11*t0 - 6*x**8*t0 + 6*x**9*t0 - 15*x**8*t0**2 +

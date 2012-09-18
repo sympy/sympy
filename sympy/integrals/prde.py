@@ -94,7 +94,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     n = min(0, nc - min(0, nb))
     if not nb:
-        # Possible cancelation
+        # Possible cancellation
         #
         # if case == 'exp':
         #     alpha = (-b/a).rem(p) == -b(0)/a(0)
@@ -244,7 +244,7 @@ def prde_spde(a, b, Q, n, DE):
 
 def prde_no_cancel_b_large(b, Q, n, DE):
     """
-    Parametric Poly Risch Differential Equation - No cancelation: deg(b) large enough.
+    Parametric Poly Risch Differential Equation - No cancellation: deg(b) large enough.
 
     Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
     b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), returns
@@ -278,7 +278,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
 def prde_no_cancel_b_small(b, Q, n, DE):
     """
-    Parametric Poly Risch Differential Equation - No cancelation: deg(b) small enough.
+    Parametric Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
     Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
     deg(b) < deg(D) - 1 and either D == d/dt or deg(D) >= 2, returns
@@ -524,7 +524,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 #    except NotImplementedError:
         # Heuristic failed, we have to use the full method.
         # TODO: This could be implemented more efficiently.
-        # It isn't too worisome, because the heuristic handles most difficult
+        # It isn't too worrisome, because the heuristic handles most difficult
         # cases.
     return A
 
@@ -671,7 +671,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     needed to compute the final answer u such that n*f == Du/u.
 
     exp(f) will be the same as u up to a multiplicative constant.  This is
-    because they will both behaive the same as monomials.  For example, both
+    because they will both behave the same as monomials.  For example, both
     exp(x) and exp(x + 1) == E*exp(x) satisfy Dt == t. Therefore, the term const
     is returned.  const is such that exp(const)*f == u.  This is calculated by
     subtracting the arguments of one exponential from the other.  Therefore, it

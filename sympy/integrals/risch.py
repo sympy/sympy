@@ -170,7 +170,7 @@ class DifferentialExtension(object):
       the current level.
     """
     # __slots__ is defined mainly so we can iterate over all the attributes
-    # of the class easily (the memory use does't matter too much, since we
+    # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
@@ -201,7 +201,7 @@ class DifferentialExtension(object):
         D.  Warning, any attribute that is not given will be set to None. The
         attributes T, t, d, cases, case, x, and level are set automatically and
         do not need to be given.  The functions in the Risch Algorithm will NOT
-        checkto see if an attribute is None before using it.  This also does not
+        check to see if an attribute is None before using it.  This also does not
         check to see if the extension is valid (non-algebraic) or even if it is
         self-consistent.  Therefore, this should only be used for
         testing/debugging purposes.

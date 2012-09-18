@@ -64,7 +64,7 @@ def order_at_oo(a, d, t):
     """
     Computes the order of a/d at oo (infinity), with respect to t.
 
-    For f in k(t), the order or f at oo is definited as deg(d) - deg(a), where
+    For f in k(t), the order or f at oo is defined as deg(d) - deg(a), where
     f == a/d.
     """
     if a.is_zero:
@@ -193,7 +193,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
 
     n = min(0, nc - min(0, nb))
     if not nb:
-        # Possible cancelation.
+        # Possible cancellation.
 
         if case == 'exp':
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
@@ -256,7 +256,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     da = a.degree(DE.t)
     db = b.degree(DE.t)
 
-    # The parametic and regular cases are identical, except for this part
+    # The parametric and regular cases are identical, except for this part
     if parametric:
         dc = max([i.degree(DE.t) for i in cQ])
     else:
@@ -381,7 +381,7 @@ def spde(a, b, c, n, DE):
 
 def no_cancel_b_large(b, c, n, DE):
     """
-    Poly Risch Differential Equation - No cancelation: deg(b) large enough.
+    Poly Risch Differential Equation - No cancellation: deg(b) large enough.
 
     Given a derivation D on k[t], n either an integer or +oo, and b, c
     in k[t] with b != 0 and either D == d/dt or
@@ -407,7 +407,7 @@ def no_cancel_b_large(b, c, n, DE):
 
 def no_cancel_b_small(b, c, n, DE):
     """
-    Poly Risch Differential Equation - No cancelation: deg(b) small enough.
+    Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
     Given a derivation D on k[t], n either an integer or +oo, and b, c
     in k[t] with deg(b) < deg(D) - 1 and either D == d/dt or
@@ -450,7 +450,7 @@ def no_cancel_b_small(b, c, n, DE):
 # TODO: better name for this function
 def no_cancel_equal(b, c, n, DE):
     """
-    Poly Risch Differential Equation - No cancelation: deg(b) == deg(D) - 1
+    Poly Risch Differential Equation - No cancellation: deg(b) == deg(D) - 1
 
     Given a derivation D on k[t] with deg(D) >= 2, n either an integer
     or +oo, and b, c in k[t] with deg(b) == deg(D) - 1, either raise
@@ -493,7 +493,7 @@ def no_cancel_equal(b, c, n, DE):
 
 def cancel_primitive(b, c, n, DE):
     """
-    Poly Risch Differential Equation - Cancelation: Primitive case.
+    Poly Risch Differential Equation - Cancellation: Primitive case.
 
     Given a derivation D on k[t], n either an integer or +oo, b in k, and
     c in k[t] with Dt in k and b != 0, either raise
@@ -541,7 +541,7 @@ def cancel_primitive(b, c, n, DE):
 
 def cancel_exp(b, c, n, DE):
     """
-    Poly Risch Differential Equation - Cancelation: Hyperexponential case.
+    Poly Risch Differential Equation - Cancellation: Hyperexponential case.
 
     Given a derivation D on k[t], n either an integer or +oo, b in k, and
     c in k[t] with Dt/t in k and b != 0, either raise
@@ -608,7 +608,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     from sympy.integrals.prde import (prde_no_cancel_b_large,
         prde_no_cancel_b_small)
 
-    # No cancelation
+    # No cancellation
     if not b.is_zero and (DE.case == 'base' or
         b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
 
@@ -658,25 +658,25 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             return h + y
 
     else:
-        # Cancelation
+        # Cancellation
         if b.is_zero:
             raise NotImplementedError("Remaining cases for Poly (P)RDE are "
             "not yet implemented (is_deriv_in_field() required).")
         else:
             if DE.case == 'exp':
                 if parametric:
-                    raise NotImplementedError("Parametric RDE cancelation "
-                        "hyperexponential case is not yet implemeted.")
+                    raise NotImplementedError("Parametric RDE cancellation "
+                        "hyperexponential case is not yet implemented.")
                 return cancel_exp(b, cQ, n, DE)
 
             elif DE.case == 'primitive':
                 if parametric:
-                    raise NotImplementedError("Parametric RDE cancelation "
+                    raise NotImplementedError("Parametric RDE cancellation "
                         "primitive case is not yet implemented.")
                 return cancel_primitive(b, cQ, n, DE)
 
             else:
-                raise NotImplementedError("Other Poly (P)RDE cancelation "
+                raise NotImplementedError("Other Poly (P)RDE cancellation "
                     "cases are not yet implemented (%s)." % case)
 
         if parametric:
@@ -691,7 +691,7 @@ def rischDE(fa, fd, ga, gd, DE):
 
     See the outline in the docstring of rde.py for more information
     about the procedure used.  Either raise NonElementaryIntegralException, in
-    which case there is no solution y in the diven differential field,
+    which case there is no solution y in the given differential field,
     or return y in k(t) satisfying Dy + f*y == g, or raise
     NotImplementedError, in which case, the algorithms necessary to
     solve the given Risch Differential Equation have not yet been

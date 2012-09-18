@@ -63,7 +63,7 @@ def test_special_denom():
 
     # Issue 841
     # Note, this isn't a very good test, because the denominator is just 1,
-    # but at least it tests the exp cancelation case
+    # but at least it tests the exp cancellation case
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(-2*x*t0, t0),
         Poly(I*k*t1, t1)]})
     DE.decrement_level()
