@@ -1,35 +1,47 @@
-from sympy.combinatorics import Permutation
-from sympy.core import Basic
-from sympy.combinatorics.permutations import perm_af_mul, \
- _new_from_array_form, perm_af_commutes_with, perm_af_invert, perm_af_muln
 from random import randrange, choice
-from sympy.functions.combinatorial.factorials import factorial
 from math import log
+from types import GeneratorType
+
+from sympy.core import Basic
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
+    _af_rmul, _af_rmuln, Cycle)
+from sympy.combinatorics.util import (_check_cycles_alt_sym,
+    _distribute_gens_by_base, _orbits_transversals_from_bsgs,
+    _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
+    _strip)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import isprime, sieve
-from sympy.combinatorics.util import _check_cycles_alt_sym,\
-_distribute_gens_by_base, _orbits_transversals_from_bsgs,\
-_handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr, _strip
+from sympy.utilities.iterables import has_variety, is_sequence, uniq
+from sympy.utilities.randtest import _randrange
+
+rmul = Permutation.rmul
+_af_new = Permutation._af_new
 
 def _smallest_change(h, alpha):
-    """
-    find the smallest point not fixed by `h`
-    """
+    """Return smallest point not fixed by ``h`` else return None."""
     for i in range(alpha, len(h)):
         if h[i] != i:
             return i
 
 class _Vertex(object):
-    """
-    vertex of JGraph
+    """Represents a vertex of JGraph.
 
-    neighbor list of neighbor vertices
-    perm     list of permutations
-    index_neighbor list of index position of vertices in neighbor
-    if vertex j is a neighbor of vertex i, then
-       vertex[i].index_neighbor[ vertex[i].neighbor[j] ] = j
-    if vertex j is not a neighbor of vertex i,
-    vertex[i].index_neighbor[j] = -1
-    n size of permutation
+    Parameters
+    ==========
+
+    neighbor
+        list of neighbor vertices
+    perm
+        list of permutations
+    index_neighbor
+        list of index position of vertices in neighbor where,
+        if vertex j is a neighbor of vertex i, then
+        vertex[i].index_neighbor[ vertex[i].neighbor[j] ] = j, and
+        if vertex j is not a neighbor of vertex i,
+        vertex[i].index_neighbor[j] = -1
+    n
+        size of permutation
 
     """
     def __init__(self, n):
@@ -39,25 +51,34 @@ class _Vertex(object):
       self.index_neighbor = [-1]*n
 
 class _JGraph(object):
-    """
-    Jerrum graph
+    """Represents a Jerrum graph.
 
-    vertex   vertices of the Jerrum graph for permutation group G < S(n);
-    vertex[i] i-th vertex, with `i` in range(n)
-    jg       array of Jerrums generators (edges of the graph)
-    jgs number of occupied entries of jg
-    freejg   stack of slots of jg. freejg[i] points to the
-             i-th free position of jg
-    To a directed edge (i, j) between vertices i, j
-    it is associated the index of a permutation `g` satisfying
-    g[i] = j
-    g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
-      = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]
+    Parameters
+    ==========
 
-    cycle  list of indices of vertices used to identify cycles
-    G Permutation group
-    n size of permutation
-    r number of generators
+    vertex
+        vertices of the Jerrum graph for permutation group G < S(n)
+        vertex[i] is the i-th vertex (with ``i`` in range(n))
+    jg
+        array of Jerrums generators (edges of the graph)
+    jgs
+        number of occupied entries of ``jg``
+    freejg
+        stack of slots of ``jg`` such that ``freejg[i]`` points to the i-th
+        free position of ``jg``. To a directed edge ``(i, j)`` between vertices
+        ``i`` and ``j`` it is associated the index of a permutation ``g``
+        satisfying ``g[i] = j`` where
+        ``g = jg[vertex[i].perm[vertex[i].index_neighbor[j]]]
+            = jg[vertex[j].perm[vertex[j].index_neighbor[i]]]``
+
+    cycle
+        list of indices of vertices used to identify cycles
+    G
+        Permutation group
+    n
+        size of permutation
+    r
+        number of generators
     """
     def __init__(self, G):
         n = G._degree
@@ -70,15 +91,19 @@ class _JGraph(object):
         self.G = G
         self.n = G._degree
         self.r = G._r
-        self.idn = range(n)
 
     def find_cycle(self, v, v1, v2, prev):
-        """
-        find if there is a cycle
+        """Test if there is a cycle.
 
-        v      vertex from which start searching a cycle
-        v1, v2 vertices through which the cycle must go
-        prev   previous vertex
+        Parameters
+        ==========
+
+        v
+            vertex from which start searching a cycle
+        v1, v2
+            vertices through which the cycle must go
+        prev
+            previous vertex
         """
         cycle = self.cycle
         neighbor = self.vertex[v].neighbor
@@ -100,121 +125,131 @@ class _JGraph(object):
         return False
 
     def insert(self, g, alpha):
-        """
-        insert permutation `g` in stabilizer chain at point alpha
+        """insert permutation ``g`` in stabilizer chain at point alpha
         """
         n = len(g)
-        if not g == self.idn:
-            vertex = self.vertex
-            jg = self.jg
-            i = _smallest_change(g, alpha)
-            ig = g[i]
-            nn = vertex[i].index_neighbor[ig]
-            if nn >= 0:  # if ig is already neighbor of i
-                jginn = jg[vertex[i].perm[nn]]
-                if g != jginn:
-                    # cycle consisting of two edges;
-                    # replace jginn by g and insert h = g**-1*jginn
-                    g1 = perm_af_invert(g)
-                    h = perm_af_mul(g1, jginn)
-                    jg[ vertex[i].perm[nn] ] = g
-                    self.insert(h, alpha)
-            else:  # new edge
-                self.insert_edge(g, i, ig)
-                self.cycle = [i]
-                if self.find_cycle(i, i, ig, -1):
-                    cycle = self.cycle
-                    cycle.append(cycle[0])
-                    # find the smallest point (vertex) of the cycle
-                    minn = min(cycle)
-                    cmin = cycle.index(minn)
+        i = _smallest_change(g, alpha)
+        if i is None:
+            return
 
-                    # now walk around the cycle starting from the smallest
-                    # point, and multiply around the cycle to obtain h
-                    # satisfying h[cmin] = cmin
-                    ap = []
-                    for c in range(cmin, len(cycle)-1) + range(cmin):
-                        i = cycle[c]
-                        j = cycle[c+1]
-                        nn = vertex[i].index_neighbor[j]
-                        p = jg[ vertex[i].perm[nn] ]
+        vertex = self.vertex
+        jg = self.jg
+        gi = g[i]
+        nn = vertex[i].index_neighbor[gi]
+        if nn >= 0:  # if gi is already neighbor of i
+            jginn = jg[vertex[i].perm[nn]]
+            if g != jginn:
+                # cycle consisting of two edges;
+                # replace jginn by g and insert h = g**-1*jginn
+                g1 = _af_invert(g)
+                h = _af_rmul(g1, jginn)
+                jg[ vertex[i].perm[nn] ] = g
+                self.insert(h, alpha)
+        else:  # new edge
+            self.insert_edge(g, i, gi)
+            self.cycle = [i]
+            if self.find_cycle(i, i, gi, -1):
+                cycle = self.cycle
+                cycle.append(cycle[0])
+                # find the smallest point (vertex) of the cycle
+                cmin = cycle.index(min(cycle))
 
-                        if i > j:
-                            p = perm_af_invert(p)
-                        ap.append(p)
-                    ap.reverse()
-                    h = perm_af_muln(*ap)
-                    self.remove_edge(cycle[cmin], cycle[cmin + 1])
-                    self.insert(h, alpha)
+                # now walk around the cycle starting from the smallest
+                # point, and multiply around the cycle to obtain h
+                # satisfying h[cmin] = cmin
+                ap = []
+                for c in range(cmin - len(cycle), cmin - 1):
+                    i = cycle[c]
+                    j = cycle[c + 1]
+                    nn = vertex[i].index_neighbor[j]
+                    p = jg[ vertex[i].perm[nn] ]
+                    if i > j:
+                        p = _af_invert(p)
+                    ap.append(p)
+                ap.reverse()
+                h = _af_rmuln(*ap)
+                self.remove_edge(cycle[cmin], cycle[cmin + 1])
+                self.insert(h, alpha)
 
-    def insert_edge(self, g, i, ig):
-        """
-        insert edge (permutation g) moving i to ig (i < ig)
+    def insert_edge(self, g, i, gi):
+        """insert edge (permutation g) moving i to gi (i < gi)
         """
         vertex = self.vertex
         self.jgs += 1
         jgslot = self.freejg.pop() # the last free generator place
         self.jg[jgslot] = g
         nn = len(vertex[i].neighbor)
-        vertex[i].neighbor.append(ig)
+        vertex[i].neighbor.append(gi)
         vertex[i].perm.append(jgslot)
-        vertex[i].index_neighbor[ig] = nn
-        nn = len(vertex[ig].neighbor)
-        vertex[ig].neighbor.append(i)
-        vertex[ig].perm.append(jgslot)
-        vertex[ig].index_neighbor[i] = nn
+        vertex[i].index_neighbor[gi] = nn
+        nn = len(vertex[gi].neighbor)
+        vertex[gi].neighbor.append(i)
+        vertex[gi].perm.append(jgslot)
+        vertex[gi].index_neighbor[i] = nn
 
     def jerrum_filter(self, alpha, cri):
-        """
-        filter the generators of the stabilizer subgroup G_alpha
+        """filter the generators of the stabilizer subgroup G_alpha
 
-        alpha point for which the stabilizer is computed
+        Parameters
+        ==========
 
-        cri[i] inverse of G._coset_repr[i] if `i` is not None
+        alpha
+            point for which the stabilizer is computed
+        cri[i]
+            inverse of G._stabilizer_cosets[i] if ``i`` is not None
 
-        Schreier lemma: the stabilizer subgroup G_alpha of G
-        is generated by the schreier generators
-        h = cosrep[ p2[i] ]**-1 * g[j] * cosrep[i]
-        where j=0,..,len(gens)-1 and i=0,..,n-1, where n is the degree.
-        Proof that h belongs to G_alpha:
-        cosrep[k][alpha] = k for all k; cosrep[k]**-1[k] = alpha
-        p1 = cosrep[i]; p2 = g[j]
-        p3 = cosrep[ p2[i] ]; p3[alpha] = p2[i]
-        p3**-1[p2[i] = alpha
-        p3**-1[p2[p1[alpha]] = alpha, so h[alpha] = alpha
+        Notes
+        =====
+
+        Schreier lemma::
+
+            the stabilizer subgroup G_alpha of G
+            is generated by the schreier generators
+            h = cosrep[ p2[i] ]**-1 * g[j] * cosrep[i]
+            where j=0,..,len(gens)-1 and i=0,..,n-1, where n is the degree.
+
+        Proof that h belongs to G_alpha::
+
+            cosrep[k][alpha] = k for all k; cosrep[k]**-1[k] = alpha
+            p1 = cosrep[i]; p2 = g[j]
+            p3 = cosrep[ p2[i] ]; p3[alpha] = p2[i]
+            p3**-1[p2[i] = alpha
+            p3**-1[p2[p1[alpha]] = alpha, so h[alpha] = alpha
 
         Using Jerrum's filter one can reduce the len(gens)*n generators
         of G_alpha produced by the Schreier lemma to at most n-1
 
-        Jerrum's filter:
+        Jerrum's filter
+        ---------------
+
         (see Cameron 'Permutation groups', page 22)
-        _JGraph has n-1 vertices; the edges (i, j) are labelled by
-        group elements `g` with j = imin(g) = min(i | g[i] != i);
+        _JGraph has n-1 vertices; the edges (i, j) are labeled by
+        group elements ``g`` with j = imin(g) = min(i | g[i] != i);
         define m(graph) = sum(imin(g) for g in graph)
 
         At the beginning the graph has no edges, so it is
         an acyclic graph.
-        Insert a group element `g` produced by the Schreier lemma;
+
+        Insert a group element ``g`` produced by the Schreier lemma;
         introduce in _JGraph an edge (imin(g), g[imin(g));
-        if the graph contains a cycle,
-        let `i0` be the smallest point in the cycle, and `h` the
-        product of the group elements labelling the edges in the cycle,
-        starting from `i0`; h[j] = j for j <= i0;
-        modify it eliminating the edge (i0, g0[i0])
-        in the cycle; one obtains a new acyclic graph with
-        m(graph_new) > m(graph). `g0` can be expressed as a product
-        of `h` and the other elements in the cycle.
-        Then insert `h` in the graph, and so on.
-        Since m < n**2, this process ends after
-        a finite number of times, so in the end one remains
-        with an acyclic graph, with at most n-1 edges and
-        the same number of generators.
+        if the graph contains a cycle, let ``i0`` be the smallest point
+        in the cycle, and ``h`` the product of the group elements labeling
+        the edges in the cycle, starting from ``i0``; h[j] = j for j <= i0;
+        modify it eliminating the edge (i0, g0[i0]) in the cycle; one obtains
+        a new acyclic graph with m(graph_new) > m(graph). ``g0`` can be
+        expressed as a product of ``h`` and the other elements in the cycle.
+
+        Then insert ``h`` in the graph, and so on.
+
+        Since m < n**2, this process ends after a finite number of times, so
+        in the end one remains with an acyclic graph, with at most n-1 edges
+        and the same number of generators.
         """
         n = self.n
         r = self.r
         G = self.G
         gens = self.gens
-        cosrep = G._coset_repr
+        cosrep = G._stabilizer_cosets
         self.jgs = 0
         for j in range(n):
             self.jg[j] = None
@@ -240,18 +275,18 @@ class _JGraph(object):
                 gens[r] = self.jg[j]
                 r += 1
         self.r = r
-    def remove_edge(self, i, ig):
-        """
-        remove edge from i to ig
+
+    def remove_edge(self, i, gi):
+        """remove edge from i to gi
         """
         vertex = self.vertex
-        # remove the permutation labelling this edge
+        # remove the permutation labeling this edge
         self.jgs -= 1
-        jgslot = vertex[i].perm[ vertex[i].index_neighbor[ig] ]
+        jgslot = vertex[i].perm[ vertex[i].index_neighbor[gi] ]
         self.jg[jgslot] = None
         self.freejg.append(jgslot) # now we gained a free place
 
-        for i1, i2 in ((i, ig), (ig, i)):
+        for i1, i2 in ((i, gi), (gi, i)):
             v = vertex[i1]
             j0 = v.index_neighbor[i2]
             v.neighbor.pop(j0)
@@ -259,19 +294,18 @@ class _JGraph(object):
             # the index of the vertices >= j0  in vertex[i] has changed
             for j in range(j0, len(v.neighbor)):
                 v.index_neighbor[ v.neighbor[j] ] = j
-            v.index_neighbor[ig] = -1
+            v.index_neighbor[gi] = -1
 
     def schreier_tree(self, alpha, gen):
-        """
-        traversal of the orbit of alpha
+        """traversal of the orbit of alpha
 
         Compute a traversal of the orbit of alpha, storing the values
-        in G._coset_repr; G._coset_repr[i][alpha] = i if i belongs
+        in G._stabilizer_cosets; G._stabilizer_cosets[i][alpha] = i if i belongs
         to the orbit of alpha.
         """
         G = self.G
-        G._coset_repr[alpha] = gen
-        G._coset_repr_n += 1
+        G._stabilizer_cosets[alpha] = gen
+        G._stabilizer_cosets_n += 1
         genv = self.gens[:self.r]
         h = 0
         r = self.r
@@ -293,37 +327,82 @@ class _JGraph(object):
             alpha = sta[-1]
             ag = g[alpha]
 
-            if G._coset_repr[ag] == None:
-                gen1 = perm_af_mul(g, stg[-1])
-                G._coset_repr[ag] = gen1
-                G._coset_repr_n += 1
+            if G._stabilizer_cosets[ag] is None:
+                gen1 = _af_rmul(g, stg[-1])
+                G._stabilizer_cosets[ag] = gen1
+                G._stabilizer_cosets_n += 1
                 sta.append(ag)
                 stg.append(gen1)
                 h += 1
 
 class PermutationGroup(Basic):
-    """
-    The class defining a Permutation group.
+    """The class defining a Permutation group.
 
-    Permutation(generator_list) returns the permutation group
-    generated by permutation_list.
+    PermutationGroup([p1, p2, ..., pn]) returns the permutation group
+    generated by the list of permutations. This group can be supplied
+    to Polyhedron if one desires to decorate the elements to which the
+    indices of the permutation refer.
 
-    >>> from sympy.combinatorics.permutations import Permutation
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
+    >>> from sympy.combinatorics.permutations import Cycle
+    >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
-    >>> a = Permutation([0, 2, 1])
-    >>> b = Permutation([1, 0, 2])
-    >>> G = PermutationGroup([a, b])
-    >>> G
-    PermutationGroup([Permutation([0, 2, 1]), Permutation([1, 0, 2])])
+
+    The permutations corresponding to motion of the front, right and
+    bottom face of a 2x2 Rubik's cube are defined:
+
+    >>> F = Permutation(2, 19, 21, 8)(3, 17, 20, 10)(4, 6, 7, 5)
+    >>> R = Permutation(1, 5, 21, 14)(3, 7, 23, 12)(8, 10, 11, 9)
+    >>> D = Permutation(6, 18, 14, 10)(7, 19, 15, 11)(20, 22, 23, 21)
+
+    These are passed as permutations to PermutationGroup:
+
+    >>> G = PermutationGroup(F, R, D)
+    >>> G.order()
+    3674160
+
+    The group can be supplied to a Polyhedron in order to track the
+    objects being moved. An example involving the 2x2 Rubik's cube is
+    given there, but here is a simple demonstration:
+
+    >>> a = Permutation(2, 1)
+    >>> b = Permutation(1, 0)
+    >>> G = PermutationGroup(a, b)
+    >>> P = Polyhedron(list('ABC'), pgroup=G)
+    >>> P.corners
+    (A, B, C)
+    >>> P.rotate(0) # apply permutation 0
+    >>> P.corners
+    (A, C, B)
+    >>> P.reset()
+    >>> P.corners
+    (A, B, C)
+
+    Or one can make a permutation as a product of selected permutations
+    and apply them to an iterable directly:
+
+    >>> P10 = G.make_perm([0, 1])
+    >>> P10('ABC')
+    ['C', 'A', 'B']
+
+    See Also
+    ========
+
+    sympy.combinatorics.polyhedron.Polyhedron,
+    sympy.combinatorics.permutations.Permutation
 
     References
     ==========
 
     [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    "Handbook of Computational Group Theory"
 
     [2] Seress, A.
-    "Permutation group algorithms"
+    "Permutation Group Algorithms"
 
     [3] http://en.wikipedia.org/wiki/Schreier_vector
 
@@ -331,8 +410,8 @@ class PermutationGroup(Basic):
     #Product_replacement_algorithm
 
     [5] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
-    Alice C.Niemeyer, and E.A.O'Brien. "Generating random
-    elements of a finite group"
+    Alice C.Niemeyer, and E.A.O'Brien. "Generating Random
+    Elements of a Finite Group"
 
     [6] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
@@ -348,43 +427,96 @@ class PermutationGroup(Basic):
 
     [12] http://en.wikipedia.org/wiki/Nilpotent_group
 
+    [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+
     """
 
-    def __eq__(self, gr):
+    def __new__(cls, *args, **kwargs):
+        """The default constructor. Accepts Cycle and Permutation forms.
+        Removes duplicates unless ``dups`` keyword is False.
         """
-        test if two groups have the same elements
+        args = list(args[0] if is_sequence(args[0]) else args)
+        if not args:
+            raise ValueError('must supply one or more permutations '
+            'to define the group')
+        if any(isinstance(a, Cycle) for a in args):
+            args = [Permutation(a) for a in args]
+        if has_variety(a.size for a in args):
+            degree = kwargs.pop('degree', None)
+            if degree is None:
+                degree = max(a.size for a in args)
+            for i in range(len(args)):
+                if args[i].size != degree:
+                    args[i] = Permutation(args[i], size=degree)
+        if kwargs.pop('dups', True):
+            args = uniq([Permutation._af_new(list(a)) for a in args])
+        obj = Basic.__new__(cls, *args, **kwargs)
+        obj._generators = args
+        obj._order = None
+        obj._center = []
+        obj._is_abelian = None
+        obj._is_transitive = None
+        obj._is_sym = None
+        obj._is_alt = None
+        obj._is_primitive = None
+        obj._is_nilpotent = None
+        obj._is_solvable = None
+        obj._is_trivial = None
+        obj._transitivity_degree = None
+        obj._max_div = None
+        obj._r = len(obj._generators)
+        obj._degree = obj._generators[0].size
+
+        # these attributes are assigned after running schreier_sims
+        obj._base = []
+        obj._stabilizer_cosets = []
+        obj._stabilizer_cosets_n = []
+        obj._stabilizer_gens = []
+        obj._strong_gens = []
+        obj._basic_orbits = []
+        obj._transversals = []
+
+        # these attributes are assigned after running _random_pr_init
+        obj._random_gens = []
+        return obj
+
+    def __getitem__(self, i):
+        return self._generators[i]
+
+    def __len__(self):
+        return len(self._generators)
+
+    def __eq__(self, other):
+        """Return True if self and other have the same generators.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = [[1,2,0,3,4,5], [1,0,2,3,4,5], [2,1,0,3,4,5], [1,2,0,3,4,5]]
-        >>> a = [Permutation(p) for p in a]
-        >>> g = Permutation([1,2,3,4,5,0])
-        >>> G1,G2,G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g,g**2]]]
-        >>> assert G1.order() == G2.order() == G3.order() == 6
-        >>> assert G1 == G2 and G1 != G3
+        >>> p = Permutation(0, 1, 2, 3, 4, 5)
+        >>> G = PermutationGroup([p, p**2])
+        >>> H = PermutationGroup([p**2, p])
+        >>> G.generators == H.generators
+        False
+        >>> G == H
+        True
 
         """
-        if self.degree != gr.degree:
+        if not isinstance(other, PermutationGroup):
             return False
-        if self.order() != gr.order():
-            return False
-        gens1 = self.generators
-        for g in gens1:
-            if not gr.has_element(g):
-                return False
-        return True
+        return set(self.generators) == set(other.generators)
+
+    def __hash__(self):
+        return super(PermutationGroup, self).__hash__()
 
     def __mul__(self, other):
-        """
-        Return the direct product of two permutation groups as a permutation
+        """Return the direct product of two permutation groups as a permutation
         group.
 
         This implementation realizes the direct product by shifting
         the index set for the generators of the second group: so if we have
-        G acting on n1 points and H acting on n2 points, G*H acts on n1+n2
+        G acting on n1 points and H acting on n2 points, G*H acts on n1 + n2
         points.
 
         Examples
@@ -395,8 +527,9 @@ class PermutationGroup(Basic):
         >>> G = CyclicGroup(5)
         >>> H = G*G
         >>> H
-        PermutationGroup([Permutation([1, 2, 3, 4, 0, 5, 6, 7, 8, 9]),
-        Permutation([0, 1, 2, 3, 4, 6, 7, 8, 9, 5])])
+        PermutationGroup([
+            Permutation(9)(0, 1, 2, 3, 4),
+            Permutation(5, 6, 7, 8, 9)])
         >>> H.order()
         25
 
@@ -412,81 +545,40 @@ class PermutationGroup(Basic):
         gens2 = [start + gen for gen in gens2]
         gens1 = [gen + end for gen in gens1]
         together = gens1 + gens2
-        gens = [_new_from_array_form(x) for x in together]
+        gens = [_af_new(x) for x in together]
         return PermutationGroup(gens)
 
-    def __ne__(self, gr):
-        return not self == gr
-
-    def __new__(cls, *args, **kw_args):
-        """
-        The default constructor.
-        """
-        obj = Basic.__new__(cls, *args, **kw_args)
-        obj._generators = args[0]
-        obj._order = None
-        obj._center = []
-        obj._is_abelian = None
-        obj._is_transitive = None
-        obj._is_sym = None
-        obj._is_alt = None
-        obj._is_primitive = None
-        obj._is_nilpotent = None
-        obj._is_solvable = None
-        obj._is_trivial = None
-        obj._transitivity_degree = None
-        obj._max_div = None
-        size = len(args[0][0].array_form)
-        obj._r = len(obj._generators)
-        if not all(len(args[0][i].array_form)==size for i in xrange(1, len(args[0]))):
-                raise ValueError("Permutation group size is not correct")
-        obj._degree = size
-
-        # these attributes are assigned after running schreier_sims
-        obj._base = []
-        obj._coset_repr = []
-        obj._coset_repr_n = []
-        obj._stabilizers_gens = []
-        obj._strong_gens = []
-        obj._basic_orbits = []
-        obj._transversals = []
-
-        # these attributes are assigned after running _random_pr_init
-        obj._random_gens = []
-        return obj
-
     def _random_pr_init(self, r, n, _random_prec_n=None):
-        r"""
-        Initializes random generators for the product replacement algorithm.
+        r"""Initialize random generators for the product replacement algorithm.
 
         The implementation uses a modification of the original product
         replacement algorithm due to Leedham-Green, as described in [1],
-        pp.69-71; also, see [2], pp.27-29 for a detailed theoretical
+        pp. 69-71; also, see [2], pp. 27-29 for a detailed theoretical
         analysis of the original product replacement algorithm, and [4].
 
         The product replacement algorithm is used for producing random,
-        uniformly distributed elements of a group `G` with a set of generators
-        `S`. For the initialization ``_random_pr_init``, a list `R` of
-        `\max\{r, |S|\}` group generators is created as the attribute
-        ``G._random_gens``, repeating elements of `S` if necessary, and the
-        identity element of `G` is appended to `R` - we shall refer to this
+        uniformly distributed elements of a group ``G`` with a set of generators
+        ``S``. For the initialization ``_random_pr_init``, a list ``R`` of
+        ``\max\{r, |S|\}`` group generators is created as the attribute
+        ``G._random_gens``, repeating elements of ``S`` if necessary, and the
+        identity element of ``G`` is appended to ``R`` - we shall refer to this
         last element as the accumulator. Then the function ``random_pr()``
-        is called ``n`` times, randomizing the list `R` while preserving
-        the generation of `G` by `R`. The function ``random_pr()`` itself
-        takes two random elements `g, h` among all elements of `R` but
-        the accumulator and replaces `g` with a randomly chosen element
-        from `\{gh, g(~h), hg, (~h)g\}`. Then the accumulator is multiplied
-        by whatever `g` was replaced by. The new value of the accumulator is
+        is called ``n`` times, randomizing the list ``R`` while preserving
+        the generation of ``G`` by ``R``. The function ``random_pr()`` itself
+        takes two random elements ``g, h`` among all elements of ``R`` but
+        the accumulator and replaces ``g`` with a randomly chosen element
+        from ``\{gh, g(~h), hg, (~h)g\}``. Then the accumulator is multiplied
+        by whatever ``g`` was replaced by. The new value of the accumulator is
         then returned by ``random_pr()``.
 
         The elements returned will eventually (for ``n`` large enough) become
-        uniformly distributed across `G` ([5]). For practical purposes however,
+        uniformly distributed across ``G`` ([5]). For practical purposes however,
         the values ``n = 50, r = 11`` are suggested in [1].
 
         Notes
         =====
 
-        XXX THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
+        THIS FUNCTION HAS SIDE EFFECTS: it changes the attribute
         self._random_gens
 
         See Also
@@ -501,7 +593,7 @@ class PermutationGroup(Basic):
         if k < r:
             for i in range(k, r):
                 random_gens.append(random_gens[i - k])
-        acc = _new_from_array_form(range(deg))
+        acc = _af_new(range(deg))
         random_gens.append(acc)
         self._random_gens = random_gens
 
@@ -514,11 +606,10 @@ class PermutationGroup(Basic):
                 self.random_pr(_random_prec = _random_prec_n[i])
 
     def _union_find_merge(self, first, second, ranks, parents, not_rep):
-        """
-        Merges two classes in a union-find data structure.
+        """Merges two classes in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
-        pp.83-87. The class merging process uses union by rank as an
+        pp. 83-87. The class merging process uses union by rank as an
         optimization. ([7])
 
         Notes
@@ -561,11 +652,10 @@ class PermutationGroup(Basic):
         return 0
 
     def _union_find_rep(self, num, parents):
-        """
-        Find representative of a class in a union-find data structure.
+        """Find representative of a class in a union-find data structure.
 
         Used in the implementation of Atkinson's algorithm as suggested in [1],
-        pp.83-87. After the representative of the class to which ``num``
+        pp. 83-87. After the representative of the class to which ``num``
         belongs is found, path compression is performed as an optimization
         ([7]).
 
@@ -603,22 +693,29 @@ class PermutationGroup(Basic):
 
     @property
     def base(self):
-        """
-        Return a base from the Schreier-Sims algorithm.
+        """Return a base from the Schreier-Sims algorithm.
 
-        For a permutation group `G`, a base is a sequence of points
-        `B = (b_1, b_2, ..., b_k)` such that no element of `G` apart from the
-        identity fixes all the points in `B`. The concepts of a base and
-        strong generating set and their applications are discussed in depth
-        in [1],pp.87-89 and [2],pp.55-57.
+        For a permutation group ``G``, a base is a sequence of points
+        ``B = (b_1, b_2, ..., b_k)`` such that no element of ``G`` apart
+        from the identity fixes all the points in ``B``. The concepts of
+        a base and strong generating set and their applications are
+        discussed in depth in [1], pp. 87-89 and [2], pp. 55-57.
+
+        An alternative way to think of ``B`` is that it gives the
+        indices of the stabilizer cosets that contain more than the
+        identity permutation.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> S = SymmetricGroup(4)
-        >>> S.base
-        [0, 1, 2]
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> G = PermutationGroup([Permutation(0, 1, 3)(2, 4)])
+        >>> G.base
+        [0, 2]
+        >>> I = [Permutation(G.degree - 1)]
+        >>> c = G.stabilizer_cosets()
+        >>> [i for i in range(len(c)) if c[i] != I]
+        [0, 2]
 
         See Also
         ========
@@ -632,14 +729,14 @@ class PermutationGroup(Basic):
 
     def baseswap(self, base, strong_gens, pos, randomized=False,\
                  transversals=None, basic_orbits=None, strong_gens_distr=None):
-        r"""
-        Swap two consecutive base points in a base and strong generating set.
+        r"""Swap two consecutive base points in base and strong generating set.
 
-        If a base for a group `G` is given by `(b_1, b_2, ..., b_k)`, this
-        function returns a base `(b_1, b_2, ..., b_{i+1}, b_i, ..., b_k)`,
-        where `i` is given by ``pos``, and a strong generating set relative
+        If a base for a group ``G`` is given by ``(b_1, b_2, ..., b_k)``, this
+        function returns a base ``(b_1, b_2, ..., b_{i+1}, b_i, ..., b_k)``,
+        where ``i`` is given by ``pos``, and a strong generating set relative
         to that base. The original base and strong generating set are not
         modified.
+
         The randomized version (default) is of Las Vegas type.
 
         Parameters
@@ -673,7 +770,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> S.schreier_sims()
         >>> S.baseswap(S.base, S.strong_gens, 1, randomized=False)
-        ([0, 2, 1], [Permutation([1, 2, 3, 0]), Permutation([1, 0, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2]), Permutation([0, 3, 2, 1])])
+        ([0, 2, 1],
+        [Permutation(0, 1, 2, 3), Permutation(3)(0, 1), Permutation(2, 3),
+         Permutation(1, 3, 2), Permutation(1, 3)])
         >>> S.base
         [0, 1, 2]
         >>> _verify_bsgs(S, S.base, S.strong_gens)
@@ -688,12 +787,12 @@ class PermutationGroup(Basic):
         =====
 
         The deterministic version of the algorithm is discussed in
-        [1],pp.102-103; the randomized version is discussed in [1],p.103, and
-        [2],p.98. It is of Las Vegas type.
+        [1], pp. 102-103; the randomized version is discussed in [1], p.103, and
+        [2], p.98. It is of Las Vegas type.
         Notice that [1] contains a mistake in the pseudocode and
         discussion of BASESWAP: on line 3 of the pseudocode,
-        `|\beta_{i+1}^{\left\langle T\right\rangle}|` should be replaced by
-        `|\beta_{i}^{\left\langle T\right\rangle}|`, and the same for the
+        ``|\beta_{i+1}^{\left\langle T\right\rangle}|`` should be replaced by
+        ``|\beta_{i}^{\left\langle T\right\rangle}|``, and the same for the
         discussion of the algorithm.
 
         """
@@ -715,7 +814,7 @@ class PermutationGroup(Basic):
         else:
             T = strong_gens_distr[pos + 2][:]
         if T == []:
-            current_group = PermGroup([_new_from_array_form(range(degree))])
+            current_group = PermGroup([_af_new(range(degree))])
         else:
             current_group = PermGroup(T)
         # randomized version
@@ -744,7 +843,7 @@ class PermutationGroup(Basic):
                     Gamma = Gamma - current_group.orbit(gamma)
                 else:
                     y = transversals[pos + 1][temp]
-                    el = x*y
+                    el = rmul(x, y)
                     if el(base[pos]) not in current_group.orbit(base[pos]):
                         T.append(el)
                         current_group = PermutationGroup(T)
@@ -765,10 +864,10 @@ class PermutationGroup(Basic):
         """
         Return the basic orbits relative to a base and strong generating set.
 
-        If `(b_1, b_2, ..., b_k)` is a base for a group `G`, and
-        `G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}` is the `i`-th basic stabilizer
-        (so that `G^{(1)} = G`), the `i`-th basic orbit relative to this base
-        is the orbit of `b_i` under `G^{(i)}`. See [1],pp.87-89 for more
+        If ``(b_1, b_2, ..., b_k)`` is a base for a group ``G``, and
+        ``G^{(i)} = G_{b_1, b_2, ..., b_{i-1}}`` is the ``i``-th basic stabilizer
+        (so that ``G^{(1)} = G``), the ``i``-th basic orbit relative to this base
+        is the orbit of ``b_i`` under ``G^{(i)}``. See [1], pp. 87-89 for more
         information.
 
         Examples
@@ -795,9 +894,9 @@ class PermutationGroup(Basic):
         Return a chain of stabilizers relative to a base and strong generating
         set.
 
-        The `i`-th basic stabilizer `G^{(i)}` relative to a base
-        `(b_1, b_2, ..., b_k)` is `G_{b_1, b_2, ..., b_{i-1}}`. For more
-        information, see [1],pp.87-89.
+        The ``i``-th basic stabilizer ``G^{(i)}`` relative to a base
+        ``(b_1, b_2, ..., b_k)`` is ``G_{b_1, b_2, ..., b_{i-1}}``. For more
+        information, see [1], pp. 87-89.
 
         Examples
         ========
@@ -807,8 +906,15 @@ class PermutationGroup(Basic):
         >>> A.schreier_sims()
         >>> A.base
         [0, 1]
-        >>> A.basic_stabilizers
-        [PermutationGroup([Permutation([1, 2, 0, 3]), Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])]), PermutationGroup([Permutation([0, 2, 3, 1]), Permutation([0, 3, 1, 2])])]
+        >>> for g in A.basic_stabilizers:
+        ...     print g
+        PermutationGroup([
+            Permutation(3)(0, 1, 2),
+            Permutation(1, 2, 3),
+            Permutation(1, 3, 2)])
+        PermutationGroup([
+            Permutation(1, 2, 3),
+            Permutation(1, 3, 2)])
 
         See Also
         ========
@@ -817,7 +923,7 @@ class PermutationGroup(Basic):
 
         """
 
-        if self._coset_repr == []:
+        if self._stabilizer_cosets == []:
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
@@ -835,7 +941,7 @@ class PermutationGroup(Basic):
         The basic transversals are transversals of the basic orbits. They
         are provided as a list of dictionaries, each dictionary having
         keys - the elements of one of the basic orbits, and values - the
-        corresponding transversal elements. See [1],pp.87-89 for more
+        corresponding transversal elements. See [1], pp. 87-89 for more
         information.
 
         Examples
@@ -844,15 +950,34 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> A = AlternatingGroup(4)
         >>> A.basic_transversals
-        [{0: Permutation([0, 1, 2, 3]), 1: Permutation([1, 2, 0, 3]),\
-        2: Permutation([2, 0, 1, 3]), 3: Permutation([3, 0, 2, 1])},\
-        {1: Permutation([0, 1, 2, 3]), 2: Permutation([0, 2, 3, 1]),\
-        3: Permutation([0, 3, 1, 2])}]
+        [{0: Permutation(3),
+          1: Permutation(3)(0, 1, 2),
+          2: Permutation(3)(0, 2, 1),
+          3: Permutation(0, 3, 1)},
+         {1: Permutation(3),
+          2: Permutation(1, 2, 3),
+          3: Permutation(1, 3, 2)}]
+
+        A list of lists of the values of each dictionary can be obtained with
+        the stabilizer_cosets method.
+
+        >>> A.stabilizer_cosets()
+        [[Permutation(3),
+          Permutation(3)(0, 1, 2),
+          Permutation(3)(0, 2, 1),
+          Permutation(0, 3, 1)],
+         [Permutation(3),
+          Permutation(1, 2, 3),
+          Permutation(1, 3, 2)]]
+        >>> A.stabilizer_cosets(af=True)
+        [[[0, 1, 2, 3], [1, 2, 0, 3], [2, 0, 1, 3], [3, 0, 2, 1]],
+         [[0, 1, 2, 3], [0, 2, 3, 1], [0, 3, 1, 2]]]
+
 
         See Also
         ========
 
-        strong_gens, base, basic_orbits, basic_stabilizers
+        strong_gens, base, basic_orbits, basic_stabilizers, stabilizer_cosets
 
         """
         if self._transversals == []:
@@ -863,11 +988,11 @@ class PermutationGroup(Basic):
         r"""
         Return the center of a permutation group.
 
-        The center for a group `G` is defined as
-        `Z(G) = \{z\in G | \forall g\in G, zg = gz \}`,
-        the set of elements of `G` that commute with all elements of `G`.
-        It is equal to the centralizer of `G` inside `G`, and is naturally a
-        subgroup of `G` ([9]).
+        The center for a group ``G`` is defined as
+        ``Z(G) = \{z\in G | \forall g\in G, zg = gz \}``,
+        the set of elements of ``G`` that commute with all elements of ``G``.
+        It is equal to the centralizer of ``G`` inside ``G``, and is naturally a
+        subgroup of ``G`` ([9]).
 
         Examples
         ========
@@ -897,14 +1022,17 @@ class PermutationGroup(Basic):
         r"""
         Return the centralizer of a group/set/element.
 
-        The centralizer of a set of permutations `S` inside
-        a group `G` is the set of elements of `G` that commute with all
-        elements of `S`:
-        `C_G(S) = \{ g \in G | gs = sg \forall s \in S\}` ([10])
-        Usually, `S` is a subset of `G`, but if `G` is a proper subgroup of
-        the full symmetric group, we allow for `S` to have elements outside
-        `G`.
-        It is naturally a subgroup of `G`; the centralizer of a permutation
+        The centralizer of a set of permutations ``S`` inside
+        a group ``G`` is the set of elements of ``G`` that commute with all
+        elements of ``S``::
+
+            ``C_G(S) = \{ g \in G | gs = sg \forall s \in S\}`` ([10])
+
+        Usually, ``S`` is a subset of ``G``, but if ``G`` is a proper subgroup of
+        the full symmetric group, we allow for ``S`` to have elements outside
+        ``G``.
+
+        It is naturally a subgroup of ``G``; the centralizer of a permutation
         group is equal to the centralizer of any set of generators for that
         group, since any element commuting with the generators commutes with
         any product of the  generators.
@@ -912,7 +1040,8 @@ class PermutationGroup(Basic):
         Parameters
         ==========
 
-        ``other`` - a permutation group/list of permutations/single permutation
+        other
+            a permutation group/list of permutations/single permutation
 
         Examples
         ========
@@ -922,7 +1051,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(6)
         >>> C = CyclicGroup(6)
         >>> H = S.centralizer(C)
-        >>> H == C
+        >>> H.is_subgroup(C)
         True
 
         See Also
@@ -934,14 +1063,14 @@ class PermutationGroup(Basic):
         =====
 
         The implementation is an application of ``.subgroup_search()`` with
-        tests using a specific base for the group `G`.
+        tests using a specific base for the group ``G``.
 
         """
         if hasattr(other, 'generators'):
             if other.is_trivial or self.is_trivial:
                 return self
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
             orbits = other.orbits()
             num_orbits = len(orbits)
             orbits.sort(key = lambda x: -len(x))
@@ -994,8 +1123,8 @@ class PermutationGroup(Basic):
                             return True
                     tests[l] = test
             def prop(g):
-                return [g*gen for gen in other.generators] ==\
-                       [gen*g for gen in other.generators]
+                return [rmul(g, gen) for gen in other.generators] ==\
+                       [rmul(gen, g) for gen in other.generators]
             return self.subgroup_search(prop, base=base,
                                         strong_gens=strong_gens, tests=tests)
         elif hasattr(other, '__getitem__'):
@@ -1008,10 +1137,10 @@ class PermutationGroup(Basic):
         """
         Return the commutator of two subgroups.
 
-        For a permutation group `K` and subgroups `G`, `H`, the
-        commutator of `G` and `H` is defined as the group generated
-        by all the commutators `[g, h] = hgh^{-1}g^{-1}` for `g` in `G` and
-        `h` in `H`. It is naturally a subgroup of `K` ([1],p.27).
+        For a permutation group ``K`` and subgroups ``G``, ``H``, the
+        commutator of ``G`` and ``H`` is defined as the group generated
+        by all the commutators ``[g, h] = hgh^{-1}g^{-1}`` for ``g`` in ``G`` and
+        ``h`` in ``H``. It is naturally a subgroup of ``K`` ([1], p.27).
 
         Examples
         ========
@@ -1021,7 +1150,7 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(5)
         >>> A = AlternatingGroup(5)
         >>> G = S.commutator(S, A)
-        >>> G == A
+        >>> G.is_subgroup(A)
         True
 
         See Also
@@ -1032,9 +1161,9 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The commutator of two subgroups `H, G` is equal to the normal closure
-        of the commutators of all the generators, i.e. `hgh^{-1}g^{-1}` for `h`
-        a generator of `H` and `g` a generator of `G` ([1],p.28)
+        The commutator of two subgroups ``H, G`` is equal to the normal closure
+        of the commutators of all the generators, i.e. ``hgh^{-1}g^{-1}`` for ``h``
+        a generator of ``H`` and ``g`` a generator of ``G`` ([1], p.28)
 
         """
         ggens = G.generators
@@ -1042,96 +1171,164 @@ class PermutationGroup(Basic):
         commutators = []
         for ggen in ggens:
             for hgen in hgens:
-                commutator = hgen*ggen*(~hgen)*(~ggen)
+                commutator = rmul(hgen, ggen, ~hgen, ~ggen)
                 if commutator not in commutators:
                     commutators.append(commutator)
         res = self.normal_closure(commutators)
         return res
 
-    def coset_decomposition(self, g):
-        """
-        Decompose `g` as h_0*...*h_{len(u)}
+    def coset_factor(self, g, af=False):
+        """Return ``G``'s (self's) coset factorization, ``f``, of ``g``
 
-        The Schreier-Sims coset representation u of `G`
-        gives a univoque decomposition of an element `g`
-        as h_0*...*h_{len(u)}, where h_i belongs to u[i]
-
-        Output: [h_0, .., h_{len(u)}] if `g` belongs to `G`
-                False otherwise
+        If ``g`` is an element of ``G`` then it can be written as the product
+        of permutations drawn from the Schreier-Sims coset decomposition,
+        ``u``, of ``G``. The permutations returned in ``f`` are those for which
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]`` where ``n = len(B)``
+        and ``B = G.base``. f[i] is one of the permutations in coset[B[i]].
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation, Cycle
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
-        >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
+
+        >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+        >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([[0, 1, 2, 3, 4], [5, 6, 7]])
-        >>> G.coset_decomposition(c)
-        False
-        >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
-        >>> G.coset_decomposition(c)
-        [[6, 4, 2, 0, 7, 5, 3, 1], [0, 4, 1, 5, 2, 6, 3, 7], [0, 1, 2, 3, 4, 5, 6, 7]]
-        >>> G.has_element(c)
+        >>> u = G.stabilizer_cosets()
+
+        The coset decomposition of G has a u of length 3:
+
+        >>> for i, ui in enumerate(u):
+        ...     print 'u%s:' % i
+        ...     for p in ui:
+        ...         print '    ', p
+        ...
+        u0:
+            Permutation(7)
+            Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+            Permutation(0, 2, 6, 4)(1, 3, 7, 5)
+            Permutation(0, 3, 6)(1, 7, 4)
+            Permutation(0, 4, 6, 7, 3, 1)(2, 5)
+            Permutation(0, 5)(2, 7)
+            Permutation(0, 6, 3)(1, 4, 7)
+            Permutation(0, 7)(1, 6)(2, 5)(3, 4)
+        u1:
+            Permutation(7)
+            Permutation(7)(1, 2)(5, 6)
+            Permutation(7)(1, 4, 2)(3, 5, 6)
+        u2:
+            Permutation(7)
+            Permutation(7)(2, 4)(3, 5)
+
+        Define g:
+
+        >>> g = Permutation(7)(1, 2, 4)(3, 6, 5)
+
+        Confirm that it is an element of G:
+
+        >>> G.contains(g)
         True
 
+        Thus, it can be written as a product of factors (up to
+        3) drawn from u. See below that a factor from u1 and u2
+        and the Identity permutation have been used:
+
+        >>> f = G.coset_factor(g); f
+        [Permutation(7),
+         Permutation(7)(1, 2)(5, 6),
+         Permutation(7)(2, 4)(3, 5)]
+
+        We confirm that the product of f gives the original g:
+
+        >>> f[2]*f[1]*f[0] == g
+        True
+
+        If g is already in the coset decomposition of G then it (and
+        Identity permutations) will be returned:
+
+        >>> g = Permutation(u[2][1])
+        >>> G.coset_factor(g)
+        [Permutation(7), Permutation(7), Permutation(7)(2, 4)(3, 5)]
+
+        If g is not an element of G then [] is returned:
+
+        >>> c = Permutation(5, 6, 7)
+        >>> G.coset_factor(c)
+        []
+
         """
-        u = self.coset_repr()
-        if isinstance(g, Permutation):
-            g = g.array_form
-        g1 = g
-        n = len(u)
-        a = []
-        for i in range(n):
-            x = g1[i]
+        if isinstance(g, (Cycle, Permutation)):
+            g = g.list()
+        if len(g) != self.degree:
+            # this could either adjust the size or return [] immediately
+            # but we don't choose between the two and just signal a possible
+            # error
+            raise ValueError('g should be the same size as permutations of G')
+        I = range(self.degree)
+        # compute u
+        u = self.stabilizer_cosets(af=True)
+        # search for factors
+        g_now = g
+        f = []
+        for i in range(len(u)):
             for h in u[i]:
-                if h[i] == x:
-                    a.append(h)
-                    p2 = perm_af_invert(h)
-                    g1 = perm_af_mul(p2, g1)
+                if h[i] == g_now[i]:
+                    f.append(h)
+                    hinv = _af_invert(h)
+                    g_now = _af_rmul(hinv, g_now)
                     break
             else:
-                return False
-        if perm_af_muln(*a) == g:
-            return a
-        return False
+                return []
+        rv = [f[j] for j in self.base] if g_now == I else []
+        if af:
+            return rv
+        return [Permutation(i) for i in rv]
 
     def coset_rank(self, g):
-        """
-        rank using Schreier-Sims representation
+        """rank using Schreier-Sims representation
 
-        The coset rank of `g` is the ordering number in which
+        The coset rank of ``g`` is the ordering number in which
         it appears in the lexicographic listing according to the
-        coset decomposition, see coset_decomposition;
-        the ordering is the same as in G.generate(method='coset').
-        If `g` does not belong to the group it returns None
+        coset decomposition
+
+        The ordering is the same as in G.generate(method='coset').
+        If ``g`` does not belong to the group it returns None.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([[0, 1, 3, 7, 6, 4], [2, 5]])
-        >>> b = Permutation([[0, 1, 3, 2], [4, 5, 7, 6]])
+        >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
+        >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([[0, 1, 2, 3, 4], [5, 6, 7]])
+        >>> c = Permutation(2, 4)(3, 5)
         >>> G.coset_rank(c)
-        >>> c = Permutation([[0, 6], [1, 7], [2, 4], [3, 5]])
-        >>> G.coset_rank(c)
-        40
-        >>> G.coset_unrank(40, af=True)
-        [6, 7, 4, 5, 2, 3, 0, 1]
+        1
+        >>> G.coset_unrank(1, af=True)
+        [0, 1, 4, 5, 2, 3, 6, 7]
+
+        See Also
+        ========
+
+        coset_factor
 
         """
-        u = self.coset_repr()
-        if isinstance(g, Permutation):
-            g = g.array_form
+        u = self.stabilizer_cosets(True)
+        if isinstance(g, (Cycle, Permutation)):
+            g = g.list()
+        # the only error checking is size adjustment; it is assumed that
+        # elements 0..len(g) - 1 are present
+        if len(g) != self.degree:
+            g.extend(range(len(g), self.degree))
         g1 = g
         m = len(u)
         a = []
 
-        un = self._coset_repr_n
+        un = self._stabilizer_cosets_n
         n = self.degree
         rank = 0
         base = [1]
@@ -1149,50 +1346,26 @@ class PermutationGroup(Basic):
                     a.append(h)
                     a1[i] = j
                     rank += j*base[i1]
-                    p2 = perm_af_invert(h)
-                    g1 = perm_af_mul(p2, g1)
+                    p2 = _af_invert(h)
+                    g1 = _af_rmul(p2, g1)
                     break
             else:
                 return None
-        if perm_af_muln(*a) == g:
+        if g1 == range(self.degree):
             return rank
         return None
 
-    def coset_repr(self):
-        """
-        Return the Schreier-Sims representation of the group.
-
-        The Schreier-Sims representation is the list of the cosets of
-        the chain of stabilizers, see schreier_sims.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1])
-        >>> b = Permutation([1, 0, 2])
-        >>> G = PermutationGroup([a, b])
-        >>> G.coset_repr()
-        [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
-
-        """
-        if not self._coset_repr:
-            self.schreier_sims()
-        return self._coset_repr
-
     def coset_unrank(self, rank, af=False):
-        """
-        unrank using Schreier-Sims representation
+        """unrank using Schreier-Sims representation
 
         coset_unrank is the inverse operation of coset_rank
         if 0 <= rank < order; otherwise it returns None.
 
         """
-        u = self.coset_repr()
+        u = self.stabilizer_cosets(True)
         if rank < 0 or rank >= self.order():
             return None
-        un = self._coset_repr_n
+        un = self._stabilizer_cosets_n
         base = self._base
         m = len(u)
         nb = len(base)
@@ -1203,45 +1376,58 @@ class PermutationGroup(Basic):
             rank, c = divmod(rank, un[i])
             v[j] = c
         a = [u[i][v[i]] for i in range(m)]
-        h = perm_af_muln(*a)
+        h = _af_rmuln(*a)
         if af:
             return h
         else:
-            return _new_from_array_form(h)
+            return _af_new(h)
 
     @property
     def degree(self):
-        """
-        Returns the size of the permutations in the group.
+        """Returns the size of the permutations in the group.
+
+        The number of permutations comprising the group is given by
+        len(group); the number of permutations that can be generated
+        by the group is given by group.order().
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,0])
+        >>> a = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a])
         >>> G.degree
+        3
+        >>> len(G)
+        1
+        >>> G.order()
         2
+        >>> list(G.generate())
+        [Permutation(2), Permutation(2)(0, 1)]
 
+        See Also
+        ========
+
+        order
         """
         return self._degree
 
     def derived_series(self):
-        r"""
-        Return the derived series for the group.
+        r"""Return the derived series for the group.
 
-        The derived series for a group `G` is defined as
-        `G = G_0 > G_1 > G_2 > \ldots`
-        where `G_i = [G_{i-1}, G_{i-1}]`, i.e. `G_i` is the derived subgroup of
-        `G_{i-1}`, for `i\in\mathbb{N}`. When we have `G_k = G_{k-1}` for some
-        `k\in\mathbb{N}`, the series terminates.
+        The derived series for a group ``G`` is defined as
+        ``G = G_0 > G_1 > G_2 > \ldots`` where ``G_i = [G_{i-1}, G_{i-1}]``,
+        i.e. ``G_i`` is the derived subgroup of ``G_{i-1}``, for
+        ``i\in\mathbb{N}``. When we have ``G_k = G_{k-1}`` for some
+        ``k\in\mathbb{N}``, the series terminates.
 
         Returns
         =======
 
         A list of permutation groups containing the members of the derived
-        series in the order `G = G_0, G_1, G_2, \ldots`.
+        series in the order ``G = G_0, G_1, G_2, \ldots``.
 
         Examples
         ========
@@ -1254,9 +1440,9 @@ class PermutationGroup(Basic):
         >>> S = SymmetricGroup(4)
         >>> len(S.derived_series())
         4
-        >>> S.derived_series()[1] == AlternatingGroup(4)
+        >>> S.derived_series()[1].is_subgroup(AlternatingGroup(4))
         True
-        >>> S.derived_series()[2] == DihedralGroup(2)
+        >>> S.derived_series()[2].is_subgroup(DihedralGroup(2))
         True
 
         See Also
@@ -1268,25 +1454,25 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.derived_subgroup()
-        while current != next:
+        while not current.is_subgroup(next):
             res.append(next)
             current = next
             next = next.derived_subgroup()
         return res
 
     def derived_subgroup(self):
-        """
-        Compute the derived subgroup.
+        """Compute the derived subgroup.
 
         The derived subgroup, or commutator subgroup is the subgroup generated
-        by all commutators `[g, h] = hgh^{-1}g^{-1}` for `g, h\in G` ; it is
+        by all commutators ``[g, h] = hgh^{-1}g^{-1}`` for ``g, h\in G`` ; it is
         equal to the normal closure of the set of commutators of the generators
-        ([1],p.28, [11]).
+        ([1], p.28, [11]).
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2, 4, 3])
         >>> b = Permutation([0, 1, 3, 2, 4])
@@ -1303,7 +1489,7 @@ class PermutationGroup(Basic):
         """
         r = self._r
         gens = [p.array_form for p in self.generators]
-        gens_inv = [perm_af_invert(p) for p in gens]
+        gens_inv = [_af_invert(p) for p in gens]
         set_commutators = set()
         for i in range(r):
             for j in range(r):
@@ -1320,10 +1506,10 @@ class PermutationGroup(Basic):
         return G2
 
     def generate(self, method="coset", af=False):
-        """
-        return iterator to generate the elements of the group
+        """Return iterator to generate the elements of the group
 
-        Iteration is done with one of these methods:
+        Iteration is done with one of these methods::
+
           method='coset'  using the Schreier-Sims coset representation
           method='dimino' using the Dimino method
 
@@ -1332,42 +1518,69 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1, 3])
-        >>> b = Permutation([0, 2, 3, 1])
-        >>> g = PermutationGroup([a, b])
-        >>> list(g.generate(af=True))
-        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1], [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> from sympy.combinatorics import PermutationGroup
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
 
+        The permutation group given in the tetrahedron object is not
+        true groups:
+
+        >>> G = tetrahedron.pgroup
+        >>> G.is_group()
+        False
+
+        But the group generated by the permutations in the tetrahedron
+        pgroup -- even the first two -- is a proper group:
+
+        >>> H = PermutationGroup(G[0], G[1])
+        >>> J = PermutationGroup(list(H.generate())); J
+        PermutationGroup([
+            Permutation(3),
+            Permutation(1, 2, 3),
+            Permutation(1, 3, 2),
+            Permutation(3)(0, 1, 2),
+            Permutation(0, 1)(2, 3),
+            Permutation(0, 1, 3),
+            Permutation(0, 2)(1, 3),
+            Permutation(3)(0, 2, 1),
+            Permutation(0, 2, 3),
+            Permutation(0, 3, 2),
+            Permutation(0, 3, 1),
+            Permutation(0, 3)(1, 2)])
+        >>> _.is_group()
+        True
         """
         if method == "coset":
             return self.generate_schreier_sims(af)
         elif method == "dimino":
             return self.generate_dimino(af)
         else:
-            raise ValueError('there is not this method')
+            raise NotImplementedError('No generation defined for %s' % method)
 
     def generate_dimino(self, af=False):
-        """
-        yield group elements using Dimino's algorithm
+        """Yield group elements using Dimino's algorithm
 
         If af == True it yields the array form of the permutations
 
-        Reference:
-        [1] The implementation of various algorithms for Permutation Groups in
+        References
+        ==========
+
+        [1] The Implementation of Various Algorithms for Permutation Groups in
         the Computer Algebra System: AXIOM, N.J. Doye, M.Sc. Thesis
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
         >>> list(g.generate_dimino(af=True))
-        [[0, 1, 2, 3], [0, 2, 1, 3], [0, 2, 3, 1], [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
+        [[0, 1, 2, 3], [0, 2, 1, 3], [0, 2, 3, 1],
+         [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
         idn = range(self.degree)
@@ -1377,10 +1590,10 @@ class PermutationGroup(Basic):
         if af:
             yield idn
         else:
-            yield _new_from_array_form(idn)
+            yield _af_new(idn)
         gens = [p.array_form for p in self.generators]
 
-        for i in xrange(len(gens)):
+        for i in range(len(gens)):
             # D elements of the subgroup G_i generated by gens[:i]
             D = element_list[:]
             N = [idn]
@@ -1389,16 +1602,16 @@ class PermutationGroup(Basic):
                 N = []
                 for a in A:
                     for g in gens[:i+1]:
-                        ag = perm_af_mul(a, g)
+                        ag = _af_rmul(a, g)
                         if tuple(ag) not in set_element_list:
                             # produce G_i*g
                             for d in D:
                                 order += 1
-                                ap = perm_af_mul(d, ag)
+                                ap = _af_rmul(d, ag)
                                 if af:
                                     yield ap
                                 else:
-                                    p = _new_from_array_form(ap)
+                                    p = _af_new(ap)
                                     yield p
                                 element_list.append(ap)
                                 set_element_list.add(tuple(ap))
@@ -1406,30 +1619,32 @@ class PermutationGroup(Basic):
         self._order = len(element_list)
 
     def generate_schreier_sims(self, af=False):
-        """
-        yield group elements using the Schreier-Sims representation
+        """Yield group elements using the Schreier-Sims representation
 
         If af = True it yields the array form of the permutations
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
         >>> g = PermutationGroup([a, b])
         >>> list(g.generate_schreier_sims(af=True))
-        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1], [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
+        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 3, 1],
+         [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
         def get1(posmax):
             n = len(posmax) - 1
-            for i in range(n,-1,-1):
+            for i in range(n, -1, -1):
                 if posmax[i] != 1:
                     return i + 1
+            return 1
         n = self.degree
-        u = self.coset_repr()
+        u = self.stabilizer_cosets(True)
         # stg stack of group elements
         stg = [range(n)]
         # posmax[i] = len(u[i])
@@ -1447,7 +1662,7 @@ class PermutationGroup(Basic):
                 h -= 1
                 stg.pop()
                 continue
-            p = perm_af_mul(stg[-1], u[h][pos[h]])
+            p = _af_rmul(stg[-1], u[h][pos[h]])
             pos[h] += 1
             stg.append(p)
             h += 1
@@ -1455,59 +1670,100 @@ class PermutationGroup(Basic):
                 if af:
                     yield p
                 else:
-                    p1 = _new_from_array_form(p)
+                    p1 = _af_new(p)
                     yield p1
                 stg.pop()
                 h -= 1
 
     @property
     def generators(self):
-        """
-        Returns the generators of the group in array form.
+        """Returns the generators of the group.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.generators
-        [Permutation([0, 2, 1]), Permutation([1, 0, 2])]
+        [Permutation(1, 2), Permutation(2)(0, 1)]
 
         """
         return self._generators
 
-    def has_element(self, g):
-        """
-        test if `g` belongs to G; see coset_decomposition
+    def contains(self, g, strict=True):
+        """Test if permutation ``g`` belong to self, ``G``.
+
+        If ``g`` is an element of ``G`` it can be written as a product
+        of factors drawn from the cosets of ``G``'s stabilizers. To see
+        if ``g`` is one of the actual generators defining the group use
+        ``G.has(g)``.
+
+        If ``strict`` is not True, ``g`` will be resized, if necessary,
+        to match the size of permutations in ``self``.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1, 3])
-        >>> b = Permutation([0, 2, 3, 1])
-        >>> g = PermutationGroup([a, b])
-        >>> g.has_element(Permutation([0, 1, 3, 2]))
+
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(2, 3, 1)
+        >>> G = PermutationGroup(a, b, degree=5)
+        >>> G.contains(G[0]) # trivial check
         True
-        >>> g.has_element(Permutation([1, 2, 3, 0]))
+        >>> elem = Permutation([[2, 3]], size=5)
+        >>> G.contains(elem)
+        True
+        >>> G.contains(Permutation(4)(0, 1, 2, 3))
         False
 
+        If strict is False, a permutation will be resized, if
+        necessary:
+
+        >>> H = PermutationGroup(Permutation(5))
+        >>> H.contains(Permutation(3))
+        False
+        >>> H.contains(Permutation(3), strict=False)
+        True
+
+        To test if a given permutation is present in the group:
+
+        >>> elem in G.generators
+        False
+        >>> G.has(elem)
+        False
+
+        See Also
+        ========
+
+        coset_factor, has, in
+
         """
-        return bool(self.coset_decomposition(g.array_form))
+        if not isinstance(g, Permutation):
+            return False
+        if g.size != self.degree:
+            if strict:
+                return False
+            g = Permutation(g, size=self.degree)
+        if g in self.generators:
+            return True
+        return bool(self.coset_factor(g.array_form))
 
     @property
     def is_abelian(self):
-        """
-        Checks if the group is Abelian.
+        """Test if the group is Abelian.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1529,14 +1785,14 @@ class PermutationGroup(Basic):
             for y in gens:
                 if y <= x:
                     continue
-                if not perm_af_commutes_with(x, y):
+                if not _af_commutes_with(x, y):
                     self._is_abelian = False
                     return False
         return True
 
     def is_alt_sym(self, eps=0.05, _random_prec=None):
-        r"""
-        Monte Carlo test for the symmetric/alternating group for degrees >= 8.
+        r"""Monte Carlo test for the symmetric/alternating group for degrees
+        >= 8.
 
         More specifically, it is one-sided Monte Carlo with the
         answer True (i.e., G is symmetric/alternating) guaranteed to be
@@ -1547,12 +1803,12 @@ class PermutationGroup(Basic):
 
         The algorithm itself uses some nontrivial results from group theory and
         number theory:
-        1) If a transitive group `G` of degree ``n`` contains an element
-        with a cycle of length `n/2 < p < n-2` for `p` a prime, `G` is the
-        symmetric or alternating group ([1], pp.81-82)
+        1) If a transitive group ``G`` of degree ``n`` contains an element
+        with a cycle of length ``n/2 < p < n-2`` for ``p`` a prime, ``G`` is the
+        symmetric or alternating group ([1], pp. 81-82)
         2) The proportion of elements in the symmetric/alternating group having
-        the property described in 1) is approximately `\log(2)/\log(n)`
-        ([1], p.82; [2], pp.226-227).
+        the property described in 1) is approximately ``\log(2)/\log(n)``
+        ([1], p.82; [2], pp. 226-227).
         The helper function ``_check_cycles_alt_sym`` is used to
         go over the cycles in a permutation and look for ones satisfying 1).
 
@@ -1575,7 +1831,7 @@ class PermutationGroup(Basic):
             n = self.degree
             if n < 8:
                 return False
-            if not self.is_transitive:
+            if not self.is_transitive():
                 return False
             if n < 17:
                 c_n = 0.34
@@ -1597,13 +1853,12 @@ class PermutationGroup(Basic):
 
     @property
     def is_nilpotent(self):
-        """
-        Test if the group is nilpotent.
+        """Test if the group is nilpotent.
 
-        A group `G` is nilpotent if it has a central series of finite length.
-        Alternatively, `G` is nilpotent if its lower central series terminates
+        A group ``G`` is nilpotent if it has a central series of finite length.
+        Alternatively, ``G`` is nilpotent if its lower central series terminates
         with the trivial group. Every nilpotent group is also solvable
-        ([1],p.29, [12]).
+        ([1], p.29, [12]).
 
         Examples
         ========
@@ -1628,8 +1883,8 @@ class PermutationGroup(Basic):
             terminator = lcs[len(lcs)-1]
             gens = terminator.generators
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
-            if [identity for gen in gens] == gens:
+            identity = _af_new(range(degree))
+            if all(g == identity for g in gens):
                 self._is_solvable = True
                 self._is_nilpotent = True
                 return True
@@ -1640,8 +1895,7 @@ class PermutationGroup(Basic):
             return self._is_nilpotent
 
     def is_normal(self, gr):
-        """
-        test if G=self is a normal subgroup of gr
+        """Test if G=self is a normal subgroup of gr.
 
         G is normal in gr if
         for each g2 in G, g1 in gr, g = g1*g2*g1**-1 belongs to G
@@ -1651,7 +1905,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
@@ -1665,32 +1920,31 @@ class PermutationGroup(Basic):
         gens1 = [p.array_form for p in gr.generators]
         for g1 in gens1:
             for g2 in gens2:
-                p = perm_af_muln(g1, g2, perm_af_invert(g1))
-                if not self.coset_decomposition(p):
+                p = _af_rmuln(g1, g2, _af_invert(g1))
+                if not self.coset_factor(p):
                     return False
         return True
 
     def is_primitive(self, randomized=True):
-        """
-        Test a group for primitivity.
+        """Test if a group is primitive.
 
-        A permutation group `G` acting on a set `S` is called primitive if
-        `S` contains no nontrivial block under the action of `G`
-        (a block is nontrivial if its cardinality is more than `1`).
+        A permutation group ``G`` acting on a set ``S`` is called primitive if
+        ``S`` contains no nontrivial block under the action of ``G``
+        (a block is nontrivial if its cardinality is more than ``1``).
 
         Notes
         =====
 
         The algorithm is described in [1], p.83, and uses the function
-        minimal_block to search for blocks of the form `\{0, k\}` for `k`
-        ranging over representatives for the orbits of `G_0`, the stabilizer of
-        `0`. This algorithm has complexity `O(n^2)` where `n` is the degree
-        of the group, and will perform badly if `G_0` is small.
+        minimal_block to search for blocks of the form ``\{0, k\}`` for ``k``
+        ranging over representatives for the orbits of ``G_0``, the stabilizer of
+        ``0``. This algorithm has complexity ``O(n^2)`` where ``n`` is the degree
+        of the group, and will perform badly if ``G_0`` is small.
 
-        There are two implementations offered: one finds `G_0`
+        There are two implementations offered: one finds ``G_0``
         deterministically using the function ``stabilizer``, and the other
-        (default) produces random elements of `G_0` using ``random_stab``,
-        hoping that they generate a subgroup of `G_0` with not too many more
+        (default) produces random elements of ``G_0`` using ``random_stab``,
+        hoping that they generate a subgroup of ``G_0`` with not too many more
         orbits than G_0 (this is suggested in [1], p.83). Behavior is changed
         by the ``randomized`` flag.
 
@@ -1713,10 +1967,9 @@ class PermutationGroup(Basic):
             return self._is_primitive
         n = self.degree
         if randomized:
-            r = len(self.generators)
             random_stab_gens = []
             v = self.schreier_vector(0)
-            for i in range(r):
+            for i in range(len(self)):
                 random_stab_gens.append(self.random_stab(0, v))
             stab = PermutationGroup(random_stab_gens)
         else:
@@ -1732,11 +1985,10 @@ class PermutationGroup(Basic):
 
     @property
     def is_solvable(self):
-        """
-        Test if the group  is solvable
+        """Test if the group is solvable.
 
-        `G` is solvable if its derived series terminates with the trivial
-        group ([1],p.29).
+        ``G`` is solvable if its derived series terminates with the trivial
+        group ([1], p.29).
 
         Examples
         ========
@@ -1757,8 +2009,8 @@ class PermutationGroup(Basic):
             terminator = ds[len(ds) - 1]
             gens = terminator.generators
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
-            if [identity for gen in gens] == gens:
+            identity = _af_new(range(degree))
+            if all(g == identity for g in gens):
                 self._is_solvable = True
                 return True
             else:
@@ -1767,40 +2019,69 @@ class PermutationGroup(Basic):
         else:
             return self._is_solvable
 
-    def is_subgroup(self, gr):
-        """
-        test if self is a subgroup of gr
+    def is_subgroup(self, G, strict=True):
+        """Return True if all elements of self belong to G.
+
+        If ``strict`` is False then if ``self``'s degree is smaller
+        than ``G``'s, the elements will be resized to have the same degree.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([1,2,3,4,0])
-        >>> b = Permutation([1,0,2,3,4])
-        >>> G = PermutationGroup([a, b])
-        >>> c = Permutation([1,0,3,2,4])
-        >>> G1 = PermutationGroup([a, c])
-        >>> G1.is_subgroup(G)
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
+        ...    CyclicGroup)
+
+        Testing is strict by default: the degree of each group must be the
+        same:
+
+        >>> p = Permutation(0, 1, 2, 3, 4, 5)
+        >>> G1 = PermutationGroup([Permutation(0, 1, 2), Permutation(0, 1)])
+        >>> G2 = PermutationGroup([Permutation(0, 2), Permutation(0, 1, 2)])
+        >>> G3 = PermutationGroup([p, p**2])
+        >>> assert G1.order() == G2.order() == G3.order() == 6
+        >>> G1.is_subgroup(G2)
+        True
+        >>> G1.is_subgroup(G3)
+        False
+        >>> G3.is_subgroup(PermutationGroup(G3[1]))
+        False
+        >>> G3.is_subgroup(PermutationGroup(G3[0]))
         True
 
-        """
-        if self.degree != gr.degree:
-            return False
-        if self.order() > gr.order():
-            return False
-        gens1 = self.generators
-        for g in gens1:
-            if not gr.has_element(g):
-                return False
-        return True
+        To ignore the size, set ``strict`` to False:
 
-    @property
-    def is_transitive(self):
+        >>> S3 = SymmetricGroup(3)
+        >>> S5 = SymmetricGroup(5)
+        >>> S3.is_subgroup(S5, strict=False)
+        True
+        >>> C7 = CyclicGroup(7)
+        >>> G = S5*C7
+        >>> S5.is_subgroup(G, False)
+        True
+        >>> C7.is_subgroup(G, 0)
+        False
         """
-        test if the group is transitive
+        if not isinstance(G, PermutationGroup):
+            return False
+        if self == G:
+            return True
+        if G.order() % self.order() != 0:
+            return False
+        if self.degree == G.degree or \
+           (self.degree < G.degree and not strict):
+            gens = self.generators
+        else:
+            return False
+        return all(G.contains(g, strict=strict) for g in gens)
+
+    def is_transitive(self, strict=True):
+        """Test if the group is transitive.
 
         A group is transitive if it has a single orbit.
+
+        If ``strict`` is False the group is transitive if it has
+        a single orbit of length different from 1.
 
         Examples
         ========
@@ -1810,63 +2091,71 @@ class PermutationGroup(Basic):
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([2, 0, 1, 3])
         >>> G1 = PermutationGroup([a, b])
-        >>> G1.is_transitive
+        >>> G1.is_transitive()
         False
+        >>> G1.is_transitive(strict=False)
+        True
         >>> c = Permutation([2, 3, 0, 1])
         >>> G2 = PermutationGroup([a, c])
-        >>> G2.is_transitive
+        >>> G2.is_transitive()
         True
-
+        >>> d = Permutation([1,0,2,3])
+        >>> e = Permutation([0,1,3,2])
+        >>> G3 = PermutationGroup([d, e])
+        >>> G3.is_transitive() or G3.is_transitive(strict=False)
+        False
         """
-        if self._is_transitive is not None:
+        if self._is_transitive: # strict or not, if True then True
             return self._is_transitive
+        if strict:
+            if self._is_transitive is not None: # we only store strict=True
+                return self._is_transitive
 
-        ans = len(self.orbit(0)) == self.degree
-        self._is_transitive = ans
-        return ans
+            ans = len(self.orbit(0)) == self.degree
+            self._is_transitive = ans
+            return ans
+
+        got_orb = False
+        for x in self.orbits():
+            if len(x) > 1:
+                if got_orb:
+                    return False
+                got_orb = True
+        return got_orb
 
     @property
     def is_trivial(self):
-        """
-        Test if the group is the trivial group.
+        """Test if the group is the trivial group.
 
-        This is true if and only if all the generators are the identity.
+        This is true if the group contains only the identity permutation.
 
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> id = Permutation(range(5))
-        >>> G = PermutationGroup([id, id, id])
+        >>> G = PermutationGroup([Permutation([0, 1, 2])])
         >>> G.is_trivial
         True
 
         """
         if self._is_trivial is None:
-            gens = self.generators
-            degree = self.degree
-            identity = _new_from_array_form(range(degree))
-            res = [identity for gen in gens] == gens
-            self._is_trivial = res
-            return res
-        else:
-            return self._is_trivial
+            self._is_trivial = len(self) == 1 and self[0].is_Identity
+        return self._is_trivial
 
     def lower_central_series(self):
-        r"""
-        Return the lower central series for the group.
+        r"""Return the lower central series for the group.
 
-        The lower central series for a group `G` is the series
-        `G = G_0 > G_1 > G_2 > \ldots` where
-        `G_k = [G, G_{k-1}]`, i.e. every term after the first is equal to the
-        commutator of `G` and the previous term in `G1` ([1],p.29).
+        The lower central series for a group ``G`` is the series
+        ``G = G_0 > G_1 > G_2 > \ldots`` where
+        ``G_k = [G, G_{k-1}]``, i.e. every term after the first is equal to the
+        commutator of ``G`` and the previous term in ``G1`` ([1], p.29).
 
         Returns
         =======
 
         A list of permutation groups in the order
-        `G = G_0, G_1, G_2, \ldots`
+        ``G = G_0, G_1, G_2, \ldots``
 
         Examples
         ========
@@ -1876,7 +2165,7 @@ class PermutationGroup(Basic):
         >>> A = AlternatingGroup(4)
         >>> len(A.lower_central_series())
         2
-        >>> A.lower_central_series()[1] == DihedralGroup(2)
+        >>> A.lower_central_series()[1].is_subgroup(DihedralGroup(2))
         True
 
         See Also
@@ -1888,7 +2177,7 @@ class PermutationGroup(Basic):
         res = [self]
         current = self
         next = self.commutator(self, current)
-        while current != next:
+        while not current.is_subgroup(next):
             res.append(next)
             current = next
             next = self.commutator(self, current)
@@ -1896,14 +2185,13 @@ class PermutationGroup(Basic):
 
     @property
     def max_div(self):
-        """
-        Maximum proper divisor of the degree of a permutation group.
+        """Maximum proper divisor of the degree of a permutation group.
 
         Notes
         =====
 
         Obviously, this is the degree divided by its minimal proper divisor
-        (larger than `1`, if one exists). As it is guaranteed to be prime,
+        (larger than ``1``, if one exists). As it is guaranteed to be prime,
         the ``sieve`` from ``sympy.ntheory`` is used.
         This function is also used as an optimization tool for the functions
         ``minimal_block`` and ``_union_find_merge``.
@@ -1911,8 +2199,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> G = PermutationGroup([Permutation([0,2,1,3])])
         >>> G.max_div
         2
@@ -1935,30 +2223,33 @@ class PermutationGroup(Basic):
                 return d
 
     def minimal_block(self, points):
-        r"""
-        For a transitive group, finds the block system generated by ``points``.
+        r"""For a transitive group, finds the block system generated by
+        ``points``.
 
-        If a group `G` acts on a set `S`, a nonempty subset `B` of `S` is
-        called a block under the action of `G` if for all `g` in `G` we have
-        `gB = B` (`g` fixes `B`) or `gB` and `B` have no common points
-        (`g` moves `B` entirely). ([1], p.23; [6]).
-        The distinct translates `gB` of a block `B` for `g` in `G` partition
-        the set `S` and this set of translates is known as a block system.
-        Moreover, we obviously have that all blocks in the partition have
-        the same size, hence the block size divides `|S|` ([1], p.23).
-        A `G`-congruence is an equivalence relation `~` on the set `S` such that
-        `a ~ b` implies `g(a) ~ g(b)` for all `g` in `G`. For a
-        transitive group, the equivalence classes of a `G`-congruence and the
-        blocks of a block system are the same thing ([1], p.23).
+        If a group ``G`` acts on a set ``S``, a nonempty subset ``B`` of ``S``
+        is called a block under the action of ``G`` if for all ``g`` in ``G``
+        we have ``gB = B`` (``g`` fixes ``B``) or ``gB`` and ``B`` have no
+        common points (``g`` moves ``B`` entirely). ([1], p.23; [6]).
+
+        The distinct translates ``gB`` of a block ``B`` for ``g`` in ``G``
+        partition the set ``S`` and this set of translates is known as a block
+        system. Moreover, we obviously have that all blocks in the partition
+        have the same size, hence the block size divides ``|S|`` ([1], p.23).
+        A ``G``-congruence is an equivalence relation ``~`` on the set ``S``
+        such that ``a ~ b`` implies ``g(a) ~ g(b)`` for all ``g`` in ``G``.
+        For a transitive group, the equivalence classes of a ``G``-congruence
+        and the blocks of a block system are the same thing ([1], p.23).
+
         The algorithm below checks the group for transitivity, and then finds
-        the `G`-congruence generated by the pairs `(p_0, p_1), (p_0, p_2), ...,
-        (p_0,p_{k-1})` which is the same as finding the maximal block system
-        (i.e., the one with minimum block size) such that
-        `p_0, ..., p_{k-1}` are in the same block ([1], p.83).
+        the ``G``-congruence generated by the pairs ``(p_0, p_1), (p_0, p_2),
+        ..., (p_0,p_{k-1})`` which is the same as finding the maximal block
+        system (i.e., the one with minimum block size) such that
+        ``p_0, ..., p_{k-1}`` are in the same block ([1], p.83).
+
         It is an implementation of Atkinson's algorithm, as suggested in [1],
-        and manipulates an equivalence relation on the set `S` using a
+        and manipulates an equivalence relation on the set ``S`` using a
         union-find data structure. The running time is just above
-        `O(|points||S|)`. ([1], pp.83-87; [7]).
+        ``O(|points||S|)``. ([1], pp. 83-87; [7]).
 
         Examples
         ========
@@ -1977,7 +2268,7 @@ class PermutationGroup(Basic):
         _union_find_rep, _union_find_merge, is_transitive, is_primitive
 
         """
-        if not self.is_transitive:
+        if not self.is_transitive():
             return False
         n = self.degree
         gens = self.generators
@@ -1989,7 +2280,7 @@ class PermutationGroup(Basic):
         # the block size must divide the degree of the group
         if k > self.max_div:
             return [0]*n
-        for i in xrange(k-1):
+        for i in range(k-1):
             parents[points[i+1]] = points[0]
             not_rep.append(points[i+1])
         ranks[points[0]] = k
@@ -2016,23 +2307,24 @@ class PermutationGroup(Basic):
         return parents
 
     def normal_closure(self, other, k=10):
-        r"""
-        Return the normal closure of a subgroup/set of permutations.
+        r"""Return the normal closure of a subgroup/set of permutations.
 
-        If `S` is a subset of a group `G`, the normal closure of `A` in `G`
-        is defined as the intersection of all normal subgroups of `G` that
-        contain `A` ([1],p.14). Alternatively, it is the group generated by
-        the conjugates `x^{-1}yx` for `x` a generator of `G` and `y` a
-        generator of the subgroup `\left\langle S\right\rangle` generated by
-        `S` (for some chosen generating set for `\left\langle S\right\rangle`)
-        ([1],p.73).
+        If ``S`` is a subset of a group ``G``, the normal closure of ``A`` in ``G``
+        is defined as the intersection of all normal subgroups of ``G`` that
+        contain ``A`` ([1], p.14). Alternatively, it is the group generated by
+        the conjugates ``x^{-1}yx`` for ``x`` a generator of ``G`` and ``y`` a
+        generator of the subgroup ``\left\langle S\right\rangle`` generated by
+        ``S`` (for some chosen generating set for ``\left\langle S\right\rangle``)
+        ([1], p.73).
 
         Parameters
         ==========
 
-        ``other`` - a subgroup/list of permutations/single permutation
-        ``k`` - an implementation-specific parameter that determines the number
-        of conjugates that are adjoined to ``other`` at once
+        other
+            a subgroup/list of permutations/single permutation
+        k
+            an implementation-specific parameter that determines the number
+            of conjugates that are adjoined to ``other`` at once
 
         Examples
         ========
@@ -2044,7 +2336,7 @@ class PermutationGroup(Basic):
         >>> G = S.normal_closure(C)
         >>> G.order()
         60
-        >>> G == AlternatingGroup(5)
+        >>> G.is_subgroup(AlternatingGroup(5))
         True
 
         See Also
@@ -2055,31 +2347,32 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The algorithm is described in [1],pp.73-74; it makes use of the
+        The algorithm is described in [1], pp. 73-74; it makes use of the
         generation of random elements for permutation groups by the product
         replacement algorithm.
 
         """
         if hasattr(other, 'generators'):
             degree = self.degree
-            identity = _new_from_array_form(range(degree))
+            identity = _af_new(range(degree))
 
-            if other.generators == [identity for gen in other.generators]:
+            if all(g == identity for g in other.generators):
                 return other
             Z = PermutationGroup(other.generators[:])
             base, strong_gens = Z.schreier_sims_incremental()
             strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
             basic_orbits, basic_transversals =\
                     _orbits_transversals_from_bsgs(base, strong_gens_distr)
-            C = False
+
             self._random_pr_init(r=10, n=20)
 
-            while C == False:
+            _loop = True
+            while _loop:
                 Z._random_pr_init(r=10, n=10)
                 for i in range(k):
                     g = self.random_pr()
                     h = Z.random_pr()
-                    conj = (~g)*h*g
+                    conj = rmul(~g, h, g)
                     res = _strip(conj, base, basic_orbits, basic_transversals)
                     if res[0] != identity or res[1] != len(base) + 1:
                         gens = Z.generators
@@ -2094,18 +2387,16 @@ class PermutationGroup(Basic):
                         basic_orbits, basic_transversals =\
                                 _orbits_transversals_from_bsgs(base,\
                                 strong_gens_distr)
-                C = True
-                break_flag = False
+                _loop = False
                 for g in self.generators:
                     for h in Z.generators:
-                        conj = (~g)*h*g
+                        conj = rmul(~g, h, g)
                         res = _strip(conj, base, basic_orbits,\
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
-                            C = False
-                            break_flag = True
+                            _loop = True
                             break
-                    if break_flag == True:
+                    if _loop:
                         break
             return Z
         elif hasattr(other, '__getitem__'):
@@ -2114,12 +2405,11 @@ class PermutationGroup(Basic):
             return self.normal_closure(PermutationGroup([other]))
 
     def orbit(self, alpha, action='tuples'):
-        r"""
-        Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
+        r"""Compute the orbit of alpha ``\{g(\alpha) | g \in G\}`` as a set.
 
-        The time complexity of the algorithm used here is `O(|Orb|*r)` where
-        `|Orb|` is the size of the orbit and `r` is the number of generators of
-        the group. For a more detailed analysis, see [1], p.78, [2], pp.19-21.
+        The time complexity of the algorithm used here is ``O(|Orb|*r)`` where
+        ``|Orb|`` is the size of the orbit and ``r`` is the number of generators of
+        the group. For a more detailed analysis, see [1], p.78, [2], pp. 19-21.
         Here alpha can be a single point, or a list of points.
 
         If alpha is a single point, the ordinary orbit is computed.
@@ -2133,8 +2423,8 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([1,2,0,4,5,6,3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
@@ -2190,8 +2480,7 @@ class PermutationGroup(Basic):
             return set([tuple(x) for x in orb])
 
     def orbit_rep(self, alpha, beta, schreier_vector=None):
-        """
-        Return a group element which sends ``alpha`` to ``beta``.
+        """Return a group element which sends ``alpha`` to ``beta``.
 
         If ``beta`` is not in the orbit of ``alpha``, the function returns
         ``False``. This implementation makes use of the schreier vector.
@@ -2200,11 +2489,13 @@ class PermutationGroup(Basic):
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
-        >>> G.orbit_rep(0,4)
-        Permutation([4, 2, 3, 0, 1])
+        >>> G.orbit_rep(0, 4)
+        Permutation(0, 4, 1, 2, 3)
 
         See Also
         ========
@@ -2217,36 +2508,40 @@ class PermutationGroup(Basic):
         if schreier_vector[beta] == None:
             return False
         n = self.degree
-        u = _new_from_array_form(range(n))
+        u = _af_new(range(n))
         k = schreier_vector[beta]
         gens = self.generators
         while k != -1:
-            u = u*gens[k]
+            u = rmul(u, gens[k])
             beta = (~gens[k])(beta)
             k = schreier_vector[beta]
         return u
 
     def orbit_transversal(self, alpha, pairs=False):
-        r"""
-        Computes a transversal for the orbit of ``alpha`` as a set.
+        r"""Computes a transversal for the orbit of ``alpha`` as a set.
 
-        For a permutation group `G`, a transversal for the orbit
-        `Orb = \{g(\alpha) | g \in G\}` is a set
-        `\{g_\beta | g_\beta(\alpha) = \beta\}` for `\beta \in Orb`.
+        For a permutation group ``G``, a transversal for the orbit
+        ``Orb = \{g(\alpha) | g \in G\}`` is a set
+        ``\{g_\beta | g_\beta(\alpha) = \beta\}`` for ``\beta \in Orb``.
         Note that there may be more than one possible transversal.
         If ``pairs`` is set to ``True``, it returns the list of pairs
-        `(\beta, g_\beta)`. For a proof of correctness, see [1], p.79
+        ``(\beta, g_\beta)``. For a proof of correctness, see [1], p.79
 
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
-        [Permutation([0, 1, 2, 3, 4, 5]), Permutation([1, 2, 3, 4, 5, 0]),
-        Permutation([5, 4, 3, 2, 1, 0]), Permutation([2, 3, 4, 5, 0, 1]),
-        Permutation([4, 3, 2, 1, 0, 5]), Permutation([3, 4, 5, 0, 1, 2])]
+        [Permutation(5),
+         Permutation(0, 1, 2, 3, 4, 5),
+         Permutation(0, 5)(1, 4)(2, 3),
+         Permutation(0, 2, 4)(1, 3, 5),
+         Permutation(5)(0, 4)(1, 3),
+         Permutation(0, 3)(1, 4)(2, 5)]
 
         See Also
         ========
@@ -2255,7 +2550,7 @@ class PermutationGroup(Basic):
 
         """
         n = self.degree
-        tr = [(alpha, _new_from_array_form(range(n)))]
+        tr = [(alpha, _af_new(range(n)))]
         used = [False]*n
         used[alpha] = True
         gens = self.generators
@@ -2263,17 +2558,17 @@ class PermutationGroup(Basic):
             for gen in gens:
                 temp = gen(pair[0])
                 if used[temp] == False:
-                    tr.append((temp, gen*pair[1]))
+                    tr.append((temp, Permutation.rmul(gen, pair[1])))
                     used[temp] = True
         if pairs:
             return tr
         return [pair[1] for pair in tr]
 
     def orbits(self, rep=False):
-        """
-        compute the orbits of G;
-        if rep=False it returns a list of sets
-        else it returns a list of representatives of the orbits
+        """Compute the orbits of G.
+
+        If rep=False it returns a list of sets else it returns a list of
+        representatives of the orbits
 
         Examples
         ========
@@ -2303,20 +2598,40 @@ class PermutationGroup(Basic):
         return orbs
 
     def order(self):
-        """
-        return the order of the group
+        """Return the order of the group: the number of permutations that
+        can be generated from elements of the group.
+
+        The number of permutations comprising the group is given by
+        len(group); the length of each permutation in the group is
+        given by group.size.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+
+        >>> a = Permutation([1, 0, 2])
+        >>> G = PermutationGroup([a])
+        >>> G.degree
+        3
+        >>> len(G)
+        1
+        >>> G.order()
+        2
+        >>> list(G.generate())
+        [Permutation(2), Permutation(2)(0, 1)]
+
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.order()
         6
 
+        See Also
+        ========
+
+        degree
         """
         if self._order != None:
             return self._order
@@ -2330,20 +2645,19 @@ class PermutationGroup(Basic):
             return self._order
         self.schreier_sims()
         m = 1
-        for x in self._coset_repr_n:
+        for x in self._stabilizer_cosets_n:
             m *= x
         return m
 
     def pointwise_stabilizer(self, points):
-        r"""
-        Return the pointwise stabilizer for a set of points.
+        r"""Return the pointwise stabilizer for a set of points.
 
-        For a permutation group `G` and a set of points
-        `\{p_1, p_2,\ldots, p_k\}`, the pointwise stabilizer of
-        `p_1, p_2, \ldots, p_k` is defined as
-        `G_{p_1,\ldots, p_k} =
+        For a permutation group ``G`` and a set of points
+        ``\{p_1, p_2,\ldots, p_k\}``, the pointwise stabilizer of
+        ``p_1, p_2, \ldots, p_k`` is defined as
+        ``G_{p_1,\ldots, p_k} =
         \{g\in G | g(p_i) = p_i \forall i\in\{1, 2,\ldots,k\}\} ([1],p20).
-        It is a subgroup of `G`.
+        It is a subgroup of ``G``.
 
         Examples
         ========
@@ -2351,7 +2665,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(7)
         >>> Stab = S.pointwise_stabilizer([2, 3, 5])
-        >>> Stab == S.stabilizer(2).stabilizer(3).stabilizer(5)
+        >>> Stab.is_subgroup(S.stabilizer(2).stabilizer(3).stabilizer(5))
         True
 
         See Also
@@ -2370,23 +2684,73 @@ class PermutationGroup(Basic):
         base, strong_gens = self.schreier_sims_incremental(base=points)
         stab_gens = []
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
+        identity = _af_new(range(degree))
         for gen in strong_gens:
             if [gen(point) for point in points] == points:
                 stab_gens.append(gen)
         return PermutationGroup(stab_gens)
 
-    def random(self, af=False):
+    def make_perm(self, n, seed=None):
         """
-        return a random group element
+        Multiply ``n`` randomly selected permutations from
+        pgroup together, starting with the identity
+        permutation. If ``n`` is a list of integers, those
+        integers will be used to select the permutations and they
+        will be applied in L to R order: make_perm((A, B, C)) will
+        give CBA(I) where I is the identity permutation.
 
+        ``seed`` is used to set the seed for the random selection
+        of permutations from pgroup. If this is a list of integers,
+        the corresponding permutations from pgroup will be selected
+        in the order give. This is mainly used for testing purposes.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
+        >>> G = PermutationGroup([a, b])
+        >>> G.make_perm(1, [0])
+        Permutation(0, 1)(2, 3)
+        >>> G.make_perm(3, [0, 1, 0])
+        Permutation(0, 2, 3, 1)
+        >>> G.make_perm([0, 1, 0])
+        Permutation(0, 2, 3, 1)
+
+        See Also
+        ========
+
+        random
+        """
+        if is_sequence(n):
+            if seed is not None:
+                raise ValueError('If n is a sequence, seed should be None')
+            n, seed = len(n), n
+        else:
+            try:
+                n = int(n)
+            except TypeError:
+                raise ValueError('n must be an integer or a sequence.')
+        randrange = _randrange(seed)
+
+        # start with the identity permutation
+        result = Permutation(range(self.degree))
+        m = len(self)
+        for i in range(n):
+            p = self[randrange(m)]
+            result = rmul(result, p)
+        return result
+
+    def random(self, af=False):
+        """Return a random group element
         """
         rank = randrange(self.order())
         return self.coset_unrank(rank, af)
 
     def random_pr(self, gen_count=11, iterations=50, _random_prec=None):
-        """
-        Return a random group element using product replacement.
+        """Return a random group element using product replacement.
 
         For the details of the product replacement algorithm, see
         ``_random_pr_init`` In ``random_pr`` the actual 'product replacement'
@@ -2421,16 +2785,15 @@ class PermutationGroup(Basic):
             e = _random_prec['e']
 
         if x == 1:
-            random_gens[s] = random_gens[s]*(random_gens[t]**e)
-            random_gens[r] = random_gens[r]*random_gens[s]
+            random_gens[s] = rmul(random_gens[s], random_gens[t]**e)
+            random_gens[r] = rmul(random_gens[r], random_gens[s])
         else:
-            random_gens[s] = (random_gens[t]**e)*random_gens[s]
-            random_gens[r] = random_gens[s]*random_gens[r]
+            random_gens[s] = rmul(random_gens[t]**e, random_gens[s])
+            random_gens[r] = rmul(random_gens[s], random_gens[r])
         return random_gens[r]
 
     def random_stab(self, alpha, schreier_vector=None, _random_prec=None):
-        """
-        Random element from the stabilizer of ``alpha``.
+        """Random element from the stabilizer of ``alpha``.
 
         The schreier vector for ``alpha`` is an optional argument used
         for speeding up repeated calls. The algorithm is described in [1], p.81
@@ -2449,18 +2812,17 @@ class PermutationGroup(Basic):
             rand = _random_prec['rand']
         beta = rand(alpha)
         h = self.orbit_rep(alpha, beta, schreier_vector)
-        return (~h)*rand
+        return rmul(~h, rand)
 
     def schreier_sims(self):
-        """
-        Schreier-Sims algorithm.
+        """Schreier-Sims algorithm.
 
-        It computes the generators of the stabilizers chain
+        It computes the generators of the chain of stabilizers
         G > G_{b_1} > .. > G_{b1,..,b_r} > 1
         in which G_{b_1,..,b_i} stabilizes b_1,..,b_i,
-        and the corresponding `s` cosets.
-        An element of the group can be written univoquely
-        as the product h_1*..*h_s.
+        and the corresponding ``s`` cosets.
+        An element of the group can be written as the product
+        h_1*..*h_s.
 
         We use Jerrum's filter in our implementation of the
         Schreier-Sims algorithm. It runs in polynomial time.
@@ -2477,41 +2839,43 @@ class PermutationGroup(Basic):
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
         >>> G.schreier_sims()
-        >>> G.stabilizers_gens()
+        >>> G.stabilizer_gens(af=True)
         [[0, 2, 1]]
-        >>> G.coset_repr()
+        >>> G.stabilizer_cosets(af=True)
         [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
 
         """
-        if self._coset_repr:
+        if self._stabilizer_cosets:
             return
         JGr = _JGraph(self)
         alpha = 0
         n = JGr.n
         self._order = 1
-        coset_repr = []
+        stabilizer_cosets = []
         num_generators = []
         generators = []
         gen = range(n)
-        base = {}
+        base = []
+        scn = []
         JGr.gens += [None]*(n - len(JGr.gens))
         while 1:
-            self._coset_repr_n = 0
-            self._coset_repr = [None]*n
+            self._stabilizer_cosets_n = 0
+            self._stabilizer_cosets = [None]*n
             JGr.schreier_tree(alpha, gen)
             cri = []
-            for p in self._coset_repr:
+            for p in self._stabilizer_cosets:
                 if not p:
                     cri.append(p)
                 else:
-                    cri.append(perm_af_invert(p))
+                    cri.append(_af_invert(p))
             JGr.jerrum_filter(alpha, cri)
-            if self._coset_repr_n > 1:
-                base[alpha] = self._coset_repr_n
-            self._order *= self._coset_repr_n
-            coset_repr.append([p for p in self._coset_repr if p])
+            if self._stabilizer_cosets_n > 1:
+                base.append(alpha)
+                scn.append(self._stabilizer_cosets_n)
+                self._order *= self._stabilizer_cosets_n
+            stabilizer_cosets.append([p for p in self._stabilizer_cosets if p])
             d = {}
-            for p in self._coset_repr:
+            for p in self._stabilizer_cosets:
                 if p:
                     d[p[alpha]] = p
             num_generators.append(JGr.r)
@@ -2520,21 +2884,21 @@ class PermutationGroup(Basic):
             if JGr.r <= 0:
                 break
             alpha += 1
-        self._coset_repr = coset_repr
+        self._stabilizer_cosets = stabilizer_cosets
         a = []
         for p in generators:
             if p not in a:
                 a.append(p)
-        self._stabilizers_gens = a
+        self._stabilizer_gens = a
 
         i = len(JGr.gens) - 1
         while not JGr.gens[i]:
             i -= 1
         JGr.gens = JGr.gens[:i+1]
-        self._base = base.keys()
-        self._coset_repr_n = base.values()
+        self._base = base
+        self._stabilizer_cosets_n = scn
         strong_gens = self.generators[:]
-        for gen in self._stabilizers_gens:
+        for gen in self._stabilizer_gens:
             gen = Permutation(gen)
             if gen not in strong_gens:
                 strong_gens.append(gen)
@@ -2542,10 +2906,10 @@ class PermutationGroup(Basic):
         base_len = len(self._base)
         transversals = [None]*base_len
         basic_orbits = [None]*base_len
-        for index in xrange(base_len):
+        for index in range(base_len):
             transversals[index] = {}
             base_point = self._base[index]
-            trans = self._coset_repr[base_point][:]
+            trans = self._stabilizer_cosets[base_point][:]
             for el in trans:
                 el = Permutation(el)
                 orbit_member = el(base_point)
@@ -2556,8 +2920,7 @@ class PermutationGroup(Basic):
         self._basic_orbits = basic_orbits
 
     def schreier_sims_incremental(self, base=None, gens=None):
-        """
-        Extend a sequence of points and generating set to a base and strong
+        """Extend a sequence of points and generating set to a base and strong
         generating set.
 
         Parameters
@@ -2603,7 +2966,7 @@ class PermutationGroup(Basic):
         as any sequence of points is a base for the trivial group. If the
         identity is present in the generators ``gens``, it is removed as
         it is a redundant generator.
-        The implementation is described in [1],pp.90-93.
+        The implementation is described in [1], pp. 90-93.
 
         See Also
         ========
@@ -2615,31 +2978,31 @@ class PermutationGroup(Basic):
             base = []
         if gens is None:
             gens = self.generators[:]
-        base_len = len(base)
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
         # handle the trivial group
-        if gens == [identity]:
+        if len(gens) == 1 and gens[0].is_Identity:
             return base, gens
         # prevent side effects
         _base, _gens = base[:], gens[:]
         # remove the identity as a generator
-        _gens = [x for x in _gens if x != identity]
+        _gens = [x for x in _gens if not x.is_Identity]
         # make sure no generator fixes all base points
         for gen in _gens:
-            if [gen(x) for x in _base] == [x for x in _base]:
-                new = 0
-                while gen(new) == new:
-                    new += 1
+            if all(x == gen(x) for x in _base):
+                for new in range(gen.size):
+                    if gen(new) != new:
+                        break
+                else:
+                    assert None # can this ever happen?
                 _base.append(new)
-                base_len += 1
         # distribute generators according to basic stabilizers
         strong_gens_distr = _distribute_gens_by_base(_base, _gens)
         # initialize the basic stabilizers, basic orbits and basic transversals
         stabs = {}
         orbs = {}
         transversals = {}
-        for i in xrange(base_len):
+        base_len = len(_base)
+        for i in range(base_len):
             stabs[i] = PermutationGroup(strong_gens_distr[i])
             transversals[i] = dict(stabs[i].orbit_transversal(_base[i],\
                                                               pairs=True))
@@ -2656,16 +3019,16 @@ class PermutationGroup(Basic):
                 u_beta = transversals[i][beta]
                 for gen in strong_gens_distr[i]:
                     u_beta_gen = transversals[i][gen(beta)]
-                    if gen*u_beta != u_beta_gen:
+                    if rmul(gen, u_beta) != u_beta_gen:
                         # test if the schreier generator is in the i+1-th
                         # would-be basic stabilizer
                         y = True
-                        schreier_gen = (~u_beta_gen)*gen*u_beta
+                        schreier_gen = rmul(~u_beta_gen, gen, u_beta)
                         h, j = _strip(schreier_gen, _base, orbs, transversals)
                         if j <= base_len:
                             # new strong generator h at level j
                             y = False
-                        elif h != _new_from_array_form(range(degree)):
+                        elif h != _af_new(range(degree)):
                             # h fixes all base points
                             y = False
                             moved = 0
@@ -2705,13 +3068,12 @@ class PermutationGroup(Basic):
 
     def schreier_sims_random(self, base=None, gens=None, consec_succ=10,\
                              _random_prec=None):
-        r"""
-        Randomized Schreier-Sims algorithm.
+        r"""Randomized Schreier-Sims algorithm.
 
         The randomized Schreier-Sims algorithm takes the sequence ``base``
         and the generating set ``gens``, and extends ``base`` to a base, and
         ``gens`` to a strong generating set relative to that base with
-        probability of a wrong answer at most `1/\text{consec\_succ}`.
+        probability of a wrong answer at most ``1/\text{consec\_succ}``.
 
         Parameters
         ==========
@@ -2746,7 +3108,7 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        The algorithm is described in detail in [1],pp.97-98. It extends
+        The algorithm is described in detail in [1], pp. 97-98. It extends
         the orbits ``orbs`` and the permutation groups ``stabs`` to
         basic orbits and basic stabilizers for the base and strong generating
         set produced in the end.
@@ -2762,7 +3124,7 @@ class PermutationGroup(Basic):
         used to amend ``stabs``, ``base``, ``gens`` and ``orbs`` accordingly.
         The halting condition is for ``consec_succ`` consecutive successful
         sifts to pass. This makes sure that the current ``base`` and ``gens``
-        form a BSGS with probability at least `1 - 1/\text{consec\_succ}`.
+        form a BSGS with probability at least ``1 - 1/\text{consec\_succ}``.
 
         See Also
         ========
@@ -2778,7 +3140,7 @@ class PermutationGroup(Basic):
         n = self.degree
         # make sure no generator fixes all base points
         for gen in gens:
-            if [gen(x) for x in base] == [x for x in base]:
+            if all(gen(x) == x for x in base):
                 new = 0
                 while gen(new) == new:
                     new += 1
@@ -2790,7 +3152,7 @@ class PermutationGroup(Basic):
         stabs = {}
         transversals = {}
         orbs = {}
-        for i in xrange(base_len):
+        for i in range(base_len):
             stabs[i] = PermutationGroup(strong_gens_distr[i])
             transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
                                                               pairs=True))
@@ -2819,12 +3181,12 @@ class PermutationGroup(Basic):
                 strong_gens_distr.append([])
             # if the element doesn't sift, amend the strong generators and
             # associated stabilizers and orbits
-            if y == False:
+            if y is False:
                 for l in range(1, j):
                     strong_gens_distr[l].append(h)
                     stabs[l] = PermutationGroup(strong_gens_distr[l])
                     transversals[l] = dict(stabs[l].orbit_transversal(base[l],\
-                                                                    pairs=True))
+                                                                   pairs=True))
                     orbs[l] = transversals[l].keys()
                 c = 0
             else:
@@ -2837,8 +3199,7 @@ class PermutationGroup(Basic):
         return base, strong_gens
 
     def schreier_vector(self, alpha):
-        """
-        Computes the schreier vector for ``alpha``.
+        """Computes the schreier vector for ``alpha``.
 
         The Schreier vector efficiently stores information
         about the orbit of ``alpha``. It can later be used to quickly obtain
@@ -2878,29 +3239,31 @@ class PermutationGroup(Basic):
         for b in orb:
             for i in range(r):
                 temp = gens[i](b)
-                if used[temp] == False:
+                if used[temp] is False:
                     orb.append(temp)
                     used[temp] = True
                     v[temp] = i
         return v
 
     def stabilizer(self, alpha):
-        r"""
-        Returns the stabilizer subgroup of ``alpha``.
+        r"""Return the stabilizer subgroup of ``alpha``.
 
-        The stabilizer of `\alpha` is the group `G_\alpha =
-        \{g \in G | g(\alpha) = \alpha\}`.
+        The stabilizer of ``\alpha`` is the group ``G_\alpha =
+        \{g \in G | g(\alpha) = \alpha\}``.
         For a proof of correctness, see [1], p.79.
 
         Examples
         ========
 
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
-        PermutationGroup([Permutation([4, 3, 2, 1, 0, 5]),
-        Permutation([0, 1, 2, 3, 4, 5])])
+        PermutationGroup([
+            Permutation(5)(0, 4)(1, 3),
+            Permutation(5)])
 
         See Also
         ========
@@ -2910,7 +3273,7 @@ class PermutationGroup(Basic):
         """
         n = self.degree
         orb = [alpha]
-        table = {alpha: _new_from_array_form(range(n))}
+        table = {alpha: _af_new(range(n))}
         used = [False]*n
         used[alpha] = True
         gens = self.generators
@@ -2918,54 +3281,114 @@ class PermutationGroup(Basic):
         for b in orb:
             for gen in gens:
                 temp = gen(b)
-                if used[temp] == False:
-                    gen_temp = gen*table[b]
+                if used[temp] is False:
+                    gen_temp = rmul(gen, table[b])
                     orb.append(temp)
                     table[temp] = gen_temp
                     used[temp] = True
                 else:
-                    schreier_gen = (~table[temp])*gen*table[b]
+                    schreier_gen = rmul(~table[temp], gen, table[b])
                     if schreier_gen not in stab_gens:
                         stab_gens.append(schreier_gen)
         return PermutationGroup(list(stab_gens))
 
-    def stabilizers_gens(self):
-        """
-        Schreier-Sims stabilizers generators
+    def stabilizer_cosets(self, af=False):
+        """Return a list of cosets of the stabilizer chain of the group
+        as computed by the Schreir-Sims algorithm.
 
-        Return the generators of the stabilizers chain in the
+        Each coset is a list of permutations in array form.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> G = tetrahedron.pgroup
+
+        The tetrahedron's pgroup contains a list of permutations corresponding
+        to different ways of manipulating the tetrahedron. We can look at the
+        underlying cosets with the stabilizer_cosets method:
+
+        >>> for i, ui in enumerate(G.stabilizer_cosets()):
+        ...     print 'coset %i:' % i
+        ...     for p in ui:
+        ...         print '   ', p
+        ...
+        coset 0:
+            Permutation(3)
+            Permutation(3)(0, 1, 2)
+            Permutation(0, 2)(1, 3)
+            Permutation(0, 3, 2)
+        coset 1:
+            Permutation(3)
+            Permutation(1, 2, 3)
+            Permutation(1, 3, 2)
+
+        Any permutation of the tetrahedron can be written as a product of
+        two permutations, one from each of the cosets. For example, the
+        first permutation in the tetrahedron pgroup corresponds to the
+        CW turning of the tetrahedron through the top vertex. This factors
+        as:
+
+        >>> G.coset_factor(G[0])
+        [Permutation(3), Permutation(1, 2, 3)]
+
+        And those two permutations are drawn from the cosets shown above.
+
+        See Also
+        ========
+        coset_factor, basic_transversals
+
+        """
+        if not self._stabilizer_cosets:
+            self.schreier_sims()
+        if af:
+            return self._stabilizer_cosets
+        return [[Permutation(p) for p in c] for c in self._stabilizer_cosets]
+
+    def stabilizer_gens(self, af=False):
+        """Return the generators of the chain of stabilizers of the
         Schreier-Sims representation.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> G = tetrahedron.pgroup
+        >>> G.stabilizer_gens()
+        [Permutation(1, 3, 2), Permutation(1, 2, 3)]
+
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
-        >>> G.stabilizers_gens()
-        [[0, 2, 1]]
+        >>> G.stabilizer_gens()
+        [Permutation(1, 2)]
 
         """
 
-        if not self._coset_repr:
+        if not self._stabilizer_cosets:
             self.schreier_sims()
-        return self._stabilizers_gens
+        if af:
+            return self._stabilizer_gens
+        return [Permutation(p) for p in self._stabilizer_gens]
 
     @property
     def strong_gens(self):
-        """
-        Return a strong generating set from the Schreier-Sims algorithm.
+        """Return a strong generating set from the Schreier-Sims algorithm.
 
-        A generating set `S = \{g_1, g_2, ..., g_t\}` for a permutation group
-        `G` is a strong generating set relative to the sequence of points
-        (referred to as a "base") `(b_1, b_2, ..., b_k)` if, for
-        `1 \leq i \leq k` we have that the intersection of the pointwise
-        stabilizer `G^{(i+1)} := G_{b_1, b_2, ..., b_i}` with `S` generates
-        the pointwise stabilizer `G^{(i+1)}`. The concepts of a base and
+        A generating set ``S = \{g_1, g_2, ..., g_t\}`` for a permutation group
+        ``G`` is a strong generating set relative to the sequence of points
+        (referred to as a "base") ``(b_1, b_2, ..., b_k)`` if, for
+        ``1 \leq i \leq k`` we have that the intersection of the pointwise
+        stabilizer ``G^{(i+1)} := G_{b_1, b_2, ..., b_i}`` with ``S`` generates
+        the pointwise stabilizer ``G^{(i+1)}``. The concepts of a base and
         strong generating set and their applications are discussed in depth
-        in [1],pp.87-89 and [2],pp.55-57.
+        in [1], pp. 87-89 and [2], pp. 55-57.
 
         Examples
         ========
@@ -2973,8 +3396,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> D.strong_gens
-        [Permutation([1, 2, 3, 0]), Permutation([3, 2, 1, 0]),\
-        Permutation([0, 3, 2, 1])]
+        [Permutation(0, 1, 2, 3), Permutation(0, 3)(1, 2), Permutation(1, 3)]
         >>> D.base
         [0, 1]
 
@@ -2990,8 +3412,7 @@ class PermutationGroup(Basic):
 
     def subgroup_search(self, prop, base=None, strong_gens=None, tests=None,\
                         init_subgroup=None):
-        """
-        Find the subgroup of all elements satisfying the property ``prop``.
+        """Find the subgroup of all elements satisfying the property ``prop``.
 
         This is done by a depth-first search with respect to base images that
         uses several tests to prune the search tree.
@@ -3009,19 +3430,20 @@ class PermutationGroup(Basic):
             A strong generating set for the supergroup.
         tests
             A list of callables of length equal to the length of ``base``.
-            These are used to rule out group elements by partial base images, so
-            that ``tests[l](g)`` returns False if the element ``g`` is known not
-            to satisfy prop base on where g sends the first ``l + 1`` base points.
-            ``init_subgroup`` - if a subgroup of the saught group is known in
-            advance, it can be passed to the function as this parameter.
+            These are used to rule out group elements by partial base images,
+            so that ``tests[l](g)`` returns False if the element ``g`` is known
+            not to satisfy prop base on where g sends the first ``l + 1`` base
+            points. ``init_subgroup`` - if a subgroup of the saught group is
+            known in advance, it can be passed to the function as this
+            parameter.
 
         Returns
         =======
 
         res
-            The subgroup of all elements satisfying ``prop``. The generating set
-            for this group is guaranteed to be a strong generating set relative to
-            the base ``base``.
+            The subgroup of all elements satisfying ``prop``. The generating
+            set for this group is guaranteed to be a strong generating set
+            relative to the base ``base``.
 
         Examples
         ========
@@ -3034,7 +3456,7 @@ class PermutationGroup(Basic):
         >>> prop_even = lambda x: x.is_even
         >>> base, strong_gens = S.schreier_sims_incremental()
         >>> G = S.subgroup_search(prop_even, base=base, strong_gens=strong_gens)
-        >>> G == AlternatingGroup(7)
+        >>> G.is_subgroup(AlternatingGroup(7))
         True
         >>> _verify_bsgs(G, base, G.generators)
         True
@@ -3044,13 +3466,15 @@ class PermutationGroup(Basic):
 
         This function is extremely lenghty and complicated and will require
         some careful attention. The implementation is described in
-        [1],pp.114-117, and the comments for the code here follow the lines
+        [1], pp. 114-117, and the comments for the code here follow the lines
         of the pseudocode in the book for clarity.
+
         The complexity is exponential in general, since the search process by
         itself visits all members of the supergroup. However, there are a lot
         of tests which are used to prune the search tree, and users can define
         their own tests via the ``tests`` parameter, so in practice, and for
         some computations, it's not terrible.
+
         A crucial part in the procedure is the frequent base change performed
         (this is line 11 in the pseudocode) in order to obtain a new basic
         stabilizer. The book mentiones that this can be done by using
@@ -3064,7 +3488,7 @@ class PermutationGroup(Basic):
             base, strong_gens = self.schreier_sims_incremental()
         base_len = len(base)
         degree = self.degree
-        identity = _new_from_array_form(range(degree))
+        identity = _af_new(range(degree))
         base_ordering = _base_ordering(base, degree)
         # add an element larger than all points
         base_ordering.append(degree)
@@ -3080,7 +3504,7 @@ class PermutationGroup(Basic):
         if tests is None:
             trivial_test = lambda x: True
             tests = []
-            for i in xrange(base_len):
+            for i in range(base_len):
                 tests.append(trivial_test)
         # line 1: more initializations.
         res = init_subgroup
@@ -3180,7 +3604,7 @@ class PermutationGroup(Basic):
                 gamma = temp_element(temp_point)
                 u[l] = transversals[l][gamma]
                 # update computed words
-                computed_words[l] = computed_words[l-1] * u[l]
+                computed_words[l] = rmul(computed_words[l-1], u[l])
             # lines 17 & 18: apply the tests to the group element found
             g = computed_words[l]
             temp_point = g(base[l])
@@ -3252,20 +3676,19 @@ class PermutationGroup(Basic):
             if l == 0:
                 computed_words[l] = u[l]
             else:
-                computed_words[l] = computed_words[l - 1]*u[l]
+                computed_words[l] = rmul(computed_words[l - 1], u[l])
 
     @property
     def transitivity_degree(self):
-        """
-        Compute the degree of transitivity of the group.
+        """Compute the degree of transitivity of the group.
 
-        A permutation group `G` acting on `\Omega = \{0, 2, ..., n-1\}` is
-        `k`-fold transitive, if, for any k points
-        `(a_1, a_2, ..., a_k)\in\Omega` and any k points
-        `(b_1, b_2, ..., b_k)\in\Omega` there exists `g\in G` such that
-        `g(a_1)=b_1, g(a_2)=b_2, ..., g(a_k)=b_k`
-        The degree of transitivity of `G` is the maximum `k` such that
-        `G` is `k`-fold transitive. ([8])
+        A permutation group ``G`` acting on ``\Omega = \{0, 1, ..., n-1\}`` is
+        ``k``-fold transitive, if, for any k points
+        ``(a_1, a_2, ..., a_k)\in\Omega`` and any k points
+        ``(b_1, b_2, ..., b_k)\in\Omega`` there exists ``g\in G`` such that
+        ``g(a_1)=b_1, g(a_2)=b_2, ..., g(a_k)=b_k``
+        The degree of transitivity of ``G`` is the maximum ``k`` such that
+        ``G`` is ``k``-fold transitive. ([8])
 
         Examples
         ========
@@ -3296,5 +3719,100 @@ class PermutationGroup(Basic):
         else:
             return self._transitivity_degree
 
+    def is_group(self):
+        """Return True if the group meets three criteria: identity is present,
+        the inverse of every element is also an element, and the product of
+        any two elements is also an element. If any of the tests fail, False
+        is returned.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+        >>> from sympy.combinatorics import PermutationGroup
+        >>> from sympy.combinatorics.polyhedron import tetrahedron
+
+        The permutation group given in the tetrahedron object is not
+        a true group:
+
+        >>> G = tetrahedron.pgroup
+        >>> G.is_group()
+        False
+
+        But the group generated by the permutations in the tetrahedron
+        pgroup is a proper group:
+
+        >>> H = PermutationGroup(list(G.generate()))
+        >>> H.is_group()
+        True
+
+        The identity permutation is present:
+
+        >>> H.has(Permutation(G.degree - 1))
+        True
+
+        The product of any two elements from the group is also in the group:
+
+        >>> from sympy import TableForm
+        >>> g = list(H)
+        >>> n = len(g)
+        >>> m = []
+        >>> for i in g:
+        ...     m.append([g.index(i*H) for H in g])
+        ...
+        >>> TableForm(m, headings=[range(n), range(n)], wipe_zeros=False)
+           | 0  1  2  3  4  5  6  7  8  9  10 11
+        ----------------------------------------
+         0 | 0  1  2  3  4  5  6  7  8  9  10 11
+         1 | 1  2  0  4  5  3  7  8  6  10 11 9
+         2 | 2  0  1  5  3  4  8  6  7  11 9  10
+         3 | 3  6  9  7  2  11 10 0  5  4  1  8
+         4 | 4  7  10 8  0  9  11 1  3  5  2  6
+         5 | 5  8  11 6  1  10 9  2  4  3  0  7
+         6 | 6  9  3  2  11 7  0  5  10 1  8  4
+         7 | 7  10 4  0  9  8  1  3  11 2  6  5
+         8 | 8  11 5  1  10 6  2  4  9  0  7  3
+         9 | 9  3  6  11 7  2  5  10 0  8  4  1
+        10 | 10 4  7  9  8  0  3  11 1  6  5  2
+        11 | 11 5  8  10 6  1  4  9  2  7  3  0
+
+        The entries in the table give the element in the group corresponding
+        to the product of a given column element and row element:
+
+        >>> g[3]*g[1] == g[6]
+        True
+
+        The inverse of every element is also in the group:
+
+        >>> TableForm([[g.index(~gi) for gi in g]], headings=[[], range(n)],
+        ...    wipe_zeros=False)
+        0 1 2 3 4 5  6 7 8 9 10 11
+        --------------------------
+        0 2 1 7 4 10 6 3 9 8 5  11
+
+        So we see that g[6] and g[4] are equivalent to their inverse while
+        g[1] == ~g[2].
+        """
+        # identity present
+        I = Permutation(size=self.degree)
+        for g in self:
+            if g == I:
+                break
+        else:
+            return False
+
+        # associativity already holds: a*(b*c) == (a*b)*c for permutations
+
+        # inverse of each is present
+        if not all(self.has(~a) for a in self):
+            return False
+
+        # closure
+        for a in self:
+            for b in self:
+                if not self.has(a*b):
+                    return False
+        return True
 
 PermGroup = PermutationGroup

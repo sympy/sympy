@@ -4,7 +4,8 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
-        generate_oriented_forest, unflatten, common_prefix, common_suffix)
+        generate_oriented_forest, unflatten, common_prefix, common_suffix,
+        quick_sort, minlex, runs, lazyDSU_sort, reshape)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -315,3 +316,51 @@ def test_common_prefix_suffix():
     assert common_suffix(range(3), range(4)) == []
     assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
     assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]
+
+def test_minlex():
+    assert minlex([1, 2, 0]) == (0, 1, 2)
+    assert minlex((1, 2, 0)) == (0, 1, 2)
+    assert minlex((1, 0, 2)) == (0, 2, 1)
+    assert minlex((1, 0, 2), directed=False) == (0, 1, 2)
+
+def test_quick_sort():
+    assert quick_sort((x, y)) in [(x, y), (y, x)]
+    assert quick_sort((x, y)) == quick_sort((y, x))
+    assert quick_sort((x, y), quick=False) == (x, y)
+
+def test_lazyDSU_sort():
+    seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], (
+    lambda x: len(x),
+    lambda x: sum(x))]
+    assert lazyDSU_sort(seq, keys, warn=False) == \
+        [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
+    raises(ValueError, lambda: lazyDSU_sort(seq, keys, warn=True))
+
+def test_runs():
+    assert runs([]) == []
+    assert runs([1]) == [[1]]
+    assert runs([1, 1]) == [[1], [1]]
+    assert runs([1, 1, 2]) == [[1], [1, 2]]
+    assert runs([1, 2, 1]) == [[1, 2], [1]]
+    assert runs([2, 1, 1]) == [[2], [1], [1]]
+    from operator import lt
+    assert runs([2, 1, 1], lt) == [[2, 1], [1]]
+
+def test_reshape():
+    seq = range(1, 9)
+    assert reshape(seq, [4]) == \
+    [[1, 2, 3, 4], [5, 6, 7, 8]]
+    assert reshape(seq, (4,)) == \
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+    assert reshape(seq, (2, 2)) == \
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+    assert reshape(seq, (2, [2])) == \
+    [(1, 2, [3, 4]), (5, 6, [7, 8])]
+    assert reshape(seq, ((2,), [2])) == \
+    [((1, 2), [3, 4]), ((5, 6), [7, 8])]
+    assert reshape(seq, (1, [2], 1)) == \
+    [(1, [2, 3], 4), (5, [6, 7], 8)]
+    assert reshape(tuple(seq), ([[1], 1, (2,)],)) == \
+    (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
+    assert reshape(tuple(seq), ([1], 1, (2,))) == \
+    (([1], 2, (3, 4)), ([5], 6, (7, 8)))

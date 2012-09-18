@@ -85,6 +85,8 @@ class Basic(object):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
         """ Pickling support."""
@@ -110,9 +112,13 @@ class Basic(object):
         return h
 
     def _hashable_content(self):
-        # If class defines additional attributes, like name in Symbol,
-        # then this method should be updated accordingly to return
-        # relevant attributes as tuple.
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevent attributes.
+
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
         return self._args
 
     @property
@@ -332,13 +338,25 @@ class Basic(object):
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
-        """a == b  -> Compare two symbolic trees and see whether they are equal
+        """Return a boolean indicating whether a == b on the basis of
+        their symbolic trees.
 
-           this is the same as:
+        This is the same as a.compare(b) == 0 but faster.
 
-             a.compare(b) == 0
+        Notes
+        =====
 
-           but faster
+        If a class that overrides __eq__() needs to retain the
+        implementation of __hash__() from a parent class, the
+        interpreter must be told this explicitly by setting __hash__ =
+        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
+        will be blocked, just as if __hash__ had been explicitly set to
+        None.
+
+        References
+        ==========
+
+        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
         if type(self) is not type(other):
@@ -1072,7 +1090,8 @@ class Basic(object):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
@@ -1571,6 +1590,7 @@ class preorder_traversal(object):
             for item in node:
                 for subtree in self._preorder_traversal(item, key):
                     yield subtree
+
 
     def skip(self):
         """

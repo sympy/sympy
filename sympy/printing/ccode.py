@@ -93,7 +93,7 @@ class CCodePrinter(CodePrinter):
             if len(not_c) > 0:
                 frontlines.append("// Not C:")
                 for expr in sorted(not_c, key=str):
-                    frontlines.append("// %s" % expr)
+                    frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("double const %s = %s;" % (name, value))
             lines = frontlines + lines

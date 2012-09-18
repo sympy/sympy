@@ -116,7 +116,7 @@ class Unit(AtomicExpr):
         return super(Unit, self).__hash__()
 
     def _hashable_content(self):
-        return (self.name,self.abbrev)
+        return (self.name, self.abbrev)
 
     @property
     def free_symbols(self):
