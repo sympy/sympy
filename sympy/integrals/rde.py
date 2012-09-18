@@ -711,10 +711,10 @@ def rischDE(fa, fd, ga, gd, DE):
         # RuntimeError: maximum recursion depth exceeded.
         n = bound_degree(A, B, C, DE)
     except NotImplementedError:
-        # TODO: Remove warnings
-        import warnings
-        warnings.warn("rischDE: Proceeding with n = oo; may cause " +
-            "non-termination.")
+        # Useful for debugging:
+        # import warnings
+        # warnings.warn("rischDE: Proceeding with n = oo; may cause " +
+        #     "non-termination.")
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)

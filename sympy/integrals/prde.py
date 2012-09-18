@@ -340,10 +340,10 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(A, B, G, DE, parametric=True)
     except NotImplementedError:
-        # TODO: Remove warnings
-        import warnings
-        warnings.warn("param_rischDE: Proceeding with n = oo; may cause " +
-            "non-termination.")
+        # Useful for debugging:
+        # import warnings
+        # warnings.warn("param_rischDE: Proceeding with n = oo; may cause " +
+        #     "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
