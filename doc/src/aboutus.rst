@@ -91,7 +91,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
 #. Eh Tan: improve trigonometric simplification
 #. Renato Coutinho: derivative improvements
-#. Oscar Benjamin: latex printer fix
+#. Oscar Benjamin: latex printer fix, gcd bug fix
 #. Øyvind Jensen: implemented coupled cluster expansion and wick theorem, improvements to assumptions, bugfixes
 #. Julio Idichekop Filho: indentation fixes, docstring improvements
 #. Łukasz Pankowski: fix matrix multiplication with numpy scalars
