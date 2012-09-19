@@ -119,8 +119,6 @@ Implementation Domains
 .. autoclass:: SymPyRationalField
 .. autoclass:: GMPYRationalField
 
-.. autoclass:: PythonRealDomain
-.. autoclass:: SymPyRealDomain
 .. autoclass:: MPmathRealDomain
 
 
