@@ -42,7 +42,7 @@ if sys.version_info[:2] < (2,5):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
+# for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -50,6 +50,7 @@ modules = [
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
+    'sympy.differential_geometry',
     'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',
@@ -69,7 +70,6 @@ modules = [
     'sympy.mpmath.functions',
     'sympy.mpmath.libmp',
     'sympy.mpmath.matrices',
-    'sympy.mpmath.tests',
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
@@ -92,7 +92,7 @@ modules = [
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
-  ]
+]
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
