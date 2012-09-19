@@ -64,8 +64,7 @@ def test_sin():
 
     assert sin(-1273*pi/5) == -sin(2*pi/5)
 
-    assert sin(pi/8) == sqrt((2-sqrt(2))/4)
-
+    assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
     assert sin(104*pi/105) == sin(pi/105)
     assert sin(106*pi/105) == -sin(pi/105)
@@ -85,8 +84,8 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) == True
     assert isinstance(sin(-re(x) + im(y)), sin) == False
 
-    for d in range(1,22) + [60, 85]:
-        for n in xrange(0, d*2+1):
+    for d in range(1, 22) + [60, 85]:
+        for n in xrange(0, d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
@@ -95,10 +94,10 @@ def test_sin_cos():
     for d in [1, 2, 3, 4, 5, 6, 10, 12]: # list is not exhaustive...
         for n in xrange(-2*d, d*2):
             x = n*pi/d
-            assert sin(x + pi/2) == cos(x),  "fails for %d*pi/%d"%(n,d)
-            assert sin(x - pi/2) == -cos(x), "fails for %d*pi/%d"%(n,d)
-            assert sin(x) == cos(x - pi/2),  "fails for %d*pi/%d"%(n,d)
-            assert -sin(x) == cos(x + pi/2), "fails for %d*pi/%d"%(n,d)
+            assert sin(x + pi/2) == cos(x),  "fails for %d*pi/%d" % (n, d)
+            assert sin(x - pi/2) == -cos(x), "fails for %d*pi/%d" % (n, d)
+            assert sin(x) == cos(x - pi/2),  "fails for %d*pi/%d" % (n, d)
+            assert -sin(x) == cos(x + pi/2), "fails for %d*pi/%d" % (n, d)
 
 def test_sin_series():
     x = Symbol('x')
@@ -246,7 +245,7 @@ def test_cos():
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
-    for d in range(1,22) + [60,85]:
+    for d in range(1, 22) + [60, 85]:
         for n in xrange(0, 2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
@@ -831,8 +830,8 @@ def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17, 3*5*17]:
         for t in [1, 8]:
             n=t*p
-            for i in xrange(1, (n+1)//2 + 1):
-                if 1 == gcd(i,n):
+            for i in xrange(1, (n + 1)//2 + 1):
+                if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
                     c1 = cos(x).rewrite(sqrt)

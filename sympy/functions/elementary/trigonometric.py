@@ -176,7 +176,6 @@ class sin(TrigonometricFunction):
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return
 
-
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -203,9 +202,9 @@ class sin(TrigonometricFunction):
                     return -cls((x%1)*S.Pi)
                 if 2*x > 1:
                     return cls((1-x)*S.Pi)
-                narg = ((pi_coeff + C.Rational(3,2)) % 2)*S.Pi
+                narg = ((pi_coeff + C.Rational(3, 2)) % 2)*S.Pi
                 result = cos(narg)
-                if not isinstance(result,cos):
+                if not isinstance(result, cos):
                     return result
                 if pi_coeff*S.Pi != arg:
                     return cls(pi_coeff*S.Pi)
@@ -405,7 +404,15 @@ class cos(TrigonometricFunction):
             elif arg is S.Zero:
                 return S.One
             elif arg is S.Infinity or arg is S.NegativeInfinity:
-                return        # for test_sin in test_trigonometric
+                # In this cases, it is unclear if we should
+                # return S.NaN or leave un-evaluated.  One
+                # useful test case is how "limit(sin(x)/x,x,oo)"
+                # is handled.
+                # See test_sin_cos_with_infinity() an
+                # Test for issue 209
+                # http://code.google.com/p/sympy/issues/detail?id=2097
+                # For now, we return un-evaluated.
+                return
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
@@ -454,7 +461,6 @@ class cos(TrigonometricFunction):
                 if q in cst_table_some:
                     cts = cst_table_some[pi_coeff.q]
                     return C.chebyshevt(pi_coeff.p, cts).expand()
-
 
                 if 0 == q % 2:
                     narg = (pi_coeff*2)*S.Pi
@@ -538,8 +544,8 @@ class cos(TrigonometricFunction):
         def migcdex(x):
             # recursive calcuation of gcd and linear combination
             # for a sequence of integers.
-            # Given  (x1,x2,x3)
-            # Returns (y1,y1,y3,g)
+            # Given  (x1, x2, x3)
+            # Returns (y1, y1, y3, g)
             # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
             # Note, that this is only one such linear combination.
             if len(x) == 1:
@@ -549,7 +555,7 @@ class cos(TrigonometricFunction):
             g = migcdex(x[1:])
             u, v, h = igcdex(x[0], g[-1])
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
-        def ipartfrac(r, factors=None):
+        def ipartfrac(r, factors = None):
             if isinstance(r, int):
                 return r
             assert isinstance(r, C.Rational)
@@ -558,9 +564,9 @@ class cos(TrigonometricFunction):
                 return r.q
 
             if None == factors:
-                a=[n/x**y for x, y in factorint(r.q).iteritems()]
+                a = [n/x**y for x, y in factorint(r.q).iteritems()]
             else:
-                a=[n/x for x in factors]
+                a = [n/x for x in factors]
             if len(a) == 1:
                 return [ r ]
             h = migcdex(a)
