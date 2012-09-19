@@ -153,6 +153,9 @@ class Order(Expr):
     def _eval_nseries(self, x, n, logx):
         return self
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), *self.args[1:])
+
     @property
     def expr(self):
         return self._args[0]
