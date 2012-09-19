@@ -1145,20 +1145,22 @@ def test_Poly_l1_norm():
 
 def test_Poly_clear_denoms():
     coeff, poly = Poly(x + 2, x).clear_denoms()
-
     assert coeff == 1 and poly == Poly(x + 2, x, domain='ZZ') and poly.get_domain() == ZZ
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms()
-
     assert coeff == 2 and poly == Poly(x + 2, x, domain='QQ') and poly.get_domain() == QQ
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
-
     assert coeff == 2 and poly == Poly(x + 2, x, domain='ZZ') and poly.get_domain() == ZZ
 
     coeff, poly = Poly(x/y + 1, x).clear_denoms(convert=True)
-
     assert coeff == y and poly == Poly(x + y, x, domain='ZZ[y]') and poly.get_domain() == ZZ[y]
+
+    coeff, poly = Poly(x/3 + sqrt(2), x, domain='EX').clear_denoms()
+    assert coeff == 3 and poly == Poly(x + 3*sqrt(2), x, domain='EX') and poly.get_domain() == EX
+
+    coeff, poly = Poly(x/3 + sqrt(2), x, domain='EX').clear_denoms(convert=True)
+    assert coeff == 3 and poly == Poly(x + 3*sqrt(2), x, domain='EX') and poly.get_domain() == EX
 
 def test_Poly_rat_clear_denoms():
     f = Poly(x**2/y + 1, x)
@@ -1658,6 +1660,28 @@ def test_gcd():
     assert cofactors(f, g, modulus=11, symmetric=False) == (h, s, t)
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
+
+    raises(TypeError, lambda: gcd(x))
+    raises(TypeError, lambda: lcm(x))
+
+def test_gcd_numbers_vs_polys():
+    assert isinstance(gcd(3, 9), Integer)
+    assert isinstance(gcd(3*x, 9), Integer)
+
+    assert gcd(3, 9) == 3
+    assert gcd(3*x, 9) == 3
+
+    assert isinstance(gcd(S(3)/2, S(9)/4), Rational)
+    assert isinstance(gcd(S(3)/2*x, S(9)/4), Rational)
+
+    assert gcd(S(3)/2, S(9)/4) == S(3)/4
+    assert gcd(S(3)/2*x, S(9)/4) == 1
+
+    assert isinstance(gcd(3.0, 9.0), Float)
+    assert isinstance(gcd(3.0*x, 9.0), Float)
+
+    assert gcd(3.0, 9.0) == 1.0
+    assert gcd(3.0*x, 9.0) == 1.0
 
 def test_terms_gcd():
     assert terms_gcd(1) == 1
