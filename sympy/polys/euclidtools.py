@@ -1276,7 +1276,7 @@ def dup_zz_heu_gcd(f, g, K):
 
                 if not r:
                     h = dup_mul_ground(h, gcd, K)
-                    return h, cff, cfg
+                    return h, cff_, cfg
 
         x = 73794*x * K.sqrt(K.sqrt(x)) // 27011
 

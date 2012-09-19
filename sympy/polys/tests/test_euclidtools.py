@@ -391,6 +391,15 @@ def test_dup_gcd():
     assert dup_qq_heu_gcd(f, g, QQ) == (h, g, [QQ(1,2)])
     assert dup_ff_prs_gcd(f, g, QQ) == (h, g, [QQ(1,2)])
 
+    f = ZZ.map([1317378933230047068160, 2945748836994210856960])
+    g = ZZ.map([120352542776360960, 269116466014453760])
+
+    h = ZZ.map([120352542776360960, 269116466014453760])
+    cff = ZZ.map([10946])
+    cfg = ZZ.map([1])
+
+    assert dup_zz_heu_gcd(f, g, ZZ) == (h, cff, cfg)
+
 def test_dmp_gcd():
     assert dmp_zz_heu_gcd([[]], [[]], 1, ZZ) == ([[]], [[]], [[]])
     assert dmp_rr_prs_gcd([[]], [[]], 1, ZZ) == ([[]], [[]], [[]])
