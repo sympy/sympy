@@ -379,7 +379,20 @@ class MatrixBase(object):
 
     @property
     def shape(self):
-        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
+        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import zeros
+        >>> M = zeros(2, 3)
+        >>> M.shape
+        (2, 3)
+        >>> M.rows
+        2
+        >>> M.cols
+        3
+        """
         return (self.rows, self.cols)
 
     def __rmul__(self,a):
@@ -3515,6 +3528,7 @@ class MutableMatrix(MatrixBase):
         self.cols = cols
         self.mat = list(mat) # create a shallow copy
         return self
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
