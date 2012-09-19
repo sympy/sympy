@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan,
+    Tuple, nan, And, Eq
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -735,6 +735,20 @@ def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1, 3), x) == \
         6*x**Rational(7, 6)/7 - 3*x**Rational(11, 3)/11
 
+
+def test_issue_1428():
+    k, m = symbols('k m', integer=True)
+    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
+        (0, And(Eq(k, 0), Eq(m, 0))),
+        (-pi/2, Eq(k, -m)),
+        (pi/2, Eq(k, m)),
+        (0, True))
+    assert integrate(sin(k*x)*sin(m*x), (x,)) == Piecewise(
+        (0, And(Eq(k, 0), Eq(m, 0))),
+        (-x*sin(m*x)**2/2 - x*cos(m*x)**2/2 + sin(m*x)*cos(m*x)/(2*m), Eq(k, -m)),
+        (x*sin(m*x)**2/2 + x*cos(m*x)**2/2 - sin(m*x)*cos(m*x)/(2*m), Eq(k, m)),
+        (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
+         k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
 
 def test_issue_1100():
     ypos = Symbol('y', positive=True)
