@@ -1,5 +1,5 @@
 from sympy.ntheory import isprime, sieve
-from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
 
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
@@ -349,8 +349,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     """
     from sympy.combinatorics.perm_groups import PermutationGroup
     base_len = len(base)
-    degree = strong_gens[0].size
-    identity = _af_new(range(degree))
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
     temp = strong_gens_distr[:]
@@ -442,17 +440,17 @@ def _strip(g, base, orbits, transversals):
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """
-    h = g
+    h = g.array_form
     base_len = len(base)
     for i in range(base_len):
-        beta = h(base[i])
+        beta = h[base[i]]
         if beta == base[i]:
             continue
         if beta not in orbits[i]:
-            return h, i + 1
-        u = transversals[i][beta]
-        h = rmul(~u, h)
-    return h, base_len + 1
+            return _af_new(h), i + 1
+        u = transversals[i][beta].array_form
+        h = _af_rmul(_af_invert(u), h)
+    return _af_new(h), base_len + 1
 
 def _strong_gens_from_distr(strong_gens_distr):
     """
