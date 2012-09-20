@@ -103,7 +103,7 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
-    # Note: these forumlas are not unique.  The ones here come from the
+    # Note: these formulas are not unique.  The ones here come from the
     # Chebyshev formulas.
     x, y = symbols('x y')
     assert sin(x + y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
