@@ -1,5 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
+from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
@@ -138,7 +139,7 @@ class MatrixBase(object):
                     return rows, cols, mat
                 else:
                     raise NotImplementedError("SymPy supports just 1D and 2D matrices")
-            elif not is_sequence(in_mat, include=MatrixBase):
+            elif not is_sequence(in_mat):
                 raise TypeError("Matrix constructor doesn't accept %s as input"
                         % str(type(in_mat)))
             in_mat = []
@@ -1611,7 +1612,7 @@ class MatrixBase(object):
         multiply
         multiply_elementwise
         """
-        if not is_sequence(b, include=MatrixBase):
+        if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
@@ -2966,7 +2967,7 @@ class MatrixBase(object):
         return Max(*singularvalues) / Min(*singularvalues)
 
     def __getattr__(self, attr):
-        if attr in ('diff','integrate','limit'):
+        if attr in ('diff', 'integrate', 'limit'):
             def doit(*args):
                 item_doit = lambda item: getattr(item, attr)(*args)
                 return self.applyfunc( item_doit )
@@ -3488,14 +3489,18 @@ class MutableMatrix(MatrixBase):
     def __setitem__(self, key, value):
         """
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
+        >>> m = Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
         [3,     4]
-        >>> m[1,0]=9
+        >>> m[1, 0] = 9
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
         [9,     4]
+        >>> m[1, 0] = [[0, 1]]
+        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        [1, 2 + I]
+        [0,     1]
 
         """
         if type(key) is tuple:
@@ -3504,13 +3509,22 @@ class MutableMatrix(MatrixBase):
                 if isinstance(value, MatrixBase):
                     self.copyin_matrix(key, value)
                     return
-                if is_sequence(value):
+                if not isinstance(value, Expr) and is_sequence(value):
                     self.copyin_list(key, value)
                     return
                 raise ValueError('unexpected value: %s' % value)
             else:
                 i, j = self.key2ij(key)
-                self.mat[i*self.cols + j] = sympify(value)
+                ismat = isinstance(value, MatrixBase)
+                if not ismat and \
+                    not isinstance(value, Expr) and is_sequence(value):
+                    value = Matrix(value)
+                    ismat = True
+                if ismat:
+                    self.copyin_matrix((slice(i, i + value.rows),
+                                        slice(j, j + value.cols)), value)
+                else:
+                    self.mat[i*self.cols + j] = sympify(value)
                 return
         else:
             # row-wise decomposition of matrix
@@ -3520,7 +3534,6 @@ class MutableMatrix(MatrixBase):
                 k = a2idx(key)
                 self.mat[k] = sympify(value)
                 return
-        raise IndexError("Invalid index: a[%s]" % repr(key))
 
     def copyin_matrix(self, key, value):
         """
@@ -3538,15 +3551,18 @@ class MutableMatrix(MatrixBase):
         ========
 
         >>> import sympy
-        >>> M = sympy.matrices.Matrix([[0,1],[2,3]])
-        >>> I = sympy.matrices.eye(5)
-        >>> I.copyin_matrix((slice(0,2), slice(0,2)),M)
+        >>> M = sympy.matrices.Matrix([[0, 1], [2, 3], [4, 5]])
+        >>> I = sympy.matrices.eye(3)
+        >>> I[:3, :2] = M
         >>> I
-        [0, 1, 0, 0, 0]
-        [2, 3, 0, 0, 0]
-        [0, 0, 1, 0, 0]
-        [0, 0, 0, 1, 0]
-        [0, 0, 0, 0, 1]
+        [0, 1, 0]
+        [2, 3, 0]
+        [4, 5, 1]
+        >>> I[0, 1] = M
+        >>> I
+        [0, 0, 1]
+        [2, 2, 3]
+        [4, 4, 5]
 
         See Also
         ========
@@ -3554,14 +3570,15 @@ class MutableMatrix(MatrixBase):
         copyin_list
         """
         rlo, rhi, clo, chi = self.key2bounds(key)
-
-        if value.rows != rhi - rlo or value.cols != chi - clo:
+        shape = value.shape
+        dr, dc = rhi - rlo, chi - clo
+        if shape != (dr, dc):
             raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
                 "as the in sub-Matrix given by `key`.")
 
         for i in range(value.rows):
             for j in range(value.cols):
-                self[i+rlo, j+clo] = sympify(value[i,j])
+                self[i + rlo, j + clo] = value[i, j]
 
     def copyin_list(self, key, value):
         """
@@ -3579,14 +3596,17 @@ class MutableMatrix(MatrixBase):
         ========
 
         >>> import sympy
-        >>> I = sympy.matrices.eye(5)
-        >>> I.copyin_list((slice(0,2), slice(0,1)), [1,2])
+        >>> I = sympy.matrices.eye(3)
+        >>> I[:2, 0] = [1, 2] # col
         >>> I
-        [1, 0, 0, 0, 0]
-        [2, 1, 0, 0, 0]
-        [0, 0, 1, 0, 0]
-        [0, 0, 0, 1, 0]
-        [0, 0, 0, 0, 1]
+        [1, 0, 0]
+        [2, 1, 0]
+        [0, 0, 1]
+        >>> I[1, :2] = [[3, 4]]
+        >>> I
+        [1, 0, 0]
+        [3, 4, 0]
+        [0, 0, 1]
 
         See Also
         ========
@@ -3962,7 +3982,8 @@ def zeros(r, c=None, cls=MutableMatrix):
     """
     if is_sequence(r):
         SymPyDeprecationWarning(
-            feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+            feature="The syntax zeros([%i, %i])" % tuple(r),
+            useinstead="zeros(%i, %i)." % tuple(r),
             issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
@@ -3985,7 +4006,8 @@ def ones(r, c=None):
 
     if is_sequence(r):
         SymPyDeprecationWarning(
-                feature="The syntax ones([%i, %i])" % tuple(r), useinstead="ones(%i, %i)." % tuple(r),
+                feature="The syntax ones([%i, %i])" % tuple(r),
+                useinstead="ones(%i, %i)." % tuple(r),
                 issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
@@ -4328,23 +4350,23 @@ class SparseMatrix(MatrixBase):
 
         if type(key) is tuple:
             i, j = key
-            if isinstance(i, int) and isinstance(i, int):
+            if isinstance(i, int) and isinstance(j, int):
                 i, j = self.key2ij(key)
-                return self.mat.get((i, j), S.Zero)
-            elif isinstance(i, slice) or isinstance(i, slice):
+                rv = self.mat.get((i, j), S.Zero)
+                return rv
+            elif isinstance(i, slice) or isinstance(j, slice):
                 return self.submatrix(key)
 
         # check for single arg, like M[:] or M[3]
         if isinstance(key, slice):
-            lo, hi = self.key2bounds(key)
+            lo, hi = key.indices(len(self))[:2]
             L = []
             for i in range(lo, hi):
                 m, n = self.rowdecomp(i)
                 L.append(self.mat.get((m, n), S.Zero))
             return L
 
-        lo = a2idx(key)
-        i, j = self.rowdecomp(lo)
+        i, j = self.rowdecomp(key)
         return self.mat.get((i, j), S.Zero)
 
     def rowdecomp(self, num):
@@ -4360,17 +4382,31 @@ class SparseMatrix(MatrixBase):
             raise ValueError("`key` must be of length 2.")
 
         if isinstance(key[0], slice) or isinstance(key[1], slice):
-            if isinstance(value, Matrix):
+            if isinstance(value, MatrixBase):
                 self.copyin_matrix(key, value)
-            if is_sequence(value):
+                return
+            elif not isinstance(value, Expr) and is_sequence(value):
                 self.copyin_list(key, value)
+                return
+            raise ValueError('unexpected value: %s' % value)
         else:
             i, j = self.key2ij(key)
-            testval = sympify(value)
-            if testval:
-                self.mat[(i, j)] = testval
-            elif (i, j) in self.mat:
-                del self.mat[(i, j)]
+            ismat = isinstance(value, MatrixBase)
+            if not ismat and \
+                not isinstance(value, Expr) and is_sequence(value):
+                value = Matrix(value)
+                ismat = True
+            if ismat:
+                self.copyin_matrix((slice(i, i + value.rows),
+                                    slice(j, j + value.cols)), value)
+                return
+            else:
+                testval = sympify(value)
+                if testval:
+                    self.mat[(i, j)] = testval
+                elif (i, j) in self.mat:
+                    del self.mat[(i, j)]
+                return
 
     def row_del(self, k):
         """
@@ -4602,6 +4638,18 @@ class SparseMatrix(MatrixBase):
             raise TypeError("`value` must be of type list or tuple.")
         self.copyin_matrix(key, SparseMatrix(value))
 
+    def copyin_matrix(self, key, value):
+        # include this here because it's not part of BaseMatrix
+        rlo, rhi, clo, chi = self.key2bounds(key)
+        shape = value.shape
+        dr, dc = rhi - rlo, chi - clo
+        if shape != (dr, dc):
+            raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
+                "as the in sub-Matrix given by `key`.")
+        for i in range(value.rows):
+            for j in range(value.cols):
+                self[i + rlo, j + clo] = value[i, j]
+
     def multiply(self,b):
         """Returns self*b
 
@@ -4642,7 +4690,7 @@ class SparseMatrix(MatrixBase):
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
-        if not is_sequence(b, include=Matrix):
+        if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
@@ -4662,7 +4710,8 @@ class SparseMatrix(MatrixBase):
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
             SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+                feature="The syntax zeros([%i, %i])" % tuple(r),
+                useinstead="zeros(%i, %i)." % tuple(r),
                 issue=3381, deprecated_since_version="0.7.2",
             ).warn()
             r, c = r

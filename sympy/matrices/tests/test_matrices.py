@@ -345,7 +345,7 @@ def test_submatrix_assignment():
                         (4,0,0,1)))
     m[:,:] = zeros(4)
     assert m == zeros(4)
-    m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
+    m[:,:] = [(1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16)]
     assert m == Matrix(((1,2,3,4),
                         (5,6,7,8),
                         (9, 10, 11, 12),
@@ -2167,6 +2167,53 @@ def test_slice_issue_2884():
 
 def test_slice_issue_3401():
     assert zeros(0, 3)[:, -1].shape == (0, 1)
+    assert zeros(3,0)[0,:] == Matrix(1, 0, [])
+    s = SparseMatrix(3, 3, {})
+    for i in range(3):
+        s[i, 1] = i
+
+def test_copyin():
+    s = SparseMatrix(3, 3, {})
+    s[1, 0] = 1
+    assert s[:, 0] == SparseMatrix(Matrix([0, 1, 0]))
+    assert s[3] == 1
+    assert s[3: 4] == [1]
+    s[1, 1] = 42
+    assert s[1, 1] == 42
+    assert s[1, 1:] == SparseMatrix([[42, 0]])
+    s[1, 1:] = Matrix([[5, 6]])
+    assert s[1, :] == SparseMatrix([[1, 5, 6]])
+    s[1, 1:] = [[42, 43]]
+    assert s[1, :] == SparseMatrix([[1, 42, 43]])
+    s[0, 0] = 17
+    assert s[:, :1] == SparseMatrix([17, 1, 0])
+    s[0, 0] = [1, 1, 1]
+    assert s[:, 0] == SparseMatrix([1, 1, 1])
+    s[0, 0] = Matrix([1, 1, 1])
+    assert s[:, 0] == SparseMatrix([1, 1, 1])
+    s[0, 0] = SparseMatrix([1, 1, 1])
+    assert s[:, 0] == SparseMatrix([1, 1, 1])
+
+    s = zeros(3, 3)
+    s[3] = 1
+    assert s[:, 0] == Matrix([0, 1, 0])
+    assert s[3] == 1
+    assert s[3: 4] == [1]
+    s[1, 1] = 42
+    assert s[1, 1] == 42
+    assert s[1, 1:] == Matrix([[42, 0]])
+    s[1, 1:] = Matrix([[5, 6]])
+    assert s[1, :] == Matrix([[1, 5, 6]])
+    s[1, 1:] = [[42, 43]]
+    assert s[1, :] == Matrix([[1, 42, 43]])
+    s[0, 0] = 17
+    assert s[:, :1] == Matrix([17, 1, 0])
+    s[0, 0] = [1, 1, 1]
+    assert s[:, 0] == Matrix([1, 1, 1])
+    s[0, 0] = Matrix([1, 1, 1])
+    assert s[:, 0] == Matrix([1, 1, 1])
+    s[0, 0] = SparseMatrix([1, 1, 1])
+    assert s[:, 0] == Matrix([1, 1, 1])
 
 def test_invertible_check():
     x = symbols('x')
