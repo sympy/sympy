@@ -1719,7 +1719,6 @@ def test_errors():
     raises(IndexError, lambda: Matrix([[1, 2]])[1.2, 5])
     raises(IndexError, lambda: Matrix([[1, 2]])[1, 5.2])
     raises(ValueError, lambda: randMatrix(3, c=4, symmetric=True))
-    raises(IndexError, lambda: Matrix([1, 2]).slice2bounds('a', 4))
     raises(ValueError, lambda: Matrix([1, 2]).reshape(4, 6))
     raises(ShapeError,
         lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
@@ -1766,7 +1765,7 @@ def test_errors():
     raises(TypeError, lambda: SparseMatrix(1.4, 2, lambda i, j: 0))
     raises(TypeError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)])
-    raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5))
+    raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5))
     with raises(ValueError):
       SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4
     raises(TypeError,
@@ -2157,13 +2156,16 @@ def test_zero_dimension_multiply():
     assert zeros(0, 3)*zeros(3, 0) == Matrix()
 
 def test_slice_issue_2884():
-    m = Matrix(2,2,range(4))
+    m = Matrix(2, 2, range(4))
     assert m[1,:] == Matrix([[2, 3]])
     assert m[-1,:] == Matrix([[2, 3]])
     assert m[:,1] == Matrix([[1, 3]]).T
     assert m[:,-1] == Matrix([[1, 3]]).T
     raises(IndexError, lambda: m[2,:])
     raises(IndexError, lambda: m[2,2])
+
+def test_slice_issue_3401():
+    assert zeros(0, 3)[:, -1].shape == (0, 1)
 
 def test_invertible_check():
     x = symbols('x')
