@@ -1,5 +1,5 @@
 from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
-    S, Integral, sin)
+    S, Integral, sin, conjugate, expand, transpose)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -15,6 +15,8 @@ def test_simple_1():
     assert Order(2*x) == Order(x)
     assert Order(x)*3 == Order(x)
     assert -28*Order(x) == Order(x)
+    assert Order(Order(x)) == Order(x)
+    assert Order(Order(x), y) == Order(Order(x), x, y)
     assert Order(-23) == Order(1)
     assert Order(exp(x)) == Order(1,x)
     assert Order(exp(1/x)).expr == exp(1/x)
@@ -62,6 +64,12 @@ def test_simple_7():
     assert 2+O(1) == O(1)
     assert x+O(1) == O(1)
     assert 1/x+O(1) == 1/x+O(1)
+
+def test_as_expr_variables():
+    assert Order(x).as_expr_variables(None) == (x, (x,))
+    assert Order(x).as_expr_variables((x,)) == (x, (x,))
+    assert Order(y).as_expr_variables((x,)) == (y, (x, y))
+    assert Order(y).as_expr_variables((x, y)) == (y, (x, y))
 
 def test_contains_0():
     assert Order(1,x).contains(Order(1,x))
@@ -185,6 +193,7 @@ def test_order_symbols():
     assert O(e, x) == O(x**2)
 
 def test_nan():
+    assert O(nan) == nan
     assert not O(x).contains(nan)
 
 def test_O1():
@@ -220,6 +229,8 @@ def test_eval():
     from sympy import Basic
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
+    assert Order(x).subs(y, x) == Order(x)
+    assert Order(x).subs(x, x + y) == Order(x + y)
     assert (O(1)**x).is_Pow
 
 def test_oseries():
@@ -238,3 +249,25 @@ def test_issue_1756():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(f(x)) != O(1/x)
+
+def test_order_conjugate_transpose():
+    x = Symbol('x', real=True)
+    y = Symbol('y', imaginary=True)
+    assert conjugate(Order(x)) == Order(conjugate(x))
+    assert conjugate(Order(y)) == Order(conjugate(y))
+    assert conjugate(Order(x**2)) == Order(conjugate(x)**2)
+    assert conjugate(Order(y**2)) == Order(conjugate(y)**2)
+    assert transpose(Order(x)) == Order(transpose(x))
+    assert transpose(Order(y)) == Order(transpose(y))
+    assert transpose(Order(x**2)) == Order(transpose(x)**2)
+    assert transpose(Order(y**2)) == Order(transpose(y)**2)
+
+def test_order_noncommutative():
+    A = Symbol('A', commutative=False)
+    x = Symbol('x')
+    assert Order(A + A*x, x) == Order(1, x)
+    assert (A + A*x)*Order(x) == Order(x)
+    assert (A*x)*Order(x) == Order(x**2, x)
+    assert expand((1 + Order(x))*A*A*x) == A*A*x + Order(x**2, x)
+    assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
+    assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)

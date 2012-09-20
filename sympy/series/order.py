@@ -122,7 +122,7 @@ class Order(Expr):
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e,f) in lst])
             elif expr:
-                if len(symbols) > 1:
+                if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
                     # We cannot use compute_leading_term because that only
                     # works in one symbol.
@@ -244,8 +244,18 @@ class Order(Expr):
             return Order(self.expr._subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
         return Order(self.expr._subs(old, new), *self.variables)
 
+    def _eval_conjugate(self):
+        expr = self.expr._eval_conjugate()
+        if expr is not None:
+            return self.func(expr, *self.variables)
+
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
+
+    def _eval_transpose(self):
+        expr = self.expr._eval_transpose()
+        if expr is not None:
+            return self.func(expr, *self.variables)
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
