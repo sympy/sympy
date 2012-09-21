@@ -41,7 +41,7 @@ def _add_factorial_tokens(name, result):
     return result
 
 AppliedFunction = collections.namedtuple('AppliedFunction', 'function args')
-class ParenthesesGroup(list): pass
+class ParenthesisGroup(list): pass
 
 def _flatten(result):
     result2 = []
@@ -49,41 +49,47 @@ def _flatten(result):
         if isinstance(tok, AppliedFunction):
             result2.append(tok.function)
             result2.extend(tok.args)
-        elif isinstance(tok, ParenthesesGroup):
+        elif isinstance(tok, ParenthesisGroup):
             result2.extend(tok)
         else:
             result2.append(tok)
     return result2
 
-def _implicit_multiplication_application(result, global_dict):
-    # Step 1: parenthesis grouping
+def _group_parentheses(tokens, global_dict):
     # Group sequences of '()' operators
-    result2 = []
+    result = []
     stacks = []
     stacklevel = 0
-    for token in result:
+    for token in tokens:
         if token[0] == OP:
             if token[1] == '(':
-                stacks.append(ParenthesesGroup([]))
+                stacks.append(ParenthesisGroup([]))
                 stacklevel += 1
             elif token[1] == ')':
                 stacks[-1].append(token)
                 stack = stacks.pop()
+
                 if len(stacks) > 0:
+                    # We don't recurse here since the upper-level stack
+                    # would reprocess these tokens
                     stacks[-1].extend(stack)
                 else:
+                    # Recurse here to handle nested parentheses
                     # Strip off the outer parentheses to avoid an infinite loop
                     inner = stack[1:-1]
                     inner = _implicit_multiplication_application(inner, global_dict)
                     parenGroup = [stack[0]] + inner + [stack[-1]]
-                    result2.append(ParenthesesGroup(parenGroup))
+                    result.append(ParenthesisGroup(parenGroup))
                 stacklevel -= 1
                 continue
         if stacklevel:
             stacks[-1].append(token)
         else:
-            result2.append(token)
-    # print 'STEP1', result2
+            result.append(token)
+    return result
+
+def _implicit_multiplication_application(result, global_dict):
+    result2 = _group_parentheses(result, global_dict)
 
     # Step 2: symbol/function application
     # Group NAME followed by a list
@@ -93,7 +99,7 @@ def _implicit_multiplication_application(result, global_dict):
         if tok[0] == NAME:
             symbol = tok
             result3.append(tok)
-        elif isinstance(tok, ParenthesesGroup):
+        elif isinstance(tok, ParenthesisGroup):
             if symbol:
                 result3[-1] = AppliedFunction(symbol, tok)
                 symbol = None
@@ -161,7 +167,7 @@ def _implicit_multiplication_application(result, global_dict):
 
     return result6
 
-def _transform(s, local_dict, global_dict, rationalize, convert_xor):
+def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
     g = generate_tokens(StringIO(s).readline)
 
     result = []
@@ -263,13 +269,13 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
         prevtoken = tokval
 
-    result = _implicit_multiplication_application(result, global_dict)
-    print 'Tokens:', result
-    print 'Expression:', ''.join(x[1] for x in result)
+    if implicit:
+        result = _implicit_multiplication_application(result, global_dict)
+    #print 'Tokens:', result
+    #print 'Expression:', ''.join(x[1] for x in result)
     return untokenize(result)
 
-
-def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
+def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=True):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
