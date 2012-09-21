@@ -1169,9 +1169,8 @@ class Permutation(Basic):
         The reverse order of arguments will raise a TypeError.
 
         """
-        rv = args[0]
-        for i in range(1, len(args)):
-            rv = args[i]*rv
+        a = [x.array_form for x in args]
+        rv = Perm._af_new(_af_rmuln(*a))
         return rv
 
     def __rmul__(self, other):
