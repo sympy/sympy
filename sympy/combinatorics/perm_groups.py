@@ -5,7 +5,7 @@ from types import GeneratorType
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, Cycle)
+    _af_rmul, _af_rmuln, _af_pow, Cycle)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -588,12 +588,12 @@ class PermutationGroup(Basic):
 
         """
         deg = self.degree
-        random_gens = self.generators[:]
+        random_gens = [x.array_form for x in self.generators]
         k = len(random_gens)
         if k < r:
             for i in range(k, r):
                 random_gens.append(random_gens[i - k])
-        acc = _af_new(range(deg))
+        acc = range(deg)
         random_gens.append(acc)
         self._random_gens = random_gens
 
@@ -2791,12 +2791,12 @@ class PermutationGroup(Basic):
             e = _random_prec['e']
 
         if x == 1:
-            random_gens[s] = rmul(random_gens[s], random_gens[t]**e)
-            random_gens[r] = rmul(random_gens[r], random_gens[s])
+            random_gens[s] = _af_rmul(random_gens[s], _af_pow(random_gens[t], e))
+            random_gens[r] = _af_rmul(random_gens[r], random_gens[s])
         else:
-            random_gens[s] = rmul(random_gens[t]**e, random_gens[s])
-            random_gens[r] = rmul(random_gens[s], random_gens[r])
-        return random_gens[r]
+            random_gens[s] = _af_rmul(_af_pow(random_gens[t], e), random_gens[s])
+            random_gens[r] = _af_rmul(random_gens[s], random_gens[r])
+        return _af_new(random_gens[r])
 
     def random_stab(self, alpha, schreier_vector=None, _random_prec=None):
         """Random element from the stabilizer of ``alpha``.

@@ -158,6 +158,50 @@ def _af_invert(a):
         inv_form[ai] = i
     return inv_form
 
+def _af_pow(a, n):
+    """
+    Routine for finding powers of a permutation.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import Permutation
+    >>> Permutation.print_cyclic = False
+    >>> p = Permutation([2,0,3,1])
+    >>> p.order()
+    4
+    >>> p**4
+    Permutation([0, 1, 2, 3])
+    """
+    if n == 0:
+        return range(len(a))
+    if n < 0:
+        return _af_pow(_af_invert(a), -n)
+    if n == 1:
+        return a[:]
+    elif n == 2:
+        b = [a[i] for i in a]
+    elif n == 3:
+        b = [a[a[i]] for i in a]
+    elif n == 4:
+        b = [a[a[a[i]]] for i in a]
+    else:
+        # use binary multiplication
+        b = range(len(a))
+        while 1:
+            if n & 1:
+                b = [b[i] for i in a]
+                n -= 1
+                if not n:
+                    break
+            if n % 4 == 0:
+                a = [a[a[a[i]]] for i in a]
+                n = n // 4
+            elif n % 2 == 0:
+                a = [a[i] for i in a]
+                n = n // 2
+    return b
+
 def _af_commutes_with(a, b):
     """
     Checks if the two permutations with array forms
@@ -1234,35 +1278,7 @@ class Permutation(Basic):
             raise NotImplementedError(
             'p**p is not defined; do you mean p^p (conjugate)?')
         n = int(n)
-        if n == 0:
-            return Perm._af_new(range(self.size))
-        if n < 0:
-            return pow(~self, -n)
-        a = self.array_form
-        if n == 1:
-            return Perm._af_new(a) # XXX is `return self` ok?
-        elif n == 2:
-            b = [a[i] for i in a]
-        elif n == 3:
-            b = [a[a[i]] for i in a]
-        elif n == 4:
-            b = [a[a[a[i]]] for i in a]
-        else:
-            # use binary multiplication
-            b = range(len(a))
-            while 1:
-                if n & 1:
-                    b = [b[i] for i in a]
-                    n -= 1
-                    if not n:
-                        break
-                if n % 4 == 0:
-                    a = [a[a[a[i]]] for i in a]
-                    n = n // 4
-                elif n % 2 == 0:
-                    a = [a[i] for i in a]
-                    n = n // 2
-        return Perm._af_new(b)
+        return Perm._af_new(_af_pow(self.array_form, n))
 
     def __rxor__(self, i):
         """Return self(i) when ``i`` is an int.
