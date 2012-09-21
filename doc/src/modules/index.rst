@@ -48,6 +48,7 @@ access any SymPy module, or use this contens:
    parsing.rst
    physics/index.rst
    categories.rst
+   diffgeom.rst
 
 Contributions to docs
 ---------------------
