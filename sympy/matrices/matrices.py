@@ -84,10 +84,10 @@ class MatrixBase(object):
         Matrix can be constructed with values or a rule.
 
         >>> from sympy import Matrix, I
-        >>> Matrix( ((1, 2+I), (3, 4)) ) #doctest:+NORMALIZE_WHITESPACE
+        >>> Matrix( ((1, 2+I), (3, 4)) )
         [1, 2 + I]
         [3,     4]
-        >>> Matrix(2, 2, lambda i, j: (i+1)*j ) #doctest:+NORMALIZE_WHITESPACE
+        >>> Matrix(2, 2, lambda i, j: (i+1)*j )
         [0, 1]
         [0, 2]
 
@@ -190,10 +190,10 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix, I
         >>> m=Matrix(((1, 2+I), (3, 4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [3,     4]
-        >>> m.transpose() #doctest: +NORMALIZE_WHITESPACE
+        >>> m.transpose()
         [    1, 3]
         [2 + I, 4]
         >>> m.T == m.transpose()
@@ -238,10 +238,10 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix, I
         >>> m=Matrix(((1, 2+I), (3, 4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [3,     4]
-        >>> m.H #doctest: +NORMALIZE_WHITESPACE
+        >>> m.H
         [    1, 3]
         [2 - I, 4]
 
@@ -989,17 +989,17 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, lambda i, j: i+j)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1, 2, 3]
         [1, 2, 3, 4]
         [2, 3, 4, 5]
         [3, 4, 5, 6]
-        >>> m[:1, 1] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:1, 1]
         [1]
-        >>> m[:2, :1] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:2, :1]
         [0]
         [1]
-        >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
+        >>> m[2:4, 2:4]
         [4, 5]
         [5, 6]
 
@@ -1027,26 +1027,26 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, range(12))
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0,  1,  2]
         [3,  4,  5]
         [6,  7,  8]
         [9, 10, 11]
-        >>> m.extract([0, 1, 3], [0, 1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract([0, 1, 3], [0, 1])
         [0,  1]
         [3,  4]
         [9, 10]
 
         Rows or columns can be repeated:
 
-        >>> m.extract([0, 0, 1], [-1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract([0, 0, 1], [-1])
         [2]
         [2]
         [5]
 
         Every other row can be taken by using range to provide the indices:
 
-        >>> m.extract(range(0, m.rows, 2), [-1])   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.extract(range(0, m.rows, 2), [-1])
         [2]
         [8]
 
@@ -1114,10 +1114,10 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, lambda i, j: i*2+j)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1]
         [2, 3]
-        >>> m.applyfunc(lambda i: 2*i)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.applyfunc(lambda i: 2*i)
         [0, 2]
         [4, 6]
 
@@ -1145,12 +1145,12 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix
         >>> m = Matrix(2, 3, lambda i, j: 1)
-        >>> m   #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 1, 1]
         [1, 1, 1]
-        >>> m.reshape(1, 6)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.reshape(1, 6)
         [1, 1, 1, 1, 1, 1]
-        >>> m.reshape(3, 2)  #doctest: +NORMALIZE_WHITESPACE
+        >>> m.reshape(3, 2)
         [1, 1]
         [1, 1]
         [1, 1]
@@ -1169,14 +1169,14 @@ class MatrixBase(object):
 
         >>> from sympy import Matrix, matrices
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
-        >>> m           #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [0, 1, 2]
         [3, 4, 5]
-        >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+        >>> m.print_nonzero()
         [ XX]
         [XXX]
         >>> m = matrices.eye(4)
-        >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+        >>> m.print_nonzero("x")
         [x   ]
         [ x  ]
         [  x ]
@@ -3489,15 +3489,15 @@ class MutableMatrix(MatrixBase):
         """
         >>> from sympy import Matrix, I
         >>> m = Matrix(((1, 2+I), (3, 4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [3,     4]
         >>> m[1, 0] = 9
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [9,     4]
         >>> m[1, 0] = [[0, 1]]
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        >>> m
         [1, 2 + I]
         [0,     1]
 
@@ -3731,7 +3731,7 @@ class MutableMatrix(MatrixBase):
         >>> import sympy
         >>> M = sympy.matrices.eye(3)
         >>> M.row_del(1)
-        >>> M   #doctest: +NORMALIZE_WHITESPACE
+        >>> M
         [1, 0, 0]
         [0, 0, 1]
 
@@ -3751,7 +3751,7 @@ class MutableMatrix(MatrixBase):
         >>> import sympy
         >>> M = sympy.matrices.eye(3)
         >>> M.col_del(1)
-        >>> M   #doctest: +NORMALIZE_WHITESPACE
+        >>> M
         [1, 0]
         [0, 0]
         [0, 1]
@@ -4225,13 +4225,13 @@ def wronskian(functions, var, method='bareis'):
 
     ::
 
-                       | f1       f2        ...   fn      |
-                       | f1'      f2'       ...   fn'     |
-                       |  .        .        .      .      |
-        W(f1,...,fn) = |  .        .         .     .      |
-                       |  .        .          .    .      |
-                       |  (n)      (n)            (n)     |
-                       | D   (f1) D   (f2)  ...  D   (fn) |
+                         | f1       f2        ...   fn      |
+                         | f1'      f2'       ...   fn'     |
+                         |  .        .        .      .      |
+        W(f1, ..., fn) = |  .        .         .     .      |
+                         |  .        .          .    .      |
+                         |  (n)      (n)            (n)     |
+                         | D   (f1) D   (f2)  ...  D   (fn) |
 
     see: http://en.wikipedia.org/wiki/Wronskian
 
@@ -4593,6 +4593,56 @@ class SparseMatrix(MatrixBase):
 
     T = property(transpose, None, None, "Matrix transposition.")
 
+    def multiply(A, B):
+        "Fast multiplication exploiting the sparsity of the matrix."
+        rows1 = A._lil_row_major()
+        rows2 = B._lil_row_major()
+        Cdict = {}
+        for k in xrange(A.rows):
+            for _, j in rows1[k]:
+                for _, n  in rows2[j]:
+                    temp = A.mat[k, j] * B.mat[j, n]
+                    if (k, n) in Cdict:
+                        Cdict[k, n] += temp
+                    else:
+                        Cdict[k, n] = temp
+        return SparseMatrix(A.rows, B.cols, Cdict)
+
+    def scalar_multiply(matrix, scalar):
+        "Scalar element-wise multiplication"
+        C = SparseMatrix(matrix.rows, matrix.cols, {})
+        for i in matrix.mat:
+            C.mat[i] = scalar * matrix.mat[i]
+        return C
+
+    def __mul__(self, other):
+        """Multiply self and other, watching for non-matrix entities.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix, eye, zeros
+        >>> I = SparseMatrix(eye(3))
+        >>> I*I == I
+        True
+        >>> Z = zeros(3)
+        >>> I*Z
+        [0, 0, 0]
+        [0, 0, 0]
+        [0, 0, 0]
+        >>> I*2 == 2*I
+        True
+        """
+        if isinstance(other, SparseMatrix):
+            return self.multiply(other)
+        elif isinstance(other, MatrixBase):
+            return self.toMatrix() * other
+        else:
+            return self.scalar_multiply(other)
+
+    def __rmul__(self, other):
+        return self * other
+
 
     def __add__(self, other):
         """Add other to self, efficiently if possible.
@@ -4686,14 +4736,36 @@ class SparseMatrix(MatrixBase):
             for j in range(value.cols):
                 self[i + rlo, j + clo] = value[i, j]
 
-    def multiply(self,b):
-        """Returns self*b
+    def _lil_row_major(self):
+        """
+        Returns the row-based list of list structure of the given matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix, eye
+        >>> M = SparseMatrix(eye(3))
+        >>> M[0, 2] = 3
+        >>> M._lil_row_major()
+        [[(0, 0), (0, 2)], [(1, 1)], [(2, 2)]]
+        >>> M.row_list()
+        [(0, 0, 1), (0, 2, 3), (1, 1, 1), (2, 2, 1)]
+
+        """
+        lil = [[] for x in range(self.rows)]
+        for (i, j, v) in self.row_list():
+            lil[i].append((i, j))
+        return lil
+
+    def multiply(self, other):
+        """Fast multiplication exploiting the sparsity of the matrix.
 
         Examples
         ========
 
         >>> from sympy.matrices.matrices import SparseMatrix, eye, ones
-        >>> SparseMatrix(eye(3)).multiply(ones(3)) == ones(3)
+        >>> I, B = SparseMatrix(eye(3)), SparseMatrix(ones(3))
+        >>> I.multiply(B) == B
         True
 
         See Also
@@ -4701,20 +4773,20 @@ class SparseMatrix(MatrixBase):
 
         add
         """
-
-        def dotprod(a, b, i, j):
-            if a.cols != b.rows:
-                raise ShapeError("`self.cols` must equal `b.rows`.")
-            r=0
-            for x in range(a.cols):
-                r+=a[i, x]*b[x, j]
-            return r
-
-        r = SparseMatrix(self.rows, b.cols,
-            lambda i,j: dotprod(self, b, i, j))
-        if r.rows == 1 and r.cols ==1:
-            return r[0, 0]
-        return r
+        A = self
+        B = other
+        rows1 = A._lil_row_major()
+        rows2 = B._lil_row_major()
+        Cdict = {}
+        for k in xrange(A.rows):
+            for _, j in rows1[k]:
+                for _, n  in rows2[j]:
+                    temp = A.mat[k, j] * B.mat[j, n]
+                    if (k, n) in Cdict:
+                        Cdict[k, n] += temp
+                    else:
+                        Cdict[k, n] = temp
+        return SparseMatrix(A.rows, B.cols, Cdict)
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
@@ -4773,6 +4845,102 @@ class SparseMatrix(MatrixBase):
 
     def __hash__(self):
         return super(Matrix, self).__hash__()
+
+    @property
+    def is_symmetric(self):
+        """Return True if self is symmetric.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix, eye
+        >>> M = SparseMatrix(eye(3))
+        >>> M.is_symmetric
+        True
+        >>> M[0, 2] = 1
+        >>> M.is_symmetric
+        False
+        """
+        return all((k[1], k[0]) in self.mat and \
+            not (self[k] - self[k[1], k[0]]).simplify() for k in self.mat)
+
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
+
+        Examples:
+        >>> from sympy import SparseMatrix, Float
+        >>> from sympy.abc import x, y
+        >>> A = SparseMatrix(((1, x), (0.2, 3)))
+        >>> A.has(x)
+        True
+        >>> A.has(y)
+        False
+        >>> A.has(Float)
+        True
+        """
+        return any(self[key].has(*patterns) for key in self.mat)
+
+    def row_join(self, other):
+        """
+        Returns [A B], i.e. A with B augmented row-wise.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.row_join(B)
+        [1, 0, 1, 1, 0, 0]
+        [0, 1, 0, 0, 1, 0]
+        [1, 1, 0, 0, 0, 1]
+        """
+        A, B = self, other
+        if not A.rows == B.rows:
+            raise ShapeError()
+        A = A.copy()
+        for i, j in B.mat:
+            A.mat[i, j + A.cols] = B.mat[i, j]
+        A.cols += B.cols
+        return A
+
+    def col_join(self, other):
+        """
+        Returns [A B], i.e. A with B augmented row-wise.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.col_join(B)
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        """
+        A, B = self, other
+        if not A.cols == B.cols:
+            raise ShapeError()
+        A = A.copy()
+        for i, j in B.mat:
+            A.mat[i + A.rows, j] = B.mat[i, j]
+        A.rows += B.rows
+        return A
 
 def list2numpy(l): # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
