@@ -2441,15 +2441,15 @@ class PermutationGroup(Basic):
         if not hasattr(alpha, '__getitem__'):
             alpha = [alpha]
 
+        gens = [x.array_form for x in self.generators]
         if len(alpha) == 1 or action == 'union':
             orb = alpha
             used = [False]*self.degree
             for el in alpha:
                 used[el] = True
-            gens = self.generators
             for b in orb:
                 for gen in gens:
-                    temp = gen(b)
+                    temp = gen[b]
                     if used[temp] == False:
                         orb.append(temp)
                         used[temp] = True
@@ -2458,10 +2458,9 @@ class PermutationGroup(Basic):
             alpha = tuple(alpha)
             orb = [alpha]
             used = set([alpha])
-            gens = self.generators
             for b in orb:
                 for gen in gens:
-                    temp = tuple([gen(x) for x in b])
+                    temp = tuple([gen[x] for x in b])
                     if temp not in used:
                         orb.append(temp)
                         used.add(temp)
@@ -2470,10 +2469,9 @@ class PermutationGroup(Basic):
             alpha = frozenset(alpha)
             orb = [alpha]
             used = set([alpha])
-            gens = self.generators
             for b in orb:
                 for gen in gens:
-                    temp = frozenset([gen(x) for x in b])
+                    temp = frozenset([gen[x] for x in b])
                     if temp not in used:
                         orb.append(temp)
                         used.add(temp)
@@ -2550,19 +2548,20 @@ class PermutationGroup(Basic):
 
         """
         n = self.degree
-        tr = [(alpha, _af_new(range(n)))]
+        tr = [(alpha, range(n))]
         used = [False]*n
         used[alpha] = True
-        gens = self.generators
+        gens = [x.array_form for x in self.generators]
         for pair in tr:
             for gen in gens:
-                temp = gen(pair[0])
+                temp = gen[pair[0]]
                 if used[temp] == False:
-                    tr.append((temp, Permutation.rmul(gen, pair[1])))
+                    tr.append((temp, _af_rmul(gen, pair[1])))
                     used[temp] = True
         if pairs:
+            tr = [(x, _af_new(y)) for x, y in tr]
             return tr
-        return [pair[1] for pair in tr]
+        return [_af_new(y) for _, y in tr]
 
     def orbits(self, rep=False):
         """Compute the orbits of G.
@@ -2649,7 +2648,7 @@ class PermutationGroup(Basic):
             m *= x
         return m
 
-    def pointwise_stabilizer(self, points):
+    def pointwise_stabilizer(self, points, incremental=False):
         r"""Return the pointwise stabilizer for a set of points.
 
         For a permutation group ``G`` and a set of points
@@ -2676,19 +2675,26 @@ class PermutationGroup(Basic):
         Notes
         =====
 
-        Rather than the obvious implementation using successive calls to
+        When incremental == True,
+        rather than the obvious implementation using successive calls to
         .stabilizer(), this uses the incremental Schreier-Sims algorithm
         to obtain a base with starting segment - the given points.
 
         """
-        base, strong_gens = self.schreier_sims_incremental(base=points)
-        stab_gens = []
-        degree = self.degree
-        identity = _af_new(range(degree))
-        for gen in strong_gens:
-            if [gen(point) for point in points] == points:
-                stab_gens.append(gen)
-        return PermutationGroup(stab_gens)
+        if incremental:
+            base, strong_gens = self.schreier_sims_incremental(base=points)
+            stab_gens = []
+            degree = self.degree
+            identity = _af_new(range(degree))
+            for gen in strong_gens:
+                if [gen(point) for point in points] == points:
+                    stab_gens.append(gen)
+            return PermutationGroup(stab_gens)
+        else:
+            H = self
+            for x in points:
+                H = H.stabilizer(x)
+        return H
 
     def make_perm(self, n, seed=None):
         """
@@ -3273,24 +3279,24 @@ class PermutationGroup(Basic):
         """
         n = self.degree
         orb = [alpha]
-        table = {alpha: _af_new(range(n))}
+        table = {alpha: range(n)}
         used = [False]*n
         used[alpha] = True
-        gens = self.generators
+        gens = [x.array_form for x in self.generators]
         stab_gens = []
         for b in orb:
             for gen in gens:
-                temp = gen(b)
+                temp = gen[b]
                 if used[temp] is False:
-                    gen_temp = rmul(gen, table[b])
+                    gen_temp = _af_rmul(gen, table[b])
                     orb.append(temp)
                     table[temp] = gen_temp
                     used[temp] = True
                 else:
-                    schreier_gen = rmul(~table[temp], gen, table[b])
+                    schreier_gen = _af_rmuln(_af_invert(table[temp]), gen, table[b])
                     if schreier_gen not in stab_gens:
                         stab_gens.append(schreier_gen)
-        return PermutationGroup(list(stab_gens))
+        return PermutationGroup([_af_new(x) for x in stab_gens])
 
     def stabilizer_cosets(self, af=False):
         """Return a list of cosets of the stabilizer chain of the group
@@ -3708,12 +3714,19 @@ class PermutationGroup(Basic):
         """
         if self._transitivity_degree is None:
             n = self.degree
-            max_size = 1
-            for i in range(1, n + 1):
-                max_size *= n - i + 1
-                orb = self.orbit(range(i), 'tuples')
-                if len(orb) != max_size:
-                    return i - 1
+            G = self
+            # if G is k-transitive, a tuple (a_0,..,a_k)
+            # can be brought to (b_0,...,b_(k-1), b_k)
+            # where b_0,...,b_(k-1) are fixed points;
+            # consider the group G_k which stabilizes b_0,...,b_(k-1)
+            # if G_k is transitive on the subset excluding b_0,...,b_(k-1)
+            # then G is (k+1)-transitive
+            for i in range(n):
+                orb = G.orbit((i))
+                if len(orb) != n - i:
+                    self._transitivity_degree = i
+                    return i
+                G = G.stabilizer(i)
             self._transitivity_degree = n
             return n
         else:
