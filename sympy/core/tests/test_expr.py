@@ -433,11 +433,11 @@ def test_as_numer_denom():
     assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
     assert (x**-2).as_numer_denom() == (1, x**2)
     assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
-            (6*a + 3*b + 2*c, 6*x)
+        (6*a + 3*b + 2*c, 6*x)
     assert (a/x + b/2/x + c/3/y).as_numer_denom() == \
-            (2*c*x + y*(6*a + 3*b), 6*x*y)
+        (2*c*x + y*(6*a + 3*b), 6*x*y)
     assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
-            (2*a + b + 4.0*c, 2*x)
+        (2*a + b + 4.0*c, 2*x)
     # this should take no more than a few seconds
     assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
                        ).as_numer_denom()[1]/x).n(4)) == 705
@@ -813,7 +813,7 @@ def test_as_coeff_exponent():
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
     assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
     assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
-            (log(2)/(2+pi), 0)
+        (log(2)/(2 + pi), 0)
     # 1685
     D = Derivative
     f = Function('f')

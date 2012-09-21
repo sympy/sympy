@@ -62,27 +62,27 @@ def test_evalc():
 
     assert sin(I*x).expand(complex=True) == I * sinh(x)
     assert sin(x+I*y).expand(complex=True) == sin(x)*cosh(y) + \
-            I * sinh(y) * cos(x)
+        I * sinh(y) * cos(x)
 
     assert cos(I*x).expand(complex=True) == cosh(x)
     assert cos(x+I*y).expand(complex=True) == cos(x)*cosh(y) - \
-            I * sinh(y) * sin(x)
+        I * sinh(y) * sin(x)
 
     assert tan(I*x).expand(complex=True) == tanh(x) * I
     assert tan(x+I*y).expand(complex=True) == \
-            ((sin(x)*cos(x) + I*cosh(y)*sinh(y)) / (cos(x)**2 + sinh(y)**2)).expand()
+        ((sin(x)*cos(x) + I*cosh(y)*sinh(y)) / (cos(x)**2 + sinh(y)**2)).expand()
 
     assert sinh(I*x).expand(complex=True) == I * sin(x)
     assert sinh(x+I*y).expand(complex=True) == sinh(x)*cos(y) + \
-            I * sin(y) * cosh(x)
+        I * sin(y) * cosh(x)
 
     assert cosh(I*x).expand(complex=True) == cos(x)
     assert cosh(x+I*y).expand(complex=True) == cosh(x)*cos(y) + \
-            I * sin(y) * sinh(x)
+        I * sin(y) * sinh(x)
 
     assert tanh(I*x).expand(complex=True) == tan(x) * I
     assert tanh(x+I*y).expand(complex=True) == \
-            ((sinh(x)*cosh(x) + I*cos(y)*sin(y)) / (sinh(x)**2 + cos(y)**2)).expand()
+        ((sinh(x)*cosh(x) + I*cos(y)*sin(y)) / (sinh(x)**2 + cos(y)**2)).expand()
 
 def test_pythoncomplex():
     x = Symbol("x")
