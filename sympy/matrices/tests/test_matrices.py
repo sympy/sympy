@@ -1767,8 +1767,7 @@ def test_errors():
     raises(TypeError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)])
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5))
-    with raises(ValueError):
-      SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4
+    raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2, 3])
     raises(TypeError,
         lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2)))

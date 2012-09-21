@@ -175,6 +175,9 @@ class MatrixBase(object):
 
         return rows, cols, mat
 
+    def copy(self):
+        return type(self)(self.rows, self.cols, self.mat)
+
     def _eval_transpose(self):
         return self.transpose()
 
@@ -330,22 +333,31 @@ class MatrixBase(object):
 
     def tolist(self):
         """
-        Return the Matrix converted in a python list.
+        Return the Matrix as a nested Python list.
 
-        >>> from sympy import Matrix
-        >>> m=Matrix(3, 3, range(9))
+        Examples
+        ========
+
+        >>> from sympy import Matrix, ones
+        >>> m = Matrix(3, 3, range(9))
         >>> m
         [0, 1, 2]
         [3, 4, 5]
         [6, 7, 8]
         >>> m.tolist()
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        >>> ones(0, 3).tolist()
+        []
+        >>> ones(3, 0).tolist()
+        [[], [], []]
 
         """
-        ret = [0]*self.rows
-        for i in xrange(self.rows):
-            ret[i] = self.mat[i*self.cols:(i+1)*self.cols]
-        return ret
+        if not self.rows:
+            return []
+        if not self.cols:
+            return [[] for i in range(self.rows)]
+        return [self.mat[i: i + self.cols] \
+            for i in range(0, len(self), self.cols)]
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -370,7 +382,7 @@ class MatrixBase(object):
         """
         return (self.rows, self.cols)
 
-    def __rmul__(self,a):
+    def __rmul__(self, a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
         out = self._new(self.rows, self.cols, map(lambda i: a*i,self.mat))
@@ -830,13 +842,13 @@ class MatrixBase(object):
         """
         Concatenates two matrices along self's last and rhs's first column
 
-        >>> from sympy import Matrix
-        >>> M = Matrix(3,3,lambda i,j: i+j)
-        >>> V = Matrix(3,1,lambda i,j: 3+i+j)
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(3, 1)
         >>> M.row_join(V)
-        [0, 1, 2, 3]
-        [1, 2, 3, 4]
-        [2, 3, 4, 5]
+        [0, 0, 0, 1]
+        [0, 0, 0, 1]
+        [0, 0, 0, 1]
 
         See Also
         ========
@@ -848,22 +860,22 @@ class MatrixBase(object):
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         newmat = self.zeros(self.rows, self.cols + rhs.cols)
-        newmat[:,:self.cols] = self[:,:]
-        newmat[:,self.cols:] = rhs
+        newmat[:, :self.cols] = self
+        newmat[:, self.cols:] = rhs
         return newmat
 
     def col_join(self, bott):
         """
         Concatenates two matrices along self's last and bott's first row
 
-        >>> from sympy import Matrix, ones
-        >>> M = ones(3, 3)
-        >>> V = Matrix([[7,7,7]])
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(1, 3)
         >>> M.col_join(V)
+        [0, 0, 0]
+        [0, 0, 0]
+        [0, 0, 0]
         [1, 1, 1]
-        [1, 1, 1]
-        [1, 1, 1]
-        [7, 7, 7]
 
         See Also
         ========
@@ -875,28 +887,22 @@ class MatrixBase(object):
             raise ShapeError("`self` and `bott` must have the same number of columns.")
 
         newmat = self.zeros(self.rows+bott.rows, self.cols)
-        newmat[:self.rows,:] = self[:,:]
-        newmat[self.rows:,:] = bott
+        newmat[:self.rows, :] = self
+        newmat[self.rows:, :] = bott
         return newmat
 
     def row_insert(self, pos, mti):
         """
         Insert a row at the given position.
 
-        >>> from sympy import Matrix, zeros
-        >>> M = Matrix(3,3,lambda i,j: i+j)
-        >>> M
-        [0, 1, 2]
-        [1, 2, 3]
-        [2, 3, 4]
-        >>> V = zeros(1, 3)
-        >>> V
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(1, 3)
+        >>> M.row_insert(1, V)
         [0, 0, 0]
-        >>> M.row_insert(1,V)
-        [0, 1, 2]
+        [1, 1, 1]
         [0, 0, 0]
-        [1, 2, 3]
-        [2, 3, 4]
+        [0, 0, 0]
 
         See Also
         ========
@@ -917,30 +923,23 @@ class MatrixBase(object):
             raise ShapeError("`self` and `mti` must have the same number of columns.")
 
         newmat = self.zeros(self.rows + mti.rows, self.cols)
-        newmat[:pos,:] = self[:pos,:]
-        newmat[pos:pos+mti.rows,:] = mti[:,:]
-        newmat[pos+mti.rows:,:] = self[pos:,:]
+        i, j = pos, pos + mti.rows
+        newmat[:i  , :] = self[:i, :]
+        newmat[i: j, :] = mti
+        newmat[j:  , :] = self[i:, :]
         return newmat
 
     def col_insert(self, pos, mti):
         """
         Insert a column at the given position.
 
-        >>> from sympy import Matrix, zeros
-        >>> M = Matrix(3,3,lambda i,j: i+j)
-        >>> M
-        [0, 1, 2]
-        [1, 2, 3]
-        [2, 3, 4]
-        >>> V = zeros(3, 1)
-        >>> V
-        [0]
-        [0]
-        [0]
-        >>> M.col_insert(1,V)
-        [0, 0, 1, 2]
-        [1, 0, 2, 3]
-        [2, 0, 3, 4]
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(3, 1)
+        >>> M.col_insert(1, V)
+        [0, 1, 0, 0]
+        [0, 1, 0, 0]
+        [0, 1, 0, 0]
 
         See Also
         ========
@@ -961,18 +960,18 @@ class MatrixBase(object):
             raise ShapeError("self and mti must have the same number of rows.")
 
         newmat = self.zeros(self.rows, self.cols + mti.cols)
-        newmat[:,:pos] = self[:,:pos]
-        newmat[:,pos:pos+mti.cols] = mti[:,:]
-        newmat[:,pos+mti.cols:] = self[:,pos:]
+        i, j = pos, pos + mti.cols
+        newmat[:,  :i] = self[:, :i]
+        newmat[:, i:j] = mti
+        newmat[:, j: ] = self[:, i:]
         return newmat
 
     def trace(self):
         """
         Calculate the trace of a (square) matrix.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
-        >>> M.trace()
+        >>> from sympy.matrices import eye
+        >>> eye(3).trace()
         3
 
         """
@@ -1815,8 +1814,8 @@ class MatrixBase(object):
 
         permuteFwd
         """
-        copy = self[:,:]
-        for i in range(len(perm)-1, -1, -1):
+        copy = self.copy()
+        for i in range(len(perm) - 1, -1, -1):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
@@ -1836,7 +1835,7 @@ class MatrixBase(object):
 
         permuteBkwd
         """
-        copy = self[:,:]
+        copy = self.copy()
         for i in range(len(perm)):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
@@ -2414,7 +2413,7 @@ class MatrixBase(object):
         if not self:
             return S.One
 
-        M, n = self[:,:], self.rows
+        M, n = self.copy(), self.rows
 
         if n == 1:
             det = M[0, 0]
@@ -2474,7 +2473,7 @@ class MatrixBase(object):
         if not self:
             return S.One
 
-        M, n = self[:,:], self.rows
+        M, n = self.copy(), self.rows
         p, prod = [] , 1
         l, u, p = M.LUdecomposition()
         if  len(p) % 2:
@@ -3176,7 +3175,7 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
-        >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
         [1,  2, 0]
         [0,  3, 0]
@@ -4377,9 +4376,31 @@ class SparseMatrix(MatrixBase):
         return divmod(num, self.cols)
 
     def __setitem__(self, key, value):
+        """Assign value to position designated by key.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix(2, 2, {})
+        >>> M[1] = 1; M
+        [0, 1]
+        [0, 0]
+        >>> M[1, 1] = 2; M
+        [0, 1]
+        [0, 2]
+        >>> M = SparseMatrix(2, 2, {})
+        >>> M[:, 1] = [1, 1]; M
+        [0, 1]
+        [0, 1]
+        >>> M = SparseMatrix(2, 2, {})
+        >>> M[1, :] = [[1, 1]]; M
+        [0, 0]
+        [1, 1]
+        """
         # almost identical, need to test for 0
-        if len(key) != 2:
-            raise ValueError("`key` must be of length 2.")
+        if isinstance(key, int):
+            key = divmod(key, self.cols)
 
         if isinstance(key[0], slice) or isinstance(key[1], slice):
             if isinstance(value, MatrixBase):
@@ -4479,23 +4500,29 @@ class SparseMatrix(MatrixBase):
         """
         Convert this sparse matrix into a matrix.
         """
-        l = []
-        for i in range(self.rows):
-            c = []
-            l.append(c)
-            for j in range(self.cols):
-                if (i, j) in self.mat:
-                    c.append(self[i, j])
-                else:
-                    c.append(S.Zero)
-        return Matrix(l)
+        return Matrix(self.tolist())
+
+    def tolist(self):
+        """
+        Convert this sparse matrix a list of nested Python lists.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> a = SparseMatrix(((1,2),(3,4)))
+        >>> a.tolist()
+        [[1, 2], [3, 4]]
+        """
+        I, J = self.shape
+        return [[self[i, j] for j in range(J)] for i in range(I)]
 
     def row_list(self):
         """
         Returns a Row-sorted list of non-zero elements of the matrix.
 
         >>> from sympy.matrices import SparseMatrix
-        >>> a=SparseMatrix(((1,2),(3,4)))
+        >>> a = SparseMatrix(((1,2),(3,4)))
         >>> a
         [1, 2]
         [3, 4]
@@ -4565,71 +4592,77 @@ class SparseMatrix(MatrixBase):
 
 
     def __add__(self, other):
-        if isinstance(other, SparseMatrix):
-            return self.add(other)
-        else:
-            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
+        """Add other to self, efficiently if possible.
 
-    def __radd__(self, other):
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, eye
+        >>> eye(3) + SparseMatrix(eye(3))
+        [2, 0, 0]
+        [0, 2, 0]
+        [0, 0, 2]
+        """
         if isinstance(other, SparseMatrix):
             return self.add(other)
+        elif isinstance(other, MatrixBase):
+            return other + self.toMatrix()
         else:
-            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
+            raise NotImplementedError("Cannot add %s to SparseMatrix" % type(other))
+
+    def __neg__(self):
+        """Negate all elements of self.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, eye
+        >>> -SparseMatrix(eye(3))
+        [-1,  0,  0]
+        [ 0, -1,  0]
+        [ 0,  0, -1]
+
+        """
+        rv = self.copy()
+        for k, v in rv.mat.iteritems():
+            rv.mat[k] = -v
+        return rv
 
     def add(self, other):
         """
         Add two sparse matrices with dictionary representation.
 
-        >>> from sympy.matrices.matrices import SparseMatrix
-        >>> A = SparseMatrix(5, 5, lambda i, j: i * j + i)
-        >>> A
-        [0, 0,  0,  0,  0]
-        [1, 2,  3,  4,  5]
-        [2, 4,  6,  8, 10]
-        [3, 6,  9, 12, 15]
-        [4, 8, 12, 16, 20]
-        >>> B = SparseMatrix(5, 5, lambda i, j: i + 2 * j)
-        >>> B
-        [0, 2, 4,  6,  8]
-        [1, 3, 5,  7,  9]
-        [2, 4, 6,  8, 10]
-        [3, 5, 7,  9, 11]
-        [4, 6, 8, 10, 12]
-        >>> A + B
-        [0,  2,  4,  6,  8]
-        [2,  5,  8, 11, 14]
-        [4,  8, 12, 16, 20]
-        [6, 11, 16, 21, 26]
-        [8, 14, 20, 26, 32]
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, eye, ones
+        >>> SparseMatrix(eye(3)).add(SparseMatrix(ones(3)))
+        [2, 1, 1]
+        [1, 2, 1]
+        [1, 1, 2]
+        >>> SparseMatrix(eye(3)).add(-SparseMatrix(eye(3)))
+        [0, 0, 0]
+        [0, 0, 0]
+        [0, 0, 0]
+
+        Only the non-zero elements are stored, so the resulting dictionary
+        that is used to represent the sparse matrix is empty:
+        >>> _.mat
+        {}
 
         See Also
         ========
 
         multiply
         """
+        if not isinstance(other, SparseMatrix):
+            raise ValueError('use add with SparseMatrix, not %s' % type(other))
         if self.shape != other.shape:
             raise ShapeError()
-        a, b = self.mat.keys(), other.mat.keys()
-        a.sort()
-        b.sort()
-        i = j = 0
-        c = {}
-        while i < len(a) or j < len(b):
-            if j >= len(b) or (i < len(a) and a[i] < b[j]):
-                c[a[i]] = self.mat[a[i]]
-                i = i + 1
-                continue
-            elif i >= len(a) or (j < len(b) and a[i] > b[j]):
-                c[b[j]] = other.mat[b[j]]
-                j = j + 1
-                continue
-            else:
-                c[a[i]] = self.mat[a[i]] + other.mat[b[j]]
-                i = i + 1
-                j = j + 1
-        return SparseMatrix(self.rows, self.cols, c)
-
-
+        M = self.copy()
+        for i, v in other.mat.iteritems():
+            M[i] += v
+        return M
 
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
@@ -4652,6 +4685,13 @@ class SparseMatrix(MatrixBase):
 
     def multiply(self,b):
         """Returns self*b
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, eye, ones
+        >>> SparseMatrix(eye(3)).multiply(ones(3)) == ones(3)
+        True
 
         See Also
         ========
