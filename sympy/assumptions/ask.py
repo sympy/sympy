@@ -198,27 +198,27 @@ def compute_known_facts():
 # handlers_dict tells us what ask handler we should use
 # for a particular key
 _handlers_dict = {
-    'antihermitian'  : ['sympy.assumptions.handlers.sets.AskAntiHermitianHandler'],
-    'bounded'        : ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
-    'commutative'    : ['sympy.assumptions.handlers.AskCommutativeHandler'],
-    'complex'        : ['sympy.assumptions.handlers.sets.AskComplexHandler'],
-    'composite'      : ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
-    'even'           : ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
-    'extended_real'  : ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
-    'hermitian'      : ['sympy.assumptions.handlers.sets.AskHermitianHandler'],
-    'imaginary'      : ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
-    'infinitesimal'  : ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
-    'integer'        : ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
-    'irrational'     : ['sympy.assumptions.handlers.sets.AskIrrationalHandler'],
-    'rational'       : ['sympy.assumptions.handlers.sets.AskRationalHandler'],
-    'negative'       : ['sympy.assumptions.handlers.order.AskNegativeHandler'],
-    'nonzero'        : ['sympy.assumptions.handlers.order.AskNonZeroHandler'],
-    'positive'       : ['sympy.assumptions.handlers.order.AskPositiveHandler'],
-    'prime'          : ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
-    'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
-    'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
-    'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
-    'is_true'        : ['sympy.assumptions.handlers.TautologicalHandler']
+    'antihermitian':   ['sympy.assumptions.handlers.sets.AskAntiHermitianHandler'],
+    'bounded':         ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
+    'commutative':     ['sympy.assumptions.handlers.AskCommutativeHandler'],
+    'complex':         ['sympy.assumptions.handlers.sets.AskComplexHandler'],
+    'composite':       ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
+    'even':            ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
+    'extended_real':   ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
+    'hermitian':       ['sympy.assumptions.handlers.sets.AskHermitianHandler'],
+    'imaginary':       ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
+    'infinitesimal':   ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
+    'integer':         ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
+    'irrational':      ['sympy.assumptions.handlers.sets.AskIrrationalHandler'],
+    'rational':        ['sympy.assumptions.handlers.sets.AskRationalHandler'],
+    'negative':        ['sympy.assumptions.handlers.order.AskNegativeHandler'],
+    'nonzero':         ['sympy.assumptions.handlers.order.AskNonZeroHandler'],
+    'positive':        ['sympy.assumptions.handlers.order.AskPositiveHandler'],
+    'prime':           ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
+    'real':            ['sympy.assumptions.handlers.sets.AskRealHandler'],
+    'odd':             ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
+    'algebraic':       ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
+    'is_true':         ['sympy.assumptions.handlers.TautologicalHandler']
 }
 for name, value in _handlers_dict.iteritems():
     register_handler(name, value[0])

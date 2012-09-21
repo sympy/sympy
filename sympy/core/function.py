@@ -267,8 +267,7 @@ class Function(Application, Expr):
                 # and change NumPy to take advantage of this.
                 temp = ('%(name)s takes exactly %(args)s '
                        'argument%(plural)s (%(given)s given)')
-                raise TypeError(temp %
-                    {
+                raise TypeError(temp % {
                     'name': cls,
                     'args': cls.nargs,
                     'plural': 's'*(n != 1),

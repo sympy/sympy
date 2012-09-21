@@ -143,15 +143,15 @@ def test_FactRules_deduce():
         return kb
 
     assert D({'a': T})  == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
-    assert D({'b': T})  == {        'b': T, 'c': T, 'd': T, 'e': T}
-    assert D({'c': T})  == {                'c': T,         'e': T}
-    assert D({'d': T})  == {                        'd': T        }
-    assert D({'e': T})  == {                                'e': T}
+    assert D({'b': T})  == {'b': T, 'c': T, 'd': T, 'e': T}
+    assert D({'c': T})  == {'c': T, 'e': T}
+    assert D({'d': T})  == {'d': T}
+    assert D({'e': T})  == {'e': T}
 
-    assert D({'a': F})  == {'a': F                                }
-    assert D({'b': F})  == {'a': F, 'b': F                        }
-    assert D({'c': F})  == {'a': F, 'b': F, 'c': F                }
-    assert D({'d': F})  == {'a': F, 'b': F,         'd': F        }
+    assert D({'a': F})  == {'a': F}
+    assert D({'b': F})  == {'a': F, 'b': F}
+    assert D({'c': F})  == {'a': F, 'b': F, 'c': F}
+    assert D({'d': F})  == {'a': F, 'b': F, 'd': F}
 
     assert D({'a': U})  == {'a': U} # XXX ok?
 
@@ -165,21 +165,21 @@ def test_FactRules_deduce2():
         return kb
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
-    assert D({'pos':F}) == {'pos': F                  }
-    assert D({'neg':T}) == {'pos': F, 'neg': T        }
-    assert D({'neg':F}) == {          'neg': F        }
-    assert D({'z': T})  == {'pos': F,           'z': T}
-    assert D({'z': F})  == {                    'z': F}
+    assert D({'pos':F}) == {'pos': F}
+    assert D({'neg':T}) == {'pos': F, 'neg': T}
+    assert D({'neg':F}) == {'neg': F}
+    assert D({'z': T})  == {'pos': F, 'z': T}
+    assert D({'z': F})  == {'z': F}
 
     # pos/neg/zero. rules are sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'neg -> !pos', 'pos -> !z', 'neg -> !z'])
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
-    assert D({'pos':F}) == {'pos': F                  }
+    assert D({'pos':F}) == {'pos': F}
     assert D({'neg':T}) == {'pos': F, 'neg': T, 'z': F}
-    assert D({'neg':F}) == {          'neg': F        }
+    assert D({'neg':F}) == {'neg': F}
     assert D({'z': T})  == {'pos': F, 'neg': F, 'z': T}
-    assert D({'z': F})  == {                    'z': F}
+    assert D({'z': F})  == {'z': F}
 
 
 def test_FactRules_deduce_multiple():
@@ -223,9 +223,9 @@ def test_FactRules_deduce_multiple2():
     assert D({'real':T, 'zero':F})              ==  {'real': T, 'zero':F}
     assert D({'real':T, 'pos': F})              ==  {'real': T, 'pos': F}
 
-    assert D({'real':T,           'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
-    assert D({'real':T, 'neg': F,            'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
-    assert D({'real':T, 'neg': F, 'zero': F          }) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
+    assert D({'real':T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
+    assert D({'real':T, 'neg': F, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
+    assert D({'real':T, 'neg': F, 'zero': F}) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
 
     assert D({'neg': T, 'zero': F, 'pos': F})   ==  {'real': T, 'neg': T, 'zero': F, 'pos': F}
