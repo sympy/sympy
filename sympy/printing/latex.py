@@ -1347,6 +1347,24 @@ class LatexPrinter(Printer):
         return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys._names[field._index]
+        return r'\boldsymbol{\mathrm{%s}}' % self._print(Symbol(string))
+
+    def _print_BaseVectorField(self, field):
+        string = field._coord_sys._names[field._index]
+        return r'\partial_{%s}' % self._print(Symbol(string))
+
+    def _print_Differential(self, diff):
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys._names[field._index]
+            return r'\mathbb{d}%s' % self._print(Symbol(string))
+        else:
+            return 'd(%s)'%self._print(field)
+            string = self._print(field)
+            return r'\mathbb{d}\left(%s\right)' % string
+
     def _print_Tr(self, p):
         #Todo: Handle indices
         contents = self._print(p.args[0])
