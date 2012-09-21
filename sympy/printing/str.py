@@ -589,9 +589,23 @@ class StrPrinter(Printer):
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
+    def _print_BaseScalarField(self, field):
+        return field._coord_sys._names[field._index]
+
+    def _print_BaseVectorField(self, field):
+        return 'e_%s'%field._coord_sys._names[field._index]
+
+    def _print_Differential(self, diff):
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            return 'd%s'%field._coord_sys._names[field._index]
+        else:
+            return 'd(%s)'%self._print(field)
+
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
+
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

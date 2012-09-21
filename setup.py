@@ -50,7 +50,7 @@ modules = [
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
-    'sympy.differential_geometry',
+    'sympy.diffgeom',
     'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',

@@ -1560,6 +1560,24 @@ class PrettyPrinter(Printer):
             ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
 
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys._names[field._index]
+        return self._print(pretty_symbol(string))
+
+    def _print_BaseVectorField(self, field):
+        s = U('PARTIAL DIFFERENTIAL')+'_'+field._coord_sys._names[field._index]
+        return self._print(pretty_symbol(s))
+
+    def _print_Differential(self, diff):
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys._names[field._index]
+            return self._print(u'\u2146 '+pretty_symbol(string))
+        else:
+            pform = self._print(field)
+            pform = prettyForm(*pform.parens())
+            return prettyForm(*pform.left(u"\u2146"))
+
     def _print_Tr(self, p):
         #TODO: Handle indices
         pform = self._print(p.args[0])

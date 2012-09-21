@@ -91,7 +91,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 return expr_to_call(*on_args)
         elif expr_to_call.args:
-            args = (Expr._recursive_call(sub, on_args) for sub in expr_to_call.args)
+            args = [Expr._recursive_call(sub, on_args) for sub in expr_to_call.args]
             return type(expr_to_call)(*args)
         else:
             return expr_to_call
