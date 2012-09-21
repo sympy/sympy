@@ -4730,6 +4730,8 @@ def terms_gcd(f, *gens, **args):
 
     >>> terms_gcd(x + y/2, clear=False)
     x + y/2
+    >>> terms_gcd(x*y/2 + y**2, clear=False)
+    y*(x/2 + y)
 
     The ``clear`` flag is ignored if all coefficients are fractions:
 
@@ -4773,7 +4775,12 @@ def terms_gcd(f, *gens, **args):
 
     term = Mul(*[ x**j for x, j in zip(f.gens, J) ])
 
-    return _keep_coeff(coeff, term*f.as_expr(), clear=clear)
+    if clear:
+        return _keep_coeff(coeff, term*f.as_expr())
+    # base the clearing on the form of the original expression, not
+    # the (perhaps) Mul that we have now
+    coeff, f = _keep_coeff(coeff, f.as_expr(), clear=False).as_coeff_Mul()
+    return _keep_coeff(coeff, term*f, clear=False)
 
 def trunc(f, p, *gens, **args):
     """

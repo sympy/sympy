@@ -109,10 +109,18 @@ the least common multiple.
 When the polynomials have integer coefficients, the contents' gcd is also
 considered::
 
-    >>> f = 12*(x + 1)*x
+    >>> f = (12*x + 12)*x
     >>> g = 16*x**2
     >>> gcd(f, g)
     4*x
+
+But if the polynomials have rational coefficients, then the returned polynomial is
+monic::
+
+    >>> f = 3*x**2/2
+    >>> g = 9*x/4
+    >>> gcd(f, g)
+    x
 
 It also works with multiple variables. In this case, the variables are ordered
 alphabetically, be default, which has influence on the leading coefficient::
