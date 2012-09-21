@@ -254,9 +254,7 @@ def test_atoms():
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
     assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
-                                                   [1 + x*(2 + y)+exp(3 + z),
-                                                    2 + y,
-                                                    3 + z])
+        [1 + x*(2 + y)+exp(3 + z), 2 + y, 3 + z])
 
     # issue 3033
     f = Function('f')

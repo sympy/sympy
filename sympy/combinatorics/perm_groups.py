@@ -2550,8 +2550,7 @@ class PermutationGroup(Basic):
                 el = Permutation(el)
                 orbit_member = el(base_point)
                 transversals[index][orbit_member] = el
-            basic_orbits[index] =\
-            transversals[index].keys()
+            basic_orbits[index] = transversals[index].keys()
         self._transversals = transversals
         self._basic_orbits = basic_orbits
 
