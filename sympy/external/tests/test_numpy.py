@@ -172,15 +172,13 @@ def test_Matrix_mul():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix([[1,2,3],[x,y,x]])
     m = matrix([[2,4],[x,6],[x,z**2]])
-    assert M*m == Matrix([
-                         [         2 + 5*x,        16 + 3*z**2],
-                         [2*x + x*y + x**2, 4*x + 6*y + x*z**2],
+    assert M*m == Matrix([[2 + 5*x, 16 + 3*z**2],
+                          [2*x + x*y + x**2, 4*x + 6*y + x*z**2],
                          ])
 
-    assert m*M == Matrix([
-                         [   2 + 4*x,      4 + 4*y,      6 + 4*x],
-                         [       7*x,    2*x + 6*y,          9*x],
-                         [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
+    assert m*M == Matrix([[2 + 4*x, 4 + 4*y, 6 + 4*x],
+                          [7*x, 2*x + 6*y, 9*x],
+                          [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
                          ])
     a = array([2])
     assert a[0] * M == 2 * M
@@ -235,10 +233,10 @@ def test_lambdify_matrix_multi_input():
     assert numpy.allclose(actual,expected)
 
 def test_lambdify_matrix_vec_input():
-    X=sympy.DeferredVector('X')
-    M=Matrix([[X[0]**2, X[0]*X[1], X[0]*X[2]],
-              [X[1]*X[0], X[1]**2, X[1]*X[2]],
-              [X[2]*X[0], X[2]*X[1], X[2]**2]])
+    X = sympy.DeferredVector('X')
+    M = Matrix([[X[0]**2, X[0]*X[1], X[0]*X[2]],
+                [X[1]*X[0], X[1]**2, X[1]*X[2]],
+                [X[2]*X[0], X[2]*X[1], X[2]**2]])
     f = lambdify(X, M, "numpy")
 
     Xh = array([1.0, 2.0, 3.0])
