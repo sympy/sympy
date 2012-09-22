@@ -16,13 +16,20 @@ from sympy.utilities.misc import filldedent, default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
-
-from sympy.core.compatibility import callable, reduce
+# uncomment the import of as_int and delete the function when merged with 0.7.2
+from sympy.core.compatibility import callable, reduce#, as_int
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.decorators import call_highest_priority
 
 import random
+from collections import defaultdict
 from types import FunctionType
+
+def as_int(i):
+    ii = int(i)
+    if i != ii:
+        raise TypeError()
+    return ii
 
 class MatrixError(Exception):
     pass
@@ -81,15 +88,37 @@ class MatrixBase(object):
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """
-        Matrix can be constructed with values or a rule.
-
         >>> from sympy import Matrix, I
+
+        Matrix can be constructed as follows:
+
+        * from a nested list of iterables
+
         >>> Matrix( ((1, 2+I), (3, 4)) )
         [1, 2 + I]
         [3,     4]
-        >>> Matrix(2, 2, lambda i, j: (i+1)*j )
-        [0, 1]
-        [0, 2]
+
+        * from un-nested iterable (interpreted as a column)
+
+        >>> Matrix( [1, 2] )
+        [1]
+        [2]
+
+        * from un-nested iterable with dimensions
+
+        >>> Matrix(1, 2, [1, 2] )
+        [1, 2]
+
+        * from no arguments (a 0 x 0 matrix)
+
+        >>> Matrix()
+        []
+
+        * from a rule
+
+        >>> Matrix(2, 2, lambda i, j: i/(j + 1) )
+        [0,   0]
+        [1, 1/2]
 
         """
         # Matrix(Matrix(...))
@@ -100,48 +129,45 @@ class MatrixBase(object):
         if len(args) == 1 and isinstance(args[0], Basic) and args[0].is_Matrix:
             return args[0].rows, args[0].cols, args[0].as_explicit().mat
 
+        if len(args) == 3:
+            rows = as_int(args[0])
+            cols = as_int(args[1])
+
         # Matrix(2, 2, lambda i, j: i+j)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
-            rows = args[0]
-            cols = args[1]
             mat = []
             for i in range(rows):
-                for j in range(cols):
-                    mat.append(sympify(operation(i, j)))
+                mat.extend([operation(sympify(i), j) for j in range(cols)])
 
         # Matrix(2, 2, [1, 2, 3, 4])
-        elif len(args)==3 and is_sequence(args[2]):
-            rows = args[0]
-            cols = args[1]
+        elif len(args) == 3 and is_sequence(args[2]):
             mat  = args[2]
             if len(mat) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
             mat = map(lambda i: sympify(i), mat)
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1:
-            in_mat = args[0]
-            if hasattr(in_mat, "__array__"): #pragma: no cover
-                # NumPy array or matrix or some other object that implements
-                # __array__. So let's first use this method to get a
-                # numpy.array() and then make a python list out of it.
-                arr = in_mat.__array__()
-                if len(arr.shape) == 2:
-                    rows, cols = arr.shape[0], arr.shape[1]
-                    mat = map(lambda i: sympify(i), arr.ravel())
-                    return rows, cols, mat
-                elif len(arr.shape) == 1:
-                    rows, cols = 1, arr.shape[0]
-                    mat = [0]*cols
-                    for i in xrange(len(arr)):
-                        mat[i] = sympify(arr[i])
-                    return rows, cols, mat
-                else:
-                    raise NotImplementedError("SymPy supports just 1D and 2D matrices")
-            elif not is_sequence(in_mat):
-                raise TypeError("Matrix constructor doesn't accept %s as input"
-                        % str(type(in_mat)))
+        elif len(args) == 1 and hasattr(args[0], "__array__"): #pragma: no cover
+            # NumPy array or matrix or some other object that implements
+            # __array__. So let's first use this method to get a
+            # numpy.array() and then make a python list out of it.
+            arr = args[0].__array__()
+            if len(arr.shape) == 2:
+                rows, cols = arr.shape[0], arr.shape[1]
+                mat = map(lambda i: sympify(i), arr.ravel())
+                return rows, cols, mat
+            elif len(arr.shape) == 1:
+                rows, cols = 1, arr.shape[0]
+                mat = [0]*cols
+                for i in range(len(arr)):
+                    mat[i] = sympify(arr[i])
+                return rows, cols, mat
+            else:
+                raise NotImplementedError("SymPy supports just 1D and 2D matrices")
+
+        # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
+        elif len(args) == 1 and is_sequence(args[0]):
             in_mat = []
             for row in args[0]:
                 if isinstance(row, MatrixBase):
@@ -158,11 +184,11 @@ class MatrixBase(object):
             else:
                 cols = 0
             mat = []
-            for j in xrange(rows):
+            for j in range(rows):
                 if len(in_mat[j]) != cols:
                     raise ValueError("Input %s inconsistant to form a Matrix." %
                         args)
-                for i in xrange(cols):
+                for i in range(cols):
                     mat.append(sympify(in_mat[j][i]))
 
         # Matrix()
@@ -170,6 +196,7 @@ class MatrixBase(object):
             # Empty Matrix
             rows = cols = 0
             mat = []
+
         else:
             raise TypeError("Data type not understood")
 
@@ -205,7 +232,7 @@ class MatrixBase(object):
         conjugate: By-element conjugation
         """
         a = [0]*len(self)
-        for i in xrange(self.cols):
+        for i in range(self.cols):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
         return self._new(self.cols, self.rows, a)
 
@@ -297,7 +324,53 @@ class MatrixBase(object):
             return self.mat[a2idx(key)]
 
     def __setitem__(self, key, value):
-        raise NotImplementedError()
+        """
+        >>> from sympy import Matrix, I
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        [1, 2 + I]
+        [3,     4]
+        >>> m[1, 0] = 9
+        >>> m
+        [1, 2 + I]
+        [9,     4]
+        >>> m[1, 0] = [[0, 1]]
+        >>> m
+        [1, 2 + I]
+        [0,     1]
+
+        """
+        if type(key) is tuple:
+            i, j = key
+            if type(i) is slice or type(j) is slice:
+                if isinstance(value, MatrixBase):
+                    self.copyin_matrix(key, value)
+                    return
+                if not isinstance(value, Expr) and is_sequence(value):
+                    self.copyin_list(key, value)
+                    return
+                raise ValueError('unexpected value: %s' % value)
+            else:
+                i, j = self.key2ij(key)
+                ismat = isinstance(value, MatrixBase)
+                if not ismat and \
+                    not isinstance(value, Expr) and is_sequence(value):
+                    value = Matrix(value)
+                    ismat = True
+                if ismat:
+                    self.copyin_matrix((slice(i, i + value.rows),
+                                        slice(j, j + value.cols)), value)
+                else:
+                    self.mat[i*self.cols + j] = sympify(value)
+                return
+        else:
+            # row-wise decomposition of matrix
+            if type(key) is slice:
+                raise IndexError("Vector slices not implemented yet.")
+            else:
+                k = a2idx(key)
+                self.mat[k] = sympify(value)
+                return
 
     def as_mutable(self):
         """
@@ -481,8 +554,8 @@ class MatrixBase(object):
         try:
             return (self.shape == other.shape and
                     all([self[i, j] == other[i, j]
-                        for i in xrange(self.rows)
-                        for j in xrange(self.cols)]))
+                        for i in range(self.rows)
+                        for j in range(self.cols)]))
         except AttributeError:
             return False
 
@@ -562,13 +635,13 @@ class MatrixBase(object):
         Without the error checks.
         To be used privately. """
         L = zeros(self.rows, self.rows)
-        for i in xrange(self.rows):
-            for j in xrange(i):
-                L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
-                    for k in xrange(j)))
-            L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
-                for k in xrange(i)))
-        return self._new(L)
+        for i in range(self.rows):
+            for j in range(i):
+                L[i, j] = (1 / L[j, j]) * (self[i, j] -
+                    sum(L[i, k] * L[j, k] for k in range(j)))
+            L[i, i] = sqrt(self[i, i] -
+                    sum(L[i, k]**2 for k in range(i)))
+        return type(self)(L)
 
     def LDLdecomposition(self):
         """
@@ -614,12 +687,12 @@ class MatrixBase(object):
         """
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
-        for i in xrange(self.rows):
-            for j in xrange(i):
+        for i in range(self.rows):
+            for j in range(i):
                 L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
-                    L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
+                    L[i, k] * L[j, k] * D[k, k] for k in range(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
-                for k in xrange(i))
+                for k in range(i))
         return self._new(L), self._new(D)
 
     def lower_triangular_solve(self, rhs):
@@ -652,11 +725,11 @@ class MatrixBase(object):
         To be used privately.
         """
         X = zeros(self.rows, 1)
-        for i in xrange(self.rows):
+        for i in range(self.rows):
             if self[i, i] == 0:
                 raise TypeError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
-                for k in xrange(i))) / self[i, i]
+                for k in range(i))) / self[i, i]
         return self._new(X)
 
     def upper_triangular_solve(self, rhs):
@@ -686,11 +759,11 @@ class MatrixBase(object):
         Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
         X = zeros(self.rows, 1)
-        for i in reversed(xrange(self.rows)):
+        for i in reversed(range(self.rows)):
             if self[i, i] == 0:
                 raise ValueError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
-                for k in xrange(i+1, self.rows))) / self[i, i]
+                for k in range(i+1, self.rows))) / self[i, i]
         return self._new(X)
 
     def cholesky_solve(self, rhs):
@@ -1011,7 +1084,7 @@ class MatrixBase(object):
         rlo, rhi, clo, chi = self.key2bounds(keys)
         outRows, outCols = rhi - rlo, chi - clo
         outMat = [0]*outRows*outCols
-        for i in xrange(outRows):
+        for i in range(outRows):
             outMat[i*outCols:(i+1)*outCols] = \
             self.mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
         return self._new(outRows, outCols, outMat)
@@ -1880,7 +1953,7 @@ class MatrixBase(object):
             U, D = self.diagonalize()
         except MatrixError:
             raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
-        for i in xrange(0, D.rows):
+        for i in range(0, D.rows):
             D[i, i] = C.exp(D[i, i])
         return U * D * U.inv()
 
@@ -2030,8 +2103,8 @@ class MatrixBase(object):
         is_diagonal
         is_upper_hessenberg
         """
-        for i in xrange(1, self.rows):
-            for j in xrange(0, i):
+        for i in range(1, self.rows):
+            for j in range(0, i):
                 if self[i, j]:
                     return False
         return True
@@ -2074,8 +2147,8 @@ class MatrixBase(object):
         is_diagonal
         is_lower_hessenberg
         """
-        for i in xrange(0, self.rows):
-            for j in xrange(i+1, self.cols):
+        for i in range(0, self.rows):
+            for j in range(i+1, self.cols):
                 if self[i, j]:
                     return False
         return True
@@ -2106,8 +2179,8 @@ class MatrixBase(object):
         is_lower_hessenberg
         is_upper
         """
-        for i in xrange(2, self.rows):
-            for j in xrange(0, i - 1):
+        for i in range(2, self.rows):
+            for j in range(0, i - 1):
                 if self[i, j]:
                     return False
         return True
@@ -2138,8 +2211,8 @@ class MatrixBase(object):
         is_upper_hessenberg
         is_lower
         """
-        for i in xrange(0, self.rows):
-            for j in xrange(i + 2, self.cols):
+        for i in range(0, self.rows):
+            for j in range(i + 2, self.cols):
                 if self[i, j]:
                     return False
         return True
@@ -2290,19 +2363,19 @@ class MatrixBase(object):
             return False
         n = self.rows
         if simplify:
-            for i in xrange(n):
+            for i in range(n):
                 # diagonal
                 if not simpfunc(self[i, i]).is_zero:
                     return False
                 # others
-                for j in xrange(i + 1, n):
+                for j in range(i + 1, n):
                     diff = self[i, j] + self[j, i]
                     if not simpfunc(diff).is_zero:
                         return False
             return True
         else:
-            for i in xrange(n):
-                for j in xrange(i, n):
+            for i in range(n):
+                for j in range(i, n):
                     if self[i, j] != -self[j, i]:
                         return False
             return True
@@ -2347,8 +2420,8 @@ class MatrixBase(object):
         is_diagonalizable
         diagonalize
         """
-        for i in xrange(self.rows):
-            for j in xrange(self.cols):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if i != j and self[i, j]:
                     return False
         return True
@@ -2725,7 +2798,7 @@ class MatrixBase(object):
         A, N = self, self.rows
         transforms = [0] * (N-1)
 
-        for n in xrange(N, 1, -1):
+        for n in range(N, 1, -1):
             T, k = zeros(n+1, n), n - 1
 
             R, C = -A[k, :k], A[:k, k]
@@ -2733,7 +2806,7 @@ class MatrixBase(object):
 
             items = [ C ]
 
-            for i in xrange(0, n-2):
+            for i in range(0, n-2):
                 items.append(A * items[i])
 
             for i, B in enumerate(items):
@@ -2741,7 +2814,7 @@ class MatrixBase(object):
 
             items = [ S.One, a ] + items
 
-            for i in xrange(n):
+            for i in range(n):
                 T[i:, i] = items[:n-i+1]
 
             transforms[k-1] = T
@@ -3104,14 +3177,14 @@ class MatrixBase(object):
         count = 0
         if diagonal:
             v = zeros(c * (c + 1) // 2, 1)
-            for j in xrange(c):
-                for i in xrange(j, c):
+            for j in range(c):
+                for i in range(j, c):
                     v[count] = self[i, j]
                     count += 1
         else:
             v = zeros(c * (c - 1) // 2, 1)
-            for j in xrange(c):
-                for i in xrange(j+1, c):
+            for j in range(c):
+                for i in range(j+1, c):
                     v[count] = self[i, j]
                     count += 1
         return v
@@ -3424,8 +3497,8 @@ class MatrixBase(object):
     def is_Identity(self):
         if not self.is_square:
             return False
-        for i in xrange(self.rows):
-            for j in xrange(self.cols):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if i==j and self[i, j] != 1:
                     return False
                 if i!=j and self[i, j]:
@@ -3489,55 +3562,6 @@ class MutableMatrix(MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
-
-    def __setitem__(self, key, value):
-        """
-        >>> from sympy import Matrix, I
-        >>> m = Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        [1, 2 + I]
-        [3,     4]
-        >>> m[1, 0] = 9
-        >>> m
-        [1, 2 + I]
-        [9,     4]
-        >>> m[1, 0] = [[0, 1]]
-        >>> m
-        [1, 2 + I]
-        [0,     1]
-
-        """
-        if type(key) is tuple:
-            i, j = key
-            if type(i) is slice or type(j) is slice:
-                if isinstance(value, MatrixBase):
-                    self.copyin_matrix(key, value)
-                    return
-                if not isinstance(value, Expr) and is_sequence(value):
-                    self.copyin_list(key, value)
-                    return
-                raise ValueError('unexpected value: %s' % value)
-            else:
-                i, j = self.key2ij(key)
-                ismat = isinstance(value, MatrixBase)
-                if not ismat and \
-                    not isinstance(value, Expr) and is_sequence(value):
-                    value = Matrix(value)
-                    ismat = True
-                if ismat:
-                    self.copyin_matrix((slice(i, i + value.rows),
-                                        slice(j, j + value.cols)), value)
-                else:
-                    self.mat[i*self.cols + j] = sympify(value)
-                return
-        else:
-            # row-wise decomposition of matrix
-            if type(key) is slice:
-                raise IndexError("Vector slices not implemented yet.")
-            else:
-                k = a2idx(key)
-                self.mat[k] = sympify(value)
-                return
 
     def copyin_matrix(self, key, value):
         """
@@ -3782,7 +3806,7 @@ class MutableMatrix(MatrixBase):
 
         sympy.simplify.simplify.simplify
         """
-        for i in xrange(len(self.mat)):
+        for i in range(len(self.mat)):
             self.mat[i] = _simplify(self.mat[i], ratio=ratio, measure=measure)
 
     def fill(self, value):
@@ -3919,8 +3943,8 @@ def matrix_multiply(A, B):
     #if na != mb:
     #    raise ShapeError()
     #product = Matrix(ma, nb, lambda i, j: 0)
-    #for i in xrange(ma):
-    #    for j in xrange(nb):
+    #for i in range(ma):
+    #    for j in range(nb):
     #        s = 0
     #        for k in range(na):
     #            s += A[i, k]*B[k, j]
@@ -3972,7 +3996,7 @@ def matrix_add(A, B):
     alst = A.tolist()
     blst = B.tolist()
     ret = [0]*A.shape[0]
-    for i in xrange(A.shape[0]):
+    for i in range(A.shape[0]):
         ret[i] = map(lambda j, k: j+k, alst[i], blst[i])
     return classof(A, B)._new(ret)
 
@@ -4160,11 +4184,11 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     if not symmetric:
         return MutableMatrix(r, c, lambda i, j: prng.randint(min, max))
     m = zeros(r)
-    for i in xrange(r):
-        for j in xrange(i, r):
+    for i in range(r):
+        for j in range(i, r):
             m[i, j] = prng.randint(min, max)
-    for i in xrange(r):
-        for j in xrange(i):
+    for i in range(r):
+        for j in range(i):
             m[i, j] = m[j, i]
     return m
 
@@ -4247,7 +4271,7 @@ def wronskian(functions, var, method='bareis'):
     hessian
     """
 
-    for index in xrange(0, len(functions)):
+    for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
     n = len(functions)
     if n == 0:
@@ -4297,7 +4321,6 @@ def casoratian(seqs, n, zero=True):
     return MutableMatrix(k, k, f).det()
 
 
-
 class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
@@ -4309,49 +4332,44 @@ class SparseMatrix(MatrixBase):
     """
 
     def __init__(self, *args):
-        self.mat = {}
-        if len(args) == 3 and callable(args[2]):
-            op = args[2]
-            if not isinstance(args[0], (int, Integer)) or \
-               not isinstance(args[1], (int, Integer)):
-                raise TypeError("`args[0]` and `args[1]` must both be integers.")
-            self.rows = args[0]
-            self.cols = args[1]
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    value = sympify(op(i, j))
-                    if value:
-                        self.mat[(i, j)] = value
-        elif len(args) == 3 and isinstance(args[0], int) and \
-                isinstance(args[1], int) and is_sequence(args[2]):
-            self.rows = args[0]
-            self.cols = args[1]
-            mat = args[2]
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    value = sympify(mat[i*self.cols + j])
-                    if value:
-                        self.mat[(i, j)] = value
-        elif len(args) == 3 and isinstance(args[0], int) and \
-                isinstance(args[1], int) and isinstance(args[2], dict):
-            self.rows = args[0]
-            self.cols = args[1]
-            # manual copy, copy.deepcopy() doesn't work
-            for key in args[2].keys():
-                self.mat[key] = args[2][key]
+
+        self.smat = {}
+
+        if len(args) == 3:
+            self.rows = as_int(args[0])
+            self.cols = as_int(args[1])
+
+            if callable(args[2]):
+                op = args[2]
+                for i in range(self.rows):
+                    for j in range(self.cols):
+                        value = sympify(op(i, j))
+                        if value:
+                            self.smat[(i, j)] = value
+            elif is_sequence(args[2]):
+                smat = args[2]
+                for i in range(self.rows):
+                    for j in range(self.cols):
+                        value = sympify(smat[i*self.cols + j])
+                        if value:
+                            self.smat[(i, j)] = value
+            elif isinstance(args[2], dict):
+                # manual copy, copy.deepcopy() doesn't work
+                for key in args[2].keys():
+                    self.smat[key] = args[2][key]
         else:
-            # TODO: _handle_creation_inputs creates a temporary dense array
-            # and calls sympify on each element. This is a waste of time.
-            # Just like above rewrite the rest of the handled cases with
-            # "sparse" logic.
-            r, c, mat = self._handle_creation_inputs(*args)
+            # handle full matrix forms with _handle_creation_inputs
+            r, c, full = self._handle_creation_inputs(*args)
             self.rows = r
             self.cols = c
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = mat[self.cols*i + j]
+                    value = full[self.cols*i + j]
                     if value:
-                        self.mat[(i, j)] = value
+                        self.smat[(i, j)] = value
+
+    def copy(self):
+        return type(self)(self.rows, self.cols, self.smat)
 
     def __getitem__(self, key):
 
@@ -4359,7 +4377,7 @@ class SparseMatrix(MatrixBase):
             i, j = key
             if isinstance(i, int) and isinstance(j, int):
                 i, j = self.key2ij(key)
-                rv = self.mat.get((i, j), S.Zero)
+                rv = self.smat.get((i, j), S.Zero)
                 return rv
             elif isinstance(i, slice) or isinstance(j, slice):
                 return self.submatrix(key)
@@ -4369,19 +4387,12 @@ class SparseMatrix(MatrixBase):
             lo, hi = key.indices(len(self))[:2]
             L = []
             for i in range(lo, hi):
-                m, n = self.rowdecomp(i)
-                L.append(self.mat.get((m, n), S.Zero))
+                m, n = divmod(i, self.cols)
+                L.append(self.smat.get((m, n), S.Zero))
             return L
 
-        i, j = self.rowdecomp(key)
-        return self.mat.get((i, j), S.Zero)
-
-    def rowdecomp(self, num):
-        """
-        Perform a row decomposition on the matrix.
-        """
-        num = a2idx(num, len(self))
-        return divmod(num, self.cols)
+        i, j = divmod(a2idx(key, len(self)), self.cols)
+        return self.smat.get((i, j), S.Zero)
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
@@ -4432,9 +4443,9 @@ class SparseMatrix(MatrixBase):
             else:
                 testval = sympify(value)
                 if testval:
-                    self.mat[(i, j)] = testval
-                elif (i, j) in self.mat:
-                    del self.mat[(i, j)]
+                    self.smat[(i, j)] = testval
+                elif (i, j) in self.smat:
+                    del self.smat[(i, j)]
                 return
 
     def row_del(self, k):
@@ -4460,14 +4471,14 @@ class SparseMatrix(MatrixBase):
         """
         newD = {}
         k = a2idx(k, self.rows)
-        for (i, j) in self.mat.keys():
+        for (i, j) in self.smat:
             if i == k:
                 pass
             elif i > k:
-                newD[i - 1, j] = self.mat[i, j]
+                newD[i - 1, j] = self.smat[i, j]
             else:
-                newD[i, j] = self.mat[i, j]
-        self.mat = newD
+                newD[i, j] = self.smat[i, j]
+        self.smat = newD
         self.rows -= 1
 
     def col_del(self, k):
@@ -4494,14 +4505,14 @@ class SparseMatrix(MatrixBase):
         """
         newD = {}
         k = a2idx(k, self.cols)
-        for (i, j) in self.mat.keys():
+        for (i, j) in self.smat:
             if j == k:
                 pass
             elif j > k:
-                newD[i, j - 1] = self.mat[i, j]
+                newD[i, j - 1] = self.smat[i, j]
             else:
-                newD[i, j] = self.mat[i, j]
-        self.mat = newD
+                newD[i, j] = self.smat[i, j]
+        self.smat = newD
         self.cols -= 1
 
     def toMatrix(self):
@@ -4592,32 +4603,48 @@ class SparseMatrix(MatrixBase):
         [2, 4]
         """
         tran = SparseMatrix(self.cols, self.rows, {})
-        for key, value in self.mat.iteritems():
-            tran.mat[key[1], key[0]]=value
+        for key, value in self.smat.iteritems():
+            key = key[1], key[0] # reverse
+            tran.smat[key] = value
         return tran
 
     T = property(transpose, None, None, "Matrix transposition.")
 
-    def multiply(A, B):
-        "Fast multiplication exploiting the sparsity of the matrix."
-        rows1 = A._lil_row_major()
-        rows2 = B._lil_row_major()
-        Cdict = {}
-        for k in xrange(A.rows):
-            for _, j in rows1[k]:
-                for _, n  in rows2[j]:
-                    temp = A.mat[k, j] * B.mat[j, n]
-                    if (k, n) in Cdict:
-                        Cdict[k, n] += temp
-                    else:
-                        Cdict[k, n] = temp
+
+    def multiply(self, other):
+        """Fast multiplication exploiting the sparsity of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.matrices import SparseMatrix, ones
+        >>> A, B = SparseMatrix(ones(4, 3)), SparseMatrix(ones(3, 4))
+        >>> A.multiply(B) == 3*ones(4)
+        True
+
+        See Also
+        ========
+
+        add
+        """
+        A = self
+        B = other
+        # sort B's row_list into list of rows
+        Blist = [[] for i in range(B.rows)]
+        for i, j, v in B.row_list():
+            Blist[i].append((j, v))
+        Cdict = defaultdict(int)
+        for k, j, Akj in A.row_list():
+            for n, Bjn  in Blist[j]:
+                temp = Akj * Bjn
+                Cdict[k, n] += temp
         return SparseMatrix(A.rows, B.cols, Cdict)
 
     def scalar_multiply(matrix, scalar):
         "Scalar element-wise multiplication"
         C = SparseMatrix(matrix.rows, matrix.cols, {})
-        for i in matrix.mat:
-            C.mat[i] = scalar * matrix.mat[i]
+        for i in matrix.smat:
+            C.smat[i] = scalar * matrix.smat[i]
         return C
 
     def __mul__(self, other):
@@ -4682,8 +4709,8 @@ class SparseMatrix(MatrixBase):
 
         """
         rv = self.copy()
-        for k, v in rv.mat.iteritems():
-            rv.mat[k] = -v
+        for k, v in rv.smat.iteritems():
+            rv.smat[k] = -v
         return rv
 
     def add(self, other):
@@ -4705,7 +4732,7 @@ class SparseMatrix(MatrixBase):
 
         Only the non-zero elements are stored, so the resulting dictionary
         that is used to represent the sparse matrix is empty:
-        >>> _.mat
+        >>> _.smat
         {}
 
         See Also
@@ -4718,7 +4745,7 @@ class SparseMatrix(MatrixBase):
         if self.shape != other.shape:
             raise ShapeError()
         M = self.copy()
-        for i, v in other.mat.iteritems():
+        for i, v in other.smat.iteritems():
             M[i] += v
         return M
 
@@ -4741,58 +4768,6 @@ class SparseMatrix(MatrixBase):
             for j in range(value.cols):
                 self[i + rlo, j + clo] = value[i, j]
 
-    def _lil_row_major(self):
-        """
-        Returns the row-based list of list structure of the given matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye
-        >>> M = SparseMatrix(eye(3))
-        >>> M[0, 2] = 3
-        >>> M._lil_row_major()
-        [[(0, 0), (0, 2)], [(1, 1)], [(2, 2)]]
-        >>> M.row_list()
-        [(0, 0, 1), (0, 2, 3), (1, 1, 1), (2, 2, 1)]
-
-        """
-        lil = [[] for x in range(self.rows)]
-        for (i, j, v) in self.row_list():
-            lil[i].append((i, j))
-        return lil
-
-    def multiply(self, other):
-        """Fast multiplication exploiting the sparsity of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices.matrices import SparseMatrix, eye, ones
-        >>> I, B = SparseMatrix(eye(3)), SparseMatrix(ones(3))
-        >>> I.multiply(B) == B
-        True
-
-        See Also
-        ========
-
-        add
-        """
-        A = self
-        B = other
-        rows1 = A._lil_row_major()
-        rows2 = B._lil_row_major()
-        Cdict = {}
-        for k in xrange(A.rows):
-            for _, j in rows1[k]:
-                for _, n  in rows2[j]:
-                    temp = A.mat[k, j] * B.mat[j, n]
-                    if (k, n) in Cdict:
-                        Cdict[k, n] += temp
-                    else:
-                        Cdict[k, n] = temp
-        return SparseMatrix(A.rows, B.cols, Cdict)
-
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
         return SparseMatrix(rhi -rlo, chi - clo,
@@ -4804,9 +4779,9 @@ class SparseMatrix(MatrixBase):
         newD = {}
         for i in range(_rows):
             for j in range(_cols):
-                m, n = self.rowdecomp(i*_cols + j)
-                if (m, n) in self.mat:
-                    newD[(i, j)] = self.mat[(m, n)]
+                m, n = divmod(i*_cols + j, self.cols)
+                if (m, n) in self.smat:
+                    newD[(i, j)] = self.smat[(m, n)]
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
@@ -4851,8 +4826,7 @@ class SparseMatrix(MatrixBase):
     def __hash__(self):
         return super(Matrix, self).__hash__()
 
-    @property
-    def is_symmetric(self):
+    def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 
         Examples
@@ -4860,14 +4834,18 @@ class SparseMatrix(MatrixBase):
 
         >>> from sympy.matrices import SparseMatrix, eye
         >>> M = SparseMatrix(eye(3))
-        >>> M.is_symmetric
+        >>> M.is_symmetric()
         True
         >>> M[0, 2] = 1
-        >>> M.is_symmetric
+        >>> M.is_symmetric()
         False
         """
-        return all((k[1], k[0]) in self.mat and \
-            not (self[k] - self[k[1], k[0]]).simplify() for k in self.mat)
+        if simplify:
+            return all((k[1], k[0]) in self.smat and \
+                not (self[k] - self[k]).simplify() for k in self.smat)
+        else:
+            return all((k[1], k[0]) in self.smat and \
+                self[k] == self[k] for k in self.smat)
 
     def has(self, *patterns):
         """
@@ -4884,7 +4862,7 @@ class SparseMatrix(MatrixBase):
         >>> A.has(Float)
         True
         """
-        return any(self[key].has(*patterns) for key in self.mat)
+        return any(self[key].has(*patterns) for key in self.smat)
 
     def row_join(self, other):
         """
@@ -4910,8 +4888,8 @@ class SparseMatrix(MatrixBase):
         if not A.rows == B.rows:
             raise ShapeError()
         A = A.copy()
-        for i, j in B.mat:
-            A.mat[i, j + A.cols] = B.mat[i, j]
+        for i, j in B.smat:
+            A.smat[i, j + A.cols] = B.smat[i, j]
         A.cols += B.cols
         return A
 
@@ -4942,8 +4920,8 @@ class SparseMatrix(MatrixBase):
         if not A.cols == B.cols:
             raise ShapeError()
         A = A.copy()
-        for i, j in B.mat:
-            A.mat[i + A.rows, j] = B.mat[i, j]
+        for i, j in B.smat:
+            A.smat[i + A.rows, j] = B.smat[i, j]
         A.rows += B.rows
         return A
 
