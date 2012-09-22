@@ -1136,6 +1136,8 @@ class Permutation(Basic):
         Return product of Permutations [a, b, c, ...] as the Permutation whose
         ith value is a(b(c(i))).
 
+        a, b, c, ... can be Permutation objects or tuples.
+
         Examples
         ========
 
@@ -1168,6 +1170,16 @@ class Permutation(Basic):
 
         The reverse order of arguments will raise a TypeError.
 
+        """
+        rv = args[0]
+        for i in range(1, len(args)):
+            rv = args[i]*rv
+        return rv
+
+    @staticmethod
+    def rmulp(*args):
+        """
+        same as rmul, but the elements of args are Permutation objects.
         """
         a = [x.array_form for x in args]
         rv = Perm._af_new(_af_rmuln(*a))

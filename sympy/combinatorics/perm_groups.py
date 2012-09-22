@@ -15,7 +15,7 @@ from sympy.ntheory import isprime, sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
 
-rmul = Permutation.rmul
+rmul = Permutation.rmulp
 _af_new = Permutation._af_new
 
 def _smallest_change(h, alpha):
@@ -449,7 +449,7 @@ class PermutationGroup(Basic):
                 if args[i].size != degree:
                     args[i] = Permutation(args[i], size=degree)
         if kwargs.pop('dups', True):
-            args = uniq([Permutation._af_new(list(a)) for a in args])
+            args = uniq([_af_new(list(a)) for a in args])
         obj = Basic.__new__(cls, *args, **kwargs)
         obj._generators = args
         obj._order = None
@@ -1284,7 +1284,7 @@ class PermutationGroup(Basic):
         rv = [f[j] for j in self.base] if g_now == I else []
         if af:
             return rv
-        return [Permutation(i) for i in rv]
+        return [_af_new(i) for i in rv]
 
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
@@ -1501,7 +1501,7 @@ class PermutationGroup(Basic):
                 ct = tuple(c)
                 if not ct in set_commutators:
                     set_commutators.add(ct)
-        cms = [Permutation(p) for p in set_commutators]
+        cms = [_af_new(p) for p in set_commutators]
         G2 = self.normal_closure(cms)
         return G2
 
@@ -2905,7 +2905,7 @@ class PermutationGroup(Basic):
         self._stabilizer_cosets_n = scn
         strong_gens = self.generators[:]
         for gen in self._stabilizer_gens:
-            gen = Permutation(gen)
+            gen = _af_new(gen)
             if gen not in strong_gens:
                 strong_gens.append(gen)
         self._strong_gens = strong_gens
@@ -2917,7 +2917,7 @@ class PermutationGroup(Basic):
             base_point = self._base[index]
             trans = self._stabilizer_cosets[base_point][:]
             for el in trans:
-                el = Permutation(el)
+                el = _af_new(el)
                 orbit_member = el(base_point)
                 transversals[index][orbit_member] = el
             basic_orbits[index] =\
@@ -3352,7 +3352,7 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         if af:
             return self._stabilizer_cosets
-        return [[Permutation(p) for p in c] for c in self._stabilizer_cosets]
+        return [[_af_new(p) for p in c] for c in self._stabilizer_cosets]
 
     def stabilizer_gens(self, af=False):
         """Return the generators of the chain of stabilizers of the
@@ -3381,7 +3381,7 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         if af:
             return self._stabilizer_gens
-        return [Permutation(p) for p in self._stabilizer_gens]
+        return [_af_new(p) for p in self._stabilizer_gens]
 
     @property
     def strong_gens(self):
