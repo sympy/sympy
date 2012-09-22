@@ -2506,14 +2506,14 @@ class PermutationGroup(Basic):
         if schreier_vector[beta] == None:
             return False
         n = self.degree
-        u = _af_new(range(n))
+        u = range(n)
         k = schreier_vector[beta]
-        gens = self.generators
+        gens = [x.array_form for x in self.generators]
         while k != -1:
-            u = rmul(u, gens[k])
-            beta = (~gens[k])(beta)
+            u = _af_rmul(u, gens[k])
+            beta = gens[k].index(beta) # beta = (~gens[k])(beta)
             k = schreier_vector[beta]
-        return u
+        return _af_new(u)
 
     def orbit_transversal(self, alpha, pairs=False):
         r"""Computes a transversal for the orbit of ``alpha`` as a set.
