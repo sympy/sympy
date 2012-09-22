@@ -88,84 +88,103 @@ def _group_parentheses(tokens, global_dict):
             result.append(token)
     return result
 
-def _implicit_multiplication_application(result, global_dict):
-    result2 = _group_parentheses(result, global_dict)
-
+def _apply_functions(tokens, global_dict):
     # Step 2: symbol/function application
     # Group NAME followed by a list
-    result3 = []
+    result = []
     symbol = None
-    for tok in result2:
+    for tok in tokens:
         if tok[0] == NAME:
             symbol = tok
-            result3.append(tok)
+            result.append(tok)
         elif isinstance(tok, ParenthesisGroup):
             if symbol:
-                result3[-1] = AppliedFunction(symbol, tok)
+                result[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:
-                result3.extend(tok)
+                result.extend(tok)
         else:
             symbol = None
-            result3.append(tok)
+            result.append(tok)
     # print 'STEP2', result3
+    return result
 
+def _implicit_multiplication(tokens, global_dict):
     # Step 3: implicit multiplication
     # Look for two NAMEs in a row or NAME then paren group or paren group
     # then NAME
-    result4 = []
-    for tok, nextTok in zip(result3, result3[1:]):
-        result4.append(tok)
-        if (isinstance(tok,AppliedFunction) and
-            isinstance(nextTok,AppliedFunction)):
-            result4.append((OP, '*'))
+    result = []
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        result.append(tok)
+        if (isinstance(tok, AppliedFunction) and
+            isinstance(nextTok, AppliedFunction)):
+            result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
             # Applied function followed by an open parenthesis
-            result4.append((OP, '*'))
+            result.append((OP, '*'))
         elif (tok[0] == OP and tok[1] == ')' and
               isinstance(nextTok, AppliedFunction)):
             # Close parenthesis followed by an applied function
-            result4.append((OP, '*'))
+            result.append((OP, '*'))
         elif (tok[0] == OP and tok[1] == ')' and
               nextTok[0] == NAME):
             # Close parenthesis followed by an implicitly applied function
-            result4.append((OP, '*'))
+            result.append((OP, '*'))
         elif (tok[0] == nextTok[0] == OP
               and tok[1] == ')' and nextTok[1] == '('):
             # Close parenthesis followed by an open parenthesis
-            result4.append((OP, '*'))
+            result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
             # Applied function followed by implicitly applied function
-            result4.append((OP, '*'))
-    result4.append(result3[-1])
+            result.append((OP, '*'))
+    result.append(tokens[-1])
     # print 'STEP3', result4
+    return result
 
+def _implicit_application(tokens, global_dict):
     # Step 4: implicit application
     # Look for a NAME that is not followed by an OP '(' and apply it to the
     # following token
-    result5 = []
+
+    result = []
     appendParen = 0
-    for tok, nextTok in zip(result4, result4[1:]):
-        result5.append(tok)
+    skip = False
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        result.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
             if getattr(global_dict.get(tok[1]), 'is_Function', False):
-                result5.append((OP, '('))
+                result.append((OP, '('))
                 appendParen += 1
         elif appendParen:
-            result5.append((OP, ')'))
+            if nextTok[0] == OP and nextTok[1] in ('^', '**'):
+                skip = True
+                continue
+            if skip:
+                skip = False
+                continue
+            result.append((OP, ')'))
             appendParen -= 1
 
     if appendParen:
-        result5.extend([(OP, ')')] * appendParen)
-    result5.append(result4[-1])
-    # print 'STEP4', result5
+        if result[-1][0] == OP and result[-1][1] == '(':
+            # Function implicitly applied to nothing, undo that
+            del result[-1]
+        else:
+            result.extend([(OP, ')')] * appendParen)
+    result.append(tokens[-1])
+    # print 'STEP4', result
+    return result
 
-    # Step 5: Flatten
-    result6 = _flatten(result5)
-    # print 'STEP5', result6
+def _implicit_multiplication_application(result, global_dict):
+    for step in (_group_parentheses,
+                 _apply_functions,
+                 _implicit_multiplication,
+                 _implicit_application):
+        result = step(result, global_dict)
 
-    return result6
+    result = _flatten(result)
+    return result
 
 def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
     g = generate_tokens(StringIO(s).readline)
