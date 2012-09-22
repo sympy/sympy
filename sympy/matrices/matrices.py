@@ -3163,7 +3163,7 @@ class MatrixBase(object):
         recurse_sub_blocks(self)
         return sub_blocks
 
-    def diagonalize(self, reals_only = False):
+    def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
         Return diagonalized matrix D and transformation P such as
 
@@ -3208,18 +3208,23 @@ class MatrixBase(object):
         else:
             if self._eigenvects is None:
                 self._eigenvects = self.eigenvects(simplify=True)
+            if sort:
+                self._eigenvects.sort(key=default_sort_key)
+                self._eigenvects.reverse()
             diagvals = []
             P = MutableMatrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
                 for k in range(multiplicity):
                     diagvals.append(eigenval)
                     vec = vects[k]
+                    if normalize:
+                        vec = vec/vec.norm()
                     P = P.col_insert(P.cols, vec)
             D = diag(*diagvals)
             self._diagonalize_clear_subproducts()
             return (P, D)
 
-    def is_diagonalizable(self, reals_only = False, clear_subproducts=True):
+    def is_diagonalizable(self, reals_only=False, clear_subproducts=True):
         """
         Check if matrix is diagonalizable.
 

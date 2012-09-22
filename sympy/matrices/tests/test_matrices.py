@@ -2305,3 +2305,11 @@ def test_anti_symmetric():
     assert m.is_anti_symmetric(simplify=False) is True
     m[0, 0] = 1
     assert m.is_anti_symmetric() is False
+
+def test_normalize_sort_diogonalization():
+    A = Matrix(((1, 2), (2, 1)))
+    P, Q = A.diagonalize(normalize=True)
+    assert P*P.T == P.T*P == eye(P.cols)
+    P, Q = A.diagonalize(normalize=True, sort=True)
+    assert P*P.T == P.T*P == eye(P.cols)
+    assert P*Q*P.inv() == A
