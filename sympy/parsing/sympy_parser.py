@@ -7,10 +7,24 @@ from keyword import iskeyword
 from StringIO import StringIO
 import re
 import collections
+import unicodedata
 
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
+UNSPLITTABLE_TOKEN_NAMES = ['_kern']
+
+def _token_splittable(token):
+    if '_' in token:
+        return False
+    elif token in UNSPLITTABLE_TOKEN_NAMES:
+        return False
+    else:
+        try:
+            return not unicodedata.lookup('GREEK SMALL LETTER ' + token)
+        except KeyError:
+            return True
+    return True
 
 
 def _add_factorial_tokens(name, result):
@@ -40,15 +54,40 @@ def _add_factorial_tokens(name, result):
 
     return result
 
-AppliedFunction = collections.namedtuple('AppliedFunction', 'function args')
+class AppliedFunction(collections.namedtuple('AppliedFunction',
+                                             'function args exponent')):
+    def __new__(cls, function, args, exponent=None):
+        if exponent is None:
+            exponent = []
+        return super(cls, AppliedFunction).__new__(cls, function, args,
+                                                   exponent)
+
+    def expand(self):
+        result = []
+        if self.exponent:
+            result.append((OP, '('))
+        result.append(self.function)
+        for arg in self.args:
+            if isinstance(arg, AppliedFunction):
+                result.extend(arg.expand())
+            else:
+                result.append(arg)
+        if self.exponent:
+            result.append((OP, ')'))
+            for arg in self.exponent:
+                if isinstance(arg, AppliedFunction):
+                    result.extend(arg.expand())
+                else:
+                    result.append(arg)
+        return result
+
 class ParenthesisGroup(list): pass
 
 def _flatten(result):
     result2 = []
     for tok in result:
         if isinstance(tok, AppliedFunction):
-            result2.append(tok.function)
-            result2.extend(tok.args)
+            result2.extend(tok.expand())
         elif isinstance(tok, ParenthesisGroup):
             result2.extend(tok)
         else:
@@ -89,7 +128,7 @@ def _group_parentheses(tokens, global_dict):
     return result
 
 def _apply_functions(tokens, global_dict):
-    # Step 2: symbol/function application
+    # symbol/function application
     # Group NAME followed by a list
     result = []
     symbol = None
@@ -110,7 +149,6 @@ def _apply_functions(tokens, global_dict):
     return result
 
 def _implicit_multiplication(tokens, global_dict):
-    # Step 3: implicit multiplication
     # Look for two NAMEs in a row or NAME then paren group or paren group
     # then NAME
     result = []
@@ -143,19 +181,29 @@ def _implicit_multiplication(tokens, global_dict):
     return result
 
 def _implicit_application(tokens, global_dict):
-    # Step 4: implicit application
-    # Look for a NAME that is not followed by an OP '(' and apply it to the
-    # following token
-
+    # Look for a callable NAME that is not followed by an OP '(' and apply
+    # it to the following token
     result = []
-    appendParen = 0
-    skip = False
+    appendParen = 0  # number of closing parentheses to add
+    skip = False  # delay adding a ')' if True (to capture **, ^, etc.)
+    consume = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
             if getattr(global_dict.get(tok[1]), 'is_Function', False):
                 result.append((OP, '('))
                 appendParen += 1
+        elif isinstance(tok, AppliedFunction) and not tok.args:
+            # This occurs when we had a function raised to a power
+            consume = True
+        elif consume:
+            token = result.pop()
+            # add parentheses here since token is going to be another
+            # applied function
+            result[-1].args.append((OP, '('))
+            result[-1].args.append(token)
+            result[-1].args.append((OP, ')'))
+            consume = False
         elif appendParen:
             if nextTok[0] == OP and nextTok[1] in ('^', '**'):
                 skip = True
@@ -173,14 +221,33 @@ def _implicit_application(tokens, global_dict):
         else:
             result.extend([(OP, ')')] * appendParen)
     result.append(tokens[-1])
-    # print 'STEP4', result
+    return result
+
+def _function_exponents(tokens, global_dict):
+    result = []
+    need_exponent = False
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        result.append(tok)
+        if (tok[0] == NAME and nextTok[0] == OP
+            and nextTok[1] in ('**', '^')):
+            if getattr(global_dict.get(tok[1]), 'is_Function', False):
+                result[-1] = AppliedFunction(tok, [])
+                need_exponent = True
+        elif need_exponent:
+            del result[-1]
+            result[-1].exponent.append(tok)
+            if isinstance(tok, AppliedFunction):
+                need_exponent = False
+    result.append(tokens[-1])
+    print result
     return result
 
 def _implicit_multiplication_application(result, global_dict):
     for step in (_group_parentheses,
                  _apply_functions,
-                 _implicit_multiplication,
-                 _implicit_application):
+                 _function_exponents,
+                 _implicit_application,
+                 _implicit_multiplication):
         result = step(result, global_dict)
 
     result = _flatten(result)
@@ -253,7 +320,8 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
                     result.append((NAME, name))
                     continue
 
-            if name != '_kern':
+            # we want xyz -> x*y*z but not theta -> t**2 * e * a
+            if _token_splittable(name):
                 for var in name:
                     result.extend([
                         (NAME, 'Symbol'),
@@ -290,8 +358,8 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
 
     if implicit:
         result = _implicit_multiplication_application(result, global_dict)
-    #print 'Tokens:', result
-    #print 'Expression:', ''.join(x[1] for x in result)
+    print 'Tokens:', result
+    print 'Expression:', ''.join(x[1] for x in result)
     return untokenize(result)
 
 def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=True):
