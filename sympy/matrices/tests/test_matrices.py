@@ -2314,3 +2314,30 @@ def test_normalize_sort_diogonalization():
     P, Q = A.diagonalize(normalize=True, sort=True)
     assert P*P.T == P.T*P == eye(P.cols)
     assert P*Q*P.inv() == A
+
+def test_sparse_solve():
+    from sympy.matrices import SparseMatrix
+    A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+    assert A.cholesky() == Matrix([
+    [ 5, 0, 0],
+    [ 3, 3, 0],
+    [-1, 1, 3]])
+    assert A.cholesky() * A.cholesky().T == Matrix([
+    [25, 15, -5],
+    [15, 18,  0],
+    [-5,  0, 11]])
+
+    A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
+    L, D = A.LDLdecomposition()
+    assert 15*L == Matrix([
+    [15,  0,  0],
+    [ 9, 15,  0],
+    [-3,  5, 15]])
+    assert D == Matrix([
+    [25, 0, 0],
+    [ 0, 9, 0],
+    [ 0, 0, 9]])
+    assert L * D * L.T == A
+
+    A = SparseMatrix(((3,0,2),(0,0,1),(1,2,0)))
+    assert A.inv() * A == eye(3)

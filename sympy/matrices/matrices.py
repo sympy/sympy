@@ -4976,6 +4976,337 @@ class SparseMatrix(MatrixBase):
         A.rows += B.rows
         return A
 
+    def liupc(self):
+        """
+        Liu's algorithm, for pre-determination of the Elimination Tree of
+        the given matrix, used in row-based symbolic Cholesky factorization.
+
+        References
+        ==========
+
+        Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582, downloaded from
+        http://tinyurl.com/9o2jsxj
+        """
+        # Algorithm 2.4, p 17 of reference
+
+        # get the indices of the elements that are non-zero on or below diag
+        R = [[] for r in range(self.rows)]
+        for r, c, _ in self.row_list():
+            if c <= r:
+                R[r].append(c)
+
+        inf = len(R) # nothing will be this large
+        parent = [inf] * self.rows
+        virtual = [inf] * self.rows
+        for r in range(self.rows):
+            for c in R[r][:-1]:
+                while virtual[c] < r:
+                    t = virtual[c]
+                    virtual[c] = r
+                    c = t
+                if virtual[c] == inf:
+                    parent[c] = virtual[c] = r
+        return R, parent
+
+    def row_structure_symbolic_cholesky(self):
+        """
+        Symbolic cholesky factorization, for pre-determination of the non-zero
+        structure of the Cholesky factororization.
+
+        References
+        ==========
+
+        Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582, downloaded from
+        http://tinyurl.com/9o2jsxj
+        """
+
+        R, parent = self.liupc()
+        inf = len(R) # this acts as infinity
+        Lrow = R[:]
+        for k in range(self.rows):
+            for j in R[k]:
+                while j != inf and j != k:
+                    if j not in Lrow[k]:
+                        Lrow[k].append(j)
+                    j = parent[j]
+            Lrow[k].sort()
+            if Lrow[k][-1:] == inf:
+                print 'yo'
+                Lrow[k].pop()
+        return Lrow
+
+    def _cholesky_sparse(self):
+        """
+        Algorithm for numeric cholesky factorization of a sparse matrix.
+        """
+        Crowstruc = self.row_structure_symbolic_cholesky()
+        C = self.zeros(self.rows)
+        for i in range(len(Crowstruc)):
+            for j in Crowstruc[i]:
+                if i != j:
+                    C[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Crowstruc[i]:
+                        if p1 < j:
+                            for p2 in Crowstruc[j]:
+                                if p2 < j:
+                                    if p1 == p2:
+                                        summ += C[i, p1] * C[j, p1]
+                                else:
+                                    break
+                            else:
+                                break
+                    C[i, j] -= summ
+                    C[i, j] /= C[j, j]
+                else:
+                    C[j, j] = self[j, j]
+                    summ = 0
+                    for k in Crowstruc[j]:
+                        if k < j:
+                            summ += C[j, k] ** 2
+                        else:
+                            break
+                    C[j, j] -= summ
+                    C[j, j] = sqrt(C[j, j])
+        return C
+
+    def _LDL_sparse(self):
+        """
+        Algorithm for numeric LDL factization, exploiting the sparsity of the given matrix.
+        """
+        Lrowstruc = self.row_structure_symbolic_cholesky()
+        L = self.eye(self.rows)
+        D = SparseMatrix(self.rows, self.cols, {})
+
+        for i in range(len(Lrowstruc)):
+            for j in Lrowstruc[i]:
+                if i != j:
+                    L[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Lrowstruc[i]:
+                        if p1 < j:
+                            for p2 in Lrowstruc[j]:
+                                if p2 < j:
+                                    if p1 == p2:
+                                        summ += L[i, p1] * L[j, p1] * D[p1, p1]
+                                else:
+                                    break
+                        else:
+                            break
+                    L[i, j] -= summ
+                    L[i, j] /= D[j, j]
+                elif i == j:
+                    D[i, i] = self[i, i]
+                    summ = 0
+                    for k in Lrowstruc[i]:
+                        if k < i:
+                            summ += L[i, k]**2 * D[k, k]
+                        else:
+                            break
+                    D[i, i] -= summ
+
+        return L, D
+
+    def _lower_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
+        rows = [[] for i in range(self.rows)]
+        for i, j, v in self.row_list():
+            if i < j:
+                rows[i].append((j, v))
+        X = SparseMatrix(rhs.rows, 1, rhs.smat if isinstance(rhs, SparseMatrix) else rhs.mat)
+        for i in range(self.rows):
+            for j, v in rows[i]:
+                X[i, 0] -= v * X[j, 0]
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _upper_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
+        rows = [[] for i in range(self.rows)]
+        for i, j, v in self.row_list():
+            if i > j:
+                rows[i].append((j, v))
+        X = SparseMatrix(rhs.rows, 1, rhs.smat)
+        for i in reversed(range(self.rows)):
+            for j, v in reversed(rows[i]):
+                X[i, 0] -= v * X[j, 0]
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _diagonal_solve(self, rhs):
+        "Diagonal solve."
+        return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+
+    def _cholesky_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
+        L = self._cholesky_sparse()
+        Y = L._lower_triangular_solve(rhs)
+        return L.T._upper_triangular_solve(Y)
+
+    def _LDL_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
+        L, D = self._LDL_sparse()
+        Z = L._lower_triangular_solve(rhs)
+        Y = D._diagonal_solve(Z)
+        return L.T._upper_triangular_solve(Y)
+
+    def solve_least_squares(self, rhs, method='LDL'):
+        return (self.T * self).solve(self.T * rhs, method=method)
+
+    def solve(self, rhs, method='LDL'):
+        if not self.is_square:
+            if self.rows < self.cols:
+                raise ValueError('Under-determined system.')
+            elif self.rows > self.cols:
+                raise ValueError('Over-determined system. Use .solve_least_squares function')
+        else:
+            if method == 'LDL':
+                return self._LDL_solve(rhs)
+            elif method == 'CH':
+                return self._cholesky_solve(rhs)
+            else:
+                raise ValueError('method can be LDL or CH, not %s' % method)
+
+    def cholesky(self):
+        """
+        Returns the Cholesky Decomposition L of a matrix A
+        such that L * L.T = A
+
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> A.cholesky()
+        [ 5, 0, 0]
+        [ 3, 3, 0]
+        [-1, 1, 3]
+        >>> A.cholesky() * A.cholesky().T == A
+        True
+        """
+
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise ValueError('Cholesky decomposition applies only to symmetric matrices.')
+        C = self._cholesky_sparse()
+        if C.has(nan) or C.has(oo):
+            raise ValueError('Cholesky decomposition applies only to positive-definite matrices')
+        return C
+
+    def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T == A
+        True
+
+        """
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise ValueError('LDL decomposition applies only to symmetric matrices.')
+        L, D = self._LDL_sparse()
+        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
+            raise ValueError('LDL decomposition applies only to positive-definite matrices')
+        return L, D
+
+    def inv(self, method="LDL"):
+        """
+        Returns the inverse of the given matrix using
+        Cholesky decomposition or LDL decomposition,
+        as specified by user.
+
+        >>> from sympy import SparseMatrix, Matrix
+        >>> A = SparseMatrix([
+        ... [ 2, -1,  0],
+        ... [-1,  2, -1],
+        ... [ 0,  0,  2]])
+        >>> Matrix(A.tolist()).inv()
+        [2/3, 1/3, 1/6]
+        [1/3, 2/3, 1/3]
+        [  0,   0, 1/2]
+        >>> A.inv('CH')
+        [2/3, 1/3, 1/6]
+        [1/3, 2/3, 1/3]
+        [  0,   0, 1/2]
+        >>> A.inv()
+        [2/3, 1/3, 1/6]
+        [1/3, 2/3, 1/3]
+        [  0,   0, 1/2]
+        >>> A * A.inv()
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
+        """
+        if method == "LDL":
+            solve = self._LDL_solve
+        elif method == "CH":
+            solve = self._cholesky_solve
+        else:
+            raise NotImplementedError()
+        I = self.eye(self.rows)
+        return vecs2matrix([solve(I[:, i]) for i in range(I.cols)])
+
+def vecs2matrix(vecs):
+    """
+    Utility function.
+    Strings together a list of vectors to form a Matrix
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.matrices import vecs2matrix, Matrix, SparseMatrix
+    >>> m = Matrix(range(3))
+    >>> vecs2matrix([m, m])
+    [0, 0]
+    [1, 1]
+    [2, 2]
+    >>> m = SparseMatrix(range(3))
+    >>> vecs2matrix([m, m])
+    [0, 0]
+    [1, 1]
+    [2, 2]
+    """
+    A = vecs[0]
+    for vec in vecs[1:]:
+        A = A.row_join(vec)
+    return A
+
+def _separate_eig_results(res):
+    eigvals = [item[0] for item in res]
+    multiplicities = [item[1] for item in res]
+    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
+    eigvects = flatten([item[2] for item in res])
+    return eigvals, eigvects
+
 def list2numpy(l): # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
