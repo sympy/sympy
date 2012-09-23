@@ -328,7 +328,15 @@ class Expr(Basic, EvalfMixin):
             a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free]))
-            nmag = abs(self.evalf(2, subs=reps))
+            try:
+                nmag = abs(self.evalf(2, subs=reps))
+            except TypeError:
+                # if an out of range value resulted in evalf problems
+                # then return None -- XXX is there a way to know how to
+                # select a good random number for a given expression?
+                # e.g. when calculating n! negative values for n should not
+                # be used
+                return None
         else:
             reps = {}
             nmag = abs(self.evalf(2))
