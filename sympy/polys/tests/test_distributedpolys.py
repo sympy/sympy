@@ -59,56 +59,8 @@ def test_sdp_monoms():
     assert sdp_monoms([((1,0), QQ(1,2))]) == [(1,0)]
     assert sdp_monoms([((1,1), QQ(1,4)), ((1,0), QQ(1,2))]) == [(1,1), (1,0)]
 
-def test_sdp_sort():
-    pass
-
 def test_sdp_strip():
     assert sdp_strip([((2,2), 0), ((1,1), 1), ((0,0), 0)]) == [((1,1), 1)]
-
-def test_sdp_normal():
-    pass
-
-def test_sdp_from_dict():
-    pass
-
-def test_sdp_indep_p():
-    pass
-
-def test_sdp_one_p():
-    pass
-
-def test_sdp_one():
-    pass
-
-def test_sdp_term_p():
-    pass
-
-def test_sdp_abs():
-    pass
-
-def test_sdp_neg():
-    pass
-
-def test_sdp_add_term():
-    pass
-
-def test_sdp_sub_term():
-    pass
-
-def test_sdp_mul_term():
-    pass
-
-def test_sdp_add():
-    pass
-
-def test_sdp_sub():
-    pass
-
-def test_sdp_mul():
-    pass
-
-def test_sdp_sqr():
-    pass
 
 def test_sdp_pow():
     f = sdp_from_dict({(1,): 2, (0,): 3}, grlex)
@@ -132,15 +84,6 @@ def test_sdp_pow():
     assert sdp_pow(f, 2, 2, grlex, ZZ) == g
 
     raises(ValueError, lambda: sdp_pow(f, -2, 2, grlex, ZZ))
-
-def test_sdp_monic():
-    pass
-
-def test_sdp_content():
-    pass
-
-def test_sdp_primitive():
-    pass
 
 def test_sdp_div():
     f = sdp_from_dict({(2,1): 4, (1,1): -2, (1,0): 4, (0,1): -2, (0,0): 8}, grlex)
@@ -247,9 +190,3 @@ def test_sdp_rem():
     r = sdp_from_dict({(1,0): 2, (0,0): 1}, grlex)
 
     assert sdp_rem(f, G, 1, grlex, ZZ) == r
-
-def test_sdp_lcm():
-    pass
-
-def test_sdp_gcd():
-    pass

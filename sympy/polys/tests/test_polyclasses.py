@@ -347,9 +347,6 @@ def test_DMF__init__():
     raises(ValueError, lambda: DMF(([1], [[1]]), ZZ))
     raises(ZeroDivisionError, lambda: DMF(([1], []), ZZ))
 
-def test_DMF__eq__():
-    pass
-
 def test_DMF__bool__():
     assert bool(DMF([[]], ZZ)) == False
     assert bool(DMF([[1]], ZZ)) == True
