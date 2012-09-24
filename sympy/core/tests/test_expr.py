@@ -123,6 +123,7 @@ def dotest(s):
     for x in all_objs:
         for y in all_objs:
             s(x,y)
+    return True
 
 def test_basic():
     def j(a,b):
@@ -134,7 +135,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
-    dotest(j)
+    assert dotest(j)
 
 def test_ibasic():
     def s(a,b):
@@ -146,7 +147,7 @@ def test_ibasic():
         x *= b
         x = a
         x /= b
-    dotest(s)
+    assert dotest(s)
 
 def test_relational():
     assert (pi < 3) == False

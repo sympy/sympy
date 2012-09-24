@@ -5,8 +5,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import XFAIL
 
 def test_issue153():
-    #test that is runs:
-    a = sqrt(2*(1+sqrt(2)))
+    assert sqrt(2*(1 + sqrt(2))) == sqrt((2 + 2*sqrt(2)))
 
 def test_rational():
     a = Rational(1, 5)

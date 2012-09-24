@@ -23,6 +23,7 @@ def dotest(s):
     for x in l:
         for y in l:
             s(x,y)
+    return True
 
 def test_basic():
     def s(a,b):
@@ -34,7 +35,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
-    dotest(s)
+    assert dotest(s)
 
 def test_ibasic():
     def s(a,b):
@@ -46,4 +47,4 @@ def test_ibasic():
         x *= b
         x = a
         x /= b
-    dotest(s)
+    assert dotest(s)

@@ -65,7 +65,7 @@ def test_bug():
     x1 = Symbol('x1')
     x2 = Symbol('x2')
     y = x1*x2
-    y.subs(x1, Float(3.0))
+    assert y.subs(x1, Float(3.0)) == Float(3.0)*x2
 
 def test_subbug1():
     x = Symbol('x')
@@ -440,17 +440,17 @@ def test_subs_dict():
 def test_no_arith_subs_on_floats():
     a, x, y = symbols('a,x,y')
 
-    (x + 3).subs(x + 3, a) == a
-    (x + 3).subs(x + 2, a) == a + 1
+    assert (x + 3).subs(x + 3, a) == a
+    assert (x + 3).subs(x + 2, a) == a + 1
 
-    (x + y + 3).subs(x + 3, a) == a + y
-    (x + y + 3).subs(x + 2, a) == a + y + 1
+    assert (x + y + 3).subs(x + 3, a) == a + y
+    assert (x + y + 3).subs(x + 2, a) == a + y + 1
 
-    (x + 3.0).subs(x + 3.0, a) == a
-    (x + 3.0).subs(x + 2.0, a) == x + y + 3.0
+    assert (x + 3.0).subs(x + 3.0, a) == a
+    assert (x + 3.0).subs(x + 2.0, a) == x + 3.0
 
-    (x + y + 3.0).subs(x + 3.0, a) == a + y
-    (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
+    assert (x + y + 3.0).subs(x + 3.0, a) == a + y
+    assert (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
 
 @XFAIL
 def test_issue_2261() :

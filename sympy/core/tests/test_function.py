@@ -410,7 +410,7 @@ def test_diff_wrt():
     assert diff(f(g(x)),g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
 def test_diff_wrt_func_subs():
-     f(g(x)).diff(x).subs(g, Lambda(x, 2*x)) == f(2*x).diff(x)
+    assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
 
 def test_diff_wrt_not_allowed():
     raises(ValueError, lambda: diff(sin(x**2),x**2))
