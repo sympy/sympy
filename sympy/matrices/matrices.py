@@ -21,6 +21,7 @@ from sympy.core.compatibility import callable, reduce#, as_int
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.decorators import call_highest_priority
 
+import copy
 import random
 from collections import defaultdict
 from types import FunctionType
@@ -598,11 +599,11 @@ class MatrixBase(object):
 
     def cholesky(self):
         """
-        Returns the Cholesky Decomposition L of a Matrix A
+        Returns the Cholesky decomposition L of a matrix A
         such that L * L.T = A
 
         A must be a square, symmetric, positive-definite
-        and non-singular matrix
+        and non-singular matrix.
 
         >>> from sympy.matrices import Matrix
         >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
@@ -4981,12 +4982,24 @@ class SparseMatrix(MatrixBase):
         Liu's algorithm, for pre-determination of the Elimination Tree of
         the given matrix, used in row-based symbolic Cholesky factorization.
 
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix([
+        ... [1, 0, 3, 2],
+        ... [0, 0, 1, 0],
+        ... [4, 0, 0, 5],
+        ... [0, 6, 7, 0]])
+        >>> S.liupc()
+        ([[0], [], [0], [1, 2]], [4, 3, 4, 4])
+
         References
         ==========
 
-        Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582, downloaded from
-        http://tinyurl.com/9o2jsxj
+        Symbolic Sparse Cholesky Factorization using Elimination Trees,
+        Jeroen Van Grondelle (1999) http://citeseerx.ist.psu.edu/viewdoc/
+        summary?doi=10.1.1.39.7582, downloaded from http://tinyurl.com/9o2jsxj
         """
         # Algorithm 2.4, p 17 of reference
 
@@ -5014,32 +5027,40 @@ class SparseMatrix(MatrixBase):
         Symbolic cholesky factorization, for pre-determination of the non-zero
         structure of the Cholesky factororization.
 
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix([
+        ... [1, 0, 3, 2],
+        ... [0, 0, 1, 0],
+        ... [4, 0, 0, 5],
+        ... [0, 6, 7, 0]])
+        >>> S.row_structure_symbolic_cholesky()
+        [[0], [], [0], [1, 2]]
+
         References
         ==========
 
-        Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582, downloaded from
-        http://tinyurl.com/9o2jsxj
+        Symbolic Sparse Cholesky Factorization using Elimination Trees,
+        Jeroen Van Grondelle (1999) http://citeseerx.ist.psu.edu/viewdoc/
+        summary?doi=10.1.1.39.7582, downloaded from http://tinyurl.com/9o2jsxj
         """
 
         R, parent = self.liupc()
         inf = len(R) # this acts as infinity
-        Lrow = R[:]
+        Lrow = copy.deepcopy(R)
         for k in range(self.rows):
             for j in R[k]:
                 while j != inf and j != k:
-                    if j not in Lrow[k]:
-                        Lrow[k].append(j)
+                    Lrow[k].append(j)
                     j = parent[j]
-            Lrow[k].sort()
-            if Lrow[k][-1:] == inf:
-                print 'yo'
-                Lrow[k].pop()
+            Lrow[k] = list(sorted(set(Lrow[k])))
         return Lrow
 
     def _cholesky_sparse(self):
         """
-        Algorithm for numeric cholesky factorization of a sparse matrix.
+        Algorithm for numeric Cholesky factorization of a sparse matrix.
         """
         Crowstruc = self.row_structure_symbolic_cholesky()
         C = self.zeros(self.rows)
@@ -5111,14 +5132,15 @@ class SparseMatrix(MatrixBase):
 
     def _lower_triangular_solve(self, rhs):
         """
-        Fast algorithm for solving a triangular system,
+        Fast algorithm for solving a lower-triangular system,
         exploiting the sparsity of the given matrix.
         """
         rows = [[] for i in range(self.rows)]
         for i, j, v in self.row_list():
-            if i < j:
+            if i > j:
                 rows[i].append((j, v))
-        X = SparseMatrix(rhs.rows, 1, rhs.smat if isinstance(rhs, SparseMatrix) else rhs.mat)
+        X = SparseMatrix(rhs.rows, 1, rhs.smat
+            if isinstance(rhs, SparseMatrix) else rhs.mat)
         for i in range(self.rows):
             for j, v in rows[i]:
                 X[i, 0] -= v * X[j, 0]
@@ -5127,14 +5149,15 @@ class SparseMatrix(MatrixBase):
 
     def _upper_triangular_solve(self, rhs):
         """
-        Fast algorithm for solving a triangular system,
+        Fast algorithm for solving an upper-triangular system,
         exploiting the sparsity of the given matrix.
         """
         rows = [[] for i in range(self.rows)]
         for i, j, v in self.row_list():
-            if i > j:
+            if i < j:
                 rows[i].append((j, v))
-        X = SparseMatrix(rhs.rows, 1, rhs.smat)
+        X = SparseMatrix(rhs.rows, 1, rhs.smat
+            if isinstance(rhs, SparseMatrix) else rhs.mat)
         for i in reversed(range(self.rows)):
             for j, v in reversed(rows[i]):
                 X[i, 0] -= v * X[j, 0]
@@ -5143,20 +5166,15 @@ class SparseMatrix(MatrixBase):
 
     def _diagonal_solve(self, rhs):
         "Diagonal solve."
-        return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0]/self[i, i])
 
     def _cholesky_solve(self, rhs):
-        if not self.is_symmetric():
-            rhs = self.T * rhs
-            self = self.T * self
         L = self._cholesky_sparse()
         Y = L._lower_triangular_solve(rhs)
-        return L.T._upper_triangular_solve(Y)
+        rv = L.T._upper_triangular_solve(Y)
+        return rv
 
     def _LDL_solve(self, rhs):
-        if not self.is_symmetric():
-            rhs = self.T * rhs
-            self = self.T * self
         L, D = self._LDL_sparse()
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)
@@ -5181,7 +5199,7 @@ class SparseMatrix(MatrixBase):
 
     def cholesky(self):
         """
-        Returns the Cholesky Decomposition L of a matrix A
+        Returns the Cholesky decomposition L of a matrix A
         such that L * L.T = A
 
         A must be a square, symmetric, positive-definite
@@ -5248,32 +5266,38 @@ class SparseMatrix(MatrixBase):
         ... [ 2, -1,  0],
         ... [-1,  2, -1],
         ... [ 0,  0,  2]])
-        >>> Matrix(A.tolist()).inv()
-        [2/3, 1/3, 1/6]
-        [1/3, 2/3, 1/3]
-        [  0,   0, 1/2]
         >>> A.inv('CH')
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]
-        >>> A.inv()
+        >>> A.inv('LDL')
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]
-        >>> A * A.inv()
+        >>> A * _
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
 
         """
+        sym = self.is_symmetric()
+        I = self.eye(self.rows)
+        if not sym:
+            t = self.T
+            r1 = self[0, :]
+            self = t*self
+            I = t*I
         if method == "LDL":
             solve = self._LDL_solve
         elif method == "CH":
             solve = self._cholesky_solve
         else:
             raise NotImplementedError()
-        I = self.eye(self.rows)
-        return vecs2matrix([solve(I[:, i]) for i in range(I.cols)])
+        rv = vecs2matrix([solve(I[:, i]) for i in range(I.cols)])
+        if not sym:
+            scale = (r1*rv[:, 0])[0, 0]
+            rv /= scale
+        return rv
 
 def vecs2matrix(vecs):
     """
@@ -5299,13 +5323,6 @@ def vecs2matrix(vecs):
     for vec in vecs[1:]:
         A = A.row_join(vec)
     return A
-
-def _separate_eig_results(res):
-    eigvals = [item[0] for item in res]
-    multiplicities = [item[1] for item in res]
-    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
-    eigvects = flatten([item[2] for item in res])
-    return eigvals, eigvects
 
 def list2numpy(l): # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
