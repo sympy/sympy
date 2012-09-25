@@ -254,6 +254,7 @@ def _implicit_application(tokens, global_dict):
     return result
 
 def _function_exponents(tokens, global_dict):
+    """Preprocess functions raised to powers."""
     result = []
     need_exponent = False
     for tok, nextTok in zip(tokens, tokens[1:]):
@@ -350,7 +351,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
                     continue
 
             # we want xyz -> x*y*z but not theta -> t**2 * e * a
-            if _token_splittable(name):
+            if _token_splittable(name) and implicit:
                 for var in name:
                     result.extend([
                         (NAME, 'Symbol'),
@@ -391,7 +392,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
     print 'Expression:', ''.join(x[1] for x in result)
     return untokenize(result)
 
-def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=True):
+def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
