@@ -63,7 +63,7 @@ TERMINAL_EXAMPLES = [
     "intermediate.trees",
     "intermediate.vandermonde",
     "advanced.curvilinear_coordinates",
-    "advanced.dense_coding_examplg",
+    "advanced.dense_coding_example",
     "advanced.fem",
     "advanced.gibbs_phenomenon",
     "advanced.grover_example",
