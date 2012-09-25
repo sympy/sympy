@@ -124,9 +124,17 @@ def test_files():
                 # eof newline check
                 assert False, message_eof % (fname, idx+1)
 
+    # Files to test at top level
+    top_level_files = [join(TOP_PATH, file) for file in [
+        "build.py",
+        "setup.py",
+        "setupegg.py",
+    ]]
+    # Files to exclude from all tests
     exclude = set([
         "%(sep)smpmath%(sep)s" % sepd,
     ])
+    # Files to exclude from the implicit import test
     import_exclude = set([
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
@@ -135,12 +143,19 @@ def test_files():
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
+        # isympy executes ``from sympy import *``:
+        "%(sep)sbin%(sep)sisympy" % sepd,
+        # these two are import timing tests:
+        "%(sep)sbin%(sep)ssympy_time.py" % sepd,
+        "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
         # Taken from Python stdlib:
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # these two should be fixed:
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
         "%(sep)splotting%(sep)stextplot.py" % sepd,
     ])
+    check_files(top_level_files, test)
+    check_directory_tree(BIN_PATH, test, set([".pyc"]), "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
