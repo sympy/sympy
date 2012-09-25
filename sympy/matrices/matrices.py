@@ -4438,7 +4438,8 @@ class SparseMatrix(MatrixBase):
                 ismat = True
             if ismat:
                 self.copyin_matrix((slice(i, i + value.rows),
-                                    slice(j, j + value.cols)), value)
+                                    slice(j, j + value.cols)),
+                                    value)
                 return
             else:
                 testval = sympify(value)
@@ -4591,8 +4592,11 @@ class SparseMatrix(MatrixBase):
     CL = property(col_list, None, None, "Alternate faster representation")
 
     def transpose(self):
-        """
-        Returns the transposed SparseMatrix of this SparseMatrix
+        """Returns the transposed SparseMatrix of this SparseMatrix.
+
+        Examples
+        ========
+
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
@@ -4610,6 +4614,36 @@ class SparseMatrix(MatrixBase):
 
     T = property(transpose, None, None, "Matrix transposition.")
 
+
+    def conjugate(self):
+        """Return the by-element conjugation.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import I
+        >>> a = SparseMatrix(((1, 2 + I), (3, 4)))
+        >>> a
+        [1, 2 + I]
+        [3,     4]
+        >>> a.C
+        [1, 2 - I]
+        [3,     4]
+
+        See Also
+        ========
+
+        transpose: Matrix transposition
+        H: Hermite conjugation
+        D: Dirac conjugation
+        """
+        conj = SparseMatrix(self.cols, self.rows, {})
+        for key, value in self.smat.iteritems():
+            conj.smat[key] = value.conjugate()
+        return conj
+
+    C = property(conjugate, None, None, "By-element conjugation.")
 
     def multiply(self, other):
         """Fast multiplication exploiting the sparsity of the matrix.
@@ -4764,8 +4798,13 @@ class SparseMatrix(MatrixBase):
         if shape != (dr, dc):
             raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
                 "as the in sub-Matrix given by `key`.")
-        for i in range(value.rows):
-            for j in range(value.cols):
+        if not isinstance(value, SparseMatrix):
+            for i in range(value.rows):
+                for j in range(value.cols):
+                    self[i + rlo, j + clo] = value[i, j]
+        else:
+            for k, v in value.smat.iteritems():
+                i, j = k
                 self[i + rlo, j + clo] = value[i, j]
 
     def submatrix(self, keys):
@@ -4774,14 +4813,26 @@ class SparseMatrix(MatrixBase):
             lambda i, j: self[i + rlo, j + clo])
 
     def reshape(self, _rows, _cols):
+        """Reshape matrix while retaining original size.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix(4, 2, range(8))
+        >>> S.reshape(2, 4)
+        [0, 1, 2, 3]
+        [4, 5, 6, 7]
+
+        """
         if len(self) != _rows*_cols:
             raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
         newD = {}
-        for i in range(_rows):
-            for j in range(_cols):
-                m, n = divmod(i*_cols + j, self.cols)
-                if (m, n) in self.smat:
-                    newD[(i, j)] = self.smat[(m, n)]
+        for k, v in self.smat.iteritems():
+            i, j = k
+            n = i*self.cols + j
+            ii, jj = divmod(n, _cols)
+            newD[(ii, jj)] = self.smat[(i, j)]
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
