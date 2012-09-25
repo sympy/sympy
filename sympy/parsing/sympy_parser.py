@@ -75,23 +75,10 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
                                                    exponent)
 
     def expand(self):
-        """Return a list of tokens, accounting for exponents, etc."""
+        """Return a list of tokens representing the function"""
         result = []
-        if self.exponent:
-            result.append((OP, '('))
         result.append(self.function)
-        for arg in self.args:
-            if isinstance(arg, AppliedFunction):
-                result.extend(arg.expand())
-            else:
-                result.append(arg)
-        if self.exponent:
-            result.append((OP, ')'))
-            for arg in self.exponent:
-                if isinstance(arg, AppliedFunction):
-                    result.extend(arg.expand())
-                else:
-                    result.append(arg)
+        result.extend(self.args)
         return result
 
 class ParenthesisGroup(list):
@@ -223,8 +210,7 @@ def _implicit_application(tokens, global_dict):
     appendParen = 0  # number of closing parentheses to add
     skip = False  # number of tokens to delay before adding a ')' (to
                   # capture **, ^, etc.)
-    consume = False  # if True, result[-1] is an AppliedFunction and the
-                     # next token we read is its argument
+    exponent = None
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
@@ -234,22 +220,11 @@ def _implicit_application(tokens, global_dict):
         elif isinstance(tok, AppliedFunction) and not tok.args:
             # This occurs when we had a function raised to a power - it has
             # no arguments
-            consume = True
-            result[-1].args.append((OP, '('))
-        elif consume:
-            # We can't just insert tokens because the power has to go after
-            # all the arguments
-            token = result.pop()
-            result[-1].args.append(token)
-            if nextTok[0] == OP and nextTok[1] in ('^', '**'):
-                skip = 2
-                continue
-            if skip:
-                skip -= 1
-                if skip != 0:
-                    continue
-            result[-1].args.append((OP, ')'))
-            consume = False
+            result[-1] = tok.function
+            exponent = tok.exponent
+            if nextTok[0] != OP and nextTok[1] != '(':
+                result.append((OP, '('))
+                appendParen += 1
         elif appendParen:
             if nextTok[0] == OP and nextTok[1] in ('^', '**'):
                 skip = 1
@@ -259,13 +234,22 @@ def _implicit_application(tokens, global_dict):
                 continue
             result.append((OP, ')'))
             appendParen -= 1
+            if exponent and not appendParen:
+                result.extend(exponent)
+                exponent = None
 
+    # An expression like sin tan x will result in sin(tan(x) because there
+    # isn't a token at the end to cause the loop to insert the close
+    # parenthesis
     if appendParen:
         if result[-1][0] == OP and result[-1][1] == '(':
             # Function implicitly applied to nothing, undo that
             del result[-1]
         else:
             result.extend([(OP, ')')] * appendParen)
+    if exponent:
+        result.extend(exponent)
+
     result.append(tokens[-1])
     return result
 
