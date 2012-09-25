@@ -208,7 +208,7 @@ tests = [
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
-    'sympy.differential_geometry.tests',
+    'sympy.diffgeom.tests',
     'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
