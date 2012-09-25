@@ -388,8 +388,6 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
 
     if implicit:
         result = _implicit_multiplication_application(result, global_dict)
-    print 'Tokens:', result
-    print 'Expression:', ''.join(x[1] for x in result)
     return untokenize(result)
 
 def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=False):
