@@ -15,6 +15,13 @@ _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 UNSPLITTABLE_TOKEN_NAMES = ['_kern']
 
 def _token_splittable(token):
+    """
+    Predicate for whether a token name can be split into multiple tokens.
+
+    A token is splittable if it does not contain an underscore charater and
+    it is not the name of a Greek letter. This is used to implicitly convert
+    expressions like 'xyz' into 'x*y*z'.
+    """
     if '_' in token:
         return False
     elif token in UNSPLITTABLE_TOKEN_NAMES:
@@ -56,6 +63,11 @@ def _add_factorial_tokens(name, result):
 
 class AppliedFunction(collections.namedtuple('AppliedFunction',
                                              'function args exponent')):
+    """
+    A group of tokens representing a function and its arguments.
+
+    `exponent` is for handling the shorthand sin^2, ln^2, etc.
+    """
     def __new__(cls, function, args, exponent=None):
         if exponent is None:
             exponent = []
@@ -63,6 +75,7 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
                                                    exponent)
 
     def expand(self):
+        """Return a list of tokens, accounting for exponents, etc."""
         result = []
         if self.exponent:
             result.append((OP, '('))
@@ -81,7 +94,9 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
                     result.append(arg)
         return result
 
-class ParenthesisGroup(list): pass
+class ParenthesisGroup(list):
+    """List of tokens representing an expression in parentheses."""
+    pass
 
 def _flatten(result):
     result2 = []
@@ -95,7 +110,11 @@ def _flatten(result):
     return result2
 
 def _group_parentheses(tokens, global_dict):
-    # Group sequences of '()' operators
+    """Group tokens between parentheses with ParenthesisGroup.
+
+    Also processes those tokens recursively.
+
+    """
     result = []
     stacks = []
     stacklevel = 0
@@ -128,8 +147,12 @@ def _group_parentheses(tokens, global_dict):
     return result
 
 def _apply_functions(tokens, global_dict):
-    # symbol/function application
-    # Group NAME followed by a list
+    """Convert a NAME token + ParenthesisGroup into an AppliedFunction.
+
+    Note that ParenthesisGroups, if not applied to any function, are
+    converted back into lists of tokens.
+
+    """
     result = []
     symbol = None
     for tok in tokens:
@@ -145,12 +168,25 @@ def _apply_functions(tokens, global_dict):
         else:
             symbol = None
             result.append(tok)
-    # print 'STEP2', result3
     return result
 
 def _implicit_multiplication(tokens, global_dict):
-    # Look for two NAMEs in a row or NAME then paren group or paren group
-    # then NAME
+    """Implicitly adds '*' tokens.
+
+    Cases:
+
+    - Two AppliedFunctions next to each other ("sin(x)cos(x)")
+
+    - AppliedFunction next to an open parenthesis ("sin x (cos x + 1)")
+
+    - A close parenthesis next to an AppliedFunction ("(x+2)sin x")\
+
+    - A closeparenthesis next to an open parenthesis ("(x+2)(x+3)")
+
+    - An AppliedFunction next to an implicitly applied function ("sin(x)cos
+      x")
+
+    """
     result = []
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
@@ -177,16 +213,18 @@ def _implicit_multiplication(tokens, global_dict):
             # Applied function followed by implicitly applied function
             result.append((OP, '*'))
     result.append(tokens[-1])
-    # print 'STEP3', result4
     return result
 
 def _implicit_application(tokens, global_dict):
-    # Look for a callable NAME that is not followed by an OP '(' and apply
-    # it to the following token
+    """Adds parentheses as needed after functions.
+
+    Also processes functions raised to powers."""
     result = []
     appendParen = 0  # number of closing parentheses to add
-    skip = False  # delay adding a ')' if True (to capture **, ^, etc.)
-    consume = False
+    skip = False  # number of tokens to delay before adding a ')' (to
+                  # capture **, ^, etc.)
+    consume = False  # if True, result[-1] is an AppliedFunction and the
+                     # next token we read is its argument
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
@@ -194,22 +232,30 @@ def _implicit_application(tokens, global_dict):
                 result.append((OP, '('))
                 appendParen += 1
         elif isinstance(tok, AppliedFunction) and not tok.args:
-            # This occurs when we had a function raised to a power
+            # This occurs when we had a function raised to a power - it has
+            # no arguments
             consume = True
-        elif consume:
-            token = result.pop()
-            # add parentheses here since token is going to be another
-            # applied function
             result[-1].args.append((OP, '('))
+        elif consume:
+            # We can't just insert tokens because the power has to go after
+            # all the arguments
+            token = result.pop()
             result[-1].args.append(token)
+            if nextTok[0] == OP and nextTok[1] in ('^', '**'):
+                skip = 2
+                continue
+            if skip:
+                skip -= 1
+                if skip != 0:
+                    continue
             result[-1].args.append((OP, ')'))
             consume = False
         elif appendParen:
             if nextTok[0] == OP and nextTok[1] in ('^', '**'):
-                skip = True
+                skip = 1
                 continue
             if skip:
-                skip = False
+                skip -= 1
                 continue
             result.append((OP, ')'))
             appendParen -= 1
@@ -239,7 +285,6 @@ def _function_exponents(tokens, global_dict):
             if isinstance(tok, AppliedFunction):
                 need_exponent = False
     result.append(tokens[-1])
-    print result
     return result
 
 def _implicit_multiplication_application(result, global_dict):
