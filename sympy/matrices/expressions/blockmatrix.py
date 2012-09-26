@@ -89,7 +89,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self.mat.mat]
+        matrices = [Transpose(matrix) for matrix in self.mat]
         # Make a copy
         mat = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
@@ -98,12 +98,30 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self.mat[i,i])
+            return Add(*[Trace(self._mat[i,i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError("Can't perform trace of irregular blockshape")
 
-    #def transpose(self):
-    #    return self.eval_transpose()
+    def transpose(self):
+        """Return transpose of matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
+        >>> from sympy.abc import l, m, n
+        >>> X = MatrixSymbol('X', n, n)
+        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Z = MatrixSymbol('Z', n, m)
+        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+        >>> B.transpose()
+        [X',  0]
+        [Z', Y']
+        >>> _.transpose()
+        [X, Z]
+        [0, Y]
+        """
+        return self._eval_transpose()
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
