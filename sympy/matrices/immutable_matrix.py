@@ -1,7 +1,6 @@
 from matrices import MatrixBase, MutableMatrix
 from expressions import MatrixExpr, Transpose
 from sympy import Basic, Integer, Tuple
-from sympy.utilities.iterables import unflatten
 
 class ImmutableMatrix(MatrixExpr, MatrixBase):
 
