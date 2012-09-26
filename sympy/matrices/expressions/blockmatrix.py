@@ -33,19 +33,19 @@ class BlockMatrix(MatrixExpr):
     """
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
-    def __new__(cls, mat):
-        if not isinstance(mat, Matrix):
-            mat = Matrix(mat)
-        data = Tuple(*mat.mat)
-        shape = Tuple(*sympify(mat.shape))
+    def __new__(cls, M):
+        if not isinstance(M, Matrix):
+            M = Matrix(M)
+        data = Tuple(*M._mat)
+        shape = Tuple(*sympify(M.shape))
         obj = Basic.__new__(cls, data, shape)
-        obj.mat = mat
+        obj._mat = M
         return obj
 
     @property
     def shape(self):
         numrows = numcols = 0
-        M = self.mat
+        M = self._mat
         for i in range(M.shape[0]):
             numrows += M[i,0].shape[0]
         for i in range(M.shape[1]):
@@ -54,11 +54,11 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def blockshape(self):
-        return self.mat.shape
+        return self._mat.shape
 
     @property
     def blocks(self):
-        return self.mat
+        return self._mat
 
     @property
     def rowblocksizes(self):
@@ -73,7 +73,7 @@ class BlockMatrix(MatrixExpr):
         if  (other.is_Matrix and other.is_BlockMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockMatrix(self.mat*other.mat)
+            return BlockMatrix(self._mat*other._mat)
 
         return MatrixExpr.__mul__(self, other)
 
@@ -83,18 +83,18 @@ class BlockMatrix(MatrixExpr):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockMatrix(self.mat + other.mat)
+            return BlockMatrix(self._mat + other._mat)
 
         return MatrixExpr.__add__(self, other)
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self.mat]
+        matrices = [Transpose(matrix) for matrix in self._mat]
         # Make a copy
-        mat = Matrix(self.blockshape[0], self.blockshape[1], matrices)
+        M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
-        mat = mat.transpose()
-        return BlockMatrix(mat)
+        M = M.transpose()
+        return BlockMatrix(M)
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
@@ -165,9 +165,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self.mat[i,j].is_Identity:
+                if i==j and not self._mat[i,j].is_Identity:
                     return False
-                if i!=j and not self.mat[i,j].is_ZeroMatrix:
+                if i!=j and not self._mat[i,j].is_ZeroMatrix:
                     return False
         return True
     @property
@@ -201,9 +201,9 @@ class BlockDiagMatrix(BlockMatrix):
                 data_matrix[r, c] = ZeroMatrix(n, m)
 
         shape = Tuple(*sympify(mat.shape))
-        data = Tuple(*data_matrix.mat)
+        data = Tuple(*data_matrix._mat)
         obj = Basic.__new__(cls, data, shape, Tuple(*mats))
-        obj.mat = data_matrix
+        obj._mat = data_matrix
         return obj
 
     @property
@@ -292,7 +292,7 @@ def block_collapse(expr):
             return BlockDiagMatrix(
                     *[expr.args[0]*arg for arg in expr.args[1].diag])
         else:
-            return BlockMatrix(expr.args[0]*expr.args[1].mat)
+            return BlockMatrix(expr.args[0]*expr.args[1]._mat)
 
     if expr.is_Add:
         nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]

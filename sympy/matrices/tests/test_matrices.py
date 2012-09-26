@@ -776,7 +776,7 @@ def test_sparse_matrix():
         (2, 0),
         (5, 0)
     ))
-    assert a.smat == {(0, 0): 2, (1, 0): 5}
+    assert a._smat == {(0, 0): 2, (1, 0): 5}
 
     # test_multiplication
     a=SparseMatrix((
@@ -1778,7 +1778,7 @@ def test_SparseMatrix_add():
         SparseMatrix(((1,1), (1,1)))
     a = SparseMatrix(100, 100, lambda i, j: int(j != 0 and i % j == 0))
     b = SparseMatrix(100, 100, lambda i, j: int(i != 0 and j % i == 0))
-    assert (len(a.smat) + len(b.smat) - len((a + b).smat) > 0)
+    assert (len(a._smat) + len(b._smat) - len((a + b)._smat) > 0)
 
 def test_has():
     x, y, z = symbols('x,y,z')
@@ -2016,8 +2016,8 @@ def test_matrix_norm():
     # Test Rows
     y = Matrix([[5, Rational(3,2)]])
     assert y.norm() == Pow(25 + Rational(9,4),S(1)/2)
-    assert y.norm(oo) == max(y.mat)
-    assert y.norm(-oo) == min(y.mat)
+    assert y.norm(oo) == max(y._mat)
+    assert y.norm(-oo) == min(y._mat)
 
     # Matrix Tests
     # Intuitive test
