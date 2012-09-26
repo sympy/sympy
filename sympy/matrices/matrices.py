@@ -4887,15 +4887,18 @@ class SparseMatrix(MatrixBase):
                 Cdict[k, n] += temp
         return SparseMatrix(A.rows, B.cols, Cdict)
 
-    def scalar_multiply(matrix, scalar):
+    def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
-        C = SparseMatrix(matrix.rows, matrix.cols, {})
-        for i in matrix._smat:
-            C._smat[i] = scalar * matrix._smat[i]
+        C = SparseMatrix(self.rows, self.cols, {})
+        for i in self._smat:
+            C._smat[i] = scalar * self._smat[i]
         return C
 
     def __mul__(self, other):
         """Multiply self and other, watching for non-matrix entities.
+
+        When multiplying be a non-sparse matrix, the result is no longer
+        sparse.
 
         Examples
         ========
@@ -4914,31 +4917,58 @@ class SparseMatrix(MatrixBase):
         """
         if isinstance(other, SparseMatrix):
             return self.multiply(other)
-        elif isinstance(other, MatrixBase):
-            return self.toMatrix() * other
-        else:
-            return self.scalar_multiply(other)
+        if isinstance(other, MatrixBase):
+            return other._new(self*self._new(other))
+        return self.scalar_multiply(other)
 
     def __rmul__(self, other):
-        return self * other
+        """Return product the same type as other (if a Matrix).
 
+        When multiplying be a non-sparse matrix, the result is no longer
+        sparse.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, SparseMatrix
+        >>> A = Matrix(2, 2, range(1, 5))
+        >>> S = SparseMatrix(2, 2, range(2, 6))
+        >>> A*S == S*A
+        False
+        >>> (isinstance(A*S, SparseMatrix) ==
+        ...  isinstance(S*A, SparseMatrix) == False)
+        True
+        """
+        if isinstance(other, MatrixBase):
+            return other * other._new(self)
+        return self.scalar_multiply(other)
 
     def __add__(self, other):
         """Add other to self, efficiently if possible.
+
+        When adding a non-sparse matrix, the result is no longer
+        sparse.
 
         Examples
         ========
 
         >>> from sympy.matrices.matrices import SparseMatrix, eye
-        >>> eye(3) + SparseMatrix(eye(3))
+        >>> A = SparseMatrix(eye(3)) + SparseMatrix(eye(3))
+        >>> B = SparseMatrix(eye(3)) + eye(3)
+        >>> A
         [2, 0, 0]
         [0, 2, 0]
         [0, 0, 2]
+        >>> A == B
+        True
+        >>> isinstance(A, SparseMatrix) and isinstance(B, SparseMatrix)
+        False
+
         """
         if isinstance(other, SparseMatrix):
             return self.add(other)
         elif isinstance(other, MatrixBase):
-            return other + self
+            return other._new(other + self)
         else:
             raise NotImplementedError("Cannot add %s to SparseMatrix" % type(other))
 
