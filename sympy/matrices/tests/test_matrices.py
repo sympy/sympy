@@ -407,7 +407,9 @@ def test_random():
     M = randMatrix(3, 3, seed=3)
     M = randMatrix(3, 4, 0, 150)
     M = randMatrix(3, symmetric=True)
-    assert M.is_symmetric() is True
+    S = M.copy()
+    S.simplify()
+    assert S == M # doesn't fail when elements are Numbers, not int
 
 def test_LUdecomp():
     testmat = Matrix([[0,2,5,3],

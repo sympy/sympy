@@ -143,7 +143,8 @@ class MatrixBase(object):
             operation = args[2]
             flat_list = []
             for i in range(rows):
-                flat_list.extend([operation(sympify(i), j) for j in range(cols)])
+                flat_list.extend([sympify(operation(sympify(i), j))
+                    for j in range(cols)])
 
         # Matrix(2, 2, [1, 2, 3, 4])
         elif len(args) == 3 and is_sequence(args[2]):
