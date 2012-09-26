@@ -122,6 +122,10 @@ class MatrixBase(object):
         [1, 1/2]
 
         """
+        # Matrix(SparseMatrix(...))
+        if len(args) == 1 and isinstance(args[0], SparseMatrix):
+            return args[0].rows, args[0].cols, flatten(args[0].tolist())
+
         # Matrix(Matrix(...))
         if len(args) == 1 and isinstance(args[0], MatrixBase):
             return args[0].rows, args[0].cols, args[0].mat
@@ -204,7 +208,7 @@ class MatrixBase(object):
         return rows, cols, mat
 
     def copy(self):
-        return type(self)(self.rows, self.cols, self.mat)
+        return self._new(self.rows, self.cols, self.mat)
 
     def _eval_transpose(self):
         return self.transpose()
@@ -385,14 +389,14 @@ class MatrixBase(object):
         [1, 2]
         [3, 5]
         """
-        return MutableMatrix(self.rows, self.cols, self.mat)
+        return MutableMatrix(self.tolist())
 
     def as_immutable(self):
         """
         Returns an Immutable version of this Matrix
         """
         from immutable_matrix import ImmutableMatrix
-        return ImmutableMatrix(self.rows, self.cols, self.mat)
+        return ImmutableMatrix(self.tolist())
 
     def __array__(self):
         return matrix2numpy(self)
@@ -642,7 +646,7 @@ class MatrixBase(object):
                     sum(L[i, k] * L[j, k] for k in range(j)))
             L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
-        return type(self)(L)
+        return self._new(L)
 
     def LDLdecomposition(self):
         """
@@ -1298,7 +1302,7 @@ class MatrixBase(object):
             for j in range(i):
                 b.row(i, lambda x, k: x - b[j, k]*A[i, j])
         # backward substitution
-        for i in range(n-1, -1, -1):
+        for i in range(n - 1, -1, -1):
             for j in range(i+1, n):
                 b.row(i, lambda x, k: x - b[j, k]*A[i, j])
             b.row(i, lambda x, k: x / A[i, i])
@@ -1664,8 +1668,8 @@ class MatrixBase(object):
         n = R.rows
         for j in range(n - 1, -1, -1):
             tmp = y[j, :]
-            for k in range(j+1, n):
-                tmp -= R[j, k] * x[n-1-k]
+            for k in range(j + 1, n):
+                tmp -= R[j, k] * x[n - 1 - k]
             x.append(tmp/R[j, j])
         return self._new([row.mat for row in reversed(x)])
 
@@ -1977,7 +1981,8 @@ class MatrixBase(object):
             r, c = r
         else:
             c = r if c is None else c
-        r, c = [int(i) for i in [r, c]]
+        r = as_int(r)
+        c = as_int(c)
         return MutableMatrix(r, c, [S.Zero]*r*c)
 
     @classmethod
@@ -2426,12 +2431,6 @@ class MatrixBase(object):
                 if i != j and self[i, j]:
                     return False
         return True
-
-    def clone(self):
-        """
-        Create a shallow copy of this matrix.
-        """
-        return self._new(self.rows, self.cols, lambda i, j: self[i, j])
 
     def det(self, method="bareis"):
         """
@@ -3140,7 +3139,7 @@ class MatrixBase(object):
 
         vech
         """
-        return self.__class__(len(self), 1, self.transpose().mat)
+        return self.T.reshape(len(self), 1)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """
@@ -3792,8 +3791,8 @@ class MutableMatrix(MatrixBase):
         col
         row_del
         """
-        for j in range(self.rows-1, -1, -1):
-            del self.mat[i+j*self.cols]
+        for j in range(self.rows - 1, -1, -1):
+            del self.mat[i + j*self.cols]
         self.cols -= 1
 
     # Utility functions
@@ -4331,8 +4330,17 @@ class SparseMatrix(MatrixBase):
 
     :class:`Matrix`
     """
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        return SparseMatrix(*args)
 
     def __init__(self, *args):
+
+        if len(args) == 1 and type(args[0]) is SparseMatrix:
+            self.rows = args[0].rows
+            self.cols = args[0].cols
+            self.smat = dict(args[0].smat)
+            return
 
         self.smat = {}
 
@@ -4360,17 +4368,17 @@ class SparseMatrix(MatrixBase):
                     self.smat[key] = args[2][key]
         else:
             # handle full matrix forms with _handle_creation_inputs
-            r, c, full = self._handle_creation_inputs(*args)
+            r, c, _list = MutableMatrix._handle_creation_inputs(*args)
             self.rows = r
             self.cols = c
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = full[self.cols*i + j]
+                    value = _list[self.cols*i + j]
                     if value:
                         self.smat[(i, j)] = value
 
     def copy(self):
-        return type(self)(self.rows, self.cols, self.smat)
+        return self._new(self.rows, self.cols, self.smat)
 
     def __getitem__(self, key):
 
@@ -4516,6 +4524,64 @@ class SparseMatrix(MatrixBase):
                 newD[i, j] = self.smat[i, j]
         self.smat = newD
         self.cols -= 1
+
+    def row_swap(self, i, j):
+        """Swap, in place, columns i and j.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix.eye(3); S[2, 1] = 2
+        >>> S.row_swap(1, 0); S
+        [0, 1, 0]
+        [1, 0, 0]
+        [0, 2, 1]
+        """
+        if i > j:
+            i, j = j, i
+        rows = self.row_list()
+        temp = []
+        for ii, jj, v in rows:
+            if ii == i:
+                self.smat.pop((ii, jj))
+                temp.append((jj, v))
+            elif ii == j:
+                self.smat.pop((ii, jj))
+                self.smat[i, jj] = v
+            elif ii > j:
+                break
+        for k, v in temp:
+            self.smat[j, k] = v
+
+    def col_swap(self, i, j):
+        """Swap, in place, columns i and j.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix.eye(3); S[2, 1] = 2
+        >>> S.col_swap(1, 0); S
+        [0, 1, 0]
+        [1, 0, 0]
+        [2, 0, 1]
+        """
+        if i > j:
+            i, j = j, i
+        rows = self.col_list()
+        temp = []
+        for ii, jj, v in rows:
+            if jj == i:
+                self.smat.pop((ii, jj))
+                temp.append((ii, v))
+            elif jj == j:
+                self.smat.pop((ii, jj))
+                self.smat[ii, i] = v
+            elif jj > j:
+                break
+        for k, v in temp:
+            self.smat[k, j] = v
 
     def toMatrix(self):
         """
@@ -4789,7 +4855,7 @@ class SparseMatrix(MatrixBase):
     def copyin_list(self, key, value):
         if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
-        self.copyin_matrix(key, SparseMatrix(value))
+        self.copyin_matrix(key, Matrix(value))
 
     def copyin_matrix(self, key, value):
         # include this here because it's not part of BaseMatrix
@@ -4804,6 +4870,14 @@ class SparseMatrix(MatrixBase):
                 for j in range(value.cols):
                     self[i + rlo, j + clo] = value[i, j]
         else:
+            if (rhi - rlo)*(chi - clo) < len(self):
+                for i in range(rlo, rhi):
+                    for j in range(clo, chi):
+                        self.smat[(i, j)] = 0
+            else:
+                for i, j, v in self.row_list():
+                    if rlo <= i < rhi and clo <= j < chi:
+                        self.smat[(i, j)] = 0
             for k, v in value.smat.iteritems():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
@@ -4812,6 +4886,28 @@ class SparseMatrix(MatrixBase):
         rlo, rhi, clo, chi = self.key2bounds(keys)
         return SparseMatrix(rhi -rlo, chi - clo,
             lambda i, j: self[i + rlo, j + clo])
+
+    def applyfunc(self, f):
+        """
+        Apply a function to each element of the matrix.
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(2, 2, lambda i, j: i*2+j)
+        >>> m
+        [0, 1]
+        [2, 3]
+        >>> m.applyfunc(lambda i: 2*i)
+        [0, 2]
+        [4, 6]
+
+        """
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = self.copy()
+        for k, v in self.smat.iteritems():
+            out.smat[k] = f(v)
+        return out
 
     def reshape(self, _rows, _cols):
         """Reshape matrix while retaining original size.
@@ -4894,10 +4990,10 @@ class SparseMatrix(MatrixBase):
         """
         if simplify:
             return all((k[1], k[0]) in self.smat and \
-                not (self[k] - self[k]).simplify() for k in self.smat)
+                not (self[k] - self[(k[1], k[0])]).simplify() for k in self.smat)
         else:
             return all((k[1], k[0]) in self.smat and \
-                self[k] == self[k] for k in self.smat)
+                self[k] == self[(k[1], k[0])] for k in self.smat)
 
     def has(self, *patterns):
         """
@@ -5158,8 +5254,9 @@ class SparseMatrix(MatrixBase):
                 rows[i].append((j, v))
         X = SparseMatrix(rhs.rows, 1, rhs.smat
             if isinstance(rhs, SparseMatrix) else rhs.mat)
-        for i in reversed(range(self.rows)):
-            for j, v in reversed(rows[i]):
+        for i in range(self.rows -1, -1, -1):
+            rows[i].reverse()
+            for j, v in rows[i]:
                 X[i, 0] -= v * X[j, 0]
             X[i, 0] /= self[i, i]
         return X
