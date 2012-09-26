@@ -13,7 +13,8 @@ class BlockMatrix(MatrixExpr):
     The submatrices are stored in a SymPy Matrix object but accessed as part of
     a Matrix Expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
+    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols,
+    ...     Identity, ZeroMatrix, block_collapse)
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
@@ -125,14 +126,14 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
-        if self.blockshape==(1,1):
+        if self.blockshape==(1, 1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
-        elif expand and self.blockshape==(2,2):
+        elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
-            A11, A12, A21, A22 = (self.blocks[0,0], self.blocks[0,1],
-                    self.blocks[1,0], self.blocks[1,1])
+            A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
+                    self.blocks[1, 0], self.blocks[1, 1])
             C1 = A11 - A12*Inverse(A22)*A21
             C2 = A22 - A21*Inverse(A11)*A12
             mat = Matrix([[Inverse(C1), Inverse(-A11)*A12*Inverse(C2)],
@@ -140,6 +141,31 @@ class BlockMatrix(MatrixExpr):
             return BlockMatrix(mat)
         else:
             raise NotImplementedError()
+
+    def inv(self, expand=False):
+        """Return transpose of matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
+        >>> from sympy.abc import l, m, n
+        >>> X = MatrixSymbol('X', n, n)
+        >>> BlockMatrix([[X]]).inv()
+        [X^-1]
+
+        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Z = MatrixSymbol('Z', n, m)
+        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+        >>> B
+        [X, Z]
+        [0, Y]
+        >>> B.inv(expand=True)
+        [X^-1, (-1)*X^-1*Z*Y^-1]
+        [   0,             Y^-1]
+
+        """
+        return self._eval_inverse(expand)
 
     def inverse(self):
         return Inverse(self)
