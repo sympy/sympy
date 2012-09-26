@@ -123,13 +123,18 @@ def test_files():
         "%(sep)smpmath%(sep)s" % sepd,
     ])
     import_exclude = set([
-        "%(sep)s__init__.py" % sepd,
+        # glob imports are allowed in top-level __init__.py:
+        "%(sep)ssympy%(sep)s__init__.py" % sepd,
+        # these __init__.py should be fixed:
+        "%(sep)smechanics%(sep)s__init__.py" % sepd,
+        "%(sep)squantum%(sep)s__init__.py" % sepd,
+        # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # Taken from Python stdlib:
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # these two should be fixed:
-        "%(sep)smpmath%(sep)s" % sepd,
-        "%(sep)splotting%(sep)s" % sepd,
+        "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        "%(sep)splotting%(sep)stextplot.py" % sepd,
     ])
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
