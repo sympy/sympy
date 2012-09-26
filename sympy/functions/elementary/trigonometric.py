@@ -1,11 +1,12 @@
 from sympy.core.add import Add
-from sympy.core.numbers import Rational
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
+from sympy.core.numbers import igcdex
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.utilities.iterables import numbered_symbols
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -94,10 +95,10 @@ def _pi_coeff(arg, cycles=1):
                     cm = c*m
                     i = int(cm)
                     if i == cm:
-                        c = Rational(i, m)
+                        c = C.Rational(i, m)
                         cx = c*x
                 else:
-                    c = Rational(int(c))
+                    c = C.Rational(int(c))
                     cx = c*x
             if x.is_integer:
                 c2 = c % 2
@@ -172,7 +173,7 @@ class sin(TrigonometricFunction):
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
-            elif arg is S.Infinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return
 
         if arg.could_extract_minus_sign():
@@ -193,44 +194,21 @@ class sin(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            cst_table_some = {
-                2 : S.One,
-                3 : S.Half*sqrt(3),
-                4 : S.Half*sqrt(2),
-                6 : S.Half,
-            }
-
-            cst_table_more = {
-                (1, 5) : sqrt((5 - sqrt(5)) / 8),
-                (2, 5) : sqrt((5 + sqrt(5)) / 8)
-            }
-
-            p = pi_coeff.p
-            q = pi_coeff.q
-
-            Q, P = p // q, p % q
-
-            try:
-                result = cst_table_some[q]
-            except KeyError:
-                if abs(P) > q // 2:
-                    P = q - P
-
-                try:
-                    result = cst_table_more[(P, q)]
-                except KeyError:
-                    if P != p:
-                        result = cls(C.Rational(P, q)*S.Pi)
-                    else:
-                        newarg = pi_coeff*S.Pi
-                        if newarg != arg:
-                            return cls(newarg)
-                        return None
-
-            if Q % 2 == 1:
-                return -result
-            else:
-                return result
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # transform a sine to a cosine, to avoid redundant code
+            if pi_coeff.is_Rational:
+                x = pi_coeff % 2
+                if x > 1:
+                    return -cls((x%1)*S.Pi)
+                if 2*x > 1:
+                    return cls((1-x)*S.Pi)
+                narg = ((pi_coeff + C.Rational(3, 2)) % 2)*S.Pi
+                result = cos(narg)
+                if not isinstance(result, cos):
+                    return result
+                if pi_coeff*S.Pi != arg:
+                    return cls(pi_coeff*S.Pi)
+                return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -296,6 +274,12 @@ class sin(TrigonometricFunction):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
 
+    def _eval_rewrite_as_pow(self, arg):
+        return self.rewrite(cos).rewrite(pow)
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        return self.rewrite(cos).rewrite(sqrt)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -335,6 +319,10 @@ class sin(TrigonometricFunction):
                 else:
                     return expand_mul((-1)**(n/2 - 1)*cos(x)*C.chebyshevu(n -
                         1, sin(x)), deep=False)
+            pi_coeff = _pi_coeff(arg)
+            if pi_coeff is not None:
+                if pi_coeff.is_Rational:
+                    return self.rewrite(sqrt)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -415,7 +403,15 @@ class cos(TrigonometricFunction):
                 return S.NaN
             elif arg is S.Zero:
                 return S.One
-            elif arg is S.Infinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                # In this cases, it is unclear if we should
+                # return S.NaN or leave un-evaluated.  One
+                # useful test case is how "limit(sin(x)/x,x,oo)"
+                # is handled.
+                # See test_sin_cos_with_infinity() an
+                # Test for issue 209
+                # http://code.google.com/p/sympy/issues/detail?id=2097
+                # For now, we return un-evaluated.
                 return
 
         if arg.could_extract_minus_sign():
@@ -427,53 +423,54 @@ class cos(TrigonometricFunction):
 
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return (S.NegativeOne)**pi_coeff
             if not pi_coeff.is_Rational:
-                if pi_coeff.is_integer:
-                    return (S.NegativeOne)**pi_coeff
                 narg = pi_coeff*S.Pi
                 if narg != arg:
                     return cls(narg)
                 return None
 
+            # cosine formula #####################
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # explicit calculations are preformed for
+            # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
+            # Some other exact values like cos(k pi/15) can be
+            # calculated using a partial-fraction decomposition
+            # by calling cos( X ).rewrite(sqrt)
             cst_table_some = {
-                1 : S.One,
-                2 : S.Zero,
                 3 : S.Half,
-                4 : S.Half*sqrt(2),
-                6 : S.Half*sqrt(3),
+                5 : (sqrt(5) + 1)/4,
             }
+            if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % (2*q)
+                if p > q:
+                    narg = (pi_coeff - 1)*S.Pi
+                    return -cls(narg)
+                if 2*p > q:
+                    narg = (1 - pi_coeff)*S.Pi
+                    return -cls(narg)
 
-            cst_table_more = {
-                (1, 5) : (sqrt(5) + 1)/4,
-                (2, 5) : (sqrt(5) - 1)/4
-            }
+                # If nested sqrt's are worse than un-evaluation
+                # you can require q in (1, 2, 3, 4, 6)
+                # q <= 12 returns expressions with 2 or fewer nestings.
+                if q > 12:
+                    return None
 
-            p = pi_coeff.p
-            q = pi_coeff.q
+                if q in cst_table_some:
+                    cts = cst_table_some[pi_coeff.q]
+                    return C.chebyshevt(pi_coeff.p, cts).expand()
 
-            Q, P = 2*p // q, p % q
-
-            try:
-                result = cst_table_some[q]
-            except KeyError:
-                if abs(P) > q // 2:
-                    P = q - P
-
-                try:
-                    result = cst_table_more[(P, q)]
-                except KeyError:
-                    if P != p:
-                        result = cls(C.Rational(P, q)*S.Pi)
-                    else:
-                        newarg = pi_coeff*S.Pi
-                        if newarg != arg:
-                            return cls(newarg)
+                if 0 == q % 2:
+                    narg = (pi_coeff*2)*S.Pi
+                    nval = cls(narg)
+                    if None == nval:
                         return None
-
-            if Q % 4 in (1, 2):
-                return -result
-            else:
-                return result
+                    x = (2*pi_coeff + 1)/2
+                    sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+                    return sign_cos*sqrt( (1 + nval)/2 )
+            return None
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
@@ -539,6 +536,107 @@ class cos(TrigonometricFunction):
         cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
 
+    def _eval_rewrite_as_pow(self, arg):
+         return self._eval_rewrite_as_sqrt(arg)
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        _EXPAND_INTS = False
+        def migcdex(x):
+            # recursive calcuation of gcd and linear combination
+            # for a sequence of integers.
+            # Given  (x1, x2, x3)
+            # Returns (y1, y1, y3, g)
+            # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
+            # Note, that this is only one such linear combination.
+            if len(x) == 1:
+                return (1, x[0])
+            if len(x) == 2:
+                return igcdex(x[0], x[-1])
+            g = migcdex(x[1:])
+            u, v, h = igcdex(x[0], g[-1])
+            return tuple([u] + [v*i for i in g[0:-1] ] + [h])
+        def ipartfrac(r, factors = None):
+            if isinstance(r, int):
+                return r
+            assert isinstance(r, C.Rational)
+            n = r.q
+            if 2 > r.q*r.q:
+                return r.q
+
+            if None == factors:
+                a = [n/x**y for x, y in factorint(r.q).iteritems()]
+            else:
+                a = [n/x for x in factors]
+            if len(a) == 1:
+                return [ r ]
+            h = migcdex(a)
+            ans = [ r.p*C.Rational(i*j, r.q) for i, j in zip(h[:-1], a) ]
+            assert r == sum(ans)
+            return ans
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is None:
+            return None
+
+        assert not pi_coeff.is_integer, "should have been simplified already"
+
+        if not pi_coeff.is_Rational:
+            return None
+
+        cst_table_some = {
+            3 : S.Half,
+            5 : (sqrt(5) + 1)/4,
+            17 : sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) + \
+                sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17)) \
+                *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32)
+            # 65537 and 257 are the only other known Fermat primes
+            # Please add if you would like them
+        }
+        def fermatCoords(n):
+            assert isinstance(n, int)
+            assert n > 0
+            if n == 1 or 0 == n % 2:
+                return False
+            primes = dict( [(p, 0) for p in cst_table_some ] )
+            assert 1 not in primes
+            for p_i in primes:
+                while 0 == n % p_i:
+                    n = n/p_i;
+                    primes[p_i] += 1;
+            if 1 != n:
+                return False
+            if max(primes.values()) > 1:
+                return False
+            return tuple([ p for p in primes if primes[p] == 1])
+
+        if pi_coeff.q in cst_table_some:
+            return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]).expand()
+
+        if 0 == pi_coeff.q % 2: # recursively remove powers of 2
+            narg = (pi_coeff*2)*S.Pi
+            nval = cos(narg)
+            if None == nval:
+                return None
+            nval = nval.rewrite(sqrt)
+            if not _EXPAND_INTS:
+                if (isinstance(nval, cos) or isinstance(-nval, cos)):
+                    return None
+            x = (2*pi_coeff+1)/2
+            sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+            return sign_cos*sqrt( (1+nval)/2 )
+
+        FC = fermatCoords(pi_coeff.q)
+        if FC:
+            decomp = ipartfrac(pi_coeff, FC)
+            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
+            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
+            return pcls.rewrite(sqrt)
+        if _EXPAND_INTS:
+            decomp = ipartfrac(pi_coeff)
+            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
+            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
+            return pcls
+        return None
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -569,6 +667,10 @@ class cos(TrigonometricFunction):
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return C.chebyshevt(coeff, cos(terms))
+            pi_coeff = _pi_coeff(arg)
+            if pi_coeff is not None:
+                if pi_coeff.is_Rational:
+                    return self.rewrite(sqrt)
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
@@ -698,8 +800,8 @@ class tan(TrigonometricFunction):
                 if pi_coeff.p > pi_coeff.q:
                     p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
                     if 2 * p > q:
-                        return -cls(Rational(q - p, q)*S.Pi)
-                    return cls(Rational(p, q)*S.Pi)
+                        return -cls(C.Rational(q - p, q)*S.Pi)
+                    return cls(C.Rational(p, q)*S.Pi)
                 else:
                     newarg = pi_coeff*S.Pi
                     if newarg != arg:
@@ -882,8 +984,8 @@ class cot(TrigonometricFunction):
                 if pi_coeff.p > pi_coeff.q:
                     p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
                     if 2 * p > q:
-                        return -cls(Rational(q - p, q)*S.Pi)
-                    return cls(Rational(p, q)*S.Pi)
+                        return -cls(C.Rational(q - p, q)*S.Pi)
+                    return cls(C.Rational(p, q)*S.Pi)
                 else:
                     newarg = pi_coeff*S.Pi
                     if newarg != arg:
