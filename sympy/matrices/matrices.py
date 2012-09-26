@@ -4595,15 +4595,83 @@ class SparseMatrix(MatrixBase):
         for k, v in temp:
             self._smat[k, j] = v
 
-    def toMatrix(self):
+    def row_join(self, other):
         """
-        Convert this sparse matrix into a matrix.
+        Returns B appended after A (column-wise augmenting)::
+        
+            [A B]
+
+        Examples
+        ========
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.row_join(B)
+        [1, 0, 1, 1, 0, 0]
+        [0, 1, 0, 0, 1, 0]
+        [1, 1, 0, 0, 0, 1]
         """
-        return Matrix(self.tolist())
+        A, B = self, other
+        if not A.rows == B.rows:
+            raise ShapeError()
+        A = A.copy()
+        B = SparseMatrix(B)
+        for (i, j), v in B._smat.iteritems():
+            A._smat[i, j + A.cols] = v
+        A.cols += B.cols
+        return A
+
+    def col_join(self, other):
+        """
+        Returns B augmented beneath A (row-wise joining)::
+
+            [A]
+            [B]
+
+        Examples
+        ========
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.col_join(B)
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        """
+        A, B = self, other
+        if not A.cols == B.cols:
+            raise ShapeError()
+        A = A.copy()
+        B = SparseMatrix(B)
+        for (i, j), v in B._smat.iteritems():
+            A._smat[i + A.rows, j] = v
+        A.rows += B.rows
+        return A
 
     def tolist(self):
         """
-        Convert this sparse matrix a list of nested Python lists.
+        Convert this sparse matrix into a list of nested Python lists.
 
         Examples
         ========
@@ -4804,7 +4872,7 @@ class SparseMatrix(MatrixBase):
         if isinstance(other, SparseMatrix):
             return self.add(other)
         elif isinstance(other, MatrixBase):
-            return other + self.toMatrix()
+            return other + self
         else:
             raise NotImplementedError("Cannot add %s to SparseMatrix" % type(other))
 
@@ -5024,67 +5092,6 @@ class SparseMatrix(MatrixBase):
         True
         """
         return any(self[key].has(*patterns) for key in self._smat)
-
-    def row_join(self, other):
-        """
-        Returns [A B], i.e. A with B augmented row-wise.
-
-        >>> from sympy import SparseMatrix
-        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
-        >>> A
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
-        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
-        >>> B
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
-        >>> A.row_join(B)
-        [1, 0, 1, 1, 0, 0]
-        [0, 1, 0, 0, 1, 0]
-        [1, 1, 0, 0, 0, 1]
-        """
-        A, B = self, other
-        if not A.rows == B.rows:
-            raise ShapeError()
-        A = A.copy()
-        for i, j in B._smat:
-            A._smat[i, j + A.cols] = B._smat[i, j]
-        A.cols += B.cols
-        return A
-
-    def col_join(self, other):
-        """
-        Returns [A B], i.e. A with B augmented row-wise.
-
-        >>> from sympy import SparseMatrix
-        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
-        >>> A
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
-        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
-        >>> B
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
-        >>> A.col_join(B)
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
-        """
-        A, B = self, other
-        if not A.cols == B.cols:
-            raise ShapeError()
-        A = A.copy()
-        for i, j in B._smat:
-            A._smat[i + A.rows, j] = B._smat[i, j]
-        A.rows += B.rows
-        return A
 
     def liupc(self):
         """

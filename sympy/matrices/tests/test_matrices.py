@@ -863,7 +863,6 @@ def test_sparse_matrix():
     assert a == SparseMatrix(0, 2, [])
     b.col_del(1)
     assert b == SparseMatrix(1, 1, [1])
-    assert c.toMatrix() == Matrix(1, 2, [1, 2])
 
     # test_determinant
     x, y = Symbol('x'), Symbol('y')

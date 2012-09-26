@@ -466,7 +466,8 @@ class StrPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_SparseMatrix(self, expr):
-        return self._print(expr.toMatrix())
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):
