@@ -721,7 +721,6 @@ def test_eigen():
     sevals = list(sorted(evals.keys()))
     assert all(abs(nevals[i] - sevals[i]) < 1e-9 for i in range(len(nevals)))
 
-@XFAIL
 def test_sparse_matrix():
     def eye(n):
         tmp = SparseMatrix(n,n,lambda i,j:0)
@@ -752,7 +751,7 @@ def test_sparse_matrix():
         (2, 0),
         (5, 0)
     ))
-    assert a.mat == {(0, 0): 2, (1, 0): 5}
+    assert a.smat == {(0, 0): 2, (1, 0): 5}
 
     # test_multiplication
     a=SparseMatrix((
@@ -793,13 +792,13 @@ def test_sparse_matrix():
     #test_power
     A = SparseMatrix([[2,3],[4,5]])
     assert (A**5)[:] == [6140, 8097, 10796, 14237]
-    A = SparseMatrix([[2, 1, 3],[4,2, 4], [6,12, 1]])
+    A = SparseMatrix([[2, 1, 3], [4, 2, 4], [6, 12, 1]])
     assert (A**3)[:] == [290, 262, 251, 448, 440, 368, 702, 954, 433]
 
 
     # test_creation
     x = Symbol("x")
-    a = SparseMatrix([x, 0], [0, 0])
+    a = SparseMatrix([[x, 0], [0, 0]])
     m = a
     assert m.cols == m.rows
     assert m.cols == 2
@@ -813,11 +812,13 @@ def test_sparse_matrix():
     assert a == b
 
     a = SparseMatrix(1, 2, [1, 2])
-    b = a
-    c = a
+    b = a.copy()
+    c = a.copy()
     assert a[0] == 1
-    assert a.row_del(0) == SparseMatrix(0, 2, [])
-    assert b.col_del(1) == SparseMatrix(1, 1, [1])
+    a.row_del(0)
+    assert a == SparseMatrix(0, 2, [])
+    b.col_del(1)
+    assert b == SparseMatrix(1, 1, [1])
     assert c.toMatrix() == Matrix(1, 2, [1, 2])
 
     # test_determinant
@@ -880,26 +881,26 @@ def test_sparse_matrix():
     assert m1[0,:] == SparseMatrix(1,3,(0,1,2))
     assert m1[1:3, 1] == SparseMatrix(2,1,(2,3))
 
-    m2 = SparseMatrix([0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15])
-    assert m2[:,-1] == SparseMatrix(4,1,[3,7,11,15])
-    assert m2[-2:,:] == SparseMatrix([[8,9,10,11],[12,13,14,15]])
+    m2 = SparseMatrix([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]])
+    assert m2[:, -1] == SparseMatrix(4,1,[3,7,11,15])
+    assert m2[-2:, :] == SparseMatrix([[8,9,10,11],[12,13,14,15]])
 
     assert SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1]) == Matrix([[4]])
 
     # test_submatrix_assignment
     m = zeros(4)
     m[2:4, 2:4] = eye(2)
-    assert m == SparseMatrix((0,0,0,0),
+    assert m == SparseMatrix([(0,0,0,0),
                         (0,0,0,0),
                         (0,0,1,0),
-                        (0,0,0,1))
+                        (0,0,0,1)])
     m[:2, :2] = eye(2)
     assert m == eye(4)
     m[:,0] = SparseMatrix(4,1,(1,2,3,4))
-    assert m == SparseMatrix((1,0,0,0),
+    assert m == SparseMatrix([(1,0,0,0),
                         (2,1,0,0),
                         (3,0,1,0),
-                        (4,0,0,1))
+                        (4,0,0,1)])
     m[:,:] = zeros(4)
     assert m == zeros(4)
     m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
@@ -917,8 +918,8 @@ def test_sparse_matrix():
     m0 = eye(3)
     assert m0.reshape(1,9) == SparseMatrix(1,9,(1,0,0,0,1,0,0,0,1))
     m1 = SparseMatrix(3,4, lambda i,j: i+j)
-    assert m1.reshape(4,3) == SparseMatrix((0,1,2), (3,1,2), (3,4,2), (3,4,5))
-    assert m1.reshape(2,6) == SparseMatrix((0,1,2,3,1,2), (3,4,2,3,4,5))
+    assert m1.reshape(4,3) == SparseMatrix([(0,1,2), (3,1,2), (3,4,2), (3,4,5)])
+    assert m1.reshape(2,6) == SparseMatrix([(0,1,2,3,1,2), (3,4,2,3,4,5)])
 
     # test_applyfunc
     m0 = eye(3)
@@ -970,21 +971,30 @@ def test_sparse_matrix():
     # test_inverse
     A = eye(4)
     assert A.inv() == eye(4)
-    assert A.inv("LU") == eye(4)
-    assert A.inv("ADJ") == eye(4)
+    assert A.inv("CH") == eye(4)
+    assert A.inv("LDL") == eye(4)
+
     A = SparseMatrix([[2,3,5],
-                [3,6,2],
-                [8,3,6]])
-    Ainv = A.inv()
+                      [3,6,2],
+                      [7,2,6]])
+    Ainv = SparseMatrix(Matrix(A).inv())
     assert A*Ainv == eye(3)
-    assert A.inv("LU") == Ainv
-    assert A.inv("ADJ") == Ainv
+    assert A.inv("CH") == Ainv
+    assert A.inv("LDL") == Ainv
+
+    A = SparseMatrix([[2,3,5],
+                      [3,6,2],
+                      [5,2,6]])
+    Ainv = SparseMatrix(Matrix(A).inv())
+    assert A*Ainv == eye(3)
+    assert A.inv("CH") == Ainv
+    assert A.inv("LDL") == Ainv
 
     # test_cross
     v1 = Matrix(1,3,[1,2,3])
     v2 = Matrix(1,3,[3,4,5])
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
-    assert v1.norm(v1) == 14
+    assert v1.norm(2)**2 == 14
 
     # test_cofactor
     assert eye(3) == eye(3).cofactorMatrix()
@@ -1018,20 +1028,21 @@ def test_sparse_matrix():
     assert Q*S == A
     assert Q.T * Q == eye(2)
 
+    R = Rational
     # test nullspace
     # first test reduced row-ech form
-    R = Rational
 
-    M = Matrix([[5,7,2,1],
+    M = SparseMatrix([[5,7,2,1],
                [1,6,2,-1]])
     out, tmp = M.rref()
     assert out == Matrix([[1,0,-R(2)/23,R(13)/23],
-                              [0,1,R(8)/23, R(-6)/23]])
+                          [0,1,R(8)/23, R(-6)/23]])
 
-    M = Matrix([[1,3,0,2,6,3,1],
+    M = SparseMatrix([[1,3,0,2,6,3,1],
                 [-2,-6,0,-2,-8,3,1],
                 [3,9,0,0,6,6,2],
                 [-1,-3,0,1,0,9,3]])
+
     out, tmp = M.rref()
     assert out == Matrix([[1,3,0,0,2,0,0],
                                [0,0,0,1,2,0,0],
@@ -1039,40 +1050,40 @@ def test_sparse_matrix():
                                [0,0,0,0,0,0,0]])
     # now check the vectors
     basis = M.nullspace()
-    assert basis[0] == Matrix([[-3,1,0,0,0,0,0]])
-    assert basis[1] == Matrix([[0,0,1,0,0,0,0]])
-    assert basis[2] == Matrix([[-2,0,0,-2,1,0,0]])
-    assert basis[3] == Matrix([[0,0,0,0,0,R(-1)/3, 1]])
+    assert basis[0] == Matrix([-3,1,0,0,0,0,0])
+    assert basis[1] == Matrix([0,0,1,0,0,0,0])
+    assert basis[2] == Matrix([-2,0,0,-2,1,0,0])
+    assert basis[3] == Matrix([0,0,0,0,0,R(-1)/3, 1])
 
 
     # test eigen
     x = Symbol('x')
     y = Symbol('y')
     eye3 = eye(3)
-    assert eye3.charpoly(x) == (1-x)**3
-    assert eye3.charpoly(y) == (1-y)**3
+    assert eye3.charpoly(x) == PurePoly(((x - 1)**3))
+    assert eye3.charpoly(y) == PurePoly(((y - 1)**3))
+
     # test values
     M = Matrix([(0,1,-1),
                 (1,1,0),
                 (-1,0,1) ])
     vals = M.eigenvals()
-    vals.sort()
-    assert vals == [-1, 1, 2]
+    assert sorted(vals.keys()) == [-1, 1, 2]
 
     R = Rational
     M = Matrix([[1,0,0],
                  [0,1,0],
                  [0,0,1]])
-    assert M.eigenvects() == [[1, 3, [
-        Matrix(1,3,[1,0,0]),
-        Matrix(1,3,[0,1,0]),
-        Matrix(1,3,[0,0,1])]]]
+    assert M.eigenvects() == [(1, 3, [
+        Matrix([1,0,0]),
+        Matrix([0,1,0]),
+        Matrix([0,0,1])])]
     M = Matrix([[5,0,2],
                  [3,2,0],
                  [0,0,1]])
-    assert M.eigenvects() == [[1, 1, [Matrix(1,3,[R(-1)/2,R(3)/2,1])]],
-                              [2, 1, [Matrix(1,3,[0,1,0])]],
-                              [5, 1, [Matrix(1,3,[1,1,0])]]]
+    assert M.eigenvects() == [(1, 1, [Matrix([R(-1)/2,R(3)/2,1])]),
+                              (2, 1, [Matrix([0,1,0])]),
+                              (5, 1, [Matrix([1,1,0])])]
 
     assert M.zeros(3, 5) == SparseMatrix(3, 5, {})
 
@@ -2340,4 +2351,16 @@ def test_sparse_solve():
     assert L * D * L.T == A
 
     A = SparseMatrix(((3,0,2),(0,0,1),(1,2,0)))
-    assert A.inv() * A == eye(3)
+    assert A.inv() * A == SparseMatrix(eye(3))
+
+    A = SparseMatrix([
+    [ 2, -1,  0],
+    [-1,  2, -1],
+    [ 0,  0,  2]])
+    ans = SparseMatrix([
+    [S(2)/3, S(1)/3, S(1)/6],
+    [S(1)/3, S(2)/3, S(1)/3],
+    [  0,   0, S(1)/2]])
+    assert A.inv('CH') == ans
+    assert A.inv('LDL') == ans
+    assert A * ans == SparseMatrix(eye(3))
