@@ -857,6 +857,72 @@ class MatrixBase(object):
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
 
+    def solve_least_squares(self, rhs, method='CH'):
+        """Return the least-square fit to the data.
+
+        By default the cholesky_solve routine is used (method='CH'); other
+        methods of matrix inversion can be used. To find out which are
+        available, see the docstring of the .inv() method.
+
+        >>> from sympy.matrices import Matrix, Matrix, ones
+        >>> A = Matrix([1, 2, 3])
+        >>> B = Matrix([2, 3, 4])
+        >>> S = Matrix(A.row_join(B))
+        >>> S
+        [1, 2]
+        [2, 3]
+        [3, 4]
+
+        If each line of S represent coefficients of Ax + By
+        and x and y are [2, 3] then S*xy is:
+
+        >>> r = S*Matrix([2, 3]); r
+        [ 8]
+        [13]
+        [18]
+
+        But let's add 1 to the middle value and then solve for the
+        least-squares value of xy:
+
+        >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
+        [ 5/3]
+        [10/3]
+
+        The error is given by S*xy - r:
+
+        >>> S*xy - r
+        [1/3]
+        [1/3]
+        [1/3]
+        >>> _.norm().n(2)
+        0.58
+
+        If a different xy is used, the norm will be higher:
+
+        >>> xy += ones(2, 1)/10
+        >>> (S*xy - r).norm().n(2)
+        1.5
+
+        """
+        if method == 'CH':
+            return self.cholesky_solve(rhs)
+        t = self.T
+        return (t*self).inv(method=method)*t*rhs
+
+    def solve(self, rhs, method='GE'):
+        """Return solution to self*soln = rhs using given inversion method.
+
+        For a list of possible inversion methods, see the .inv() docstring.
+        """
+        if not self.is_square:
+            if self.rows < self.cols:
+                raise ValueError('Under-determined system.')
+            elif self.rows > self.cols:
+                raise ValueError('For over-determined system, M, having '
+                    'more rows than columns, try M.solve_least_squares(rhs).')
+        else:
+            return self.inv(method=method)*rhs
+
     def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
         """
         Calculates the matrix inverse.
@@ -4598,7 +4664,7 @@ class SparseMatrix(MatrixBase):
     def row_join(self, other):
         """
         Returns B appended after A (column-wise augmenting)::
-        
+
             [A B]
 
         Examples
@@ -5286,33 +5352,82 @@ class SparseMatrix(MatrixBase):
         return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0]/self[i, i])
 
     def _cholesky_solve(self, rhs):
+        # for speed reasons, this is not uncommented, but if you are
+        # having difficulties, try uncommenting to make sure that the
+        # input matrix is symmetric
+
+        #assert self.is_symmetric()
         L = self._cholesky_sparse()
         Y = L._lower_triangular_solve(rhs)
         rv = L.T._upper_triangular_solve(Y)
         return rv
 
     def _LDL_solve(self, rhs):
+        # for speed reasons, this is not uncommented, but if you are
+        # having difficulties, try uncommenting to make sure that the
+        # input matrix is symmetric
+
+        #assert self.is_symmetric()
         L, D = self._LDL_sparse()
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)
         return L.T._upper_triangular_solve(Y)
 
     def solve_least_squares(self, rhs, method='LDL'):
-        return (self.T * self).solve(self.T * rhs, method=method)
+        """Return the least-square fit to the data.
+
+        >>> from sympy.matrices import SparseMatrix, Matrix, ones
+        >>> A = Matrix([1, 2, 3])
+        >>> B = Matrix([2, 3, 4])
+        >>> S = SparseMatrix(A.row_join(B))
+        >>> S
+        [1, 2]
+        [2, 3]
+        [3, 4]
+
+        If each line of S represent coefficients of Ax + By
+        and x and y are [2, 3] then S*xy is:
+
+        >>> r = S*Matrix([2, 3]); r
+        [ 8]
+        [13]
+        [18]
+
+        But let's add 1 to the middle value and then solve for the
+        least-squares value of xy:
+
+        >>> xy = S.solve_least_squares(SparseMatrix([8, 14, 18])); xy
+        [ 5/3]
+        [10/3]
+
+        The error is given by S*xy - r:
+
+        >>> S*xy - r
+        [1/3]
+        [1/3]
+        [1/3]
+        >>> _.norm().n(2)
+        0.58
+
+        If a different xy is used, the norm will be higher:
+
+        >>> xy += ones(2, 1)/10
+        >>> (S*xy - r).norm().n(2)
+        1.5
+
+        """
+        t = self.T
+        return (t*self).inv(method=method)*t*rhs
 
     def solve(self, rhs, method='LDL'):
         if not self.is_square:
             if self.rows < self.cols:
                 raise ValueError('Under-determined system.')
             elif self.rows > self.cols:
-                raise ValueError('Over-determined system. Use .solve_least_squares function')
+                raise ValueError('For over-determined system, M, having '
+                    'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            if method == 'LDL':
-                return self._LDL_solve(rhs)
-            elif method == 'CH':
-                return self._cholesky_solve(rhs)
-            else:
-                raise ValueError('method can be LDL or CH, not %s' % method)
+            return self.inv(method=method)*rhs
 
     def cholesky(self):
         """
@@ -5334,10 +5449,12 @@ class SparseMatrix(MatrixBase):
 
         from sympy.core.numbers import nan, oo
         if not self.is_symmetric():
-            raise ValueError('Cholesky decomposition applies only to symmetric matrices.')
+            raise ValueError('Cholesky decomposition applies only to '
+                'symmetric matrices.')
         C = self._cholesky_sparse()
         if C.has(nan) or C.has(oo):
-            raise ValueError('Cholesky decomposition applies only to positive-definite matrices')
+            raise ValueError('Cholesky decomposition applies only to '
+                'positive-definite matrices')
         return C
 
     def LDLdecomposition(self):
@@ -5366,11 +5483,77 @@ class SparseMatrix(MatrixBase):
         """
         from sympy.core.numbers import nan, oo
         if not self.is_symmetric():
-            raise ValueError('LDL decomposition applies only to symmetric matrices.')
+            raise ValueError('LDL decomposition applies only to '
+                'symmetric matrices.')
         L, D = self._LDL_sparse()
         if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
-            raise ValueError('LDL decomposition applies only to positive-definite matrices')
+            raise ValueError('LDL decomposition applies only to '
+                'positive-definite matrices')
         return L, D
+
+    def solve_least_squares(self, rhs, method='LDL'):
+        """Return the least-square fit to the data.
+
+        By default the cholesky_solve routine is used (method='CH'); other
+        methods of matrix inversion can be used. To find out which are
+        available, see the docstring of the .inv() method.
+
+        >>> from sympy.matrices import SparseMatrix, Matrix, ones
+        >>> A = Matrix([1, 2, 3])
+        >>> B = Matrix([2, 3, 4])
+        >>> S = SparseMatrix(A.row_join(B))
+        >>> S
+        [1, 2]
+        [2, 3]
+        [3, 4]
+
+        If each line of S represent coefficients of Ax + By
+        and x and y are [2, 3] then S*xy is:
+
+        >>> r = S*Matrix([2, 3]); r
+        [ 8]
+        [13]
+        [18]
+
+        But let's add 1 to the middle value and then solve for the
+        least-squares value of xy:
+
+        >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
+        [ 5/3]
+        [10/3]
+
+        The error is given by S*xy - r:
+
+        >>> S*xy - r
+        [1/3]
+        [1/3]
+        [1/3]
+        >>> _.norm().n(2)
+        0.58
+
+        If a different xy is used, the norm will be higher:
+
+        >>> xy += ones(2, 1)/10
+        >>> (S*xy - r).norm().n(2)
+        1.5
+
+        """
+        t = self.T
+        return (t*self).inv(method=method)*t*rhs
+
+    def solve(self, rhs, method='LDL'):
+        """Return solution to self*soln = rhs using given inversion method.
+
+        For a list of possible inversion methods, see the .inv() docstring.
+        """
+        if not self.is_square:
+            if self.rows < self.cols:
+                raise ValueError('Under-determined system.')
+            elif self.rows > self.cols:
+                raise ValueError('For over-determined system, M, having '
+                    'more rows than columns, try M.solve_least_squares(rhs).')
+        else:
+            return self.inv(method=method)*rhs
 
     def inv(self, method="LDL"):
         """
@@ -5409,7 +5592,7 @@ class SparseMatrix(MatrixBase):
         elif method == "CH":
             solve = self._cholesky_solve
         else:
-            raise NotImplementedError()
+            raise NotImplementedError('Method may be "CH" or "LDL", not %s.' % method)
         rv = vecs2matrix([solve(I[:, i]) for i in range(I.cols)])
         if not sym:
             scale = (r1*rv[:, 0])[0, 0]
