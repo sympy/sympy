@@ -1318,3 +1318,37 @@ def test_issue_2671():
 def test_issue_2013_2331():
     assert homogeneous_order(-log(x) + acosh(x), x) is None
     assert homogeneous_order(y - log(x), x, y) is None
+
+def test_nth_order_linear_euler_eq_homogeneous():
+    our_hint = "nth_linear_euler_eq_homogeneous"
+    x = Symbol('x')
+    print
+
+    eq= Eq( -3*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
+    sol = dsolve(eq, f(x), hint=our_hint);
+    assert our_hint in classify_ode(eq)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq= Eq(3*f(x) - 5*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
+    sol = dsolve(eq, f(x), hint=our_hint);
+    assert our_hint in classify_ode(eq)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    assert sol.rhs == C1*sqrt(x) + C2*x**3
+
+    eq= Eq(4*f(x) + 5*diff(f(x),x)*x + x**2*diff(f(x),x,x),0)
+    sol = dsolve(eq, f(x), hint=our_hint);
+    assert our_hint in classify_ode(eq)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    assert sol.rhs == (C1 + C2*log(x))/x**2
+
+    eq= Eq(6*f(x) - 6*diff(f(x),x)*x + 1*x**2*diff(f(x),x,x)+x**3*diff(f(x),x,x,x),0)
+    sol = dsolve(eq, f(x), hint=our_hint);
+    assert our_hint in classify_ode(eq)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    assert sol.rhs == C1/x**2 + C2*x + C3*x**3
+
+    eq= Eq(-125*f(x) + 61*diff(f(x),x)*x -12*x**2*diff(f(x),x,x)+x**3*diff(f(x),x,x,x),0)
+    sol = dsolve(eq, f(x), hint=our_hint);
+    assert our_hint in classify_ode(eq)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    assert sol.rhs == x**5*(C1 + C2*log(x) + C3*log(x)**2)

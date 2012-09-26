@@ -239,6 +239,7 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
+"nth_linear_euler_eq_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
 "nth_linear_constant_coeff_variation_of_parameters",
 "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
@@ -891,6 +892,24 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
+        # Euler equation case (a_i * x**i for all i)
+        def is_monomial_of_degree(coeff,i):
+            assert i >= 0
+            if i == 0:
+                return coeff.is_Number
+            if coeff.is_Pow:
+                return (coeff.base, coeff.exp) == (x, i)
+            if coeff.is_Mul:
+                if coeff.has(f(x)):
+                    return False
+                for j in coeff.args:
+                    if not j.is_Number and j!=x**i:
+                        return False
+                return True
+            return False
+        if r and not any( not is_monomial_of_degree(r[i],i) for i in r if i >= 0):
+            if not r[-1]:
+                matching_hints["nth_linear_euler_eq_homogeneous"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -2462,6 +2481,70 @@ def _nth_linear_match(eq, func, order):
             else:
                 terms[len(f.args[1:])] += c
     return terms
+
+def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
+    x = func.args[0]
+    f = func.func
+    r = match
+
+    # A generator of constants
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # First, set up characteristic equation.
+    chareq, symbol = S.Zero, Dummy('x')
+
+    for i in r.keys():
+        if type(i) == str or i < 0:
+            pass
+        else:
+            chareq += (r[i]*diff(x**symbol,x,i)*x**-symbol).expand()
+
+    chareq = Poly(chareq, symbol)
+    chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
+
+    # Create a dict root: multiplicity or charroots
+    charroots = defaultdict(int)
+    for root in chareqroots:
+        charroots[root] += 1
+    gsol = S(0)
+    # We need keep track of terms so we can run collect() at the end.
+    # This is necessary for constantsimp to work properly.
+    global collectterms
+    collectterms = []
+    ln = log
+    for root, multiplicity in charroots.items():
+        for i in range(multiplicity):
+            if isinstance(root, RootOf):
+                gsol += (x**root)*constants.next()
+                assert multiplicity == 1
+                collectterms = [(0, root, 0)] + collectterms
+            else:
+                reroot = re(root)
+                imroot = im(root)
+                gsol += ln(x)**i*(x**reroot)*(constants.next()*sin(abs(imroot)*ln(x)) \
+                + constants.next()*cos(imroot*ln(x)))
+                # This ordering is important
+                collectterms = [(i, reroot, imroot)] + collectterms
+    if returns == 'sol':
+        return Eq(f(x), gsol)
+    elif returns in ('list' 'both'):
+        # Create a list of (hopefully) linearly independent solutions
+        gensols = []
+        # Keep track of when to use sin or cos for nonzero imroot
+        for i, reroot, imroot in collectterms:
+            if imroot == 0:
+                gensols.append(ln(x)**i*x**reroot)
+            else:
+                if ln(x)**i*x**reroot*sin(abs(imroot)*ln(x)) in gensols:
+                    gensols.append(ln(x)**i*x**reroot*cos(imroot*ln(x)))
+                else:
+                    gensols.append(ln(x)**i*x**reroot*sin(abs(imroot)*ln(x)))
+        if returns == 'list':
+            return gensols
+        else:
+            return {'sol':Eq(f(x), gsol), 'list':gensols}
+    else:
+        raise ValueError('Unknown value for key "returns".')
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
