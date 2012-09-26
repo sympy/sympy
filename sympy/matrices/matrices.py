@@ -1038,7 +1038,7 @@ class MatrixBase(object):
 
     def row_insert(self, pos, mti):
         """
-        Insert a row at the given position.
+        Insert one or more rows at the given row position.
 
         >>> from sympy import Matrix, zeros, ones
         >>> M = zeros(3)
@@ -1076,7 +1076,7 @@ class MatrixBase(object):
 
     def col_insert(self, pos, mti):
         """
-        Insert a column at the given position.
+        Insert one or more columns at the given column position.
 
         >>> from sympy import Matrix, zeros, ones
         >>> M = zeros(3)
@@ -4670,7 +4670,7 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy import SparseMatrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
         >>> A
         [1, 0, 1]
@@ -4681,18 +4681,33 @@ class SparseMatrix(MatrixBase):
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
-        >>> A.row_join(B)
+        >>> C = A.row_join(B); C
         [1, 0, 1, 1, 0, 0]
         [0, 1, 0, 0, 1, 0]
         [1, 1, 0, 0, 0, 1]
+        >>> C == A.row_join(Matrix(B))
+        True
+
+        Joining at row ends is the same as appending columns at the end
+        of the matrix:
+
+        >>> C == A.col_insert(A.cols, B)
+        True
         """
         A, B = self, other
         if not A.rows == B.rows:
             raise ShapeError()
         A = A.copy()
-        B = SparseMatrix(B)
-        for (i, j), v in B._smat.iteritems():
-            A._smat[i, j + A.cols] = v
+        if not isinstance(B, SparseMatrix):
+            k = 0
+            b = B._mat
+            for i in range(B.rows):
+                for j in range(B.cols):
+                    A._smat[(i, j + A.cols)] = b[k]
+                    k += 1
+        else:
+            for (i, j), v in B._smat.iteritems():
+                A._smat[(i, j + A.cols)] = v
         A.cols += B.cols
         return A
 
@@ -4706,7 +4721,7 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy import SparseMatrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
         >>> A
         [1, 0, 1]
@@ -4717,21 +4732,36 @@ class SparseMatrix(MatrixBase):
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
-        >>> A.col_join(B)
+        >>> C = A.col_join(B); C
         [1, 0, 1]
         [0, 1, 0]
         [1, 1, 0]
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+        >>> C == A.col_join(Matrix(B))
+        True
+
+        Joining along columns is the same as appending rows at the end
+        of the matrix:
+
+        >>> C == A.row_insert(A.rows, Matrix(B))
+        True
         """
         A, B = self, other
         if not A.cols == B.cols:
             raise ShapeError()
         A = A.copy()
-        B = SparseMatrix(B)
-        for (i, j), v in B._smat.iteritems():
-            A._smat[i + A.rows, j] = v
+        if not isinstance(B, SparseMatrix):
+            k = 0
+            b = B._mat
+            for i in range(B.rows):
+                for j in range(B.cols):
+                    A._smat[(i + A.rows, j)] = b[k]
+                    k += 1
+        else:
+            for (i, j), v in B._smat.iteritems():
+                A._smat[i + A.rows, j] = v
         A.rows += B.rows
         return A
 
