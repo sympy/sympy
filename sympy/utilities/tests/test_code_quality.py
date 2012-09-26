@@ -1,5 +1,4 @@
 from __future__ import with_statement
-from sympy.core.compatibility import reduce
 
 from os import walk, sep, chdir, pardir
 from os.path import split, join, abspath, exists, isfile
@@ -16,17 +15,12 @@ import sys
 sepd = {"sep": sep}
 
 # path and sympy_path
-PATH = reduce(join, [split(__file__)[0], pardir, pardir]) # go to sympy/
-SYMPY_PATH = abspath(PATH)
+SYMPY_PATH = abspath(join(split(__file__)[0], pardir, pardir))  # go to sympy/
 assert exists(SYMPY_PATH)
 
-# Tests can be executed when examples are not installed
-# (e.g. after "./setup.py install") so set the examples path
-# to null so it will be skipped by the checker if it is not
-# there.
-EXAMPLES_PATH = abspath(reduce(join, [PATH, pardir, "examples"]))
-if not exists(EXAMPLES_PATH):
-    EXAMPLES_PATH = ""
+TOP_PATH = abspath(join(SYMPY_PATH, pardir))
+BIN_PATH = join(TOP_PATH, "bin")
+EXAMPLES_PATH = join(TOP_PATH, "examples")
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 
