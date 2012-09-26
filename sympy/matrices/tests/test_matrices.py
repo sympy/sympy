@@ -25,6 +25,19 @@ def test_sum():
     n = Matrix(1, 2, [1, 2])
     raises(ShapeError, lambda: m+n)
 
+def test_addition():
+    a=Matrix((
+        (1, 2),
+        (3, 1),
+        ))
+
+    b = Matrix ((
+        (1, 2),
+        (3, 0),
+        ))
+
+    assert a + b == a.add(b) == Matrix([[2, 4], [6, 1]])
+
 def test_multiplication():
     a=Matrix((
         (1, 2),
@@ -38,6 +51,7 @@ def test_multiplication():
         ))
 
     c= a*b
+    assert a.multiply(b) == c
     assert c[0,0]==7
     assert c[0,1]==2
     assert c[1,0]==6
@@ -731,11 +745,22 @@ def test_sparse_matrix():
     def zeros(n):
         return SparseMatrix(n,n,lambda i,j:0)
 
+    a = SparseMatrix((
+        (1, 0),
+        (0, 1)
+    ))
+    assert SparseMatrix(a) == a
+
     # test element assignment
     a = SparseMatrix((
         (1, 0),
         (0, 1)
     ))
+
+    a[3] = 4
+    assert a[1, 1] == 4
+    a[3] = 1
+
     a[0, 0] = 2
     assert a == SparseMatrix((
         (2, 0),
@@ -810,6 +835,23 @@ def test_sparse_matrix():
     assert m[:] == [x,0,0,0]
 
     assert a == b
+    S = eye(3)
+    S.row_del(1)
+    assert S == SparseMatrix([
+    [1, 0, 0],
+    [0, 0, 1]])
+    S = eye(3)
+    S.col_del(1)
+    assert S == SparseMatrix([
+    [1, 0],
+    [0, 0],
+    [0, 1]])
+    S = SparseMatrix.eye(3); S[2, 1] = 2
+    S.col_swap(1, 0)
+    assert S == SparseMatrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [2, 0, 1]])
 
     a = SparseMatrix(1, 2, [1, 2])
     b = a.copy()
@@ -995,6 +1037,28 @@ def test_sparse_matrix():
     v2 = Matrix(1,3,[3,4,5])
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
     assert v1.norm(2)**2 == 14
+
+    # conjugate
+    a = SparseMatrix(((1, 2 + I), (3, 4)))
+    assert a.C == SparseMatrix([
+        [1, 2 - I],
+        [3, 4]])
+
+    # mul
+    assert a*Matrix(2, 2, [1, 0, 0, 1]) == a
+    assert a + Matrix(2, 2, [1, 1, 1, 1]) == SparseMatrix([
+        [2, 3 + I],
+        [4, 5]])
+
+    # col join
+    assert a.col_join(eye(2)) == SparseMatrix([
+        [1, 2 + I],
+        [3, 4],
+        [1, 0],
+        [0, 1]])
+
+    # symmetric
+    assert not a.is_symmetric(simplify=False)
 
     # test_cofactor
     assert eye(3) == eye(3).cofactorMatrix()
@@ -2364,3 +2428,13 @@ def test_sparse_solve():
     assert A.inv('CH') == ans
     assert A.inv('LDL') == ans
     assert A * ans == SparseMatrix(eye(3))
+
+    s = A.solve(A[:, 0], 'LDL')
+    assert A*s == A[:, 0]
+    s = A.solve(A[:, 0], 'CH')
+    assert A*s == A[:, 0]
+    A = A.col_join(A)
+    s = A.solve_least_squares(A[:, 0], 'CH')
+    assert A*s == A[:, 0]
+    s = A.solve_least_squares(A[:, 0], 'LDL')
+    assert A*s == A[:, 0]

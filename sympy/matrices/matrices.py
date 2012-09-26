@@ -4969,7 +4969,8 @@ class SparseMatrix(MatrixBase):
             r, c = r
         else:
             c = r if c is None else c
-        r, c = [int(i) for i in [r, c]]
+        r = as_int(r)
+        c = as_int(c)
         return cls(r, c, {})
 
     @classmethod
