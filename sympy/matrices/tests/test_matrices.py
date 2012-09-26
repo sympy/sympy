@@ -2002,26 +2002,26 @@ def test_matrix_norm():
     c = Matrix([-1,-1,-1])
     d = Matrix([3, 2, I])
     e = Matrix([Integer(1e2),Rational(1,1e2),1])
-    L = [a,b,c,d,e]
+    L = [a, b, c, d, e]
     alpha = Symbol('alpha', real=True)
 
-    for order in [1,2,-1, -2, S.Infinity, S.NegativeInfinity, pi]:
+    for order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity, pi]:
         # Zero Check
-        assert Matrix([0,0,0]).norm(order) == S(0)
+        if order > 0:
+            assert Matrix([0,0,0]).norm(order) == S(0)
         # Triangle inequality on all pairs
         if order >= 1: # Triangle InEq holds only for these norms
             for v in L:
                 for w in L:
                     assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
         # Linear to scalar multiplication
-        if order in [1,2, -1, -2, S.Infinity, S.NegativeInfinity]:
+        if order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity]:
             for vec in L:
                 try:
                     assert simplify(  (alpha*v).norm(order) -
                             (abs(alpha) * v.norm(order))  ) == 0
                 except NotImplementedError:
                     pass; # Some Norms fail on symbolics due to Max issue
-
 
 def test_singular_values():
     x = Symbol('x', real=True)

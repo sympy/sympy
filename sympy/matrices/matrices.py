@@ -1769,6 +1769,10 @@ class MatrixBase(object):
         """
         return matrix_multiply_elementwise(self, b)
 
+    def values(self):
+        """Return non-zero values of self."""
+        return [i for i in flatten(self.tolist()) if i]
+
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
         In the simplest case this is the geometric size of the vector
@@ -1789,7 +1793,7 @@ class MatrixBase(object):
         other  - does not exist              sum(abs(x)**ord)**(1./ord)
         =====  ============================  ==========================
 
-        >>> from sympy import Matrix, Symbol, trigsimp, cos, sin
+        >>> from sympy import Matrix, Symbol, trigsimp, cos, sin, oo
         >>> x = Symbol('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
         >>> trigsimp( v.norm() )
@@ -1803,6 +1807,10 @@ class MatrixBase(object):
         0
         >>> A.norm() # Frobenius Norm
         2
+        >>> Matrix([1, -2]).norm(oo)
+        2
+        >>> Matrix([-1, 2]).norm(-oo)
+        1
 
         See Also
         ========
@@ -1810,24 +1818,25 @@ class MatrixBase(object):
         normalized
         """
         # Row or Column Vector Norms
+        vals = self.values() or [0]
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x, x>)
-                return sqrt(Add(*(abs(i)**2 for i in self.mat)))
+                return sqrt(Add(*(abs(i)**2 for i in vals)))
 
             elif ord == 1: # sum(abs(x))
-                return Add(*(abs(i) for i in self.mat))
+                return Add(*(abs(i) for i in vals))
 
             elif ord == S.Infinity: # max(abs(x))
-                return Max(*self.applyfunc(abs))
+                return Max(*[abs(i) for i in vals])
 
             elif ord == S.NegativeInfinity: # min(abs(x))
-                return Min(*self.applyfunc(abs))
+                return Min(*[abs(i) for i in vals])
 
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
-            except TypeError:
+                return Pow( Add(*(abs(i)**ord for i in vals)), S(1)/ord )
+            except (NotImplementedError, TypeError):
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
         # Matrix Norms
