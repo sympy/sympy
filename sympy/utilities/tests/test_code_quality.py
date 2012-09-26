@@ -2,7 +2,7 @@ from __future__ import with_statement
 from sympy.core.compatibility import reduce
 
 from os import walk, sep, chdir, pardir
-from os.path import split, join, abspath, exists
+from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
@@ -57,7 +57,7 @@ def tab_in_leading(s):
         check = s[:n] + smore[:len(smore)-len(smore.lstrip())]
     return not (check.expandtabs() == check)
 
-def check_directory_tree(base_path, file_check, exclusions=set()):
+def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
     """
     Checks all files in the directory tree (with base_path as starting point)
     with the file_check function provided, skipping files that contain
@@ -66,10 +66,21 @@ def check_directory_tree(base_path, file_check, exclusions=set()):
     if not base_path:
         return
     for root, dirs, files in walk(base_path):
-        for fname in glob(join(root, "*.py")):
-            if filter(lambda ex: ex in fname, exclusions):
-                continue
-            file_check(fname)
+        check_files(glob(join(root, pattern)), file_check, exclusions)
+
+def check_files(files, file_check, exclusions=set()):
+    """
+    Checks all files with the file_check function provided, skipping files
+    that contain any of the strings in the set provided by exclusions.
+    """
+    if not files:
+        return
+    for fname in files:
+        if not exists(fname) or not isfile(fname):
+            continue
+        if filter(lambda ex: ex in fname, exclusions):
+            continue
+        file_check(fname)
 
 def test_files():
     """
