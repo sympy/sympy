@@ -1378,12 +1378,12 @@ class Permutation(Basic):
 
         if self.size != h.size:
             raise ValueError("The permutations must be of equal size.")
-        invh = [None]*self.size
+        a = [None]*self.size
         h = h.array_form
         p = self.array_form
         for i in range(self.size):
-            invh[h[i]] = i
-        return Perm._af_new([h[p[i]] for i in invh])
+            a[h[i]] = h[p[i]]
+        return Perm._af_new(a)
 
     def transpositions(self):
         """

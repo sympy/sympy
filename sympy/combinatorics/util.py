@@ -91,7 +91,7 @@ def _check_cycles_alt_sym(perm):
 
     """
     n = perm.size
-    af = perm.array_form
+    af = perm._array_form
     current_len = 0
     total_len = 0
     used = set()
@@ -399,7 +399,7 @@ def _strip(g, base, orbits, transversals):
     ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
     under some subgroup of the pointwise stabilizer of `
     `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
-    in this function since the only infromation we need is encoded in the orbits
+    in this function since the only information we need is encoded in the orbits
     and transversals
     ``transversals`` - a list of orbit transversals associated with the orbits
     ``orbits``.
@@ -440,7 +440,7 @@ def _strip(g, base, orbits, transversals):
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """
-    h = g.array_form
+    h = g._array_form
     base_len = len(base)
     for i in range(base_len):
         beta = h[base[i]]
@@ -448,7 +448,7 @@ def _strip(g, base, orbits, transversals):
             continue
         if beta not in orbits[i]:
             return _af_new(h), i + 1
-        u = transversals[i][beta].array_form
+        u = transversals[i][beta]._array_form
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
