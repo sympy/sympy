@@ -214,7 +214,10 @@ def _implicit_application(tokens, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
-            if getattr(global_dict.get(tok[1]), 'is_Function', False):
+            func = global_dict.get(tok[1])
+            is_Function = getattr(func, 'is_Function', False)
+            if (is_Function or
+                (callable(func) and not hasattr(func, 'is_Function'))):
                 result.append((OP, '('))
                 appendParen += 1
         elif isinstance(tok, AppliedFunction) and not tok.args:
