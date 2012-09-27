@@ -22,7 +22,8 @@ class SympifyError(ValueError):
 converter = {}  # See sympify docstring.
 
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+            implicit=False):
     """
     Converts an arbitrary expression to a type that can be used inside sympy.
 
@@ -74,6 +75,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+    If the option ``implicit`` is set to ``True``, the parser will attempt
+    to use a slightly relaxed Python syntax. Parentheses for method calls
+    as well as multiplication is optional, while symbol names will be split;
+    also, functions can be exponentiated:
+
+    >>> sympify("10sin**2 x**2 + 3xyz + tan theta", implicit=True)
+    3*x*y*z + 10*sin(x**2)**2 + tan(theta)
 
     To extend ``sympify`` to convert custom objects (not derived from ``Basic``),
     just define a ``_sympy_`` method to your class. You can do that even to
@@ -148,14 +157,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
+                rational=rational, implicit=implicit) for x in a])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.iteritems()])
+                rational=rational, implicit=implicit) for x in a.iteritems()])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
@@ -177,7 +186,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, locals or {}, rational, convert_xor)
+        expr = parse_expr(a, locals or {}, rational, convert_xor,
+                          implicit=implicit)
     except (TokenError, SyntaxError):
         raise SympifyError('could not parse %r' % a)
 
