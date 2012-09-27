@@ -435,7 +435,7 @@ class MatrixBase(object):
             return []
         if not self.cols:
             return [[] for i in range(self.rows)]
-        return [self._mat[i: i + self.cols] \
+        return [self._mat[i: i + self.cols]
             for i in range(0, len(self), self.cols)]
 
     def hash(self):
@@ -1759,9 +1759,9 @@ class MatrixBase(object):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not (self.rows == 1 and self.cols == 3 or \
+        if not (self.rows == 1 and self.cols == 3 or
                 self.rows == 3 and self.cols == 1 ) and \
-                (b.rows == 1 and b.cols == 3 or \
+                (b.rows == 1 and b.cols == 3 or
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
@@ -5142,9 +5142,9 @@ class SparseMatrix(MatrixBase):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not (self.rows == 1 and self.cols == 3 or \
+        if not (self.rows == 1 and self.cols == 3 or
                 self.rows == 3 and self.cols == 1 ) and \
-                (b.rows == 1 and b.cols == 3 or \
+                (b.rows == 1 and b.cols == 3 or
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product")
         else:
@@ -5196,10 +5196,10 @@ class SparseMatrix(MatrixBase):
         False
         """
         if simplify:
-            return all((k[1], k[0]) in self._smat and \
+            return all((k[1], k[0]) in self._smat and
                 not (self[k] - self[(k[1], k[0])]).simplify() for k in self._smat)
         else:
-            return all((k[1], k[0]) in self._smat and \
+            return all((k[1], k[0]) in self._smat and
                 self[k] == self[(k[1], k[0])] for k in self._smat)
 
     def has(self, *patterns):
