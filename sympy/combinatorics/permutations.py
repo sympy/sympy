@@ -1179,11 +1179,20 @@ class Permutation(Basic):
     @staticmethod
     def rmulp(*args):
         """
-        same as rmul, but the elements of args are Permutation objects.
+        same as rmul, but the elements of args are Permutation objects
+        which have _array_form
         """
-        a = [x.array_form for x in args]
+        a = [x._array_form for x in args]
         rv = Perm._af_new(_af_rmuln(*a))
         return rv
+
+    def mul_inv(self, other):
+        """
+        other*~self, self and other have _array_form
+        """
+        a = _af_invert(self._array_form)
+        b = other._array_form
+        return Perm._af_new(_af_rmul(a, b))
 
     def __rmul__(self, other):
         """This is needed to coerse other to Permutation in rmul."""

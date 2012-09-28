@@ -10,7 +10,7 @@ from random import shuffle
 
 def test_cmp_perm_lists():
     S = SymmetricGroup(4)
-    els = list(S.generate_dimino())
+    els = list(S.generate_dimino(af=True))
     other = els[:]
     shuffle(other)
     assert _cmp_perm_lists(els, other) == True

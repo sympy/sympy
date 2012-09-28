@@ -30,7 +30,7 @@ def _cmp_perm_lists(first, second):
     return set([tuple(a) for a in first]) == \
            set([tuple(a) for a in second])
 
-def _naive_list_centralizer(self, other):
+def _naive_list_centralizer(self, other, af=False):
     from sympy.combinatorics.perm_groups import PermutationGroup
     """
     Return a list of elements for the centralizer of a subgroup/set/element.
@@ -53,20 +53,26 @@ def _naive_list_centralizer(self, other):
     sympy.combinatorics.perm_groups.centralizer
 
     """
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.permutations import _af_commutes_with
     if hasattr(other, 'generators'):
-        elements = list(self.generate_dimino())
-        gens = other.generators
-        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] ==\
-                                       [rmul(gen, x) for gen in gens]
+        elements = list(self.generate_dimino(af=True))
+        gens = [x._array_form for x in other.generators]
+        commutes_with_gens = lambda x: all(_af_commutes_with(x, gen) for gen in gens)
         centralizer_list = []
-        for element in elements:
-            if commutes_with_gens(element):
-                centralizer_list.append(element)
+        if not af:
+            for element in elements:
+                if commutes_with_gens(element):
+                    centralizer_list.append(Permutation._af_new(element))
+        else:
+            for element in elements:
+                if commutes_with_gens(element):
+                    centralizer_list.append(element)
         return centralizer_list
     elif hasattr(other, 'getitem'):
-        return _naive_list_centralizer(self, PermutationGroup(other))
+        return _naive_list_centralizer(self, PermutationGroup(other), af)
     elif hasattr(other, 'array_form'):
-        return _naive_list_centralizer(self, PermutationGroup([other]))
+        return _naive_list_centralizer(self, PermutationGroup([other]), af)
 
 def _verify_bsgs(group, base, gens):
     """
@@ -138,8 +144,8 @@ def _verify_centralizer(group, arg, centr=None):
     """
     if centr is None:
         centr = group.centralizer(arg)
-    centr_list = list(centr.generate_dimino())
-    centr_list_naive = _naive_list_centralizer(group, arg)
+    centr_list = list(centr.generate_dimino(af=True))
+    centr_list_naive = _naive_list_centralizer(group, arg, af=True)
     return _cmp_perm_lists(centr_list, centr_list_naive)
 
 def _verify_normal_closure(group, arg, closure=None):
@@ -169,18 +175,16 @@ def _verify_normal_closure(group, arg, closure=None):
     """
     if closure is None:
         closure = group.normal_closure(arg)
-    conjugates = []
-    group_els = list(group.generate_dimino())
+    #conjugates = []
+    conjugates = set()
     if hasattr(arg, 'generators'):
         subgr_gens = arg.generators
     elif hasattr(arg, '__getitem__'):
         subgr_gens = arg
     elif hasattr(arg, 'array_form'):
         subgr_gens = [arg]
-    for el in group_els:
+    for el in group.generate_dimino():
         for gen in subgr_gens:
-            conjugate = rmul(~el, gen, el)
-            if conjugate not in conjugates:
-                conjugates.append(conjugate)
-    naive_closure = PermutationGroup(conjugates)
+            conjugates.add(gen^el)
+    naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
