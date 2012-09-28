@@ -524,6 +524,8 @@ Matrix Exceptions Reference
 Matrix Functions Reference
 --------------------------
 
+.. autofunction:: classof
+
 .. autofunction:: matrix_multiply
 
 .. autofunction:: matrix_multiply_elementwise
@@ -537,6 +539,8 @@ Matrix Functions Reference
 .. autofunction:: eye
 
 .. autofunction:: diag
+
+.. autofunction:: jordan_cell
 
 .. autofunction:: randMatrix
 
