@@ -192,13 +192,23 @@ def interpolate(data, x):
     >>> from sympy.polys.polyfuncs import interpolate
     >>> from sympy.abc import x
 
+    A list is interpreted as though it were paired with a range starting
+    from 1:
+
     >>> interpolate([1, 4, 9, 16], x)
     x**2
+
+    This can be made explicit by giving a list of coordinates:
+
     >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
     x**2
-    >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
+
+    The (x, y) coordinates can also be given as keys and values of a
+    dictionary (and the points need not be equispaced):
+
+    >>> interpolate([(-1, 2), (1, 2), (2, 5)], x)
     x**2 + 1
-    >>> interpolate({1: 2, 2: 5, 3: 10}, x)
+    >>> interpolate({-1: 2, 1: 2, 2: 5}, x)
     x**2 + 1
 
     """
