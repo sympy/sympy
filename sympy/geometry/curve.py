@@ -187,7 +187,7 @@ class Curve(GeometryEntity):
         >>> Curve((x, x), (x, 0, 1)).rotate(pi/2)
         Curve((-x, x), (x, 0, 1))
         """
-        from sympy.matrices.matrices import Matrix, rot_axis3
+        from sympy.matrices import Matrix, rot_axis3
         pt = -Point(pt or (0, 0))
         rv = self.translate(*pt.args)
         f = list(rv.functions)

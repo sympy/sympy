@@ -3,14 +3,18 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from matrices import (SparseMatrix, zeros, ones, eye, diag,
-     hessian, randMatrix, GramSchmidt, wronskian, casoratian,
-     list2numpy, matrix2numpy, DeferredVector, symarray, ShapeError,
-     NonSquareMatrixError, rot_axis1, rot_axis2, rot_axis3)
+from matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
+    zeros, ones, eye, diag, jordan_cell,
+    hessian, GramSchmidt, wronskian, casoratian)
 
-from matrices import MutableMatrix as Matrix
+from mutable import (MutableMatrix as Matrix,
+    list2numpy, matrix2numpy, symarray,
+    rot_axis1, rot_axis2, rot_axis3,
+    randMatrix)
 
-from immutable_matrix import ImmutableMatrix
+from immutable import ImmutableMatrix
+
+from sparse import SparseMatrix
 
 from expressions import (BlockDiagMatrix, BlockMatrix, FunctionMatrix,
      Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol,

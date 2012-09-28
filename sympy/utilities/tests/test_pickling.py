@@ -220,7 +220,7 @@ def test_logic():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SparseMatrix
+from sympy.matrices import Matrix, SparseMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):

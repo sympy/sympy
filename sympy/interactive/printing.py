@@ -56,7 +56,7 @@ def _init_ipython_printing(ip, stringify_func):
             'sympy.core.basic', 'Basic', _pretty_print
         )
         formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'Matrix', _pretty_print
+            'sympy.matrices.mutable', 'Matrix', _pretty_print
         )
     else:
         ip.set_hook('result_display', _result_display)

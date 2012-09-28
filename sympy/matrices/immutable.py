@@ -1,5 +1,5 @@
-from matrices import MatrixBase, MutableMatrix
-from expressions import MatrixExpr, Transpose
+from matrices import MatrixBase
+from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple
 
 class ImmutableMatrix(MatrixExpr, MatrixBase):

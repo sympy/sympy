@@ -10,7 +10,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.matrices.matrices import Matrix, zeros
+from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 
 

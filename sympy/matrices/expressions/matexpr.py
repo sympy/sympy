@@ -174,7 +174,7 @@ class MatrixExpr(Expr):
         [0, 1, 0]
         [0, 0, 1]
         """
-        from sympy.matrices.immutable_matrix import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])

@@ -499,17 +499,9 @@ norm():
     >>> out2[2].norm()
     1
 
-So there is quite a bit that can be done with the module including eigenvalues,
-eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
-here one might want to look over the matrices.py file for all functionality.
-
-Matrix Class Reference
-----------------------
-.. autoclass:: Matrix
-   :members:
-
-.. autoclass:: SparseMatrix
-   :members:
+So there is quite a bit more that can be done: eigenvalues, eigenvectors,
+nullspace calculation, cofactor expansion, and so on. From here one might
+want to look over the matrices.py file for all functionality.
 
 Matrix Exceptions Reference
 ---------------------------
@@ -542,8 +534,6 @@ Matrix Functions Reference
 
 .. autofunction:: jordan_cell
 
-.. autofunction:: randMatrix
-
 .. autofunction:: hessian
 
 .. autofunction:: GramSchmidt
@@ -555,16 +545,6 @@ Matrix Functions Reference
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: list2numpy
-
-.. autofunction:: matrix2numpy
-
 .. autofunction:: a2idx
 
-.. autofunction:: symarray
 
-.. autofunction:: rot_axis1
-
-.. autofunction:: rot_axis2
-
-.. autofunction:: rot_axis3
