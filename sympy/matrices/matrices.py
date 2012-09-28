@@ -720,7 +720,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise ShapeError("Matrices size mismatch.")
-        if not self.is_lower():
+        if not self.is_lower:
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
@@ -756,7 +756,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise TypeError("Matrix size mismatch.")
-        if not self.is_upper():
+        if not self.is_upper:
             raise TypeError("Matrix is not upper triangular.")
         return self._upper_triangular_solve(rhs)
 
@@ -1838,7 +1838,7 @@ class MatrixBase(object):
 
     def values(self):
         """Return non-zero values of self."""
-        return [i for i in flatten(self.tolist()) if i]
+        return [i for i in flatten(self.tolist()) if not i.is_zero]
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
@@ -2120,7 +2120,7 @@ class MatrixBase(object):
         >>> d.is_zero
         True
         """
-        return all(i.is_zero for i in self)
+        return not self.values()
 
     def is_nilpotent(self):
         """
@@ -2148,6 +2148,7 @@ class MatrixBase(object):
             return True
         return False
 
+    @property
     def is_upper(self):
         """
         Check if matrix is an upper triangular matrix.
@@ -2160,7 +2161,7 @@ class MatrixBase(object):
         >>> m
         [1, 0]
         [0, 1]
-        >>> m.is_upper()
+        >>> m.is_upper
         True
 
         >>> m = Matrix(3, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5])
@@ -2168,14 +2169,14 @@ class MatrixBase(object):
         [5, 1, 9]
         [0, 4, 6]
         [0, 0, 5]
-        >>> m.is_upper()
+        >>> m.is_upper
         True
 
         >>> m = Matrix(2, 3, [4, 2, 5, 6, 1, 1])
         >>> m
         [4, 2, 5]
         [6, 1, 1]
-        >>> m.is_upper()
+        >>> m.is_upper
         False
 
         See Also
@@ -2185,12 +2186,11 @@ class MatrixBase(object):
         is_diagonal
         is_upper_hessenberg
         """
-        for i in range(1, self.rows):
-            for j in range(0, i):
-                if self[i, j]:
-                    return False
-        return True
+        return all(self[i, j].is_zero
+            for i in range(1, self.rows)
+            for j in range(i))
 
+    @property
     def is_lower(self):
         """
         Check if matrix is a lower triangular matrix.
@@ -2203,7 +2203,7 @@ class MatrixBase(object):
         >>> m
         [1, 0]
         [0, 1]
-        >>> m.is_lower()
+        >>> m.is_lower
         True
 
         >>> m = Matrix(3, 3, [2, 0, 0, 1, 4 , 0, 6, 6, 5])
@@ -2211,7 +2211,7 @@ class MatrixBase(object):
         [2, 0, 0]
         [1, 4, 0]
         [6, 6, 5]
-        >>> m.is_lower()
+        >>> m.is_lower
         True
 
         >>> from sympy.abc import x, y
@@ -2219,7 +2219,7 @@ class MatrixBase(object):
         >>> m
         [x**2 + y, x + y**2]
         [       0,    x + y]
-        >>> m.is_lower()
+        >>> m.is_lower
         False
 
         See Also
@@ -2229,12 +2229,11 @@ class MatrixBase(object):
         is_diagonal
         is_lower_hessenberg
         """
-        for i in range(0, self.rows):
-            for j in range(i+1, self.cols):
-                if self[i, j]:
-                    return False
-        return True
+        return all(self[i, j].is_zero
+            for i in range(self.rows)
+            for j in range(i + 1, self.cols))
 
+    @property
     def is_upper_hessenberg(self):
         """
         Checks if the matrix is the upper hessenberg form.
@@ -2252,7 +2251,7 @@ class MatrixBase(object):
         [3, 4, 1, 7]
         [0, 2, 3, 4]
         [0, 0, 1, 3]
-        >>> a.is_upper_hessenberg()
+        >>> a.is_upper_hessenberg
         True
 
         See Also
@@ -2261,12 +2260,11 @@ class MatrixBase(object):
         is_lower_hessenberg
         is_upper
         """
-        for i in range(2, self.rows):
-            for j in range(0, i - 1):
-                if self[i, j]:
-                    return False
-        return True
+        return all(self[i, j].is_zero
+            for i in range(2, self.rows)
+            for j in range(i - 1))
 
+    @property
     def is_lower_hessenberg(self):
         r"""
         Checks if the matrix is in the lower hessenberg form.
@@ -2284,7 +2282,7 @@ class MatrixBase(object):
         [5, 2, 3, 0]
         [3, 4, 3, 7]
         [5, 6, 1, 1]
-        >>> a.is_lower_hessenberg()
+        >>> a.is_lower_hessenberg
         True
 
         See Also
@@ -2293,11 +2291,9 @@ class MatrixBase(object):
         is_upper_hessenberg
         is_lower
         """
-        for i in range(0, self.rows):
-            for j in range(i + 2, self.cols):
-                if self[i, j]:
-                    return False
-        return True
+        return all(self[i, j].is_zero
+            for i in range(self.rows)
+            for j in range(i + 2, self.cols))
 
     def is_symbolic(self):
         """
@@ -2313,7 +2309,7 @@ class MatrixBase(object):
         True
 
         """
-        return any(element.has(Symbol) for element in self._mat)
+        return any(element.has(Symbol) for element in self.values())
 
     def is_symmetric(self, simplify=True):
         """

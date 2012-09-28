@@ -417,8 +417,8 @@ def test_LUdecomp():
                       [8,4,0,2],
                       [-2,6,3,4]])
     L,U,p = testmat.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     testmat = Matrix([[6,-2,7,4],
@@ -426,29 +426,29 @@ def test_LUdecomp():
                       [1,-2,7,4],
                       [-9,2,6,3]])
     L,U,p = testmat.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-M == zeros(3)
 
     mL = Matrix((
       (1,0,0),
       (2,3,0),
     ))
-    assert mL.is_lower() == True
-    assert mL.is_upper() == False
+    assert mL.is_lower == True
+    assert mL.is_upper == False
     mU = Matrix((
       (1,2,3),
       (0,4,5),
     ))
-    assert mU.is_lower() == False
-    assert mU.is_upper() == True
+    assert mU.is_lower == False
+    assert mU.is_upper == True
 
     # test FF LUdecomp
     M = Matrix([[1, 3, 3],
@@ -574,20 +574,20 @@ def test_QR():
     A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
-    assert R.is_upper()
+    assert R.is_upper
     assert A == Q*R
 
 def test_QR_non_square():
     A = Matrix([[9,0,26],[12,0,-7],[0,4,4],[0,-3,-3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
-    assert R.is_upper()
+    assert R.is_upper
     assert A == Q*R
 
     A = Matrix([[1,-1,4],[1,4,-2],[1,4,2],[1,-1,0]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
-    assert R.is_upper()
+    assert R.is_upper
     assert A == Q*R
 
 def test_nullspace():
@@ -975,8 +975,8 @@ def test_sparse_matrix():
                       [8,4,0,2],
                       [-2,6,3,4]])
     L,U,p = testmat.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     testmat = SparseMatrix([[6,-2,7,4],
@@ -984,15 +984,15 @@ def test_sparse_matrix():
                       [1,-2,7,4],
                       [-9,2,6,3]])
     L,U,p = testmat.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
-    assert L.is_lower()
-    assert U.is_upper()
+    assert L.is_lower
+    assert U.is_upper
     assert (L*U).permuteBkwd(p)-M == zeros(3)
 
     # test_LUsolve
@@ -1330,15 +1330,15 @@ def test_is_symbolic():
 
 def test_is_upper():
     a = Matrix([[1,2,3]])
-    assert a.is_upper() == True
+    assert a.is_upper == True
     a = Matrix([[1],[2],[3]])
-    assert a.is_upper() == False
+    assert a.is_upper == False
 
 def test_is_lower():
     a = Matrix([[1,2,3]])
-    assert a.is_lower() == False
+    assert a.is_lower == False
     a = Matrix([[1],[2],[3]])
-    assert a.is_lower() == True
+    assert a.is_lower == True
 
 def test_is_nilpotent():
     a = Matrix(4, 4, [0,2,1,6,0,0,1,2,0,0,0,3,0,0,0,0])
@@ -1907,21 +1907,21 @@ def test_getattr():
 
 def test_hessenberg():
     A = Matrix([[3, 4, 1],[2, 4 ,5],[0, 1, 2]])
-    assert A.is_upper_hessenberg()
+    assert A.is_upper_hessenberg
     A = A.T
-    assert A.is_lower_hessenberg()
+    assert A.is_lower_hessenberg
     A[0, -1] = 1
-    assert A.is_lower_hessenberg() is False
+    assert A.is_lower_hessenberg is False
 
     A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
-    assert not A.is_upper_hessenberg()
+    assert not A.is_upper_hessenberg
 
 def test_cholesky():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
     A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
     assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower()
+    assert A.cholesky().is_lower
     assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
 
 def test_LDLdecomposition():
@@ -1930,7 +1930,7 @@ def test_LDLdecomposition():
     A = Matrix(((25,15,-5), (15,18,0), (-5,0,11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
-    assert L.is_lower()
+    assert L.is_lower
     assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
