@@ -61,11 +61,6 @@ def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
     return sum(c[i]*f.subs(n, n+i) for i in range(len(c)))
 
-def rsolve_bulk_checker(solver, c, q, p):
-    """Used by test_rsolve_bulk."""
-    pp = solver(c, q, n)
-    assert pp == p
-
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
     funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5 ]
@@ -75,9 +70,9 @@ def test_rsolve_bulk():
         for c in coeffs:
             q = recurrence_term(c, p)
             if p.is_polynomial(n):
-                yield rsolve_bulk_checker, rsolve_poly, c, q, p
+                assert rsolve_poly(c, q, n) == p
             #if p.is_hypergeometric(n):
-            #    yield rsolve_bulk_checker, rsolve_hyper, c, q, p
+            #    assert rsolve_hyper(c, q, n) == p
 
 def test_rsolve():
     f = y(n+2) - y(n+1) - y(n)

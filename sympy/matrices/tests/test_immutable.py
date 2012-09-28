@@ -15,8 +15,8 @@ def test_immutability():
         IM[2,2] = 5
 
 def test_slicing():
-    IM[1,:] == ImmutableMatrix([[4,5,6]])
-    IM[:2, :2] == ImmutableMatrix([[1,2],[4,5]])
+    assert IM[1, :] == ImmutableMatrix([[4, 5, 6]])
+    assert IM[:2, :2] == ImmutableMatrix([[1, 2], [4, 5]])
 
 def test_subs():
     A = ImmutableMatrix([[1,2],[3,4]])

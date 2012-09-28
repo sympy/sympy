@@ -1,8 +1,7 @@
 from __future__ import with_statement
-from sympy.core.compatibility import reduce
 
 from os import walk, sep, chdir, pardir
-from os.path import split, join, abspath, exists
+from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
@@ -16,17 +15,12 @@ import sys
 sepd = {"sep": sep}
 
 # path and sympy_path
-PATH = reduce(join, [split(__file__)[0], pardir, pardir]) # go to sympy/
-SYMPY_PATH = abspath(PATH)
+SYMPY_PATH = abspath(join(split(__file__)[0], pardir, pardir))  # go to sympy/
 assert exists(SYMPY_PATH)
 
-# Tests can be executed when examples are not installed
-# (e.g. after "./setup.py install") so set the examples path
-# to null so it will be skipped by the checker if it is not
-# there.
-EXAMPLES_PATH = abspath(reduce(join, [PATH, pardir, "examples"]))
-if not exists(EXAMPLES_PATH):
-    EXAMPLES_PATH = ""
+TOP_PATH = abspath(join(SYMPY_PATH, pardir))
+BIN_PATH = join(TOP_PATH, "bin")
+EXAMPLES_PATH = join(TOP_PATH, "examples")
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 
@@ -57,7 +51,7 @@ def tab_in_leading(s):
         check = s[:n] + smore[:len(smore)-len(smore.lstrip())]
     return not (check.expandtabs() == check)
 
-def check_directory_tree(base_path, file_check, exclusions=set()):
+def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
     """
     Checks all files in the directory tree (with base_path as starting point)
     with the file_check function provided, skipping files that contain
@@ -66,10 +60,21 @@ def check_directory_tree(base_path, file_check, exclusions=set()):
     if not base_path:
         return
     for root, dirs, files in walk(base_path):
-        for fname in glob(join(root, "*.py")):
-            if filter(lambda ex: ex in fname, exclusions):
-                continue
-            file_check(fname)
+        check_files(glob(join(root, pattern)), file_check, exclusions)
+
+def check_files(files, file_check, exclusions=set()):
+    """
+    Checks all files with the file_check function provided, skipping files
+    that contain any of the strings in the set provided by exclusions.
+    """
+    if not files:
+        return
+    for fname in files:
+        if not exists(fname) or not isfile(fname):
+            continue
+        if filter(lambda ex: ex in fname, exclusions):
+            continue
+        file_check(fname)
 
 def test_files():
     """
@@ -119,18 +124,38 @@ def test_files():
                 # eof newline check
                 assert False, message_eof % (fname, idx+1)
 
+    # Files to test at top level
+    top_level_files = [join(TOP_PATH, file) for file in [
+        "build.py",
+        "setup.py",
+        "setupegg.py",
+    ]]
+    # Files to exclude from all tests
     exclude = set([
         "%(sep)smpmath%(sep)s" % sepd,
     ])
+    # Files to exclude from the implicit import test
     import_exclude = set([
-        "%(sep)s__init__.py" % sepd,
+        # glob imports are allowed in top-level __init__.py:
+        "%(sep)ssympy%(sep)s__init__.py" % sepd,
+        # these __init__.py should be fixed:
+        "%(sep)smechanics%(sep)s__init__.py" % sepd,
+        "%(sep)squantum%(sep)s__init__.py" % sepd,
+        # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
+        # isympy executes ``from sympy import *``:
+        "%(sep)sbin%(sep)sisympy" % sepd,
+        # these two are import timing tests:
+        "%(sep)sbin%(sep)ssympy_time.py" % sepd,
+        "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
         # Taken from Python stdlib:
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # these two should be fixed:
-        "%(sep)smpmath%(sep)s" % sepd,
-        "%(sep)splotting%(sep)s" % sepd,
+        "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        "%(sep)splotting%(sep)stextplot.py" % sepd,
     ])
+    check_files(top_level_files, test)
+    check_directory_tree(BIN_PATH, test, set(["~", ".pyc"]), "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 

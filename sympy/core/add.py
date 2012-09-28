@@ -552,6 +552,8 @@ class Add(AssocOp):
             if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
                 return Add(-new, coeff_self,  coeff_old)
 
+        if coeff_self.is_Rational and coeff_old.is_Rational \
+                or coeff_self == coeff_old:
             args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
             if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
                 self_set = set(args_self)

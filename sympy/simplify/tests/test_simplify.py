@@ -1231,8 +1231,8 @@ def test_unpolarify():
     assert unpolarify(True) is True
 
 def test_issue_2998():
-    collect(a*y**(2.0*x)+b*y**(2.0*x),y**(x)) == y**(2.0*x)*(a + b)
-    collect(a*2**(2.0*x)+b*2**(2.0*x),2**(x)) == 2**(2.0*x)*(a + b)
+    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == y**(2.0*x)*(a + b)
+    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == 2**(2.0*x)*(a + b)
 
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)

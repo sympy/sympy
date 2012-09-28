@@ -426,9 +426,6 @@ def test_f5_reduce():
     s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
     assert f5_reduce(s, F, 2, lex, QQ) == s
 
-def test_matrix_fglm():
-    pass  # see test_polytools.py
-
 def test_representing_matrices():
     basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
     F = [[((2, 0), QQ(1,1)), ((1, 0), QQ(-1,1)), ((0, 1), QQ(-3,1)), ((0, 0), QQ(1,1))],
