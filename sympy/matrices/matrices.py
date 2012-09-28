@@ -49,7 +49,7 @@ class DeferredVector(Symbol):
     >>> func( [1, 2, 3] )
     (3, 6)
     """
-    def __getitem__(self,i):
+    def __getitem__(self, i):
         if i == -0:
             i = 0
         if i < 0:
@@ -205,7 +205,7 @@ class MatrixBase(object):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
         return self._new(self.cols,self.rows,a)
 
-    T = property(transpose,None,None,"Matrix transposition.")
+    T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
         """By-element conjugation.
@@ -269,54 +269,28 @@ class MatrixBase(object):
         except ShapeError:
             raise AttributeError("Dirac conjugation not possible.")
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         """
         >>> from sympy import Matrix, I
-        >>> m=Matrix(((1,2+I),(3,4)))
-        >>> m  #doctest: +NORMALIZE_WHITESPACE
-        [1, 2 + I]
-        [3,     4]
-        >>> m[1,0]
+        >>> m = Matrix([
+        ... [1, 2 + I],
+        ... [3, 4    ]])
+        >>> m[1, 0]
         3
-        >>> m.H[1,0]
-        2 - I
 
         """
         if type(key) is tuple:
             i, j = key
             if type(i) is slice or type(j) is slice:
                 return self.submatrix(key)
-
             else:
-                # a2idx inlined
-                if type(i) is not int:
-                    try:
-                        i = i.__index__()
-                    except AttributeError:
-                        raise IndexError("Invalid index a[%r]" % (key,))
-                # a2idx inlined
-                if type(j) is not int:
-                    try:
-                        j = j.__index__()
-                    except AttributeError:
-                        raise IndexError("Invalid index a[%r]" % (key,))
-
-                i, j = self.key2ij((i, j))
-                if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-                    raise IndexError("Index out of range: a[%s]" % (key,))
-                else:
-                    return self.mat[i*self.cols + j]
-
-
+                i, j = self.key2ij(key)
+                return self.mat[i*self.cols + j]
         else:
             # row-wise decomposition of matrix
             if type(key) is slice:
                 return self.mat[key]
-            else:
-                k = a2idx(key)
-                if k is not None:
-                    return self.mat[k]
-        raise IndexError("Invalid index: a[%s]" % repr(key))
+            return self.mat[a2idx(key)]
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
@@ -379,7 +353,20 @@ class MatrixBase(object):
 
     @property
     def shape(self):
-        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
+        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import zeros
+        >>> M = zeros(2, 3)
+        >>> M.shape
+        (2, 3)
+        >>> M.rows
+        2
+        >>> M.cols
+        3
+        """
         return (self.rows, self.cols)
 
     def __rmul__(self,a):
@@ -1007,7 +994,7 @@ class MatrixBase(object):
         [1, 2, 3, 4]
         [2, 3, 4, 5]
         [3, 4, 5, 6]
-        >>> m[:1, 1]   #doctest: +NORMALIZE_WHITESPACE
+        >>> m[:1, 1] #doctest: +NORMALIZE_WHITESPACE
         [1]
         >>> m[:2, :1] #doctest: +NORMALIZE_WHITESPACE
         [0]
@@ -1022,11 +1009,12 @@ class MatrixBase(object):
         extract
         """
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        outLines, outCols = rhi-rlo, chi-clo
-        outMat = [0]*outLines*outCols
-        for i in xrange(outLines):
-            outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
-        return self._new(outLines,outCols,outMat)
+        outRows, outCols = rhi - rlo, chi - clo
+        outMat = [0]*outRows*outCols
+        for i in xrange(outRows):
+            outMat[i*outCols:(i+1)*outCols] = \
+            self.mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
+        return self._new(outRows, outCols, outMat)
 
     def extract(self, rowsList, colsList):
         """
@@ -1069,8 +1057,8 @@ class MatrixBase(object):
         """
         cols = self.cols
         mat = self.mat
-        rowsList = [self.key2ij((k,0))[0] for k in rowsList]
-        colsList = [self.key2ij((0,k))[1] for k in colsList]
+        rowsList = [a2idx(k, self.rows) for k in rowsList]
+        colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),
                 lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
@@ -1083,63 +1071,42 @@ class MatrixBase(object):
         ========
 
         key2ij
-        slice2bounds
         """
 
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
-            rlo, rhi = self.slice2bounds(keys[0], self.rows)
+            if not self.rows:
+                rlo = rhi = 0
+            else:
+                rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            # assuming we don't have a
-            rlo, _ = self.slice2bounds((keys[0], 0), self.rows)
+            rlo = a2idx(keys[0], self.rows)
             rhi  = rlo + 1
         if jslice:
-            clo, chi = self.slice2bounds(keys[1], self.cols)
+            if not self.cols:
+                clo = chi = 0
+            else:
+                clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            _, clo = self.slice2bounds((0, keys[1]), self.cols)
+            clo = a2idx(keys[1], self.cols)
             chi = clo + 1
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
         return rlo, rhi, clo, chi
 
+
     def key2ij(self, key):
-        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
-        indices are also supported and are remapped to positives provided they
-        are valid indices.
+        """Converts key with two integers to canonical form, checking to see that
+        they are valid for the given shape.
 
         See Also
         ========
 
         key2bounds
-        slice2bounds
         """
 
         if not (is_sequence(key) and len(key) == 2):
             raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
-                    %repr(key))
-        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
-        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-            raise IndexError("Index out of range: a[%s]"%repr(key))
-        return i,j
-
-    def slice2bounds(self, key, defmax):
-        """
-        Takes slice or number and returns (min,max) for iteration
-        Takes a default maxval to deal with the slice ':' which is (none, none)
-
-        See Also
-        ========
-
-        key2bounds
-        key2ij
-        """
-        if isinstance(key, slice):
-            return key.indices(defmax)[:2]
-        elif isinstance(key, tuple):
-            key = [defmax - 1 if i == -1 else i for i in key]
-            return self.key2ij(key)
-        else:
-            raise IndexError("Improper index type")
+                    % repr(key))
+        return [a2idx(i, n) for i, n in zip(key, self.shape)]
 
     def applyfunc(self, f):
         """
@@ -3383,12 +3350,11 @@ class MatrixBase(object):
         ========
 
         >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
-        >>> m
-        [ 6,  5, -2, -3]
-        [-3, -1,  3,  3]
-        [ 2,  1, -2, -3]
-        [-1,  1,  5,  5]
+        >>> m = Matrix(4, 4, [
+        ...  6,  5, -2, -3,
+        ... -3, -1,  3,  3,
+        ...  2,  1, -2, -3,
+        ... -1,  1,  5,  5])
 
         >>> (P, Jcells) = m.jordan_cells()
         >>> Jcells[0]
@@ -3515,6 +3481,7 @@ class MutableMatrix(MatrixBase):
         self.cols = cols
         self.mat = list(mat) # create a shallow copy
         return self
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
@@ -3540,39 +3507,20 @@ class MutableMatrix(MatrixBase):
                 if is_sequence(value):
                     self.copyin_list(key, value)
                     return
+                raise ValueError('unexpected value: %s' % value)
             else:
-                # a2idx inlined
-                if type(i) is not int:
-                    try:
-                        i = i.__index__()
-                    except AttributeError:
-                        raise IndexError("Invalid index a[%r]" % (key,))
-
-                # a2idx inlined
-                if type(j) is not int:
-                    try:
-                        j = j.__index__()
-                    except AttributeError:
-                        raise IndexError("Invalid index a[%r]" % (key,))
-
-
-                i, j = self.key2ij((i,j))
-                if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-                    raise IndexError("Index out of range: a[%s]" % (key,))
-                else:
-                    self.mat[i*self.cols + j] = sympify(value)
-                    return
-
+                i, j = self.key2ij(key)
+                self.mat[i*self.cols + j] = sympify(value)
+                return
         else:
             # row-wise decomposition of matrix
             if type(key) is slice:
                 raise IndexError("Vector slices not implemented yet.")
             else:
                 k = a2idx(key)
-                if k is not None:
-                    self.mat[k] = sympify(value)
-                    return
-        raise IndexError("Invalid index: a[%s]"%repr(key))
+                self.mat[k] = sympify(value)
+                return
+        raise IndexError("Invalid index: a[%s]" % repr(key))
 
     def copyin_matrix(self, key, value):
         """
@@ -3877,7 +3825,7 @@ def force_mutable(x):
         return x.as_mutable()
     return x
 
-def classof(A,B):
+def classof(A, B):
     """
     Determines strategy for combining Immutable and Mutable matrices
 
@@ -4335,27 +4283,28 @@ class SparseMatrix(MatrixBase):
         self.mat = {}
         if len(args) == 3 and callable(args[2]):
             op = args[2]
-            if not isinstance(args[0], (int, Integer)) or not isinstance(args[1], (int, Integer)):
+            if not isinstance(args[0], (int, Integer)) or \
+               not isinstance(args[1], (int, Integer)):
                 raise TypeError("`args[0]` and `args[1]` must both be integers.")
             self.rows = args[0]
             self.cols = args[1]
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = sympify(op(i,j))
+                    value = sympify(op(i, j))
                     if value:
-                        self.mat[(i,j)] = value
-        elif len(args)==3 and isinstance(args[0],int) and \
+                        self.mat[(i, j)] = value
+        elif len(args) == 3 and isinstance(args[0], int) and \
                 isinstance(args[1],int) and is_sequence(args[2]):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = sympify(mat[i*self.cols+j])
+                    value = sympify(mat[i*self.cols + j])
                     if value:
-                        self.mat[(i,j)] = value
-        elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], dict):
+                        self.mat[(i, j)] = value
+        elif len(args) == 3 and isinstance(args[0], int) and \
+                isinstance(args[1], int) and isinstance(args[2], dict):
             self.rows = args[0]
             self.cols = args[1]
             # manual copy, copy.deepcopy() doesn't work
@@ -4371,52 +4320,39 @@ class SparseMatrix(MatrixBase):
             self.cols = c
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = mat[self.cols*i+j]
+                    value = mat[self.cols*i + j]
                     if value:
-                        self.mat[(i,j)] = value
+                        self.mat[(i, j)] = value
 
     def __getitem__(self, key):
-        if isinstance(key, slice) or isinstance(key, int):
-            lo, hi = self.slice2bounds(key, len(self))
+
+        if type(key) is tuple:
+            i, j = key
+            if isinstance(i, int) and isinstance(i, int):
+                i, j = self.key2ij(key)
+                return self.mat.get((i, j), S.Zero)
+            elif isinstance(i, slice) or isinstance(i, slice):
+                return self.submatrix(key)
+
+        # check for single arg, like M[:] or M[3]
+        if isinstance(key, slice):
+            lo, hi = self.key2bounds(key)
             L = []
             for i in range(lo, hi):
                 m, n = self.rowdecomp(i)
-                if (m, n) in self.mat:
-                    L.append(self.mat[(m, n)])
-                else:
-                    L.append(S.Zero)
-            if len(L) == 1:
-                return L[0]
-            else:
-                return L
-        if len(key) != 2:
-            raise ValueError("`key` must be of length 2.")
+                L.append(self.mat.get((m, n), S.Zero))
+            return L
 
-        if isinstance(key[0], int) and isinstance(key[1], int):
-            i, j=self.key2ij(key)
-            if (i, j) in self.mat:
-                return self.mat[(i, j)]
-            else:
-                return S.Zero
-        elif isinstance(key[0], slice) or isinstance(key[1], slice):
-            return self.submatrix(key)
-        else:
-            raise IndexError("Index out of range: a[%s]"%repr(key))
+        lo = a2idx(key)
+        i, j = self.rowdecomp(lo)
+        return self.mat.get((i, j), S.Zero)
 
     def rowdecomp(self, num):
         """
         Perform a row decomposition on the matrix.
         """
-        nmax = len(self)
-        if not (0 <= num < nmax) or not (0 <= -num < nmax):
-            raise ValueError("`num` must satisfy 0 <= `num` < `self.rows*" +
-                "*self.cols` (%d) and 0 <= -num < " % nmax +
-                "`self.rows*self.cols` (%d) to apply redecomp()." % nmax)
-        i, j = 0, num
-        while j >= self.cols:
-            j -= self.cols
-            i += 1
-        return i,j
+        num = a2idx(num, len(self))
+        return divmod(num, self.cols)
 
     def __setitem__(self, key, value):
         # almost identical, need to test for 0
@@ -4429,7 +4365,7 @@ class SparseMatrix(MatrixBase):
             if is_sequence(value):
                 self.copyin_list(key, value)
         else:
-            i, j=self.key2ij(key)
+            i, j = self.key2ij(key)
             testval = sympify(value)
             if testval:
                 self.mat[(i, j)] = testval
@@ -4458,7 +4394,7 @@ class SparseMatrix(MatrixBase):
         col_del
         """
         newD = {}
-        k = self.key2ij((k, 0))[0]
+        k = a2idx(k, self.rows)
         for (i, j) in self.mat.keys():
             if i == k:
                 pass
@@ -4492,7 +4428,7 @@ class SparseMatrix(MatrixBase):
         row_del
         """
         newD = {}
-        k = self.key2ij((0, k))[1]
+        k = a2idx(k, self.cols)
         for (i, j) in self.mat.keys():
             if j == k:
                 pass
@@ -4775,18 +4711,6 @@ def matrix2numpy(m): # pragma: no cover
             a[i, j] = m[i, j]
     return a
 
-def a2idx(a):
-    """
-    Tries to convert "a" to an index, returns None on failure.
-
-    The result of a2idx() (if not None) can be safely used as an index to
-    arrays/matrices.
-    """
-    if hasattr(a, "__int__"):
-        return int(a)
-    if hasattr(a, "__index__"):
-        return a.__index__()
-
 def symarray(prefix, shape):
     """Create a numpy ndarray of symbols (as an object array).
 
@@ -4973,5 +4897,19 @@ def rot_axis1(theta):
            (0,ct,st),
            (0,-st,ct))
     return MutableMatrix(mat)
+
+def a2idx(j, n=None):
+    """Return integer after making positive and validating against n."""
+    if type(j) is not int:
+        try:
+            j = j.__index__()
+        except AttributeError:
+            raise IndexError("Invalid index a[%r]" % (j,))
+    if n is not None:
+        if j < 0:
+            j += n
+        if not (j >= 0 and j < n):
+            raise IndexError("Index out of range: a[%s]" % (j,))
+    return int(j)
 
 Matrix = MutableMatrix
