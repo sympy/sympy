@@ -403,9 +403,6 @@ def test_All_postprocess():
 
     assert opt == {'all': True}
 
-def test_Gen_preprocess():
-    pass
-
 def test_Gen_postprocess():
     opt = {'gen': x}
     Gen.postprocess(opt)

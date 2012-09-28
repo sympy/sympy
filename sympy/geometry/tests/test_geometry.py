@@ -935,9 +935,9 @@ def test_repr():
 
 def test_transform():
     p = Point(1, 1)
-    p.transform(rotate(pi/2)) == Point(-1, 1)
-    p.transform(scale(3, 2)) == Point(3, 2)
-    p.transform(translate(1, 2)) == Point(2, 3)
+    assert p.transform(rotate(pi/2)) == Point(-1, 1)
+    assert p.transform(scale(3, 2)) == Point(3, 2)
+    assert p.transform(translate(1, 2)) == Point(2, 3)
 
 def test_line_intersection():
     assert asa(120, 8, 52) == \

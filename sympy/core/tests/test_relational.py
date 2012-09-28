@@ -8,7 +8,7 @@ x, y, z, t = symbols('x,y,z,t')
 
 
 def test_rel_ne():
-    Relational(x, y, '!=')  # this used to raise
+    assert Relational(x, y, '!=') == Ne(x, y)
 
 
 def test_rel_subs():

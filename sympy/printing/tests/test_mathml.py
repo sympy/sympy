@@ -100,9 +100,6 @@ def test_mathml_tuples():
     assert mml_2.childNodes[1].nodeName == 'cn'
     assert len(mml_2.childNodes) == 2
 
-def test_mathml_matrices():
-    pass #TODO
-
 def test_mathml_add():
     mml = mp._print(x**5 - x**4 + x)
     assert mml.childNodes[0].nodeName == 'plus'

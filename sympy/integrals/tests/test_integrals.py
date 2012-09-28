@@ -701,7 +701,7 @@ def test_issue1304():
 
 def test_issue459():
     from sympy import Si
-    integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
+    assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
 
 def test_issue1394():
     from sympy import simplify

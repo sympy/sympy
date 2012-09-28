@@ -197,8 +197,8 @@ def test_sage():
     assert hasattr(log(x), "_sage_")
 
 def test_bug496():
-    a_ = sympify("a_")
-    _a = sympify("_a")
+    assert sympify("a_") == Symbol("a_")
+    assert sympify("_a") == Symbol("_a")
 
 @XFAIL
 def test_lambda():
