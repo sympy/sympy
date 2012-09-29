@@ -6,7 +6,6 @@ from sympy_tokenize import \
 from keyword import iskeyword
 from StringIO import StringIO
 import re
-import collections
 import unicodedata
 
 from sympy.core.basic import Basic, C
@@ -68,11 +67,12 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
 
     `exponent` is for handling the shorthand sin^2, ln^2, etc.
     """
-    def __new__(cls, function, args, exponent=None):
+    def __init__(self, function, args, exponent=None):
         if exponent is None:
             exponent = []
-        return super(cls, AppliedFunction).__new__(cls, function, args,
-                                                   exponent)
+        self.function = function
+        self.args = args
+        self.exponent = exponent
 
     def expand(self):
         """Return a list of tokens representing the function"""
