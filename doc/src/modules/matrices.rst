@@ -12,17 +12,11 @@ import and declare our first Matrix object:
     >>> from sympy.interactive.printing import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> from sympy.matrices import *
-    >>> Matrix([[1,0], [0,1]])
-    [1  0]
-    [    ]
-    [0  1]
-    >>> Matrix((
-    ...   Matrix((
-    ...     (1, 0, 0),
-    ...     (0, 0, 0)
-    ...   )),
-    ...   (0, 0, -1)
-    ... ))
+    >>> M = Matrix([[1,0,0], [0,0,0]]); M
+    [1  0  0]
+    [       ]
+    [0  0  0]
+    >>> Matrix([M, (0, 0, -1)])
     [1  0  0 ]
     [        ]
     [0  0  0 ]
@@ -118,40 +112,64 @@ careful - to access the entries as if they were a 1-d list.
     >>> M[4]
     5
 
-Now, the more standard entry access is a pair of indices:
+Now, the more standard entry access is a pair of indices which will always
+return the value at the corresponding row and column of the matrix:
 
-    >>> M[1,2]
+    >>> M[1, 2]
     6
-    >>> M[0,0]
+    >>> M[0, 0]
     1
-    >>> M[1,1]
+    >>> M[1, 1]
     5
 
-Since this is Python we're also able to slice submatrices::
+Since this is Python we're also able to slice submatrices; slices always
+give a matrix in return, even if the dimension is 1 x 1::
 
-    >>> M[0:2,0:2]
+    >>> M[0:2, 0:2]
     [1  2]
     [    ]
     [4  5]
-    >>> M[1:2,2]
-    [6]
-    >>> M[:,2]
+    >>> M[2:2, 2]
+    []
+    >>> M[:, 2]
     [3]
     [ ]
     [6]
+    >>> M[:1, 2]
+    [3]
 
-Remember in the 2nd example above that slicing 2:2 gives an empty range and
-that, as in python, a 4 column list is indexed from 0 to 3. In particular, this
-mean a quick way to create a copy of the matrix is:
+In the 2nd example above notice that the slice 2:2 gives an empty range. Note
+also (in keeping with 0-based indexing of Python) the first row/column is 0.
 
-    >>> M2 = M[:,:]
-    >>> M2[0,0] = 100
-    >>> M
+You cannot access rows or columns that are not present unless they
+are in a slice:
+
+    >>> M[:, 10] # the 10-th column (not there)
+    Traceback (most recent call last):
+    ...
+    IndexError: Index out of range: a[[0, 10]]
+    >>> M[:, 10:11] # the 10-th column (if there)
+    []
+    >>> M[:, :10] # all columns up to the 10-th
     [1  2  3]
     [       ]
     [4  5  6]
 
-See? Changing M2 didn't change M. Since we can slice, we can also assign
+Slicing an empty matrix works as long as you use a slice for the coordinate
+that has no size:
+
+    >>> Matrix(0, 3, [])[:, 1]
+    []
+
+Slicing gives a copy of what is sliced, so modifications of one object
+do not affect the other:
+
+    >>> M2 = M[:, :]
+    >>> M2[0, 0] = 100
+    >>> M[0, 0] == 100
+    False
+
+Notice that changing M2 didn't change M. Since we can slice, we can also assign
 entries:
 
     >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
