@@ -286,7 +286,7 @@ def _implicit_multiplication_application(result, global_dict):
     result = _flatten(result)
     return result
 
-def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
+def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
 
     result = []
@@ -353,16 +353,6 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
                     result.append((NAME, name))
                     continue
 
-            # we want xyz -> x*y*z but not theta -> t**2 * e * a
-            if _token_splittable(name) and implicit:
-                for var in name:
-                    result.extend([
-                        (NAME, 'Symbol'),
-                        (OP, '('),
-                        (NAME, repr(str(var))),
-                        (OP, ')'),
-                    ])
-            else:
                 result.extend([
                     (NAME, 'Symbol'),
                     (OP, '('),
@@ -389,11 +379,9 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor, implicit):
 
         prevtoken = tokval
 
-    if implicit:
-        result = _implicit_multiplication_application(result, global_dict)
     return untokenize(result)
 
-def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False, implicit=False):
+def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
