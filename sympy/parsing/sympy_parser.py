@@ -85,9 +85,8 @@ class AppliedFunction(object):
         return getattr(self, self.items[index])
 
     def __repr__(self):
-        return "AppliedFunction({}, {}, {})".format(self.function,
-                                                    self.args,
-                                                    self.exponent)
+        return "AppliedFunction(%s, %s, %s)" % (self.function, self.args,
+                                                self.exponent)
 
 class ParenthesisGroup(list):
     """List of tokens representing an expression in parentheses."""
