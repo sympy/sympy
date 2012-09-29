@@ -1,9 +1,9 @@
-Sparse Matrices (linear algebra)
-================================
+Sparse Matrices
+===============
 
 .. module:: sympy.matrices.sparse
 
-Dense Class Reference
----------------------
+SparseMatrix Class Reference
+----------------------------
 .. autoclass:: SparseMatrix
    :members:

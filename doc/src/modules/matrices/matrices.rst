@@ -538,9 +538,21 @@ Matrix Functions Reference
 
 .. autofunction:: casoratian
 
+.. autofunction:: sympy.matrices.mutable.randMatrix
+
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: a2idx
+.. autofunction:: sympy.matrices.mutable.list2numpy
 
+.. autofunction:: sympy.matrices.mutable.matrix2numpy
 
+.. autofunction:: sympy.matrices.mutable.symarray
+
+.. autofunction:: sympy.matrices.mutable.rot_axis1
+
+.. autofunction:: sympy.matrices.mutable.rot_axis2
+
+.. autofunction:: sympy.matrices.mutable.rot_axis3
+
+.. autofunction:: sympy.matrices.matrices.a2idx

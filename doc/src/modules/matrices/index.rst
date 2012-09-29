@@ -12,5 +12,5 @@ Contents:
    :maxdepth: 2
 
    matrices.rst
-   mutable.rst
+   dense.rst
    sparse.rst
