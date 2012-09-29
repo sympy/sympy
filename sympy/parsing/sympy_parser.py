@@ -72,7 +72,7 @@ class AppliedFunction(object):
         self.function = function
         self.args = args
         self.exponent = exponent
-        self.items = [function, args, exponent]
+        self.items = ['function', 'args', 'exponent']
 
     def expand(self):
         """Return a list of tokens representing the function"""
@@ -82,7 +82,12 @@ class AppliedFunction(object):
         return result
 
     def __getitem__(self, index):
-        return self.items.__getitem__(index)
+        return getattr(self, self.items[index])
+
+    def __repr__(self):
+        return "AppliedFunction({}, {}, {})".format(self.function,
+                                                    self.args,
+                                                    self.exponent)
 
 class ParenthesisGroup(list):
     """List of tokens representing an expression in parentheses."""
@@ -160,6 +165,23 @@ def _apply_functions(tokens, local_dict, global_dict):
         else:
             symbol = None
             result.append(tok)
+    return result
+
+def _split_symbols(tokens, local_dict, global_dict):
+    result = []
+    for tok in tokens:
+        if isinstance(tok, AppliedFunction):
+            if tok.function[1] == 'Symbol' and len(tok.args) == 3:
+                # Middle token, get value, strip quotes
+                symbol = tok.args[1][1][1:-1]
+                if _token_splittable(symbol):
+                    for char in symbol:
+                        result.append(AppliedFunction(
+                            tok.function,
+                            [(OP, '('), (NAME, str(repr(char))), (OP, ')')]
+                        ))
+                    continue
+        result.append(tok)
     return result
 
 def _implicit_multiplication(tokens, local_dict, global_dict):
@@ -302,6 +324,7 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     # These are interdependent steps, so we don't expose them separately
     for step in (_group_parentheses,
                  _apply_functions,
+                 _split_symbols,
                  _function_exponents,
                  _implicit_application,
                  _implicit_multiplication):
@@ -456,6 +479,8 @@ def rationalize(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
+standard_transformations = (auto_symbol, auto_number, factorial_notation)
 
 def parse_expr(s, local_dict=None, transformations=[]):
     """
