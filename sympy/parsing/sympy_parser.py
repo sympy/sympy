@@ -125,9 +125,9 @@ def _group_parentheses(tokens, local_dict, global_dict):
                     # Recurse here to handle nested parentheses
                     # Strip off the outer parentheses to avoid an infinite loop
                     inner = stack[1:-1]
-                    inner = _implicit_multiplication_application(inner,
-                                                                 local_dict,
-                                                                 global_dict)
+                    inner = implicit_multiplication_application(inner,
+                                                                local_dict,
+                                                                global_dict)
                     parenGroup = [stack[0]] + inner + [stack[-1]]
                     result.append(ParenthesisGroup(parenGroup))
                 stacklevel -= 1
@@ -281,7 +281,7 @@ def _function_exponents(tokens, local_dict, global_dict):
     return result
 
 def implicit_multiplication_application(result, local_dict, global_dict):
-    """Transformation for ``parse_expr`` that allows a slightly relaxed syntax.
+    """Allows a slightly relaxed syntax.
 
     - Parentheses for single-argument method calls are optional.
 
@@ -310,8 +310,82 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     result = _flatten(result)
     return result
 
-def _transform(tokens, local_dict, global_dict):
-    rationalize, convert_xor = False, True  # XXX TODO FIXME
+def auto_symbol(tokens, local_dict, global_dict):
+    """Inserts calls to ``Symbol`` for undefined variables."""
+    result = []
+    for toknum, tokval in tokens:
+        if toknum == NAME:
+            name = tokval
+
+            if (name in ['True', 'False', 'None']
+                or iskeyword(name)
+                or name in local_dict):
+                result.append((NAME, name))
+                continue
+            elif name in global_dict:
+                obj = global_dict[name]
+
+                if isinstance(obj, (Basic, type)) or callable(obj):
+                    result.append((NAME, name))
+                    continue
+
+            result.extend([
+                (NAME, 'Symbol'),
+                (OP, '('),
+                (NAME, repr(str(name))),
+                (OP, ')'),
+            ])
+        else:
+            result.append((toknum, tokval))
+
+    return result
+
+def factorial_notation(tokens, local_dict, global_dict):
+    """Allows standard notation for factorial."""
+    result = []
+    prevtoken = ''
+    for toknum, tokval in tokens:
+        if toknum == OP:
+            op = tokval
+
+            if op == '!!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
+                result = _add_factorial_tokens('factorial2', result)
+            elif op == '!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
+                result = _add_factorial_tokens('factorial', result)
+            else:
+                result.append((OP, op))
+        else:
+            result.append((toknum, tokval))
+
+        prevtoken = tokval
+
+    return result
+
+def convert_xor(tokens, local_dict, global_dict):
+    """Treats XOR, '^', as exponentiation, '**'."""
+    result = []
+    for toknum, tokval in tokens:
+        if toknum == OP:
+            if tokval == '^':
+                result.append((OP, '**'))
+            else:
+                result.append((toknum, tokval))
+        else:
+            result.append((toknum, tokval))
+
+    return result
+
+def auto_number(tokens, local_dict, global_dict):
+    """Converts numeric literals to use SymPy equivalents.
+
+    Complex numbers use ``I``; integer literals use ``Integer``, float
+    literals use ``Float``, and repeating decimals use ``Rational``.
+
+    """
     result = []
     prevtoken = ''
 
@@ -352,9 +426,6 @@ def _transform(tokens, local_dict, global_dict):
                             NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
                         (OP, ')'),
                     ]
-                elif rationalize:
-                    seq = [(NAME, 'Rational'), (OP,
-                            '('), (STRING, repr(str(number))), (OP, ')')]
                 else:
                     seq = [(NAME, 'Float'), (OP, '('),
                            (NUMBER, repr(str(number))), (OP, ')')]
@@ -363,49 +434,30 @@ def _transform(tokens, local_dict, global_dict):
                     NUMBER, number), (OP, ')')]
 
             result.extend(seq + postfix)
-        elif toknum == NAME:
-            name = tokval
-
-            if name in ['True', 'False', 'None'] or iskeyword(name) or name in local_dict:
-                result.append((NAME, name))
-                continue
-            elif name in global_dict:
-                obj = global_dict[name]
-
-                if isinstance(obj, (Basic, type)) or callable(obj):
-                    result.append((NAME, name))
-                    continue
-
-            result.extend([
-                (NAME, 'Symbol'),
-                (OP, '('),
-                (NAME, repr(str(name))),
-                (OP, ')'),
-            ])
-
-        elif toknum == OP:
-            op = tokval
-
-            if op == '^' and convert_xor:
-                result.append((OP, '**'))
-            elif op == '!!':
-                if prevtoken == '!' or prevtoken == '!!':
-                    raise TokenError
-                result = _add_factorial_tokens('factorial2', result)
-            elif op == '!':
-                if prevtoken == '!' or prevtoken == '!!':
-                    raise TokenError
-                result = _add_factorial_tokens('factorial', result)
-            else:
-                result.append((OP, op))
         else:
             result.append((toknum, tokval))
 
-        prevtoken = tokval
+    return result
+
+def rationalize(tokens, local_dict, global_dict):
+    """Converts floats into ``Rational``s. Run AFTER ``auto_number``."""
+    result = []
+    passed_float = False
+    for toknum, tokval in tokens:
+        if toknum == NAME:
+            if tokval == 'Float':
+                passed_float = True
+                tokval = 'Rational'
+            result.append((toknum, tokval))
+        elif passed_float == True and toknum == NUMBER:
+            passed_float = False
+            result.append((STRING, tokval))
+        else:
+            result.append((toknum, tokval))
 
     return result
 
-def parse_expr(s, *transformations, **kwargs):
+def parse_expr(s, local_dict=None, transformations=[]):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
@@ -420,7 +472,6 @@ def parse_expr(s, *transformations, **kwargs):
     <class 'sympy.core.numbers.Half'>
 
     """
-    local_dict = kwargs.get('local_dict')
 
     if local_dict is None:
         local_dict = {}

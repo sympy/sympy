@@ -1,4 +1,11 @@
-from sympy.parsing.sympy_parser import parse_expr
+from sympy.parsing.sympy_parser import (
+    parse_expr,
+    auto_symbol,
+    auto_number,
+    convert_xor,
+    factorial_notation,
+    implicit_multiplication_application
+)
 
 def test_implicit_multiplication_application():
     d = {
@@ -23,6 +30,10 @@ def test_implicit_multiplication_application():
         'sin^2 x**2': 'sin(x**2)**2',  # function raised to a power
         'sin**3(x)': 'sin(x)**3'
     }
+    transformations = (auto_number, auto_symbol, convert_xor,
+                       factorial_notation)
+    transformations2 = transformations + (implicit_multiplication_application,)
     for e in d:
-        assert(parse_expr(e, implicit=True, convert_xor=True) ==
-               parse_expr(d[e], convert_xor=True))
+        implicit = parse_expr(e, transformations=transformations2)
+        normal = parse_expr(d[e], transformations=transformations)
+        assert(implicit == normal)
