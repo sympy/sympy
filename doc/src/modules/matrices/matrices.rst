@@ -518,11 +518,7 @@ Matrix Functions Reference
 
 .. autofunction:: classof
 
-.. autofunction:: matrix_multiply
-
 .. autofunction:: matrix_multiply_elementwise
-
-.. autofunction:: matrix_add
 
 .. autofunction:: zeros
 

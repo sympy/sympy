@@ -461,12 +461,6 @@ class MatrixBase(object):
         """
         return (self.rows, self.cols)
 
-    def __rmul__(self, a):
-        if hasattr(a, "__array__") and a.shape != ():
-            return matrix_multiply(a, self)
-        out = self._new(self.rows, self.cols, map(lambda i: a*i, self._mat))
-        return out
-
     def expand(self, **hints):
         """
         Expand each element of the matrix by calling ``expand()``.
@@ -489,11 +483,66 @@ class MatrixBase(object):
     def __rsub__(self, a):
         return (-self) + a
 
-    def __mul__(self, a):
-        if hasattr(a, "__array__") and a.shape != ():
-            return matrix_multiply(self, a)
-        out = self._new(self.rows, self.cols, map(lambda i: i*a, self._mat))
-        return out
+    def __mul__(self, other):
+        """Return self*other where other is either a scalar or a matrix
+        of compatible dimensions.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
+        True
+        >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> A*B
+        [30, 36, 42]
+        [66, 81, 96]
+        >>> B*A
+        Traceback (most recent call last):
+        ...
+        ShapeError: Matrices size mismatch.
+        >>>
+
+        See Also
+        ========
+
+        matrix_multiply_elementwise
+        """
+        if hasattr(other, "__array__"):
+            # The following implmentation is equivalent, but about 5% slower
+            #ma, na = A.shape
+            #mb, nb = B.shape
+            #
+            #if na != mb:
+            #    raise ShapeError()
+            #product = Matrix(ma, nb, lambda i, j: 0)
+            #for i in range(ma):
+            #    for j in range(nb):
+            #        s = 0
+            #        for k in range(na):
+            #            s += A[i, k]*B[k, j]
+            #        product[i, j] = s
+            #return product
+            A = self
+            B = other
+            if A.shape[1] != B.shape[0]:
+                raise ShapeError("Matrices size mismatch.")
+            blst = B.T.tolist()
+            alst = A.tolist()
+            return classof(A, B)._new(A.shape[0], B.shape[1], lambda i, j:
+                                                reduce(lambda k, l: k+l,
+                                                map(lambda n, m: n*m,
+                                                alst[i],
+                                                blst[j]), 0))
+        else:
+            return self._new(self.rows, self.cols,
+                map(lambda i: i*other, self._mat))
+
+    def __rmul__(self, a):
+        if hasattr(a, "__array__"):
+            return self._new(a)*self
+        return self*a
 
     def __pow__(self, num):
         if not self.is_square:
@@ -524,17 +573,32 @@ class MatrixBase(object):
         else:
             raise NotImplementedError("Only integer and rational values are supported")
 
-    def __add__(self, a):
-        return matrix_add(self, a)
+    def __add__(self, other):
+        """Return self + other, raising ShapeError if shapes don't match."""
+        if hasattr(other, "__array__"):
+            A = self
+            B = other
+            if A.shape != B.shape:
+                raise ShapeError("Matrices size mismatch.")
+            alst = A.tolist()
+            blst = B.tolist()
+            ret = [0]*A.rows
+            for i in range(A.shape[0]):
+                ret[i] = map(lambda j, k: j+k, alst[i], blst[i])
+            return classof(A, B)._new(ret)
+        raise TypeError('cannot add matrix and %s' % type(other))
 
-    def __radd__(self, a):
-        return matrix_add(a, self)
+    def __radd__(self, other):
+        return self + other
 
-    def __div__(self, a):
-        return self * (S.One/a)
+    def __div__(self, other):
+        return self * (S.One/other)
 
-    def __truediv__(self, a):
-        return self.__div__(a)
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def __neg__(self):
+        return -1*self
 
     def multiply(self, b):
         """Returns self*b
@@ -544,17 +608,13 @@ class MatrixBase(object):
 
         dot
         cross
-
         multiply_elementwise
         """
-        return matrix_multiply(self, b)
+        return self*b
 
     def add(self, b):
         """Return self + b """
-        return matrix_add(self, b)
-
-    def __neg__(self):
-        return -1*self
+        return self + b
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -2059,13 +2119,7 @@ class MatrixBase(object):
         return self._new(M)
 
     def exp(self):
-        """ Returns the exponentiation of a matrix
-
-        See Also
-        ========
-
-        matrix_multiply
-        """
+        """ Returns the exponentiation of a square matrix."""
         if not self.is_square:
             raise NonSquareMatrixError("Exponentiation is valid only for square matrices")
         try:
@@ -3686,57 +3740,21 @@ def classof(A, B):
     except: pass
     raise TypeError("Incompatible classes %s, %s"%(A.__class__, B.__class__))
 
+def matrix_add(A, B):
+    SymPyDeprecationWarning(
+        feature="matrix_add(A, B)",
+        useinstead="A + B",
+        deprecated_since_version="0.7.2",
+    ).warn()
+    return A + B
+
 def matrix_multiply(A, B):
-    """
-    Matrix product A*B.
-
-    A and B must be of appropriate dimensions.  If A is an m x k matrix, and B
-    is a k x n matrix, the product will be an m x n matrix.
-
-    Examples
-    ========
-
-    >>> from sympy.matrices import Matrix
-    >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
-    >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    >>> A*B
-    [30, 36, 42]
-    [66, 81, 96]
-    >>> B*A
-    Traceback (most recent call last):
-    ...
-    ShapeError: Matrices size mismatch.
-    >>>
-
-    See Also
-    ========
-
-    matrix_multiply_elementwise
-    matrix_add
-    """
-    # The following implmentation is equivalent, but about 5% slower
-    #ma, na = A.shape
-    #mb, nb = B.shape
-    #
-    #if na != mb:
-    #    raise ShapeError()
-    #product = Matrix(ma, nb, lambda i, j: 0)
-    #for i in range(ma):
-    #    for j in range(nb):
-    #        s = 0
-    #        for k in range(na):
-    #            s += A[i, k]*B[k, j]
-    #        product[i, j] = s
-    #return product
-    if A.shape[1] != B.shape[0]:
-        raise ShapeError("Matrices size mismatch.")
-    blst = B.T.tolist()
-    alst = A.tolist()
-    return classof(A, B)._new(A.shape[0], B.shape[1], lambda i, j:
-                                        reduce(lambda k, l: k+l,
-                                        map(lambda n, m: n*m,
-                                        alst[i],
-                                        blst[j]), 0))
+    SymPyDeprecationWarning(
+        feature="matrix_multiply(A, B)",
+        useinstead="A * B",
+        deprecated_since_version="0.7.2",
+    ).warn()
+    return A*B
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -3752,32 +3770,13 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    matrix_multiply
-    matrix_add
+    __mul__
     """
     if A.shape != B.shape:
         raise ShapeError()
     shape = A.shape
     return classof(A, B)._new(shape[0], shape[1],
         lambda i, j: A[i, j] * B[i, j])
-
-def matrix_add(A, B):
-    """Return A + B
-
-    See Also
-    ========
-
-    matrix_multiply
-    matrix_multiply_elementwise
-    """
-    if A.shape != B.shape:
-        raise ShapeError()
-    alst = A.tolist()
-    blst = B.tolist()
-    ret = [0]*A.shape[0]
-    for i in range(A.shape[0]):
-        ret[i] = map(lambda j, k: j+k, alst[i], blst[i])
-    return classof(A, B)._new(ret)
 
 def zeros(r, c=None, cls=None):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;

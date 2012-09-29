@@ -49,7 +49,6 @@ def test_multiplication():
         ))
 
     c= a*b
-    assert a.multiply(b) == c
     assert c[0,0]==7
     assert c[0,1]==2
     assert c[1,0]==6
