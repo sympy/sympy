@@ -1,4 +1,4 @@
-from sympy.ntheory import isprime, sieve
+from sympy.ntheory import isprime
 from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
 
 rmul = Permutation.rmul
@@ -351,7 +351,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     base_len = len(base)
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-    temp = strong_gens_distr[:]
     if basic_orbits is None:
         basic_orbits = []
         for i in range(base_len):
