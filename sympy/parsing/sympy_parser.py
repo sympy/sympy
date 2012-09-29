@@ -315,8 +315,11 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
     Example:
 
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_multiplication_application)
     >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
-    ... implicit_multiplication_application)
+    ... transformations=standard_transformations +
+    ... (implicit_multiplication_application,))
     3*x*y*z + 10*sin(x**2)**2 + tan(theta)
 
     """
@@ -481,7 +484,7 @@ def rationalize(tokens, local_dict, global_dict):
 
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
 
-def parse_expr(s, local_dict=None, transformations=[]):
+def parse_expr(s, local_dict=None, transformations=standard_transformations):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
