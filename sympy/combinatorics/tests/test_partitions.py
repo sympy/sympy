@@ -1,5 +1,4 @@
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
-                                            RGS_generalized,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
 from sympy.utilities.pytest import raises

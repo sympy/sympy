@@ -1,16 +1,12 @@
-import random
-
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation, _af_rmuln
-from sympy.utilities.pytest import raises, skip, XFAIL
+from sympy.utilities.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
      _verify_normal_closure
-from sympy.combinatorics.util import _distribute_gens_by_base
 
 rmul = Permutation.rmul
 
@@ -183,7 +179,6 @@ def test_coset_factor():
     b = Permutation([2,1,3,4,5,0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    rep = g.stabilizer_cosets()
     d = Permutation([1,0,2,3,4,5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
@@ -309,7 +304,7 @@ def test_rubik():
     skip('takes too much time')
     G = PermutationGroup(rubik_cube_generators())
     assert G.order() == 43252003274489856000
-    G1 = PermutationGroup(gens[:3])
+    G1 = PermutationGroup(G[:3])
     assert G1.order() == 170659735142400
     assert not G1.is_normal(G)
     G2 = G.normal_closure(G1.generators)

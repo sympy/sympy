@@ -173,7 +173,6 @@ def rubik(n):
 
     # motion of the entire cube from the F side
     def FCW(r=1):
-        m = n//2
         for _ in range(r):
             cw(F)
             ccw(B)
@@ -191,7 +190,6 @@ def rubik(n):
 
     # motion of the entire cube from the U side
     def UCW(r=1):
-        m = n//2
         for _ in range(r):
             cw(U)
             ccw(D)

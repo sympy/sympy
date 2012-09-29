@@ -1,4 +1,3 @@
-from sympy.core import FiniteSet
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.core.compatibility import permutations
@@ -116,7 +115,7 @@ def test_Permutation():
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
-    jnk = s.cyclic_form
+    _ = s.cyclic_form # needed to create a value for _cyclic_form
     assert len(s._cyclic_form) != s.size and s.parity() == 0
     assert not s.is_odd
     assert s.is_even

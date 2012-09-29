@@ -1,11 +1,9 @@
 from sympy.core import Basic, C, Dict, sympify
 from sympy.core.compatibility import as_int
 from sympy.matrices import zeros
-from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import has_dups, flatten, group
 
-import random
 from collections import defaultdict
 
 class Partition(C.FiniteSet):

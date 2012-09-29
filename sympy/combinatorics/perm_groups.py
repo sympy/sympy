@@ -1,6 +1,5 @@
 from random import randrange, choice
 from math import log
-from types import GeneratorType
 
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
@@ -11,7 +10,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip)
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.ntheory import isprime, sieve
+from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
 
@@ -127,7 +126,6 @@ class _JGraph(object):
     def insert(self, g, alpha):
         """insert permutation ``g`` in stabilizer chain at point alpha
         """
-        n = len(g)
         i = _smallest_change(g, alpha)
         if i is None:
             return
@@ -1113,7 +1111,6 @@ class PermutationGroup(Basic):
                         g = computed_words[l]
                         rep_orb_index = orbit_descr[base[l]]
                         rep = orbit_reps[rep_orb_index]
-                        rep_orb = orbits[rep_orb_index]
                         im = g(base[l])
                         im_rep = g(rep)
                         tr_el = transversals[rep_orb_index][base[l]]
@@ -1329,7 +1326,6 @@ class PermutationGroup(Basic):
         a = []
 
         un = self._stabilizer_cosets_n
-        n = self.degree
         rank = 0
         base = [1]
         for i in un[m:0:-1]:
@@ -2685,7 +2681,6 @@ class PermutationGroup(Basic):
             base, strong_gens = self.schreier_sims_incremental(base=points)
             stab_gens = []
             degree = self.degree
-            identity = _af_new(range(degree))
             for gen in strong_gens:
                 if [gen(point) for point in points] == points:
                     stab_gens.append(gen)
