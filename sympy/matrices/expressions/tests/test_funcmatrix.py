@@ -1,5 +1,4 @@
 from sympy import (symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix)
-from sympy.utilities.pytest import raises, XFAIL
 
 def test_funcmatrix():
     i,j = symbols('i,j')

@@ -1,4 +1,4 @@
-from sympy import Basic, Expr, sympify
+from sympy import Basic, Expr
 from matexpr import ShapeError
 
 class Trace(Expr):

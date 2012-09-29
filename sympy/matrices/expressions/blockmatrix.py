@@ -171,7 +171,6 @@ class BlockMatrix(MatrixExpr):
         return Inverse(self)
 
     def _entry(self, i, j):
-        idx = 0
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
             if i < numrows:

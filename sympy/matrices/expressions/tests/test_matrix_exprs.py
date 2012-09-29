@@ -23,7 +23,6 @@ def test_transpose():
 def test_inverse():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', n, n)
     D = MatrixSymbol('D', n, n)
     E = MatrixSymbol('E', m, n)
@@ -90,6 +89,7 @@ def test_matexpr():
     assert (x*A).shape == A.shape
     assert (x*A).__class__ == MatMul
     assert 2*A - A - A == ZeroMatrix(*A.shape)
+    assert (A*B).shape == (n, l)
 
 def test_subs():
     n, m, l = symbols('n m l', integer=True)

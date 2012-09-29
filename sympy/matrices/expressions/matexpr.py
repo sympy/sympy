@@ -2,7 +2,7 @@ from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple, Integer
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
-from sympy.matrices import ShapeError, Matrix
+from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
     """ Matrix Expression Class
@@ -82,9 +82,6 @@ class MatrixExpr(Expr):
     def __rdiv__(self, other):
         raise NotImplementedError()
         #return MatMul(other, Pow(self, S.NegativeOne))
-
-    def __getitem__(self, key):
-        raise NotImplementedError()
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
