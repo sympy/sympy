@@ -2904,7 +2904,7 @@ def _undetermined_coefficients_match(expr, x):
 def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
     r"""
     Solves an nth order linear differential equation with constant
-    coefficients using the method of undetermined coefficients.
+    coefficients using the method of variation of parameters.
 
     This method works on any differential equations of the form
     f(x)^(n) + a_(n-1)*f(x)^(n-1) + ... + a1*f'(x) + a0*f(x) = P(x).
