@@ -60,8 +60,7 @@ def _add_factorial_tokens(name, result):
 
     return result
 
-class AppliedFunction(collections.namedtuple('AppliedFunction',
-                                             'function args exponent')):
+class AppliedFunction(object):
     """
     A group of tokens representing a function and its arguments.
 
@@ -73,6 +72,7 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
         self.function = function
         self.args = args
         self.exponent = exponent
+        self.items = [function, args, exponent]
 
     def expand(self):
         """Return a list of tokens representing the function"""
@@ -80,6 +80,9 @@ class AppliedFunction(collections.namedtuple('AppliedFunction',
         result.append(self.function)
         result.extend(self.args)
         return result
+
+    def __getitem__(self, index):
+        return self.items.__getitem__(index)
 
 class ParenthesisGroup(list):
     """List of tokens representing an expression in parentheses."""
@@ -96,7 +99,7 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
-def _group_parentheses(tokens, global_dict):
+def _group_parentheses(tokens, local_dict, global_dict):
     """Group tokens between parentheses with ParenthesisGroup.
 
     Also processes those tokens recursively.
@@ -122,7 +125,9 @@ def _group_parentheses(tokens, global_dict):
                     # Recurse here to handle nested parentheses
                     # Strip off the outer parentheses to avoid an infinite loop
                     inner = stack[1:-1]
-                    inner = _implicit_multiplication_application(inner, global_dict)
+                    inner = _implicit_multiplication_application(inner,
+                                                                 local_dict,
+                                                                 global_dict)
                     parenGroup = [stack[0]] + inner + [stack[-1]]
                     result.append(ParenthesisGroup(parenGroup))
                 stacklevel -= 1
@@ -133,7 +138,7 @@ def _group_parentheses(tokens, global_dict):
             result.append(token)
     return result
 
-def _apply_functions(tokens, global_dict):
+def _apply_functions(tokens, local_dict, global_dict):
     """Convert a NAME token + ParenthesisGroup into an AppliedFunction.
 
     Note that ParenthesisGroups, if not applied to any function, are
@@ -157,7 +162,7 @@ def _apply_functions(tokens, global_dict):
             result.append(tok)
     return result
 
-def _implicit_multiplication(tokens, global_dict):
+def _implicit_multiplication(tokens, local_dict, global_dict):
     """Implicitly adds '*' tokens.
 
     Cases:
@@ -202,7 +207,7 @@ def _implicit_multiplication(tokens, global_dict):
     result.append(tokens[-1])
     return result
 
-def _implicit_application(tokens, global_dict):
+def _implicit_application(tokens, local_dict, global_dict):
     """Adds parentheses as needed after functions.
 
     Also processes functions raised to powers."""
@@ -256,7 +261,7 @@ def _implicit_application(tokens, global_dict):
     result.append(tokens[-1])
     return result
 
-def _function_exponents(tokens, global_dict):
+def _function_exponents(tokens, local_dict, global_dict):
     """Preprocess functions raised to powers."""
     result = []
     need_exponent = False
@@ -275,24 +280,42 @@ def _function_exponents(tokens, global_dict):
     result.append(tokens[-1])
     return result
 
-def _implicit_multiplication_application(result, global_dict):
+def implicit_multiplication_application(result, local_dict, global_dict):
+    """Transformation for ``parse_expr`` that allows a slightly relaxed syntax.
+
+    - Parentheses for single-argument method calls are optional.
+
+    - Multiplication is implicit.
+
+    - Symbol names can be split (i.e. spaces are not needed between
+      symbols).
+
+    - Functions can be exponentiated.
+
+    Example:
+
+    >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
+    ... implicit_multiplication_application)
+    3*x*y*z + 10*sin(x**2)**2 + tan(theta)
+
+    """
+    # These are interdependent steps, so we don't expose them separately
     for step in (_group_parentheses,
                  _apply_functions,
                  _function_exponents,
                  _implicit_application,
                  _implicit_multiplication):
-        result = step(result, global_dict)
+        result = step(result, local_dict, global_dict)
 
     result = _flatten(result)
     return result
 
-def _transform(s, local_dict, global_dict, rationalize, convert_xor):
-    g = generate_tokens(StringIO(s).readline)
-
+def _transform(tokens, local_dict, global_dict):
+    rationalize, convert_xor = False, True  # XXX TODO FIXME
     result = []
     prevtoken = ''
 
-    for toknum, tokval, _, _, _ in g:
+    for toknum, tokval in tokens:
         if toknum == NUMBER:
             number = tokval
             postfix = []
@@ -353,12 +376,13 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     result.append((NAME, name))
                     continue
 
-                result.extend([
-                    (NAME, 'Symbol'),
-                    (OP, '('),
-                    (NAME, repr(str(name))),
-                    (OP, ')'),
-                ])
+            result.extend([
+                (NAME, 'Symbol'),
+                (OP, '('),
+                (NAME, repr(str(name))),
+                (OP, ')'),
+            ])
+
         elif toknum == OP:
             op = tokval
 
@@ -379,9 +403,9 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
         prevtoken = tokval
 
-    return untokenize(result)
+    return result
 
-def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
+def parse_expr(s, *transformations, **kwargs):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
@@ -396,6 +420,8 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     <class 'sympy.core.numbers.Half'>
 
     """
+    local_dict = kwargs.get('local_dict')
+
     if local_dict is None:
         local_dict = {}
 
@@ -413,10 +439,17 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
         hit = kern in s
 
-    code = _transform(
-        s.strip(), local_dict, global_dict, rationalize, convert_xor)
+    tokens = []
+    input_code = StringIO(s.strip())
+    for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
+        tokens.append((toknum, tokval))
+
+    for transform in transformations:
+        tokens = transform(tokens, local_dict, global_dict)
+
+    code = untokenize(tokens)
     expr = eval(
-        code, global_dict, local_dict)  # take local objects in preference
+        code, global_dict, local_dict) # take local objects in preference
 
     if not hit:
         return expr
