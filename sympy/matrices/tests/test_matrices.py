@@ -511,15 +511,15 @@ def test_QRsolve():
 def test_inverse():
     A = eye(4)
     assert A.inv() == eye(4)
-    assert A.inv("LU") == eye(4)
-    assert A.inv("ADJ") == eye(4)
+    assert A.inv(method="LU") == eye(4)
+    assert A.inv(method="ADJ") == eye(4)
     A = Matrix([[2,3,5],
                 [3,6,2],
                 [8,3,6]])
     Ainv = A.inv()
     assert A*Ainv == eye(3)
-    assert A.inv("LU") == Ainv
-    assert A.inv("ADJ") == Ainv
+    assert A.inv(method="LU") == Ainv
+    assert A.inv(method="ADJ") == Ainv
 
 def test_util():
     R = Rational
@@ -982,7 +982,8 @@ def test_inv_iszerofunc():
     A = eye(4)
     A.col_swap(0,1)
     for method in "GE", "LU":
-        assert A.inv(method, iszerofunc=lambda x: x == 0) == A.inv("ADJ")
+        assert A.inv(method=method, iszerofunc=lambda x: x == 0) == \
+            A.inv(method="ADJ")
 
 def test_jacobian_metrics():
     rho, phi = symbols("rho phi")

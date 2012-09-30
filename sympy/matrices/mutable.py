@@ -10,6 +10,10 @@ from sympy.simplify import simplify as _simplify
 
 from sympy.matrices.matrices import MatrixBase, ShapeError, zeros
 
+def _iszero(x):
+    """Returns True if x is zero."""
+    return x.is_zero
+
 class MutableMatrix(MatrixBase):
 
     is_MatrixExpr = False
@@ -285,6 +289,121 @@ class MutableMatrix(MatrixBase):
         ones
         """
         self._mat = [value]*len(self)
+
+    def _eval_trace(self):
+        """
+        Calculate the trace of a square matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> eye(3).trace()
+        3
+
+        """
+        trace = 0
+        for i in range(self.cols):
+            trace += self._mat[i*self.cols + i]
+        return trace
+
+    def _eval_transpose(self):
+        """
+        Matrix transposition.
+
+        >>> from sympy import Matrix, I
+        >>> m=Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        [1, 2 + I]
+        [3,     4]
+        >>> m.transpose()
+        [    1, 3]
+        [2 + I, 4]
+        >>> m.T == m.transpose()
+        True
+
+        See Also
+        ========
+
+        conjugate: By-element conjugation
+        """
+        a = [0]*len(self)
+        for i in range(self.cols):
+            a[i*self.rows:(i + 1)*self.rows] = self._mat[i::self.cols]
+        return self._new(self.cols, self.rows, a)
+
+    def _eval_conjugate(self):
+        """By-element conjugation.
+
+        See Also
+        ========
+
+        transpose: Matrix transposition
+        H: Hermite conjugation
+        D: Dirac conjugation
+        """
+        out = self._new(self.rows, self.cols,
+                lambda i, j: self[i, j].conjugate())
+        return out
+
+    def _eval_inverse(self, **kwargs):
+        """Return the matrix inverse.
+
+        kwargs
+        ======
+
+        method
+        iszerofunc
+        try_block_diag
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          GE .... inverse_GE()
+          LU .... inverse_LU()
+          ADJ ... inverse_ADJ()
+
+        According to the ``try_block_diag`` keyword, it will try to form block
+        diagonal matrices using the method get_diag_blocks(), invert these
+        individually, and then reconstruct the full inverse matrix.
+
+        Note, the GE and LU methods may require the matrix to be simplified
+        before it is inverted in order to properly detect zeros during
+        pivoting. In difficult cases a custom zero detection function can
+        be provided by setting the ``iszerosfunc`` argument to a function that
+        should return True if its argument is zero. The ADJ routine computes
+        the determinant and uses that to detect singular matrices in addition
+        to testing for zeros on the diagonal.
+
+        See Also
+        ========
+
+        inverse_LU
+        inverse_GE
+        inverse_ADJ
+        """
+        from sympy.matrices import diag
+
+        method = kwargs.get('method', 'GE')
+        iszerofunc = kwargs.get('iszerofunc', _iszero)
+        if kwargs.get('try_block_diag', False):
+            blocks = self.get_diag_blocks()
+            r = []
+            for block in blocks:
+                r.append(block.inv(method=method, iszerofunc=iszerofunc))
+            return diag(*r)
+        if method == "GE":
+            return self.inverse_GE(iszerofunc=iszerofunc)
+        elif method == "LU":
+            return self.inverse_LU(iszerofunc=iszerofunc)
+        elif method == "ADJ":
+            return self.inverse_ADJ(iszerofunc=iszerofunc)
+        else:
+            # make sure to add an invertibility check (as in inverse_LU)
+            # if a new method is added.
+            raise ValueError("Inversion method unrecognized")
 
     ############################
     # Mutable matrix operators #

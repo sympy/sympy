@@ -349,8 +349,8 @@ Linear algebra
 --------------
 
 Now that we have the basics out of the way, let's see what we can do with the
-actual matrices. Of course the first things that come to mind are the basics
-like the determinant:
+actual matrices. Of course, one of the first things that comes to mind is the
+determinant:
 
     >>> M = Matrix(( [1, 2, 3], [3, 6, 2], [2, 0, 1] ))
     >>> M.det()
@@ -362,8 +362,9 @@ like the determinant:
     >>> M3.det()
     0
 
-and the inverse. In SymPy the inverse is computed by Gaussian elimination by
-default but we can specify it be done by LU decomposition as well:
+Another common operation is the inevers: In SymPy, this is computed by Gaussian
+elimination by default (for dense matrices) but we can specify it be done by LU
+decomposition as well:
 
     >>> M2.inv()
     [1  0  0]
@@ -371,19 +372,19 @@ default but we can specify it be done by LU decomposition as well:
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M2.inv("LU")
+    >>> M2.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M.inv("LU")
+    >>> M.inv(method="LU")
     [-3/14  1/14  1/2 ]
     [                 ]
     [-1/28  5/28  -1/4]
     [                 ]
     [ 3/7   -1/7   0  ]
-    >>> M * M.inv("LU")
+    >>> M * M.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]

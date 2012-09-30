@@ -1,8 +1,9 @@
 from matrices import MatrixBase
+from mutable import MutableMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple
 
-class ImmutableMatrix(MatrixExpr, MatrixBase):
+class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     _class_priority = 8
 
@@ -15,6 +16,7 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
         cols = Integer(cols)
         mat = Tuple(*mat)
         return Basic.__new__(cls, rows, cols, mat)
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
@@ -40,7 +42,10 @@ class ImmutableMatrix(MatrixExpr, MatrixBase):
     conjugate = MatrixBase.conjugate
     equals = MatrixBase.equals
     is_Identity = MatrixBase.is_Identity
-    transpose = MatrixBase.transpose
+    _eval_trace = MutableMatrix._eval_trace
+    _eval_transpose = MutableMatrix._eval_transpose
+    _eval_conjugate = MutableMatrix._eval_conjugate
+    _eval_inverse = MutableMatrix._eval_inverse
 
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__

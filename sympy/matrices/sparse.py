@@ -457,7 +457,24 @@ class SparseMatrix(MatrixBase):
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    def transpose(self):
+    def _eval_trace(self):
+        """
+        Calculate the trace of a square matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> eye(3).trace()
+        3
+
+        """
+        trace = S.Zero
+        for i in range(self.cols):
+            trace += self._smat.get((i, i), 0)
+        return trace
+
+    def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
 
         Examples
@@ -478,10 +495,7 @@ class SparseMatrix(MatrixBase):
             tran._smat[key] = value
         return tran
 
-    T = property(transpose, None, None, "Matrix transposition.")
-
-
-    def conjugate(self):
+    def _eval_conjugate(self):
         """Return the by-element conjugation.
 
         Examples
@@ -508,8 +522,6 @@ class SparseMatrix(MatrixBase):
         for key, value in self._smat.iteritems():
             conj._smat[key] = value.conjugate()
         return conj
-
-    C = property(conjugate, None, None, "By-element conjugation.")
 
     def multiply(self, other):
         """Fast multiplication exploiting the sparsity of the matrix.
@@ -1182,7 +1194,7 @@ class SparseMatrix(MatrixBase):
         else:
             return self.inv(method=method)*rhs
 
-    def inv(self, method="LDL"):
+    def _eval_inverse(self, **kwargs):
         """
         Returns the inverse of the given matrix using
         Cholesky decomposition or LDL decomposition,
@@ -1193,11 +1205,11 @@ class SparseMatrix(MatrixBase):
         ... [ 2, -1,  0],
         ... [-1,  2, -1],
         ... [ 0,  0,  2]])
-        >>> A.inv('CH')
+        >>> A.inv(method='CH')
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]
-        >>> A.inv('LDL')
+        >>> A.inv(method='LDL')
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]
@@ -1214,6 +1226,7 @@ class SparseMatrix(MatrixBase):
             r1 = self[0, :]
             self = t*self
             I = t*I
+        method = kwargs.get('method', 'LDL')
         if method == "LDL":
             solve = self._LDL_solve
         elif method == "CH":

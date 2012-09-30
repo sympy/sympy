@@ -26,6 +26,10 @@ def as_int(i):
         raise TypeError()
     return ii
 
+def _iszero(x):
+    """Returns True if x is zero."""
+    return x.is_zero
+
 class MatrixError(Exception):
     pass
 
@@ -77,7 +81,6 @@ class MatrixBase(object):
     _class_priority = 3
 
     def _sympy_(self):
-        #return self.as_immutable()
         raise SympifyError('Matrix cannot be sympified')
 
     @classmethod
@@ -207,58 +210,29 @@ class MatrixBase(object):
     def copy(self):
         return self._new(self.rows, self.cols, self._mat)
 
-    def _eval_transpose(self):
-        return self.transpose()
+    def trace(self):
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        return self._eval_trace()
 
-    def _eval_trace(self):
-        return self.trace()
+    def inv(self, **kwargs):
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        return self._eval_inverse(**kwargs)
 
     def transpose(self):
-        """
-        Matrix transposition.
-
-        >>> from sympy import Matrix, I
-        >>> m=Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        [1, 2 + I]
-        [3,     4]
-        >>> m.transpose()
-        [    1, 3]
-        [2 + I, 4]
-        >>> m.T == m.transpose()
-        True
-
-        See Also
-        ========
-
-        conjugate: By-element conjugation
-        """
-        a = [0]*len(self)
-        for i in range(self.cols):
-            a[i*self.rows:(i+1)*self.rows] = self._mat[i::self.cols]
-        return self._new(self.cols, self.rows, a)
+        return self._eval_transpose()
 
     T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
-        """By-element conjugation.
-
-        See Also
-        ========
-
-        transpose: Matrix transposition
-        H: Hermite conjugation
-        D: Dirac conjugation
-        """
-        out = self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].conjugate())
-        return out
+        return self._eval_conjugate()
 
     C = property(conjugate, None, None, "By-element conjugation.")
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""
-        return self.conjugate().transpose()
+        return self.C.T
 
     @property
     def H(self):
@@ -1024,57 +998,6 @@ class MatrixBase(object):
         else:
             return self.inv(method=method)*rhs
 
-    def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
-        """
-        Calculates the matrix inverse.
-
-        According to the "method" parameter, it calls the appropriate method:
-
-          GE .... inverse_GE()
-          LU .... inverse_LU()
-          ADJ ... inverse_ADJ()
-
-        According to the "try_block_diag" parameter, it will try to form block
-        diagonal matrices using the method get_diag_blocks(), invert these
-        individually, and then reconstruct the full inverse matrix.
-
-        Note, the GE and LU methods may require the matrix to be simplified
-        before it is inverted in order to properly detect zeros during
-        pivoting. In difficult cases a custom zero detection function can
-        be provided by setting the iszerosfunc argument to a function that
-        should return True if its argument is zero. The ADJ routine computes
-        the determinant and uses that to detect singular matrices in addition
-        to testing for zeros on the diagonal.
-
-        See Also
-        ========
-
-        inverse_LU
-        inverse_GE
-        inverse_ADJ
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if try_block_diag:
-            blocks = self.get_diag_blocks()
-            r = []
-            for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc))
-            return diag(*r)
-        if method == "GE":
-            return self.inverse_GE(iszerofunc=iszerofunc)
-        elif method == "LU":
-            return self.inverse_LU(iszerofunc=iszerofunc)
-        elif method == "ADJ":
-            return self.inverse_ADJ(iszerofunc=iszerofunc)
-        else:
-            # make sure to add an invertibility check (as in inverse_LU)
-            # if a new method is added.
-            raise ValueError("Inversion method unrecognized")
-
-    def _eval_inverse(self):
-        return self.inv()
-
     def __mathml__(self):
         mml = ""
         for i in range(self.rows):
@@ -1211,23 +1134,6 @@ class MatrixBase(object):
         newmat[:, i:j] = mti
         newmat[:, j: ] = self[:, i:]
         return newmat
-
-    def trace(self):
-        """
-        Calculate the trace of a (square) matrix.
-
-        >>> from sympy.matrices import eye
-        >>> eye(3).trace()
-        3
-
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-
-        trace = 0
-        for i in range(self.cols):
-            trace += self[i, i]
-        return trace
 
     def submatrix(self, keys):
         """

@@ -282,24 +282,24 @@ def test_sparse_matrix():
     # test_inverse
     A = eye(4)
     assert A.inv() == eye(4)
-    assert A.inv("CH") == eye(4)
-    assert A.inv("LDL") == eye(4)
+    assert A.inv(method="CH") == eye(4)
+    assert A.inv(method="LDL") == eye(4)
 
     A = SparseMatrix([[2,3,5],
                       [3,6,2],
                       [7,2,6]])
     Ainv = SparseMatrix(Matrix(A).inv())
     assert A*Ainv == eye(3)
-    assert A.inv("CH") == Ainv
-    assert A.inv("LDL") == Ainv
+    assert A.inv(method="CH") == Ainv
+    assert A.inv(method="LDL") == Ainv
 
     A = SparseMatrix([[2,3,5],
                       [3,6,2],
                       [5,2,6]])
     Ainv = SparseMatrix(Matrix(A).inv())
     assert A*Ainv == eye(3)
-    assert A.inv("CH") == Ainv
-    assert A.inv("LDL") == Ainv
+    assert A.inv(method="CH") == Ainv
+    assert A.inv(method="LDL") == Ainv
 
     # test_cross
     v1 = Matrix(1,3,[1,2,3])
@@ -420,17 +420,21 @@ def test_sparse_matrix():
 
     assert M.zeros(3, 5) == SparseMatrix(3, 5, {})
 
-def test_SparseMatrix_transpose():
+def test_transpose():
     assert SparseMatrix(((1,2),(3,4))).transpose() == \
         SparseMatrix(((1,3),(2,4)))
 
-def test_SparseMatrix_CL_RL():
+def test_trace():
+    assert SparseMatrix(((1,2),(3,4))).trace() == 5
+    assert SparseMatrix(((0,0),(0,4))).trace() == 4
+
+def test_CL_RL():
     assert SparseMatrix(((1,2),(3,4))).row_list() == \
         [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SparseMatrix(((1,2),(3,4))).col_list() == \
         [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
-def test_SparseMatrix_add():
+def test_add():
     assert SparseMatrix(((1,0), (0,1))) + SparseMatrix(((0,1), (1,0))) == \
         SparseMatrix(((1,1), (1,1)))
     a = SparseMatrix(100, 100, lambda i, j: int(j != 0 and i % j == 0))
@@ -522,8 +526,8 @@ def test_sparse_solve():
     [S(2)/3, S(1)/3, S(1)/6],
     [S(1)/3, S(2)/3, S(1)/3],
     [  0,   0, S(1)/2]])
-    assert A.inv('CH') == ans
-    assert A.inv('LDL') == ans
+    assert A.inv(method='CH') == ans
+    assert A.inv(method='LDL') == ans
     assert A * ans == SparseMatrix(eye(3))
 
     s = A.solve(A[:, 0], 'LDL')
