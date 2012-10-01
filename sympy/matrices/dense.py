@@ -47,6 +47,18 @@ class Matrix(MatrixBase):
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
+    @property
+    def is_Identity(self):
+        if not self.is_square:
+            return False
+        if not all(self[i, i] == 1 for i in range(self.rows)):
+            return False
+        for i in range(self.rows):
+            for j in range(i + 1, self.cols):
+                if self[i, j] or self[j, i]:
+                    return False
+        return True
+
     def __getitem__(self, key):
         """
         >>> from sympy import Matrix, I

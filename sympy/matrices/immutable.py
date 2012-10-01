@@ -42,12 +42,13 @@ class ImmutableMatrix(MatrixExpr, Matrix):
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
-    equals = Matrix.equals
-    is_Identity = MatrixBase.is_Identity
     _eval_trace = Matrix._eval_trace
     _eval_transpose = Matrix._eval_transpose
     _eval_conjugate = Matrix._eval_conjugate
     _eval_inverse = Matrix._eval_inverse
+
+    equals = Matrix.equals
+    is_Identity = Matrix.is_Identity
 
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__

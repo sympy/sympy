@@ -73,6 +73,7 @@ class MatrixBase(object):
     __array_priority__ = 10.0
 
     is_Matrix = True
+    is_Identity = None
     _class_priority = 3
 
     def _sympy_(self):
@@ -3364,18 +3365,6 @@ class MatrixBase(object):
         True
         """
         return any(a.has(*patterns) for a in self._mat)
-
-    @property
-    def is_Identity(self):
-        if not self.is_square:
-            return False
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i==j and self[i, j] != 1:
-                    return False
-                if i!=j and self[i, j]:
-                    return False
-        return True
 
     def dual(self):
         """

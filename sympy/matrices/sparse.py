@@ -83,6 +83,14 @@ class SparseMatrix(MatrixBase):
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
 
+    @property
+    def is_Identity(self):
+        if not self.is_square:
+            return False
+        if not all(self[i, i] == 1 for i in range(self.rows)):
+            return False
+        return len(self) == self.rows
+
     def __getitem__(self, key):
 
         if type(key) is tuple:
