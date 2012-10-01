@@ -17,8 +17,6 @@ def builder_inited(app):
 
     app.add_javascript(app.config.sympylive_url + '/static/utilities.js')
     app.add_javascript(app.config.sympylive_url + '/static/external/classy.js')
-    app.add_javascript(
-        'http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js')
 
     app.add_stylesheet(app.config.sympylive_url + '/static/live-core.css')
     app.add_stylesheet(app.config.sympylive_url +
