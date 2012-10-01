@@ -1286,11 +1286,11 @@ def casoratian(seqs, n, zero=True):
 
     return Matrix(k, k, f).det()
 
-# XXX make this a random method of each class
-def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
+def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
     the matrix will be square. If ``symmetric`` is True the matrix must be
-    square.
+    square. If ``percent`` is less than 100 then only approximately the given
+    percentage of elements will be non-zero.
 
     Examples
     ========
@@ -1318,6 +1318,10 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     False
     >>> A == randMatrix(3, seed=1)
     True
+    >>> randMatrix(3, symmetric=True, percent=50) # doctest:+SKIP
+    [0, 68, 43]
+    [0, 68,  0]
+    [0, 91, 34]
     """
     if c is None:
         c = r
@@ -1328,14 +1332,21 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     if symmetric and r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
     if not symmetric:
-        return Matrix(r, c, lambda i, j: prng.randint(min, max))
-    m = zeros(r)
-    for i in range(r):
-        for j in range(i, r):
-            m[i, j] = prng.randint(min, max)
-    for i in range(r):
-        for j in range(i):
-            m[i, j] = m[j, i]
+        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
+    else:
+        m = zeros(r)
+        for i in range(r):
+            for j in range(i, r):
+                m[i, j] = prng.randint(min, max)
+        for i in range(r):
+            for j in range(i):
+                m[i, j] = m[j, i]
+    if percent == 100:
+        return m
+    else:
+        z = int(r*c*percent//100)
+        m._mat[:z] = [S.Zero]*z
+        random.shuffle(m._mat)
     return m
 
 # for compatibility
