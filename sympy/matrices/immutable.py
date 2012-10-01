@@ -9,7 +9,7 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args)==1 and isinstance(args[0], ImmutableMatrix):
+        if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
         rows = Integer(rows)
@@ -19,10 +19,6 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
-
-    @property
-    def shape(self):
-        return self.args[0:2]
 
     @property
     def _mat(self):

@@ -87,8 +87,13 @@ class MatrixExpr(Expr):
     __rtruediv__ = __rdiv__
 
     @property
+    def shape(self):
+        return self.args[:2]
+
+    @property
     def rows(self):
         return self.shape[0]
+
     @property
     def cols(self):
         return self.shape[1]
