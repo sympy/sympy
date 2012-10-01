@@ -278,6 +278,9 @@ class Identity(MatrixSymbol):
     def _eval_inverse(self):
         return self
 
+    def conjugate(self):
+        return self
+
     def _entry(self, i, j):
         if i==j:
             return S.One
@@ -303,6 +306,9 @@ class ZeroMatrix(MatrixSymbol):
 
     def _eval_trace(self):
         return S.Zero
+
+    def conjugate(self):
+        return self
 
     def _entry(self, i, j):
         return S.Zero

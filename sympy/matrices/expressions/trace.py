@@ -17,7 +17,7 @@ class Trace(Expr):
     is_Trace = True
     def __new__(cls, mat):
         if not mat.is_Matrix:
-            raise TypeError("input to Trace, %s, is not a matrix"%str(mat))
+            raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
         if not mat.is_square:
             raise ShapeError("Trace of a non-square matrix")
@@ -33,4 +33,4 @@ class Trace(Expr):
 
     def doit(self):
         from sympy import Add
-        return Add(*[self.arg[i,i] for i in xrange(self.arg.rows)])
+        return Add(*[self.arg[i,i] for i in range(self.arg.rows)])

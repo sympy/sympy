@@ -239,6 +239,7 @@ def test_ZeroMatrix():
     assert A-A == ZeroMatrix(*A.shape)
 
     assert Transpose(Z) == ZeroMatrix(m, n)
+    assert Z.conjugate() == Z
 
 def test_Identity():
     n,m = symbols('n m', integer=True)
@@ -251,7 +252,7 @@ def test_Identity():
 
     assert Transpose(In) == In
     assert Inverse(In) == In
-
+    assert In.conjugate() == In
 
 def test_MatAdd():
     n, m = symbols('n m', integer=True)
