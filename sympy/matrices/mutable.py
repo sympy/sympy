@@ -569,6 +569,23 @@ class MutableMatrix(MatrixBase):
         except AttributeError:
             return False
 
+    def __eq__(self, other):
+        try:
+            if self.shape != other.shape:
+                return False
+            if isinstance(other, MutableMatrix):
+                return self._mat == other._mat
+            elif isinstance(other, MatrixBase):
+                return self._mat == other.as_mutable()._mat
+        except AttributeError:
+            return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return super(MatrixBase, self).__hash__()
+
 
     ############################
     # Mutable matrix operators #

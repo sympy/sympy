@@ -1238,3 +1238,22 @@ class SparseMatrix(MatrixBase):
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
         return rv
+
+    def __eq__(self, other):
+        try:
+            if self.shape != other.shape:
+                return False
+            if isinstance(other, SparseMatrix):
+                return self._smat == other._smat
+            elif isinstance(other, MatrixBase):
+                return self._smat == SparseMatrix(other)._smat
+        except AttributeError:
+            return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return super(MatrixBase, self).__hash__()
+
+

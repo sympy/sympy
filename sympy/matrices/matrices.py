@@ -497,21 +497,6 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def __eq__(self, other):
-        try:
-            return (self.shape == other.shape and
-                    all([self[i, j] == other[i, j]
-                        for i in range(self.rows)
-                        for j in range(self.cols)]))
-        except AttributeError:
-            return False
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __hash__(self):
-        return super(MatrixBase, self).__hash__()
-
     def _format_str(self, strfunc, rowsep='\n'):
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
