@@ -1238,11 +1238,11 @@ class SparseMatrix(MatrixBase):
         ... [ 2, -1,  0],
         ... [-1,  2, -1],
         ... [ 0,  0,  2]])
-        >>> A.inv(method='CH')
+        >>> A.inv('CH')
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]
-        >>> A.inv(method='LDL')
+        >>> A.inv(method='LDL') # use of 'method=' is optional
         [2/3, 1/3, 1/6]
         [1/3, 2/3, 1/3]
         [  0,   0, 1/2]

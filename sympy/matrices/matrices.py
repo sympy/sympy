@@ -211,9 +211,11 @@ class MatrixBase(object):
             raise NonSquareMatrixError()
         return self._eval_trace()
 
-    def inv(self, **kwargs):
+    def inv(self, method=None, **kwargs):
         if not self.is_square:
             raise NonSquareMatrixError()
+        if method is not None:
+            kwargs['method'] = method
         return self._eval_inverse(**kwargs)
 
     def transpose(self):
