@@ -284,14 +284,13 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
     _distribute_gens_by_base, _handle_precomputed_bsgs
 
     """
-    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.perm_groups import PermutationGroup, orbit_transversal
     base_len = len(base)
     transversals = [None]*base_len
     if transversals_only is False:
         basic_orbits = [None]*base_len
     for i in xrange(base_len):
-        group = PermutationGroup(strong_gens_distr[i])
-        transversals[i] = dict(group.orbit_transversal(base[i], pairs=True))
+        transversals[i] = dict(orbit_transversal(strong_gens_distr[i], base[i], pairs=True))
         if transversals_only is False:
             basic_orbits[i] = transversals[i].keys()
     if transversals_only:

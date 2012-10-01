@@ -3004,7 +3004,7 @@ class PermutationGroup(Basic):
         for gen in _gens:
             if all(x == gen._array_form[x] for x in _base):
                 for new in range(gen.size):
-                    if gen(new) != new:
+                    if gen._array_form[new] != new:
                         break
                 else:
                     assert None # can this ever happen?
@@ -3161,12 +3161,10 @@ class PermutationGroup(Basic):
         # distribute generators according to basic stabilizers
         strong_gens_distr = _distribute_gens_by_base(base, gens)
         # initialize the basic stabilizers, basic transversals and basic orbits
-        stabs = {}
         transversals = {}
         orbs = {}
         for i in range(base_len):
-            stabs[i] = PermutationGroup(strong_gens_distr[i])
-            transversals[i] = dict(stabs[i].orbit_transversal(base[i],\
+            transversals[i] = dict(orbit_transversal(strong_gens_distr[i], base[i],\
                                                               pairs=True))
             orbs[i] = transversals[i].keys()
         # initialize the number of consecutive elements sifted
@@ -3196,8 +3194,7 @@ class PermutationGroup(Basic):
             if y is False:
                 for l in range(1, j):
                     strong_gens_distr[l].append(h)
-                    stabs[l] = PermutationGroup(strong_gens_distr[l])
-                    transversals[l] = dict(stabs[l].orbit_transversal(base[l],\
+                    transversals[l] = dict(orbit_transversal(strong_gens_distr[l],base[l],\
                                                                    pairs=True))
                     orbs[l] = transversals[l].keys()
                 c = 0
