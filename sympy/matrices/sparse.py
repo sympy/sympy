@@ -26,8 +26,7 @@ class SparseMatrix(MatrixBase):
 
     See Also
     ========
-
-    :class:`Matrix`
+    sympy.matrices.dense.Matrix
     """
     @classmethod
     def _new(cls, *args, **kwargs):

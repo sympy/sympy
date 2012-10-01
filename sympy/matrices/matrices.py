@@ -386,7 +386,7 @@ class MatrixBase(object):
 
         matrix_multiply_elementwise
         """
-        if hasattr(other, "__array__"):
+        if getattr(other, 'is_Matrix', False):
             # The following implmentation is equivalent, but about 5% slower
             #ma, na = A.shape
             #mb, nb = B.shape
@@ -417,7 +417,7 @@ class MatrixBase(object):
                 map(lambda i: i*other, self._mat))
 
     def __rmul__(self, a):
-        if hasattr(a, "__array__"):
+        if getattr(a, 'is_Matrix', False):
             return self._new(a)*self
         return self*a
 
@@ -454,7 +454,7 @@ class MatrixBase(object):
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
-        if hasattr(other, "__array__"):
+        if getattr(other, 'is_Matrix', False):
             A = self
             B = other
             if A.shape != B.shape:
