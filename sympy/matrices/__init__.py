@@ -3,14 +3,14 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
-    zeros, ones, eye, diag, jordan_cell,
-    hessian, GramSchmidt, wronskian, casoratian)
+from matrices import (DeferredVector, ShapeError, NonSquareMatrixError)
 
 from mutable import (MutableMatrix as Matrix,
     list2numpy, matrix2numpy, symarray,
     rot_axis1, rot_axis2, rot_axis3,
-    randMatrix)
+    zeros, ones, eye, diag, jordan_cell,
+    hessian, GramSchmidt, wronskian, casoratian,
+    randMatrix, matrix_multiply_elementwise)
 
 from immutable import ImmutableMatrix
 

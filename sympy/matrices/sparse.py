@@ -832,9 +832,6 @@ class SparseMatrix(MatrixBase):
             tmp[i, i] = 1
         return tmp
 
-    def __hash__(self):
-        return super(Matrix, self).__hash__()
-
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 

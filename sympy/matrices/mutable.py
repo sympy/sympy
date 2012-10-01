@@ -5,13 +5,24 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.matrices.matrices import MatrixBase, ShapeError, zeros, a2idx, eye
+from sympy.matrices.matrices import MatrixBase, ShapeError, a2idx, classof
+
+# uncomment the import of as_int and delete the function when merged with 0.7.2
+#from sympy.core.compatibility import as_int
+
+def as_int(i):
+    ii = int(i)
+    if i != ii:
+        raise TypeError()
+    return ii
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -924,6 +935,328 @@ def rot_axis1(theta):
            (0, ct, st),
            (0, -st, ct))
     return MutableMatrix(lil)
+
+###############
+# Functions
+###############
+def matrix_add(A, B):
+    SymPyDeprecationWarning(
+        feature="matrix_add(A, B)",
+        useinstead="A + B",
+        deprecated_since_version="0.7.2",
+    ).warn()
+    return A + B
+
+def matrix_multiply(A, B):
+    SymPyDeprecationWarning(
+        feature="matrix_multiply(A, B)",
+        useinstead="A * B",
+        deprecated_since_version="0.7.2",
+    ).warn()
+    return A*B
+
+def matrix_multiply_elementwise(A, B):
+    """Return the Hadamard product (elementwise product) of A and B
+
+    >>> from sympy.matrices import matrix_multiply_elementwise
+    >>> from sympy.matrices import Matrix
+    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> matrix_multiply_elementwise(A, B)
+    [  0, 10, 200]
+    [300, 40,   5]
+
+    See Also
+    ========
+
+    __mul__
+    """
+    if A.shape != B.shape:
+        raise ShapeError()
+    shape = A.shape
+    return classof(A, B)._new(shape[0], shape[1],
+        lambda i, j: A[i, j] * B[i, j])
+
+def zeros(r, c=None, cls=None):
+    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+    if ``c`` is omitted a square matrix will be returned.
+
+    See Also
+    ========
+
+    ones
+    eye
+    diag
+    """
+    if cls is None:
+        from mutable import Matrix as cls
+    if is_sequence(r):
+        SymPyDeprecationWarning(
+            feature="The syntax zeros([%i, %i])" % tuple(r),
+            useinstead="zeros(%i, %i)." % tuple(r),
+            issue=3381, deprecated_since_version="0.7.2",
+        ).warn()
+        r, c = r
+    else:
+        c = r if c is None else c
+    r, c = [int(i) for i in [r, c]]
+    return cls.zeros(r, c)
+
+def ones(r, c=None):
+    """Returns a matrix of ones with ``r`` rows and ``c`` columns;
+    if ``c`` is omitted a square matrix will be returned.
+
+    See Also
+    ========
+
+    zeros
+    eye
+    diag
+    """
+    from mutable import Matrix
+
+    if is_sequence(r):
+        SymPyDeprecationWarning(
+                feature="The syntax ones([%i, %i])" % tuple(r),
+                useinstead="ones(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
+        ).warn()
+        r, c = r
+    else:
+        c = r if c is None else c
+    r = as_int(r)
+    c = as_int(c)
+    return Matrix(r, c, [S.One]*r*c)
+
+def eye(n, cls=None):
+    """Create square identity matrix n x n
+
+    See Also
+    ========
+
+    diag
+    zeros
+    ones
+    """
+    if cls is None:
+        from mutable import Matrix as cls
+
+    n = as_int(n)
+    out = cls.zeros(n)
+    for i in range(n):
+        out[i, i] = S.One
+    return out
+
+def diag(*values):
+    """Create diagonal matrix from a list as a diagonal values.
+
+    Arguments might be matrices too, in case of it they are fitted in result matrix
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import diag, Matrix
+    >>> diag(1, 2, 3)
+    [1, 0, 0]
+    [0, 2, 0]
+    [0, 0, 3]
+
+    >>> from sympy.abc import x, y, z
+    >>> a = Matrix([x, y, z])
+    >>> b = Matrix([[1, 2], [3, 4]])
+    >>> c = Matrix([[5, 6]])
+    >>> diag(a, 7, b, c)
+    [x, 0, 0, 0, 0, 0]
+    [y, 0, 0, 0, 0, 0]
+    [z, 0, 0, 0, 0, 0]
+    [0, 7, 0, 0, 0, 0]
+    [0, 0, 1, 2, 0, 0]
+    [0, 0, 3, 4, 0, 0]
+    [0, 0, 0, 0, 5, 6]
+
+    See Also
+    ========
+
+    eye
+    """
+    from sympy.matrices import zeros
+
+    rows = 0
+    cols = 0
+    for m in values:
+        if isinstance(m, MatrixBase):
+            rows += m.rows
+            cols += m.cols
+        else:
+            rows += 1
+            cols += 1
+    res = zeros(rows, cols)
+    i_row = 0
+    i_col = 0
+    for m in values:
+        if isinstance(m, MatrixBase):
+            res[i_row:i_row + m.rows, i_col:i_col + m.cols] = m
+            i_row += m.rows
+            i_col += m.cols
+        else:
+            res[i_row, i_col] = m
+            i_row += 1
+            i_col += 1
+    return res
+
+def jordan_cell(eigenval, n):
+    """
+    Create matrix of Jordan cell kind:
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import jordan_cell
+    >>> from sympy.abc import x
+    >>> jordan_cell(x, 4)
+    [x, 1, 0, 0]
+    [0, x, 1, 0]
+    [0, 0, x, 1]
+    [0, 0, 0, x]
+    """
+    n = as_int(n)
+    out = zeros(n)
+    for i in range(n - 1):
+        out[i, i] = eigenval
+        out[i, i + 1] = S.One
+    out[n - 1, n - 1] = eigenval
+    return out
+
+def hessian(f, varlist):
+    """Compute Hessian matrix for a function f
+
+    see: http://en.wikipedia.org/wiki/Hessian_matrix
+
+    See Also
+    ========
+
+    sympy.matrices.mutable.Matrix.jacobian
+    wronskian
+    """
+    # f is the expression representing a function f, return regular matrix
+    if is_sequence(varlist):
+        m = len(varlist)
+        if not m:
+            raise ShapeError("`len(varlist)` must not be zero.")
+    elif isinstance(varlist, MatrixBase):
+        m = varlist.cols
+        if not m:
+            raise ShapeError("`varlist.cols` must not be zero.")
+        if varlist.rows != 1:
+            raise ShapeError("`varlist` must be a row vector.")
+    else:
+        raise ValueError("Improper variable list in hessian function")
+    if not getattr(f, 'diff'):
+        # check differentiability
+        raise ValueError("Function `f` (%s) is not differentiable" % f)
+    out = zeros(m)
+    for i in range(m):
+        for j in range(i, m):
+            out[i, j] = f.diff(varlist[i]).diff(varlist[j])
+    for i in range(m):
+        for j in range(i):
+            out[i, j] = out[j, i]
+    return out
+
+def GramSchmidt(vlist, orthog=False):
+    """
+    Apply the Gram-Schmidt process to a set of vectors.
+
+    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+    """
+    out = []
+    m = len(vlist)
+    for i in range(m):
+        tmp = vlist[i]
+        for j in range(i):
+            tmp -= vlist[i].project(out[j])
+        if not tmp.values():
+            raise ValueError("GramSchmidt: vector set not linearly independent")
+        out.append(tmp)
+    if orthog:
+        for i in range(len(out)):
+            out[i] = out[i].normalized()
+    return out
+
+def wronskian(functions, var, method='bareis'):
+    """
+    Compute Wronskian for [] of functions
+
+    ::
+
+                         | f1       f2        ...   fn      |
+                         | f1'      f2'       ...   fn'     |
+                         |  .        .        .      .      |
+        W(f1, ..., fn) = |  .        .         .     .      |
+                         |  .        .          .    .      |
+                         |  (n)      (n)            (n)     |
+                         | D   (f1) D   (f2)  ...  D   (fn) |
+
+    see: http://en.wikipedia.org/wiki/Wronskian
+
+    See Also
+    ========
+
+    sympy.matrices.mutable.Matrix.jacobian
+    hessian
+    """
+    from mutable import Matrix
+
+    for index in range(0, len(functions)):
+        functions[index] = sympify(functions[index])
+    n = len(functions)
+    if n == 0:
+        return 1
+    W = Matrix(n, n, lambda i, j: functions[i].diff(var, j) )
+    return W.det(method)
+
+def casoratian(seqs, n, zero=True):
+    """Given linear difference operator L of order 'k' and homogeneous
+       equation Ly = 0 we want to compute kernel of L, which is a set
+       of 'k' sequences: a(n), b(n), ... z(n).
+
+       Solutions of L are linearly independent iff their Casoratian,
+       denoted as C(a, b, ..., z), do not vanish for n = 0.
+
+       Casoratian is defined by k x k determinant::
+
+                  +  a(n)     b(n)     . . . z(n)     +
+                  |  a(n+1)   b(n+1)   . . . z(n+1)   |
+                  |    .         .     .        .     |
+                  |    .         .       .      .     |
+                  |    .         .         .    .     |
+                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
+
+       It proves very useful in rsolve_hyper() where it is applied
+       to a generating set of a recurrence to factor out linearly
+       dependent solutions and return a basis:
+
+       >>> from sympy import Symbol, casoratian, factorial
+       >>> n = Symbol('n', integer=True)
+
+       Exponential and factorial are linearly independent:
+
+       >>> casoratian([2**n, factorial(n)], n) != 0
+       True
+
+    """
+    from mutable import Matrix
+
+    seqs = map(sympify, seqs)
+
+    if not zero:
+        f = lambda i, j: seqs[j].subs(n, n+i)
+    else:
+        f = lambda i, j: seqs[j].subs(n, i)
+
+    k = len(seqs)
+
+    return Matrix(k, k, f).det()
 
 # XXX make this a random method of each class
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):

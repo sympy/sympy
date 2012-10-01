@@ -2,10 +2,11 @@ from sympy import (symbols, I, Symbol, Rational, Float, cos, sin, exp, sqrt,
     Poly, S, pi, E, oo, trigsimp, Integer, N, sympify,
     Pow, simplify, Min, Max, Abs, PurePoly, signsimp)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, matrix_multiply_elementwise)
+    NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (ImmutableMatrix, SparseMatrix, Matrix,
     rot_axis1, rot_axis2, rot_axis3, randMatrix,
-    eye, diag, GramSchmidt, ones, zeros, wronskian, hessian, casoratian)
+    eye, diag, GramSchmidt, ones, zeros, wronskian, hessian, casoratian,
+    matrix_multiply_elementwise)
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 

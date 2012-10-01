@@ -1,6 +1,5 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
@@ -39,10 +38,6 @@ class ShapeError(ValueError, MatrixError):
 
 class NonSquareMatrixError(ShapeError):
     pass
-
-def _iszero(x):
-    """Returns True if x is zero."""
-    return x.is_zero
 
 class DeferredVector(Symbol):
     """A vector whose components are deferred (e.g. for use with lambdify)
@@ -426,6 +421,8 @@ class MatrixBase(object):
         return self*a
 
     def __pow__(self, num):
+        from sympy.matrices import eye
+
         if not self.is_square:
             raise NonSquareMatrixError()
         if isinstance(num, int) or isinstance(num, Integer):
@@ -1104,7 +1101,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, matrices
+        >>> from sympy.matrices import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         [0, 1, 2]
@@ -1112,7 +1109,7 @@ class MatrixBase(object):
         >>> m.print_nonzero()
         [ XX]
         [XXX]
-        >>> m = matrices.eye(4)
+        >>> m = eye(4)
         >>> m.print_nonzero("x")
         [x   ]
         [ x  ]
@@ -1269,9 +1266,13 @@ class MatrixBase(object):
         LUdecomposition_Simple
         LUsolve
         """
+        from sympy.matrices import SparseMatrix
+        zeros = SparseMatrix.zeros
+        eye = SparseMatrix.eye
+
         n, m = self.rows, self.cols
         U, L, P = self.as_mutable(), eye(n), eye(n)
-        DD = zeros(n) # store it smarter since it's just diagonal
+        DD = zeros(n, n)
         oldpivot = 1
 
         for k in range(n-1):
@@ -1292,7 +1293,7 @@ class MatrixBase(object):
                     U[i, j] = (Ukk * U[i, j] - U[k, j]*Uik) / oldpivot
                 U[i, k] = 0
             oldpivot = Ukk
-        DD[n-1, n-1] = oldpivot
+        DD[n - 1, n - 1] = oldpivot
         return P, L, DD, U
 
     def cofactorMatrix(self, method="berkowitz"):
@@ -1623,6 +1624,8 @@ class MatrixBase(object):
         dot
         multiply
         """
+        from sympy.matrices import matrix_multiply_elementwise
+
         return matrix_multiply_elementwise(self, b)
 
     def values(self):
@@ -1745,8 +1748,8 @@ class MatrixBase(object):
         """
         Permute the rows of the matrix with the given permutation in reverse.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
         >>> M.permuteBkwd([[0, 1], [0, 2]])
         [0, 1, 0]
         [0, 0, 1]
@@ -1766,8 +1769,8 @@ class MatrixBase(object):
         """
         Permute the rows of the matrix with the given permutation.
 
-        >>> import sympy
-        >>> M = sympy.matrices.eye(3)
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
         >>> M.permuteFwd([[0, 1], [0, 2]])
         [0, 0, 1]
         [1, 0, 0]
@@ -1790,8 +1793,8 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> import sympy
-        >>> I = sympy.matrices.eye(4)
+        >>> from sympy.matrices import eye
+        >>> I = eye(4)
         >>> I.delRowCol(1, 2)
         [1, 0, 0]
         [0, 0, 0]
@@ -2555,6 +2558,8 @@ class MatrixBase(object):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
+        from sympy.matrices import zeros
+
         if simplified is not False:
             SymPyDeprecationWarning(
                 feature="'simplified' as a keyword to nullspace",
@@ -2649,6 +2654,8 @@ class MatrixBase(object):
         berkowitz_charpoly
         berkowitz_eigenvals
         """
+        from sympy.matrices import zeros
+
         if not self.is_square:
             raise NonSquareMatrixError()
 
@@ -2796,6 +2803,7 @@ class MatrixBase(object):
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
         """
+        from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
         primitive = bool(flags.get('simplify', False))
@@ -3023,6 +3031,8 @@ class MatrixBase(object):
 
         vec
         """
+        from sympy.matrices import zeros
+
         c = self.cols
         if c != self.rows:
             raise ShapeError("Matrix must be square")
@@ -3129,6 +3139,8 @@ class MatrixBase(object):
         is_diagonal
         is_diagonalizable
         """
+        from sympy.matrices import diag
+
         if not self.is_square:
             raise NonSquareMatrixError()
         if not self.is_diagonalizable(reals_only, False):
@@ -3260,6 +3272,8 @@ class MatrixBase(object):
 
         jordan_cells
         """
+        from sympy.matrices import diag
+
         (P, Jcells) = self.jordan_cells(calc_transformation)
         J = diag(*Jcells)
         return (P, J)
@@ -3303,6 +3317,8 @@ class MatrixBase(object):
 
         jordan_form
         """
+        from sympy.matrices import jordan_cell, diag
+
         if not self.is_square:
             raise NonSquareMatrixError()
         _eigenvects = self.eigenvects()
@@ -3375,6 +3391,7 @@ class MatrixBase(object):
 
         """
         from sympy import LeviCivita
+        from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
         work = zeros(n)
@@ -3430,323 +3447,6 @@ def classof(A, B):
             return A.__class__
     except: pass
     raise TypeError("Incompatible classes %s, %s"%(A.__class__, B.__class__))
-
-def matrix_add(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_add(A, B)",
-        useinstead="A + B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A + B
-
-def matrix_multiply(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_multiply(A, B)",
-        useinstead="A * B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A*B
-
-def matrix_multiply_elementwise(A, B):
-    """Return the Hadamard product (elementwise product) of A and B
-
-    >>> from sympy.matrices.matrices import matrix_multiply_elementwise
-    >>> from sympy.matrices import Matrix
-    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> matrix_multiply_elementwise(A, B)
-    [  0, 10, 200]
-    [300, 40,   5]
-
-    See Also
-    ========
-
-    __mul__
-    """
-    if A.shape != B.shape:
-        raise ShapeError()
-    shape = A.shape
-    return classof(A, B)._new(shape[0], shape[1],
-        lambda i, j: A[i, j] * B[i, j])
-
-def zeros(r, c=None, cls=None):
-    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
-
-    See Also
-    ========
-
-    ones
-    eye
-    diag
-    """
-    if cls is None:
-        from mutable import Matrix as cls
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-            feature="The syntax zeros([%i, %i])" % tuple(r),
-            useinstead="zeros(%i, %i)." % tuple(r),
-            issue=3381, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
-    r, c = [int(i) for i in [r, c]]
-    return cls.zeros(r, c)
-
-def ones(r, c=None):
-    """Returns a matrix of ones with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
-
-    See Also
-    ========
-
-    zeros
-    eye
-    diag
-    """
-    from mutable import Matrix
-
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-                feature="The syntax ones([%i, %i])" % tuple(r),
-                useinstead="ones(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
-    r = as_int(r)
-    c = as_int(c)
-    return Matrix(r, c, [S.One]*r*c)
-
-def eye(n, cls=None):
-    """Create square identity matrix n x n
-
-    See Also
-    ========
-
-    diag
-    zeros
-    ones
-    """
-    if cls is None:
-        from mutable import Matrix as cls
-
-    n = as_int(n)
-    out = cls.zeros(n)
-    for i in range(n):
-        out[i, i] = S.One
-    return out
-
-def diag(*values):
-    """Create diagonal matrix from a list as a diagonal values.
-
-    Arguments might be matrices too, in case of it they are fitted in result matrix
-
-    Examples
-    ========
-
-    >>> from sympy.matrices import diag, Matrix
-    >>> diag(1, 2, 3)
-    [1, 0, 0]
-    [0, 2, 0]
-    [0, 0, 3]
-
-    >>> from sympy.abc import x, y, z
-    >>> a = Matrix([x, y, z])
-    >>> b = Matrix([[1, 2], [3, 4]])
-    >>> c = Matrix([[5, 6]])
-    >>> diag(a, 7, b, c)
-    [x, 0, 0, 0, 0, 0]
-    [y, 0, 0, 0, 0, 0]
-    [z, 0, 0, 0, 0, 0]
-    [0, 7, 0, 0, 0, 0]
-    [0, 0, 1, 2, 0, 0]
-    [0, 0, 3, 4, 0, 0]
-    [0, 0, 0, 0, 5, 6]
-
-    See Also
-    ========
-
-    eye
-    """
-    rows = 0
-    cols = 0
-    for m in values:
-        if isinstance(m, MatrixBase):
-            rows += m.rows
-            cols += m.cols
-        else:
-            rows += 1
-            cols += 1
-    res = zeros(rows, cols)
-    i_row = 0
-    i_col = 0
-    for m in values:
-        if isinstance(m, MatrixBase):
-            res[i_row:i_row + m.rows, i_col:i_col + m.cols] = m
-            i_row += m.rows
-            i_col += m.cols
-        else:
-            res[i_row, i_col] = m
-            i_row += 1
-            i_col += 1
-    return res
-
-def jordan_cell(eigenval, n):
-    """
-    Create matrix of Jordan cell kind:
-
-    Examples
-    ========
-
-    >>> from sympy.matrices.matrices import jordan_cell
-    >>> from sympy.abc import x
-    >>> jordan_cell(x, 4)
-    [x, 1, 0, 0]
-    [0, x, 1, 0]
-    [0, 0, x, 1]
-    [0, 0, 0, x]
-    """
-    n = as_int(n)
-    out = zeros(n)
-    for i in range(n - 1):
-        out[i, i] = eigenval
-        out[i, i + 1] = S.One
-    out[n - 1, n - 1] = eigenval
-    return out
-
-def hessian(f, varlist):
-    """Compute Hessian matrix for a function f
-
-    see: http://en.wikipedia.org/wiki/Hessian_matrix
-
-    See Also
-    ========
-
-    sympy.matrices.mutable.Matrix.jacobian
-    wronskian
-    """
-    # f is the expression representing a function f, return regular matrix
-    if is_sequence(varlist):
-        m = len(varlist)
-        if not m:
-            raise ShapeError("`len(varlist)` must not be zero.")
-    elif isinstance(varlist, MatrixBase):
-        m = varlist.cols
-        if not m:
-            raise ShapeError("`varlist.cols` must not be zero.")
-        if varlist.rows != 1:
-            raise ShapeError("`varlist` must be a row vector.")
-    else:
-        raise ValueError("Improper variable list in hessian function")
-    if not getattr(f, 'diff'):
-        # check differentiability
-        raise ValueError("Function `f` (%s) is not differentiable" % f)
-    out = zeros(m)
-    for i in range(m):
-        for j in range(i, m):
-            out[i, j] = f.diff(varlist[i]).diff(varlist[j])
-    for i in range(m):
-        for j in range(i):
-            out[i, j] = out[j, i]
-    return out
-
-def GramSchmidt(vlist, orthog=False):
-    """
-    Apply the Gram-Schmidt process to a set of vectors.
-
-    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
-    """
-    out = []
-    m = len(vlist)
-    for i in range(m):
-        tmp = vlist[i]
-        for j in range(i):
-            tmp -= vlist[i].project(out[j])
-        if not tmp.values():
-            raise ValueError("GramSchmidt: vector set not linearly independent")
-        out.append(tmp)
-    if orthog:
-        for i in range(len(out)):
-            out[i] = out[i].normalized()
-    return out
-
-def wronskian(functions, var, method='bareis'):
-    """
-    Compute Wronskian for [] of functions
-
-    ::
-
-                         | f1       f2        ...   fn      |
-                         | f1'      f2'       ...   fn'     |
-                         |  .        .        .      .      |
-        W(f1, ..., fn) = |  .        .         .     .      |
-                         |  .        .          .    .      |
-                         |  (n)      (n)            (n)     |
-                         | D   (f1) D   (f2)  ...  D   (fn) |
-
-    see: http://en.wikipedia.org/wiki/Wronskian
-
-    See Also
-    ========
-
-    sympy.matrices.mutable.Matrix.jacobian
-    hessian
-    """
-    from mutable import Matrix
-
-    for index in range(0, len(functions)):
-        functions[index] = sympify(functions[index])
-    n = len(functions)
-    if n == 0:
-        return 1
-    W = Matrix(n, n, lambda i, j: functions[i].diff(var, j) )
-    return W.det(method)
-
-def casoratian(seqs, n, zero=True):
-    """Given linear difference operator L of order 'k' and homogeneous
-       equation Ly = 0 we want to compute kernel of L, which is a set
-       of 'k' sequences: a(n), b(n), ... z(n).
-
-       Solutions of L are linearly independent iff their Casoratian,
-       denoted as C(a, b, ..., z), do not vanish for n = 0.
-
-       Casoratian is defined by k x k determinant::
-
-                  +  a(n)     b(n)     . . . z(n)     +
-                  |  a(n+1)   b(n+1)   . . . z(n+1)   |
-                  |    .         .     .        .     |
-                  |    .         .       .      .     |
-                  |    .         .         .    .     |
-                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
-
-       It proves very useful in rsolve_hyper() where it is applied
-       to a generating set of a recurrence to factor out linearly
-       dependent solutions and return a basis:
-
-       >>> from sympy import Symbol, casoratian, factorial
-       >>> n = Symbol('n', integer=True)
-
-       Exponential and factorial are linearly independent:
-
-       >>> casoratian([2**n, factorial(n)], n) != 0
-       True
-
-    """
-    from mutable import Matrix
-
-    seqs = map(sympify, seqs)
-
-    if not zero:
-        f = lambda i, j: seqs[j].subs(n, n+i)
-    else:
-        f = lambda i, j: seqs[j].subs(n, i)
-
-    k = len(seqs)
-
-    return Matrix(k, k, f).det()
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
