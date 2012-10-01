@@ -232,7 +232,7 @@ class MatrixBase(object):
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""
-        return self.C.T
+        return self.T.C
 
     @property
     def H(self):
