@@ -1,8 +1,9 @@
 from sympy.core.cache import cacheit
 from matrices import MatrixBase
 from mutable import MutableMatrix
+from sparse import SparseMatrix
 from expressions import MatrixExpr
-from sympy import Basic, Integer, Tuple
+from sympy import Basic, Integer, Tuple, Dict
 
 class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
@@ -58,3 +59,27 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+
+class ImmutableSparseMatrix(SparseMatrix):
+
+    _class_priority = 9
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], ImmutableSparseMatrix):
+            return args[0]
+        rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        mat = Dict(SparseMatrix(rows, cols, mat)._smat)
+        rows = Integer(rows)
+        cols = Integer(cols)
+        return Basic.__new__(cls, rows, cols, mat)
+
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    def __setitem__(self, *args):
+        raise TypeError("Cannot set values of ImmutableSparseMatrix")
+
+    @cacheit
+    def hash(self):
+        return hash(self.__str__() )
