@@ -491,12 +491,13 @@ class Matrix(MatrixBase):
         return out
 
     def _eval_inverse(self, **kwargs):
-        """Return the matrix inverse.
+        """Return the matrix inverse using the method indicated (default
+        is Gauss elimination).
 
         kwargs
         ======
 
-        method
+        method : ('GE', 'LU', or 'ADJ')
         iszerofunc
         try_block_diag
 
@@ -505,7 +506,7 @@ class Matrix(MatrixBase):
 
         According to the ``method`` keyword, it calls the appropriate method:
 
-          GE .... inverse_GE()
+          GE .... inverse_GE(); default
           LU .... inverse_LU()
           ADJ ... inverse_ADJ()
 

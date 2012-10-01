@@ -1219,10 +1219,9 @@ class SparseMatrix(MatrixBase):
             return self.inv(method=method)*rhs
 
     def _eval_inverse(self, **kwargs):
-        """
-        Returns the inverse of the given matrix using
-        Cholesky decomposition or LDL decomposition,
-        as specified by user.
+        """Return the matrix inverse using Cholesky or LDL (default)
+        decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
+        respectively.
 
         >>> from sympy import SparseMatrix, Matrix
         >>> A = SparseMatrix([
@@ -1251,7 +1250,7 @@ class SparseMatrix(MatrixBase):
             self = t*self
             I = t*I
         method = kwargs.get('method', 'LDL')
-        if method == "LDL":
+        if method in "LDL":
             solve = self._LDL_solve
         elif method == "CH":
             solve = self._cholesky_solve
