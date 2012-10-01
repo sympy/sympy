@@ -2,13 +2,15 @@ import random
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
+from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify as _simplify
 
-from sympy.matrices.matrices import MatrixBase, ShapeError, zeros
+from sympy.matrices.matrices import MatrixBase, ShapeError, zeros, a2idx
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -32,6 +34,80 @@ class MutableMatrix(MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
+
+    def __getitem__(self, key):
+        """
+        >>> from sympy import Matrix, I
+        >>> m = Matrix([
+        ... [1, 2 + I],
+        ... [3, 4    ]])
+        >>> m[1, 0]
+        3
+
+        """
+        if type(key) is tuple:
+            i, j = key
+            if type(i) is slice or type(j) is slice:
+                return self.submatrix(key)
+            else:
+                i, j = self.key2ij(key)
+                return self._mat[i*self.cols + j]
+        else:
+            # row-wise decomposition of matrix
+            if type(key) is slice:
+                return self._mat[key]
+            return self._mat[a2idx(key)]
+
+    def __setitem__(self, key, value):
+        """
+        >>> from sympy import Matrix, I
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        [1, 2 + I]
+        [3,     4]
+        >>> m[1, 0] = 9
+        >>> m
+        [1, 2 + I]
+        [9,     4]
+        >>> m[1, 0] = [[0, 1]]
+        >>> m
+        [1, 2 + I]
+        [0,     1]
+
+        """
+        from mutable import Matrix
+
+        if type(key) is tuple:
+            i, j = key
+            if type(i) is slice or type(j) is slice:
+                if isinstance(value, MatrixBase):
+                    self.copyin_matrix(key, value)
+                    return
+                if not isinstance(value, Expr) and is_sequence(value):
+                    self.copyin_list(key, value)
+                    return
+                raise ValueError('unexpected value: %s' % value)
+            else:
+                i, j = self.key2ij(key)
+                is_mat = isinstance(value, MatrixBase)
+                if not is_mat and \
+                    not isinstance(value, Expr) and is_sequence(value):
+                    value = Matrix(value)
+                    is_mat = True
+                if is_mat:
+                    self.copyin_matrix((slice(i, i + value.rows),
+                                        slice(j, j + value.cols)), value)
+                else:
+                    self._mat[i*self.cols + j] = sympify(value)
+                return
+        else:
+            # row-wise decomposition of matrix
+            if type(key) is slice:
+                raise IndexError("Vector slices not implemented yet.")
+            else:
+                k = a2idx(key)
+                self._mat[k] = sympify(value)
+                return
 
     def copyin_matrix(self, key, value):
         """

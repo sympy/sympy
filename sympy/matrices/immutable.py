@@ -25,12 +25,12 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
         return self.args[2]
 
     def _entry(self, i, j):
-        return MatrixBase.__getitem__(self, (i,j))
+        return MutableMatrix.__getitem__(self, (i,j))
+
+    __getitem__ = MutableMatrix.__getitem__
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
-
-    __getitem__ = MatrixBase.__getitem__
 
     as_mutable = MatrixBase.as_mutable
 
