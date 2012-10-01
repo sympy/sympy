@@ -519,25 +519,25 @@ Matrix Functions Reference
 
 .. autofunction:: classof
 
-.. autofunction:: matrix_multiply_elementwise
+.. autofunction:: sympy.matrices.mutable.matrix_multiply_elementwise
 
-.. autofunction:: zeros
+.. autofunction:: sympy.matrices.mutable.zeros
 
-.. autofunction:: ones
+.. autofunction:: sympy.matrices.mutable.ones
 
-.. autofunction:: eye
+.. autofunction:: sympy.matrices.mutable.eye
 
-.. autofunction:: diag
+.. autofunction:: sympy.matrices.mutable.diag
 
-.. autofunction:: jordan_cell
+.. autofunction:: sympy.matrices.mutable.jordan_cell
 
-.. autofunction:: hessian
+.. autofunction:: sympy.matrices.mutable.hessian
 
-.. autofunction:: GramSchmidt
+.. autofunction:: sympy.matrices.mutable.GramSchmidt
 
-.. autofunction:: wronskian
+.. autofunction:: sympy.matrices.mutable.wronskian
 
-.. autofunction:: casoratian
+.. autofunction:: sympy.matrices.mutable.casoratian
 
 .. autofunction:: sympy.matrices.mutable.randMatrix
 
@@ -556,4 +556,4 @@ Numpy Utility Functions Reference
 
 .. autofunction:: sympy.matrices.mutable.rot_axis3
 
-.. autofunction:: sympy.matrices.matrices.a2idx
+.. autofunction:: a2idx
