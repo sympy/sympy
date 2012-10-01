@@ -5,18 +5,17 @@ matrix, etc.
 """
 from matrices import (DeferredVector, ShapeError, NonSquareMatrixError)
 
-from mutable import (MutableMatrix as Matrix,
-    list2numpy, matrix2numpy, symarray,
-    rot_axis1, rot_axis2, rot_axis3,
-    zeros, ones, eye, diag, jordan_cell,
-    hessian, GramSchmidt, wronskian, casoratian,
-    randMatrix, matrix_multiply_elementwise)
-
-from immutable import ImmutableMatrix
+from dense import (
+    GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,
+    list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
+    randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
+    zeros)
 
 from sparse import SparseMatrix, Diag
 
-from expressions import (BlockDiagMatrix, BlockMatrix, FunctionMatrix,
-     Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol,
-     Trace, Transpose, ZeroMatrix, block_collapse, linear_factors,
-     matrix_symbols, matrixify)
+from immutable import ImmutableMatrix, ImmutableSparseMatrix
+
+from expressions import (
+    BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity, Inverse,
+    MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace, Transpose,
+    ZeroMatrix, block_collapse, linear_factors, matrix_symbols, matrixify)

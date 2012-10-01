@@ -9,7 +9,7 @@ from sympy.core.sympify import sympify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from matrices import MatrixBase, ShapeError, a2idx
-from mutable import Matrix
+from dense import Matrix
 
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int

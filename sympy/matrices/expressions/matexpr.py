@@ -157,7 +157,7 @@ class MatrixExpr(Expr):
 
         See Also
         --------
-        as_mutable: returns MutableMatrix type
+        as_mutable: returns mutable Matrix type
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -174,9 +174,7 @@ class MatrixExpr(Expr):
 
     def as_mutable(self):
         """
-        Returns a dense Matrix with elements represented explicitly
-
-        Returns an object of type MutableMatrix.
+        Returns a dense, mutable matrix with elements represented explicitly
 
         See Also
         --------

@@ -79,7 +79,7 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i,j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    def _print_MutableMatrix(self, expr):
+    def _print_Matrix(self, expr):
         """
         Same as _print_MatrixBase except treat the name as Matrix
         """

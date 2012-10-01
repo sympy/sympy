@@ -519,41 +519,41 @@ Matrix Functions Reference
 
 .. autofunction:: classof
 
-.. autofunction:: sympy.matrices.mutable.matrix_multiply_elementwise
+.. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
 
-.. autofunction:: sympy.matrices.mutable.zeros
+.. autofunction:: sympy.matrices.dense.zeros
 
-.. autofunction:: sympy.matrices.mutable.ones
+.. autofunction:: sympy.matrices.dense.ones
 
-.. autofunction:: sympy.matrices.mutable.eye
+.. autofunction:: sympy.matrices.dense.eye
 
-.. autofunction:: sympy.matrices.mutable.diag
+.. autofunction:: sympy.matrices.dense.diag
 
-.. autofunction:: sympy.matrices.mutable.jordan_cell
+.. autofunction:: sympy.matrices.dense.jordan_cell
 
-.. autofunction:: sympy.matrices.mutable.hessian
+.. autofunction:: sympy.matrices.dense.hessian
 
-.. autofunction:: sympy.matrices.mutable.GramSchmidt
+.. autofunction:: sympy.matrices.dense.GramSchmidt
 
-.. autofunction:: sympy.matrices.mutable.wronskian
+.. autofunction:: sympy.matrices.dense.wronskian
 
-.. autofunction:: sympy.matrices.mutable.casoratian
+.. autofunction:: sympy.matrices.dense.casoratian
 
-.. autofunction:: sympy.matrices.mutable.randMatrix
+.. autofunction:: sympy.matrices.dense.randMatrix
 
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: sympy.matrices.mutable.list2numpy
+.. autofunction:: sympy.matrices.dense.list2numpy
 
-.. autofunction:: sympy.matrices.mutable.matrix2numpy
+.. autofunction:: sympy.matrices.dense.matrix2numpy
 
-.. autofunction:: sympy.matrices.mutable.symarray
+.. autofunction:: sympy.matrices.dense.symarray
 
-.. autofunction:: sympy.matrices.mutable.rot_axis1
+.. autofunction:: sympy.matrices.dense.rot_axis1
 
-.. autofunction:: sympy.matrices.mutable.rot_axis2
+.. autofunction:: sympy.matrices.dense.rot_axis2
 
-.. autofunction:: sympy.matrices.mutable.rot_axis3
+.. autofunction:: sympy.matrices.dense.rot_axis3
 
 .. autofunction:: a2idx

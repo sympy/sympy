@@ -28,7 +28,7 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
-class MutableMatrix(MatrixBase):
+class Matrix(MatrixBase):
 
     is_MatrixExpr = False
 
@@ -87,7 +87,7 @@ class MutableMatrix(MatrixBase):
         [0,     1]
 
         """
-        from mutable import Matrix
+        from dense import Matrix
 
         if type(key) is tuple:
             i, j = key
@@ -245,7 +245,7 @@ class MutableMatrix(MatrixBase):
         """
         if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        return self.copyin_matrix(key, MutableMatrix(value))
+        return self.copyin_matrix(key, Matrix(value))
 
     def row(self, i, f=None):
         """
@@ -585,7 +585,7 @@ class MutableMatrix(MatrixBase):
         try:
             if self.shape != other.shape:
                 return False
-            if isinstance(other, MutableMatrix):
+            if isinstance(other, Matrix):
                 return self._mat == other._mat
             elif isinstance(other, MatrixBase):
                 return self._mat == other.as_mutable()._mat
@@ -706,7 +706,7 @@ class MutableMatrix(MatrixBase):
         raise NotImplementedError("Matrix Power not defined")
 
 def _force_mutable(x):
-    """Return a matrix as a MutableMatrix, otherwise return x."""
+    """Return a matrix as a Matrix, otherwise return x."""
     if not isinstance(x, Basic):
         return x
     if not x.is_Matrix:
@@ -854,7 +854,7 @@ def rot_axis3(theta):
     lil = ((ct, st, 0),
            (-st, ct, 0),
            (0, 0, 1))
-    return MutableMatrix(lil)
+    return Matrix(lil)
 
 def rot_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
@@ -894,7 +894,7 @@ def rot_axis2(theta):
     lil = ((ct, 0, -st),
            (0, 1, 0),
            (st, 0, ct))
-    return MutableMatrix(lil)
+    return Matrix(lil)
 
 def rot_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
@@ -934,7 +934,7 @@ def rot_axis1(theta):
     lil = ((1, 0, 0),
            (0, ct, st),
            (0, -st, ct))
-    return MutableMatrix(lil)
+    return Matrix(lil)
 
 ###############
 # Functions
@@ -989,7 +989,7 @@ def zeros(r, c=None, cls=None):
     diag
     """
     if cls is None:
-        from mutable import Matrix as cls
+        from dense import Matrix as cls
     if is_sequence(r):
         SymPyDeprecationWarning(
             feature="The syntax zeros([%i, %i])" % tuple(r),
@@ -1013,7 +1013,7 @@ def ones(r, c=None):
     eye
     diag
     """
-    from mutable import Matrix
+    from dense import Matrix
 
     if is_sequence(r):
         SymPyDeprecationWarning(
@@ -1039,7 +1039,7 @@ def eye(n, cls=None):
     ones
     """
     if cls is None:
-        from mutable import Matrix as cls
+        from dense import Matrix as cls
 
     n = as_int(n)
     out = cls.zeros(n)
@@ -1205,7 +1205,7 @@ def wronskian(functions, var, method='bareis'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from mutable import Matrix
+    from dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1245,7 +1245,7 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from mutable import Matrix
+    from dense import Matrix
 
     seqs = map(sympify, seqs)
 
@@ -1300,7 +1300,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     if symmetric and r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
     if not symmetric:
-        return MutableMatrix(r, c, lambda i, j: prng.randint(min, max))
+        return Matrix(r, c, lambda i, j: prng.randint(min, max))
     m = zeros(r)
     for i in range(r):
         for j in range(i, r):
@@ -1310,4 +1310,5 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
             m[i, j] = m[j, i]
     return m
 
-Matrix = MutableMatrix
+# for compatibility
+MutableMatrix = Matrix

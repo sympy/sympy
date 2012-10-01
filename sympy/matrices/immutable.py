@@ -1,11 +1,11 @@
 from sympy.core.cache import cacheit
 from matrices import MatrixBase
-from mutable import MutableMatrix
+from dense import Matrix
 from sparse import SparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
 
-class ImmutableMatrix(MatrixExpr, MutableMatrix):
+class ImmutableMatrix(MatrixExpr, Matrix):
 
     _class_priority = 8
 
@@ -27,9 +27,9 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
         return self.args[2]
 
     def _entry(self, i, j):
-        return MutableMatrix.__getitem__(self, (i,j))
+        return Matrix.__getitem__(self, (i,j))
 
-    __getitem__ = MutableMatrix.__getitem__
+    __getitem__ = Matrix.__getitem__
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
@@ -42,12 +42,12 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
-    equals = MutableMatrix.equals
+    equals = Matrix.equals
     is_Identity = MatrixBase.is_Identity
-    _eval_trace = MutableMatrix._eval_trace
-    _eval_transpose = MutableMatrix._eval_transpose
-    _eval_conjugate = MutableMatrix._eval_conjugate
-    _eval_inverse = MutableMatrix._eval_inverse
+    _eval_trace = Matrix._eval_trace
+    _eval_transpose = Matrix._eval_transpose
+    _eval_conjugate = Matrix._eval_conjugate
+    _eval_inverse = Matrix._eval_inverse
 
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__

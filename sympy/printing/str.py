@@ -207,7 +207,7 @@ class StrPrinter(Printer):
     def _print_MatrixBase(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
     _print_ImmutableMatrix = _print_MatrixBase
-    _print_MutableMatrix = _print_MatrixBase
+    _print_Matrix = _print_MatrixBase
 
     def _print_DeferredVector(self, expr):
         return expr.name

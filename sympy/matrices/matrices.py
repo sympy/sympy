@@ -308,7 +308,7 @@ class MatrixBase(object):
         [1, 2]
         [3, 5]
         """
-        from mutable import Matrix
+        from dense import Matrix
         return Matrix(self.tolist())
 
     def as_immutable(self):
@@ -319,7 +319,7 @@ class MatrixBase(object):
         return ImmutableMatrix(self.tolist())
 
     def __array__(self):
-        from mutable import matrix2numpy
+        from dense import matrix2numpy
         return matrix2numpy(self)
 
     def __len__(self):
@@ -1582,7 +1582,7 @@ class MatrixBase(object):
         multiply
         multiply_elementwise
         """
-        from mutable import Matrix
+        from dense import Matrix
 
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
@@ -3431,7 +3431,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.mutable.MutableMatrix'>
+    <class 'sympy.matrices.dense.Matrix'>
     """
     try:
         if A._class_priority > B._class_priority:

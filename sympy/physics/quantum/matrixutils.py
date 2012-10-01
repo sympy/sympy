@@ -182,8 +182,7 @@ def _sympy_tensor_product(*matrices):
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices
-    testmat = [isinstance(m, Matrix) for m in matrices]
-    if not all(testmat):
+    if not all(isinstance(m, Matrix) for m in matrices):
         raise TypeError(
             'Sequence of Matrices expected, got: %s' % repr(matrices)
         )
