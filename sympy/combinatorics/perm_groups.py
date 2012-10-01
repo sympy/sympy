@@ -2639,6 +2639,7 @@ class PermutationGroup(Basic):
         m = 1
         for x in self._stabilizer_cosets_n:
             m *= x
+        self._order = m
         return m
 
     def pointwise_stabilizer(self, points, incremental=False):
@@ -3017,7 +3018,7 @@ class PermutationGroup(Basic):
             for beta in orbs[i]:
                 u_beta = transversals[i][beta]
                 for gen in strong_gens_distr[i]:
-                    u_beta_gen = transversals[i][gen(beta)]
+                    u_beta_gen = transversals[i][gen._array_form[beta]]
                     gen_u_beta = rmul(gen, u_beta)
                     if gen_u_beta != u_beta_gen:
                         # test if the schreier generator is in the i+1-th

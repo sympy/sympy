@@ -158,20 +158,17 @@ def _distribute_gens_by_base(base, gens):
 
     """
     base_len = len(base)
-    stabs = []
     degree = gens[0].size
-    for i in xrange(base_len):
-        stabs.append([])
-    num_gens = len(gens)
+    stabs = [[] for _ in xrange(base_len)]
     max_stab_index = 0
-    for i in xrange(num_gens):
+    for gen in gens:
         j = 0
-        while j < base_len - 1 and gens[i](base[j]) == base[j]:
+        while j < base_len - 1 and gen._array_form[base[j]] == base[j]:
             j += 1
         if j > max_stab_index:
             max_stab_index = j
         for k in xrange(j + 1):
-            stabs[k].append(gens[i])
+            stabs[k].append(gen)
     for i in range(max_stab_index + 1, base_len):
         stabs[i].append(_af_new(range(degree)))
     return stabs
