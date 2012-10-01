@@ -1048,14 +1048,14 @@ def eye(n, cls=None):
     return out
 
 def diag(*values):
-    """Create diagonal matrix from a list as a diagonal values.
+    """Create a diagonal matrix from a list as a diagonal values.
 
-    Arguments might be matrices too, in case of it they are fitted in result matrix
+    When arguments are matrices they are fitted in resultant matrix.
 
     Examples
     ========
 
-    >>> from sympy.matrices import diag, Matrix
+    >>> from sympy.matrices import diag, Matrix, ones
     >>> diag(1, 2, 3)
     [1, 0, 0]
     [0, 2, 0]
@@ -1073,6 +1073,18 @@ def diag(*values):
     [0, 0, 1, 2, 0, 0]
     [0, 0, 3, 4, 0, 0]
     [0, 0, 0, 0, 5, 6]
+
+    A given band off the diagonal can be made by padding with a
+    vertical or horizontal "kerning" vector:
+
+    >>> hpad = ones(0, 2)
+    >>> vpad = ones(2, 0)
+    >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
+    [0, 0, 4, 0, 0]
+    [0, 0, 0, 5, 0]
+    [1, 0, 0, 0, 6]
+    [0, 2, 0, 0, 0]
+    [0, 0, 3, 0, 0]
 
     See Also
     ========
