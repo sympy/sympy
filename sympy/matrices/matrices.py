@@ -299,7 +299,7 @@ class MatrixBase(object):
 
     def as_mutable(self):
         """
-        Returns a Mutable version of this Matrix
+        Returns a mutable version of this matrix
 
         >>> from sympy import ImmutableMatrix
         >>> X = ImmutableMatrix([[1, 2], [3, 4]])
@@ -310,14 +310,18 @@ class MatrixBase(object):
         [3, 5]
         """
         from dense import Matrix
-        return Matrix(self.tolist())
+        if self.rows:
+            return Matrix(self.tolist())
+        return Matrix(0, self.cols, [])
 
     def as_immutable(self):
         """
         Returns an Immutable version of this Matrix
         """
-        from immutable import ImmutableMatrix
-        return ImmutableMatrix(self.tolist())
+        from immutable import ImmutableMatrix as Matrix
+        if self.rows:
+            return Matrix(self.tolist())
+        return Matrix(0, self.cols, [])
 
     def __array__(self):
         from dense import matrix2numpy
@@ -407,7 +411,7 @@ class MatrixBase(object):
                 raise ShapeError("Matrices size mismatch.")
             blst = B.T.tolist()
             alst = A.tolist()
-            return classof(A, B)._new(A.shape[0], B.shape[1], lambda i, j:
+            return classof(A, B)._new(A.rows, B.cols, lambda i, j:
                                                 reduce(lambda k, l: k+l,
                                                 map(lambda n, m: n*m,
                                                 alst[i],

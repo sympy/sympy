@@ -408,11 +408,22 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy.matrices import SparseMatrix, ones
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a.tolist()
         [[1, 2], [3, 4]]
+
+        When there are no rows then it will not be possible to tell how
+        many columns were in the original matrix:
+
+        >>> SparseMatrix(ones(0, 3)).tolist()
+        []
+
         """
+        if not self.rows:
+            return []
+        if not self.cols:
+            return [[] for i in range(self.rows)]
         I, J = self.shape
         return [[self[i, j] for j in range(J)] for i in range(I)]
 

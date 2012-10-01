@@ -155,6 +155,10 @@ def test_tolist():
     m = Matrix(lst)
     assert m.tolist() == lst
 
+def test_as_mutable():
+    assert zeros(0, 3).as_mutable() == zeros(0, 3)
+    assert zeros(0, 3).as_immutable() == ImmutableMatrix(zeros(0, 3))
+
 def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 

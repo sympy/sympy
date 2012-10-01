@@ -148,10 +148,14 @@ class Matrix(MatrixBase):
         [6, 7, 8]
         >>> m.tolist()
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        >>> ones(0, 3).tolist()
-        []
         >>> ones(3, 0).tolist()
         [[], [], []]
+
+        When there are no rows then it will not be possible to tell how
+        many columns were in the original matrix:
+
+        >>> ones(0, 3).tolist()
+        []
 
         """
         if not self.rows:
