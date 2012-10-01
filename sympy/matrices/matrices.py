@@ -558,20 +558,6 @@ class MatrixBase(object):
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky()
 
-    def _cholesky(self):
-        """
-        Helper function of cholesky.
-        Without the error checks.
-        To be used privately. """
-        L = zeros(self.rows, self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / L[j, j]) * (self[i, j] -
-                    sum(L[i, k] * L[j, k] for k in range(j)))
-            L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
-        return self._new(L)
-
     def LDLdecomposition(self):
         """
         Returns the LDL Decomposition (L, D) of matrix A,
@@ -608,22 +594,6 @@ class MatrixBase(object):
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition()
 
-    def _LDLdecomposition(self):
-        """
-        Helper function of LDLdecomposition.
-        Without the error checks.
-        To be used privately.
-        """
-        D = zeros(self.rows, self.rows)
-        L = eye(self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
-                    L[i, k] * L[j, k] * D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
-                for k in range(i))
-        return self._new(L), self._new(D)
-
     def lower_triangular_solve(self, rhs):
         """
         Solves Ax = B, where A is a lower triangular matrix.
@@ -647,20 +617,6 @@ class MatrixBase(object):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def _lower_triangular_solve(self, rhs):
-        """
-        Helper function of function lower_triangular_solve.
-        Without the error checks.
-        To be used privately.
-        """
-        X = zeros(self.rows, 1)
-        for i in range(self.rows):
-            if self[i, i] == 0:
-                raise TypeError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
-                for k in range(i))) / self[i, i]
-        return self._new(X)
-
     def upper_triangular_solve(self, rhs):
         """
         Solves Ax = B, where A is an upper triangular matrix.
@@ -682,18 +638,6 @@ class MatrixBase(object):
         if not self.is_upper:
             raise TypeError("Matrix is not upper triangular.")
         return self._upper_triangular_solve(rhs)
-
-    def _upper_triangular_solve(self, rhs):
-        """
-        Helper function of function upper_triangular_solve.
-        Without the error checks, to be used privately. """
-        X = zeros(self.rows, 1)
-        for i in reversed(range(self.rows)):
-            if self[i, i] == 0:
-                raise ValueError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
-                for k in range(i+1, self.rows))) / self[i, i]
-        return self._new(X)
 
     def cholesky_solve(self, rhs):
         """
@@ -742,13 +686,6 @@ class MatrixBase(object):
         if rhs.rows != self.rows:
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
-
-    def _diagonal_solve(self, rhs):
-        """
-        Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
-        """
-        return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def LDLsolve(self, rhs):
         """
