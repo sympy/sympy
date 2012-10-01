@@ -236,17 +236,20 @@ class MatrixBase(object):
 
     @property
     def H(self):
-        """
-        Hermite conjugation.
+        """Return Hermite conjugate.
 
-        >>> from sympy import Matrix, I
-        >>> m=Matrix(((1, 2+I), (3, 4)))
+        Examples
+        ========
+
+        >>> from sympy import Matrix, I, eye
+        >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m
-        [1, 2 + I]
-        [3,     4]
+        [    0]
+        [1 + I]
+        [    2]
+        [    3]
         >>> m.H
-        [    1, 3]
-        [2 - I, 4]
+        [0, 1 - I, 2, 3]
 
         See Also
         ========
@@ -254,12 +257,34 @@ class MatrixBase(object):
         conjugate: By-element conjugation
         D: Dirac conjugation
         """
-        out = self.T.C
-        return out
+        return self.T.C
 
     @property
     def D(self):
-        """Dirac conjugation.
+        """Return Dirac conjugate (if self.rows == 4).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, I, eye
+        >>> m = Matrix((0, 1 + I, 2, 3))
+        >>> m.D
+        [0, 1 - I, -2, -3]
+        >>> m = (eye(4) + I*eye(4))
+        >>> m[0, 3] = 2
+        >>> m.D
+        [1 - I,     0,      0,      0]
+        [    0, 1 - I,      0,      0]
+        [    0,     0, -1 + I,      0]
+        [    2,     0,      0, -1 + I]
+
+        If the matrix does not have 4 rows an AttributeError will be raised
+        because this property is only defined for matrices with 4 rows.
+
+        >>> Matrix(eye(2)).D
+        Traceback (most recent call last):
+        ...
+        AttributeError: Matrix has no attribute D.
 
         See Also
         ========
@@ -268,13 +293,13 @@ class MatrixBase(object):
         H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
-        try:
-            out = self.H * mgamma(0)
-            return out
-        # In Python 3.2, properties can only return an AttributeError, so we
-        # have to catch the ShapeError; see also the commit making this change
-        except ShapeError:
-            raise AttributeError("Dirac conjugation not possible.")
+        if self.rows != 4:
+            # In Python 3.2, properties can only return an AttributeError
+            # so we can't raise a ShapeError -- see commit which added the
+            # first line of this inline comment. Also, there is no need
+            # for a message since MatrixBase will raise the AttributeError
+            raise AttributeError
+        return self.H * mgamma(0)
 
     def __getitem__(self, key):
         """
