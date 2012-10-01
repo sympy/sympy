@@ -14,7 +14,7 @@ from mutable import (MutableMatrix as Matrix,
 
 from immutable import ImmutableMatrix
 
-from sparse import SparseMatrix
+from sparse import SparseMatrix, Diag
 
 from expressions import (BlockDiagMatrix, BlockMatrix, FunctionMatrix,
      Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol,

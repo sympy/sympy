@@ -1273,3 +1273,13 @@ class SparseMatrix(MatrixBase):
         return super(MatrixBase, self).__hash__()
 
 
+class Diag(SparseMatrix):
+    def __new__(self, *args, **kwargs):
+        if len(args) == 1 and not is_sequence(args[0]):
+            return SparseMatrix(args[0])
+
+        s = self._new(len(args), len(args), {})
+        for i, a in enumerate(args):
+            if a:
+                s._smat[(i, i)] = sympify(a)
+        return s
