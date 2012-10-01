@@ -1,3 +1,4 @@
+from sympy.core.cache import cacheit
 from matrices import MatrixBase
 from mutable import MutableMatrix
 from expressions import MatrixExpr
@@ -31,6 +32,10 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
+
+    @cacheit
+    def hash(self):
+        return hash(self.__str__() )
 
     as_mutable = MatrixBase.as_mutable
 
