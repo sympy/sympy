@@ -2554,21 +2554,7 @@ class PermutationGroup(Basic):
         orbit
 
         """
-        n = self.degree
-        tr = [(alpha, range(n))]
-        used = [False]*n
-        used[alpha] = True
-        gens = [x._array_form for x in self.generators]
-        for pair in tr:
-            for gen in gens:
-                temp = gen[pair[0]]
-                if used[temp] == False:
-                    tr.append((temp, _af_rmul(gen, pair[1])))
-                    used[temp] = True
-        if pairs:
-            tr = [(x, _af_new(y)) for x, y in tr]
-            return tr
-        return [_af_new(y) for _, y in tr]
+        return orbit_transversal(self.generators, alpha, pairs)
 
     def orbits(self, rep=False):
         """Compute the orbits of G.
@@ -3831,7 +3817,7 @@ class PermutationGroup(Basic):
                     return False
         return True
 
-def orbit_transversal(generators, alpha, pairs=False):
+def orbit_transversal(generators, alpha, pairs):
     n = generators[0].size
     tr = [(alpha, range(n))]
     used = [False]*n
