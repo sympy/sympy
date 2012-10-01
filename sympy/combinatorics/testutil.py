@@ -1,5 +1,3 @@
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
-AlternatingGroup, CyclicGroup
 from sympy.combinatorics.util import _distribute_gens_by_base
 from sympy.combinatorics import Permutation
 
@@ -95,10 +93,8 @@ def _verify_bsgs(group, base, gens):
     """
     from sympy.combinatorics.perm_groups import PermutationGroup
     strong_gens_distr = _distribute_gens_by_base(base, gens)
-    base_len = len(base)
-    degree = group.degree
     current_stabilizer = group
-    for i in range(base_len):
+    for i in range(len(base)):
         candidate = PermutationGroup(strong_gens_distr[i])
         if current_stabilizer.order() != candidate.order():
             return False

@@ -6,8 +6,6 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.utilities.pytest import raises
 
-import random
-
 rmul = Permutation.rmul
 
 def test_polyhedron():

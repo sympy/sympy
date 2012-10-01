@@ -1,12 +1,8 @@
 from sympy.core import Basic, Tuple, FiniteSet
-from sympy.core.sympify import sympify
 from sympy.core.compatibility import as_int
 from sympy.combinatorics import Permutation as Perm
-from sympy.utilities.misc import default_sort_key
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.utilities.iterables import (rotate_left, has_variety,
-    is_sequence, minlex, unflatten, flatten)
-from sympy.utilities.randtest import _randrange
+from sympy.utilities.iterables import (minlex, unflatten, flatten)
 
 rmul = Perm.rmul
 
@@ -492,7 +488,6 @@ class Polyhedron(Basic):
         """
         if self._edges is None:
             output = set()
-            n = len(self.corners)
             for face in self.faces:
                 for i in range(len(face)):
                     edge = tuple(sorted([face[i], face[i - 1]]))
