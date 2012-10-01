@@ -110,23 +110,14 @@ class MatrixExpr(Expr):
         return MatMul(*[arg.conjugate() for arg in self.args])
 
     def transpose(self):
-        if isinstance(self, Transpose):
-            return self.arg
-
-        if self.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
-
-        if self.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in self.args])
-
         try:
             return self._eval_transpose()
         except (AttributeError, NotImplementedError):
             return Basic.__new__(Transpose, self)
 
-    @property
-    def T(self):
-        return self.transpose()
+    C = property(conjugate, None, None, 'By-element conjugation.')
+
+    T = property(transpose, None, None, 'Matrix transposition.')
 
     @property
     def I(self):
