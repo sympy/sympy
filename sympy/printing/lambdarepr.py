@@ -14,7 +14,8 @@ class LambdaPrinter(StrPrinter):
     """
 
     def _print_Matrix(self, expr):
-        return "Matrix([%s])"%expr._format_str(self._print, ",")
+        return "%s([%s])" % (expr.__class__.__name__,
+        expr._format_str(self._print, ","))
 
     def _print_Piecewise(self, expr):
         from sympy.core.sets import Interval
