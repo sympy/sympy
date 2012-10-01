@@ -9,6 +9,7 @@ def test_transpose():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
+    Sq = MatrixSymbol('Sq', n, n)
 
     assert Transpose(A).shape == (m,n)
     assert Transpose(A*B).shape == (l,n)
@@ -19,6 +20,8 @@ def test_transpose():
     assert Transpose(S(5)) == S(5)
 
     assert Transpose(Matrix([[1,2],[3,4]])) == Matrix([[1,3],[2,4]])
+
+    assert Transpose(Trace(Sq)) == Trace(Sq)
 
 def test_inverse():
     n, m, l = symbols('n m l', integer=True)

@@ -27,6 +27,9 @@ class Trace(Expr):
         except (AttributeError, NotImplementedError):
             return Basic.__new__(cls, mat)
 
+    def _eval_transpose(self):
+        return self
+
     @property
     def arg(self):
         return self.args[0]
