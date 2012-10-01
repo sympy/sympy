@@ -143,7 +143,7 @@ class BlockMatrix(MatrixExpr):
             raise NotImplementedError()
 
     def inv(self, expand=False):
-        """Return transpose of matrix.
+        """Return inverse of matrix.
 
         Examples
         ========
@@ -168,6 +168,7 @@ class BlockMatrix(MatrixExpr):
         return self._eval_inverse(expand)
 
     def inverse(self):
+        # XXX document how this is different than inv
         return Inverse(self)
 
     def _entry(self, i, j):
