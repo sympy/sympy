@@ -335,34 +335,6 @@ class MatrixBase(object):
         """
         return self.rows * self.cols
 
-    def tolist(self):
-        """
-        Return the Matrix as a nested Python list.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, ones
-        >>> m = Matrix(3, 3, range(9))
-        >>> m
-        [0, 1, 2]
-        [3, 4, 5]
-        [6, 7, 8]
-        >>> m.tolist()
-        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        >>> ones(0, 3).tolist()
-        []
-        >>> ones(3, 0).tolist()
-        [[], [], []]
-
-        """
-        if not self.rows:
-            return []
-        if not self.cols:
-            return [[] for i in range(self.rows)]
-        return [self._mat[i: i + self.cols]
-            for i in range(0, len(self), self.cols)]
-
     def hash(self):
         """Compute a hash every time, because the matrix elements
         could change."""
@@ -385,22 +357,6 @@ class MatrixBase(object):
         3
         """
         return (self.rows, self.cols)
-
-    def expand(self, **hints):
-        """
-        Expand each element of the matrix by calling ``expand()``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.expand(**hints), self._mat))
-        return out
-
-    def subs(self, *args, **kwargs):
-        """
-        Create substituted expressions for each element with ``Expr.subs``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.subs(*args, **kwargs), self._mat))
-        return out
 
     def __sub__(self, a):
         return self + (-a)
