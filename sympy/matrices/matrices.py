@@ -497,50 +497,6 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def equals(self, other, failing_expression=False):
-        """Applies ``equals`` to corresponding elements of the matrices,
-        trying to prove that the elements are equivalent, returning True
-        if they are, False if any pair is not, and None (or the first
-        failing expression if failing_expression is True) if it cannot
-        be decided if the expressions are equivalent or not. This is, in
-        general, an expensive operation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x
-        >>> from sympy import cos
-        >>> A = Matrix([x*(x - 1), 0])
-        >>> B = Matrix([x**2 - x, 0])
-        >>> A == B
-        False
-        >>> A.simplify() == B.simplify()
-        True
-        >>> A.equals(B)
-        True
-        >>> A.equals(2)
-        False
-
-        See Also
-        ========
-        sympy.core.expr.equals
-        """
-        try:
-            if self.shape != other.shape:
-                return False
-            rv = True
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    ans = self[i, j].equals(other[i, j], failing_expression)
-                    if ans is False:
-                        return False
-                    elif ans is not True and rv is True:
-                        rv = ans
-            return rv
-        except AttributeError:
-            return False
-
     def __eq__(self, other):
         try:
             return (self.shape == other.shape and

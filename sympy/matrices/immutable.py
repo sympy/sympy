@@ -41,7 +41,7 @@ class ImmutableMatrix(MatrixExpr, MutableMatrix):
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
-    equals = MatrixBase.equals
+    equals = MutableMatrix.equals
     is_Identity = MatrixBase.is_Identity
     _eval_trace = MutableMatrix._eval_trace
     _eval_transpose = MutableMatrix._eval_transpose
