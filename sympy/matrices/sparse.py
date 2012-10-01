@@ -66,7 +66,9 @@ class SparseMatrix(MatrixBase):
             elif isinstance(args[2], dict):
                 # manual copy, copy.deepcopy() doesn't work
                 for key in args[2].keys():
-                    self._smat[key] = args[2][key]
+                    v = args[2][key]
+                    if v:
+                        self._smat[key] = v
         else:
             # handle full matrix forms with _handle_creation_inputs
             r, c, _list = Matrix._handle_creation_inputs(*args)
@@ -326,7 +328,9 @@ class SparseMatrix(MatrixBase):
             b = B._mat
             for i in range(B.rows):
                 for j in range(B.cols):
-                    A._smat[(i, j + A.cols)] = b[k]
+                    v = b[k]
+                    if v:
+                        A._smat[(i, j + A.cols)] = v
                     k += 1
         else:
             for (i, j), v in B._smat.iteritems():
@@ -344,21 +348,21 @@ class SparseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy import SparseMatrix, Matrix
-        >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
+        >>> from sympy import SparseMatrix, Matrix, ones
+        >>> A = SparseMatrix(ones(3))
         >>> A
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
-        >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        [1, 1, 1]
+        [1, 1, 1]
+        [1, 1, 1]
+        >>> B = SparseMatrix.eye(3)
         >>> B
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
         >>> C = A.col_join(B); C
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
+        [1, 1, 1]
+        [1, 1, 1]
+        [1, 1, 1]
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
@@ -380,7 +384,9 @@ class SparseMatrix(MatrixBase):
             b = B._mat
             for i in range(B.rows):
                 for j in range(B.cols):
-                    A._smat[(i + A.rows, j)] = b[k]
+                    v = b[k]
+                    if v:
+                        A._smat[(i + A.rows, j)] = v
                     k += 1
         else:
             for (i, j), v in B._smat.iteritems():
@@ -555,8 +561,13 @@ class SparseMatrix(MatrixBase):
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
         M = SparseMatrix(self.rows, self.cols, {})
-        for i in self._smat:
-            M._smat[i] = scalar * self._smat[i]
+        if scalar:
+            for i in self._smat:
+                v = scalar*self._smat[i]
+                if v:
+                    M._smat[i] = v
+                else:
+                    M._smat.pop(i, None)
         return M
 
     def __mul__(self, other):
@@ -688,7 +699,11 @@ class SparseMatrix(MatrixBase):
             raise ShapeError()
         M = self.copy()
         for i, v in other._smat.iteritems():
-            M[i] += v
+            v = M[i] + v
+            if v:
+                M._smat[i] = v
+            else:
+                M._smat.pop(i, None)
         return M
 
     # from here to end all functions are same as in matrices.py
@@ -714,11 +729,11 @@ class SparseMatrix(MatrixBase):
             if (rhi - rlo)*(chi - clo) < len(self):
                 for i in range(rlo, rhi):
                     for j in range(clo, chi):
-                        self._smat[(i, j)] = 0
+                        self._smat.pop((i, j), None)
             else:
                 for i, j, v in self.row_list():
                     if rlo <= i < rhi and clo <= j < chi:
-                        self._smat[(i, j)] = 0
+                        self._smat.pop((i, j), None)
             for k, v in value._smat.iteritems():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
@@ -747,7 +762,11 @@ class SparseMatrix(MatrixBase):
 
         out = self.copy()
         for k, v in self._smat.iteritems():
-            out._smat[k] = f(v)
+            fv = f(v)
+            if fv:
+                out._smat[k] = fv
+            else:
+                out._smat.pop(k, None)
         return out
 
     def reshape(self, _rows, _cols):
