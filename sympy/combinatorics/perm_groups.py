@@ -837,8 +837,7 @@ class PermutationGroup(Basic):
             while len(current_group.orbit(base[pos])) != size:
                 gamma = iter(Gamma).next()
                 x = transversals[pos][gamma]
-                x_inverse = ~x
-                temp = x_inverse(base[pos + 1])
+                temp = x._array_form.index(base[pos + 1])
                 if temp not in basic_orbits[pos + 1]:
                     Gamma = Gamma - current_group.orbit(gamma)
                 else:
@@ -1114,10 +1113,10 @@ class PermutationGroup(Basic):
                         rep_orb_index = orbit_descr[base[l]]
                         rep = orbit_reps[rep_orb_index]
                         rep_orb = orbits[rep_orb_index]
-                        im = g(base[l])
-                        im_rep = g(rep)
+                        im = g._array_form[base[l]]
+                        im_rep = g._array_form[rep]
                         tr_el = transversals[rep_orb_index][base[l]]
-                        if im != tr_el(im_rep):
+                        if im != tr_el._array_form[im_rep]:
                             return False
                         else:
                             return True
@@ -1336,7 +1335,6 @@ class PermutationGroup(Basic):
             base.append(base[-1]*i)
         base.reverse()
 
-        a1 = [0]*m
         i1 = -1
         for i in self._base:
             i1 += 1
@@ -1344,7 +1342,6 @@ class PermutationGroup(Basic):
             for j, h in enumerate(u[i]):
                 if h[i] == x:
                     a.append(h)
-                    a1[i] = j
                     rank += j*base[i1]
                     p2 = _af_invert(h)
                     g1 = _af_rmul(p2, g1)
