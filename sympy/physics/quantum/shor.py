@@ -13,6 +13,7 @@ import random
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import bin
 
 from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import Qubit, measure_partial_oneshot
@@ -107,19 +108,22 @@ def shor(N):
 
 
 def arr(num, t):
-    """This function returns num as an array in binary
+    """Return a list of ``t`` binary digits of ``num``; low digits rightmost.
 
-    It does this with the 0th digit being on the right
-
+    Examples
+    ========
     >>> from sympy.physics.quantum.shor import arr
-    >>> arr(5, 4)
-    [0, 1, 0, 1]
+    >>> arr(5, 6)
+    [0, 0, 0, 1, 0, 1]
+    >>> arr(5, 2)
+    [0, 1]
     """
-    binary_array = []
-    for i in reversed(range(t)):
-        binary_array.append((num>>i)&1)
+    binary_array = [0]*t
+    b = list(bin(abs(num))[2:]) # strip 0b
+    b = b[-t:]
+    for i in range(-1, -min(len(b), t) - 1, -1):
+        binary_array[i] = int(b[i])
     return binary_array
-
 
 def getr(x, y, N):
     fraction = continued_fraction(x,y)
