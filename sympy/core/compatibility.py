@@ -371,3 +371,37 @@ except NameError: # Python 2.5
                 return args[1]
         else:
             raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
+
+try:
+    from __builtin__ import bin
+except ImportError: # Python 2.5
+    _hexDict = {
+    '0':'0000', '1':'0001', '2':'0010', '3':'0011', '4':'0100', '5':'0101',
+    '6':'0110', '7':'0111', '8':'1000', '9':'1001', 'a':'1010', 'b':'1011',
+    'c':'1100', 'd':'1101', 'e':'1110', 'f':'1111', 'L':''}
+    def bin(n):
+        """Return the equivalent to Python 2.6's bin function.
+
+        Examples
+        ========
+
+        >>> from sympy.core.compatibility import bin
+        >>> bin(-123)
+        '-0b1111011'
+        >>> bin(0) # this is the only time a 0 will be to the right of 'b'
+        '0b0'
+
+        See Also
+        ========
+        sympy.physics.quantum.shor.arr
+
+        Modified from http://code.activestate.com/recipes/576847/
+        """
+        # =========================================================
+        # create hex of int, remove '0x'. now for each hex char,
+        # look up binary string, append in list and join at the end.
+        # =========================================================
+        if n < 0:
+            return '-%s' % bin(-n)
+        return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
+            ]).lstrip('0') or '0')
