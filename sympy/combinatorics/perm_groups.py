@@ -2293,7 +2293,8 @@ class PermutationGroup(Basic):
         s1 = set(range(n))
         orbs = []
         while s1:
-            i = s1.pop()
+            i = min(s1)
+            s1.remove(i)
             si = self.orbit(i)
             if rep:
                 orbs.append(i)
