@@ -1752,7 +1752,10 @@ class PermutationGroup(Basic):
             g = Permutation(g, size=self.degree)
         if g in self.generators:
             return True
-        return bool(self.coset_factor(g._array_form, af=True))
+        self.schreier_sims()
+        r = _strip(g, self._base, self._basic_orbits, self._transversals)
+        b1 = (r[0]._array_form == range(self.degree))
+        return (r[0]._array_form == range(self.degree))
 
     @property
     def is_abelian(self):
