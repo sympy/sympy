@@ -109,7 +109,14 @@ _loaded = False
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
     global _loaded
-    if not _loaded:
+    # Use extension manager to track loaded status if available
+    # This is currently in IPython 0.14.dev
+    if hasattr(ip.extension_manager, 'loaded'):
+        loaded = 'sympy.utilities.sympyprinting' not in ip.extension_manager.loaded
+    else:
+        loaded = _loaded
+
+    if not loaded:
         printable_containers = [list, tuple, set, frozenset]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
