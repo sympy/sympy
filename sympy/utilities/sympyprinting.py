@@ -87,7 +87,7 @@ def can_print_latex(o):
         return all(can_print_latex(i) for i in o)
     elif isinstance(o, dict):
         return all((isinstance(i, basestring) or can_print_latex(i)) and can_print_latex(o[i]) for i in o)
-    elif isinstance(o,(sympy.Basic, sympy.matrices.MutableMatrix, int, long, float)):
+    elif isinstance(o,(sympy.Basic, sympy.matrices.Matrix, int, long, float)):
         return True
     return False
 
