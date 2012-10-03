@@ -45,7 +45,7 @@ def _init_ipython_printing(ip, stringify_func):
         png = latex_to_png(s)
         return png
 
-    def _print_png(o):
+    def _print_display_png(o):
         """
         A function to display sympy expression using display style LaTeX in PNG.
         """
@@ -122,7 +122,7 @@ def _init_ipython_printing(ip, stringify_func):
             'sympy.core.basic', 'Basic', _print_png
         )
         png_formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'MatrixBase', _print_png
+            'sympy.matrices.matrices', 'MatrixBase', _print_display_png
         )
 
         for cls in [dict, int, long, float] + printable_containers:
