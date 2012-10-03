@@ -21,18 +21,24 @@ pretty-printed.
 # Imports
 #-----------------------------------------------------------------------------
 
-from IPython.lib.latextools import latex_to_png
-from IPython.testing import decorators as dec
-# use @dec.skipif_not_sympy to skip tests requiring sympy
+from sympy import pretty, latex
+from sympy.external import import_module
 
-try:
-    from sympy import pretty, latex
-except ImportError:
-    pass
+import warnings
+
+ipython = import_module("IPython", min_module_version="0.11")
 
 #-----------------------------------------------------------------------------
 # Definitions of special display functions for use with IPython
 #-----------------------------------------------------------------------------
+
+# If IPython cannot be imported, then not in IPython shell or insufficient version
+if ipython:
+    latex_to_png = ipython.lib.latextools.latex_to_png
+else:
+    warnings.warn("This should only be imported from within an IPython instance, "
+            "check that IPython version >= 0.11.")
+
 
 def print_basic_unicode(o, p, cycle):
     """A function to pretty print sympy Basic objects."""
@@ -85,6 +91,7 @@ def can_print_latex(o):
         return True
     return False
 
+
 def print_latex(o):
     """A function to generate the latex representation of sympy
     expressions."""
@@ -96,26 +103,18 @@ def print_latex(o):
     # Fallback to the string printer
     return None
 
+
 _loaded = False
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
-    import sympy
     global _loaded
     if not _loaded:
+        printable_containers = [list, tuple, set, frozenset]
+
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in (object, str):
-            plaintext_formatter.for_type(cls, print_basic_unicode)
-
-        printable_containers = [list, tuple]
-
-        # set and frozen set were broken with SymPy's latex() function, but
-        # was fixed in the 0.7.1-git development version. See
-        # http://code.google.com/p/sympy/issues/detail?id=3062.
-        if sympy.__version__ > '0.7.1':
-            printable_containers += [set, frozenset]
-        else:
             plaintext_formatter.for_type(cls, print_basic_unicode)
 
         plaintext_formatter.for_type_by_name(
