@@ -21,7 +21,6 @@ pretty-printed.
 # Imports
 #-----------------------------------------------------------------------------
 
-from sympy import pretty, latex
 from sympy.interactive.printing import init_printing
 
 #-----------------------------------------------------------------------------

@@ -21,7 +21,7 @@ def _init_python_printing(stringify_func):
 
     sys.displayhook = _displayhook
 
-def _init_ipython_printing(ip, stringify_func):
+def _init_ipython_printing(ip, stringify_func, render_latex):
     """Setup printing in IPython interactive session. """
     # For IPython >= 0.11, will use latex_to_png to render LaTeX
     try:
@@ -116,17 +116,18 @@ def _init_ipython_printing(ip, stringify_func):
             'sympy.matrices.matrices', 'MatrixBase', _print_pretty
         )
 
-        png_formatter = ip.display_formatter.formatters['image/png']
+        if render_latex:
+            png_formatter = ip.display_formatter.formatters['image/png']
 
-        png_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_png
-        )
-        png_formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'MatrixBase', _print_display_png
-        )
+            png_formatter.for_type_by_name(
+                'sympy.core.basic', 'Basic', _print_png
+            )
+            png_formatter.for_type_by_name(
+                'sympy.matrices.matrices', 'MatrixBase', _print_display_png
+            )
 
-        for cls in [dict, int, long, float] + printable_containers:
-            png_formatter.for_type(cls, _print_png)
+            for cls in [dict, int, long, float] + printable_containers:
+                png_formatter.for_type(cls, _print_png)
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         latex_formatter.for_type_by_name(
@@ -140,7 +141,7 @@ def _init_ipython_printing(ip, stringify_func):
     else:
         ip.set_hook('result_display', _result_display)
 
-def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None, num_columns=None, no_global=False, ip=None):
+def init_printing(pretty_print=True, order=None, use_unicode=True, use_latex=True, wrap_line=None, num_columns=None, no_global=False, ip=None):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -160,6 +161,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
+    use_latex: boolean or None
+        If True, use latex rendering in GUI interfaces;
+        if False, do not use latex rendering
     wrap_line: boolean
         If True, lines will wrap at the end;
         if False, they will not wrap but continue as one line.
@@ -225,7 +229,14 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
+    # Even if ip is not passed, double check that not in IPython shell
+    if ip is None:
+        try:
+            ip = get_ipython()
+        except NameError:
+            pass
+
     if ip is not None and ip.__module__.startswith('IPython'):
-        _init_ipython_printing(ip, stringify_func)
+        _init_ipython_printing(ip, stringify_func, use_latex)
     else:
         _init_python_printing(stringify_func)
