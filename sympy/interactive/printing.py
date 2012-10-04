@@ -141,7 +141,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
     else:
         ip.set_hook('result_display', _result_display)
 
-def init_printing(pretty_print=True, order=None, use_unicode=True, use_latex=True, wrap_line=None, num_columns=None, no_global=False, ip=None):
+def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=None, wrap_line=None, num_columns=None, no_global=False, ip=None):
     """
     Initializes pretty-printer depending on the environment.
 
