@@ -7,7 +7,7 @@ MKS stands for "meter, kilogram, second".
 from __future__ import division
 
 from sympy.physics.unitsystems.dimensions import Dimension
-from sympy.physics.unitsystems.units import Unit, UnitSystem, PREFIXES
+from sympy.physics.unitsystems.units import Unit, UnitSystem, Constant, PREFIXES
 
 # base dimensions
 length = Dimension(name='length', symbol='L', length=1)
@@ -37,5 +37,11 @@ N = Unit(dimension=force, factor=10**3, abbrev='N')
 W = Unit(dimension=power, factor=10**3, abbrev='W')
 Pa = Unit(dimension=pressure, factor=10**3, abbrev='Pa')
 
-units = (v, a, p, J, N, W, Pa)
+# constants
+# Newton constant
+G = Constant(m**3*kg**-1*s**-2, factor=6.67384e-11, abbrev='G')
+# speed of light
+c = Constant(dimension=velocity, factor=299792458, abbrev='c')
+
+units = (v, a, p, J, N, W, Pa, G, c)
 mks = UnitSystem(base=(m, kg, s), units=units, name='MKS')

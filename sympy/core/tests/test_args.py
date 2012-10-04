@@ -1803,6 +1803,25 @@ def test_sympy__physics__units__Unit():
     from sympy.physics.units import Unit
     assert _test_args(Unit("meter", "m"))
 
+def test_sympy__physics__unitsystems__dimensions__Dimension():
+    from sympy.physics.unitsystems.dimensions import Dimension
+    assert _test_args(Dimension(name='length', symbol='L', length=1))
+
+def test_sympy__physics__unitsystems__units__Constant():
+    from sympy.physics.unitsystems.units import Constant
+    from sympy.physics.unitsystems.mks import length
+    assert _test_args(Constant(dimension=length, factor=1, abbrev='l'))
+
+def test_sympy__physics__unitsystems__units__Quantity():
+    from sympy.physics.unitsystems.units import Quantity
+    from sympy.physics.unitsystems.mks import m
+    assert _test_args(Quantity(1, m))
+
+def test_sympy__physics__unitsystems__units__Unit():
+    from sympy.physics.unitsystems.units import Unit
+    from sympy.physics.unitsystems.mks import length
+    assert _test_args(Unit(dimension=length, abbrev='m'))
+
 def test_sympy__polys__numberfields__AlgebraicNumber():
     from sympy.polys.numberfields import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))

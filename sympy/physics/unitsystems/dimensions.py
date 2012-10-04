@@ -51,6 +51,10 @@ class Dimension(Dict):
 
         pairs.extend(kwargs.items())
 
+        # filter dimension set to zero; this avoid the following odd result:
+        # Dimension(length=1) == Dimension(length=1, mass=0) => False
+        pairs = [pair for pair in pairs if pair[1] != 0]
+
         new = Dict.__new__(cls, *pairs)
         new.name = name
         new.symbol = symbol
