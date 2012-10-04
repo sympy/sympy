@@ -69,6 +69,7 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
+from sympy.core.containers import OrderedSet
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets, cythonized
 
@@ -279,7 +280,7 @@ def dup_zz_zassenhaus(f, K):
 
     g = dup_zz_hensel_lift(p, f, modular, l, K)
 
-    T = set(range(len(g)))
+    T = OrderedSet(range(len(g)))
     factors, s = [], 1
 
     while 2*s <= len(T):

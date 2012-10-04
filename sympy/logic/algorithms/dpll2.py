@@ -12,6 +12,7 @@ from collections import defaultdict
 from heapq import heappush, heappop
 
 from sympy.core import Symbol
+from sympy.core.containers import OrderedSet
 from sympy import Predicate
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
 
@@ -33,7 +34,7 @@ def dpll_satisfiable(expr):
 
     """
     symbols = list(expr.atoms(Symbol, Predicate))
-    symbols_int_repr = set(range(1, len(symbols) + 1))
+    symbols_int_repr = OrderedSet(range(1, len(symbols) + 1))
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
 
@@ -178,7 +179,7 @@ class SATSolver(object):
                 self.num_decisions += 1
 
                 # Stopping condition for a satisfying theory
-                if 0 == lit:
+                if lit is False:
                     return True
 
                 # Start the new decision level

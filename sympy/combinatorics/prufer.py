@@ -274,9 +274,9 @@ class Prufer(Basic):
             nmin = min(ei[0], nmin) if nmin != None else ei[0]
             nmax = max(ei[1], nmax) if nmax != None else ei[1]
             rv.append(list(ei))
-        missing = set(range(nmin, nmax + 1)) - got
+        missing = OrderedSet(range(nmin, nmax + 1)) - got
         if missing:
-            missing = [i + nmin for i in sorted(missing)]
+            missing = [i + nmin for i in missing]
             if len(missing) == 1:
                 msg = 'Node %s is missing.' % missing[0]
             else:
@@ -370,11 +370,11 @@ class Prufer(Basic):
                 nodes = set(flatten(args[0]))
                 nnodes = max(nodes) + 1
                 if nnodes != len(nodes):
-                    missing = sorted(set(range(nnodes)) - nodes)
+                    missing = set(range(nnodes)) - nodes
                     if len(missing) == 1:
-                        msg = 'Node %s is missing.' % missing[0]
+                        msg = 'Node %s is missing.' % missing.pop()
                     else:
-                        msg = 'Nodes %s are missing.' % missing
+                        msg = 'Nodes %s are missing.' % list(sorted(missing))
                     raise ValueError(msg)
             ret_obj._tree_repr = [list(i) for i in args[0]]
             ret_obj._nodes = nnodes

@@ -12,6 +12,7 @@ from sympy import Predicate
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr
 from sympy.logic.inference import pl_true, literal_symbol
+from sympy.core.containers import OrderedSet
 
 def dpll_satisfiable(expr):
     """
@@ -27,7 +28,7 @@ def dpll_satisfiable(expr):
 
     """
     symbols = list(expr.atoms(Symbol, Predicate))
-    symbols_int_repr = set(range(1, len(symbols) + 1))
+    symbols_int_repr = OrderedSet(range(1, len(symbols) + 1))
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
     result = dpll_int_repr(clauses_int_repr, symbols_int_repr, {})
