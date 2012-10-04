@@ -2289,18 +2289,16 @@ class PermutationGroup(Basic):
         [0]
 
         """
-        n = self._degree
-        s1 = set(range(n))
+        skip = set() # keep track of which indices have been seen and should be skipped
         orbs = []
-        while s1:
-            i = min(s1)
-            s1.remove(i)
-            si = self.orbit(i)
-            if rep:
-                orbs.append(i)
-            else:
-                orbs.append(si)
-            s1 -= si
+        for i in range(self._degree):
+            if i not in skip:
+                orb = self.orbit(i)
+                orbs.append(i if rep else orb)
+                # don't do any other indices that are in this orbit;
+                # not need to add current indices since we won't see
+                # this one again
+                skip.update(orb)
         return orbs
 
     def order(self):
