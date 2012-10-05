@@ -1620,7 +1620,7 @@ class MatrixBase(object):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
-            return self._new(1,3,((self[1]*b[2] - self[2]*b[1]),
+            return self._new(self.rows, self.cols, ((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
@@ -4651,7 +4651,7 @@ class SparseMatrix(MatrixBase):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product")
         else:
-            return SparseMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
+            return SparseMatrix(self.rows, self.cols, ((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 

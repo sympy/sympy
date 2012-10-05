@@ -515,6 +515,10 @@ def test_util():
     v2 = Matrix(1,3,[3,4,5])
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
     assert v1.norm() == sqrt(14)
+
+    # cross with column vector (result adopts its shape) (Issue 2021)
+    assert v1.T.cross(v2) == Matrix(3,1,[-2,4,-2])
+
     assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
     assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
     assert ones(1, 2) == Matrix(1, 2, [1, 1])
@@ -985,6 +989,8 @@ def test_sparse_matrix():
     v2 = Matrix(1,3,[3,4,5])
     assert v1.cross(v2) == Matrix(1,3,[-2,4,-2])
     assert v1.norm(v1) == 14
+    # cross with column vector (result adopts its shape) (Issue 2021)
+    assert v1.T.cross(v2) == Matrix(3,1,[-2,4,-2])
 
     # test_cofactor
     assert eye(3) == eye(3).cofactorMatrix()
