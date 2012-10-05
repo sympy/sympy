@@ -14,3 +14,18 @@ def rmid(isid):
             return expr.__class__(first_id)
 
     return ident_remove
+
+def frequencies(coll):
+    counts = {}
+    for elem in coll:
+        counts[elem] = counts.get(elem, 0) + 1
+    return counts
+
+def glom(mkglom):
+    def conglomerate(expr):
+        """ Conglomerate together identical args x + x -> 2x """
+        freqs = frequencies(expr.args)
+        return expr.__class__(*[arg if freqs[arg] == 1
+                                    else mkglom(freqs[arg], arg)
+                                    for arg in freqs])
+    return conglomerate
