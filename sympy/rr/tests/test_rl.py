@@ -1,9 +1,6 @@
 from sympy.rr.rl import rmid, glom
 from sympy import Basic
 
-class Container(Basic):
-    pass
-
 def test_rmid():
     rmzeros = rmid(lambda x: x == 0)
     assert rmzeros(Basic(0, 1)) == Basic(1)
