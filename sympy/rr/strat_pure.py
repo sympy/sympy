@@ -35,6 +35,15 @@ def chain(*rules):
 def debug(rule):
     def debug_rl(expr):
         result = rule(expr)
-        print "In: %s\nOut: %s\n"%(expr, result)
+        if result != expr:
+            print "In: %s\nOut: %s\n"%(expr, result)
         return result
     return debug_rl
+
+def null_safe(rule):
+    def null_safe_rl(expr):
+        result = rule(expr)
+        if result is None:
+            return expr
+        else:
+            return result
