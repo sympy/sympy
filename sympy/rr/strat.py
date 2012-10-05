@@ -9,4 +9,3 @@ def canon(*rules):
     Keep doing this until there is no change.
     """
     return exhaust(chain(*map(bottom_up, rules)))
-
