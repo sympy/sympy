@@ -36,14 +36,17 @@ class BlockMatrix(MatrixExpr):
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
 
-    def __new__(cls, M):
-        if not isinstance(M, Matrix):
-            M = Matrix(M)
-        data = Tuple(*M._mat)
-        shape = Tuple(*sympify(M.shape))
-        obj = Basic.__new__(cls, data, shape)
-        obj._mat = M
+    def __new__(cls, *args):
+        from sympy.matrices.immutable import ImmutableMatrix
+        mat = ImmutableMatrix(*args)
+
+        obj = Basic.__new__(cls, mat)
         return obj
+
+
+    @property
+    def _mat(self):
+        return self.args[0]
 
     @property
     def shape(self):
@@ -220,6 +223,7 @@ class BlockDiagMatrix(BlockMatrix):
     is_BlockDiagMatrix = True
 
     def __new__(cls, *mats):
+        from sympy.matrices.immutable import ImmutableMatrix
         data_matrix = eye(len(mats))
         for i, mat in enumerate(mats):
             data_matrix[i, i] = mat
@@ -234,13 +238,12 @@ class BlockDiagMatrix(BlockMatrix):
 
         shape = Tuple(*sympify(mat.shape))
         data = Tuple(*data_matrix._mat)
-        obj = Basic.__new__(cls, data, shape, Tuple(*mats))
-        obj._mat = data_matrix
+        obj = Basic.__new__(cls, ImmutableMatrix(data_matrix), Tuple(*mats))
         return obj
 
     @property
     def diag(self):
-        return self.args[2]
+        return self.args[1]
 
     def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
@@ -369,3 +372,4 @@ def block_collapse(expr):
         for i in range(1, expr.exp):
             rv = rv._blockmul(expr.base)
         return rv
+
