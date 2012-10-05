@@ -1,4 +1,4 @@
-from sympy.rr.rl import rmid, glom
+from sympy.rr.rl import rmid, glom, flatten, unpack
 from sympy import Basic
 
 def test_rmid():
@@ -12,3 +12,9 @@ def test_glom():
     assert conglomerate(Basic(1, 2, 2)) == Basic(1, 4)
     conglomerate = glom(lambda num, x: x ** num)
     assert conglomerate(Basic(1, 3, 3)) == Basic(1, 9)
+
+def test_flatten():
+    assert flatten(Basic(1, 2, Basic(3, 4))) == Basic(1, 2, 3, 4)
+
+def test_unpack():
+    assert unpack(Basic(2)) == 2
