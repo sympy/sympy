@@ -313,7 +313,8 @@ def init_python_session():
     return SymPyConsole()
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, quiet=False, auto_symbols=False, auto_int_to_Integer=False, argv=[]):
+        use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
+        auto_int_to_Integer=False, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -335,6 +336,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
     use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
+    use_latex: boolean or None
+        If True, use latex rendering if IPython GUI's;
+        if False, do not use latex rendering.
     quiet: boolean
         If True, init_session will not print messages regarding its status;
         if False, init_session will print messages regarding its status.
@@ -456,7 +460,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
     _preexec_source = preexec_source
 
     ip.runsource(_preexec_source, symbol='exec')
-    init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode, ip=ip)
+    init_printing(pretty_print=pretty_print, order=order,
+        use_unicode=use_unicode, use_latex=use_latex, ip=ip)
 
     message = _make_message(ipython, quiet, _preexec_source)
 
