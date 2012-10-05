@@ -2560,36 +2560,31 @@ class PermutationGroup(Basic):
         return [_af_new(y) for _, y in tr]
 
     def orbits(self, rep=False):
-        """Compute the orbits of G.
-
-        If rep=False it returns a list of sets else it returns a list of
-        representatives of the orbits
+        """Return the orbits of self, ordered according to lowest element
+        in each orbit.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation([0, 2, 1])
-        >>> b = Permutation([1, 0, 2])
+        >>> a = Permutation(1,5)(2,3)(4,0,6)
+        >>> b = Permutation(1,5)(3,4)(2,6,0)
         >>> G = PermutationGroup([a, b])
         >>> G.orbits()
-        [set([0, 1, 2])]
-        >>> G.orbits(rep=True)
-        [0]
-
+        [set([0, 2, 3, 4, 6]), set([1, 5])]
         """
-        n = self._degree
-        s1 = set(range(n))
+        seen = set() # elements that have already appeared in orbits
         orbs = []
-        while s1:
-            i = s1.pop()
-            si = self.orbit(i)
-            if rep:
-                orbs.append(i)
-            else:
-                orbs.append(si)
-            s1 -= si
+        sorted_I = range(self._degree)
+        I = set(sorted_I)
+        while I:
+            i = sorted_I[0]
+            orb = self.orbit(i)
+            orbs.append(orb)
+            # remove all indices that are in this orbit
+            I -= orb
+            sorted_I = [i for i in sorted_I if i not in orb]
         return orbs
 
     def order(self):
