@@ -58,3 +58,8 @@ def flatten(expr):
         else:
             args.append(arg)
     return Basic.__new__(expr.__class__, *args)
+
+def sort(key):
+    def sort_rl(expr):
+        return Basic.__new__(expr.__class__, *sorted(expr.args, key=key))
+    return sort_rl

@@ -1,4 +1,4 @@
-from sympy.rr.rl import rmid, glom, flatten, unpack
+from sympy.rr.rl import rmid, glom, flatten, unpack, sort
 from sympy import Basic
 
 def test_rmid():
@@ -18,3 +18,7 @@ def test_flatten():
 
 def test_unpack():
     assert unpack(Basic(2)) == 2
+
+def test_sort():
+    assert sort(str)(Basic(3,1,2)) == Basic(1,2,3)
+
