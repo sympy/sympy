@@ -1,5 +1,5 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
-from sympy.core import Mul, Add, Basic
+from sympy.core import Mul, Add, Basic, sympify
 
 
 class MatMul(MatrixExpr, Mul):
@@ -15,40 +15,18 @@ class MatMul(MatrixExpr, Mul):
     A*B*C
     """
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
+        simplify = kwargs.get('simplify', True)
+        check    = kwargs.get('check'   , True)
 
-        # Check that the shape of the args is consistent
-        matrices = [arg for arg in args if arg.is_Matrix]
-
-        validate(*matrices)
-
-        if any(arg.is_zero for arg in args):
-            return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
-
-        expr = matrixify(Mul.__new__(cls, *args))
-        if expr.is_Add:
-            return MatAdd(*expr.args)
-        if expr.is_Pow:
-            assert expr.exp.is_Integer
-            expr = Basic.__new__(MatMul, *[expr.base for i in range(expr.exp)])
-        if not expr.is_Mul:
-            return expr
-
-        if any(arg.is_Matrix and arg.is_ZeroMatrix for arg in expr.args):
-            return ZeroMatrix(*expr.shape)
-
-        # Clear out Identities
-        nonmats = [M for M in expr.args if not M.is_Matrix]  # scalars
-        mats = [M for M in expr.args if M.is_Matrix]  # matrices
-        if any(M.is_Identity for M in mats):  # Any identities around?
-            newmats = [M for M in mats if not M.is_Identity]  # clear out
-            if len(newmats) == 0:  # Did we lose everything?
-                newmats = [Identity(expr.rows)]  # put just one back in
-
-            if mats != newmats:  # Removed some I's but not everything?
-                return MatMul(*(nonmats + newmats))  # Repeat with simpler expr
-
-        return expr
+        args = map(sympify, args)
+        obj = Basic.__new__(cls, *args)
+        factor, matrices = obj.as_factor_mat()
+        if check:
+            validate(*matrices)
+        if simplify:
+            return canonicalize(obj)
+        return obj
 
     @property
     def shape(self):
@@ -87,11 +65,10 @@ class MatMul(MatrixExpr, Mul):
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
     def _eval_trace(self):
-        factor = Mul(*[arg for arg in self.args if not arg.is_Matrix])
-        matrix = MatMul(*[arg for arg in self.args if arg.is_Matrix])
+        factor, matrices = self.as_factor_mat()
         if factor != 1:
             from trace import Trace
-            return factor * Trace(matrix)
+            return factor * Trace(MatMul(*matrices))
         else:
             raise NotImplementedError("Can't simplify any further")
 
@@ -102,11 +79,70 @@ class MatMul(MatrixExpr, Mul):
         except ShapeError:
             raise NotImplementedError("Can not decompose this Inverse")
 
+    def as_factor_mat(self):
+        matrices    = [arg for arg in self.args if arg.is_Matrix]
+        nonmatrices = [arg for arg in self.args if not arg.is_Matrix]
+        return Mul(*nonmatrices), matrices
+
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
         A,B = matrices[i:i+2]
         if A.cols != B.rows:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+
+
+# Rules
+
+from sympy.rr import rmid, unpack, canon, condition, debug, flatten
+
+def newmul(*args):
+    if args[0] == 1:
+        args = args[1:]
+    return Basic.__new__(MatMul, *args)
+
+def any_zeros(mul):
+    if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
+                       for arg in mul.args]):
+        matrices = [arg for arg in mul.args if arg.is_Matrix]
+        return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
+    return mul
+
+def xxinv(mul):
+    from sympy.matrices.expressions import Inverse
+    """ Y * X * X.I -> Y """
+    factor, matrices = mul.as_factor_mat()
+    for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
+        if X.is_square and Y.is_square and X == Inverse(Y):
+            I = Identity(X.rows)
+            return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+    return mul
+
+def remove_ids(mul):
+    factor, matrices = mul.as_factor_mat()
+    if not any(m.is_Identity for m in matrices) or len(matrices) == 1:
+        return mul
+
+    non_ids = filter(lambda x: not x.is_Identity, matrices)
+    return newmul(factor, *non_ids)
+
+def factor_in_front(mul):
+    factor, matrices = mul.as_factor_mat()
+    if factor == 1:
+        return mul
+    else:
+        return newmul(factor, *matrices)
+
+def condition_matmul(rule):
+    is_matmul = lambda x: x.is_Matrix and x.is_Mul
+    return condition(is_matmul, rule)
+
+canonicalize = canon(*map(condition_matmul, (any_zeros,
+                                             remove_ids,
+                                             xxinv,
+                                             unpack,
+                                             rmid(lambda x: x == 1),
+                                             factor_in_front,
+                                             flatten)))
 
 from matadd import MatAdd
