@@ -11,7 +11,7 @@ from dense import (
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
     zeros)
 
-from sparse import SparseMatrix, Diag
+from sparse import MutableSparseMatrix as SparseMatrix, Diag
 
 from immutable import ImmutableMatrix, ImmutableSparseMatrix
 

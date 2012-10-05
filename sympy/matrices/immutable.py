@@ -1,11 +1,27 @@
 from sympy.core.cache import cacheit
 from matrices import MatrixBase
 from dense import Matrix
-from sparse import SparseMatrix
+from sparse import MutableSparseMatrix as SparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
 
 class ImmutableMatrix(MatrixExpr, Matrix):
+    """Create an immutable version of a matrix.
+
+    Examples
+    ========
+
+    >>> from sympy import eye
+    >>> from sympy.matrices import ImmutableMatrix
+    >>> ImmutableMatrix(eye(3))
+    [1, 0, 0]
+    [0, 1, 0]
+    [0, 0, 1]
+    >>> _[0, 0] = 42
+    Traceback (most recent call last):
+    ...
+    TypeError: Cannot set values of ImmutableDenseMatrix
+    """
 
     _class_priority = 8
 
@@ -13,10 +29,10 @@ class ImmutableMatrix(MatrixExpr, Matrix):
     def _new(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
-        rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)
         rows = Integer(rows)
         cols = Integer(cols)
-        mat = Tuple(*mat)
+        mat = Tuple(*flat_list)
         return Basic.__new__(cls, rows, cols, mat)
 
     def __new__(cls, *args, **kwargs):
@@ -31,12 +47,12 @@ class ImmutableMatrix(MatrixExpr, Matrix):
 
     __getitem__ = Matrix.__getitem__
 
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of ImmutableMatrix")
-
     @cacheit
     def hash(self):
         return hash(self.__str__() )
+
+    def __setitem__(self, *args):
+        raise TypeError("Cannot set values of ImmutableMatrix")
 
     as_mutable = MatrixBase.as_mutable
 
@@ -61,16 +77,30 @@ class ImmutableMatrix(MatrixExpr, Matrix):
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
 
-class ImmutableSparseMatrix(SparseMatrix):
+class ImmutableSparseMatrix(Basic, SparseMatrix):
+    """Create an immutable version of a sparse matrix.
+
+    Examples
+    ========
+
+    >>> from sympy import eye
+    >>> from sympy.matrices.immutable import ImmutableSparseMatrix
+    >>> ImmutableSparseMatrix(eye(3)) # XXX define print method
+    ImmutableSparseMatrix(3, 3, {(0, 0): 1, (4, 0): 1, (8, 0): 1})
+    >>> _[0, 0] = 42
+    Traceback (most recent call last):
+    ...
+    TypeError: Cannot set values of ImmutableSparseMatrix
+    """
 
     _class_priority = 9
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], ImmutableSparseMatrix):
+        if len(args) == 1 and isinstance(args[0], cls):
             return args[0]
         rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
-        mat = Dict(SparseMatrix(rows, cols, mat)._smat)
+        mat = Dict(SparseMatrix(mat)._smat)
         rows = Integer(rows)
         cols = Integer(cols)
         return Basic.__new__(cls, rows, cols, mat)
@@ -80,6 +110,11 @@ class ImmutableSparseMatrix(SparseMatrix):
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
+
+    def _entry(self, i, j):
+        return SparseMatrix.__getitem__(self, (i, j))
+
+    __getitem__ = SparseMatrix.__getitem__
 
     @cacheit
     def hash(self):

@@ -1,5 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
+from sympy.core.expr import Expr
+from sympy.core.function import count_ops
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
@@ -202,6 +204,68 @@ class MatrixBase(object):
             raise TypeError("Data type not understood")
 
         return rows, cols, flat_list
+
+    def _setitem(self, key, value):
+        """
+        >>> from sympy import Matrix, I, zeros, ones
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        [1, 2 + I]
+        [3,     4]
+        >>> m[1, 0] = 9
+        >>> m
+        [1, 2 + I]
+        [9,     4]
+        >>> m[1, 0] = [[0, 1]]
+
+        To replace row r you assign to position r*m where m
+        is the number of columns:
+
+        >>> M = zeros(4)
+        >>> m = M.cols
+        >>> M[3*m] = ones(1, m)*2; M
+        [0, 0, 0, 0]
+        [0, 0, 0, 0]
+        [0, 0, 0, 0]
+        [2, 2, 2, 2]
+
+        And to replace column c you can assign to position c:
+
+        >>> M[2] = ones(m, 1)*4; M
+        [0, 0, 4, 0]
+        [0, 0, 4, 0]
+        [0, 0, 4, 0]
+        [2, 2, 4, 2]
+        """
+        from dense import Matrix
+
+        is_slice = isinstance(key, slice)
+        i, j = key = self.key2ij(key)
+        is_mat = isinstance(value, MatrixBase)
+        if type(i) is slice or type(j) is slice:
+            if is_mat:
+                self.copyin_matrix(key, value)
+                return
+            if not isinstance(value, Expr) and is_sequence(value):
+                self.copyin_list(key, value)
+                return
+            raise ValueError('unexpected value: %s' % value)
+        else:
+            if not is_mat and \
+                not isinstance(value, Expr) and is_sequence(value):
+                value = Matrix(value)
+                is_mat = True
+            if is_mat:
+                if is_slice:
+                    key = (slice(*divmod(i, self.cols)),
+                           slice(*divmod(j, self.cols)))
+                else:
+                    key = (slice(i, i + value.rows),
+                           slice(j, j + value.cols))
+                self.copyin_matrix(key, value)
+            else:
+                return i, j, sympify(value)
+            return
 
     def copy(self):
         return self._new(self.rows, self.cols, self._mat)
@@ -1035,19 +1099,24 @@ class MatrixBase(object):
 
 
     def key2ij(self, key):
-        """Converts key with two integers to canonical form, checking to see that
-        they are valid for the given shape.
+        """Converts key into canonical form, converting integers or indexable
+        items into valid integers for self's range or returning slices
+        unchanged.
 
         See Also
         ========
 
         key2bounds
         """
-
-        if not (is_sequence(key) and len(key) == 2):
-            raise TypeError("wrong syntax: a[%s]. Use a[i, j] or a[(i, j)]"
-                    % repr(key))
-        return [a2idx(i, n) for i, n in zip(key, self.shape)]
+        if is_sequence(key):
+            if not len(key) == 2:
+                raise TypeError('key must be a sequence of length 2')
+            return [a2idx(i, n) if not isinstance(i, slice) else i
+                for i, n in zip(key, self.shape)]
+        elif isinstance(key, slice):
+            return key.indices(len(self))[:2]
+        else:
+            return divmod(a2idx(key, len(self)), self.cols)
 
     def applyfunc(self, f):
         """
@@ -3426,7 +3495,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.dense.Matrix'>
+    <class 'sympy.matrices.dense.MutableDenseMatrix'>
     """
     try:
         if A._class_priority > B._class_priority:
@@ -3445,6 +3514,8 @@ def classof(A, B):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
+    if isinstance(j, slice):
+        return j
     if type(j) is not int:
         try:
             j = j.__index__()

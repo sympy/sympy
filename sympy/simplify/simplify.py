@@ -5,7 +5,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
+    Function, Equality, Dummy, Atom, Expr, factor_terms,
     expand_multinomial, expand_power_base, symbols)
 
 from sympy.core.compatibility import iterable, reduce

@@ -28,36 +28,12 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
-class Matrix(MatrixBase):
+class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False
 
     _op_priority = 12.0
     _class_priority = 10
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)
-        self = object.__new__(cls)
-        self.rows = rows
-        self.cols = cols
-        self._mat = list(flat_list) # create a shallow copy
-        return self
-
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    @property
-    def is_Identity(self):
-        if not self.is_square:
-            return False
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        for i in range(self.rows):
-            for j in range(i + 1, self.cols):
-                if self[i, j] or self[j, i]:
-                    return False
-        return True
 
     def __getitem__(self, key):
         """
@@ -83,55 +59,19 @@ class Matrix(MatrixBase):
             return self._mat[a2idx(key)]
 
     def __setitem__(self, key, value):
-        """
-        >>> from sympy import Matrix, I
-        >>> m = Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        [1, 2 + I]
-        [3,     4]
-        >>> m[1, 0] = 9
-        >>> m
-        [1, 2 + I]
-        [9,     4]
-        >>> m[1, 0] = [[0, 1]]
-        >>> m
-        [1, 2 + I]
-        [0,     1]
+        raise NotImplementedError()
 
-        """
-        from dense import Matrix
-
-        if type(key) is tuple:
-            i, j = key
-            if type(i) is slice or type(j) is slice:
-                if isinstance(value, MatrixBase):
-                    self.copyin_matrix(key, value)
-                    return
-                if not isinstance(value, Expr) and is_sequence(value):
-                    self.copyin_list(key, value)
-                    return
-                raise ValueError('unexpected value: %s' % value)
-            else:
-                i, j = self.key2ij(key)
-                is_mat = isinstance(value, MatrixBase)
-                if not is_mat and \
-                    not isinstance(value, Expr) and is_sequence(value):
-                    value = Matrix(value)
-                    is_mat = True
-                if is_mat:
-                    self.copyin_matrix((slice(i, i + value.rows),
-                                        slice(j, j + value.cols)), value)
-                else:
-                    self._mat[i*self.cols + j] = sympify(value)
-                return
-        else:
-            # row-wise decomposition of matrix
-            if type(key) is slice:
-                raise IndexError("Vector slices not implemented yet.")
-            else:
-                k = a2idx(key)
-                self._mat[k] = sympify(value)
-                return
+    @property
+    def is_Identity(self):
+        if not self.is_square:
+            return False
+        if not all(self[i, i] == 1 for i in range(self.rows)):
+            return False
+        for i in range(self.rows):
+            for j in range(i + 1, self.cols):
+                if self[i, j] or self[j, i]:
+                    return False
+        return True
 
     def tolist(self):
         """
@@ -164,104 +104,6 @@ class Matrix(MatrixBase):
             return [[] for i in range(self.rows)]
         return [self._mat[i: i + self.cols]
             for i in range(0, len(self), self.cols)]
-
-    def expand(self, **hints):
-        """
-        Expand each element of the matrix by calling ``expand()``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.expand(**hints), self._mat))
-        return out
-
-    def subs(self, *args, **kwargs):
-        """
-        Create substituted expressions for each element with ``Expr.subs``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.subs(*args, **kwargs), self._mat))
-        return out
-
-    def copyin_matrix(self, key, value):
-        """
-        Copy in values from a matrix into the given bounds.
-
-        Parameters
-        ==========
-
-        key : slice
-            The section of this matrix to replace.
-        value : Matrix
-            The matrix to copy values from.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
-        >>> I = eye(3)
-        >>> I[:3, :2] = M
-        >>> I
-        [0, 1, 0]
-        [2, 3, 0]
-        [4, 5, 1]
-        >>> I[0, 1] = M
-        >>> I
-        [0, 0, 1]
-        [2, 2, 3]
-        [4, 4, 5]
-
-        See Also
-        ========
-
-        copyin_list
-        """
-        rlo, rhi, clo, chi = self.key2bounds(key)
-        shape = value.shape
-        dr, dc = rhi - rlo, chi - clo
-        if shape != (dr, dc):
-            raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
-                "as the in sub-Matrix given by `key`.")
-
-        for i in range(value.rows):
-            for j in range(value.cols):
-                self[i + rlo, j + clo] = value[i, j]
-
-    def copyin_list(self, key, value):
-        """
-        Copy in elements from a list.
-
-        Parameters
-        ==========
-
-        key : slice
-            The section of this matrix to replace.
-        value : iterable
-            The iterable to copy values from.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> I = eye(3)
-        >>> I[:2, 0] = [1, 2] # col
-        >>> I
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
-        >>> I[1, :2] = [[3, 4]]
-        >>> I
-        [1, 0, 0]
-        [3, 4, 0]
-        [0, 0, 1]
-
-        See Also
-        ========
-
-        copyin_matrix
-        """
-        if not is_sequence(value):
-            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        return self.copyin_matrix(key, Matrix(value))
 
     def row(self, i, f=None):
         """
@@ -324,119 +166,6 @@ class Matrix(MatrixBase):
             return self[:, j]
         for i in range(0, self.rows):
             self[i, j] = f(self[i, j], i)
-
-    def row_swap(self, i, j):
-        """
-        Swap the two given rows of the matrix in-place.
-
-        >>> from sympy.matrices import Matrix
-        >>> M = Matrix([[0, 1], [1, 0]])
-        >>> M
-        [0, 1]
-        [1, 0]
-        >>> M.row_swap(0, 1)
-        >>> M
-        [1, 0]
-        [0, 1]
-
-        See Also
-        ========
-
-        row
-        col_swap
-        """
-        for k in range(0, self.cols):
-            self[i, k], self[j, k] = self[j, k], self[i, k]
-
-    def col_swap(self, i, j):
-        """
-        Swap the two given columns of the matrix in-place.
-
-        >>> from sympy.matrices import Matrix
-        >>> M = Matrix([[1, 0], [1, 0]])
-        >>> M
-        [1, 0]
-        [1, 0]
-        >>> M.col_swap(0, 1)
-        >>> M
-        [0, 1]
-        [0, 1]
-
-        See Also
-        ========
-
-        col
-        row_swap
-        """
-        for k in range(0, self.rows):
-            self[k, i], self[k, j] = self[k, j], self[k, i]
-
-    def row_del(self, i):
-        """
-        Delete the given row.
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.row_del(1)
-        >>> M
-        [1, 0, 0]
-        [0, 0, 1]
-
-        See Also
-        ========
-
-        row
-        col_del
-        """
-        self._mat = self._mat[:i*self.cols] + self._mat[(i+1)*self.cols:]
-        self.rows -= 1
-
-    def col_del(self, i):
-        """
-        Delete the given column.
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.col_del(1)
-        >>> M
-        [1, 0]
-        [0, 0]
-        [0, 1]
-
-        See Also
-        ========
-
-        col
-        row_del
-        """
-        for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j*self.cols]
-        self.cols -= 1
-
-    # Utility functions
-    def simplify(self, ratio=1.7, measure=count_ops):
-        """Applies simplify to the elements of a matrix in place.
-
-        This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
-
-        See Also
-        ========
-
-        sympy.simplify.simplify.simplify
-        """
-        for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure)
-
-    def fill(self, value):
-        """Fill the matrix with the scalar value.
-
-        See Also
-        ========
-
-        zeros
-        ones
-        """
-        self._mat = [value]*len(self)
 
     def _eval_trace(self):
         """
@@ -722,6 +451,28 @@ class Matrix(MatrixBase):
     def __rpow__(self, other):
         raise NotImplementedError("Matrix Power not defined")
 
+    ###############
+    # define these in the Mutable version of the matrix
+
+    def subs(self, *args, **kwargs): # should mirror core.basic.subs
+        raise NotImplementedError()
+
+    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
+            mul=True, log=True, multinomial=True, basic=True, **hints):
+        raise NotImplementedError()
+
+    def row_del(self, i):
+        raise NotImplementedError()
+
+    def col_del(self, i):
+        raise NotImplementedError()
+
+    def simplify(self, ratio=1.7, measure=count_ops):
+        raise NotImplementedError()
+
+    def fill(self, value):
+        raise NotImplementedError()
+
 def _force_mutable(x):
     """Return a matrix as a Matrix, otherwise return x."""
     if getattr(x, 'is_Matrix', False):
@@ -734,6 +485,270 @@ def _force_mutable(x):
             return sympify(a)
         return Matrix(x)
     return x
+
+
+class MutableDenseMatrix(DenseMatrix):
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        self = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
+        self._mat = list(flat_list) # create a shallow copy
+        return self
+
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        """
+        >>> from sympy import Matrix, I, zeros, ones
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        [1, 2 + I]
+        [3,     4]
+        >>> m[1, 0] = 9
+        >>> m
+        [1, 2 + I]
+        [9,     4]
+        >>> m[1, 0] = [[0, 1]]
+
+        To replace row r you assign to position r*m where m
+        is the number of columns:
+
+        >>> M = zeros(4)
+        >>> m = M.cols
+        >>> M[3*m] = ones(1, m)*2; M
+        [0, 0, 0, 0]
+        [0, 0, 0, 0]
+        [0, 0, 0, 0]
+        [2, 2, 2, 2]
+
+        And to replace column c you can assign to position c:
+
+        >>> M[2] = ones(m, 1)*4; M
+        [0, 0, 4, 0]
+        [0, 0, 4, 0]
+        [0, 0, 4, 0]
+        [2, 2, 4, 2]
+        """
+        rv = self._setitem(key, value)
+        if rv is not None:
+            i, j, value = rv
+            self._mat[i*self.cols + j] = value
+
+    def expand(self, **hints):
+        """
+        Expand each element of the matrix by calling ``expand()``.
+        """
+        out = self._new(self.rows, self.cols,
+                map(lambda i: i.expand(**hints), self._mat))
+        return out
+
+    def subs(self, *args, **kwargs):
+        """
+        Create substituted expressions for each element with ``Expr.subs``.
+        """
+        out = self._new(self.rows, self.cols,
+                map(lambda i: i.subs(*args, **kwargs), self._mat))
+        return out
+
+    def copyin_matrix(self, key, value):
+        """
+        Copy in values from a matrix into the given bounds.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : Matrix
+            The matrix to copy values from.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
+        >>> I = eye(3)
+        >>> I[:3, :2] = M
+        >>> I
+        [0, 1, 0]
+        [2, 3, 0]
+        [4, 5, 1]
+        >>> I[0, 1] = M
+        >>> I
+        [0, 0, 1]
+        [2, 2, 3]
+        [4, 4, 5]
+
+        See Also
+        ========
+
+        copyin_list
+        """
+        rlo, rhi, clo, chi = self.key2bounds(key)
+        shape = value.shape
+        dr, dc = rhi - rlo, chi - clo
+        if shape != (dr, dc):
+            raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
+                "as the in sub-Matrix given by `key`.")
+
+        for i in range(value.rows):
+            for j in range(value.cols):
+                self[i + rlo, j + clo] = value[i, j]
+
+    def copyin_list(self, key, value):
+        """
+        Copy in elements from a list.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : iterable
+            The iterable to copy values from.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> I = eye(3)
+        >>> I[:2, 0] = [1, 2] # col
+        >>> I
+        [1, 0, 0]
+        [2, 1, 0]
+        [0, 0, 1]
+        >>> I[1, :2] = [[3, 4]]
+        >>> I
+        [1, 0, 0]
+        [3, 4, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+
+        copyin_matrix
+        """
+        if not is_sequence(value):
+            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
+        return self.copyin_matrix(key, Matrix(value))
+
+    def row_swap(self, i, j):
+        """
+        Swap the two given rows of the matrix in-place.
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[0, 1], [1, 0]])
+        >>> M
+        [0, 1]
+        [1, 0]
+        >>> M.row_swap(0, 1)
+        >>> M
+        [1, 0]
+        [0, 1]
+
+        See Also
+        ========
+
+        row
+        col_swap
+        """
+        for k in range(0, self.cols):
+            self[i, k], self[j, k] = self[j, k], self[i, k]
+
+    def col_swap(self, i, j):
+        """
+        Swap the two given columns of the matrix in-place.
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[1, 0], [1, 0]])
+        >>> M
+        [1, 0]
+        [1, 0]
+        >>> M.col_swap(0, 1)
+        >>> M
+        [0, 1]
+        [0, 1]
+
+        See Also
+        ========
+
+        col
+        row_swap
+        """
+        for k in range(0, self.rows):
+            self[k, i], self[k, j] = self[k, j], self[k, i]
+
+    def row_del(self, i):
+        """
+        Delete the given row.
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.row_del(1)
+        >>> M
+        [1, 0, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+
+        row
+        col_del
+        """
+        self._mat = self._mat[:i*self.cols] + self._mat[(i+1)*self.cols:]
+        self.rows -= 1
+
+    def col_del(self, i):
+        """
+        Delete the given column.
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.col_del(1)
+        >>> M
+        [1, 0]
+        [0, 0]
+        [0, 1]
+
+        See Also
+        ========
+
+        col
+        row_del
+        """
+        for j in range(self.rows - 1, -1, -1):
+            del self._mat[i + j*self.cols]
+        self.cols -= 1
+
+    # Utility functions
+    def simplify(self, ratio=1.7, measure=count_ops):
+        """Applies simplify to the elements of a matrix in place.
+
+        This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
+
+        See Also
+        ========
+
+        sympy.simplify.simplify.simplify
+        """
+        for i in range(len(self._mat)):
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure)
+
+    def fill(self, value):
+        """Fill the matrix with the scalar value.
+
+        See Also
+        ========
+
+        zeros
+        ones
+        """
+        self._mat = [value]*len(self)
+
+MutableMatrix = Matrix = MutableDenseMatrix
 
 ###########
 # Numpy Utility Functions:
@@ -1352,6 +1367,3 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
         m._mat[:z] = [S.Zero]*z
         random.shuffle(m._mat)
     return m
-
-# for compatibility
-MutableMatrix = Matrix
