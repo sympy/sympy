@@ -1,7 +1,6 @@
 import copy
 from collections import defaultdict
 
-from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
@@ -879,28 +878,6 @@ class SparseMatrix(MatrixBase):
         return super(MatrixBase, self).__hash__()
 
 
-    ###############
-    # define these in the Mutable version of the matrix
-
-    def subs(self, *args, **kwargs): # should mirror core.basic.subs
-        raise NotImplementedError()
-
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
-            mul=True, log=True, multinomial=True, basic=True, **hints):
-        raise NotImplementedError()
-
-    def row_del(self, i):
-        raise NotImplementedError()
-
-    def col_del(self, i):
-        raise NotImplementedError()
-
-    def simplify(self, ratio=1.7, measure=count_ops):
-        raise NotImplementedError()
-
-    def fill(self, value):
-        raise NotImplementedError()
-
 class MutableSparseMatrix(SparseMatrix):
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -1317,6 +1294,37 @@ class MutableSparseMatrix(SparseMatrix):
             ii, jj = divmod(n, _cols)
             newD[(ii, jj)] = self._smat[(i, j)]
         return MutableSparseMatrix(_rows, _cols, newD)
+
+    def fill(self, value):
+        """Fill self with the given value.
+
+        Notes
+        =====
+
+        Unless many values are going to be deleted (i.e. set to zero)
+        this will create a matrix that is slower than a dense matrix in
+        operations.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.zeros(3); M
+        [0, 0, 0]
+        [0, 0, 0]
+        [0, 0, 0]
+        >>> M.fill(1); M
+        [1, 1, 1]
+        [1, 1, 1]
+        [1, 1, 1]
+        """
+        if not value:
+            self._smat = {}
+        else:
+            v = sympify(value)
+            self._smat = dict([((i, j), v)
+                for i in range(self.rows) for j in range(self.cols)])
+
 
 class Diag(MutableSparseMatrix):
     def __new__(self, *args, **kwargs):

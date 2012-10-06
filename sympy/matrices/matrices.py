@@ -1118,26 +1118,6 @@ class MatrixBase(object):
         else:
             return divmod(a2idx(key, len(self)), self.cols)
 
-    def applyfunc(self, f):
-        """
-        Apply a function to each element of the matrix.
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, lambda i, j: i*2+j)
-        >>> m
-        [0, 1]
-        [2, 3]
-        >>> m.applyfunc(lambda i: 2*i)
-        [0, 2]
-        [4, 6]
-
-        """
-        if not callable(f):
-            raise TypeError("`f` must be callable.")
-
-        out = self._new(self.rows, self.cols, map(f, self._mat))
-        return out
-
     def evalf(self, prec=None, **options):
         """
         Evaluate each element of the matrix as a float.
@@ -1149,26 +1129,57 @@ class MatrixBase(object):
 
     n = evalf
 
-    def reshape(self, _rows, _cols):
-        """
-        Reshape the matrix. Total number of elements must remain the same.
+    def subs(self, *args, **kwargs): # should mirror core.basic.subs
+        """Return a new matrix with subs applied to each entry.
 
-        >>> from sympy import Matrix
-        >>> m = Matrix(2, 3, lambda i, j: 1)
-        >>> m
-        [1, 1, 1]
-        [1, 1, 1]
-        >>> m.reshape(1, 6)
-        [1, 1, 1, 1, 1, 1]
-        >>> m.reshape(3, 2)
-        [1, 1]
-        [1, 1]
-        [1, 1]
+        Examples
+        ========
 
+        >>> from sympy.abc import x, y
+        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> SparseMatrix(1, 1, [x])
+        [x]
+        >>> _.subs(x, y)
+        [y]
+        >>> Matrix(_).subs(y, x)
+        [x]
         """
-        if len(self) != _rows*_cols:
-            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
-        return self._new(_rows, _cols, lambda i, j: self._mat[i*_cols + j])
+        return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+
+    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
+            mul=True, log=True, multinomial=True, basic=True, **hints):
+        """Apply core.function.expand to each entry of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.matrices import Matrix
+        >>> Matrix(1, 1, [x*(x+1)])
+        [x*(x + 1)]
+        >>> _.expand()
+        [x**2 + x]
+        >>>
+        """
+        return self.applyfunc(lambda x: x.expand(
+        deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
+        **hints))
+
+    def simplify(self, ratio=1.7, measure=count_ops):
+        """Apply simplify to each element of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import sin, cos
+        >>> from sympy.matrices import SparseMatrix
+        >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
+        [x*sin(y)**2 + x*cos(y)**2]
+        >>> _.simplify()
+        [x]
+        """
+        return self.applyfunc(lambda x: x.simplify(ratio, measure))
 
     def print_nonzero (self, symb="X"):
         """

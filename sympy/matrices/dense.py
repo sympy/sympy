@@ -2,7 +2,6 @@ import random
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
-from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -204,9 +203,9 @@ class DenseMatrix(MatrixBase):
 
         conjugate: By-element conjugation
         """
-        a = [0]*len(self)
+        a = []
         for i in range(self.cols):
-            a[i*self.rows:(i + 1)*self.rows] = self._mat[i::self.cols]
+            a.extend(self._mat[i::self.cols])
         return self._new(self.cols, self.rows, a)
 
     def _eval_conjugate(self):
@@ -407,6 +406,47 @@ class DenseMatrix(MatrixBase):
         """
         return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
+    def applyfunc(self, f):
+        """
+        Apply a function to each element of the matrix.
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(2, 2, lambda i, j: i*2+j)
+        >>> m
+        [0, 1]
+        [2, 3]
+        >>> m.applyfunc(lambda i: 2*i)
+        [0, 2]
+        [4, 6]
+
+        """
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = self._new(self.rows, self.cols, map(f, self._mat))
+        return out
+
+    def reshape(self, _rows, _cols):
+        """
+        Reshape the matrix. Total number of elements must remain the same.
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(2, 3, lambda i, j: 1)
+        >>> m
+        [1, 1, 1]
+        [1, 1, 1]
+        >>> m.reshape(1, 6)
+        [1, 1, 1, 1, 1, 1]
+        >>> m.reshape(3, 2)
+        [1, 1]
+        [1, 1]
+        [1, 1]
+
+        """
+        if len(self) != _rows*_cols:
+            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
+        return self._new(_rows, _cols, lambda i, j: self._mat[i*_cols + j])
+
     ############################
     # Mutable matrix operators #
     ############################
@@ -451,27 +491,6 @@ class DenseMatrix(MatrixBase):
     def __rpow__(self, other):
         raise NotImplementedError("Matrix Power not defined")
 
-    ###############
-    # define these in the Mutable version of the matrix
-
-    def subs(self, *args, **kwargs): # should mirror core.basic.subs
-        raise NotImplementedError()
-
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
-            mul=True, log=True, multinomial=True, basic=True, **hints):
-        raise NotImplementedError()
-
-    def row_del(self, i):
-        raise NotImplementedError()
-
-    def col_del(self, i):
-        raise NotImplementedError()
-
-    def simplify(self, ratio=1.7, measure=count_ops):
-        raise NotImplementedError()
-
-    def fill(self, value):
-        raise NotImplementedError()
 
 def _force_mutable(x):
     """Return a matrix as a Matrix, otherwise return x."""
@@ -536,22 +555,6 @@ class MutableDenseMatrix(DenseMatrix):
         if rv is not None:
             i, j, value = rv
             self._mat[i*self.cols + j] = value
-
-    def expand(self, **hints):
-        """
-        Expand each element of the matrix by calling ``expand()``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.expand(**hints), self._mat))
-        return out
-
-    def subs(self, *args, **kwargs):
-        """
-        Create substituted expressions for each element with ``Expr.subs``.
-        """
-        out = self._new(self.rows, self.cols,
-                map(lambda i: i.subs(*args, **kwargs), self._mat))
-        return out
 
     def copyin_matrix(self, key, value):
         """
