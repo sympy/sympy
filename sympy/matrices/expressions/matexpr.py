@@ -4,8 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
 
-
-class MatrixExpr(Expr):
+class MatrixExpr(Basic):
     """ Matrix Expression Class
     Matrix Expressions subclass SymPy Expr's so that
     MatAdd inherits from Add
