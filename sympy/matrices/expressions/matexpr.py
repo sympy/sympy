@@ -227,8 +227,7 @@ class MatrixExpr(Basic):
         """
         return self.as_explicit().equals(other)
 
-
-class MatrixSymbol(MatrixExpr, Symbol):
+class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
     Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
