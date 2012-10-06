@@ -137,12 +137,9 @@ def condition_matmul(rule):
     is_matmul = lambda x: x.is_Matrix and x.is_Mul
     return condition(is_matmul, rule)
 
-canonicalize = canon(*map(condition_matmul, (any_zeros,
-                                             remove_ids,
-                                             xxinv,
-                                             unpack,
-                                             rmid(lambda x: x == 1),
-                                             factor_in_front,
-                                             flatten)))
+rules = (any_zeros, remove_ids, xxinv, unpack, rmid(lambda x: x == 1),
+         factor_in_front, flatten)
+
+canonicalize = canon(*map(condition_matmul, rules))
 
 from matadd import MatAdd
