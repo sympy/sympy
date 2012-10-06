@@ -36,6 +36,7 @@ def debug(rule):
     def debug_rl(expr):
         result = rule(expr)
         if result != expr:
+            print "Rule: %s"%rule.func_name
             print "In: %s\nOut: %s\n"%(expr, result)
         return result
     return debug_rl
