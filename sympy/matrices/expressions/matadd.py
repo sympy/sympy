@@ -64,7 +64,7 @@ def condition_matadd(rule):
     is_matadd = lambda x: x.is_Matrix and x.is_Add
     return condition(is_matadd, rule)
 
-def ma_glom(expr):
+def glom_MatAdd(expr):
     def counts(arg):
         if arg.is_Mul:
             factor, args = arg.as_factor_mat()
@@ -88,7 +88,7 @@ def ma_glom(expr):
 rules = (rmid(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          unpack,
          flatten,
-         ma_glom)
+         glom_MatAdd)
 
 canonicalize = canon(*map(condition_matadd, rules))
 
