@@ -1,8 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic, sympify
 
-
-class MatMul(MatrixExpr, Mul):
+class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
 
     MatMul inherits from and operates like SymPy Mul
@@ -14,6 +13,7 @@ class MatMul(MatrixExpr, Mul):
     >>> MatMul(A, B, C)
     A*B*C
     """
+    is_MatMul = True
 
     def __new__(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
@@ -35,7 +35,8 @@ class MatMul(MatrixExpr, Mul):
 
     def _entry(self, i, j):
         coeff, matmul = self.as_coeff_mmul()
-        if not matmul.is_Mul:  # situation like 2*X, matmul is just X
+
+        if not matmul.is_MatMul: # situation like 2*X, matmul is just X
             return coeff * matmul[i, j]
 
         head, tail = matmul.args[0], matmul.args[1:]
@@ -134,7 +135,7 @@ def factor_in_front(mul):
         return newmul(factor, *matrices)
 
 def condition_matmul(rule):
-    is_matmul = lambda x: x.is_Matrix and x.is_Mul
+    is_matmul = lambda x: x.is_Matrix and x.is_MatMul
     return condition(is_matmul, rule)
 
 rules = (any_zeros, remove_ids, xxinv, unpack, rmid(lambda x: x == 1),

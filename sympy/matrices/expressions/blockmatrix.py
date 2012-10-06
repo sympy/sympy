@@ -295,7 +295,7 @@ def block_collapse(expr):
     if expr.__class__ in [Tuple, FiniteSet]:
         return expr.__class__(*[block_collapse(arg) for arg in expr])
 
-    if not expr.is_Matrix or (not expr.is_Add and not expr.is_Mul
+    if not expr.is_Matrix or (not expr.is_MatAdd and not expr.is_MatMul
             and not expr.is_Transpose and not expr.is_Pow
             and not expr.is_Inverse):
         return expr
@@ -323,7 +323,7 @@ def block_collapse(expr):
         expr = expr.__class__(*args)
 
     # Turn  -[X, Y] into [-X, -Y]
-    if (expr.is_Mul and len(expr.args) == 2 and not expr.args[0].is_Matrix
+    if (expr.is_MatMul and len(expr.args) == 2 and not expr.args[0].is_Matrix
             and expr.args[1].is_BlockMatrix):
         if expr.args[1].is_BlockDiagMatrix:
             return BlockDiagMatrix(
@@ -331,7 +331,7 @@ def block_collapse(expr):
         else:
             return BlockMatrix(expr.args[0]*expr.args[1]._mat)
 
-    if expr.is_Add:
+    if expr.is_MatAdd:
         nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
         blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
         if not blocks:
@@ -354,7 +354,7 @@ def block_collapse(expr):
 
         return MatAdd(*(nonblocks + [block]))
 
-    if expr.is_Mul:
+    if expr.is_MatMul:
         nonmatrices = [arg for arg in expr.args if not arg.is_Matrix]
         matrices = [arg for arg in expr.args if arg.is_Matrix]
         i = 0

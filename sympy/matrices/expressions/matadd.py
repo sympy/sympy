@@ -1,8 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, ZeroMatrix
 from sympy import Add, S, Basic
 
-
-class MatAdd(MatrixExpr, Add):
+class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
 
     MatAdd inherits from and operates like SymPy Add
@@ -14,6 +13,7 @@ class MatAdd(MatrixExpr, Add):
     >>> MatAdd(A, B, C)
     A + B + C
     """
+    is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
@@ -61,12 +61,12 @@ def newadd(*args):
     return Basic.__new__(MatAdd, *args)
 
 def condition_matadd(rule):
-    is_matadd = lambda x: x.is_Matrix and x.is_Add
+    is_matadd = lambda x: x.is_Matrix and x.is_MatAdd
     return condition(is_matadd, rule)
 
 def glom_MatAdd(expr):
     def counts(arg):
-        if arg.is_Mul:
+        if arg.is_MatMul:
             factor, args = arg.as_factor_mat()
             return factor, MatMul(*args)
         return 1, arg

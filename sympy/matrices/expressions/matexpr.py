@@ -27,6 +27,8 @@ class MatrixExpr(Expr):
     is_Transpose = False
     is_ZeroMatrix = False
     is_BlockMatrix = False
+    is_MatAdd = False
+    is_MatMul = False
 
     is_commutative = False
 
@@ -395,7 +397,7 @@ def linear_factors(expr, *syms):
         if expr in syms:
             d[expr] = Identity(expr.rows)
 
-    if expr.is_Add:
+    if expr.is_MatAdd:
         for sym in syms:
             total_factor = 0
             for arg in expr.args:
@@ -417,7 +419,7 @@ def linear_factors(expr, *syms):
                         factor = Identity(sym.rows)*factor
                 total_factor += factor
             d[sym] = total_factor
-    elif expr.is_Mul:
+    elif expr.is_MatMul:
         for sym in syms:
             factor = expr.coeff(sym)
             if not factor:

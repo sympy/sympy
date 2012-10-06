@@ -136,11 +136,11 @@ def test_BlockMatrix():
     assert X.blockshape == (2, 2)
 
     # Test that BlockMatrices and MatrixSymbols can still mix
-    assert (X*M).is_Mul
-    assert X._blockmul(M).is_Mul
+    assert (X*M).is_MatMul
+    assert X._blockmul(M).is_MatMul
     assert (X*M).shape == (n + l, p)
-    assert (X + N).is_Add
-    assert X._blockadd(N).is_Add
+    assert (X + N).is_MatAdd
+    assert X._blockadd(N).is_MatAdd
     assert (X + N).shape == X.shape
 
     E = MatrixSymbol('E', m, 1)
@@ -191,8 +191,8 @@ def test_squareBlockMatrix():
     Q = X + Identity(m + n)
     assert block_collapse(Inverse(Q)) == Inverse(block_collapse(Q))
 
-    assert (X + MatrixSymbol('Q', n + m, n + m)).is_Add
-    assert (X * MatrixSymbol('Q', n + m, n + m)).is_Mul
+    assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
+    assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
     assert Y.I.blocks[0, 0] == A.I
     assert Inverse(X, expand=True) == BlockMatrix([
@@ -234,11 +234,11 @@ def test_BlockDiagMatrix():
     assert block_collapse(X + Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
 
     # Ensure that BlockDiagMatrices can still interact with normal MatrixExprs
-    assert (X*(2*M)).is_Mul
-    assert (X + (2*M)).is_Add
+    assert (X*(2*M)).is_MatMul
+    assert (X + (2*M)).is_MatAdd
 
-    assert (X._blockmul(M)).is_Mul
-    assert (X._blockadd(M)).is_Add
+    assert (X._blockmul(M)).is_MatMul
+    assert (X._blockadd(M)).is_MatAdd
 
 
 def test_ZeroMatrix():
@@ -275,12 +275,12 @@ def test_MatAdd():
     B = MatrixSymbol('B', n, m)
 
     assert (A + B).shape == A.shape
-    assert MatAdd(A, -A, 2*B).is_Mul
+    assert MatAdd(A, -A, 2*B).is_MatMul
 
     raises(ShapeError, lambda: A + B.T)
-    raises(ValueError, lambda: A + 1)
-    raises(ValueError, lambda: 5 + A)
-    raises(ValueError, lambda: 5 - A)
+    raises(TypeError, lambda: A + 1)
+    raises(TypeError, lambda: 5 + A)
+    raises(TypeError, lambda: 5 - A)
 
     assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
     # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
@@ -307,7 +307,7 @@ def test_MatMul():
 
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
-    assert MatMul(Identity(n), (A + B)).is_Add
+    assert MatMul(Identity(n), (A + B)).is_MatAdd
 
 
 def test_MatPow():
