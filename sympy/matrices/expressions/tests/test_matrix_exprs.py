@@ -283,8 +283,7 @@ def test_MatAdd():
     raises(ValueError, lambda: 5 - A)
 
     assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
-    assert MatAdd(ZeroMatrix(n, m), S(0)) == ZeroMatrix(n, m)
-
+    # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
 
 def test_MatMul():
     n, m, l = symbols('n m l', integer=True)
