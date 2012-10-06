@@ -19,6 +19,11 @@ class MatAdd(MatrixExpr, Add):
         simplify = kwargs.get('simplify', True)
         check    = kwargs.get('check'   , True)
 
+        # TODO: This is a kludge
+        # We still use Matrix + 0 in a few places. This removes it
+        # In particular see matrix_multiply and linear_factors
+        args = filter(lambda x: not x == 0, args)
+
         obj = Basic.__new__(cls, *args)
         if check:
             validate(*args)
@@ -44,13 +49,13 @@ class MatAdd(MatrixExpr, Add):
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
-        raise ValueError("Mix of Matrix and Scalar symbols")
+        raise TypeError("Mix of Matrix and Scalar symbols")
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
-from sympy.rr import rmid, unpack, flatten, sort, canon, condition, glom
+from sympy.rr import rmid, unpack, flatten, sort, canon, condition, glom, debug
 
 def newadd(*args):
     return Basic.__new__(MatAdd, *args)
@@ -59,11 +64,31 @@ def condition_matadd(rule):
     is_matadd = lambda x: x.is_Matrix and x.is_Add
     return condition(is_matadd, rule)
 
+def ma_glom(expr):
+    def counts(arg):
+        if arg.is_Mul:
+            factor, args = arg.as_factor_mat()
+            return factor, MatMul(*args)
+        return 1, arg
+    freqs = {}
+    for arg in expr.args:
+        count, m = counts(arg)
+        freqs[m] = freqs.get(m, 0) + count
+
+    # If it is the same expr then return the old one
+    if all(v==1 for v in freqs.values()):
+        return expr
+    args = [m if c == 1 else m*c for m, c in freqs.items()]
+    if set(args) == set(expr.args):
+        return expr
+
+    return Basic.__new__(MatAdd, *args)
+
+
 rules = (rmid(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          unpack,
          flatten,
-         sort(str),
-         glom(lambda num, arg: num*arg))
+         ma_glom)
 
 canonicalize = canon(*map(condition_matadd, rules))
 
