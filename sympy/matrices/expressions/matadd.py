@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError, matrixify, ZeroMatrix
+from matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy import Add, S, Basic
 
 class MatAdd(MatrixExpr):

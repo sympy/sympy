@@ -2,7 +2,7 @@ from sympy.utilities.pytest import raises
 from sympy import S, symbols, Symbol, Tuple, Mul, Lambda
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd, MatPow, matrixify, ImmutableMatrix, Trace,
+        ZeroMatrix, MatAdd, MatPow, ImmutableMatrix, Trace,
         MatrixExpr, FunctionMatrix)
 
 
@@ -357,15 +357,6 @@ def test_MatrixSymbol():
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n, m)
     raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
-
-
-def test_matrixify():
-    n, m, l = symbols('n m l')
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
-    assert matrixify(n + m) == n + m
-    assert matrixify(Mul(A, B)) == MatMul(A, B)
-
 
 def test_dense_conversion():
     X = MatrixSymbol('X', 2, 2)

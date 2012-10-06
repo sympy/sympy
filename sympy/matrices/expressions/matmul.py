@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
+from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic, sympify
 
 class MatMul(MatrixExpr):

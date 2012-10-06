@@ -346,35 +346,6 @@ class ZeroMatrix(MatrixSymbol):
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
-
-def matrixify(expr):
-    """
-    Recursively walks down an expression tree changing Expr's to MatExpr's
-    i.e. Add -> MatAdd
-         Mul -> MatMul
-
-    Only changes those Exprs which contain MatrixSymbols
-
-    This function is useful when traditional SymPy functions which use Mul and
-    Add are called on MatrixExpressions. Examples flatten, expand, simplify...
-
-    Calling matrixify after calling these functions will reset classes back to
-    their matrix equivalents
-    """
-    class_dict = {Mul: MatMul, Add: MatAdd, MatMul: MatMul, MatAdd: MatAdd,
-            Pow: MatPow, MatPow: MatPow}
-
-    if expr.__class__ not in class_dict:
-        return expr
-
-    args = map(matrixify, expr.args)  # Recursively call down the tree
-
-    if not any(arg.is_Matrix for arg in args):
-        return expr
-    else:
-        return Basic.__new__(class_dict[expr.__class__], *args)
-
-
 def linear_factors(expr, *syms):
     """Reduce a Matrix Expression to a sum of linear factors
 
