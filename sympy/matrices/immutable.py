@@ -85,8 +85,10 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     >>> from sympy import eye
     >>> from sympy.matrices.immutable import ImmutableSparseMatrix
-    >>> ImmutableSparseMatrix(eye(3)) # XXX define print method
-    ImmutableSparseMatrix(3, 3, {(0, 0): 1, (4, 0): 1, (8, 0): 1})
+    >>> ImmutableSparseMatrix(eye(3))
+    [1, 0, 0]
+    [0, 1, 0]
+    [0, 0, 1]
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...

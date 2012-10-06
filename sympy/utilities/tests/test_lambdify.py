@@ -9,6 +9,8 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 import math, sympy
 
+MutableDenseMatrix = Matrix
+
 numpy = import_module('numpy', min_python_version=(2, 6))
 
 x,y,z = symbols('x,y,z')

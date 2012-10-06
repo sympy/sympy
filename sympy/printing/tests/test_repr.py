@@ -65,7 +65,7 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    for cls, name in [(Matrix, "Matrix"), (ImmutableMatrix, "ImmutableMatrix")]:
+    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
         sT(cls([[x**+1, 1], [y, x+y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 

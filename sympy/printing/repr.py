@@ -79,7 +79,15 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i,j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    _print_Matrix = _print_MatrixBase
+    _print_SparseMatrix = \
+    _print_MutableSparseMatrix = \
+    _print_ImmutableSparseMatrix = \
+    _print_Matrix = \
+    _print_DenseMatrix = \
+    _print_MutableDenseMatrix = \
+    _print_ImmutableMatrix = \
+    _print_ImmutableDenseMatrix = \
+    _print_MatrixBase
 
     def _print_NaN(self, expr):
         return "nan"
