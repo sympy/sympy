@@ -1488,12 +1488,12 @@ def test_sympy__functions__special__polynomials__assoc_laguerre():
 
 def test_sympy__functions__special__spherical_harmonics__Ynm():
     from sympy.functions.special.spherical_harmonics import Ynm
-    assert _test_args(Ynm(1,1,x,y))
+    assert _test_args(Ynm(1, 1, x, y))
 
 
 def test_sympy__functions__special__spherical_harmonics__Znm():
     from sympy.functions.special.spherical_harmonics import Znm
-    assert _test_args(Znm(1,1,x,y))
+    assert _test_args(Znm(1, 1, x, y))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():

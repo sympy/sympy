@@ -155,17 +155,11 @@ class Ynm(Function):
             phi = -phi
             return C.exp(-2*I*m*phi) * Ynm(n, m, theta, phi)
 
-        # Move this into the expand_func routine?
-        #if n.is_number and m.is_number:
-        #    return (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
-        #            C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
-
         # TODO Add more simplififcation here
-
 
     def _eval_expand_func(self, **hints):
         n, m, theta, phi = self.args
-        return (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
+        return (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
                 C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
 
     def fdiff(self, argindex=4):
@@ -179,7 +173,7 @@ class Ynm(Function):
             # Diff wrt theta
             n, m, theta, phi = self.args
             return (m * C.cot(theta) * Ynm(n, m, theta, phi) +
-                    sqrt((n-m)*(n+m+1)) * C.exp(-I*phi) * Ynm(n, m+1, theta, phi))
+                    sqrt((n - m)*(n + m + 1)) * C.exp(-I*phi) * Ynm(n, m + 1, theta, phi))
         elif argindex == 4:
             # Diff wrt phi
             n, m, theta, phi = self.args
@@ -200,9 +194,9 @@ class Ynm(Function):
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
         n, m, theta, phi = self.args
-        re = (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
+        re = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
               C.cos(m*phi) * assoc_legendre(n, m, C.cos(theta)))
-        im = (sqrt((2*n+1)/(4*pi) * C.factorial(n-m)/C.factorial(n+m)) *
+        im = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
               C.sin(m*phi) * assoc_legendre(n, m, C.cos(theta)))
         return (re, im)
 
