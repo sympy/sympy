@@ -63,3 +63,15 @@ def sort(key):
     def sort_rl(expr):
         return Basic.__new__(expr.__class__, *sorted(expr.args, key=key))
     return sort_rl
+
+def expand(A, B):
+    """ Turns an A containing Bs into a B of As
+
+    where A, B are container types """
+    def expand_rl(expr):
+        for i, arg in enumerate(expr.args):
+            if isinstance(arg, B): break
+        first, b, tail = expr.args[:i], expr.args[i], expr.args[i+1:]
+        return B(*[A(*(first + (arg,) + tail)) for arg in b.args])
+    return expand_rl
+
