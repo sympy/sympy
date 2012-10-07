@@ -3,7 +3,8 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from matrices import (DeferredVector, ShapeError, NonSquareMatrixError)
+from matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
+    MatrixBase)
 
 from dense import (
     GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,
@@ -13,7 +14,9 @@ from dense import (
 
 MutableDenseMatrix = MutableMatrix = Matrix
 
-from sparse import MutableSparseMatrix as SparseMatrix, Diag
+from sparse import MutableSparseMatrix, Diag
+
+SparseMatrix = MutableSparseMatrix
 
 from immutable import ImmutableMatrix, ImmutableSparseMatrix
 

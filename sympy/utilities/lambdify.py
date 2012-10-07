@@ -81,9 +81,10 @@ MODULES = {
     "math"   : (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
     "mpmath" : (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy"  : (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
-    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  ("from sympy.functions import *",
-                                                              "from sympy.matrices import Matrix, MutableDenseMatrix",
-                                                              "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  (
+        "from sympy.functions import *",
+        "from sympy.matrices import *",
+        "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
 
 def _import(module, reload="False"):
@@ -133,35 +134,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
-    Usage:
-
-    >>> from sympy import sqrt, sin, Matrix
-    >>> from sympy.utilities.lambdify import lambdify
-    >>> from sympy.abc import x, y, z
-    >>> f = lambdify(x, x**2)
-    >>> f(2)
-    4
-    >>> f = lambdify((x,y,z), [z,y,x])
-    >>> f(1,2,3)
-    [3, 2, 1]
-    >>> f = lambdify(x, sqrt(x))
-    >>> f(4)
-    2.0
-    >>> f = lambdify((x,y), sin(x*y)**2)
-    >>> f(0, 5)
-    0.0
-    >>> f = lambdify((x, y), Matrix((x, x + y)).T)
-    >>> f(1, 2)
-    [1, 3]
-    >>> f = lambdify(Matrix((x,y)), Matrix((x, x + y)).jacobian((x, y)))
-    >>> f(1, 2)
-    [1, 3]
-
     If not specified differently by the user, SymPy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
-    functions - exactly in this order.
-    To change this behavior, the "modules" argument can be used.
-    It accepts:
+    functions - exactly in this order. To change this behavior, the "modules"
+    argument can be used. It accepts:
 
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
@@ -169,8 +145,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
 
-    Examples
-    ========
+    Usage
+    =====
 
     (1) Use one of the provided modules:
 
@@ -209,22 +185,45 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
 
         >> lambda x: my_cool_function(x)
 
+    Examples
+    ========
+
+    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy import sqrt, sin, Matrix
+    >>> from sympy import Function
+    >>> from sympy.abc import x, y, z
+
+    >>> f = lambdify(x, x**2)
+    >>> f(2)
+    4
+    >>> f = lambdify((x, y, z), [z, y, x])
+    >>> f(1,2,3)
+    [3, 2, 1]
+    >>> f = lambdify(x, sqrt(x))
+    >>> f(4)
+    2.0
+    >>> f = lambdify((x, y), sin(x*y)**2)
+    >>> f(0, 5)
+    0.0
+    >>> f = lambdify((x, y), Matrix((x, x + y)).T)
+    >>> f(1, 2)
+    [[1 3]]
+    >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
+    >>> f(1, 2)
+    [1, 3]
+
     Functions present in `expr` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``
     attribute.  Usually you attach this using the
     ``implemented_function`` factory:
 
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
     >>> func(4)
     5
 
-    ``lambdify`` always prefers ``_imp_`` implementations to
-    implementations in other namespaces, unless the ``use_imps`` input
-    parameter is False.
+    ``lambdify`` always prefers ``_imp_`` implementations to implementations
+    in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
 
@@ -311,7 +310,7 @@ def lambdastr(args, expr, printer=None):
     expr = lambdarepr(expr)
     if isinstance(args, str):
         pass
-    elif hasattr(args, "__iter__"):
+    elif hasattr(args, '__iter__'):
         args = ",".join(str(a) for a in args)
     else:
         args = str(args)
