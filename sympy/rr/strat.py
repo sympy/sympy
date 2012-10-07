@@ -9,3 +9,19 @@ def canon(*rules):
     Keep doing this until there is no change.
     """
     return exhaust(chain(*map(bottom_up, rules)))
+
+def typed(ruletypes):
+    """ Apply rules based on the expression type
+
+    inputs:
+        ruletypes -- a dict mapping {Type: rule}
+
+    >>> from sympy.rr import rmid, typed
+    >>> remove_zeros = rmid(lambda x: x==0)
+    >>> remove_ones  = rmid(lambda x: x==1)
+    >>> remove_idents = typed({Add: rm_zeros, Mul: rm_ones})
+    """
+    def typed_rl(expr):
+        rl = ruletypes.get(type(expr), lambda x:x)
+        return rl(expr)
+    return typed_rl
