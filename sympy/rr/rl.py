@@ -1,4 +1,5 @@
-# Generic rules for SymPy
+# Generic rules for SymPy.
+# This file assumes knowledge of Basic and little else
 from sympy import Basic
 
 def rmid(isid):
@@ -81,8 +82,12 @@ def distribute(A, B):
     """
 
     def distribute_rl(expr):
+        if not any(isinstance(arg, B) for arg in expr.args):
+            return expr
+
         for i, arg in enumerate(expr.args):
             if isinstance(arg, B): break
+
         first, b, tail = expr.args[:i], expr.args[i], expr.args[i+1:]
         return B(*[A(*(first + (arg,) + tail)) for arg in b.args])
     return distribute_rl
