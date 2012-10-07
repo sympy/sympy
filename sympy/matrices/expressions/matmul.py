@@ -125,7 +125,7 @@ def remove_ids(mul):
     if not any(m.is_Identity for m in matrices) or len(matrices) == 1:
         return mul
 
-    non_ids = filter(lambda x: not x.is_Identity, matrices)
+    non_ids = [x for x in matrices if not x.is_Identity]
     return newmul(factor, *non_ids)
 
 def factor_in_front(mul):

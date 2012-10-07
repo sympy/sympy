@@ -22,7 +22,7 @@ class MatAdd(MatrixExpr):
         # TODO: This is a kludge
         # We still use Matrix + 0 in a few places. This removes it
         # In particular see matrix_multiply
-        args = filter(lambda x: not x == 0, args)
+        args = [x for x in args if not x == 0]
 
         obj = Basic.__new__(cls, *args)
         if check:
