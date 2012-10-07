@@ -1,13 +1,18 @@
 """
-A print function that pretty prints sympy Basic objects.
+A print function that pretty prints SymPy objects.
 
 :moduleauthor: Brian Granger
 
 Usage
 =====
 
-Once the extension is loaded, Sympy Basic objects are automatically
-pretty-printed.
+To use this extension, execute:
+
+    %load_ext sympy.interactive.ipythonprinting
+
+Once the extension is loaded, SymPy Basic objects are automatically
+pretty-printed in the terminal and rendered in LaTeX in the Qt console and
+notebook.
 
 """
 #-----------------------------------------------------------------------------
@@ -21,6 +26,7 @@ pretty-printed.
 # Imports
 #-----------------------------------------------------------------------------
 
+import IPython
 from sympy.interactive.printing import init_printing
 
 #-----------------------------------------------------------------------------
@@ -40,6 +46,9 @@ def load_ipython_extension(ip):
         loaded = _loaded
 
     if not loaded:
-        init_printing(ip=ip)
+        if isinstance(ip, IPython.frontend.terminal.interactiveshell.TerminalInteractiveShell):
+            init_printing(ip=ip)
+        else:
+            init_printing(use_unicode=True, use_latex=True, ip=ip)
 
         _loaded = True
