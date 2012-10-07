@@ -266,8 +266,7 @@ class BlockDiagMatrix(BlockMatrix):
         else:
             return BlockMatrix._blockadd(self, other)
 
-from sympy.rr import distribute, typed, canon, chain, try_safe, debug
-
+from sympy.rr import typed, canon, debug, do_one
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
@@ -290,8 +289,8 @@ def block_collapse(expr):
     [X, Z + Z*Y]
     """
     from sympy import MatAdd, MatMul, MatPow
-    rule = canon(typed({MatAdd: chain(bc_matadd, try_safe(bc_block_plus_ident)),
-                        MatMul: chain(bc_matmul, try_safe(bc_dist)),
+    rule = canon(typed({MatAdd: do_one(bc_matadd, bc_block_plus_ident),
+                        MatMul: do_one(bc_matmul, bc_dist),
                         MatPow: bc_matpow,
                         BlockMatrix: bc_unpack}))
     result = rule(expr)
