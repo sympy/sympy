@@ -74,6 +74,12 @@ class BlockMatrix(MatrixExpr):
     def colblocksizes(self):
         return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
+    def structurally_equal(self, other):
+        return (self.shape == other.shape
+            and self.blockshape == other.blockshape
+            and self.rowblocksizes == other.rowblocksizes
+            and self.colblocksizes == other.colblocksizes)
+
     def _blockmul(self, other):
 
         if  (other.is_Matrix and other.is_BlockMatrix and
@@ -84,11 +90,8 @@ class BlockMatrix(MatrixExpr):
         return MatrixExpr.__mul__(self, other)
 
     def _blockadd(self, other):
-
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                self.blockshape == other.blockshape and
-                self.rowblocksizes == other.rowblocksizes and
-                self.colblocksizes == other.colblocksizes):
+        if   (other.is_Matrix and other.is_BlockMatrix
+                and self.structurally_equal(other)):
             return BlockMatrix(self._mat + other._mat)
 
         return MatrixExpr.__add__(self, other)
@@ -207,6 +210,13 @@ class BlockMatrix(MatrixExpr):
     def is_structurally_symmetric(self):
         return self.rowblocksizes == self.colblocksizes
 
+    def equals(self, other):
+        if self == other:
+            return True
+        if (self.is_BlockMatrix and other.is_BlockMatrix and
+                self._mat == other._mat):
+            return True
+        return super(BlockMatrix, self).equals(other)
 
 class BlockDiagMatrix(BlockMatrix):
     """A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
@@ -256,6 +266,7 @@ class BlockDiagMatrix(BlockMatrix):
         else:
             return BlockMatrix._blockadd(self, other)
 
+from sympy.rr import distribute, typed, canon, chain, try_safe, debug
 
 def block_collapse(expr):
     """Evaluates a block matrix expression
@@ -278,86 +289,70 @@ def block_collapse(expr):
     >>> print block_collapse(C*B)
     [X, Z + Z*Y]
     """
-    if expr.__class__ in [tuple, list, set, frozenset]:
-        return expr.__class__([block_collapse(arg) for arg in expr])
-    if expr.__class__ in [Tuple, FiniteSet]:
-        return expr.__class__(*[block_collapse(arg) for arg in expr])
+    from sympy import MatAdd, MatMul, MatPow
+    rule = canon(typed({MatAdd: chain(bc_matadd, try_safe(bc_block_plus_ident)),
+                        MatMul: chain(bc_matmul, try_safe(bc_dist)),
+                        MatPow: bc_matpow,
+                        BlockMatrix: bc_unpack}))
+    result = rule(expr)
+    try:                    return result.canonicalize()
+    except AttributeError:  return result
 
-    if not expr.is_Matrix or (not expr.is_MatAdd and not expr.is_MatMul
-            and not expr.is_Transpose and not expr.is_Pow
-            and not expr.is_Inverse):
+#[BlockMatrix]
+def bc_unpack(expr):
+    if expr.blockshape == (1, 1):
+        return expr.blocks[0,0]
+    return expr
+
+#[MatAdd]
+def bc_matadd(expr):
+    nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
+    blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
+    if not blocks:
         return expr
 
-    if expr.is_Transpose:
-        expr = Transpose(block_collapse(expr.arg))
-        if expr.is_Transpose and expr.arg.is_BlockMatrix:
-            expr = expr.arg._eval_transpose()
+    block = blocks[0]
+    for b in blocks[1:]:
+        block = block._blockadd(b)
+
+    return MatAdd(*(nonblocks+[block]))
+
+def bc_block_plus_ident(expr):
+    idents = [arg for arg in expr.args if arg.is_Identity]
+    if not idents:
         return expr
 
-    if expr.is_Inverse:
-        return Inverse(block_collapse(expr.arg))
+    blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
+    if (blocks and all(b.structurally_equal(blocks[0]) for b in blocks)
+               and blocks[0].is_structurally_symmetric):
+        block_id = BlockDiagMatrix(*[Identity(k)
+                                        for k in blocks[0].rowblocksizes])
+        return MatAdd(block_id * len(idents), *blocks)
 
-    # Recurse on the subargs
-    args = list(expr.args)
-    for i in range(len(args)):
-        arg = args[i]
-        newarg = block_collapse(arg)
-        while(newarg != arg):  # Repeat until no new changes
-            arg = newarg
-            newarg = block_collapse(arg)
-        args[i] = newarg
+    return expr
 
-    if tuple(args) != expr.args:
-        expr = expr.__class__(*args)
+#[MatMul]
+def bc_dist(expr):
+    """ Turn  -[X, Y] into [-X, -Y] """
+    factor, mat = expr.as_coeff_mmul()
+    if factor != 1 and mat.is_BlockMatrix:
+        B = mat.blocks
+        return BlockMatrix([[factor * B[i,j] for j in range(B.cols)]
+                                             for i in range(B.rows)])
+    return expr
 
-    # Turn  -[X, Y] into [-X, -Y]
-    if (expr.is_MatMul and len(expr.args) == 2 and not expr.args[0].is_Matrix
-            and expr.args[1].is_BlockMatrix):
-        if expr.args[1].is_BlockDiagMatrix:
-            return BlockDiagMatrix(
-                *[expr.args[0]*arg for arg in expr.args[1].diag])
+def bc_matmul(expr):
+    factor, matrices = expr.as_coeff_matrices()
+    i = 0
+    while (i+1 < len(matrices)):
+        A, B = matrices[i:i+2]
+        if A.is_BlockMatrix and B.is_BlockMatrix:
+            matrices[i] = A._blockmul(B)
+            matrices.pop(i+1)
         else:
-            return BlockMatrix(expr.args[0]*expr.args[1]._mat)
+            i+=1
+    return MatMul(factor, *matrices)
 
-    if expr.is_MatAdd:
-        nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
-        blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
-        if not blocks:
-            return MatAdd(*nonblocks)
-        block = blocks[0]
-        for b in blocks[1:]:
-            block = block._blockadd(b)
-        if block.blockshape == (1, 1):
-            # Bring all the non-blocks into the block_matrix
-            mat = Matrix(1, 1, (block.blocks[0, 0] + MatAdd(*nonblocks), ))
-            return BlockMatrix(mat)
-        # Add identities to the blocks as block identities
-        for i, mat in enumerate(nonblocks):
-            c, M = mat.as_coeff_Mul()
-            if M.is_Identity and block.is_structurally_symmetric:
-                block_id = BlockDiagMatrix(
-                    *[c*Identity(k) for k in block.rowblocksizes])
-                nonblocks.pop(i)
-                block = block._blockadd(block_id)
-
-        return MatAdd(*(nonblocks + [block]))
-
-    if expr.is_MatMul:
-        nonmatrices = [arg for arg in expr.args if not arg.is_Matrix]
-        matrices = [arg for arg in expr.args if arg.is_Matrix]
-        i = 0
-        while (i + 1 < len(matrices)):
-            A, B = matrices[i:i + 2]
-            if A.is_BlockMatrix and B.is_BlockMatrix:
-                matrices[i] = A._blockmul(B)
-                matrices.pop(i + 1)
-            else:
-                i += 1
-        return MatMul(*(nonmatrices + matrices))
-
-    if expr.is_Pow:
-        rv = expr.base
-        for i in range(1, expr.exp):
-            rv = rv._blockmul(expr.base)
-        return rv
-
+#[MatPow]
+def bc_matpow(expr):
+    return MatMul(*([expr.base]*expr.exp))

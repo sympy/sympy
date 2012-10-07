@@ -1751,7 +1751,37 @@ class MatrixBase(object):
             raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
         for i in range(0, D.rows):
             D[i, i] = C.exp(D[i, i])
-        return U*D*U.inv()
+        return U * D * U.inv()
+
+    @classmethod
+    def zeros(cls, r, c=None):
+        """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+        if ``c`` is omitted a square matrix will be returned.
+
+        See Also
+        ========
+
+        ones
+        fill
+        """
+        if is_sequence(r):
+            SymPyDeprecationWarning(
+                feature="The syntax zeros([%i, %i])" % tuple(r), useinstead="zeros(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
+            ).warn()
+            r, c = r
+        else:
+            c = r if c is None else c
+        r = as_int(r)
+        c = as_int(c)
+        return cls._new(r, c, [S.Zero]*r*c)
+
+    @classmethod
+    def eye(cls, n):
+        """Returns the identity matrix of size n."""
+        return cls._new([[S.One if row == col else S.Zero
+                                for col in range(n)]
+                                for row in range(n)])
 
     @property
     def is_square(self):

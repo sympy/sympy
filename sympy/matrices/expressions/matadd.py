@@ -47,6 +47,9 @@ class MatAdd(MatrixExpr):
         from trace import Trace
         return MatAdd(*[Trace(arg) for arg in self.args])
 
+    def canonicalize(self):
+        return canonicalize(self)
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
@@ -87,7 +90,8 @@ def glom_MatAdd(expr):
 rules = (rmid(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          unpack,
          flatten,
-         glom_MatAdd)
+         glom_MatAdd,
+         sort(str))
 
 canonicalize = canon(*map(condition_matadd, rules))
 

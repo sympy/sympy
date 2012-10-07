@@ -143,8 +143,6 @@ def test_BlockMatrix():
             block_collapse(X*Y))
 
     # block_collapse passes down into container objects, transposes, and inverse
-    assert block_collapse(
-        (X*Y, 2*X)) == (block_collapse(X*Y), block_collapse(2*X))
     assert block_collapse(Tuple(X*Y, 2*X)) == (
         block_collapse(X*Y), block_collapse(2*X))
     assert (block_collapse(Transpose(X*Y)) ==
@@ -154,8 +152,7 @@ def test_BlockMatrix():
     Z = MatrixSymbol('Z', *A.shape)
 
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
-    assert block_collapse(Ab + Z) == BlockMatrix([[A + Z]])
-
+    assert block_collapse(Ab + Z) == A + Z
 
 def test_BlockMatrix_Trace():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
@@ -173,9 +170,10 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert block_collapse(X + Identity(m + n)) == BlockMatrix(
-        [[A + Identity(n), B], [C, D + Identity(m)]])
+    assert block_collapse(X+Identity(m + n)).equals(
+            BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
+
     assert block_collapse(Inverse(Q)) == Inverse(block_collapse(Q))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
@@ -211,13 +209,13 @@ def test_BlockDiagMatrix():
 
     assert block_collapse(X.I * X).is_Identity
 
-    assert block_collapse(X*X) == BlockDiagMatrix(A*A, B*B, C*C)
+    assert block_collapse(X*X).equals(BlockDiagMatrix(A*A, B*B, C*C))
 
-    assert block_collapse(X + X) == BlockDiagMatrix(2*A, 2*B, 2*C)
+    assert block_collapse(X + X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
 
-    assert block_collapse(X*Y) == BlockDiagMatrix(A*A, 2*B*B, 3*C*C)
+    assert block_collapse(X*Y).equals(BlockDiagMatrix(A*A, 2*B*B, 3*C*C))
 
-    assert block_collapse(X + Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
+    assert block_collapse(X + Y).equals(BlockDiagMatrix(2*A, 3*B, 4*C))
 
     # Ensure that BlockDiagMatrices can still interact with normal MatrixExprs
     assert (X*(2*M)).is_MatMul

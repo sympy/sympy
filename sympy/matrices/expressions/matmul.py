@@ -84,6 +84,9 @@ class MatMul(MatrixExpr):
         except ShapeError:
             raise NotImplementedError("Can not decompose this Inverse")
 
+    def canonicalize(self):
+        return canonicalize(self)
+
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):

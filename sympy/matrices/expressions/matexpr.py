@@ -227,6 +227,9 @@ class MatrixExpr(Basic):
         """
         return self.as_explicit().equals(other)
 
+    def canonicalize(self):
+        return self
+
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
