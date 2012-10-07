@@ -530,6 +530,7 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name

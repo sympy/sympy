@@ -1015,6 +1015,8 @@ class LatexPrinter(Printer):
     def _print_MatMul(self, expr):
         return self._print_Mul(expr)
 
+    _print_MatrixSymbol = _print_Symbol
+
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         if base.is_Add or base.is_Mul:
