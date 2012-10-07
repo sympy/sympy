@@ -860,133 +860,6 @@ class MatrixBase(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def row_join(self, rhs):
-        """
-        Concatenates two matrices along self's last and rhs's first column
-
-        >>> from sympy import Matrix, zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(3, 1)
-        >>> M.row_join(V)
-        [0, 0, 0, 1]
-        [0, 0, 0, 1]
-        [0, 0, 0, 1]
-
-        See Also
-        ========
-
-        row
-        col_join
-        """
-        if self.rows != rhs.rows:
-            raise ShapeError("`self` and `rhs` must have the same number of rows.")
-
-        newmat = self.zeros(self.rows, self.cols + rhs.cols)
-        newmat[:, :self.cols] = self
-        newmat[:, self.cols:] = rhs
-        return newmat
-
-    def col_join(self, bott):
-        """
-        Concatenates two matrices along self's last and bott's first row
-
-        >>> from sympy import Matrix, zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(1, 3)
-        >>> M.col_join(V)
-        [0, 0, 0]
-        [0, 0, 0]
-        [0, 0, 0]
-        [1, 1, 1]
-
-        See Also
-        ========
-
-        col
-        row_join
-        """
-        if self.cols != bott.cols:
-            raise ShapeError("`self` and `bott` must have the same number of columns.")
-
-        newmat = self.zeros(self.rows+bott.rows, self.cols)
-        newmat[:self.rows, :] = self
-        newmat[self.rows:, :] = bott
-        return newmat
-
-    def row_insert(self, pos, mti):
-        """
-        Insert one or more rows at the given row position.
-
-        >>> from sympy import Matrix, zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(1, 3)
-        >>> M.row_insert(1, V)
-        [0, 0, 0]
-        [1, 1, 1]
-        [0, 0, 0]
-        [0, 0, 0]
-
-        See Also
-        ========
-
-        row
-        col_insert
-        """
-        if pos == 0:
-            return mti.col_join(self)
-        elif pos < 0:
-            pos = self.rows + pos
-        if pos < 0:
-            pos = 0
-        elif pos > self.rows:
-            pos = self.rows
-
-        if self.cols != mti.cols:
-            raise ShapeError("`self` and `mti` must have the same number of columns.")
-
-        newmat = self.zeros(self.rows + mti.rows, self.cols)
-        i, j = pos, pos + mti.rows
-        newmat[:i  , :] = self[:i, :]
-        newmat[i: j, :] = mti
-        newmat[j:  , :] = self[i:, :]
-        return newmat
-
-    def col_insert(self, pos, mti):
-        """
-        Insert one or more columns at the given column position.
-
-        >>> from sympy import Matrix, zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(3, 1)
-        >>> M.col_insert(1, V)
-        [0, 1, 0, 0]
-        [0, 1, 0, 0]
-        [0, 1, 0, 0]
-
-        See Also
-        ========
-
-        col
-        row_insert
-        """
-        if pos == 0:
-            return mti.row_join(self)
-        elif pos < 0:
-            pos = self.cols + pos
-        if pos < 0:
-            pos = 0
-        elif pos > self.cols:
-            pos = self.cols
-
-        if self.rows != mti.rows:
-            raise ShapeError("self and mti must have the same number of rows.")
-
-        newmat = self.zeros(self.rows, self.cols + mti.cols)
-        i, j = pos, pos + mti.cols
-        newmat[:,  :i] = self[:, :i]
-        newmat[:, i:j] = mti
-        newmat[:, j: ] = self[:, i:]
-        return newmat
 
     def submatrix(self, keys):
         """
@@ -1872,32 +1745,6 @@ class MatrixBase(object):
         for i in range(len(perm)):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
-
-    def delRowCol(self, i, j):
-        """
-        Creates a copy of the matrix with the given row and column deleted.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> I = eye(4)
-        >>> I.delRowCol(1, 2)
-        [1, 0, 0]
-        [0, 0, 0]
-        [0, 0, 1]
-
-        See Also
-        ========
-
-        row_del
-        col_del
-        """
-        # used only for cofactors, makes a copy
-        M = self.as_mutable()
-        M.row_del(i)
-        M.col_del(j)
-        return self._new(M)
 
     def exp(self):
         """ Returns the exponentiation of a square matrix."""
@@ -3491,6 +3338,163 @@ class MatrixBase(object):
             work[l, 0] = acum
 
         return work
+
+
+class MutableBase(MatrixBase):
+    def delRowCol(self, i, j):
+        """
+        Creates a copy of the matrix with the given row and column deleted.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> I = eye(4)
+        >>> I.delRowCol(1, 2)
+        [1, 0, 0]
+        [0, 0, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+
+        row_del
+        col_del
+        """
+        # used only for cofactors, makes a copy
+        M = self.as_mutable()
+        M.row_del(i)
+        M.col_del(j)
+        return self._new(M)
+
+    def row_join(self, rhs):
+        """
+        Concatenates two matrices along self's last and rhs's first column
+
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(3, 1)
+        >>> M.row_join(V)
+        [0, 0, 0, 1]
+        [0, 0, 0, 1]
+        [0, 0, 0, 1]
+
+        See Also
+        ========
+
+        row
+        col_join
+        """
+        if self.rows != rhs.rows:
+            raise ShapeError("`self` and `rhs` must have the same number of rows.")
+
+        newmat = self.zeros(self.rows, self.cols + rhs.cols)
+        newmat[:, :self.cols] = self
+        newmat[:, self.cols:] = rhs
+        return newmat
+
+    def col_join(self, bott):
+        """
+        Concatenates two matrices along self's last and bott's first row
+
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(1, 3)
+        >>> M.col_join(V)
+        [0, 0, 0]
+        [0, 0, 0]
+        [0, 0, 0]
+        [1, 1, 1]
+
+        See Also
+        ========
+
+        col
+        row_join
+        """
+        if self.cols != bott.cols:
+            raise ShapeError("`self` and `bott` must have the same number of columns.")
+
+        newmat = self.zeros(self.rows+bott.rows, self.cols)
+        newmat[:self.rows, :] = self
+        newmat[self.rows:, :] = bott
+        return newmat
+
+    def row_insert(self, pos, mti):
+        """
+        Insert one or more rows at the given row position.
+
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(1, 3)
+        >>> M.row_insert(1, V)
+        [0, 0, 0]
+        [1, 1, 1]
+        [0, 0, 0]
+        [0, 0, 0]
+
+        See Also
+        ========
+
+        row
+        col_insert
+        """
+        if pos == 0:
+            return mti.col_join(self)
+        elif pos < 0:
+            pos = self.rows + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.rows:
+            pos = self.rows
+
+        if self.cols != mti.cols:
+            raise ShapeError("`self` and `mti` must have the same number of columns.")
+
+        newmat = self.zeros(self.rows + mti.rows, self.cols)
+        i, j = pos, pos + mti.rows
+        newmat[:i  , :] = self[:i, :]
+        newmat[i: j, :] = mti
+        newmat[j:  , :] = self[i:, :]
+        return newmat
+
+    def col_insert(self, pos, mti):
+        """
+        Insert one or more columns at the given column position.
+
+        >>> from sympy import Matrix, zeros, ones
+        >>> M = zeros(3)
+        >>> V = ones(3, 1)
+        >>> M.col_insert(1, V)
+        [0, 1, 0, 0]
+        [0, 1, 0, 0]
+        [0, 1, 0, 0]
+
+        See Also
+        ========
+
+        col
+        row_insert
+        """
+        if pos == 0:
+            return mti.row_join(self)
+        elif pos < 0:
+            pos = self.cols + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.cols:
+            pos = self.cols
+
+        if self.rows != mti.rows:
+            raise ShapeError("self and mti must have the same number of rows.")
+
+        newmat = self.zeros(self.rows, self.cols + mti.cols)
+        i, j = pos, pos + mti.cols
+        newmat[:,  :i] = self[:, :i]
+        newmat[:, i:j] = mti
+        newmat[:, j: ] = self[:, i:]
+        return newmat
+
 
 def classof(A, B):
     """

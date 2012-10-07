@@ -12,7 +12,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.matrices.matrices import MatrixBase, ShapeError, a2idx, classof
+from sympy.matrices.matrices import (MatrixBase, MutableBase,
+    ShapeError, a2idx, classof)
 
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int
@@ -506,7 +507,7 @@ def _force_mutable(x):
     return x
 
 
-class MutableDenseMatrix(DenseMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableBase):
     @classmethod
     def _new(cls, *args, **kwargs):
         rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)

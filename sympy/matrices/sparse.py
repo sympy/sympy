@@ -8,7 +8,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.sympify import sympify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from matrices import MatrixBase, ShapeError, a2idx
+from matrices import MatrixBase, MutableBase, ShapeError, a2idx
 from dense import Matrix
 
 # uncomment the import of as_int and delete the function when merged with 0.7.2
@@ -878,7 +878,7 @@ class SparseMatrix(MatrixBase):
         return super(MatrixBase, self).__hash__()
 
 
-class MutableSparseMatrix(SparseMatrix):
+class MutableSparseMatrix(SparseMatrix, MutableBase):
     @classmethod
     def _new(cls, *args, **kwargs):
         return cls(*args)
