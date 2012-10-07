@@ -1261,6 +1261,10 @@ def test_sympy__matrices__immutable__ImmutableMatrix():
     from sympy.matrices.immutable import ImmutableMatrix
     assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
 
+def test_sympy__matrices__immutable__ImmutableSparseMatrix():
+    from sympy.matrices.immutable import ImmutableSparseMatrix
+    assert _test_args(ImmutableSparseMatrix([[1,2],[3,4]]))
+
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
     from sympy.matrices.expressions import MatrixSymbol
