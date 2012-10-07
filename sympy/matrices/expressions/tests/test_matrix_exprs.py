@@ -5,11 +5,14 @@ from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         ZeroMatrix, MatAdd, MatPow, ImmutableMatrix, Trace,
         MatrixExpr, FunctionMatrix)
 
+n,m,l,k,p = symbols('n m l k p', integer=True)
+A = MatrixSymbol('A', n, m)
+B = MatrixSymbol('B', m, l)
+C = MatrixSymbol('C', n, n)
+D = MatrixSymbol('D', n, n)
+E = MatrixSymbol('E', m, n)
 
 def test_transpose():
-    n, m, l = symbols('n m l', integer=True)
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
     Sq = MatrixSymbol('Sq', n, n)
 
     assert Transpose(A).shape == (m, n)
@@ -26,12 +29,6 @@ def test_transpose():
 
 
 def test_inverse():
-    n, m, l = symbols('n m l', integer=True)
-    A = MatrixSymbol('A', n, m)
-    C = MatrixSymbol('C', n, n)
-    D = MatrixSymbol('D', n, n)
-    E = MatrixSymbol('E', m, n)
-
     raises(ShapeError, lambda: Inverse(A))
     assert Inverse(Inverse(C)) == C
 
@@ -53,7 +50,6 @@ def test_inverse():
 
 
 def test_trace():
-    n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
     assert isinstance(Trace(A), Trace)
@@ -80,19 +76,13 @@ def test_trace():
 
 
 def test_shape():
-    n, m, l = symbols('n m l', integer=True)
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
     raises(ShapeError, lambda: B*A)
 
 
 def test_matexpr():
-    n, m, l = symbols('n m l', integer=True)
     x = Symbol('x')
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
 
     assert (x*A).shape == A.shape
     assert (x*A).__class__ == MatMul
@@ -101,7 +91,6 @@ def test_matexpr():
 
 
 def test_subs():
-    n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', m, l)
@@ -114,7 +103,6 @@ def test_subs():
 
 
 def test_BlockMatrix():
-    n, m, l, k, p = symbols('n m l k p', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, k)
     C = MatrixSymbol('C', l, m)
@@ -176,7 +164,6 @@ def test_BlockMatrix_Trace():
 
 
 def test_squareBlockMatrix():
-    n, m, l, k = symbols('n m l k', integer=True)
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, m)
     C = MatrixSymbol('C', m, n)
@@ -209,7 +196,6 @@ def test_squareBlockMatrix():
 
 
 def test_BlockDiagMatrix():
-    n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', m, m)
     C = MatrixSymbol('C', l, l)
@@ -242,7 +228,6 @@ def test_BlockDiagMatrix():
 
 
 def test_ZeroMatrix():
-    n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)
     Z = ZeroMatrix(n, m)
 
@@ -256,7 +241,6 @@ def test_ZeroMatrix():
 
 
 def test_Identity():
-    n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)
     In = Identity(n)
     Im = Identity(m)
@@ -270,7 +254,6 @@ def test_Identity():
 
 
 def test_MatAdd():
-    n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, m)
 
@@ -286,7 +269,6 @@ def test_MatAdd():
     # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
 
 def test_MatMul():
-    n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', n, n)
@@ -311,7 +293,6 @@ def test_MatMul():
 
 
 def test_MatPow():
-    n = Symbol('n', integer=True)
     A = MatrixSymbol('A', n, n)
 
     assert Inverse(A).is_Pow
@@ -329,7 +310,6 @@ def test_MatPow():
 
 def test_linear_factors():
     from sympy.matrices import MatrixSymbol, linear_factors
-    n, m, l = symbols('n m l')
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', n, l)
