@@ -207,7 +207,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     0.0
     >>> f = lambdify((x, y), Matrix((x, x + y)).T)
     >>> f(1, 2)
-    [[1 3]]
+    [1.0  3.0]
     >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> f(1, 2)
     [1, 3]
