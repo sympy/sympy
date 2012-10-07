@@ -48,3 +48,11 @@ def null_safe(rule):
             return expr
         else:
             return result
+
+def try_safe(rule):
+    def try_rl(expr):
+        try:
+            return rule(expr)
+        except:
+            return expr
+    return try_rl
