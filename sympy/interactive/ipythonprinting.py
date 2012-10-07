@@ -26,7 +26,6 @@ notebook.
 # Imports
 #-----------------------------------------------------------------------------
 
-import IPython
 from sympy.interactive.printing import init_printing
 
 #-----------------------------------------------------------------------------
@@ -37,6 +36,8 @@ _loaded = False
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
+    import IPython
+
     global _loaded
     # Use extension manager to track loaded status if available
     # This is currently in IPython 0.14.dev
