@@ -56,3 +56,13 @@ def try_safe(rule):
         except:
             return expr
     return try_rl
+
+def do_one(*rules):
+    """ Try each of the rules until one works. Then stop """
+    def do_one_rl(expr):
+        for rl in rules:
+            result = rl(expr)
+            if result != expr:
+                return result
+        return expr
+    return do_one_rl
