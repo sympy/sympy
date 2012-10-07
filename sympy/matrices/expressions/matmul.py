@@ -21,7 +21,7 @@ class MatMul(MatrixExpr):
 
         args = map(sympify, args)
         obj = Basic.__new__(cls, *args)
-        factor, matrices = obj.as_factor_mat()
+        factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
         if simplify:
@@ -54,22 +54,26 @@ class MatMul(MatrixExpr):
             k = Dummy('k', integer=True)
             return summation(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
 
-    def as_coeff_mmul(self):
+    def as_coeff_matrices(self):
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
         coeff = Mul(*scalars)
 
-        return coeff, MatMul(*matrices)
+        return coeff, matrices
+
+    def as_coeff_mmul(self):
+        coeff, matrices = self.as_coeff_matrices()
+        return coeff, MatMul(*matrices, check=False)
 
     def _eval_transpose(self):
         from transpose import Transpose
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
     def _eval_trace(self):
-        factor, matrices = self.as_factor_mat()
+        factor, mmul = self.as_coeff_mmul()
         if factor != 1:
             from trace import Trace
-            return factor * Trace(MatMul(*matrices))
+            return factor * Trace(mmul)
         else:
             raise NotImplementedError("Can't simplify any further")
 
@@ -79,11 +83,6 @@ class MatMul(MatrixExpr):
             return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
         except ShapeError:
             raise NotImplementedError("Can not decompose this Inverse")
-
-    def as_factor_mat(self):
-        matrices    = [arg for arg in self.args if arg.is_Matrix]
-        nonmatrices = [arg for arg in self.args if not arg.is_Matrix]
-        return Mul(*nonmatrices), matrices
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -112,7 +111,7 @@ def any_zeros(mul):
 def xxinv(mul):
     from sympy.matrices.expressions import Inverse
     """ Y * X * X.I -> Y """
-    factor, matrices = mul.as_factor_mat()
+    factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         if X.is_square and Y.is_square and X == Inverse(Y):
             I = Identity(X.rows)
@@ -120,7 +119,7 @@ def xxinv(mul):
     return mul
 
 def remove_ids(mul):
-    factor, matrices = mul.as_factor_mat()
+    factor, matrices = mul.as_coeff_matrices()
     if not any(m.is_Identity for m in matrices) or len(matrices) == 1:
         return mul
 
@@ -128,7 +127,7 @@ def remove_ids(mul):
     return newmul(factor, *non_ids)
 
 def factor_in_front(mul):
-    factor, matrices = mul.as_factor_mat()
+    factor, matrices = mul.as_coeff_matrices()
     if factor == 1:
         return mul
     else:

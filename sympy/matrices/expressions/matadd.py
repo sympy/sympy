@@ -67,8 +67,7 @@ def condition_matadd(rule):
 def glom_MatAdd(expr):
     def counts(arg):
         if arg.is_MatMul:
-            factor, args = arg.as_factor_mat()
-            return factor, MatMul(*args)
+            return arg.as_coeff_mmul()
         return 1, arg
     freqs = {}
     for arg in expr.args:
