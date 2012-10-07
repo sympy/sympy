@@ -5,7 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import division
 from sympy.external import import_module
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, iterable
 
 import inspect
 
@@ -307,10 +307,11 @@ def lambdastr(args, expr, printer=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     # Transform everything to strings.
+    from sympy.matrices import DeferredVector
     expr = lambdarepr(expr)
     if isinstance(args, str):
         pass
-    elif hasattr(args, '__iter__'):
+    elif iterable(args, exclude=DeferredVector):
         args = ",".join(str(a) for a in args)
     else:
         args = str(args)
