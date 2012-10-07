@@ -279,6 +279,10 @@ class MatrixSymbol(MatrixExpr):
             return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
 
 
+    @property
+    def free_symbols(self):
+        return set((self,))
+
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
 
@@ -344,74 +348,6 @@ class ZeroMatrix(MatrixSymbol):
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
-
-def linear_factors(expr, *syms):
-    """Reduce a Matrix Expression to a sum of linear factors
-
-    Given symbols and a matrix expression linear in those symbols return a
-    dict mapping symbol to the linear factor
-
-    >>> from sympy import MatrixSymbol, linear_factors, symbols
-    >>> n, m, l = symbols('n m l')
-    >>> A = MatrixSymbol('A', n, m)
-    >>> B = MatrixSymbol('B', m, l)
-    >>> C = MatrixSymbol('C', n, l)
-    >>> linear_factors(2*A*B + C, B, C)
-    {B: 2*A, C: I}
-    """
-
-    expr = matrixify(expand(expr))
-    d = {}
-    if expr.is_Matrix and expr.is_Symbol:
-        if expr in syms:
-            d[expr] = Identity(expr.rows)
-
-    if expr.is_MatAdd:
-        for sym in syms:
-            total_factor = 0
-            for arg in expr.args:
-                factor = arg.coeff(sym)
-                if not factor:
-                    # .coeff fails when powers are in the expression
-                    if sym in arg.free_symbols:
-                        raise ValueError("Expression not linear in symbols")
-                    else:
-                        factor = 0
-                factor = sympify(factor)
-                if not factor.is_Matrix:
-                    if factor.is_zero:
-                        factor = ZeroMatrix(expr.rows, sym.rows)
-                        if not sym.cols == expr.cols:
-                            raise ShapeError(
-                                "%s not compatible as factor of %s" % (sym, expr))
-                    else:
-                        factor = Identity(sym.rows)*factor
-                total_factor += factor
-            d[sym] = total_factor
-    elif expr.is_MatMul:
-        for sym in syms:
-            factor = expr.coeff(sym)
-            if not factor:
-                # .coeff fails when powers are in the expression
-                if sym in expr.free_symbols:
-                    raise ValueError("Expression not linear in symbols")
-                else:
-                    factor = 0
-            factor = sympify(factor)
-            if not factor.is_Matrix:
-                if factor.is_zero:
-                    factor = ZeroMatrix(expr.rows, sym.rows)
-                    if not sym.cols == expr.cols:
-                        raise ShapeError("%s not compatible as factor of %s" %
-                                (sym, expr))
-                else:
-                    factor = Identity(sym.rows)*factor
-            d[sym] = factor
-
-    if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):
-        raise ValueError("Expression not linear in symbols")
-
-    return d
 
 from matmul import MatMul
 from matadd import MatAdd

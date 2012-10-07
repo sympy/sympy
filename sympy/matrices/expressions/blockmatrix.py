@@ -224,26 +224,14 @@ class BlockDiagMatrix(BlockMatrix):
 
     def __new__(cls, *mats):
         from sympy.matrices.immutable import ImmutableMatrix
-        data_matrix = eye(len(mats))
-        for i, mat in enumerate(mats):
-            data_matrix[i, i] = mat
-
-        for r in range(len(mats)):
-            for c in range(len(mats)):
-                if r == c:
-                    continue
-                n = mats[r].rows
-                m = mats[c].cols
-                data_matrix[r, c] = ZeroMatrix(n, m)
-
-        shape = Tuple(*sympify(mat.shape))
-        data = Tuple(*data_matrix._mat)
-        obj = Basic.__new__(cls, ImmutableMatrix(data_matrix), Tuple(*mats))
-        return obj
+        data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
+                        for j in range(len(mats))]
+                        for i in range(len(mats))]
+        return Basic.__new__(BlockDiagMatrix, ImmutableMatrix(data))
 
     @property
     def diag(self):
-        return self.args[1]
+        return [self.blocks[i,i] for i in range(self.blocks.rows)]
 
     def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])

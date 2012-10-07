@@ -307,31 +307,6 @@ def test_MatPow():
     assert A**-1 == Inverse(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
-
-def test_linear_factors():
-    from sympy.matrices import MatrixSymbol, linear_factors
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
-    C = MatrixSymbol('C', n, l)
-
-    assert linear_factors(2*A*B + C, B, C) == { C: Identity(n), B: 2*A}
-    assert linear_factors(2*A*B + C, B) == { B: 2*A}
-    assert linear_factors(2*A*B, B) == {B: 2*A}
-    assert linear_factors(2*A*B, C) == {C: ZeroMatrix(n, n)}
-
-    A = MatrixSymbol('A', n, n)
-    B = MatrixSymbol('B', n, n)
-    C = MatrixSymbol('C', n, n)
-    D = MatrixSymbol('C', m, m)
-    raises(ValueError, lambda: linear_factors(2*A*A + B, A))
-    raises(ValueError, lambda: linear_factors(2*A*A, A))
-    raises(ValueError, lambda: linear_factors(2*A*B, A, B))
-    raises(ShapeError, lambda: linear_factors(2*A*B, D))
-    raises(ShapeError, lambda: linear_factors(2*A*B + C, D))
-
-    assert linear_factors(A, A) == {A: Identity(n)}
-
-
 def test_MatrixSymbol():
     n, m, t = symbols('n,m,t')
     X = MatrixSymbol('X', n, m)
@@ -343,3 +318,6 @@ def test_dense_conversion():
     x00, x01, x10, x11 = symbols('X_00 X_01 X_10 X_11')
     assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
     assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])
+
+def test_free_symbols():
+    assert (C*D).free_symbols == set((C, D))

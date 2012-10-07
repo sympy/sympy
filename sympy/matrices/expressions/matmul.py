@@ -91,7 +91,6 @@ def validate(*matrices):
         if A.cols != B.rows:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
-
 # Rules
 
 from sympy.rr import rmid, unpack, canon, condition, debug, flatten
