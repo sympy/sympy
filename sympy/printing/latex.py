@@ -1013,7 +1013,8 @@ class LatexPrinter(Printer):
         return self._print_Add(expr)
 
     def _print_MatMul(self, expr):
-        return self._print_Mul(expr)
+        from sympy import Mul
+        return self._print_Mul(Mul(*expr.args, evaluate=False))
 
     _print_MatrixSymbol = _print_Symbol
 

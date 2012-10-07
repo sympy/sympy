@@ -628,14 +628,14 @@ class PrettyPrinter(Printer):
         return self._print(B.mat)
 
     def _print_MatMul(self, expr):
-        a = list(expr.args)
-        for i in xrange(0, len(a)):
-            if a[i].is_Add and len(a) > 1:
-                a[i] = prettyForm(*self._print(a[i]).parens())
+        args = list(expr.args)
+        for i, a in enumerate(args):
+            if (a.is_Add or a.is_Matrix and a.is_MatAdd) and len(expr.args) > 1:
+                args[i] = prettyForm(*self._print(a).parens())
             else:
-                a[i] = self._print(a[i])
+                args[i] = self._print(a)
 
-        return prettyForm.__mul__(*a)
+        return prettyForm.__mul__(*args)
 
     def _print_MatAdd(self, expr):
         return self._print_seq(expr.args, None, None, ' + ')
