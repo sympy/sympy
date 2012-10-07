@@ -64,14 +64,25 @@ def sort(key):
         return Basic.__new__(expr.__class__, *sorted(expr.args, key=key))
     return sort_rl
 
-def expand(A, B):
+def distribute(A, B):
     """ Turns an A containing Bs into a B of As
 
-    where A, B are container types """
-    def expand_rl(expr):
+    where A, B are container types
+
+    >>> from sympy.rr import distribute
+    >>> from sympy import Add, Mul, symbols
+    >>> x, y = symbols('x,y')
+    >>> dist = distribute(Mul, Add)
+    >>> expr = Mul(2, x+y, evaluate=False)
+    >>> expr
+    2*(x + y)
+    >>> dist(expr)
+    2*x + 2*y
+    """
+
+    def distribute_rl(expr):
         for i, arg in enumerate(expr.args):
             if isinstance(arg, B): break
         first, b, tail = expr.args[:i], expr.args[i], expr.args[i+1:]
         return B(*[A(*(first + (arg,) + tail)) for arg in b.args])
-    return expand_rl
-
+    return distribute_rl
