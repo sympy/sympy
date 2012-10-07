@@ -591,9 +591,9 @@ def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
-    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', 'C - 2 B']
+    assert l._print_MatAdd(C - 2*B) in ['-2 B + C', 'C -2 B']
     assert l._print_MatAdd(C + 2*B) in ['2 B + C', 'C + 2 B']
-    assert l._print_MatAdd(B - 2*C) in ['B - 2 C', '- 2 C + B']
+    assert l._print_MatAdd(B - 2*C) in ['B -2 C', '-2 C + B']
     assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
 
 

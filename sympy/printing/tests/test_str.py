@@ -638,5 +638,6 @@ def test_issue3288():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 def test_MatMul_MatAdd():
+    from sympy import MatrixSymbol
     assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
             "2*(X + Y)"

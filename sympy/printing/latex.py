@@ -1010,13 +1010,25 @@ class LatexPrinter(Printer):
             return "%s^T" % self._print(mat)
 
     def _print_MatAdd(self, expr):
-        return self._print_Add(expr)
+        # Stolen from print_Add
+        terms = list(expr.args)
+        tex = self._print(terms[0])
+
+        for term in terms[1:]:
+            if not _coeff_isneg(term):
+                tex += " +"
+
+            tex += " " + self._print(term)
+
+        return tex
 
     def _print_MatMul(self, expr):
-        from sympy import Mul
-        return self._print_Mul(Mul(*expr.args, evaluate=False))
-
-    _print_MatrixSymbol = _print_Symbol
+        from sympy import Add, MatAdd
+        def parens(x):
+            if isinstance(x, (Add, MatAdd)):
+                return r"\left(%s\right)"%str(x)
+            return str(x)
+        return ' '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
