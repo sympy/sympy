@@ -3,7 +3,7 @@
 from random import uniform
 import random
 
-from sympy import I, nsimplify, S, Tuple, Dummy
+from sympy import I, nsimplify, Tuple
 from sympy.core.compatibility import is_sequence
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
