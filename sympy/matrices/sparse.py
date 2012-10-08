@@ -1356,9 +1356,9 @@ class Diag(MutableSparseMatrix):
     [1, 0]
     [0, 2]
 
-    Diagonal elements can also be given as a sequence:
+    Diagonal elements in a sequence must be unpacked:
 
-    >>> Diag([1, 2, 3])
+    >>> Diag(*[1, 2, 3])
     [1, 0, 0]
     [0, 2, 0]
     [0, 0, 3]
@@ -1367,7 +1367,7 @@ class Diag(MutableSparseMatrix):
 
     >>> type(_)
     <class 'sympy.matrices.sparse.MutableSparseMatrix'>
-    >>> Diag([1, 2], mutable=False)
+    >>> Diag(*[1, 2], mutable=False)
     [1, 0]
     [0, 2]
     >>> type(_)
