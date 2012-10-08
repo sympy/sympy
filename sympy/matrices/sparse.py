@@ -1327,11 +1327,56 @@ class MutableSparseMatrix(SparseMatrix, MutableBase):
 
 
 class Diag(MutableSparseMatrix):
-    def __new__(self, *args, **kwargs):
-        if len(args) == 1 and not is_sequence(args[0]):
-            return MutableSparseMatrix(args[0])
+    """Return a sparse matrix with diagonal elements as given by iterable.
 
-        s = self._new(len(args), len(args), {})
+    By default a mutable, sparse matrix is returned. To make it immutable,
+    set the keyword ``mutable`` to False.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import Diag, ImmutableSparseMatrix
+
+    Diagonal elements can be given directly:
+
+    >>> Diag(1)
+    [1]
+    >>> Diag(1, 2)
+    [1, 0]
+    [0, 2]
+
+    Diagonal elements can also be given as a sequence:
+
+    >>> Diag([1, 2, 3])
+    [1, 0, 0]
+    [0, 2, 0]
+    [0, 0, 3]
+
+    The type is mutable by default but can be made immutable:
+
+    >>> type(_)
+    <class 'sympy.matrices.sparse.MutableSparseMatrix'>
+    >>> Diag([1, 2], mutable=False)
+    [1, 0]
+    [0, 2]
+    >>> type(_)
+    <class 'sympy.matrices.immutable.ImmutableSparseMatrix'>
+    """
+    def __new__(self, *args, **kwargs):
+        from sympy.matrices.immutable import ImmutableSparseMatrix
+        cls = MutableSparseMatrix if kwargs.pop('mutable', True) else \
+              ImmutableSparseMatrix
+        if kwargs:
+            raise ValueError('unrecognized keywords: %s' % kwargs.keys())
+        if len(args) == 1:
+            if not is_sequence(args[0]):
+                try:
+                    return cls(args[0])
+                except TypeError:
+                    pass
+            else:
+                args = args[0]
+        s = cls(len(args), len(args), {})
         for i, a in enumerate(args):
             if a:
                 s._smat[(i, i)] = sympify(a)
