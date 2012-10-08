@@ -47,10 +47,6 @@ class ImmutableMatrix(MatrixExpr, Matrix):
 
     __getitem__ = Matrix.__getitem__
 
-    @cacheit
-    def hash(self):
-        return hash(self.__str__() )
-
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
 
@@ -117,7 +113,3 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         return SparseMatrix.__getitem__(self, (i, j))
 
     __getitem__ = SparseMatrix.__getitem__
-
-    @cacheit
-    def hash(self):
-        return hash(self.__str__() )
