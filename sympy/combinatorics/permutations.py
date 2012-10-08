@@ -165,13 +165,13 @@ def _af_pow(a, n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics.permutations import Permutation, _af_pow
     >>> Permutation.print_cyclic = False
     >>> p = Permutation([2,0,3,1])
     >>> p.order()
     4
-    >>> p**4
-    Permutation([0, 1, 2, 3])
+    >>> _af_pow(p._array_form, 4)
+    [0, 1, 2, 3]
     """
     if n == 0:
         return range(len(a))
@@ -903,7 +903,7 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Perm
         >>> Perm.print_cyclic = False
         >>> a = [2,1,3,0]
-        >>> p = _af_new(a)
+        >>> p = Perm._af_new(a)
         >>> p
         Permutation([2, 1, 3, 0])
 
