@@ -4,7 +4,7 @@ Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
 from matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
-    MatrixBase, MutableBase)
+    MatrixBase)
 
 from dense import (
     GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,

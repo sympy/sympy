@@ -3347,7 +3347,6 @@ class MatrixBase(object):
 
         return work
 
-class MutableBase(MatrixBase):
     @classmethod
     def hstack(cls, *args):
         """Return a matrix formed by joining args horizontally (i.e.
