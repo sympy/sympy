@@ -36,14 +36,39 @@ class DenseMatrix(MatrixBase):
     _class_priority = 10
 
     def __getitem__(self, key):
-        """
+        """Return portion of self defined by key. If the key involves a slice
+        then a list will be returned (if key is a single slice) or a matrix
+        (if key was a tuple involving a slice).
+
+        Examples
+        ========
+
         >>> from sympy import Matrix, I
         >>> m = Matrix([
         ... [1, 2 + I],
         ... [3, 4    ]])
+
+        If the key is a tuple that doesn't involve a slice then that element
+        is returned:
+
         >>> m[1, 0]
         3
 
+        When a tuple key involves a slice, a matrix is returned. Here, the
+        first column is selected (all rows, column 0):
+
+        >>> m[:, 0]
+        [1]
+        [3]
+
+        If the slice is not a tuple then it selects from the underlying
+        list of elements that are arranged in row order and a list is
+        returned if a slice is involved:
+
+        >>> m[0]
+        1
+        >>> m[::2]
+        [1, 3]
         """
         if type(key) is tuple:
             i, j = key
@@ -108,7 +133,7 @@ class DenseMatrix(MatrixBase):
     def row(self, i, f=None):
         """
         Elementary row selector (default) or operation using functor
-        which is a function two args interpreted as (self[i, j], j).
+        which is a function of two args interpreted as (self[i, j], j).
 
         >>> from sympy import ones
         >>> I = ones(3)
@@ -137,7 +162,7 @@ class DenseMatrix(MatrixBase):
     def col(self, j, f=None):
         """
         Elementary column selector (default) or operation using functor
-        which is a function two args interpreted as (self[i, j], i).
+        which is a function of two args interpreted as (self[i, j], i).
 
         >>> from sympy import ones
         >>> I = ones(3)
@@ -425,7 +450,7 @@ class DenseMatrix(MatrixBase):
         out = self._new(self.rows, self.cols, map(f, self._mat))
         return out
 
-    def reshape(self, _rows, _cols):
+    def reshape(self, rows, cols):
         """
         Reshape the matrix. Total number of elements must remain the same.
 
@@ -442,9 +467,9 @@ class DenseMatrix(MatrixBase):
         [1, 1]
 
         """
-        if len(self) != _rows*_cols:
-            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
-        return self._new(_rows, _cols, lambda i, j: self._mat[i*_cols + j])
+        if len(self) != rows*cols:
+            raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
+        return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
 
     ############################
     # Mutable matrix operators #
@@ -1085,7 +1110,7 @@ def eye(n, cls=None):
     return out
 
 def diag(*values):
-    """Create a diagonal matrix from a list as a diagonal values.
+    """Create a diagonal matrix from a list of diagonal values.
 
     When arguments are matrices they are fitted in resultant matrix.
 
