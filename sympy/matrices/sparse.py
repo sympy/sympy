@@ -24,6 +24,17 @@ class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
+    Examples
+    ========
+
+    >>> from sympy.matrices import SparseMatrix
+    >>> SparseMatrix(2, 2, range(4))
+    [0, 1]
+    [2, 3]
+    >>> SparseMatrix(2, 2, {(1, 1): 2})
+    [0, 0]
+    [0, 2]
+
     See Also
     ========
     sympy.matrices.dense.Matrix
@@ -1368,16 +1379,10 @@ class Diag(MutableSparseMatrix):
               ImmutableSparseMatrix
         if kwargs:
             raise ValueError('unrecognized keywords: %s' % kwargs.keys())
-        if len(args) == 1:
-            if not is_sequence(args[0]):
-                try:
-                    return cls(args[0])
-                except TypeError:
-                    pass
-            else:
-                args = args[0]
-        s = cls(len(args), len(args), {})
+        s = MutableSparseMatrix.zeros(len(args))
         for i, a in enumerate(args):
             if a:
                 s._smat[(i, i)] = sympify(a)
+        if cls != MutableSparseMatrix:
+            return cls(s)
         return s

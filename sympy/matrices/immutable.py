@@ -103,12 +103,10 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], cls):
-            return args[0]
-        rows, cols, mat = MatrixBase._handle_creation_inputs(*args, **kwargs)
-        mat = Dict(SparseMatrix(mat)._smat)
-        rows = Integer(rows)
-        cols = Integer(cols)
+        s = SparseMatrix(*args)
+        rows = Integer(s.rows)
+        cols = Integer(s.cols)
+        mat = Dict(s._smat)
         return Basic.__new__(cls, rows, cols, mat)
 
     def __new__(cls, *args, **kwargs):
