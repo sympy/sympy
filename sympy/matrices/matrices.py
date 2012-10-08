@@ -176,7 +176,8 @@ class MatrixBase(object):
             for row in args[0]:
                 if isinstance(row, MatrixBase):
                     in_mat.extend(row.tolist())
-                    ncol.add(row.cols)
+                    if row.cols or row.rows: # only pay attention if it's not 0x0
+                        ncol.add(row.cols)
                 else:
                     in_mat.append(row)
                     try:
