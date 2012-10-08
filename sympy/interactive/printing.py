@@ -219,6 +219,26 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=Non
     else:
         from sympy.printing import sstrrepr as stringify_func
 
+    # Even if ip is not passed, double check that not in IPython shell
+    if ip is None:
+        try:
+            ip = get_ipython()
+        except NameError:
+            pass
+
+    if ip:
+        try:
+            from IPython.zmq.zmqshell import ZMQInteractiveShell
+        except ImportError:
+            pass
+        else:
+            # If in qtconsole or notebook
+            if isinstance(ip, ZMQInteractiveShell):
+                if use_unicode is None:
+                    use_unicode = True
+                if use_latex is None:
+                    use_latex = True
+
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
     else:
@@ -228,13 +248,6 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=Non
             stringify_func = lambda expr: _stringify_func(expr, order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
-
-    # Even if ip is not passed, double check that not in IPython shell
-    if ip is None:
-        try:
-            ip = get_ipython()
-        except NameError:
-            pass
 
     if ip is not None and ip.__module__.startswith('IPython'):
         _init_ipython_printing(ip, stringify_func, use_latex)

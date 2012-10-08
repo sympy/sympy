@@ -47,9 +47,5 @@ def load_ipython_extension(ip):
         loaded = _loaded
 
     if not loaded:
-        if isinstance(ip, IPython.frontend.terminal.interactiveshell.TerminalInteractiveShell):
-            init_printing(ip=ip)
-        else:
-            init_printing(use_unicode=True, use_latex=True, ip=ip)
-
+        init_printing(ip=ip)
         _loaded = True
