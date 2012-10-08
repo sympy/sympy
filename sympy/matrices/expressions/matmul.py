@@ -96,7 +96,8 @@ def validate(*matrices):
 
 # Rules
 
-from sympy.rr import rmid, unpack, canon, condition, debug, flatten
+from sympy.rr import (rmid, unpack, canon, condition, debug, flatten, chain,
+        exhaust, do_one)
 
 def newmul(*args):
     if args[0] == 1:
@@ -142,6 +143,6 @@ def condition_matmul(rule):
 rules = (any_zeros, remove_ids, xxinv, unpack, rmid(lambda x: x == 1),
          factor_in_front, flatten)
 
-canonicalize = canon(*map(condition_matmul, rules))
+canonicalize = exhaust(condition_matmul(do_one(*rules)))
 
 from matadd import MatAdd

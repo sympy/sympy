@@ -58,7 +58,8 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
-from sympy.rr import rmid, unpack, flatten, sort, canon, condition, glom, debug
+from sympy.rr import (rmid, unpack, flatten, sort, canon, condition, glom,
+        debug, exhaust, chain, do_one)
 
 def newadd(*args):
     return Basic.__new__(MatAdd, *args)
@@ -93,6 +94,6 @@ rules = (rmid(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          glom_MatAdd,
          sort(str))
 
-canonicalize = canon(*map(condition_matadd, rules))
+canonicalize = exhaust(condition_matadd(do_one(*rules)))
 
 from matmul import MatMul

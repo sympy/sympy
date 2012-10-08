@@ -2,4 +2,5 @@
 import rl
 import traverse
 from rl import rmid, unpack, flatten, sort, glom, distribute
-from strat import canon, condition, debug, typed, chain, try_safe, do_one
+from strat import (canon, condition, debug, typed, chain, try_safe, do_one,
+        exhaust)
