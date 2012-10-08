@@ -3347,8 +3347,39 @@ class MatrixBase(object):
 
         return work
 
-
 class MutableBase(MatrixBase):
+    @classmethod
+    def hstack(cls, *args):
+        """Return a matrix formed by joining args horizontally (i.e.
+        by repeated application of row_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.hstack(eye(2), 2*eye(2))
+        [1, 0, 2, 0]
+        [0, 1, 0, 2]
+        """
+        return reduce(cls.row_join, args)
+
+    @classmethod
+    def vstack(cls, *args):
+        """Return a matrix formed by joining args vertically (i.e.
+        by repeated application of col_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.vstack(eye(2), 2*eye(2))
+        [1, 0]
+        [0, 1]
+        [2, 0]
+        [0, 2]
+        """
+        return reduce(cls.col_join, args)
+
     def row_join(self, rhs):
         """
         Concatenates two matrices along self's last and rhs's first column
