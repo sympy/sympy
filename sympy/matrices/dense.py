@@ -1102,19 +1102,19 @@ def eye(n, cls=None):
     zeros
     ones
     """
-    if cls is None:
-        from dense import Matrix as cls
-
     n = as_int(n)
-    out = cls.zeros(n)
-    for i in range(n):
-        out[i, i] = S.One
-    return out
+    return diag(*[S.One]*n, **dict(cls=cls))
 
-def diag(*values):
-    """Create a diagonal matrix from a list of diagonal values.
+def diag(*values, **kwargs):
+    """Create a sparse, diagonal matrix from a list of diagonal values.
+
+    Notes
+    =====
 
     When arguments are matrices they are fitted in resultant matrix.
+
+    The returned matrix is a mutable, dense matrix. To make it a different
+    type, send the desired class for keyword ``cls``.
 
     Examples
     ========
@@ -1124,6 +1124,13 @@ def diag(*values):
     [1, 0, 0]
     [0, 2, 0]
     [0, 0, 3]
+    >>> diag(*[1, 2, 3])
+    [1, 0, 0]
+    [0, 2, 0]
+    [0, 0, 3]
+
+    The diagonal elements can be matrices; diagonal filling will
+    continue on the diagonal from the last element of the matrix:
 
     >>> from sympy.abc import x, y, z
     >>> a = Matrix([x, y, z])
@@ -1138,6 +1145,18 @@ def diag(*values):
     [0, 0, 3, 4, 0, 0]
     [0, 0, 0, 0, 5, 6]
 
+    When diagonal elements are lists, they will be treated as arguments
+    to Matrix:
+
+    >>> diag([1, 2, 3], 4)
+    [1, 0]
+    [2, 0]
+    [3, 0]
+    [0, 4]
+    >>> diag([[1, 2, 3]], 4)
+    [1, 2, 3, 0]
+    [0, 0, 0, 4]
+
     A given band off the diagonal can be made by padding with a
     vertical or horizontal "kerning" vector:
 
@@ -1150,23 +1169,47 @@ def diag(*values):
     [0, 2, 0, 0, 0]
     [0, 0, 3, 0, 0]
 
+
+    The type is mutable by default but can be made immutable by setting
+    the ``mutable`` flag to False:
+
+    >>> type(diag(1))
+    <class 'sympy.matrices.dense.MutableDenseMatrix'>
+    >>> from sympy.matrices import ImmutableMatrix
+    >>> type(diag(1, cls=ImmutableMatrix))
+    <class 'sympy.matrices.immutable.ImmutableMatrix'>
+
     See Also
     ========
 
     eye
     """
-    from sympy.matrices import zeros
+    from sparse import MutableSparseMatrix
 
+    cls = kwargs.pop('cls', None)
+    if cls is None:
+        from dense import Matrix as cls
+
+    if kwargs:
+        raise ValueError('unrecognized keyword%s: %s' % (
+            's' if len(kwargs) > 1 else '',
+            ', '.join(kwargs.keys())))
     rows = 0
     cols = 0
-    for m in values:
+    values = list(values)
+    for i in range(len(values)):
+        m = values[i]
         if isinstance(m, MatrixBase):
+            rows += m.rows
+            cols += m.cols
+        elif is_sequence(m):
+            m = values[i] = Matrix(m)
             rows += m.rows
             cols += m.cols
         else:
             rows += 1
             cols += 1
-    res = zeros(rows, cols)
+    res = MutableSparseMatrix.zeros(rows, cols)
     i_row = 0
     i_col = 0
     for m in values:
@@ -1178,7 +1221,7 @@ def diag(*values):
             res[i_row, i_col] = m
             i_row += 1
             i_col += 1
-    return res
+    return cls(res)
 
 def jordan_cell(eigenval, n):
     """

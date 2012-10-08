@@ -14,7 +14,7 @@ from dense import (
 
 MutableDenseMatrix = MutableMatrix = Matrix
 
-from sparse import MutableSparseMatrix, Diag
+from sparse import MutableSparseMatrix
 
 SparseMatrix = MutableSparseMatrix
 
