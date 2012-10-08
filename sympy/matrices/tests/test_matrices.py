@@ -1910,3 +1910,6 @@ def test_normalize_sort_diogonalization():
     P, Q = A.diagonalize(normalize=True, sort=True)
     assert P*P.T == P.T*P == eye(P.cols)
     assert P*Q*P.inv() == A
+
+def test_issue2222():
+    raises(ValueError, lambda: Matrix([[1, 2, 3], Matrix(0, 1, [])]))

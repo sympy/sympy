@@ -172,25 +172,31 @@ class MatrixBase(object):
         # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
         elif len(args) == 1 and is_sequence(args[0]):
             in_mat = []
+            ncol = set()
             for row in args[0]:
                 if isinstance(row, MatrixBase):
                     in_mat.extend(row.tolist())
+                    ncol.add(row.cols)
                 else:
                     in_mat.append(row)
+                    try:
+                        ncol.add(len(row))
+                    except TypeError:
+                        ncol.add(1)
+            if len(ncol) > 1:
+                raise ValueError("Got rows of variable lengths: %s" %
+                    sorted(list(ncol)))
             rows = len(in_mat)
-            if len(in_mat):
+            if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
                     flat_list = map(lambda i: sympify(i), in_mat)
                     return rows, cols, flat_list
-                cols = len(in_mat[0])
+                cols = ncol.pop()
             else:
                 cols = 0
             flat_list = []
             for j in range(rows):
-                if len(in_mat[j]) != cols:
-                    raise ValueError("Input %s inconsistant to form a Matrix." %
-                        args)
                 for i in range(cols):
                     flat_list.append(sympify(in_mat[j][i]))
 
