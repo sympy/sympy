@@ -137,8 +137,7 @@ class DenseMatrix(MatrixBase):
 
     def row(self, i, f=None):
         """
-        Elementary row selector (default) or operation using functor
-        which is a function of two args interpreted as (self[i, j], j).
+        Elementary row selector.
 
         >>> from sympy import ones
         >>> I = ones(3)
@@ -154,6 +153,7 @@ class DenseMatrix(MatrixBase):
         ========
 
         col
+        row_op
         row_swap
         row_del
         row_join
@@ -161,8 +161,12 @@ class DenseMatrix(MatrixBase):
         """
         if f is None:
             return self[i, :]
-        for j in range(0, self.cols):
-            self[i, j] = f(self[i, j], j)
+        SymPyDeprecationWarning(
+            feature="calling .row(i, f)",
+            useinstead=".row_op(i, f)",
+            deprecated_since_version="0.7.2",
+        ).warn()
+        self.row_op(i, f)
 
     def col(self, j, f=None):
         """
@@ -185,6 +189,7 @@ class DenseMatrix(MatrixBase):
         ========
 
         row
+        col_op
         col_swap
         col_del
         col_join
@@ -192,8 +197,12 @@ class DenseMatrix(MatrixBase):
         """
         if f is None:
             return self[:, j]
-        for i in range(0, self.rows):
-            self[i, j] = f(self[i, j], i)
+        SymPyDeprecationWarning(
+            feature="calling .col(j, f)",
+            useinstead=".col_op(j, f)",
+            deprecated_since_version="0.7.2",
+        ).warn()
+        self.col_op(j, f)
 
     def _eval_trace(self):
         """
@@ -663,6 +672,51 @@ class MutableDenseMatrix(DenseMatrix, MutableBase):
         if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, Matrix(value))
+
+    def row_op(self, i, f):
+        """In-place operation on row i using two-arg functor whose args are
+        interpreted as (self[i, j], j).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
+        [1, 0, 0]
+        [2, 1, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+        row
+        col_op
+        """
+        i0 = i*self.cols
+        self._mat[i0: i0 + self.cols] = map(lambda t: f(*t),
+            zip(self._mat[i0: i0 + self.cols], range(self.cols)))
+
+    def col_op(self, j, f):
+        """In-place operation on col j using two-arg functor whose args are
+        interpreted as (self[i, j], i).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
+        [1, 2, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+        col
+        row_op
+        """
+        self._mat[j::self.cols] = map(lambda t: f(*t),
+            zip(self._mat[j::self.cols], range(self.rows)))
 
     def row_swap(self, i, j):
         """

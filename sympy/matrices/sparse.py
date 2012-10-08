@@ -151,7 +151,7 @@ class SparseMatrix(MatrixBase):
 
     def row_list(self):
         """
-        Returns a Row-sorted list of non-zero elements of the matrix.
+        Returns a row-sorted list of non-zero elements of the matrix.
 
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
@@ -163,7 +163,7 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-
+        row_op
         col_list
         """
 
@@ -179,7 +179,7 @@ class SparseMatrix(MatrixBase):
 
     def col_list(self):
         """
-        Returns a Column-sorted list of non-zero elements of the matrix.
+        Returns a column-sorted list of non-zero elements of the matrix.
         >>> from sympy.matrices import SparseMatrix
         >>> a=SparseMatrix(((1, 2), (3, 4)))
         >>> a
@@ -190,7 +190,7 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-
+        col_op
         row_list
         """
         new=[]
@@ -1270,8 +1270,6 @@ class MutableSparseMatrix(SparseMatrix, MutableBase):
         A.rows += B.rows
         return A
 
-    # from here to end all functions are same as in matrices.py
-    # with Matrix replaced with MutableSparseMatrix
     def copyin_list(self, key, value):
         if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
@@ -1301,6 +1299,44 @@ class MutableSparseMatrix(SparseMatrix, MutableBase):
             for k, v in value._smat.iteritems():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
+
+    def row_op(self, i, f):
+        """In-place operation on row i using two-arg functor whose args are
+        interpreted as (self[i, j], j).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.eye(3)
+        >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
+        [1, 0, 0]
+        [2, 1, 0]
+        [0, 0, 1]
+        """
+        for j in range(0, self.cols):
+            v = f(self[i, j], j)
+            if v:
+                self._smat[(i, j)] = v
+
+    def col_op(self, j, f):
+        """In-place operation on col j using two-arg functor whose args are
+        interpreted as (self[i, j], i).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.eye(3)
+        >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
+        [1, 2, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        """
+        for i in range(0, self.rows):
+            v = f(self[i, j], i)
+            if v:
+                self._smat[(i, j)] = v
 
     def fill(self, value):
         """Fill self with the given value.

@@ -1111,12 +1111,12 @@ class MatrixBase(object):
         # forward substitution, all diag entries are scaled to 1
         for i in range(n):
             for j in range(i):
-                b.row(i, lambda x, k: x - b[j, k]*A[i, j])
+                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
         # backward substitution
         for i in range(n - 1, -1, -1):
             for j in range(i+1, n):
-                b.row(i, lambda x, k: x - b[j, k]*A[i, j])
-            b.row(i, lambda x, k: x / A[i, i])
+                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
+            b.row_op(i, lambda x, k: x / A[i, i])
         return rhs.__class__(b)
 
     def LUdecomposition(self, iszerofunc=_iszero):
@@ -2476,12 +2476,12 @@ class MatrixBase(object):
                     continue
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
-            r.row(pivot, lambda x, _: x/scale)
+            r.row_op(pivot, lambda x, _: x/scale)
             for j in range(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.row(j, lambda x, k: x - scale*r[pivot, k])
+                r.row_op(j, lambda x, k: x - scale*r[pivot, k])
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist

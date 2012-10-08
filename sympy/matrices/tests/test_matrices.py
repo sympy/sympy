@@ -840,7 +840,7 @@ def test_col_row():
     M.row(1,lambda r, j: r+j+1)
     assert M == Matrix([[x,0,0],
                         [1,y+2,3]])
-    M.col(0,lambda c, j: c+y**j)
+    M.col_op(0,lambda c, j: c+y**j)
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
     # neither row nor slice give copies that allow the original matrix to
