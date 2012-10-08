@@ -523,6 +523,55 @@ class SparseMatrix(MatrixBase):
         """
         return any(self[key].has(*patterns) for key in self._smat)
 
+    def applyfunc(self, f):
+        """
+        Apply a function to each element of the matrix.
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
+        >>> m
+        [0, 1]
+        [2, 3]
+        >>> m.applyfunc(lambda i: 2*i)
+        [0, 2]
+        [4, 6]
+
+        """
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = self.copy()
+        for k, v in self._smat.iteritems():
+            fv = f(v)
+            if fv:
+                out._smat[k] = fv
+            else:
+                out._smat.pop(k, None)
+        return out
+
+    def reshape(self, rows, cols):
+        """Reshape matrix while retaining original size.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> S = SparseMatrix(4, 2, range(8))
+        >>> S.reshape(2, 4)
+        [0, 1, 2, 3]
+        [4, 5, 6, 7]
+
+        """
+        if len(self) != rows*cols:
+            raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
+        smat = {}
+        for k, v in self._smat.iteritems():
+            i, j = k
+            n = i*self.cols + j
+            ii, jj = divmod(n, cols)
+            smat[(ii, jj)] = self._smat[(i, j)]
+        return self._new(rows, cols, smat)
+
     def liupc(self):
         """
         Liu's algorithm, for pre-determination of the Elimination Tree of
@@ -1245,55 +1294,6 @@ class MutableSparseMatrix(SparseMatrix, MutableBase):
             for k, v in value._smat.iteritems():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
-
-    def applyfunc(self, f):
-        """
-        Apply a function to each element of the matrix.
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, lambda i, j: i*2+j)
-        >>> m
-        [0, 1]
-        [2, 3]
-        >>> m.applyfunc(lambda i: 2*i)
-        [0, 2]
-        [4, 6]
-
-        """
-        if not callable(f):
-            raise TypeError("`f` must be callable.")
-
-        out = self.copy()
-        for k, v in self._smat.iteritems():
-            fv = f(v)
-            if fv:
-                out._smat[k] = fv
-            else:
-                out._smat.pop(k, None)
-        return out
-
-    def reshape(self, _rows, _cols):
-        """Reshape matrix while retaining original size.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix(4, 2, range(8))
-        >>> S.reshape(2, 4)
-        [0, 1, 2, 3]
-        [4, 5, 6, 7]
-
-        """
-        if len(self) != _rows*_cols:
-            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
-        newD = {}
-        for k, v in self._smat.iteritems():
-            i, j = k
-            n = i*self.cols + j
-            ii, jj = divmod(n, _cols)
-            newD[(ii, jj)] = self._smat[(i, j)]
-        return MutableSparseMatrix(_rows, _cols, newD)
 
     def fill(self, value):
         """Fill self with the given value.
