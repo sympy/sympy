@@ -128,7 +128,6 @@ class DenseMatrix(MatrixBase):
         row_del
         row_join
         row_insert
-        delRowCol
         """
         if f is None:
             return self[i, :]
@@ -160,7 +159,6 @@ class DenseMatrix(MatrixBase):
         col_del
         col_join
         col_insert
-        delRowCol
         """
         if f is None:
             return self[:, j]

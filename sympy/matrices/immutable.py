@@ -1,11 +1,11 @@
 from sympy.core.cache import cacheit
 from matrices import MatrixBase
-from dense import Matrix
+from dense import DenseMatrix
 from sparse import MutableSparseMatrix as SparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
 
-class ImmutableMatrix(MatrixExpr, Matrix):
+class ImmutableMatrix(MatrixExpr, DenseMatrix):
     """Create an immutable version of a matrix.
 
     Examples
@@ -47,9 +47,9 @@ class ImmutableMatrix(MatrixExpr, Matrix):
         return self.args[2]
 
     def _entry(self, i, j):
-        return Matrix.__getitem__(self, (i,j))
+        return DenseMatrix.__getitem__(self, (i,j))
 
-    __getitem__ = Matrix.__getitem__
+    __getitem__ = DenseMatrix.__getitem__
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
@@ -58,13 +58,13 @@ class ImmutableMatrix(MatrixExpr, Matrix):
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
-    _eval_trace = Matrix._eval_trace
-    _eval_transpose = Matrix._eval_transpose
-    _eval_conjugate = Matrix._eval_conjugate
-    _eval_inverse = Matrix._eval_inverse
+    _eval_trace = DenseMatrix._eval_trace
+    _eval_transpose = DenseMatrix._eval_transpose
+    _eval_conjugate = DenseMatrix._eval_conjugate
+    _eval_inverse = DenseMatrix._eval_inverse
 
-    equals = Matrix.equals
-    is_Identity = Matrix.is_Identity
+    equals = DenseMatrix.equals
+    is_Identity = DenseMatrix.is_Identity
 
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__

@@ -1302,7 +1302,10 @@ class MatrixBase(object):
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
                 "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        return self.delRowCol(i, j)
+        M = self.as_mutable()
+        M.row_del(i)
+        M.col_del(j)
+        return self._new(M)
 
     def cofactor(self, i, j, method="berkowitz"):
         """
@@ -3341,32 +3344,6 @@ class MatrixBase(object):
 
 
 class MutableBase(MatrixBase):
-    def delRowCol(self, i, j):
-        """
-        Creates a copy of the matrix with the given row and column deleted.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> I = eye(4)
-        >>> I.delRowCol(1, 2)
-        [1, 0, 0]
-        [0, 0, 0]
-        [0, 0, 1]
-
-        See Also
-        ========
-
-        row_del
-        col_del
-        """
-        # used only for cofactors, makes a copy
-        M = self.as_mutable()
-        M.row_del(i)
-        M.col_del(j)
-        return self._new(M)
-
     def row_join(self, rhs):
         """
         Concatenates two matrices along self's last and rhs's first column
