@@ -29,6 +29,53 @@ class SparseMatrix(MatrixBase):
     sympy.matrices.dense.Matrix
     """
 
+    def __init__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], SparseMatrix):
+            self.rows = args[0].rows
+            self.cols = args[0].cols
+            self._smat = dict(args[0]._smat)
+            return
+
+        self._smat = {}
+
+        if len(args) == 3:
+            self.rows = as_int(args[0])
+            self.cols = as_int(args[1])
+
+            if callable(args[2]):
+                op = args[2]
+                for i in range(self.rows):
+                    for j in range(self.cols):
+                        value = sympify(op(i, j))
+                        if value:
+                            self._smat[(i, j)] = value
+            elif is_sequence(args[2]):
+                if len(args[2]) != self.rows*self.cols:
+                    raise ValueError('List length should be equal to rows*columns')
+                flat_list = args[2]
+                for i in range(self.rows):
+                    for j in range(self.cols):
+                        value = sympify(flat_list[i*self.cols + j])
+                        if value:
+                            self._smat[(i, j)] = value
+            elif isinstance(args[2], dict):
+                # manual copy, copy.deepcopy() doesn't work
+                for key in args[2].keys():
+                    v = args[2][key]
+                    if v:
+                        self._smat[key] = v
+        else:
+            # handle full matrix forms with _handle_creation_inputs
+            r, c, _list = Matrix._handle_creation_inputs(*args)
+            self.rows = r
+            self.cols = c
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    value = _list[self.cols*i + j]
+                    if value:
+                        self._smat[(i, j)] = value
+
     def __getitem__(self, key):
 
         if type(key) is tuple:
@@ -882,53 +929,6 @@ class MutableSparseMatrix(SparseMatrix, MutableBase):
     @classmethod
     def _new(cls, *args, **kwargs):
         return cls(*args)
-
-    def __init__(self, *args):
-
-        if len(args) == 1 and isinstance(args[0], SparseMatrix):
-            self.rows = args[0].rows
-            self.cols = args[0].cols
-            self._smat = dict(args[0]._smat)
-            return
-
-        self._smat = {}
-
-        if len(args) == 3:
-            self.rows = as_int(args[0])
-            self.cols = as_int(args[1])
-
-            if callable(args[2]):
-                op = args[2]
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = sympify(op(i, j))
-                        if value:
-                            self._smat[(i, j)] = value
-            elif is_sequence(args[2]):
-                if len(args[2]) != self.rows*self.cols:
-                    raise ValueError('List length should be equal to rows*columns')
-                flat_list = args[2]
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = sympify(flat_list[i*self.cols + j])
-                        if value:
-                            self._smat[(i, j)] = value
-            elif isinstance(args[2], dict):
-                # manual copy, copy.deepcopy() doesn't work
-                for key in args[2].keys():
-                    v = args[2][key]
-                    if v:
-                        self._smat[key] = v
-        else:
-            # handle full matrix forms with _handle_creation_inputs
-            r, c, _list = Matrix._handle_creation_inputs(*args)
-            self.rows = r
-            self.cols = c
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    value = _list[self.cols*i + j]
-                    if value:
-                        self._smat[(i, j)] = value
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
