@@ -1875,7 +1875,8 @@ class MatrixBase(object):
     @property
     def is_upper(self):
         """
-        Check if matrix is an upper triangular matrix.
+        Check if matrix is an upper triangular matrix. True can be returned
+        even if the matrix is not square.
 
         Examples
         ========
@@ -1888,11 +1889,12 @@ class MatrixBase(object):
         >>> m.is_upper
         True
 
-        >>> m = Matrix(3, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5])
+        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5, 0, 0, 0])
         >>> m
         [5, 1, 9]
         [0, 4, 6]
         [0, 0, 5]
+        [0, 0, 0]
         >>> m.is_upper
         True
 
@@ -1917,7 +1919,8 @@ class MatrixBase(object):
     @property
     def is_lower(self):
         """
-        Check if matrix is a lower triangular matrix.
+        Check if matrix is a lower triangular matrix. True can be returned
+        even if the matrix is not square.
 
         Examples
         ========
@@ -1930,8 +1933,9 @@ class MatrixBase(object):
         >>> m.is_lower
         True
 
-        >>> m = Matrix(3, 3, [2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4 , 0, 6, 6, 5])
         >>> m
+        [0, 0, 0]
         [2, 0, 0]
         [1, 4, 0]
         [6, 6, 5]
