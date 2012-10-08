@@ -175,8 +175,6 @@ def test_coset_rank():
         assert h == h1
         i += 1
     assert G.coset_unrank(48) == None
-    assert G.coset_rank(gens[0]) == 6
-    assert G.coset_unrank(6) == gens[0]
 
 def test_coset_factor():
     a = Permutation([2,0,1,3,4,5])

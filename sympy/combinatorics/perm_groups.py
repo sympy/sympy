@@ -1283,7 +1283,7 @@ class PermutationGroup(Basic):
         rv = [f[j] for j in self.base] if g_now == I else []
         if af:
             return rv
-        return [_af_new(i) for i in rv]
+        return [Permutation(i) for i in rv]
 
     def coset_rank(self, g):
         """rank using Schreier-Sims representation
@@ -1327,22 +1327,25 @@ class PermutationGroup(Basic):
         m = len(u)
         a = []
 
+        # (hv[0],.., hv[n-1])  factorization of g
+        # rank = hv[n-1] + hv[n-2]*len(tr[n-1]) + hv[n-3]*len(tr[n-1])*len(tr[n-2]) + ...
+        # hv[i] is the position of the factor of g in u[i]
+        #
         un = self._stabilizer_cosets_n
         n = self.degree
         rank = 0
-        base = [1]
-        for i in un[m:0:-1]:
-            base.append(base[-1]*i)
-        base.reverse()
+        rank_base = [1]
+        for i in un:
+            rank_base.append(rank_base[-1]*i)
 
-        i1 = -1
-        for i in self._base:
-            i1 += 1
+        a1 = [0]*m
+        for i1, i in enumerate(self._base):
             x = g1[i]
             for j, h in enumerate(u[i]):
                 if h[i] == x:
                     a.append(h)
-                    rank += j*base[i1]
+                    a1[i] = j
+                    rank += j*rank_base[i1]
                     p2 = _af_invert(h)
                     g1 = _af_rmul(p2, g1)
                     break
@@ -1368,7 +1371,7 @@ class PermutationGroup(Basic):
         nb = len(base)
         assert nb == len(un)
         v = [0]*m
-        for i in range(nb-1, -1,-1):
+        for i in range(nb):
             j = base[i]
             rank, c = divmod(rank, un[i])
             v[j] = c
@@ -1636,41 +1639,48 @@ class PermutationGroup(Basic):
          [0, 2, 1, 3], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
-        def get1(posmax):
-            n = len(posmax) - 1
-            for i in range(n, -1, -1):
-                if posmax[i] != 1:
-                    return i + 1
-            return 1
         n = self.degree
         u = self.stabilizer_cosets(True)
+        if len(u) == 1:
+            for q in u[-1]:
+                if af:
+                    yield q
+                else:
+                    yield _af_new(q)
+            raise StopIteration
+
+        u = [x for x in u if len(x) > 1]
+        u.reverse()
         # stg stack of group elements
         stg = [range(n)]
-        # posmax[i] = len(u[i])
         posmax = [len(x) for x in u]
-        n1 = get1(posmax)
+        n1 = len(posmax) - 1
         pos = [0]*n1
-        posmax = posmax[:n1]
         h = 0
         while 1:
             # backtrack when finished iterating over coset
             if pos[h] >= posmax[h]:
+                #count_b += 1
                 if h == 0:
                     raise StopIteration
                 pos[h] = 0
                 h -= 1
                 stg.pop()
                 continue
-            p = _af_rmul(stg[-1], u[h][pos[h]])
+            p = _af_rmul(u[h][pos[h]], stg[-1])
             pos[h] += 1
             stg.append(p)
             h += 1
             if h == n1:
                 if af:
-                    yield p
+                    for q in u[-1]:
+                        p = _af_rmul(q, stg[-1])
+                        yield p
                 else:
-                    p1 = _af_new(p)
-                    yield p1
+                    for q in u[-1]:
+                        p = _af_rmul(q, stg[-1])
+                        p1 = _af_new(p)
+                        yield p1
                 stg.pop()
                 h -= 1
 
