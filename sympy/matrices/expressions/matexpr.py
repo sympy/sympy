@@ -87,10 +87,6 @@ class MatrixExpr(Expr):
     __rtruediv__ = __rdiv__
 
     @property
-    def shape(self):
-        return self.args[:2]
-
-    @property
     def rows(self):
         return self.shape[0]
 
@@ -176,17 +172,23 @@ class MatrixExpr(Expr):
         """
         Returns a dense, mutable matrix with elements represented explicitly
 
-        See Also
-        --------
-        as_explicit: returns ImmutableMatrix
+        Examples
+        ========
+
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
         I
+        >>> I.shape
+        (3, 3)
         >>> I.as_mutable()
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+
+        See Also
+        ========
+        as_explicit: returns ImmutableMatrix
         """
         return self.as_explicit().as_mutable()
 

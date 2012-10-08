@@ -39,6 +39,10 @@ class ImmutableMatrix(MatrixExpr, Matrix):
         return cls._new(*args, **kwargs)
 
     @property
+    def shape(self):
+        return self.args[:2]
+
+    @property
     def _mat(self):
         return self.args[2]
 
@@ -89,6 +93,8 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     Traceback (most recent call last):
     ...
     TypeError: Cannot set values of ImmutableSparseMatrix
+    >>> _.shape
+    (3, 3)
     """
 
     _class_priority = 9
