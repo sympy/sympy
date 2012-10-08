@@ -2,7 +2,6 @@ import copy
 from collections import defaultdict
 
 from sympy.core.compatibility import is_sequence
-from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.sympify import sympify
@@ -980,9 +979,6 @@ class SparseMatrix(MatrixBase):
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return super(MatrixBase, self).__hash__()
 
 
 class MutableSparseMatrix(SparseMatrix, MutableBase):

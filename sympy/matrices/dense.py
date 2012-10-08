@@ -86,6 +86,11 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
+    def __hash__(self):
+        # issue 880 suggests that there should be no hash for a mutable
+        # object...but at least we aren't caching the result
+        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
+
     @property
     def is_Identity(self):
         if not self.is_square:
@@ -363,9 +368,6 @@ class DenseMatrix(MatrixBase):
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return super(MatrixBase, self).__hash__()
 
     def _cholesky(self):
         """

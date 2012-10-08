@@ -1,4 +1,3 @@
-from sympy.core.cache import cacheit
 from matrices import MatrixBase
 from dense import DenseMatrix
 from sparse import MutableSparseMatrix as SparseMatrix

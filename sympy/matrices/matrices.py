@@ -401,11 +401,6 @@ class MatrixBase(object):
         """
         return self.rows * self.cols
 
-    def hash(self):
-        """Compute a hash every time, because the matrix elements
-        could change."""
-        return hash(self.__str__() )
-
     @property
     def shape(self):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
