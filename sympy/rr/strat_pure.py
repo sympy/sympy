@@ -56,6 +56,7 @@ def null_safe(rule):
             return expr
         else:
             return result
+    return null_safe_rl
 
 def try_safe(rule):
     """ Return original expr if rule raises exception """
