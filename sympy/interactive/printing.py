@@ -130,15 +130,15 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
             for cls in [dict, int, long, float] + printable_containers:
                 png_formatter.for_type(cls, _print_png)
 
-        latex_formatter = ip.display_formatter.formatters['text/latex']
-        latex_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_latex
-        )
-        latex_formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'MatrixBase', _print_latex
-        )
-        for cls in printable_containers:
-            latex_formatter.for_type(cls, _print_latex)
+            latex_formatter = ip.display_formatter.formatters['text/latex']
+            latex_formatter.for_type_by_name(
+                'sympy.core.basic', 'Basic', _print_latex
+            )
+            latex_formatter.for_type_by_name(
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex
+            )
+            for cls in printable_containers:
+                latex_formatter.for_type(cls, _print_latex)
     else:
         ip.set_hook('result_display', _result_display)
 
