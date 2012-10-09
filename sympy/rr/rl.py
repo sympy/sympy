@@ -6,6 +6,14 @@ def rmid(isid):
     """ Create a rule to remove identities
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
+
+    >>> from sympy.rr import rmid, typed
+    >>> from sympy import Basic
+    >>> remove_zeros = rmid(lambda x: x==0)
+    >>> remove_zeros(Basic(1, 0, 2))
+    Basic(1, 2)
+    >>> remove_zeros(Basic(0, 0))
+    Basic(0)
     """
     def ident_remove(expr):
         """ Remove identities """
@@ -22,6 +30,12 @@ def rmid(isid):
     return ident_remove
 
 def frequencies(coll):
+    """ Count the number of times an element occurs in a collection
+
+    >>> from sympy.rr.rl import frequencies
+    >>> frequencies("aabbc")
+    {'a': 2, 'b': 2, 'c': 1}
+    """
     counts = {}
     for elem in coll:
         counts[elem] = counts.get(elem, 0) + 1
@@ -31,6 +45,7 @@ def glom(mkglom):
     """ Create a rule to conglomerate identical args
 
     >>> from sympy.rr import glom
+    >>> from sympy import Basic
     >>> rl = glom(lambda num, arg: num * arg)
     >>> rl(Basic(1, 1, 3))
     Basic(2, 3)
@@ -44,6 +59,13 @@ def glom(mkglom):
     return conglomerate
 
 def unpack(expr):
+    """ Rule to unpack singleton args
+
+    >>> from sympy.rr import unpack
+    >>> from sympy import Basic
+    >>> unpack(Basic(2))
+    2
+    """
     if len(expr.args) == 1:
         return expr.args[0]
     else:
@@ -61,6 +83,15 @@ def flatten(expr):
     return Basic.__new__(expr.__class__, *args)
 
 def sort(key):
+    """ Create a rule to sort by a key function
+
+    >>> from sympy.rr import sort
+    >>> from sympy import Basic
+    >>> sort_rl = sort(str)
+    >>> sort_rl(Basic(3, 1, 2))
+    Basic(1, 2, 3)
+    """
+
     def sort_rl(expr):
         return Basic.__new__(expr.__class__, *sorted(expr.args, key=key))
     return sort_rl
