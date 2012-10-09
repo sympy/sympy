@@ -1194,6 +1194,7 @@ class PermutationGroup(Basic):
                     yield x._array_form
                 else:
                     yield x
+            raise StopIteration
         if len(u) == 1:
             for i in basic_orbits[0]:
                 if af:

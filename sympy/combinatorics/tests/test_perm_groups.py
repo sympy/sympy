@@ -35,7 +35,7 @@ def test_has():
 
 
 def test_generate():
-    assert len(list(PermutationGroup(Permutation((0,1))).generate(method='dimino'))) == 1
+    assert len(list(PermutationGroup(Permutation((0,1))).generate())) == 1
     a = Permutation([1, 0])
     g = list(PermutationGroup([a]).generate())
     assert g == [Permutation([0, 1]), Permutation([1, 0])]
