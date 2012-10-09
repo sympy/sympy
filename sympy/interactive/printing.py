@@ -62,10 +62,11 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
+        import sympy
         if isinstance(o, (list, tuple, set, frozenset)):
-            return all(can_print_latex(i) for i in o)
+            return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, basestring) or can_print_latex(i)) and can_print_latex(o[i]) for i in o)
+            return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o,(sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
             return True
         return False
