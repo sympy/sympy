@@ -83,6 +83,7 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.rr',
     'sympy.series',
     'sympy.sets',
     'sympy.simplify',
