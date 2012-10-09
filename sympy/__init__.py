@@ -9,7 +9,7 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
-__version__ = "0.7.1-git"
+__version__ = "0.7.2.rc1"
 
 # Try to determine if 2to3 has been run. To do this, we look at long.__name__.
 # If 2to3 has been run, it should convert long to int.
