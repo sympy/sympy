@@ -1,6 +1,7 @@
-from sympy.matrices.expressions.blockmatrix import *
-from sympy.matrices.expressions import MatrixSymbol
-from sympy import symbols
+from sympy.matrices.expressions.blockmatrix import (bc_matmul,
+        bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd)
+from sympy.matrices.expressions import MatrixSymbol, Identity
+from sympy import symbols, Matrix
 
 n,m,l,k,o,p = symbols('n,m,l,k,o,p')
 A = MatrixSymbol('A', n, m)
