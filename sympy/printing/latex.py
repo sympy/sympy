@@ -1026,8 +1026,8 @@ class LatexPrinter(Printer):
         from sympy import Add, MatAdd
         def parens(x):
             if isinstance(x, (Add, MatAdd)):
-                return r"\left(%s\right)"%str(x)
-            return str(x)
+                return r"\left(%s\right)"%self._print(x)
+            return self._print(x)
         return ' '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
