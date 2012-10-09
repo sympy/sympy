@@ -2456,11 +2456,8 @@ class PermutationGroup(Basic):
         An element of the group can be written as the product
         h_1*..*h_s.
 
-        We use Jerrum's filter in our implementation of the
-        Schreier-Sims algorithm. It runs in polynomial time.
-
-        This implementation is a translation of the C++ implementation in
-        http://www.m8j.net
+        We use incremental Schreier-Sims algorithm, which
+        runs in polynomial time.
 
         Examples
         ========
@@ -2478,7 +2475,6 @@ class PermutationGroup(Basic):
         if self._transversals:
             return
         base, strong_gens = self.schreier_sims_incremental(base, gens)
-        #base, strong_gens = self.schreier_sims_random(base, gens)
         self._base = base
         self._strong_gens = strong_gens
         if not base:
@@ -2637,14 +2633,14 @@ class PermutationGroup(Basic):
                     strong_gens.append(gen)
         return _base, strong_gens
 
-    def schreier_sims_random(self, base=None, gens=None, consec_succ=10,\
+    def schreier_sims_random(self, base=None, gens=None, consec_succ=100,\
                              _random_prec=None):
         r"""Randomized Schreier-Sims algorithm.
 
         The randomized Schreier-Sims algorithm takes the sequence ``base``
         and the generating set ``gens``, and extends ``base`` to a base, and
         ``gens`` to a strong generating set relative to that base with
-        probability of a wrong answer at most ``1/\text{consec\_succ}``.
+        probability of a wrong answer at most ``2^{-consec_succ}``.
 
         Parameters
         ==========
@@ -2693,9 +2689,12 @@ class PermutationGroup(Basic):
         fully decomposed (successful sift) or not (unsuccessful sift). In
         the latter case, the level at which the sift failed is reported and
         used to amend ``stabs``, ``base``, ``gens`` and ``orbs`` accordingly.
+        If ``base, gens`` do not form a BSGS, ``_strip`` returns a
+        non-identity element with probability at least ``1/2``.
+
         The halting condition is for ``consec_succ`` consecutive successful
         sifts to pass. This makes sure that the current ``base`` and ``gens``
-        form a BSGS with probability at least ``1 - 1/\text{consec\_succ}``.
+        form a BSGS with probability at least ``1 - 2^{-consec_succ}``.
 
         See Also
         ========
