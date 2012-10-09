@@ -123,18 +123,17 @@ def xxinv(mul):
 
 def remove_ids(mul):
     factor, matrices = mul.as_coeff_matrices()
-    if not any(m.is_Identity for m in matrices) or len(matrices) == 1:
-        return mul
+    if any(m.is_Identity for m in matrices) and len(matrices) != 1:
+        non_ids = [x for x in matrices if not x.is_Identity]
+        return newmul(factor, *non_ids)
+    return mul
 
-    non_ids = [x for x in matrices if not x.is_Identity]
-    return newmul(factor, *non_ids)
 
 def factor_in_front(mul):
     factor, matrices = mul.as_coeff_matrices()
-    if factor == 1:
-        return mul
-    else:
+    if factor != 1:
         return newmul(factor, *matrices)
+    return mul
 
 def condition_matmul(rule):
     is_matmul = lambda x: x.is_Matrix and x.is_MatMul

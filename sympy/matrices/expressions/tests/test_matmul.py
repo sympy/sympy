@@ -1,6 +1,7 @@
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack)
 from sympy import symbols, MatrixSymbol, Identity, Inverse, ZeroMatrix
+from sympy.rr import null_safe
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -17,8 +18,8 @@ def test_factor_in_front():
 def test_remove_ids():
     assert remove_ids(MatMul(A, Identity(m), B, simplify=False)) == \
                       MatMul(A, B, simplify=False)
-    assert remove_ids(MatMul(Identity(n), simplify=False)) == \
-                      MatMul(Identity(n), simplify=False)
+    assert null_safe(remove_ids)(MatMul(Identity(n), simplify=False)) == \
+                                 MatMul(Identity(n), simplify=False)
 
 def test_xxinv():
     assert xxinv(MatMul(D, Inverse(D), D, simplify=False)) == \
