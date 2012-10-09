@@ -81,9 +81,9 @@ class StrPrinter(Printer):
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
 
     def _print_BlockMatrix(self, B):
-        if B.mat.shape == (1, 1):
-            self._print(B.mat[0,0])
-        return self._print(B.mat)
+        if B._mat.shape == (1, 1):
+            self._print(B._mat[0,0])
+        return self._print(B._mat)
 
     def _print_Catalan(self, expr):
         return 'Catalan'
@@ -206,8 +206,15 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_MutableMatrix = _print_MatrixBase
+    _print_SparseMatrix = \
+    _print_MutableSparseMatrix = \
+    _print_ImmutableSparseMatrix = \
+    _print_Matrix = \
+    _print_DenseMatrix = \
+    _print_MutableDenseMatrix = \
+    _print_ImmutableMatrix = \
+    _print_ImmutableDenseMatrix = \
+    _print_MatrixBase
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -466,7 +473,8 @@ class StrPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_SparseMatrix(self, expr):
-        return self._print(expr.toMatrix())
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):

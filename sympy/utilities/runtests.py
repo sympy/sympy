@@ -71,11 +71,6 @@ if IS_PYTHON_3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
 
 
-def sys_normcase(f):
-    if sys_case_insensitive:
-        return f.lower()
-    return f
-
 def convert_to_native_paths(lst):
     """
     Converts a list of '/' separated paths into a list of
@@ -109,9 +104,14 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
+def sys_normcase(f):
+    if sys_case_insensitive: # global defined after call to get_sympy_dir()
+        return f.lower()
+    return f
+
 def isgeneratorfunction(object):
     """
-    Return true if the object is a user-defined generator function.
+    Return True if the object is a user-defined generator function.
 
     Generator function objects provides same attributes as functions.
 
@@ -177,7 +177,8 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     ... run_in_subprocess_with_hash_randomization)
     >>> # run the core tests in verbose mode
     >>> run_in_subprocess_with_hash_randomization("_test",
-    ... function_args=("core",), function_kwargs={'verbose': True}) #doctest: +SKIP
+    ... function_args=("core",),
+    ... function_kwargs={'verbose': True}) # doctest: +SKIP
     # Will return 0 if sys.executable supports hash randomization and tests
     # pass, 1 if they fail, and False if it does not support hash
     # randomization.
@@ -202,7 +203,8 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             return False
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
-                     (module, function, function, repr(function_args), repr(function_kwargs)))
+                     (module, function, function, repr(function_args),
+                     repr(function_kwargs)))
 
     try:
         return subprocess.call([command, "-R", "-c", commandstring])
@@ -226,13 +228,14 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     This is what ``setup.py test`` uses.
 
     You can pass arguments and keyword arguments to the test functions that
-    support them (for now, test,  doctest, and the examples).  See the docstrings of those
-    functions for a description of the available options.
+    support them (for now, test,  doctest, and the examples). See the
+    docstrings of those functions for a description of the available options.
 
     For example, to run the solvers tests with colors turned off:
 
     >>> from sympy.utilities.runtests import run_all_tests
-    >>> run_all_tests(test_args=("solvers",), test_kwargs={"colors:False"}) # doctest: +SKIP
+    >>> run_all_tests(test_args=("solvers",),
+    ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
     tests_successful = True
@@ -260,8 +263,10 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         if not (sys.platform == "win32" or sys.version_info[0] == 3):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
-            if subprocess.call("sage -v", shell=True, stdout=dev_null, stderr=dev_null) == 0:
-                if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell=True) != 0:
+            if subprocess.call("sage -v", shell=True, stdout=dev_null,
+                stderr=dev_null) == 0:
+                if subprocess.call("sage -python bin/test "
+                    "sympy/external/tests/test_sage.py", shell=True) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -430,7 +435,8 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
-    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors, force_colors=force_colors)
+    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
+        force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -604,11 +610,13 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(rst_file, module_relative=False, encoding='utf-8',
+            # out = pdoctest.testfile(
+            #    rst_file, module_relative=False, encoding='utf-8',
             #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
-            out = sympytestfile(rst_file, module_relative=False, encoding='utf-8',
-                optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
-                            | pdoctest.IGNORE_EXCEPTION_DETAIL)
+            out = sympytestfile(
+                rst_file, module_relative=False, encoding='utf-8',
+                optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
+                            pdoctest.IGNORE_EXCEPTION_DETAIL)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
@@ -736,11 +744,13 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     # Relativize the path
     if not IS_PYTHON_3:
-        text, filename = pdoctest._load_testfile(filename, package, module_relative)
+        text, filename = pdoctest._load_testfile(
+            filename, package, module_relative)
         if encoding is not None:
             text = text.decode(encoding)
     else:
-        text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
+        text, filename = pdoctest._load_testfile(
+            filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -842,11 +852,10 @@ class SymPyTests(object):
             # that are defined in the testing file or in the file where
             # is defined the XFAIL decorator
             funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                                                 (inspect.isfunction(gl[f])
-                                                    or inspect.ismethod(gl[f])) and
-                                                 (inspect.getsourcefile(gl[f]) == filename or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile2)]
+                (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
+                (inspect.getsourcefile(gl[f]) == filename or
+                 inspect.getsourcefile(gl[f]) == pytestfile or
+                 inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
                 funcs = [f for f in funcs if getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
@@ -1007,8 +1016,9 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
-            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS | \
-                    pdoctest.NORMALIZE_WHITESPACE | pdoctest.IGNORE_EXCEPTION_DETAIL)
+            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
+                    pdoctest.NORMALIZE_WHITESPACE |
+                    pdoctest.IGNORE_EXCEPTION_DETAIL)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1122,10 +1132,11 @@ class SymPyDocTestFinder(DocTestFinder):
                     if in_module:
                         try:
                             valname = '%s.%s' % (name, rawname)
-                            self._find(tests, val, valname, module, source_lines, globs, seen)
+                            self._find(tests, val, valname, module,
+                                source_lines, globs, seen)
                         except KeyboardInterrupt:
                             raise
-                        except ValueError, msg:
+                        except ValueError:
                             raise
                         except Exception:
                             pass
@@ -1166,7 +1177,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         # "double check" again
                         pat = r'\s*(def|class)\s+%s\s*\(' % valname
                         PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in source_lines)
+                        in_module = any(PAT.match(line) for line in
+                            source_lines)
                     if in_module:
                         valname = '%s.%s' % (name, valname)
                         self._find(tests, val, valname, module, source_lines,
@@ -1199,10 +1211,10 @@ class SymPyDocTestFinder(DocTestFinder):
             # if None, then _find_lineno couldn't find the docstring.
             # But IT IS STILL THERE.  Likely it was decorated or something
             # (i.e., @property docstrings have lineno == None)
-            # TODO: Write our own _find_lineno that is smarter in this regard
+            # TODO: Write our own _find_lineno that is smarter in this regard.
             # Until then, just give it a dummy lineno.  This is just used for
-            # sorting the tests, so the only bad effect is that they will appear
-            # last instead of the order that they really are in the file.
+            # sorting the tests, so the only bad effect is that they will
+            # appear last instead of in the order that they appear in the file.
             # lineno is also used to report the offending line of a failing
             # doctest, which is another reason to fix this.  See issue 1947.
             lineno = 0
@@ -1306,7 +1318,8 @@ class PyTestReporter(Reporter):
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False, tb="short", colors=True, force_colors=False):
+    def __init__(self, verbose=False, tb="short", colors=True,
+        force_colors=False):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -1338,7 +1351,8 @@ class PyTestReporter(Reporter):
             if sys.platform == "win32":
                 # Windows support is based on:
                 #
-                #  http://code.activestate.com/recipes/440694-determine-size-of-console-window-on-windows/
+                #  http://code.activestate.com/recipes/
+                #  440694-determine-size-of-console-window-on-windows/
 
                 from ctypes import windll, create_string_buffer
 
@@ -1348,7 +1362,8 @@ class PyTestReporter(Reporter):
 
                 if res:
                     import struct
-                    (_, _, _, _, _, left, _, right, _, _, _) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+                    (_, _, _, _, _, left, _, right, _, _, _) = \
+                        struct.unpack("hhhhHhhhhhh", csbi.raw)
                     return right - left
                 else:
                     return self._default_width
@@ -1357,7 +1372,9 @@ class PyTestReporter(Reporter):
                 return self._default_width # leave PIPEs alone
 
             try:
-                process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.Popen(['stty', '-a'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
                 if sys.version_info[0] > 2:
                     stdout = stdout.decode("utf-8")
@@ -1392,7 +1409,8 @@ class PyTestReporter(Reporter):
 
         return width
 
-    def write(self, text, color="", align="left", width=None, force_colors=False):
+    def write(self, text, color="", align="left", width=None,
+        force_colors=False):
         """
         Prints a text on the screen.
 
@@ -1403,7 +1421,8 @@ class PyTestReporter(Reporter):
 
         color : choose from the colors below, "" means default color
         align : "left"/"right", "left" is a normal print, "right" is aligned on
-                the right-hand side of the screen, filled with spaces if necessary
+                the right-hand side of the screen, filled with spaces if
+                necessary
         width : the screen width
 
         """
@@ -1441,7 +1460,8 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
-        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
+            sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
@@ -1461,12 +1481,14 @@ class PyTestReporter(Reporter):
         if IS_PYTHON_3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
         elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
-            text = text.encode(sys.stdout.encoding, 'backslashreplace').decode(sys.stdout.encoding)
+            text = text.encode(sys.stdout.encoding, 'backslashreplace'
+                              ).decode(sys.stdout.encoding)
 
         if color == "":
             sys.stdout.write(text)
         else:
-            sys.stdout.write("%s%s%s" % (c_color % colors[color], text, c_normal))
+            sys.stdout.write("%s%s%s" %
+                (c_color % colors[color], text, c_normal))
         sys.stdout.flush()
         l = text.rfind("\n")
         if l == -1:
@@ -1498,7 +1520,8 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" % (executable, python_version))
+        self.write("executable:         %s  (%s)\n" %
+            (executable, python_version))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE

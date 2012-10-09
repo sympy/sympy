@@ -1,7 +1,7 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
 from sympy import Matrix, I, Expr, Integer
-from sympy.matrices import matrices
+from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
 __all__ = [
@@ -182,8 +182,7 @@ def _sympy_tensor_product(*matrices):
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices
-    testmat = [isinstance(m, Matrix) for m in matrices]
-    if not all(testmat):
+    if not all(isinstance(m, Matrix) for m in matrices):
         raise TypeError(
             'Sequence of Matrices expected, got: %s' % repr(matrices)
         )
@@ -263,7 +262,7 @@ def matrix_eye(n, **options):
     """Get the version of eye and tensor_product for a given format."""
     format = options.get('format','sympy')
     if format == 'sympy':
-        return matrices.eye(n)
+        return eye(n)
     elif format == 'numpy':
         return _numpy_eye(n)
     elif format == 'scipy.sparse':
@@ -297,7 +296,7 @@ def _scipy_sparse_matrix_to_zero(e):
 def matrix_to_zero(e):
     """Convert a zero matrix to the scalar zero."""
     if isinstance(e, Matrix):
-        if matrices.zeros(*e.shape) == e:
+        if zeros(*e.shape) == e:
             e = Integer(0)
     elif isinstance(e, numpy_ndarray):
         e = _numpy_matrix_to_zero(e)

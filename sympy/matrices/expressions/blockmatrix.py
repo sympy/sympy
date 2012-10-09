@@ -13,7 +13,8 @@ class BlockMatrix(MatrixExpr):
     The submatrices are stored in a SymPy Matrix object but accessed as part of
     a Matrix Expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
+    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols,
+    ...     Identity, ZeroMatrix, block_collapse)
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
@@ -33,19 +34,19 @@ class BlockMatrix(MatrixExpr):
     """
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
-    def __new__(cls, mat):
-        if not isinstance(mat, Matrix):
-            mat = Matrix(mat)
-        data = Tuple(*mat.mat)
-        shape = Tuple(*sympify(mat.shape))
+    def __new__(cls, M):
+        if not isinstance(M, Matrix):
+            M = Matrix(M)
+        data = Tuple(*M._mat)
+        shape = Tuple(*sympify(M.shape))
         obj = Basic.__new__(cls, data, shape)
-        obj.mat = mat
+        obj._mat = M
         return obj
 
     @property
     def shape(self):
         numrows = numcols = 0
-        M = self.mat
+        M = self._mat
         for i in range(M.shape[0]):
             numrows += M[i,0].shape[0]
         for i in range(M.shape[1]):
@@ -54,11 +55,11 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def blockshape(self):
-        return self.mat.shape
+        return self._mat.shape
 
     @property
     def blocks(self):
-        return self.mat
+        return self._mat
 
     @property
     def rowblocksizes(self):
@@ -73,7 +74,7 @@ class BlockMatrix(MatrixExpr):
         if  (other.is_Matrix and other.is_BlockMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockMatrix(self.mat*other.mat)
+            return BlockMatrix(self._mat*other._mat)
 
         return MatrixExpr.__mul__(self, other)
 
@@ -83,38 +84,56 @@ class BlockMatrix(MatrixExpr):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockMatrix(self.mat + other.mat)
+            return BlockMatrix(self._mat + other._mat)
 
         return MatrixExpr.__add__(self, other)
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self.mat.mat]
+        matrices = [Transpose(matrix) for matrix in self._mat]
         # Make a copy
-        mat = Matrix(self.blockshape[0], self.blockshape[1], matrices)
+        M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
-        mat = mat.transpose()
-        return BlockMatrix(mat)
+        M = M.transpose()
+        return BlockMatrix(M)
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self.mat[i,i])
+            return Add(*[Trace(self._mat[i,i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError("Can't perform trace of irregular blockshape")
 
-    #def transpose(self):
-    #    return self.eval_transpose()
+    def transpose(self):
+        """Return transpose of matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
+        >>> from sympy.abc import l, m, n
+        >>> X = MatrixSymbol('X', n, n)
+        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Z = MatrixSymbol('Z', n, m)
+        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+        >>> B.transpose()
+        [X',  0]
+        [Z', Y']
+        >>> _.transpose()
+        [X, Z]
+        [0, Y]
+        """
+        return self._eval_transpose()
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
-        if self.blockshape==(1,1):
+        if self.blockshape==(1, 1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
-        elif expand and self.blockshape==(2,2):
+        elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
-            A11, A12, A21, A22 = (self.blocks[0,0], self.blocks[0,1],
-                    self.blocks[1,0], self.blocks[1,1])
+            A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
+                    self.blocks[1, 0], self.blocks[1, 1])
             C1 = A11 - A12*Inverse(A22)*A21
             C2 = A22 - A21*Inverse(A11)*A12
             mat = Matrix([[Inverse(C1), Inverse(-A11)*A12*Inverse(C2)],
@@ -123,11 +142,36 @@ class BlockMatrix(MatrixExpr):
         else:
             raise NotImplementedError()
 
+    def inv(self, expand=False):
+        """Return inverse of matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
+        >>> from sympy.abc import l, m, n
+        >>> X = MatrixSymbol('X', n, n)
+        >>> BlockMatrix([[X]]).inv()
+        [X^-1]
+
+        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Z = MatrixSymbol('Z', n, m)
+        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+        >>> B
+        [X, Z]
+        [0, Y]
+        >>> B.inv(expand=True)
+        [X^-1, (-1)*X^-1*Z*Y^-1]
+        [   0,             Y^-1]
+
+        """
+        return self._eval_inverse(expand)
+
     def inverse(self):
+        # XXX document how this is different than inv
         return Inverse(self)
 
     def _entry(self, i, j):
-        idx = 0
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
             if i < numrows:
@@ -147,9 +191,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self.mat[i,j].is_Identity:
+                if i==j and not self._mat[i,j].is_Identity:
                     return False
-                if i!=j and not self.mat[i,j].is_ZeroMatrix:
+                if i!=j and not self._mat[i,j].is_ZeroMatrix:
                     return False
         return True
     @property
@@ -183,9 +227,9 @@ class BlockDiagMatrix(BlockMatrix):
                 data_matrix[r, c] = ZeroMatrix(n, m)
 
         shape = Tuple(*sympify(mat.shape))
-        data = Tuple(*data_matrix.mat)
+        data = Tuple(*data_matrix._mat)
         obj = Basic.__new__(cls, data, shape, Tuple(*mats))
-        obj.mat = data_matrix
+        obj._mat = data_matrix
         return obj
 
     @property
@@ -274,7 +318,7 @@ def block_collapse(expr):
             return BlockDiagMatrix(
                     *[expr.args[0]*arg for arg in expr.args[1].diag])
         else:
-            return BlockMatrix(expr.args[0]*expr.args[1].mat)
+            return BlockMatrix(expr.args[0]*expr.args[1]._mat)
 
     if expr.is_Add:
         nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]

@@ -602,7 +602,7 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[',']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
-    _print_MutableMatrix = _print_MatrixBase
+    _print_Matrix = _print_MatrixBase
 
     def _print_Transpose(self, T):
         pform = self._print(T.arg)

@@ -349,8 +349,8 @@ Linear algebra
 --------------
 
 Now that we have the basics out of the way, let's see what we can do with the
-actual matrices. Of course the first things that come to mind are the basics
-like the determinant:
+actual matrices. Of course, one of the first things that comes to mind is the
+determinant:
 
     >>> M = Matrix(( [1, 2, 3], [3, 6, 2], [2, 0, 1] ))
     >>> M.det()
@@ -362,8 +362,9 @@ like the determinant:
     >>> M3.det()
     0
 
-and the inverse. In SymPy the inverse is computed by Gaussian elimination by
-default but we can specify it be done by LU decomposition as well:
+Another common operation is the inevers: In SymPy, this is computed by Gaussian
+elimination by default (for dense matrices) but we can specify it be done by LU
+decomposition as well:
 
     >>> M2.inv()
     [1  0  0]
@@ -371,19 +372,19 @@ default but we can specify it be done by LU decomposition as well:
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M2.inv("LU")
+    >>> M2.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M.inv("LU")
+    >>> M.inv(method="LU")
     [-3/14  1/14  1/2 ]
     [                 ]
     [-1/28  5/28  -1/4]
     [                 ]
     [ 3/7   -1/7   0  ]
-    >>> M * M.inv("LU")
+    >>> M * M.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]
@@ -499,17 +500,9 @@ norm():
     >>> out2[2].norm()
     1
 
-So there is quite a bit that can be done with the module including eigenvalues,
-eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
-here one might want to look over the matrices.py file for all functionality.
-
-Matrix Class Reference
-----------------------
-.. autoclass:: Matrix
-   :members:
-
-.. autoclass:: SparseMatrix
-   :members:
+So there is quite a bit more that can be done: eigenvalues, eigenvectors,
+nullspace calculation, cofactor expansion, and so on. From here one might
+want to look over the matrices.py file for all functionality.
 
 Matrix Exceptions Reference
 ---------------------------
@@ -524,43 +517,43 @@ Matrix Exceptions Reference
 Matrix Functions Reference
 --------------------------
 
-.. autofunction:: matrix_multiply
+.. autofunction:: classof
 
-.. autofunction:: matrix_multiply_elementwise
+.. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
 
-.. autofunction:: matrix_add
+.. autofunction:: sympy.matrices.dense.zeros
 
-.. autofunction:: zeros
+.. autofunction:: sympy.matrices.dense.ones
 
-.. autofunction:: ones
+.. autofunction:: sympy.matrices.dense.eye
 
-.. autofunction:: eye
+.. autofunction:: sympy.matrices.dense.diag
 
-.. autofunction:: diag
+.. autofunction:: sympy.matrices.dense.jordan_cell
 
-.. autofunction:: randMatrix
+.. autofunction:: sympy.matrices.dense.hessian
 
-.. autofunction:: hessian
+.. autofunction:: sympy.matrices.dense.GramSchmidt
 
-.. autofunction:: GramSchmidt
+.. autofunction:: sympy.matrices.dense.wronskian
 
-.. autofunction:: wronskian
+.. autofunction:: sympy.matrices.dense.casoratian
 
-.. autofunction:: casoratian
+.. autofunction:: sympy.matrices.dense.randMatrix
 
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: list2numpy
+.. autofunction:: sympy.matrices.dense.list2numpy
 
-.. autofunction:: matrix2numpy
+.. autofunction:: sympy.matrices.dense.matrix2numpy
+
+.. autofunction:: sympy.matrices.dense.symarray
+
+.. autofunction:: sympy.matrices.dense.rot_axis1
+
+.. autofunction:: sympy.matrices.dense.rot_axis2
+
+.. autofunction:: sympy.matrices.dense.rot_axis3
 
 .. autofunction:: a2idx
-
-.. autofunction:: symarray
-
-.. autofunction:: rot_axis1
-
-.. autofunction:: rot_axis2
-
-.. autofunction:: rot_axis3

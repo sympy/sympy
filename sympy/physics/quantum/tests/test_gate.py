@@ -1,5 +1,5 @@
 from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
-from sympy.matrices.matrices import Matrix
+from sympy.matrices import Matrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
         CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,

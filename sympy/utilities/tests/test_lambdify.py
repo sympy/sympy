@@ -9,6 +9,8 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 import math, sympy
 
+MutableDenseMatrix = Matrix
+
 numpy = import_module('numpy', min_python_version=(2, 6))
 
 x,y,z = symbols('x,y,z')
@@ -216,6 +218,11 @@ def test_matrix():
     assert f(1,2,3) == sol
     f = lambdify((x,y,z), (A, [A]), modules="sympy")
     assert f(1,2,3) == (sol,[sol])
+    J = Matrix((x, x + y)).jacobian((x, y))
+    v = Matrix((x, y))
+    sol = Matrix([[1, 0], [1, 1]])
+    assert lambdify(v, J, modules='sympy')(1, 2) == sol
+    assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
 def test_integral():
     f = Lambda(x, exp(-x**2))

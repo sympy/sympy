@@ -64,7 +64,7 @@ def pat_matrix(m, dx, dy, dz):
            (dzdx, dydz, dydy + dxdx))
     return m*Matrix(mat)
 
-def mgamma(mu,lower=False):
+def mgamma(mu, lower=False):
     """Returns a Dirac gamma matrix gamma^mu in the standard
     (Dirac) representation.
 
@@ -127,10 +127,10 @@ def mgamma(mu,lower=False):
                 (1,0,0,0),
                 (0,1,0,0)
                 )
-    m= Matrix(mat)
+    m = Matrix(mat)
     if lower:
         if mu in [1,2,3,5]:
-            m = - m
+            m = -m
     return m
 
 #Minkowski tensor using the convention (+,-,-,-) used in the Quantum Field

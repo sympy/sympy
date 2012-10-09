@@ -132,7 +132,6 @@ def default_sort_key(item, order=None):
             unordered = True
         else:
             # e.g. tuple, list
-            sort = False
             args = list(item)
             unordered = False
 
@@ -225,7 +224,7 @@ def rawlines(s):
         rv = ["("]
         # add on the newlines
         trailing = s.endswith('\n')
-        n = last = len(lines) - 1
+        last = len(lines) - 1
         for i, li in enumerate(lines):
             if i != last or trailing:
                 rv.append(repr(li)[:-1] + '\\n\'')

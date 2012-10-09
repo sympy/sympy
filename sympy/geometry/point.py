@@ -13,7 +13,7 @@ from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
-from sympy.matrices.matrices import Matrix
+from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.simplify.simplify import nsimplify
 
