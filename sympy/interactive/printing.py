@@ -62,10 +62,11 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
+        import sympy
         if isinstance(o, (list, tuple, set, frozenset)):
-            return all(can_print_latex(i) for i in o)
+            return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, basestring) or can_print_latex(i)) and can_print_latex(o[i]) for i in o)
+            return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o,(sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
             return True
         return False
@@ -129,15 +130,15 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
             for cls in [dict, int, long, float] + printable_containers:
                 png_formatter.for_type(cls, _print_png)
 
-        latex_formatter = ip.display_formatter.formatters['text/latex']
-        latex_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_latex
-        )
-        latex_formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'MatrixBase', _print_latex
-        )
-        for cls in printable_containers:
-            latex_formatter.for_type(cls, _print_latex)
+            latex_formatter = ip.display_formatter.formatters['text/latex']
+            latex_formatter.for_type_by_name(
+                'sympy.core.basic', 'Basic', _print_latex
+            )
+            latex_formatter.for_type_by_name(
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex
+            )
+            for cls in printable_containers:
+                latex_formatter.for_type(cls, _print_latex)
     else:
         ip.set_hook('result_display', _result_display)
 
