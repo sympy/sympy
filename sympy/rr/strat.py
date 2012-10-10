@@ -17,10 +17,10 @@ def typed(ruletypes):
     inputs:
         ruletypes -- a dict mapping {Type: rule}
 
-    >>> from sympy.rr import rmid, typed
+    >>> from sympy.rr import rm_id, typed
     >>> from sympy import Add, Mul
-    >>> rm_zeros = rmid(lambda x: x==0)
-    >>> rm_ones  = rmid(lambda x: x==1)
+    >>> rm_zeros = rm_id(lambda x: x==0)
+    >>> rm_ones  = rm_id(lambda x: x==1)
     >>> remove_idents = typed({Add: rm_zeros, Mul: rm_ones})
     """
     def typed_rl(expr):

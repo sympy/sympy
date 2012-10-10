@@ -58,7 +58,7 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
-from sympy.rr import (rmid, unpack, flatten, sort, canon, condition, glom,
+from sympy.rr import (rm_id, unpack, flatten, sort, canon, condition, glom,
         debug, exhaust, chain, do_one)
 
 def newadd(*args):
@@ -88,7 +88,7 @@ def glom_MatAdd(expr):
     return Basic.__new__(MatAdd, *args)
 
 
-rules = (rmid(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
+rules = (rm_id(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          unpack,
          flatten,
          glom_MatAdd,

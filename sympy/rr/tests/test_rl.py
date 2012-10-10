@@ -1,8 +1,8 @@
-from sympy.rr.rl import rmid, glom, flatten, unpack, sort, distribute
+from sympy.rr.rl import rm_id, glom, flatten, unpack, sort, distribute
 from sympy import Basic
 
-def test_rmid():
-    rmzeros = rmid(lambda x: x == 0)
+def test_rm_id():
+    rmzeros = rm_id(lambda x: x == 0)
     assert rmzeros(Basic(0, 1)) == Basic(1)
     assert rmzeros(Basic(0, 0)) == Basic(0)
     assert rmzeros(Basic(2, 1)) == Basic(2, 1)

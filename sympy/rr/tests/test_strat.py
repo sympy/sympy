@@ -1,11 +1,11 @@
-from sympy.rr import typed, rmid, do_one
+from sympy.rr import typed, rm_id, do_one
 from sympy import Basic
 
 def test_typed():
     class A(Basic): pass
     class B(Basic): pass
-    rmzeros = rmid(lambda x: x == 0)
-    rmones  = rmid(lambda x: x == 1)
+    rmzeros = rm_id(lambda x: x == 0)
+    rmones  = rm_id(lambda x: x == 1)
     remove_something = typed({A: rmzeros, B: rmones})
 
     assert remove_something(A(0, 1)) == A(1)

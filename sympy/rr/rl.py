@@ -2,14 +2,14 @@
 # This file assumes knowledge of Basic and little else
 from sympy import Basic
 
-def rmid(isid):
+def rm_id(isid):
     """ Create a rule to remove identities
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
 
-    >>> from sympy.rr import rmid, typed
+    >>> from sympy.rr import rm_id, typed
     >>> from sympy import Basic
-    >>> remove_zeros = rmid(lambda x: x==0)
+    >>> remove_zeros = rm_id(lambda x: x==0)
     >>> remove_zeros(Basic(1, 0, 2))
     Basic(1, 2)
     >>> remove_zeros(Basic(0, 0))

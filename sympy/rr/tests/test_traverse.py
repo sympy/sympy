@@ -1,4 +1,3 @@
-from sympy.rr.rl import rmid
 from sympy.rr.traverse import top_down, bottom_up
 from sympy import Basic, symbols, Symbol, S
 
