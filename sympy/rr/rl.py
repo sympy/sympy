@@ -79,7 +79,7 @@ def glom(key, count, combine):
     def conglomerate(expr):
         """ Conglomerate together identical args x + x -> 2x """
         groups = groupby(expr.args, key)
-        counts = {k: sum(map(count, args)) for k, args in groups.items()}
+        counts = dict((k, sum(map(count, args))) for k, args in groups.items())
         newargs = [combine(cnt, mat) for mat, cnt in counts.items()]
         if set(newargs) != set(expr.args):
             return Basic.__new__(type(expr), *newargs)
