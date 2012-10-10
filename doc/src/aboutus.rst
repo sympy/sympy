@@ -211,7 +211,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Arpit Goyal: Improvements to Integral and Sum
 #. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
 #. Comer Duncan: added dual, is_antisymmetric, and det_lu_decomposition to matrices.py
-#. Jens H. Nielsen: added sets to modules listing
+#. Jens H. Nielsen: added sets to modules listing, update IPython printing extension
 #. Joseph Dougherty: modified whitespace cleaning to remove multiple newlines at eof
 #. marshall2389: Spelling correction
 #. Guru Devanla: Implemented quantum density operator
