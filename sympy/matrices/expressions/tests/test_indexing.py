@@ -1,6 +1,6 @@
 from sympy import (symbols, MatrixSymbol, Symbol, MatPow, BlockMatrix,
         Identity, ZeroMatrix, ImmutableMatrix, eye)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 k,l,m,n = symbols('k l m n', integer=True)
 i,j = symbols('i j', integer=True)

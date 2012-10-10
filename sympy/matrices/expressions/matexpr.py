@@ -2,7 +2,7 @@ from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple, Integer
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
-from sympy.matrices import ShapeError, Matrix
+from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
     """ Matrix Expression Class
@@ -83,15 +83,13 @@ class MatrixExpr(Expr):
         raise NotImplementedError()
         #return MatMul(other, Pow(self, S.NegativeOne))
 
-    def __getitem__(self, key):
-        raise NotImplementedError()
-
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
     @property
     def rows(self):
         return self.shape[0]
+
     @property
     def cols(self):
         return self.shape[1]
@@ -113,23 +111,14 @@ class MatrixExpr(Expr):
         return MatMul(*[arg.conjugate() for arg in self.args])
 
     def transpose(self):
-        if isinstance(self, Transpose):
-            return self.arg
-
-        if self.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
-
-        if self.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in self.args])
-
         try:
             return self._eval_transpose()
         except (AttributeError, NotImplementedError):
             return Basic.__new__(Transpose, self)
 
-    @property
-    def T(self):
-        return self.transpose()
+    C = property(conjugate, None, None, 'By-element conjugation.')
+
+    T = property(transpose, None, None, 'Matrix transposition.')
 
     @property
     def I(self):
@@ -164,7 +153,7 @@ class MatrixExpr(Expr):
 
         See Also
         --------
-        as_mutable: returns MutableMatrix type
+        as_mutable: returns mutable Matrix type
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -174,28 +163,32 @@ class MatrixExpr(Expr):
         [0, 1, 0]
         [0, 0, 1]
         """
-        from sympy.matrices.immutable_matrix import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
     def as_mutable(self):
         """
-        Returns a dense Matrix with elements represented explicitly
+        Returns a dense, mutable matrix with elements represented explicitly
 
-        Returns an object of type MutableMatrix.
+        Examples
+        ========
 
-        See Also
-        --------
-        as_explicit: returns ImmutableMatrix
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
         I
+        >>> I.shape
+        (3, 3)
         >>> I.as_mutable()
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+
+        See Also
+        ========
+        as_explicit: returns ImmutableMatrix
         """
         return self.as_explicit().as_mutable()
 
@@ -290,6 +283,9 @@ class Identity(MatrixSymbol):
     def _eval_inverse(self):
         return self
 
+    def conjugate(self):
+        return self
+
     def _entry(self, i, j):
         if i==j:
             return S.One
@@ -315,6 +311,9 @@ class ZeroMatrix(MatrixSymbol):
 
     def _eval_trace(self):
         return S.Zero
+
+    def conjugate(self):
+        return self
 
     def _entry(self, i, j):
         return S.Zero

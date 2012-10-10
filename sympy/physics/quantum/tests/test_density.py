@@ -1,5 +1,5 @@
 from sympy import pprint, latex, symbols, S, log
-from sympy.matrices.matrices import Matrix
+from sympy.matrices import Matrix
 from sympy.core.trace import Tr
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity

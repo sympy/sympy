@@ -62,7 +62,7 @@ def transform(name, X, Y, g_correct=None, recursive=False):
         print "metric tensor g_{ij} specified by hand:"
         pprint(g)
     print "inverse metric tensor g^{ij}:"
-    g_inv = g.inv("ADJ")
+    g_inv = g.inv(method="ADJ")
     g_inv = g_inv.applyfunc(simplify)
     pprint(g_inv)
     print "det g_{ij}:"

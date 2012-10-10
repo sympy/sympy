@@ -2,11 +2,12 @@ from collections import defaultdict
 import random
 
 from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable # logical location
-from sympy.core.compatibility import \
-    product as cartes, combinations, combinations_with_replacement
-from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+# this is the logical location of these functions
+from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import (is_sequence, iterable,
+    product as cartes, combinations, combinations_with_replacement)
 
 def flatten(iterable, levels=None, cls=None):
     """

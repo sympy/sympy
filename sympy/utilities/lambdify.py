@@ -5,7 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import division
 from sympy.external import import_module
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, iterable
 
 import inspect
 
@@ -44,6 +44,7 @@ MPMATH_TRANSLATIONS = {
     #"uppergamma":"upper_gamma",
     "LambertW":"lambertw",
     "Matrix":"matrix",
+    "MutableDenseMatrix":"matrix",
     "conjugate":"conj",
     "dirichlet_eta":"altzeta",
     "Ei":"ei",
@@ -68,6 +69,7 @@ NUMPY_TRANSLATIONS = {
     "im":"imag",
     "ln":"log",
     "Matrix":"matrix",
+    "MutableDenseMatrix":"matrix",
     "Max":"amax",
     "Min":"amin",
     "oo":"inf",
@@ -79,9 +81,10 @@ MODULES = {
     "math"   : (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
     "mpmath" : (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy"  : (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
-    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  ("from sympy.functions import *",
-                                                              "from sympy.matrices import Matrix",
-                                                              "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  (
+        "from sympy.functions import *",
+        "from sympy.matrices import *",
+        "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
 
 def _import(module, reload="False"):
@@ -131,38 +134,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
-    Usage:
-
-    >>> from sympy import sqrt, sin
-    >>> from sympy.utilities.lambdify import lambdify
-    >>> from sympy.abc import x, y, z
-    >>> f = lambdify(x, x**2)
-    >>> f(2)
-    4
-    >>> f = lambdify((x,y,z), [z,y,x])
-    >>> f(1,2,3)
-    [3, 2, 1]
-    >>> f = lambdify(x, sqrt(x))
-    >>> f(4)
-    2.0
-    >>> f = lambdify((x,y), sin(x*y)**2)
-    >>> f(0, 5)
-    0.0
-
     If not specified differently by the user, SymPy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
-    functions - exactly in this order.
-    To change this behavior, the "modules" argument can be used.
-    It accepts:
+    functions - exactly in this order. To change this behavior, the "modules"
+    argument can be used. It accepts:
 
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
-     - lists that contain a mix of the arguments above. (Entries that are first
-        in the list have higher priority)
+     - lists that contain a mix of the arguments above, with higher priority
+       given to entries appearing first.
 
-    Examples
-    ========
+    Usage
+    =====
 
     (1) Use one of the provided modules:
 
@@ -201,22 +185,45 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
 
         >> lambda x: my_cool_function(x)
 
+    Examples
+    ========
+
+    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy import sqrt, sin, Matrix
+    >>> from sympy import Function
+    >>> from sympy.abc import x, y, z
+
+    >>> f = lambdify(x, x**2)
+    >>> f(2)
+    4
+    >>> f = lambdify((x, y, z), [z, y, x])
+    >>> f(1,2,3)
+    [3, 2, 1]
+    >>> f = lambdify(x, sqrt(x))
+    >>> f(4)
+    2.0
+    >>> f = lambdify((x, y), sin(x*y)**2)
+    >>> f(0, 5)
+    0.0
+    >>> f = lambdify((x, y), Matrix((x, x + y)).T)
+    >>> f(1, 2)
+    [1.0  3.0]
+    >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
+    >>> f(1, 2)
+    [1, 3]
+
     Functions present in `expr` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``
     attribute.  Usually you attach this using the
     ``implemented_function`` factory:
 
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
     >>> func(4)
     5
 
-    ``lambdify`` always prefers ``_imp_`` implementations to
-    implementations in other namespaces, unless the ``use_imps`` input
-    parameter is False.
+    ``lambdify`` always prefers ``_imp_`` implementations to implementations
+    in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
 
@@ -259,7 +266,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
 
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer)
-
     return eval(lstr, namespace)
 
 def _get_namespace(m):
@@ -301,10 +307,11 @@ def lambdastr(args, expr, printer=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     # Transform everything to strings.
+    from sympy.matrices import DeferredVector
     expr = lambdarepr(expr)
     if isinstance(args, str):
         pass
-    elif hasattr(args, "__iter__"):
+    elif iterable(args, exclude=DeferredVector):
         args = ",".join(str(a) for a in args)
     else:
         args = str(args)

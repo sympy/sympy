@@ -6,13 +6,13 @@ from sympy.printing.lambdarepr import lambdarepr
 x,y,z = symbols("x,y,z")
 
 def test_basic():
-    assert lambdarepr(x*y)=="x*y"
+    assert lambdarepr(x*y) == "x*y"
     assert lambdarepr(x+y) in ["y + x", "x + y"]
-    assert lambdarepr(x**y)=="x**y"
+    assert lambdarepr(x**y) == "x**y"
 
 def test_matrix():
     A = Matrix([[x,y],[y*x,z**2]])
-    assert lambdarepr(A)=="Matrix([[  x,    y],[x*y, z**2]])"
+    assert lambdarepr(A) == "MutableDenseMatrix([[  x,    y],[x*y, z**2]])"
 
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a

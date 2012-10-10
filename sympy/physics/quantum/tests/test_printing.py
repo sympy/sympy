@@ -31,6 +31,8 @@ from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.latex import latex
 
+MutableDenseMatrix = Matrix
+
 ENV = {}
 exec "from sympy import *" in ENV
 def sT(expr, string):
@@ -291,7 +293,7 @@ U \n\
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
-    sT(g4, "UGate(Tuple(Integer(0)),Matrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
+    sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
 def test_hilbert():
     h1 = HilbertSpace()

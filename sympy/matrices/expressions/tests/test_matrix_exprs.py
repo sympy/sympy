@@ -9,6 +9,7 @@ def test_transpose():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
+    Sq = MatrixSymbol('Sq', n, n)
 
     assert Transpose(A).shape == (m,n)
     assert Transpose(A*B).shape == (l,n)
@@ -20,10 +21,11 @@ def test_transpose():
 
     assert Transpose(Matrix([[1,2],[3,4]])) == Matrix([[1,3],[2,4]])
 
+    assert Transpose(Trace(Sq)) == Trace(Sq)
+
 def test_inverse():
     n, m, l = symbols('n m l', integer=True)
     A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', n, n)
     D = MatrixSymbol('D', n, n)
     E = MatrixSymbol('E', m, n)
@@ -90,6 +92,7 @@ def test_matexpr():
     assert (x*A).shape == A.shape
     assert (x*A).__class__ == MatMul
     assert 2*A - A - A == ZeroMatrix(*A.shape)
+    assert (A*B).shape == (n, l)
 
 def test_subs():
     n, m, l = symbols('n m l', integer=True)
@@ -239,6 +242,7 @@ def test_ZeroMatrix():
     assert A-A == ZeroMatrix(*A.shape)
 
     assert Transpose(Z) == ZeroMatrix(m, n)
+    assert Z.conjugate() == Z
 
 def test_Identity():
     n,m = symbols('n m', integer=True)
@@ -251,7 +255,7 @@ def test_Identity():
 
     assert Transpose(In) == In
     assert Inverse(In) == In
-
+    assert In.conjugate() == In
 
 def test_MatAdd():
     n, m = symbols('n m', integer=True)

@@ -28,7 +28,7 @@ access any SymPy module, or use this contens:
    galgebra/latex_ex/latex_ex.rst
    integrals/integrals.rst
    logic.rst
-   matrices.rst
+   matrices/index.rst
    mpmath/index.rst
    polys/index.rst
    printing.rst

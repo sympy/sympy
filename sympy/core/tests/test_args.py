@@ -1257,9 +1257,13 @@ def test_sympy__matrices__matrices__DeferredVector():
 def test_sympy__matrices__expressions__matexpr__MatrixBase():
     pass
 
-def test_sympy__matrices__immutable_matrix__ImmutableMatrix():
-    from sympy.matrices.immutable_matrix import ImmutableMatrix
+def test_sympy__matrices__immutable__ImmutableMatrix():
+    from sympy.matrices.immutable import ImmutableMatrix
     assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
+
+def test_sympy__matrices__immutable__ImmutableSparseMatrix():
+    from sympy.matrices.immutable import ImmutableSparseMatrix
+    assert _test_args(ImmutableSparseMatrix([[1,2],[3,4]]))
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
@@ -1466,7 +1470,7 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
 
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
-    from sympy.matrices.immutable_matrix import ImmutableMatrix
+    from sympy.matrices.immutable import ImmutableMatrix
     from sympy import Integer, Tuple
     assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1,0],[0,2]])))
 
