@@ -1,7 +1,7 @@
-from matexpr import MatrixExpr, ShapeError
-from sympy import Add, Basic
+from matexpr import MatrixExpr, ShapeError, ZeroMatrix
+from sympy import Add, Basic, sympify
 from sympy.rr import (rm_id, unpack, flatten, sort, condition, debug, exhaust,
-        do_one)
+        do_one, glom)
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -60,38 +60,20 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
+factor_of = lambda arg: arg.as_coeff_mmul()[0]
+matrix_of = lambda arg: arg.as_coeff_mmul()[1]
+def combine(cnt, mat):
+    from matmul import MatMul
+    if cnt == 1:
+        return mat
+    else:
+        return cnt * mat
 
-def newadd(*args):
-    return Basic.__new__(MatAdd, *args)
-
-def condition_matadd(rule):
-    is_matadd = lambda x: x.is_Matrix and x.is_MatAdd
-    return condition(is_matadd, rule)
-
-def glom_MatAdd(expr):
-    def counts(arg):
-        if arg.is_MatMul:
-            return arg.as_coeff_mmul()
-        return 1, arg
-    freqs = {}
-    for arg in expr.args:
-        count, m = counts(arg)
-        freqs[m] = freqs.get(m, 0) + count
-
-    # If it is the same expr then return the old one
-    if all(v==1 for v in freqs.values()):
-        return expr
-    args = [m if c == 1 else m*c for m, c in freqs.items()]
-    if set(args) == set(expr.args):
-        return expr
-
-    return Basic.__new__(MatAdd, *args)
-
-
-rules = (rm_id(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
+rules = (rm_id(lambda x: x == 0 or isinstance(x, ZeroMatrix)),
          unpack,
          flatten,
-         glom_MatAdd,
+         glom(matrix_of, factor_of, combine),
          sort(str))
 
-canonicalize = exhaust(condition_matadd(do_one(*rules)))
+canonicalize = exhaust(condition(lambda x: isinstance(x, MatAdd),
+                                 do_one(*rules)))

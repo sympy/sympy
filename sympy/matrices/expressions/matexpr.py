@@ -230,6 +230,9 @@ class MatrixExpr(Basic):
     def canonicalize(self):
         return self
 
+    def as_coeff_mmul(self):
+        return 1, self
+
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
