@@ -497,8 +497,10 @@ def test_issue_2033():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
      set([
-     (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
-     (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))])
+        (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
+        -sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
+        (sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
+        sqrt(r*tan(t)**2/(tan(t)**2 + 1)))])
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -969,7 +971,11 @@ def test_exclude():
         Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
         R: Vplus/(C*s*(V1 - 2*Vplus))}]
 
-
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
+
+def test_issue3429():
+    assert len(solve([
+    327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
+    895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000], y, x)) == 4

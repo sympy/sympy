@@ -1315,21 +1315,9 @@ def _solve_system(exprs, symbols, **flags):
                 # we don't know here if the symbols provided were given
                 # or not, so let solve resolve that. A list of dictionaries
                 # is going to always be returned from here.
+                #
+                # We do not check the solution obtained from polys, either.
                 result = [dict(zip(solved_syms, r)) for r in result]
-
-                checked = []
-                warning = flags.get('warn', False)
-                for r in result:
-                    check = checksol(polys, r, **flags)
-                    if check is not False:
-                        if check is None and warning:
-                            print(filldedent("""
-                                \tWarning: could not verify solution %s.""" %
-                                result))
-                        # if it's a solution to any denom then exclude
-                        if not dens or not checksol(dens, r, **flags):
-                            checked.append(r)
-                result = checked
 
     if failed:
         # For each failed equation, see if we can solve for one of the
