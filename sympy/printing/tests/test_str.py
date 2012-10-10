@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
     Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet)
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -495,3 +495,6 @@ def test_Tr():
     A, B = symbols('A B', commutative=False)
     t = Tr(A*B)
     assert str(t) == 'Tr(A*B)'
+
+def test_issue3288():
+    assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'

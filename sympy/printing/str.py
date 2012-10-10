@@ -3,6 +3,7 @@ A Printer for generating readable representation of most sympy classes.
 """
 
 from sympy.core import S, Rational, Pow, Basic, Mul
+from sympy.core.mul import _keep_coeff
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -224,7 +225,8 @@ class StrPrinter(Printer):
         prec = precedence(expr)
 
         if _coeff_isneg(expr):
-            expr = -expr
+            c, e = expr.as_coeff_Mul()
+            expr = _keep_coeff(-c, e)
             sign = "-"
         else:
             sign = ""
