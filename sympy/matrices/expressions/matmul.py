@@ -1,7 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from sympy.core import Mul, Add, Basic, sympify
-from sympy.rr import (rm_id, unpack, canon, condition, debug, flatten, chain,
-        exhaust, do_one)
+from sympy.core import Mul, Add, Basic
+from sympy import sympify
+from sympy.rr import rm_id, unpack, condition, debug, flatten, exhaust, do_one
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
@@ -140,5 +140,3 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, MatMul),
                                  do_one(*rules)))
-
-from matadd import MatAdd

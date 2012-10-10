@@ -1,7 +1,7 @@
-from matexpr import MatrixExpr, ShapeError, ZeroMatrix
-from sympy import Add, S, Basic
-from sympy.rr import (rm_id, unpack, flatten, sort, canon, condition, glom,
-        debug, exhaust, chain, do_one)
+from matexpr import MatrixExpr, ShapeError
+from sympy import Add, Basic
+from sympy.rr import (rm_id, unpack, flatten, sort, condition, debug, exhaust,
+        do_one)
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -95,5 +95,3 @@ rules = (rm_id(lambda x: x == 0 or x.is_Matrix and x.is_ZeroMatrix),
          sort(str))
 
 canonicalize = exhaust(condition_matadd(do_one(*rules)))
-
-from matmul import MatMul

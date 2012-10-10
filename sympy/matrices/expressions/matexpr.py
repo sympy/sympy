@@ -1,4 +1,4 @@
-from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple, Integer
+from sympy import Symbol, sympify, Tuple, Integer
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority

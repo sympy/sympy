@@ -1,11 +1,12 @@
 from matexpr import MatrixExpr, ZeroMatrix, Identity
 from matmul import MatMul
 from matadd import MatAdd
+from matpow import MatPow
 from transpose import Transpose
 from trace import Trace
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
-from sympy import Tuple, Basic, sympify, FiniteSet, Add
+from sympy import Tuple, Basic, Add
 
 
 class BlockMatrix(MatrixExpr):
@@ -288,7 +289,6 @@ def block_collapse(expr):
     >>> print block_collapse(C*B)
     [X, Z + Z*Y]
     """
-    from sympy import MatAdd, MatMul, MatPow
     rule = canon(typed({MatAdd: do_one(bc_matadd, bc_block_plus_ident),
                         MatMul: do_one(bc_matmul, bc_dist),
                         MatPow: bc_matpow,
