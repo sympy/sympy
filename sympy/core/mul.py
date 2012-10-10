@@ -1535,9 +1535,9 @@ def _keep_coeff(coeff, factors, clear=True):
             factors, coeff = coeff, factors
         else:
             return coeff*factors
-    if coeff == 1:
+    if coeff is S.One:
         return factors
-    elif coeff == -1: # don't keep sign?
+    elif coeff is S.NegativeOne: # don't keep sign?
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
