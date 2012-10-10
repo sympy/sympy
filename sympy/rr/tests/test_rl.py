@@ -8,10 +8,14 @@ def test_rm_id():
     assert rmzeros(Basic(2, 1)) == Basic(2, 1)
 
 def test_glom():
-    conglomerate = glom(lambda num, x: num * x)
-    assert conglomerate(Basic(1, 2, 2)) == Basic(1, 4)
-    conglomerate = glom(lambda num, x: x ** num)
-    assert conglomerate(Basic(1, 3, 3)) == Basic(1, 9)
+    from sympy import Add
+    from sympy.abc import x
+    key     = lambda x: x.as_coeff_Mul()[1]
+    count   = lambda x: x.as_coeff_Mul()[0]
+    newargs = lambda cnt, arg: cnt * arg
+    rl = glom(key, count, newargs)
+
+    assert rl(Add(x, -x, 3*x, 2, 3, evaluate=False)) == 3*x + 5
 
 def test_flatten():
     assert flatten(Basic(1, 2, Basic(3, 4))) == Basic(1, 2, 3, 4)
