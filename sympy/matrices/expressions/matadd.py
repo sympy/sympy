@@ -1,5 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy import Add, S, Basic
+from sympy.rr import (rm_id, unpack, flatten, sort, canon, condition, glom,
+        debug, exhaust, chain, do_one)
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -58,8 +60,6 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
-from sympy.rr import (rm_id, unpack, flatten, sort, canon, condition, glom,
-        debug, exhaust, chain, do_one)
 
 def newadd(*args):
     return Basic.__new__(MatAdd, *args)

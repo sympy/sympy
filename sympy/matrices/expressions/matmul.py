@@ -1,5 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic, sympify
+from sympy.rr import (rm_id, unpack, canon, condition, debug, flatten, chain,
+        exhaust, do_one)
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
@@ -96,8 +98,6 @@ def validate(*matrices):
 
 # Rules
 
-from sympy.rr import (rm_id, unpack, canon, condition, debug, flatten, chain,
-        exhaust, do_one)
 
 def newmul(*args):
     if args[0] == 1:
