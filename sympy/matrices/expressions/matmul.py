@@ -1,7 +1,8 @@
 from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic
 from sympy import sympify
-from sympy.rr import rm_id, unpack, condition, debug, flatten, exhaust, do_one
+from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
+        do_one)
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions

@@ -1,4 +1,4 @@
-from sympy.rr.rl import rm_id, glom, flatten, unpack, sort, distribute
+from sympy.rules.rl import rm_id, glom, flatten, unpack, sort, distribute
 from sympy import Basic
 
 def test_rm_id():

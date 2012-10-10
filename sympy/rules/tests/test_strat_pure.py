@@ -1,4 +1,4 @@
-from sympy.rr.strat_pure import null_safe
+from sympy.rules.strat_pure import null_safe
 
 def test_null_safe():
     def rl(expr):

@@ -1,4 +1,4 @@
-from sympy.rr.traverse import top_down, bottom_up
+from sympy.rules.traverse import top_down, bottom_up
 from sympy import Basic, symbols, Symbol, S
 
 def test_bottom_up():

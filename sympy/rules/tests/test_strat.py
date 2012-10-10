@@ -1,4 +1,4 @@
-from sympy.rr import typed, rm_id, do_one
+from sympy.rules import typed, rm_id, do_one
 from sympy import Basic
 
 def test_typed():

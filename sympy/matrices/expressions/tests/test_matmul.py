@@ -1,7 +1,7 @@
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack)
 from sympy import symbols, MatrixSymbol, Identity, Inverse, ZeroMatrix
-from sympy.rr import null_safe
+from sympy.rules import null_safe
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)

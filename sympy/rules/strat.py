@@ -17,7 +17,7 @@ def typed(ruletypes):
     inputs:
         ruletypes -- a dict mapping {Type: rule}
 
-    >>> from sympy.rr import rm_id, typed
+    >>> from sympy.rules import rm_id, typed
     >>> from sympy import Add, Mul
     >>> rm_zeros = rm_id(lambda x: x==0)
     >>> rm_ones  = rm_id(lambda x: x==1)

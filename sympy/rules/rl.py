@@ -7,7 +7,7 @@ def rm_id(isid):
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
 
-    >>> from sympy.rr import rm_id, typed
+    >>> from sympy.rules import rm_id, typed
     >>> from sympy import Basic
     >>> remove_zeros = rm_id(lambda x: x==0)
     >>> remove_zeros(Basic(1, 0, 2))
@@ -32,7 +32,7 @@ def rm_id(isid):
 def frequencies(coll):
     """ Count the number of times an element occurs in a collection
 
-    >>> from sympy.rr.rl import frequencies
+    >>> from sympy.rules.rl import frequencies
     >>> frequencies("aabbc")
     {'a': 2, 'b': 2, 'c': 1}
     """
@@ -44,7 +44,7 @@ def frequencies(coll):
 def groupby(coll, key):
     """ Group elements in a collection by a key function
 
-    >>> from sympy.rr.rl import groupby
+    >>> from sympy.rules.rl import groupby
     >>> groupby((1,2,3,4), lambda x: x%2)
     {0: (2, 4), 1: (1, 3)}
     """
@@ -56,7 +56,7 @@ def groupby(coll, key):
 def glom(key, count, combine):
     """ Create a rule to conglomerate identical args
 
-    >>> from sympy.rr import glom
+    >>> from sympy.rules import glom
     >>> from sympy import Add
     >>> from sympy.abc import x
 
@@ -91,7 +91,7 @@ def glom(key, count, combine):
 def unpack(expr):
     """ Rule to unpack singleton args
 
-    >>> from sympy.rr import unpack
+    >>> from sympy.rules import unpack
     >>> from sympy import Basic
     >>> unpack(Basic(2))
     2
@@ -115,7 +115,7 @@ def flatten(expr):
 def sort(key):
     """ Create a rule to sort by a key function
 
-    >>> from sympy.rr import sort
+    >>> from sympy.rules import sort
     >>> from sympy import Basic
     >>> sort_rl = sort(str)
     >>> sort_rl(Basic(3, 1, 2))
@@ -131,7 +131,7 @@ def distribute(A, B):
 
     where A, B are container types
 
-    >>> from sympy.rr import distribute
+    >>> from sympy.rules import distribute
     >>> from sympy import Add, Mul, symbols
     >>> x, y = symbols('x,y')
     >>> dist = distribute(Mul, Add)

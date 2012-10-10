@@ -7,6 +7,7 @@ from trace import Trace
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, Add
+from sympy.rules import typed, canon, debug, do_one
 
 
 class BlockMatrix(MatrixExpr):
@@ -262,7 +263,6 @@ class BlockDiagMatrix(BlockMatrix):
         else:
             return BlockMatrix._blockadd(self, other)
 
-from sympy.rr import typed, canon, debug, do_one
 def block_collapse(expr):
     """Evaluates a block matrix expression
 

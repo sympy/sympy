@@ -1,7 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy import Add, Basic, sympify
-from sympy.rr import (rm_id, unpack, flatten, sort, condition, debug, exhaust,
-        do_one, glom)
+from sympy.rules import (rm_id, unpack, flatten, sort, condition, debug,
+        exhaust, do_one, glom)
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
