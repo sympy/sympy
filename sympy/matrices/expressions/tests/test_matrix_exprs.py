@@ -319,3 +319,6 @@ def test_dense_conversion():
 
 def test_free_symbols():
     assert (C*D).free_symbols == set((C, D))
+
+def test_zero_matmul():
+    assert isinstance(S.Zero * MatrixSymbol('X', 2, 2), MatrixExpr)
