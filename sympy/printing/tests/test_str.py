@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor)
 from sympy.core import Expr
@@ -251,7 +251,6 @@ def test_Rational():
     n3 = Rational(2,4)
     n4 = Rational(2,-4)
     n5 = Rational(0)
-    n6 = Rational(1)
     n7 = Rational(3)
     n8 = Rational(-3)
     assert str(n1*n2) == "1/12"
@@ -474,8 +473,8 @@ def test_PrettyPoly():
     assert sstr(R.convert(x + y)) == sstr(x + y)
 
 def test_categories():
-    from sympy.categories import (Object, Morphism, NamedMorphism,
-                                  IdentityMorphism, Category)
+    from sympy.categories import (Object, NamedMorphism,
+        IdentityMorphism, Category)
 
     A = Object("A")
     B = Object("B")

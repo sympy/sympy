@@ -1,6 +1,5 @@
 """A module providing information about the necessity of brackets"""
 
-from sympy import S
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types

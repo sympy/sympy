@@ -2,7 +2,6 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float
 from sympy.printing.mathml import mathml, MathMLPrinter
-from xml.dom.minidom import parseString
 
 from sympy.utilities.pytest import raises
 
@@ -207,7 +206,6 @@ def test_c2p():
     """This tests some optional routines that depend on libxslt1 (which is optional)"""
     try:
         from sympy.modules.mathml import c2p
-        assert c2p(f.mathml) == result
     except ImportError:
         pass
 
