@@ -205,9 +205,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     >>> f = lambdify((x, y), sin(x*y)**2)
     >>> f(0, 5)
     0.0
-    >>> f = lambdify((x, y), Matrix((x, x + y)).T)
-    >>> f(1, 2)
-    [1.0  3.0]
     >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> f(1, 2)
     [1, 3]
