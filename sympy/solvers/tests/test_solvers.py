@@ -976,6 +976,7 @@ def test_high_order_roots():
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
 def test_issue3429():
-    assert len(solve([
+    eqs = [
     327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
-    895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000], y, x)) == 4
+    895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
+    assert len(solve(eqs, y, x)) == len(solve(eqs, y, x, manual=True)) == 4

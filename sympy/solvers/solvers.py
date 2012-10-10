@@ -260,7 +260,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif val.is_Rational:
             return val == 0
         if numerical and not val.free_symbols:
-            return abs(val.n(chop=True)) < 1e-9
+            return abs(val.n(18).n(12, chop=True)) < 1e-9
         was = val
 
     if flags.get('warn', False):
