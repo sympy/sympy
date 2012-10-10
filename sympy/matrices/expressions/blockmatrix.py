@@ -44,15 +44,10 @@ class BlockMatrix(MatrixExpr):
         obj = Basic.__new__(cls, mat)
         return obj
 
-
-    @property
-    def _mat(self):
-        return self.args[0]
-
     @property
     def shape(self):
         numrows = numcols = 0
-        M = self._mat
+        M = self.blocks
         for i in range(M.shape[0]):
             numrows += M[i, 0].shape[0]
         for i in range(M.shape[1]):
@@ -61,11 +56,11 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def blockshape(self):
-        return self._mat.shape
+        return self.blocks.shape
 
     @property
     def blocks(self):
-        return self._mat
+        return self.args[0]
 
     @property
     def rowblocksizes(self):
@@ -86,20 +81,20 @@ class BlockMatrix(MatrixExpr):
         if  (other.is_Matrix and other.is_BlockMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockMatrix(self._mat*other._mat)
+            return BlockMatrix(self.blocks*other.blocks)
 
         return MatrixExpr.__mul__(self, other)
 
     def _blockadd(self, other):
         if   (other.is_Matrix and other.is_BlockMatrix
                 and self.structurally_equal(other)):
-            return BlockMatrix(self._mat + other._mat)
+            return BlockMatrix(self.blocks + other.blocks)
 
         return MatrixExpr.__add__(self, other)
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self._mat]
+        matrices = [Transpose(matrix) for matrix in self.blocks]
         # Make a copy
         M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
@@ -108,7 +103,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self._mat[i, i])
+            return Add(*[Trace(self.blocks[i, i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError(
             "Can't perform trace of irregular blockshape")
@@ -201,9 +196,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i == j and not self._mat[i, j].is_Identity:
+                if i==j and not self.blocks[i, j].is_Identity:
                     return False
-                if i != j and not self._mat[i, j].is_ZeroMatrix:
+                if i!=j and not self.blocks[i, j].is_ZeroMatrix:
                     return False
         return True
 
@@ -215,7 +210,7 @@ class BlockMatrix(MatrixExpr):
         if self == other:
             return True
         if (self.is_BlockMatrix and other.is_BlockMatrix and
-                self._mat == other._mat):
+                self.blocks == other.blocks):
             return True
         return super(BlockMatrix, self).equals(other)
 
