@@ -1,6 +1,7 @@
 from sympy.matrices.expressions.blockmatrix import (bc_matmul,
-        bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd)
-from sympy.matrices.expressions import MatrixSymbol, Identity
+        bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
+        bc_matpow)
+from sympy.matrices.expressions import MatrixSymbol, Identity, MatMul
 from sympy import symbols, Matrix
 
 n,m,l,k,o,p = symbols('n,m,l,k,o,p')
@@ -34,6 +35,11 @@ def test_bc_dist_diag():
     X = BlockDiagMatrix(A,B,C)
 
     assert bc_dist(X+X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
+
+def test_bc_matpow():
+    A = MatrixSymbol('A', n, n)
+    assert bc_matpow(A**2) == MatMul(A, A, simplify=False)
+    assert bc_matpow(A**n) == A**n
 
 def test_block_plus_ident():
     A = MatrixSymbol('A', n, n)

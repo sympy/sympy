@@ -345,4 +345,7 @@ def bc_matmul(expr):
     return MatMul(factor, *matrices)
 
 def bc_matpow(expr):
-    return MatMul(*([expr.base]*expr.exp))
+    if expr.exp.is_number and expr.exp.is_integer:
+        return MatMul(*([expr.base]*expr.exp))
+    return expr
+
