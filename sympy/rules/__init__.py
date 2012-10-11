@@ -16,7 +16,7 @@ the work of mathematical programming from algorithmic programming.
 Submodules
 
 rules.rl         - some fundamental rules
-rules.strat_pure - strategies that have nothing to do with SymPy
+rules.strat_pure - generic non-SymPy specific strategies
 rules.traverse   - strategies that traverse a SymPy AST
 rules.strat      - some conglomerate strategies that do depend on SymPy
 """
