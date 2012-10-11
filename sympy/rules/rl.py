@@ -68,7 +68,7 @@ def glom(key, count, combine):
     >>> rl(Add(x, -x, 3*x, 2, 3, evaluate=False))
     3*x + 5
 
-    # Wait, how are key, count and combine supposed to work?
+    Wait, how are key, count and combine supposed to work?
     >>> key(2*x)
     x
     >>> count(2*x)
