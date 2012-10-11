@@ -324,7 +324,7 @@ def bc_block_plus_ident(expr):
     return expr
 
 def bc_dist(expr):
-    """ Turn  -[X, Y] into [-X, -Y] """
+    """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
     if factor != 1 and mat.is_BlockMatrix:
         B = mat.blocks
