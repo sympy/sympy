@@ -292,13 +292,11 @@ def block_collapse(expr):
     try:                    return result.canonicalize()
     except AttributeError:  return result
 
-#[BlockMatrix]
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
         return expr.blocks[0,0]
     return expr
 
-#[MatAdd]
 def bc_matadd(expr):
     nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
     blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
@@ -325,7 +323,6 @@ def bc_block_plus_ident(expr):
 
     return expr
 
-#[MatMul]
 def bc_dist(expr):
     """ Turn  -[X, Y] into [-X, -Y] """
     factor, mat = expr.as_coeff_mmul()
@@ -347,6 +344,5 @@ def bc_matmul(expr):
             i+=1
     return MatMul(factor, *matrices)
 
-#[MatPow]
 def bc_matpow(expr):
     return MatMul(*([expr.base]*expr.exp))
