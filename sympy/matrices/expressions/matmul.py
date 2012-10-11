@@ -113,8 +113,8 @@ def any_zeros(mul):
     return mul
 
 def xxinv(mul):
-    from sympy.matrices.expressions import Inverse
     """ Y * X * X.I -> Y """
+    from sympy.matrices.expressions import Inverse
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         if X.is_square and Y.is_square and X == Inverse(Y):
@@ -123,6 +123,16 @@ def xxinv(mul):
     return mul
 
 def remove_ids(mul):
+    """ Remove Identities from a MatMul
+
+    This is a specialized version of sympy.rules.rm_id.
+    This is necesssary because MatMul may contain both MatrixExprs and Exprs
+    as args.
+
+    See Also
+    --------
+        sympy.rules.rm_id
+    """
     factor, matrices = mul.as_coeff_matrices()
     if any(m.is_Identity for m in matrices) and len(matrices) != 1:
         non_ids = [x for x in matrices if not x.is_Identity]
