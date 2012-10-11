@@ -1,8 +1,8 @@
-from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
-    sqrt, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
-    S, sympify, sstr, Wild, solve_linear, Integral,
-    And, Or, Lt, Gt, Q, re, im, expand, tan, Poly, cosh, sinh, atanh,
-    atan, Dummy, Float, tanh)
+from sympy import (
+    Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
+    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
+    asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
+    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,\
@@ -980,3 +980,9 @@ def test_issue3429():
     327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
     895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
     assert len(solve(eqs, y, x)) == len(solve(eqs, y, x, manual=True)) == 4
+
+def test_overdetermined():
+    eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
+    assert solve(eqs, x) == [(S.Half,)]
+    assert solve(eqs, x, manual=True) == [(S.Half,)]
+    assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]

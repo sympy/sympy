@@ -1285,7 +1285,7 @@ def _solve_system(exprs, symbols, **flags):
                     solved_syms = []
 
         else:
-            if len(symbols) != len(polys):
+            if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
                 from sympy.core.compatibility import set_union
 
@@ -1352,20 +1352,31 @@ def _solve_system(exprs, symbols, **flags):
                 key=default_sort_key))
         for eq in failed:
             newresult = []
+            bad_results = []
             got_s = None
             u = Dummy()
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
-                b = checksol(u, u, eq2, minimal=True)
-                if b is not None:
-                    if b:
-                        newresult.append(r)
-                    continue
+                # if check is True then we see if it satisfies this
+                # equation, otherwise we just accept it
+                if check and r:
+                    b = checksol(u, u, eq2, minimal=True)
+                    if b is not None:
+                        # this solution is sufficient to know whether
+                        # it is valid or not so we either accept or
+                        # reject it, then continue
+                        if b:
+                            newresult.append(r)
+                        else:
+                            bad_results.append(r)
+                        continue
                 # search for a symbol amongst those available that
                 # can be solved for
                 ok_syms = _ok_syms(eq2, sort=True)
                 if not ok_syms:
+                    if r:
+                        newresult.append(r)
                     break # skip as it's independent of desired symbols
                 for s in ok_syms:
                     try:
@@ -1378,8 +1389,8 @@ def _solve_system(exprs, symbols, **flags):
                     if do_simplify:
                         flags['simplify'] = False # for checksol's sake
                     for sol in soln:
-                        # check that it satisfies *other* equations
                         if check:
+                            # check that it satisfies *other* equations
                             ok = False
                             for p in polys:
                                 if checksol(p, s, sol, **flags) is False:
@@ -1388,6 +1399,7 @@ def _solve_system(exprs, symbols, **flags):
                                 ok = True
                             if not ok:
                                 continue
+                            # check that it doesn't set any denominator to 0
                             if any(checksol(d, s, sol, **flags) for d in dens):
                                 continue
                         # update existing solutions with this new one
@@ -1406,6 +1418,8 @@ def _solve_system(exprs, symbols, **flags):
             if got_s:
                 result = newresult
                 solved_syms.add(got_s)
+            for b in bad_results:
+                result.remove(b)
         # if there is only one result should we return just the dictionary?
     return result
 
