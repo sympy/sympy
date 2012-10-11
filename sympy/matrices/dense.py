@@ -309,16 +309,19 @@ class DenseMatrix(MatrixBase):
             for block in blocks:
                 r.append(block.inv(method=method, iszerofunc=iszerofunc))
             return diag(*r)
+
+        M = self.as_mutable()
         if method == "GE":
-            return self.inverse_GE(iszerofunc=iszerofunc)
+            rv = M.inverse_GE(iszerofunc=iszerofunc)
         elif method == "LU":
-            return self.inverse_LU(iszerofunc=iszerofunc)
+            rv = M.inverse_LU(iszerofunc=iszerofunc)
         elif method == "ADJ":
-            return self.inverse_ADJ(iszerofunc=iszerofunc)
+            rv = M.inverse_ADJ(iszerofunc=iszerofunc)
         else:
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
+        return self._new(rv)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -371,7 +374,7 @@ class DenseMatrix(MatrixBase):
             if isinstance(other, Matrix):
                 return self._mat == other._mat
             elif isinstance(other, MatrixBase):
-                return self._mat == other.as_mutable()._mat
+                return self._mat == Matrix(other)._mat
         except AttributeError:
             return False
 
@@ -481,6 +484,32 @@ class DenseMatrix(MatrixBase):
         if len(self) != rows*cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
         return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
+
+    def as_mutable(self):
+        """
+        Returns a mutable version of this matrix
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1, 1] = 5 # Can set values in Y
+        >>> Y
+        [1, 2]
+        [3, 5]
+        """
+        cls = Matrix
+        if self.rows:
+            return cls(self.tolist())
+        return cls(0, self.cols, [])
+
+    def as_immutable(self):
+        """
+        Returns an Immutable version of this Matrix
+        """
+        from immutable import ImmutableMatrix as cls
+        if self.rows:
+            return cls(self.tolist())
+        return cls(0, self.cols, [])
 
     ############################
     # Mutable matrix operators #

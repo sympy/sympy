@@ -491,7 +491,7 @@ class SparseMatrix(MatrixBase):
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        return MutableSparseMatrix(rhi -rlo, chi - clo,
+        return self._new(rhi -rlo, chi - clo,
             lambda i, j: self[i + rlo, j + clo])
 
     def cross(self, b):
@@ -504,7 +504,7 @@ class SparseMatrix(MatrixBase):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product")
         else:
-            return MutableSparseMatrix(1, 3, ((self[1]*b[2] - self[2]*b[1]),
+            return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
@@ -525,14 +525,6 @@ class SparseMatrix(MatrixBase):
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})
-
-    @classmethod
-    def eye(cls, n):
-        n = int(n)
-        tmp = cls.zeros(n)
-        for i in range(tmp.rows):
-            tmp[i, i] = 1
-        return tmp
 
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
@@ -735,6 +727,7 @@ class SparseMatrix(MatrixBase):
                             break
                     C[j, j] -= summ
                     C[j, j] = sqrt(C[j, j])
+
         return C
 
     def _LDL_sparse(self):
@@ -783,13 +776,12 @@ class SparseMatrix(MatrixBase):
         for i, j, v in self.row_list():
             if i > j:
                 rows[i].append((j, v))
-        X = MutableSparseMatrix(rhs.rows, 1, rhs._smat
-            if isinstance(rhs, SparseMatrix) else rhs._mat)
+        X = rhs.copy()
         for i in range(self.rows):
             for j, v in rows[i]:
                 X[i, 0] -= v * X[j, 0]
             X[i, 0] /= self[i, i]
-        return X
+        return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
         """
@@ -800,18 +792,17 @@ class SparseMatrix(MatrixBase):
         for i, j, v in self.row_list():
             if i < j:
                 rows[i].append((j, v))
-        X = MutableSparseMatrix(rhs.rows, 1, rhs._smat
-            if isinstance(rhs, SparseMatrix) else rhs._mat)
+        X = rhs.copy()
         for i in range(self.rows -1, -1, -1):
             rows[i].reverse()
             for j, v in rows[i]:
                 X[i, 0] -= v * X[j, 0]
             X[i, 0] /= self[i, i]
-        return X
+        return self._new(X)
 
     def _diagonal_solve(self, rhs):
         "Diagonal solve."
-        return MutableSparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0]/self[i, i])
+        return self._new(self.rows, 1, lambda i, j: rhs[i, 0]/self[i, i])
 
     def _cholesky_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
@@ -857,11 +848,11 @@ class SparseMatrix(MatrixBase):
         if not self.is_symmetric():
             raise ValueError('Cholesky decomposition applies only to '
                 'symmetric matrices.')
-        M = self._cholesky_sparse()
+        M = self.as_mutable()._cholesky_sparse()
         if M.has(nan) or M.has(oo):
             raise ValueError('Cholesky decomposition applies only to '
                 'positive-definite matrices')
-        return M
+        return self._new(M)
 
     def LDLdecomposition(self):
         """
@@ -891,11 +882,12 @@ class SparseMatrix(MatrixBase):
         if not self.is_symmetric():
             raise ValueError('LDL decomposition applies only to '
                 'symmetric matrices.')
-        L, D = self._LDL_sparse()
+        L, D = self.as_mutable()._LDL_sparse()
         if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
             raise ValueError('LDL decomposition applies only to '
                 'positive-definite matrices')
-        return L, D
+
+        return self._new(L), self._new(D)
 
     def solve_least_squares(self, rhs, method='LDL'):
         """Return the least-square fit to the data.
@@ -986,24 +978,25 @@ class SparseMatrix(MatrixBase):
 
         """
         sym = self.is_symmetric()
-        I = self.eye(self.rows)
+        M = self.as_mutable()
+        I = M.eye(M.rows)
         if not sym:
-            t = self.T
-            r1 = self[0, :]
-            self = t*self
+            t = M.T
+            r1 = M[0, :]
+            M = t*M
             I = t*I
         method = kwargs.get('method', 'LDL')
         if method in "LDL":
-            solve = self._LDL_solve
+            solve = M._LDL_solve
         elif method == "CH":
-            solve = self._cholesky_solve
+            solve = M._cholesky_solve
         else:
             raise NotImplementedError('Method may be "CH" or "LDL", not %s.' % method)
-        rv = reduce(lambda x, y: x.row_join(y), [solve(I[:, i]) for i in range(I.cols)])
+        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
         if not sym:
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
-        return rv
+        return self._new(rv)
 
     def __eq__(self, other):
         try:
@@ -1018,6 +1011,32 @@ class SparseMatrix(MatrixBase):
 
     def __ne__(self, other):
         return not self == other
+
+    def as_mutable(self):
+        """
+        Returns a mutable version of this matrix
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1, 1] = 5 # Can set values in Y
+        >>> Y
+        [1, 2]
+        [3, 5]
+        """
+        cls = MutableSparseMatrix
+        if self.rows:
+            return cls(self.tolist())
+        return cls(0, self.cols, [])
+
+    def as_immutable(self):
+        """
+        Returns an Immutable version of this Matrix
+        """
+        from immutable import ImmutableSparseMatrix as cls
+        if self.rows:
+            return cls(self.tolist())
+        return cls(0, self.cols, [])
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):

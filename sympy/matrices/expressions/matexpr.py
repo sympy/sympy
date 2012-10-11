@@ -3,6 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
+from sympy.matrices.dense import MutableDenseMatrix
 
 class MatrixExpr(Expr):
     """ Matrix Expression Class
@@ -151,9 +152,8 @@ class MatrixExpr(Expr):
 
         Returns an object of type ImmutableMatrix.
 
-        See Also
-        --------
-        as_mutable: returns mutable Matrix type
+        Examples
+        ========
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -162,6 +162,10 @@ class MatrixExpr(Expr):
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+
+        See Also
+        ========
+        as_mutable: returns mutable Matrix type
         """
         from sympy.matrices.immutable import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]

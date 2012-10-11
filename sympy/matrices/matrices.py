@@ -370,32 +370,6 @@ class MatrixBase(object):
             raise AttributeError
         return self.H * mgamma(0)
 
-    def as_mutable(self):
-        """
-        Returns a mutable version of this matrix
-
-        >>> from sympy import ImmutableMatrix
-        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
-        >>> Y = X.as_mutable()
-        >>> Y[1, 1] = 5 # Can set values in Y
-        >>> Y
-        [1, 2]
-        [3, 5]
-        """
-        from dense import Matrix
-        if self.rows:
-            return Matrix(self.tolist())
-        return Matrix(0, self.cols, [])
-
-    def as_immutable(self):
-        """
-        Returns an Immutable version of this Matrix
-        """
-        from immutable import ImmutableMatrix as Matrix
-        if self.rows:
-            return Matrix(self.tolist())
-        return Matrix(0, self.cols, [])
-
     def __array__(self):
         from dense import matrix2numpy
         return matrix2numpy(self)
@@ -1788,11 +1762,13 @@ class MatrixBase(object):
 
     @classmethod
     def eye(cls, n):
-        """Returns the identity matrix of size n."""
-        tmp = cls.zeros(n)
-        for i in range(tmp.rows):
-            tmp[i, i] = S.One
-        return tmp
+        """Returns the identity matrix of size n.
+
+        See Also
+        ========
+        sympy.matrices.dense.eye"""
+        from dense import eye
+        return eye(n, cls)
 
     @property
     def is_square(self):
@@ -2410,15 +2386,16 @@ class MatrixBase(object):
         inverse_LU
         inverse_ADJ
         """
+        from dense import Matrix
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        big = self.row_join(self.eye(self.rows))
+        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
-        return red[:, big.rows:]
+        return self._new(red[:, big.rows:])
 
     def inverse_ADJ(self, iszerofunc=_iszero):
         """
@@ -2852,7 +2829,7 @@ class MatrixBase(object):
                 return self.applyfunc( item_doit )
             return doit
         else:
-            raise AttributeError("Matrix has no attribute %s." % attr)
+            raise AttributeError("%s has no attribute %s." % (self.__class__.__name__, attr))
 
     def integrate(self, *args):
         """

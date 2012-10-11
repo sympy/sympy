@@ -1,5 +1,5 @@
 from matrices import MatrixBase
-from dense import DenseMatrix
+from dense import DenseMatrix, MutableDenseMatrix
 from sparse import MutableSparseMatrix as SparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
@@ -50,10 +50,11 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     __getitem__ = DenseMatrix.__getitem__
 
+    def as_mutable(self):
+        return MutableDenseMatrix(self)
+
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
-
-    as_mutable = MatrixBase.as_mutable
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate

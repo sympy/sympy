@@ -3,10 +3,11 @@ from sympy import (symbols, I, Symbol, Rational, Float, cos, sin, exp, sqrt,
     Pow, simplify, Min, Max, Abs, PurePoly, signsimp)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
-from sympy.matrices import (ImmutableMatrix, SparseMatrix, Matrix,
-    rot_axis1, rot_axis2, rot_axis3, randMatrix,
-    eye, diag, GramSchmidt, ones, zeros, wronskian, hessian, casoratian,
-    matrix_multiply_elementwise)
+from sympy.matrices import(
+    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
+    SparseMatrix, casoratian, diag, eye, hessian,
+    matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
+    rot_axis3, wronskian, zeros)
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -525,6 +526,20 @@ def test_inverse():
     assert A*Ainv == eye(3)
     assert A.inv(method="LU") == Ainv
     assert A.inv(method="ADJ") == Ainv
+
+    # test that immutability is not a problem
+    cls = ImmutableMatrix
+    m = cls([
+    [48, 49, 31],
+    [ 9, 71, 94],
+    [59, 28, 65]])
+    assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU'.split())
+    cls = ImmutableSparseMatrix
+    m = cls([
+    [48, 49, 31],
+    [ 9, 71, 94],
+    [59, 28, 65]])
+    assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
 
 def test_util():
     R = Rational
