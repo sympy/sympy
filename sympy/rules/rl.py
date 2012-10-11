@@ -24,8 +24,7 @@ def rm_id(isid):
             return Basic.__new__(expr.__class__,
                               *[arg for arg, x in zip(expr.args, ids) if not x])
         else:
-            first_id = (arg for arg, x in zip(expr.args, ids) if x).next()
-            return Basic.__new__(expr.__class__, first_id)
+            return Basic.__new__(expr.__class__, expr.args[0])
 
     return ident_remove
 
