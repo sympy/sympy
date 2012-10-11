@@ -88,8 +88,8 @@ def test_latex_Float():
     assert latex(-1.0*oo) == r"- \infty"
 
 def test_latex_symbols():
-    Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
-    mass, volume = map(Symbol, ('mass', 'volume'))
+    Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
+    mass, volume = symbols('mass, volume')
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q21')) == r"q_{21}"
@@ -100,7 +100,7 @@ def test_latex_symbols():
 
 @XFAIL
 def test_latex_symbols_failing():
-    rho, mass, volume = map(Symbol, ('rho', 'mass', 'volume'))
+    rho, mass, volume = symbols('rho, mass, volume')
     assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
     assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
     assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"

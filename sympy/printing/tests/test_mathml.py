@@ -201,14 +201,6 @@ def test_mathml_relational():
     assert mml_4.childNodes[2].nodeName == 'ci'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
 
-
-def test_c2p():
-    """This tests some optional routines that depend on libxslt1 (which is optional)"""
-    try:
-        from sympy.modules.mathml import c2p
-    except ImportError:
-        pass
-
 def test_symbol():
     mml = mp._print(Symbol("x"))
     assert mml.nodeName == 'ci'
