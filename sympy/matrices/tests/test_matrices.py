@@ -1,9 +1,10 @@
-from sympy import (symbols, I, Symbol, Rational, Float, cos, sin, exp, sqrt,
-    Poly, S, pi, E, oo, trigsimp, Integer, N, sympify,
-    Pow, simplify, Min, Max, Abs, PurePoly, signsimp)
+from sympy import (
+    Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
+    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    sympify, trigsimp)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
-from sympy.matrices import(
+from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,

@@ -2209,7 +2209,7 @@ class MatrixBase(object):
         elif method == "det_LU":
             return self.det_LU_decomposition()
         else:
-            raise ValueError("Determinant method unrecognized")
+            raise ValueError("Determinant method '%s' unrecognized" % method)
 
     def det_bareis(self):
         """Compute matrix determinant using Bareis' fraction-free
