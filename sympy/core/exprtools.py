@@ -752,9 +752,14 @@ def factor_nc(expr):
         if c is not S.One:
             hit = True
             c, g = c.as_coeff_Mul()
-            for i, (cc, _) in enumerate(args):
-                cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
-                args[i][0] = cc
+            if g is not S.One:
+                for i, (cc, _) in enumerate(args):
+                    cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
+                    args[i][0] = cc
+            else:
+                for i, (cc, _) in enumerate(args):
+                    cc[0] = cc[0]/c
+                    args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):
             if i == 0:
