@@ -265,7 +265,7 @@ Representation and Reduction of Multivector Bases
 In our symbolic geometric algebra we assume that all multivectors of interest to
 us can be obtained from the symbolic basis vectors we have input, via the
 different operations available to geometric algebra. The first problem we have
-is representing the general multivector in terms terms of the basis vectors.  To
+is representing the general multivector in terms of the basis vectors.  To
 do this we form the ordered geometric products of the basis vectors and develop
 an internal representation of these products in terms of python classes.  The
 ordered geometric products are all multivectors of the form
