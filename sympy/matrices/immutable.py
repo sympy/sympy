@@ -55,6 +55,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
+    # C and T are defined in MatrixExpr...I don't know why C alone
+    # needs to be defined here
+    C = MatrixBase.C
+
     _eval_trace = DenseMatrix._eval_trace
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate

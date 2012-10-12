@@ -1953,3 +1953,22 @@ def test_cross():
         test(A.T.cross(B))
         test(A.T.cross(B.T))
         test(A.cross(B.T))
+
+def test_hash():
+    for cls in classes:
+        if cls == SparseMatrix:
+            continue
+        s = set([cls.eye(1), cls.eye(1)])
+        assert len(s) == 1 and s.pop() == cls.eye(1)
+
+@XFAIL
+def test_hash():
+    cls == SparseMatrix
+    s = set([cls.eye(1), cls.eye(1)])
+    assert len(s) == 1 and s.pop() == cls.eye(1)
+
+def test_adjoint():
+    dat = [[0, I], [1, 0]]
+    ans = Matrix([[0, 1], [-I, 0]])
+    for cls in classes:
+        assert ans == cls(dat).adjoint()
