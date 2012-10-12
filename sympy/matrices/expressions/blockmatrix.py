@@ -72,7 +72,8 @@ class BlockMatrix(MatrixExpr):
         return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
     def structurally_equal(self, other):
-        return (self.shape == other.shape
+        return (isinstance(other, BlockMatrix)
+            and self.shape == other.shape
             and self.blockshape == other.blockshape
             and self.rowblocksizes == other.rowblocksizes
             and self.colblocksizes == other.colblocksizes)
