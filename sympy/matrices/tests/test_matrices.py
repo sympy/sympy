@@ -1790,6 +1790,12 @@ def test_GramSchmidt():
     m2 = Matrix(1, 2, [2, 3])
     assert GramSchmidt([m1, m2]) == \
         [Matrix(1, 2, [1, 2]), Matrix(1, 2, [R(2)/5, R(-1)/5])]
+    assert GramSchmidt([m1.T, m2.T]) == \
+        [Matrix(2, 1, [1, 2]), Matrix(2, 1, [R(2)/5, R(-1)/5])]
+    # from wikipedia
+    assert GramSchmidt([Matrix([3, 1]),Matrix([2,2])], True) == [
+    Matrix([3*sqrt(10)/10, sqrt(10)/10]),
+    Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
 
 def test_casoratian():
     assert casoratian([1, 2, 3, 4], 1) == 0
