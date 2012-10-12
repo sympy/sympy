@@ -934,7 +934,7 @@ def matrix2numpy(m): # pragma: no cover
             a[i, j] = m[i, j]
     return a
 
-def symarray(prefix, shape):
+def symarray(prefix, shape): # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -991,13 +991,9 @@ def symarray(prefix, shape):
       [a_1_2_0, a_1_2_1]]]
 
     """
-    try:
-        import numpy as np
-    except ImportError:
-        raise ImportError("symarray requires numpy to be installed")
-
-    arr = np.empty(shape, dtype=object)
-    for index in np.ndindex(shape):
+    from numpy import empty, ndindex
+    arr = empty(shape, dtype=object)
+    for index in ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
