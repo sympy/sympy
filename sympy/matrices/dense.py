@@ -104,8 +104,7 @@ class DenseMatrix(MatrixBase):
         return True
 
     def tolist(self):
-        """
-        Return the Matrix as a nested Python list.
+        """Return the Matrix as a nested Python list.
 
         Examples
         ========
@@ -136,8 +135,10 @@ class DenseMatrix(MatrixBase):
             for i in range(0, len(self), self.cols)]
 
     def row(self, i, f=None):
-        """
-        Elementary row selector.
+        """Elementary row selector.
+
+        Examples
+        ========
 
         >>> from sympy import ones
         >>> I = ones(3)
@@ -169,9 +170,11 @@ class DenseMatrix(MatrixBase):
         self.row_op(i, f)
 
     def col(self, j, f=None):
-        """
-        Elementary column selector (default) or operation using functor
+        """Elementary column selector (default) or operation using functor
         which is a function of two args interpreted as (self[i, j], i).
+
+        Examples
+        ========
 
         >>> from sympy import ones
         >>> I = ones(3)
@@ -205,8 +208,7 @@ class DenseMatrix(MatrixBase):
         self.col_op(j, f)
 
     def _eval_trace(self):
-        """
-        Calculate the trace of a square matrix.
+        """Calculate the trace of a square matrix.
 
         Examples
         ========
@@ -222,8 +224,10 @@ class DenseMatrix(MatrixBase):
         return trace
 
     def _eval_transpose(self):
-        """
-        Matrix transposition.
+        """Matrix transposition.
+
+        Examples
+        ========
 
         >>> from sympy import Matrix, I
         >>> m=Matrix(((1, 2+I), (3, 4)))
@@ -382,8 +386,7 @@ class DenseMatrix(MatrixBase):
         return not self == other
 
     def _cholesky(self):
-        """
-        Helper function of cholesky.
+        """Helper function of cholesky.
         Without the error checks.
         To be used privately. """
         L = zeros(self.rows, self.rows)
@@ -396,8 +399,7 @@ class DenseMatrix(MatrixBase):
         return self._new(L)
 
     def _LDLdecomposition(self):
-        """
-        Helper function of LDLdecomposition.
+        """Helper function of LDLdecomposition.
         Without the error checks.
         To be used privately.
         """
@@ -412,8 +414,7 @@ class DenseMatrix(MatrixBase):
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
-        """
-        Helper function of function lower_triangular_solve.
+        """Helper function of function lower_triangular_solve.
         Without the error checks.
         To be used privately.
         """
@@ -426,8 +427,7 @@ class DenseMatrix(MatrixBase):
         return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
-        """
-        Helper function of function upper_triangular_solve.
+        """Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
         X = zeros(self.rows, 1)
         for i in reversed(range(self.rows)):
@@ -438,15 +438,16 @@ class DenseMatrix(MatrixBase):
         return self._new(X)
 
     def _diagonal_solve(self, rhs):
-        """
-        Helper function of function diagonal_solve,
+        """Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
         return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def applyfunc(self, f):
-        """
-        Apply a function to each element of the matrix.
+        """Apply a function to each element of the matrix.
+
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, lambda i, j: i*2+j)
@@ -465,8 +466,10 @@ class DenseMatrix(MatrixBase):
         return out
 
     def reshape(self, rows, cols):
-        """
-        Reshape the matrix. Total number of elements must remain the same.
+        """Reshape the matrix. Total number of elements must remain the same.
+
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2, 3, lambda i, j: 1)
@@ -486,8 +489,10 @@ class DenseMatrix(MatrixBase):
         return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
 
     def as_mutable(self):
-        """
-        Returns a mutable version of this matrix
+        """Returns a mutable version of this matrix
+
+        Examples
+        ========
 
         >>> from sympy import ImmutableMatrix
         >>> X = ImmutableMatrix([[1, 2], [3, 4]])
@@ -608,6 +613,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     def __setitem__(self, key, value):
         """
+
+        Examples
+        ========
+
         >>> from sympy import Matrix, I, zeros, ones
         >>> m = Matrix(((1, 2+I), (3, 4)))
         >>> m
@@ -644,8 +653,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             self._mat[i*self.cols + j] = value
 
     def copyin_matrix(self, key, value):
-        """
-        Copy in values from a matrix into the given bounds.
+        """Copy in values from a matrix into the given bounds.
 
         Parameters
         ==========
@@ -689,8 +697,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
                 self[i + rlo, j + clo] = value[i, j]
 
     def copyin_list(self, key, value):
-        """
-        Copy in elements from a list.
+        """Copy in elements from a list.
 
         Parameters
         ==========
@@ -771,8 +778,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             zip(self._mat[j::self.cols], range(self.rows)))
 
     def row_swap(self, i, j):
-        """
-        Swap the two given rows of the matrix in-place.
+        """Swap the two given rows of the matrix in-place.
+
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
@@ -794,8 +803,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
     def col_swap(self, i, j):
-        """
-        Swap the two given columns of the matrix in-place.
+        """Swap the two given columns of the matrix in-place.
+
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
@@ -817,8 +828,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             self[k, i], self[k, j] = self[k, j], self[k, i]
 
     def row_del(self, i):
-        """
-        Delete the given row.
+        """Delete the given row.
+
+        Examples
+        ========
 
         >>> from sympy.matrices import eye
         >>> M = eye(3)
@@ -837,8 +850,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.rows -= 1
 
     def col_del(self, i):
-        """
-        Delete the given column.
+        """Delete the given column.
+
+        Examples
+        ========
 
         >>> from sympy.matrices import eye
         >>> M = eye(3)
@@ -991,7 +1006,7 @@ def rot_axis3(theta):
     the 3-axis.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import pi
     >>> from sympy.matrices import rot_axis3
@@ -1031,7 +1046,7 @@ def rot_axis2(theta):
     the 2-axis.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import pi
     >>> from sympy.matrices import rot_axis2
@@ -1071,7 +1086,7 @@ def rot_axis1(theta):
     the 1-axis.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import pi
     >>> from sympy.matrices import rot_axis1
