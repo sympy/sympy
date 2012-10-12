@@ -502,10 +502,7 @@ class DenseMatrix(MatrixBase):
         [1, 2]
         [3, 5]
         """
-        cls = Matrix
-        if self.rows:
-            return cls._new(self.tolist())
-        return cls._new(0, self.cols, [])
+        return Matrix(self)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix

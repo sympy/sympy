@@ -47,9 +47,6 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     __getitem__ = DenseMatrix.__getitem__
 
-    def as_mutable(self):
-        return MutableDenseMatrix(self)
-
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
 
@@ -59,6 +56,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     # needs to be defined here
     C = MatrixBase.C
 
+    as_mutable = DenseMatrix.as_mutable
     _eval_trace = DenseMatrix._eval_trace
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate
@@ -77,6 +75,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+
 
 class ImmutableSparseMatrix(Basic, SparseMatrix):
     """Create an immutable version of a sparse matrix.
