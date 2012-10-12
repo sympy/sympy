@@ -1739,6 +1739,18 @@ def test_zeros_eye():
     assert Matrix.zeros(3) == zeros(3)
     assert ones(3, 4) == Matrix(3, 4, [1]*12)
 
+    i = Matrix([[1, 0], [0, 1]])
+    z = Matrix([[0, 0], [0, 0]])
+    for cls in classes:
+        m = cls.eye(2)
+        assert i == m # but m == i will fail if m is immutable
+        assert i == eye(2, cls=cls)
+        assert type(m) == cls
+        m = cls.zeros(2)
+        assert z == m
+        assert z == zeros(2, cls=cls)
+        assert type(m) == cls
+
 def test_is_zero():
     assert Matrix().is_zero
     assert Matrix([[0, 0], [0, 0]]).is_zero
@@ -1927,19 +1939,6 @@ def test_issue2221():
     [1, 0, 2, 0],
     [0, 1, 0, 2]])
 
-def test_zeros_eye():
-    i = Matrix([[1, 0], [0, 1]])
-    z = Matrix([[0, 0], [0, 0]])
-    for cls in classes:
-        m = cls.eye(2)
-        assert i == m # but m == i will fail if m is immutable
-        assert i == eye(2, cls=cls)
-        assert type(m) == cls
-        m = cls.zeros(2)
-        assert z == m
-        assert z == zeros(2, cls=cls)
-        assert type(m) == cls
-
 def test_cross():
     a = [1, 2, 3]
     b = [3, 4, 5]
@@ -1963,8 +1962,9 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
 
 @XFAIL
-def test_hash():
-    cls == SparseMatrix
+def test_hashx():
+    # delete and remove if-block in test_hash when this passes
+    cls = SparseMatrix
     s = set([cls.eye(1), cls.eye(1)])
     assert len(s) == 1 and s.pop() == cls.eye(1)
 

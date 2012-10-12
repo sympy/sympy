@@ -1,5 +1,5 @@
 from matrices import MatrixBase
-from dense import DenseMatrix, MutableDenseMatrix
+from dense import DenseMatrix
 from sparse import SparseMatrix, MutableSparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict

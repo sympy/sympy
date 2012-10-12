@@ -3,7 +3,6 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
-from sympy.matrices.dense import MutableDenseMatrix
 
 class MatrixExpr(Expr):
     """ Matrix Expression Class
