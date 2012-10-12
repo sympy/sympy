@@ -532,7 +532,7 @@ def density(expr, condition=None, numsamples=None, **kwargs):
     """
 
     if numsamples:
-        return sampling_density(expr, condition, numsamples=numsamples, 
+        return sampling_density(expr, condition, numsamples=numsamples,
                 **kwargs)
 
     if condition is not None: # If there is a condition
