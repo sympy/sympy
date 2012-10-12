@@ -1016,17 +1016,12 @@ class SparseMatrix(MatrixBase):
         [1, 2]
         [3, 5]
         """
-        cls = MutableSparseMatrix
-        if self.rows:
-            return cls(self.tolist())
-        return cls(0, self.cols, [])
+        return MutableSparseMatrix(self)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
-        from immutable import ImmutableSparseMatrix as cls
-        if self.rows:
-            return cls(self.tolist())
-        return cls(0, self.cols, [])
+        from immutable import ImmutableSparseMatrix
+        return ImmutableSparseMatrix(self)
 
     @classmethod
     def zeros(cls, r, c=None):
