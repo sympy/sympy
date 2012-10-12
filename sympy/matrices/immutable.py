@@ -1,6 +1,6 @@
 from matrices import MatrixBase
 from dense import DenseMatrix, MutableDenseMatrix
-from sparse import MutableSparseMatrix as SparseMatrix
+from sparse import SparseMatrix, MutableSparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
 
@@ -103,19 +103,18 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        s = SparseMatrix(*args)
+        s = MutableSparseMatrix(*args)
         rows = Integer(s.rows)
         cols = Integer(s.cols)
         mat = Dict(s._smat)
-        return Basic.__new__(cls, rows, cols, mat)
+        obj = Basic.__new__(cls, rows, cols, mat)
+        obj.rows = s.rows
+        obj.cols = s.cols
+        obj._smat = s._smat
+        return obj
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
-
-    def _entry(self, i, j):
-        return SparseMatrix.__getitem__(self, (i, j))
-
-    __getitem__ = SparseMatrix.__getitem__

@@ -494,38 +494,6 @@ class SparseMatrix(MatrixBase):
         return self._new(rhi -rlo, chi - clo,
             lambda i, j: self[i + rlo, j + clo])
 
-    def cross(self, b):
-        if not is_sequence(b):
-            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
-                type(b))
-        if not (self.rows == 1 and self.cols == 3 or
-                self.rows == 3 and self.cols == 1 ) and \
-                (b.rows == 1 and b.cols == 3 or
-                b.rows == 3 and b.cols == 1):
-            raise ShapeError("Dimensions incorrect for cross product")
-        else:
-            return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
-                               (self[2]*b[0] - self[0]*b[2]),
-                               (self[0]*b[1] - self[1]*b[0])))
-
-
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
-        if ``c`` is omitted a square matrix will be returned."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls(r, c, {})
-
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 
@@ -1030,13 +998,33 @@ class SparseMatrix(MatrixBase):
         return cls(0, self.cols, [])
 
     def as_immutable(self):
-        """
-        Returns an Immutable version of this Matrix
-        """
+        """Returns an Immutable version of this Matrix."""
         from immutable import ImmutableSparseMatrix as cls
         if self.rows:
             return cls(self.tolist())
         return cls(0, self.cols, [])
+
+    @classmethod
+    def zeros(cls, r, c=None):
+        """Return an r x c matrix of zeros, square if c is omitted."""
+        if is_sequence(r):
+            SymPyDeprecationWarning(
+                feature="The syntax zeros([%i, %i])" % tuple(r),
+                useinstead="zeros(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
+            ).warn()
+            r, c = r
+        else:
+            c = r if c is None else c
+        r = as_int(r)
+        c = as_int(c)
+        return cls(r, c, {})
+
+    @classmethod
+    def eye(cls, n):
+        """Return an n x n identity matrix."""
+        n = as_int(n)
+        return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):

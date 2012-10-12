@@ -499,17 +499,40 @@ class DenseMatrix(MatrixBase):
         """
         cls = Matrix
         if self.rows:
-            return cls(self.tolist())
-        return cls(0, self.cols, [])
+            return cls._new(self.tolist())
+        return cls._new(0, self.cols, [])
 
     def as_immutable(self):
-        """
-        Returns an Immutable version of this Matrix
+        """Returns an Immutable version of this Matrix
         """
         from immutable import ImmutableMatrix as cls
         if self.rows:
-            return cls(self.tolist())
-        return cls(0, self.cols, [])
+            return cls._new(self.tolist())
+        return cls._new(0, self.cols, [])
+
+    @classmethod
+    def zeros(cls, r, c=None):
+        """Return an r x c matrix of zeros, square if c is omitted."""
+        if is_sequence(r):
+            SymPyDeprecationWarning(
+                feature="The syntax zeros([%i, %i])" % tuple(r),
+                useinstead="zeros(%i, %i)." % tuple(r),
+                issue=3381, deprecated_since_version="0.7.2",
+            ).warn()
+            r, c = r
+        else:
+            c = r if c is None else c
+        r = as_int(r)
+        c = as_int(c)
+        return cls._new(r, c, [S.Zero]*r*c)
+
+    @classmethod
+    def eye(cls, n):
+        """Return an n x n identity matrix."""
+        n = as_int(n)
+        mat = [S.Zero]*n*n
+        mat[::n + 1] = [S.One]*n
+        return cls._new(n, n, mat)
 
     ############################
     # Mutable matrix operators #
@@ -1124,31 +1147,6 @@ def matrix_multiply_elementwise(A, B):
     return classof(A, B)._new(shape[0], shape[1],
         lambda i, j: A[i, j] * B[i, j])
 
-def zeros(r, c=None, cls=None):
-    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
-
-    See Also
-    ========
-
-    ones
-    eye
-    diag
-    """
-    if cls is None:
-        from dense import Matrix as cls
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-            feature="The syntax zeros([%i, %i])" % tuple(r),
-            useinstead="zeros(%i, %i)." % tuple(r),
-            issue=3381, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
-    r, c = [int(i) for i in [r, c]]
-    return cls.zeros(r, c)
-
 def ones(r, c=None):
     """Returns a matrix of ones with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned.
@@ -1175,6 +1173,21 @@ def ones(r, c=None):
     c = as_int(c)
     return Matrix(r, c, [S.One]*r*c)
 
+def zeros(r, c=None, cls=None):
+    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+    if ``c`` is omitted a square matrix will be returned.
+
+    See Also
+    ========
+
+    ones
+    eye
+    diag
+    """
+    if cls is None:
+        from dense import Matrix as cls
+    return cls.zeros(r, c)
+
 def eye(n, cls=None):
     """Create square identity matrix n x n
 
@@ -1185,8 +1198,9 @@ def eye(n, cls=None):
     zeros
     ones
     """
-    n = as_int(n)
-    return diag(*[S.One]*n, **dict(cls=cls))
+    if cls is None:
+        from sympy.matrices import Matrix as cls
+    return cls.eye(n)
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1304,7 +1318,7 @@ def diag(*values, **kwargs):
             res[i_row, i_col] = m
             i_row += 1
             i_col += 1
-    return cls(res)
+    return cls._new(res)
 
 def jordan_cell(eigenval, n):
     """

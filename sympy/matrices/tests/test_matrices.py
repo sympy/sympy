@@ -11,6 +11,8 @@ from sympy.matrices import(
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 
+classes = (Matrix, ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix)
+
 def test_division():
     x, y, z = symbols('x y z')
     v = Matrix(1,2,[x, y])
@@ -1942,3 +1944,32 @@ def test_issue2221():
     assert cls.hstack(cls(eye(2)), cls(2*eye(2))) == Matrix([
     [1, 0, 2, 0],
     [0, 1, 0, 2]])
+
+def test_zeros_eye():
+    cls = (Matrix, ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix)
+    i = Matrix([[1, 0], [0, 1]])
+    z = Matrix([[0, 0], [0, 0]])
+    for cls in classes:
+        m = cls.eye(2)
+        assert i == m # but m == i will fail if m is immutable
+        assert i == eye(2, cls=cls)
+        assert type(m) == cls
+        m = cls.zeros(2)
+        assert z == m
+        assert z == zeros(2, cls=cls)
+        assert type(m) == cls
+
+def test_cross():
+    a = [1, 2, 3]
+    b = [3, 4, 5]
+    ans = Matrix([-2, 4, -2]).T
+    def test(M):
+        assert ans == M
+        assert type(M) == cls
+    for cls in classes:
+        A = cls(a)
+        B = cls(b)
+        test(A.cross(B))
+        test(A.T.cross(B))
+        test(A.T.cross(B.T))
+        test(A.cross(B.T))

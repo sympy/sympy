@@ -162,7 +162,7 @@ class MatrixBase(object):
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
                 rows, cols = 1, arr.shape[0]
-                flat_list = [0]*cols
+                flat_list = [S.Zero]*cols
                 for i in range(len(arr)):
                     flat_list[i] = sympify(arr[i])
                 return rows, cols, flat_list
@@ -507,7 +507,7 @@ class MatrixBase(object):
                 raise ShapeError("Matrices size mismatch.")
             alst = A.tolist()
             blst = B.tolist()
-            ret = [0]*A.rows
+            ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
                 ret[i] = map(lambda j, k: j+k, alst[i], blst[i])
             return classof(A, B)._new(ret)
