@@ -15,7 +15,9 @@ def test_glom():
     newargs = lambda cnt, arg: cnt * arg
     rl = glom(key, count, newargs)
 
-    assert rl(Add(x, -x, 3*x, 2, 3, evaluate=False)) == 3*x + 5
+    result   = rl(Add(x, -x, 3*x, 2, 3, evaluate=False))
+    expected = Add(3*x, 5)
+    assert  set(result.args) == set(expected.args)
 
 def test_flatten():
     assert flatten(Basic(1, 2, Basic(3, 4))) == Basic(1, 2, 3, 4)
