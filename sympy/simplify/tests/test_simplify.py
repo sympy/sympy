@@ -1260,3 +1260,6 @@ def test_Piecewise():
     s3 = simplify(e3)
     assert simplify(Piecewise((e1, x < e2), (e3, True))) \
         == Piecewise((s1, x < s2), (s3, True))
+
+def test_issue_3433():
+    assert radsimp(1/sqrt(x)) == 1/sqrt(x)
