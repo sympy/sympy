@@ -1354,10 +1354,42 @@ def jordan_cell(eigenval, n):
     out[n - 1, n - 1] = eigenval
     return out
 
-def hessian(f, varlist):
-    """Compute Hessian matrix for a function f
+def hessian(f, varlist, constraints=[]):
+    """Compute Hessian matrix for a function f wrt parameters in varlist
+    which may be given as a sequence or a row/column vector. A list of
+    constraints may optionally be given.
 
-    see: http://en.wikipedia.org/wiki/Hessian_matrix
+    Examples
+    ========
+
+    >>> from sympy import Function, hessian, pprint
+    >>> from sympy.abc import x, y
+    >>> f = Function('f')(x, y)
+    >>> g1 = Function('g')(x, y)
+    >>> g2 = x**2 + 3*y
+    >>> pprint(hessian(f, (x, y), [g1, g2]))
+    [                   d               d            ]
+    [     0        0    --(g(x, y))     --(g(x, y))  ]
+    [                   dx              dy           ]
+    [                                                ]
+    [     0        0        2*x              3       ]
+    [                                                ]
+    [                     2               2          ]
+    [d                   d               d           ]
+    [--(g(x, y))  2*x   ---(f(x, y))   -----(f(x, y))]
+    [dx                   2            dy dx         ]
+    [                   dx                           ]
+    [                                                ]
+    [                     2               2          ]
+    [d                   d               d           ]
+    [--(g(x, y))   3   -----(f(x, y))   ---(f(x, y)) ]
+    [dy                dy dx              2          ]
+    [                                   dy           ]
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -1366,28 +1398,36 @@ def hessian(f, varlist):
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
+    if isinstance(varlist, MatrixBase):
+        if 1 not in varlist.shape:
+            raise ShapeError("`varlist` must be a column or row vector.")
+        if varlist.cols == 1:
+            varlist = varlist.T
+        varlist = varlist.tolist()[0]
     if is_sequence(varlist):
-        m = len(varlist)
-        if not m:
+        n = len(varlist)
+        if not n:
             raise ShapeError("`len(varlist)` must not be zero.")
-    elif isinstance(varlist, MatrixBase):
-        m = varlist.cols
-        if not m:
-            raise ShapeError("`varlist.cols` must not be zero.")
-        if varlist.rows != 1:
-            raise ShapeError("`varlist` must be a row vector.")
     else:
         raise ValueError("Improper variable list in hessian function")
     if not getattr(f, 'diff'):
         # check differentiability
         raise ValueError("Function `f` (%s) is not differentiable" % f)
-    out = zeros(m)
-    for i in range(m):
-        for j in range(i, m):
-            out[i, j] = f.diff(varlist[i]).diff(varlist[j])
-    for i in range(m):
-        for j in range(i):
-            out[i, j] = out[j, i]
+    m = len(constraints)
+    N = m + n
+    out = zeros(N)
+    for k, g in enumerate(constraints):
+        if not getattr(g, 'diff'):
+            # check differentiability
+            raise ValueError("Function `f` (%s) is not differentiable" % f)
+        for i in range(n):
+            out[k, i + m] = g.diff(varlist[i])
+    for i in range(n):
+        for j in range(i, n):
+            out[i + m, j + m] = f.diff(varlist[i]).diff(varlist[j])
+    for i in range(N):
+        for j in range(i + 1, N):
+            out[j, i] = out[i, j]
     return out
 
 def GramSchmidt(vlist, orthog=False):
