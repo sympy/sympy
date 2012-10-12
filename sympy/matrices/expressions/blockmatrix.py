@@ -348,4 +348,3 @@ def bc_matpow(expr):
     if expr.exp.is_number and expr.exp.is_integer:
         return MatMul(*([expr.base]*expr.exp))
     return expr
-
