@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import raises
-from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Abs, \
+from sympy import symbols, Function, Integer, Matrix, Abs, \
     Rational, Float, S, WildFunction, ImmutableMatrix
-from sympy.geometry import Point, Circle, Ellipse
+from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 
 x, y = symbols('x,y')

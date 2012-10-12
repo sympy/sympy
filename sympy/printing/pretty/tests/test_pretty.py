@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
-    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
-    pprint, sqrt, factorial, factorial2, binomial, pi, sin, ceiling, pprint_use_unicode,
-    I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
-    RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
-    euler, groebner, catalan, Product, KroneckerDelta, Ei, expint, Shi, Chi, Si,
-    Ci, Segment, Ray, FiniteSet, homomorphism)
+from sympy import (
+    Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
+    FiniteSet, Function, Function, Ge, Gt, I, Implies, Integral,
+    KroneckerDelta, Lambda, Le, Limit, Lt, Matrix, Nand, Ne, Nor, Not, O,
+    Or, Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum,
+    S, Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2,
+    binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
+    factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
+    log, lowergamma, meijerg, oo, pi, sin,
+    sqrt, sqrt, symbols, tan, uppergamma)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3673,10 +3675,6 @@ def test_RandomDomain():
     B = Exponential('b', 1)
     assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
-def test_issue_3186():
-    assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
-    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
-
 def test_PrettyPoly():
     F = QQ.frac_field(x, y)
     R = QQ[x, y]
@@ -3698,9 +3696,8 @@ def test_complicated_symbol_unchanged():
         assert pretty(Symbol(symb_name)) == symb_name
 
 def test_categories():
-    from sympy.categories import (Object, Morphism, IdentityMorphism,
-                                  NamedMorphism, CompositeMorphism,
-                                  Category, Diagram, DiagramGrid)
+    from sympy.categories import (Object, IdentityMorphism,
+        NamedMorphism, Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")
@@ -3824,8 +3821,6 @@ u"""\
 
     assert upretty(Q) == ucode_str
     assert  pretty(Q) == ascii_str
-
-    expr = Q.submodule([1, x**3/2], [2, y])
 
     ucode_str = \
 u"""\

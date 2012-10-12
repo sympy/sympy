@@ -14,7 +14,7 @@ from sympy.mpmath.libmp import prec_to_dps
 
 from sympy.utilities import default_sort_key
 
-import re, warnings
+import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
@@ -1266,8 +1266,6 @@ class LatexPrinter(Printer):
             morphism.domain, morphism.codomain, "id"))
 
     def _print_CompositeMorphism(self, morphism):
-        from sympy.categories import NamedMorphism
-
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
         component_names_list = [self._print(Symbol(component.name)) for \
