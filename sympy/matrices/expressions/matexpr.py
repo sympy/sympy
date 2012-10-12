@@ -126,7 +126,7 @@ class MatrixExpr(Expr):
         return Inverse(self)
 
     def _entry(self, i, j):
-        raise NotImplementedError("Indexing not implemented")
+        return self[i, j]
 
     def valid_index(self, i, j):
         def is_valid(idx):
@@ -138,7 +138,8 @@ class MatrixExpr(Expr):
         if isinstance(key, tuple) and len(key)==2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError("Slicing is not implemented")
+                raise NotImplementedError(
+                "Slicing is not implemented for %s" % self.__class__.__name__)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)

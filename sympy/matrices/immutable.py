@@ -39,14 +39,11 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     @property
     def shape(self):
-        return self.args[:2]
+        return tuple([int(i) for i in self.args[:2]])
 
     @property
     def _mat(self):
-        return self.args[2]
-
-    def _entry(self, i, j):
-        return DenseMatrix.__getitem__(self, (i,j))
+        return list(self.args[2])
 
     __getitem__ = DenseMatrix.__getitem__
 
