@@ -120,6 +120,9 @@ def test_Sample():
     E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
 
 
+    assert sorted(density(X, numsamples=10).keys()) == [1,2,3,4,5,6]
+    assert sorted(density(X, X>3, numsamples=10).keys()) == [4,5,6]
+
 def test_given():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
