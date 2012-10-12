@@ -216,6 +216,9 @@ def test_factor_nc():
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
+    # issue 3435
+    assert (2*n+2*m).factor() == 2*(n + m)
+
 def test_issue_3261():
     a, b = symbols("a b")
     apb = a + b
