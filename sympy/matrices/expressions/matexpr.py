@@ -125,7 +125,7 @@ class MatrixExpr(Expr):
         return Inverse(self)
 
     def _entry(self, i, j):
-        return self[i, j]
+        raise NotImplementedError("Indexing not implemented")
 
     def valid_index(self, i, j):
         def is_valid(idx):
