@@ -269,7 +269,7 @@ def gf_from_dict(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_from_dict
 
-    >>> gf_from_dict({10: 4, 4: 33, 0: -1}, 5, ZZ)
+    >>> gf_from_dict({10: ZZ(4), 4: ZZ(33), 0: ZZ(-1)}, 5, ZZ)
     [4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4]
 
     """
@@ -450,7 +450,7 @@ def gf_quo_ground(f, a, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_quo_ground
 
-    >>> gf_quo_ground([3, 2, 4], 2, 5, ZZ)
+    >>> gf_quo_ground(ZZ.map([3, 2, 4]), ZZ(2), 5, ZZ)
     [4, 1, 2]
 
     """
@@ -672,12 +672,12 @@ def gf_div(f, g, p, K):
        >>> from sympy.polys.domains import ZZ
        >>> from sympy.polys.galoistools import gf_div, gf_add_mul
 
-       >>> gf_div([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+       >>> gf_div(ZZ.map([1, 0, 1, 1]), ZZ.map([1, 1, 0]), 2, ZZ)
        ([1, 1], [1])
 
     As result we obtained quotient ``x + 1`` and remainder ``1``, thus::
 
-       >>> gf_add_mul([1], [1, 1], [1, 1, 0], 2, ZZ)
+       >>> gf_add_mul(ZZ.map([1]), ZZ.map([1, 1]), ZZ.map([1, 1, 0]), 2, ZZ)
        [1, 0, 1, 1]
 
     References
@@ -722,7 +722,7 @@ def gf_rem(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_rem
 
-    >>> gf_rem([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+    >>> gf_rem(ZZ.map([1, 0, 1, 1]), ZZ.map([1, 1, 0]), 2, ZZ)
     [1]
 
     """
@@ -739,9 +739,9 @@ def gf_quo(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_quo
 
-    >>> gf_quo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+    >>> gf_quo(ZZ.map([1, 0, 1, 1]), ZZ.map([1, 1, 0]), 2, ZZ)
     [1, 1]
-    >>> gf_quo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
+    >>> gf_quo(ZZ.map([1, 0, 3, 2, 3]), ZZ.map([2, 2, 2]), 5, ZZ)
     [3, 2, 4]
 
     """
@@ -777,10 +777,10 @@ def gf_exquo(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_exquo
 
-    >>> gf_exquo([1, 0, 3, 2, 3], [2, 2, 2], 5, ZZ)
+    >>> gf_exquo(ZZ.map([1, 0, 3, 2, 3]), ZZ.map([2, 2, 2]), 5, ZZ)
     [3, 2, 4]
 
-    >>> gf_exquo([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
+    >>> gf_exquo(ZZ.map([1, 0, 1, 1]), ZZ.map([1, 1, 0]), 2, ZZ)
     Traceback (most recent call last):
     ...
     ExactQuotientFailed: [1, 1, 0] does not divide [1, 0, 1, 1]
@@ -884,7 +884,7 @@ def gf_pow_mod(f, n, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_pow_mod
 
-    >>> gf_pow_mod([3, 2, 4], 3, [1, 1], 5, ZZ)
+    >>> gf_pow_mod(ZZ.map([3, 2, 4]), 3, ZZ.map([1, 1]), 5, ZZ)
     []
 
     References
@@ -928,7 +928,7 @@ def gf_gcd(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_gcd
 
-    >>> gf_gcd([3, 2, 4], [2, 2, 3], 5, ZZ)
+    >>> gf_gcd(ZZ.map([3, 2, 4]), ZZ.map([2, 2, 3]), 5, ZZ)
     [1, 3]
 
     """
@@ -947,7 +947,7 @@ def gf_lcm(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_lcm
 
-    >>> gf_lcm([3, 2, 4], [2, 2, 3], 5, ZZ)
+    >>> gf_lcm(ZZ.map([3, 2, 4]), ZZ.map([2, 2, 3]), 5, ZZ)
     [1, 2, 0, 4]
 
     """
@@ -969,7 +969,7 @@ def gf_cofactors(f, g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_cofactors
 
-    >>> gf_cofactors([3, 2, 4], [2, 2, 3], 5, ZZ)
+    >>> gf_cofactors(ZZ.map([3, 2, 4]), ZZ.map([2, 2, 3]), 5, ZZ)
     ([1, 3], [3, 3], [2, 1])
 
     """
@@ -995,15 +995,15 @@ def gf_gcdex(f, g, p, K):
        >>> from sympy.polys.domains import ZZ
        >>> from sympy.polys.galoistools import gf_gcdex, gf_mul, gf_add
 
-       >>> s, t, g = gf_gcdex([1,8,7], [1,7,1,7], 11, ZZ)
+       >>> s, t, g = gf_gcdex(ZZ.map([1, 8, 7]), ZZ.map([1, 7, 1, 7]), 11, ZZ)
        >>> s, t, g
        ([5, 6], [6], [1, 7])
 
     As result we obtained polynomials ``s = 5*x + 6`` and ``t = 6``, and
     additionally ``gcd(f, g) = x + 7``. This is correct because::
 
-       >>> S = gf_mul(s,   [1,8,7], 11, ZZ)
-       >>> T = gf_mul(t, [1,7,1,7], 11, ZZ)
+       >>> S = gf_mul(s, ZZ.map([1, 8, 7]), 11, ZZ)
+       >>> T = gf_mul(t, ZZ.map([1, 7, 1, 7]), 11, ZZ)
 
        >>> gf_add(S, T, 11, ZZ) == [1, 7]
        True
@@ -1056,7 +1056,7 @@ def gf_monic(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_monic
 
-    >>> gf_monic([3, 2, 4], 5, ZZ)
+    >>> gf_monic(ZZ.map([3, 2, 4]), 5, ZZ)
     (3, [1, 4, 3])
 
     """
@@ -1177,7 +1177,7 @@ def gf_compose_mod(g, h, f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_compose_mod
 
-    >>> gf_compose_mod([3, 2, 4], [2, 2, 2], [4, 3], 5, ZZ)
+    >>> gf_compose_mod(ZZ.map([3, 2, 4]), ZZ.map([2, 2, 2]), ZZ.map([4, 3]), 5, ZZ)
     [4]
 
     """
@@ -1296,9 +1296,9 @@ def gf_irred_p_ben_or(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_irred_p_ben_or
 
-    >>> gf_irred_p_ben_or([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4], 5, ZZ)
+    >>> gf_irred_p_ben_or(ZZ.map([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4]), 5, ZZ)
     True
-    >>> gf_irred_p_ben_or([3, 2, 4], 5, ZZ)
+    >>> gf_irred_p_ben_or(ZZ.map([3, 2, 4]), 5, ZZ)
     False
 
     """
@@ -1332,9 +1332,9 @@ def gf_irred_p_rabin(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_irred_p_rabin
 
-    >>> gf_irred_p_rabin([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4], 5, ZZ)
+    >>> gf_irred_p_rabin(ZZ.map([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4]), 5, ZZ)
     True
-    >>> gf_irred_p_rabin([3, 2, 4], 5, ZZ)
+    >>> gf_irred_p_rabin(ZZ.map([3, 2, 4]), 5, ZZ)
     False
 
     """
@@ -1377,9 +1377,9 @@ def gf_irreducible_p(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_irreducible_p
 
-    >>> gf_irreducible_p([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4], 5, ZZ)
+    >>> gf_irreducible_p(ZZ.map([1, 4, 2, 2, 3, 2, 4, 1, 4, 0, 4]), 5, ZZ)
     True
-    >>> gf_irreducible_p([3, 2, 4], 5, ZZ)
+    >>> gf_irreducible_p(ZZ.map([3, 2, 4]), 5, ZZ)
     False
 
     """
@@ -1402,9 +1402,9 @@ def gf_sqf_p(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_sqf_p
 
-    >>> gf_sqf_p([3, 2, 4], 5, ZZ)
+    >>> gf_sqf_p(ZZ.map([3, 2, 4]), 5, ZZ)
     True
-    >>> gf_sqf_p([2, 4, 4, 2, 2, 1, 4], 5, ZZ)
+    >>> gf_sqf_p(ZZ.map([2, 4, 4, 2, 2, 1, 4]), 5, ZZ)
     False
 
     """
@@ -1425,7 +1425,7 @@ def gf_sqf_part(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_sqf_part
 
-    >>> gf_sqf_part([1, 1, 3, 0, 1, 0, 2, 2, 1], 5, ZZ)
+    >>> gf_sqf_part(ZZ.map([1, 1, 3, 0, 1, 0, 2, 2, 1]), 5, ZZ)
     [1, 4, 3]
 
     """
@@ -1458,7 +1458,7 @@ def gf_sqf_list(f, p, K, all=False):
        ... )
        ... # doctest: +NORMALIZE_WHITESPACE
 
-       >>> f = gf_from_dict({11: 1, 0: 1}, 11, ZZ)
+       >>> f = gf_from_dict({11: ZZ(1), 0: ZZ(1)}, 11, ZZ)
 
     Note that ``f'(x) = 0``::
 
@@ -1689,7 +1689,7 @@ def gf_ddf_zassenhaus(f, p, K):
        >>> from sympy.polys.domains import ZZ
        >>> from sympy.polys.galoistools import gf_from_dict
 
-       >>> f = gf_from_dict({15: 1, 0: -1}, 11, ZZ)
+       >>> f = gf_from_dict({15: ZZ(1), 0: ZZ(-1)}, 11, ZZ)
 
     Distinct degree factorization gives::
 
@@ -1802,7 +1802,7 @@ def gf_ddf_shoup(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_ddf_shoup, gf_from_dict
 
-    >>> f = gf_from_dict({6: 1, 5: -1, 4: 1, 3: 1, 1: -1}, 3, ZZ)
+    >>> f = gf_from_dict({6: ZZ(1), 5: ZZ(-1), 4: ZZ(1), 3: ZZ(1), 1: ZZ(-1)}, 3, ZZ)
 
     >>> gf_ddf_shoup(f, 3, ZZ)
     [([1, 1, 0], 1), ([1, 1, 0, 1, 2], 2)]
@@ -1877,7 +1877,7 @@ def gf_edf_shoup(f, n, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_edf_shoup
 
-    >>> gf_edf_shoup([1, 2837, 2277], 1, 2917, ZZ)
+    >>> gf_edf_shoup(ZZ.map([1, 2837, 2277]), 1, 2917, ZZ)
     [[1, 852], [1, 1985]]
 
     References
@@ -1931,7 +1931,7 @@ def gf_zassenhaus(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_zassenhaus
 
-    >>> gf_zassenhaus([1, 4, 3], 5, ZZ)
+    >>> gf_zassenhaus(ZZ.map([1, 4, 3]), 5, ZZ)
     [[1, 1], [1, 3]]
 
     """
@@ -1953,7 +1953,7 @@ def gf_shoup(f, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_shoup
 
-    >>> gf_shoup([1, 4, 3], 5, ZZ)
+    >>> gf_shoup(ZZ.map([1, 4, 3]), 5, ZZ)
     [[1, 1], [1, 3]]
 
     """
@@ -1980,7 +1980,7 @@ def gf_factor_sqf(f, p, K, method=None):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_factor_sqf
 
-    >>> gf_factor_sqf([3, 2, 4], 5, ZZ)
+    >>> gf_factor_sqf(ZZ.map([3, 2, 4]), 5, ZZ)
     (3, [[1, 1], [1, 3]])
 
     """
@@ -2022,7 +2022,7 @@ def gf_factor(f, p, K):
        >>> from sympy.polys.domains import ZZ
        >>> from sympy.polys.galoistools import gf_factor
 
-       >>> gf_factor([5, 2, 7, 2], 11, ZZ)
+       >>> gf_factor(ZZ.map([5, 2, 7, 2]), 11, ZZ)
        (5, [([1, 2], 1), ([1, 8], 2)])
 
     We arrived with factorization ``f = 5 (x + 2) (x + 8)**2``. We didn't

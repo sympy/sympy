@@ -179,11 +179,11 @@ def test_dmp_subresultants():
     assert dmp_zz_collins_resultant([[]], [[ZZ(1)]], 1, ZZ) == []
     assert dmp_qq_collins_resultant([[]], [[ZZ(1)]], 1, ZZ) == []
 
-    f = dmp_normal([[3,0],[],[-1,0,0,-4]], 1, ZZ)
-    g = dmp_normal([[1],[1,0,0,0],[-9]], 1, ZZ)
+    f = dmp_normal(ZZ.map([[3, 0], [], [-1, 0, 0, -4]]), 1, ZZ)
+    g = dmp_normal(ZZ.map([[1], [1, 0, 0, 0], [-9]]), 1, ZZ)
 
-    a = dmp_normal([[3,0,0,0,0],[1,0,-27,4]], 1, ZZ)
-    b = dmp_normal([[-3,0,0,-12,1,0,-54,8,729,-216,16]], 1, ZZ)
+    a = dmp_normal(ZZ.map([[3, 0, 0, 0, 0], [1, 0, -27, 4]]), 1, ZZ)
+    b = dmp_normal(ZZ.map([[-3, 0, 0, -12, 1, 0, -54, 8, 729, -216, 16]]), 1, ZZ)
 
     r = dmp_LC(b, ZZ)
 
@@ -194,11 +194,11 @@ def test_dmp_subresultants():
     assert dmp_zz_collins_resultant(f, g, 1, ZZ) == r
     assert dmp_qq_collins_resultant(f, g, 1, ZZ) == r
 
-    f = dmp_normal([[-1],[],[],[5]], 1, ZZ)
-    g = dmp_normal([[3,1],[],[]], 1, ZZ)
+    f = dmp_normal(ZZ.map([[-1], [], [], [5]]), 1, ZZ)
+    g = dmp_normal(ZZ.map([[3, 1], [], []]), 1, ZZ)
 
-    a = dmp_normal([[45,30,5]], 1, ZZ)
-    b = dmp_normal([[675,675,225,25]], 1, ZZ)
+    a = dmp_normal(ZZ.map([[45, 30, 5]]), 1, ZZ)
+    b = dmp_normal(ZZ.map([[675, 675, 225, 25]]), 1, ZZ)
 
     r = dmp_LC(b, ZZ)
 
@@ -301,11 +301,11 @@ def test_dup_gcd():
     assert dup_zz_heu_gcd([2], [2,4,2], ZZ) == ([2], [1], [1, 2, 1])
     assert dup_rr_prs_gcd([2], [2,4,2], ZZ) == ([2], [1], [1, 2, 1])
 
-    assert dup_zz_heu_gcd([2,4,2], [1,1], ZZ) == ([1, 1], [2, 2], [1])
-    assert dup_rr_prs_gcd([2,4,2], [1,1], ZZ) == ([1, 1], [2, 2], [1])
+    assert dup_zz_heu_gcd(ZZ.map([2, 4, 2]), [1, 1], ZZ) == ([1, 1], [2, 2], [1])
+    assert dup_rr_prs_gcd(ZZ.map([2, 4, 2]), [1, 1], ZZ) == ([1, 1], [2, 2], [1])
 
-    assert dup_zz_heu_gcd([1,1], [2,4,2], ZZ) == ([1, 1], [1], [2, 2])
-    assert dup_rr_prs_gcd([1,1], [2,4,2], ZZ) == ([1, 1], [1], [2, 2])
+    assert dup_zz_heu_gcd(ZZ.map([1, 1]), [2, 4, 2], ZZ) == ([1, 1], [1], [2, 2])
+    assert dup_rr_prs_gcd(ZZ.map([1, 1]), [2, 4, 2], ZZ) == ([1, 1], [1], [2, 2])
 
     f, g = [1, -31], [1, 0]
 
@@ -443,14 +443,14 @@ def test_dmp_gcd():
     assert dmp_zz_heu_gcd([[2]], [[2],[4],[2]], 1, ZZ) == ([[2]], [[1]], [[1], [2], [1]])
     assert dmp_rr_prs_gcd([[2]], [[2],[4],[2]], 1, ZZ) == ([[2]], [[1]], [[1], [2], [1]])
 
-    assert dmp_zz_heu_gcd([[2],[4],[2]], [[1],[1]], 1, ZZ) == ([[1], [1]], [[2], [2]], [[1]])
-    assert dmp_rr_prs_gcd([[2],[4],[2]], [[1],[1]], 1, ZZ) == ([[1], [1]], [[2], [2]], [[1]])
+    assert dmp_zz_heu_gcd(ZZ.map([[2], [4], [2]]), [[1], [1]], 1, ZZ) == ([[1], [1]], [[2], [2]], [[1]])
+    assert dmp_rr_prs_gcd(ZZ.map([[2], [4], [2]]), [[1], [1]], 1, ZZ) == ([[1], [1]], [[2], [2]], [[1]])
 
-    assert dmp_zz_heu_gcd([[1],[1]], [[2],[4],[2]], 1, ZZ) == ([[1], [1]], [[1]], [[2], [2]])
-    assert dmp_rr_prs_gcd([[1],[1]], [[2],[4],[2]], 1, ZZ) == ([[1], [1]], [[1]], [[2], [2]])
+    assert dmp_zz_heu_gcd(ZZ.map([[1], [1]]), [[2], [4], [2]], 1, ZZ) == ([[1], [1]], [[1]], [[2], [2]])
+    assert dmp_rr_prs_gcd(ZZ.map([[1], [1]]), [[2], [4], [2]], 1, ZZ) == ([[1], [1]], [[1]], [[2], [2]])
 
-    assert dmp_zz_heu_gcd([[[[1,2,1]]]], [[[[2,2]]]], 3, ZZ) == ([[[[1,1]]]], [[[[1,1]]]], [[[[2]]]])
-    assert dmp_rr_prs_gcd([[[[1,2,1]]]], [[[[2,2]]]], 3, ZZ) == ([[[[1,1]]]], [[[[1,1]]]], [[[[2]]]])
+    assert dmp_zz_heu_gcd(ZZ.map([[[[1, 2, 1]]]]), [[[[2, 2]]]], 3, ZZ) == ([[[[1, 1]]]], [[[[1, 1]]]], [[[[2]]]])
+    assert dmp_rr_prs_gcd(ZZ.map([[[[1, 2, 1]]]]), [[[[2, 2]]]], 3, ZZ) == ([[[[1, 1]]]], [[[[1, 1]]]], [[[[2]]]])
 
     f, g = [[[[1,2,1],[1,1],[]]]], [[[[1,2,1]]]]
     h, cff, cfg = [[[[1,1]]]], [[[[1,1],[1],[]]]], [[[[1,1]]]]
@@ -539,11 +539,11 @@ def test_dup_lcm():
     assert dup_lcm([2,0,0,0], [6,0], ZZ) == [6,0,0,0]
     assert dup_lcm([2,0,0,0], [3,0], ZZ) == [6,0,0,0]
 
-    assert dup_lcm([1,1,0], [1,0], ZZ) == [1,1,0]
-    assert dup_lcm([1,1,0], [2,0], ZZ) == [2,2,0]
-    assert dup_lcm([1,2,0], [1,0], ZZ) == [1,2,0]
-    assert dup_lcm([2,1,0], [1,0], ZZ) == [2,1,0]
-    assert dup_lcm([2,1,0], [2,0], ZZ) == [4,2,0]
+    assert dup_lcm(ZZ.map([1, 1, 0]), ZZ.map([1, 0]), ZZ) == [1, 1, 0]
+    assert dup_lcm(ZZ.map([1, 1, 0]), ZZ.map([2, 0]), ZZ) == [2, 2, 0]
+    assert dup_lcm(ZZ.map([1, 2, 0]), ZZ.map([1, 0]), ZZ) == [1, 2, 0]
+    assert dup_lcm(ZZ.map([2, 1, 0]), ZZ.map([1, 0]), ZZ) == [2, 1, 0]
+    assert dup_lcm(ZZ.map([2, 1, 0]), ZZ.map([2, 0]), ZZ) == [4, 2, 0]
 
 def test_dmp_lcm():
     assert dmp_lcm([[2]], [[6]], 1, ZZ) == [[6]]
@@ -552,17 +552,17 @@ def test_dmp_lcm():
     assert dmp_lcm([[2],[],[],[]], [[6,0,0],[]], 1, ZZ) == [[6,0,0],[],[],[]]
     assert dmp_lcm([[2],[],[],[]], [[3,0,0],[]], 1, ZZ) == [[6,0,0],[],[],[]]
 
-    assert dmp_lcm([[1,0],[],[]], [[1,0,0],[]], 1, ZZ) == [[1,0,0],[],[]]
+    assert dmp_lcm(ZZ.map([[1, 0], [], []]), ZZ.map([[1, 0, 0], []]), 1, ZZ) == [[1, 0, 0], [], []]
 
-    f = [[2,-3,-2,3,0,0],[]]
-    g = [[1,0,-2,0,1,0]]
-    h = [[2,-3,-4,6,2,-3,0,0],[]]
+    f = ZZ.map([[2, -3, -2, 3, 0, 0], []])
+    g = ZZ.map([[1, 0, -2, 0, 1, 0]])
+    h = [[2, -3, -4, 6, 2, -3, 0, 0], []]
 
     assert dmp_lcm(f, g, 1, ZZ) == h
 
-    f = [[1],[-3,0],[-9,0,0],[-5,0,0,0]]
-    g = [[1],[6,0],[12,0,0],[10,0,0,0],[3,0,0,0,0]]
-    h = [[1],[1,0],[-18,0,0],[-50,0,0,0],[-47,0,0,0,0],[-15,0,0,0,0,0]]
+    f = ZZ.map([[1], [-3, 0], [-9, 0, 0], [-5, 0, 0, 0]])
+    g = ZZ.map([[1], [6, 0], [12, 0, 0], [10, 0, 0, 0], [3, 0, 0, 0, 0]])
+    h = [[1], [1, 0], [-18, 0, 0], [-50, 0, 0, 0], [-47, 0, 0, 0, 0], [-15, 0, 0, 0, 0, 0]]
 
     assert dmp_lcm(f, g, 1, ZZ) == h
 
