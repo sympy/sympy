@@ -1962,7 +1962,7 @@ def test_cross():
 
 def test_hash():
     for cls in classes:
-        if cls == SparseMatrix:
+        if cls in (SparseMatrix, Matrix):
             continue
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
@@ -1970,9 +1970,9 @@ def test_hash():
 @XFAIL
 def test_hashx():
     # delete and remove if-block in test_hash when this passes
-    cls = SparseMatrix
-    s = set([cls.eye(1), cls.eye(1)])
-    assert len(s) == 1 and s.pop() == cls.eye(1)
+    for cls in (Matrix, SparseMatrix):
+        s = set([cls.eye(1), cls.eye(1)])
+        assert len(s) == 1 and s.pop() == cls.eye(1)
 
 def test_adjoint():
     dat = [[0, I], [1, 0]]
