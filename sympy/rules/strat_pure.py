@@ -24,8 +24,10 @@ def memoize(rule):
 def condition(cond, rule):
     """ Only apply rule if condition is true """
     def conditioned_rl(expr):
-        if cond(expr): return rule(expr)
-        else         : return      expr
+        if cond(expr):
+            return rule(expr)
+        else:
+            return      expr
     return conditioned_rl
 
 def chain(*rules):

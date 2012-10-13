@@ -290,8 +290,10 @@ def block_collapse(expr):
                         MatPow: bc_matpow,
                         BlockMatrix: bc_unpack}))
     result = rule(expr)
-    try:                    return result.canonicalize()
-    except AttributeError:  return result
+    try:
+        return result.canonicalize()
+    except AttributeError:
+        return result
 
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
