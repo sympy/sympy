@@ -1113,6 +1113,16 @@ def test_radsimp():
     assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
         sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
 
+
+    # issue 3433
+    assert radsimp(1/sqrt(x)) == 1/sqrt(x)
+    # this is sign-trickery to keep the expression from reverting
+    # back to having a radical in the denominator; the only way
+    # to get the previous expression to return as sqrt(x)/x would be
+    # to use an unevaluated Mul
+    assert radsimp(1/sqrt(2*x+3)) == -sqrt(2*x + 3)/(-2*x - 3)
+    assert radsimp(1/sqrt(2*(x+3))) == -sqrt(2)*sqrt(x + 3)/(-x - 3)/2
+
 def test_issue2834():
     from sympy import Polygon, RegularPolygon, denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
@@ -1260,6 +1270,3 @@ def test_Piecewise():
     s3 = simplify(e3)
     assert simplify(Piecewise((e1, x < e2), (e3, True))) \
         == Piecewise((s1, x < s2), (s3, True))
-
-def test_issue_3433():
-    assert radsimp(1/sqrt(x)) == 1/sqrt(x)

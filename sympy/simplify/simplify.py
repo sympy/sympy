@@ -1417,17 +1417,17 @@ def radsimp(expr, symbolic=True, max_terms=4):
                     r[a] = S.Zero
                 va, vb, vc = r[a],r[b],r[c]
 
-                if va or vc.is_Number:
-                    d = va**2 - vc*vb**2
-                    nmul = va - vb*sqrt(vc)
-                    n1 = n/d
-                    if denom(n1) is not S.One:
-                        n = -(-n/d)
-                    else:
-                        n = n1
-                    n, d = fraction(n*nmul)
+                dold = d
+                d = va**2 - vc*vb**2
+                nmul = va - vb*sqrt(vc)
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n1 = -(-n/d)
+                n1, d1 = fraction(n1*nmul)
+                if d1 != dold:
+                    n, d = n1, d1
                 else:
-                    break
+                    n *= nmul
 
         nexpr = collect_sqrt(expand_mul(n))/d
         if changed or nexpr != expr:
