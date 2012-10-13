@@ -24,6 +24,7 @@ def test_flatten():
 
 def test_unpack():
     assert unpack(Basic(2)) == 2
+    assert unpack(Basic(2, 3)) == Basic(2, 3)
 
 def test_sort():
     assert sort(str)(Basic(3,1,2)) == Basic(1,2,3)
@@ -36,6 +37,7 @@ def test_distribute():
     assert distribute_t12(T1(1, 2, T2(3, 4), 5)) == \
             T2(T1(1, 2, 3, 5),
                T1(1, 2, 4, 5))
+    assert distribute_t12(T1(1, 2, 3)) == T1(1, 2, 3)
 
 def test_distribute_add_mul():
     from sympy import Add, Mul, symbols
