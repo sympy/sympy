@@ -18,7 +18,7 @@ the responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from sympy.core import S, C, Add, Float
+from sympy.core import S, C, Add
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \

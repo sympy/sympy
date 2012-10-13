@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs)
+    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
+    I)
 
 from sympy.printing.python import python
 
@@ -131,7 +132,8 @@ def test_python_derivatives():
 
     # Multiple symbols
     f_3 = Derivative(log(x) + x**2, x, y, evaluate=False)
-    #assert python(f_3) ==
+    assert python(f_3) == \
+        "x = Symbol('x')\ny = Symbol('y')\ne = Derivative(x**2 + log(x), x, y)"
 
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert python(f_4) in [

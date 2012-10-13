@@ -1,4 +1,4 @@
-from sympy.core import S, C, Basic, Interval
+from sympy.core import S, C
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 from sympy.core.sympify import SympifyError
@@ -428,7 +428,6 @@ class PrettyPrinter(Printer):
 
             h = max(hrequired, 2)
             d = h//2
-            wrequired = max(lower, upper)
             w = d + 1
             more = hrequired % 2
 
@@ -749,11 +748,6 @@ class PrettyPrinter(Printer):
         above = D.height()//2 - 1
         below = D.height() - above - 1
 
-        if self._use_unicode:
-            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
-        else:
-            pic = (3, 0, 3, ' _\n|_\n|\n')
-
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
@@ -863,7 +857,6 @@ class PrettyPrinter(Printer):
         args = e.args
         if sort:
             args = sorted(args, key=default_sort_key)
-        n = len(args)
 
         func_name = func.__name__
 
@@ -1364,8 +1357,6 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
-        cls = basis.__class__.__name__
-
         exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
@@ -1427,11 +1418,6 @@ class PrettyPrinter(Printer):
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
-    def _print_atan2(self, e):
-        pform = prettyForm(*self._print_seq(e.args).parens())
-        pform = prettyForm(*pform.left('atan2'))
-        return pform
-
     def _print_RandomDomain(self, d):
         try:
             pform = self._print('Domain: ')
@@ -1483,7 +1469,6 @@ class PrettyPrinter(Printer):
             NamedMorphism(morphism.domain, morphism.codomain, "id"))
 
     def _print_CompositeMorphism(self, morphism):
-        from sympy.categories import NamedMorphism
 
         circle = xsym(".")
 

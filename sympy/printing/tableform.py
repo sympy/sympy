@@ -315,9 +315,7 @@ class TableForm(object):
             new_line = []
             for i in range(self._w):
                 # Format the item somehow if needed:
-                s = str(self._headings[1][i])
-                w = len(s)
-                new_line.append(s)
+                new_line.append(str(self._headings[1][i]))
             self._headings[1] = new_line
 
         alignments = []
