@@ -28,18 +28,6 @@ def rm_id(isid):
 
     return ident_remove
 
-def frequencies(coll):
-    """ Count the number of times an element occurs in a collection
-
-    >>> from sympy.rules.rl import frequencies
-    >>> frequencies("aabbc")
-    {'a': 2, 'b': 2, 'c': 1}
-    """
-    counts = {}
-    for elem in coll:
-        counts[elem] = counts.get(elem, 0) + 1
-    return counts
-
 def groupby(coll, key):
     """ Group elements in a collection by a key function
 
