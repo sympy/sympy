@@ -140,15 +140,9 @@ class DenseMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy import ones
-        >>> I = ones(3)
-        >>> I.row(1, lambda v, i: v*3)
-        >>> I
-        [1, 1, 1]
-        [3, 3, 3]
-        [1, 1, 1]
-        >>> I.row(1)
-        [3, 3, 3]
+        >>> from sympy import eye
+        >>> eye(2).row(0)
+        [1, 0]
 
         See Also
         ========
@@ -170,23 +164,15 @@ class DenseMatrix(MatrixBase):
         self.row_op(i, f)
 
     def col(self, j, f=None):
-        """Elementary column selector (default) or operation using functor
-        which is a function of two args interpreted as (self[i, j], i).
+        """Elementary column selector.
 
         Examples
         ========
 
-        >>> from sympy import ones
-        >>> I = ones(3)
-        >>> I.col(0, lambda v, i: v*3)
-        >>> I
-        [3, 1, 1]
-        [3, 1, 1]
-        [3, 1, 1]
-        >>> I.col(0)
-        [3]
-        [3]
-        [3]
+        >>> from sympy import eye
+        >>> eye(2).col(0)
+        [1]
+        [0]
 
         See Also
         ========

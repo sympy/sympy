@@ -848,10 +848,10 @@ def test_shape():
                 [0,y,0]])
     assert M.shape == (2, 3)
 
-def test_col_row():
+def test_col_row_op():
     M = Matrix([[x,0,0],
                 [0,y,0]])
-    M.row(1,lambda r, j: r+j+1)
+    M.row_op(1,lambda r, j: r+j+1)
     assert M == Matrix([[x,0,0],
                         [1,y+2,3]])
     M.col_op(0,lambda c, j: c+y**j)
