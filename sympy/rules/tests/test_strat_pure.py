@@ -1,5 +1,5 @@
 from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, try_safe, do_one)
+        chain, try_safe, do_one, debug)
 
 def test_null_safe():
     def rl(expr):
@@ -46,3 +46,15 @@ def test_try_safe():
 def test_do_one():
     rl = do_one(posdec, posdec)
     assert rl(5) == 4
+
+def test_debug():
+    import StringIO
+    file = StringIO.StringIO()
+    rl = debug(posdec, file)
+    rl(5)
+    log = file.getvalue()
+    file.close()
+
+    assert posdec.func_name in log
+    assert '5' in log
+    assert '4' in log

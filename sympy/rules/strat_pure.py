@@ -40,13 +40,16 @@ def chain(*rules):
         return expr
     return chain_rl
 
-def debug(rule):
+def debug(rule, file=None):
     """ Print out before and after expressions each time rule is used """
+    if file is None:
+        from sys import stdout
+        file = stdout
     def debug_rl(expr):
         result = rule(expr)
         if result != expr:
-            print "Rule: %s"%rule.func_name
-            print "In: %s\nOut: %s\n"%(expr, result)
+            file.write("Rule: %s\n"%rule.func_name)
+            file.write("In: %s\nOut: %s\n\n"%(expr, result))
         return result
     return debug_rl
 
