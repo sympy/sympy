@@ -3637,8 +3637,8 @@ atan2⎜───────, ╲╱ x ⎟\n\
 def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment(Point(0, 1), Point(0, 2))'
-    e = Ray((1, 1), angle=4.2*pi)
-    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/5) + 1))'
+    e = Ray((1, 1), angle=4.05*pi)
+    assert pretty(e) == 'Ray(Point(1, 1), Point(2, tan(pi/20) + 1))'
 
 def test_expint():
     expr = Ei(x)
