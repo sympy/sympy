@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions import legendre, assoc_legendre
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -187,6 +187,9 @@ class Ynm(Function):
         # TODO: Make sure n \in N
         # TODO: Assert |m| <= n ortherwise we should return 0
         return self.expand(func=True)
+
+    def _eval_rewrite_as_sin(self, n, m, theta, phi):
+        return self.rewrite(cos)
 
     def _eval_rewrite_as_cos(self, n, m, theta, phi):
         # This method can be expensive due to extensive use of simplification!
