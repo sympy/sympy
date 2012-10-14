@@ -1000,7 +1000,7 @@ class LatexPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_BlockMatrix(self, expr):
-        return self._print(expr.mat)
+        return self._print(expr.blocks)
 
     def _print_Transpose(self, expr):
         mat = expr.arg

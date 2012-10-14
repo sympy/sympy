@@ -623,9 +623,9 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_BlockMatrix(self, B):
-        if B.mat.shape == (1, 1):
-            return self._print(B.mat[0, 0])
-        return self._print(B.mat)
+        if B.blocks.shape == (1, 1):
+            return self._print(B.blocks[0, 0])
+        return self._print(B.blocks)
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
