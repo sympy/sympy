@@ -1368,7 +1368,6 @@ def generate_oriented_forest(n):
             else:
                 break
 
-
 def lazyDSU_sort(seq, keys, warn=False):
     """Return sorted seq, breaking ties by applying keys only when needed.
 
@@ -1512,3 +1511,15 @@ def runs(seq, op=gt):
     if run:
         cycles.append(run)
     return cycles
+
+def groupby(coll, key):
+    """ Group elements in a collection by a key function
+
+    >>> from sympy.utilities.iterables import groupby
+    >>> groupby((1,2,3,4), lambda x: x%2)
+    {0: (2, 4), 1: (1, 3)}
+    """
+    m = {}
+    for elem in coll:
+        m[key(elem)] = m.get(key(elem), ()) + (elem,)
+    return m

@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        quick_sort, minlex, runs, lazyDSU_sort, reshape)
+        quick_sort, minlex, runs, lazyDSU_sort, reshape, groupby)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -347,7 +347,6 @@ def test_common_prefix_suffix():
     assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
     assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]
 
-
 def test_minlex():
     assert minlex([1, 2, 0]) == (0, 1, 2)
     assert minlex((1, 2, 0)) == (0, 1, 2)
@@ -399,3 +398,6 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+
+def test_groupby():
+    assert groupby((1,2,3,4), lambda x: x%2) == {0: (2, 4), 1: (1, 3)}

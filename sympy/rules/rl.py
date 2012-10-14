@@ -1,6 +1,7 @@
 # Generic rules for SymPy.
 # This file assumes knowledge of Basic and little else
 from sympy import Basic
+from sympy.utilities.iterables import groupby
 
 def rm_id(isid):
     """ Create a rule to remove identities
@@ -27,18 +28,6 @@ def rm_id(isid):
             return Basic.__new__(expr.__class__, expr.args[0])
 
     return ident_remove
-
-def groupby(coll, key):
-    """ Group elements in a collection by a key function
-
-    >>> from sympy.rules.rl import groupby
-    >>> groupby((1,2,3,4), lambda x: x%2)
-    {0: (2, 4), 1: (1, 3)}
-    """
-    m = {}
-    for elem in coll:
-        m[key(elem)] = m.get(key(elem), ()) + (elem,)
-    return m
 
 def glom(key, count, combine):
     """ Create a rule to conglomerate identical args
