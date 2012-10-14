@@ -783,10 +783,11 @@ class tan(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
-                x = (pi_coeff+S.Half) % 1 - S.Half
-                narg = x*S.Pi
-                cresult, sresult = cos(narg), sin(narg)
-                if not isinstance(cresult,cos) and not isinstance(sresult,sin):
+                narg = ((pi_coeff + S.Half) % 1 - S.Half)*S.Pi
+                # see cos() to specify which expressions should  be
+                # expanded automatically in terms of radicals
+                cresult, sresult = cos(narg), cos(narg-S.Pi/2)
+                if not isinstance(cresult, cos) and not isinstance(sresult, cos):
                     if cresult == 0:
                         return S.ComplexInfinity
                     return (sresult/cresult)
@@ -800,7 +801,7 @@ class tan(TrigonometricFunction):
                 tanx = tan(x)
                 if tanm is S.ComplexInfinity:
                     return -cot(x)
-                return (tanm + tanx)/(1-tanm*tanx)
+                return (tanm + tanx)/(1 - tanm*tanx)
 
         if arg.func is atan:
             return arg.args[0]
@@ -866,25 +867,28 @@ class tan(TrigonometricFunction):
         return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
 
     def _eval_expand_trig(self, **hints):
-        from sympy import I
         arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO, implement more if deep stuff here
-            # TODO: Do this more efficiently for more than two terms
-            x, y = arg.as_two_terms()
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            TX = []
+            for x in arg.args:
+                tx = tan(x, evaluate=False)._eval_expand_trig()
+                TX.append(tx)
 
-            try:
-                tx = tan(x)._eval_expand_trig()
-            except:
-                tx = tan(x)
-            try:
-                ty = tan(y)._eval_expand_trig()
-            except:
-                ty = tan(y)
-            return (tx+ty)/(1-tx*ty)
+            Yg = numbered_symbols('Y')
+            Y = [ Yg.next() for i in xrange(n) ]
+
+            p = [0,0]
+            for i in xrange(n+1):
+                p[1-i%2] += symmetric_poly(i,Y)*(-1)**((i%4)//2)
+            return (p[0]/p[1]).subs(zip(Y,TX))
+
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
+                I = S.ImaginaryUnit
                 z = C.Symbol('dummy',real=True)
                 P = ((1+I*z)**coeff).expand()
                 return (C.im(P)/C.re(P)).subs([(z,tan(terms))])
@@ -989,10 +993,11 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
-                x = ((pi_coeff+S.Half) % 1) - S.Half
-                narg = x*S.Pi
-                cresult, sresult = cos(narg), sin(narg)
-                if not isinstance(cresult, cos) and not isinstance(sresult, sin):
+                narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi
+                # see cos() to specify which expressions should be
+                # expanded automatically in terms of radicals
+                cresult, sresult = cos(narg), cos(narg-S.Pi/2)
+                if not isinstance(cresult, cos) and not isinstance(sresult, cos):
                     if sresult == 0:
                         return S.ComplexInfinity
                     return cresult / sresult
@@ -1121,22 +1126,25 @@ class cot(TrigonometricFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO, implement more if deep stuff here
-            # TODO: Do this more efficiently for more than two terms
-            x, y = arg.as_two_terms()
-            try:
-                cx = cot(x)._eval_expand_trig()
-            except:
-                cx = cot(x)
-            try:
-                cy = cot(y)._eval_expand_trig()
-            except:
-                cy = cot(y)
-            return (cx*cy-1)/(cx+cy)
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            CX = []
+            for x in arg.args:
+                cx = cot(x, evaluate=False)._eval_expand_trig()
+                CX.append(cx)
+
+            Yg = numbered_symbols('Y')
+            Y = [ Yg.next() for i in xrange(n) ]
+
+            p = [0,0]
+            for i in xrange(n,-1,-1):
+                p[(n-i)%2] += symmetric_poly(i,Y)*(-1)**(((n-i)%4)//2)
+            return (p[0]/p[1]).subs(zip(Y,CX))
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
-                from sympy import I
+                I = S.ImaginaryUnit
                 z = C.Symbol('dummy',real=True)
                 P = ((z+I)**coeff).expand()
                 return (C.re(P)/C.im(P)).subs([(z,cot(terms))])

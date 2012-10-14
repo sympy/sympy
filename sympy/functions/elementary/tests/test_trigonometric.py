@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd)
 
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
 
 def test_sin():
     x, y = symbols('x,y')
@@ -379,9 +379,12 @@ def test_tan_subs():
     assert tan(x).subs(x, 3*S.Pi/2) == zoo
 
 def test_tan_expansion():
-    x,y = symbols('x,y')
+    x,y,z = symbols('x,y,z')
     assert 0 == tan(x+y).expand(trig=True) - ((tan(x)+tan(y))/(1-tan(x)*tan(y)))
     assert 0 == tan(x-y).expand(trig=True) - ((tan(x)-tan(y))/(1+tan(x)*tan(y)))
+    assert 0 == (tan(x)+tan(y)+tan(z)-tan(x)*tan(y)*tan(z)) \
+        /(1-tan(x)*tan(y)-tan(x)*tan(z)-tan(y)*tan(z)) \
+        - tan(x+y+z).expand(trig=True)
     assert 0 == tan(2*x).expand(trig=True).rewrite(tan).subs([(tan(x),Rational(1,7))])*24-7
     assert 0 == tan(3*x).expand(trig=True).rewrite(tan).subs([(tan(x),Rational(1,5))])*55-37
     assert 0 == tan(4*x-pi/4).expand(trig=True).rewrite(tan).subs([(tan(x),Rational(1,5))])*239-1
@@ -472,9 +475,12 @@ def test_cot_subs():
     assert cot(x).subs(x, S.Pi) == zoo
 
 def test_cot_expansion():
-    x,y = symbols('x,y')
+    x,y,z = symbols('x,y,z')
     assert 0 == cot(x+y).expand(trig=True) - (cot(x)*cot(y) - 1)/(cot(x) + cot(y))
     assert 0 == (cot(x-y).expand(trig=True) + (cot(x)*cot(y) + 1)/(cot(x) - cot(y))).factor()
+    assert 0 == (cot(x)*cot(y)*cot(z)-cot(x)-cot(y)-cot(z))\
+        /(-1+cot(x)*cot(y)+cot(x)*cot(z)+cot(y)*cot(z)) \
+        - cot(x+y+z).expand(trig=True)
     assert 0 == cot(3*x).expand(trig=True) - ((cot(x)**3-3*cot(x))/(3*cot(x)**2-1))
     assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x),Rational(1,3))])*3+4
     assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x),Rational(1,5))])*55-37
@@ -850,8 +856,9 @@ def test_sin_cos_with_infinity():
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
 
+@slow
 def test_sincos_rewrite_sqrt():
-    # this test is slow
+    # equivalent to testing rewrite(pow)
     for p in [1, 3, 5, 17, 3*5*17]:
         for t in [1, 8]:
             n=t*p
@@ -861,7 +868,25 @@ def test_sincos_rewrite_sqrt():
                     s1 = sin(x).rewrite(sqrt)
                     c1 = cos(x).rewrite(sqrt)
 
-                    assert not s1.has(cos, sin), "fails for %d*pi/%d"%(i,n)
-                    assert not c1.has(cos, sin), "fails for %d*pi/%d"%(i,n)
+                    assert not s1.has(cos, sin), "fails for %d*pi/%d"%(i, n)
+                    assert not c1.has(cos, sin), "fails for %d*pi/%d"%(i, n)
                     assert 1e-10 > abs( sin(float(x)) - float(s1) )
                     assert 1e-10 > abs( cos(float(x)) - float(c1) )
+
+@slow
+def test_tancot_rewrite_sqrt():
+    # equivalent to testing rewrite(pow)
+    for p in [1, 3, 5, 17, 3*5*17]:
+        for t in [1, 8]:
+            n=t*p
+            for i in xrange(1, (n + 1)//2 + 1):
+                if 1 == gcd(i, n):
+                    x = i*pi/n
+                    if  2*i != n and 3*i != 2*n:
+                        t1 = tan(x).rewrite(sqrt)
+                        assert not t1.has(cot, tan), "fails for %d*pi/%d"%(i, n)
+                        assert 1e-10 > abs( tan(float(x)) - float(t1) )
+                    if  i != 0 and i != n:
+                        c1 = cot(x).rewrite(sqrt)
+                        assert not c1.has(cot, tan), "fails for %d*pi/%d"%(i, n)
+                        assert 1e-10 > abs( cot(float(x)) - float(c1) )
