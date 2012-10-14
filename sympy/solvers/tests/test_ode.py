@@ -1322,7 +1322,6 @@ def test_issue_2013_2331():
 def test_nth_order_linear_euler_eq_homogeneous():
     our_hint = "nth_linear_euler_eq_homogeneous"
     x = Symbol('x')
-    print
 
     eq= Eq( -3*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
     sol = dsolve(eq, f(x), hint=our_hint);
