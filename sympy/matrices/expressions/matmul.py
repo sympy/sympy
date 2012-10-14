@@ -19,7 +19,7 @@ class MatMul(MatrixExpr):
     is_MatMul = True
 
     def __new__(cls, *args, **kwargs):
-        simplify = kwargs.get('simplify', True)
+        evaluate = kwargs.get('evaluate', True)
         check    = kwargs.get('check'   , True)
 
         args = map(sympify, args)
@@ -27,7 +27,7 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
-        if simplify:
+        if evaluate:
             return canonicalize(obj)
         return obj
 

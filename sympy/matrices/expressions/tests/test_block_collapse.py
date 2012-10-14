@@ -38,7 +38,7 @@ def test_bc_dist_diag():
 
 def test_bc_matpow():
     A = MatrixSymbol('A', n, n)
-    assert bc_matpow(A**2) == MatMul(A, A, simplify=False)
+    assert bc_matpow(A**2) == MatMul(A, A, evaluate=False)
     assert bc_matpow(A**n) == A**n
 
 def test_block_plus_ident():

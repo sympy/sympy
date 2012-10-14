@@ -12,24 +12,24 @@ E = MatrixSymbol('E', m, n)
 
 
 def test_factor_in_front():
-    assert factor_in_front(MatMul(A, 2, B, simplify=False)) ==\
-                           MatMul(2, A, B, simplify=False)
+    assert factor_in_front(MatMul(A, 2, B, evaluate=False)) ==\
+                           MatMul(2, A, B, evaluate=False)
 
 def test_remove_ids():
-    assert remove_ids(MatMul(A, Identity(m), B, simplify=False)) == \
-                      MatMul(A, B, simplify=False)
-    assert null_safe(remove_ids)(MatMul(Identity(n), simplify=False)) == \
-                                 MatMul(Identity(n), simplify=False)
+    assert remove_ids(MatMul(A, Identity(m), B, evaluate=False)) == \
+                      MatMul(A, B, evaluate=False)
+    assert null_safe(remove_ids)(MatMul(Identity(n), evaluate=False)) == \
+                                 MatMul(Identity(n), evaluate=False)
 
 def test_xxinv():
-    assert xxinv(MatMul(D, Inverse(D), D, simplify=False)) == \
-                 MatMul(Identity(n), D, simplify=False)
+    assert xxinv(MatMul(D, Inverse(D), D, evaluate=False)) == \
+                 MatMul(Identity(n), D, evaluate=False)
 
 def test_any_zeros():
-    assert any_zeros(MatMul(A, ZeroMatrix(m, k), simplify=False)) == \
+    assert any_zeros(MatMul(A, ZeroMatrix(m, k), evaluate=False)) == \
                      ZeroMatrix(n, k)
 
 def test_unpack():
-    assert unpack(MatMul(A, simplify=False)) == A
+    assert unpack(MatMul(A, evaluate=False)) == A
     x = MatMul(A, B)
     assert unpack(x) == x

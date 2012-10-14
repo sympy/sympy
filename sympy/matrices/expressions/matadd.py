@@ -18,7 +18,7 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
-        simplify = kwargs.get('simplify', True)
+        evaluate = kwargs.get('evaluate', True)
         check    = kwargs.get('check'   , True)
 
         # TODO: This is a kludge
@@ -29,7 +29,7 @@ class MatAdd(MatrixExpr):
         obj = Basic.__new__(cls, *args)
         if check:
             validate(*args)
-        if simplify:
+        if evaluate:
             return canonicalize(obj)
         else:
             return obj
