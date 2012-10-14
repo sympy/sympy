@@ -1352,3 +1352,4 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert our_hint in classify_ode(eq)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
     assert sol.rhs == x**5*(C1 + C2*log(x) + C3*log(x)**2)
+
