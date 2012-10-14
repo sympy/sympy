@@ -7,7 +7,7 @@ from trace import Trace
 from inverse import Inverse
 from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, Add
-from sympy.rules import typed, canon, debug, do_one
+from sympy.rules import typed, canon, debug, do_one, unpack
 
 
 class BlockMatrix(MatrixExpr):
@@ -329,8 +329,8 @@ def bc_block_plus_ident(expr):
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
-    if factor != 1 and mat.is_BlockMatrix:
-        B = mat.blocks
+    if factor != 1 and unpack(mat).is_BlockMatrix:
+        B = unpack(mat).blocks
         return BlockMatrix([[factor * B[i,j] for j in range(B.cols)]
                                              for i in range(B.rows)])
     return expr

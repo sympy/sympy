@@ -66,7 +66,7 @@ class MatMul(MatrixExpr):
 
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
-        return coeff, MatMul(*matrices)
+        return coeff, Basic.__new__(MatMul, *matrices)
 
     def _eval_transpose(self):
         from transpose import Transpose

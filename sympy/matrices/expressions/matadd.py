@@ -61,7 +61,7 @@ def validate(*args):
             raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
-matrix_of = lambda arg: arg.as_coeff_mmul()[1]
+matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
 def combine(cnt, mat):
     from matmul import MatMul
     if cnt == 1:

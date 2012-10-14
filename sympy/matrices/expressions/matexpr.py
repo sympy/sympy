@@ -231,7 +231,7 @@ class MatrixExpr(Basic):
         return self
 
     def as_coeff_mmul(self):
-        return 1, self
+        return 1, Basic.__new__(MatMul, self)
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
