@@ -125,7 +125,7 @@ def xxinv(mul):
 def remove_ids(mul):
     """ Remove Identities from a MatMul
 
-    This is a specialized version of sympy.rules.rm_id.
+    This is a modified version of sympy.rules.rm_id.
     This is necesssary because MatMul may contain both MatrixExprs and Exprs
     as args.
 
@@ -133,12 +133,14 @@ def remove_ids(mul):
     --------
         sympy.rules.rm_id
     """
-    factor, matrices = mul.as_coeff_matrices()
-    if any(m.is_Identity for m in matrices) and len(matrices) != 1:
-        non_ids = [x for x in matrices if not x.is_Identity]
-        return newmul(factor, *non_ids)
-    return mul
-
+    # Separate Exprs from MatrixExprs in args
+    factor, mmul = mul.as_coeff_mmul()
+    # Apply standard rm_id for MatMuls
+    result = rm_id(lambda x: x.is_Identity == True)(mmul)
+    if result != mmul:
+        return newmul(factor, *result.args) # Recombine and return
+    else:
+        return mul
 
 def factor_in_front(mul):
     factor, matrices = mul.as_coeff_matrices()
