@@ -8,7 +8,7 @@ def rm_id(isid):
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
 
-    >>> from sympy.rules import rm_id, typed
+    >>> from sympy.rules import rm_id
     >>> from sympy import Basic
     >>> remove_zeros = rm_id(lambda x: x==0)
     >>> remove_zeros(Basic(1, 0, 2))
