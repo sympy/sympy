@@ -13,8 +13,11 @@ def rm_id(isid):
     >>> remove_zeros = rm_id(lambda x: x==0)
     >>> remove_zeros(Basic(1, 0, 2))
     Basic(1, 2)
-    >>> remove_zeros(Basic(0, 0))
+    >>> remove_zeros(Basic(0, 0)) # If only identites then we keep one
     Basic(0)
+
+    See Also:
+        unpack
     """
     def ident_remove(expr):
         """ Remove identities """
