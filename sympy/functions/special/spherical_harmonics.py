@@ -4,6 +4,8 @@ from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions import legendre, assoc_legendre
+from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 
 Pl = legendre
@@ -185,6 +187,17 @@ class Ynm(Function):
         # TODO: Make sure n \in N
         # TODO: Assert |m| <= n ortherwise we should return 0
         return self.expand(func=True)
+
+    def _eval_rewrite_as_cos(self, n, m, theta, phi):
+        # This method can be expensive due to extensive use of simplification!
+        from sympy.simplify import simplify, trigsimp
+        # TODO: Make sure n \in N
+        # TODO: Assert |m| <= n ortherwise we should return 0
+        term = simplify(self.expand(func=True))
+        # We can do this because of the range of theta
+        th = self.args[2]
+        term = term.xreplace({Abs(sin(theta)):sin(theta)})
+        return simplify(trigsimp(term))
 
     def _eval_conjugate(self):
         # TODO: Make sure theta \in R and phi \in R
