@@ -1320,7 +1320,8 @@ def test_issue_2013_2331():
     assert homogeneous_order(y - log(x), x, y) is None
 
 def test_nth_order_linear_euler_eq_homogeneous():
-    x = Symbol('x')
+    x,t = symbols('x,t')
+    y = Function('y')
     our_hint = "nth_linear_euler_eq_homogeneous"
 
     eq = Eq( -3*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
@@ -1355,6 +1356,13 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = Eq(-125*f(x) + 61*diff(f(x),x)*x -12*x**2*diff(f(x),x,x)+x**3*diff(f(x),x,x,x),0)
     sol = x**5*(C1 + C2*log(x) + C3*log(x)**2)
     sols = constant_renumber(sol, 'C', 1, 4)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = t**2*diff(y(t),t,2)+t*diff(y(t),t)-9*y(t)
+    sol = C1*t**3 + C2*t**-3
+    sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
