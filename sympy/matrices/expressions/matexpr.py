@@ -105,10 +105,10 @@ class MatrixExpr(Expr):
         raise NotImplementedError()
 
     def adjoint(self):
-        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
+        raise NotImplementedError()
 
     def conjugate(self):
-        return MatMul(*[arg.conjugate() for arg in self.args])
+        raise NotImplementedError()
 
     def transpose(self):
         try:
