@@ -911,7 +911,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 return x**i in coeff.args
                 return True
             if i == 1:
-                return x == coeff 
+                return x == coeff
             return False
         if r and not any( not is_monomial_of_degree(r[i],i) for i in r if i >= 0):
             if not r[-1]:

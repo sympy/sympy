@@ -99,8 +99,10 @@ def test_dsolve_options():
     assert a['separable_Integral'].has(Integral)
     assert sorted(b.keys()) == keys
     assert b['order'] == ode_order(eq, f(x))
-    assert b['best'] == Eq(f(x), C1/x)
-    assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
+    assert constant_renumber(b['best'], 'C', 1, 2) == Eq(f(x), C1/x)
+    sol = dsolve(eq, hint='best', simplify=False)
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert sols == Eq(f(x), C1/x)
     assert b['default'] == 'separable'
     assert b['best_hint'] == '1st_linear'
     assert a['separable'] != b['separable']
