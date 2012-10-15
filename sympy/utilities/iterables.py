@@ -543,12 +543,9 @@ def sift(expr, keyfunc):
     ========
     lazyDSU_sort
     """
-    d = defaultdict(list)
     if hasattr(expr, 'args'):
         expr = expr.args or [expr]
-    for e in expr:
-        d[keyfunc(e)].append(e)
-    return d
+    return groupby(expr, keyfunc)
 
 
 def take(iter, n):
@@ -1517,9 +1514,9 @@ def groupby(coll, key):
 
     >>> from sympy.utilities.iterables import groupby
     >>> groupby((1,2,3,4), lambda x: x%2)
-    {0: (2, 4), 1: (1, 3)}
+    {0: [2, 4], 1: [1, 3]}
     """
-    m = {}
+    m = defaultdict(list)
     for elem in coll:
-        m[key(elem)] = m.get(key(elem), ()) + (elem,)
+        m[key(elem)].append(elem)
     return m

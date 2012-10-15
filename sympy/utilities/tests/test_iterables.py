@@ -400,4 +400,4 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
 
 def test_groupby():
-    assert groupby((1,2,3,4), lambda x: x%2) == {0: (2, 4), 1: (1, 3)}
+    assert groupby((1,2,3,4), lambda x: x%2) == {0: [2, 4], 1: [1, 3]}
