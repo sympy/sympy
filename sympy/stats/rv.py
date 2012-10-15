@@ -462,7 +462,7 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
-def probability(condition, given_condition=None, numsamples=None,  **kwargs):
+def probability(condition, given_condition=None, numsamples=None, **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
@@ -505,14 +505,19 @@ def probability(condition, given_condition=None, numsamples=None,  **kwargs):
 
 def density(expr, condition=None, numsamples=None, **kwargs):
     """
-    Probability density of a random expression
+    Probability density of a random expression, optionally given a second condition
 
-    Optionally given a second condition
+    This density will take on different forms for different types of probability
+    spaces. Discrete variables produce Dicts. Continuous variables produce Lambdas.
 
-    This density will take on different forms for different types of
-    probability spaces.
-    Discrete variables produce Dicts.
-    Continuous variables produce Lambdas.
+    Parameters
+    ----------
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the density value
+    condition : Relational containing RandomSymbols
+        A conditional expression. density(X>1, X>0) is density of X>1 given X>0
+    numsamples : int
+        Enables sampling and approximates the density with this many samples
 
     Examples
     ========
@@ -724,8 +729,6 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         yield expr.subs(d)
         count += 1
 
-
-
 def sampling_P(condition, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
@@ -780,7 +783,7 @@ def sampling_E(condition, given_condition=None, numsamples=1,
     else:
         return result
 
-def sampling_density(condition, given_condition=None, numsamples=1, 
+def sampling_density(condition, given_condition=None, numsamples=1,
                      **kwargs):
     """
     Sampling version of density
