@@ -3,6 +3,8 @@
 from sympy import Basic
 from sympy.utilities.iterables import groupby
 
+# Functions that create rules
+
 def rm_id(isid):
     """ Create a rule to remove identities
 
@@ -67,30 +69,6 @@ def glom(key, count, combine):
 
     return conglomerate
 
-def unpack(expr):
-    """ Rule to unpack singleton args
-
-    >>> from sympy.rules import unpack
-    >>> from sympy import Basic
-    >>> unpack(Basic(2))
-    2
-    """
-    if len(expr.args) == 1:
-        return expr.args[0]
-    else:
-        return expr
-
-def flatten(expr):
-    """ Flatten T(a, b, T(c, d), T2(e)) to T(a, b, c, d, T2(e)) """
-    cls = expr.__class__
-    args = []
-    for arg in expr.args:
-        if arg.__class__ == cls:
-            args.extend(arg.args)
-        else:
-            args.append(arg)
-    return Basic.__new__(expr.__class__, *args)
-
 def sort(key):
     """ Create a rule to sort by a key function
 
@@ -128,3 +106,29 @@ def distribute(A, B):
                 return B(*[A(*(first + (arg,) + tail)) for arg in b.args])
         return expr
     return distribute_rl
+
+# Functions that are rules
+
+def unpack(expr):
+    """ Rule to unpack singleton args
+
+    >>> from sympy.rules import unpack
+    >>> from sympy import Basic
+    >>> unpack(Basic(2))
+    2
+    """
+    if len(expr.args) == 1:
+        return expr.args[0]
+    else:
+        return expr
+
+def flatten(expr):
+    """ Flatten T(a, b, T(c, d), T2(e)) to T(a, b, c, d, T2(e)) """
+    cls = expr.__class__
+    args = []
+    for arg in expr.args:
+        if arg.__class__ == cls:
+            args.extend(arg.args)
+        else:
+            args.append(arg)
+    return Basic.__new__(expr.__class__, *args)
