@@ -72,12 +72,14 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral', \
         '1st_homogeneous_coeff_subs_indep_div_dep', \
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear', \
-        '1st_linear_Integral', 'best', 'best_hint', 'default', 'order', \
+        '1st_linear_Integral', 'best', 'best_hint', 'default', \
+        'nth_linear_euler_eq_homogeneous', 'order', \
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
-    'best', 'best_hint', 'default', 'order', 'separable_Integral']
+    'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous', \
+    'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
@@ -1320,9 +1322,15 @@ def test_issue_2013_2331():
     assert homogeneous_order(y - log(x), x, y) is None
 
 def test_nth_order_linear_euler_eq_homogeneous():
-    x,t = symbols('x,t')
+    x,t,a,b,c = symbols('x,t,a,b,c')
     y = Function('y')
     our_hint = "nth_linear_euler_eq_homogeneous"
+
+    eq = diff(f(t),t,4)*t**4 - 13*diff(f(t),t,2)*t**2 + 36*f(t)
+    assert our_hint in classify_ode(eq)
+
+    eq = a*y(t)+b*t*diff(y(t),t)+c*t**2*diff(y(t),t,2)
+    assert our_hint in classify_ode(eq)
 
     eq = Eq( -3*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
     sol = C1 + C2*x**Rational(5,2)
@@ -1364,5 +1372,5 @@ def test_nth_order_linear_euler_eq_homogeneous():
     sol = C1*t**3 + C2*t**-3
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, y(t), hint=our_hint).rhs in ( sol, sols )
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]

@@ -895,17 +895,23 @@ def classify_ode(eq, func=None, dict=False, prep=True):
         # Euler equation case (a_i * x**i for all i)
         def is_monomial_of_degree(coeff,i):
             assert i >= 0
+            if coeff == 0:
+                return True
             if i == 0:
-                return coeff.is_Number
+                if x in coeff.atoms():
+                    return False
+                if f(x) in coeff.atoms():
+                    return False
+                return True
             if coeff.is_Pow:
                 return (coeff.base, coeff.exp) == (x, i)
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
-                for j in coeff.args:
-                    if not j.is_Number and j!=x**i:
-                        return False
+                return x**i in coeff.args
                 return True
+            if i == 1:
+                return x == coeff 
             return False
         if r and not any( not is_monomial_of_degree(r[i],i) for i in r if i >= 0):
             if not r[-1]:
