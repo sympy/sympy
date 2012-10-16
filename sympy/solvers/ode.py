@@ -192,7 +192,7 @@ run sol = constant_renumber(sol, 'C', 1, order), for each solution, where
 order is the order of the ODE. This is because constant_renumber renumbers
 the arbitrary constants by printing order, which is platform dependent.
 Try to test every corner case of your solver, including a range of
-orders if it is a nth order solver, but if your solver is slow, auch as
+orders if it is a nth order solver, but if your solver is slow, such as
 if it involves hard integration, try to keep the test run time down.
 
 Feel free to refactor existing hints to avoid duplicating code or
@@ -2524,6 +2524,9 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
                 gsol += (x**root)*constants.next()
                 assert multiplicity == 1
                 collectterms = [(0, root, 0)] + collectterms
+            elif root.is_real:
+                gsol += ln(x)**i*(x**root)*constants.next()
+                collectterms = [(i, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
@@ -2534,6 +2537,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     if returns == 'sol':
         return Eq(f(x), gsol)
     elif returns in ('list' 'both'):
+        # HOW TO TEST THIS CODE? (dsolve does not pass 'returns' through)
         # Create a list of (hopefully) linearly independent solutions
         gensols = []
         # Keep track of when to use sin or cos for nonzero imroot
