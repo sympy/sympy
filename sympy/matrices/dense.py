@@ -80,7 +80,7 @@ class DenseMatrix(MatrixBase):
                 return self.submatrix(key)
             else:
                 i, j = self.key2ij(key)
-                return self._mat[i * self.cols + j]
+                return self._mat[i*self.cols + j]
         else:
             # row-wise decomposition of matrix
             if type(key) is slice:
@@ -210,7 +210,7 @@ class DenseMatrix(MatrixBase):
         """
         trace = 0
         for i in range(self.cols):
-            trace += self._mat[i * self.cols + i]
+            trace += self._mat[i*self.cols + i]
         return trace
 
     def _eval_transpose(self):
@@ -382,10 +382,10 @@ class DenseMatrix(MatrixBase):
         L = zeros(self.rows, self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / L[j, j]) * (self[i, j] -
-                    sum(L[i, k] * L[j, k] for k in range(j)))
+                L[i, j] = (1 / L[j, j])*(self[i, j] -
+                    sum(L[i, k]*L[j, k] for k in range(j)))
             L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k] ** 2 for k in range(i)))
+                    sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
     def _LDLdecomposition(self):
@@ -397,9 +397,9 @@ class DenseMatrix(MatrixBase):
         L = eye(self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
-                    L[i, k] * L[j, k] * D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k] ** 2 * D[k, k]
+                L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
+                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
+            D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
                 for k in range(i))
         return self._new(L), self._new(D)
 
@@ -412,7 +412,7 @@ class DenseMatrix(MatrixBase):
         for i in range(self.rows):
             if self[i, i] == 0:
                 raise TypeError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
                 for k in range(i))) / self[i, i]
         return self._new(X)
 
@@ -423,7 +423,7 @@ class DenseMatrix(MatrixBase):
         for i in reversed(range(self.rows)):
             if self[i, i] == 0:
                 raise ValueError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
                 for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
 
@@ -474,9 +474,9 @@ class DenseMatrix(MatrixBase):
         [1, 1]
 
         """
-        if len(self) != rows * cols:
+        if len(self) != rows*cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self._mat[i * cols + j])
+        return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -516,14 +516,14 @@ class DenseMatrix(MatrixBase):
             c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
-        return cls._new(r, c, [S.Zero] * r * c)
+        return cls._new(r, c, [S.Zero]*r*c)
 
     @classmethod
     def eye(cls, n):
         """Return an n x n identity matrix."""
         n = as_int(n)
-        mat = [S.Zero] * n * n
-        mat[::n + 1] = [S.One] * n
+        mat = [S.Zero]*n*n
+        mat[::n + 1] = [S.One]*n
         return cls._new(n, n, mat)
 
     ############################
@@ -638,7 +638,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-            self._mat[i * self.cols + j] = value
+            self._mat[i*self.cols + j] = value
 
     def copyin_matrix(self, key, value):
         """Copy in values from a matrix into the given bounds.
@@ -740,7 +740,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_op
         """
-        i0 = i * self.cols
+        i0 = i*self.cols
         self._mat[i0: i0 + self.cols] = map(lambda t: f(*t),
             zip(self._mat[i0: i0 + self.cols], range(self.cols)))
 
@@ -835,7 +835,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_del
         """
-        self._mat = self._mat[:i * self.cols] + self._mat[(i + 1) * self.cols:]
+        self._mat = self._mat[:i*self.cols] + self._mat[(i + 1)*self.cols:]
         self.rows -= 1
 
     def col_del(self, i):
@@ -859,7 +859,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row_del
         """
         for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j * self.cols]
+            del self._mat[i + j*self.cols]
         self.cols -= 1
 
     # Utility functions
@@ -885,7 +885,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         zeros
         ones
         """
-        self._mat = [value] * len(self)
+        self._mat = [value]*len(self)
 
 MutableMatrix = Matrix = MutableDenseMatrix
 
@@ -1129,10 +1129,10 @@ def matrix_add(A, B):
 def matrix_multiply(A, B):
     SymPyDeprecationWarning(
         feature="matrix_multiply(A, B)",
-        useinstead="A * B",
+        useinstead="A*B",
         deprecated_since_version="0.7.2",
     ).warn()
-    return A * B
+    return A*B
 
 
 def matrix_multiply_elementwise(A, B):
@@ -1155,7 +1155,7 @@ def matrix_multiply_elementwise(A, B):
         raise ShapeError()
     shape = A.shape
     return classof(A, B)._new(shape[0], shape[1],
-        lambda i, j: A[i, j] * B[i, j])
+        lambda i, j: A[i, j]*B[i, j])
 
 
 def ones(r, c=None):
@@ -1182,7 +1182,7 @@ def ones(r, c=None):
         c = r if c is None else c
     r = as_int(r)
     c = as_int(c)
-    return Matrix(r, c, [S.One] * r * c)
+    return Matrix(r, c, [S.One]*r*c)
 
 
 def zeros(r, c=None, cls=None):
@@ -1592,7 +1592,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     if percent == 100:
         return m
     else:
-        z = int(r * c * percent // 100)
-        m._mat[:z] = [S.Zero] * z
+        z = int(r*c*percent // 100)
+        m._mat[:z] = [S.Zero]*z
         random.shuffle(m._mat)
     return m

@@ -159,7 +159,7 @@ class MatrixBase(object):
         # Matrix(2, 2, [1, 2, 3, 4])
         elif len(args) == 3 and is_sequence(args[2]):
             flat_list = args[2]
-            if len(flat_list) != rows * cols:
+            if len(flat_list) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
             flat_list = map(lambda i: sympify(i), flat_list)
 
@@ -175,7 +175,7 @@ class MatrixBase(object):
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
                 rows, cols = 1, arr.shape[0]
-                flat_list = [S.Zero] * cols
+                flat_list = [S.Zero]*cols
                 for i in range(len(arr)):
                     flat_list[i] = sympify(arr[i])
                 return rows, cols, flat_list
@@ -385,7 +385,7 @@ class MatrixBase(object):
             # first line of this inline comment. Also, there is no need
             # for a message since MatrixBase will raise the AttributeError
             raise AttributeError
-        return self.H * mgamma(0)
+        return self.H*mgamma(0)
 
     def __array__(self):
         from dense import matrix2numpy
@@ -396,7 +396,7 @@ class MatrixBase(object):
 
         Implemented mainly so bool(Matrix()) == False.
         """
-        return self.rows * self.cols
+        return self.rows*self.cols
 
     @property
     def shape(self):
@@ -471,17 +471,17 @@ class MatrixBase(object):
             alst = A.tolist()
             return classof(A, B)._new(A.rows, B.cols, lambda i, j:
                                                 reduce(lambda k, l: k + l,
-                                                map(lambda n, m: n * m,
+                                                map(lambda n, m: n*m,
                                                 alst[i],
                                                 blst[j]), 0))
         else:
             return self._new(self.rows, self.cols,
-                map(lambda i: i * other, self._mat))
+                map(lambda i: i*other, self._mat))
 
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
-            return self._new(a) * self
-        return self * a
+            return self._new(a)*self
+        return self*a
 
     def __pow__(self, num):
         from sympy.matrices import eye
@@ -491,7 +491,7 @@ class MatrixBase(object):
         if isinstance(num, int) or isinstance(num, Integer):
             n = int(num)
             if n < 0:
-                return self.inv() ** -n   # A**-2 = (A**-1)**2
+                return self.inv()**-n   # A**-2 = (A**-1)**2
             a = eye(self.cols)
             s = self
             while n:
@@ -509,8 +509,8 @@ class MatrixBase(object):
             except MatrixError:
                 raise NotImplementedError("Implemented only for diagonalizable matrices")
             for i in range(D.rows):
-                D[i, i] = D[i, i] ** num
-            return self._new(P * D * P.inv())
+                D[i, i] = D[i, i]**num
+            return self._new(P*D*P.inv())
         else:
             raise NotImplementedError("Only integer and rational values are supported")
 
@@ -523,7 +523,7 @@ class MatrixBase(object):
                 raise ShapeError("Matrices size mismatch.")
             alst = A.tolist()
             blst = B.tolist()
-            ret = [S.Zero] * A.rows
+            ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
                 ret[i] = map(lambda j, k: j + k, alst[i], blst[i])
             return classof(A, B)._new(ret)
@@ -533,13 +533,13 @@ class MatrixBase(object):
         return self + other
 
     def __div__(self, other):
-        return self * (S.One / other)
+        return self*(S.One / other)
 
     def __truediv__(self, other):
         return self.__div__(other)
 
     def __neg__(self):
-        return -1 * self
+        return -1*self
 
     def multiply(self, b):
         """Returns self*b
@@ -551,7 +551,7 @@ class MatrixBase(object):
         cross
         multiply_elementwise
         """
-        return self * b
+        return self*b
 
     def add(self, b):
         """Return self + b """
@@ -564,7 +564,7 @@ class MatrixBase(object):
         # Build table of string representations of the elements
         res = []
         # Track per-column max lengths for pretty alignment
-        maxlen = [0] * self.cols
+        maxlen = [0]*self.cols
         for i in range(self.rows):
             res.append([])
             for j in range(self.cols):
@@ -720,8 +720,8 @@ class MatrixBase(object):
         if self.is_symmetric():
             L = self._cholesky()
         elif self.rows >= self.cols:
-            L = (self.T * self)._cholesky()
-            rhs = self.T * rhs
+            L = (self.T*self)._cholesky()
+            rhs = self.T*rhs
         else:
             raise NotImplementedError("Under-determined System.")
         Y = L._lower_triangular_solve(rhs)
@@ -768,8 +768,8 @@ class MatrixBase(object):
         if self.is_symmetric():
             L, D = self.LDLdecomposition()
         elif self.rows >= self.cols:
-            L, D = (self.T * self).LDLdecomposition()
-            rhs = self.T * rhs
+            L, D = (self.T*self).LDLdecomposition()
+            rhs = self.T*rhs
         else:
             raise NotImplementedError("Under-determined System.")
         Y = L._lower_triangular_solve(rhs)
@@ -829,7 +829,7 @@ class MatrixBase(object):
         if method == 'CH':
             return self.cholesky_solve(rhs)
         t = self.T
-        return (t * self).inv(method=method) * t * rhs
+        return (t*self).inv(method=method)*t*rhs
 
     def solve(self, rhs, method='GE'):
         """Return solution to self*soln = rhs using given inversion method.
@@ -843,7 +843,7 @@ class MatrixBase(object):
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.inv(method=method) * rhs
+            return self.inv(method=method)*rhs
 
     def __mathml__(self):
         mml = ""
@@ -884,10 +884,10 @@ class MatrixBase(object):
         """
         rlo, rhi, clo, chi = self.key2bounds(keys)
         rows, cols = rhi - rlo, chi - clo
-        mat = [S.Zero] * rows * cols
+        mat = [S.Zero]*rows*cols
         for i in range(rows):
-            mat[i * cols:(i + 1) * cols] = \
-            self._mat[(i + rlo) * self.cols + clo:(i + rlo) * self.cols + chi]
+            mat[i*cols:(i + 1)*cols] = \
+            self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
         return self._new(rows, cols, mat)
 
     def extract(self, rowsList, colsList):
@@ -933,7 +933,7 @@ class MatrixBase(object):
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),
-                lambda i, j: flat_list[rowsList[i] * cols + colsList[j]])
+                lambda i, j: flat_list[rowsList[i]*cols + colsList[j]])
 
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
@@ -1105,11 +1105,11 @@ class MatrixBase(object):
         # forward substitution, all diag entries are scaled to 1
         for i in range(n):
             for j in range(i):
-                b.row_op(i, lambda x, k: x - b[j, k] * A[i, j])
+                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
         # backward substitution
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
-                b.row_op(i, lambda x, k: x - b[j, k] * A[i, j])
+                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
             b.row_op(i, lambda x, k: x / A[i, i])
         return rhs.__class__(b)
 
@@ -1172,11 +1172,11 @@ class MatrixBase(object):
         for j in range(n):
             for i in range(j):
                 for k in range(i):
-                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
+                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
             pivot = -1
             for i in range(j, n):
                 for k in range(j):
-                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
+                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
                 # find the first non-zero pivot, includes any expression
                 if pivot == -1 and not iszerofunc(A[i, j]):
                     pivot = i
@@ -1189,7 +1189,7 @@ class MatrixBase(object):
                 p.append([pivot, j])
             scale = 1 / A[j, j]
             for i in range(j + 1, n):
-                A[i, j] = A[i, j] * scale
+                A[i, j] = A[i, j]*scale
         return A, p
 
     def LUdecompositionFF(self):
@@ -1231,11 +1231,11 @@ class MatrixBase(object):
                 L[k, :k], L[kpivot, :k] = L[kpivot, :k], L[k, :k]
                 P[k, :], P[kpivot, :] = P[kpivot, :], P[k, :]
             L[k, k] = Ukk = U[k, k]
-            DD[k, k] = oldpivot * Ukk
+            DD[k, k] = oldpivot*Ukk
             for i in range(k + 1, n):
                 L[i, k] = Uik = U[i, k]
                 for j in range(k + 1, m):
-                    U[i, j] = (Ukk * U[i, j] - U[k, j] * Uik) / oldpivot
+                    U[i, j] = (Ukk*U[i, j] - U[k, j]*Uik) / oldpivot
                 U[i, k] = 0
             oldpivot = Ukk
         DD[n - 1, n - 1] = oldpivot
@@ -1302,7 +1302,7 @@ class MatrixBase(object):
         if (i + j) % 2 == 0:
             return self.minorEntry(i, j, method)
         else:
-            return -1 * self.minorEntry(i, j, method)
+            return -1*self.minorEntry(i, j, method)
 
     def jacobian(self, X):
         """Calculates the Jacobian matrix (derivative of a vectorial function).
@@ -1421,7 +1421,7 @@ class MatrixBase(object):
             tmp = self[:, j]     # take original v
             for i in range(j):
                 # subtract the project of self on new vector
-                tmp -= Q[:, i] * self[:, j].dot(Q[:, i])
+                tmp -= Q[:, i]*self[:, j].dot(Q[:, i])
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
@@ -1461,7 +1461,7 @@ class MatrixBase(object):
         """
 
         Q, R = self.as_mutable().QRdecomposition()
-        y = Q.T * b
+        y = Q.T*b
 
         # back substitution to solve R*x = y:
         # We build up the result "backwards" in the vector 'x' and reverse it
@@ -1471,7 +1471,7 @@ class MatrixBase(object):
         for j in range(n - 1, -1, -1):
             tmp = y[j, :]
             for k in range(j + 1, n):
-                tmp -= R[j, k] * x[n - 1 - k]
+                tmp -= R[j, k]*x[n - 1 - k]
             x.append(tmp / R[j, j])
         return self._new([row._mat for row in reversed(x)])
 
@@ -1494,9 +1494,9 @@ class MatrixBase(object):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
-            return self._new(1, 3, ((self[1] * b[2] - self[2] * b[1]),
-                               (self[2] * b[0] - self[0] * b[2]),
-                               (self[0] * b[1] - self[1] * b[0])))
+            return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
+                               (self[2]*b[0] - self[0]*b[2]),
+                               (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
         """Return the dot product of Matrix self and b relaxing the condition
@@ -1540,7 +1540,7 @@ class MatrixBase(object):
             if b.cols != 1:
                 self = self.T
                 b = b.T
-            prod = flatten((self * b).tolist())
+            prod = flatten((self*b).tolist())
             if len(prod) == 1:
                 return prod[0]
             return prod
@@ -1630,7 +1630,7 @@ class MatrixBase(object):
         vals = self.values() or [0]
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None:  # Common case sqrt(<x, x>)
-                return sqrt(Add(*(abs(i) ** 2 for i in vals)))
+                return sqrt(Add(*(abs(i)**2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
                 return Add(*(abs(i) for i in vals))
@@ -1644,7 +1644,7 @@ class MatrixBase(object):
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                return Pow(Add(*(abs(i) ** ord for i in vals)), S(1) / ord)
+                return Pow(Add(*(abs(i)**ord for i in vals)), S(1) / ord)
             except (NotImplementedError, TypeError):
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
@@ -1694,7 +1694,7 @@ class MatrixBase(object):
         >>> V.project(-x)
         [sqrt(3)/2, 0]
         """
-        return v * (self.dot(v) / v.dot(v))
+        return v*(self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
         """Permute the rows of the matrix with the given permutation in reverse.
@@ -1752,7 +1752,7 @@ class MatrixBase(object):
             raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
         for i in range(0, D.rows):
             D[i, i] = C.exp(D[i, i])
-        return U * D * U.inv()
+        return U*D*U.inv()
 
     @property
     def is_square(self):
@@ -1826,7 +1826,7 @@ class MatrixBase(object):
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
         x = Dummy('x')
-        if self.charpoly(x).args[0] == x ** self.rows:
+        if self.charpoly(x).args[0] == x**self.rows:
             return True
         return False
 
@@ -2240,7 +2240,7 @@ class MatrixBase(object):
         if n == 1:
             det = M[0, 0]
         elif n == 2:
-            det = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
+            det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
         else:
             sign = 1  # track current sign in case of column swap
 
@@ -2260,7 +2260,7 @@ class MatrixBase(object):
                 # form of Gaussian elimination algorithm
                 for i in range(k + 1, n):
                     for j in range(k + 1, n):
-                        D = M[k, k] * M[i, j] - M[i, k] * M[k, j]
+                        D = M[k, k]*M[i, j] - M[i, k]*M[k, j]
 
                         if k > 0:
                             D /= M[k - 1, k - 1]
@@ -2270,7 +2270,7 @@ class MatrixBase(object):
                         else:
                             M[i, j] = cancel(D)
 
-            det = sign * M[n - 1, n - 1]
+            det = sign*M[n - 1, n - 1]
 
         return det.expand()
 
@@ -2303,7 +2303,7 @@ class MatrixBase(object):
             prod = -1
 
         for k in range(n):
-            prod = prod * u[k, k] * l[k, k]
+            prod = prod*u[k, k]*l[k, k]
 
         return prod.expand()
 
@@ -2437,7 +2437,7 @@ class MatrixBase(object):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.row_op(j, lambda x, k: x - scale * r[pivot, k])
+                r.row_op(j, lambda x, k: x - scale*r[pivot, k])
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
@@ -2463,7 +2463,7 @@ class MatrixBase(object):
         for i in range(self.cols - len(pivots)):
             basis.append(zeros(self.cols, 1))
         # contains the variable index to which the vector corresponds
-        basiskey, cur = [-1] * len(basis), 0
+        basiskey, cur = [-1]*len(basis), 0
         for i in range(self.cols):
             if i not in pivots:
                 basiskey[cur] = i
@@ -2547,7 +2547,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError()
 
         A, N = self, self.rows
-        transforms = [0] * (N - 1)
+        transforms = [0]*(N - 1)
 
         for n in range(N, 1, -1):
             T, k = zeros(n + 1, n), n - 1
@@ -2558,10 +2558,10 @@ class MatrixBase(object):
             items = [C]
 
             for i in range(0, n - 2):
-                items.append(A * items[i])
+                items.append(A*items[i])
 
             for i, B in enumerate(items):
-                items[i] = (R * B)[0, 0]
+                items[i] = (R*B)[0, 0]
 
             items = [S.One, a] + items
 
@@ -2573,7 +2573,7 @@ class MatrixBase(object):
         polys = [self._new([S.One, -A[0, 0]])]
 
         for i, T in enumerate(transforms):
-            polys.append(T * polys[i])
+            polys.append(T*polys[i])
 
         return tuple(map(tuple, polys))
 
@@ -2591,8 +2591,8 @@ class MatrixBase(object):
         if not self:
             return S.One
         poly = self.berkowitz()[-1]
-        sign = (-1) ** (len(poly) - 1)
-        return sign * poly[-1]
+        sign = (-1)**(len(poly) - 1)
+        return sign*poly[-1]
 
     def berkowitz_minors(self):
         """Computes principal minors using Berkowitz method.
@@ -2605,7 +2605,7 @@ class MatrixBase(object):
         sign, minors = S.NegativeOne, []
 
         for poly in self.berkowitz():
-            minors.append(sign * poly[-1])
+            minors.append(sign*poly[-1])
             sign = -sign
 
         return tuple(minors)
@@ -2714,7 +2714,7 @@ class MatrixBase(object):
         flags.pop('rational', None)
 
         for r, k in vlist:
-            tmp = self - eye(self.rows) * r
+            tmp = self - eye(self.rows)*r
             basis = tmp.nullspace()
             # whether tmp.is_symbolic() is True or False, it is possible that
             # the basis will come back as [] in which case simplification is
@@ -2733,7 +2733,7 @@ class MatrixBase(object):
                 for i, b in enumerate(basis[0]):
                     c, p = signsimp(b).as_content_primitive()
                     if c is not S.One:
-                        b = c * p
+                        b = c*p
                         l = ilcm(l, c.q)
                     basis[0][i] = b
                 if l != 1:
@@ -2763,12 +2763,12 @@ class MatrixBase(object):
         """
         self = self.as_mutable()
         # Compute eigenvalues of A.H A
-        valmultpairs = (self.H * self).eigenvals()
+        valmultpairs = (self.H*self).eigenvals()
 
         # Expands result from eigenvals into a simple list
         vals = []
         for k, v in valmultpairs.items():
-            vals += [sqrt(k)] * v  # dangerous! same k in several spots!
+            vals += [sqrt(k)]*v  # dangerous! same k in several spots!
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)
 
@@ -2937,13 +2937,13 @@ class MatrixBase(object):
                 raise ValueError("Matrix appears to be asymmetric; consider check_symmetry=False")
         count = 0
         if diagonal:
-            v = zeros(c * (c + 1) // 2, 1)
+            v = zeros(c*(c + 1) // 2, 1)
             for j in range(c):
                 for i in range(j, c):
                     v[count] = self[i, j]
                     count += 1
         else:
-            v = zeros(c * (c - 1) // 2, 1)
+            v = zeros(c*(c - 1) // 2, 1)
             for j in range(c):
                 for i in range(j + 1, c):
                     v[count] = self[i, j]
@@ -3216,7 +3216,7 @@ class MatrixBase(object):
         for eigenval, multiplicity, vects in _eigenvects:
             geometrical = len(vects)
             if geometrical == multiplicity:
-                Jcell = diag(*([eigenval] * multiplicity))
+                Jcell = diag(*([eigenval]*multiplicity))
                 Jcells.append(Jcell)
             else:
                 sizes = self._jordan_split(multiplicity, geometrical)
@@ -3231,7 +3231,7 @@ class MatrixBase(object):
         """Return a list of integers with sum equal to 'algebraical'
         and length equal to 'geometrical'"""
         n1 = algebraical // geometrical
-        res = [n1] * geometrical
+        res = [n1]*geometrical
         res[len(res) - 1] += algebraical % geometrical
         assert sum(res) == algebraical
         return res
@@ -3278,7 +3278,7 @@ class MatrixBase(object):
             for j in range(1, n):
                 acum = 0
                 for k in range(1, n):
-                    acum += LeviCivita(i, j, 0, k) * M[0, k]
+                    acum += LeviCivita(i, j, 0, k)*M[0, k]
                 work[i, j] = acum
                 work[j, i] = -acum
 
@@ -3286,7 +3286,7 @@ class MatrixBase(object):
             acum = 0
             for a in range(1, n):
                 for b in range(1, n):
-                    acum += LeviCivita(0, l, a, b) * M[a, b]
+                    acum += LeviCivita(0, l, a, b)*M[a, b]
             acum /= 2
             work[0, l] = -acum
             work[l, 0] = acum
