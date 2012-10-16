@@ -14,7 +14,8 @@ from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z
 
-classes = (Matrix, ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix)
+# don't re-order this list
+classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 
 def test_division():
     v = Matrix(1,2,[x, y])
@@ -1961,18 +1962,19 @@ def test_cross():
         test(A.cross(B.T))
 
 def test_hash():
-    for cls in classes:
-        if cls == SparseMatrix:
-            continue
+    for cls in classes[-2:]:
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
+    # issue 880
+    for cls in classes[1:2]:
+        raises(AttributeError, lambda: hash(cls.eye(1)))
 
 @XFAIL
-def test_hashx():
-    # delete and remove if-block in test_hash when this passes
-    cls = SparseMatrix
-    s = set([cls.eye(1), cls.eye(1)])
-    assert len(s) == 1 and s.pop() == cls.eye(1)
+def test_issue880():
+    # when this passes, delete this and change the [1:2]
+    # to [:2] in the test_hash above for issue 880
+    cls = classes[0]
+    raises(AttributeError, lambda: hash(cls.eye(1)))
 
 def test_adjoint():
     dat = [[0, I], [1, 0]]

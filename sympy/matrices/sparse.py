@@ -1046,7 +1046,7 @@ class SparseMatrix(MatrixBase):
         return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
 
     def __hash__(self):
-        return hash((self.shape, tuple(self._smat.items())))
+        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
@@ -1103,6 +1103,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 self._smat[(i, j)] = value
             elif (i, j) in self._smat:
                 del self._smat[(i, j)]
+
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
 
     def row_del(self, k):
         """Delete the given row of the matrix.
