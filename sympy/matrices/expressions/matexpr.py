@@ -104,11 +104,17 @@ class MatrixExpr(Expr):
     def _eval_inverse(self):
         raise NotImplementedError()
 
+    def _entry(self, i, j):
+        raise NotImplementedError(
+            "Indexing not implemented for %s" % self.__class__.__name__)
+
     def adjoint(self):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "adjoint not implemented for %s" % self.__class__.__name__)
 
     def conjugate(self):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "conjugate not implemented for %s" % self.__class__.__name__)
 
     def transpose(self):
         try:
@@ -116,17 +122,11 @@ class MatrixExpr(Expr):
         except (AttributeError, NotImplementedError):
             return Basic.__new__(Transpose, self)
 
-    C = property(conjugate, None, None, 'By-element conjugation.')
-
     T = property(transpose, None, None, 'Matrix transposition.')
 
     @property
     def I(self):
         return Inverse(self)
-
-    def _entry(self, i, j):
-        raise NotImplementedError(
-            "Indexing not implemented for %s" % self.__class__.__name__)
 
     def valid_index(self, i, j):
         def is_valid(idx):
