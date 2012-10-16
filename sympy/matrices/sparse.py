@@ -1045,6 +1045,8 @@ class SparseMatrix(MatrixBase):
         n = as_int(n)
         return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
 
+    def __hash__(self):
+        return hash((self.shape, tuple(self._smat.items())))
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
