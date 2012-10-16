@@ -13,11 +13,13 @@ from dense import Matrix
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int
 
+
 def as_int(i):
     ii = int(i)
     if i != ii:
         raise TypeError()
     return ii
+
 
 class SparseMatrix(MatrixBase):
     """
@@ -61,14 +63,14 @@ class SparseMatrix(MatrixBase):
                         if value:
                             self._smat[(i, j)] = value
             elif is_sequence(args[2]):
-                if len(args[2]) != self.rows*self.cols:
+                if len(args[2]) != self.rows * self.cols:
                     raise ValueError(
                         'List length (%s) != rows*columns (%s)' %
-                        (len(args[2]), self.rows*self.cols))
+                        (len(args[2]), self.rows * self.cols))
                 flat_list = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = sympify(flat_list[i*self.cols + j])
+                        value = sympify(flat_list[i * self.cols + j])
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], dict):
@@ -84,7 +86,7 @@ class SparseMatrix(MatrixBase):
             self.cols = c
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = _list[self.cols*i + j]
+                    value = _list[self.cols * i + j]
                     if value:
                         self._smat[(i, j)] = value
 
@@ -215,7 +217,7 @@ class SparseMatrix(MatrixBase):
         col_list
         """
 
-        new=[]
+        new = []
         for i in range(self.rows):
             for j in range(self.cols):
                 value = self[(i, j)]
@@ -244,7 +246,7 @@ class SparseMatrix(MatrixBase):
         col_op
         row_list
         """
-        new=[]
+        new = []
         for j in range(self.cols):
             for i in range(self.rows):
                 value = self[(i, j)]
@@ -287,7 +289,7 @@ class SparseMatrix(MatrixBase):
         """
         tran = self.zeros(self.cols, self.rows)
         for key, value in self._smat.iteritems():
-            key = key[1], key[0] # reverse
+            key = key[1], key[0]  # reverse
             tran._smat[key] = value
         return tran
 
@@ -357,7 +359,7 @@ class SparseMatrix(MatrixBase):
         M = self.zeros(*self.shape)
         if scalar:
             for i in self._smat:
-                v = scalar*self._smat[i]
+                v = scalar * self._smat[i]
                 if v:
                     M._smat[i] = v
                 else:
@@ -388,7 +390,7 @@ class SparseMatrix(MatrixBase):
         if isinstance(other, SparseMatrix):
             return self.multiply(other)
         if isinstance(other, MatrixBase):
-            return other._new(self*self._new(other))
+            return other._new(self * self._new(other))
         return self.scalar_multiply(other)
 
     def __rmul__(self, other):
@@ -504,7 +506,7 @@ class SparseMatrix(MatrixBase):
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        return self._new(rhi -rlo, chi - clo,
+        return self._new(rhi - rlo, chi - clo,
             lambda i, j: self[i + rlo, j + clo])
 
     def is_symmetric(self, simplify=True):
@@ -588,12 +590,12 @@ class SparseMatrix(MatrixBase):
         [4, 5, 6, 7]
 
         """
-        if len(self) != rows*cols:
+        if len(self) != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
         smat = {}
         for k, v in self._smat.iteritems():
             i, j = k
-            n = i*self.cols + j
+            n = i * self.cols + j
             ii, jj = divmod(n, cols)
             smat[(ii, jj)] = self._smat[(i, j)]
         return self._new(rows, cols, smat)
@@ -629,7 +631,7 @@ class SparseMatrix(MatrixBase):
             if c <= r:
                 R[r].append(c)
 
-        inf = len(R) # nothing will be this large
+        inf = len(R)  # nothing will be this large
         parent = [inf] * self.rows
         virtual = [inf] * self.rows
         for r in range(self.rows):
@@ -667,7 +669,7 @@ class SparseMatrix(MatrixBase):
         """
 
         R, parent = self.liupc()
-        inf = len(R) # this acts as infinity
+        inf = len(R)  # this acts as infinity
         Lrow = copy.deepcopy(R)
         for k in range(self.rows):
             for j in R[k]:
@@ -728,7 +730,7 @@ class SparseMatrix(MatrixBase):
                             for p2 in Lrowstruc[j]:
                                 if p2 < j:
                                     if p1 == p2:
-                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
+                                        summ += L[i, p1] * L[j, p1] * D[p1, p1]
                                 else:
                                     break
                         else:
@@ -740,7 +742,7 @@ class SparseMatrix(MatrixBase):
                     summ = 0
                     for k in Lrowstruc[i]:
                         if k < i:
-                            summ += L[i, k]**2 * D[k, k]
+                            summ += L[i, k] ** 2 * D[k, k]
                         else:
                             break
                     D[i, i] -= summ
@@ -771,7 +773,7 @@ class SparseMatrix(MatrixBase):
             if i < j:
                 rows[i].append((j, v))
         X = rhs.copy()
-        for i in range(self.rows -1, -1, -1):
+        for i in range(self.rows - 1, -1, -1):
             rows[i].reverse()
             for j, v in rows[i]:
                 X[i, 0] -= v * X[j, 0]
@@ -780,7 +782,7 @@ class SparseMatrix(MatrixBase):
 
     def _diagonal_solve(self, rhs):
         "Diagonal solve."
-        return self._new(self.rows, 1, lambda i, j: rhs[i, 0]/self[i, i])
+        return self._new(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def _cholesky_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
@@ -923,7 +925,7 @@ class SparseMatrix(MatrixBase):
 
         """
         t = self.T
-        return (t*self).inv(method=method)*t*rhs
+        return (t * self).inv(method=method) * t * rhs
 
     def solve(self, rhs, method='LDL'):
         """Return solution to self*soln = rhs using given inversion method.
@@ -937,7 +939,7 @@ class SparseMatrix(MatrixBase):
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.inv(method=method)*rhs
+            return self.inv(method=method) * rhs
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)
@@ -972,8 +974,8 @@ class SparseMatrix(MatrixBase):
         if not sym:
             t = M.T
             r1 = M[0, :]
-            M = t*M
-            I = t*I
+            M = t * M
+            I = t * I
         method = kwargs.get('method', 'LDL')
         if method in "LDL":
             solve = M._LDL_solve
@@ -984,7 +986,7 @@ class SparseMatrix(MatrixBase):
                 'Method may be "CH" or "LDL", not %s.' % method)
         rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
         if not sym:
-            scale = (r1*rv[:, 0])[0, 0]
+            scale = (r1 * rv[:, 0])[0, 0]
             rv /= scale
         return self._new(rv)
 
@@ -1047,6 +1049,7 @@ class SparseMatrix(MatrixBase):
 
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
+
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
@@ -1355,7 +1358,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for j in range(value.cols):
                     self[i + rlo, j + clo] = value[i, j]
         else:
-            if (rhi - rlo)*(chi - clo) < len(self):
+            if (rhi - rlo) * (chi - clo) < len(self):
                 for i in range(rlo, rhi):
                     for j in range(clo, chi):
                         self._smat.pop((i, j), None)

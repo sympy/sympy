@@ -11,6 +11,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
@@ -18,15 +19,18 @@ from sympy.matrices.matrices import (MatrixBase,
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int
 
+
 def as_int(i):
     ii = int(i)
     if i != ii:
         raise TypeError()
     return ii
 
+
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
+
 
 class DenseMatrix(MatrixBase):
 
@@ -76,7 +80,7 @@ class DenseMatrix(MatrixBase):
                 return self.submatrix(key)
             else:
                 i, j = self.key2ij(key)
-                return self._mat[i*self.cols + j]
+                return self._mat[i * self.cols + j]
         else:
             # row-wise decomposition of matrix
             if type(key) is slice:
@@ -206,7 +210,7 @@ class DenseMatrix(MatrixBase):
         """
         trace = 0
         for i in range(self.cols):
-            trace += self._mat[i*self.cols + i]
+            trace += self._mat[i * self.cols + i]
         return trace
 
     def _eval_transpose(self):
@@ -381,7 +385,7 @@ class DenseMatrix(MatrixBase):
                 L[i, j] = (1 / L[j, j]) * (self[i, j] -
                     sum(L[i, k] * L[j, k] for k in range(j)))
             L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
+                    sum(L[i, k] ** 2 for k in range(i)))
         return self._new(L)
 
     def _LDLdecomposition(self):
@@ -395,7 +399,7 @@ class DenseMatrix(MatrixBase):
             for j in range(i):
                 L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
                     L[i, k] * L[j, k] * D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
+            D[i, i] = self[i, i] - sum(L[i, k] ** 2 * D[k, k]
                 for k in range(i))
         return self._new(L), self._new(D)
 
@@ -420,7 +424,7 @@ class DenseMatrix(MatrixBase):
             if self[i, i] == 0:
                 raise ValueError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
-                for k in range(i+1, self.rows))) / self[i, i]
+                for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
 
     def _diagonal_solve(self, rhs):
@@ -470,9 +474,9 @@ class DenseMatrix(MatrixBase):
         [1, 1]
 
         """
-        if len(self) != rows*cols:
+        if len(self) != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
+        return self._new(rows, cols, lambda i, j: self._mat[i * cols + j])
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -512,14 +516,14 @@ class DenseMatrix(MatrixBase):
             c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
-        return cls._new(r, c, [S.Zero]*r*c)
+        return cls._new(r, c, [S.Zero] * r * c)
 
     @classmethod
     def eye(cls, n):
         """Return an n x n identity matrix."""
         n = as_int(n)
-        mat = [S.Zero]*n*n
-        mat[::n + 1] = [S.One]*n
+        mat = [S.Zero] * n * n
+        mat[::n + 1] = [S.One] * n
         return cls._new(n, n, mat)
 
     ############################
@@ -584,11 +588,12 @@ def _force_mutable(x):
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        rows, cols, flat_list = MatrixBase._handle_creation_inputs(
+            *args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
-        self._mat = list(flat_list) # create a shallow copy
+        self._mat = list(flat_list)  # create a shallow copy
         return self
 
     def __new__(cls, *args, **kwargs):
@@ -633,7 +638,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-            self._mat[i*self.cols + j] = value
+            self._mat[i * self.cols + j] = value
 
     def copyin_matrix(self, key, value):
         """Copy in values from a matrix into the given bounds.
@@ -672,8 +677,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         shape = value.shape
         dr, dc = rhi - rlo, chi - clo
         if shape != (dr, dc):
-            raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
-                "as the in sub-Matrix given by `key`.")
+            raise ShapeError(filldedent("The Matrix `value` doesn't have the "
+                "same dimensions "
+                "as the in sub-Matrix given by `key`."))
 
         for i in range(value.rows):
             for j in range(value.cols):
@@ -734,7 +740,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_op
         """
-        i0 = i*self.cols
+        i0 = i * self.cols
         self._mat[i0: i0 + self.cols] = map(lambda t: f(*t),
             zip(self._mat[i0: i0 + self.cols], range(self.cols)))
 
@@ -829,7 +835,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_del
         """
-        self._mat = self._mat[:i*self.cols] + self._mat[(i+1)*self.cols:]
+        self._mat = self._mat[:i * self.cols] + self._mat[(i + 1) * self.cols:]
         self.rows -= 1
 
     def col_del(self, i):
@@ -853,7 +859,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row_del
         """
         for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j*self.cols]
+            del self._mat[i + j * self.cols]
         self.cols -= 1
 
     # Utility functions
@@ -879,7 +885,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         zeros
         ones
         """
-        self._mat = [value]*len(self)
+        self._mat = [value] * len(self)
 
 MutableMatrix = Matrix = MutableDenseMatrix
 
@@ -888,7 +894,8 @@ MutableMatrix = Matrix = MutableDenseMatrix
 # list2numpy, matrix2numpy, symmarray, rot_axis[123]
 ###########
 
-def list2numpy(l): # pragma: no cover
+
+def list2numpy(l):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -902,7 +909,8 @@ def list2numpy(l): # pragma: no cover
         a[i] = s
     return a
 
-def matrix2numpy(m): # pragma: no cover
+
+def matrix2numpy(m):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -917,7 +925,8 @@ def matrix2numpy(m): # pragma: no cover
             a[i, j] = m[i, j]
     return a
 
-def symarray(prefix, shape): # pragma: no cover
+
+def symarray(prefix, shape):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -980,6 +989,7 @@ def symarray(prefix, shape): # pragma: no cover
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
+
 def rot_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
     the 3-axis.
@@ -1020,6 +1030,7 @@ def rot_axis3(theta):
            (0, 0, 1))
     return Matrix(lil)
 
+
 def rot_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
     the 2-axis.
@@ -1059,6 +1070,7 @@ def rot_axis2(theta):
            (0, 1, 0),
            (st, 0, ct))
     return Matrix(lil)
+
 
 def rot_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
@@ -1103,6 +1115,8 @@ def rot_axis1(theta):
 ###############
 # Functions
 ###############
+
+
 def matrix_add(A, B):
     SymPyDeprecationWarning(
         feature="matrix_add(A, B)",
@@ -1111,13 +1125,15 @@ def matrix_add(A, B):
     ).warn()
     return A + B
 
+
 def matrix_multiply(A, B):
     SymPyDeprecationWarning(
         feature="matrix_multiply(A, B)",
         useinstead="A * B",
         deprecated_since_version="0.7.2",
     ).warn()
-    return A*B
+    return A * B
+
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -1140,6 +1156,7 @@ def matrix_multiply_elementwise(A, B):
     shape = A.shape
     return classof(A, B)._new(shape[0], shape[1],
         lambda i, j: A[i, j] * B[i, j])
+
 
 def ones(r, c=None):
     """Returns a matrix of ones with ``r`` rows and ``c`` columns;
@@ -1165,7 +1182,8 @@ def ones(r, c=None):
         c = r if c is None else c
     r = as_int(r)
     c = as_int(c)
-    return Matrix(r, c, [S.One]*r*c)
+    return Matrix(r, c, [S.One] * r * c)
+
 
 def zeros(r, c=None, cls=None):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
@@ -1182,6 +1200,7 @@ def zeros(r, c=None, cls=None):
         from dense import Matrix as cls
     return cls.zeros(r, c)
 
+
 def eye(n, cls=None):
     """Create square identity matrix n x n
 
@@ -1195,6 +1214,7 @@ def eye(n, cls=None):
     if cls is None:
         from sympy.matrices import Matrix as cls
     return cls.eye(n)
+
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1314,6 +1334,7 @@ def diag(*values, **kwargs):
             i_col += 1
     return cls._new(res)
 
+
 def jordan_cell(eigenval, n):
     """
     Create matrix of Jordan cell kind:
@@ -1336,6 +1357,7 @@ def jordan_cell(eigenval, n):
         out[i, i + 1] = S.One
     out[n - 1, n - 1] = eigenval
     return out
+
 
 def hessian(f, varlist, constraints=[]):
     """Compute Hessian matrix for a function f wrt parameters in varlist
@@ -1413,6 +1435,7 @@ def hessian(f, varlist, constraints=[]):
             out[j, i] = out[i, j]
     return out
 
+
 def GramSchmidt(vlist, orthog=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
@@ -1432,6 +1455,7 @@ def GramSchmidt(vlist, orthog=False):
         for i in range(len(out)):
             out[i] = out[i].normalized()
     return out
+
 
 def wronskian(functions, var, method='bareis'):
     """
@@ -1462,8 +1486,9 @@ def wronskian(functions, var, method='bareis'):
     n = len(functions)
     if n == 0:
         return 1
-    W = Matrix(n, n, lambda i, j: functions[i].diff(var, j) )
+    W = Matrix(n, n, lambda i, j: functions[i].diff(var, j))
     return W.det(method)
+
 
 def casoratian(seqs, n, zero=True):
     """Given linear difference operator L of order 'k' and homogeneous
@@ -1500,13 +1525,14 @@ def casoratian(seqs, n, zero=True):
     seqs = map(sympify, seqs)
 
     if not zero:
-        f = lambda i, j: seqs[j].subs(n, n+i)
+        f = lambda i, j: seqs[j].subs(n, n + i)
     else:
         f = lambda i, j: seqs[j].subs(n, i)
 
     k = len(seqs)
 
     return Matrix(k, k, f).det()
+
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
@@ -1566,7 +1592,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     if percent == 100:
         return m
     else:
-        z = int(r*c*percent//100)
-        m._mat[:z] = [S.Zero]*z
+        z = int(r * c * percent // 100)
+        m._mat[:z] = [S.Zero] * z
         random.shuffle(m._mat)
     return m
