@@ -806,7 +806,8 @@ class Mul(AssocOp):
                 return b.matches(-expr, repl_dict)
         expr = sympify(expr)
         if expr.is_Mul and expr.args[0] is S.NegativeOne:
-            expr = -expr; sign = -sign
+            expr = -expr
+            sign = -sign
 
         if not expr.is_Mul:
             # expr can only match if it matches b and a matches +/- 1

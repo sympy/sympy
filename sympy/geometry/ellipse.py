@@ -915,7 +915,7 @@ class Ellipse(GeometryEntity):
         a = ldir.dot(mdir)
         b = ldir.dot(mdiff)
         c = diff.dot(mdiff) - 1
-        det = simplify(b*b - a*c);
+        det = simplify(b*b - a*c)
 
         result = []
         if det == 0:

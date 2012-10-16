@@ -600,8 +600,8 @@ class cos(TrigonometricFunction):
             assert 1 not in primes
             for p_i in primes:
                 while 0 == n % p_i:
-                    n = n/p_i;
-                    primes[p_i] += 1;
+                    n = n/p_i
+                    primes[p_i] += 1
             if 1 != n:
                 return False
             if max(primes.values()) > 1:

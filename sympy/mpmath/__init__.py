@@ -417,7 +417,8 @@ def runtests():
 
 def doctests():
     try:
-        import psyco; psyco.full()
+        import psyco
+        psyco.full()
     except ImportError:
         pass
     import sys
