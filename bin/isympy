@@ -197,7 +197,7 @@ def main():
     usage = 'usage: isympy [options] -- [ipython options]'
     parser = OptionParser(
         usage=usage,
-        version='0.7.2.rc1',
+        version='0.7.2',
         # XXX: We need a more centralized place to store the version.
         # It is currently stored in sympy.__version__, but we can't yet
         # import sympy at this point.
