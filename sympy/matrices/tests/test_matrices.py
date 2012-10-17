@@ -781,6 +781,9 @@ def test_subs():
     assert Matrix([x*y]).subs({x:y-1, y:x-1}, simultaneous=True) == \
         Matrix([(x-1)*(y-1)])
 
+    for cls in classes:
+        assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
+
 def test_simplify():
     f, n = symbols('f, n')
 

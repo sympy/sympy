@@ -1,6 +1,7 @@
 import copy
 from collections import defaultdict
 
+from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -62,6 +63,12 @@ class SparseMatrix(MatrixBase):
                         value = sympify(op(i, j))
                         if value:
                             self._smat[(i, j)] = value
+            elif isinstance(args[2], (dict, Dict)):
+                # manual copy, copy.deepcopy() doesn't work
+                for key in args[2].keys():
+                    v = args[2][key]
+                    if v:
+                        self._smat[key] = v
             elif is_sequence(args[2]):
                 if len(args[2]) != self.rows*self.cols:
                     raise ValueError(
@@ -73,12 +80,6 @@ class SparseMatrix(MatrixBase):
                         value = sympify(flat_list[i*self.cols + j])
                         if value:
                             self._smat[(i, j)] = value
-            elif isinstance(args[2], dict):
-                # manual copy, copy.deepcopy() doesn't work
-                for key in args[2].keys():
-                    v = args[2][key]
-                    if v:
-                        self._smat[key] = v
         else:
             # handle full matrix forms with _handle_creation_inputs
             r, c, _list = Matrix._handle_creation_inputs(*args)

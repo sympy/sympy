@@ -123,3 +123,5 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
+
+    subs = MatrixBase.subs
