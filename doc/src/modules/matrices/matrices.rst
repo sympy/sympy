@@ -32,7 +32,7 @@ import and declare our first Matrix object:
     [3]
 
 In addition to creating a matrix from a list of appropriately-sized lists
-and/or matrices. SymPy also supports more advanced methods of matrix creation
+and/or matrices, SymPy also supports more advanced methods of matrix creation
 including a single list of values and dimension inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
@@ -40,15 +40,15 @@ including a single list of values and dimension inputs:
     [       ]
     [4  5  6]
 
-More interestingly (and usefully), we can use a 2-variable function (or lambda)
-to make one. Here we create an indicator function which is 1 on the diagonal
-and then use it to make the identity matrix:
+More interesting (and useful), is the ability to use a 2-variable function
+(or lambda) to create a matrix. Here we create an indicator function which
+is 1 on the diagonal and then use it to make the identity matrix:
 
     >>> def f(i,j):
     ...     if i == j:
-    ...             return 1
+    ...         return 1
     ...     else:
-    ...             return 0
+    ...         return 0
     ...
     >>> Matrix(4, 4, f)
     [1  0  0  0]
@@ -69,7 +69,7 @@ permutation entries:
     [          ]
     [1  0  1  0]
 
-There are also a couple of special constructors for quick matrix construction -
+There are also a couple of special constructors for quick matrix construction:
 ``eye`` is the identity matrix, ``zeros`` and ``ones`` for matrices of all
 zeros and ones, respectively, and ``diag`` to put matrices or elements along
 the diagonal:
