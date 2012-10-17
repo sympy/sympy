@@ -259,7 +259,7 @@ def test_sparse_matrix():
     L, U, p = M.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-M == sparse_zeros(3)
+    assert (L*U).permuteBkwd(p) - M == sparse_zeros(3)
 
     # test_LUsolve
     A = SparseMatrix([[2,3,5],

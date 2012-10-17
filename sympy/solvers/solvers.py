@@ -1675,7 +1675,7 @@ def solve_linear_system(system, *symbols, **flags):
         pivot_inv = S.One/matrix[i, i]
 
         # divide all elements in the current row by the pivot
-        matrix.row(i, lambda x, _: x * pivot_inv)
+        matrix.row_op(i, lambda x, _: x * pivot_inv)
 
         for k in xrange(i + 1, matrix.rows):
             if matrix[k, i]:
@@ -1683,7 +1683,7 @@ def solve_linear_system(system, *symbols, **flags):
 
                 # subtract from the current row the row containing
                 # pivot and multiplied by extracted coefficient
-                matrix.row(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
+                matrix.row_op(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
 
         i += 1
 

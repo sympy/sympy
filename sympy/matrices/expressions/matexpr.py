@@ -104,11 +104,17 @@ class MatrixExpr(Expr):
     def _eval_inverse(self):
         raise NotImplementedError()
 
+    def _entry(self, i, j):
+        raise NotImplementedError(
+            "Indexing not implemented for %s" % self.__class__.__name__)
+
     def adjoint(self):
-        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
+        raise NotImplementedError(
+            "adjoint not implemented for %s" % self.__class__.__name__)
 
     def conjugate(self):
-        return MatMul(*[arg.conjugate() for arg in self.args])
+        raise NotImplementedError(
+            "conjugate not implemented for %s" % self.__class__.__name__)
 
     def transpose(self):
         try:
@@ -116,16 +122,11 @@ class MatrixExpr(Expr):
         except (AttributeError, NotImplementedError):
             return Basic.__new__(Transpose, self)
 
-    C = property(conjugate, None, None, 'By-element conjugation.')
-
     T = property(transpose, None, None, 'Matrix transposition.')
 
     @property
     def I(self):
         return Inverse(self)
-
-    def _entry(self, i, j):
-        raise NotImplementedError("Indexing not implemented")
 
     def valid_index(self, i, j):
         def is_valid(idx):
@@ -137,7 +138,8 @@ class MatrixExpr(Expr):
         if isinstance(key, tuple) and len(key)==2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError("Slicing is not implemented")
+                raise NotImplementedError(
+                "Slicing is not implemented for %s" % self.__class__.__name__)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
@@ -151,9 +153,8 @@ class MatrixExpr(Expr):
 
         Returns an object of type ImmutableMatrix.
 
-        See Also
-        --------
-        as_mutable: returns mutable Matrix type
+        Examples
+        ========
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -162,6 +163,10 @@ class MatrixExpr(Expr):
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+
+        See Also
+        ========
+        as_mutable: returns mutable Matrix type
         """
         from sympy.matrices.immutable import ImmutableMatrix
         return ImmutableMatrix([[    self[i,j]
