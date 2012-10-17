@@ -1,7 +1,7 @@
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -15,16 +15,6 @@ from sympy.utilities.misc import filldedent
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
-
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-#from sympy.core.compatibility import as_int
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 def _iszero(x):

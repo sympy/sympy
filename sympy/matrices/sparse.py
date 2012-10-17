@@ -2,7 +2,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.sympify import sympify
@@ -10,16 +10,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from matrices import MatrixBase, ShapeError, a2idx
 from dense import Matrix
-
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-#from sympy.core.compatibility import as_int
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 class SparseMatrix(MatrixBase):
@@ -845,7 +835,7 @@ class SparseMatrix(MatrixBase):
         symmetric, positive-definite and non-singular.
 
         This method eliminates the use of square root and ensures that all
-        the diagonal entries of L are 1. 
+        the diagonal entries of L are 1.
 
         Examples
         ========

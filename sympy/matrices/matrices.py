@@ -15,18 +15,10 @@ from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-from sympy.core.compatibility import callable, reduce  # , as_int
+from sympy.core.compatibility import callable, reduce, as_int
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 def _iszero(x):

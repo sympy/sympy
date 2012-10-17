@@ -442,7 +442,7 @@ def test_add():
 
 
 def test_errors():
-    raises(TypeError, lambda: SparseMatrix(1.4, 2, lambda i, j: 0))
+    raises(ValueError, lambda: SparseMatrix(1.4, 2, lambda i, j: 0))
     raises(TypeError, lambda: SparseMatrix([1, 2, 3], [1, 2]))
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[(1, 2, 3)])
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[5])
