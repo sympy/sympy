@@ -11,32 +11,31 @@ def test_deduce_alpha_implications():
     def D(i):
         I = deduce_alpha_implications(i)
         P = rules_2prereq(dict(((k, True), set([(v, True) for v in S])) for k, S in I.items()))
-        return I,P
+        return I, P
 
     # transitivity
-    I,P = D([('a','b'), ('b','c')])
-    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    I, P = D([('a', 'b'), ('b', 'c')])
+    assert I == {'a': set(['b', 'c']), 'b': set(['c'])}
     assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if the output does not contain repeated implications
-    I,P = D([('a','b'), ('b','c'), ('b','c')])
-    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    I, P = D([('a', 'b'), ('b', 'c'), ('b', 'c')])
+    assert I == {'a': set(['b', 'c']), 'b': set(['c'])}
     assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if it is tolerant to cycles
-    assert D([('a','a'), ('a','a')]) == ({}, {})
-    assert D([('a','b'), ('b','a')]) == ({'a': set(['b']), 'b': set(['a'])},  {'a': set(['b']), 'b': set(['a'])})
+    assert D([('a', 'a'), ('a', 'a')]) == ({}, {})
+    assert D([('a', 'b'), ('b', 'a')]) == ({'a': set(['b']), 'b': set(['a'])}, {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
-    raises(ValueError, lambda: D([('a',Not('a'))]))
-    raises(ValueError, lambda: D([('a','b'), ('b',Not('a'))]))
-    raises(ValueError, lambda: D([('a','b'), ('b','c'), ('b','na'), ('na',Not('a'))]))
-
+    raises(ValueError, lambda: D([('a', Not('a'))]))
+    raises(ValueError, lambda: D([('a', 'b'), ('b', Not('a'))]))
+    raises(ValueError, lambda: D([('a', 'b'), ('b', 'c'), ('b', 'na'), ('na', Not('a'))]))
 
     # something related to real-world
-    I,P = D([('rat','real'), ('int','rat')])
+    I, P = D([('rat', 'real'), ('int', 'rat')])
 
-    assert I == {'int': set(['rat', 'real']),  'rat': set(['real'])}
+    assert I == {'int': set(['rat', 'real']), 'rat': set(['real'])}
     assert P == {'rat': set(['int']), 'real': set(['int', 'rat'])}
 
 
@@ -117,19 +116,19 @@ def test_apply_beta_to_alpha_route():
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
-    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
+    assert f.prereq == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
-    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
+    assert f.prereq == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
-    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
+    assert f.prereq == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
+    assert f.prereq == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
-    assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
+    assert f.prereq == {'z': set(['nz']), 'nz': set(['z'])}
 
 
 def test_FactRules_parse2():
@@ -137,68 +136,71 @@ def test_FactRules_parse2():
 
 def test_FactRules_deduce():
     f = FactRules(['a -> b', 'b -> c', 'b -> d', 'c -> e'])
+
     def D(facts):
         kb = FactKB(f)
         kb.deduce_all_facts(facts)
         return kb
 
-    assert D({'a': T})  == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
-    assert D({'b': T})  == {'b': T, 'c': T, 'd': T, 'e': T}
-    assert D({'c': T})  == {'c': T, 'e': T}
-    assert D({'d': T})  == {'d': T}
-    assert D({'e': T})  == {'e': T}
+    assert D({'a': T}) == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
+    assert D({'b': T}) == {        'b': T, 'c': T, 'd': T, 'e': T}
+    assert D({'c': T}) == {                'c': T,         'e': T}
+    assert D({'d': T}) == {                        'd': T        }
+    assert D({'e': T}) == {                                'e': T}
 
-    assert D({'a': F})  == {'a': F}
-    assert D({'b': F})  == {'a': F, 'b': F}
-    assert D({'c': F})  == {'a': F, 'b': F, 'c': F}
-    assert D({'d': F})  == {'a': F, 'b': F, 'd': F}
+    assert D({'a': F}) == {'a': F                                }
+    assert D({'b': F}) == {'a': F, 'b': F                        }
+    assert D({'c': F}) == {'a': F, 'b': F, 'c': F                }
+    assert D({'d': F}) == {'a': F, 'b': F,         'd': F        }
 
-    assert D({'a': U})  == {'a': U} # XXX ok?
+    assert D({'a': U}) == {'a': U}  # XXX ok?
 
 
 def test_FactRules_deduce2():
     # pos/neg/zero, but the rules are not sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'pos -> !z'])
+
     def D(facts):
         kb = FactKB(f)
         kb.deduce_all_facts(facts)
         return kb
 
-    assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
-    assert D({'pos':F}) == {'pos': F}
-    assert D({'neg':T}) == {'pos': F, 'neg': T}
-    assert D({'neg':F}) == {'neg': F}
-    assert D({'z': T})  == {'pos': F, 'z': T}
-    assert D({'z': F})  == {'z': F}
+    assert D({'pos': T}) == {'pos': T, 'neg': F, 'z': F}
+    assert D({'pos': F}) == {'pos': F                  }
+    assert D({'neg': T}) == {'pos': F, 'neg': T        }
+    assert D({'neg': F}) == {          'neg': F        }
+    assert D({'z':   T}) == {'pos': F,           'z': T}
+    assert D({'z':   F}) == {                    'z': F}
 
     # pos/neg/zero. rules are sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'neg -> !pos', 'pos -> !z', 'neg -> !z'])
 
-    assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
-    assert D({'pos':F}) == {'pos': F}
-    assert D({'neg':T}) == {'pos': F, 'neg': T, 'z': F}
-    assert D({'neg':F}) == {'neg': F}
-    assert D({'z': T})  == {'pos': F, 'neg': F, 'z': T}
-    assert D({'z': F})  == {'z': F}
+    assert D({'pos': T}) == {'pos': T, 'neg': F, 'z': F}
+    assert D({'pos': F}) == {'pos': F                  }
+    assert D({'neg': T}) == {'pos': F, 'neg': T, 'z': F}
+    assert D({'neg': F}) == {          'neg': F        }
+    assert D({'z':   T}) == {'pos': F, 'neg': F, 'z': T}
+    assert D({'z':   F}) == {                    'z': F}
 
 
 def test_FactRules_deduce_multiple():
     # deduction that involves _several_ starting points
     f = FactRules(['real == pos | npos'])
+
     def D(facts):
         kb = FactKB(f)
         kb.deduce_all_facts(facts)
         return kb
 
-    assert D({'real': T})   == {'real': T}
-    assert D({'real': F})   == {'real': F, 'pos': F, 'npos': F}
-    assert D({'pos' : T})   == {'real': T, 'pos': T}
-    assert D({'npos': T})   == {'real': T, 'npos': T}
+    assert D({'real': T}) == {'real': T}
+    assert D({'real': F}) == {'real': F, 'pos': F, 'npos': F}
+    assert D({'pos': T}) == {'real': T, 'pos': T}
+    assert D({'npos': T}) == {'real': T, 'npos': T}
 
     # --- key tests below ---
     assert D({'pos': F, 'npos': F}) == {'real': F, 'pos': F, 'npos': F}
     assert D({'real': T, 'pos': F}) == {'real': T, 'pos': F, 'npos': T}
-    assert D({'real': T, 'npos':F}) == {'real': T, 'pos': T, 'npos': F}
+    assert D({'real': T, 'npos': F}) == {'real': T, 'pos': T, 'npos': F}
 
     assert D({'pos': T, 'npos': F}) == {'real': T, 'pos': T, 'npos': F}
     assert D({'pos': F, 'npos': T}) == {'real': T, 'pos': F, 'npos': T}
@@ -206,31 +208,31 @@ def test_FactRules_deduce_multiple():
 
 def test_FactRules_deduce_multiple2():
     f = FactRules(['real == neg | zero | pos'])
+
     def D(facts):
         kb = FactKB(f)
         kb.deduce_all_facts(facts)
         return kb
 
-    assert D({'real': T})   == {'real': T}
-    assert D({'real': F})   == {'real': F, 'neg': F, 'zero': F, 'pos': F}
-    assert D({'neg' : T})   == {'real': T, 'neg': T}
-    assert D({'zero': T})   == {'real': T, 'zero': T}
-    assert D({'pos' : T})   == {'real': T, 'pos': T}
+    assert D({'real': T}) == {'real': T}
+    assert D({'real': F}) == {'real': F, 'neg': F, 'zero': F, 'pos': F}
+    assert D({'neg': T}) == {'real': T, 'neg': T}
+    assert D({'zero': T}) == {'real': T, 'zero': T}
+    assert D({'pos': T}) == {'real': T, 'pos': T}
 
     # --- key tests below ---
-    assert D({'neg': F, 'zero': F, 'pos': F})   ==  {'real': F, 'neg': F, 'zero': F, 'pos': F}
-    assert D({'real':T, 'neg': F})              ==  {'real': T, 'neg': F}
-    assert D({'real':T, 'zero':F})              ==  {'real': T, 'zero':F}
-    assert D({'real':T, 'pos': F})              ==  {'real': T, 'pos': F}
+    assert D({'neg': F, 'zero': F, 'pos': F}) == {'real': F, 'neg': F, 'zero': F, 'pos': F}
+    assert D({'real': T, 'neg': F}) == {'real': T, 'neg': F}
+    assert D({'real': T, 'zero': F}) == {'real': T, 'zero': F}
+    assert D({'real': T, 'pos': F}) == {'real': T, 'pos': F}
 
-    assert D({'real':T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
-    assert D({'real':T, 'neg': F, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
-    assert D({'real':T, 'neg': F, 'zero': F}) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
+    assert D({'real': T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
+    assert D({'real': T, 'neg': F, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
+    assert D({'real': T, 'neg': F, 'zero': F}) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
-
-    assert D({'neg': T, 'zero': F, 'pos': F})   ==  {'real': T, 'neg': T, 'zero': F, 'pos': F}
-    assert D({'neg': F, 'zero': T, 'pos': F})   ==  {'real': T, 'neg': F, 'zero': T, 'pos': F}
-    assert D({'neg': F, 'zero': F, 'pos': T})   ==  {'real': T, 'neg': F, 'zero': F, 'pos': T}
+    assert D({'neg': T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
+    assert D({'neg': F, 'zero': T, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
+    assert D({'neg': F, 'zero': F, 'pos': T}) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
 
 def test_FactRules_deduce_base():
