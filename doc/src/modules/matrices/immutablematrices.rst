@@ -11,7 +11,9 @@ SymPy classes inherit, is immutable.
 The mission of the :class:`ImmutableMatrix` class is to bridge the tension 
 between performance/mutability and safety/immutability. Immutable matrices can 
 do almost everything that normal matrices can do but they inherit from 
-:class:`Basic` and can thus interact more naturally with the rest of SymPy. 
+:class:`Basic` and can thus interact more naturally with the rest of SymPy.
+:class:`ImmutableMatrix` also inherits from :class:`MatrixExpr`, allowing it to 
+interact freely with SymPy's Matrix Expression module.
 
 You can turn any Matrix-like object into an :class:`ImmutableMatrix` by calling
 the constructor 
@@ -29,17 +31,11 @@ the constructor
     ...
     TypeError: Can not set values in Immutable Matrix. Use Matrix instead.
 
-Matrix Expressions
-------------------
 
-:class:`ImmutableMatrix` also inherits from :class:`MatrixExpr`, allowing it to 
-interact freely with SymPy's Matrix Expression module.
+ImmutableMatrix Class Reference
+-------------------------------
 
-
-Class Reference
----------------
-
-.. module:: sympy.matrices.immutable_matrix
+.. module:: sympy.matrices.immutable
 
 .. autoclass:: ImmutableMatrix 
    :members:
