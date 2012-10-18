@@ -9,6 +9,7 @@ from sympy.functions import re, im, Abs
 from sympy.logic import And
 from sympy.polys import Poly
 
+
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -85,6 +86,7 @@ def solve_poly_inequality(poly, rel):
 
     return intervals
 
+
 def solve_poly_inequalities(polys):
     """Solve a system of polynomial inequalities with rational coefficients.
 
@@ -136,6 +138,7 @@ def solve_poly_inequalities(polys):
             result = result.union(interval)
 
     return result
+
 
 def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
     """Reduce a system of polynomial inequalities with rational coefficients.
@@ -199,6 +202,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
         result = solution.as_relational(gen)
 
     return result
+
 
 def reduce_abs_inequality(expr, rel, gen, assume=True):
     """Reduce an inequality with nested absolute values.
@@ -278,6 +282,7 @@ def reduce_abs_inequality(expr, rel, gen, assume=True):
 
     return reduce_poly_inequalities(inequalities, gen, assume)
 
+
 def reduce_abs_inequalities(exprs, gen, assume=True):
     """Reduce a system of inequalities with nested absolute values.
 
@@ -302,6 +307,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
     """
     return And(*[ reduce_abs_inequality(expr, rel, gen, assume) for expr, rel in exprs ])
 
+
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
@@ -319,6 +325,7 @@ def _solve_inequality(ie, s):
         return ie.func(-b/a, s)
     else:
         raise NotImplementedError
+
 
 def reduce_inequalities(inequalities, assume=True, symbols=[]):
     """Reduce a system of inequalities with rational coefficients.

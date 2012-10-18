@@ -4,6 +4,7 @@ from sympy.utilities.pytest import XFAIL
 
 x, y = symbols('x,y')
 
+
 def test_levicivita():
     assert Eijk(1, 2, 3) == LeviCivita(1, 2, 3)
     assert LeviCivita(1, 2, 3) == 1
@@ -17,6 +18,7 @@ def test_levicivita():
     assert LeviCivita(1, 2, 3, 1) == 0
     assert LeviCivita(4, 5, 1, 2, 3) == 1
     assert LeviCivita(4, 5, 2, 1, 3) == -1
+
 
 def test_kronecker_delta():
     i, j = symbols('i,j')
@@ -104,6 +106,7 @@ def test_kronecker_delta_secondquant():
     assert EV(D(p, j)*D(p, i)*F(i)) == F(j)
     assert EV(D(p, j)*D(p, i)*F(j)) == F(i)
     assert EV(D(p, q)*D(p, i))*F(i) == D(q, i)*F(i)
+
 
 @XFAIL
 def test_kronecker_delta_failing():

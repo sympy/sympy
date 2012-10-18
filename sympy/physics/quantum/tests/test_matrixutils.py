@@ -21,12 +21,14 @@ def test_matrix_to_zero():
 
 np = import_module('numpy', min_python_version=(2, 6))
 
+
 def test_to_numpy():
     if not np:
         skip("numpy not installed or Python too old.")
 
     result = np.matrix([[1, 2], [3, 4]], dtype='complex')
     assert (to_numpy(m) == result).all()
+
 
 def test_matrix_tensor_product():
     if not np:
@@ -94,6 +96,7 @@ def test_matrix_tensor_product():
 
 
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 
 def test_to_scipy_sparse():
     if not np:

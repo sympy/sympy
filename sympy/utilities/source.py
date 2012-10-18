@@ -5,12 +5,14 @@ This module adds several functions for interactive source code inspection.
 import inspect
 from sympy.core.compatibility import callable
 
+
 def source(object):
     """
     Prints the source code of a given object.
     """
     print 'In file: %s' % inspect.getsourcefile(object)
     print inspect.getsource(object)
+
 
 def get_class(lookup_view):
     """
@@ -27,6 +29,7 @@ def get_class(lookup_view):
             if not callable(lookup_view):
                 raise AttributeError("'%s.%s' is not a callable." % (mod_name, func_name))
     return lookup_view
+
 
 def get_mod_func(callback):
     """

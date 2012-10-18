@@ -2,6 +2,7 @@ from sympy.core import S, Add
 from sympy.assumptions import Q, ask
 from sympy.logic.boolalg import fuzzy_not
 
+
 def refine(expr, assumptions=True):
     """
     Simplify an expression using assumptions.
@@ -33,6 +34,7 @@ def refine(expr, assumptions=True):
         return expr
     return refine(new_expr, assumptions)
 
+
 def refine_abs(expr, assumptions):
     """
     Handler for the absolute value.
@@ -57,6 +59,7 @@ def refine_abs(expr, assumptions):
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+
 
 def refine_Pow(expr, assumptions):
     """

@@ -26,6 +26,7 @@ from sympy.abc import x, y
 
 Q = Rational
 
+
 def test_minimal_polynomial():
     assert minimal_polynomial(-7, x) == x + 7
     assert minimal_polynomial(-1, x) == x + 1
@@ -94,6 +95,7 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
+
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
     assert primitive_element([sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
@@ -113,6 +115,7 @@ def test_primitive_element():
 
     raises(ValueError, lambda: primitive_element([], x, ex=False))
     raises(ValueError, lambda: primitive_element([], x, ex=True))
+
 
 def test_field_isomorphism_pslq():
     a = AlgebraicNumber(I)
@@ -159,6 +162,7 @@ def test_field_isomorphism_pslq():
     f = AlgebraicNumber(3*sqrt(2)+8*sqrt(7)-5)
 
     assert field_isomorphism_pslq(f, e) == [Q(3, 80), 0, -Q(139, 80), 0, Q(347, 20), 0, -Q(761, 20), -5]
+
 
 def test_field_isomorphism():
     assert field_isomorphism(3, sqrt(2)) == [3]
@@ -317,6 +321,7 @@ def test_field_isomorphism():
     assert field_isomorphism(sqrt(2), sqrt(3), fast=False) is None
     assert field_isomorphism(sqrt(3), sqrt(2), fast=False) is None
 
+
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
     assert to_number_field([sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2)+sqrt(3))
@@ -327,6 +332,7 @@ def test_to_number_field():
     assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2)+sqrt(3))) == a
 
     raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))
+
 
 def test_AlgebraicNumber():
     minpoly, root = x**2 - 2, sqrt(2)
@@ -457,6 +463,7 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))
 
+
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
 
@@ -482,10 +489,12 @@ def test_to_algebraic_integer():
     assert a.root == 2*sqrt(3)
     assert a.rep == DMP([QQ(7, 19), QQ(3)], QQ)
 
+
 def test_IntervalPrinter():
     ip = IntervalPrinter()
     assert ip.doprint(x**Q(1, 3)) == "x**(mpi('1/3'))"
     assert ip.doprint(sqrt(x)) == "x**(mpi('1/2'))"
+
 
 def test_isolate():
     assert isolate(1) == (1, 1)

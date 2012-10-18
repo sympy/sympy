@@ -27,6 +27,7 @@ from sympy import S, Symbol, symbols, groebner
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.polys import polyconfig as config
 
+
 def helper_test_sdp_groebner():
     f = sdp_from_dict({(1, 2): QQ(2,), (2, 0): QQ(1)}, lex)
     g = sdp_from_dict({(0, 3): QQ(2), (1, 1): QQ(1), (0, 0): QQ(-1)},  lex)
@@ -178,11 +179,13 @@ def helper_test_sdp_groebner():
 
     raises(DomainError, lambda: sdp_groebner([], 1, lex, ZZ))
 
+
 def test_sdp_groebner():
     config.setup('GB_METHOD', 'f5b')
     helper_test_sdp_groebner()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_sdp_groebner()
+
 
 def helper_test_benchmark_minpoly():
     x, y, z = symbols('x,y,z')
@@ -201,11 +204,13 @@ def helper_test_benchmark_minpoly():
         13 - 46*z + 89*z**2 - 82*z**3 + 41*z**4 - 7*z**5 + z**6,
     ]
 
+
 def test_benchmark_minpoly():
     config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_minpoly()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_minpoly()
+
 
 @XFAIL
 def test_benchmark_coloring():
@@ -243,6 +248,7 @@ def test_benchmark_coloring():
 
     assert groebner(I, V, order='lex') == [1]
 
+
 def helper_test_benchmark_katsura_3():
     x0, x1, x2 = symbols('x:3')
 
@@ -263,11 +269,13 @@ def helper_test_benchmark_katsura_3():
         -1 + x0 + 2*x1 + 2*x2,
     ]
 
+
 def test_benchmark_katsura3():
     config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_katsura_3()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_katsura_3()
+
 
 def helper_test_benchmark_katsura_4():
     x0, x1, x2, x3 = symbols('x:4')
@@ -295,11 +303,13 @@ def helper_test_benchmark_katsura_4():
         x0 + 2*x1 + 2*x2 + 2*x3 - 1,
     ]
 
+
 def test_benchmark_kastura_4():
     config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_katsura_4()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_katsura_4()
+
 
 def helper_test_benchmark_czichowski():
     x, t = symbols('x t')
@@ -318,6 +328,7 @@ def helper_test_benchmark_czichowski():
         -3725142681462373002731339445216700112264527*t**3 + 583711207282060457652784180668273817487940*t**2*x - 12381382393074485225164741437227437062814908*t**2 + 151081054097783125250959636747516827435040*t*x**2 + 1814103857455163948531448580501928933873280*t*x - 13353115629395094645843682074271212731433648*t + 236415091385250007660606958022544983766080*x**2 + 1390443278862804663728298060085399578417600*x - 4716885828494075789338754454248931750698880
     ]
 
+
 @XFAIL
 def test_benchmark_czichowski():
     skip('This takes too much time (without gmpy)')
@@ -326,6 +337,7 @@ def test_benchmark_czichowski():
     helper_test_benchmark_czichowski()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_czichowski()
+
 
 def helper_test_benchmark_cyclic_4():
     a, b, c, d = symbols('a b c d')
@@ -350,11 +362,13 @@ def helper_test_benchmark_cyclic_4():
         a + b + c + d
     ]
 
+
 def test_benchmark_cyclic_4():
     config.setup('GB_METHOD', 'f5b')
     helper_test_benchmark_cyclic_4()
     config.setup('GB_METHOD', 'buchberger')
     helper_test_benchmark_cyclic_4()
+
 
 def test_sig_key():
     s1 = sig((0,) * 3, 2)
@@ -364,6 +378,7 @@ def test_sig_key():
     assert sig_key(s1, lex) > sig_key(s2, lex)
     assert sig_key(s2, lex) < sig_key(s3, lex)
 
+
 def test_lbp_key():
     p1 = lbp(sig((0,) * 4, 3), [], 12)
     p2 = lbp(sig((0,) * 4, 4), [], 13)
@@ -371,6 +386,7 @@ def test_lbp_key():
 
     assert lbp_key(p1, lex) > lbp_key(p2, lex)
     assert lbp_key(p2, lex) < lbp_key(p3, lex)
+
 
 def test_critical_pair():
     # from cyclic4 with grlex
@@ -382,6 +398,7 @@ def test_critical_pair():
 
     assert critical_pair(p1, q1, 3, grlex, QQ) == (((0, 0, 1, 2), 2), ((0, 0, 1, 2), QQ(-1, 1)), (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1, 1)), ((0, 1, 0, 1), QQ(-1, 1)), ((0, 0, 1, 1), QQ(-1, 1)), ((0, 0, 0, 2), QQ(-1, 1))], 2), ((0, 1, 0, 0), 4), ((0, 1, 0, 0), QQ(1, 1)), (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1, 1)), ((0, 0, 2, 2), QQ(1, 1)), ((0, 0, 0, 4), QQ(-1, 1)), ((0, 0, 0, 0), QQ(-1, 1))], 4))
     assert critical_pair(p2, q2, 3, grlex, QQ) == (((0, 0, 4, 2), 2), ((0, 0, 2, 0), QQ(1, 1)), (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1, 1)), ((0, 0, 0, 6), QQ(1, 1)), ((0, 1, 1, 0), QQ(1, 1)), ((0, 0, 1, 1), QQ(1, 1))], 13), ((0, 0, 0, 5), 3), ((0, 0, 0, 3), QQ(1, 1)), (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1, 1)), ((0, 0, 2, 3), QQ(1, 1)), ((0, 0, 1, 0), QQ(-1, 1)), ((0, 0, 0, 1), QQ(-1, 1))], 5))
+
 
 def test_cp_key():
     # from cyclic4 with grlex
@@ -401,6 +418,7 @@ def test_cp_key():
 
     assert cp_key(cp1, grlex) < cp_key(cp2, grlex)
 
+
 def test_is_rewritable_or_comparable():
     # from katsura4 with grlex
     p = lbp(sig((0, 0, 2, 1), 2), [], 2)
@@ -414,6 +432,7 @@ def test_is_rewritable_or_comparable():
     # comparable:
     assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
 
+
 def test_f5_reduce():
     # katsura3 with lex
     F = [(((0, 0, 0), 1), [((1, 0, 0), QQ(1, 1)), ((0, 1, 0), QQ(2, 1)), ((0, 0, 1), QQ(2, 1)), ((0, 0, 0), QQ(-1, 1))], 1), (((0, 0, 0), 2), [((0, 2, 0), QQ(6, 1)), ((0, 1, 1), QQ(8, 1)), ((0, 1, 0), QQ(-2, 1)), ((0, 0, 2), QQ(6, 1)), ((0, 0, 1), QQ(-2, 1))], 2), (((0, 0, 0), 3), [((0, 1, 1), QQ(10, 3)), ((0, 1, 0), QQ(-1, 3)), ((0, 0, 2), QQ(4, 1)), ((0, 0, 1), QQ(-4, 3))], 3), (((0, 0, 1), 2), [((0, 1, 0), QQ(1, 1)), ((0, 0, 3), QQ(30, 1)), ((0, 0, 2), QQ(-79, 7)), ((0, 0, 1), QQ(3, 7))], 4), (((0, 0, 2), 2), [((0, 0, 4), QQ(1, 1)), ((0, 0, 3), QQ(-10, 21)), ((0, 0, 2), QQ(1, 84)), ((0, 0, 1), QQ(1, 84))], 5)]
@@ -425,6 +444,7 @@ def test_f5_reduce():
 
     s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
     assert f5_reduce(s, F, 2, lex, QQ) == s
+
 
 def test_representing_matrices():
     basis = [(0, 0), (0, 1), (1, 0), (1, 1)]

@@ -6,6 +6,7 @@ from numbers import ilcm, igcd
 
 from collections import defaultdict
 
+
 class Add(AssocOp):
 
     __slots__ = []

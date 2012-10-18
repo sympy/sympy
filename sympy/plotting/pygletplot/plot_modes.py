@@ -6,11 +6,13 @@ from sympy.functions import sin, cos
 from math import sin as p_sin
 from math import cos as p_cos
 
+
 def float_vec3(f):
     def inner(*args):
         v = f(*args)
         return float(v[0]), float(v[1]), float(v[2])
     return inner
+
 
 class Cartesian2D(PlotCurve):
     i_vars, d_vars = 'x', 'y'
@@ -31,6 +33,7 @@ class Cartesian2D(PlotCurve):
         fy = self.d_vars[0]
         x = self.t_interval.v
         return lambdify([x], [x, fy, 0.0])
+
 
 class Cartesian3D(PlotSurface):
     i_vars, d_vars = 'xy', 'z'
@@ -54,6 +57,7 @@ class Cartesian3D(PlotSurface):
         y = self.v_interval.v
         return lambdify([x, y], [x, y, fz])
 
+
 class ParametricCurve2D(PlotCurve):
     i_vars, d_vars = 't', 'xy'
     intervals = [[0, 2*pi, 100]]
@@ -74,6 +78,7 @@ class ParametricCurve2D(PlotCurve):
         t = self.t_interval.v
         return lambdify([t], [fx, fy, 0.0])
 
+
 class ParametricCurve3D(PlotCurve):
     i_vars, d_vars = 't', 'xyz'
     intervals = [[0, 2*pi, 100]]
@@ -93,6 +98,7 @@ class ParametricCurve3D(PlotCurve):
         fx, fy, fz = self.d_vars
         t = self.t_interval.v
         return lambdify([t], [fx, fy, fz])
+
 
 class ParametricSurface(PlotSurface):
     i_vars, d_vars = 'uv', 'xyz'
@@ -118,6 +124,7 @@ class ParametricSurface(PlotSurface):
         v = self.v_interval.v
         return lambdify([u, v], [fx, fy, fz])
 
+
 class Polar(PlotCurve):
     i_vars, d_vars = 't', 'r'
     intervals = [[0, 2*pi, 100]]
@@ -138,6 +145,7 @@ class Polar(PlotCurve):
         t = self.t_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
         return lambdify([t], [fx, fy, 0.0])
+
 
 class Cylindrical(PlotSurface):
     i_vars, d_vars = 'th', 'r'
@@ -161,6 +169,7 @@ class Cylindrical(PlotSurface):
         h = self.v_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
         return lambdify([t, h], [fx, fy, h])
+
 
 class Spherical(PlotSurface):
     i_vars, d_vars = 'tp', 'r'

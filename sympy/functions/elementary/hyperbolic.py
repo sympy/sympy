@@ -7,10 +7,12 @@ from sympy.functions.elementary.miscellaneous import sqrt
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
 
+
 class HyperbolicFunction(Function):
     """Base class for hyperbolic functions. """
 
     unbranched = True
+
 
 class sinh(HyperbolicFunction):
     """
@@ -152,6 +154,7 @@ class sinh(HyperbolicFunction):
         import sage.all as sage
         return sage.sinh(self.args[0]._sage_())
 
+
 class cosh(HyperbolicFunction):
     """
     The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
@@ -281,6 +284,7 @@ class cosh(HyperbolicFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.cosh(self.args[0]._sage_())
+
 
 class tanh(HyperbolicFunction):
     """
@@ -414,6 +418,7 @@ class tanh(HyperbolicFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.tanh(self.args[0]._sage_())
+
 
 class coth(HyperbolicFunction):
     """
@@ -618,6 +623,7 @@ class asinh(Function):
         import sage.all as sage
         return sage.asinh(self.args[0]._sage_())
 
+
 class acosh(Function):
     """
     The inverse hyperbolic cosine function.
@@ -727,6 +733,7 @@ class acosh(Function):
         import sage.all as sage
         return sage.acosh(self.args[0]._sage_())
 
+
 class atanh(Function):
     """
     The inverse hyperbolic tangent function.
@@ -797,6 +804,7 @@ class atanh(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.atanh(self.args[0]._sage_())
+
 
 class acoth(Function):
     """

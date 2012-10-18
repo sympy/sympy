@@ -6,6 +6,7 @@ from plot_controller import PlotController
 
 from time import clock
 
+
 class PlotWindow(ManagedWindow):
 
     def __init__(self, plot, **kwargs):

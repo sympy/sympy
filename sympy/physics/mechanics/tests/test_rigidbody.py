@@ -2,6 +2,7 @@ from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer
 
+
 def test_rigidbody():
     m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
     A = ReferenceFrame('A')
@@ -31,6 +32,7 @@ def test_rigidbody():
     N = ReferenceFrame('N')
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
     assert B.linear_momentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+
 
 def test_rigidbody2():
     M, v, r, omega, g, h = dynamicsymbols('M v r omega g h')

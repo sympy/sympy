@@ -1,5 +1,6 @@
 from sympy import Symbol, Dummy, Rational, exp
 
+
 def test_equal():
     b = Symbol("b")
     a = Symbol("a")
@@ -33,11 +34,13 @@ def test_equal():
     assert e5 != 3+x
     assert 3+x != e5
 
+
 def test_expevalbug():
     x = Symbol("x")
     e1 = exp(1*x)
     e3 = exp(x)
     assert e1 == e3
+
 
 def test_cmp_bug1():
     class T(object):
@@ -49,6 +52,7 @@ def test_cmp_bug1():
     assert not (x == t)
     assert (x != t)
 
+
 def test_cmp_bug2():
     class T(object):
         pass
@@ -57,6 +61,7 @@ def test_cmp_bug2():
 
     assert not (Symbol == t)
     assert (Symbol != t)
+
 
 def test_cmp_bug1258():
     """ Check that Basic subclasses can be compared with sympifiable objects.
@@ -67,6 +72,7 @@ def test_cmp_bug1258():
     assert (Symbol != 1)
     assert not (Symbol == 'x')
     assert (Symbol != 'x')
+
 
 def test_dummy_eq():
     x = Symbol('x')

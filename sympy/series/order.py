@@ -3,6 +3,7 @@ from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
 
+
 class Order(Expr):
     """ Represents the limiting behavior of some function
 

@@ -15,6 +15,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities.pytest import raises
 
+
 def test_DMP___init__():
     f = DMP([[0], [], [0, 1, 2], [3]], ZZ)
 
@@ -34,6 +35,7 @@ def test_DMP___init__():
     assert f.dom == ZZ
     assert f.lev == 1
 
+
 def test_DMP___eq__():
     assert DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ) == \
            DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
@@ -46,9 +48,11 @@ def test_DMP___eq__():
     assert DMP([[[ZZ(1)]]], ZZ) != DMP([[ZZ(1)]], ZZ)
     assert DMP([[ZZ(1)]], ZZ) != DMP([[[ZZ(1)]]], ZZ)
 
+
 def test_DMP___bool__():
     assert bool(DMP([[]], ZZ)) == False
     assert bool(DMP([[1]], ZZ)) == True
+
 
 def test_DMP_to_dict():
     f = DMP([[3], [], [2], [], [8]], ZZ)
@@ -57,6 +61,7 @@ def test_DMP_to_dict():
         {(4, 0): 3, (2, 0): 2, (0, 0): 8}
     assert f.to_sympy_dict() == \
         {(4, 0): ZZ.to_sympy(3), (2, 0): ZZ.to_sympy(2), (0, 0): ZZ.to_sympy(8)}
+
 
 def test_DMP_properties():
     assert DMP([[]], ZZ).is_zero == True
@@ -76,6 +81,7 @@ def test_DMP_properties():
 
     assert DMP([[1, 2], [3]], ZZ).is_primitive == True
     assert DMP([[2, 4], [6]], ZZ).is_primitive == False
+
 
 def test_DMP_arithmetics():
     f = DMP([[2], [2, 0]], ZZ)
@@ -153,6 +159,7 @@ def test_DMP_arithmetics():
     assert f % g == r
 
     raises(ExactQuotientFailed, lambda: f.exquo(g))
+
 
 def test_DMP_functionality():
     f = DMP([[1], [2, 0], [1, 0, 0]], ZZ)
@@ -252,12 +259,14 @@ def test_DMP_functionality():
     raises(ValueError, lambda: f.decompose())
     raises(ValueError, lambda: f.sturm())
 
+
 def test_DMP_exclude():
     f = [[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
     J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25]
 
     assert DMP(f, ZZ).exclude() == (J, DMP([1, 0], ZZ))
     assert DMP([[1], [1, 0]], ZZ).exclude() == ([], DMP([[1], [1, 0]], ZZ))
+
 
 def test_DMF__init__():
     f = DMF(([[0], [], [0, 1, 2], [3]], [[1, 2, 3]]), ZZ)
@@ -347,9 +356,11 @@ def test_DMF__init__():
     raises(ValueError, lambda: DMF(([1], [[1]]), ZZ))
     raises(ZeroDivisionError, lambda: DMF(([1], []), ZZ))
 
+
 def test_DMF__bool__():
     assert bool(DMF([[]], ZZ)) == False
     assert bool(DMF([[1]], ZZ)) == True
+
 
 def test_DMF_properties():
     assert DMF([[]], ZZ).is_zero == True
@@ -359,6 +370,7 @@ def test_DMF_properties():
     assert DMF([[1]], ZZ).is_one == True
 
     assert DMF(([[1]], [[2]]), ZZ).is_one == False
+
 
 def test_DMF_arithmetics():
     f = DMF([[7], [-9]], ZZ)
@@ -395,6 +407,7 @@ def test_DMF_arithmetics():
 
     assert g.pow(3) == g**3 == h
 
+
 def test_ANP___init__():
     rep = [QQ(1), QQ(1)]
     mod = [QQ(1), QQ(0), QQ(1)]
@@ -420,6 +433,7 @@ def test_ANP___init__():
     assert f.mod == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
+
 def test_ANP___eq__():
     a = ANP([QQ(1), QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)
     b = ANP([QQ(1), QQ(1)], [QQ(1), QQ(0), QQ(2)], QQ)
@@ -435,9 +449,11 @@ def test_ANP___eq__():
     assert (a == b) == False
     assert (a != b) == True
 
+
 def test_ANP___bool__():
     assert bool(ANP([], [QQ(1), QQ(0), QQ(1)], QQ)) == False
     assert bool(ANP([QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)) == True
+
 
 def test_ANP_properties():
     mod = [QQ(1), QQ(0), QQ(1)]
@@ -447,6 +463,7 @@ def test_ANP_properties():
 
     assert ANP([QQ(1)], mod, QQ).is_one == True
     assert ANP([QQ(2)], mod, QQ).is_one == False
+
 
 def test_ANP_arithmetics():
     mod = [QQ(1), QQ(0), QQ(0), QQ(-2)]
@@ -485,6 +502,7 @@ def test_ANP_arithmetics():
 
     assert a.quo(a) == a.mul(a.pow(-1)) == a*a**(-1) == ANP(1, mod, QQ)
 
+
 def test_ANP_unify():
     mod = [QQ(1), QQ(0), QQ(-2)]
 
@@ -495,6 +513,7 @@ def test_ANP_unify():
     assert b.unify(a)[0] == QQ
     assert a.unify(a)[0] == QQ
     assert b.unify(b)[0] == ZZ
+
 
 def test___hash__():
     # Issue 2472

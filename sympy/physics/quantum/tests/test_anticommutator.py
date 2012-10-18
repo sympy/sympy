@@ -15,6 +15,7 @@ def test_anticommutator():
     assert ac.is_commutative == False
     assert ac.subs(A, C) == AComm(C, B)
 
+
 def test_commutator_identities():
     assert AComm(a*A, b*B) == a*b*AComm(A, B)
     assert AComm(A, A) == 2*A**2

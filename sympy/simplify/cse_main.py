@@ -32,6 +32,7 @@ cse_optimizations = list(cse_opts.default_optimizations)
 # transformations can be put here for users
 # ===============================================================
 
+
 def reps_toposort(r):
     """Sort replacements `r` so (k1, v1) appears before (k2, v2)
     if k2 is in v1's free symbols. This orders items in the
@@ -59,6 +60,7 @@ def reps_toposort(r):
                 E.append((c1, c2))
     return [r[i] for i in topological_sort((range(len(r)), E))]
 
+
 def cse_separate(r, e):
     """Move expressions that are in the form (symbol, expr) out of the
     expressions and sort them into the replacements using the reps_toposort.
@@ -78,6 +80,7 @@ def cse_separate(r, e):
     return [reps_toposort(r), e]
 
 # ====end of cse postprocess idioms===========================
+
 
 def preprocess_for_cse(expr, optimizations):
     """ Preprocess an expression to optimize for common subexpression
@@ -99,6 +102,7 @@ def preprocess_for_cse(expr, optimizations):
         if pre is not None:
             expr = pre(expr)
     return expr
+
 
 def postprocess_for_cse(expr, optimizations):
     """ Postprocess an expression after common subexpression elimination to
@@ -124,6 +128,7 @@ def postprocess_for_cse(expr, optimizations):
         if post is not None:
             expr = post(expr)
     return expr
+
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     """ Perform common subexpression elimination on an expression.

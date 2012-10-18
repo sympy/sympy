@@ -43,6 +43,7 @@ from sympy.core.compatibility import permutations, next
 
 # Additional monomial tools.
 
+
 def sdm_monomial_mul(M, X):
     """
     Multiply tuple ``X`` representing a monomial of `K[X]` into the tuple
@@ -59,6 +60,7 @@ def sdm_monomial_mul(M, X):
     """
     return (M[0],) + monomial_mul(X, M[1:])
 
+
 def sdm_monomial_deg(M):
     """
     Return the total degree of ``M``.
@@ -73,6 +75,7 @@ def sdm_monomial_deg(M):
     3
     """
     return monomial_deg(M[1:])
+
 
 def sdm_monomial_lcm(A, B):
     """
@@ -89,6 +92,7 @@ def sdm_monomial_lcm(A, B):
     (1, 2, 5)
     """
     return (A[0],) + monomial_lcm(A[1:], B[1:])
+
 
 def sdm_monomial_divides(A, B):
     """
@@ -148,6 +152,7 @@ def sdm_monomial_divides(A, B):
 sdm_LC = sdp_LC
 sdm_to_dict = sdp_to_dict
 
+
 def sdm_from_dict(d, O):
     """
     Create an sdm from a dictionary.
@@ -161,6 +166,7 @@ def sdm_from_dict(d, O):
     [((1, 1, 0), 1/1), ((1, 0, 0), 2/1)]
     """
     return sdp_strip(sdp_from_dict(d, O))
+
 
 def sdm_add(f, g, O, K):
     """
@@ -199,6 +205,7 @@ def sdm_add(f, g, O, K):
     # send 0 for u (3rd parameter) since it is not needed
     return sdp_add(f, g, 0, O, K)
 
+
 def sdm_LM(f):
     r"""
     Returns the leading monomial of ``f``.
@@ -216,6 +223,7 @@ def sdm_LM(f):
     """
     return f[0][0]
 
+
 def sdm_LT(f):
     r"""
     Returns the leading term of ``f``.
@@ -232,6 +240,7 @@ def sdm_LT(f):
     ((4, 0, 1), 3/1)
     """
     return f[0]
+
 
 def sdm_mul_term(f, term, O, K):
     """
@@ -278,9 +287,11 @@ def sdm_mul_term(f, term, O, K):
         else:
             return [ (sdm_monomial_mul(f_M, X), f_c * c) for f_M, f_c in f ]
 
+
 def sdm_zero():
     """Return the zero module element."""
     return []
+
 
 def sdm_deg(f):
     """
@@ -325,6 +336,7 @@ def sdm_from_vector(vec, O, K, **opts):
             dic[(i,) + k] = K.convert(v)
     return sdm_from_dict(dic, O)
 
+
 def sdm_to_vector(f, gens, K, n=None):
     """
     Convert sdm ``f`` into a list of polynomial expressions.
@@ -357,6 +369,7 @@ def sdm_to_vector(f, gens, K, n=None):
     return res
 
 # Algorithms.
+
 
 def sdm_spoly(f, g, O, K, phantom=None):
     """
@@ -409,6 +422,7 @@ def sdm_spoly(f, g, O, K, phantom=None):
                  sdm_mul_term(phantom[1], (m2, c), O, K), O, K)
     return r1, r2
 
+
 def sdm_ecart(f):
     """
     Compute the ecart of ``f``.
@@ -428,6 +442,7 @@ def sdm_ecart(f):
     3
     """
     return sdm_deg(f) - sdm_monomial_deg(sdm_LM(f))
+
 
 def sdm_nf_mora(f, G, O, K, phantom=None):
     r"""
@@ -484,6 +499,7 @@ def sdm_nf_mora(f, G, O, K, phantom=None):
         return h, hp
     return h
 
+
 def sdm_nf_buchberger(f, G, O, K, phantom=None):
     r"""
     Compute a weak normal form of ``f`` with respect to ``G`` and order ``O``.
@@ -523,6 +539,7 @@ def sdm_nf_buchberger(f, G, O, K, phantom=None):
         return h, hp
     return h
 
+
 def sdm_nf_buchberger_reduced(f, G, O, K):
     r"""
     Compute a reduced normal form of ``f`` with respect to ``G`` and order ``O``.
@@ -547,6 +564,7 @@ def sdm_nf_buchberger_reduced(f, G, O, K):
             h = sdm_add(h, [sdm_LT(g)], O, K)
             g = g[1:]
     return h
+
 
 def sdm_groebner(G, NF, O, K, extended=False):
     """

@@ -23,6 +23,7 @@ def _add_splines(c, b1, d, b2):
     new_args.append(b2.args[-1])
     return Piecewise(*new_args)
 
+
 def bspline_basis(d, knots, n, x, close=True):
     """The n-th B-spline at x of degree d with knots.
 
@@ -111,6 +112,7 @@ def bspline_basis(d, knots, n, x, close=True):
     else:
         raise ValueError('degree must be non-negative: %r' % n)
     return result
+
 
 def bspline_basis_set(d, knots, x):
     """Return the len(knots)-d-1 B-splines at x of degree d with knots.

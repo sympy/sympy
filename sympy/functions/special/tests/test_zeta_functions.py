@@ -10,6 +10,7 @@ a = Symbol('a')
 z = Symbol('z')
 s = Symbol('s')
 
+
 def test_zeta_eval():
 
     assert zeta(nan) == nan
@@ -59,6 +60,7 @@ def test_zeta_eval():
 
     assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
 
+
 def test_dirichlet_eta_eval():
 
     assert dirichlet_eta(0) == Rational(1, 2)
@@ -66,6 +68,7 @@ def test_dirichlet_eta_eval():
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12
     assert dirichlet_eta(4) == pi**4*Rational(7, 720)
+
 
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
@@ -78,6 +81,7 @@ def test_rewriting():
 
     assert lerchphi(1, x, a).rewrite(zeta) == zeta(x, a)
     assert z*lerchphi(z, s, 1).rewrite(polylog) == polylog(s, z)
+
 
 def test_derivatives():
     from sympy import Derivative
@@ -94,6 +98,7 @@ def test_derivatives():
     assert td(lerchphi(c, b, x), x)
     assert td(lerchphi(x, b, c), x)
 
+
 def myexpand(func, target):
     expanded = expand_func(func)
     if target is not None:
@@ -107,6 +112,7 @@ def myexpand(func, target):
         subs[a] = randcplx()
     return abs(func.subs(subs).n()
                - expanded.replace(exp_polar, exp).subs(subs).n()) < 1e-10
+
 
 def test_polylog_expansion():
     from sympy import factor, log

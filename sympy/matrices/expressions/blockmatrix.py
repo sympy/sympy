@@ -7,6 +7,7 @@ from inverse import Inverse
 from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, sympify, FiniteSet, Add
 
+
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
 
@@ -202,6 +203,7 @@ class BlockMatrix(MatrixExpr):
     def is_structurally_symmetric(self):
         return self.rowblocksizes == self.colblocksizes
 
+
 class BlockDiagMatrix(BlockMatrix):
     """A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
 
@@ -261,6 +263,7 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockDiagMatrix(*[a+b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockadd(self, other)
+
 
 def block_collapse(expr):
     """Evaluates a block matrix expression

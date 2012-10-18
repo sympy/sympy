@@ -5,6 +5,7 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
 
+
 class AskPrimeHandler(CommonHandler):
     """
     Handler for key 'prime'
@@ -83,6 +84,7 @@ class AskPrimeHandler(CommonHandler):
     def NumberSymbol(expr, assumptions):
         return AskPrimeHandler._number(expr, assumptions)
 
+
 class AskCompositeHandler(CommonHandler):
 
     @staticmethod
@@ -96,6 +98,7 @@ class AskCompositeHandler(CommonHandler):
                 return not _prime
             else: return _integer
         else: return _positive
+
 
 class AskEvenHandler(CommonHandler):
 
@@ -207,6 +210,7 @@ class AskEvenHandler(CommonHandler):
     def im(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             return True
+
 
 class AskOddHandler(CommonHandler):
     """

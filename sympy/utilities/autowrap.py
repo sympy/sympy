@@ -79,7 +79,9 @@ from sympy.utilities.codegen import (
 from sympy.utilities.lambdify import implemented_function
 from sympy import C
 
+
 class CodeWrapError(Exception): pass
+
 
 class CodeWrapper:
     """Base Class for code wrappers"""
@@ -154,6 +156,7 @@ class CodeWrapper:
             raise CodeWrapError(
                     "Error while executing command: %s" % " ".join(command))
 
+
 class DummyWrapper(CodeWrapper):
     """Class used for testing independent of backends """
 
@@ -192,6 +195,7 @@ def %(name)s():
     @classmethod
     def _get_wrapped_function(cls, mod):
         return mod.autofunc
+
 
 class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
@@ -304,6 +308,7 @@ setup(
         else:
             return "%s %s"%(t, str(arg.name))
 
+
 class F2PyCodeWrapper(CodeWrapper):
     """Wrapper that uses f2py"""
 
@@ -320,9 +325,11 @@ class F2PyCodeWrapper(CodeWrapper):
     def _get_wrapped_function(cls, mod):
         return mod.autofunc
 
+
 def _get_code_wrapper_class(backend):
     wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
+
 
 def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
@@ -388,6 +395,7 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 
+
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -408,6 +416,7 @@ def binary_function(symfunc, expr, **kwargs):
     """
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
+
 
 def ufuncify(args, expr, **kwargs):
     """

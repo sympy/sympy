@@ -29,38 +29,46 @@ from sympy import S, Symbol, symbols
 
 from sympy.utilities.pytest import raises, skip, XFAIL
 
+
 def test_sdp_LC():
     assert sdp_LC([], QQ) == QQ(0)
     assert sdp_LC([((1, 0), QQ(1, 2))], QQ) == QQ(1, 2)
     assert sdp_LC([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))], QQ) == QQ(1, 4)
+
 
 def test_sdp_LM():
     assert sdp_LM([], 1) == (0, 0)
     assert sdp_LM([((1, 0), QQ(1, 2))], 1) == (1, 0)
     assert sdp_LM([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))], 1) == (1, 1)
 
+
 def test_sdp_LT():
     assert sdp_LT([], 1, QQ) == ((0, 0), QQ(0))
     assert sdp_LT([((1, 0), QQ(1, 2))], 1, QQ) == ((1, 0), QQ(1, 2))
     assert sdp_LT([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))], 1, QQ) == ((1, 1), QQ(1, 4))
+
 
 def test_sdp_del_LT():
     assert sdp_del_LT([]) == []
     assert sdp_del_LT([((1, 0), QQ(1, 2))]) == []
     assert sdp_del_LT([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [((1, 0), QQ(1, 2))]
 
+
 def test_sdp_coeffs():
     assert sdp_coeffs([]) == []
     assert sdp_coeffs([((1, 0), QQ(1, 2))]) == [QQ(1, 2)]
     assert sdp_coeffs([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [QQ(1, 4), QQ(1, 2)]
+
 
 def test_sdp_monoms():
     assert sdp_monoms([]) == []
     assert sdp_monoms([((1, 0), QQ(1, 2))]) == [(1, 0)]
     assert sdp_monoms([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [(1, 1), (1, 0)]
 
+
 def test_sdp_strip():
     assert sdp_strip([((2, 2), 0), ((1, 1), 1), ((0, 0), 0)]) == [((1, 1), 1)]
+
 
 def test_sdp_pow():
     f = sdp_from_dict({(1,): 2, (0,): 3}, grlex)
@@ -84,6 +92,7 @@ def test_sdp_pow():
     assert sdp_pow(f, 2, 2, grlex, ZZ) == g
 
     raises(ValueError, lambda: sdp_pow(f, -2, 2, grlex, ZZ))
+
 
 def test_sdp_div():
     f = sdp_from_dict({(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)
@@ -147,6 +156,7 @@ def test_sdp_div():
     r = sdp_from_dict({(1, 0): 2, (0, 0): 1}, grlex)
 
     assert sdp_div(f, G, 1, grlex, ZZ) == (Q, r)
+
 
 def test_sdp_rem():
     f = sdp_from_dict({(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)

@@ -1,5 +1,6 @@
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
 
+
 def _is_scalar(e):
     """ Helper method used in Tr"""
 
@@ -13,6 +14,7 @@ def _is_scalar(e):
             return True
 
     return False
+
 
 def _cycle_permute(l):
     """ Cyclic permutations based on canonical ordering
@@ -61,6 +63,7 @@ def _rearrange_args(l):
     x = list(l[-1:])
     x.extend(l[0:-1])
     return Mul(*x).args
+
 
 class Tr(Expr):
     """ Generic Trace operation than can trace over:

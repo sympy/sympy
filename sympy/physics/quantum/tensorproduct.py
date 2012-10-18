@@ -202,6 +202,7 @@ class TensorProduct(Expr):
             return Mul(*[Tr(value).doit() if idx in indices else value
                         for idx, value in enumerate(exp.args)])
 
+
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.
 

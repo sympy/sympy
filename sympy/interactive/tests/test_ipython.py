@@ -18,6 +18,7 @@ if not ipython:
     #bin/test will not execute any tests now
     disabled = True
 
+
 def test_automatic_symbols():
     # NOTE: Because of the way the hook works, you have to use run_cell(code,
     # True).  This means that the code must have no Out, or it will be printed
@@ -45,6 +46,7 @@ def test_automatic_symbols():
     app.run_cell("import sympy")
     app.run_cell("a = factorial == sympy.factorial", True)
     assert app.user_ns['a'] == True
+
 
 def test_int_to_Integer():
     # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!

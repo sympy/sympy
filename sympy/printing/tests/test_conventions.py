@@ -1,5 +1,6 @@
 from sympy.printing.conventions import split_super_sub
 
+
 def test_super_sub():
     assert split_super_sub("beta_13_2") == ("beta", [], ["13", "2"])
     assert split_super_sub("beta_132_20") == ("beta", [], ["132", "20"])

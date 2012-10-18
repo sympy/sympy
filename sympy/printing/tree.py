@@ -32,6 +32,7 @@ def pprint_nodes(subtrees):
     f += indent(subtrees[-1], 2)
     return f
 
+
 def print_node(node):
     """
     Returns an information about the "node".
@@ -43,6 +44,7 @@ def print_node(node):
         for a in node._assumptions:
             s += "%s: %s\n" % (a, node._assumptions[a])
     return s
+
 
 def tree(node):
     """
@@ -57,6 +59,7 @@ def tree(node):
         subtrees.append(tree(arg))
     s = print_node(node)+pprint_nodes(subtrees)
     return s
+
 
 def print_tree(node):
     """

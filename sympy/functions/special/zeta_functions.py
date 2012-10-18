@@ -6,6 +6,7 @@ from sympy.core.function import ArgumentIndexError
 ###################### LERCH TRANSCENDENT #####################################
 ###############################################################################
 
+
 class lerchphi(Function):
     r"""
     Lerch transcendent (Lerch phi function).
@@ -195,6 +196,7 @@ class lerchphi(Function):
 ###################### POLYLOGARITHM ##########################################
 ###############################################################################
 
+
 class polylog(Function):
     r"""
     Polylogarithm function.
@@ -297,6 +299,7 @@ class polylog(Function):
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
+
 
 class zeta(Function):
     r"""
@@ -465,6 +468,7 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
+
 
 class dirichlet_eta(Function):
     r"""

@@ -35,6 +35,8 @@ MutableDenseMatrix = Matrix
 
 ENV = {}
 exec "from sympy import *" in ENV
+
+
 def sT(expr, string):
     """
     sT := sreprTest
@@ -43,9 +45,11 @@ def sT(expr, string):
     assert srepr(expr) == string
     assert eval(string) == expr
 
+
 def pretty(expr):
     """ASCII pretty-printing"""
     return xpretty(expr, use_unicode=False, wrap_line=False)
+
 
 def upretty(expr):
     """Unicode pretty-printing"""
@@ -79,6 +83,7 @@ u"""\
     assert upretty(ac_tall) == ucode_str
     assert latex(ac_tall) == r'\left\{\left(A\right)^{2},B\right\}'
     sT(ac_tall, "AntiCommutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
+
 
 def test_cg():
     cg = CG(1, 2, 3, 4, 5, 6)
@@ -161,6 +166,7 @@ u"""\
         r'\left\{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{array}\right\}'
     sT(wigner9j, "Wigner9j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6), Integer(7), Integer(8), Integer(9))")
 
+
 def test_commutator():
     A = Operator('A')
     B = Operator('B')
@@ -187,12 +193,14 @@ u"""\
     assert latex(c_tall) == r'\left[\left(A\right)^{2},B\right]'
     sT(c_tall, "Commutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
+
 def test_constants():
     assert str(hbar) == 'hbar'
     assert pretty(hbar) == 'hbar'
     assert upretty(hbar) == u'ℏ'
     assert latex(hbar) == r'\hbar'
     sT(hbar, "HBar()")
+
 
 def test_dagger():
     x = symbols('x')
@@ -213,12 +221,14 @@ x \
     assert latex(expr) == r'x^{\dag}'
     sT(expr, "Dagger(Symbol('x'))")
 
+
 @XFAIL
 def test_gate_failing():
     a, b, c, d = symbols('a,b,c,d')
     uMat = Matrix([[a, b], [c, d]])
     g = UGate((0,), uMat)
     assert str(g) == 'U(0)'
+
 
 def test_gate():
     a, b, c, d = symbols('a,b,c,d')
@@ -294,6 +304,7 @@ U \n\
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
     sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
+
 
 def test_hilbert():
     h1 = HilbertSpace()
@@ -385,6 +396,7 @@ H  \
     assert upretty(h1**2) == ucode_str
     assert latex(h1**2) == r'{\mathcal{H}}^{\otimes 2}'
     sT(h1**2, "TensorPowerHilbertSpace(HilbertSpace(),Integer(2))")
+
 
 def test_innerproduct():
     x = symbols('x')
@@ -478,6 +490,7 @@ u"""\
         r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
     sT(ip_tall3, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
 
+
 def test_operator():
     a = Operator('A')
     b = Operator('B', Symbol('t'), S(1)/2)
@@ -535,6 +548,7 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
     assert latex(op) == r'{\left|\psi\right\rangle }{\left\langle \psi\right|}'
     sT(op, "OuterProduct(Ket(Symbol('psi')),Bra(Symbol('psi')))")
 
+
 def test_qexpr():
     q = QExpr('q')
     assert str(q) == 'q'
@@ -542,6 +556,7 @@ def test_qexpr():
     assert upretty(q) == u'q'
     assert latex(q) == r'q'
     sT(q, "QExpr(Symbol('q'))")
+
 
 def test_qubit():
     q1 = Qubit('0101')
@@ -556,6 +571,7 @@ def test_qubit():
     assert upretty(q2) == u'❘8⟩'
     assert latex(q2) == r'{\left|8\right\rangle }'
     sT(q2, "IntQubit(8)")
+
 
 def test_spin():
     lz = JzOp('L')
@@ -687,6 +703,7 @@ d   (4)\n\
     assert latex(smalld) == r'd^{1}_{2,3}\left(4\right)'
     sT(smalld, "WignerD(Integer(1), Integer(2), Integer(3), Integer(0), Integer(4), Integer(0))")
 
+
 def test_state():
     x = symbols('x')
     bra = Bra()
@@ -754,6 +771,7 @@ u"""\
     assert latex(tket) == r'{\left|\psi;t\right\rangle }'
     sT(tket, "TimeDepKet(Symbol('psi'),Symbol('t'))")
 
+
 def test_tensorproduct():
     tp = TensorProduct(JzKet(1, 1), JzKet(1, 0))
     assert str(tp) == '|1,1>x|1,0>'
@@ -762,6 +780,7 @@ def test_tensorproduct():
     assert latex(tp) == \
         r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
+
 
 def test_big_expr():
     f = Function('f')

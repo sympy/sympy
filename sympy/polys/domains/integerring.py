@@ -6,6 +6,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 import math
 
+
 class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """
 

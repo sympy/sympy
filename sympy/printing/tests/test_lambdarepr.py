@@ -5,14 +5,17 @@ from sympy.printing.lambdarepr import lambdarepr
 
 x, y, z = symbols("x,y,z")
 
+
 def test_basic():
     assert lambdarepr(x*y) == "x*y"
     assert lambdarepr(x+y) in ["y + x", "x + y"]
     assert lambdarepr(x**y) == "x**y"
 
+
 def test_matrix():
     A = Matrix([[x, y], [y*x, z**2]])
     assert lambdarepr(A) == "MutableDenseMatrix([[  x,    y],[x*y, z**2]])"
+
 
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a
@@ -134,6 +137,7 @@ def test_piecewise():
     assert l == "((1) if (x < 1) else (((2) if (x < 2) else (((3) if "\
         "(x < 3) else (((4) if (x < 4) else (((5) if (x < 5) else (((6) if "\
         "(True) else None)))))))))))"
+
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))

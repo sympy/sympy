@@ -74,10 +74,12 @@ def test_wrappers():
     res = Relational(y, e, '!=')
     assert Ne(y, x+x**2) == res
 
+
 def test_Eq():
 
     assert Eq(x**2) == Eq(x**2, 0)
     assert Eq(x**2) != Eq(x**2, 1)
+
 
 def test_rel_Infinity():
     assert (oo > oo) is False
@@ -105,6 +107,7 @@ def test_rel_Infinity():
     assert (-oo <= -oo) is True
     assert (-oo <= 1) is True
 
+
 def test_bool():
     assert Eq(0, 0) is True
     assert Eq(1, 0) is False
@@ -130,11 +133,13 @@ def test_bool():
     b = Float('.0000000000000000000001', '')
     assert Eq(pi + a, pi + b) is False
 
+
 def test_rich_cmp():
     assert (x<y) == Lt(x, y)
     assert (x<=y) == Le(x, y)
     assert (x>y) == Gt(x, y)
     assert (x>=y) == Ge(x, y)
+
 
 def test_doit():
     from sympy import Symbol
@@ -153,6 +158,7 @@ def test_doit():
     assert Lt(nn, 0).doit() is False
 
     assert Eq(x, 0).doit() == Eq(x, 0)
+
 
 def test_new_relational():
     x = Symbol('x')
@@ -250,11 +256,13 @@ def test_new_relational():
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
 
+
 @XFAIL
 def test_relational_bool_output():
     # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
     raises(ValueError, lambda: bool(x > 3))
+
 
 def test_relational_logic_symbols():
     # See issue 3105

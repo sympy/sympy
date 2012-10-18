@@ -30,6 +30,7 @@ from sympy.utilities.misc import filldedent
 # A, B, C, D matrices
 ###
 
+
 class RayTransferMatrix(Matrix):
     """
     Base class for a Ray Transfer Matrix.
@@ -170,6 +171,7 @@ class RayTransferMatrix(Matrix):
         """
         return self[1, 1]
 
+
 class FreeSpace(RayTransferMatrix):
     """
     Ray Transfer Matrix for free space.
@@ -196,6 +198,7 @@ class FreeSpace(RayTransferMatrix):
     """
     def __new__(cls, d):
         return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -225,6 +228,7 @@ class FlatRefraction(RayTransferMatrix):
     def __new__(cls, n1, n2):
         n1, n2 = sympify((n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -256,6 +260,7 @@ class CurvedRefraction(RayTransferMatrix):
         R, n1, n2 = sympify((R, n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
 
+
 class FlatMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection.
@@ -275,6 +280,7 @@ class FlatMirror(RayTransferMatrix):
     """
     def __new__(cls):
         return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
+
 
 class CurvedMirror(RayTransferMatrix):
     """
@@ -303,6 +309,7 @@ class CurvedMirror(RayTransferMatrix):
     def __new__(cls, R):
         R = sympify(R)
         return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+
 
 class ThinLens(RayTransferMatrix):
     """
@@ -635,6 +642,7 @@ def waist2rayleigh(w, wavelen):
     w, wavelen = sympify((w, wavelen))
     return w**2*pi/wavelen
 
+
 def rayleigh2waist(z_r, wavelen):
     """Calculate the waist from the rayleigh range of a gaussian beam.
 
@@ -683,6 +691,7 @@ def geometric_conj_ab(a, b):
     else:
         return a*b/(a+b)
 
+
 def geometric_conj_af(a, f):
     """
     Conjugation relation for geometrical beams under paraxial conditions.
@@ -711,6 +720,7 @@ def geometric_conj_af(a, f):
     return -geometric_conj_ab(a, -f)
 
 geometric_conj_bf = geometric_conj_af
+
 
 def gaussian_conj(s_in, z_r_in, f):
     """
@@ -752,6 +762,7 @@ def gaussian_conj(s_in, z_r_in, f):
     m = 1/sqrt((1-(s_in/f)**2) + (z_r_in/f)**2)
     z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2)
     return (s_out, z_r_out, m)
+
 
 def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     """

@@ -2,6 +2,7 @@ from sympy import (Symbol, symbols, factorial, factorial2, binomial,
     rf, ff, gamma, polygamma, EulerGamma, O, pi, nan, oo, simplify)
 from sympy.utilities.pytest import XFAIL
 
+
 def test_rf_eval_apply():
     x, y = symbols('x,y')
 
@@ -29,6 +30,7 @@ def test_rf_eval_apply():
     assert rf(x, -3) == 1/((x-1)*(x-2)*(x-3))
 
     assert rf(1, 100) == factorial(100)
+
 
 def test_ff_eval_apply():
     x, y = symbols('x,y')
@@ -58,6 +60,7 @@ def test_ff_eval_apply():
 
     assert ff(100, 100) == factorial(100)
 
+
 def test_factorial():
     n = Symbol('n', integer=True)
 
@@ -67,6 +70,7 @@ def test_factorial():
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+
 def test_factorial_diff():
     n = Symbol('n', integer=True)
 
@@ -75,16 +79,19 @@ def test_factorial_diff():
     assert factorial(n**2).diff(n) == \
         2*n*gamma(1 + n**2)*polygamma(0, 1 + n**2)
 
+
 def test_factorial_series():
     n = Symbol('n', integer=True)
 
     assert factorial(n).series(n, 0, 3) == \
         1 - n*EulerGamma + n**2*(EulerGamma**2/2 + pi**2/12) + O(n**3)
 
+
 def test_factorial_rewrite():
     n = Symbol('n', integer=True)
 
     assert factorial(n).rewrite(gamma) == gamma(n + 1)
+
 
 def test_factorial2():
     n = Symbol('n', integer=True)
@@ -94,6 +101,7 @@ def test_factorial2():
     assert factorial2(7) == 105
     assert factorial2(8) == 384
     assert factorial2(n).func == factorial2
+
 
 def test_binomial():
     n = Symbol('n', integer=True)
@@ -122,6 +130,7 @@ def test_binomial():
     assert binomial(n, k).func == binomial
     assert binomial(n, n + v) == 0
 
+
 def test_binomial_diff():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
@@ -136,12 +145,14 @@ def test_binomial_diff():
     assert binomial(n**2, k**3).diff(k) == \
         3*k**2*(-polygamma(0, 1 + k**3) + polygamma(0, 1 + n**2 - k**3))*binomial(n**2, k**3)
 
+
 def test_binomial_rewrite():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
 
     assert binomial(n, k).rewrite(factorial) == factorial(n)/(factorial(k)*factorial(n - k))
     assert binomial(n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
 
 @XFAIL
 def test_factorial_simplify_fail():

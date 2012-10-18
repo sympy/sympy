@@ -52,6 +52,7 @@ def test_sqrtdenest2():
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(z) == z
 
+
 def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
       -r2 + r3 + 2*r7
@@ -82,9 +83,11 @@ def test_sqrtdenest_rec():
     z = sqrt(2*r10 + 6*r2 + 4*r5 + 12 + 10*r15 + 30*r3)
     assert sqrtdenest(z) == z
 
+
 def test_issue3142():
     z = sqrt( -320 + 32*sqrt(5) + 64*r15)
     assert sqrtdenest(z) == z
+
 
 def test_sqrtdenest3():
     z = sqrt(13 - 2*r10 + 2*r2*sqrt(-2*r10 + 11))
@@ -103,6 +106,7 @@ def test_sqrtdenest3():
     z = sqrt(5 + sqrt(2*r6 + 5)*sqrt(-2*r29 + 2*sqrt(-10*r29 + 55) + 16))
     r = sqrt(-2*r29 + 11)
     assert sqrtdenest(z) == sqrt(r2*r + r3*r + r10 + r15 + 5)
+
 
 def test_sqrtdenest4():
     # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
@@ -162,6 +166,7 @@ def test_subsets():
       [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 1, 0], [1, 0, 1, 0],
       [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
       [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
+
 
 def test_issue_2554():
     assert sqrtdenest(sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))

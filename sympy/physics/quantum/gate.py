@@ -70,6 +70,7 @@ __all__ = [
 
 _normalized = True
 
+
 def normalized(normalize):
     """Should Hadamard gates be normalized by a 1/sqrt(2).
 
@@ -449,6 +450,7 @@ class CGate(Gate):
         else:
             return Gate._eval_power(self, exp)
 
+
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
 
@@ -553,6 +555,7 @@ class OneQubitGate(Gate):
             if self.targets != other.targets or self.__class__ == other.__class__:
                 return Integer(2)*self*other
         return Operator._eval_anticommutator(self, other, **hints)
+
 
 class TwoQubitGate(Gate):
     """A two qubit unitary gate base class."""
@@ -912,6 +915,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
             return Integer(0)
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
+
 
 class SwapGate(TwoQubitGate):
     """Two qubit SWAP gate.

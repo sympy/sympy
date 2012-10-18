@@ -9,6 +9,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (inertia_of_point_mass,
                                                partial_velocity)
 
+
 class KanesMethod(object):
     """Kane's method object.
 

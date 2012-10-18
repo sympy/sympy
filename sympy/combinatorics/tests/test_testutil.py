@@ -15,12 +15,14 @@ def test_cmp_perm_lists():
     shuffle(other)
     assert _cmp_perm_lists(els, other) == True
 
+
 def test_naive_list_centralizer():
     # verified by GAP
     S = SymmetricGroup(3)
     A = AlternatingGroup(3)
     assert _naive_list_centralizer(S, S) == [Permutation([0, 1, 2])]
     assert PermutationGroup(_naive_list_centralizer(S, A)).is_subgroup(A)
+
 
 def test_verify_bsgs():
     S = SymmetricGroup(5)
@@ -31,6 +33,7 @@ def test_verify_bsgs():
     assert _verify_bsgs(S, base[:-1], strong_gens) == False
     assert _verify_bsgs(S, base, S.generators) == False
 
+
 def test_verify_centralizer():
     # verified by GAP
     S = SymmetricGroup(3)
@@ -38,6 +41,7 @@ def test_verify_centralizer():
     triv = PermutationGroup([Permutation([0, 1, 2])])
     assert _verify_centralizer(S, S, centr=triv)
     assert _verify_centralizer(S, A, centr=A)
+
 
 def test_verify_normal_closure():
     # verified by GAP

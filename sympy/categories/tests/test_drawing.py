@@ -3,6 +3,7 @@ from sympy.categories import (DiagramGrid, Object, NamedMorphism,
                               Diagram, XypicDiagramDrawer, xypic_draw_diagram)
 from sympy import FiniteSet
 
+
 def test_GrowableGrid():
     grid = _GrowableGrid(1, 2)
 
@@ -69,6 +70,7 @@ def test_GrowableGrid():
     assert grid[0, 1] is None
     assert grid[1, 1] == 1
     assert grid[2, 1] == "two"
+
 
 def test_DiagramGrid():
     # Set up some objects and morphisms.
@@ -592,6 +594,7 @@ def test_DiagramGrid():
         morphisms[f] = FiniteSet()
     assert grid.morphisms == morphisms
 
+
 def test_ArrowStringDescription():
     astr = ArrowStringDescription("cm", "", None, "", "", "d", "r", "_", "f")
     assert str(astr) == "\\ar[dr]_{f}"
@@ -618,6 +621,7 @@ def test_ArrowStringDescription():
     astr = ArrowStringDescription("cm", "_", 12, "", "", "d", "r", "_", "f")
     astr.arrow_style = "{-->}"
     assert str(astr) == "\\ar@/_12cm/@{-->}[dr]_{f}"
+
 
 def test_XypicDiagramDrawer_line():
     # A linear diagram.
@@ -648,6 +652,7 @@ def test_XypicDiagramDrawer_line():
         "D \\ar[d]^{i} \\\\\n" \
         "E \n" \
         "}\n"
+
 
 def test_XypicDiagramDrawer_triangle():
     # A triangle diagram.
@@ -717,6 +722,7 @@ def test_XypicDiagramDrawer_triangle():
         "B \\ar@/^3mm/[u]^{f_{1}} \\ar[ru]_{g} \\ar@/^3mm/[ru]^{g_{2}} & \n" \
         "}\n"
 
+
 def test_XypicDiagramDrawer_cube():
     # A cube diagram.
     A1 = Object("A1")
@@ -770,6 +776,7 @@ def test_XypicDiagramDrawer_cube():
         "& A_{4} \\ar[d]_{f_{11}} \\\\\n" \
         "& & A_{8} \n" \
         "}\n"
+
 
 def test_XypicDiagramDrawer_curved_and_loops():
     # A simple diagram, with a curved arrow.
@@ -878,6 +885,7 @@ def test_XypicDiagramDrawer_curved_and_loops():
         "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
         "\\ar@(l,d)[]^{l_{D}} \\ar@/^3mm/@(d,r)[]^{n_{D}} & \n" \
         "}\n"
+
 
 def test_xypic_draw_diagram():
     # A linear diagram.

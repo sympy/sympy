@@ -32,6 +32,7 @@ def test_eval_args():
     # check for value error, when prob is not provided
     raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
 
+
 def test_doit():
 
     x, y = symbols('x y')
@@ -104,10 +105,12 @@ def test_doit():
     t = Tr(d, [1])
     assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
 
+
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
                                           [XOp()*Ket(1), 0.5])
+
 
 def test_represent():
     x, y = symbols('x y')
@@ -126,10 +129,12 @@ def test_represent():
             represent(0.5*(PxKet()*Dagger(PxKet())), basis=PxOp())) == \
         represent(d, basis=PxOp())
 
+
 def test_states():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     states = d.states()
     assert states[0] == Ket(0) and states[1] == Ket(1)
+
 
 def test_probs():
     d = Density([Ket(0), .75], [Ket(1), 0.25])
@@ -142,17 +147,20 @@ def test_probs():
     probs = d.probs()
     assert probs[0] == x and probs[1] == y
 
+
 def test_get_state():
     x, y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     states = (d.get_state(0), d.get_state(1))
     assert states[0] == Ket(0) and states[1] == Ket(1)
 
+
 def test_get_prob():
     x, y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     probs = (d.get_prob(0), d.get_prob(1))
     assert probs[0] == x and probs[1] == y
+
 
 def test_entropy():
     up = JzKet(S(1)/2, S(1)/2)
@@ -178,6 +186,7 @@ def test_entropy():
         mat = represent(d, format="scipy.sparse")
         assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
                       0.69314718055994529 and ent.imag == 0
+
 
 def test_eval_trace():
     up = JzKet(S(1)/2, S(1)/2)

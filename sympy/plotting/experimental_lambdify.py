@@ -75,6 +75,7 @@ import warnings
 
 #TODO debuging output
 
+
 class vectorized_lambdify(object):
     """ Return a sufficiently smart, vectorized and lambdified function.
 
@@ -155,6 +156,7 @@ class vectorized_lambdify(object):
             np.seterr(**np_old_err)
 
         return results
+
 
 class lambdify(object):
     """Returns the lambdified function.

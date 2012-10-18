@@ -17,6 +17,7 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
+
 def _process_limits(*symbols):
     """Convert the symbols-related limits into proper limits,
     storing them as Tuple(symbol, lower, upper). The sign of
@@ -58,6 +59,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, sign
+
 
 class Integral(Expr):
     """Represents unevaluated integral."""
@@ -1360,6 +1362,7 @@ def integrate(*args, **kwargs):
         return integral.doit(deep=False, meijerg=meijerg, conds=conds)
     else:
         return integral
+
 
 @xthreaded
 def line_integrate(field, curve, vars):

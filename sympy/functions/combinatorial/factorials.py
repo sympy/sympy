@@ -5,12 +5,14 @@ from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce
 
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
+
 
 class factorial(CombinatorialFunction):
     """Implementation of factorial function over nonnegative integers.
@@ -154,8 +156,10 @@ class factorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
+
 class MultiFactorial(CombinatorialFunction):
     pass
+
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
@@ -204,6 +208,7 @@ class factorial2(CombinatorialFunction):
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
+
 
 class RisingFactorial(CombinatorialFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
@@ -274,6 +279,7 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
+
 
 class FallingFactorial(CombinatorialFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -347,6 +353,7 @@ ff = FallingFactorial
 ###############################################################################
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
+
 
 class binomial(CombinatorialFunction):
     """Implementation of the binomial coefficient. It can be defined

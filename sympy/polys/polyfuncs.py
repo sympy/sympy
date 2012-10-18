@@ -15,6 +15,7 @@ from sympy.utilities import numbered_symbols, take
 
 from sympy.core import S, Basic, Add, Mul
 
+
 def symmetrize(F, *gens, **args):
     """
     Rewrite a polynomial in terms of elementary symmetric polynomials.
@@ -137,6 +138,7 @@ def symmetrize(F, *gens, **args):
         else:
             return result + (polys,)
 
+
 def horner(f, *gens, **args):
     """
     Rewrite a polynomial in Horner form.
@@ -182,6 +184,7 @@ def horner(f, *gens, **args):
 
     return form
 
+
 def interpolate(data, x):
     """
     Construct an interpolating polynomial for the data points.
@@ -226,6 +229,7 @@ def interpolate(data, x):
     poly = interpolating_poly(n, x, X, Y)
 
     return poly.expand()
+
 
 def viete(f, roots=None, *gens, **args):
     """

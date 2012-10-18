@@ -1,20 +1,25 @@
 from pyglet.gl import *
 from math import sqrt as _sqrt, acos as _acos
 
+
 def cross(a, b):
     return (a[1] * b[2] - a[2] * b[1],
             a[2] * b[0] - a[0] * b[2],
             a[0] * b[1] - a[1] * b[0])
 
+
 def dot(a, b):
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
 
 def mag(a):
     return _sqrt(a[0]**2+a[1]**2+a[2]**2)
 
+
 def norm(a):
     m = mag(a)
     return (a[0] / m, a[1] / m, a[2] / m)
+
 
 def get_sphere_mapping(x, y, width, height):
     x = min([max([x, 0]), width])
@@ -35,6 +40,7 @@ def get_sphere_mapping(x, y, width, height):
         return norm((sx, sy, sz))
 
 rad2deg = 180.0 / 3.141592
+
 
 def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
     v1 = get_sphere_mapping(p1[0], p1[1], width, height)

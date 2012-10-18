@@ -1,6 +1,7 @@
 from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
 DihedralGroup, AlternatingGroup, AbelianGroup)
 
+
 def test_SymmetricGroup():
     G = SymmetricGroup(5)
     elements = list(G.generate())
@@ -14,6 +15,7 @@ def test_SymmetricGroup():
     L = SymmetricGroup(2)
     assert L.order() == 2
 
+
 def test_CyclicGroup():
     G = CyclicGroup(10)
     elements = list(G.generate())
@@ -24,6 +26,7 @@ def test_CyclicGroup():
     assert H.order() == 1
     L = CyclicGroup(2)
     assert L.order() == 2
+
 
 def test_DihedralGroup():
     G = DihedralGroup(6)
@@ -37,6 +40,7 @@ def test_DihedralGroup():
     assert L.order() == 4
     assert L.is_abelian == True
 
+
 def test_AlternatingGroup():
     G = AlternatingGroup(5)
     elements = list(G.generate())
@@ -46,6 +50,7 @@ def test_AlternatingGroup():
     assert H.order() == 1
     L = AlternatingGroup(2)
     assert L.order() == 1
+
 
 def test_AbelianGroup():
     A = AbelianGroup(3, 3, 3)

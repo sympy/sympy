@@ -4,6 +4,7 @@ from sympy.integrals import integrate
 
 x, y, z, n = symbols('x,y,z,n')
 
+
 def test_has():
     assert cot(x).has(x)
     assert cot(x).has(cot)
@@ -11,6 +12,7 @@ def test_has():
     assert sin(x).has(x)
     assert sin(x).has(sin)
     assert not sin(x).has(cot)
+
 
 def test_sin_exp_rewrite():
     assert sin(x).rewrite(sin, exp) == -I/2*(exp(I*x)-exp(-I*x))

@@ -97,6 +97,7 @@ except OSError:
 if not libtcc:
     raise ImportError('Could not load libtcc')
 
+
 def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     """
     Gets the expressions to the left and right of an operator.
@@ -156,6 +157,7 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
             right += char
     return (left, right)
 
+
 def cexpr(pyexpr):
     """
     Python math expression string -> C expression string
@@ -174,6 +176,7 @@ def cexpr(pyexpr):
     # TODO: avoid integer division
     return pyexpr
 
+
 def _gentmpvars():
     """
     Generate symbols tmp1, tmp2, ... infinitely.
@@ -182,6 +185,7 @@ def _gentmpvars():
     while True:
         i += 1
         yield Symbol('tmp' + str(i))
+
 
 def genfcode(lambdastr, use_cse=False):
     """
@@ -224,12 +228,14 @@ inline double f(%s)
 """ % (cvarstr, cfstr, finalexpr)
     return code
 
+
 def __run(cmd):
     """
     Checks the exit code of a ran command.
     """
     if not cmd == 0:
         raise RuntimeError('could not run libtcc command')
+
 
 def _compile(code, argcount=None, fname='f', fprototype=None):
     """
@@ -260,6 +266,8 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     return fprototype(symbol.value)
 
 # expr needs to work with lambdastr
+
+
 def clambdify(args, expr, **kwargs):
     """
     SymPy expression -> compiled function
@@ -286,6 +294,7 @@ def clambdify(args, expr, **kwargs):
 """ % genfcode(s, **kwargs)
     # compile code
     return _compile(code, len(args))
+
 
 def frange(*args, **kwargs):
     """
@@ -373,6 +382,7 @@ void evalonrange(double *result, int n)
     # return ctypes array with results
     return a
 
+
 def evalonarray(lambdastr, array, length=None, **kwargs):
     """
     Evaluates a function on an array using machine code.
@@ -425,10 +435,12 @@ void evalonarray(double *array, int length)
 from sympy import sqrt, pi, lambdify
 from math import exp as _exp, cos as _cos, sin as _sin
 
+
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
     assert cexpr(expr).replace(' ', '') == \
            '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
+
 
 def test_clambdify():
     x = Symbol('x')
@@ -444,6 +456,7 @@ def test_clambdify():
     cf2 = clambdify((x, y, z), f2)
     assert round(pf2(1, 2, 3),  14) == round(cf2(1, 2, 3),  14)
     # FIXME: slight difference in precision
+
 
 def test_frange():
     fstr = 'lambda x: _exp(x)*_cos(x)**x'
@@ -485,6 +498,7 @@ def test_frange():
     except TypeError:
         pass
 
+
 def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
     evalonarray('lambda x: _sin(x)', a)
@@ -495,11 +509,13 @@ def test_evalonarray_ctypes():
 ##    for i, j in enumerater(a):
 ##        print j
 
+
 def test_evalonarray_numpy():
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1',  a)
     for i, j in enumerate(a):
         assert float(i + 1) == j
+
 
 def test_use_cse():
     args = ('lambda x: sqrt(x + 1)**sqrt(x + 1)', 1, 10)
@@ -510,6 +526,7 @@ def test_use_cse():
     assert len(a) == len(b)
     for i in xrange(len(a)):
         assert a[i] == b[i]
+
 
 def benchmark():
     """

@@ -10,6 +10,7 @@ from sympy import (
     Rational as sympy_rat,
 )
 
+
 class SymPyRationalField(RationalField):
     """Rational field based on SymPy Rational class. """
 

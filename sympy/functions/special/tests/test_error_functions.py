@@ -14,6 +14,7 @@ x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
 
+
 def test_erf():
     assert erf(nan) == nan
 
@@ -46,12 +47,15 @@ def test_erf():
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
+
 def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
+
 def test_erf_evalf():
     assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8  # XXX
+
 
 def test__erfs():
     assert _erfs(z).diff(z) == -2/sqrt(S.Pi)+2*z*_erfs(z)
@@ -63,6 +67,8 @@ def test__erfs():
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 #      branch, hence take x in the lower half plane (d=0).
+
+
 def mytn(expr1, expr2, expr3, x, d=0):
     from sympy.utilities.randtest import test_numerically, random_complex_number
     subs = {}
@@ -72,6 +78,7 @@ def mytn(expr1, expr2, expr3, x, d=0):
     return expr2 == expr3 and test_numerically(expr1.subs(subs),
                                                expr2.subs(subs), x, d=d)
 
+
 def mytd(expr1, expr2, x):
     from sympy.utilities.randtest import test_derivative_numerically, \
                                          random_complex_number
@@ -80,6 +87,7 @@ def mytd(expr1, expr2, x):
         if a != x:
             subs[a] = random_complex_number()
     return expr1.diff(x) == expr2 and test_derivative_numerically(expr1.subs(subs), x)
+
 
 def tn_branch(func, s=None):
     from sympy import I, pi, exp_polar
@@ -94,6 +102,7 @@ def tn_branch(func, s=None):
     eps = 1e-15
     expr2 = fn(-c + eps*I) - fn(-c - eps*I)
     return abs(expr.n() - expr2.n()).n() < 1e-10
+
 
 def test_ei():
     pos = Symbol('p', positive=True)
@@ -113,6 +122,7 @@ def test_ei():
     assert mytn(Ei(x), Ei(x).rewrite(Shi), Chi(x) + Shi(x), x)
     assert mytn(Ei(x*polar_lift(I)), Ei(x*polar_lift(I)).rewrite(Si),
                 Ci(x) + I*Si(x) + I*pi/2, x)
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
@@ -151,6 +161,7 @@ def test_expint():
     assert mytn(expint(3, x), expint(3, x).rewrite(Ei).rewrite(expint),
                 x**2*E1(x)/2 + (1-x)*exp(-x)/2, x)
 
+
 def tn_arg(func):
     def test(arg, e1, e2):
         from random import uniform
@@ -162,6 +173,7 @@ def tn_arg(func):
            test(exp_polar(-I*pi/2), -I, 1) and \
            test(exp_polar(I*pi), -1, I) and \
            test(exp_polar(-I*pi), -1, -I)
+
 
 def test_si():
     assert Si(I*x) == I*Shi(x)
@@ -198,6 +210,7 @@ def test_si():
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
     assert Si(x).nseries(x, 1, n=3) == Si(1) + x*sin(1) + x**2*(-sin(1)/2 + cos(1)/2) + O(x**3)
 
+
 def test_ci():
     m1 = exp_polar(I*pi)
     m1_ = exp_polar(-I*pi)
@@ -232,6 +245,7 @@ def test_ci():
     assert Ci(x).nseries(x, n=4) == EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
     assert Chi(x).nseries(x, n=4) == EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
+
 
 def test_fresnel():
     assert fresnels(0) == 0

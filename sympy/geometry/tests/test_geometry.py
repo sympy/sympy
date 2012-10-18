@@ -17,10 +17,12 @@ y1 = Symbol('y1', real=True)
 y2 = Symbol('y2', real=True)
 half = Rational(1, 2)
 
+
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t = Float("1.0E-10")
     return -t < a-b < t
+
 
 def test_curve():
     s = Symbol('s')
@@ -61,6 +63,7 @@ def test_curve():
 
     raises(ValueError, lambda: Curve((s, s + t), (s, 1, 2)).arbitrary_point())
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
+
 
 def test_point():
     p1 = Point(x1, x2)
@@ -138,6 +141,7 @@ def test_point():
     assert p.translate(1) == Point(2, 1)
     assert p.translate(y=1) == Point(1, 2)
     assert p.translate(*p.args) == Point(2, 2)
+
 
 def test_line():
     p1 = Point(0, 0)
@@ -374,6 +378,7 @@ def test_line():
     assert Ray((0, 0), angle=pi/4).plot_interval() == \
         [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
 
+
 def test_ellipse():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
@@ -586,6 +591,7 @@ def test_ellipse():
     assert e.rotate(pi/3, (1, 2)) == \
         Ellipse(Point(S(1)/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
 
+
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
@@ -593,6 +599,7 @@ def test_ellipse_random_point():
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
+
 
 def test_polygon():
     t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
@@ -814,6 +821,7 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
+
 @XFAIL
 def test_polygon_to_polygon():
     '''Polygon to Polygon'''
@@ -837,6 +845,7 @@ def test_polygon_to_polygon():
     assert p1.distance(p3) == sqrt(2)/2
     assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
     assert p5.distance(p6) == Rational(7)/10
+
 
 def test_convex_hull():
     p = [Point(-5, -1), Point(-2, 1), Point(-2, -1), Point(-1, -3), Point(0, 0),
@@ -863,11 +872,13 @@ def test_convex_hull():
                         RegularPolygon(Point(2, 0), 2, 4)]) == \
             Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))
 
+
 def test_concyclic_doctest_bug():
     p1, p2 = Point(-1, 0), Point(1, 0)
     p3, p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
 
 def test_subs():
     p = Point(x, 2)
@@ -891,6 +902,7 @@ def test_subs():
     raises(ValueError, lambda: Point(1, 2).subs(1))
     raises(ValueError, lambda: Point(1, 1).subs((Point(1, 1), Point(1, 2)), 1, 2))
 
+
 def test_encloses():
     # square with a dimpled left side
     s = Polygon(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1), Point(S.Half, S.Half))
@@ -898,6 +910,7 @@ def test_encloses():
     assert s.encloses(Point(0, S.Half)) is False
     assert s.encloses(Point(S.Half, S.Half)) is False  # it's a vertex
     assert s.encloses(Point(Rational(3, 4), S.Half)) is True
+
 
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
@@ -916,6 +929,7 @@ def test_free_symbols():
     assert Polygon((a, b), (c, d), (e, f)).free_symbols == set([e, b, d, f, a, c])
     assert RegularPolygon((a, b), c, d, e).free_symbols == set([e, a, b, c, d])
 
+
 def test_util_centroid():
     p = Polygon((0, 0), (10, 0), (10, 10))
     q = p.translate(0, 20)
@@ -926,20 +940,24 @@ def test_util_centroid():
     assert centroid(Point(0, 0), Point(2, 0)) == Point(2, 0)/2
     assert centroid(Point(0, 0), Point(0, 0), Point(2, 0)) == Point(2, 0)/3
 
+
 def test_util():
     # coverage for some leftover functions in sympy.geometry.util
     assert intersection(Point(0, 0)) == []
     raises(ValueError, lambda: intersection(Point(0, 0), 3))
     raises(ValueError, lambda: convex_hull(Point(0, 0), 3))
 
+
 def test_repr():
     assert repr(Circle((0, 1), 2)) == 'Circle(Point(0, 1), 2)'
+
 
 def test_transform():
     p = Point(1, 1)
     assert p.transform(rotate(pi/2)) == Point(-1, 1)
     assert p.transform(scale(3, 2)) == Point(3, 2)
     assert p.transform(translate(1, 2)) == Point(2, 3)
+
 
 def test_line_intersection():
     assert asa(120, 8, 52) == \
@@ -961,6 +979,7 @@ def test_line_intersection():
         (-3 + tan(13*pi/45)**2)
     assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
 
+
 def test_triangle_kwargs():
     assert Triangle(sss=(3, 4, 5)) == \
         Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
@@ -970,6 +989,7 @@ def test_triangle_kwargs():
         Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
     assert Triangle(sss=(1, 2, 5)) is None
     assert deg(rad(180)) == 180
+
 
 def test_geometry_transforms():
     from sympy import Tuple

@@ -64,6 +64,7 @@ __all__ = ['ContinuousRV',
 'WignerSemicircle'
 ]
 
+
 def _value_check(condition, message):
     """
     Check a condition on input value.
@@ -112,6 +113,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
 #-------------------------------------------------------------------------------
 # Arcsin distribution ----------------------------------------------------------
 
+
 class ArcsinPSpace(SingleContinuousPSpace):
     def __new__(cls, name, a, b):
         a, b = sympify(a), sympify(b)
@@ -119,6 +121,7 @@ class ArcsinPSpace(SingleContinuousPSpace):
         pdf = 1/(pi*sqrt((x-a)*(b-x)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
         return obj
+
 
 def Arcsin(name, a=0, b=1):
     r"""
@@ -167,6 +170,7 @@ def Arcsin(name, a=0, b=1):
 #-------------------------------------------------------------------------------
 # Benini distribution ----------------------------------------------------------
 
+
 class BeniniPSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta, sigma):
         alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
@@ -176,6 +180,7 @@ class BeniniPSpace(SingleContinuousPSpace):
         obj = SingleContinuousPSpace.__new__(cls, x, pdf,
                                              set=Interval(sigma, oo))
         return obj
+
 
 def Benini(name, alpha, beta, sigma):
     r"""
@@ -232,6 +237,7 @@ def Benini(name, alpha, beta, sigma):
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
 
+
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
@@ -249,6 +255,7 @@ class BetaPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.betavariate(self.alpha, self.beta)}
+
 
 def Beta(name, alpha, beta):
     r"""
@@ -308,6 +315,7 @@ def Beta(name, alpha, beta):
 #-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
+
 class BetaPrimePSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
@@ -315,6 +323,7 @@ class BetaPrimePSpace(SingleContinuousPSpace):
         pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
+
 
 def BetaPrime(name, alpha, beta):
     r"""
@@ -368,6 +377,7 @@ def BetaPrime(name, alpha, beta):
 #-------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
+
 class CauchyPSpace(SingleContinuousPSpace):
     def __new__(cls, name, x0, gamma):
         x0, gamma = sympify(x0), sympify(gamma)
@@ -375,6 +385,7 @@ class CauchyPSpace(SingleContinuousPSpace):
         pdf = 1/(pi*gamma*(1+((x-x0)/gamma)**2))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -423,6 +434,7 @@ def Cauchy(name, x0, gamma):
 #-------------------------------------------------------------------------------
 # Chi distribution -------------------------------------------------------------
 
+
 class ChiPSpace(SingleContinuousPSpace):
     def __new__(cls, name, k):
         k = sympify(k)
@@ -430,6 +442,7 @@ class ChiPSpace(SingleContinuousPSpace):
         pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
+
 
 def Chi(name, k):
     r"""
@@ -477,6 +490,7 @@ def Chi(name, k):
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
 
+
 class DagumPSpace(SingleContinuousPSpace):
     def __new__(cls, name, p, a, b):
         p, a, b = sympify(p), sympify(a), sympify(b)
@@ -484,6 +498,7 @@ class DagumPSpace(SingleContinuousPSpace):
         pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a+1)**(p+1)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def Dagum(name, p, a, b):
     r"""
@@ -535,6 +550,7 @@ def Dagum(name, p, a, b):
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
+
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, name, rate):
         rate = sympify(rate)
@@ -550,6 +566,7 @@ class ExponentialPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.expovariate(self.rate)}
+
 
 def Exponential(name, rate):
     r"""
@@ -621,6 +638,7 @@ def Exponential(name, rate):
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
 
+
 class GammaPSpace(SingleContinuousPSpace):
     def __new__(cls, name, k, theta):
         k, theta = sympify(k), sympify(theta)
@@ -638,6 +656,7 @@ class GammaPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.gammavariate(self.k, self.theta)}
+
 
 def Gamma(name, k, theta):
     r"""
@@ -714,6 +733,7 @@ def Gamma(name, k, theta):
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
 
+
 class LaplacePSpace(SingleContinuousPSpace):
     def __new__(cls, name, mu, b):
         mu, b = sympify(mu), sympify(b)
@@ -721,6 +741,7 @@ class LaplacePSpace(SingleContinuousPSpace):
         pdf = 1/(2*b)*exp(-Abs(x-mu)/b)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def Laplace(name, mu, b):
     r"""
@@ -768,6 +789,7 @@ def Laplace(name, mu, b):
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
+
 class LogisticPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mu, s):
         mu, s = sympify(mu), sympify(s)
@@ -777,6 +799,7 @@ class LogisticPSpace(SingleContinuousPSpace):
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def Logistic(name, mu, s):
     r"""
@@ -824,6 +847,7 @@ def Logistic(name, mu, s):
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
+
 class LogNormalPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mean, std):
         mean, std = sympify(mean), sympify(std)
@@ -838,6 +862,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.lognormvariate(self.mean, self.std)}
+
 
 def LogNormal(name, mean, std):
     r"""
@@ -902,6 +927,7 @@ def LogNormal(name, mean, std):
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
 
+
 class MaxwellPSpace(SingleContinuousPSpace):
     def __new__(cls, name, a):
         a = sympify(a)
@@ -911,6 +937,7 @@ class MaxwellPSpace(SingleContinuousPSpace):
         pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
+
 
 def Maxwell(name, a):
     r"""
@@ -964,6 +991,7 @@ def Maxwell(name, a):
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
 
+
 class NakagamiPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mu, omega):
         mu, omega = sympify(mu), sympify(omega)
@@ -971,6 +999,7 @@ class NakagamiPSpace(SingleContinuousPSpace):
         pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
+
 
 def Nakagami(name, mu, omega):
     r"""
@@ -1037,6 +1066,7 @@ def Nakagami(name, mu, omega):
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
 
+
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mean, std):
         mean, std = sympify(mean), sympify(std)
@@ -1054,6 +1084,7 @@ class NormalPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.normalvariate(self.mean, self.std)}
+
 
 def Normal(name, mean, std):
     r"""
@@ -1123,6 +1154,7 @@ def Normal(name, mean, std):
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
 
+
 class ParetoPSpace(SingleContinuousPSpace):
     def __new__(cls, name, xm, alpha):
         xm, alpha = sympify(xm), sympify(alpha)
@@ -1140,6 +1172,7 @@ class ParetoPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.paretovariate(self.alpha)}
+
 
 def Pareto(name, xm, alpha):
     r"""
@@ -1189,6 +1222,7 @@ def Pareto(name, xm, alpha):
 #-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
 
+
 class RayleighPSpace(SingleContinuousPSpace):
     def __new__(cls, name, sigma):
         sigma = sympify(sigma)
@@ -1196,6 +1230,7 @@ class RayleighPSpace(SingleContinuousPSpace):
         pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
+
 
 def Rayleigh(name, sigma):
     r"""
@@ -1249,6 +1284,7 @@ def Rayleigh(name, sigma):
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
 
+
 class StudentTPSpace(SingleContinuousPSpace):
     def __new__(cls, name, nu):
         nu = sympify(nu)
@@ -1256,6 +1292,7 @@ class StudentTPSpace(SingleContinuousPSpace):
         pdf = 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1+x**2/nu)**(-(nu+1)/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def StudentT(name, nu):
     r"""
@@ -1314,6 +1351,7 @@ def StudentT(name, nu):
 #-------------------------------------------------------------------------------
 # Triangular distribution ------------------------------------------------------
 
+
 class TriangularPSpace(SingleContinuousPSpace):
     def __new__(cls, name, a, b, c):
         a, b, c = sympify(a), sympify(b), sympify(c)
@@ -1327,6 +1365,7 @@ class TriangularPSpace(SingleContinuousPSpace):
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
+
 
 def Triangular(name, a, b, c):
     r"""
@@ -1387,6 +1426,7 @@ def Triangular(name, a, b, c):
 #-------------------------------------------------------------------------------
 # Uniform distribution ---------------------------------------------------------
 
+
 class UniformPSpace(SingleContinuousPSpace):
     def __new__(cls, name, left, right):
         left, right = sympify(left), sympify(right)
@@ -1418,6 +1458,7 @@ class UniformPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.uniform(self.left, self.right)}
+
 
 def Uniform(name, left, right):
     r"""
@@ -1482,6 +1523,7 @@ def Uniform(name, left, right):
 #-------------------------------------------------------------------------------
 # UniformSum distribution ------------------------------------------------------
 
+
 class UniformSumPSpace(SingleContinuousPSpace):
     def __new__(cls, name, n):
         n = sympify(n)
@@ -1492,6 +1534,7 @@ class UniformSumPSpace(SingleContinuousPSpace):
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, n))
         return obj
+
 
 def UniformSum(name, n):
     r"""
@@ -1551,6 +1594,7 @@ def UniformSum(name, n):
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
 
+
 class WeibullPSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
@@ -1568,6 +1612,7 @@ class WeibullPSpace(SingleContinuousPSpace):
 
     def sample(self):
         return {self.value: random.weibullvariate(self.alpha, self.beta)}
+
 
 def Weibull(name, alpha, beta):
     r"""
@@ -1626,6 +1671,7 @@ def Weibull(name, alpha, beta):
 #-------------------------------------------------------------------------------
 # Wigner semicircle distribution -----------------------------------------------
 
+
 class WignerSemicirclePSpace(SingleContinuousPSpace):
     def __new__(cls, name, R):
         R = sympify(R)
@@ -1635,6 +1681,7 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(-R, R))
         return obj
+
 
 def WignerSemicircle(name, R):
     r"""

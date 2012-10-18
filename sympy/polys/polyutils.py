@@ -23,6 +23,7 @@ _gens_order = {
 _max_order = 1000
 _re_gen = re.compile(r"^(.+?)(\d*)$")
 
+
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
     opt = build_options(args)
@@ -70,6 +71,7 @@ def _sort_gens(gens, **args):
 
     return tuple(gens)
 
+
 def _unify_gens(f_gens, g_gens):
     """Unify generators in a reasonably intelligent way. """
     f_gens = list(f_gens)
@@ -106,12 +108,14 @@ def _unify_gens(f_gens, g_gens):
 
     return tuple(gens)
 
+
 def _analyze_gens(gens):
     """Support for passing generators as `*gens` and `[gens]`. """
     if len(gens) == 1 and hasattr(gens[0], '__iter__'):
         return tuple(gens[0])
     else:
         return tuple(gens)
+
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
@@ -127,9 +131,11 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
+
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
     return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+
 
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
@@ -176,6 +182,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
         polys.append(poly)
 
     return polys, opt.gens
+
 
 def _parallel_dict_from_expr_no_gens(exprs, opt):
     """Transform expressions into a multinomial form and figure out generators. """
@@ -255,20 +262,24 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
 
     return polys, tuple(gens)
 
+
 def _dict_from_expr_if_gens(expr, opt):
     """Transform an expression into a multinomial form given generators. """
     (poly,), gens = _parallel_dict_from_expr_if_gens((expr,), opt)
     return poly, gens
+
 
 def _dict_from_expr_no_gens(expr, opt):
     """Transform an expression into a multinomial form and figure out generators. """
     (poly,), gens = _parallel_dict_from_expr_no_gens((expr,), opt)
     return poly, gens
 
+
 def parallel_dict_from_expr(exprs, **args):
     """Transform expressions into a multinomial form. """
     reps, opt = _parallel_dict_from_expr(exprs, build_options(args))
     return reps, opt.gens
+
 
 def _parallel_dict_from_expr(exprs, opt):
     """Transform expressions into a multinomial form. """
@@ -285,10 +296,12 @@ def _parallel_dict_from_expr(exprs, opt):
 
     return reps, opt.clone({'gens': gens})
 
+
 def dict_from_expr(expr, **args):
     """Transform an expression into a multinomial form. """
     rep, opt = _dict_from_expr(expr, build_options(args))
     return rep, opt.gens
+
 
 def _dict_from_expr(expr, opt):
     """Transform an expression into a multinomial form. """
@@ -317,6 +330,7 @@ def _dict_from_expr(expr, opt):
 
     return rep, opt.clone({'gens': gens})
 
+
 def expr_from_dict(rep, *gens):
     """Convert a multinomial form into an expression. """
     result = []
@@ -334,6 +348,7 @@ def expr_from_dict(rep, *gens):
 parallel_dict_from_basic = parallel_dict_from_expr
 dict_from_basic = dict_from_expr
 basic_from_dict = expr_from_dict
+
 
 def _dict_reorder(rep, gens, new_gens):
     """Reorder levels using dict representation. """
@@ -355,6 +370,7 @@ def _dict_reorder(rep, gens, new_gens):
                 new_M.append(0)
 
     return map(tuple, new_monoms), coeffs
+
 
 class PicklableWithSlots(object):
     """

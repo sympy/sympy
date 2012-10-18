@@ -1,6 +1,7 @@
 from sympy.core import S, pi, Rational
 from sympy.functions import assoc_laguerre, sqrt, exp, factorial, factorial2
 
+
 def R_nl(n, l, nu, r):
     """
     Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic
@@ -57,6 +58,7 @@ def R_nl(n, l, nu, r):
             (sqrt(pi)*(factorial2(2*n + 2*l - 1)))
             )
     return C*r**(l)*exp(-nu*r**2)*assoc_laguerre(n-1, l + S(1)/2, 2*nu*r**2)
+
 
 def E_nl(n, l, hw):
     """

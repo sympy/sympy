@@ -5,6 +5,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 from sympy.core.compatibility import is_sequence
 
+
 class PlotMode(PlotObject):
     """
     Grandparent class for plotting
@@ -383,6 +384,7 @@ class PlotMode(PlotObject):
                 nargs.append(a)
         nkwargs = dict(nkwargs, **kwargs)
         return nargs, nkwargs
+
 
 def var_count_error(is_independent, is_plotting):
     """

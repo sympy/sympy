@@ -7,10 +7,12 @@ from sympy.utilities.randtest import (
         test_numerically as tn,
         test_derivative_numerically as td)
 
+
 def test_TupleParametersBase():
     # test that our implementation of the chain rule works
     p = hyper((), (), z**2)
     assert p.diff(z) == p*2*z
+
 
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
@@ -43,6 +45,7 @@ def test_hyper():
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
            hyper([z], [k], polar_lift(x))
 
+
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
     from sympy.abc import a, b, c
@@ -59,6 +62,7 @@ def test_expand_func():
     assert expand_func(meijerg([[1, 1], []], [[1], [0]], z)) == log(z + 1)
     assert expand_func(meijerg([[1, 1], []], [[], []], z)) \
            == meijerg([[1, 1], []], [[], []], z)
+
 
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
@@ -138,6 +142,7 @@ def test_meijer():
     assert meijerg([a], [b], [c], [d], z).integrand(s) == \
            z**s*gamma(c - s)*gamma(-a + s + 1)/(gamma(b - s)*gamma(-d + s + 1))
 
+
 def test_meijerg_derivative():
     assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \
            log(z)*meijerg([], [1, 1], [0, 0, x], [], z) \
@@ -157,6 +162,7 @@ def test_meijerg_derivative():
     b = S(3)/2
     assert td(meijerg([a + 2], [b], [b - 3, x], [a], y), x)
 
+
 def test_meijerg_period():
     assert meijerg([], [1], [0], [], x).get_period() == 2*pi
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
@@ -164,6 +170,7 @@ def test_meijerg_period():
     assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
     assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
     assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
+
 
 def test_hyper_unpolarify():
     from sympy import exp_polar
@@ -173,6 +180,7 @@ def test_hyper_unpolarify():
     assert hyper([0], [], a).argument == a
     assert hyper([0], [0], a).argument == b
     assert hyper([0, 1], [0], a).argument == a
+
 
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
@@ -254,6 +262,7 @@ def test_hyperrep():
     assert t(HyperRep_log2(z), -z/4*hyper([S(3)/2, 1, 1], [2, 2], z), z)
     assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S(1)/2], z), z)
     assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1-a, 1+a], [S(3)/2], z), z)
+
 
 def test_meijerg_eval():
     from sympy import besseli, exp_polar

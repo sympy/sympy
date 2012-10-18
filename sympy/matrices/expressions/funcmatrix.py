@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr
 from sympy import Basic, sympify
 
+
 class FunctionMatrix(MatrixExpr):
     """
     Represents a Matrix using a function (Lambda)

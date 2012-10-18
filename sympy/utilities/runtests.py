@@ -42,6 +42,7 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+
 def _indent(s, indent=4):
     """
     Add the given number of space characters to the beginning of
@@ -59,6 +60,8 @@ def _indent(s, indent=4):
 pdoctest._indent = _indent
 
 # ovverride reporter to maintain windows and python3
+
+
 def _report_failure(self, out, test, example, got):
     """
     Report that the given example failed.
@@ -89,6 +92,7 @@ def convert_to_native_paths(lst):
         newlst.append(sys_normcase(rv))
     return newlst
 
+
 def get_sympy_dir():
     """
     Returns the root sympy directory and set the global value
@@ -104,10 +108,12 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
+
 def sys_normcase(f):
     if sys_case_insensitive:  # global defined after call to get_sympy_dir()
         return f.lower()
     return f
+
 
 def isgeneratorfunction(object):
     """
@@ -125,6 +131,7 @@ def isgeneratorfunction(object):
         return True
     return False
 
+
 def setup_pprint():
     from sympy import pprint_use_unicode, init_printing
 
@@ -133,6 +140,7 @@ def setup_pprint():
 
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
+
 
 def run_in_subprocess_with_hash_randomization(function, function_args=(),
     function_kwargs={}, command=sys.executable,
@@ -216,6 +224,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
 
+
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
                   doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
     """
@@ -278,6 +287,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         print
         print("DO *NOT* COMMIT!")
         sys.exit(1)
+
 
 def test(*paths, **kwargs):
     """
@@ -413,6 +423,7 @@ def test(*paths, **kwargs):
             return not bool(ret)
     return not bool(_test(*paths, **kwargs))
 
+
 def _test(*paths, **kwargs):
     """
     Internal function that actually runs the tests.
@@ -461,6 +472,7 @@ def _test(*paths, **kwargs):
 
     return int(not t.test(sort=sort, timeout=timeout, slow=slow))
 
+
 def doctest(*paths, **kwargs):
     """
     Runs doctests in all \*.py files in the sympy directory which match
@@ -506,6 +518,7 @@ def doctest(*paths, **kwargs):
         if ret is not False:
             return not bool(ret)
     return not bool(_doctest(*paths, **kwargs))
+
 
 def _doctest(*paths, **kwargs):
     """
@@ -661,6 +674,7 @@ if sys.version_info[:2] > (2, 5):
 else:
     SymPyTestResults = lambda a, b: (a, b)
 
+
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
              extraglobs=None, raise_on_error=False,
@@ -787,6 +801,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         pdoctest.master.merge(runner)
 
     return SymPyTestResults(runner.failures, runner.tries)
+
 
 class SymPyTests(object):
 
@@ -954,6 +969,7 @@ class SymPyTests(object):
 
         return [sys_normcase(gi) for gi in g]
 
+
 class SymPyDocTests(object):
 
     def __init__(self, reporter, normal):
@@ -1080,6 +1096,7 @@ class SymPyDocTests(object):
             g = [x for x in g if importable(x)]
 
         return [sys_normcase(gi) for gi in g]
+
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1236,6 +1253,7 @@ class SymPyDocTestFinder(DocTestFinder):
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
 
+
 class SymPyDocTestRunner(DocTestRunner):
     """
     A class used to run DocTest test cases, and accumulate statistics.
@@ -1310,11 +1328,13 @@ SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
 SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
     DocTestRunner._DocTestRunner__record_outcome
 
+
 class Reporter(object):
     """
     Parent class for all reporters.
     """
     pass
+
 
 class PyTestReporter(Reporter):
     """

@@ -7,6 +7,7 @@ from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 
+
 def test_jacobi():
     n = Symbol("n")
     a = Symbol("a")
@@ -39,6 +40,7 @@ def test_jacobi():
     assert diff(jacobi(n, a, b, x), n) == Derivative(jacobi(n, a, b, x), n)
     assert diff(jacobi(n, a, b, x), x) == (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
+
 def test_gegenbauer():
     n = Symbol("n")
     a = Symbol("a")
@@ -70,6 +72,7 @@ def test_gegenbauer():
 
     assert diff(gegenbauer(n, a, x), n) == Derivative(gegenbauer(n, a, x), n)
     assert diff(gegenbauer(n, a, x), x) == 2*a*gegenbauer(n - 1, a + 1, x)
+
 
 def test_legendre():
     raises(ValueError, lambda: legendre(-1, x))
@@ -105,6 +108,7 @@ def test_legendre():
     assert diff(legendre(n, x), x) == n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
     assert diff(legendre(n, x), n) == Derivative(legendre(n, x), n)
 
+
 def test_assoc_legendre():
     Plm=assoc_legendre
     Q=sqrt(1-x**2)
@@ -138,6 +142,7 @@ def test_assoc_legendre():
 
     raises(ValueError, lambda: Plm(-1, 0, x))
     raises(ValueError, lambda: Plm(0, 1, x))
+
 
 def test_chebyshev():
 
@@ -180,6 +185,7 @@ def test_chebyshev():
 
     assert diff(chebyshevu(n, x), x) == (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
 
+
 def test_hermite():
     assert hermite(0, x) == 1
     assert hermite(1, x) == 2*x
@@ -195,6 +201,7 @@ def test_hermite():
 
     assert diff(hermite(n, x), x) == 2*n*hermite(n - 1, x)
     assert diff(hermite(n, x), n) == Derivative(hermite(n, x), n)
+
 
 def test_laguerre():
     alpha = Symbol("alpha")

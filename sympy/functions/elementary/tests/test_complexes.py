@@ -4,9 +4,12 @@ from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
+
+
 def N_equals(a, b):
     """Check whether two complex numbers are numerically close"""
     return comp(a.n(), b.n(), 1.e-6)
+
 
 def test_re():
     x, y = symbols('x,y')
@@ -64,6 +67,7 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
            (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
+
 def test_im():
     x, y = symbols('x,y')
     a, b = symbols('a,b', real=True)
@@ -120,6 +124,7 @@ def test_im():
 
     assert im((1 + sqrt(a + b*I))/2) == \
            (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
+
 
 def test_sign():
     assert sign(1.2) == 1
@@ -179,6 +184,7 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+
 def test_as_real_imag():
     n = pi**1000
     # the special code for working out the real
@@ -199,6 +205,7 @@ def test_as_real_imag():
            ((a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2), \
             (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
+
 @XFAIL
 def test_sign_issue_3068():
     n = pi**1000
@@ -210,6 +217,7 @@ def test_sign_issue_3068():
     # 2 digits works
     assert (n - x).n(1, subs={x: i}) > 0
     assert (n - x).n(2, subs={x: i}) > 0
+
 
 def test_Abs():
     x, y = symbols('x,y')
@@ -249,6 +257,7 @@ def test_Abs():
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
 
+
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
     a = Abs(x).rewrite(Heaviside).expand()
@@ -257,6 +266,7 @@ def test_Abs_rewrite():
         assert a.subs(x, i) == abs(i)
     y = Symbol('y')
     assert Abs(y).rewrite(Heaviside) == Abs(y)
+
 
 def test_Abs_real():
     # test some properties of abs that only apply
@@ -275,6 +285,7 @@ def test_Abs_real():
     assert Abs(nn) == nn
     assert Abs(np) == -np
 
+
 def test_Abs_properties():
     x = Symbol('x')
     assert Abs(x).is_real == True
@@ -291,11 +302,13 @@ def test_Abs_properties():
     assert Abs(q).is_positive == True
     assert Abs(q).is_zero == False
 
+
 def test_abs():
     # this tests that abs calls Abs; don't rename to
     # test_Abs since that test is already above
     a = Symbol('a', positive=True)
     assert abs(I*(1 + a)**2) == (1 + a)**2
+
 
 def test_arg():
     assert arg(0) == nan
@@ -316,6 +329,7 @@ def test_arg():
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
 
+
 def test_conjugate():
     a = Symbol('a', real=True)
     assert conjugate(a) == a
@@ -329,15 +343,18 @@ def test_conjugate():
     assert conjugate(x / y) == conjugate(x) / conjugate(y)
     assert conjugate(-x) == -conjugate(x)
 
+
 def test_issue936():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
     assert arg(x).expand(trig=True) == arg(x)
 
+
 def test_issue3206():
     x = Symbol('x')
     assert Abs(Abs(x)) == Abs(x)
+
 
 def test_issue1655_derivative_conjugate():
     x = Symbol('x', real=True)
@@ -345,6 +362,7 @@ def test_issue1655_derivative_conjugate():
     f = Function('f')
     assert (f(x).conjugate()).diff(x) == (f(x).diff(x)).conjugate()
     assert (f(y).conjugate()).diff(y) == -(f(y).diff(y)).conjugate()
+
 
 def test_derivatives_issue1658():
     x = Symbol('x', real=True)
@@ -358,6 +376,7 @@ def test_derivatives_issue1658():
     assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)
     assert Abs(f(y)).diff(y).subs(f(y), 1+y).doit() == -y/sqrt(1 - y**2)
     assert arg(f(y)).diff(y).subs(f(y), I+y**2).doit() == 2*y/(1 + y**4)
+
 
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,
@@ -387,10 +406,12 @@ def test_periodic_argument():
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
+
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
+
 
 def test_principal_branch():
     from sympy import principal_branch, polar_lift, exp_polar

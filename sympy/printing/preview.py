@@ -6,6 +6,7 @@ import tempfile
 
 from latex import latex
 
+
 def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.

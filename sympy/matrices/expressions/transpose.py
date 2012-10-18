@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr
 from sympy import Basic
 
+
 class Transpose(MatrixExpr):
     """Matrix Transpose
 

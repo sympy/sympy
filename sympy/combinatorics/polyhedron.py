@@ -6,6 +6,7 @@ from sympy.utilities.iterables import (minlex, unflatten, flatten)
 
 rmul = Perm.rmul
 
+
 class Polyhedron(Basic):
     """
     Represents the polyhedral symmetry group (PSG).
@@ -579,6 +580,7 @@ class Polyhedron(Basic):
         (0, 1, 2, 3)
         """
         self._corners = self.args[0]
+
 
 def _pgroup_calcs():
     """Return the permutation groups for each of the polyhedra and the face

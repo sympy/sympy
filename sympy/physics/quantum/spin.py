@@ -981,6 +981,7 @@ class SpinState(State):
 
         return (bra*self).doit()
 
+
 class JxKet(SpinState, Ket):
     """Eigenket of Jx.
 
@@ -1012,6 +1013,7 @@ class JxKet(SpinState, Ket):
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(beta=pi/2, **options)
+
 
 class JxBra(SpinState, Bra):
     """Eigenbra of Jx.
@@ -1695,6 +1697,7 @@ class JzBraCoupled(CoupledSpinState, Bra):
 # Coupling/uncoupling
 #-----------------------------------------------------------------------------
 
+
 def couple(expr, jcoupling_list=None):
     """ Couple a tensor product of spin states
 
@@ -1763,6 +1766,7 @@ def couple(expr, jcoupling_list=None):
             raise TypeError('All states must be the same basis')
         expr = expr.subs(tp, _couple(tp, jcoupling_list))
     return expr
+
 
 def _couple(tp, jcoupling_list):
     states = tp.args

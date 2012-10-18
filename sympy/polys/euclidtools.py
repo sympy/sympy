@@ -52,6 +52,7 @@ from sympy.utilities import cythonized
 
 from sympy.ntheory import nextprime
 
+
 def dup_half_gcdex(f, g, K):
     """
     Half extended Euclidean algorithm in `F[x]`.
@@ -86,6 +87,7 @@ def dup_half_gcdex(f, g, K):
 
     return a, f
 
+
 def dmp_half_gcdex(f, g, u, K):
     """
     Half extended Euclidean algorithm in `F[X]`.
@@ -101,6 +103,7 @@ def dmp_half_gcdex(f, g, u, K):
         return dup_half_gcdex(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
 
 def dup_gcdex(f, g, K):
     """
@@ -128,6 +131,7 @@ def dup_gcdex(f, g, K):
 
     return s, t, h
 
+
 def dmp_gcdex(f, g, u, K):
     """
     Extended Euclidean algorithm in `F[X]`.
@@ -143,6 +147,7 @@ def dmp_gcdex(f, g, u, K):
         return dup_gcdex(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
 
 def dup_invert(f, g, K):
     """
@@ -174,6 +179,7 @@ def dup_invert(f, g, K):
     else:
         raise NotInvertible("zero divisor")
 
+
 def dmp_invert(f, g, u, K):
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
@@ -189,6 +195,7 @@ def dmp_invert(f, g, u, K):
         return dup_invert(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
 
 def dup_euclidean_prs(f, g, K):
     """
@@ -229,6 +236,7 @@ def dup_euclidean_prs(f, g, K):
 
     return prs
 
+
 def dmp_euclidean_prs(f, g, u, K):
     """
     Euclidean polynomial remainder sequence (PRS) in `K[X]`.
@@ -244,6 +252,7 @@ def dmp_euclidean_prs(f, g, u, K):
         return dup_euclidean_prs(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
 
 def dup_primitive_prs(f, g, K):
     """
@@ -284,6 +293,7 @@ def dup_primitive_prs(f, g, K):
 
     return prs
 
+
 def dmp_primitive_prs(f, g, u, K):
     """
     Primitive polynomial remainder sequence (PRS) in `K[X]`.
@@ -299,6 +309,7 @@ def dmp_primitive_prs(f, g, u, K):
         return dup_primitive_prs(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
 
 @cythonized("n,m,d,k")
 def dup_inner_subresultants(f, g, K):
@@ -368,6 +379,7 @@ def dup_inner_subresultants(f, g, K):
 
     return R, B, D
 
+
 def dup_subresultants(f, g, K):
     """
     Computes subresultant PRS of two polynomials in `K[x]`.
@@ -386,6 +398,7 @@ def dup_subresultants(f, g, K):
 
     """
     return dup_inner_subresultants(f, g, K)[0]
+
 
 @cythonized("s,i,du,dv,dw")
 def dup_prs_resultant(f, g, K):
@@ -441,6 +454,7 @@ def dup_prs_resultant(f, g, K):
 
     return res, R
 
+
 def dup_resultant(f, g, K):
     """
     Computes resultant of two polynomials in `K[x]`.
@@ -459,6 +473,7 @@ def dup_resultant(f, g, K):
 
     """
     return dup_prs_resultant(f, g, K)[0]
+
 
 @cythonized("u,v,n,m,d,k")
 def dmp_inner_subresultants(f, g, u, K):
@@ -537,6 +552,7 @@ def dmp_inner_subresultants(f, g, u, K):
 
     return R, B, D
 
+
 @cythonized("u")
 def dmp_subresultants(f, g, u, K):
     """
@@ -559,6 +575,7 @@ def dmp_subresultants(f, g, u, K):
 
     """
     return dmp_inner_subresultants(f, g, u, K)[0]
+
 
 @cythonized("u,v,s,i,d,du,dv,dw")
 def dmp_prs_resultant(f, g, u, K):
@@ -624,6 +641,7 @@ def dmp_prs_resultant(f, g, u, K):
     res = dmp_quo(dmp_mul(res, p, v, K), q, v, K)
 
     return res, R
+
 
 @cythonized("u,v,n,m,N,M,B")
 def dmp_zz_modular_resultant(f, g, p, u, K):
@@ -698,9 +716,11 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
 
     return r
 
+
 def _collins_crt(r, R, P, p, K):
     """Wrapper of CRT for Collins's resultant algorithm. """
     return gf_int(gf_crt([r, R], [P, p], K), P*p)
+
 
 @cythonized("u,v,n,m")
 def dmp_zz_collins_resultant(f, g, u, K):
@@ -761,6 +781,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
     return r
 
+
 @cythonized("u,n,m")
 def dmp_qq_collins_resultant(f, g, u, K0):
     """
@@ -800,6 +821,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     return dmp_quo_ground(r, c, u-1, K0)
 
+
 @cythonized("u")
 def dmp_resultant(f, g, u, K):
     """
@@ -830,6 +852,7 @@ def dmp_resultant(f, g, u, K):
 
     return dmp_prs_resultant(f, g, u, K)[0]
 
+
 @cythonized("d,s")
 def dup_discriminant(f, K):
     """
@@ -856,6 +879,7 @@ def dup_discriminant(f, K):
         r = dup_resultant(f, dup_diff(f, 1, K), K)
 
         return K.quo(r, c*K(s))
+
 
 @cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
@@ -890,6 +914,7 @@ def dmp_discriminant(f, u, K):
 
         return dmp_quo(r, c, v, K)
 
+
 def _dup_rr_trivial_gcd(f, g, K):
     """Handle trivial cases in GCD algorithm over a ring. """
     if not (f or g):
@@ -907,6 +932,7 @@ def _dup_rr_trivial_gcd(f, g, K):
 
     return None
 
+
 def _dup_ff_trivial_gcd(f, g, K):
     """Handle trivial cases in GCD algorithm over a field. """
     if not (f or g):
@@ -917,6 +943,7 @@ def _dup_ff_trivial_gcd(f, g, K):
         return dup_monic(f, K), [dup_LC(f, K)], []
     else:
         return None
+
 
 @cythonized("u")
 def _dmp_rr_trivial_gcd(f, g, u, K):
@@ -941,6 +968,7 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
     else:
         return None
 
+
 @cythonized("u")
 def _dmp_ff_trivial_gcd(f, g, u, K):
     """Handle trivial cases in GCD algorithm over a field. """
@@ -961,6 +989,7 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
         return None
+
 
 @cythonized("u,v,df,dg")
 def _dmp_simplify_gcd(f, g, u, K):
@@ -989,6 +1018,7 @@ def _dmp_simplify_gcd(f, g, u, K):
     cfg = [ dmp_quo(cg, h, v, K) for cg in g ]
 
     return [h], cff, cfg
+
 
 def dup_rr_prs_gcd(f, g, K):
     """
@@ -1033,6 +1063,7 @@ def dup_rr_prs_gcd(f, g, K):
 
     return h, cff, cfg
 
+
 def dup_ff_prs_gcd(f, g, K):
     """
     Computes polynomial GCD using subresultants over a field.
@@ -1065,6 +1096,7 @@ def dup_ff_prs_gcd(f, g, K):
     cfg = dup_quo(g, h, K)
 
     return h, cff, cfg
+
 
 @cythonized("u")
 def dmp_rr_prs_gcd(f, g, u, K):
@@ -1112,6 +1144,7 @@ def dmp_rr_prs_gcd(f, g, u, K):
 
     return h, cff, cfg
 
+
 @cythonized("u")
 def dmp_ff_prs_gcd(f, g, u, K):
     """
@@ -1158,6 +1191,7 @@ def dmp_ff_prs_gcd(f, g, u, K):
 
 HEU_GCD_MAX = 6
 
+
 def _dup_zz_gcd_interpolate(h, x, K):
     """Interpolate polynomial GCD from integer GCD. """
     f = []
@@ -1172,6 +1206,7 @@ def _dup_zz_gcd_interpolate(h, x, K):
         h = (h-g) // x
 
     return f
+
 
 @cythonized("i,df,dg")
 def dup_zz_heu_gcd(f, g, K):
@@ -1282,6 +1317,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     raise HeuristicGCDFailed('no luck')
 
+
 @cythonized("v")
 def _dmp_zz_gcd_interpolate(h, x, v, K):
     """Interpolate polynomial GCD from integer GCD. """
@@ -1298,6 +1334,7 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
         return dmp_neg(f, v+1, K)
     else:
         return f
+
 
 @cythonized("u,v,i,dg,df")
 def dmp_zz_heu_gcd(f, g, u, K):
@@ -1406,6 +1443,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     raise HeuristicGCDFailed('no luck')
 
+
 def dup_qq_heu_gcd(f, g, K0):
     """
     Heuristic polynomial GCD in `Q[x]`.
@@ -1453,6 +1491,7 @@ def dup_qq_heu_gcd(f, g, K0):
     cfg = dup_mul_ground(cfg, K0.quo(c, cg), K0)
 
     return h, cff, cfg
+
 
 @cythonized("u")
 def dmp_qq_heu_gcd(f, g, u, K0):
@@ -1503,6 +1542,7 @@ def dmp_qq_heu_gcd(f, g, u, K0):
 
     return h, cff, cfg
 
+
 def dup_inner_gcd(f, g, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`.
@@ -1540,6 +1580,7 @@ def dup_inner_gcd(f, g, K):
 
         return dup_rr_prs_gcd(f, g, K)
 
+
 @cythonized("u")
 def _dmp_inner_gcd(f, g, u, K):
     """Helper function for `dmp_inner_gcd()`. """
@@ -1559,6 +1600,7 @@ def _dmp_inner_gcd(f, g, u, K):
                 pass
 
         return dmp_rr_prs_gcd(f, g, u, K)
+
 
 @cythonized("u")
 def dmp_inner_gcd(f, g, u, K):
@@ -1591,6 +1633,7 @@ def dmp_inner_gcd(f, g, u, K):
             dmp_inflate(cff, J, u, K),
             dmp_inflate(cfg, J, u, K))
 
+
 def dup_gcd(f, g, K):
     """
     Computes polynomial GCD of `f` and `g` in `K[x]`.
@@ -1609,6 +1652,7 @@ def dup_gcd(f, g, K):
 
     """
     return dup_inner_gcd(f, g, K)[0]
+
 
 @cythonized("u")
 def dmp_gcd(f, g, u, K):
@@ -1629,6 +1673,7 @@ def dmp_gcd(f, g, u, K):
 
     """
     return dmp_inner_gcd(f, g, u, K)[0]
+
 
 def dup_rr_lcm(f, g, K):
     """
@@ -1657,6 +1702,7 @@ def dup_rr_lcm(f, g, K):
 
     return dup_mul_ground(h, c, K)
 
+
 def dup_ff_lcm(f, g, K):
     """
     Computes polynomial LCM over a field in `K[x]`.
@@ -1679,6 +1725,7 @@ def dup_ff_lcm(f, g, K):
 
     return dup_monic(h, K)
 
+
 def dup_lcm(f, g, K):
     """
     Computes polynomial LCM of `f` and `g` in `K[x]`.
@@ -1700,6 +1747,7 @@ def dup_lcm(f, g, K):
         return dup_ff_lcm(f, g, K)
     else:
         return dup_rr_lcm(f, g, K)
+
 
 @cythonized("u")
 def dmp_rr_lcm(f, g, u, K):
@@ -1729,6 +1777,7 @@ def dmp_rr_lcm(f, g, u, K):
 
     return dmp_mul_ground(h, c, u, K)
 
+
 @cythonized("u")
 def dmp_ff_lcm(f, g, u, K):
     """
@@ -1751,6 +1800,7 @@ def dmp_ff_lcm(f, g, u, K):
                 dmp_gcd(f, g, u, K), u, K)
 
     return dmp_ground_monic(h, u, K)
+
 
 @cythonized("u")
 def dmp_lcm(f, g, u, K):
@@ -1777,6 +1827,7 @@ def dmp_lcm(f, g, u, K):
         return dmp_ff_lcm(f, g, u, K)
     else:
         return dmp_rr_lcm(f, g, u, K)
+
 
 @cythonized("u,v")
 def dmp_content(f, u, K):
@@ -1811,6 +1862,7 @@ def dmp_content(f, u, K):
     else:
         return cont
 
+
 @cythonized("u,v")
 def dmp_primitive(f, u, K):
     """
@@ -1835,6 +1887,7 @@ def dmp_primitive(f, u, K):
     else:
         return cont, [ dmp_quo(c, cont, v, K) for c in f ]
 
+
 def dup_cancel(f, g, K, include=True):
     """
     Cancel common factors in a rational function `f/g`.
@@ -1853,6 +1906,7 @@ def dup_cancel(f, g, K, include=True):
 
     """
     return dmp_cancel(f, g, 0, K, include=include)
+
 
 def dmp_cancel(f, g, u, K, include=True):
     """

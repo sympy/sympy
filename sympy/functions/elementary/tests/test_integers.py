@@ -3,6 +3,7 @@ from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
 
 from sympy.utilities.pytest import XFAIL
 
+
 def test_floor():
 
     x = Symbol('x')
@@ -198,6 +199,7 @@ def test_ceiling():
     assert ceiling(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336801
 
+
 def test_series():
     x, y = symbols('x,y')
     assert floor(x).nseries(x, y, 100) == floor(y)
@@ -208,6 +210,7 @@ def test_series():
     assert ceiling(x).nseries(x, 0, 100) == 1
     assert floor(-x).nseries(x, 0, 100) == -1
     assert ceiling(-x).nseries(x, 0, 100) == 0
+
 
 @XFAIL
 def test_issue_1050():

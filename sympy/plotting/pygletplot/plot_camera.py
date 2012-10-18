@@ -4,6 +4,7 @@ from util import get_model_matrix
 from util import screen_to_model, model_to_screen
 from util import vec_subs
 
+
 class PlotCamera(object):
 
     min_dist = 0.05

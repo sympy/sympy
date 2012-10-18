@@ -48,19 +48,24 @@ from sympy import nextprime, sin, sqrt, I
 
 from sympy.utilities.pytest import raises
 
+
 def test_dup_trial_division():
     assert dup_trial_division([1, 8, 25, 38, 28, 8],
         ([1, 1], [1, 2]), ZZ) == [([1, 1], 2), ([1, 2], 3)]
+
 
 def test_dmp_trial_division():
     assert dmp_trial_division([[1], [8], [25], [38], [28], [8]],
         ([[1], [1]], [[1], [2]]), 1, ZZ) == [([[1], [1]], 2), ([[1], [2]], 3)]
 
+
 def test_dup_zz_mignotte_bound():
     assert dup_zz_mignotte_bound([2, 3, 4], ZZ) == 32
 
+
 def test_dmp_zz_mignotte_bound():
     assert dmp_zz_mignotte_bound([[2], [3], [4]], 1, ZZ) == 32
+
 
 def test_dup_zz_hensel_step():
     f = dup_from_raw_dict({4: 1, 0: -1}, ZZ)
@@ -77,6 +82,7 @@ def test_dup_zz_hensel_step():
     assert S == dup_from_raw_dict({0: 8}, ZZ)
     assert T == dup_from_raw_dict({2: -8, 1: -12, 0: -1}, ZZ)
 
+
 def test_dup_zz_hensel_lift():
     f = dup_from_raw_dict({4: 1, 0: -1}, ZZ)
 
@@ -92,12 +98,14 @@ def test_dup_zz_hensel_lift():
     assert dup_to_raw_dict(ff_list[2]) == {0:  182, 1: 1}
     assert dup_to_raw_dict(ff_list[3]) == {0:  1,   1: 1}
 
+
 def test_dup_zz_irreducible_p():
     assert dup_zz_irreducible_p([3, 2, 6, 8, 7], ZZ) is None
     assert dup_zz_irreducible_p([3, 2, 6, 8, 4], ZZ) is None
 
     assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
+
 
 def test_dup_cyclotomic_p():
     assert dup_cyclotomic_p(ZZ.map([1, -1]), ZZ) == True
@@ -130,6 +138,7 @@ def test_dup_cyclotomic_p():
 
     assert dup_cyclotomic_p([K([ZZ(1)]), K([ZZ(1)]), K([ZZ(1)])], K) == False
 
+
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1, -1]
     assert dup_zz_cyclotomic_poly(2, ZZ) == [1, 1]
@@ -140,6 +149,7 @@ def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(7, ZZ) == [1, 1, 1, 1, 1, 1, 1]
     assert dup_zz_cyclotomic_poly(8, ZZ) == [1, 0, 0, 0, 1]
     assert dup_zz_cyclotomic_poly(9, ZZ) == [1, 0, 0, 1, 0, 0, 1]
+
 
 def test_dup_zz_cyclotomic_factor():
     assert dup_zz_cyclotomic_factor([], ZZ) is None
@@ -182,6 +192,7 @@ def test_dup_zz_cyclotomic_factor():
          [1, 1, 1],
          [1, 0, 0, 1, 0, 0, 1],
          [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
+
 
 def test_dup_zz_factor():
     assert dup_zz_factor([], ZZ) == (0, [])
@@ -295,6 +306,7 @@ def test_dup_zz_factor():
 
     config.setup('USE_CYCLOTOMIC_FACTOR')
 
+
 def test_dmp_zz_wang():
     p = ZZ(nextprime(dmp_zz_mignotte_bound(w_1, 2, ZZ)))
 
@@ -358,6 +370,7 @@ def test_dmp_zz_wang():
 
     assert dmp_expand(factors, 2, ZZ) == w_1
 
+
 def test_issue_3256():
     # This tests a bug in the Wang algorithm that occured only with a very
     # specific set of random numbers.
@@ -366,6 +379,7 @@ def test_issue_3256():
     u = 2
     K = ZZ
     assert dmp_zz_wang(f, u, K, seed=random_sequence) == [f]
+
 
 def test_dmp_zz_factor():
     assert dmp_zz_factor(ZZ.map([]), 0, ZZ) == (0, [])
@@ -455,6 +469,7 @@ def test_dmp_zz_factor():
         (-12, [([[1, 0]], 1),
                ([[1], [], [-1, 0]], 6),
                ([[1], [], [6, 0], [], [1, 0, 0]], 1)])
+
 
 def test_dup_ext_factor():
     h = [QQ(1), QQ(0), QQ(1)]
@@ -547,6 +562,7 @@ def test_dup_ext_factor():
             ([ANP([QQ(1, 1)], h, QQ), ANP([ QQ(4, 1), QQ(1, 1)], h, QQ)], 1),
         ])
 
+
 def test_dmp_ext_factor():
     h = [QQ(1), QQ(0), QQ(-2)]
     K = QQ.algebraic_field(sqrt(2))
@@ -577,6 +593,7 @@ def test_dmp_ext_factor():
             ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
             ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
         ])
+
 
 def test_dup_factor_list():
     assert dup_factor_list([], ZZ) == (ZZ(0), [])
@@ -637,6 +654,7 @@ def test_dup_factor_list():
                                  ([ANP([QQ(1, 1)], h, QQ), ANP([], h, QQ), ANP([QQ(2, 1)], h, QQ)], 1)])
 
     raises(DomainError, lambda: dup_factor_list([EX(sin(1))], EX))
+
 
 def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ) == (ZZ(0), [])
@@ -715,9 +733,11 @@ def test_dmp_factor_list():
     raises(DomainError, lambda: dmp_factor_list([[K(1)], [], [K(1), K(0), K(0)]], 1, K))
     raises(DomainError, lambda: dmp_factor_list([[EX(sin(1))]], 1, EX))
 
+
 def test_dup_irreducible_p():
     assert dup_irreducible_p([ZZ(1), ZZ(1), ZZ(1)], ZZ) == True
     assert dup_irreducible_p([ZZ(1), ZZ(2), ZZ(1)], ZZ) == False
+
 
 def test_dmp_irreducible_p():
     assert dmp_irreducible_p([[ZZ(1)], [ZZ(1)], [ZZ(1)]], 1, ZZ) == True

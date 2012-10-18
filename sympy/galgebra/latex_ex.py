@@ -23,9 +23,11 @@ from sympy.utilities import default_sort_key
 
 from sympy.printing.latex import accepted_latex_functions
 
+
 def debug(txt):
     sys.stderr.write(txt+'\n')
     return
+
 
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
@@ -60,8 +62,10 @@ def find_executable(executable, path=None):
     else:
         return None
 
+
 def len_cmp(str1, str2):
     return(len(str2)-len(str1))
+
 
 def process_equals(xstr):
     eq1 = xstr.find('=')
@@ -70,6 +74,7 @@ def process_equals(xstr):
         return(xstr)
     xstr = xstr[:eq1]+xstr[eq2:]
     return(xstr)
+
 
 class LatexPrinter(Printer):
     r"""
@@ -998,6 +1003,7 @@ class LatexPrinter(Printer):
                 self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
+
 def LaTeX(expr, inline=True):
     """
     Convert the given expression to LaTeX representation.
@@ -1030,13 +1036,16 @@ def LaTeX(expr, inline=True):
     xstr = LatexPrinter(inline).doprint(expr)
     return (xstr)
 
+
 def print_LaTeX(expr):
     """Prints LaTeX representation of the given expression."""
     print LaTeX(expr)
 
+
 def Format(fmt='1 1 1 1'):
     LatexPrinter.format_str(fmt)
     return
+
 
 def xdvi(filename='tmplatex.tex', debug=False):
     """
@@ -1194,6 +1203,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
     LatexPrinter.LaTeX_flg = False
     return
 
+
 def MV_format(mv_fmt):
     """
     0 or 1 - Print multivector on one line
@@ -1205,6 +1215,7 @@ def MV_format(mv_fmt):
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['mv'] = mv_fmt
     return
+
 
 def fct_format(fct_fmt):
     """
@@ -1220,6 +1231,7 @@ def fct_format(fct_fmt):
         LatexPrinter.fct = fct_fmt
     return
 
+
 def pdiff_format(pdiff_fmt):
     """
     0 - Use default sympy partial derivative format
@@ -1229,6 +1241,7 @@ def pdiff_format(pdiff_fmt):
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['pdiff'] = pdiff_fmt
     return
+
 
 def sym_format(sym_fmt):
     """
@@ -1243,6 +1256,7 @@ def sym_format(sym_fmt):
         LatexPrinter.fmt_dict['sym'] = sym_fmt
     return
 
+
 def str_format(str_fmt):
     """
     0 - Use default sympy format
@@ -1255,6 +1269,7 @@ def str_format(str_fmt):
     if LatexPrinter.LaTeX_flg:
         LatexPrinter.fmt_dict['str'] = str_fmt
     return
+
 
 def ext_str(xstr):
     return(LatexPrinter.extended_symbol(xstr))

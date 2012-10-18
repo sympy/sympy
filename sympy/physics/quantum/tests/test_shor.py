@@ -16,6 +16,7 @@ def test_CMod():
     assert qapply(CMod(3, 2, 3)*Qubit(0, 1, 0, 0, 0, 0)) ==\
         Qubit(0, 1, 0, 0, 0, 1)
 
+
 def test_continued_frac():
     assert continued_fraction(3245, 10000) == [0, 3, 12, 4, 13]
     assert continued_fraction(1932, 2568) == [0, 1, 3, 26, 2]

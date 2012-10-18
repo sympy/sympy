@@ -7,6 +7,7 @@ from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
 

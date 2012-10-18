@@ -7,6 +7,7 @@ from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse
 )
 
+
 class MatrixCache(object):
     """A cache for small matrices in different formats.
 

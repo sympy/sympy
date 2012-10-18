@@ -8,6 +8,7 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
+
 class RoundFunction(Function):
     """The base class for rounding functions."""
 
@@ -70,6 +71,7 @@ class RoundFunction(Function):
     def _eval_is_integer(self):
         return self.args[0].is_real
 
+
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
@@ -122,6 +124,7 @@ class floor(RoundFunction):
                 return r-1
         else:
             return r
+
 
 class ceiling(RoundFunction):
     """

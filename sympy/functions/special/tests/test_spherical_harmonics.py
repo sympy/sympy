@@ -2,6 +2,7 @@ from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I, S
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos
 from sympy.utilities.pytest import XFAIL
 
+
 def test_Pl():
     x = Symbol("x")
     assert Pl(0, x) == 1
@@ -11,6 +12,7 @@ def test_Pl():
     assert Pl(4, x) == ((35*x**4-30*x**2+3)/8).expand()
     assert Pl(5, x) == ((63*x**5-70*x**3+15*x)/8).expand()
     assert Pl(6, x) == ((231*x**6-315*x**4+105*x**2-5)/16).expand()
+
 
 def test_Plm():
     #http://en.wikipedia.org/wiki/Legendre_function
@@ -33,6 +35,7 @@ def test_Plm():
     assert Plm(3, 2, x) == 15*x*(1-x**2)
     assert Plm(3, 3, x) == -15*(1-x**2)**(sympify(3)/2)
 
+
 def test_Plmcos():
     #http://en.wikipedia.org/wiki/Legendre_function
     th = Symbol("th", real=True)
@@ -47,6 +50,7 @@ def test_Plmcos():
     assert Plmcos(3, 1, th) == -sin(th)*(15*cos(th)**2/2-S(3)/2)
     assert Plmcos(3, 2, th) == 15*cos(th)*sin(th)**2
     assert Plmcos(3, 3, th) == -15*sin(th)**3
+
 
 def test_Ylm():
     #http://en.wikipedia.org/wiki/Spherical_harmonics
@@ -66,6 +70,7 @@ def test_Ylm():
     assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
             S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
     assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
+
 
 def test_Zlm():
     #http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions

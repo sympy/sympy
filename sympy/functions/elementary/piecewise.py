@@ -5,6 +5,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, Or
 from sympy.utilities.misc import default_sort_key
 
+
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
@@ -49,6 +50,7 @@ class ExprCondPair(Tuple):
     def __iter__(self):
         yield self.expr
         yield self.cond
+
 
 class Piecewise(Function):
     """
@@ -448,6 +450,7 @@ class Piecewise(Function):
         if cond is True:
             return True
         return None
+
 
 def piecewise_fold(expr):
     """

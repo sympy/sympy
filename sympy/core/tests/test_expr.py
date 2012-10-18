@@ -14,6 +14,7 @@ from sympy.physics.units import meter
 
 from sympy.utilities.pytest import raises, XFAIL
 
+
 class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.
@@ -89,11 +90,13 @@ class DummyNumber(object):
     def __neg__(self):
         return - self.number
 
+
 class I5(DummyNumber):
     number = 5
 
     def __int__(self):
         return self.number
+
 
 class F1_1(DummyNumber):
     number = 1.1
@@ -121,11 +124,13 @@ all_objs = basic_objs + [
     f1_1
 ]
 
+
 def dotest(s):
     for x in all_objs:
         for y in all_objs:
             s(x, y)
     return True
+
 
 def test_basic():
     def j(a, b):
@@ -139,6 +144,7 @@ def test_basic():
         x = a**b
     assert dotest(j)
 
+
 def test_ibasic():
     def s(a, b):
         x = a
@@ -151,6 +157,7 @@ def test_ibasic():
         x /= b
     assert dotest(s)
 
+
 def test_relational():
     assert (pi < 3) == False
     assert (pi <= 3) == False
@@ -162,6 +169,7 @@ def test_relational():
     assert (-pi >= 3) == False
     assert (x - 2 < x - 3) == False
 
+
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
     A, B = symbols('A,B', commutative=False)
@@ -169,6 +177,7 @@ def test_relational_noncommutative():
     assert (A <= B) == Le(A, B)
     assert (A > B) == Gt(A, B)
     assert (A >= B) == Ge(A, B)
+
 
 def test_basic_nostr():
     for obj in basic_objs:
@@ -182,6 +191,7 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj / '1')
         raises(TypeError, lambda: obj ** '1')
 
+
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3, 0)
 
@@ -192,6 +202,7 @@ def test_leadterm():
     assert (x+1).leadterm(x)[1] == 0
     assert (x+x**2).leadterm(x)[1] == 1
     assert (x**2).leadterm(x)[1] == 2
+
 
 def test_as_leading_term():
     assert (3+2*x**(log(3)/log(2)-1)).as_leading_term(x) == 3
@@ -204,20 +215,25 @@ def test_as_leading_term():
     assert (x**2).as_leading_term(x) == x**2
     assert (x + oo).as_leading_term(x) == oo
 
+
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
             (sin(1 + sin(1)), 0)
 
+
 def test_leadterm3():
     assert (y+z+x).leadterm(x) == (y+z, 0)
+
 
 def test_as_leading_term2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).as_leading_term(x) == \
             sin(1 + sin(1))
 
+
 def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
     assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
+
 
 def test_as_leading_term_stub():
     class foo(Function):
@@ -225,6 +241,7 @@ def test_as_leading_term_stub():
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
     raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
+
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
@@ -272,6 +289,7 @@ def test_atoms():
     assert e.atoms(Function, Number) == \
         set([S(2), sin(x), f(x)])
 
+
 def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
 
@@ -316,6 +334,7 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
+
 def test_is_rational_function():
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -339,6 +358,7 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) == True
     assert (sin(y)/x).is_rational_function(x, y) == False
 
+
 def test_SAGE1():
     #see http://code.google.com/p/sympy/issues/detail?id=247
     class MyInt:
@@ -350,6 +370,7 @@ def test_SAGE1():
 
     raises(TypeError, lambda: Rational(2)*MyInt)
 
+
 def test_SAGE2():
     class MyInt(object):
         def __int__(self):
@@ -359,6 +380,7 @@ def test_SAGE2():
     assert e == 10
 
     raises(TypeError, lambda: Rational(2)*MyInt)
+
 
 def test_SAGE3():
     class MySymbol:
@@ -370,11 +392,13 @@ def test_SAGE3():
 
     assert e == ('mys', x, o)
 
+
 def test_len():
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
     assert len(e.args) == 3
+
 
 def test_doit():
     a = Integral(x**2, x)
@@ -386,10 +410,12 @@ def test_doit():
 
     assert (2*Integral(x, x)).doit() == x**2
 
+
 def test_attribute_error():
     raises(AttributeError, lambda: x.cos())
     raises(AttributeError, lambda: x.sin())
     raises(AttributeError, lambda: x.exp())
+
 
 def test_args():
     assert (x*y).args in ((x, y), (y, x))
@@ -401,15 +427,18 @@ def test_args():
     assert (x**y).args[0] == x
     assert (x**y).args[1] == y
 
+
 def test_iter_basic_args():
     assert list(sin(x*y).iter_basic_args()) == [x*y]
     assert list((x**y).iter_basic_args()) == [x, y]
+
 
 def test_noncommutative_expand_issue658():
     A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
     assert (A*(A+B)*B).expand() == A**2*B + A*B**2
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
+
 
 def test_as_numer_denom():
     a, b, c = symbols('a, b, c')
@@ -458,6 +487,7 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1).as_numer_denom() == ((A*B*C)**-1, 1)
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
+
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
     assert (2*x*sin(x)+y+x).as_independent(y) == (x + 2*x*sin(x), y)
@@ -505,6 +535,7 @@ def test_as_independent():
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
 
+
 def test_call():
     # See the long history of this in issues 1927 and 2006.
 
@@ -519,6 +550,7 @@ def test_call():
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')
     #assert (2*f)(x) == 2*f(x)
+
 
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
@@ -539,6 +571,7 @@ def test_replace():
     assert sin(x).replace(cos, sin) == sin(x)
 
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+
 
 def test_find():
     expr = (x + y + 2 + sin(3*x))
@@ -568,6 +601,7 @@ def test_find():
     assert expr.find(sin) == set([sin(x), sin(sin(x))])
     assert expr.find(sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
 
+
 def test_count():
     expr = (x + y + 2 + sin(3*x))
 
@@ -583,6 +617,7 @@ def test_count():
     assert expr.count(sin) == 1
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
+
 
 def test_has_basics():
     f = Function('f')
@@ -611,6 +646,7 @@ def test_has_basics():
 
     assert not x.has()
 
+
 def test_has_multiple():
     f = x**2*y + sin(2**t + log(z))
 
@@ -633,6 +669,7 @@ def test_has_multiple():
     assert (i*y**i).has(x, y)
     assert not (i*y**i).has(x, z)
 
+
 def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
     g = Function('g')
@@ -648,6 +685,7 @@ def test_has_piecewise():
     assert p.has(f)
     assert p.has(g)
     assert not p.has(h)
+
 
 def test_has_iterative():
     A, B, C = symbols('A,B,C', commutative=False)
@@ -685,6 +723,7 @@ def test_has_integrals():
     assert not f.has(2*x + y)
     assert not f.has(2*x*y)
 
+
 def test_has_tuple():
     f = Function('f')
     g = Function('g')
@@ -701,11 +740,13 @@ def test_has_tuple():
     assert not Tuple(f, g).has(h)
     assert Tuple(True).has(True) is True  # .has(1) will also be True
 
+
 def test_has_units():
     from sympy.physics.units import m, s
 
     assert (x*m/s).has(x)
     assert (x*m/s).has(y, z) is False
+
 
 def test_has_polys():
     poly = Poly(x**2 + x*y*sin(z), x, y, t)
@@ -714,8 +755,10 @@ def test_has_polys():
     assert poly.has(x, y, z)
     assert poly.has(x, y, z, t)
 
+
 def test_has_physics():
     assert FockState((x, y)).has(x)
+
 
 def test_as_poly_as_expr():
     f = x**2 + 2*x*y
@@ -729,6 +772,7 @@ def test_as_poly_as_expr():
 
     assert p.as_poly() == p
 
+
 def test_nonzero():
     assert bool(S.Zero) == False
     assert bool(S.One) == True
@@ -738,6 +782,7 @@ def test_nonzero():
     assert bool(x*y) == True
     assert bool(x*1) == True
     assert bool(x*0) == False
+
 
 def test_is_number():
     assert Float(3.14).is_number == True
@@ -771,6 +816,7 @@ def test_is_number():
     a = A()
     assert a.is_number == False
 
+
 def test_as_coeff_add():
     assert S(2).as_coeff_add() == (2, ())
     assert S(3.0).as_coeff_add() == (0, (S(3.0),))
@@ -784,6 +830,7 @@ def test_as_coeff_add():
     # don't do expansion
     e = (x + y)**2
     assert e.as_coeff_add(y) == (0, (e,))
+
 
 def test_as_coeff_mul():
     assert S(2).as_coeff_mul() == (2, ())
@@ -799,6 +846,7 @@ def test_as_coeff_mul():
     assert e.as_coeff_mul(y) == (1, (e,))
     e = 2**(x + y)
     assert e.as_coeff_mul(y) == (1, (e,))
+
 
 def test_as_coeff_exponent():
     assert (3*x**4).as_coeff_exponent(x) == (3, 4)
@@ -819,6 +867,7 @@ def test_as_coeff_exponent():
     f = Function('f')
     fx = D(f(x), x)
     assert fx.as_coeff_exponent(f(x)) == (fx, 0)
+
 
 def test_extractions():
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
@@ -881,6 +930,7 @@ def test_extractions():
            ((-x-y)/(y-x)).could_extract_minus_sign() == False  # is_Mul even case
     assert ( x - y).could_extract_minus_sign() == False
     assert (-x + y).could_extract_minus_sign() == True
+
 
 def test_coeff():
     assert (x+1).coeff(x+1) == 1
@@ -954,12 +1004,14 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+
 def test_coeff2():
     r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
     assert g.coeff((psi(r).diff(r))) == 2/r
+
 
 def test_coeff2_0():
     r, kappa = symbols('r, kappa')
@@ -969,21 +1021,25 @@ def test_coeff2_0():
 
     assert g.coeff(psi(r).diff(r, 2)) == 1
 
+
 def test_coeff_expand():
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
     assert expr.coeff(z) == (x+y)**2
     assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
 
+
 def test_integrate():
     assert x.integrate(x) == x**2/2
     assert x.integrate((x, 0, 1)) == S(1)/2
+
 
 def test_as_base_exp():
     assert x.as_base_exp() == (x, S.One)
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x+y+z).as_base_exp() == (x+y+z, S.One)
     assert ((x+y)**z).as_base_exp() == (x+y, z)
+
 
 def test_issue1864():
     assert hasattr(Mul(x, y), "is_commutative")
@@ -992,6 +1048,7 @@ def test_issue1864():
     assert hasattr(Pow(x, y, evaluate=False), "is_commutative")
     expr = Mul(Pow(2, 2, evaluate=False), 3, evaluate=False) + 1
     assert hasattr(expr, "is_commutative")
+
 
 def test_action_verbs():
     assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
@@ -1010,10 +1067,12 @@ def test_action_verbs():
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
 
+
 def test_as_powers_dict():
     assert x.as_powers_dict() == {x: 1}
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+
 
 def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
@@ -1022,6 +1081,7 @@ def test_as_coefficients_dict():
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+
 
 def test_args_cnc():
     A = symbols('A', commutative=False)
@@ -1040,6 +1100,7 @@ def test_args_cnc():
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
+
 
 def test_new_rawargs():
     n = Symbol('n', commutative=False)
@@ -1060,10 +1121,12 @@ def test_new_rawargs():
     assert m._new_rawargs(x, n, reeval=False).is_commutative is False
     assert m._new_rawargs(S.One) is S.One
 
+
 def test_2127():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x+y, evaluate=False).is_Add
+
 
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
@@ -1074,13 +1137,16 @@ def test_free_symbols():
     assert meter.free_symbols == set()
     assert (meter**x).free_symbols == set([x])
 
+
 def test_issue2201():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
+
 def test_issue_2061():
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     assert sqrt(1.0*x) == 1.0*sqrt(x)
+
 
 def test_as_coeff_Mul():
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
@@ -1098,6 +1164,7 @@ def test_as_coeff_Mul():
     assert (x).as_coeff_Mul() == (S.One, x)
     assert (x*y).as_coeff_Mul() == (S.One, x*y)
 
+
 def test_as_coeff_Add():
     assert Integer(3).as_coeff_Add() == (Integer(3), Integer(0))
     assert Rational(3, 4).as_coeff_Add() == (Rational(3, 4), Integer(0))
@@ -1113,6 +1180,7 @@ def test_as_coeff_Add():
 
     assert (x).as_coeff_Add() == (S.Zero, x)
     assert (x*y).as_coeff_Add() == (S.Zero, x*y)
+
 
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
@@ -1153,6 +1221,7 @@ def test_expr_sorting():
     exprs = [set([1]), set([1, 2])]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
 
@@ -1168,6 +1237,7 @@ def test_as_ordered_factors():
 
     assert (A*B).as_ordered_factors() == [A, B]
     assert (B*A).as_ordered_factors() == [B, A]
+
 
 def test_as_ordered_terms():
     f, g = symbols('f,g', cls=Function)
@@ -1199,9 +1269,11 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
+
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
+
 
 def test_issue_1100():
     # first subs and limit gives NaN
@@ -1213,6 +1285,7 @@ def test_issue_1100():
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
+
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1234,11 +1307,13 @@ def test_primitive():
         (S(1)/21, 14*x + 12*y + oo)
     assert S.Zero.primitive() == (S.One, S.Zero)
 
+
 def test_issue_2744():
     a = 1 + x
     assert (2*a).extract_multiplicatively(a) == 2
     assert (4*a).extract_multiplicatively(2*a) == 2
     assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
+
 
 def test_is_constant():
     from sympy.solvers.solvers import checksol
@@ -1272,6 +1347,7 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
+
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
     assert (x**2 - 1).equals((x + 1)*(x - 1))
@@ -1301,10 +1377,12 @@ def test_equals():
     assert diff.subs(x, p).equals(0) is True
     assert diff.subs(x, -1).equals(0) is True
 
+
 def test_random():
     from sympy import posify
     assert posify(x)[0]._random() is not None
     assert S('-pi*Abs(1/log(n!)) + 1')._random(2, -2, 0, -1, 0) is None
+
 
 def test_round():
     from sympy.abc import x
@@ -1382,6 +1460,7 @@ def test_round():
 
     # issue 3815
     assert (I**(I+3)).round(3) == Float('-0.208', '')*I
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)

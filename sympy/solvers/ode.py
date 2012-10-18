@@ -247,6 +247,7 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_specia
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
+
 def preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
@@ -317,6 +318,7 @@ def preprocess(expr, func=None, hint='_Integral'):
     eq = expr.subs(reps)
     return eq, func
 
+
 def sub_func_doit(eq, func, new):
     """When replacing the func with something else, we usually
     want the derivative evaluated, so this function helps in
@@ -350,6 +352,7 @@ def sub_func_doit(eq, func, new):
         reps[d] = u
 
     return eq.subs(reps).subs(func, new).subs(repu)
+
 
 def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     """
@@ -582,6 +585,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     return rv
+
 
 def classify_ode(eq, func=None, dict=False, prep=True):
     """
@@ -913,6 +917,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     else:
         return tuple(retlist)
 
+
 @vectorize(0)
 def odesimp(eq, func, order, hint):
     r"""
@@ -1053,6 +1058,7 @@ def odesimp(eq, func, order, hint):
         eq = eq[0]
 
     return eq
+
 
 def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     """
@@ -1624,6 +1630,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             else:
                 return newexpr
 
+
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in expr to have numbers 1 through N
@@ -1753,6 +1760,7 @@ def _handle_Integral(expr, func, order, hint):
     else:
         sol = expr
     return sol
+
 
 def ode_order(expr, func):
     """
@@ -1917,6 +1925,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
+
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     r"""
     Solves a 1st order differential equation with homogeneous coefficients
@@ -2000,6 +2009,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
         (u1, None, f(x)/x))
     sol = logcombine(Eq(log(x), int + log(C1)), force=True)
     return sol
+
 
 def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     r"""
@@ -2087,6 +2097,8 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     return sol
 
 # XXX: Should this function maybe go somewhere else?
+
+
 def homogeneous_order(eq, *symbols):
     """
     Returns the order n if g is homogeneous and None if it is not
@@ -2173,6 +2185,7 @@ def homogeneous_order(eq, *symbols):
     if b == t:
         return e
 
+
 def ode_1st_linear(eq, func, order, match):
     r"""
     Solves 1st order linear differential equations.
@@ -2228,6 +2241,7 @@ def ode_1st_linear(eq, func, order, match):
     t = exp(C.Integral(r[r['b']]/r[r['a']], x))
     tt = C.Integral(t*(-r[r['c']]/r[r['a']]), x)
     return Eq(f(x), (tt + C1)/t)
+
 
 def ode_Bernoulli(eq, func, order, match):
     r"""
@@ -2310,6 +2324,7 @@ def ode_Bernoulli(eq, func, order, match):
     tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']], x)
     return Eq(f(x), ((tt + C1)/t)**(1/(1-r[r['n']])))
 
+
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
     The general Riccati equation has the form dy/dx = f(x)*y**2 + g(x)*y + h(x).
@@ -2353,6 +2368,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     C1 = Symbol('C1')
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
     return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x)+C1))/(2*b2*x))
+
 
 def ode_Liouville(eq, func, order, match):
     r"""
@@ -2464,6 +2480,7 @@ def _nth_linear_match(eq, func, order):
             else:
                 terms[len(f.args[1:])] += c
     return terms
+
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
@@ -2602,6 +2619,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     else:
         raise ValueError('Unknown value for key "returns".')
 
+
 def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match):
     r"""
     Solves an nth order linear differential equation with constant
@@ -2660,6 +2678,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
         returns='both')
     match.update(gensol)
     return _solve_undetermined_coefficients(eq, func, order, match)
+
 
 def _solve_undetermined_coefficients(eq, func, order, match):
     """
@@ -2752,6 +2771,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     psol = trialfunc.subs(coeffvals)
 
     return Eq(f(x), gsol.rhs + psol)
+
 
 def _undetermined_coefficients_match(expr, x):
     """
@@ -2904,6 +2924,7 @@ def _undetermined_coefficients_match(expr, x):
 
     return retdict
 
+
 def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
     r"""
     Solves an nth order linear differential equation with constant
@@ -2972,6 +2993,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     match.update(gensol)
     return _solve_variation_of_parameters(eq, func, order, match)
 
+
 def _solve_variation_of_parameters(eq, func, order, match):
     """
     Helper function for the method of variation of parameters.
@@ -3021,6 +3043,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = simplify(psol)
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
+
 
 def ode_separable(eq, func, order, match):
     r"""

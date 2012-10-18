@@ -3,6 +3,7 @@ from sympy.combinatorics.graycode import GrayCode
 
 from sympy.core.compatibility import bin, combinations
 
+
 class Subset(Basic):
     """
     Represents a basic subset object.
@@ -497,6 +498,7 @@ class Subset(Basic):
         else:
             return list()
         return [d[bi] for bi in b]
+
 
 def ksubsets(superset, k):
     """

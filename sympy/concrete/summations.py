@@ -4,6 +4,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
+
 def _free_symbols(function, limits):
     """Helper function to return the symbols that appear in a sum-like object
     once it is evaluated.
@@ -17,6 +18,7 @@ def _free_symbols(function, limits):
         for i in xab[1:]:
             isyms.update(i.free_symbols)
     return isyms
+
 
 class Sum(Expr):
     """Represents unevaluated summation."""
@@ -272,6 +274,7 @@ class Sum(Expr):
         if any(old == v for v in self.variables):
             return self
 
+
 def summation(f, *symbols, **kwargs):
     r"""
     Compute the summation of f with respect to symbols.
@@ -312,6 +315,7 @@ def summation(f, *symbols, **kwargs):
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
+
 def telescopic_direct(L, R, n, limits):
     """Returns the direct summation of the terms of a telescopic sum
 
@@ -332,6 +336,7 @@ def telescopic_direct(L, R, n, limits):
     for m in xrange(n):
         s += L.subs(i, a+m) + R.subs(i, b-m)
     return s
+
 
 def telescopic(L, R, limits):
     '''Tries to perform the summation using the telescopic property
@@ -375,6 +380,7 @@ def telescopic(L, R, limits):
     elif s > 0:
         return telescopic_direct(L, R, s, (i, a, b))
 
+
 def eval_sum(f, limits):
     (i, a, b) = limits
     if f is S.Zero:
@@ -399,11 +405,13 @@ def eval_sum(f, limits):
     if definite:
         return eval_sum_direct(f, (i, a, b))
 
+
 def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
     return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
+
 
 def eval_sum_symbolic(f, limits):
     (i, a, b) = limits
@@ -480,6 +488,7 @@ def eval_sum_symbolic(f, limits):
 
     return eval_sum_hyper(f, (i, a, b))
 
+
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
@@ -527,6 +536,7 @@ def _eval_sum_hyper(f, i, a):
     h = hyper(ap, bq, x)
 
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+
 
 def eval_sum_hyper(f, (i, a, b)):
     from sympy.functions import Piecewise

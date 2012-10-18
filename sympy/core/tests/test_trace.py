@@ -2,6 +2,7 @@ from sympy import S, Symbol, symbols, Matrix, Tuple
 from sympy.core.trace import Tr
 from sympy.utilities.pytest import raises
 
+
 def test_trace_new():
     a, b, c, d, Y = symbols('a b c d Y')
     A, B, C, D = symbols('A B C D', commutative=False)
@@ -71,11 +72,13 @@ def test_trace_new():
     raises(ValueError, lambda: Tr())
     raises(ValueError, lambda: Tr(A, 1, 2))
 
+
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')
     A, B, C, D = symbols('A B C D', commutative=False)
 
     #TODO: needed while testing reduced density operations, etc.
+
 
 def test_permute():
     A, B, C, D, E, F, G = symbols('A B C D E F G', commutative=False)

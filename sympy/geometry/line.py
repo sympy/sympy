@@ -19,8 +19,11 @@ from point import Point
 from util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
+
+
 class Undecidable(ValueError):
     pass
+
 
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)

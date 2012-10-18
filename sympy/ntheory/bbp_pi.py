@@ -46,6 +46,8 @@ array (perhaps just a matter of preference).
 
 '''
 import math
+
+
 def _series(j, n):
 
     # Left sum from the bbp algorithm
@@ -65,6 +67,7 @@ def _series(j, n):
     total = s+t
 
     return total
+
 
 def pi_hex_digits(n):
     """Returns a string containing 14 digits after the nth value of pi in hex
@@ -95,6 +98,7 @@ def pi_hex_digits(n):
     s=("%014x" % x)
     #s is constrained between 0 and 14
     return s[:14]
+
 
 def _dn(n):
     # controller for n dependence on precision

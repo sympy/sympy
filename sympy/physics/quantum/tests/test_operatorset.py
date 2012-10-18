@@ -17,6 +17,7 @@ from sympy.utilities.pytest import raises
 
 from sympy.utilities.pytest import XFAIL
 
+
 @XFAIL
 def test_spin():
     assert operators_to_state(set([J2Op, JxOp])) == JxKet()
@@ -40,6 +41,7 @@ def test_spin():
     assert state_to_operators(JyBra()) == set([J2Op(), JyOp()])
     assert state_to_operators(JzBra()) == set([J2Op(), JzOp()])
 
+
 def test_op_to_state():
     assert operators_to_state(XOp) == XKet()
     assert operators_to_state(PxOp) == PxKet()
@@ -49,6 +51,7 @@ def test_op_to_state():
     assert state_to_operators(operators_to_state(XOp())) == XOp()
 
     raises(NotImplementedError, lambda: operators_to_state(XKet))
+
 
 def test_state_to_op():
     assert state_to_operators(XKet) == XOp()

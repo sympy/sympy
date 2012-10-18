@@ -9,6 +9,7 @@ from sympy.utilities.randtest import \
         test_derivative_numerically as td
 from sympy.abc import z, n, k, x
 
+
 def test_bessel_rand():
     assert td(besselj(randcplx(), z), z)
     assert td(bessely(randcplx(), z), z)
@@ -19,6 +20,7 @@ def test_bessel_rand():
     assert td(jn(randcplx(), z), z)
     assert td(yn(randcplx(), z), z)
 
+
 def test_diff():
     assert besselj(n, z).diff(z) == besselj(n-1, z)/2 - besselj(n+1, z)/2
     assert bessely(n, z).diff(z) == bessely(n-1, z)/2 - bessely(n+1, z)/2
@@ -26,6 +28,7 @@ def test_diff():
     assert besselk(n, z).diff(z) == -besselk(n-1, z)/2 - besselk(n+1, z)/2
     assert hankel1(n, z).diff(z) == hankel1(n-1, z)/2 - hankel1(n+1, z)/2
     assert hankel2(n, z).diff(z) == hankel2(n-1, z)/2 - hankel2(n+1, z)/2
+
 
 def test_rewrite():
     from sympy import polar_lift, exp, I
@@ -39,9 +42,11 @@ def test_rewrite():
     assert tn(besselj(nu, z), besselj(nu, z).rewrite(besseli), z)
     assert tn(besseli(nu, z), besseli(nu, z).rewrite(besselj), z)
 
+
 def test_expand():
     assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert expand_func(bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+
 
 def test_fn():
     x, z = symbols("x z")
@@ -50,8 +55,12 @@ def test_fn():
     assert fn(3, z) == -6/z**2 + 15/z**4
     assert fn(4, z) == 1/z - 45/z**3 + 105/z**5
 
+
 def mjn(n, z): return expand_func(jn(n, z))
+
+
 def myn(n, z): return expand_func(yn(n, z))
+
 
 def test_jn():
     z = symbols("z")
@@ -68,6 +77,7 @@ def test_jn():
 
     assert expand_func(jn(n, z)) == jn(n, z)
 
+
 def test_yn():
     z = symbols("z")
     assert myn(0, z) == -cos(z)/z
@@ -75,9 +85,11 @@ def test_yn():
     assert myn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
     assert expand_func(yn(n, z)) == yn(n, z)
 
+
 def test_sympify_yn():
     assert S(15) in myn(3, pi).atoms()
     assert myn(3, pi) == 15/pi**4 - 6/pi**2
+
 
 def eq(a, b, tol=1e-6):
     for x, y in zip(a, b):
@@ -85,12 +97,14 @@ def eq(a, b, tol=1e-6):
             return False
     return True
 
+
 def test_jn_zeros():
     assert eq(jn_zeros(0, 4), [3.141592, 6.283185, 9.424777, 12.566370])
     assert eq(jn_zeros(1, 4), [4.493409, 7.725251, 10.904121, 14.066193])
     assert eq(jn_zeros(2, 4), [5.763459, 9.095011, 12.322940, 15.514603])
     assert eq(jn_zeros(3, 4), [6.987932, 10.417118, 13.698023, 16.923621])
     assert eq(jn_zeros(4, 4), [8.182561, 11.704907, 15.039664, 18.301255])
+
 
 def test_bessel_eval():
     from sympy import I
@@ -106,6 +120,7 @@ def test_bessel_eval():
     assert besseli(0, I*z) == besselj(0, z)
     assert besseli(1, I*z) == I*besselj(1, z)
     assert besselj(3, I*z) == -I*besseli(3, z)
+
 
 def test_branching():
     from sympy import exp_polar, polar_lift, Symbol, I, exp

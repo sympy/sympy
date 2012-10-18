@@ -16,6 +16,7 @@ def test_innerproduct():
     assert k*(b*k)*b == k*InnerProduct(b, k)*b
     assert InnerProduct(b, k).subs(b, Dagger(k)) == Dagger(k)*k
 
+
 def test_innerproduct_dagger():
     k = Ket('k')
     b = Bra('b')

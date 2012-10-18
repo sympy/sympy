@@ -7,11 +7,13 @@ from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 
 i, j, n, x = symbols('i j n x')
 
+
 def test_H():
     assert PIABHamiltonian('H').hilbert_space ==\
         L2(Interval(S.NegativeInfinity, S.Infinity))
     assert qapply(PIABHamiltonian('H')*PIABKet(n)) ==\
         (n**2*pi**2*hbar**2)/(2*m*L**2)*PIABKet(n)
+
 
 def test_states():
     assert PIABKet(n).dual_class() == PIABBra

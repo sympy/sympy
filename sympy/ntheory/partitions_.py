@@ -5,6 +5,7 @@ from sympy.mpmath.libmp import (fzero,
 from sympy.core.numbers import igcd
 import math
 
+
 def _a(n, j, prec):
     """Compute the inner sum in the HRR formula."""
     if j == 1:
@@ -29,6 +30,7 @@ def _a(n, j, prec):
         s = mpf_add(s, mpf_cos(from_man_exp(g, -prec), prec), prec)
     return s
 
+
 def _d(n, j, prec, sq23pi, sqrt8):
     """
     Compute the sinh term in the outer sum of the HRR formula.
@@ -43,6 +45,7 @@ def _d(n, j, prec, sq23pi, sqrt8):
     D = mpf_div(mpf_sqrt(j, prec), mpf_mul(mpf_mul(sqrt8, b), pi), prec)
     E = mpf_sub(mpf_mul(a, ch), mpf_div(sh, c, prec), prec)
     return mpf_mul(D, E)
+
 
 def npartitions(n, verbose=False):
     """

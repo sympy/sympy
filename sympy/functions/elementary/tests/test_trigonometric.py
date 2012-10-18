@@ -5,6 +5,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
 
 from sympy.utilities.pytest import XFAIL
 
+
 def test_sin():
     x, y = symbols('x,y')
 
@@ -90,6 +91,7 @@ def test_sin():
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
 
+
 def test_sin_cos():
     for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
         for n in xrange(-2*d, d*2):
@@ -99,10 +101,12 @@ def test_sin_cos():
             assert sin(x) == cos(x - pi/2),  "fails for %d*pi/%d" % (n, d)
             assert -sin(x) == cos(x + pi/2), "fails for %d*pi/%d" % (n, d)
 
+
 def test_sin_series():
     x = Symbol('x')
     assert sin(x).series(x, 0, 9) == \
                     x - x**3/6 + x**5/120 - x**7/5040 + O(x**9)
+
 
 def test_sin_rewrite():
     x = Symbol('x')
@@ -119,6 +123,7 @@ def test_sin_rewrite():
     assert sin(cot(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
 
+
 def test_sin_expansion():
     # Note: these formulas are not unique.  The ones here come from the
     # Chebyshev formulas.
@@ -131,6 +136,7 @@ def test_sin_expansion():
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
     assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
     assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
+
 
 def test_trig_symmetry():
     x = Symbol('x')
@@ -171,6 +177,7 @@ def test_trig_symmetry():
     assert cos(pi/2+x) == -sin(x)
     assert tan(pi/2+x) == -cot(x)
     assert cot(pi/2+x) == -tan(x)
+
 
 def test_cos():
     x, y = symbols('x,y')
@@ -253,6 +260,7 @@ def test_cos():
             e = abs( float(cos(x)) - cos(float(x)) )
             assert e < 1e-12
 
+
 def test_issue_3091():
     c = Float('123456789012345678901234567890.25', '')
     for cls in [sin, cos, tan, cot]:
@@ -260,10 +268,12 @@ def test_issue_3091():
         assert cls(4.125*pi) == cls(pi/8)
         assert cls(4.7*pi) == cls((4.7 % 2)*pi)
 
+
 def test_cos_series():
     x = Symbol('x')
     assert cos(x).series(x, 0, 9) == \
                     1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**9)
+
 
 def test_cos_rewrite():
     x = Symbol('x')
@@ -280,6 +290,7 @@ def test_cos_rewrite():
     assert cos(cot(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
 
+
 def test_cos_expansion():
     x, y = symbols('x y')
     assert cos(x + y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
@@ -290,6 +301,7 @@ def test_cos_expansion():
     assert cos(4*x).expand(trig=True) == 8*cos(x)**4 - 8*cos(x)**2 + 1
     assert cos(2).expand(trig=True) == 2*cos(1)**2 - 1
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
+
 
 def test_tan():
     x, y = symbols('x,y')
@@ -350,10 +362,12 @@ def test_tan():
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
 
+
 def test_tan_series():
     x = Symbol('x')
     assert tan(x).series(x, 0, 9) == \
                     x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
+
 
 def test_tan_rewrite():
     x = Symbol('x')
@@ -372,12 +386,14 @@ def test_tan_rewrite():
     assert tan(cot(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
 
+
 def test_tan_subs():
     x, y = symbols('x,y')
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
     assert tan(x).subs(x, S.Pi/2) == zoo
     assert tan(x).subs(x, 3*S.Pi/2) == zoo
+
 
 def test_cot():
     x, y = symbols('x,y')
@@ -434,10 +450,12 @@ def test_cot():
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
 
+
 def test_cot_series():
     x = Symbol('x')
     assert cot(x).series(x, 0, 9) == \
                     1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
+
 
 def test_cot_rewrite():
     x = Symbol('x')
@@ -454,12 +472,14 @@ def test_cot_rewrite():
     assert cot(tan(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
 
+
 def test_cot_subs():
     x, y = symbols('x,y')
     assert cot(x).subs(cot(x), y) == y
     assert cot(x).subs(x, y) == cot(y)
     assert cot(x).subs(x, 0) == zoo
     assert cot(x).subs(x, S.Pi) == zoo
+
 
 def test_asin():
     x = Symbol('x')
@@ -495,6 +515,7 @@ def test_asin():
 
     assert asin(-2*I) == -I*asinh(2)
 
+
 def test_asin_series():
     x = Symbol('x')
     assert asin(x).series(x, 0, 9) == \
@@ -503,11 +524,13 @@ def test_asin_series():
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
 
+
 def test_asin_rewrite():
     x = Symbol('x')
     assert asin(x).rewrite(log) == -I*log(I*x + sqrt(1 - x**2))
     assert asin(x).rewrite(atan) == 2*atan(x/(1 + sqrt(1 - x**2)))
     assert asin(x).rewrite(acos) == S.Pi/2 - acos(x)
+
 
 def test_acos():
     x = Symbol('x')
@@ -531,6 +554,7 @@ def test_acos():
     assert acos(0.2).is_real == True
     assert acos(-2).is_real == False
 
+
 def test_acos_series():
     x = Symbol('x')
     assert acos(x).series(x, 0, 8) == \
@@ -540,12 +564,14 @@ def test_acos_series():
     assert t5 == -3*x**5/40
     assert acos(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
+
 def test_acos_rewrite():
     x = Symbol('x')
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
+
 
 def test_atan():
     x = Symbol('x')
@@ -567,9 +593,11 @@ def test_atan():
 
     assert atan(-2*I) == -I*atanh(2)
 
+
 def test_atan_rewrite():
     x = Symbol('x')
     assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
+
 
 def test_atan2():
     assert atan2(0, 0) == S.NaN
@@ -578,6 +606,7 @@ def test_atan2():
     assert atan2(1, -1) == 3*pi/4
     assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
+
 
 def test_acot():
     x = Symbol('x')
@@ -600,13 +629,16 @@ def test_acot():
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
 
+
 def test_acot_rewrite():
     x = Symbol('x')
     assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
 
+
 def test_attributes():
     x = Symbol('x')
     assert sin(x).args == (x,)
+
 
 def test_sincos_rewrite():
     x = Symbol("x")
@@ -616,11 +648,13 @@ def test_sincos_rewrite():
     assert cos(pi/2-x) == sin(x)
     assert cos(pi-x) == -cos(x)
 
+
 def _check_even_rewrite(func, arg):
     """Checks that the expr has been rewritten using f(-x) -> f(x)
     arg : -x
     """
     return func(arg).args[0] == -arg
+
 
 def _check_odd_rewrite(func, arg):
     """Checks that the expr has been rewritten using f(-x) -> -f(x)
@@ -628,9 +662,11 @@ def _check_odd_rewrite(func, arg):
     """
     return func(arg).func.is_Mul
 
+
 def _check_no_rewrite(func, arg):
     """Checks that the expr is not rewritten"""
     return func(arg).args[0] == arg
+
 
 def test_evenodd_rewrite():
     x, y = symbols('x,y')
@@ -650,6 +686,7 @@ def test_evenodd_rewrite():
         assert _check_no_rewrite(func, a*b)
         assert func(x-y) == -func(y-x)  # it doesn't matter which form is canonical
 
+
 def test_issue1448():
     x = Symbol('x')
     assert cot(x).inverse() == acot
@@ -657,6 +694,7 @@ def test_issue1448():
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
     assert cot(x).fdiff() == -1 - cot(x)**2
+
 
 def test_as_leading_term_issue2173():
     x = Symbol('x')
@@ -669,12 +707,14 @@ def test_as_leading_term_issue2173():
     assert atan(x).as_leading_term(x) == x
     assert acot(x).as_leading_term(x) == x
 
+
 def test_leading_terms():
     x = Symbol('x')
     for func in [sin, cos, tan, cot, asin, acos, atan, acot]:
         for arg in (1/x, S.Half):
             eq = func(arg)
             assert eq.as_leading_term(x) == eq
+
 
 def test_atan2_expansion():
     x, y = symbols("x,y")
@@ -688,6 +728,7 @@ def test_atan2_expansion():
     assert Matrix([atan2(x, y)]).jacobian([x, y]) \
                   == Matrix([[y/(x**2+y**2), -x/(x**2+y**2)]])
 
+
 def test_aseries():
     x = Symbol('x')
 
@@ -697,6 +738,7 @@ def test_aseries():
     t(atan, -0.1, '-', 1e-5)
     t(acot, 0.1, '+', 1e-5)
     t(acot, -0.1, '-', 1e-5)
+
 
 def test_issue_1321():
     i = Symbol('i', integer=True)
@@ -807,10 +849,12 @@ def test_issue_1321():
     assert tan(4.5*x*pi) == tan(4.5*pi*x)
     assert cot(4.5*x*pi) == cot(4.5*pi*x)
 
+
 def test_inverses():
     x = Symbol('x')
     for pair in [[sin, asin], [cos, acos], [tan, atan], [cot, acot]]:
         assert pair[0](x).inverse() == pair[1]
+
 
 def test_real_imag():
     a, b = symbols('a,b', real=True)
@@ -825,12 +869,14 @@ def test_real_imag():
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
+
 @XFAIL
 def test_sin_cos_with_infinity():
     # Test for issue 2097
     # http://code.google.com/p/sympy/issues/detail?id=2097
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
+
 
 def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17, 3*5*17]:

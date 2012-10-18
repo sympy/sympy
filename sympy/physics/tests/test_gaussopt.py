@@ -6,8 +6,10 @@ from sympy.physics.gaussopt import (BeamParameter, CurvedMirror,
   gaussian_conj, geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
   rayleigh2waist, waist2rayleigh)
 
+
 def streq(a, b):
     return str(a) == str(b)
+
 
 def test_gauss_opt():
     mat = RayTransferMatrix(1, 2, 3, 4)

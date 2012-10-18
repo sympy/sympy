@@ -35,6 +35,7 @@ MINUS_INF = float(-mpmath_inf)
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
 
+
 class PrecisionExhausted(ArithmeticError):
     pass
 
@@ -65,6 +66,7 @@ relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
 """
+
 
 def fastlog(x):
     """Fast approximation of log2(x) for an mpf value tuple x.
@@ -98,6 +100,7 @@ def fastlog(x):
         return MINUS_INF
     return x[2] + x[3]
 
+
 def pure_complex(v):
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None.
@@ -115,6 +118,7 @@ def pure_complex(v):
     c, i = t.as_coeff_Mul()
     if i is S.ImaginaryUnit:
         return h, c
+
 
 def scaled_zero(mag, sign=1):
     """Return an mpf representing a power of two with magnitude ``mag``
@@ -153,10 +157,12 @@ def scaled_zero(mag, sign=1):
     else:
         raise ValueError('scaled zero expects int or scaled_zero tuple.')
 
+
 def iszero(mpf, scaled=False):
     if not scaled:
         return not mpf or not mpf[1] and not mpf[-1]
     return mpf and type(mpf[0]) is list and mpf[1] == mpf[-1] == 1
+
 
 def complex_accuracy(result):
     """
@@ -184,6 +190,7 @@ def complex_accuracy(result):
     relative_error = absolute_error - max(re_size, im_size)
     return -relative_error
 
+
 def get_abs(expr, prec, options):
     re, im, re_acc, im_acc = evalf(expr, prec+2, options)
     if not re:
@@ -194,6 +201,7 @@ def get_abs(expr, prec, options):
         return mpf_abs(re), None, re_acc, None
     else:
         return None, None, None, None
+
 
 def get_complex_part(expr, no, prec, options):
     """no = 0 for real part, no = 1 for imaginary part"""
@@ -208,14 +216,18 @@ def get_complex_part(expr, no, prec, options):
         workprec += max(30, 2**i)
         i += 1
 
+
 def evalf_abs(expr, prec, options):
     return get_abs(expr.args[0], prec, options)
+
 
 def evalf_re(expr, prec, options):
     return get_complex_part(expr.args[0], 0, prec, options)
 
+
 def evalf_im(expr, prec, options):
     return get_complex_part(expr.args[0], 1, prec, options)
+
 
 def finalize_complex(re, im, prec):
     if re == fzero and im == fzero:
@@ -234,6 +246,7 @@ def finalize_complex(re, im, prec):
         im_acc = prec
         re_acc = prec + min(-(size_im - size_re), 0)
     return re, im, re_acc, im_acc
+
 
 def chop_parts(value, prec):
     """
@@ -254,12 +267,14 @@ def chop_parts(value, prec):
             im, im_acc = None, None
     return re, im, re_acc, im_acc
 
+
 def check_target(expr, result, prec):
     a = complex_accuracy(result)
     if a < prec:
         raise PrecisionExhausted("Failed to distinguish the expression: \n\n%s\n\n"
             "from zero. Try simplifying the input, using chop=True, or providing "
             "a higher maxn for evalf" % (expr))
+
 
 def get_integer_part(expr, no, options, return_ints=False):
     """
@@ -319,8 +334,10 @@ def get_integer_part(expr, no, options, return_ints=False):
         return int(to_int(re or fzero)), int(to_int(im or fzero))
     return re, im, re_acc, im_acc
 
+
 def evalf_ceiling(expr, prec, options):
     return get_integer_part(expr.args[0], 1, options)
+
 
 def evalf_floor(expr, prec, options):
     return get_integer_part(expr.args[0], -1, options)
@@ -330,6 +347,7 @@ def evalf_floor(expr, prec, options):
 #                            Arithmetic operations                           #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 def add_terms(terms, prec, target_prec):
     """
@@ -399,6 +417,7 @@ def add_terms(terms, prec, target_prec):
     #print "returning", to_str(r[0],50), r[1]
     return r
 
+
 def evalf_add(v, prec, options):
     res = pure_complex(v)
     if res:
@@ -438,6 +457,7 @@ def evalf_add(v, prec, options):
     if iszero(im, scaled=True):
         im = scaled_zero(im)
     return re, im, re_acc, im_acc
+
 
 def evalf_mul(v, prec, options):
     res = pure_complex(v)
@@ -535,6 +555,7 @@ def evalf_mul(v, prec, options):
         if direction & 1:
             re, im = mpf_neg(im), re
         return re, im, acc, acc
+
 
 def evalf_pow(v, prec, options):
 
@@ -697,6 +718,7 @@ def evalf_trig(v, prec, options):
         else:
             return y, None, prec, None
 
+
 def evalf_log(expr, prec, options):
     arg = expr.args[0]
     workprec = prec+10
@@ -726,6 +748,7 @@ def evalf_log(expr, prec, options):
     else:
         return re, None, re_acc, None
 
+
 def evalf_atan(v, prec, options):
     arg = v.args[0]
     xre, xim, reacc, imacc = evalf(arg, prec+5, options)
@@ -734,6 +757,7 @@ def evalf_atan(v, prec, options):
     if xim:
         raise NotImplementedError
     return mpf_atan(xre, prec, rnd), None, prec, None
+
 
 def evalf_subs(prec, subs):
     """ Change all Float entries in `subs` to have precision prec. """
@@ -744,6 +768,7 @@ def evalf_subs(prec, subs):
             b = b._eval_evalf(prec)
         newsubs[a] = b
     return newsubs
+
 
 def evalf_piecewise(expr, prec, options):
     if 'subs' in options:
@@ -759,6 +784,7 @@ def evalf_piecewise(expr, prec, options):
 
     # We still have undefined symbols
     raise NotImplementedError
+
 
 def evalf_bernoulli(expr, prec, options):
     arg = expr.args[0]
@@ -776,6 +802,7 @@ def evalf_bernoulli(expr, prec, options):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+
 def as_mpmath(x, prec, options):
     x = sympify(x)
     if isinstance(x, C.Zero):
@@ -789,6 +816,7 @@ def as_mpmath(x, prec, options):
     if im:
         return mpc(re or fzero, im)
     return mpf(re)
+
 
 def do_integral(expr, prec, options):
     func = expr.args[0]
@@ -871,6 +899,7 @@ def do_integral(expr, prec, options):
     result = re, im, re_acc, im_acc
     return result
 
+
 def evalf_integral(expr, prec, options):
     workprec = prec
     i = 0
@@ -884,6 +913,7 @@ def evalf_integral(expr, prec, options):
             return result
         workprec += prec - max(-2**i, accuracy)
         i += 1
+
 
 def check_convergence(numer, denom, n):
     """
@@ -920,6 +950,7 @@ def check_convergence(numer, denom, n):
     pc = npol.all_coeffs()[1]
     qc = dpol.all_coeffs()[1]
     return rate, constant, (qc-pc)/dpol.LC()
+
 
 def hypsum(expr, n, start, prec):
     """
@@ -984,6 +1015,7 @@ def hypsum(expr, n, start, prec):
         finally:
             mp.prec = orig
         return v._mpf_
+
 
 def evalf_sum(expr, prec, options):
     func = expr.function
@@ -1050,6 +1082,7 @@ def evalf_symbol(x, prec, options):
 
 evalf_table = None
 
+
 def _create_evalf_table():
     global evalf_table
     evalf_table = {
@@ -1091,6 +1124,7 @@ def _create_evalf_table():
 
         C.bernoulli: evalf_bernoulli,
     }
+
 
 def evalf(x, prec, options):
     from sympy import re as re_, im as im_

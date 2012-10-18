@@ -17,6 +17,7 @@ from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
 
+
 class FiniteDomain(RandomDomain):
     """
     A domain with discrete finite support
@@ -47,6 +48,7 @@ class FiniteDomain(RandomDomain):
     def as_boolean(self):
         return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
 
+
 class SingleFiniteDomain(FiniteDomain):
     """
     A FiniteDomain over a single symbol/set
@@ -76,6 +78,7 @@ class SingleFiniteDomain(FiniteDomain):
         sym, val = tuple(other)[0]
         return sym == self.symbol and val in self.set
 
+
 class ProductFiniteDomain(ProductDomain, FiniteDomain):
     """
     A Finite domain consisting of several other FiniteDomains
@@ -90,6 +93,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
     @property
     def elements(self):
         return FiniteSet(iter(self))
+
 
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
@@ -141,6 +145,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 #=============================================
 #=========  Probability Space  ===============
 #=============================================
+
 
 class FinitePSpace(PSpace):
     """
@@ -235,6 +240,7 @@ class FinitePSpace(PSpace):
 
         assert False, "We should never have gotten to this point"
 
+
 class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     """
     A single finite probability space
@@ -254,6 +260,7 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
                 for val, prob in density.items())
         density = Dict(density)
         return FinitePSpace.__new__(cls, domain, density)
+
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     """

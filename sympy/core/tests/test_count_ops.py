@@ -3,6 +3,7 @@ from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
 
 x, y, z = symbols('x,y,z')
 
+
 def test_count_ops_non_visual():
     def count(val):
         return count_ops(val, visual=False)
@@ -13,6 +14,7 @@ def test_count_ops_non_visual():
     assert count(x + y*x + 2*y) == 4
     assert count({x + y: x}) == 1
     assert count({x + y: S(2) + x}) is not S.One
+
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols('Add Mul Pow sin cos exp And Derivative Integral'.upper())

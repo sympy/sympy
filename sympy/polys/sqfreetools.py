@@ -36,6 +36,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities import cythonized
 
+
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
@@ -56,6 +57,7 @@ def dup_sqf_p(f, K):
         return True
     else:
         return not dup_degree(dup_gcd(f, dup_diff(f, 1, K), K))
+
 
 @cythonized("u")
 def dmp_sqf_p(f, u, K):
@@ -81,6 +83,7 @@ def dmp_sqf_p(f, u, K):
         return True
     else:
         return not dmp_degree(dmp_gcd(f, dmp_diff(f, 1, u, K), u, K), u)
+
 
 @cythonized("s")
 def dup_sqf_norm(f, K):
@@ -124,6 +127,7 @@ def dup_sqf_norm(f, K):
             f, s = dup_shift(f, -K.unit, K), s+1
 
     return s, f, r
+
 
 @cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
@@ -174,6 +178,7 @@ def dmp_sqf_norm(f, u, K):
 
     return s, f, r
 
+
 @cythonized("i")
 def dup_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[x]``. """
@@ -181,9 +186,11 @@ def dup_gf_sqf_part(f, K):
     g = gf_sqf_part(f, K.mod, K.dom)
     return dup_convert(g, K.dom, K)
 
+
 def dmp_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
+
 
 def dup_sqf_part(f, K):
     """
@@ -215,6 +222,7 @@ def dup_sqf_part(f, K):
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
+
 
 @cythonized("u")
 def dmp_sqf_part(f, u, K):
@@ -253,6 +261,7 @@ def dmp_sqf_part(f, u, K):
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
 
+
 @cythonized("i")
 def dup_gf_sqf_list(f, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
@@ -265,9 +274,11 @@ def dup_gf_sqf_list(f, K, all=False):
 
     return K.convert(coeff, K.dom), factors
 
+
 def dmp_gf_sqf_list(f, u, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[X]``. """
     raise DomainError('multivariate polynomials over %s' % K)
+
 
 @cythonized("i")
 def dup_sqf_list(f, K, all=False):
@@ -327,6 +338,7 @@ def dup_sqf_list(f, K, all=False):
 
     return coeff, result
 
+
 def dup_sqf_list_include(f, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
@@ -354,6 +366,7 @@ def dup_sqf_list_include(f, K, all=False):
     else:
         g = dup_strip([coeff])
         return [(g, 1)] + factors
+
 
 @cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
@@ -416,6 +429,7 @@ def dmp_sqf_list(f, u, K, all=False):
 
     return coeff, result
 
+
 @cythonized("u")
 def dmp_sqf_list_include(f, u, K, all=False):
     """
@@ -447,6 +461,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
     else:
         g = dmp_ground(coeff, u)
         return [(g, 1)] + factors
+
 
 def dup_gff_list(f, K):
     """
@@ -485,6 +500,7 @@ def dup_gff_list(f, K):
             return H
         else:
             return [(f, 1)] + H
+
 
 def dmp_gff_list(f, u, K):
     """

@@ -37,20 +37,25 @@ PRECEDENCE_VALUES = {
 # precedence value.
 
 # Precedence functions
+
+
 def precedence_Mul(item):
     if _coeff_isneg(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
+
 
 def precedence_Rational(item):
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
+
 def precedence_Integer(item):
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
+
 
 def precedence_Float(item):
     if item < 0:

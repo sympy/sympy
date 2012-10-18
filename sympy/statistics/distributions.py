@@ -342,6 +342,7 @@ class Uniform(ContinuousProbability):
         d = sqrt(12*sample.variance)/2
         return Uniform(m-d, m+d)
 
+
 class PDF(ContinuousProbability):
     """
     PDF(func, (x, a, b)) represents continuous probability distribution

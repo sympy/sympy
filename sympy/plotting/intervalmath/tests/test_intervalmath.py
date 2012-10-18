@@ -2,6 +2,8 @@ from __future__ import division
 from sympy.plotting.intervalmath import interval
 from sympy.utilities.pytest import raises
 from sympy.external import import_module
+
+
 def test_interval():
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
     assert (interval(1, 1) == interval(1, 1, is_valid=False)) == (True, False)

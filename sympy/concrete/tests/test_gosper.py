@@ -5,12 +5,15 @@ from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 from sympy.utilities.pytest import XFAIL
 
+
 def test_gosper_normal():
     assert gosper_normal(4*n + 5, 2*(4*n + 1)*(2*n + 3), n) == \
         (Poly(S(1)/4, n), Poly(n + S(3)/2), Poly(n + S(1)/4))
 
+
 def test_gosper_term():
     assert gosper_term((4*k + 1)*factorial(k)/factorial(2*k + 1), k) == (-k - S(1)/2)/(k + S(1)/4)
+
 
 def test_gosper_sum():
     assert gosper_sum(1, (k, 0, n)) == 1 + n
@@ -35,6 +38,7 @@ def test_gosper_sum():
     assert gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n)) == \
         (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
 
+
 def test_gosper_sum_indefinite():
     assert gosper_sum(k, k) == k*(k - 1)/2
     assert gosper_sum(k**2, k) == k*(k - 1)*(2*k - 1)/6
@@ -43,12 +47,15 @@ def test_gosper_sum_indefinite():
     assert gosper_sum(-(27*k**4 + 158*k**3 + 430*k**2 + 678*k + 445)*gamma(2*k + 4)/(3*(3*k + 7)*gamma(3*k + 6)), k) == \
         (3*k + 5)*(k**2 + 2*k + 5)*gamma(2*k + 4)/gamma(3*k + 6)
 
+
 def test_gosper_sum_parametric():
     assert gosper_sum(binomial(S(1)/2, m - j + 1)*binomial(S(1)/2, m + j), (j, 1, n)) == \
         n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S(1)/2, 1 + m - n)*binomial(S(1)/2, m + n)/(m*(1 + 2*m))
 
+
 def test_gosper_sum_algebraic():
     assert gosper_sum(n**2 + sqrt(2), (n, 0, m)) == (m + 1)*(2*m**2 + m + 6*sqrt(2))/6
+
 
 def test_gosper_sum_iterated():
     f1 = binomial(2*k, k)/4**k
@@ -64,6 +71,8 @@ def test_gosper_sum_iterated():
 
 # the AeqB tests test expressions given in
 # www.math.upenn.edu/~wilf/AeqB.pdf
+
+
 def test_gosper_sum_AeqB_part1():
     f1a = n**4
     f1b = n**3*2**n
@@ -100,6 +109,7 @@ def test_gosper_sum_AeqB_part1():
     g = gosper_sum(f1h, (n, 0, m))
     assert g is not None and simplify(g - g1h) == 0
 
+
 def test_gosper_sum_AeqB_part2():
     f2a = n**2*a**n
     f2b = (n - r/2)*binomial(r, n)
@@ -122,12 +132,14 @@ def test_gosper_sum_AeqB_part2():
     g2d = 1/(factorial(a - 1)*factorial(b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
     assert simplify(sum(f2d.subs(n, i) for i in range(3)) - g2d.subs(m, 2)) == 0
 
+
 @XFAIL
 def test_gosper_nan():
     f2d = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
     g2d = 1/(factorial(a - 1)*factorial(b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
     g = gosper_sum(f2d, (n, 0, m))
     assert g is not S.NaN and simplify(g - g2d) == 0
+
 
 def test_gosper_sum_AeqB_part3():
     f3a = 1/n**4

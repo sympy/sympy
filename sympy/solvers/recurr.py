@@ -62,6 +62,7 @@ from sympy.concrete import product
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
 
+
 def rsolve_poly(coeffs, f, n, **hints):
     """Given linear recurrence operator L of order 'k' with polynomial
        coefficients and inhomogeneous equation Ly = f, where 'f' is a
@@ -336,6 +337,7 @@ def rsolve_poly(coeffs, f, n, **hints):
     else:
         return result
 
+
 def rsolve_ratio(coeffs, f, n, **hints):
     """Given linear recurrence operator L of order 'k' with polynomial
        coefficients and inhomogeneous equation Ly = f, where 'f' is a
@@ -438,6 +440,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
                 return simplify(result / C)
         else:
             return None
+
 
 def rsolve_hyper(coeffs, f, n, **hints):
     """Given linear recurrence operator L of order 'k' with polynomial
@@ -625,6 +628,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return (result, [s for s, k in sk])
     else:
         return result
+
 
 def rsolve(f, y, init=None):
     """

@@ -93,6 +93,7 @@ def to_sympy(m, **options):
         return m
     raise TypeError('Expected sympy/numpy/scipy.sparse matrix, got: %r' % m)
 
+
 def to_numpy(m, **options):
     """Convert a sympy/scipy.sparse matrix to a numpy matrix."""
     dtype = options.get('dtype', 'complex')

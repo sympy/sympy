@@ -11,6 +11,7 @@ from expr import Expr
 from sympy import mpmath
 from sympy.utilities.iterables import sift
 
+
 def integer_nthroot(y, n):
     """
     Return a tuple containing x = floor(y**(1/n))
@@ -66,6 +67,7 @@ def integer_nthroot(y, n):
         x -= 1
         t = x**n
     return x, t == y
+
 
 class Pow(Expr):
 

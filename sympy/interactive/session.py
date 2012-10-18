@@ -22,6 +22,7 @@ See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
+
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
@@ -67,6 +68,7 @@ def _make_message(ipython=True, quiet=False, source=None):
         message += '\n' + verbose_message % {'source': _source}
 
     return message
+
 
 def int_to_Integer(s):
     """
@@ -155,6 +157,7 @@ def int_to_Integer(s):
 #     """
 #     app.shell.prefilter_manager.register_transformer(int_transformer)
 
+
 def enable_automatic_int_sympification(app):
     """
     Allow IPython to automatically convert integer literals to Integer.
@@ -185,6 +188,7 @@ def enable_automatic_int_sympification(app):
         app.shell.run_cell = my_run_cell
     else:
         app.run_cell = my_run_cell
+
 
 def enable_automatic_symbols(app):
     """Allow IPython to automatially create symbols (``isympy -a``). """
@@ -258,6 +262,7 @@ def enable_automatic_symbols(app):
         # This was restructured in IPython 0.13
         app.set_custom_exc((NameError,), _handler)
 
+
 def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
     import IPython
@@ -280,6 +285,7 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
+
 
 def init_python_session():
     """Construct new Python session. """
@@ -312,6 +318,7 @@ def init_python_session():
                     atexit.register(readline.write_history_file, history)
 
     return SymPyConsole()
+
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,

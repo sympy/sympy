@@ -8,9 +8,11 @@ from sympy.physics.quantum.circuitutils import (kmp_table, find_subcircuit,
         convert_to_real_indices, random_reduce, random_insert,
         flatten_ids)
 
+
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
     return gates
+
 
 def test_kmp_table():
     word = ('a', 'b', 'c', 'd', 'a', 'b', 'd')
@@ -34,6 +36,7 @@ def test_kmp_table():
     word = (x, x, y, h, z)
     expected_table = [-1, 0, 1, 0, 0]
     assert expected_table == kmp_table(word)
+
 
 def test_find_subcircuit():
     x = X(0)
@@ -81,6 +84,7 @@ def test_find_subcircuit():
     subcircuit = (x_i0, y_i0, z_i0)
     result = find_subcircuit(circuit, subcircuit)
     assert result == 0
+
 
 def test_replace_subcircuit():
     x = X(0)
@@ -130,6 +134,7 @@ def test_replace_subcircuit():
     actual = replace_subcircuit(circuit, remove,
                      replace=replace, pos=1)
     assert actual == (x, y, h, cnot, cgate_z, z)
+
 
 def test_convert_to_symbolic_indices():
     (x, y, z, h) = create_gate_sequence()
@@ -256,6 +261,7 @@ def test_convert_to_symbolic_indices():
     assert actual == expected
     assert act_map == exp_map
 
+
 def test_convert_to_real_indices():
     i0 = Symbol('i0')
     i1 = Symbol('i1')
@@ -319,6 +325,7 @@ def test_convert_to_real_indices():
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
+
 def test_random_reduce():
     x = X(0)
     y = Y(0)
@@ -353,6 +360,7 @@ def test_random_reduce():
     assert random_reduce(circuit, ids, seed=seq) == expected
     circuit = Mul(*circuit)
     assert random_reduce(circuit, ids, seed=seq) == expected
+
 
 def test_random_insert():
     x = X(0)

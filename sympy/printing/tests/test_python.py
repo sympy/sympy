@@ -12,6 +12,7 @@ x, y = symbols('x,y')
 th = Symbol('theta')
 ph = Symbol('phi')
 
+
 def test_python_basic():
     # Simple numbers/symbols
     assert python(-Rational(1)/2) == "e = Rational(-1, 2)"
@@ -61,6 +62,7 @@ def test_python_basic():
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)"
             ]
 
+
 def test_python_keyword_symbol_name_escaping():
     # Check for escaping of keywords
     assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda')\ne = 5*lambda_"
@@ -68,6 +70,7 @@ def test_python_keyword_symbol_name_escaping():
             "lambda__ = Symbol('lambda')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
     assert (python(5*Symbol("for") + Function("for_")(8)) ==
             "for__ = Symbol('for')\nfor_ = Function('for_')\ne = 5*for__ + for_(8)")
+
 
 def test_python_keyword_function_name_escaping():
     assert python(5*Function("for")(8)) == "for_ = Function('for')\ne = 5*for_(8)"
@@ -82,6 +85,7 @@ def test_python_relational():
     assert python(Ne(x/(y+1), y**2)) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
+
 
 def test_python_functions():
     # Simple
@@ -116,11 +120,13 @@ def test_python_functions():
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
+
 @XFAIL
 def test_python_functions_conjugates():
     a, b = map(Symbol, 'ab')
     assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
     assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
+
 
 def test_python_derivatives():
     # Simple
@@ -139,6 +145,7 @@ def test_python_derivatives():
     assert python(f_4) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + Derivative(2*x*y, y, x)",
             "x = Symbol('x')\ny = Symbol('y')\ne = Derivative(2*x*y, y, x) + x**2"]
+
 
 def test_python_integrals():
     # Simple
@@ -173,6 +180,7 @@ def test_python_integrals():
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'
     assert python(limit(x**2, x, 0)) == 'e = 0'
+
 
 def test_settings():
     raises(TypeError, lambda: python(x, method="garbage"))

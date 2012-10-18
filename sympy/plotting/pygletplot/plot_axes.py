@@ -8,6 +8,7 @@ from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
 
+
 class PlotAxes(PlotObject):
 
     def __init__(self, *args, **kwargs):
@@ -113,6 +114,7 @@ class PlotAxes(PlotObject):
     def toggle_colors(self):
         self._colored = not self._colored
 
+
 class PlotAxesBase(PlotObject):
 
     def __init__(self, parent_axes):
@@ -162,6 +164,7 @@ class PlotAxesBase(PlotObject):
         glVertex3f(v[0][0]+o[0], v[0][1]+o[1], v[0][2]+o[2])
         glVertex3f(v[1][0]+o[0], v[1][1]+o[1], v[1][2]+o[2])
         glEnd()
+
 
 class PlotAxesOrdinate(PlotAxesBase):
 
@@ -227,6 +230,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         tick_label_vector[axis] = tick
         tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][axis] * radius * 3.5
         self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
+
 
 class PlotAxesFrame(PlotAxesBase):
 

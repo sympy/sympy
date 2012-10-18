@@ -23,6 +23,7 @@ Amat = Matrix([[1, I], [-I, 1]])
 Bmat = Matrix([[1, 2], [3, 4]])
 Avec = Matrix([[1], [I]])
 
+
 class AKet(Ket):
 
     @classmethod
@@ -99,6 +100,7 @@ def test_format_sympy():
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
+
 def test_scalar_sympy():
     assert represent(Integer(1)) == Integer(1)
     assert represent(Float(1.0)) == Float(1.0)
@@ -106,6 +108,7 @@ def test_scalar_sympy():
 
 
 np = import_module('numpy', min_python_version=(2, 6))
+
 
 def test_format_numpy():
     if not np:
@@ -119,6 +122,7 @@ def test_format_numpy():
         else:
             assert lhs == rhs
 
+
 def test_scalar_numpy():
     if not np:
         skip("numpy not installed or Python too old.")
@@ -129,6 +133,7 @@ def test_scalar_numpy():
 
 
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 
 def test_format_scipy_sparse():
     if not np:
@@ -144,6 +149,7 @@ def test_format_scipy_sparse():
         else:
             assert lhs == rhs
 
+
 def test_scalar_scipy_sparse():
     if not np:
         skip("numpy not installed or Python too old.")
@@ -158,6 +164,7 @@ x_ket = XKet('x')
 x_bra = XBra('x')
 x_op = XOp('X')
 
+
 def test_innerprod_represent():
     assert rep_innerproduct(x_ket) == InnerProduct(XBra("x_1"), x_ket).doit()
     assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet("x_1")).doit()
@@ -167,9 +174,11 @@ def test_innerprod_represent():
     except TypeError:
         return True
 
+
 def test_operator_represent():
     basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
     assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+
 
 def test_enumerate_states():
     test = XKet("foo")

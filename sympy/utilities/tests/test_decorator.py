@@ -5,6 +5,7 @@ from sympy import symbols, Eq, Matrix
 from sympy.abc import x, y
 from sympy.core.decorators import wraps
 
+
 def test_threaded():
     @threaded
     def function(expr, *args):
@@ -27,12 +28,14 @@ def test_threaded():
     assert function(x + y, 2) == x**2 + y**2
     assert function(x, 2) == x**2
 
+
 def test_xthreaded():
     @xthreaded
     def function(expr, n):
         return expr**n
 
     assert function(x + y, 2) == (x + y)**2
+
 
 def test_wraps():
     def my_func(x):

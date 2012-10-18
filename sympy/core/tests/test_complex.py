@@ -3,12 +3,14 @@ from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re,
         expand_complex)
 from sympy.utilities.pytest import XFAIL
 
+
 def test_complex():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
     e = (a+I*b)*(a-I*b)
     assert e.expand() == a**2+b**2
     assert sqrt(I) == (-1)**Rational(1, 4)
+
 
 def test_conjugate():
     a = Symbol("a", real=True)
@@ -33,6 +35,7 @@ def test_conjugate():
     assert conjugate(tanh(z)) == tanh(zc)
     assert conjugate(coth(z)) == coth(zc)
 
+
 def test_abs1():
     a=Symbol("a", real=True)
     b=Symbol("b", real=True)
@@ -40,12 +43,14 @@ def test_abs1():
     assert abs(-a) == abs(a)
     assert abs(a+I*b) == sqrt(a**2+b**2)
 
+
 def test_abs2():
     a=Symbol("a", real=False)
     b=Symbol("b", real=False)
     assert abs(a) != a
     assert abs(-a) != a
     assert abs(a+I*b) != sqrt(a**2+b**2)
+
 
 def test_evalc():
     x = Symbol("x", real=True)
@@ -84,11 +89,13 @@ def test_evalc():
     assert tanh(x+I*y).expand(complex=True) == \
         ((sinh(x)*cosh(x) + I*cos(y)*sin(y)) / (sinh(x)**2 + cos(y)**2)).expand()
 
+
 def test_pythoncomplex():
     x = Symbol("x")
     assert 4j*x == 4*x*I
     assert 4j*x == 4.0*x*I
     assert 4.1j*x != 4*x*I
+
 
 def test_rootcomplex():
     R = Rational
@@ -96,10 +103,12 @@ def test_rootcomplex():
     assert ((-1-I)**R(1, 2)).expand(complex=True) == 2**R(1, 4)*cos(3*pi/8) - 2**R(1, 4)*sin(3*pi/8)*I
     assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)
 
+
 def test_expand_inverse():
     assert (1/(1+I)).expand(complex=True) == (1-I)/2
     assert ((1+2*I)**(-2)).expand(complex=True) == (-3-4*I)/25
     assert ((1+I)**(-8)).expand(complex=True) == Rational(1, 16)
+
 
 def test_expand_complex():
     assert ((2+3*I)**10).expand(complex=True) == -341525 - 145668*I
@@ -122,6 +131,7 @@ def test_expand_complex():
     assert exp(a*(2 + I*b)).expand(complex=True) == \
            I*exp(2*a)*sin(a*b) + exp(2*a)*cos(a*b)
 
+
 def test_expand():
     f = (16 - 2*sqrt(29))**2
     assert f.expand() == 372 - 64*sqrt(29)
@@ -130,24 +140,29 @@ def test_expand():
     f = (Integer(1)/2 + I)**10
     assert f.expand() == Integer(237)/1024 - 779*I/256
 
+
 def test_re_im1652():
     x = Symbol('x')
     assert re(x) == re(conjugate(x))
     assert im(x) == - im(conjugate(x))
     assert im(x)*re(conjugate(x)) + im(conjugate(x)) * re(x) == 0
 
+
 def test_issue_1985():
     x = Symbol('x')
     assert ((x + x*I)/(1 + I)).as_real_imag() == (re((x + I*x)/(1 + I)), im((x + I*x)/(1 + I)))
+
 
 def test_issue_2137():
     assert (cos(1+I)**3).as_real_imag() == (-3*sin(1)**2*sinh(1)**2*cos(1)*cosh(1) +
         cos(1)**3*cosh(1)**3, -3*cos(1)**2*cosh(1)**2*sin(1)*sinh(1) + sin(1)**3*sinh(1)**3)
 
+
 def test_real_imag():
     x = Symbol('x')
     a = Symbol('a', real=True)
     assert (2*a*x).as_real_imag() == (2*a*re(x), 2*a*im(x))
+
 
 def test_pow_issue_1724():
     e = ((-1)**(S(1)/3))
@@ -156,6 +171,7 @@ def test_pow_issue_1724():
     assert e.conjugate().n() == e.n().conjugate()
     e = 2**I
     assert e.conjugate().n() == e.n().conjugate()
+
 
 def test_issue_2330():
     assert sqrt(I).conjugate() != sqrt(I)

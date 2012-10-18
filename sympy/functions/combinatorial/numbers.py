@@ -12,6 +12,7 @@ from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
 
+
 def _product(a, b):
     p = 1
     for k in xrange(a, b+1):
@@ -91,6 +92,7 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
+
 
 class lucas(Function):
     """
@@ -406,6 +408,7 @@ class bell(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+
 class harmonic(Function):
     r"""
     Harmonic numbers
@@ -474,6 +477,7 @@ class harmonic(Function):
 #                           Euler numbers                                    #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class euler(Function):
     r"""
@@ -561,6 +565,7 @@ class euler(Function):
 #                           Catalan numbers                                  #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class catalan(Function):
     r"""

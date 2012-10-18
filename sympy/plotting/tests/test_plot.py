@@ -9,8 +9,10 @@ import warnings
 
 unset_show()
 
+
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
+
 
 def plot_and_save(name):
     x = Symbol('x')

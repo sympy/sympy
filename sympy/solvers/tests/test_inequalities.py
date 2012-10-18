@@ -9,6 +9,7 @@ from sympy.utilities.pytest import raises
 
 inf = oo.evalf()
 
+
 def test_reduce_poly_inequalities_real_interval():
     global_assumptions.add(Q.real(x))
     global_assumptions.add(Q.real(y))
@@ -46,6 +47,7 @@ def test_reduce_poly_inequalities_real_interval():
     global_assumptions.remove(Q.real(x))
     global_assumptions.remove(Q.real(y))
 
+
 def test_reduce_poly_inequalities_real_relational():
     global_assumptions.add(Q.real(x))
     global_assumptions.add(Q.real(y))
@@ -74,6 +76,7 @@ def test_reduce_poly_inequalities_real_relational():
     global_assumptions.remove(Q.real(x))
     global_assumptions.remove(Q.real(y))
 
+
 def test_reduce_poly_inequalities_complex_relational():
     cond = Eq(im(x), 0)
 
@@ -98,6 +101,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_poly_inequalities([[Gt(x**2, 1.0)]], x, relational=True) == And(Or(Lt(re(x), -1.0), Lt(1.0, re(x))), cond)
     assert reduce_poly_inequalities([[Ne(x**2, 1.0)]], x, relational=True) == And(Or(Lt(re(x), -1.0), And(Lt(-1.0, re(x)), Lt(re(x), 1.0)), Lt(1.0, re(x))), cond)
 
+
 def test_reduce_abs_inequalities():
     real = Q.real(x)
 
@@ -108,27 +112,33 @@ def test_reduce_abs_inequalities():
 
     raises(NotImplementedError, lambda: reduce_inequalities(abs(x - 5) < 3))
 
+
 def test_reduce_inequalities_boolean():
     assert reduce_inequalities([Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
     assert reduce_inequalities([Eq(x**2, 0), False]) == False
 
+
 def test_reduce_inequalities_assume():
     assert reduce_inequalities([Le(x**2, 1), Q.real(x)]) == And(Le(-1, x), Le(x, 1))
     assert reduce_inequalities([Le(x**2, 1)], Q.real(x)) == And(Le(-1, x), Le(x, 1))
+
 
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == \
         And(And(Or(Le(re(x), -1), Le(1, re(x))), Eq(im(x), 0)),
             And(Or(Le(re(y), -1), Le(1, re(y))), Eq(im(y), 0)))
 
+
 def test_reduce_inequalities_errors():
     raises(NotImplementedError, lambda: reduce_inequalities(Ge(sin(x) + x, 1)))
     raises(NotImplementedError, lambda: reduce_inequalities(Ge(x**2*y + y, 1)))
     raises(NotImplementedError, lambda: reduce_inequalities(Ge(sqrt(2)*x, 1)))
 
+
 def test_hacky_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
+
 
 def test_issue_3244():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0

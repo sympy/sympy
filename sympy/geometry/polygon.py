@@ -16,6 +16,7 @@ from util import _symbol
 
 import warnings
 
+
 class Polygon(GeometryEntity):
     """A two-dimensional polygon.
 
@@ -1539,6 +1540,7 @@ class RegularPolygon(Polygon):
     def __hash__(self):
         return super(RegularPolygon, self).__hash__()
 
+
 class Triangle(Polygon):
     """
     A polygon with three vertices and three sides.
@@ -2167,23 +2169,28 @@ class Triangle(Polygon):
     #    """Returns a list of the three excircles for this triangle."""
     #    pass
 
+
 def rad(d):
     """Return the radian value for the given degrees (pi = 180 degrees)."""
     return d*pi/180
+
 
 def deg(r):
     """Return the degree value for the given radians (pi = 180 degrees)."""
     return r/pi*180
 
+
 def _slope(d):
     rv = tan(rad(d))
     return rv
+
 
 def _asa(d1, l, d2):
     """Return triangle having side with length l on the x-axis."""
     xy = Line((0, 0), slope=_slope(d1)).intersection(
          Line((l, 0), slope=_slope(180 - d2)))[0]
     return Triangle((0, 0), (l, 0), xy)
+
 
 def _sss(l1, l2, l3):
     """Return triangle having side of length l1 on the x-axis."""
@@ -2194,6 +2201,7 @@ def _sss(l1, l2, l3):
         return None
     pt = inter[0]
     return Triangle((0, 0), (l1, 0), pt)
+
 
 def _sas(l1, d, l2):
     """Return triangle having side with length l2 on the x-axis."""

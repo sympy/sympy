@@ -16,14 +16,18 @@ from sympy.polys.domains import QQ
 
 from sympy.abc import x, y, z
 
+
 def test_sdm_monomial_mul():
     assert sdm_monomial_mul((1, 1, 0), (1, 3)) == (1, 2, 3)
+
 
 def test_sdm_monomial_deg():
     assert sdm_monomial_deg((5, 2, 1)) == 3
 
+
 def test_sdm_monomial_lcm():
     assert sdm_monomial_lcm((1, 2, 3), (1, 5, 0)) == (1, 5, 3)
+
 
 def test_sdm_monomial_divides():
     assert sdm_monomial_divides((1, 0, 0), (1, 0, 0)) is True
@@ -34,8 +38,10 @@ def test_sdm_monomial_divides():
     assert sdm_monomial_divides((1, 1, 0), (1, 0, 0)) is False
     assert sdm_monomial_divides((5, 1, 2), (5, 0, 1)) is False
 
+
 def test_sdm_LC():
     assert sdm_LC([((1, 2, 3), QQ(5))], QQ) == QQ(5)
+
 
 def test_sdm_from_dict():
     dic = {(1, 2, 1, 1): QQ(1), (1, 1, 2, 1): QQ(1), (1, 0, 2, 1): QQ(1),
@@ -46,6 +52,7 @@ def test_sdm_from_dict():
 
 # TODO test to_dict?
 
+
 def test_sdm_add():
     assert sdm_add([((1, 1, 1), QQ(1))], [((2, 0, 0), QQ(1))], lex, QQ) == \
         [((2, 0, 0), QQ(1)), ((1, 1, 1), QQ(1))]
@@ -55,13 +62,16 @@ def test_sdm_add():
     assert sdm_add([((1, 0, 1), QQ(1))], [((1, 1, 0), QQ(1))], lex, QQ) == \
         [((1, 1, 0), QQ(1)), ((1, 0, 1), QQ(1))]
 
+
 def test_sdm_LM():
     dic = {(1, 2, 3): QQ(1), (4, 0, 0): QQ(1), (4, 0, 1): QQ(1)}
     assert sdm_LM(sdm_from_dict(dic, lex)) == (4, 0, 1)
 
+
 def test_sdm_LT():
     dic = {(1, 2, 3): QQ(1), (4, 0, 0): QQ(2), (4, 0, 1): QQ(3)}
     assert sdm_LT(sdm_from_dict(dic, lex)) == ((4, 0, 1), QQ(3))
+
 
 def test_sdm_mul_term():
     assert sdm_mul_term([((1, 0, 0), QQ(1))], ((0, 0), QQ(0)), lex, QQ) == []
@@ -72,11 +82,14 @@ def test_sdm_mul_term():
     assert sdm_mul_term(f, ((1, 1), QQ(2)), lex, QQ) == \
         [((2, 1, 2), QQ(8)), ((1, 2, 1), QQ(6))]
 
+
 def test_sdm_zero():
     assert sdm_zero() == []
 
+
 def test_sdm_deg():
     assert sdm_deg([((1, 2, 3), 1), ((10, 0, 1), 1), ((2, 3, 4), 4)]) == 7
+
 
 def test_sdm_spoly():
     f = [((2, 1, 1), QQ(1)), ((1, 0, 1), QQ(1))]
@@ -85,9 +98,11 @@ def test_sdm_spoly():
     assert sdm_spoly(f, h, lex, QQ) == []
     assert sdm_spoly(f, g, lex, QQ) == [((1, 2, 1), QQ(1))]
 
+
 def test_sdm_ecart():
     assert sdm_ecart([((1, 2, 3), 1), ((1, 0, 1), 1)]) == 0
     assert sdm_ecart([((2, 2, 1), 1), ((1, 5, 1), 1)]) == 3
+
 
 def test_sdm_nf_mora():
     f = sdm_from_dict({(1, 2, 1, 1): QQ(1), (1, 1, 2, 1): QQ(1),
@@ -115,6 +130,7 @@ def test_sdm_nf_mora():
         [((1, 0, 1, 1), QQ(1)), ((1, 0, 0, 1), QQ(-1)), ((0, 1, 1, 0), QQ(-1)),
          ((0, 1, 0, 1), QQ(1))]
 
+
 def test_conversion():
     f = [x**2 + y**2, 2*z]
     g = [((1, 0, 0, 1), QQ(2)), ((0, 2, 0, 0), QQ(1)), ((0, 0, 2, 0), QQ(1))]
@@ -123,6 +139,7 @@ def test_conversion():
     assert sdm_from_vector([x, 1], lex, QQ) == [((1, 0), QQ(1)), ((0, 1), QQ(1))]
     assert sdm_to_vector([((1, 1, 0, 0), 1)], [x, y, z], QQ, n=3) == [0, x, 0]
     assert sdm_from_vector([0, 0], lex, QQ, gens=[x, y]) == sdm_zero()
+
 
 def test_nontrivial():
     gens = [x, y, z]
@@ -154,6 +171,7 @@ def test_nontrivial():
     assert not contains([x*(1+x+y), y*(1+z)], x)
     assert not contains([x*(1+x+y), y*(1+z)], x + y)
 
+
 def test_local():
     igrlex = InverseOrder(grlex)
     gens = [x, y, z]
@@ -172,6 +190,7 @@ def test_local():
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
 
+
 def test_uncovered_line():
     gens = [x, y]
     f1 = sdm_zero()
@@ -180,6 +199,7 @@ def test_uncovered_line():
 
     assert sdm_spoly(f1, f2, lex, QQ) == sdm_zero()
     assert sdm_spoly(f3, f2, lex, QQ) == sdm_zero()
+
 
 def test_chain_criterion():
     gens = [x]

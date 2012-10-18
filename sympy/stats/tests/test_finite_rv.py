@@ -6,9 +6,12 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
+
+
 def BayesTest(A, B):
     assert P(A, B) == P(And(A, B)) / P(B)
     assert P(A, B) == P(B, A) * P(A) / P(B)
+
 
 def test_discreteuniform():
     # Symbolic
@@ -31,6 +34,7 @@ def test_discreteuniform():
         assert P(Y >= x) == S(5-x)/10
 
     assert density(Die('D', 6)) == density(DiscreteUniform('U', range(1, 7)))
+
 
 def test_dice():
     # TODO: Make iid method!
@@ -72,11 +76,13 @@ def test_dice():
 
     assert where(X>3).set == FiniteSet(4, 5, 6)
 
+
 def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S(1)}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
     assert sample(X, X > 5) == 6
+
 
 def test_domains():
     X, Y= Die('x', 6), Die('y', 6)
@@ -104,12 +110,14 @@ def test_domains():
     assert where(X>Y).dict == FiniteSet(Dict({X.symbol: i, Y.symbol: j})
             for i in range(1, 7) for j in range(1, 7) if i>j)
 
+
 def test_dice_bayes():
     X, Y, Z= Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     BayesTest(X>3, X+Y<5)
     BayesTest(Eq(X-Y, Z), Z>Y)
     BayesTest(X>3, X>2)
+
 
 def test_bernoulli():
     p, a, b = symbols('p a b')
@@ -126,11 +134,13 @@ def test_bernoulli():
     E(a*X+b) == a*E(X)+b
     variance(a*X+b) == a**2 * variance(X)
 
+
 def test_cdf():
     D = Die('D', 6)
     o = S.One
 
     assert cdf(D) == sympify({1: o/6, 2: o/3, 3: o/2, 4: 2*o/3, 5: 5*o/6, 6: o})
+
 
 def test_coins():
     C, D = Coin('C'), Coin('D')
@@ -149,6 +159,7 @@ def test_coins():
 
     raises(ValueError, lambda: P(C>D))  # Can't intelligently compare H to T
 
+
 def test_binomial_numeric():
     nvals = range(5)
     pvals = [0, S(1)/4, S.Half, S(3)/4, 1]
@@ -163,6 +174,7 @@ def test_binomial_numeric():
             for k in range(n+1):
                 assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1-p)**(n-k))
 
+
 def test_binomial_symbolic():
     n = 10  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
@@ -176,6 +188,7 @@ def test_binomial_symbolic():
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert Eq(simplify(E(Y)), simplify(n*(H*p+T*(1-p))))
+
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):

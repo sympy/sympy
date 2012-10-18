@@ -15,6 +15,7 @@ from sympy.printing.str import StrPrinter
 from sympy.utilities import group
 from sympy.core.compatibility import reduce
 
+
 class Dyadic(object):
     """A Dyadic object.
 
@@ -1885,6 +1886,7 @@ def _check_vector(other):
         else:
             other = Vector([])
     return other
+
 
 def dynamicsymbols(names, level=0):
     """Uses symbols and Function for functions of time.

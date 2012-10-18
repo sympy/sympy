@@ -1,6 +1,7 @@
 from sympy import residue, Symbol, Function, sin, S, I, pi, exp, log, pi, factorial
 from sympy.utilities.pytest import XFAIL, raises
 
+
 def test_basic1():
     x = Symbol("x")
     assert residue(1/x, x, 0) == 1
@@ -11,6 +12,7 @@ def test_basic1():
     assert residue(5, x, 0) == 0
     assert residue(x, x, 0) == 0
     assert residue(x**2, x, 0) == 0
+
 
 def test_basic2():
     x = Symbol("x")
@@ -23,11 +25,13 @@ def test_basic2():
     assert residue(x, x, 1) == 0
     assert residue(x**2, x, 5) == 0
 
+
 def _test_f():
     # FIXME: we get infinite recursion here:
     x = Symbol("x")
     f = Function("f")
     assert residue(f(x)/x**5, x, 0) == f.diff(x, 4)/24
+
 
 def test_functions():
     x = Symbol("x")
@@ -35,6 +39,7 @@ def test_functions():
     assert residue(2/sin(x), x, 0) == 2
     assert residue(1/sin(x)**2, x, 0) == 0
     assert residue(1/sin(x)**5, x, 0) == S(3)/8
+
 
 def test_expressions():
     x = Symbol("x")
@@ -44,6 +49,7 @@ def test_expressions():
     assert residue(1/(x**2+1), x, I) == -I/2
     assert residue(1/(x**2+1), x, -I) == I/2
     assert residue(1/(x**4+1), x, 0) == 0
+
 
 @XFAIL
 def test_expressions_failing():
@@ -57,9 +63,11 @@ def test_expressions_failing():
            exp(I*pi*a/4)/factorial(n-1)
     assert residue(1/(x**2 + a**2)**2, x, a*I) == -I/4/a**3
 
+
 def test_NotImplemented():
     z = Symbol('z')
     raises(NotImplementedError, lambda: residue(exp(1/z), z, 0))
+
 
 def test_bug():
     from sympy.abc import s, z

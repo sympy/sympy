@@ -2,6 +2,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
 from sympy.functions import tan, cot
 from gruntz import gruntz
 
+
 def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
@@ -266,6 +267,7 @@ def limit(e, z, z0, dir="+"):
     except (PoleError, ValueError):
         r = heuristics(e, z, z0, dir)
     return r
+
 
 def heuristics(e, z, z0, dir):
     if abs(z0) is S.Infinity:

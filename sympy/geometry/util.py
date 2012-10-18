@@ -9,6 +9,7 @@ are_similar
 """
 from sympy import Symbol, Function, solve
 
+
 def idiff(eq, y, x, dep=None):
     """Return dy/dx assuming that y and any other variables given in dep
     depend on x.
@@ -38,6 +39,7 @@ def idiff(eq, y, x, dep=None):
     dydx = Function(y.name)(x).diff(x)
     return solve(eq.subs(f).diff(x), dydx)[0].subs(
         [(b, a) for a, b in f.iteritems()])
+
 
 def _symbol(s, matching_symbol=None):
     """Return s if s is a Symbol, else return either a new Symbol (real=True)
@@ -78,6 +80,7 @@ def _symbol(s, matching_symbol=None):
         return s
     else:
         raise ValueError('symbol must be string for symbol name or Symbol')
+
 
 def intersection(*entities):
     """The intersection of a collection of GeometryEntity instances.
@@ -308,6 +311,7 @@ def are_similar(e1, e2):
             n1 = e1.__class__.__name__
             n2 = e2.__class__.__name__
             raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))
+
 
 def centroid(*args):
     """Find the centroid (center of mass) of the collection containing only Points,

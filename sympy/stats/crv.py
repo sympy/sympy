@@ -17,6 +17,7 @@ from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
 
+
 class ContinuousDomain(RandomDomain):
     """
     A domain with continuous support
@@ -27,6 +28,7 @@ class ContinuousDomain(RandomDomain):
 
     def as_boolean(self):
         raise NotImplementedError("Not Implemented for generic Domains")
+
 
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     """
@@ -72,6 +74,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 
     def as_boolean(self):
         return And(*[domain.as_boolean() for domain in self.domains])
+
 
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
@@ -139,6 +142,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
         else:
             raise NotImplementedError(
                     "Set of Conditional Domain not Implemented")
+
 
 class ContinuousPSpace(PSpace):
     """
@@ -236,6 +240,7 @@ class ContinuousPSpace(PSpace):
 
         return ContinuousPSpace(domain, density)
 
+
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
     A continuous probability space over a single univariate domain
@@ -280,6 +285,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         icdf = self._inverse_cdf_expression()
         return {self.value: icdf(random.uniform(0, 1))}
 
+
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
     A collection of independent continuous probability spaces
@@ -288,11 +294,13 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def density(self):
         return Mul(*[space.density for space in self.spaces])
 
+
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
         return reduce_poly_inequalities(conditions, var, **kwargs)
     except PolynomialError:
         raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+
 
 def reduce_poly_inequalities_wrap(condition, var):
     if condition.is_Relational:

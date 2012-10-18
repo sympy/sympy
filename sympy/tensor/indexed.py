@@ -109,8 +109,10 @@
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence
 
+
 class IndexException(Exception):
     pass
+
 
 class Indexed(Expr):
     """Represents a mathematical object with indices.

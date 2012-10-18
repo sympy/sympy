@@ -18,6 +18,7 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
 
 from collections import defaultdict
 
+
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
@@ -65,6 +66,7 @@ def decompose_power(expr):
             base, exp = expr, 1
 
     return base, exp
+
 
 class Factors(object):
     """Efficient representation of ``f_1*f_2*...*f_n``. """
@@ -234,6 +236,7 @@ class Factors(object):
     def __ne__(self, other):  # Factors
         return not self.__eq__(other)
 
+
 class Term(object):
     """Efficient representation of ``coeff*(numer/denom)``. """
 
@@ -344,6 +347,7 @@ class Term(object):
     def __ne__(self, other):  # Term
         return not self.__eq__(other)
 
+
 def _gcd_terms(terms, isprimitive=False, fraction=True):
     """Helper function for :func:`gcd_terms`.
 
@@ -403,6 +407,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
         cont *= _cont
 
     return cont, numer, denom
+
 
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
@@ -593,6 +598,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         fraction=fraction)
     return _keep_coeff(cont, p, clear=clear)
 
+
 def _mask_nc(eq):
     """Return ``eq`` with non-commutative objects replaced with dummy
     symbols. A dictionary that can be used to restore the original
@@ -709,6 +715,7 @@ def _mask_nc(eq):
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
     return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
+
 
 def factor_nc(expr):
     """Return the factored form of ``expr`` while handling non-commutative

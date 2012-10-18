@@ -11,6 +11,7 @@ from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
+
 def _add_factorial_tokens(name, result):
     if result == [] or result[-1][1] == '(':
         raise TokenError()
@@ -37,6 +38,7 @@ def _add_factorial_tokens(name, result):
                 return result[:i] + beginning + result[i:] + end
 
     return result
+
 
 def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
@@ -125,6 +127,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
         prevtoken = tokval
 
     return untokenize(result)
+
 
 def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """

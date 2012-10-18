@@ -18,8 +18,10 @@ x3, x4 = Vx[2], Vx[3]
 F_1 = F3 + Fg
 F_2 = F3 + Fg + [x3**2 + x3*x4 + x4**2]
 
+
 def time_vertex_color_12_vertices_23_edges():
     assert groebner(F_1, Vx) != [1]
+
 
 def time_vertex_color_12_vertices_24_edges():
     assert groebner(F_2, Vx) == [1]

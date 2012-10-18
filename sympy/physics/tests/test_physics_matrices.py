@@ -1,6 +1,7 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix
 from sympy import zeros, eye, I, Matrix
 
+
 def test_parallel_axis_theorem():
     # This tests the parallel axis theorem matrix by comparing to test
     # matrices.
@@ -25,6 +26,7 @@ def test_parallel_axis_theorem():
     assert pat_matrix(1, 0, 0, 1) == mat4
     assert pat_matrix(2, 0, 0, 1) == 2*mat4
 
+
 def test_Pauli():
     #this and the following test are testing both Pauli and Dirac matrices
     #and also that the general Matrix class works correctly in a real world
@@ -47,6 +49,7 @@ def test_Pauli():
 
     assert sigma1*2*sigma1 == 2*eye(2)
     assert sigma1*sigma3*sigma1 == -sigma3
+
 
 def test_Dirac():
     gamma0=mgamma(0)

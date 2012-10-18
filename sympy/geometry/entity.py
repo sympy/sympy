@@ -27,6 +27,7 @@ ordering_of_classes = [
     "Curve"
 ]
 
+
 class GeometryEntity(Basic):
     """The base class for all geometrical entities.
 
@@ -289,12 +290,14 @@ class GeometryEntity(Basic):
             new = Point(new)
             return self._subs(old, new)
 
+
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
     rv = eye(3)
     rv[2, 0] = x
     rv[2, 1] = y
     return rv
+
 
 def scale(x, y, pt=None):
     """Return the matrix to multiply a 2-D point's coordinates by x and y.
@@ -310,6 +313,7 @@ def scale(x, y, pt=None):
         tr2 = translate(*pt.args)
         return tr1*rv*tr2
     return rv
+
 
 def rotate(th):
     """Return the matrix to rotate a 2-D point about the origin by ``angle``.

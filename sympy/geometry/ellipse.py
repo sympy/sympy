@@ -20,6 +20,7 @@ from util import _symbol, idiff
 
 import random
 
+
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 

@@ -9,12 +9,15 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
 
 from sympy.abc import x, y, z
 
+
 def test_expand_no_log():
     assert ((1+log(x**4))**2).expand(log=False) == 1 + 2*log(x**4) + log(x**4)**2
     assert ((1+log(x**4))*(1+log(x**3))).expand(log=False) == 1 + log(x**4) + log(x**3) + log(x**4)*log(x**3)
 
+
 def test_expand_no_multinomial():
     assert ((1+x)*(1+(1+x)**4)).expand(multinomial=False) == 1 + x + (1+x)**4 + x*(1+x)**4
+
 
 def test_expand_negative_integer_powers():
     expr = (x+y)**(-2)
@@ -26,6 +29,7 @@ def test_expand_negative_integer_powers():
     expr = (x+y)**(2) * (x+y)**(-4)
     assert expr.expand() == 1 / (2*x*y + x**2 + y**2)
     assert expr.expand(multinomial=False) == (x+y)**(-2)
+
 
 def test_expand_non_commutative():
     A = x = Symbol('x', commutative=False)
@@ -43,6 +47,7 @@ def test_expand_non_commutative():
     assert ((a*A*B)**2).expand() == a**2*A*B*A*B
     assert ((a*A)**2).expand() == a**2*A**2
     assert ((a*A*B)**i).expand() == a**i*(A*B)**i
+
 
 def test_expand_radicals():
     a = (x + y)**R(1, 2)
@@ -63,6 +68,7 @@ def test_expand_radicals():
     assert (a**5).expand() == x*a**2 + y*a**2
     assert (a**7).expand() == x**2*a + 2*x*y*a + y**2*a
 
+
 def test_expand_modulus():
     assert ((x + y)**11).expand(modulus=11) == x**11 + y**11
     assert ((x + sqrt(2)*y)**11).expand(modulus=11) == x**11 + 10*sqrt(2)*y**11
@@ -71,9 +77,11 @@ def test_expand_modulus():
     raises(ValueError, lambda: ((x + y)**11).expand(modulus=0))
     raises(ValueError, lambda: ((x + y)**11).expand(modulus=x))
 
+
 def test_issue_2644():
     assert (x*sqrt(x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
     assert (x*sqrt(x + y)*(1 + x*sqrt(x + y))).expand() == x**3 + x**2*y + x*sqrt(x + y)
+
 
 def test_expand_frac():
     assert expand((x + y)*y/x/(x + 1), frac=True) == \
@@ -84,6 +92,7 @@ def test_expand_frac():
         y*(x + y)/(x**2 + x)
     eq = (x+1)**2/y
     assert expand_numer(eq, multinomial=False) == eq
+
 
 def test_issue_3022():
     from sympy import cse
@@ -105,6 +114,7 @@ def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     r, e = cse((eq).expand(complex=True))
     assert abs((eq - e[0].subs(reversed(r))).subs(x, 1 + 3*I)) < 1e-9
+
 
 def test_expand_power_base():
     # was test_separate()

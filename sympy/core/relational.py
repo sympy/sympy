@@ -28,6 +28,7 @@ def Rel(a, b, op):
     """
     return Relational(a, b, op)
 
+
 def Eq(a, b=0):
     """
     A handy wrapper around the Relational class.
@@ -43,6 +44,7 @@ def Eq(a, b=0):
 
     """
     return Relational(a, b, '==')
+
 
 def Ne(a, b):
     """
@@ -60,6 +62,7 @@ def Ne(a, b):
     """
     return Relational(a, b, '!=')
 
+
 def Lt(a, b):
     """
     A handy wrapper around the Relational class.
@@ -75,6 +78,7 @@ def Lt(a, b):
 
     """
     return Relational(a, b, '<')
+
 
 def Le(a, b):
     """
@@ -92,6 +96,7 @@ def Le(a, b):
     """
     return Relational(a, b, '<=')
 
+
 def Gt(a, b):
     """
     A handy wrapper around the Relational class.
@@ -107,6 +112,7 @@ def Gt(a, b):
 
     """
     return Relational(a, b, '>')
+
 
 def Ge(a, b):
     """
@@ -126,6 +132,8 @@ def Ge(a, b):
 
 # Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
+
+
 class Relational(Boolean, Expr, EvalfMixin):
 
     __slots__ = []
@@ -189,6 +197,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_relation_doit(cls, lhs, rhs):
         return cls._eval_relation(lhs, rhs)
 
+
 class Equality(Relational):
 
     rel_op = '=='
@@ -208,6 +217,7 @@ class Equality(Relational):
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)==0
 
+
 class Unequality(Relational):
 
     rel_op = '!='
@@ -224,6 +234,7 @@ class Unequality(Relational):
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0
+
 
 class _Greater(Relational):
     """Not intended for general use
@@ -242,6 +253,7 @@ class _Greater(Relational):
     def lts(self):
         return self._args[1]
 
+
 class _Less(Relational):
     """Not intended for general use.
 
@@ -258,6 +270,7 @@ class _Less(Relational):
     @property
     def lts(self):
         return self._args[0]
+
 
 class GreaterThan(_Greater):
     """Class representations of inequalities.
@@ -511,6 +524,7 @@ class GreaterThan(_Greater):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) >= 0
 
+
 class LessThan(_Less):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
@@ -524,6 +538,7 @@ class LessThan(_Less):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) <= 0
 
+
 class StrictGreaterThan(_Greater):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
@@ -536,6 +551,7 @@ class StrictGreaterThan(_Greater):
 
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) > 0
+
 
 class StrictLessThan(_Less):
     __doc__ = GreaterThan.__doc__

@@ -433,6 +433,7 @@ def _pow_float(inter, power):
 
         return interval(start, end, is_valid=inter.is_valid)
 
+
 def _pow_int(inter, power):
     """Evaluates an interval raised to an integer power"""
     power = int(power)

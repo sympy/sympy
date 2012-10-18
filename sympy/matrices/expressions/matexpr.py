@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
 
+
 class MatrixExpr(Expr):
     """ Matrix Expression Class
     Matrix Expressions subclass SymPy Expr's so that
@@ -225,6 +226,7 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().equals(other)
 
+
 class MatrixSymbol(MatrixExpr, Symbol):
     """Symbolic representation of a Matrix object
 
@@ -275,6 +277,7 @@ class MatrixSymbol(MatrixExpr, Symbol):
         else:
             return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
 
+
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
 
@@ -308,6 +311,7 @@ class Identity(MatrixSymbol):
         else:
             return S.Zero
 
+
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
 
@@ -336,8 +340,10 @@ class ZeroMatrix(MatrixSymbol):
     def _entry(self, i, j):
         return S.Zero
 
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
+
 
 def matrixify(expr):
     """
@@ -365,6 +371,7 @@ def matrixify(expr):
         return expr
     else:
         return Basic.__new__(class_dict[expr.__class__], *args)
+
 
 def linear_factors(expr, *syms):
     """Reduce a Matrix Expression to a sum of linear factors

@@ -16,6 +16,7 @@ else:
     from sympy.galgebra.GA import MV, ZERO, HALF, S
     import sympy
 
+
 def F(x, n, nbar):
     """
     Conformal Mapping Function from 3D Euclidean space to 5D conformal space
@@ -24,6 +25,7 @@ def F(x, n, nbar):
     Fx = HALF*((x*x)*n+2*x-nbar)
     #print 'F(x) =',Fx
     return(Fx)
+
 
 def test_rmul():
     """
@@ -36,6 +38,7 @@ def test_rmul():
     assert 5*x == x*5
     assert HALF*x == x*HALF
     assert a*x == x*a
+
 
 def test_contraction():
     """
@@ -50,6 +53,7 @@ def test_contraction():
     assert (e_1<(e_1^e_3)) == e_3
     assert ((e_1^e_3)<e_1) == 0
     assert (e_1>(e_1^e_3)) == 0
+
 
 def test_substitution():
 
@@ -96,6 +100,7 @@ def test_vector_extraction():
     Am2.compact()
     assert Ap2 == ZERO
     assert Am2 == ZERO
+
 
 def test_geometry():
     """
@@ -148,6 +153,7 @@ def test_geometry():
     diff.compact()
     assert diff == ZERO
 
+
 def test_extract_plane_and_line():
     """
     Show that conformal trivector encodes planes and lines. See D&L section
@@ -181,6 +187,7 @@ def test_extract_plane_and_line():
     diff = delta-delta_test
     diff.compact()
     assert diff == ZERO
+
 
 def test_reciprocal_frame():
     """
@@ -235,6 +242,7 @@ def test_reciprocal_frame():
     w = w().expand()
     assert w/Esq == 1
 
+
 def test_derivative():
     coords = x, y, z = sympy.symbols('x y z')
     e_x, e_y, e_z = MV.setup('e', '1 0 0, 0 1 0, 0 0 1', coords=coords)
@@ -245,6 +253,7 @@ def test_derivative():
     assert ((X*X).grad()) == 2*X
     assert (X*X*X).grad() == 5*X*X
     assert X.grad_int() == 3
+
 
 def test_str():
     e_1, e_2, e_3 = MV.setup('e_1 e_2 e_3', '1 0 0, 0 1 0, 0 0 1')
@@ -257,9 +266,11 @@ def test_str():
     assert str(Z) == 'x+y+x__0*e_1+x__1*e_2+x__2*e_3+(x__01+y__01)*e_1e_2+(x__02+y__02)*e_1e_3+(x__12+y__12)*e_2e_3+x__012*e_1e_2e_3'
     assert str(e_1|e_1) == '1'
 
+
 def test_metric():
     MV.setup('e_1 e_2 e_3', '[1,1,1]')
     assert str(MV.metric) == '[[1 0 0]\n [0 1 0]\n [0 0 1]]'
+
 
 def test_constructor():
     """
@@ -276,6 +287,7 @@ def test_constructor():
     assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
     assert str(MV([2, 'a'], 'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a', 'grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+
 
 def test__print_Mul_Add():
     from sympy.galgebra.latex_ex import LatexPrinter

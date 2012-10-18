@@ -6,6 +6,7 @@ from threading import Thread, Lock
 
 gl_lock = Lock()
 
+
 class ManagedWindow(Window):
     """
     A pyglet window with an event loop which executes automatically

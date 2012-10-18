@@ -17,6 +17,7 @@ from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.simplify.simplify import nsimplify
 
+
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
 

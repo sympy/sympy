@@ -70,8 +70,10 @@ from sympy.mpmath import (
 
 import sympy.mpmath.libmp as mlib
 
+
 def python_sqrt(n):
     return int(mlib.isqrt(n))
+
 
 def python_factorial(n):
     return int(mlib.ifac(n))

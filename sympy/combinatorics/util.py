@@ -65,6 +65,7 @@ def _base_ordering(base, degree):
             current += 1
     return ordering
 
+
 def _check_cycles_alt_sym(perm):
     """
     Checks for cycles of prime length p with n/2 < p < n-2.
@@ -108,6 +109,7 @@ def _check_cycles_alt_sym(perm):
             if current_len > n//2 and current_len < n-2 and isprime(current_len):
                 return True
     return False
+
 
 def _distribute_gens_by_base(base, gens):
     """
@@ -176,6 +178,7 @@ def _distribute_gens_by_base(base, gens):
         stabs[i].append(_af_new(range(degree)))
     return stabs
 
+
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
                              basic_orbits=None, strong_gens_distr=None):
     """
@@ -243,6 +246,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
                 basic_orbits[i] = transversals[i].keys()
     return transversals, basic_orbits, strong_gens_distr
 
+
 def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
                                    transversals_only=False):
     """
@@ -298,6 +302,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
         return transversals
     else:
         return basic_orbits, transversals
+
 
 def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     """
@@ -373,6 +378,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     gens_copy.remove(gen)
                     res.remove(gen)
     return res
+
 
 def _strip(g, base, orbits, transversals):
     """
@@ -450,6 +456,7 @@ def _strip(g, base, orbits, transversals):
         u = transversals[i][beta].array_form
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
+
 
 def _strong_gens_from_distr(strong_gens_distr):
     """

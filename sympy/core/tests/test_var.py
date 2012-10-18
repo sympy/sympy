@@ -4,12 +4,17 @@ from sympy import Symbol, var, Function, FunctionClass
 from sympy.utilities.pytest import raises
 
 # make z1 with call-depth = 1
+
+
 def make_z1():
     var("z1")
 
 # make z2 with call-depth = 2
+
+
 def __make_z2():
     var("z2")
+
 
 def make_z2():
     __make_z2()
@@ -43,6 +48,7 @@ def test_var():
     make_z2()
     assert z2 == Symbol("z2")
 
+
 def test_var_return():
     raises(ValueError, lambda: var(''))
     v2 = var('q')
@@ -50,6 +56,7 @@ def test_var_return():
 
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
+
 
 def test_var_accepts_comma():
     v1 = var('x y z')
@@ -59,9 +66,11 @@ def test_var_accepts_comma():
     assert v1 == v2
     assert v1 == v3
 
+
 def test_var_keywords():
     var('x y', real=True)
     assert x.is_real and y.is_real
+
 
 def test_var_cls():
     f = var('f', cls=Function)

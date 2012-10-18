@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic
 
+
 class MatMul(MatrixExpr, Mul):
     """A Product of Matrix Expressions
 

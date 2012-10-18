@@ -14,6 +14,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.utilities import cythonized
 
+
 @cythonized("i,n,m")
 def dup_add_term(f, c, i, K):
     """
@@ -44,6 +45,7 @@ def dup_add_term(f, c, i, K):
             return [c] + [K.zero]*(i-n) + f
         else:
             return f[:m] + [f[m]+c] + f[m+1:]
+
 
 @cythonized("i,u,v,n,m")
 def dmp_add_term(f, c, i, u, K):
@@ -82,6 +84,7 @@ def dmp_add_term(f, c, i, u, K):
         else:
             return f[:m] + [dmp_add(f[m], c, v, K)] + f[m+1:]
 
+
 @cythonized("i,n,m")
 def dup_sub_term(f, c, i, K):
     """
@@ -112,6 +115,7 @@ def dup_sub_term(f, c, i, K):
             return [-c] + [K.zero]*(i-n) + f
         else:
             return f[:m] + [f[m]-c] + f[m+1:]
+
 
 @cythonized("i,u,v,n,m")
 def dmp_sub_term(f, c, i, u, K):
@@ -150,6 +154,7 @@ def dmp_sub_term(f, c, i, u, K):
         else:
             return f[:m] + [dmp_sub(f[m], c, v, K)] + f[m+1:]
 
+
 @cythonized("i")
 def dup_mul_term(f, c, i, K):
     """
@@ -171,6 +176,7 @@ def dup_mul_term(f, c, i, K):
         return []
     else:
         return [ cf * c for cf in f ] + [K.zero]*i
+
 
 @cythonized("i,u,v")
 def dmp_mul_term(f, c, i, u, K):
@@ -202,6 +208,7 @@ def dmp_mul_term(f, c, i, u, K):
     else:
         return [ dmp_mul(cf, c, v, K) for cf in f ] + dmp_zeros(i, v, K)
 
+
 def dup_add_ground(f, c, K):
     """
     Add an element of the ground domain to ``f``.
@@ -219,6 +226,7 @@ def dup_add_ground(f, c, K):
 
     """
     return dup_add_term(f, c, 0, K)
+
 
 def dmp_add_ground(f, c, u, K):
     """
@@ -238,6 +246,7 @@ def dmp_add_ground(f, c, u, K):
     """
     return dmp_add_term(f, dmp_ground(c, u-1), 0, u, K)
 
+
 def dup_sub_ground(f, c, K):
     """
     Subtract an element of the ground domain from ``f``.
@@ -256,6 +265,7 @@ def dup_sub_ground(f, c, K):
     """
     return dup_sub_term(f, c, 0, K)
 
+
 def dmp_sub_ground(f, c, u, K):
     """
     Subtract an element of the ground domain from ``f``.
@@ -273,6 +283,7 @@ def dmp_sub_ground(f, c, u, K):
 
     """
     return dmp_sub_term(f, dmp_ground(c, u-1), 0, u, K)
+
 
 def dup_mul_ground(f, c, K):
     """
@@ -294,6 +305,7 @@ def dup_mul_ground(f, c, K):
         return []
     else:
         return [ cf * c for cf in f ]
+
 
 @cythonized("u,v")
 def dmp_mul_ground(f, c, u, K):
@@ -318,6 +330,7 @@ def dmp_mul_ground(f, c, u, K):
     v = u-1
 
     return [ dmp_mul_ground(cf, c, v, K) for cf in f ]
+
 
 def dup_quo_ground(f, c, K):
     """
@@ -349,6 +362,7 @@ def dup_quo_ground(f, c, K):
     else:
         return [ cf // c for cf in f ]
 
+
 @cythonized("u,v")
 def dmp_quo_ground(f, c, u, K):
     """
@@ -377,6 +391,7 @@ def dmp_quo_ground(f, c, u, K):
 
     return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
 
+
 def dup_exquo_ground(f, c, K):
     """
     Exact quotient by a constant in ``K[x]``.
@@ -399,6 +414,7 @@ def dup_exquo_ground(f, c, K):
         return f
 
     return [ K.exquo(cf, c) for cf in f ]
+
 
 @cythonized("u,v")
 def dmp_exquo_ground(f, c, u, K):
@@ -424,6 +440,7 @@ def dmp_exquo_ground(f, c, u, K):
 
     return [ dmp_exquo_ground(cf, c, v, K) for cf in f ]
 
+
 @cythonized("n")
 def dup_lshift(f, n, K):
     """
@@ -445,6 +462,7 @@ def dup_lshift(f, n, K):
         return f
     else:
         return f + [K.zero]*n
+
 
 @cythonized("n")
 def dup_rshift(f, n, K):
@@ -469,6 +487,7 @@ def dup_rshift(f, n, K):
     """
     return f[:-n]
 
+
 def dup_abs(f, K):
     """
     Make all coefficients positive in ``K[x]``.
@@ -486,6 +505,7 @@ def dup_abs(f, K):
 
     """
     return [ K.abs(coeff) for coeff in f ]
+
 
 @cythonized("u,v")
 def dmp_abs(f, u, K):
@@ -511,6 +531,7 @@ def dmp_abs(f, u, K):
 
     return [ dmp_abs(cf, v, K) for cf in f ]
 
+
 def dup_neg(f, K):
     """
     Negate a polynomial in ``K[x]``.
@@ -528,6 +549,7 @@ def dup_neg(f, K):
 
     """
     return [ -coeff for coeff in f ]
+
 
 @cythonized("u,v")
 def dmp_neg(f, u, K):
@@ -552,6 +574,7 @@ def dmp_neg(f, u, K):
     v = u-1
 
     return [ dmp_neg(cf, v, K) for cf in f ]
+
 
 @cythonized("df,dg,k")
 def dup_add(f, g, K):
@@ -590,6 +613,7 @@ def dup_add(f, g, K):
             h, g = g[:k], g[k:]
 
         return h + [ a + b for a, b in zip(f, g) ]
+
 
 @cythonized("u,v,df,dg,k")
 def dmp_add(f, g, u, K):
@@ -636,6 +660,7 @@ def dmp_add(f, g, u, K):
 
         return h + [ dmp_add(a, b, v, K) for a, b in zip(f, g) ]
 
+
 @cythonized("df,dg,k")
 def dup_sub(f, g, K):
     """
@@ -673,6 +698,7 @@ def dup_sub(f, g, K):
             h, g = dup_neg(g[:k], K), g[k:]
 
         return h + [ a - b for a, b in zip(f, g) ]
+
 
 @cythonized("u,v,df,dg,k")
 def dmp_sub(f, g, u, K):
@@ -719,6 +745,7 @@ def dmp_sub(f, g, u, K):
 
         return h + [ dmp_sub(a, b, v, K) for a, b in zip(f, g) ]
 
+
 def dup_add_mul(f, g, h, K):
     """
     Returns ``f + g*h`` where ``f, g, h`` are in ``K[x]``.
@@ -738,6 +765,7 @@ def dup_add_mul(f, g, h, K):
 
     """
     return dup_add(f, dup_mul(g, h, K), K)
+
 
 @cythonized("u")
 def dmp_add_mul(f, g, h, u, K):
@@ -760,6 +788,7 @@ def dmp_add_mul(f, g, h, u, K):
     """
     return dmp_add(f, dmp_mul(g, h, u, K), u, K)
 
+
 def dup_sub_mul(f, g, h, K):
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[x]``.
@@ -779,6 +808,7 @@ def dup_sub_mul(f, g, h, K):
 
     """
     return dup_sub(f, dup_mul(g, h, K), K)
+
 
 @cythonized("u")
 def dmp_sub_mul(f, g, h, u, K):
@@ -800,6 +830,7 @@ def dmp_sub_mul(f, g, h, u, K):
 
     """
     return dmp_sub(f, dmp_mul(g, h, u, K), u, K)
+
 
 @cythonized("df,dg,i,j")
 def dup_mul(f, g, K):
@@ -839,6 +870,7 @@ def dup_mul(f, g, K):
         h.append(coeff)
 
     return dup_strip(h)
+
 
 @cythonized("u,v,df,dg,i,j")
 def dmp_mul(f, g, u, K):
@@ -886,6 +918,7 @@ def dmp_mul(f, g, u, K):
 
     return dmp_strip(h, u)
 
+
 @cythonized("df,jmin,jmax,n,i,j")
 def dup_sqr(f, K):
     """
@@ -927,6 +960,7 @@ def dup_sqr(f, K):
         h.append(c)
 
     return dup_strip(h)
+
 
 @cythonized("u,v,df,jmin,jmax,n,i,j")
 def dmp_sqr(f, u, K):
@@ -978,6 +1012,7 @@ def dmp_sqr(f, u, K):
 
     return dmp_strip(h, u)
 
+
 @cythonized("n,m")
 def dup_pow(f, n, K):
     """
@@ -1014,6 +1049,7 @@ def dup_pow(f, n, K):
         f = dup_sqr(f, K)
 
     return g
+
 
 @cythonized("u,n,m")
 def dmp_pow(f, n, u, K):
@@ -1056,6 +1092,7 @@ def dmp_pow(f, n, u, K):
         f = dmp_sqr(f, u, K)
 
     return g
+
 
 @cythonized("df,dg,dr,N,j")
 def dup_pdiv(f, g, K):
@@ -1111,6 +1148,7 @@ def dup_pdiv(f, g, K):
 
     return q, r
 
+
 @cythonized("df,dg,dr,N,j")
 def dup_prem(f, g, K):
     """
@@ -1157,6 +1195,7 @@ def dup_prem(f, g, K):
 
     return dup_mul_ground(r, lc_g**N, K)
 
+
 def dup_pquo(f, g, K):
     """
     Polynomial exact pseudo-quotient in ``K[X]``.
@@ -1181,6 +1220,7 @@ def dup_pquo(f, g, K):
 
     """
     return dup_pdiv(f, g, K)[0]
+
 
 def dup_pexquo(f, g, K):
     """
@@ -1213,6 +1253,7 @@ def dup_pexquo(f, g, K):
         return q
     else:
         raise ExactQuotientFailed(f, g)
+
 
 @cythonized("u,df,dg,dr,N,j")
 def dmp_pdiv(f, g, u, K):
@@ -1272,6 +1313,7 @@ def dmp_pdiv(f, g, u, K):
 
     return q, r
 
+
 @cythonized("u,df,dg,dr,N,j")
 def dmp_prem(f, g, u, K):
     """
@@ -1324,6 +1366,7 @@ def dmp_prem(f, g, u, K):
 
     return dmp_mul_term(r, c, 0, u, K)
 
+
 def dmp_pquo(f, g, u, K):
     """
     Polynomial exact pseudo-quotient in ``K[X]``.
@@ -1346,6 +1389,7 @@ def dmp_pquo(f, g, u, K):
 
     """
     return dmp_pdiv(f, g, u, K)[0]
+
 
 def dmp_pexquo(f, g, u, K):
     """
@@ -1376,6 +1420,7 @@ def dmp_pexquo(f, g, u, K):
         return q
     else:
         raise ExactQuotientFailed(f, g)
+
 
 @cythonized("df,dg,dr,j")
 def dup_rr_div(f, g, K):
@@ -1427,6 +1472,7 @@ def dup_rr_div(f, g, K):
         r = dup_sub(r, h, K)
 
     return q, r
+
 
 @cythonized("u,df,dg,dr,j")
 def dmp_rr_div(f, g, u, K):
@@ -1484,6 +1530,7 @@ def dmp_rr_div(f, g, u, K):
 
     return q, r
 
+
 @cythonized("df,dg,dr,j")
 def dup_ff_div(f, g, K):
     """
@@ -1534,6 +1581,7 @@ def dup_ff_div(f, g, K):
             r = dup_normal(r, K)
 
     return q, r
+
 
 @cythonized("u,df,dg,dr,j")
 def dmp_ff_div(f, g, u, K):
@@ -1591,6 +1639,7 @@ def dmp_ff_div(f, g, u, K):
 
     return q, r
 
+
 def dup_div(f, g, K):
     """
     Polynomial division with remainder in ``K[x]``.
@@ -1619,6 +1668,7 @@ def dup_div(f, g, K):
     else:
         return dup_rr_div(f, g, K)
 
+
 def dup_rem(f, g, K):
     """
     Returns polynomial remainder in ``K[x]``.
@@ -1644,6 +1694,7 @@ def dup_rem(f, g, K):
     """
     return dup_div(f, g, K)[1]
 
+
 def dup_quo(f, g, K):
     """
     Returns exact polynomial quotient in ``K[x]``.
@@ -1668,6 +1719,7 @@ def dup_quo(f, g, K):
 
     """
     return dup_div(f, g, K)[0]
+
 
 def dup_exquo(f, g, K):
     """
@@ -1701,6 +1753,7 @@ def dup_exquo(f, g, K):
     else:
         raise ExactQuotientFailed(f, g)
 
+
 @cythonized("u")
 def dmp_div(f, g, u, K):
     """
@@ -1730,6 +1783,7 @@ def dmp_div(f, g, u, K):
     else:
         return dmp_rr_div(f, g, u, K)
 
+
 @cythonized("u")
 def dmp_rem(f, g, u, K):
     """
@@ -1756,6 +1810,7 @@ def dmp_rem(f, g, u, K):
     """
     return dmp_div(f, g, u, K)[1]
 
+
 @cythonized("u")
 def dmp_quo(f, g, u, K):
     """
@@ -1781,6 +1836,7 @@ def dmp_quo(f, g, u, K):
 
     """
     return dmp_div(f, g, u, K)[0]
+
 
 @cythonized("u")
 def dmp_exquo(f, g, u, K):
@@ -1813,6 +1869,7 @@ def dmp_exquo(f, g, u, K):
     else:
         raise ExactQuotientFailed(f, g)
 
+
 def dup_max_norm(f, K):
     """
     Returns maximum norm of a polynomial in ``K[x]``.
@@ -1833,6 +1890,7 @@ def dup_max_norm(f, K):
         return K.zero
     else:
         return max(dup_abs(f, K))
+
 
 @cythonized("u,v")
 def dmp_max_norm(f, u, K):
@@ -1858,6 +1916,7 @@ def dmp_max_norm(f, u, K):
 
     return max([ dmp_max_norm(c, v, K) for c in f ])
 
+
 def dup_l1_norm(f, K):
     """
     Returns l1 norm of a polynomial in ``K[x]``.
@@ -1878,6 +1937,7 @@ def dup_l1_norm(f, K):
         return K.zero
     else:
         return sum(dup_abs(f, K))
+
 
 @cythonized("u,v")
 def dmp_l1_norm(f, u, K):
@@ -1902,6 +1962,7 @@ def dmp_l1_norm(f, u, K):
     v = u-1
 
     return sum([ dmp_l1_norm(c, v, K) for c in f ])
+
 
 def dup_expand(polys, K):
     """
@@ -1930,6 +1991,7 @@ def dup_expand(polys, K):
         f = dup_mul(f, g, K)
 
     return f
+
 
 @cythonized("u")
 def dmp_expand(polys, u, K):

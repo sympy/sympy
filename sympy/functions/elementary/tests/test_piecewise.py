@@ -6,6 +6,7 @@ from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x,y')
 
+
 def test_piecewise():
 
     # Test canonization
@@ -94,10 +95,12 @@ def test_piecewise():
     # Test commutativity
     assert p.is_commutative is True
 
+
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x, a<0), (y, True))
     assert f.free_symbols == set([x, y, a])
+
 
 def test_piecewise_integrate():
     # XXX Use '<=' here! '>=' is not yet implemented ..
@@ -171,6 +174,7 @@ def test_piecewise_integrate():
     assert integrate(g, (x, y, 1)) == Piecewise((1, y <= -1), (0, y >= 1),
         (y**2/2 - y + 0.5, y > 0), (-y**2/2 - y + 0.5, True))
 
+
 def test_piecewise_integrate_symbolic_conditions():
     from sympy.abc import a, b, x, y
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
@@ -207,6 +211,7 @@ def test_piecewise_integrate_symbolic_conditions():
     assert integrate(p4, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
     assert integrate(p5, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
 
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
@@ -232,10 +237,13 @@ def test_piecewise_solve():
     assert solve(g, x) == [5]
 
 # See issue 1253 (enhance the solver to handle inequalities).
+
+
 @XFAIL
 def test_piecewise_solve2():
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert solve(f, x) == [2, Interval(0, oo, True, True)]
+
 
 def test_piecewise_fold():
 
@@ -253,6 +261,7 @@ def test_piecewise_fold():
     p = 4*p1 + 2*p2
     assert integrate(piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
+
 def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
@@ -263,15 +272,18 @@ def test_piecewise_fold_expand():
     p2 = expand(piecewise_fold((1-x)*p1))
     assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
+
 def test_piecewise_duplicate():
     p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
     assert p == Piecewise(*p.args)
+
 
 def test_doit():
     p1 = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3 < x))
     p2 = Piecewise((x, x < 1), (Integral(2 * x), -1 <= x), (x, 3 < x))
     assert p2.doit() == p1
     assert p2.doit(deep=False) == p2
+
 
 def test_piecewise_interval():
     p1 = Piecewise((x, Interval(0, 1).contains(x)), (0, True))
@@ -280,6 +292,7 @@ def test_piecewise_interval():
     assert p1.diff(x) == Piecewise((1, Interval(0, 1).contains(x)), (0, True))
     assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
 
+
 def test_piecewise_collapse():
     p1 = Piecewise((x, x<0), (x**2, x>1))
     p2 = Piecewise((p1, x<0), (p1, x>1))
@@ -287,6 +300,7 @@ def test_piecewise_collapse():
 
     p1 = Piecewise((Piecewise((x, x<0), (1, True)), True))
     assert p1 == Piecewise((Piecewise((x, x<0), (1, True)), True))
+
 
 def test_piecewise_lambdify():
     p = Piecewise(
@@ -302,11 +316,13 @@ def test_piecewise_lambdify():
     assert f(0.5) == 0.5
     assert f(2.0) == 0.0
 
+
 def test_piecewise_series():
     from sympy import sin, cos, O
     p1 = Piecewise((sin(x), x<0), (cos(x), x>0))
     p2 = Piecewise((x+O(x**2), x<0), (1+O(x**2), x>0))
     assert p1.nseries(x, n=2) == p2
+
 
 def test_piecewise_as_leading_term():
     p1 = Piecewise((1/x, x > 1), (0, True))
@@ -325,6 +341,7 @@ def test_piecewise_as_leading_term():
     assert p6.as_leading_term(x) == 1/x
     assert p7.as_leading_term(x) == x
     assert p8.as_leading_term(x) == 1/x
+
 
 def test_piecewise_complex():
     p1 = Piecewise((2, x < 0), (1, 0 <= x))
@@ -345,6 +362,7 @@ def test_piecewise_complex():
 
     assert p1.as_real_imag() == (p1, 0)
     assert p2.as_real_imag() == (0, -I*p2)
+
 
 def test_piecewise_evaluate():
     assert Piecewise((x, True)) == x

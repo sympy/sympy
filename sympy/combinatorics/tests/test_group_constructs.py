@@ -1,6 +1,7 @@
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.named_groups import CyclicGroup, DihedralGroup
 
+
 def test_direct_product_n():
     C = CyclicGroup(4)
     D = DihedralGroup(4)

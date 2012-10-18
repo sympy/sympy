@@ -5,6 +5,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
 
+
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
 
@@ -102,6 +103,7 @@ def ratint(f, x, **flags):
 
     return coeff*result
 
+
 def ratint_ratpart(f, g, x):
     """
     Horowitz-Ostrogradsky algorithm.
@@ -158,6 +160,7 @@ def ratint_ratpart(f, g, x):
     log_part = cancel(B/v.as_expr(), x)
 
     return rat_part, log_part
+
 
 def ratint_logpart(f, g, x, t=None):
     """
@@ -242,6 +245,7 @@ def ratint_logpart(f, g, x, t=None):
 
     return H
 
+
 def log_to_atan(f, g):
     """
     Convert complex logarithms to real arctangents.
@@ -286,6 +290,7 @@ def log_to_atan(f, g):
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)
+
 
 def log_to_real(h, q, x, t):
     """

@@ -8,6 +8,7 @@ from time import sleep
 
 from sympy.core.compatibility import callable
 
+
 class PlotModeBase(PlotMode):
     """
     Intended parent class for plotting

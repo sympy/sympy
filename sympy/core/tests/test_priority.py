@@ -50,10 +50,12 @@ class Higher(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+
 class Lower(Higher):
 
     _op_priority = 5.0
     result = 'low'
+
 
 def test_mul():
     x = Symbol('x')
@@ -63,6 +65,7 @@ def test_mul():
     assert x*h == h*x == 'high'
     assert l*x == x*l != 'low'
 
+
 def test_add():
     x = Symbol('x')
     h = Higher()
@@ -70,6 +73,7 @@ def test_add():
     assert l+h == h+l == 'high'
     assert x+h == h+x == 'high'
     assert l+x == x+l != 'low'
+
 
 def test_sub():
     x = Symbol('x')
@@ -79,6 +83,7 @@ def test_sub():
     assert x-h == h-x == 'high'
     assert l-x == -(x-l) != 'low'
 
+
 def test_pow():
     x = Symbol('x')
     h = Higher()
@@ -87,6 +92,7 @@ def test_pow():
     assert x**h == h**x == 'high'
     assert l**x != 'low'
     assert x**l != 'low'
+
 
 def test_div():
     x = Symbol('x')

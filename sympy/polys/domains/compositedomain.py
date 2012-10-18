@@ -3,6 +3,7 @@
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import GeneratorsError
 
+
 class CompositeDomain(Domain):
     """Base class for composite domains, e.g. ZZ[x], ZZ(X). """
 

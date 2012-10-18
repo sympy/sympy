@@ -9,6 +9,7 @@ from sympy.solvers import solve
 
 oo = S.Infinity
 
+
 class Naturals(Set):
     """
     Represents the Natural Numbers. The Naturals are available as a singleton
@@ -57,6 +58,7 @@ class Naturals(Set):
     @property
     def _sup(self):
         return oo
+
 
 class Integers(Set):
     """
@@ -113,11 +115,13 @@ class Integers(Set):
     def _sup(self):
         return oo
 
+
 class Reals(Interval):
     __metaclass__ = Singleton
 
     def __new__(cls):
         return Interval.__new__(cls, -oo, oo)
+
 
 class TransformationSet(Set):
     """
@@ -183,6 +187,7 @@ class TransformationSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
 
 class Range(Set):
     """

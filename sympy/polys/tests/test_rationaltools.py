@@ -7,6 +7,7 @@ from sympy.abc import x, y, z
 
 A, B = symbols('A,B', commutative=False)
 
+
 def test_together():
     assert together(0) == 0
     assert together(1) == 1

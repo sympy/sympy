@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 
+
 class AssumptionsContext(set):
     """Set representing assumptions.
 
@@ -34,6 +35,7 @@ class AssumptionsContext(set):
             super(AssumptionsContext, self).add(a)
 
 global_assumptions = AssumptionsContext()
+
 
 class AppliedPredicate(Boolean):
     """The class of expressions resulting from applying a Predicate.
@@ -92,6 +94,7 @@ class AppliedPredicate(Boolean):
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
+
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.

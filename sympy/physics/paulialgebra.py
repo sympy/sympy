@@ -12,6 +12,7 @@ from sympy import Symbol, I
 
 __all__ = ['evaluate_pauli_product']
 
+
 def delta(i, j):
     """
     Returns 1 if i == j, else 0.
@@ -31,6 +32,7 @@ def delta(i, j):
         return 1
     else:
         return 0
+
 
 def epsilon(i, j, k):
     """
@@ -55,6 +57,7 @@ def epsilon(i, j, k):
         return -1
     else:
         return 0
+
 
 class Pauli(Symbol):
     """The class representing algebraic properties of Pauli matrices
@@ -125,6 +128,7 @@ class Pauli(Symbol):
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
             return super(Pauli, b).__pow__(int(e) % 2)
+
 
 def evaluate_pauli_product(arg):
     '''Help function to evaluate Pauli matrices product

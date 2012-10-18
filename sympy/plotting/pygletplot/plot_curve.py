@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
 
+
 class PlotCurve(PlotModeBase):
 
     style_override = 'wireframe'

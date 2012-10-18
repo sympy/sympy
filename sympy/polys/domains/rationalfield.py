@@ -4,6 +4,7 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
+
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 

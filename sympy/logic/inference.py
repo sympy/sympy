@@ -4,6 +4,7 @@ from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
+
 def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).
@@ -24,6 +25,7 @@ def literal_symbol(literal):
         return literal.args[0]
     else:
         return literal
+
 
 def satisfiable(expr, algorithm="dpll2"):
     """
@@ -48,6 +50,7 @@ def satisfiable(expr, algorithm="dpll2"):
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr)
     raise NotImplementedError
+
 
 def pl_true(expr, model={}):
     """

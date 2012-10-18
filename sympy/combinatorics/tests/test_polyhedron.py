@@ -8,6 +8,7 @@ from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
 
+
 def test_polyhedron():
     raises(ValueError, lambda: Polyhedron(list('ab'),
         pgroup=[Permutation([0])]))

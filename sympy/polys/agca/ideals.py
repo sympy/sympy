@@ -2,6 +2,7 @@
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class Ideal(object):
     """
     Abstract base class for ideals.
@@ -254,6 +255,7 @@ class Ideal(object):
 
     def __ne__(self, e):
         return not (self == e)
+
 
 class ModuleImplementedIdeal(Ideal):
     """

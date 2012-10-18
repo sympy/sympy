@@ -8,6 +8,7 @@ Plm= assoc_legendre
 
 _x = Dummy("x")
 
+
 def Plmcos(l, m, th):
     """
     Plm(cos(th)).
@@ -21,6 +22,7 @@ def Plmcos(l, m, th):
     _sinth = Dummy("_sinth", nonnegative=True)
     P = P.subs(1-cos(th)**2, _sinth**2).subs(_sinth, sin(th))
     return P
+
 
 def Ylm(l, m, theta, phi):
     """
@@ -44,9 +46,11 @@ def Ylm(l, m, theta, phi):
     return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
             Plmcos(l, m, theta) * C.exp(I*m*phi)
 
+
 def Ylm_c(l, m, theta, phi):
     """Conjugate spherical harmonics."""
     return (-1)**m * Ylm(l, -m, theta, phi)
+
 
 def Zlm(l, m, th, ph):
     """

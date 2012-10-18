@@ -41,6 +41,8 @@ from sympy.utilities import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')
+
+
 def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
     def wild(n):
@@ -248,6 +250,7 @@ def _create_lookup_table(table):
 from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
+
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
     if not f.has(x):
@@ -262,11 +265,13 @@ def _mytype(f, x):
         res.sort()
         return tuple(res)
 
+
 class _CoeffExpValueError(ValueError):
     """
     Exception raised by _get_coeff_exp, for internal use only.
     """
     pass
+
 
 def _get_coeff_exp(expr, x):
     """
@@ -298,6 +303,7 @@ def _get_coeff_exp(expr, x):
     else:
         raise _CoeffExpValueError('expr not of form a*x**b: %s' % expr)
 
+
 def _exponents(expr, x):
     """
     Find the exponents of ``x`` (not including zero) in ``expr``.
@@ -327,10 +333,12 @@ def _exponents(expr, x):
     _exponents_(expr, x, res)
     return res
 
+
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
     return set(e.func for e in expr.atoms(Function) if e.has(x))
+
 
 def _find_splitting_points(expr, x):
     """
@@ -364,6 +372,7 @@ def _find_splitting_points(expr, x):
     innermost = set()
     compute_innermost(expr, innermost)
     return innermost
+
 
 def _split_mul(f, x):
     """
@@ -401,6 +410,7 @@ def _split_mul(f, x):
 
     return fac, po, g
 
+
 def _mul_args(f):
     """
     Return a list ``L`` such that Mul(*L) == f.
@@ -423,6 +433,7 @@ def _mul_args(f):
             gs.append(g)
     return gs
 
+
 def _mul_as_two_parts(f):
     """
     Find all the ways to split f into a product of two terms.
@@ -441,6 +452,7 @@ def _mul_as_two_parts(f):
         return None
 
     return [(Mul(*x), Mul(*y)) for (x, y) in multiset_partitions(gs, 2)]
+
 
 def _inflate_g(g, n):
     """ Return C, h such that h is a G function of argument z**n and
@@ -461,12 +473,14 @@ def _inflate_g(g, n):
                       inflate(g.bm, n), inflate(g.bother, n),
                       g.argument**n * n**(n*v))
 
+
 def _flip_g(g):
     """ Turn the G function into one of inverse argument
         (i.e. G(1/x) -> G'(x)) """
     # See [L], section 5.2
     def tr(l): return [1 - a for a in l]
     return meijerg(tr(g.bm), tr(g.bother), tr(g.an), tr(g.aother), 1/g.argument)
+
 
 def _inflate_fox_h(g, a):
     r"""
@@ -494,6 +508,8 @@ def _inflate_fox_h(g, a):
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
 _dummies = {}
+
+
 def _dummy(name, token, expr, **kwargs):
     """
     Return a dummy. This will return the same dummy if the same token+name is
@@ -504,6 +520,8 @@ def _dummy(name, token, expr, **kwargs):
     if expr.has(d):
         return Dummy(name, **kwargs)
     return d
+
+
 def _dummy_(name, token, **kwargs):
     """
     Return a dummy associated to name and token. Same effect as declaring
@@ -514,11 +532,13 @@ def _dummy_(name, token, **kwargs):
         _dummies[(name, token)] = Dummy(name, **kwargs)
     return _dummies[(name, token)]
 
+
 def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
     return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
+
 
 def _condsimp(cond):
     """
@@ -612,6 +632,7 @@ def _condsimp(cond):
     return cond.replace(lambda expr: expr.is_Relational and expr.rel_op == '==',
                         repl_eq)
 
+
 def _eval_cond(cond):
     """ Re-evaluate the conditions. """
     if isinstance(cond, bool):
@@ -621,6 +642,7 @@ def _eval_cond(cond):
 ####################################################################
 # Now the "backbone" functions to do actual integration.
 ####################################################################
+
 
 def _my_principal_branch(expr, period, full_pb=False):
     """ Bring expr nearer to its principal branch by removing superfluous
@@ -633,6 +655,7 @@ def _my_principal_branch(expr, period, full_pb=False):
     if not full_pb:
         res = res.replace(principal_branch, lambda x, y: x)
     return res
+
 
 def _rewrite_saxena_1(fac, po, g, x):
     """
@@ -652,6 +675,7 @@ def _rewrite_saxena_1(fac, po, g, x):
     def tr(l): return [a + (1 + s)/b - 1 for a in l]
     return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother),
                       a*x)
+
 
 def _check_antecedents_1(g, x, helper=False):
     """
@@ -767,6 +791,7 @@ def _check_antecedents_1(g, x, helper=False):
 
     return Or(*conds)
 
+
 def _int0oo_1(g, x):
     """
     Evaluate int_0^\infty g dx using G functions,
@@ -792,6 +817,7 @@ def _int0oo_1(g, x):
     for a in g.aother:
         res /= gamma(a + 1)
     return combsimp(unpolarify(res))
+
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     """
@@ -857,6 +883,7 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     g2 = meijerg(g2.an, g2.aother, g2.bm, g2.bother, a2*x)
 
     return powdenest(fac, polar=True), g1, g2
+
 
 def _check_antecedents(g1, g2, x):
     """ Return a condition under which the integral theorem applies. """
@@ -1159,6 +1186,7 @@ def _check_antecedents(g1, g2, x):
     # NOTE An alternative, but as far as I can tell weaker, set of conditions
     #      can be found in [L, section 5.6.2].
 
+
 def _int0oo(g1, g2, x):
     """
     Express integral from zero to infinity g1*g2 using a G function,
@@ -1192,6 +1220,7 @@ def _rewrite_inversion(fac, po, g, x):
     def tr(l): return [t + s/b for t in l]
     return (powdenest(fac/a**(s/b), polar=True),
             meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
+
 
 def _check_antecedents_inversion(g, x):
     """ Check antecedents for the laplace inversion integral. """
@@ -1309,6 +1338,7 @@ def _check_antecedents_inversion(g, x):
 
     return Or(*conds)
 
+
 def _int_inversion(g, x, t):
     """
     Compute the laplace inversion integral, assuming the formula applies.
@@ -1323,6 +1353,8 @@ def _int_inversion(g, x, t):
 ####################################################################
 
 _lookup_table = None
+
+
 @cacheit
 @timeit
 def _rewrite_single(f, x, recursive=True):
@@ -1461,6 +1493,7 @@ def _rewrite_single(f, x, recursive=True):
     _debug('Recursive mellin transform worked:', g)
     return res, True
 
+
 def _rewrite1(f, x, recursive=True):
     """
     Try to rewrite f using a (sum of) single G functions with argument a*x**b.
@@ -1473,6 +1506,7 @@ def _rewrite1(f, x, recursive=True):
     g = _rewrite_single(g, x, recursive)
     if g:
         return fac, po, g[0], g[1]
+
 
 def _rewrite2(f, x):
     """
@@ -1501,6 +1535,7 @@ def _rewrite2(f, x):
                 if cond is not False:
                     return fac, po, g1[0], g2[0], cond
 
+
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
@@ -1522,6 +1557,7 @@ def meijerint_indefinite(f, x):
             return results[-1]
     if results:
         return sorted(results, key=count_ops)[0]
+
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
@@ -1601,6 +1637,7 @@ def _meijerint_indefinite_1(f, x):
     else:
         res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
+
 
 @timeit
 def meijerint_definite(f, x, a, b):
@@ -1717,6 +1754,7 @@ def meijerint_definite(f, x, a, b):
     if results:
         return sorted(results, key=lambda x: count_ops(x[0]))[0]
 
+
 def _guess_expansion(f, x):
     """ Try to guess sensible rewritings for integrand f(x). """
     from sympy import expand_trig
@@ -1738,6 +1776,7 @@ def _guess_expansion(f, x):
             res += [(expanded, 'expand_trig, expand_mul')]
 
     return res
+
 
 def _meijerint_definite_2(f, x):
     """
@@ -1767,6 +1806,7 @@ def _meijerint_definite_2(f, x):
         if res is not None and res[1] is not False:
             return res
 
+
 def _meijerint_definite_3(f, x):
     """
     Try to integrate f dx from zero to infinity.
@@ -1790,9 +1830,11 @@ def _meijerint_definite_3(f, x):
             if c is not False:
                 return res, c
 
+
 def _my_unpolarify(f):
     from sympy import unpolarify
     return _eval_cond(unpolarify(f))
+
 
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
@@ -1853,6 +1895,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 if only_double:
                     return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond
+
 
 def meijerint_inversion(f, x, t):
     """

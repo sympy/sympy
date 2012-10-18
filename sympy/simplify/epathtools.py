@@ -2,6 +2,7 @@
 
 from sympy.core import Basic
 
+
 class EPath(object):
     r"""
     Manipulate expressions using paths.
@@ -275,6 +276,7 @@ class EPath(object):
 
         _select(self._epath, expr)
         return result
+
 
 def epath(path, expr=None, func=None, args=None, kwargs=None):
     r"""

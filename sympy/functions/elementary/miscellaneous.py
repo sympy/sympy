@@ -9,6 +9,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int
 
+
 class IdentityFunction(Lambda):
     """
     The identity function
@@ -35,6 +36,7 @@ Id = S.IdentityFunction
 ###############################################################################
 ############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
+
 
 def sqrt(arg):
     """The square root function
@@ -184,6 +186,7 @@ def root(arg, n):
     n = sympify(n)
     return C.Pow(arg, 1/n)
 
+
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of -1**(1/odd) will be changed to -1.
@@ -226,6 +229,7 @@ def real_root(arg, n=None):
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
 ###############################################################################
+
 
 class MinMaxBase(LatticeOp):
     def __new__(cls, *args, **assumptions):
@@ -346,6 +350,7 @@ class MinMaxBase(LatticeOp):
                 return False  # never occurs?
             return True
         return False
+
 
 class Max(MinMaxBase, Application, Basic):
     """

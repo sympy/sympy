@@ -12,10 +12,12 @@ from sympy.utilities.iterables import numbered_symbols
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
 
+
 class TrigonometricFunction(Function):
     """Base class for trigonometric functions. """
 
     unbranched = True
+
 
 def _peeloff_pi(arg):
     """
@@ -46,6 +48,7 @@ def _peeloff_pi(arg):
     m1 = (K % S.Half) * S.Pi
     m2 = K*S.Pi - m1
     return arg - m2, m2
+
 
 def _pi_coeff(arg, cycles=1):
     """
@@ -111,6 +114,7 @@ def _pi_coeff(arg, cycles=1):
                 else:
                     return c2*x
             return cx
+
 
 class sin(TrigonometricFunction):
     """
@@ -344,6 +348,7 @@ class sin(TrigonometricFunction):
     def _sage_(self):
         import sage.all as sage
         return sage.sin(self.args[0]._sage_())
+
 
 class cos(TrigonometricFunction):
     """
@@ -697,6 +702,7 @@ class cos(TrigonometricFunction):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
+
 class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. see cos, sin, tan.
 
     def _eval_rewrite_as_cos(self, arg):
@@ -705,6 +711,7 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
+
 class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
 
     def _eval_rewrite_as_sin(self, arg):
@@ -712,6 +719,7 @@ class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. 
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
+
 
 class tan(TrigonometricFunction):
     """
@@ -924,6 +932,7 @@ class tan(TrigonometricFunction):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
 
+
 class cot(TrigonometricFunction):
     """
     cot(x) -> Returns the cotangent of x (measured in radians)
@@ -1105,6 +1114,7 @@ class cot(TrigonometricFunction):
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
+
 class asin(Function):
     """
     asin(x) -> Returns the arc sine of x (measured in radians)
@@ -1226,6 +1236,7 @@ class asin(Function):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
 
+
 class acos(Function):
     """
     acos(x) -> Returns the arc cosine of x (measured in radians)
@@ -1337,6 +1348,7 @@ class acos(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.acos(self.args[0]._sage_())
+
 
 class atan(Function):
     """
@@ -1454,6 +1466,7 @@ class atan(Function):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
 
+
 class acot(Function):
     """
     acot(x) -> Returns the arc cotangent of x (measured in radians)
@@ -1550,6 +1563,7 @@ class acot(Function):
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
                (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
+
 
 class atan2(Function):
     """

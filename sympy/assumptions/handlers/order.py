@@ -86,6 +86,7 @@ class AskNegativeHandler(CommonHandler):
     def Abs(expr, assumptions):
         return False
 
+
 class AskNonZeroHandler(CommonHandler):
     """
     Handler for key 'zero'
@@ -123,6 +124,7 @@ class AskNonZeroHandler(CommonHandler):
     @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr.args[0]), assumptions)
+
 
 class AskPositiveHandler(CommonHandler):
     """

@@ -5,6 +5,7 @@ from sympy.polys.polyutils import PicklableWithSlots
 
 import operator
 
+
 class PythonRationalType(PicklableWithSlots):
     """
     Rational number type based on Python integers.

@@ -5,6 +5,7 @@ General SymPy exceptions and warnings.
 from sympy.utilities.misc import filldedent
 from warnings import warn as warning
 
+
 class SymPyDeprecationWarning(DeprecationWarning):
     r"""A warning for deprecated features of SymPy.
 

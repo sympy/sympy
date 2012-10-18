@@ -13,6 +13,7 @@ from sympy.integrals.meijerint import _dummy
 # Helpers / Utilities
 ##########################################################################
 
+
 class IntegralTransformError(NotImplementedError):
     """
     Exception raised in relation to problems computing transforms.
@@ -28,6 +29,7 @@ class IntegralTransformError(NotImplementedError):
         super(IntegralTransformError, self).__init__(
             "%s Transform could not be computed: %s." % (transform, msg))
         self.function = function
+
 
 class IntegralTransform(Function):
     """
@@ -157,11 +159,13 @@ class IntegralTransform(Function):
 
 from sympy.solvers.inequalities import _solve_inequality
 
+
 def _simplify(expr, doit):
     from sympy import powdenest, piecewise_fold
     if doit:
         return simplify(powdenest(piecewise_fold(expr), polar=True))
     return expr
+
 
 def _noconds_(default):
     """
@@ -199,6 +203,7 @@ _noconds = _noconds_(False)
 
 def _default_integrator(f, x):
     return integrate(f, (x, 0, oo))
+
 
 @_noconds
 def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
@@ -266,6 +271,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     a, b, aux = conds[0]
     return _simplify(F.subs(s, s_), simplify), (a, b), aux
 
+
 class MellinTransform(IntegralTransform):
     """
     Class representing unevaluated Mellin transforms.
@@ -298,6 +304,7 @@ class MellinTransform(IntegralTransform):
         if (res[0][0] >= res[0][1]) is True or res[1] is False:
             raise IntegralTransformError('Mellin', None, 'no combined convergence.')
         return res
+
 
 def mellin_transform(f, x, s, **hints):
     r"""
@@ -336,6 +343,7 @@ def mellin_transform(f, x, s, **hints):
     hankel_transform, inverse_hankel_transform
     """
     return MellinTransform(f, x, s).doit(**hints)
+
 
 def _rewrite_sin((m, n), s, a, b):
     """
@@ -377,11 +385,13 @@ def _rewrite_sin((m, n), s, a, b):
     r = ceiling(-m*a - n.as_real_imag()[0])  # Don't use re(n), does not expand
     return gamma(m*s + n + r), gamma(1 - n - r - m*s), (-1)**r*pi
 
+
 class MellinTransformStripError(ValueError):
     """
     Exception raised by _rewrite_gamma. Mainly for internal use.
     """
     pass
+
 
 def _rewrite_gamma(f, s, a, b):
     """
@@ -674,6 +684,7 @@ def _rewrite_gamma(f, s, a, b):
 
     return (an, ap), (bm, bq), arg, exponent, fac
 
+
 @_noconds_(True)
 def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     """ A helper for the real inverse_mellin_transform function, this one here
@@ -726,6 +737,8 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     raise IntegralTransformError('Inverse Mellin', F, '')
 
 _allowed = None
+
+
 class InverseMellinTransform(IntegralTransform):
     """
     Class representing unevaluated inverse Mellin transforms.
@@ -777,6 +790,7 @@ class InverseMellinTransform(IntegralTransform):
         from sympy import Integral, I, oo
         c = self.__class__._c
         return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))
+
 
 def inverse_mellin_transform(F, s, x, strip, **hints):
     r"""
@@ -915,6 +929,7 @@ def _simplifyconds(expr, s, a):
     expr = repl(expr, Unequality, replue)
     return expr
 
+
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
@@ -1006,6 +1021,7 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), sbs(aux)
 
+
 class LaplaceTransform(IntegralTransform):
     """
     Class representing unevaluated Laplace transforms.
@@ -1045,6 +1061,7 @@ class LaplaceTransform(IntegralTransform):
             raise IntegralTransformError('Laplace', None, 'No combined convergence.')
         return plane, cond
 
+
 def laplace_transform(f, t, s, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
@@ -1077,6 +1094,7 @@ def laplace_transform(f, t, s, **hints):
     hankel_transform, inverse_hankel_transform
     """
     return LaplaceTransform(f, t, s).doit(**hints)
+
 
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
@@ -1148,6 +1166,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     return _simplify(f.subs(t, t_), simplify), cond
 
+
 class InverseLaplaceTransform(IntegralTransform):
     """
     Class representing unevaluated inverse Laplace transforms.
@@ -1183,6 +1202,7 @@ class InverseLaplaceTransform(IntegralTransform):
         from sympy import I, Integral, exp
         c = self.__class__._c
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))
+
 
 def inverse_laplace_transform(F, s, t, plane=None, **hints):
     r"""
@@ -1253,6 +1273,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
 
     return _simplify(F, simplify), cond
 
+
 class FourierTypeTransform(IntegralTransform):
     """ Base class for Fourier transforms.
         Specify cls._a and cls._b.
@@ -1269,6 +1290,7 @@ class FourierTypeTransform(IntegralTransform):
         b = self.__class__._b
         return Integral(a*f*exp(b*I*x*k), (x, -oo, oo))
 
+
 class FourierTransform(FourierTypeTransform):
     """
     Class representing unevaluated Fourier transforms.
@@ -1282,6 +1304,7 @@ class FourierTransform(FourierTypeTransform):
     _name = 'Fourier'
     _a = 1
     _b = -2*S.Pi
+
 
 def fourier_transform(f, x, k, **hints):
     r"""
@@ -1318,6 +1341,7 @@ def fourier_transform(f, x, k, **hints):
     """
     return FourierTransform(f, x, k).doit(**hints)
 
+
 class InverseFourierTransform(FourierTypeTransform):
     """
     Class representing unevaluated inverse Fourier transforms.
@@ -1331,6 +1355,7 @@ class InverseFourierTransform(FourierTypeTransform):
     _name = 'Inverse Fourier'
     _a = 1
     _b = 2*S.Pi
+
 
 def inverse_fourier_transform(F, k, x, **hints):
     r"""
@@ -1374,6 +1399,7 @@ def inverse_fourier_transform(F, k, x, **hints):
 
 from sympy import sin, cos, sqrt, pi, I, oo
 
+
 @_noconds_(True)
 def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
     """
@@ -1398,6 +1424,7 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
 
     return _simplify(F, simplify), cond
 
+
 class SineCosineTypeTransform(IntegralTransform):
     """
     Base class for sine and cosine transforms.
@@ -1417,6 +1444,7 @@ class SineCosineTypeTransform(IntegralTransform):
         K = self.__class__._kern
         return Integral(a*f*K(b*x*k), (x, 0, oo))
 
+
 class SineTransform(SineCosineTypeTransform):
     """
     Class representing unevaluated sine transforms.
@@ -1431,6 +1459,7 @@ class SineTransform(SineCosineTypeTransform):
     _kern = sin
     _a = sqrt(2)/sqrt(pi)
     _b = 1
+
 
 def sine_transform(f, x, k, **hints):
     r"""
@@ -1464,6 +1493,7 @@ def sine_transform(f, x, k, **hints):
     """
     return SineTransform(f, x, k).doit(**hints)
 
+
 class InverseSineTransform(SineCosineTypeTransform):
     """
     Class representing unevaluated inverse sine transforms.
@@ -1478,6 +1508,7 @@ class InverseSineTransform(SineCosineTypeTransform):
     _kern = sin
     _a = sqrt(2)/sqrt(pi)
     _b = 1
+
 
 def inverse_sine_transform(F, k, x, **hints):
     r"""
@@ -1511,6 +1542,7 @@ def inverse_sine_transform(F, k, x, **hints):
     """
     return InverseSineTransform(F, k, x).doit(**hints)
 
+
 class CosineTransform(SineCosineTypeTransform):
     """
     Class representing unevaluated cosine transforms.
@@ -1525,6 +1557,7 @@ class CosineTransform(SineCosineTypeTransform):
     _kern = cos
     _a = sqrt(2)/sqrt(pi)
     _b = 1
+
 
 def cosine_transform(f, x, k, **hints):
     r"""
@@ -1558,6 +1591,7 @@ def cosine_transform(f, x, k, **hints):
     """
     return CosineTransform(f, x, k).doit(**hints)
 
+
 class InverseCosineTransform(SineCosineTypeTransform):
     """
     Class representing unevaluated inverse cosine transforms.
@@ -1572,6 +1606,7 @@ class InverseCosineTransform(SineCosineTypeTransform):
     _kern = cos
     _a = sqrt(2)/sqrt(pi)
     _b = 1
+
 
 def inverse_cosine_transform(F, k, x, **hints):
     r"""
@@ -1632,6 +1667,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
 
     return _simplify(F, simplify), cond
 
+
 class HankelTypeTransform(IntegralTransform):
     """
     Base class for Hankel transforms.
@@ -1660,6 +1696,7 @@ class HankelTypeTransform(IntegralTransform):
                                  self.transform_variable,
                                  self.args[3])
 
+
 class HankelTransform(HankelTypeTransform):
     """
     Class representing unevaluated Hankel transforms.
@@ -1671,6 +1708,7 @@ class HankelTransform(HankelTypeTransform):
     """
 
     _name = 'Hankel'
+
 
 def hankel_transform(f, r, k, nu, **hints):
     r"""
@@ -1714,6 +1752,7 @@ def hankel_transform(f, r, k, nu, **hints):
     """
     return HankelTransform(f, r, k, nu).doit(**hints)
 
+
 class InverseHankelTransform(HankelTypeTransform):
     """
     Class representing unevaluated inverse Hankel transforms.
@@ -1725,6 +1764,7 @@ class InverseHankelTransform(HankelTypeTransform):
     """
 
     _name = 'Inverse Hankel'
+
 
 def inverse_hankel_transform(F, k, r, nu, **hints):
     r"""

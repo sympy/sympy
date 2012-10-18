@@ -6,6 +6,7 @@ __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance', 'dependent',
         'independent', 'random_symbols']
 
+
 def variance(X, condition=None, **kwargs):
     """
     Variance of a random expression
@@ -31,6 +32,7 @@ def variance(X, condition=None, **kwargs):
     return (expectation(X**2, condition, **kwargs) -
             expectation(X, condition, **kwargs)**2)
 
+
 def standard_deviation(X, condition=None, **kwargs):
     """
     Standard Deviation of a random expression
@@ -51,6 +53,7 @@ def standard_deviation(X, condition=None, **kwargs):
     """
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
+
 
 def covariance(X, Y, condition=None, **kwargs):
     """
@@ -82,6 +85,7 @@ def covariance(X, Y, condition=None, **kwargs):
             (X - expectation(X, condition, **kwargs)) *
             (Y - expectation(Y, condition, **kwargs)),
                       condition, **kwargs)
+
 
 def skewness(X, condition=None, **kwargs):
 

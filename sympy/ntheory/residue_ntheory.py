@@ -3,6 +3,7 @@ from sympy.core.compatibility import as_int
 from primetest import isprime
 from factor_ import factorint, trailing, totient
 
+
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
 
@@ -149,6 +150,7 @@ def legendre_symbol(a, p):
         return 1
     else:
         return -1
+
 
 def jacobi_symbol(m, n):
     """

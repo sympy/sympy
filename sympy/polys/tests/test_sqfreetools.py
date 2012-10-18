@@ -33,6 +33,7 @@ from sympy.abc import x
 
 from sympy.utilities.pytest import raises
 
+
 def test_dup_sqf():
     assert dup_sqf_part([], ZZ) == []
     assert dup_sqf_p([], ZZ) == True
@@ -107,6 +108,7 @@ def test_dup_sqf():
     assert dup_sqf_list_include([DMP([1, 0, 0, 0], ZZ), DMP([], ZZ), DMP([], ZZ)], ZZ[x]) == \
         [([DMP([1, 0, 0, 0], ZZ)], 1), ([DMP([1], ZZ), DMP([], ZZ)], 2)]
 
+
 def test_dmp_sqf():
     assert dmp_sqf_part([[]], 1, ZZ) == [[]]
     assert dmp_sqf_p([[]], 1, ZZ) == True
@@ -160,6 +162,7 @@ def test_dmp_sqf():
         [([[-1]], 1), ([[1], [-1]], 2)]
 
     raises(DomainError, lambda: dmp_sqf_list([[K(1), K(0), K(1)]], 1, K))
+
 
 def test_dup_gff_list():
     f = [1, 2, -1, -2, 0, 0]

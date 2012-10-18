@@ -57,6 +57,7 @@ def gf_crt(U, M, K=None):
 
     return v % p
 
+
 def gf_crt1(M, K):
     """
     First part of the Chinese Remainder Theorem.
@@ -79,6 +80,7 @@ def gf_crt1(M, K):
         S.append(K.gcdex(E[-1], m)[0] % m)
 
     return p, E, S
+
 
 def gf_crt2(U, M, p, E, S, K):
     """
@@ -107,6 +109,7 @@ def gf_crt2(U, M, p, E, S, K):
 
     return v % p
 
+
 def gf_int(a, p):
     """
     Coerce ``a mod p`` to an integer in ``[-p/2, p/2]`` range.
@@ -127,6 +130,7 @@ def gf_int(a, p):
     else:
         return a - p
 
+
 def gf_degree(f):
     """
     Return leading degree of ``f``.
@@ -143,6 +147,7 @@ def gf_degree(f):
 
     """
     return len(f)-1
+
 
 def gf_LC(f, K):
     """
@@ -163,6 +168,7 @@ def gf_LC(f, K):
     else:
         return f[0]
 
+
 def gf_TC(f, K):
     """
     Return trailing coefficient of ``f``.
@@ -181,6 +187,7 @@ def gf_TC(f, K):
         return K.zero
     else:
         return f[-1]
+
 
 @cythonized("k")
 def gf_strip(f):
@@ -210,6 +217,7 @@ def gf_strip(f):
 
     return f[k:]
 
+
 def gf_trunc(f, p):
     """
     Reduce all coefficients modulo ``p``.
@@ -224,6 +232,7 @@ def gf_trunc(f, p):
 
     """
     return gf_strip([ a % p for a in f ])
+
 
 def gf_normal(f, p, K):
     """
@@ -241,6 +250,7 @@ def gf_normal(f, p, K):
     """
     return gf_trunc(map(K, f), p)
 
+
 def gf_convert(f, p, K0, K1):
     """
     Normalize all coefficients in ``K``.
@@ -257,6 +267,7 @@ def gf_convert(f, p, K0, K1):
 
     """
     return gf_trunc([ K1.convert(c, K0) for c in f ], p)
+
 
 @cythonized("k,n")
 def gf_from_dict(f, p, K):
@@ -286,6 +297,7 @@ def gf_from_dict(f, p, K):
 
     return gf_trunc(h, p)
 
+
 @cythonized("k,n")
 def gf_to_dict(f, p, symmetric=True):
     """
@@ -314,6 +326,7 @@ def gf_to_dict(f, p, symmetric=True):
 
     return result
 
+
 def gf_from_int_poly(f, p):
     """
     Create ``GF(p)[x]`` polynomial from ``Z[x]``.
@@ -329,6 +342,7 @@ def gf_from_int_poly(f, p):
 
     """
     return gf_trunc(f, p)
+
 
 def gf_to_int_poly(f, p, symmetric=True):
     """
@@ -351,6 +365,7 @@ def gf_to_int_poly(f, p, symmetric=True):
     else:
         return f
 
+
 def gf_neg(f, p, K):
     """
     Negate a polynomial in ``GF(p)[x]``.
@@ -366,6 +381,7 @@ def gf_neg(f, p, K):
 
     """
     return [ -coeff % p for coeff in f ]
+
 
 def gf_add_ground(f, a, p, K):
     """
@@ -394,6 +410,7 @@ def gf_add_ground(f, a, p, K):
     else:
         return [a]
 
+
 def gf_sub_ground(f, a, p, K):
     """
     Compute ``f - a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
@@ -421,6 +438,7 @@ def gf_sub_ground(f, a, p, K):
     else:
         return [a]
 
+
 def gf_mul_ground(f, a, p, K):
     """
     Compute ``f * a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
@@ -440,6 +458,7 @@ def gf_mul_ground(f, a, p, K):
     else:
         return [ (a*b) % p for b in f ]
 
+
 def gf_quo_ground(f, a, p, K):
     """
     Compute ``f/a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
@@ -455,6 +474,7 @@ def gf_quo_ground(f, a, p, K):
 
     """
     return gf_mul_ground(f, K.invert(a, p), p, K)
+
 
 @cythonized("df,dg,k")
 def gf_add(f, g, p, K):
@@ -491,6 +511,7 @@ def gf_add(f, g, p, K):
 
         return h + [ (a + b) % p for a, b in zip(f, g) ]
 
+
 @cythonized("df,dg,k")
 def gf_sub(f, g, p, K):
     """
@@ -526,6 +547,7 @@ def gf_sub(f, g, p, K):
 
         return h + [ (a - b) % p for a, b in zip(f, g) ]
 
+
 @cythonized("df,dg,dh,i,j")
 def gf_mul(f, g, p, K):
     """
@@ -556,6 +578,7 @@ def gf_mul(f, g, p, K):
         h[i] = coeff % p
 
     return gf_strip(h)
+
 
 @cythonized("df,dh,i,j,jmin,jmax,n")
 def gf_sqr(f, p, K):
@@ -600,6 +623,7 @@ def gf_sqr(f, p, K):
 
     return gf_strip(h)
 
+
 def gf_add_mul(f, g, h, p, K):
     """
     Returns ``f + g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
@@ -613,6 +637,7 @@ def gf_add_mul(f, g, h, p, K):
     [2, 3, 2, 2]
     """
     return gf_add(f, gf_mul(g, h, p, K), p, K)
+
 
 def gf_sub_mul(f, g, h, p, K):
     """
@@ -629,6 +654,7 @@ def gf_sub_mul(f, g, h, p, K):
 
     """
     return gf_sub(f, gf_mul(g, h, p, K), p, K)
+
 
 @cythonized("k")
 def gf_expand(F, p, K):
@@ -657,6 +683,7 @@ def gf_expand(F, p, K):
         g = gf_mul(g, f, p, K)
 
     return g
+
 
 @cythonized("df,dg,dq,dr,i,j")
 def gf_div(f, g, p, K):
@@ -712,6 +739,7 @@ def gf_div(f, g, p, K):
 
     return h[:dq+1], gf_strip(h[dq+1:])
 
+
 def gf_rem(f, g, p, K):
     """
     Compute polynomial remainder in ``GF(p)[x]``.
@@ -727,6 +755,7 @@ def gf_rem(f, g, p, K):
 
     """
     return gf_div(f, g, p, K)[1]
+
 
 @cythonized("df,dg,dq,dr,i,j")
 def gf_quo(f, g, p, K):
@@ -767,6 +796,7 @@ def gf_quo(f, g, p, K):
 
     return h[:dq+1]
 
+
 def gf_exquo(f, g, p, K):
     """
     Compute polynomial quotient in ``GF(p)[x]``.
@@ -793,6 +823,7 @@ def gf_exquo(f, g, p, K):
     else:
         raise ExactQuotientFailed(f, g)
 
+
 @cythonized("n")
 def gf_lshift(f, n, K):
     """
@@ -813,6 +844,7 @@ def gf_lshift(f, n, K):
     else:
         return f + [K.zero]*n
 
+
 @cythonized("n")
 def gf_rshift(f, n, K):
     """
@@ -832,6 +864,7 @@ def gf_rshift(f, n, K):
         return f, []
     else:
         return f[:-n], f[-n:]
+
 
 def gf_pow(f, n, p, K):
     """
@@ -869,6 +902,7 @@ def gf_pow(f, n, p, K):
         f = gf_sqr(f, p, K)
 
     return h
+
 
 def gf_pow_mod(f, n, g, p, K):
     """
@@ -918,6 +952,7 @@ def gf_pow_mod(f, n, g, p, K):
 
     return h
 
+
 def gf_gcd(f, g, p, K):
     """
     Euclidean Algorithm in ``GF(p)[x]``.
@@ -936,6 +971,7 @@ def gf_gcd(f, g, p, K):
         f, g = g, gf_rem(f, g, p, K)
 
     return gf_monic(f, p, K)[1]
+
 
 def gf_lcm(f, g, p, K):
     """
@@ -959,6 +995,7 @@ def gf_lcm(f, g, p, K):
 
     return gf_monic(h, p, K)[1]
 
+
 def gf_cofactors(f, g, p, K):
     """
     Compute polynomial GCD and cofactors in ``GF(p)[x]``.
@@ -980,6 +1017,7 @@ def gf_cofactors(f, g, p, K):
 
     return (h, gf_quo(f, h, p, K),
                gf_quo(g, h, p, K))
+
 
 def gf_gcdex(f, g, p, K):
     """
@@ -1046,6 +1084,7 @@ def gf_gcdex(f, g, p, K):
 
     return s1, t1, r1
 
+
 def gf_monic(f, p, K):
     """
     Compute LC and a monic polynomial in ``GF(p)[x]``.
@@ -1069,6 +1108,7 @@ def gf_monic(f, p, K):
             return lc, list(f)
         else:
             return lc, gf_quo_ground(f, lc, p, K)
+
 
 @cythonized("df,n")
 def gf_diff(f, p, K):
@@ -1100,6 +1140,7 @@ def gf_diff(f, p, K):
 
     return gf_strip(h)
 
+
 def gf_eval(f, a, p, K):
     """
     Evaluate ``f(a)`` in ``GF(p)`` using Horner scheme.
@@ -1123,6 +1164,7 @@ def gf_eval(f, a, p, K):
 
     return result
 
+
 def gf_multi_eval(f, A, p, K):
     """
     Evaluate ``f(a)`` for ``a`` in ``[a_1, ..., a_n]``.
@@ -1138,6 +1180,7 @@ def gf_multi_eval(f, A, p, K):
 
     """
     return [ gf_eval(f, a, p, K) for a in A ]
+
 
 def gf_compose(f, g, p, K):
     """
@@ -1167,6 +1210,7 @@ def gf_compose(f, g, p, K):
 
     return h
 
+
 def gf_compose_mod(g, h, f, p, K):
     """
     Compute polynomial composition ``g(h)`` in ``GF(p)[x]/(f)``.
@@ -1192,6 +1236,7 @@ def gf_compose_mod(g, h, f, p, K):
         comp = gf_rem(comp, f, p, K)
 
     return comp
+
 
 @cythonized("n")
 def gf_trace_map(a, b, c, n, f, p, K):
@@ -1249,6 +1294,7 @@ def gf_trace_map(a, b, c, n, f, p, K):
 
     return gf_compose_mod(a, V, f, p, K), U
 
+
 @cythonized("i,n")
 def gf_random(n, p, K):
     """
@@ -1264,6 +1310,7 @@ def gf_random(n, p, K):
 
     """
     return [K.one] + [ K(int(uniform(0, p))) for i in xrange(0, n) ]
+
 
 @cythonized("i,n")
 def gf_irreducible(n, p, K):
@@ -1284,6 +1331,7 @@ def gf_irreducible(n, p, K):
 
         if gf_irreducible_p(f, p, K):
             return f
+
 
 @cythonized("i,n")
 def gf_irred_p_ben_or(f, p, K):
@@ -1320,6 +1368,7 @@ def gf_irred_p_ben_or(f, p, K):
             return False
 
     return True
+
 
 @cythonized("i,n,d")
 def gf_irred_p_rabin(f, p, K):
@@ -1367,6 +1416,7 @@ _irred_methods = {
     'rabin': gf_irred_p_rabin,
 }
 
+
 def gf_irreducible_p(f, p, K):
     """
     Test irreducibility of a polynomial ``f`` in ``GF(p)[x]``.
@@ -1392,6 +1442,7 @@ def gf_irreducible_p(f, p, K):
 
     return irred
 
+
 def gf_sqf_p(f, p, K):
     """
     Return ``True`` if ``f`` is square-free in ``GF(p)[x]``.
@@ -1415,6 +1466,7 @@ def gf_sqf_p(f, p, K):
     else:
         return gf_gcd(f, gf_diff(f, p, K), p, K) == [K.one]
 
+
 def gf_sqf_part(f, p, K):
     """
     Return square-free part of a ``GF(p)[x]`` polynomial.
@@ -1437,6 +1489,7 @@ def gf_sqf_part(f, p, K):
         g = gf_mul(g, f, p, K)
 
     return g
+
 
 @cythonized("i,n,d,r")
 def gf_sqf_list(f, p, K, all=False):
@@ -1527,6 +1580,7 @@ def gf_sqf_list(f, p, K, all=False):
 
     return lc, factors
 
+
 @cythonized("n,i,j,r")
 def gf_Qmatrix(f, p, K):
     """
@@ -1566,6 +1620,7 @@ def gf_Qmatrix(f, p, K):
         q = qq
 
     return Q
+
 
 @cythonized("n,i,j,k")
 def gf_Qbasis(Q, p, K):
@@ -1629,6 +1684,7 @@ def gf_Qbasis(Q, p, K):
 
     return basis
 
+
 @cythonized("i,k")
 def gf_berlekamp(f, p, K):
     """
@@ -1672,6 +1728,7 @@ def gf_berlekamp(f, p, K):
                 s += K.one
 
     return _sort_factors(factors, multiple=False)
+
 
 @cythonized("i")
 def gf_ddf_zassenhaus(f, p, K):
@@ -1728,6 +1785,7 @@ def gf_ddf_zassenhaus(f, p, K):
     else:
         return factors
 
+
 @cythonized("n,N,i")
 def gf_edf_zassenhaus(f, n, p, K):
     """
@@ -1781,6 +1839,7 @@ def gf_edf_zassenhaus(f, n, p, K):
                     + gf_edf_zassenhaus(gf_quo(f, g, p, K), n, p, K)
 
     return _sort_factors(factors, multiple=False)
+
 
 @cythonized("n,k,i,j")
 def gf_ddf_shoup(f, p, K):
@@ -1858,6 +1917,7 @@ def gf_ddf_shoup(f, p, K):
 
     return factors
 
+
 @cythonized("n,N,q")
 def gf_edf_shoup(f, n, p, K):
     """
@@ -1920,6 +1980,7 @@ def gf_edf_shoup(f, n, p, K):
 
     return _sort_factors(factors, multiple=False)
 
+
 @cythonized("n")
 def gf_zassenhaus(f, p, K):
     """
@@ -1941,6 +2002,7 @@ def gf_zassenhaus(f, p, K):
         factors += gf_edf_zassenhaus(factor, n, p, K)
 
     return _sort_factors(factors, multiple=False)
+
 
 @cythonized("n")
 def gf_shoup(f, p, K):
@@ -1970,6 +2032,7 @@ _factor_methods = {
     'shoup': gf_shoup,      # ``p`` : large
 }
 
+
 def gf_factor_sqf(f, p, K, method=None):
     """
     Factor a square-free polynomial ``f`` in ``GF(p)[x]``.
@@ -1997,6 +2060,7 @@ def gf_factor_sqf(f, p, K, method=None):
         factors = gf_zassenhaus(f, p, K)
 
     return lc, factors
+
 
 @cythonized("n")
 def gf_factor(f, p, K):
@@ -2082,6 +2146,7 @@ def gf_value(f, a):
         result += c
     return result
 
+
 def linear_congruence(a, b, m):
     """
     Returns the values of x satisfying a*x congruent b mod(m)
@@ -2113,6 +2178,7 @@ def linear_congruence(a, b, m):
     if b % g != 0:
         return []
     return [(r * b // g + t * m // g) % m for t in range(g)]
+
 
 def _raise_mod_power(x, s, p, f):
     """
@@ -2153,6 +2219,7 @@ def _raise_mod_power(x, s, p, f):
     beta = - gf_value(f, x) // p**s
     return linear_congruence(alpha, beta, p)
 
+
 def csolve_prime(f, p, e=1):
     """
     Solutions of f(x) congruent 0 mod(p**e).
@@ -2185,6 +2252,7 @@ def csolve_prime(f, p, e=1):
             ps = p**s
             S.extend([(x + v*ps, s1) for v in _raise_mod_power(x, s, p, f)])
     return sorted(X)
+
 
 def gf_csolve(f, n):
     """

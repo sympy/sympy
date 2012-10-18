@@ -15,6 +15,7 @@ from sympy.matrices import Matrix
 # From "Functional Differential Geometry" as of 2011
 # by Sussman and Wisdom.
 
+
 def test_functional_diffgeom_ch2():
     x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0', real=True)
     x, y = symbols('x, y', real=True)

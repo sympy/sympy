@@ -2,6 +2,7 @@
 
 from sympy import latex
 
+
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
     import __builtin__, sys
@@ -20,6 +21,7 @@ def _init_python_printing(stringify_func):
             __builtin__._ = arg
 
     sys.displayhook = _displayhook
+
 
 def _init_ipython_printing(ip, stringify_func, render_latex):
     """Setup printing in IPython interactive session. """
@@ -141,6 +143,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
                 latex_formatter.for_type(cls, _print_latex)
     else:
         ip.set_hook('result_display', _result_display)
+
 
 def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=None, wrap_line=None, num_columns=None, no_global=False, ip=None):
     """

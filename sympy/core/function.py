@@ -52,6 +52,7 @@ from sympy.utilities.iterables import uniq
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
 
+
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
 
@@ -75,13 +76,16 @@ def _coeff_isneg(a):
         a = a.args[0]
     return a.is_Number and a.is_negative
 
+
 class PoleError(Exception):
     pass
+
 
 class ArgumentIndexError(ValueError):
     def __str__(self):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -96,6 +100,7 @@ class FunctionClass(ManagedProperties):
 
     def __repr__(cls):
         return cls.__name__
+
 
 class Application(Basic):
     """
@@ -597,6 +602,7 @@ class AppliedUndef(Function):
         result.nargs = len(args)
         return result
 
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -629,6 +635,7 @@ class WildFunction(Function, AtomicExpr):
     @property
     def is_number(self):
         return False
+
 
 class Derivative(Expr):
     """
@@ -1099,6 +1106,7 @@ class Derivative(Expr):
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
 
+
 class Lambda(Expr):
     """
     Lambda(x, expr) represents a lambda function similar to Python's
@@ -1200,6 +1208,7 @@ class Lambda(Expr):
             return self.args[0] == self.args[1]
         else:
             return None
+
 
 class Subs(Expr):
     """
@@ -1416,6 +1425,7 @@ def diff(f, *symbols, **kwargs):
     """
     kwargs.setdefault('evaluate', True)
     return Derivative(f, *symbols, **kwargs)
+
 
 def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
         mul=True, log=True, multinomial=True, basic=True, **hints):
@@ -1747,6 +1757,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
 # These are simple wrappers around single hints.
+
+
 def expand_mul(expr, deep=True):
     """
     Wrapper around expand that only uses the mul hint.  See the expand
@@ -1764,6 +1776,7 @@ def expand_mul(expr, deep=True):
     return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
     power_base=False, basic=False, multinomial=False, log=False)
 
+
 def expand_multinomial(expr, deep=True):
     """
     Wrapper around expand that only uses the multinomial hint.  See the expand
@@ -1780,6 +1793,7 @@ def expand_multinomial(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
     power_base=False, basic=False, multinomial=True, log=False)
+
 
 def expand_log(expr, deep=True, force=False):
     """
@@ -1799,6 +1813,7 @@ def expand_log(expr, deep=True, force=False):
         power_exp=False, power_base=False, multinomial=False,
         basic=False, force=force)
 
+
 def expand_func(expr, deep=True):
     """
     Wrapper around expand that only uses the func hint.  See the expand
@@ -1816,6 +1831,7 @@ def expand_func(expr, deep=True):
     return sympify(expr).expand(deep=deep, func=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
+
 def expand_trig(expr, deep=True):
     """
     Wrapper around expand that only uses the trig hint.  See the expand
@@ -1832,6 +1848,7 @@ def expand_trig(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, trig=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
 
 def expand_complex(expr, deep=True):
     """
@@ -1854,6 +1871,7 @@ def expand_complex(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
 
 def expand_power_base(expr, deep=True, force=False):
     """
@@ -1919,6 +1937,7 @@ def expand_power_base(expr, deep=True, force=False):
         power_exp=False, power_base=True, multinomial=False,
         basic=False, force=force)
 
+
 def expand_power_exp(expr, deep=True):
     """
     Wrapper around expand that only uses the power_exp hint.
@@ -1935,6 +1954,7 @@ def expand_power_exp(expr, deep=True):
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,\
     log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
+
 
 def count_ops(expr, visual=False):
     """
@@ -2107,6 +2127,7 @@ def count_ops(expr, visual=False):
         return int(ops)
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
+
 
 def nfloat(expr, n=15, exponent=False):
     """Make all Rationals in expr Floats except those in exponents

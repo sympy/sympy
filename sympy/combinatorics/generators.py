@@ -3,6 +3,7 @@ from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
 
+
 def symmetric(n):
     """
     Generates the symmetric group of order n, Sn.
@@ -19,6 +20,7 @@ def symmetric(n):
     """
     for perm in variations(range(n), n):
         yield Permutation(perm)
+
 
 def cyclic(n):
     """
@@ -43,6 +45,7 @@ def cyclic(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
 
+
 def alternating(n):
     """
     Generates the alternating group of order n, An.
@@ -60,6 +63,7 @@ def alternating(n):
         p = Permutation(perm)
         if p.is_even:
             yield p
+
 
 def dihedral(n):
     """

@@ -6,6 +6,7 @@ y = Function('y')
 n, k = symbols('n,k', integer=True)
 C0, C1, C2 = symbols('C0,C1,C2')
 
+
 def test_rsolve_poly():
     assert rsolve_poly([-1, -1, 1], 0, n) == 0
     assert rsolve_poly([-1, -1, 1], 1, n) == -1
@@ -16,6 +17,7 @@ def test_rsolve_poly():
     assert rsolve_poly([-4*n-2, 1], 4*n+1, n) == -1
 
     assert rsolve_poly([-1, 1], n**5 + n**3, n) == C0 - n**3 / 2 - n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
+
 
 def test_rsolve_ratio():
     solution = rsolve_ratio([-2*n**3+n**2+2*n-1, 2*n**3+n**2-6*n,
@@ -28,6 +30,7 @@ def test_rsolve_ratio():
         (S(1)/2)*(C2*(-3 + 2*n)/(-1 + n**2)),
         (S(1)/2)*(C2*( 3 - 2*n)/( 1 - n**2)),
     ]
+
 
 def test_rsolve_hyper():
     assert rsolve_hyper([-1, -1, 1], 0, n) in [
@@ -57,9 +60,11 @@ def test_rsolve_hyper():
 
     assert rsolve_hyper([-1, 1], 3*(n+n**2), n).expand() == C0 + n**3 - n
 
+
 def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
     return sum(c[i]*f.subs(n, n+i) for i in range(len(c)))
+
 
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
@@ -73,6 +78,7 @@ def test_rsolve_bulk():
                 assert rsolve_poly(c, q, n) == p
             #if p.is_hypergeometric(n):
             #    assert rsolve_hyper(c, q, n) == p
+
 
 def test_rsolve():
     f = y(n+2) - y(n+1) - y(n)
@@ -143,6 +149,7 @@ def test_rsolve():
     assert rsolve(f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
 
 def test_rsolve_raises():
     x = Function('x')

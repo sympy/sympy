@@ -1,6 +1,7 @@
 from sympy.combinatorics.generators import symmetric, cyclic, alternating, dihedral
 from sympy.combinatorics.permutations import Permutation
 
+
 def test_generators():
 
     assert list(cyclic(6)) == [

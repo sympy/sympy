@@ -17,6 +17,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 # o More rewriting.
 # o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).
 
+
 class BesselBase(Function):
     """
     Abstract base class for bessel-type functions.
@@ -49,6 +50,8 @@ class BesselBase(Function):
             raise ArgumentIndexError(self, argindex)
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
              - self._a/2 * self.__class__(self.order + 1, self.argument) \
+
+
 
 class besselj(BesselBase):
     r"""
@@ -158,6 +161,7 @@ class besselj(BesselBase):
         from sympy import polar_lift, exp
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
+
 class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
@@ -210,6 +214,7 @@ class bessely(BesselBase):
         if self.order.is_Rational and self.order.q == 2:
             return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
         return self
+
 
 class besseli(BesselBase):
     r"""
@@ -271,6 +276,7 @@ class besseli(BesselBase):
         from sympy import polar_lift, exp
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
+
 class besselk(BesselBase):
     r"""
     Modified Bessel function of the second kind.
@@ -304,6 +310,7 @@ class besselk(BesselBase):
     _a = S.One
     _b = -S.One
 
+
 class hankel1(BesselBase):
     r"""
     Hankel function of the first kind.
@@ -335,6 +342,7 @@ class hankel1(BesselBase):
 
     _a = S.One
     _b = S.One
+
 
 class hankel2(BesselBase):
     r"""
@@ -370,6 +378,7 @@ class hankel2(BesselBase):
     _b = S.One
 
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
+
 
 class SphericalBesselBase(BesselBase):
     """
@@ -460,6 +469,7 @@ class jn(SphericalBesselBase):
         n = self.order
         z = self.argument
         return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
+
 
 class yn(SphericalBesselBase):
     r"""

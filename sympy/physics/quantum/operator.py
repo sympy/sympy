@@ -26,6 +26,7 @@ __all__ = [
 # Operators and outer products
 #-----------------------------------------------------------------------------
 
+
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
@@ -358,6 +359,7 @@ class OuterProduct(Operator):
         # differently.
 
         return self.ket._eval_trace(self.bra, **kwargs);
+
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx

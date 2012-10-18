@@ -15,6 +15,7 @@ oo = S.Infinity
 _x = Dummy("x")
 _z = Dummy("z")
 
+
 def test_single_normal():
     mu = Symbol('mu', real=True, bounded=True)
     sigma = Symbol('sigma', real=True, positive=True, bounded=True)
@@ -32,6 +33,7 @@ def test_single_normal():
 
     assert E(X, Eq(X, mu)) == mu
 
+
 @XFAIL
 def test_conditional_1d():
     X = Normal('x', 0, 1)
@@ -44,6 +46,7 @@ def test_conditional_1d():
 
     assert E(X**2) == E(Y**2)
 
+
 def test_ContinuousDomain():
     X = Normal('x', 0, 1)
     assert where(X**2<=1).set == Interval(-1, 1)
@@ -54,6 +57,7 @@ def test_ContinuousDomain():
     Y = given(X, X>=0)
 
     assert Y.pspace.domain.set == Interval(0, oo)
+
 
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
@@ -66,6 +70,7 @@ def test_multiple_normal():
 
     assert E(X, Eq(X+Y, 0)) == 0
     assert variance(X, Eq(X+Y, 0)) == S.Half
+
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
@@ -85,6 +90,7 @@ def test_symbolic():
     assert E(Z) == 1/rate
     assert E(a*Z+b) == a*E(Z)+b
     assert E(X+a*Z+b) == mu1 + a/rate + b
+
 
 def test_cdf():
     X = Normal('x', 0, 1)
@@ -108,12 +114,14 @@ def test_cdf():
     z = Symbol('z')
     assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
 
+
 def test_sample():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
     sym, val = Z.pspace.sample().items()[0]
     assert sym == Z and val in Interval(0, oo)
+
 
 def test_ContinuousRV():
     x = Symbol('x')
@@ -290,6 +298,7 @@ def test_maxwell():
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
 
+
 def test_nakagami():
     mu = Symbol("mu", positive=True)
     omega = Symbol("omega", positive=True)
@@ -302,6 +311,7 @@ def test_nakagami():
     assert (simplify(variance(X, meijerg=True)) ==
                             (omega*(gamma(mu)*gamma(mu + 1)
                           - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
+
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, bounded=True)
@@ -316,6 +326,7 @@ def test_pareto():
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
     # assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
+
 def test_pareto_numeric():
     xm, beta = 3, 2
     alpha = beta + 5
@@ -325,6 +336,7 @@ def test_pareto_numeric():
     assert variance(X) == xm**2*alpha / S(((alpha-1)**2*(alpha-2)))
     # Skewness tests too slow. Try shortcutting function?
 
+
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
 
@@ -333,12 +345,14 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+
 def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
     assert density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
                         *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
+
 
 @XFAIL
 def test_triangular():
@@ -352,6 +366,7 @@ def test_triangular():
                        (2/(-a + b), _x == c),
                        ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
                        (0, True)))
+
 
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)
@@ -378,6 +393,7 @@ def test_uniformsum():
     assert density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
                         *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
 
+
 def test_weibull():
     a, b = symbols('a b', positive=True)
     X = Weibull('x', a, b)
@@ -385,6 +401,7 @@ def test_weibull():
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
     assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
     # Skewness tests too slow. Try shortcutting function?
+
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -397,12 +414,14 @@ def test_weibull_numeric():
                 a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
 
+
 def test_wignersemicircle():
     R = Symbol("R", positive=True)
 
     X = WignerSemicircle('x', R)
     assert density(X) == Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
     assert E(X) == 0
+
 
 def test_prefab_sampling():
     N = Normal('X', 0, 1)
@@ -420,6 +439,7 @@ def test_prefab_sampling():
         for i in xrange(niter):
             assert sample(var) in var.pspace.domain.set
 
+
 def test_input_value_assertions():
     a, b = symbols('a b')
     p, q = symbols('p q', positive=True)
@@ -433,6 +453,7 @@ def test_input_value_assertions():
         raises(ValueError, lambda: fn('x', a, p))
         raises(ValueError, lambda: fn('x', p, a))
         fn('x', p, q)  # No error raised
+
 
 @XFAIL
 def test_unevaluated():
@@ -450,6 +471,7 @@ def test_unevaluated():
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
                 (x, -1, 1))), (x, 0, 1)))
+
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)

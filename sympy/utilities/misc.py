@@ -11,6 +11,7 @@ from textwrap import fill, dedent
 # text should not have leading or trailing spaces.
 filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
 
+
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.
 
@@ -160,6 +161,7 @@ def default_sort_key(item, order=None):
 
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
+
 
 def rawlines(s):
     """Return a cut-and-pastable string that, when printed, is equivalent

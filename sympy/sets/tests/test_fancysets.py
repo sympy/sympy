@@ -7,6 +7,7 @@ import itertools
 
 x = Symbol('x')
 
+
 def test_naturals():
     N = S.Naturals
     assert 5 in N
@@ -23,6 +24,7 @@ def test_naturals():
     assert N.inf == 1
     assert N.sup == oo
 
+
 def test_integers():
     Z = S.Integers
     assert 5 in Z
@@ -38,6 +40,7 @@ def test_integers():
 
     assert Z.inf == -oo
     assert Z.sup == oo
+
 
 def test_TransformationSet():
     squares = TransformationSet(Lambda(x, x**2), S.Naturals)
@@ -58,6 +61,7 @@ def test_TransformationSet():
 
     assert harmonics.is_iterable
 
+
 @XFAIL
 def test_halfcircle():
     # This test sometimes works and sometimes doesn't.
@@ -73,12 +77,14 @@ def test_halfcircle():
 
     assert not halfcircle.is_iterable
 
+
 def test_transformation_iterator_not_injetive():
     L = Lambda(x, x - x%2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
     evens = TransformationSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here
     assert (i.next(), i.next(), i.next(), i.next()) == (0, 2, 4, 6)
+
 
 def test_Range():
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
@@ -123,9 +129,11 @@ def test_range_interval_intersection():
     assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
             FiniteSet(-2, 1, 4)
 
+
 def test_fun():
     assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+
 
 def test_reals():
     assert 5 in S.Reals
@@ -133,13 +141,17 @@ def test_reals():
     assert -sqrt(2) in S.Reals
     assert (2, 5) not in S.Reals
 
+
 @XFAIL  # this is because contains is now very strict
 def test_reals_fail():
     assert sqrt(-1) not in S.Reals
 
+
 def take(n, iterable):
     "Return first n items of the iterable as a list"
     return list(itertools.islice(iterable, n))
+
+
 def test_intersections():
     assert 5 in S.Integers.intersect(S.Reals)
     assert 5 in S.Integers.intersect(S.Reals)

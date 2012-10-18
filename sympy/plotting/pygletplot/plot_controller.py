@@ -2,6 +2,7 @@ from pyglet.window import key
 from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
 from util import get_direction_vectors, get_basis_vectors
 
+
 class PlotController(object):
 
     normal_mouse_sensitivity = 4.0

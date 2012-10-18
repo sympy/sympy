@@ -5,6 +5,7 @@ Read the vectorize docstring for more details.
 """
 from sympy.core.decorators import wraps
 
+
 def apply_on_element(f, args, kwargs, n):
     """
     Returns a structure with the same dimension as the specified argument,
@@ -34,6 +35,7 @@ def apply_on_element(f, args, kwargs, n):
     # all basic elements.
     return map(f_reduced, structure)
 
+
 def iter_copy(structure):
     """
     Returns a copy of an iterable object (also copying all embedded iterables).
@@ -46,6 +48,7 @@ def iter_copy(structure):
             l.append(i)
     return l
 
+
 def structure_copy(structure):
     """
     Returns a copy of the given structure (numpy-array, list, iterable, ..).
@@ -53,6 +56,7 @@ def structure_copy(structure):
     if hasattr(structure, "copy"):
         return structure.copy()
     return iter_copy(structure)
+
 
 class vectorize:
     """

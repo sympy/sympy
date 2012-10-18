@@ -27,6 +27,7 @@ from sympy.polys.domains import ZZ, QQ, EX
 x, y, z, p, q, r, s, t, u, v, w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 A, B = symbols('A,B', commutative=False)
 
+
 def test__sort_gens():
     assert _sort_gens([]) == ()
 
@@ -80,6 +81,7 @@ def test__sort_gens():
 
     assert _sort_gens(X) == X
 
+
 def test__unify_gens():
     assert _unify_gens([], []) == ()
 
@@ -105,12 +107,14 @@ def test__unify_gens():
 
     assert _unify_gens([x, y, z], [t, x, p, q, z]) == (t, x, y, p, q, z)
 
+
 def test__analyze_gens():
     assert _analyze_gens((x, y, z)) == (x, y, z)
     assert _analyze_gens([x, y, z]) == (x, y, z)
 
     assert _analyze_gens(([x, y, z],)) == (x, y, z)
     assert _analyze_gens(((x, y, z),)) == (x, y, z)
+
 
 def test__sort_factors():
     assert _sort_factors([], multiple=True) == []
@@ -151,6 +155,7 @@ def test__sort_factors():
 
     assert _sort_factors(F, multiple=True) == G
 
+
 def test__dict_from_expr_if_gens():
     assert dict_from_expr(Integer(17), gens=(x,)) == ({(0,): Integer(17)}, (x,))
     assert dict_from_expr(Integer(17), gens=(x, y)) == ({(0, 0): Integer(17)}, (x, y))
@@ -186,6 +191,7 @@ def test__dict_from_expr_if_gens():
     assert dict_from_expr(Integral(x, (x, 1, 2)) + x) == ({(0, 1): 1, (1, 0): 1}, (x, Integral(x, (x, 1, 2))))
     raises(PolynomialError, lambda: dict_from_expr(2**y*x, gens=(x, y)))
 
+
 def test__dict_from_expr_no_gens():
     raises(GeneratorsNeeded, lambda: dict_from_expr(Integer(17)))
 
@@ -211,9 +217,11 @@ def test__dict_from_expr_no_gens():
     assert dict_from_expr(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
         (1, 0, 0, 1): 1, (1, 0, 1, 0): 1}, (cos(x), cos(y), sin(x), sin(y)))
 
+
 def test__parallel_dict_from_expr_if_gens():
     assert parallel_dict_from_expr([x+2*y+3*z, Integer(7)], gens=(x,)) == \
         ([{(1,): Integer(1), (0,): 2*y+3*z}, {(0,): Integer(7)}], (x,))
+
 
 def test__parallel_dict_from_expr_no_gens():
     assert parallel_dict_from_expr([x*y, Integer(3)]) == \
@@ -221,9 +229,11 @@ def test__parallel_dict_from_expr_no_gens():
     assert parallel_dict_from_expr([x*y, 2*z, Integer(3)]) == \
         ([{(1, 1, 0): Integer(1)}, {(0, 0, 1): Integer(2)}, {(0, 0, 0): Integer(3)}], (x, y, z))
 
+
 def test_parallel_dict_from_expr():
     parallel_dict_from_expr([Eq(x, 1), Eq(x**2, 2)]) == ([{(1,): Integer(1)}, {(2,): Integer(2)}], (x,))
     raises(PolynomialError, lambda: parallel_dict_from_expr([A*B - B*A]))
+
 
 def test_dict_from_expr():
     dict_from_expr(Eq(x, 1)) == ({(1,): Integer(1)}, (x,))

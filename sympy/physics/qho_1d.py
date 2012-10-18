@@ -2,6 +2,7 @@ from sympy.core import S, pi, Rational
 from sympy.functions import hermite, sqrt, exp, factorial
 from sympy.physics.quantum.constants import hbar
 
+
 def psi_n(n, x, m, omega):
     """
     Returns the wavefunction psi_{n} for the One-dimensional harmonic oscillator.

@@ -1,5 +1,6 @@
 from sympy import Symbol, Integer, sympify
 
+
 class PlotInterval(object):
     """
     """

@@ -42,6 +42,7 @@ class OrthogonalPolynomial(Function):
 # Jacobi polynomials
 #
 
+
 class jacobi(OrthogonalPolynomial):
     r"""
     Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
@@ -202,6 +203,7 @@ class jacobi(OrthogonalPolynomial):
 # Gegenbauer polynomials
 #
 
+
 class gegenbauer(OrthogonalPolynomial):
     r"""
     Gegenbauer polynomial :math:`C_n^{\left(\alpha\right)}(x)`
@@ -344,6 +346,7 @@ class gegenbauer(OrthogonalPolynomial):
 # Chebyshev polynomials of first and second kind
 #
 
+
 class chebyshevt(OrthogonalPolynomial):
     r"""
     Chebyshev polynomial of the first kind, :math:`T_n(x)`
@@ -449,6 +452,7 @@ class chebyshevt(OrthogonalPolynomial):
         k = C.Dummy("k")
         kern = C.binomial(n, 2*k) * (x**2 - 1)**k * x**(n-2*k)
         return C.Sum(kern, (k, 0, C.floor(n/2)))
+
 
 class chebyshevu(OrthogonalPolynomial):
     r"""
@@ -562,6 +566,7 @@ class chebyshevu(OrthogonalPolynomial):
         kern = S.NegativeOne**k * C.factorial(n-k) * (2*x)**(n-2*k) / (C.factorial(k) * C.factorial(n-2*k))
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
+
 class chebyshevt_root(Function):
     r"""
     chebyshev_root(n, k) returns the kth root (indexed from zero) of
@@ -601,6 +606,7 @@ class chebyshevt_root(Function):
         if not 0 <= k < n:
             raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(2*k+1)/(2*n))
+
 
 class chebyshevu_root(Function):
     r"""
@@ -644,6 +650,7 @@ class chebyshevu_root(Function):
 #----------------------------------------------------------------------------
 # Legendre polynomials and Associated Legendre polynomials
 #
+
 
 class legendre(OrthogonalPolynomial):
     r"""
@@ -736,6 +743,7 @@ class legendre(OrthogonalPolynomial):
         k = C.Dummy("k")
         kern = (-1)**k*C.binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return C.Sum(kern, (k, 0, n))
+
 
 class assoc_legendre(Function):
     r"""
@@ -839,6 +847,7 @@ class assoc_legendre(Function):
 # Hermite polynomials
 #
 
+
 class hermite(OrthogonalPolynomial):
     r"""
     hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
@@ -929,6 +938,7 @@ class hermite(OrthogonalPolynomial):
 #----------------------------------------------------------------------------
 # Laguerre polynomials
 #
+
 
 class laguerre(OrthogonalPolynomial):
     r"""

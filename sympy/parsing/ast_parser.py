@@ -70,6 +70,7 @@ if ast_enabled:
             n = Call(Name('Lambda', Load()), [Tuple(args, Load()), body], [], None, None)
             return fix_missing_locations(n)
 
+
 def parse_expr(s, local_dict):
     """
     Converts the string "s" to a SymPy expression, in local_dict.

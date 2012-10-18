@@ -15,6 +15,7 @@ from sympy.core import Symbol
 from sympy import Predicate
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
 
+
 def dpll_satisfiable(expr):
     """
     Check satisfiability of a propositional sentence.
@@ -605,6 +606,7 @@ class SATSolver(object):
     def _simple_clean_clauses(self):
         """Clean up learned clauses."""
         pass
+
 
 class Level(object):
     """

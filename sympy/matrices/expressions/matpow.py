@@ -2,6 +2,7 @@ from matexpr import MatrixExpr, ShapeError, Identity
 from sympy import Pow, S, Basic
 from sympy.core.sympify import _sympify
 
+
 class MatPow(MatrixExpr, Pow):
 
     def __new__(cls, b, e):

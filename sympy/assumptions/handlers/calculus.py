@@ -6,6 +6,7 @@ from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
+
 class AskInfinitesimalHandler(CommonHandler):
     """
     Handler for key 'infinitesimal'

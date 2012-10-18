@@ -1,6 +1,7 @@
 from sympy import Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt
 from sympy.abc import x, y, z
 
+
 def test_Abs():
     assert refine(Abs(x), Q.positive(x)) == x
     assert refine(1+Abs(x), Q.positive(x)) == 1+x
@@ -9,6 +10,7 @@ def test_Abs():
 
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
+
 
 def test_pow():
     assert refine((-1)**x, Q.even(x)) == 1

@@ -6,6 +6,7 @@ from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
 
+
 class Partition(C.FiniteSet):
     """
     This class represents an abstract partition.
@@ -263,6 +264,7 @@ class Partition(C.FiniteSet):
         if not all(p for p in partition):
             raise ValueError('some blocks of the partition were empty.')
         return Partition(partition)
+
 
 class IntegerPartition(Basic):
     """
@@ -527,6 +529,7 @@ class IntegerPartition(Basic):
     def __str__(self):
         return str(list(self.partition))
 
+
 def random_integer_partition(n, seed=None):
     """
     Generates a random integer partition summing to ``n`` as a list
@@ -565,6 +568,7 @@ def random_integer_partition(n, seed=None):
     partition = flatten([[k]*m for k, m in partition])
     return partition
 
+
 def RGS_generalized(m):
     """
     Computes the m + 1 generalized unrestricted growth strings
@@ -594,6 +598,7 @@ def RGS_generalized(m):
             else:
                 d[i, j] = 0
     return d
+
 
 def RGS_enum(m):
     """
@@ -637,6 +642,7 @@ def RGS_enum(m):
         nrgf = b[m - 1]
     return nrgf
 
+
 def RGS_unrank(rank, m):
     """
     Gives the unranked restricted growth string for a given
@@ -670,6 +676,7 @@ def RGS_unrank(rank, m):
             L[i] = int(rank / v + 1)
             rank %= v
     return map(lambda x: x - 1, L[1:])
+
 
 def RGS_rank(rgs):
     """

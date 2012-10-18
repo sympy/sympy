@@ -9,6 +9,7 @@ from sympy.core.relational import Eq
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
 
+
 class re(Function):
     """Returns real part of expression. This function performs only
        elementary analysis and so it will fail to decompose properly
@@ -297,6 +298,7 @@ class sign(Function):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
 
+
 class Abs(Function):
     """
     Return the absolute value of the argument.
@@ -438,6 +440,7 @@ class Abs(Function):
         else:
             return self
 
+
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
@@ -457,6 +460,7 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
+
 
 class conjugate(Function):
     """
@@ -502,6 +506,7 @@ class conjugate(Function):
     def _eval_transpose(self):
         return conjugate(transpose(self.args[0]))
 
+
 class transpose(Function):
     """
     Linear map transposition.
@@ -523,6 +528,7 @@ class transpose(Function):
 
     def _eval_transpose(self):
         return self.args[0]
+
 
 class adjoint(Function):
     """
@@ -571,6 +577,7 @@ class adjoint(Function):
 ###############################################################################
 ############### HANDLING OF POLAR NUMBERS #####################################
 ###############################################################################
+
 
 class polar_lift(Function):
     """
@@ -640,6 +647,7 @@ class polar_lift(Function):
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
+
 
 class periodic_argument(Function):
     """
@@ -732,9 +740,11 @@ class periodic_argument(Function):
         ub = periodic_argument(z, oo)._eval_evalf(prec)
         return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
 
+
 def unbranched_argument(arg):
     from sympy import oo
     return periodic_argument(arg, oo)
+
 
 class principal_branch(Function):
     """

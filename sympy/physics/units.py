@@ -76,6 +76,7 @@ quantity.)
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
 
+
 class Unit(AtomicExpr):
     """
     Base class for base unit of physical units.
@@ -269,6 +270,7 @@ eV = 1.602176487e-19 * J
 
 ly = lightyear = lightyears = c*julian_year
 au = astronomical_unit = astronomical_units = 149597870691*m
+
 
 def find_unit(quantity):
     """

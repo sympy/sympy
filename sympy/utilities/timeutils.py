@@ -6,6 +6,7 @@ import timeit, math
 _scales = [1e0, 1e3, 1e6, 1e9]
 _units = [u's', u'ms', u'\u03bcs', u'ns']
 
+
 def timed(func):
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func)
@@ -39,10 +40,12 @@ def __do_timings():
 _do_timings = __do_timings()
 _timestack = None
 
+
 def _print_timestack(stack, level=1):
     print '-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3])
     for s in stack[1]:
         _print_timestack(s, level+1)
+
 
 def timethis(name):
     def decorator(func):

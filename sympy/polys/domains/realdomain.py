@@ -8,6 +8,7 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
+
 class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
     """Abstract domain for real numbers. """
 

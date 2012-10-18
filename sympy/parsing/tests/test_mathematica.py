@@ -1,6 +1,7 @@
 from sympy.parsing.mathematica import mathematica
 from sympy import sympify
 
+
 def test_mathematica():
     d = {'Sin[x]^2': 'sin(x)**2',
         '2(x-1)': '2*(x-1)',

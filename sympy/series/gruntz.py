@@ -127,6 +127,7 @@ from sympy.core.compatibility import reduce
 
 O = Order
 
+
 def debug(func):
     """Only for debugging purposes: prints a tree
 
@@ -148,6 +149,7 @@ def debug(func):
 
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
+
 
 def tree(subtrees):
     """Only debugging purposes: prints a tree"""
@@ -172,6 +174,8 @@ def tree(subtrees):
 
 tmp = []
 iter = 0
+
+
 def maketree(f, *args, **kw):
     """Only debugging purposes: prints a tree"""
     global tmp
@@ -198,6 +202,7 @@ def maketree(f, *args, **kw):
         tmp = []
     return r
 
+
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
@@ -214,6 +219,7 @@ def compare(a, b, x):
         return ">"
     else:
         return "="
+
 
 class SubsSet(dict):
     """
@@ -300,6 +306,7 @@ class SubsSet(dict):
             r[expr] = var
         return r
 
+
 @debug
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
@@ -361,6 +368,7 @@ def mrv(e, x):
         return mrv(e.args[0], x)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
+
 def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. max() compares (two elements of)
@@ -386,6 +394,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
         assert c == "="
         return union, expsboth
 
+
 def mrv_max1(f, g, exps, x):
     """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. mrv_max1() compares (two elements of)
@@ -396,6 +405,7 @@ def mrv_max1(f, g, exps, x):
     u, b = f.union(g, exps)
     return mrv_max3(f, g.do_subs(exps), g, f.do_subs(exps),
                     u, b, x)
+
 
 @debug
 @cacheit
@@ -452,6 +462,7 @@ def sign(e, x):
     c0, e0 = mrv_leadterm(e, x)
     return sign(c0, x)
 
+
 @debug
 @timeit
 @cacheit
@@ -483,6 +494,7 @@ def limitinf(e, x):
     elif sig == 0:
         return limitinf(c0, x)  # e0=0: lim f = lim c0
 
+
 def moveup2(s, x):
     r = SubsSet()
     for expr, var in s.iteritems():
@@ -490,6 +502,7 @@ def moveup2(s, x):
     for var, expr in s.rewrites.iteritems():
         r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
     return r
+
 
 def moveup(l, x):
     return [e.subs(x, exp(x)) for e in l]
@@ -513,6 +526,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
         if series and ((not skip_abs) or series.has(x)):
             return series
         n *= 2
+
 
 @debug
 @timeit
@@ -552,6 +566,7 @@ def mrv_leadterm(e, x):
     series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
+
 def build_expression_tree(Omega, rewrites):
     r""" Helper function for rewrite.
 
@@ -587,6 +602,7 @@ def build_expression_tree(Omega, rewrites):
                     n.before.append(nodes[v2])
 
     return nodes
+
 
 @debug
 @timeit
@@ -654,6 +670,7 @@ def rewrite(e, Omega, x, wsym):
     logw /= exponent
 
     return f, logw
+
 
 def gruntz(e, z, z0, dir="+"):
     """

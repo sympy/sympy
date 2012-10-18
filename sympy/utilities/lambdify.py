@@ -87,6 +87,7 @@ MODULES = {
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
 
+
 def _import(module, reload="False"):
     """
     Creates a global translation dictionary for module.
@@ -129,6 +130,7 @@ def _import(module, reload="False"):
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = namespace[translation]
+
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
@@ -265,6 +267,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     lstr = lambdastr(args, expr, printer=printer)
     return eval(lstr, namespace)
 
+
 def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
@@ -278,6 +281,7 @@ def _get_namespace(m):
         return m.__dict__
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+
 
 def lambdastr(args, expr, printer=None):
     """
@@ -314,6 +318,7 @@ def lambdastr(args, expr, printer=None):
         args = str(args)
 
     return "lambda %s: (%s)" % (args, expr)
+
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
@@ -380,6 +385,7 @@ def _imp_namespace(expr, namespace=None):
         for arg in expr.args:
             _imp_namespace(arg, namespace)
     return namespace
+
 
 def implemented_function(symfunc, implementation):
     """ Add numerical ``implementation`` to function ``symfunc``.

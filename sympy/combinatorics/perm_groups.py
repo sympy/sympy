@@ -17,11 +17,13 @@ from sympy.utilities.randtest import _randrange
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
 
+
 def _smallest_change(h, alpha):
     """Return smallest point not fixed by ``h`` else return None."""
     for i in range(alpha, len(h)):
         if h[i] != i:
             return i
+
 
 class _Vertex(object):
     """Represents a vertex of JGraph.
@@ -48,6 +50,7 @@ class _Vertex(object):
         self.neighbor = []
         self.perm = []
         self.index_neighbor = [-1]*n
+
 
 class _JGraph(object):
     """Represents a Jerrum graph.
@@ -332,6 +335,7 @@ class _JGraph(object):
                 sta.append(ag)
                 stg.append(gen1)
                 h += 1
+
 
 class PermutationGroup(Basic):
     """The class defining a Permutation group.

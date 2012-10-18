@@ -27,6 +27,7 @@ from sympy.physics.mechanics.point import Point
 from sympy import sympify, diff, sin, cos, Matrix
 from sympy.core.basic import S
 
+
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
     if not isinstance(vec1, (Vector, Dyadic)):
@@ -34,12 +35,14 @@ def cross(vec1, vec2):
     return vec1 ^ vec2
 cross.__doc__ += Vector.cross.__doc__
 
+
 def dot(vec1, vec2):
     """Dot product convenience wrapper for Vector.dot(): \n"""
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
 dot.__doc__ += Vector.dot.__doc__
+
 
 def express(vec, frame, frame2=None):
     """Express convenience wrapper for Vector.express(): \n"""
@@ -52,12 +55,14 @@ def express(vec, frame, frame2=None):
 
 express.__doc__ += Vector.express.__doc__
 
+
 def outer(vec1, vec2):
     """Outer prodcut convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
 outer.__doc__ += Vector.express.__doc__
+
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
@@ -106,6 +111,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     ol += sympify(izz) * (frame.z | frame.z)
     return ol
 
+
 def inertia_of_point_mass(mass, pos_vec, frame):
     """Inertia dyadic of a point mass realtive to point O.
 
@@ -135,6 +141,7 @@ def inertia_of_point_mass(mass, pos_vec, frame):
     return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
                    (frame.z | frame.z)) * (pos_vec & pos_vec) -
                    (pos_vec | pos_vec))
+
 
 def mechanics_printing():
     """Sets up interactive printing for mechanics' derivatives.
@@ -171,6 +178,7 @@ def mechanics_printing():
     import sys
     sys.displayhook = mprint
 
+
 def mprint(expr, **settings):
     r"""Function for printing of expressions generated in mechanics.
 
@@ -206,6 +214,7 @@ def mprint(expr, **settings):
         __builtin__._ = outstr
         print(outstr)
 
+
 def mpprint(expr, **settings):
     r"""Function for pretty printing of expressions generated in mechanics.
 
@@ -230,6 +239,7 @@ def mpprint(expr, **settings):
 
     mp = MechanicsPrettyPrinter(settings)
     print(mp.doprint(expr))
+
 
 def mlatex(expr, **settings):
     r"""Function for printing latex representation of mechanics objects.
@@ -267,6 +277,7 @@ def mlatex(expr, **settings):
     """
 
     return MechanicsLatexPrinter(settings).doprint(expr)
+
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     """Gives equations relating the qdot's to u's for a rotation type.
@@ -418,6 +429,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     else:
         raise ValueError('Not an approved rotation type for this function')
 
+
 def partial_velocity(vel_list, u_list, frame):
     """Returns a list of partial velocities.
 
@@ -469,6 +481,7 @@ def partial_velocity(vel_list, u_list, frame):
         list_of_pvlists += [pvlist]
     return list_of_pvlists
 
+
 def linear_momentum(frame, *body):
     """Linear momentum of the system.
 
@@ -517,6 +530,7 @@ def linear_momentum(frame, *body):
             else:
                 raise TypeError('*body must have only Particle or RigidBody')
     return linear_momentum_sys
+
 
 def angular_momentum(point, frame, *body):
     """Angular momentum of a system
@@ -575,6 +589,7 @@ def angular_momentum(point, frame, *body):
                 raise TypeError('*body must have only Particle or RigidBody')
     return angular_momentum_sys
 
+
 def kinetic_energy(frame, *body):
     """Kinetic energy of a multibody system.
 
@@ -630,6 +645,7 @@ def kinetic_energy(frame, *body):
             raise TypeError('*body must have only Particle or RigidBody')
     return ke_sys
 
+
 def potential_energy(*body):
     """Potential energy of a multibody system.
 
@@ -680,6 +696,7 @@ def potential_energy(*body):
         else:
             raise TypeError('*body must have only Particle or RigidBody')
     return pe_sys
+
 
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.

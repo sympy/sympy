@@ -4,6 +4,7 @@ from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sq
 
 from sympy.utilities.pytest import XFAIL
 
+
 def test_sinh():
     x, y = symbols('x,y')
 
@@ -68,10 +69,12 @@ def test_sinh():
 
     assert sinh(x).inverse() == asinh
 
+
 def test_sinh_series():
     x = Symbol('x')
     assert sinh(x).series(x, 0, 10) == \
                 x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
+
 
 def test_cosh():
     x, y = symbols('x,y')
@@ -137,10 +140,12 @@ def test_cosh():
 
     assert cosh(x).inverse() == acosh
 
+
 def test_cosh_series():
     x = Symbol('x')
     assert cosh(x).series(x, 0, 10) == \
                 1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
+
 
 def test_tanh():
     x, y = symbols('x,y')
@@ -206,10 +211,12 @@ def test_tanh():
 
     assert tanh(x).inverse() == atanh
 
+
 def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
                 x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+
 
 def test_coth():
     x, y = symbols('x,y')
@@ -275,10 +282,12 @@ def test_coth():
 
     assert coth(x).inverse() == acoth
 
+
 def test_coth_series():
     x = Symbol('x')
     assert coth(x).series(x, 0, 8) == \
                 1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
+
 
 def test_asinh():
     x, y = symbols('x,y')
@@ -311,6 +320,7 @@ def test_asinh():
     assert asinh(I*(sqrt(5)+1)/4) == 3*pi*I/10
     assert asinh(-I*(sqrt(5)+1)/4) == -3*pi*I/10
 
+
 def test_asinh_series():
     x = Symbol('x')
     assert asinh(x).series(x, 0, 8) == \
@@ -318,6 +328,7 @@ def test_asinh_series():
     t5 = asinh(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
+
 
 def test_acosh():
     # TODO please write more tests  -- see #652
@@ -354,6 +365,7 @@ def test_acosh_infinities():
     assert acosh(-oo) == oo
     assert acosh(I*oo) == oo
     assert acosh(-I*oo) == oo
+
 
 def test_acosh_series():
     x = Symbol('x')
@@ -401,16 +413,20 @@ def test_atanh():
     assert atanh(I*(sqrt(3)-2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
+
 def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
                 x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
 
 def test_atanh_infinities():
     assert atanh(oo) == -I*pi/2
     assert atanh(-oo) == I*pi/2
 
 # TODO please write more tests -- see #652
+
+
 def test_acoth():
     # TODO please write more tests  -- see #652
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCoth/03/01/
@@ -449,10 +465,12 @@ def test_acoth():
     assert acoth(I*(2-sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3)-2)) == 5*pi*I/12
 
+
 def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
                 I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
 
 def test_leading_term():
     x = Symbol('x')
@@ -465,6 +483,7 @@ def test_leading_term():
             eq = func(arg)
             assert eq.as_leading_term(x) == eq
 
+
 def test_complex():
     a, b = symbols('a,b', real=True)
     z = a + b*I
@@ -476,11 +495,13 @@ def test_complex():
         assert tanh(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
         assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
 
+
 def test_complex_2899():
     a, b = symbols('a,b', real=True)
     for deep in [True, False]:
         for func in [sinh, cosh, tanh, coth]:
             assert func(a).expand(complex=True, deep=deep) == func(a)
+
 
 def test_simplifications():
     x = Symbol('x')
@@ -504,8 +525,10 @@ def test_simplifications():
     assert coth(atanh(x)) == 1/x
     assert coth(acoth(x)) == x
 
+
 def test_issue1037():
     assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)
+
 
 def test_sinh_rewrite():
     x = Symbol('x')
@@ -516,6 +539,7 @@ def test_sinh_rewrite():
     coth_half = coth(S.Half*x)
     assert sinh(x).rewrite(coth) == 2*coth_half/(coth_half**2-1)
 
+
 def test_cosh_rewrite():
     x = Symbol('x')
     assert cosh(x).rewrite(exp) == (exp(x)+exp(-x))/2
@@ -525,6 +549,7 @@ def test_cosh_rewrite():
     coth_half = coth(S.Half*x)**2
     assert cosh(x).rewrite(coth) == (coth_half+1)/(coth_half-1)
 
+
 def test_tanh_rewrite():
     x = Symbol('x')
     assert tanh(x).rewrite(exp) == (exp(x)-exp(-x))/(exp(x)+exp(-x))
@@ -532,12 +557,14 @@ def test_tanh_rewrite():
     assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2-x)/cosh(x)
     assert tanh(x).rewrite(coth) == 1/coth(x)
 
+
 def test_coth_rewrite():
     x = Symbol('x')
     assert coth(x).rewrite(exp) == (exp(x)+exp(-x))/(exp(x)-exp(-x))
     assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2-x)/sinh(x)
     assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2-x)
     assert coth(x).rewrite(tanh) == 1/tanh(x)
+
 
 def test_derivs():
     x = Symbol('x')

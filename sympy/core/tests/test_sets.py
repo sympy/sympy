@@ -8,6 +8,7 @@ from sympy.mpmath import mpi
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
+
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
     assert Interval(0, oo).right_open == True
@@ -28,6 +29,7 @@ def test_interval_arguments():
 
     assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 
+
 def test_interval_symbolic_end_points():
     a = Symbol('a', real=True)
 
@@ -35,6 +37,7 @@ def test_interval_symbolic_end_points():
     assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
     assert Interval(0, a).contains(1) == LessThan(1, a)
+
 
 def test_union():
     assert Union(Interval(1, 2), Interval(2, 3)) == Interval(1, 3)
@@ -95,6 +98,7 @@ def test_union():
 
     assert X.is_iterable == False
 
+
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
     assert Interval(1, 3) - Interval(2, 3) == Interval(1, 2, False, True)
@@ -110,6 +114,7 @@ def test_difference():
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
     assert Union(Interval(0, 2), FiniteSet(2, 3, 4)) - Interval(1, 3) == \
             Union(Interval(0, 1, False, True), FiniteSet(4))
+
 
 def test_complement():
     assert Interval(0, 1).complement == \
@@ -150,6 +155,7 @@ def test_complement():
     assert not any(pt in square for pt in [(-1, 0), (1.5, .5), (10, 10)])
     assert all(pt in notsquare for pt in [(-1, 0), (1.5, .5), (10, 10)])
 
+
 def test_intersect():
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
@@ -181,6 +187,7 @@ def test_intersect():
     assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
            FiniteSet(2, 3, 4, 5)
 
+
 def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
@@ -204,16 +211,19 @@ def test_intersection():
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
 
+
 def test_interval_subs():
     a = Symbol('a', real=True)
 
     assert Interval(0, a).subs(a, 2) == Interval(0, 2)
     assert Interval(a, 0).subs(a, 2) == S.EmptySet
 
+
 def test_interval_to_mpi():
     assert Interval(0, 1).to_mpi() == mpi(0, 1)
     assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
     assert type(Interval(0, 1).to_mpi()) == type(mpi(0, 1))
+
 
 def test_measure():
     a = Symbol('a', real=True)
@@ -241,6 +251,7 @@ def test_measure():
     assert (square + band).measure == oo
     assert (band * FiniteSet(1, 2, 3)).measure == nan
 
+
 def test_subset():
     assert Interval(0, 2).subset(Interval(0, 1)) == True
     assert Interval(0, 2).subset(Interval(0, 3)) == False
@@ -262,6 +273,7 @@ def test_subset():
     assert S.EmptySet.subset(S.EmptySet) == True
 
     raises(ValueError, lambda: S.EmptySet.subset(1))
+
 
 def test_contains():
     assert Interval(0, 2).contains(1) == True
@@ -287,6 +299,7 @@ def test_contains():
 
     assert S.EmptySet.contains(1) == False
 
+
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
@@ -294,6 +307,7 @@ def test_interval_symbolic():
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
     assert e.contains(x) == And(0<x, x<1)
+
 
 def test_union_contains():
     x = Symbol('x')
@@ -313,19 +327,23 @@ def test_union_contains():
     assert all(el not in U for el in [0, 4, -oo])
     assert all(el in U for el in [2, 5, 10])
 
+
 def test_is_number():
     assert Interval(0, 1).is_number is False
     assert Set().is_number is False
+
 
 def test_Interval_is_left_unbounded():
     assert Interval(3, 4).is_left_unbounded == False
     assert Interval(-oo, 3).is_left_unbounded == True
     assert Interval(Float("-inf"), 3).is_left_unbounded == True
 
+
 def test_Interval_is_right_unbounded():
     assert Interval(3, 4).is_right_unbounded == False
     assert Interval(3, oo).is_right_unbounded == True
     assert Interval(3, Float("+inf")).is_right_unbounded == True
+
 
 def test_Interval_as_relational():
     x = Symbol('x')
@@ -343,12 +361,14 @@ def test_Interval_as_relational():
 
     assert Interval(-oo, oo).as_relational(x) == True
 
+
 def test_Finite_as_relational():
     x = Symbol('x')
     y = Symbol('y')
 
     assert FiniteSet(1, 2).as_relational(x) == Or(Eq(x, 1), Eq(x, 2))
     assert FiniteSet(y, -5).as_relational(x) == Or(Eq(x, y), Eq(x, -5))
+
 
 def test_Union_as_relational():
     x = Symbol('x')
@@ -357,14 +377,17 @@ def test_Union_as_relational():
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) ==\
             And(Lt(0, x), Le(x, 1))
 
+
 def test_Intersection_as_relational():
     x = Symbol('x')
     assert (Intersection(Interval(0, 1), FiniteSet(2),
             evaluate=False).as_relational(x)
             == And(And(Le(0, x), Le(x, 1)), Eq(x, 2)))
 
+
 def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) == False
+
 
 def test_finite_basic():
     x = Symbol('x')
@@ -383,6 +406,7 @@ def test_finite_basic():
 
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+
 
 def test_product_basic():
     H, T = 'H', 'T'
@@ -416,6 +440,7 @@ def test_product_basic():
 
     assert square.subset(Interval(.2, .5)*FiniteSet(.5))  # segment in square
 
+
 def test_real():
     x = Symbol('x', real=True)
 
@@ -433,6 +458,7 @@ def test_real():
 
     assert not (I+A+D).is_real
 
+
 def test_supinf():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -448,6 +474,7 @@ def test_supinf():
     assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).sup == S.Infinity
     assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
     assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
+
 
 def test_universalset():
     U = S.UniversalSet

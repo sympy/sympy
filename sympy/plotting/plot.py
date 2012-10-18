@@ -56,6 +56,7 @@ from sympy.plotting.textplot import textplot
 # show.
 _show=True
 
+
 def unset_show():
     global _show
     _show=False
@@ -63,6 +64,7 @@ def unset_show():
 ##############################################################################
 # The public interface
 ##############################################################################
+
 
 class Plot(object):
     """The central class of the plotting module.
@@ -999,12 +1001,14 @@ plot_backends = {
 def centers_of_segments(array):
     return np.average(np.vstack((array[:-1], array[1:])), 0)
 
+
 def centers_of_faces(array):
     return np.average(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
                                  )), 2)
+
 
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
@@ -1015,6 +1019,7 @@ def flat(x, y, z, eps=1e-3):
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
+
 
 def _matplotlib_list(interval_list):
     """
@@ -1285,6 +1290,7 @@ def plot_parametric(*args, **kwargs):
         plots.show()
     return plots
 
+
 def plot3d_parametric_line(*args, **kwargs):
     """
     Plots a 3D parametric line plot.
@@ -1370,6 +1376,7 @@ def plot3d_parametric_line(*args, **kwargs):
     if show:
         plots.show()
     return plots
+
 
 def plot3d(*args, **kwargs):
     """
@@ -1558,6 +1565,7 @@ def plot3d_parametric_surface(*args, **kwargs):
     if show:
         plots.show()
     return plots
+
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """

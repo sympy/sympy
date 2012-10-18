@@ -4,6 +4,7 @@ from sympy.utilities.pytest import raises
 
 n, r, Z = symbols('n r Z')
 
+
 def feq(a, b, max_relative_error=1e-12, max_absolute_error=1e-12):
     a = float(a)
     b = float(b)
@@ -16,6 +17,7 @@ def feq(a, b, max_relative_error=1e-12, max_absolute_error=1e-12):
     else:
         relative_error = abs((a-b)/a)
     return relative_error <= max_relative_error
+
 
 def test_wavefunction():
     a = 1/Z
@@ -39,6 +41,7 @@ def test_wavefunction():
     for n, l in R:
         assert simplify(R_nl(n, l, r, Z) - R[(n, l)]) == 0
 
+
 def test_norm():
     # Maximum "n" which is tested:
     n_max = 2
@@ -47,6 +50,7 @@ def test_norm():
     for n in range(n_max+1):
         for l in range(n):
             assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1
+
 
 def test_hydrogen_energies():
     assert E_nl(n, Z) == -Z**2/(2*n**2)
@@ -62,6 +66,7 @@ def test_hydrogen_energies():
     assert E_nl(100) == -S(1)/(2*100**2)
 
     raises(ValueError, lambda: E_nl(0))
+
 
 def test_hydrogen_energies_relat():
     # First test exact formulas for small "c" so that we get nice expressions:

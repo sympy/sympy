@@ -7,6 +7,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 
+
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """
 

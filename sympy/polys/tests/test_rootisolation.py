@@ -26,6 +26,7 @@ from sympy.polys.domains import ZZ, QQ, EX
 
 from sympy.utilities.pytest import raises
 
+
 def test_dup_sturm():
     assert dup_sturm([QQ(5)], QQ) == [[QQ(1)]]
     assert dup_sturm([QQ(1), QQ(0)], QQ) == [[QQ(1), QQ(0)], [QQ(1)]]
@@ -34,6 +35,7 @@ def test_dup_sturm():
 
     assert dup_sturm(f, QQ) == \
         [f, [QQ(3), QQ(-4), QQ(3)], [QQ(-10, 9), QQ(13, 3)], [QQ(-3303, 100)]]
+
 
 def test_dup_refine_real_root():
     f = [1, 0, -2]
@@ -97,6 +99,7 @@ def test_dup_refine_real_root():
     assert dup_refine_real_root([1, 0, -2], s, t, ZZ, disjoint=QQ(5)) == (s, t)
     assert dup_refine_real_root([1, 0, -2], s, t, ZZ, disjoint=-u) == (s, t)
     assert dup_refine_real_root([1, 0, -2], s, t, ZZ, disjoint=u) == (u, v)
+
 
 def test_dup_isolate_real_roots_sqf():
     assert dup_isolate_real_roots_sqf([], ZZ) == []
@@ -278,6 +281,7 @@ def test_dup_isolate_real_roots_sqf():
 
     raises(DomainError, lambda: dup_isolate_real_roots_sqf([EX(1), EX(2)], EX))
 
+
 def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots([], ZZ) == []
     assert dup_isolate_real_roots([3], ZZ) == []
@@ -344,6 +348,7 @@ def test_dup_isolate_real_roots():
 
     raises(DomainError, lambda: dup_isolate_real_roots([EX(1), EX(2)], EX))
 
+
 def test_dup_isolate_real_roots_list():
     assert dup_isolate_real_roots_list([[1, 1, 0], [1, 0]], ZZ) == \
         [((-QQ(1), -QQ(1)), {0: 1}), ((QQ(0), QQ(0)), {0: 1, 1: 1})]
@@ -405,6 +410,7 @@ def test_dup_isolate_real_roots_list():
 
     raises(DomainError, lambda: dup_isolate_real_roots_list([[EX(1), EX(2)]], EX))
 
+
 def test_dup_count_real_roots():
     assert dup_count_real_roots([], ZZ) == 0
     assert dup_count_real_roots([7], ZZ) == 0
@@ -424,6 +430,7 @@ def test_dup_count_real_roots():
 a, b = (-QQ(1), -QQ(1)), (QQ(1), QQ(1))
 c, d = ( QQ(0),  QQ(0)), (QQ(1), QQ(1))
 
+
 def test_dup_count_complex_roots_1():
     # z-1
     assert dup_count_complex_roots(ZZ.map([1, -1]), ZZ, a, b) == 1
@@ -432,6 +439,7 @@ def test_dup_count_complex_roots_1():
     # z+1
     assert dup_count_complex_roots(ZZ.map([1, 1]), ZZ, a, b) == 1
     assert dup_count_complex_roots(ZZ.map([1, 1]), ZZ, c, d) == 0
+
 
 def test_dup_count_complex_roots_2():
     # (z-1)*(z)
@@ -450,6 +458,7 @@ def test_dup_count_complex_roots_2():
     assert dup_count_complex_roots(ZZ.map([-1, -1, 0]), ZZ, a, b) == 2
     assert dup_count_complex_roots(ZZ.map([-1, -1, 0]), ZZ, c, d) == 1
 
+
 def test_dup_count_complex_roots_3():
     # (z-1)*(z+1)
     assert dup_count_complex_roots(ZZ.map([1, 0, -1]), ZZ, a, b) == 2
@@ -462,6 +471,7 @@ def test_dup_count_complex_roots_3():
     # (z-1)*(z+1)*(-z)
     assert dup_count_complex_roots(ZZ.map([-1, 0, 1, 0]), ZZ, a, b) == 3
     assert dup_count_complex_roots(ZZ.map([-1, 0, 1, 0]), ZZ, c, d) == 2
+
 
 def test_dup_count_complex_roots_4():
     # (z-I)*(z+I)
@@ -500,6 +510,7 @@ def test_dup_count_complex_roots_4():
     assert dup_count_complex_roots(ZZ.map([-1, 0, 0, 0, 1, 0]), ZZ, a, b) == 5
     assert dup_count_complex_roots(ZZ.map([-1, 0, 0, 0, 1, 0]), ZZ, c, d) == 3
 
+
 def test_dup_count_complex_roots_5():
     # (z-I+1)*(z+I+1)
     assert dup_count_complex_roots(ZZ.map([1, 2, 2]), ZZ, a, b) == 2
@@ -529,6 +540,7 @@ def test_dup_count_complex_roots_5():
     assert dup_count_complex_roots(ZZ.map([1, 2, 1, -2, -2, 0]), ZZ, a, b) == 5
     assert dup_count_complex_roots(ZZ.map([1, 2, 1, -2, -2, 0]), ZZ, c, d) == 2
 
+
 def test_dup_count_complex_roots_6():
     # (z-I-1)*(z+I-1)
     assert dup_count_complex_roots(ZZ.map([1, -2, 2]), ZZ, a, b) == 2
@@ -557,6 +569,7 @@ def test_dup_count_complex_roots_6():
     # (z-I-1)*(z+I-1)*(z-1)*(z+1)*z
     assert dup_count_complex_roots(ZZ.map([1, -2, 1, 2, -2, 0]), ZZ, a, b) == 5
     assert dup_count_complex_roots(ZZ.map([1, -2, 1, 2, -2, 0]), ZZ, c, d) == 3
+
 
 def test_dup_count_complex_roots_7():
     # (z-I-1)*(z+I-1)*(z-I+1)*(z+I+1)
@@ -599,6 +612,7 @@ def test_dup_count_complex_roots_7():
     assert dup_count_complex_roots(ZZ.map([1, 0, 0, 0, 3, 0, 0, 0, -4]), ZZ, a, b) == 8
     assert dup_count_complex_roots(ZZ.map([1, 0, 0, 0, 3, 0, 0, 0, -4]), ZZ, c, d) == 3
 
+
 def test_dup_count_complex_roots_8():
     # (z-I-1)*(z+I-1)*(z-I+1)*(z+I+1)*(z-1)*(z+1)*(z-I)*(z+I)*z
     assert dup_count_complex_roots(ZZ.map([1, 0, 0, 0, 3, 0, 0, 0, -4, 0]), ZZ, a, b) == 9
@@ -608,6 +622,7 @@ def test_dup_count_complex_roots_8():
     assert dup_count_complex_roots(ZZ.map([1, 0, -2, 0, 3, 0, -6, 0, -4, 0, 8, 0]), ZZ, a, b) == 9
     assert dup_count_complex_roots(ZZ.map([1, 0, -2, 0, 3, 0, -6, 0, -4, 0, 8, 0]), ZZ, c, d) == 4
 
+
 def test_dup_count_complex_roots_implicit():
     f = ZZ.map([1, 0, 0, 0, -1, 0])  # z*(z-1)*(z+1)*(z-I)*(z+I)
 
@@ -615,6 +630,7 @@ def test_dup_count_complex_roots_implicit():
 
     assert dup_count_complex_roots(f, ZZ, sup=(0, 0)) == 3
     assert dup_count_complex_roots(f, ZZ, inf=(0, 0)) == 3
+
 
 def test_dup_count_complex_roots_exclude():
     f = ZZ.map([1, 0, 0, 0, -1, 0])  # z*(z-1)*(z+1)*(z-I)*(z+I)
@@ -646,6 +662,7 @@ def test_dup_count_complex_roots_exclude():
 
     assert dup_count_complex_roots(f, ZZ, a, b, exclude=True) == 1
 
+
 def test_dup_isolate_complex_roots_sqf():
     f = ZZ.map([1, -2, 3])
 
@@ -664,6 +681,7 @@ def test_dup_isolate_complex_roots_sqf():
     assert dup_isolate_complex_roots_sqf(f, ZZ) == \
         [((-QQ(40, 7), -QQ(40, 7)), (0, 0)), ((-QQ(40, 7), 0), (0, QQ(40, 7))), ((0, -QQ(40, 7)), (QQ(40, 7), 0)), ((0, 0), (QQ(40, 7), QQ(40, 7)))]
 
+
 def test_dup_isolate_all_roots_sqf():
     f = ZZ.map([4, -1, 2, 5, 0])
 
@@ -672,6 +690,7 @@ def test_dup_isolate_all_roots_sqf():
 
     assert dup_isolate_all_roots_sqf(f, ZZ, eps=QQ(1, 10)) == \
         ([(QQ(-7, 8), QQ(-6, 7)), (0, 0)], [((QQ(35, 64), -QQ(35, 32)), (QQ(5, 8), -QQ(65, 64))), ((QQ(35, 64), QQ(65, 64)), (QQ(5, 8), QQ(35, 32)))])
+
 
 def test_dup_isolate_all_roots():
     f = [4, -1, 2, 5, 0]

@@ -32,6 +32,7 @@ __all__ = [
 # Represent
 #-----------------------------------------------------------------------------
 
+
 def _sympy_to_scalar(e):
     """Convert from a sympy scalar to a Python scalar."""
     if isinstance(e, Expr):
@@ -225,6 +226,7 @@ def represent(expr, **options):
 
     return result
 
+
 def rep_innerproduct(expr, **options):
     """
     Returns an innerproduct like representation (e.g. ``<x'|x>``) for the
@@ -279,6 +281,7 @@ def rep_innerproduct(expr, **options):
     format = options.get('format', 'sympy')
     return expr._format_represent(result, format)
 
+
 def rep_expectation(expr, **options):
     """
     Returns an ``<x'|A|x>`` type representation for the given operator.
@@ -320,6 +323,7 @@ def rep_expectation(expr, **options):
     ket = basis_kets[0]
 
     return qapply(bra*expr*ket)
+
 
 def integrate_result(orig_expr, result, **options):
     """
@@ -393,6 +397,7 @@ def integrate_result(orig_expr, result, **options):
             result = integrate(result, (coord, start, end))
 
     return result
+
 
 def get_basis(expr, **options):
     """
@@ -477,6 +482,7 @@ def get_basis(expr, **options):
     else:
         return None
 
+
 def _make_default(expr):
     try:
         expr = expr()
@@ -484,6 +490,7 @@ def _make_default(expr):
         return expr
 
     return expr
+
 
 def enumerate_states(*args, **options):
     """

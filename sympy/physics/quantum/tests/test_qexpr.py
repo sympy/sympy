@@ -6,6 +6,7 @@ from sympy.core.containers import Tuple
 x = Symbol('x')
 y = Symbol('y')
 
+
 def test_qexpr_new():
     q = QExpr(0)
     assert q.label == (0,)
@@ -35,6 +36,7 @@ def test_qexpr_subs():
     q1 = QExpr(x, y)
     assert q1.subs(x, y) == QExpr(y, y)
     assert q1.subs({x: 1, y: 2}) == QExpr(1, 2)
+
 
 def test_qsympify():
     assert _qsympify_sequence([[1, 2], [1, 3]]) == (Tuple(1, 2), Tuple(1, 3))

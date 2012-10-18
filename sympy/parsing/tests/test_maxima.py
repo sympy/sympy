@@ -11,12 +11,14 @@ def test_parser():
     assert parse_maxima('sin(%pi/2) + cos(%pi/3)') == Rational(3, 2)
     assert parse_maxima('log(%e)') == 1
 
+
 def test_injection():
     parse_maxima('c: x+1', globals=globals())
     assert c==x+1
 
     parse_maxima('g: sqrt(81)', globals=globals())
     assert g==9
+
 
 def test_maxima_functions():
     assert parse_maxima('expand( (x+1)^2)') == x**2 + 2*x + 1

@@ -90,6 +90,7 @@ from itertools import chain
 from sympy.core.compatibility import iterable
 from sympy.printing import latex
 
+
 class _GrowableGrid(object):
     """
     Holds a growable grid of objects.
@@ -160,6 +161,7 @@ class _GrowableGrid(object):
         self._width += 1
         for i in xrange(self._height):
             self._array[i].insert(0, None)
+
 
 class DiagramGrid(object):
     r"""
@@ -1342,6 +1344,7 @@ class DiagramGrid(object):
         """
         return repr(self._grid._array)
 
+
 class ArrowStringDescription(object):
     r"""
     Stores the information necessary for producing an Xy-pic
@@ -1478,6 +1481,7 @@ class ArrowStringDescription(object):
                (curving_str, looping_str, style_str, self.horizontal_direction,
                 self.vertical_direction, self.label_position,
                 self.label_displacement, self.label)
+
 
 class XypicDiagramDrawer(object):
     r"""
@@ -2491,6 +2495,7 @@ class XypicDiagramDrawer(object):
         return XypicDiagramDrawer._build_xypic_string(
             diagram, grid, morphisms, morphisms_str_info, diagram_format)
 
+
 def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
                        groups=None, **hints):
     r"""
@@ -2530,6 +2535,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="", \
     grid = DiagramGrid(diagram, groups, **hints)
     drawer = XypicDiagramDrawer()
     return drawer.draw(diagram, grid, masked, diagram_format)
+
 
 def preview_diagram(diagram, masked=None, diagram_format="", groups=None, \
                     output='png', viewer=None, euler=True, **hints):

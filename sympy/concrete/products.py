@@ -3,6 +3,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
+
 class Product(Expr):
     """Represents unevaluated product.
 
@@ -203,6 +204,7 @@ class Product(Expr):
                 return Product(evaluated, limits)
             else:
                 return f
+
 
 def product(*args, **kwargs):
     r"""

@@ -3,6 +3,7 @@
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
+
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 
@@ -130,8 +131,10 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
+
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
+
 
 class DMP(PicklableWithSlots):
     """Dense Multivariate Polynomials over `K`. """
@@ -983,9 +986,11 @@ class DMP(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
 
+
 def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
+
 
 class DMF(PicklableWithSlots):
     """Dense Multivariate Fractions over `K`. """
@@ -1426,9 +1431,11 @@ class DMF(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
+
 def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
                dup_normal(mod, dom), dom)
+
 
 class ANP(PicklableWithSlots):
     """Dense Algebraic Number Polynomials over a field. """

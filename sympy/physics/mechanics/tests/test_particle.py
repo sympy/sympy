@@ -1,6 +1,7 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame
 
+
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')

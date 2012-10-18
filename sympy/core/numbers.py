@@ -21,6 +21,7 @@ rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
 
+
 def mpf_norm(mpf, prec):
     """Return the mpf tuple normalized appropriately for the indicated
     precision.
@@ -44,6 +45,8 @@ def mpf_norm(mpf, prec):
 
 # TODO: we should use the warnings module
 _errdict = {"divide": False}
+
+
 def seterr(divide=False):
     """
     Should sympy raise an exception on 0/0 or return a nan?
@@ -54,6 +57,7 @@ def seterr(divide=False):
     if _errdict["divide"] != divide:
         clear_cache()
         _errdict["divide"] = divide
+
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
@@ -74,6 +78,7 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
+
 def _literal_float(f):
     """Return True if n can be interpreted as a floating point number."""
     pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
@@ -83,6 +88,8 @@ def _literal_float(f):
 _gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
+
+
 def igcd(a, b):
     """Computes positive, integer greatest common divisor of two numbers.
 
@@ -106,12 +113,14 @@ def igcd(a, b):
         _gcdcache[(a, b)] = a
         return a
 
+
 def ilcm(a, b):
     """Computes integer least common multiple of two numbers. """
     if a == 0 and b == 0:
         return 0
     else:
         return a*b // igcd(a, b)
+
 
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
@@ -154,6 +163,7 @@ def igcdex(a, b):
         (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
 
     return (x*x_sign, y*y_sign, a)
+
 
 class Number(AtomicExpr):
     """
@@ -393,6 +403,7 @@ class Number(AtomicExpr):
         """Compute GCD and cofactors of `self` and `other`. """
         from sympy.polys import cofactors
         return cofactors(self, other)
+
 
 class Float(Number):
     """
@@ -846,10 +857,12 @@ converter[float] = converter[decimal.Decimal] = Float
 # this is here to work nicely in Sage
 RealNumber = Float
 
+
 @deprecated(useinstead="Float", issue=1721, deprecated_since_version="0.7.0")
 def Real(*args, **kwargs):  # pragma: no cover
     """Deprecated alias for the Float constructor."""
     return Float(*args, **kwargs)
+
 
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
@@ -1325,6 +1338,7 @@ def _intcache_printinfo():
 _intcache_hits = 0
 _intcache_misses = 0
 
+
 def int_trace(f):
     import os
     if os.getenv('SYMPY_TRACE_INT', 'no').lower() != 'yes':
@@ -1650,6 +1664,7 @@ class Integer(Rational):
 # Add sympify converters
 converter[int] = converter[long] = Integer
 
+
 class RationalConstant(Rational):
     """
     Abstract base class for rationals with specific behaviors
@@ -1661,6 +1676,7 @@ class RationalConstant(Rational):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
 
 class IntegerConstant(Integer):
     __slots__ = []
@@ -1722,6 +1738,7 @@ class Zero(IntegerConstant):
     def __nonzero__(self):
         return False
 
+
 class One(IntegerConstant):
     __metaclass__ = Singleton
 
@@ -1750,6 +1767,7 @@ class One(IntegerConstant):
         if visual:
             return S.One
         return {1: 1}
+
 
 class NegativeOne(IntegerConstant):
     __metaclass__ = Singleton
@@ -1788,6 +1806,7 @@ class NegativeOne(IntegerConstant):
                 if i:
                     return self**i*self**Rational(r, expt.q)
         return
+
 
 class Half(RationalConstant):
     __metaclass__ = Singleton
@@ -1960,6 +1979,7 @@ class Infinity(Number):
 
 oo = S.Infinity
 
+
 class NegativeInfinity(Number):
     __metaclass__ = Singleton
 
@@ -2119,6 +2139,7 @@ class NegativeInfinity(Number):
     def __ge__(self, other):
         return other is S.NegativeInfinity
 
+
 class NaN(Number):
     """
     Not a Number.
@@ -2220,6 +2241,7 @@ class NaN(Number):
 
 nan = S.NaN
 
+
 class ComplexInfinity(AtomicExpr):
     __metaclass__ = Singleton
 
@@ -2255,6 +2277,7 @@ class ComplexInfinity(AtomicExpr):
                     return S.Zero
 
 zoo = S.ComplexInfinity
+
 
 class NumberSymbol(AtomicExpr):
     __metaclass__ = Singleton
@@ -2377,6 +2400,7 @@ class Exp1(NumberSymbol):
         return sage.e
 E = S.Exp1
 
+
 class Pi(NumberSymbol):
     __metaclass__ = Singleton
 
@@ -2408,6 +2432,7 @@ class Pi(NumberSymbol):
         import sage.all as sage
         return sage.pi
 pi = S.Pi
+
 
 class GoldenRatio(NumberSymbol):
     __metaclass__ = Singleton
@@ -2441,6 +2466,7 @@ class GoldenRatio(NumberSymbol):
         import sage.all as sage
         return sage.golden_ratio
 
+
 class EulerGamma(NumberSymbol):
     __metaclass__ = Singleton
 
@@ -2470,6 +2496,7 @@ class EulerGamma(NumberSymbol):
         import sage.all as sage
         return sage.euler_gamma
 
+
 class Catalan(NumberSymbol):
     __metaclass__ = Singleton
 
@@ -2498,6 +2525,7 @@ class Catalan(NumberSymbol):
     def _sage_(self):
         import sage.all as sage
         return sage.catalan
+
 
 class ImaginaryUnit(AtomicExpr):
     __metaclass__ = Singleton
@@ -2580,10 +2608,12 @@ try:
 except ImportError:
     pass
 
+
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
 converter[mpnumeric] = sympify_mpmath
+
 
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))

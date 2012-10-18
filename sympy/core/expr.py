@@ -13,6 +13,7 @@ from collections import defaultdict
 from math import log10, ceil
 from inspect import getmro
 
+
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
@@ -2893,6 +2894,7 @@ class Expr(Basic, EvalfMixin):
         else:
             return C.Float(rv, allow)
 
+
 class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
@@ -2918,6 +2920,7 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_nseries(self, x, n, logx):
         return self
+
 
 def _mag(x):
     """Return integer ``i`` such that .1 <= x/10**i < 1

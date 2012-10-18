@@ -1,6 +1,7 @@
 from itertools import ifilter
 from collections import defaultdict
 
+
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
@@ -22,6 +23,7 @@ def binomial_coefficients(n):
         a = (a * (n-k+1))//k
         d[k, n-k] = d[n-k, k] = a
     return d
+
 
 def binomial_coefficients_list(n):
     """ Return a list of binomial coefficients as rows of the Pascal's
@@ -45,6 +47,7 @@ def binomial_coefficients_list(n):
         a = (a * (n-k+1))//k
         d[k] = d[n-k] = a
     return d
+
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
@@ -103,6 +106,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
         l[k] = r1
         r.update(r1)
     return r
+
 
 def multinomial_coefficients(m, n):
     r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
@@ -171,6 +175,7 @@ def multinomial_coefficients(m, n):
         t[0] -= 1
         r[tuple(t)] = (v * tj) // (n - t[0])
     return r
+
 
 def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     """multinomial coefficient iterator

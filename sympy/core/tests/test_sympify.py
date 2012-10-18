@@ -11,11 +11,13 @@ from sympy.functions.combinatorial.factorials import factorial, factorial2
 
 from sympy import mpmath
 
+
 def test_439():
     v = sympify("exp(x)")
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))
+
 
 def test_sympify1():
     assert sympify("x") == Symbol("x")
@@ -55,6 +57,7 @@ def test_sympify1():
     # ... or from high precision reals
     assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
 
+
 def test_sympify_Fraction():
     try:
         import fractions
@@ -63,6 +66,7 @@ def test_sympify_Fraction():
     else:
         value = sympify(fractions.Fraction(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
+
 
 def test_sympify_gmpy():
     try:
@@ -75,6 +79,7 @@ def test_sympify_gmpy():
 
         value = sympify(gmpy.mpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
+
 
 @conserve_mpmath_dps
 def test_sympify_mpmath():
@@ -91,6 +96,7 @@ def test_sympify_mpmath():
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
+
 def test_sympify2():
     class A:
         def _sympy_(self):
@@ -102,6 +108,7 @@ def test_sympify2():
     assert sympify(a) == x**3
     assert a == x**3
 
+
 def test_sympify3():
     assert sympify("x**3") == x**3
     assert sympify("x^3") == x**3
@@ -110,21 +117,25 @@ def test_sympify3():
     raises(SympifyError, lambda: _sympify('x**3'))
     raises(SympifyError, lambda: _sympify('1/2'))
 
+
 def test_sympify_keywords():
     raises(SympifyError, lambda: sympify('if'))
     raises(SympifyError, lambda: sympify('for'))
     raises(SympifyError, lambda: sympify('while'))
     raises(SympifyError, lambda: sympify('lambda'))
 
+
 def test_sympify_float():
     assert sympify("1e-64") != 0
     assert sympify("1e-20000") != 0
+
 
 def test_sympify_bool():
     """Test that sympify accepts boolean values
     and that output leaves them unchanged"""
     assert sympify(True) == True
     assert sympify(False)== False
+
 
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
@@ -133,6 +144,7 @@ def test_sympyify_iterables():
     assert sympify(tuple(['.3', '.2']), rational=1) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
 
 def test_sympify4():
     class A:
@@ -145,6 +157,7 @@ def test_sympify4():
     assert sympify(a)**3 == x**3
     assert a == x
 
+
 def test_sympify_text():
     assert sympify('some') == Symbol('some')
     assert sympify('core') == Symbol('core')
@@ -155,15 +168,18 @@ def test_sympify_text():
     assert sympify('Poly') == Poly
     assert sympify('sin') == sin
 
+
 def test_sympify_function():
     assert sympify('factor(x**2-1, x)') == -(1-x)*(x+1)
     assert sympify('sin(pi/2)*cos(pi)') == -Integer(1)
+
 
 def test_sympify_poly():
     p = Poly(x**2+x+1, x)
 
     assert _sympify(p) is p
     assert sympify(p) is p
+
 
 def test_sympify_factorial():
     assert sympify('x!') == factorial(x)
@@ -184,6 +200,7 @@ def test_sympify_factorial():
     raises(SympifyError, lambda: sympify("(!)"))
     raises(SympifyError, lambda: sympify("x!!!"))
 
+
 def test_sage():
     # how to effectivelly test for the _sage_() method without having SAGE
     # installed?
@@ -196,9 +213,11 @@ def test_sage():
     assert hasattr(exp(x), "_sage_")
     assert hasattr(log(x), "_sage_")
 
+
 def test_bug496():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
+
 
 @XFAIL
 def test_lambda():
@@ -207,12 +226,15 @@ def test_lambda():
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
+
 def test_lambda_raises():
     with raises(SympifyError):
         _sympify('lambda: 1')
 
+
 def test_sympify_raises():
     raises(SympifyError, lambda: sympify("fx)"))
+
 
 def test__sympify():
     x = Symbol('x')
@@ -261,6 +283,7 @@ def test_sympifyit():
     assert add_raises(x, y) == x + y
 
     raises(SympifyError, lambda: add_raises(x, '1'))
+
 
 def test_int_float():
     class F1_1(object):
@@ -349,11 +372,13 @@ def test_int_float():
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
 
+
 def test_issue1034():
     a = sympify('Integer(4)')
 
     assert a == Integer(4)
     assert a.is_Integer
+
 
 def test_issue883():
     a = [3, 2.0]
@@ -361,19 +386,24 @@ def test_issue883():
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
     assert sympify(set(a)) == set([Integer(3), Float(2.0)])
 
+
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
     assert (-2)**(S(1)/2) == sqrt(2)*I
+
 
 def test_issue1689():
     assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Float(1.0))
     assert srepr(Float(1)) != srepr(Float(1.0))
 
+
 def test_issue1699_None():
     assert S(None) is None
 
+
 def test_issue3218():
     assert sympify("x+\ny") == x + y
+
 
 def test_issue1889_builtins():
     C = Symbol('C')
@@ -385,11 +415,13 @@ def test_issue1889_builtins():
     exp2 = sympify('C', vars)
     assert exp2 == C  # Make sure it did not get mixed up with sympy.C
 
+
 def test_geometry():
     p = sympify(Point(0, 1))
     assert p == Point(0, 1) and type(p) == Point
     L = sympify(Line(p, (1, 0)))
     assert L == Line((0, 1), (1, 0)) and type(L) == Line
+
 
 def test_no_autosimplify_into_Mul():
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'

@@ -42,6 +42,7 @@ __all__ = [
 # Qubit Classes
 #-----------------------------------------------------------------------------
 
+
 class QubitState(State):
     """Base class for Qubit and QubitBra."""
 
@@ -251,6 +252,7 @@ class Qubit(QubitState, Ket):
 
         return new_matrix
 
+
 class QubitBra(QubitState, Bra):
     """A multi-qubit bra in the computational (z) basis.
 
@@ -456,6 +458,7 @@ def matrix_to_qubit(matrix):
 
     return result
 
+
 def matrix_to_density(mat):
     """
     Works by finding the eigenvectors and eigenvalues of the matrix.
@@ -469,6 +472,7 @@ def matrix_to_density(mat):
         return 0
     else:
         return Density(*args)
+
 
 def qubit_to_matrix(qubit, format='sympy'):
     """Coverts an Add/Mul of Qubit objects into it's matrix representation

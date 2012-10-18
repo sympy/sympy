@@ -15,6 +15,7 @@ from sympy.core.compatibility import callable
 
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
+
 class SymPyTransformer(Transformer):
     def __init__(self, local_dict, global_dict):
         Transformer.__init__(self)

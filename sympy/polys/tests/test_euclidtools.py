@@ -41,6 +41,7 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.domains import ZZ, QQ, RR
 
+
 def test_dup_gcdex():
     f = dup_normal([1, -2, -6, 12, 15], QQ)
     g = dup_normal([1, 1, -4, -4], QQ)
@@ -73,8 +74,10 @@ def test_dup_gcdex():
     assert dup_half_gcdex(f, g, QQ) == (s, h)
     assert dup_gcdex(f, g, QQ) == (s, t, h)
 
+
 def test_dup_invert():
     assert dup_invert([QQ(2), QQ(0)], [QQ(1), QQ(0), QQ(-16)], QQ) == [QQ(1, 32), QQ(0)]
+
 
 def test_dup_euclidean_prs():
     f = QQ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
@@ -86,6 +89,7 @@ def test_dup_euclidean_prs():
         [QQ(233150, 19773), -QQ(102500, 6591)],
         [-QQ(1288744821, 543589225)]]
 
+
 def test_dup_primitive_prs():
     f = ZZ.map([1, 0, 1, 0, -3, -3, 8, 2, -5])
     g = ZZ.map([3, 0, 5, 0, -4, -9, 21])
@@ -95,6 +99,7 @@ def test_dup_primitive_prs():
         [ZZ(13), ZZ(25), -ZZ(49)],
         [ZZ(4663), -ZZ(6150)],
         [ZZ(1)]]
+
 
 def test_dup_subresultants():
     assert dup_resultant([], [], ZZ) == ZZ(0)
@@ -164,6 +169,7 @@ def test_dup_subresultants():
 
     assert dup_resultant(f, g, ZZ) == -1
 
+
 def test_dmp_subresultants():
     assert dmp_resultant([[]], [[]], 1, ZZ) == []
     assert dmp_prs_resultant([[]], [[]], 1, ZZ)[0] == []
@@ -228,6 +234,7 @@ def test_dmp_subresultants():
 
     assert dmp_qq_collins_resultant(f, g, 4, QQ) == r
 
+
 def test_dup_discriminant():
     assert dup_discriminant([], ZZ) == 0
     assert dup_discriminant([1, 0], ZZ) == 1
@@ -236,6 +243,7 @@ def test_dup_discriminant():
     assert dup_discriminant([5, 0, 1, 0, 0, 2], ZZ) == 31252160
     assert dup_discriminant([1, 2, 6, -22, 13], ZZ) == 0
     assert dup_discriminant([12, 0, 0, 15, 30, 1, 0, 1], ZZ) == -220289699947514112
+
 
 def test_dmp_discriminant():
     assert dmp_discriminant([], 0, ZZ) == 0
@@ -257,6 +265,7 @@ def test_dmp_discriminant():
         [[[-4, 0]], [[1], [], []]]
     assert dmp_discriminant([[[[[1]]], [[[]]]], [[[[1]], [[]]]], [[[[1], []]]], [[[[1, 0]]]]], 4, ZZ) == \
         [[[[-27, 0, 0]]], [[[18, 0], []], [[-4], [], [], []]], [[[-4, 0]], [[1], [], []], [[]], [[]]]]
+
 
 def test_dup_gcd():
     assert dup_zz_heu_gcd([], [], ZZ) == ([], [], [])
@@ -400,6 +409,7 @@ def test_dup_gcd():
 
     assert dup_zz_heu_gcd(f, g, ZZ) == (h, cff, cfg)
 
+
 def test_dmp_gcd():
     assert dmp_zz_heu_gcd([[]], [[]], 1, ZZ) == ([[]], [[]], [[]])
     assert dmp_rr_prs_gcd([[]], [[]], 1, ZZ) == ([[]], [[]], [[]])
@@ -533,6 +543,7 @@ def test_dmp_gcd():
     assert dmp_ff_prs_gcd(f, g, 1, RR) == \
         ([[RR(1.0)], []], [[RR(2.1), RR(-2.2), RR(2.1)]], [[RR(1.0)], [], []])
 
+
 def test_dup_lcm():
     assert dup_lcm([2], [6], ZZ) == [6]
 
@@ -544,6 +555,7 @@ def test_dup_lcm():
     assert dup_lcm(ZZ.map([1, 2, 0]), ZZ.map([1, 0]), ZZ) == [1, 2, 0]
     assert dup_lcm(ZZ.map([2, 1, 0]), ZZ.map([1, 0]), ZZ) == [2, 1, 0]
     assert dup_lcm(ZZ.map([2, 1, 0]), ZZ.map([2, 0]), ZZ) == [4, 2, 0]
+
 
 def test_dmp_lcm():
     assert dmp_lcm([[2]], [[6]], 1, ZZ) == [[6]]
@@ -566,6 +578,7 @@ def test_dmp_lcm():
 
     assert dmp_lcm(f, g, 1, ZZ) == h
 
+
 def test_dmp_content():
     assert dmp_content([[-2]], 1, ZZ) == [2]
 
@@ -580,6 +593,7 @@ def test_dmp_content():
     assert dmp_one_p(dmp_content(f_4, 2, ZZ), 1, ZZ)
     assert dmp_one_p(dmp_content(f_5, 2, ZZ), 1, ZZ)
     assert dmp_one_p(dmp_content(f_6, 3, ZZ), 2, ZZ)
+
 
 def test_dmp_primitive():
     assert dmp_primitive([[]], 1, ZZ) == ([], [[]])
@@ -600,6 +614,7 @@ def test_dmp_primitive():
     assert dmp_one_p(cont, 1, ZZ) and f == f_5
     cont, f = dmp_primitive(f_6, 3, ZZ)
     assert dmp_one_p(cont, 2, ZZ) and f == f_6
+
 
 def test_dup_cancel():
     f = ZZ.map([2, 0, -2])
@@ -628,6 +643,7 @@ def test_dup_cancel():
 
     assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ) == ([], [ZZ(1)])
     assert dup_cancel([], [ZZ(1), ZZ(0)], ZZ, include=False) == (ZZ(1), ZZ(1), [], [ZZ(1)])
+
 
 def test_dmp_cancel():
     f = ZZ.map([[2], [0], [-2]])

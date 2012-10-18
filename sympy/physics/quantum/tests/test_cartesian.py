@@ -41,6 +41,7 @@ def test_x():
     assert represent(XOp()*PxKet(), basis=PxKet) == \
            hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
 
+
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
     assert qapply(Px*PxKet(px)) == px*PxKet(px)
@@ -61,6 +62,7 @@ def test_p():
            -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
     assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
            -hbar*I*DiracDelta(x-y)*DifferentialOperator(x)
+
 
 def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))

@@ -17,6 +17,7 @@ from sympy.utilities.pytest import raises
 
 from sympy.abc import a, b, c, d, x, y, z, r
 
+
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
     assert RootOf(x, -1) == 0
@@ -98,8 +99,10 @@ def test_RootOf___new__():
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
+
 def test_RootOf_free_symbols():
     assert RootOf(x**3 + x + 3, 0).free_symbols == set()
+
 
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
@@ -114,22 +117,27 @@ def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) == False
     assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) == True
 
+
 def test_RootOf_is_real():
     assert RootOf(x**3 + x + 3, 0).is_real == True
     assert RootOf(x**3 + x + 3, 1).is_real == False
     assert RootOf(x**3 + x + 3, 2).is_real == False
+
 
 def test_RootOf_is_complex():
     assert RootOf(x**3 + x + 3, 0).is_complex == False
     assert RootOf(x**3 + x + 3, 1).is_complex == True
     assert RootOf(x**3 + x + 3, 2).is_complex == True
 
+
 def test_RootOf_subs():
     assert RootOf(x**3 + x + 1, 0).subs(x, y) == RootOf(y**3 + y + 1, 0)
+
 
 def test_RootOf_diff():
     assert RootOf(x**3 + x + 1, 0).diff(x) == 0
     assert RootOf(x**3 + x + 1, 0).diff(y) == 0
+
 
 def test_RootOf_evalf():
     real = RootOf(x**3 + x + 3, 0).evalf(n=20)
@@ -146,9 +154,11 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("0.60670583138111481707"))
     assert im.epsilon_eq(Float("1.45061224918844152650"))
 
+
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(x**3 - x**2 + 1, 0)]
+
 
 def test_RootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
@@ -166,6 +176,7 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 1),
         RootOf(x**3 - x**2 + 1, 2),
     ]
+
 
 def test_RootSum___new__():
     f = x**3 + x + 3
@@ -212,10 +223,12 @@ def test_RootSum___new__():
     assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
     assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
 
+
 def test_RootSum_free_symbols():
     assert RootSum(x**3 + x + 3, Lambda(r, exp(r))).free_symbols == set()
     assert RootSum(x**3 + x + 3, Lambda(r, exp(a*r))).free_symbols == set([a])
     assert RootSum(x**3 + x + y, Lambda(r, exp(a*r)), x).free_symbols == set([a, y])
+
 
 def test_RootSum___eq__():
     f = Lambda(x, exp(x))
@@ -225,6 +238,7 @@ def test_RootSum___eq__():
 
     assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
     assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
+
 
 def test_RootSum_doit():
     rs = RootSum(x**2 + 1, exp)
@@ -237,6 +251,7 @@ def test_RootSum_doit():
     assert isinstance(rs, RootSum) == True
     assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
 
+
 def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
@@ -247,6 +262,7 @@ def test_RootSum_evalf():
 
     assert rs.evalf() == rs
 
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
@@ -254,6 +270,7 @@ def test_RootSum_diff():
     h = Lambda(r, r*exp(r*x))
 
     assert RootSum(f, g).diff(x) == RootSum(f, h)
+
 
 def test_RootSum_subs():
     f = x**3 + x + 3
@@ -265,6 +282,7 @@ def test_RootSum_subs():
     assert RootSum(f, g).subs(y, 1) == RootSum(f, g)
     assert RootSum(f, g).subs(x, y) == RootSum(F, G)
 
+
 def test_RootSum_rational():
     assert RootSum(z**5 - z + 1, Lambda(z, z/(x - z))) == (4*x - 5)/(x**5 - x + 1)
 
@@ -272,6 +290,7 @@ def test_RootSum_rational():
     g = Lambda(z, z*log(-3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
 
     assert RootSum(f, g).diff(x) == -((5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
+
 
 def test_RootSum_independent():
     f = (x**3 - a)**2*(x**4 - b)**3

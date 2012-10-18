@@ -258,6 +258,7 @@ class KetBase(StateBase):
         """
         return dispatch_method(self, '_apply_operator', op, **options)
 
+
 class BraBase(StateBase):
     """Base class for Bras.
 
@@ -385,6 +386,7 @@ class Ket(State, KetBase):
     def dual_class(self):
         return Bra
 
+
 class Bra(State, BraBase):
     """A general time-independent Bra in quantum mechanics.
 
@@ -448,6 +450,7 @@ class Bra(State, BraBase):
 #-----------------------------------------------------------------------------
 # Time dependent states, bras and kets.
 #-----------------------------------------------------------------------------
+
 
 class TimeDepState(StateBase):
     """Base class for a general time-dependent quantum state.
@@ -602,6 +605,7 @@ class TimeDepBra(TimeDepState, BraBase):
     @classmethod
     def dual_class(self):
         return TimeDepKet
+
 
 class Wavefunction(Function):
     """Class for representations in continuous bases

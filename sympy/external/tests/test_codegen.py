@@ -115,6 +115,7 @@ combinations_lang_compiler = [
         ('F95', 'g95')
         ]
 
+
 def try_run(commands):
     """Run a series of commands and only return True if all ran fine."""
     null = open(os.devnull, 'w')
@@ -217,6 +218,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     assert compiled, "failed to compile %s code with:\n%s" %(language, "\n".join(commands))
     assert executed, "failed to execute %s code from:\n%s" %(language, "\n".join(commands))
 
+
 def fortranize_double_constants(code_string):
     """
     Replaces every literal float with literal doubles
@@ -264,23 +266,28 @@ for lang, compiler in combinations_lang_compiler:
 
 # We test all language-compiler combinations, just to report what is skipped
 
+
 def test_C_cc():
     if ("C", 'cc') in invalid_lang_compilers:
         skip("`cc' command didn't work as expected")
+
 
 def test_F95_ifort():
     if ("F95", 'ifort') in invalid_lang_compilers:
         skip("`ifort' command didn't work as expected")
 
+
 def test_F95_gfortran():
     if ("F95", 'gfortran') in invalid_lang_compilers:
         skip("`gfortran' command didn't work as expected")
+
 
 def test_F95_g95():
     if ("F95", 'g95') in invalid_lang_compilers:
         skip("`g95' command didn't work as expected")
 
 # Here comes the actual tests
+
 
 def test_basic_codegen():
     x, y, z = symbols('x,y,z')
@@ -291,6 +298,7 @@ def test_basic_codegen():
     name_expr = [("test", (x+y)*z)]
     for lang, commands in valid_lang_commands:
         run_test("basic_codegen", name_expr, numerical_tests, lang, commands)
+
 
 def test_intrinsic_math1_codegen():
     # not included: log10
@@ -324,6 +332,7 @@ def test_intrinsic_math1_codegen():
             name_expr_C = []
         run_test("intrinsic_math1", name_expr + name_expr_C, numerical_tests, lang, commands)
 
+
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
@@ -339,6 +348,7 @@ def test_instrinsic_math2_codegen():
             numerical_tests.append((name, (xval, yval), expected, 1e-14))
     for lang, commands in valid_lang_commands:
         run_test("intrinsic_math2", name_expr, numerical_tests, lang, commands)
+
 
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N

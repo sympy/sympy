@@ -16,11 +16,13 @@ x = symbols('x')
 mat1 = Matrix([[1, 2*I], [1+I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
 
+
 def test_tensor_product_dagger():
     assert Dagger(TensorProduct(I*A, B)) ==\
            -I*TensorProduct(Dagger(A), Dagger(B))
     assert Dagger(TensorProduct(mat1, mat2)) ==\
         TensorProduct(Dagger(mat1), Dagger(mat2))
+
 
 def test_tensor_product_abstract():
 
@@ -46,12 +48,14 @@ def test_tensor_product_commutator():
 def test_tensor_product_simp():
     assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
 
+
 def test_issue_2824():
     # most of the issue regarding sympification of args has been handled
     # and is tested internally by the use of args_cnc through the quantum
     # module, but the following is a test from the issue that used to raise.
     assert TensorProduct(1, Qubit('1')*Qubit('1').dual) == \
         TensorProduct(1, OuterProduct(Qubit(1), QubitBra(1)))
+
 
 def test_eval_trace():
     # This test includes tests with dependencies between TensorProducts

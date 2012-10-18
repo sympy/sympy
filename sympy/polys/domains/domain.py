@@ -8,6 +8,7 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
+
 class Domain(object):
     """Represents an abstract domain. """
 

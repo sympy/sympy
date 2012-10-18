@@ -3,6 +3,7 @@
 from sympy.core import Basic, Add, sympify
 from sympy.core.exprtools import gcd_terms
 
+
 def together(expr, deep=False):
     """
     Denest and combine rational expressions using symbolic methods.

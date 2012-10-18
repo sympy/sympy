@@ -12,6 +12,7 @@ from sympy.utilities.iterables import has_dups
 
 import operator
 
+
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive
     or multiplicative separation approach. It tries to rewrite an equation so
@@ -98,6 +99,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     dvar = subs_args[1:]
     return _separate(result, svar, dvar)
 
+
 def pde_separate_add(eq, fun, sep):
     """
     Helper function for searching additive separable solutions.
@@ -122,6 +124,7 @@ def pde_separate_add(eq, fun, sep):
     """
     return pde_separate(eq, fun, sep, strategy='add')
 
+
 def pde_separate_mul(eq, fun, sep):
     """
     Helper function for searching multiplicative separable solutions.
@@ -145,6 +148,7 @@ def pde_separate_mul(eq, fun, sep):
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')
+
 
 def _separate(eq, dep, others):
     """Separate expression into two parts based on dependencies of variables."""

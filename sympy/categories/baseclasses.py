@@ -1,6 +1,7 @@
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
 
+
 class Class(Set):
     r"""
     The base class for any kind of class in the set-theoretic sense.
@@ -16,6 +17,7 @@ class Class(Set):
     """
     is_proper = False
 
+
 class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
@@ -24,6 +26,7 @@ class Object(Symbol):
     class is the recommended way to create abstract objects in
     abstract categories.
     """
+
 
 class Morphism(Basic):
     """
@@ -128,6 +131,7 @@ class Morphism(Basic):
         """
         return self.compose(other)
 
+
 class IdentityMorphism(Morphism):
     """
     Represents an identity morphism.
@@ -156,6 +160,7 @@ class IdentityMorphism(Morphism):
     """
     def __new__(cls, domain):
         return Basic.__new__(cls, domain, domain)
+
 
 class NamedMorphism(Morphism):
     """
@@ -204,6 +209,7 @@ class NamedMorphism(Morphism):
 
         """
         return self.args[2].name
+
 
 class CompositeMorphism(Morphism):
     r"""
@@ -386,6 +392,7 @@ class CompositeMorphism(Morphism):
         """
         return NamedMorphism(self.domain, self.codomain, new_name)
 
+
 class Category(Basic):
     r"""
     An (abstract) category.
@@ -508,6 +515,7 @@ class Category(Basic):
     def all_morphisms(self):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
+
 
 class Diagram(Basic):
     r"""

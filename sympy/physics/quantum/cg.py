@@ -23,6 +23,7 @@ __all__ = [
 # CG Coefficients
 #-----------------------------------------------------------------------------
 
+
 class Wigner3j(Expr):
     """Class for the Wigner-3j symbols
 
@@ -484,6 +485,7 @@ def _cg_simp_add(e):
     other_part.append(other)
     return Add(*cg_part)+Add(*other_part)
 
+
 def _check_varsh_871_1(term_list):
     # Sum( CG(a,alpha,b,0,a,alpha), (alpha, -a, a)) == KroneckerDelta(b,0)
     a, alpha, b, lt = map(Wild, ('a', 'alpha', 'b', 'lt'))
@@ -504,6 +506,7 @@ def _check_varsh_871_2(term_list):
     build_expr = 2*a+1
     index_expr = a+alpha
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, c, lt), (a, c), build_expr, index_expr)
+
 
 def _check_varsh_872_9(term_list):
     # Sum( CG(a,alpha,b,beta,c,gamma)*CG(a,alpha',b,beta',c,gamma), (gamma, -c, c), (c, abs(a-b), a+b))
@@ -547,6 +550,7 @@ def _check_varsh_872_9(term_list):
     term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     return term_list, other1+other2+other4
+
 
 def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, build_index_expr, index_expr):
     """ Checks for simplifications that can be made, returning a tuple of the
@@ -622,6 +626,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             i += 1
     return term_list, other_part
 
+
 def _check_cg(cg_term, expr, length, sign=None):
     """Checks whether a term matches the given expression"""
     # TODO: Check for symmetries
@@ -636,11 +641,13 @@ def _check_cg(cg_term, expr, length, sign=None):
     if len(matches) == length:
         return matches
 
+
 def _cg_simp_sum(e):
     e = _check_varsh_sum_871_1(e)
     e = _check_varsh_sum_871_2(e)
     e = _check_varsh_sum_872_4(e)
     return e
+
 
 def _check_varsh_sum_871_1(e):
     a = Wild('a')
@@ -651,6 +658,7 @@ def _check_varsh_sum_871_1(e):
         return ((2*a+1)*KroneckerDelta(b, 0)).subs(match)
     return e
 
+
 def _check_varsh_sum_871_2(e):
     a = Wild('a')
     alpha = symbols('alpha')
@@ -659,6 +667,7 @@ def _check_varsh_sum_871_2(e):
     if match is not None and len(match) == 2:
         return (sqrt(2*a+1)*KroneckerDelta(c, 0)).subs(match)
     return e
+
 
 def _check_varsh_sum_872_4(e):
     a = Wild('a')
@@ -676,6 +685,7 @@ def _check_varsh_sum_872_4(e):
     if match2 is not None and len(match2) == 6:
         return 1
     return e
+
 
 def _cg_list(term):
     if isinstance(term, CG):

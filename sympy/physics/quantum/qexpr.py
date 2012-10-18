@@ -50,6 +50,7 @@ def _qsympify_sequence(seq):
 
     return tuple(__qsympify_sequence_helper(seq))
 
+
 def __qsympify_sequence_helper(seq):
     """
        Helper function for _qsympify_sequence
@@ -399,11 +400,13 @@ class QExpr(Expr):
 
         return result
 
+
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
     c_part, nc_part = e.args_cnc()
     c_part = list(c_part)
     return c_part, nc_part
+
 
 def split_qexpr_parts(e):
     """Split an expression into Expr and noncommutative QExpr parts."""

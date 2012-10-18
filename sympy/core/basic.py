@@ -8,6 +8,7 @@ from sympy.core.compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+
 class Basic(object):
     """
     Base class for all objects in sympy.
@@ -1416,6 +1417,7 @@ class Basic(object):
                 else:
                     return self
 
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -1459,6 +1461,7 @@ class Atom(Basic):
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
 
+
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
 
@@ -1486,6 +1489,7 @@ def _aresame(a, b):
             return False
     else:
         return True
+
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
@@ -1526,6 +1530,7 @@ def _atomic(e):
             pot.skip()
             atoms.add(p)
     return atoms
+
 
 class preorder_traversal(object):
     """
@@ -1617,6 +1622,7 @@ class preorder_traversal(object):
 
     def __iter__(self):
         return self
+
 
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""

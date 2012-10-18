@@ -9,6 +9,7 @@ x = Symbol('x')
 y = Symbol('y')
 n = Symbol('n', integer=True)
 
+
 def test_gamma():
     assert gamma(nan) == nan
     assert gamma(oo) == oo
@@ -66,6 +67,7 @@ def test_gamma_series():
         + x**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 - \
         polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O(x**3)
 
+
 def tn_branch(s, func):
     from sympy import I, pi, exp_polar
     from random import uniform
@@ -74,6 +76,7 @@ def tn_branch(s, func):
     eps = 1e-15
     expr2 = func(s + eps, -c + eps*I) - func(s + eps, -c - eps*I)
     return abs(expr.n() - expr2.n()).n() < 1e-10
+
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
@@ -110,6 +113,7 @@ def test_lowergamma():
     k = Symbol('k', integer=True, positive=False)
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
 
+
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert uppergamma(4, 0) == 6
@@ -142,6 +146,7 @@ def test_uppergamma():
 
     assert uppergamma(-2, x) == expint(3, x)/x**2
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
+
 
 def test_polygamma():
     from sympy import I
@@ -205,6 +210,7 @@ def test_polygamma():
     # Test a bug
     assert polygamma(0, -x).expand(func=True) == polygamma(0, -x)
 
+
 def test_polygamma_expand_func():
     assert polygamma(0, x).expand(func=True) == polygamma(0, x)
     assert polygamma(0, 2*x).expand(func=True) == \
@@ -249,6 +255,7 @@ def test_polygamma_expand_func():
     e = polygamma(3, x + y + S(3)/4)
     assert e.expand(func=True, basic=False) == e
 
+
 def test_loggamma():
     s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x, n=4)
     s2 = (-log(2*x)-1)/(2*x) - log(x/pi)/2 + (4-log(2*x))*x/24 + O(x**2)
@@ -267,6 +274,7 @@ def test_loggamma():
     tN(4, 5)
     tN(5, 5)
 
+
 def test_polygamma_expansion():
     # A. & S., pa. 259 and 260
     assert polygamma(0, 1/x).nseries(x, n=3) \
@@ -275,6 +283,7 @@ def test_polygamma_expansion():
            == x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=8) \
            == 2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
 
 def test_beta_function():
     x, y = Symbol('x'), Symbol('y')

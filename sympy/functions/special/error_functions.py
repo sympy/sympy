@@ -14,6 +14,7 @@ from sympy.functions.special.hyper import hyper, meijerg
 ################################ ERROR FUNCTION ###############################
 ###############################################################################
 
+
 class erf(Function):
     """
     The Gauss error function.
@@ -291,6 +292,7 @@ class Ei(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+
 class expint(Function):
     r"""
     Generalized exponential integral.
@@ -448,6 +450,7 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+
 def E1(z):
     """
     Classical case of the generalized exponential integral.
@@ -517,6 +520,7 @@ class TrigonometricIntegral(Function):
         if self._trigfunc(0) != 0:
             baseseries += EulerGamma + log(x)
         return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx)
+
 
 class Si(TrigonometricIntegral):
     r"""
@@ -588,6 +592,7 @@ class Si(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
+
 
 class Ci(TrigonometricIntegral):
     r"""
@@ -675,6 +680,7 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+
 class Shi(TrigonometricIntegral):
     r"""
     Sinh integral.
@@ -746,6 +752,7 @@ class Shi(TrigonometricIntegral):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z)-E1(exp_polar(I*pi)*z))/2 - I*pi/2
+
 
 class Chi(TrigonometricIntegral):
     r"""
@@ -1017,6 +1024,7 @@ class fresnels(FresnelIntegral):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
                 * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
 
+
 class fresnelc(FresnelIntegral):
     r"""
     Fresnel integral C.
@@ -1125,6 +1133,7 @@ class fresnelc(FresnelIntegral):
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
 ###############################################################################
+
 
 class _erfs(Function):
     """

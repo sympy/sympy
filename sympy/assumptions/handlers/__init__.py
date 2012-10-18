@@ -1,9 +1,11 @@
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
+
 class AskHandler(object):
     """Base class that all Ask Handlers must inherit"""
     pass
+
 
 class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers """
@@ -11,6 +13,7 @@ class CommonHandler(AskHandler):
     @staticmethod
     def NaN(expr, assumptions):
         return False
+
 
 class AskCommutativeHandler(CommonHandler):
     """
@@ -41,6 +44,7 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def NaN(expr, assumptions):
         return True
+
 
 class TautologicalHandler(AskHandler):
     """Wrapper allowing to query the truth value of a boolean expression."""

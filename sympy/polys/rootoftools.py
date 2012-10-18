@@ -30,6 +30,7 @@ from sympy.utilities import lambdify
 _reals_cache = {}
 _complexes_cache = {}
 
+
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
@@ -426,6 +427,7 @@ class RootOf(Expr):
             mp.prec = _prec
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
+
 
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """

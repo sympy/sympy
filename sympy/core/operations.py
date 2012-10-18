@@ -10,6 +10,7 @@ from sympy.core.logic import fuzzy_and
 # from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
 
+
 class AssocOp(Expr):
     """ Associative operations, can separate noncommutative and
     commutative parts.
@@ -278,8 +279,10 @@ class AssocOp(Expr):
         else:
             return (expr,)
 
+
 class ShortCircuit(Exception):
     pass
+
 
 class LatticeOp(AssocOp):
     """

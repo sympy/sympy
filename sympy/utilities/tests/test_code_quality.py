@@ -40,6 +40,7 @@ str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'
 gen_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 
+
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
     including the whitespace of docstring code samples."""
@@ -51,6 +52,7 @@ def tab_in_leading(s):
         check = s[:n] + smore[:len(smore)-len(smore.lstrip())]
     return not (check.expandtabs() == check)
 
+
 def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
     """
     Checks all files in the directory tree (with base_path as starting point)
@@ -61,6 +63,7 @@ def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"
         return
     for root, dirs, files in walk(base_path):
         check_files(glob(join(root, pattern)), file_check, exclusions)
+
 
 def check_files(files, file_check, exclusions=set()):
     """
@@ -75,6 +78,7 @@ def check_files(files, file_check, exclusions=set()):
         if filter(lambda ex: ex in fname, exclusions):
             continue
         file_check(fname)
+
 
 def test_files():
     """
@@ -159,9 +163,11 @@ def test_files():
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
+
 def _with_space(c):
     # return c with a random amount of leading space
     return random.randint(0, 10)*' ' + c
+
 
 def test_raise_statement_regular_expression():
     candidates_ok = [

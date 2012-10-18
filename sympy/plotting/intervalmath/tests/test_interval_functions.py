@@ -12,6 +12,8 @@ if not np:
     disabled = True
 
 #requires Numpy. Hence included in interval_functions
+
+
 def test_interval_pow():
     a = 2**interval(1, 2) == interval(2, 4)
     assert a == (True, True)
@@ -49,6 +51,8 @@ def test_interval_pow():
     a = interval(-8, 64)**(2 / 3)
     assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
+
+
 def test_exp():
     a = exp(interval(-np.inf, 0))
     assert a.start == np.exp(-np.inf)
@@ -74,6 +78,7 @@ def test_log():
     a = log(2)
     assert a.start == np.log(2)
     assert a.end == np.log(2)
+
 
 def test_log10():
     a = log10(interval(1, 2))

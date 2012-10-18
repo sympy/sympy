@@ -7,6 +7,7 @@ from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
 from sympy.core import sympify
 
+
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
     result, rationals, reals, algebraics = {}, False, False, False
@@ -55,6 +56,7 @@ def _construct_simple(coeffs, opt):
 
     return domain, result
 
+
 def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
@@ -96,6 +98,7 @@ def _construct_algebraic(coeffs, opt):
         result[i] = coeff
 
     return domain, result
+
 
 def _construct_composite(coeffs, opt):
     """Handle composite domains, e.g.: ZZ[X], QQ[X], ZZ(X), QQ(X). """
@@ -187,6 +190,7 @@ def _construct_composite(coeffs, opt):
 
     return domain, result
 
+
 def _construct_expression(coeffs, opt):
     """The last resort case, i.e. use the expression domain. """
     domain, result = EX, []
@@ -195,6 +199,7 @@ def _construct_expression(coeffs, opt):
         result.append(domain.from_sympy(coeff))
 
     return domain, result
+
 
 def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """

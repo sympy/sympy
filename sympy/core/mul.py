@@ -11,6 +11,8 @@ from compatibility import cmp_to_key
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
+
+
 class NC_Marker:
     is_Order = False
     is_Mul = False
@@ -1482,6 +1484,7 @@ class Mul(AssocOp):
     def _sorted_args(self):
         return self.as_ordered_factors()
 
+
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.
@@ -1505,6 +1508,7 @@ def prod(a, start=1):
 
     """
     return reduce(operator.mul, a, start)
+
 
 def _keep_coeff(coeff, factors, clear=True):
     """Return ``coeff*factors`` unevaluated if necessary.

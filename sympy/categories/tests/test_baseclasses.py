@@ -5,6 +5,7 @@ from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
 
+
 def test_morphisms():
     A = Object("A")
     B = Object("B")
@@ -79,6 +80,7 @@ def test_morphisms():
 
     raises(ValueError, lambda: NamedMorphism(A, B, ""))
     raises(NotImplementedError, lambda: Morphism(A, B))
+
 
 def test_diagram():
     A = Object("A")
@@ -180,6 +182,7 @@ def test_diagram():
     raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
 
     raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))
+
 
 def test_category():
     A = Object("A")

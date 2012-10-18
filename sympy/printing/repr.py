@@ -9,6 +9,7 @@ from printer import Printer
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
 
+
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
@@ -141,6 +142,7 @@ class ReprPrinter(Printer):
     def _print_AlgebraicNumber(self, expr):
         return "%s(%s, %s)" % (self.__class__.__name__,
             self._print(self.coeffs()), self._print(expr.root))
+
 
 def srepr(expr, **settings):
     """return expr in repr form"""

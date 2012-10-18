@@ -10,6 +10,7 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class GMPYIntegerRing(IntegerRing):
     """Integer ring based on GMPY's ``mpz`` type. """
 

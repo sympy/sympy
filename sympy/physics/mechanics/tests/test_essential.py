@@ -5,6 +5,7 @@ from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
 Vector.simp = True
 A = ReferenceFrame('A')
 
+
 def test_dyadic():
     d1 = A.x | A.x
     d2 = A.y | A.y
@@ -39,6 +40,7 @@ def test_dyadic():
     assert d1.express(B, A) == (cos(q)) * (B.x | A.x) + (-sin(q)) * (B.y | A.x)
     assert d1.express(A, B) == (cos(q)) * (A.x | B.x) + (-sin(q)) * (A.x | B.y)
     assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
+
 
 def test_ang_vel():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -105,6 +107,7 @@ def test_ang_vel():
     assert G.ang_vel_in(N) == q1d * (N.x + N.y).normalize()
     assert N.ang_vel_in(G) == -q1d * (N.x + N.y).normalize()
 
+
 def test_dcm():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     N = ReferenceFrame('N')
@@ -137,6 +140,7 @@ def test_dcm():
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
 
+
 def test_Vector():
     assert A.x != A.y
     assert A.y != A.z
@@ -168,6 +172,7 @@ def test_Vector():
     assert dot(v4, A.x) == x - x**2
     assert dot(v4, A.y) == y - y**2
     assert dot(v4, A.z) == z - z**2
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -231,6 +236,7 @@ def test_Vector_diffs():
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
 
+
 def test_vector_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
     N = ReferenceFrame('N')
@@ -251,6 +257,7 @@ def test_vector_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
     test4.simplify()
     assert (test4 & N.x) == -2 * y
+
 
 def test_dyadic_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')

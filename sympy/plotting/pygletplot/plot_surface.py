@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
 
+
 class PlotSurface(PlotModeBase):
 
     default_rot_preset = 'perspective'

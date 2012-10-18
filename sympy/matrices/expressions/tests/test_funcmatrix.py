@@ -1,5 +1,6 @@
 from sympy import (symbols, FunctionMatrix, MatrixExpr, Lambda, Matrix)
 
+
 def test_funcmatrix():
     i, j = symbols('i,j')
     X = FunctionMatrix(3, 3, Lambda((i, j), i-j))

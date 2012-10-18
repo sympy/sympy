@@ -11,6 +11,7 @@ from collections import defaultdict
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+
 def iterable(i, exclude=(basestring, dict)):
     """
     Return a boolean indicating whether i is an iterable in the sympy sense.
@@ -54,6 +55,7 @@ def iterable(i, exclude=(basestring, dict)):
     if exclude:
         return not isinstance(i, exclude)
     return True
+
 
 def is_sequence(i, include=None):
     """
@@ -111,6 +113,7 @@ try:
     from functools import reduce
 except ImportError:
     reduce = reduce
+
 
 def cmp_to_key(mycmp):
     """
@@ -310,6 +313,7 @@ except ImportError:  # < python 2.6
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
 
+
 def set_intersection(*sets):
     """Return the intersection of all the given sets.
 
@@ -330,6 +334,7 @@ def set_intersection(*sets):
     for s in sets:
         rv &= s
     return rv
+
 
 def set_union(*sets):
     """Return the union of all the given sets.
@@ -420,6 +425,7 @@ except ImportError:  # Python 2.5
         return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
             ]).lstrip('0') or '0')
 
+
 def as_int(n):
     """
     Convert the argument to a builtin integer.
@@ -448,6 +454,7 @@ def as_int(n):
     if result != n:
         raise ValueError('%s is not an integer' % n)
     return result
+
 
 def quick_sort(seq, quick=True):
     """Sort by hash and break ties with default_sort_key (default)

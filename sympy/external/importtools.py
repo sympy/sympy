@@ -9,6 +9,7 @@ import sys
 WARN_NOT_INSTALLED = None  # Default is False
 WARN_OLD_VERSION = None  # Default is True
 
+
 def __sympy_debug():
     # helper function from sympy/__init__.py
     # We don't just import SYMPY_DEBUG from that file because we don't want to
@@ -19,6 +20,7 @@ def __sympy_debug():
 if __sympy_debug():
     WARN_OLD_VERSION = True
     WARN_NOT_INSTALLED = True
+
 
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=None, warn_old_version=None,

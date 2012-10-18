@@ -68,6 +68,7 @@ class Registry(object):
 #A set containing all sympy class objects, kept in sync with C
 all_classes = set()
 
+
 class ClassRegistry(Registry):
     """
     Namespace for SymPy classes
@@ -93,6 +94,7 @@ class ClassRegistry(Registry):
             all_classes.remove(cls)
 
 C = ClassRegistry()
+
 
 class BasicMeta(BasicType):
 

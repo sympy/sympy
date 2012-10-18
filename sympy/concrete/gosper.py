@@ -6,6 +6,7 @@ from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
 
+
 def gosper_normal(f, g, n, polys=True):
     r"""
     Compute the Gosper's normal form of ``f`` and ``g``.
@@ -75,6 +76,7 @@ def gosper_normal(f, g, n, polys=True):
         C = C.as_expr()
 
     return A, B, C
+
 
 def gosper_term(f, n):
     r"""
@@ -150,6 +152,7 @@ def gosper_term(f, n):
         return None    # 'f(n)' is *not* Gosper-summable
     else:
         return B.as_expr()*x/C.as_expr()
+
 
 def gosper_sum(f, k):
     r"""

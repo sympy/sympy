@@ -2,6 +2,7 @@
 
 from sympy import Matrix, I
 
+
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
 
@@ -37,6 +38,7 @@ def msigma(i):
         raise IndexError("Invalid Pauli index")
     return Matrix(mat)
 
+
 def pat_matrix(m, dx, dy, dz):
     """Returns the Parallel Axis Theorem matrix to translate the inertia
     matrix a distance of (dx, dy, dz) for a body of mass m.
@@ -67,6 +69,7 @@ def pat_matrix(m, dx, dy, dz):
            (dxdy, dxdx + dzdz, dydz),
            (dzdx, dydz, dydy + dxdx))
     return m*Matrix(mat)
+
 
 def mgamma(mu, lower=False):
     """Returns a Dirac gamma matrix gamma^mu in the standard

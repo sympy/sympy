@@ -17,12 +17,14 @@ from random import randrange
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar)
 
+
 def test_branch_bug():
     assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
            -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
            + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
     assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
            2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
+
 
 def test_hyperexpand():
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
@@ -34,6 +36,7 @@ def test_hyperexpand():
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
            == asin(z)
+
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     from sympy import exp_polar, exp
@@ -53,6 +56,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     return tn(hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z,
               a=a, b=b, c=c, d=d)
 
+
 def test_roach():
     # Kelly B. Roach.  Meijer G Function Representations.
     # Section "Gallery"
@@ -62,6 +66,7 @@ def test_roach():
     assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
     assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
     assert can_do([-S(3)/2, ], [-S(1)/2, S(1)/2])  # shine-integral
+
 
 @XFAIL
 def test_roach_fail():
@@ -74,12 +79,14 @@ def test_roach_fail():
 
 # For the long table tests, see end of file
 
+
 def test_polynomial():
     from sympy import oo
     assert hyperexpand(hyper([], [-1], z)) == oo
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+
 
 def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
@@ -105,24 +112,29 @@ def test_hyperexpand_bases():
            + z**(-b/2 + 1)*besseli(b, 2*sqrt(z))*gamma(b)
     # TODO [a], [a - S.Half, 2*a]
 
+
 def test_hyperexpand_parametric():
     assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
         == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
     assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
         == 2**(2*a - 1)*((-z + 1)**(S(1)/2) + 1)**(-2*a + 1)
 
+
 def test_shifted_sum():
     from sympy import simplify
     assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
            == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
 
+
 def randrat():
     """ Steer clear of integers. """
     return S(randrange(25) + 10)/50
 
+
 def randcplx(offset=-1):
     """ Polys is not good with real coefficients. """
     return randrat() + I*randrat() + I*(1 + offset)
+
 
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
@@ -153,6 +165,7 @@ def test_formulae():
             assert tn(d1.subs(rep).replace(exp_polar, exp),
                       d2.subs(rep).rewrite('nonrepsmall').replace(exp_polar, exp), z)
 
+
 def test_meijerg_formulae():
     from sympy.simplify.hyperexpand import MeijerFormulaCollection
     formulae = MeijerFormulaCollection().formulae
@@ -180,7 +193,9 @@ def test_meijerg_formulae():
             for d1, d2 in zip(deriv1, deriv2):
                 assert tn(d1.subs(rep), d2.subs(rep), z)
 
+
 def op(f): return z*f.diff(z)
+
 
 def test_plan():
     assert devise_plan(IndexPair([0], ()), IndexPair([0], ()), z) == []
@@ -206,6 +221,7 @@ def test_plan():
                                       IndexPair((a1, a2), [b1]), z), op),
        h2, z)
 
+
 def test_plan_derivatives():
     a1, a2, a3 = 1, 2, S('1/2')
     b1, b2 = 3, S('5/2')
@@ -221,6 +237,7 @@ def test_plan_derivatives():
     ops = devise_plan(IndexPair((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1)),
                       IndexPair((a1, a2, a3), (b1, b2)), z)
     assert tn((apply_operators(f.C, ops, deriv)*f.B)[0], h2, z)
+
 
 def test_reduction_operators():
     a1, a2, b1 = map(lambda n: randcplx(n), range(3))
@@ -247,6 +264,7 @@ def test_reduction_operators():
     assert nip.bq == (b1,)
     assert tn(apply_operators(h, ops, op), hyper(ap, bq, z), z)
 
+
 def test_shift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
@@ -259,6 +277,7 @@ def test_shift_operators():
     assert tn(ShiftB(b1).apply(h, op), hyper((a1, a2), (b1 - 1, b2, b3), z), z)
     assert tn(ShiftB(b2).apply(h, op), hyper((a1, a2), (b1, b2 - 1, b3), z), z)
     assert tn(ShiftB(b3).apply(h, op), hyper((a1, a2), (b1, b2, b3 - 1), z), z)
+
 
 def test_ushift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
@@ -310,6 +329,7 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
     for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
         repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
+
 
 def test_meijerg_expand():
     from sympy import combsimp, simplify
@@ -369,6 +389,7 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == \
            z**a*gamma(a)*hyper((a,), (a + 1, a + 1), z*exp_polar(I*pi))/gamma(a + 1)**2
 
+
 def test_meijerg_lookup():
     from sympy import uppergamma, Si, Ci
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
@@ -386,6 +407,7 @@ def test_meijerg_lookup():
            hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
     assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])
 
+
 @XFAIL
 def test_meijerg_expand_fail():
     # These basically test hyper([], [1/2 - a, 1/2 + 1, 1/2], z),
@@ -399,6 +421,7 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([], [], [a, b + S(1)/2, b], [2*b - a])
     assert can_do_meijer([], [], [a, b + S(1)/2, b, 2*b - a])
     assert can_do_meijer([S.Half], [], [-a, a], [0])
+
 
 def test_meijerg():
     # carefully set up the parameters.
@@ -436,6 +459,7 @@ def test_meijerg():
     assert set(niq.bq) == set([b3, b4])
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
+
 def test_meijerg_shift_operators():
     # carefully set up the parameters. XXX this still fails sometimes
     a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = \
@@ -462,6 +486,7 @@ def test_meijerg_shift_operators():
 
     s = MeijerUnShiftD([a1], [a3, a4], [b1], [b3, b4], 0, z)
     assert tn(s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
+
 
 def test_meijerg_confluence():
     def t(m, a, b):
@@ -500,6 +525,7 @@ def test_meijerg_confluence():
     assert u([1, 1], [], [], [0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0, 0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
+
 
 def test_lerchphi():
     from sympy import combsimp, exp_polar, polylog, log, lerchphi
@@ -546,6 +572,7 @@ def test_lerchphi():
                              [S(3)/2, S(3)/2, S(3)/2], S(1)/4)) == \
         Abs(-polylog(3, exp_polar(I*pi)/2) + polylog(3, S(1)/2))
 
+
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
     a, b, c, d, e = map(lambda _: randcplx(), range(5))
@@ -570,6 +597,7 @@ def test_partial_simp():
            - z*(b - 4)*hyper((), (a + 1, b + 1), z)/(2*a*b)
     assert tn(hyperexpand(hyper([3], [1, d, e], z)), hyper([3], [1, d, e], z), z)
 
+
 def test_hyperexpand_special():
     assert hyperexpand(hyper([a, b], [c], 1)) == \
            gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
@@ -583,12 +611,14 @@ def test_hyperexpand_special():
     assert hyperexpand(hyper([a], [b], 0)) == 0
     assert hyper([a], [b], 0) != 0
 
+
 def test_Mod1_behavior():
     from sympy import Symbol, simplify, lowergamma
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \
            lowergamma(n + 1, z)
+
 
 @slow
 def test_prudnikov_misc():
@@ -610,6 +640,7 @@ def test_prudnikov_misc():
     assert can_do([a, a+S.Half], [2*a, b, 2*a - b + 1])
     assert can_do([a, a+S.Half], [S.Half, 2*a, 2*a + S.Half])
     assert can_do([a], [a+1], lowerplane=True)  # lowergamma
+
 
 @slow
 def test_prudnikov_1():
@@ -638,6 +669,7 @@ def test_prudnikov_1():
     assert can_do([a], [2*a + 1])
     assert can_do([a], [2*a - 1])
 
+
 @slow
 def test_prudnikov_2():
     h = S.Half
@@ -654,6 +686,7 @@ def test_prudnikov_2():
         for n in [1, 2, 3, 4]:
             for m in [1, 2, 3, 4]:
                 assert can_do([p, n], [m])
+
 
 @slow
 def test_prudnikov_3():
@@ -681,6 +714,7 @@ def test_prudnikov_4():
             for m in [2, 3, 4]:
                 assert can_do([p, m], [n])
 
+
 @slow
 def test_prudnikov_5():
     h = S.Half
@@ -703,6 +737,7 @@ def test_prudnikov_5():
             for r in [h, 3*h, 5*h]:
                 for s in [1, 2, 3]:
                     assert can_do([-h, p, q], [r, s])
+
 
 @slow
 def test_prudnikov_6():
@@ -729,6 +764,7 @@ def test_prudnikov_6():
 
     # pages 435 to 457 contain more PFDD and stuff like this
 
+
 @slow
 def test_prudnikov_7():
     assert can_do([3], [6])
@@ -739,6 +775,7 @@ def test_prudnikov_7():
     for m in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4]:  # HERE
         for n in [-h, h, 3*h, 5*h, 7*h, 1, 2, 3, 4]:
             assert can_do([m], [n])
+
 
 @slow
 def test_prudnikov_8():
@@ -766,6 +803,7 @@ def test_prudnikov_8():
                     if c <= b:
                         assert can_do([a, b], [c, d])
 
+
 @slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
@@ -773,6 +811,7 @@ def test_prudnikov_9():
         assert can_do([], [(S(i) + 1)/2])
     for i in range(5):
         assert can_do([], [-(2*S(i) + 1)/2])
+
 
 @slow
 def test_prudnikov_10():
@@ -798,6 +837,7 @@ def test_prudnikov_10():
 
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
+
 @slow
 def test_prudnikov_11():
     # 7.15
@@ -810,6 +850,7 @@ def test_prudnikov_11():
     assert can_do([S(5)/4, S(7)/4], [S(3)/2, S(5)/2, 2])
 
     assert can_do([1, 1], [S(3)/2, 2, 2])  # cosh-integral chi
+
 
 @slow
 def test_prudnikov_12():
@@ -828,6 +869,7 @@ def test_prudnikov_12():
     assert can_do([], [1, S(3)/2, S(3)/2])
     assert can_do([], [S(5)/4, S(3)/2, S(7)/4])
     assert can_do([], [2, S(3)/2, S(3)/2])
+
 
 @XFAIL
 def test_prudnikov_fail_2F1():
@@ -890,6 +932,7 @@ def test_prudnikov_fail_2F1():
     assert can_do([o/6*5, 1], [o/6*17])
     assert can_do([o/8*7, 1], [o/8*15])
 
+
 @XFAIL
 def test_prudnikov_fail_3F2():
     assert can_do([a, a + S(1)/3, a + S(2)/3], [S(1)/3, S(2)/3])
@@ -943,6 +986,7 @@ def test_prudnikov_fail_other():
 
     # XXX this does not *evaluate* right??
     assert can_do([], [a, a + S.Half, 2*a-1])
+
 
 def test_bug():
     h = hyper([-1, 1], [z], -1)

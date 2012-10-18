@@ -6,6 +6,7 @@ from sympy.polys import Poly, PolynomialError
 from sympy.core.function import count_ops
 from sympy.utilities import default_sort_key
 
+
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
 
@@ -212,8 +213,10 @@ def _sqrt_match(p):
             res = []
     return list(res)
 
+
 class SqrtdenestStopIteration(StopIteration):
     pass
+
 
 def _sqrtdenest0(expr):
     """Returns expr after denesting its arguments."""
@@ -238,6 +241,7 @@ def _sqrtdenest0(expr):
         if args:
             return expr.func(*[_sqrtdenest0(a) for a in args])
     return expr
+
 
 def _sqrtdenest_rec(expr):
     """Helper that denests the square root of three or more surds.
@@ -297,6 +301,7 @@ def _sqrtdenest_rec(expr):
     r = d/sqrt(2) + num/(den*sqrt(2))
     r = radsimp(r)
     return _mexpand(r)
+
 
 def _sqrtdenest1(expr, denester=True):
     """Return denested expr after denesting with simpler methods or, that
@@ -433,6 +438,7 @@ def _sqrt_numeric_denest(a, b, r, d2):
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
+
 def sqrt_biquadratic_denest(expr, a, b, r, d2):
     """denest expr = sqrt(a + b*sqrt(r))
     where a, b, r are linear combinations of square roots of
@@ -502,6 +508,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
             z = -z
         return _mexpand(z)
     return None
+
 
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.

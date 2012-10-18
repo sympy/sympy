@@ -7,6 +7,7 @@ from sympy.polys.polyerrors import NotReversible
 
 from sympy.utilities.pytest import raises
 
+
 def test_QuotientRingElement():
     R = QQ[x]/[x**10]
     X = R.convert(x)
@@ -22,6 +23,7 @@ def test_QuotientRingElement():
     assert X != x
 
     raises(NotReversible, lambda: 1/X)
+
 
 def test_QuotientRing():
     I = QQ[x].ideal(x**2 + 1)

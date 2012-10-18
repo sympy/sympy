@@ -7,6 +7,7 @@ T = True
 F = False
 U = None
 
+
 def test_deduce_alpha_implications():
     def D(i):
         I = deduce_alpha_implications(i)
@@ -138,6 +139,7 @@ def test_FactRules_parse():
 
 def test_FactRules_parse2():
     raises(ValueError, lambda: FactRules('a -> !a'))
+
 
 def test_FactRules_deduce():
     f = FactRules(['a -> b', 'b -> c', 'b -> d', 'c -> e'])

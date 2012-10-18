@@ -8,6 +8,7 @@ from sympy.core import I
 
 x, y = symbols('x y')
 
+
 def test_DiracDelta():
     assert DiracDelta(1) == 0
     assert DiracDelta(5.1) == 0
@@ -36,6 +37,7 @@ def test_DiracDelta():
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
+
 
 def test_heaviside():
     assert Heaviside(0) == 0.5

@@ -5,6 +5,7 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
+
 class Q:
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
@@ -44,6 +45,7 @@ def _extract_facts(expr, symbol):
         return expr.func
     return expr.func(*filter(lambda x: x is not None,
                 [_extract_facts(arg, symbol) for arg in expr.args]))
+
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -164,11 +166,13 @@ def register_handler(key, handler):
     except AttributeError:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
+
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     if type(key) is Predicate:
         key = key.name
     getattr(Q, key).remove_handler(handler)
+
 
 def compute_known_facts():
     """Compute the various forms of knowledge compilation used by the

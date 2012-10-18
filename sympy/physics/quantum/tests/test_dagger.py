@@ -42,6 +42,7 @@ def test_eval_adjoint():
 
 np = import_module('numpy', min_python_version=(2, 6))
 
+
 def test_numpy_dagger():
     if not np:
         skip("numpy not installed or Python too old.")
@@ -52,6 +53,7 @@ def test_numpy_dagger():
 
 
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 
 def test_scipy_sparse_dagger():
     if not np:

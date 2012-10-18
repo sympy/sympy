@@ -125,6 +125,7 @@ def arr(num, t):
         binary_array[i] = int(b[i])
     return binary_array
 
+
 def getr(x, y, N):
     fraction = continued_fraction(x, y)
     # Now convert into r

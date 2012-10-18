@@ -12,6 +12,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
 
+
 class Symbol(AtomicExpr, Boolean):
     """
     Assumptions:
@@ -135,6 +136,7 @@ class Symbol(AtomicExpr, Boolean):
     def free_symbols(self):
         return set([self])
 
+
 class Dummy(Symbol):
     """Dummy symbols are each unique, identified by an internal count index:
 
@@ -178,6 +180,7 @@ class Dummy(Symbol):
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
+
 
 class Wild(Symbol):
     """
@@ -227,6 +230,7 @@ class Wild(Symbol):
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
 _re_var_split = re.compile(r"\s*,\s*|\s+")
+
 
 def symbols(names, **args):
     """
@@ -386,6 +390,7 @@ def symbols(names, **args):
             result.append(symbols(name, **args))
 
         return type(names)(result)
+
 
 def var(names, **args):
     """

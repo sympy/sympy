@@ -5,6 +5,7 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+
 def test_Symbol():
     a = Symbol("a")
     x1 = Symbol("x")
@@ -27,12 +28,14 @@ def test_Symbol():
     assert isinstance(d, Dummy)
     raises(TypeError, lambda: Symbol())
 
+
 def test_Dummy():
     assert Dummy() != Dummy()
     Dummy._count = 0
     d1 = Dummy()
     Dummy._count = 0
     assert d1 == Dummy()
+
 
 def test_as_dummy():
     x = Symbol('x')
@@ -44,6 +47,7 @@ def test_as_dummy():
     x1 = x.as_dummy()
     assert x1 != x
     assert x1.is_commutative == False
+
 
 def test_lt_gt():
     from sympy import sympify as S
@@ -85,10 +89,12 @@ def test_lt_gt():
     assert (S(0) < e) == StrictLessThan(0, e)
     assert (S(0) > e) == StrictGreaterThan(0, e)
 
+
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
     raises(TypeError, lambda: len(x))
+
 
 def test_ineq_unequal():
     S = sympify
@@ -150,6 +156,7 @@ def test_ineq_unequal():
         for e2 in e[i +1:]:
             assert e1 != e2
 
+
 def test_Wild_properties():
     # these tests only include Atoms
     x = Symbol("x")
@@ -189,6 +196,7 @@ def test_Wild_properties():
                 assert d[A] in goodmatch[A]
             else:
                 assert d == None
+
 
 @XFAIL
 def test_symbols_each_char():
@@ -234,6 +242,7 @@ def test_symbols_each_char():
     # Note, in Python 2.6+, this can be done more nicely using the
     # warnings.catch_warnings context manager.
     # See http://docs.python.org/library/warnings#testing-warnings.
+
 
 def test_symbols():
     x = Symbol('x')
@@ -315,6 +324,7 @@ def test_symbols():
     assert symbols('x:z') == (x, y, z)
     assert symbols('a:d,x:z') == (a, b, c, d, x, y, z)
     assert symbols(('a:d', 'x:z')) == ((a, b, c, d), (x, y, z))
+
 
 def test_call():
     f = Symbol('f')

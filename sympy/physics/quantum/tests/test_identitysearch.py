@@ -9,9 +9,11 @@ from sympy.physics.quantum.identitysearch import (generate_gate_rules,
         is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
 from sympy.utilities.pytest import skip
 
+
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
     return gates
+
 
 def test_generate_gate_rules_1():
     # Test with tuples
@@ -79,6 +81,7 @@ def test_generate_gate_rules_1():
                       (x*ph*cgate_t, Integer(1))])
     actual = generate_gate_rules((x, ph, cgate_t), return_as_muls=True)
     assert actual == gate_rules
+
 
 def test_generate_gate_rules_2():
     # Test with Muls
@@ -164,6 +167,7 @@ def test_generate_gate_rules_2():
     actual = generate_gate_rules(x*ph*cgate_t)
     assert actual == gate_rules
 
+
 def test_generate_equivalent_ids_1():
     # Test with tuples
     (x, y, z, h) = create_gate_sequence()
@@ -203,6 +207,7 @@ def test_generate_equivalent_ids_1():
     gate_ids = set([(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
                     (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)])
     assert generate_equivalent_ids(gate_seq) == gate_ids
+
 
 def test_generate_equivalent_ids_2():
     # Test with Muls
@@ -246,6 +251,7 @@ def test_generate_equivalent_ids_2():
     gate_ids = set([cnot*h*cgate_z*h, h*cgate_z*h*cnot,
                     h*cnot*h*cgate_z, cgate_z*h*cnot*h])
     assert generate_equivalent_ids(circuit, return_as_muls=True) == gate_ids
+
 
 def test_is_scalar_nonsparse_matrix():
     numqubits = 2
@@ -296,6 +302,7 @@ def test_is_scalar_nonsparse_matrix():
     actual = is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only)
     assert actual == True
 
+
 def test_is_scalar_sparse_matrix():
     np = import_module('numpy', min_python_version=(2, 6))
     if not np:
@@ -345,6 +352,7 @@ def test_is_scalar_sparse_matrix():
     assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
 
+
 def test_is_degenerate():
     (x, y, z, h) = create_gate_sequence()
 
@@ -353,6 +361,7 @@ def test_is_degenerate():
 
     another_id = (z, y, x)
     assert is_degenerate(ids, another_id) == True
+
 
 def test_is_reducible():
     nqubits = 2
@@ -372,6 +381,7 @@ def test_is_reducible():
 
     circuit = (x, y, z, y, y)
     assert is_reducible(circuit, nqubits, 1, 5) == True
+
 
 def test_bfs_identity_search():
     assert bfs_identity_search([], 1) == set()

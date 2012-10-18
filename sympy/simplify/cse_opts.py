@@ -5,10 +5,12 @@ from sympy.core import Add, Basic, Expr, Mul, S
 from sympy.core.exprtools import factor_terms
 from sympy.core.basic import preorder_traversal
 
+
 class Neg(Expr):
     """ Stub to hold negated expression.
     """
     __slots__ = []
+
 
 def sub_pre(e):
     """ Replace y - x with Neg(x - y) if -1 can be extracted from y - x.
@@ -25,6 +27,7 @@ def sub_pre(e):
                if adds.get(a, a.could_extract_minus_sign())])
         e = e.xreplace(reps)
     return e
+
 
 def sub_post(e):
     """ Replace Neg(x) with -x.

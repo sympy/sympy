@@ -4,10 +4,12 @@ from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
 from sympy.abc import x, y, z
 from timeit import default_timer as clock
 
+
 def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"
     def f(z): return sqrt(Integer(1)/3)*z**2 + I/3
     e = f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
+
 
 def bench_R2():
     "Hermite polynomial hermite(15, y)"
@@ -22,14 +24,17 @@ def bench_R2():
 
     a = hermite(15, y)
 
+
 def bench_R3():
     "a = [bool(f==f) for _ in range(10)]"
     f = x+y+z
     a = [bool(f==f) for _ in range(10)]
 
+
 def bench_R4():
     # we don't have Tuples
     pass
+
 
 def bench_R5():
     "blowup(L, 8); L=uniq(L)"
@@ -45,14 +50,17 @@ def bench_R5():
     blowup(L, 8)
     L = uniq(L)
 
+
 def bench_R6():
     "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
     s = sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
+
 
 def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"
     f = x**24+34*x**12+45*x**3+9*x**18+34*x**10+32*x**21
     a = [f.subs(x, random()) for _ in xrange(10**4)]
+
 
 def bench_R8():
     "right(x^2,0,5,10^4)"
@@ -71,9 +79,11 @@ def bench_R8():
 
     a = right(x**2, 0, 5, 10**4)
 
+
 def _bench_R9():
     "factor(x^20 - pi^5*y^20)"
     factor(x**20 - pi**5*y**20)
+
 
 def bench_R10():
     "v = [-pi,-pi+1/10..,pi]"
@@ -83,6 +93,7 @@ def bench_R10():
             v.append(v[-1]+step)
         return v[:-1]
     v = srange(-pi, pi, sympify(1)/10)
+
 
 def bench_R11():
     "a = [random() + random()*I for w in [0..1000]]"

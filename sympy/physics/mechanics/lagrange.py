@@ -3,6 +3,7 @@ __all__ = ['LagrangesMethod']
 from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point)
 
+
 class LagrangesMethod(object):
     """Lagrange's method object.
 

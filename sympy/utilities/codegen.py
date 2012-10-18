@@ -255,6 +255,7 @@ class Routine(object):
         args.extend(self.results)
         return args
 
+
 class DataType(object):
     """Holds strings for a certain datatype in different programming languages."""
     def __init__(self, cname, fname, pyname):
@@ -275,6 +276,7 @@ def get_default_datatype(expr):
         return default_datatypes["int"]
     else:
         return default_datatypes["float"]
+
 
 class Variable(object):
     """Represents a typed variable."""
@@ -329,6 +331,7 @@ class Variable(object):
             raise CodeGenError("Has datatypes for languages: %s" %
                     ", ".join(self._datatype))
 
+
 class Argument(Variable):
     """An abstract Argument data structure: a name and a data type.
 
@@ -341,8 +344,10 @@ class Argument(Variable):
 
         Variable.__init__(self, name, datatype, dimensions, precision)
 
+
 class InputArgument(Argument):
     pass
+
 
 class ResultBase(object):
     """Base class for all ``outgoing'' information from a routine
@@ -355,6 +360,7 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
+
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine
     """
@@ -363,6 +369,7 @@ class OutputArgument(Argument, ResultBase):
         """
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
+
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine
@@ -373,6 +380,7 @@ class InOutArgument(Argument, ResultBase):
         """
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
+
 
 class Result(ResultBase):
     """An expression for a scalar return value.
@@ -498,8 +506,10 @@ class CodeGen(object):
         if code_lines:
             f.write(code_lines)
 
+
 class CodeGenError(Exception):
     pass
+
 
 class CodeGenArgumentListError(Exception):
     @property
@@ -660,6 +670,7 @@ class CCodeGen(CodeGen):
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
     dump_fns = [dump_c, dump_h]
+
 
 class FCodeGen(CodeGen):
     """

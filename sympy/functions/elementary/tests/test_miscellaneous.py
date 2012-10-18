@@ -4,6 +4,7 @@ from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
 from sympy import S, Float, I, cos, sin, oo, pi, Add
 
+
 def test_Min():
     from sympy.abc import x, y, z
     n = Symbol('n', negative=True)
@@ -153,6 +154,7 @@ def test_root():
 
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
+
 
 def test_nthroot():
     assert real_root(-8, 3) == -2

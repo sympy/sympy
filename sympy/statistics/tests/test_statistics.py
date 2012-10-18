@@ -17,6 +17,7 @@ from sympy.statistics.distributions import PDF
 
 warnings.filterwarnings("default")
 
+
 def test_normal():
     dps, mp.dps = mp.dps, 20
 
@@ -40,6 +41,7 @@ def test_normal():
     assert N.pdf(0) == Rational(1, 2)
     mp.dps = dps
 
+
 def test_uniform():
     U = Uniform(-3, -1)
     assert str(U) == "Uniform(-3, -1)"
@@ -56,6 +58,7 @@ def test_uniform():
     assert U.cdf(-Rational(3, 2)) == Rational(3, 4)
     assert U.cdf(0) == 1
 
+
 def test_fit():
     import random
     random.seed(1234)
@@ -71,6 +74,7 @@ def test_fit():
     assert n.mean == 3
     assert n.stddev == sqrt(2)
 
+
 def test_sample():
     from sympy.statistics.distributions import Sample
     s = Sample([0, 1])
@@ -83,6 +87,7 @@ def test_sample():
     assert s.median == 3
     s = Sample([4, 2, 3, 1])
     assert s.median == Rational(5, 2)
+
 
 def test_PDF():
     a = Symbol('a', positive=True)

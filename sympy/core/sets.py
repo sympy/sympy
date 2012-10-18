@@ -12,6 +12,7 @@ from sympy.logic.boolalg import And, Or
 
 from sympy.utilities import default_sort_key
 
+
 class Set(Basic):
     """
     The base class for any kind of set.
@@ -265,6 +266,7 @@ class Set(Basic):
     def is_real(self):
         return None
 
+
 class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
@@ -392,6 +394,7 @@ class ProductSet(Set):
         for set in self.sets:
             measure *= set.measure
         return measure
+
 
 class Interval(Set, EvalfMixin):
     """
@@ -679,6 +682,7 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
+
 class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
@@ -875,6 +879,7 @@ class Union(Set, EvalfMixin):
     def is_real(self):
         return all(set.is_real for set in self.args)
 
+
 class Intersection(Set):
     """
     Represents an intersection of sets as a Set.
@@ -1021,6 +1026,7 @@ class Intersection(Set):
         """Rewrite an Intersection in terms of equalities and logic operators"""
         return And(*[set.as_relational(symbol) for set in self.args])
 
+
 class EmptySet(Set):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -1074,6 +1080,7 @@ class EmptySet(Set):
     def __iter__(self):
         return iter([])
 
+
 class UniversalSet(Set):
     """
     Represents the set of all things.
@@ -1121,6 +1128,7 @@ class UniversalSet(Set):
 
     def _union(self, other):
         return self
+
 
 class FiniteSet(Set, EvalfMixin):
     """

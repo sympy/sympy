@@ -13,6 +13,7 @@ from sympy.functions.combinatorial.factorials import rf
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
+
 class gamma(Function):
     """The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
@@ -226,6 +227,7 @@ class lowergamma(Function):
         if s.is_integer and s.is_nonpositive:
             return self
         return self.rewrite(uppergamma).rewrite(expint)
+
 
 class uppergamma(Function):
     r"""
@@ -510,6 +512,7 @@ class polygamma(Function):
     def _eval_rewrite_as_zeta(self, n, z):
         return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
 
+
 class loggamma(Function):
     """
     The loggamma function is `ln(gamma(x))`.
@@ -550,6 +553,7 @@ class loggamma(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+
 def digamma(x):
     """
     The digamma function is the logarithmic derivative of the gamma function.
@@ -565,6 +569,7 @@ def digamma(x):
     """
     return polygamma(0, x)
 
+
 def trigamma(x):
     """
     The trigamma function is the second of the polygamma functions.
@@ -578,6 +583,7 @@ def trigamma(x):
 
     """
     return polygamma(1, x)
+
 
 def beta(x, y):
     """

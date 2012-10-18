@@ -20,8 +20,11 @@ m = Symbol('m', real=True)
 
 
 runslow = False
+
+
 def sskip():
     if not runslow: skip("slow")
+
 
 def test_gruntz_evaluation():
     # Gruntz' thesis pp. 122 to 123
@@ -78,6 +81,7 @@ def test_gruntz_evaluation():
     # Another
     assert gruntz(exp(exp(exp(x+exp(-x)))) / exp(exp(x)), x, oo) == oo
 
+
 def test_gruntz_evaluation_slow():
     sskip()
     # 8.4
@@ -87,6 +91,7 @@ def test_gruntz_evaluation_slow():
     assert gruntz((exp(exp(-x/(1+exp(-x))))*exp(-x/(1+exp(-x/(1+exp(-x)))))
                    *exp(exp(-x+exp(-x/(1+exp(-x))))))
                   / (exp(-x/(1+exp(-x))))**2 - exp(x) + x, x, oo) == 2
+
 
 def test_gruntz_eval_special():
     # Gruntz, p. 126
@@ -106,17 +111,20 @@ def test_gruntz_eval_special():
            == S(1)/2
     assert gruntz((gamma(x+1/gamma(x)) - gamma(x)) / log(x), x, oo) == 1
 
+
 def test_gruntz_eval_special_slow():
     sskip()
     assert gruntz(gamma(x+1)/sqrt(2*pi)
                   - exp(-x)*(x**(x+S(1)/2) + x**(x-S(1)/2)/12), x, oo) == oo
     assert gruntz(exp(exp(exp(digamma(digamma(digamma(x))))))/x, x, oo) == 0
 
+
 @XFAIL
 def test_grunts_eval_special_slow_sometimes_fail():
     sskip()
     # XXX This sometimes fails!!!
     assert gruntz(exp(gamma(x-exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) == oo
+
 
 @XFAIL
 def test_gruntz_eval_special_fail():
@@ -162,6 +170,7 @@ def test_compare1():
 
     assert compare(exp(x**2), 1/exp(x**2), x) == "="
 
+
 def test_compare2():
     assert compare(exp(x), x**5, x) == ">"
     assert compare(exp(x**2), exp(x)**2, x) == ">"
@@ -174,8 +183,10 @@ def test_compare2():
     assert compare(exp(-exp(x)), exp(x), x) == ">"
     assert compare(exp(exp(-exp(x))+x), exp(-exp(x)), x) == "<"
 
+
 def test_compare3():
     assert compare(exp(exp(x)), exp(x+exp(-exp(x))), x) == ">"
+
 
 def test_sign1():
     assert sign(Rational(0), x) == 0
@@ -190,6 +201,7 @@ def test_sign1():
     assert sign(sin(1/x), x) == 1
     assert sign((x**Integer(2)), x) == 1
 
+
 def test_sign2():
     assert sign(x, x) == 1
     assert sign(-x, x) == -1
@@ -199,7 +211,9 @@ def test_sign2():
     assert sign(y*x, x) == 1
     assert sign(-y*x, x) == -1
 
+
 def mmrv(a, b): return set(mrv(a, b)[0].keys())
+
 
 def test_mrv1():
     assert mmrv(x, x) == set([x])
@@ -212,20 +226,27 @@ def test_mrv1():
     assert mmrv(-exp(1/x), x) == set([x])
     assert mmrv(exp(x+1/x), x) == set([exp(x+1/x)])
 
+
 def test_mrv2a():
     assert mmrv(exp(x+exp(-exp(x))), x) == set([exp(-exp(x))])
     assert mmrv(exp(x+exp(-x)), x) == set([exp(x+exp(-x)), exp(-x)])
     assert mmrv(exp(1/x+exp(-x)), x) == set([exp(-x)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
+
+
 def test_mrv2b():
     assert mmrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
+
+
 def test_mrv2c():
     assert mmrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
+
+
 def test_mrv3():
     assert mmrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
     assert mmrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
@@ -236,6 +257,7 @@ def test_mrv3():
     assert mmrv(log(log(x*exp(x*exp(x))+1)), x) == set([exp(x*exp(x))])
     assert mmrv(exp(exp(log(log(x)+1/x))), x) == set([x])
 
+
 def test_mrv4():
     ln = log
     assert mmrv((ln(ln(x)+ln(ln(x)))-ln(ln(x)))/ln(ln(x)+ln(ln(ln(x))))*ln(x),
@@ -243,7 +265,10 @@ def test_mrv4():
     assert mmrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
         set([exp(x*exp(x))])
 
+
 def mrewrite(a, b, c): return rewrite(a[1], a[0], b, c)
+
+
 def test_rewrite1():
     e = exp(x)
     assert mrewrite(mrv(e, x), x, m) == (1/m, -x)
@@ -254,31 +279,38 @@ def test_rewrite1():
     e = 1/exp(-x+exp(-x))-exp(x)
     assert mrewrite(mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
 
+
 def test_rewrite2():
     e = exp(x)*log(log(exp(x)))
     assert mmrv(e, x) == set([exp(x)])
     assert mrewrite(mrv(e, x), x, m) == (1/m*log(x), -x)
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
+
+
 def test_rewrite3():
     e = exp(-x+1/x**2)-exp(x+1/x)
     #both of these are correct and should be equivalent:
     assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+
 
 def test_mrv_leadterm1():
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
     assert mrv_leadterm(1/exp(-x+exp(-x))-exp(x), x) == (-1, 0)
     assert mrv_leadterm((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == (-exp(1/x), 0)
 
+
 def test_mrv_leadterm2():
     #Gruntz: p51, 3.25
     assert mrv_leadterm((log(exp(x)+x)-x)/log(exp(x)+log(x))*exp(x), x) == \
             (1, 0)
 
+
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
     assert mmrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(-x-x*log(x))])
     assert mrv_leadterm(exp(-x+exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
+
 
 def test_limit1():
     assert gruntz(x, x, oo) == oo
@@ -305,6 +337,7 @@ def test_limit2():
     assert gruntz(x+exp(-exp(x)), x, oo) == oo
     assert gruntz(13+1/x-exp(-x), x, oo) == 13
 
+
 def test_limit3():
     a = Symbol('a')
     assert gruntz(x-log(1+exp(x)), x, oo) == 0
@@ -312,11 +345,13 @@ def test_limit3():
     assert gruntz(exp(x)/(1+exp(x)), x, oo) == 1
     assert gruntz(exp(x)/(a+exp(x)), x, oo) == 1
 
+
 def test_limit4():
     #issue 364
     assert gruntz((3**x+5**x)**(1/x), x, oo) == 5
     #issue 364
     assert gruntz((3**(1/x)+5**(1/x))**x, x, 0) == 5
+
 
 @XFAIL
 def test_MrvTestCase_page47_ex3_21():
@@ -326,6 +361,7 @@ def test_MrvTestCase_page47_ex3_21():
     # XXX Incorrect result
     assert mrv(expr, x).difference(expected) == set()
 
+
 def test_I():
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
@@ -333,8 +369,10 @@ def test_I():
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
 
+
 def test_issue1715():
     assert gruntz((x + 1)**(1/log(x + 1)), x, oo) == E
+
 
 def test_intractable():
     assert gruntz(1/gamma(x), x, oo) == 0
@@ -346,13 +384,16 @@ def test_intractable():
     assert gruntz(log(x**x)/log(gamma(x)), x, oo) == 1
     assert gruntz(log(gamma(gamma(x)))/exp(x), x, oo) == oo
 
+
 def test_aseries_trig():
     assert cancel(gruntz(1/log(atan(x)), x, oo) \
            - 1/(log(pi) + log(S(1)/2))) == 0
     assert gruntz(1/acot(x), x, -oo) == -oo
 
+
 def test_exp_log_series():
     assert gruntz(x/log(log(x*exp(x))), x, oo) == oo
+
 
 def test_issue545():
     assert gruntz(((x**7+x+1)/(2**x+x**2))**(-1/x), x, oo) == 2

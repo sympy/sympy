@@ -17,6 +17,8 @@ from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.core.compatibility import iterable
 
 # XXX why does this derive from CharacteristicZero???
+
+
 class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     """
     Base class for generalized polynomial rings.
@@ -202,6 +204,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """
         return FreeModulePolyRing(self, rank)
 
+
 def _vector_to_sdm_helper(v, order):
     """Helper method for common code in Global and Local poly rings."""
     from sympy.polys.distributedmodules import sdm_from_dict
@@ -210,6 +213,7 @@ def _vector_to_sdm_helper(v, order):
         for key, value in e.to_dict().iteritems():
             d[(i,) + key] = value
     return sdm_from_dict(d, order)
+
 
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
@@ -286,6 +290,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         """
         return _vector_to_sdm_helper(v, order)
 
+
 class GeneralizedPolynomialRing(PolynomialRingBase):
     """A generalized polynomial ring, with objects DMF. """
 
@@ -353,6 +358,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         for x in v:
             u *= x.denom()
         return _vector_to_sdm_helper([x.numer()*u/x.denom() for x in v], order)
+
 
 def PolynomialRing(dom, *gens, **opts):
     r"""

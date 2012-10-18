@@ -28,6 +28,7 @@ from sympy.ntheory import nextprime
 
 from sympy.utilities import cythonized, subsets
 
+
 @cythonized("n,i")
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
@@ -64,6 +65,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
     else:
         return PurePoly(Mul(*poly), x)
 
+
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
@@ -81,6 +83,7 @@ def cyclotomic_poly(n, x=None, **args):
     else:
         return poly
 
+
 def symmetric_poly(n, *gens, **args):
     """Generates symmetric polynomial of order `n`. """
     gens = _analyze_gens(gens)
@@ -97,6 +100,7 @@ def symmetric_poly(n, *gens, **args):
     else:
         return Poly(poly, *gens)
 
+
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
@@ -105,6 +109,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
         return poly.as_expr()
     else:
         return poly
+
 
 @cythonized("n,i,j")
 def interpolating_poly(n, x, X='x', Y='y'):
@@ -135,6 +140,7 @@ def interpolating_poly(n, x, X='x', Y='y'):
 
     return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
+
 @cythonized("n,i")
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
@@ -151,6 +157,7 @@ def fateman_poly_F_1(n):
     H = Poly(1, *Y)
 
     return F, G, H
+
 
 @cythonized("n,m,i")
 def dmp_fateman_poly_F_1(n, K):
@@ -182,6 +189,7 @@ def dmp_fateman_poly_F_1(n, K):
 
     return F, G, H
 
+
 @cythonized("n,i")
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
@@ -197,6 +205,7 @@ def fateman_poly_F_2(n):
     G = Poly((y_0 + u + 2)**2, *Y)
 
     return H*F, H*G, H
+
 
 @cythonized("n,m,i")
 def dmp_fateman_poly_F_2(n, K):
@@ -219,6 +228,7 @@ def dmp_fateman_poly_F_2(n, K):
 
     return dmp_mul(f, h, n, K), dmp_mul(g, h, n, K), h
 
+
 @cythonized("n,i")
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
@@ -234,6 +244,7 @@ def fateman_poly_F_3(n):
     G = Poly((y_0**(n+1) + u + 2)**2, *Y)
 
     return H*F, H*G, H
+
 
 @cythonized("n,i")
 def dmp_fateman_poly_F_3(n, K):

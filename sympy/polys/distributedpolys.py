@@ -8,12 +8,14 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
+
 def sdp_LC(f, K):
     """Returns the leading coeffcient of `f`. """
     if not f:
         return K.zero
     else:
         return f[0][1]
+
 
 def sdp_LM(f, u):
     """Returns the leading monomial of `f`. """
@@ -22,6 +24,7 @@ def sdp_LM(f, u):
     else:
         return f[0][0]
 
+
 def sdp_LT(f, u, K):
     """Returns the leading term of `f`. """
     if f:
@@ -29,37 +32,46 @@ def sdp_LT(f, u, K):
     else:
         return (0,) * (u + 1), K.zero
 
+
 def sdp_del_LT(f):
     """Removes the leading from `f`. """
     return f[1:]
+
 
 def sdp_coeffs(f):
     """Returns a list of monomials in `f`. """
     return [ coeff for _, coeff in f ]
 
+
 def sdp_monoms(f):
     """Returns a list of monomials in `f`. """
     return [ monom for monom, _ in f ]
+
 
 def sdp_sort(f, O):
     """Sort terms in `f` using the given monomial order `O`. """
     return sorted(f, key=lambda term: O(term[0]), reverse=True)
 
+
 def sdp_strip(f):
     """Remove terms with zero coefficients from `f` in `K[X]`. """
     return [ (monom, coeff) for monom, coeff in f if coeff ]
+
 
 def sdp_normal(f, K):
     """Normalize distributed polynomial in the given domain. """
     return [ (monom, K.convert(coeff)) for monom, coeff in f if coeff ]
 
+
 def sdp_from_dict(f, O):
     """Make a distributed polynomial from a dictionary. """
     return sdp_sort(f.items(), O)
 
+
 def sdp_to_dict(f):
     """Make a dictionary from a distributed polynomial. """
     return dict(f)
+
 
 def sdp_indep_p(f, j, u):
     """Returns `True` if a polynomial is independent of `x_j`. """
@@ -68,25 +80,31 @@ def sdp_indep_p(f, j, u):
     else:
         return all(not monom[j] for monom in sdp_monoms(h))
 
+
 def sdp_one_p(f, u, K):
     """Returns True if `f` is a multivariate one in `K[X]`. """
     return f == sdp_one(u, K)
+
 
 def sdp_one(u, K):
     """Returns a multivariate one in `K[X]`. """
     return (((0,) * (u + 1), K.one),)
 
+
 def sdp_term_p(f):
     """Returns True if `f` has a single term or is zero. """
     return len(f) <= 1
+
 
 def sdp_abs(f, u, O, K):
     """Make all coefficients positive in `K[X]`. """
     return [ (monom, K.abs(coeff)) for monom, coeff in f ]
 
+
 def sdp_neg(f, u, O, K):
     """Negate a polynomial in `K[X]`. """
     return [ (monom, -coeff) for monom, coeff in f ]
+
 
 def sdp_add_term(f, term, u, O, K):
     """Add a single term using bisection method. """
@@ -124,6 +142,7 @@ def sdp_add_term(f, term, u, O, K):
     else:
         return f[:i] + [(M, c)] + f[i + 1:]
 
+
 def sdp_sub_term(f, term, u, O, K):
     """Sub a single term using bisection method. """
     M, c = term
@@ -160,6 +179,7 @@ def sdp_sub_term(f, term, u, O, K):
     else:
         return f[:i] + [(M, -c)] + f[i + 1:]
 
+
 def sdp_mul_term(f, term, u, O, K):
     """Multiply a distributed polynomial by a term. """
     M, c = term
@@ -171,6 +191,7 @@ def sdp_mul_term(f, term, u, O, K):
             return [ (monomial_mul(f_M, M), f_c) for f_M, f_c in f ]
         else:
             return [ (monomial_mul(f_M, M), f_c * c) for f_M, f_c in f ]
+
 
 def sdp_add(f, g, u, O, K):
     """Add distributed polynomials in `K[X]`. """
@@ -189,6 +210,7 @@ def sdp_add(f, g, u, O, K):
 
     return sdp_from_dict(h, O)
 
+
 def sdp_sub(f, g, u, O, K):
     """Subtract distributed polynomials in `K[X]`. """
     h = dict(f)
@@ -205,6 +227,7 @@ def sdp_sub(f, g, u, O, K):
             h[monom] = -c
 
     return sdp_from_dict(h, O)
+
 
 def sdp_mul(f, g, u, O, K):
     """Multiply distributed polynomials in `K[X]`. """
@@ -238,6 +261,7 @@ def sdp_mul(f, g, u, O, K):
 
     return sdp_from_dict(h, O)
 
+
 def sdp_sqr(f, u, O, K):
     """Square a distributed polynomial in `K[X]`. """
     h = {}
@@ -257,6 +281,7 @@ def sdp_sqr(f, u, O, K):
             h[monom] = coeff
 
     return sdp_from_dict(h, O)
+
 
 def sdp_pow(f, n, u, O, K):
     """Raise `f` to the n-th power in `K[X]`. """
@@ -282,6 +307,7 @@ def sdp_pow(f, n, u, O, K):
 
     return g
 
+
 def sdp_monic(f, K):
     """Divides all coefficients by `LC(f)` in `K[X]`. """
     if not f:
@@ -293,6 +319,7 @@ def sdp_monic(f, K):
         return f
     else:
         return [ (m, K.quo(c, lc_f)) for m, c in f ]
+
 
 def sdp_content(f, K):
     """Returns GCD of coefficients in `K[X]`. """
@@ -315,6 +342,7 @@ def sdp_content(f, K):
 
         return cont
 
+
 def sdp_primitive(f, K):
     """Returns content and a primitive polynomial in `K[X]`. """
     if K.has_Field:
@@ -326,6 +354,7 @@ def sdp_primitive(f, K):
             return cont, f
         else:
             return cont, [ (m, K.quo(c, cont)) for m, c in f ]
+
 
 def _term_rr_div(a, b, K):
     """Division of two terms in over a ring. """
@@ -339,6 +368,7 @@ def _term_rr_div(a, b, K):
     else:
         return None
 
+
 def _term_ff_div(a, b, K):
     """Division of two terms in over a field. """
     a_lm, a_lc = a
@@ -350,6 +380,7 @@ def _term_ff_div(a, b, K):
         return monom, K.quo(a_lc, b_lc)
     else:
         return None
+
 
 def sdp_div(f, G, u, O, K):
     """
@@ -444,6 +475,7 @@ def sdp_quo(f, g, u, O, K):
     """Returns polynomial quotient in `K[x]`. """
     return sdp_div(f, g, u, O, K)[0]
 
+
 def sdp_exquo(f, g, u, O, K):
     """Returns exact polynomial quotient in `K[X]`. """
     q, r = sdp_div(f, g, u, O, K)
@@ -452,6 +484,7 @@ def sdp_exquo(f, g, u, O, K):
         return q
     else:
         raise ExactQuotientFailed(f, g)
+
 
 def sdp_lcm(f, g, u, O, K):
     """
@@ -511,6 +544,7 @@ def sdp_lcm(f, g, u, O, K):
         h = [ (m[1:], c * lcm) for m, c in H[0] ]
 
     return sdp_sort(h, O)
+
 
 def sdp_gcd(f, g, u, O, K):
     """Compute GCD of two polynomials in `K[X]` via LCM. """

@@ -8,6 +8,7 @@ from sympy.utilities.pytest import XFAIL, raises
 
 n = Symbol('n', integer=True)
 
+
 def test_arithmetic_sums():
     assert summation(1, (n, a, b)) == b-a+1
     assert Sum(S.NaN, (n, a, b)) is S.NaN
@@ -34,6 +35,7 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
 
+
 def test_polynomial_sums():
     assert summation(n**2, (n, 3, 8)) == 199
     assert summation(n, (n, a, b)) == \
@@ -44,6 +46,7 @@ def test_polynomial_sums():
         ((b**4+2*b**3+b**2)/4).expand()
     assert summation(n**6, (n, 1, b)) == \
         ((6*b**7+21*b**6+21*b**5-7*b**3+b)/42).expand()
+
 
 def test_geometric_sums():
     assert summation(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
@@ -56,11 +59,13 @@ def test_geometric_sums():
     assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
 
+
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
     assert summation(1/k, (k, 1, n)) == harmonic(n)
     assert summation(n/k, (k, 1, n)) == n*harmonic(n)
     assert summation(1/k, (k, 5, n)) == harmonic(n) - harmonic(4)
+
 
 def test_composite_sums():
     f = Rational(1, 2)*(7 - 6*n + Rational(1, 7)*n**3)
@@ -72,8 +77,10 @@ def test_composite_sums():
     B = s.subs(a, -3).subs(b, 4)
     assert A == B
 
+
 def test_hypergeometric_sums():
     assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+
 
 def test_other_sums():
     f = m**2 + m*exp(m)
@@ -84,8 +91,10 @@ def test_other_sums():
 
 fac = factorial
 
+
 def NS(e, n=15, **options):
     return str(sympify(e).evalf(n, **options))
+
 
 def test_evalf_fast_series():
     # Euler transformed series for sqrt(1+x)
@@ -112,6 +121,7 @@ def test_evalf_fast_series():
     assert NS(Sum((-1)**n * P / 24 * (fac(2*n+1)*fac(2*n)*fac(n))**3 / fac(3*n+2) / fac(4*n+3)**3, (n, 0, oo)), 100) == astr
     assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 / fac(2*n+1)**5, (n, 0, oo)), 100) == astr
 
+
 def test_evalf_fast_series_issue998():
     # Catalan's constant
     assert NS(Sum((-1)**(n-1)*2**(8*n)*(40*n**2-24*n+3)*fac(2*n)**3*\
@@ -121,6 +131,7 @@ def test_evalf_fast_series_issue998():
     assert NS(5*Sum((-1)**(n-1)*fac(n)**2 / n**3 / fac(2*n), (n, 1, oo))/2, 100) == astr
     assert NS(Sum((-1)**(n-1)*(56*n**2-32*n+5) / (2*n-1)**2 * fac(n-1)**3 / fac(3*n), (n, 1, oo))/4, 100) == astr
 
+
 def test_evalf_slow_series():
     assert NS(Sum((-1)**n / n, (n, 1, oo)), 15) == NS(-log(2), 15)
     assert NS(Sum((-1)**n / n, (n, 1, oo)), 50) == NS(-log(2), 50)
@@ -129,6 +140,7 @@ def test_evalf_slow_series():
     assert NS(Sum(1/n**2, (n, 1, oo)), 500) == NS(pi**2/6, 500)
     assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 15) == NS(pi**3/32, 15)
     assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
+
 
 def test_euler_maclaurin():
     # Exact polynomial sums with E-M
@@ -149,6 +161,7 @@ def test_euler_maclaurin():
         s, e = A.euler_maclaurin(m, n)
         assert abs((s-zeta(3)).evalf()) < e.evalf()
 
+
 def test_evalf_euler_maclaurin():
     assert NS(Sum(1/k**k, (k, 1, oo)), 15) == '1.29128599706266'
     assert NS(Sum(1/k**k, (k, 1, oo)), 50) == '1.2912859970626635404072825905956005414986193682745'
@@ -158,6 +171,7 @@ def test_evalf_euler_maclaurin():
     assert NS(Sum(log(k)/k**2, (k, 1, oo)), 50) == '0.93754825431584375370257409456786497789786028861483'
     assert NS(Sum(1/k, (k, 1000000, 2000000)), 15) == '0.693147930560008'
     assert NS(Sum(1/k, (k, 1000000, 2000000)), 50) == '0.69314793056000780941723211364567656807940638436025'
+
 
 def test_simple_products():
     assert Product(S.NaN, (x, 1, 3)) is S.NaN
@@ -188,6 +202,7 @@ def test_simple_products():
     # If Product managed to evaluate this one, it most likely got it wrong!
     assert isinstance(Product(n**n, (n, 1, b)), Product)
 
+
 @XFAIL
 def test_rational_products():
     assert Product(1+1/n, (n, a, b)) == (1+b)/a
@@ -197,6 +212,7 @@ def test_rational_products():
            == a*factorial(a+1)/(b+1)/factorial(b+2)
     assert Product(n*(n+1)/(n-1)/(n-2), (n, a, b)) \
            == b**2*(b-1)*(1+b)/(a-1)**2/(a*(a-2))
+
 
 @XFAIL
 def test_wallis_product():
@@ -210,6 +226,7 @@ def test_wallis_product():
     assert B == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
+
 
 def test_telescopic_sums():
     #checks also input 2 of comment 1 issue 1028
@@ -225,20 +242,24 @@ def test_telescopic_sums():
 
     assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 
+
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
     raises(ValueError, lambda: Sum(x, x))
     raises(ValueError, lambda: Sum(x, (x, 1)))
 
+
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
     assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
            Sum(a, (a, c, 4))
 
+
 @XFAIL
 def test_issue2166():
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
+
 
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
@@ -246,11 +267,13 @@ def test_Sum_doit():
         3*Integral(a**2)
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
+
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
     assert Product(n*Integral(a**2), (n, 1, 3)).doit(deep=False) == \
         6*Integral(a**2)**3
     assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3
+
 
 def test_Sum_interface():
     assert isinstance(Sum(0, (n, 0, 2)), Sum)
@@ -262,6 +285,7 @@ def test_Sum_interface():
     raises(ValueError, lambda: Sum(1))
     raises(ValueError, lambda: summation(1))
 
+
 def test_eval_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0
     assert Sum(x*y, (x, 1, 2)).diff(x) == 0
@@ -271,6 +295,7 @@ def test_eval_diff():
     assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
            Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
            24
+
 
 def test_hypersum():
     from sympy import simplify, sin, hyper
@@ -292,13 +317,16 @@ def test_hypersum():
     m = Symbol('n', integer=True, positive=True)
     assert summation(binomial(m, k), (k, 0, m)) == 2**m
 
+
 def test_issue_1071():
     assert summation(1/factorial(k), (k, 0, oo)) == E
+
 
 def test_is_zero():
     for func in [Sum, Product]:
         assert func(0, (x, 1, 1)).is_zero is True
         assert func(x, (x, 1, 1)).is_zero is None
+
 
 def test_is_commutative():
     from sympy.physics.secondquant import NO, F, Fd
@@ -309,6 +337,7 @@ def test_is_commutative():
         assert f(m*x, (x, 1, 2)).is_commutative is False
 
         assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
+
 
 def test_is_number():
     assert Sum(1, (x, 1, 1)).is_number is True
@@ -328,6 +357,7 @@ def test_is_number():
     assert Product(x, (y, 1, 1)).is_number is False
     assert Product(x, (x, 1, 2)).is_number is True
 
+
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
@@ -346,16 +376,19 @@ def test_free_symbols():
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
 
+
 @XFAIL
 def test_issue_1072():
     k = Symbol("k")
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
+
 
 @XFAIL
 def test_issue_3174():
     # when this passes, the doctests involving Sum in
     # is_constant can be unskipped
     assert Sum(x, (x, 1, n)).n(2, subs={n: 0}) == 1
+
 
 @XFAIL
 def test_issue_3175():

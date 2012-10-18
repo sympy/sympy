@@ -15,6 +15,7 @@ from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
+
 def test_undefined_function():
     from sympy import Function, MellinTransform
     f = Function('f')
@@ -25,11 +26,13 @@ def test_undefined_function():
     assert laplace_transform(2*f(x), x, s) == 2*LaplaceTransform(f(x), x, s)
     # TODO test derivative and other rules when implemented
 
+
 def test_free_symbols():
     from sympy import Function
     f = Function('f')
     assert mellin_transform(f(x), x, s).free_symbols == set([s])
     assert mellin_transform(f(x)*a, x, s).free_symbols == set([s, a])
+
 
 def test_as_integral():
     from sympy import Function, Integral
@@ -48,6 +51,8 @@ def test_as_integral():
            Integral(f(s)*exp(2*I*pi*s*x), (s, -oo, oo))
 
 # NOTE this is stuck in risch because meijerint cannot handle it
+
+
 @slow
 @XFAIL
 def test_mellin_transform_fail():
@@ -75,6 +80,7 @@ def test_mellin_transform_fail():
     assert MT(expr.subs({b: -bpos, a: 1}), x, s) == \
            (-bpos**(2*s + 1)*gamma(s)*gamma(-s - S(1)/2)/(2*sqrt(pi)),
             (-1, -S(1)/2), True)
+
 
 def test_mellin_transform():
     from sympy import Max, Min, Ne
@@ -242,6 +248,7 @@ def test_mellin_transform_bessel():
     # TODO exp(x/2)*besselk(a, x/2) [etc] cannot currently be done
     # TODO various strange products of special orders
 
+
 def test_expint():
     from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
     aneg = Symbol('a', negative=True)
@@ -284,6 +291,7 @@ def test_expint():
     assert inverse_laplace_transform((s - log(s + 1))/s**2, s,
                 x).rewrite(expint).expand() == \
            (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand()
+
 
 def test_inverse_mellin_transform():
     from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
@@ -418,6 +426,7 @@ def test_inverse_mellin_transform():
 
     assert IMT(pi/cos(pi*s), s, x, (0, S(1)/2)) == sqrt(x)/(x + 1)
 
+
 def test_laplace_transform():
     from sympy import (fresnels, fresnelc, hyper)
     LT = laplace_transform
@@ -482,6 +491,7 @@ def test_laplace_transform():
            ((sin(s**2/(2*pi))*fresnelc(s/pi) - sin(s**2/(2*pi))/2 -
             cos(s**2/(2*pi))*fresnels(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
 
+
 def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
                        unpolarify, simplify)
@@ -523,6 +533,7 @@ def test_inverse_laplace_transform():
 
     assert ILT(1/(s*sqrt(s+1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
+
 
 def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig
@@ -576,6 +587,7 @@ def test_fourier_transform():
 
     # TODO are there other common transforms (no distributions!)?
 
+
 def test_sine_transform():
     from sympy import sinh, cosh, EulerGamma
 
@@ -603,6 +615,7 @@ def test_sine_transform():
 
     assert sine_transform(t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
     assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
+
 
 def test_cosine_transform():
     from sympy import sinh, cosh, Si, Ci
@@ -634,6 +647,7 @@ def test_cosine_transform():
 
     assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
+
 
 def test_hankel_transform():
     from sympy import sinh, cosh, gamma, sqrt, exp

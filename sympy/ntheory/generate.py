@@ -218,6 +218,7 @@ def prime(nth):
         raise ValueError("nth must be a positive integer; prime(1) == 2")
     return sieve[n]
 
+
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
@@ -242,6 +243,7 @@ def primepi(n):
     else:
         n = int(n)
         return sieve.search(n)[0]
+
 
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
@@ -304,6 +306,7 @@ def nextprime(n, ith=1):
             return n
         n += 4
 
+
 def prevprime(n):
     """ Return the largest prime smaller than n.
 
@@ -347,6 +350,7 @@ def prevprime(n):
         if isprime(n):
             return n
         n -= 4
+
 
 def primerange(a, b):
     """ Generate a list of all prime numbers in the range [a, b).
@@ -428,6 +432,7 @@ def primerange(a, b):
         else:
             return
 
+
 def randprime(a, b):
     """ Return a random prime number in the range [a, b).
 
@@ -464,6 +469,7 @@ def randprime(a, b):
     if p < a:
         raise ValueError("no primes exist in the specified range")
     return p
+
 
 def primorial(n, nth=True):
     """
@@ -526,6 +532,7 @@ def primorial(n, nth=True):
         for i in primerange(2, n + 1):
             p *= i
     return p
+
 
 def cycle_length(f, x0, nmax=None, values=False):
     """For a given iterated sequence, return a generator that gives

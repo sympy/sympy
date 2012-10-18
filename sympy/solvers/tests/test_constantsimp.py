@@ -17,6 +17,7 @@ C2 = Symbol('C2')
 C3 = Symbol('C3')
 f = Function('f')
 
+
 def test_constant_mul():
     # We want C1 (Constant) below to absorb the y's, but not the x's
     assert constant_renumber(constantsimp(y*C1, x, 1), 'C', 1, 1) == C1
@@ -50,6 +51,7 @@ def test_constant_mul():
     assert constant_renumber(constantsimp(C1*C1*C2, x, 2), 'C', 1, 2) == C1
     assert constant_renumber(constantsimp(C1*x*2**x, x, 1), 'C', 1, 1) == C1*x*2**x
 
+
 def test_constant_add():
     assert constant_renumber(constantsimp(C1 + C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + 2, x, 1), 'C', 1, 1) == C1
@@ -65,6 +67,7 @@ def test_constant_add():
     assert constant_renumber(constantsimp(C2 + C1, x, 2), 'C', 1, 2) == C1
     assert constant_renumber(constantsimp(C1 + C2 + C1, x, 2), 'C', 1, 2) == C1
 
+
 def test_constant_power_as_base():
     assert constant_renumber(constantsimp(C1**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(Pow(C1, C1), x, 1), 'C', 1, 1) == C1
@@ -76,6 +79,7 @@ def test_constant_power_as_base():
     assert constant_renumber(constantsimp(C1**x, x, 1), 'C', 1, 1) == C1**x
     assert constant_renumber(constantsimp(C1**2, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1**(x*y), x, 1), 'C', 1, 1) == C1**(x*y)
+
 
 def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(x**C1, x, 1), 'C', 1, 1) == x**C1
@@ -92,6 +96,7 @@ def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == C1*exp(x)
     assert constant_renumber(constantsimp(Pow(2, C1), x, 1), 'C', 1, 1) == C1
 
+
 def test_constant_function():
     assert constant_renumber(constantsimp(sin(C1), x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(f(C1), x, 1), 'C', 1, 1) == C1
@@ -104,11 +109,13 @@ def test_constant_function():
     assert constant_renumber(constantsimp(f(y, C1), x, 1), 'C', 1, 2) == C1
     assert constant_renumber(constantsimp(f(C1, y, C2), x, 2), 'C', 1, 2) == C1
 
+
 @XFAIL
 def test_constant_function_multiple():
     # The rules to not renumber in this case would be too complicated, and
     # dsolve is not likely to ever encounter anything remotely like this.
     assert constant_renumber(constantsimp(f(C1, C1, x), x, 1), 'C', 1, 1) == f(C1, C1, x)
+
 
 def test_constant_multiple():
     assert constant_renumber(constantsimp(C1*2 + 2, x, 1), 'C', 1, 1) == C1
@@ -116,6 +123,7 @@ def test_constant_multiple():
     assert constant_renumber(constantsimp(C1**2*2 + 2, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(sin(2*C1) + x + sqrt(2), x, 1), 'C', 1, 1) == C1 + x
     assert constant_renumber(constantsimp(2*C1 + C2, x, 2), 'C', 1, 2) == C1
+
 
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
@@ -142,6 +150,7 @@ def test_ode_solutions():
     assert [constant_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
         [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x + x**2))]] == \
         [Eq(f(x), sqrt(x*(C1 + x))), Eq(f(x), -sqrt(x*(C1 + x)))]
+
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here

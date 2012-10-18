@@ -8,6 +8,7 @@ CACHE = []  # [] of
 
 from sympy.core.decorators import wraps
 
+
 def print_cache():
     """print cache content"""
 
@@ -32,6 +33,7 @@ def print_cache():
             for k, v in kv.iteritems():
                 print '  %s :\t%s' % (k, v)
 
+
 def clear_cache():
     """clear cache content"""
     for item, cache in CACHE:
@@ -43,8 +45,10 @@ def clear_cache():
 
 ########################################
 
+
 def __cacheit_nocache(func):
     return func
+
 
 def __cacheit(func):
     """caching decorator.
@@ -89,6 +93,7 @@ def __cacheit(func):
         return r
     return wrapper
 
+
 def __cacheit_debug(func):
     """cacheit + code to check cache consistency"""
     cfunc = __cacheit(func)
@@ -115,6 +120,7 @@ def __cacheit_debug(func):
 
         return r1
     return wrapper
+
 
 def _getenv(key, default=None):
     from os import getenv

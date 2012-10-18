@@ -7,8 +7,10 @@ from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
 
+
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
 
 def test_evalf_helpers():
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
@@ -17,14 +19,17 @@ def test_evalf_helpers():
     assert complex_accuracy((from_float(2.0), from_float(10.0), 100, 35)) == 35
     assert complex_accuracy((from_float(2.0), from_float(1000.0), 100, 35)) == 35
 
+
 def test_evalf_basic():
     assert NS('pi', 15) == '3.14159265358979'
     assert NS('2/3', 10) == '0.6666666667'
     assert NS('355/113-pi', 6) == '2.66764e-7'
     assert NS('16*atan(1/5)-4*atan(1/239)', 15) == '3.14159265358979'
 
+
 def test_cancellation():
     assert NS(Add(pi, Rational(1, 10**1000), -pi, evaluate=False), 15, maxn=1200) == '1.00000000000000e-1000'
+
 
 def test_evalf_powers():
     assert NS('pi**(10**20)', 10) == '1.339148777e+49714987269413385435'
@@ -35,9 +40,12 @@ def test_evalf_powers():
     assert NS('2**(1/10**50)-1', 15) == '6.93147180559945e-51'
 
 # Evaluation of Rump's ill-conditioned polynomial
+
+
 def test_evalf_rump():
     a = 1335*y**6/4+x**2*(11*x**2*y**2-y**6-121*y**4-2)+11*y**8/2+x/(2*y)
     assert NS(a, 15, subs={x: 77617, y: 33096}) == '-0.827396059946821'
+
 
 def test_evalf_complex():
     assert NS('2*sqrt(pi)*I', 10) == '3.544907702*I'
@@ -46,9 +54,11 @@ def test_evalf_complex():
     assert NS('pi * (3+4*I)', 15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
 
+
 @XFAIL
 def test_evalf_complex_bug():
     assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
+
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
@@ -63,9 +73,11 @@ def test_evalf_complex_powers():
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
     assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
 
+
 @XFAIL
 def test_evalf_complex_powers_bug():
     assert NS('(pi + pi*I)**4') == '-389.63636413601 + 0.e-14*I'
+
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
@@ -80,6 +92,8 @@ def test_evalf_exponentiation():
     assert NS((-pi)**(-pi)) == '-0.0247567717232697 + 0.0118013091280262*I'
 
 # An example from Smith, "Multiple Precision Complex Arithmetic and Functions"
+
+
 def test_evalf_complex_cancellation():
     A = Rational('63287/100000')
     B = Rational('52498/100000')
@@ -97,9 +111,11 @@ def test_evalf_complex_cancellation():
     assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
     assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
+
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
+
 
 def test_evalf_trig():
     assert NS('sin(1)', 15) == '0.841470984807897'
@@ -115,6 +131,8 @@ def test_evalf_trig():
         '6.99999999428333e-5'
 
 # Check detection of various false identities
+
+
 def test_evalf_near_integers():
     # Binet's formula
     f = lambda n: ((1+sqrt(5))**n)/(2**n * sqrt(5))
@@ -126,6 +144,7 @@ def test_evalf_near_integers():
     assert NS('1+sin(2017*2**(1/5))', 15) == '2.14322287389390e-17'
     assert NS('45 - 613*E/37 + 35/991', 15) == '6.03764498766326e-11'
 
+
 def test_evalf_ramanujan():
     assert NS(exp(pi*sqrt(163)) - 640320**3 - 744, 10) == '-7.499274028e-13'
     # A related identity
@@ -135,6 +154,8 @@ def test_evalf_ramanujan():
     assert NS(1-A-B+C, 10) == '1.613679005e-59'
 
 # Input that for various reasons have failed at some point
+
+
 def test_evalf_bugs():
     assert NS(sin(1)+exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10)+sin(1), 10) == NS(exp(10**10), 10)
@@ -161,6 +182,7 @@ def test_evalf_bugs():
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
 
+
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
@@ -178,6 +200,7 @@ def test_evalf_integer_parts():
     assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(999)
     assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(1000)
 
+
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
     t = a.evalf(maxn=100)
@@ -185,6 +208,7 @@ def test_evalf_trig_zero_detection():
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
     raises(PrecisionExhausted, lambda: a.evalf(strict=True))
+
 
 def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
@@ -197,11 +221,13 @@ def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n, 0, oo)).evalf())
     raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1), (n, 0, oo)).evalf())
 
+
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
     raises(TypeError, lambda: float(pi+x))
+
 
 def test_evalf_power_subs_bugs():
     assert (x**2).evalf(subs={x: 0}) == 0
@@ -213,8 +239,10 @@ def test_evalf_power_subs_bugs():
     assert ((2+I)**x).evalf(subs={x: 0}) == 1
     assert (0**x).evalf(subs={x: 0}) == 1
 
+
 def test_evalf_arguments():
     raises(TypeError, lambda: pi.evalf(method="garbage"))
+
 
 def test_implemented_function_evalf():
     from sympy.utilities.lambdify import implemented_function
@@ -226,6 +254,7 @@ def test_implemented_function_evalf():
     assert f(x).evalf() == f(x)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
+
 def test_evaluate_false():
     for no in [0, False, None]:
         assert Add(3, 2, evaluate=no).is_Add
@@ -233,15 +262,19 @@ def test_evaluate_false():
         assert Pow(3, 2, evaluate=no).is_Pow
     assert Pow(y, 2, evaluate=True) - Pow(y, 2, evaluate=True) == 0
 
+
 def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
+
 
 def test_issue_2387():
     assert not cos(sqrt(0.5 + I)).n().is_Function
 
+
 def test_issue_2387_bug():
     from sympy import I, Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
+
 
 def test_bugs():
     from sympy import polar_lift, re
@@ -251,12 +284,14 @@ def test_bugs():
     # anything that evalf's to 0 will do in place of polar_lift
     assert abs(polar_lift(0)).n() == 0
 
+
 def test_subs_bugs():
     from sympy import besseli
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
            '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
            '1.00000000000000'
+
 
 def test_issue_1857_2105():
     # 1857
@@ -281,19 +316,23 @@ def test_issue_1857_2105():
     assert NS(v, 5) == '0.077284 + 1.1104*I'
     assert NS(v, 1) == '0.08 + 1.*I'
 
+
 def test_old_docstring():
     a = (E + pi*I)*(E - pi*I)
     assert NS(a) == '17.2586605000200'
     assert a.n() == 17.25866050002001
 
+
 def test_issue_1707():
     assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
     assert atan(0, evaluate=False).n() == 0
+
 
 def test_evalf_mul():
     # sympy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
 
 def test_scaled_zero():
     a, b = (([0], 1, 100, 1), -1)
@@ -307,9 +346,11 @@ def test_scaled_zero():
     raises(ValueError, lambda: scaled_zero(100, 0))
     raises(ValueError, lambda: scaled_zero((1, 5, 1, 3)))
 
+
 def test_chop_value():
     for i in range(-27, 28):
         assert (Pow(10, i)*2).n(chop=10**i) and not (Pow(10, i)).n(chop=10**i)
+
 
 def test_infinities():
     assert oo.evalf(chop=True) == inf

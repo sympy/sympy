@@ -6,6 +6,7 @@ sigma1 = Pauli(1)
 sigma2 = Pauli(2)
 sigma3 = Pauli(3)
 
+
 def test_Pauli():
     from sympy.physics.paulialgebra import evaluate_pauli_product
 
@@ -34,6 +35,7 @@ def test_Pauli():
 
     # Check bug 3372
     assert evaluate_pauli_product(-I*4*sigma1*sigma2) == 4*sigma3
+
 
 @XFAIL
 def test_Pauli_should_work():

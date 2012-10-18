@@ -1,5 +1,6 @@
 from sympy.combinatorics import Subset
 
+
 def test_subset():
     a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
     assert a.next_binary() == Subset(['b'], ['a', 'b', 'c', 'd'])

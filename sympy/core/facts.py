@@ -51,6 +51,7 @@ from collections import defaultdict
 
 from logic import Logic, And, Or, Not
 
+
 def _base_fact(atom):
     """Return the literal fact of an atom.
 
@@ -61,6 +62,7 @@ def _base_fact(atom):
     else:
         return atom
 
+
 def _as_pair(atom):
     if isinstance(atom, Not):
         return (atom.arg, False)
@@ -68,6 +70,8 @@ def _as_pair(atom):
         return (atom, True)
 
 # XXX this prepares forward-chaining rules for alpha-network
+
+
 def deduce_alpha_implications(implications):
     """deduce all implications
 
@@ -225,6 +229,7 @@ def rules_2prereq(rules):
 # RULES PROVER #
 ################
 
+
 class TautologyDetected(Exception):
     """(internal) Prover uses it for reporting detected tautology"""
     pass
@@ -347,6 +352,7 @@ class Prover(object):
 
 ########################################
 
+
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
 
@@ -436,10 +442,12 @@ class FactRules(object):
             prereq[k] |= pitems
         self.prereq = prereq
 
+
 class InconsistentAssumptions(ValueError):
     def __str__(self):
         kb, fact, value = self.args
         return "%s, %s=%s" % (kb, fact, value)
+
 
 class FactKB(dict):
     """

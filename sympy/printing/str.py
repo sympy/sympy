@@ -15,6 +15,7 @@ from sympy.polys.polyerrors import PolynomialError
 
 from sympy.utilities import default_sort_key
 
+
 class StrPrinter(Printer):
     printmethod = "_sympystr"
     _default_settings = {
@@ -643,6 +644,7 @@ class StrReprPrinter(StrPrinter):
 
     def _print_str(self, s):
         return repr(s)
+
 
 def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form

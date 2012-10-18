@@ -7,6 +7,7 @@ from sympy.utilities.pytest import XFAIL, skip, slow
 x, y, z = symbols('x,y,z')
 f = Function('f')
 
+
 def test_components():
     assert components(x*y, x) == set([x])
     assert components(1/(x+y), x) == set([x])
@@ -25,10 +26,12 @@ def test_components():
     assert components(f(x)*diff(f(x), x),  x) == \
         set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
 
+
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
     assert heurisch(x**17, x) == x**18/18
+
 
 def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
@@ -45,10 +48,12 @@ def test_heurisch_fractions():
     assert heurisch(1/x**2, x) == -1/x
     assert heurisch(-1/x**5, x) == 1/(4*x**4)
 
+
 def test_heurisch_log():
     assert heurisch(log(x), x) == x*log(x) - x
     assert heurisch(log(3*x), x) == -x + x*log(3) + x*log(x)
     assert heurisch(log(x**2), x) in [x*log(x**2) - 2*x, 2*x*log(x) - 2*x]
+
 
 def test_heurisch_exp():
     assert heurisch(exp(x), x) == exp(x)
@@ -61,6 +66,7 @@ def test_heurisch_exp():
 
     assert heurisch(2**x, x) == 2**x/log(2)
     assert heurisch(x*2**x, x) == x*2**x/log(2) - 2**x*log(2)**(-2)
+
 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
@@ -86,6 +92,7 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16-x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
+
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
     assert heurisch(cosh(x), x) == sinh(x)
@@ -95,8 +102,10 @@ def test_heurisch_hyperbolic():
 
     assert heurisch(x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4+x**2)/4
 
+
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+
 
 def test_heurisch_radicals():
     assert heurisch(1/sqrt(x), x) == 2*sqrt(x)
@@ -107,19 +116,23 @@ def test_heurisch_radicals():
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
                                           2*sqrt(x)*cos(y*sqrt(x))/y
 
+
 def test_heurisch_special():
     assert heurisch(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
     assert heurisch(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
+
 
 def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x+y), x) == log(x+y)
     assert heurisch(1/(x+sqrt(2)), x) == log(x+sqrt(2))
     assert simplify(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
+
 def test_heurisch_symbolic_coeffs_1130():
     assert heurisch(1/(x**2+y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 - \
     I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) / \
         (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \
@@ -141,6 +154,7 @@ def test_heurisch_hacking():
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
         asinh(2*x/3)/2
 
+
 def test_heurisch_function():
     df = diff(f(x), x)
 
@@ -148,6 +162,7 @@ def test_heurisch_function():
     assert heurisch(f(x)*df, x) == f(x)**2/2
     assert heurisch(f(x)**2 * df, x) == f(x)**3/3
     assert heurisch(df / f(x), x) == log(f(x))
+
 
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
@@ -161,6 +176,7 @@ def test_issue510():
 
 # Besides, they are skipped(), because they take too much time to execute.
 
+
 @XFAIL
 def test_pmint_rat():
     f = (x**7-24*x**4-4*x**2+8*x-8) / (x**8+6*x**6+12*x**4+8*x**2)
@@ -168,12 +184,14 @@ def test_pmint_rat():
 
     assert heurisch(f, x) == g
 
+
 @XFAIL
 def test_pmint_trig():
     f = (x-tan(x)) / tan(x)**2 + tan(x)
     g = (-x - tan(x)*x**2 / 2) / tan(x) + log(1+tan(x)**2) / 2
 
     assert heurisch(f, x) == g
+
 
 @slow
 @XFAIL
@@ -183,6 +201,7 @@ def test_pmint_logexp():
 
     assert heurisch(f, x) == g
 
+
 @slow
 @XFAIL
 def test_pmint_erf():
@@ -190,6 +209,7 @@ def test_pmint_erf():
     g = sqrt(pi)/4 * (-1/(erf(x)-1) - log(erf(x)+1)/2 + log(erf(x)-1)/2)
 
     assert heurisch(f, x) == g
+
 
 def test_pmint_lambertw():
     g = (x**2 + (LambertW(x)*x)**2 - LambertW(x)*x**2)/(x*LambertW(x))

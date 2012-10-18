@@ -14,6 +14,7 @@ from sympy.polys.densearith import (
 
 from sympy.polys.domains import ZZ, QQ
 
+
 @cythonized("n,i")
 def dup_jacobi(n, a, b, K):
     """Low-level implementation of Jacobi polynomials. """
@@ -30,6 +31,7 @@ def dup_jacobi(n, a, b, K):
         seq.append(dup_sub(dup_add(p0, p1, K), p2, K))
 
     return seq[n]
+
 
 def jacobi_poly(n, a, b, x=None, **args):
     """Generates Jacobi polynomial of degree `n` in `x`. """
@@ -49,6 +51,7 @@ def jacobi_poly(n, a, b, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_gegenbauer(n, a, K):
     """Low-level implementation of Gegenbauer polynomials. """
@@ -62,6 +65,7 @@ def dup_gegenbauer(n, a, K):
         seq.append(dup_sub(p1, p2, K))
 
     return seq[n]
+
 
 def gegenbauer_poly(n, a, x=None, **args):
     """Generates Gegenbauer polynomial of degree `n` in `x`. """
@@ -81,6 +85,7 @@ def gegenbauer_poly(n, a, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the 1st kind. """
@@ -91,6 +96,7 @@ def dup_chebyshevt(n, K):
         seq.append(dup_sub(a, seq[-2], K))
 
     return seq[n]
+
 
 def chebyshevt_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`. """
@@ -109,6 +115,7 @@ def chebyshevt_poly(n, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_chebyshevu(n, K):
     """Low-level implementation of Chebyshev polynomials of the 2nd kind. """
@@ -119,6 +126,7 @@ def dup_chebyshevu(n, K):
         seq.append(dup_sub(a, seq[-2], K))
 
     return seq[n]
+
 
 def chebyshevu_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`. """
@@ -137,6 +145,7 @@ def chebyshevu_poly(n, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_hermite(n, K):
     """Low-level implementation of Hermite polynomials. """
@@ -151,6 +160,7 @@ def dup_hermite(n, K):
         seq.append(c)
 
     return seq[n]
+
 
 def hermite_poly(n, x=None, **args):
     """Generates Hermite polynomial of degree `n` in `x`. """
@@ -169,6 +179,7 @@ def hermite_poly(n, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_legendre(n, K):
     """Low-level implementation of Legendre polynomials. """
@@ -181,6 +192,7 @@ def dup_legendre(n, K):
         seq.append(dup_sub(a, b, K))
 
     return seq[n]
+
 
 def legendre_poly(n, x=None, **args):
     """Generates Legendre polynomial of degree `n` in `x`. """
@@ -199,6 +211,7 @@ def legendre_poly(n, x=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_laguerre(n, alpha, K):
     """Low-level implementation of Laguerre polynomials. """
@@ -211,6 +224,7 @@ def dup_laguerre(n, alpha, K):
         seq.append(dup_sub(a, b, K))
 
     return seq[-1]
+
 
 def laguerre_poly(n, x=None, alpha=None, **args):
     """Generates Laguerre polynomial of degree `n` in `x`. """
@@ -234,6 +248,7 @@ def laguerre_poly(n, x=None, alpha=None, **args):
     else:
         return poly
 
+
 @cythonized("n,i")
 def dup_spherical_bessel_fn(n, K):
     """ Low-level implementation of fn(n, x) """
@@ -245,6 +260,7 @@ def dup_spherical_bessel_fn(n, K):
 
     return dup_lshift(seq[n], 1, K)
 
+
 @cythonized("n,i")
 def dup_spherical_bessel_fn_minus(n, K):
     """ Low-level implementation of fn(-n, x) """
@@ -255,6 +271,7 @@ def dup_spherical_bessel_fn_minus(n, K):
         seq.append(dup_sub(a, seq[-2], K))
 
     return seq[n]
+
 
 def spherical_bessel_fn(n, x=None, **args):
     """

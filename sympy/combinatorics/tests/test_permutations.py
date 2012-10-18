@@ -6,6 +6,7 @@ from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
 
+
 def test_Permutation():
     # don't auto fill 0
     raises(ValueError, lambda: Permutation([1]))
@@ -209,9 +210,11 @@ def test_Permutation():
     assert a.cycle_structure == {1: 4}
     assert b.cycle_structure == {2: 1, 3: 1, 1: 2}
 
+
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
     assert Permutation.josephus(1, 5, 1).is_Identity
+
 
 def test_ranking():
     assert Permutation.unrank_lex(5, 10).rank() == 10
@@ -281,6 +284,7 @@ def test_ranking():
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
+
 def test_mul():
     a, b = [0, 2, 1, 3], [0, 1, 3, 2]
     assert _af_rmul(a, b) == [0, 2, 3, 1]
@@ -302,6 +306,7 @@ def test_mul():
         h = _af_rmul(h, a[i])
         h2 = _af_rmuln(*a[:i+1])
         assert h == h2
+
 
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4, 5)])
@@ -332,6 +337,7 @@ def test_args():
     # but this is ok because cycles imply that only those listed moved
     assert Permutation(4, 5) == Permutation([0, 1, 2, 3, 5, 4])
 
+
 def test_Cycle():
     assert Cycle(1, 2)(2, 3) == Cycle(1, 3, 2)
     assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
@@ -353,6 +359,7 @@ def test_Cycle():
     # check round-trip
     p = Permutation([[1, 2], [4, 3]], size=5)
     assert Permutation(Cycle(p)) == p
+
 
 def test_from_sequence():
     assert Permutation.from_sequence('SymPy') == Permutation(4)(0, 1, 3)

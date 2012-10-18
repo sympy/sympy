@@ -13,6 +13,7 @@ from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr
 from sympy.logic.inference import pl_true, literal_symbol
 
+
 def dpll_satisfiable(expr):
     """
     Check satisfiability of a propositional sentence.
@@ -37,6 +38,7 @@ def dpll_satisfiable(expr):
     for key in result:
         output.update({symbols[key-1]: result[key]})
     return output
+
 
 def dpll(clauses, symbols, model):
     """
@@ -82,6 +84,7 @@ def dpll(clauses, symbols, model):
     symbols_copy = symbols[:]
     return (dpll(unit_propagate(unknown_clauses, P), symbols, model) or
             dpll(unit_propagate(unknown_clauses, Not(P)), symbols_copy, model_copy))
+
 
 def dpll_int_repr(clauses, symbols, model):
     """
@@ -130,6 +133,7 @@ def dpll_int_repr(clauses, symbols, model):
 
 ### helper methods for DPLL
 
+
 def pl_true_int_repr(clause, model={}):
     """
     Lightweight version of pl_true.
@@ -155,6 +159,7 @@ def pl_true_int_repr(clause, model={}):
         elif p is None:
             result = None
     return result
+
 
 def unit_propagate(clauses, symbol):
     """
@@ -188,6 +193,7 @@ def unit_propagate(clauses, symbol):
         else:
             output.append(c)
     return output
+
 
 def unit_propagate_int_repr(clauses, s):
     """
@@ -223,6 +229,7 @@ def find_pure_symbol(symbols, unknown_clauses):
         if found_pos != found_neg: return sym, found_pos
     return None, None
 
+
 def find_pure_symbol_int_repr(symbols, unknown_clauses):
     """
     Same as find_pure_symbol, but arguments are expected
@@ -243,6 +250,7 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
         if -p not in found_pos:
             return -p, False
     return None, None
+
 
 def find_unit_clause(clauses, model):
     """
@@ -265,6 +273,7 @@ def find_unit_clause(clauses, model):
         if num_not_in_model == 1:
             return P, value
     return None, None
+
 
 def find_unit_clause_int_repr(clauses, model):
     """

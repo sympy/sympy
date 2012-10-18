@@ -11,6 +11,7 @@ from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda, factor, togeth
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
+
 def test_apart():
     assert apart(1) == 1
     assert apart(1, x) == 1
@@ -37,6 +38,7 @@ def test_apart():
 
     raises(NotImplementedError, lambda: apart(1/(x + 1)/(y + 2)))
 
+
 def test_apart_matrix():
     M = Matrix(2, 2, lambda i, j: 1/(x + i + 1)/(x + j))
 
@@ -44,6 +46,7 @@ def test_apart_matrix():
         [1/x - 1/(x + 1),            (x + 1)**(-2)        ],
         [1/(2*x) - (S(1)/2)/(x + 2), 1/(x + 1) - 1/(x + 2)],
     ])
+
 
 def test_apart_symbolic():
     f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
@@ -53,6 +56,7 @@ def test_apart_symbolic():
 
     assert apart(1/((x + a)*(x + b)*(x + c)), x) == \
         1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + 1/((a - b)*(a - c)*(a + x))
+
 
 def test_apart_extension():
     f = 2/(x**2 + 1)
@@ -64,6 +68,7 @@ def test_apart_extension():
     f = x/((x - 2)*(x + I))
 
     assert factor(together(apart(f))) == f
+
 
 def test_apart_full():
     f = 1/(x**2 + 1)
@@ -82,6 +87,7 @@ def test_apart_full():
         (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
     assert apart(f, full=True) == \
         -RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(a, a/(x - a)), auto=False)/5 + (S(1)/5)/(x + 1)
+
 
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)

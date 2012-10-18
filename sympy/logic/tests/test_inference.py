@@ -9,6 +9,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     unit_propagate_int_repr
 from sympy.utilities.pytest import raises
 
+
 def test_find_pure_symbol():
     A, B, C = symbols('A,B,C')
     assert find_pure_symbol([A], [A]) == (A, True)
@@ -17,6 +18,7 @@ def test_find_pure_symbol():
     assert find_pure_symbol([A, B, C], [~A | B,  B | ~C, C | A]) == (B, True)
     assert find_pure_symbol([A, B, C], [~A | ~B, ~B | ~C, C | A]) == (B, False)
     assert find_pure_symbol([A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
+
 
 def test_find_pure_symbol_int_repr():
     assert find_pure_symbol_int_repr([1], [set([1])]) == (1, True)
@@ -31,6 +33,7 @@ def test_find_pure_symbol_int_repr():
     assert find_pure_symbol_int_repr([1, 2, 3],
                 [set([-1, 2]), set([-2, -3]), set([3, 1])]) == (None, None)
 
+
 def test_unit_clause():
     A, B, C = symbols('A,B,C')
     assert find_unit_clause([A], {}) == (A, True)
@@ -40,6 +43,7 @@ def test_unit_clause():
     assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A: True}) == (B, False)
     assert find_unit_clause([A | B | C, B | ~C, A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
+
 
 def test_unit_clause_int_repr():
     assert find_unit_clause_int_repr(map(set, [[1]]), {}) == (1, True)
@@ -54,20 +58,24 @@ def test_unit_clause_int_repr():
     A, B, C = symbols('A,B,C')
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
+
 def test_unit_propagate():
     A, B, C = symbols('A,B,C')
     assert unit_propagate([A | B], A) == []
     assert unit_propagate([A | B, ~A | C, ~C | B, A], A) == [C, ~C | B, A]
+
 
 def test_unit_propagate_int_repr():
     assert unit_propagate_int_repr([set([1, 2])], 1) == []
     assert unit_propagate_int_repr(map(set, [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == \
         [set([3]), set([-3, 2])]
 
+
 def test_dpll():
     """This is also tested in test_dimacs"""
     A, B, C = symbols('A,B,C')
     assert dpll([A | B], [A, B], {A: True, B: True}) == {A: True, B: True}
+
 
 def test_dpll_satisfiable():
     A, B, C = symbols('A,B,C')
@@ -82,9 +90,11 @@ def test_dpll_satisfiable():
     assert dpll_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
+
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
     assert satisfiable(A & (A >> B) & ~B) == False
+
 
 def test_pl_true():
     A, B, C = symbols('A,B,C')
@@ -111,11 +121,13 @@ def test_pl_true():
     assert pl_true(Equivalent(A, B), {A: None}) is None
     assert pl_true(Equivalent(A, B), {A: True, B: None}) is None
 
+
 def test_pl_true_wrong_input():
     from sympy import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
     raises(ValueError, lambda: pl_true(42+pi+pi**2))
     raises(ValueError, lambda: pl_true(42))
+
 
 def test_PropKB():
     A, B, C = symbols('A,B,C')
@@ -144,6 +156,7 @@ def test_PropKB():
 
     kb3 = PropKB()
     kb3.tell(A)
+
 
 def test_propKB_tolerant():
     """"tolerant to bad input"""

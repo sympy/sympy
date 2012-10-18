@@ -9,6 +9,7 @@ from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
 from sympy.logic import Equivalent, Implies, Xor
 from sympy.utilities.pytest import raises, XFAIL, slow
 
+
 def test_int_1():
     z = 1
     assert ask(Q.commutative(z)) == True
@@ -28,6 +29,7 @@ def test_int_1():
     assert ask(Q.composite(z)) == True
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
+
 
 def test_int_11():
     z = 11
@@ -49,6 +51,7 @@ def test_int_11():
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
 
+
 def test_int_12():
     z = 12
     assert ask(Q.commutative(z)) == True
@@ -68,6 +71,7 @@ def test_int_12():
     assert ask(Q.composite(z)) == True
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
+
 
 def test_float_1():
     z = 1.0
@@ -108,6 +112,7 @@ def test_float_1():
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
 
+
 def test_zero_0():
     z = Integer(0)
     assert ask(Q.nonzero(z)) == False
@@ -127,6 +132,7 @@ def test_zero_0():
     assert ask(Q.composite(z)) == False
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
+
 
 def test_negativeone():
     z = Integer(-1)
@@ -149,6 +155,7 @@ def test_negativeone():
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
 
+
 def test_infinity():
     assert ask(Q.commutative(oo)) == True
     assert ask(Q.integer(oo)) == False
@@ -168,6 +175,7 @@ def test_infinity():
     assert ask(Q.composite(oo)) == False
     assert ask(Q.hermitian(oo)) == False
     assert ask(Q.antihermitian(oo)) == False
+
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
@@ -190,6 +198,7 @@ def test_neg_infinity():
     assert ask(Q.hermitian(mm)) == False
     assert ask(Q.antihermitian(mm)) == False
 
+
 def test_nan():
     nan = S.NaN
     assert ask(Q.commutative(nan)) == True
@@ -210,6 +219,7 @@ def test_nan():
     assert ask(Q.composite(nan)) == False
     assert ask(Q.hermitian(nan)) == False
     assert ask(Q.antihermitian(nan)) == False
+
 
 def test_Rational_number():
     r = Rational(3, 4)
@@ -259,6 +269,7 @@ def test_Rational_number():
     assert ask(Q.positive(r)) == False
     assert ask(Q.negative(r)) == True
 
+
 def test_sqrt_2():
     z = sqrt(2)
     assert ask(Q.commutative(z)) == True
@@ -278,6 +289,7 @@ def test_sqrt_2():
     assert ask(Q.composite(z)) == False
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
+
 
 def test_pi():
     z = S.Pi
@@ -375,6 +387,7 @@ def test_pi():
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
 
+
 def test_E():
     z = S.Exp1
     assert ask(Q.commutative(z)) == True
@@ -394,6 +407,7 @@ def test_E():
     assert ask(Q.composite(z)) == False
     assert ask(Q.hermitian(z)) == True
     assert ask(Q.antihermitian(z)) == False
+
 
 def test_I():
     z = I
@@ -452,6 +466,7 @@ def test_I():
     assert ask(Q.composite(z)) == False
     assert ask(Q.hermitian(z)) == False
     assert ask(Q.antihermitian(z)) == False
+
 
 @slow
 def test_bounded():
@@ -760,12 +775,14 @@ def test_bounded():
     assert ask(Q.bounded(cos(x)**2)) == True
     assert ask(Q.bounded(cos(x) + sin(x))) == True
 
+
 @XFAIL
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.bounded(sin(x)**x)) == True
     assert ask(Q.bounded(cos(x)**x)) == True
     assert ask(Q.bounded(sin(x) ** x)) == True
+
 
 def test_commutative():
     """By default objects are Q.commutative that is why it returns True
@@ -788,6 +805,7 @@ def test_commutative():
     assert ask(Q.commutative(x**2), ~Q.commutative(x)) == False
 
     assert ask(Q.commutative(log(x))) == True
+
 
 def test_complex():
     assert ask(Q.complex(x)) == None
@@ -862,6 +880,7 @@ def test_complex():
     assert ask(Q.complex(re(x))) == True
     assert ask(Q.complex(im(x))) == True
 
+
 def test_even():
     assert ask(Q.even(x)) == None
     assert ask(Q.even(x), Q.integer(x)) == None
@@ -903,12 +922,14 @@ def test_even():
     assert ask(Q.even(im(x)), Q.even(x)) == True
     assert ask(Q.even(im(x)), Q.real(x)) == True
 
+
 def test_extended_real():
     assert ask(Q.extended_real(x), Q.positive(x)) == True
     assert ask(Q.extended_real(-x), Q.positive(x)) == True
     assert ask(Q.extended_real(-x), Q.negative(x)) == True
 
     assert ask(Q.extended_real(x+S.Infinity), Q.real(x)) == True
+
 
 def test_rational():
     assert ask(Q.rational(x), Q.integer(x)) == True
@@ -949,6 +970,7 @@ def test_rational():
     assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y)) == True
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) == True
     assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) == False
+
 
 def test_hermitian():
     assert ask(Q.hermitian(x)) == None
@@ -1034,6 +1056,7 @@ def test_hermitian():
     assert ask(Q.antihermitian(x+y+z), Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) == False
     assert ask(Q.antihermitian(x+y+z), Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) == True
 
+
 def test_imaginary():
     assert ask(Q.imaginary(x)) == None
     assert ask(Q.imaginary(x), Q.real(x)) == False
@@ -1057,6 +1080,7 @@ def test_imaginary():
     assert ask(Q.imaginary(x+y+z), Q.real(x) & Q.real(y) & Q.imaginary(z)) == None
     assert ask(Q.imaginary(x+y+z), Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) == False
 
+
 def test_infinitesimal():
     assert ask(Q.infinitesimal(x)) == None
     assert ask(Q.infinitesimal(x), Q.infinitesimal(x)) == True
@@ -1067,6 +1091,7 @@ def test_infinitesimal():
     assert ask(Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.bounded(y)) == True
 
     assert ask(Q.infinitesimal(x**2), Q.infinitesimal(x)) == True
+
 
 def test_integer():
     assert ask(Q.integer(x)) == None
@@ -1087,6 +1112,7 @@ def test_integer():
     assert ask(Q.integer(x/2), Q.even(x)) == True
     assert ask(Q.integer(x/3), Q.odd(x)) == None
     assert ask(Q.integer(x/3), Q.even(x)) == None
+
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) == True
@@ -1121,6 +1147,7 @@ def test_negative():
 
     assert ask(Q.negative(Abs(x))) == False
 
+
 def test_nonzero():
     assert ask(Q.nonzero(x)) == None
     assert ask(Q.nonzero(x), Q.real(x)) == None
@@ -1141,6 +1168,7 @@ def test_nonzero():
 
     assert ask(Q.nonzero(Abs(x))) == None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) == True
+
 
 def test_odd():
     assert ask(Q.odd(x)) == None
@@ -1188,6 +1216,7 @@ def test_odd():
 
     assert ask(Q.odd(Abs(x)), Q.odd(x)) == True
 
+
 def test_prime():
     assert ask(Q.prime(x), Q.prime(x)) == True
     assert ask(Q.prime(x), ~Q.prime(x)) == False
@@ -1202,6 +1231,7 @@ def test_prime():
     assert ask(Q.prime(x**2), Q.integer(x)) == False
     assert ask(Q.prime(x**2), Q.prime(x)) == False
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) == False
+
 
 def test_positive():
     assert ask(Q.positive(x), Q.positive(x)) == True
@@ -1231,9 +1261,11 @@ def test_positive():
     assert ask(Q.positive(Abs(x))) == None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) == True
 
+
 @XFAIL
 def test_positive_xfail():
     assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) == True
+
 
 def test_real():
     assert ask(Q.real(x)) == None
@@ -1278,6 +1310,7 @@ def test_real():
     assert ask(Q.real(re(x))) == True
     assert ask(Q.real(im(x))) == True
 
+
 def test_algebraic():
     assert ask(Q.algebraic(x)) == None
 
@@ -1304,6 +1337,7 @@ def test_algebraic():
 
     assert ask(Q.algebraic(2.47)) == False
 
+
 def test_global():
     """Test ask with global assumptions"""
     assert ask(Q.integer(x)) == None
@@ -1311,6 +1345,7 @@ def test_global():
     assert ask(Q.integer(x)) == True
     global_assumptions.clear()
     assert ask(Q.integer(x)) == None
+
 
 def test_custom_context():
     """Test ask with custom assumptions context"""
@@ -1320,14 +1355,17 @@ def test_custom_context():
     assert ask(Q.integer(x), context=local_context) == True
     assert ask(Q.integer(x)) == None
 
+
 def test_functions_in_assumptions():
     assert ask(Q.negative(x), Q.real(x) >> Q.positive(x)) is False
     assert ask(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is False
     assert ask(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is False
 
+
 def test_composite_ask():
     assert ask(Q.negative(x) & Q.integer(x),
            assumptions=Q.real(x) >> Q.positive(x)) is False
+
 
 def test_composite_proposition():
     assert ask(True) is True
@@ -1343,6 +1381,7 @@ def test_composite_proposition():
     assert ask(Equivalent(Q.integer(x), Q.even(x)), Q.even(x)) is True
     assert ask(Equivalent(Q.integer(x), Q.even(x))) is None
     assert ask(Equivalent(Q.positive(x), Q.integer(x)), Q.integer(x)) is None
+
 
 def test_incompatible_resolutors():
     class Prime2AskHandler(AskHandler):
@@ -1360,6 +1399,7 @@ def test_incompatible_resolutors():
     register_handler('prime', InconclusiveHandler)
     assert ask(Q.prime(3)) == True
 
+
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
@@ -1375,6 +1415,7 @@ def test_key_extensibility():
     remove_handler('my_key', MyAskHandler)
     del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
+
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime
@@ -1397,12 +1438,14 @@ def test_type_extensibility():
     register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) == True
 
+
 def test_compute_known_facts():
     ns = {}
     exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
     exec compute_known_facts() in globals(), ns
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict
+
 
 def test_Add_queries():
     assert ask(Q.prime(12345678901234567890 + (cos(1)**2 + sin(1)**2))) is True

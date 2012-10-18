@@ -17,6 +17,7 @@ if f2py:
     else:
         f2pyworks = True
 
+
 def has_module(module):
     """
     Return True if module exists, otherwise run skip().
@@ -38,6 +39,7 @@ def has_module(module):
 # test runners used by several language-backend combinations
 #
 
+
 def runtest_autowrap_twice(language, backend):
     a, b, c = symbols('a b c')
     f = autowrap((((a + b)/c)**5).expand(), language, backend)
@@ -47,6 +49,7 @@ def runtest_autowrap_twice(language, backend):
     assert f(1, -2, 1) == -1.0
     assert g(1, -2, 1) == 1.0
 
+
 def runtest_autowrap_trace(language, backend):
     has_module('numpy')
     A = IndexedBase('A')
@@ -54,6 +57,7 @@ def runtest_autowrap_trace(language, backend):
     i = Idx('i', n)
     trace = autowrap(A[i, i], language, backend)
     assert trace(numpy.eye(100)) == 100
+
 
 def runtest_autowrap_matrix_vector(language, backend):
     has_module('numpy')
@@ -69,6 +73,7 @@ def runtest_autowrap_matrix_vector(language, backend):
     x = numpy.random.rand(20)
     y = numpy.dot(M, x)
     assert numpy.sum(numpy.abs(y - mv(M, x))) < 1e-13
+
 
 def runtest_autowrap_matrix_matrix(language, backend):
     has_module('numpy')
@@ -86,6 +91,7 @@ def runtest_autowrap_matrix_matrix(language, backend):
     M3 = numpy.dot(M1, M2)
     assert numpy.sum(numpy.abs(M3 - matmat(M1, M2))) < 1e-13
 
+
 def runtest_ufuncify(language, backend):
     has_module('numpy')
     a, b, c = symbols('a b c')
@@ -102,21 +108,26 @@ def runtest_ufuncify(language, backend):
 
 # f2py
 
+
 def test_wrap_twice_f95_f2py():
     has_module('f2py')
     runtest_autowrap_twice('f95', 'f2py')
+
 
 def test_autowrap_trace_f95_f2py():
     has_module('f2py')
     runtest_autowrap_trace('f95', 'f2py')
 
+
 def test_autowrap_matrix_vector_f95_f2py():
     has_module('f2py')
     runtest_autowrap_matrix_vector('f95', 'f2py')
 
+
 def test_autowrap_matrix_matrix_f95_f2py():
     has_module('f2py')
     runtest_autowrap_matrix_matrix('f95', 'f2py')
+
 
 def test_ufuncify_f95_f2py():
     has_module('f2py')
@@ -132,20 +143,24 @@ def test_wrap_twice_c_cython():
     has_module('Cython')
     runtest_autowrap_twice('C', 'cython')
 
+
 @XFAIL
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
     runtest_autowrap_trace('C', 'cython')
+
 
 @XFAIL
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_vector('C', 'cython')
 
+
 @XFAIL
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C', 'cython')
+
 
 @XFAIL
 def test_ufuncify_C_Cython():

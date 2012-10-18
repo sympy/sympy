@@ -3,6 +3,7 @@ from sympy.combinatorics import Permutation
 
 rmul = Permutation.rmul
 
+
 def _cmp_perm_lists(first, second):
     """
     Compare two lists of permutations as sets.
@@ -27,6 +28,7 @@ def _cmp_perm_lists(first, second):
     """
     return set([tuple(a) for a in first]) == \
            set([tuple(a) for a in second])
+
 
 def _naive_list_centralizer(self, other):
     from sympy.combinatorics.perm_groups import PermutationGroup
@@ -66,6 +68,7 @@ def _naive_list_centralizer(self, other):
     elif hasattr(other, 'array_form'):
         return _naive_list_centralizer(self, PermutationGroup([other]))
 
+
 def _verify_bsgs(group, base, gens):
     """
     Verify the correctness of a base and strong generating set.
@@ -103,6 +106,7 @@ def _verify_bsgs(group, base, gens):
         return False
     return True
 
+
 def _verify_centralizer(group, arg, centr=None):
     """
     Verify the centralizer of a group/set/element inside another group.
@@ -137,6 +141,7 @@ def _verify_centralizer(group, arg, centr=None):
     centr_list = list(centr.generate_dimino())
     centr_list_naive = _naive_list_centralizer(group, arg)
     return _cmp_perm_lists(centr_list, centr_list_naive)
+
 
 def _verify_normal_closure(group, arg, closure=None):
     from sympy.combinatorics.perm_groups import PermutationGroup

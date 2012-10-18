@@ -24,12 +24,14 @@ __all__ = [
 # Main objects
 #-----------------------------------------------------------------------------
 
+
 class HilbertSpaceError(QuantumError):
     pass
 
 #-----------------------------------------------------------------------------
 # Main objects
 #-----------------------------------------------------------------------------
+
 
 class HilbertSpace(Basic):
     """An abstract Hilbert space for quantum mechanics.

@@ -7,6 +7,7 @@ from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
+
 @threaded
 def apart(f, x=None, full=False, **options):
     """
@@ -65,6 +66,7 @@ def apart(f, x=None, full=False, **options):
 
     return common*(poly.as_expr() + terms)
 
+
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """
     X = numbered_symbols(cls=Dummy)
@@ -102,6 +104,7 @@ def apart_undetermined_coeffs(P, Q):
         result += h/f.as_expr()**k
 
     return result
+
 
 def apart_full_decomposition(P, Q):
     """

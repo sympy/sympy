@@ -30,6 +30,7 @@ if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
 
+
 def setup_module(module):
     """py.test support"""
     if getattr(module, 'disabled', False):
@@ -39,6 +40,7 @@ def setup_module(module):
 import sympy
 
 from sympy.utilities.pytest import XFAIL
+
 
 def check_expression(expr, var_symbols):
     """Does eval(expr) both in Sage and SymPy and does other checks."""
@@ -77,9 +79,11 @@ def test_basics():
     check_expression("x**2+y**3", "x y")
     check_expression("1/(x+y)**2-x**3/4", "x y")
 
+
 def test_complex():
     check_expression("I", "")
     check_expression("23+I*4", "x")
+
 
 @XFAIL
 def test_complex_fail():
@@ -87,25 +91,31 @@ def test_complex_fail():
     check_expression("I*y", "y")
     check_expression("x+I*y", "x y")
 
+
 def test_integer():
     check_expression("4*x", "x")
     check_expression("-4*x", "x")
+
 
 def test_real():
     check_expression("1.123*x", "x")
     check_expression("-18.22*x", "x")
 
+
 def test_E():
     assert sympy.sympify(sage.e) == sympy.E
     assert sage.e == sage.SR(sympy.E)
+
 
 def test_pi():
     assert sympy.sympify(sage.pi) == sympy.pi
     assert sage.pi == sage.SR(sympy.pi)
 
+
 def test_euler_gamma():
     assert sympy.sympify(sage.euler_gamma) == sympy.EulerGamma
     assert sage.euler_gamma == sage.SR(sympy.EulerGamma)
+
 
 def test_oo():
     assert sympy.sympify(sage.oo) == sympy.oo
@@ -113,17 +123,21 @@ def test_oo():
     assert sympy.sympify(-sage.oo) == -sympy.oo
     assert -sage.oo == sage.SR(-sympy.oo)
 
+
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan
     assert sage.NaN == sage.SR(sympy.nan)
+
 
 def test_Catalan():
     assert sympy.sympify(sage.catalan) == sympy.Catalan
     assert sage.catalan == sage.SR(sympy.Catalan)
 
+
 def test_GoldenRation():
     assert sympy.sympify(sage.golden_ratio) == sympy.GoldenRatio
     assert sage.golden_ratio == sage.SR(sympy.GoldenRatio)
+
 
 def test_functions():
     check_expression("sin(x)", "x")
@@ -145,6 +159,7 @@ def test_functions():
     check_expression("acoth(x)", "x")
     check_expression("exp(x)", "x")
     check_expression("log(x)", "x")
+
 
 def test_issue924():
     sage.var("a x")

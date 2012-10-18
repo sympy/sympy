@@ -3,20 +3,24 @@ from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 
+
 def test_sin():
     e1 = sin(x).series(x, 0)
     e2 = series(sin(x), x, 0)
     assert e1 == e2
+
 
 def test_cos():
     e1 = cos(x).series(x, 0)
     e2 = series(cos(x), x, 0)
     assert e1 == e2
 
+
 def test_exp():
     e1 = exp(x).series(x, 0)
     e2 = series(exp(x), x, 0)
     assert e1 == e2
+
 
 def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
@@ -77,6 +81,7 @@ def test_2124():
 from sympy.series.acceleration import richardson, shanks
 from sympy import Sum, Integer
 
+
 def test_acceleration():
     e = (1 + 1/n)**n
     assert round(richardson(e, n, 10, 20).evalf(), 10) == round(E.evalf(), 10)
@@ -85,14 +90,17 @@ def test_acceleration():
     assert round(shanks(A, n, 25).evalf(), 4) == round(log(2).evalf(), 4)
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
 
+
 def test_1484():
     assert cos(1+x+x**2).series(x, 0, 5) == cos(1) - x*sin(1) + x**2*(-sin(1) - \
                                           cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
                                           x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
 
+
 def test_issue_3219():
     eq = (1/x)**(S(2)/3)
     assert (eq + 1).as_leading_term(x) == eq
+
 
 def test_x_is_base_detection():
     eq = (x**2)**(S(2)/3)

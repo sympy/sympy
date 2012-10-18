@@ -17,6 +17,7 @@ from sympy.core.singleton import S
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8)) \
     for i in range(256)]
 
+
 def smoothness(n):
     """
     Return the B-smooth and B-power smooth values of n.
@@ -42,6 +43,7 @@ def smoothness(n):
         return (1, 1)  # not prime, but otherwise this causes headaches
     facs = factorint(n)
     return max(facs), max([m**facs[m] for m in facs])
+
 
 def smoothness_p(n, m=-1, power=0, visual=None):
     """
@@ -139,6 +141,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         lines.append('p**i=%i**%i has p%+i B=%i, B-pow=%i' % tuple(dat))
     return '\n'.join(lines)
 
+
 def trailing(n):
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
@@ -175,6 +178,7 @@ def trailing(n):
             p *= 2
         p //= 2
     return t
+
 
 def multiplicity(p, n):
     """
@@ -216,6 +220,7 @@ def multiplicity(p, n):
                 return m + multiplicity(p, n)
         n, rem = divmod(n, p)
     return m
+
 
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
@@ -319,6 +324,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             return int(r), e
     else:
         return False
+
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     r"""
@@ -426,6 +432,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
         a = prng.randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
         F = None
     return None
+
 
 def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     """
@@ -584,6 +591,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         # say 'a' should be coprime to n, but either will detect factors.
         a = prng.randint(2, n - 2)
 
+
 def _trial(factors, n, candidates, verbose=False):
     """
     Helper function for integer factorization. Trial factors ``n`
@@ -603,6 +611,7 @@ def _trial(factors, n, candidates, verbose=False):
         for k in sorted(set(factors).difference(set(factors0))):
             print factor_msg % (k, factors[k])
     return int(n), len(factors) != nfactors
+
 
 def _check_termination(factors, n,
                                    limitp1,
@@ -654,6 +663,7 @@ pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 factor_msg = '\t%i ** %i'
 fermat_msg = 'Close factors satisying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
+
 
 def _factorint_small(factors, n, limit, fail_max):
     """
@@ -754,6 +764,7 @@ def _factorint_small(factors, n, limit, fail_max):
         d += 4
 
     return done(n, d)
+
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
               verbose=False, visual=None):
@@ -1197,6 +1208,7 @@ def primefactors(n, limit=None, verbose=False):
         s += [factors[-1]]
     return s
 
+
 def _divisors(n):
     """Helper function for divisors which generates the divisors."""
 
@@ -1216,6 +1228,7 @@ def _divisors(n):
 
     for p in rec_gen():
         yield p
+
 
 def divisors(n, generator=False):
     r"""
@@ -1260,6 +1273,7 @@ def divisors(n, generator=False):
             return sorted(rv)
         return rv
 
+
 def divisor_count(n, modulus=1):
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
@@ -1289,6 +1303,7 @@ def divisor_count(n, modulus=1):
     if n == 0:
         return 0
     return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])
+
 
 def totient(n):
     """

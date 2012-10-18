@@ -3,6 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
 
+
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -41,6 +42,7 @@ class BooleanFunction(Application, Boolean):
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
 
+
 class And(LatticeOp, BooleanFunction):
     """
     Logical AND function.
@@ -59,6 +61,7 @@ class And(LatticeOp, BooleanFunction):
     zero = False
     identity = True
 
+
 class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
@@ -68,6 +71,7 @@ class Or(LatticeOp, BooleanFunction):
     """
     zero = True
     identity = False
+
 
 class Xor(BooleanFunction):
     """
@@ -102,6 +106,7 @@ class Xor(BooleanFunction):
             B = args.pop()
             A = Or(And(A, Not(B)), And(Not(A), B))
         return A
+
 
 class Not(BooleanFunction):
     """
@@ -157,6 +162,7 @@ class Not(BooleanFunction):
         if arg.func is Not:
             return arg.args[0]
 
+
 class Nand(BooleanFunction):
     """
     Logical NAND function.
@@ -182,6 +188,7 @@ class Nand(BooleanFunction):
         False
         """
         return Not(And(*args))
+
 
 class Nor(BooleanFunction):
     """
@@ -212,6 +219,7 @@ class Nor(BooleanFunction):
         True
         """
         return Not(Or(*args))
+
 
 class Implies(BooleanFunction):
     """
@@ -249,6 +257,7 @@ class Implies(BooleanFunction):
             return Or(Not(A), B)
         else:
             return Basic.__new__(cls, *args)
+
 
 class Equivalent(BooleanFunction):
     """
@@ -289,6 +298,7 @@ class Equivalent(BooleanFunction):
             return Nor(*argset)
         return Basic.__new__(cls, *set(args))
 
+
 class ITE(BooleanFunction):
     """
     If then else clause.
@@ -321,6 +331,7 @@ class ITE(BooleanFunction):
 
 ### end class definitions. Some useful methods
 
+
 def fuzzy_not(arg):
     """
     Not in fuzzy logic
@@ -342,6 +353,7 @@ def fuzzy_not(arg):
         return
     return not arg
 
+
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 
@@ -357,6 +369,7 @@ def conjuncts(expr):
     """
     return And.make_args(expr)
 
+
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
 
@@ -371,6 +384,7 @@ def disjuncts(expr):
 
     """
     return Or.make_args(expr)
+
 
 def distribute_and_over_or(expr):
     """
@@ -400,6 +414,7 @@ def distribute_and_over_or(expr):
     else:
         return expr
 
+
 def to_cnf(expr):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
@@ -421,6 +436,7 @@ def to_cnf(expr):
     expr = sympify(expr)
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
+
 
 def is_cnf(expr):
     """
@@ -478,6 +494,7 @@ def is_cnf(expr):
 
     return True
 
+
 def eliminate_implications(expr):
     """
     Change >>, <<, and Equivalent into &, |, and ~. That is, return an
@@ -506,6 +523,7 @@ def eliminate_implications(expr):
         return (a | Not(b)) & (b | Not(a))
     else:
         return expr.func(*args)
+
 
 def compile_rule(s):
     """

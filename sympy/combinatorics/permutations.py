@@ -9,6 +9,7 @@ from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
 from sympy.mpmath.libmp.libintmath import ifac
 
+
 def _af_rmul(a, b):
     """
     Return the product b*a; input and output are array forms. The ith value
@@ -39,6 +40,7 @@ def _af_rmul(a, b):
     rmul, _af_rmuln
     """
     return [a[i] for i in b]
+
 
 def _af_rmuln(*abc):
     """
@@ -99,6 +101,7 @@ def _af_rmuln(*abc):
     p1 = _af_rmuln(*a[m//2:])
     return [p0[i] for i in p1]
 
+
 def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
@@ -134,6 +137,7 @@ def _af_parity(pi):
                 a[i] = 1
     return (n - c) % 2
 
+
 def _af_invert(a):
     """
     Finds the inverse, ~A, of a permutation, A, given in array form.
@@ -158,6 +162,7 @@ def _af_invert(a):
         inv_form[ai] = i
     return inv_form
 
+
 def _af_commutes_with(a, b):
     """
     Checks if the two permutations with array forms
@@ -176,6 +181,7 @@ def _af_commutes_with(a, b):
     Permutation, commutes_with
     """
     return not any(a[b[i]] != b[a[i]] for i in range(len(a) - 1))
+
 
 class Cycle(dict):
     """
@@ -376,6 +382,7 @@ class Cycle(dict):
 
     def copy(self):
         return Cycle(self)
+
 
 class Permutation(Basic):
     """
@@ -2718,6 +2725,7 @@ class Permutation(Basic):
     # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
     # when False, Permutation([0, 2, 1, 3]) -> Permutation([0, 2, 1])
     print_cyclic = True
+
 
 def _merge(arr, temp, left, mid, right):
     """

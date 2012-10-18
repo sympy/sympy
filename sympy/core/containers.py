@@ -10,6 +10,7 @@ from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
+
 class Tuple(Basic):
     """
     Wrapper around the builtin tuple object
@@ -88,6 +89,7 @@ class Tuple(Basic):
 
 converter[tuple] = lambda tup: Tuple(*tup)
 
+
 def tuple_wrapper(method):
     """
     Decorator that converts any tuple in the function arguments into a Tuple.
@@ -116,6 +118,7 @@ def tuple_wrapper(method):
                 newargs.append(arg)
         return method(*newargs, **kw_args)
     return wrap_tuples
+
 
 class Dict(Basic):
     """

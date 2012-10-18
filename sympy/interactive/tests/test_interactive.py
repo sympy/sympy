@@ -2,6 +2,7 @@ import sys
 
 from sympy.interactive.session import int_to_Integer
 
+
 def test_int_to_Integer():
     assert int_to_Integer("1 + 2.2 + 0x3 + 40") == \
         'Integer (1 )+2.2 +Integer (0x3 )+Integer (40 )'

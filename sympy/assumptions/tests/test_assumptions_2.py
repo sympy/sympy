@@ -6,15 +6,18 @@ from sympy.core import symbols
 from sympy.logic.boolalg import Or
 from sympy.printing import pretty
 
+
 def test_equal():
     """Test for equality"""
     assert Q.positive(x) == Q.positive(x)
     assert Q.positive(x) != ~Q.positive(x)
     assert ~Q.positive(x) == ~Q.positive(x)
 
+
 def test_pretty():
     assert pretty(Q.positive(x)) == "Q.positive(x)"
     assert pretty(set([Q.positive, Q.integer])) == "set([Q.integer, Q.positive])"
+
 
 def test_extract_facts():
     a, b = symbols('a b', cls=Predicate)
@@ -24,6 +27,7 @@ def test_extract_facts():
     assert _extract_facts(~a(x), y) == None
     assert _extract_facts(a(x) | b(x), x) == a | b
     assert _extract_facts(a(x) | ~b(x), x) == a | ~b
+
 
 def test_global():
     """Test for global assumptions"""
@@ -38,6 +42,7 @@ def test_global():
     global_assumptions.clear()
     assert not Q.is_true(x > 0) in global_assumptions
     assert not Q.is_true(y > 0) in global_assumptions
+
 
 def test_composite_predicates():
     pred = Q.integer | ~Q.positive

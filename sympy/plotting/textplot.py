@@ -1,5 +1,6 @@
 from sympy import *
 
+
 def textplot(expr, a, b, W=55, H=18):
     """
     Print a crude ASCII art plot of the SymPy expression 'expr' (which

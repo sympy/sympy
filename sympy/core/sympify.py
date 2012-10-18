@@ -21,6 +21,7 @@ class SympifyError(ValueError):
 
 converter = {}  # See sympify docstring.
 
+
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
     Converts an arbitrary expression to a type that can be used inside sympy.
@@ -181,6 +182,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError('could not parse %r' % a)
 
     return expr
+
 
 def _sympify(a):
     """Short version of sympify for internal usage for __add__ and __eq__

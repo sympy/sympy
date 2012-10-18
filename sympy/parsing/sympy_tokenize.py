@@ -40,8 +40,13 @@ NL = N_TOKENS + 1
 tok_name[NL] = 'NL'
 N_TOKENS += 2
 
+
 def group(*choices): return '(' + '|'.join(choices) + ')'
+
+
 def any(*choices): return group(*choices) + '*'
+
+
 def maybe(*choices): return group(*choices) + '?'
 
 Whitespace = r'[ \f\t]*'
@@ -142,15 +147,19 @@ for t in ("'", '"',
 
 tabsize = 8
 
+
 class TokenError(Exception): pass
 
+
 class StopTokenizing(Exception): pass
+
 
 def printtoken(type, token, srow_scol, erow_ecol, line):  # for testing
     srow, scol = srow_scol
     erow, ecol = erow_ecol
     print "%d,%d-%d,%d:\t%s\t%s" % \
         (srow, scol, erow, ecol, tok_name[type], repr(token))
+
 
 def tokenize(readline, tokeneater=printtoken):
     """
@@ -171,9 +180,12 @@ def tokenize(readline, tokeneater=printtoken):
         pass
 
 # backwards compatible interface
+
+
 def tokenize_loop(readline, tokeneater):
     for token_info in generate_tokens(readline):
         tokeneater(*token_info)
+
 
 class Untokenizer:
 
@@ -240,6 +252,7 @@ class Untokenizer:
                 startline = False
             toks_append(tokval)
 
+
 def untokenize(iterable):
     """Transform tokens back into Python source code.
 
@@ -261,6 +274,7 @@ def untokenize(iterable):
     """
     ut = Untokenizer()
     return ut.untokenize(iterable)
+
 
 def generate_tokens(readline):
     """

@@ -4,6 +4,7 @@ from sympy.utilities.iterables import flatten
 
 from collections import defaultdict
 
+
 class Prufer(Basic):
     """
     The Prufer correspondence is an algorithm that describes the

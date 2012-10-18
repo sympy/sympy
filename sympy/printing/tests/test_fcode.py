@@ -17,6 +17,7 @@ def test_printmethod():
             return "nint(%s)" % printer._print(self.args[0])
     assert fcode(nint(x)) == "      nint(x)"
 
+
 def test_fcode_Pow():
     x, y = symbols('x,y')
     n = symbols('n', integer=True)
@@ -36,23 +37,28 @@ def test_fcode_Pow():
                  source_format = 'free',
                  human = True) == 'y = x**(-2.0d0)'  #2823
 
+
 def test_fcode_Rational():
     assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"
     assert fcode(Rational(18, 9)) == "      2"
     assert fcode(Rational(3, -7)) == "      -3.0d0/7.0d0"
     assert fcode(Rational(-3, -7)) == "      3.0d0/7.0d0"
 
+
 def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
     assert fcode(Integer(-1)) == "      -1"
+
 
 def test_fcode_Float():
     assert fcode(Float(42.0)) == "      42.0000000000000d0"
     assert fcode(Float(-1e20)) == "      -1.00000000000000d+20"
 
+
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+
 
 def test_fcode_NumberSymbol():
     p = FCodePrinter()
@@ -69,6 +75,7 @@ def test_fcode_NumberSymbol():
     assert fcode(pi, human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
     assert fcode(pi, precision=5, human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
 
+
 def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"
     x = symbols('x')
@@ -82,11 +89,13 @@ def test_fcode_complex():
     assert fcode(I*x) == "      cmplx(0,1)*x"
     assert fcode(3+x) == "      x + 3"
 
+
 def test_implicit():
     x, y = symbols('x,y')
     assert fcode(sin(x)) == "      sin(x)"
     assert fcode(atan2(x, y)) == "      atan2(x, y)"
     assert fcode(conjugate(x)) == "      conjg(x)"
+
 
 def test_not_fortran():
     x = symbols('x')
@@ -94,6 +103,7 @@ def test_not_fortran():
     assert fcode(gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
     assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+
 
 def test_user_functions():
     x = symbols('x')
@@ -104,6 +114,7 @@ def test_user_functions():
     assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+
 
 def test_inline_function():
     x = symbols('x')
@@ -123,9 +134,11 @@ def test_inline_function():
             "      end do"
             )
 
+
 def test_assign_to():
     x = symbols('x')
     assert fcode(sin(x), assign_to="s") == "      s = sin(x)"
+
 
 def test_line_wrapping():
     x, y = symbols('x,y')
@@ -139,6 +152,7 @@ def test_line_wrapping():
         "      x**10 + x**9 + x**8 + x**7 + x**6 + x**5 + x**4 + x**3 + x**2 + x\n"
         "     @ + 1"
     )
+
 
 def test_fcode_Piecewise():
     x = symbols('x')
@@ -196,6 +210,7 @@ def test_fcode_Piecewise():
         "         sin(x)\n"
         "      end if"
     )
+
 
 def test_wrap_fortran():
     #   "########################################################################"
@@ -256,6 +271,7 @@ def test_wrap_fortran():
         assert w == e
     assert len(wrapped_lines) == len(expected_lines)
 
+
 def test_wrap_fortran_keep_d0():
     printer = FCodePrinter()
     lines = [
@@ -281,12 +297,15 @@ def test_wrap_fortran_keep_d0():
         ]
     assert printer._wrap_fortran(lines) == expected
 
+
 def test_settings():
     raises(TypeError, lambda: fcode(S(4), method="garbage"))
+
 
 def test_free_form_code_line():
     x, y = symbols('x,y')
     assert fcode(cos(x) + sin(y), source_format='free') == "sin(y) + cos(x)"
+
 
 def test_free_form_continuation_line():
     x, y = symbols('x,y')
@@ -298,6 +317,7 @@ def test_free_form_continuation_line():
     )
     assert result == expected
 
+
 def test_free_form_comment_line():
     printer = FCodePrinter({ 'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
@@ -305,6 +325,7 @@ def test_free_form_comment_line():
         '! This is a long comment on a single line that must be wrapped properly',
         '! to produce nice output']
     assert printer._wrap_fortran(lines) == expected
+
 
 def test_loops():
     n, m = symbols('n,m', integer=True)
@@ -329,6 +350,7 @@ def test_loops():
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
             code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
 
+
 def test_dummy_loops():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
@@ -346,6 +368,7 @@ def test_dummy_loops():
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
 
+
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
         _default_settings = FCodePrinter._default_settings.copy()
@@ -354,6 +377,7 @@ def test_derived_classes():
     printer = MyFancyFCodePrinter()
     x = symbols('x')
     assert printer.doprint(sin(x)) == "      bork = sin(x)"
+
 
 def test_indent():
     codelines = (

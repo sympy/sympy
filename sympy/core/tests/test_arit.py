@@ -9,6 +9,7 @@ x = Symbol('x')
 y = Symbol('y')
 z = Symbol('z')
 
+
 def test_bug1():
     assert re(x) != x
     x.series(x, 0, 1)
@@ -18,12 +19,14 @@ a = Symbol("a")
 b = Symbol("b", positive=True)
 c = Symbol("c")
 
+
 def test_Symbol():
     e=a*b
     assert e==a*b
     assert a*b*b==a*b**2
     assert a*b*b+c==c+a*b**2
     assert a*b*b-c==-c+a*b**2
+
 
 def test_arit0():
     p = Rational(5)
@@ -74,6 +77,7 @@ def test_arit0():
     e = Rational(1, 2)*(1+a)
     assert e == Rational(1, 2) + a/2
 
+
 def test_div():
     e=a/b
     assert e == a*b**(-1)
@@ -81,6 +85,7 @@ def test_div():
     assert e == a*b**(-1)+Rational(1)/2*c
     e=(1-b)/(b-1)
     assert e == (1+-b)*((-1)+b)**(-1)
+
 
 def test_pow():
     n1 = Rational(1)
@@ -150,6 +155,7 @@ def test_pow():
     assert (-2*x)**k == 2**k*x**k
     assert (-1)**k == 1
 
+
 def test_pow2():
     # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
     #                                  x.is_positive or y.is_integer
@@ -158,12 +164,15 @@ def test_pow2():
     assert (-x)**Rational(2, 3) != x**Rational(2, 3)
     assert (-x)**Rational(5, 7) != -x**Rational(5, 7)
 
+
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
     assert sqrt(2)**3 == sqrt(8)
 
+
 def test_pow_issue417():
     assert 4**Rational(1, 4) == sqrt(2)
+
 
 def test_pow_im():
     for m in (-2, -1, 2):
@@ -193,6 +202,7 @@ def test_pow_im():
     ans = (-2)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
+
 
 def test_expand():
     p = Rational(5)
@@ -252,6 +262,7 @@ def test_expand():
     W = W.expand()
     assert W.has(-1672280820*x**15)
 
+
 def test_power_expand():
     """Test for Pow.expand()"""
     a = Symbol('a')
@@ -270,10 +281,12 @@ def test_power_expand():
     assert (2**(A+B)).expand() == 2**(A+B)
     assert (A**(a+b)).expand() != A**(a+b)
 
+
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
     assert Float(1) * pi * x == pi * x
     assert len((Float(2) * pi * x).args) == 3
+
 
 def test_ncmul():
     A = Symbol("A", commutative=False)
@@ -305,6 +318,7 @@ def test_ncmul():
 
     assert (A+B + 2*(A+B)) == 3*A + 3*B
 
+
 def test_ncpow():
     x = Symbol('x', commutative=False)
     y = Symbol('y', commutative=False)
@@ -329,6 +343,7 @@ def test_ncpow():
     assert x**a*x**(4*a) == x**(5*a)
     assert x**a*x**(4*a)*x**a == x**(6*a)
 
+
 def test_powerbug():
     x=Symbol("x")
     assert x**1 != (-x)**1
@@ -343,6 +358,7 @@ def test_powerbug():
 
     assert (2*x)**2 == (-2*x)**2
 
+
 def test_Mul_doesnt_expand_exp():
     x = Symbol('x')
     y = Symbol('y')
@@ -355,6 +371,7 @@ def test_Mul_doesnt_expand_exp():
     assert 2**x*2**(2*x) == 2**(3*x)
     assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
+
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -375,6 +392,7 @@ def test_Add_Mul_is_integer():
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer != False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer != False
 
+
 def test_Add_Mul_is_bounded():
     x = Symbol('x', real=True, bounded=False)
 
@@ -391,6 +409,7 @@ def test_Add_Mul_is_bounded():
     assert (1 + x**2 + (1 + x)*(1 - x)).is_bounded is None
     assert (sqrt(2)*(1 + x)).is_bounded is False
     assert (sqrt(2)*(1 + x)*(1 - x)).is_bounded is False
+
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
@@ -430,6 +449,7 @@ def test_Mul_is_even_odd():
     assert (k*m*x).is_even == True
     assert (k*m*x).is_odd == False
 
+
 def test_Add_is_even_odd():
     x = Symbol('x', integer=True)
 
@@ -460,6 +480,7 @@ def test_Add_is_even_odd():
 
     assert (k+n+x+m).is_even == None
     assert (k+n+x+m).is_odd == None
+
 
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
@@ -558,6 +579,7 @@ def test_Mul_is_negative_positive():
 
     assert (x*neg).is_positive == None
     assert (nneg*npos*pos*x*neg).is_positive == None
+
 
 def test_Mul_is_negative_positive_2():
     a = Symbol('a', nonnegative=True)
@@ -673,6 +695,7 @@ def test_Mul_is_nonpositive_nonnegative():
     assert (x*k).is_nonnegative == None
     assert (u*v*n*x*k).is_nonnegative == None
 
+
 def test_Add_is_negative_positive():
     x = Symbol('x', real=True)
 
@@ -753,6 +776,7 @@ def test_Add_is_negative_positive():
 
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
 
+
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -831,6 +855,7 @@ def test_Add_is_nonpositive_nonnegative():
     assert (u-x).is_nonnegative == None
     assert (v+x+n).is_nonnegative == None
 
+
 def test_Pow_is_integer():
     x = Symbol('x')
 
@@ -874,6 +899,7 @@ def test_Pow_is_integer():
     assert Pow(4, S.Half, evaluate=False).is_integer is True
     assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
+
 def test_Pow_is_real():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True, positive=True)
@@ -905,6 +931,7 @@ def test_Pow_is_real():
     assert (i**o).is_real is False
     assert (i**k).is_real is None
 
+
 @XFAIL
 def test_real_Pow():
     """
@@ -913,6 +940,7 @@ def test_real_Pow():
     """
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
+
 
 def test_Pow_is_bounded():
     x = Symbol('x', real=True)
@@ -929,6 +957,7 @@ def test_Pow_is_bounded():
     assert (sin(x)**exp(x)).is_bounded == None
     assert (1/sin(x)).is_bounded == None  # if zero, no, otherwise yes
     assert (1/exp(x)).is_bounded == None  # x could be -oo
+
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -977,6 +1006,7 @@ def test_Pow_is_even_odd():
     assert (k**x).is_odd == None
     assert (n**x).is_odd == None
 
+
 def test_Pow_is_negative_positive():
     x = Symbol('x', real=True)
 
@@ -1014,6 +1044,7 @@ def test_Pow_is_negative_positive():
 
     assert (2**z).is_positive == None
     assert (2**z).is_negative == None
+
 
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
@@ -1086,6 +1117,7 @@ def test_Add_is_comparable():
     assert (x+1).is_comparable == False
     assert (Rational(1, 3) - sqrt(8)).is_comparable == True
 
+
 def test_Mul_is_comparable():
     assert (x*y).is_comparable == False
     assert (x*2).is_comparable == False
@@ -1117,6 +1149,7 @@ def test_Add_is_irrational():
     assert (i+1).is_irrational == True
     assert (i+1).is_rational == False
 
+
 @XFAIL
 def test_issue432():
     class MightyNumeric(tuple):
@@ -1126,6 +1159,7 @@ def test_issue432():
         def __rtruediv__(self, other):
             return "something"
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
+
 
 def test_issue432b():
     class Foo:
@@ -1141,12 +1175,14 @@ def test_issue432b():
     x = Symbol("x")
     assert f*x == x*f
 
+
 def test_bug3():
     a = Symbol("a")
     b = Symbol("b", positive=True)
     e = 2*a + b
     f = b + 2*a
     assert e == f
+
 
 def test_suppressed_evaluation():
     a = Add(0, 3, 2, evaluate=False)
@@ -1182,15 +1218,18 @@ def test_Add_as_coeff_mul():
     assert (n - 2).as_coeff_mul() == (1, (n - 2,))
     assert (n - 3).as_coeff_mul() == (1, (n - 3,))
 
+
 def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + y).as_coeff_mul() == (1, (exp(x + y),))
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
+
 
 def test_issue415():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
     assert sqrt(6)*sqrt(2)/2 == sqrt(3)
+
 
 def test_make_args():
     assert Add.make_args(x) == (x,)
@@ -1205,16 +1244,19 @@ def test_make_args():
     assert Add.make_args((x+y)**z) == ((x+y)**z,)
     assert Mul.make_args((x+y)**z) == ((x+y)**z,)
 
+
 def test_issue2027():
     assert (-2)**x*(-3)**x != 6**x
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
+
 
 def test_Rational_as_content_primitive():
     c, p = S(1), S(0)
     assert (c*p).as_content_primitive() == (c, p)
     c, p = S(1)/2, S(1)
     assert (c*p).as_content_primitive() == (c, p)
+
 
 def test_Add_as_content_primitive():
     assert (x + 2).as_content_primitive() == (1, x + 2)
@@ -1241,16 +1283,19 @@ def test_Add_as_content_primitive():
     p *= -1
     assert (2*p).expand().as_content_primitive() == (2, p)
 
+
 def test_Mul_as_content_primitive():
     assert (2*x).as_content_primitive() == (2, x)
     assert (x*(2+2*x)).as_content_primitive() == (2, x*(1 + x))
     assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x*(1 + y)*(x + 1)**2)
     assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive() == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
 
+
 def test_Pow_as_content_primitive():
     assert (x**y).as_content_primitive() == (1, x**y)
     assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2, (x + 1), evaluate=False))**y)
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
+
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
@@ -1261,14 +1306,17 @@ def test_issue2361():
     assert u.is_Mul
     assert 2 + u == 4 + 2*n
 
+
 def test_product_irrational():
     from sympy import I, pi
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
 
+
 def test_issue_2820():
     assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
+
 
 def test_Mod():
     assert Mod(5, 3) == 2
@@ -1296,6 +1344,7 @@ def test_Mod():
     e = Mod(Rational(13, 10), Rational(7, 10))
     assert e == .6 and e.is_Rational
 
+
 def test_issue_2902():
     A = Symbol("A", commutative=False)
     eq = A + A**2
@@ -1312,6 +1361,7 @@ def test_issue_2902():
     # that definition can change, e.g. (A*B).subs(B,A**-1) -> 1
     assert (sqrt(2)*A).is_commutative is False
     assert (sqrt(2)*A*B).is_commutative is False
+
 
 def test_polar():
     from sympy import polar_lift
@@ -1332,6 +1382,7 @@ def test_polar():
     assert (2*q)**2 == 4 * q**2
     assert ((p*q)**x).expand() == p**x * q**x
 
+
 def test_issue_2941():
     a, b = Pow(1, 2, evaluate=False), S.One
     assert a != b
@@ -1339,9 +1390,11 @@ def test_issue_2941():
     assert not (a == b)
     assert not (b == a)
 
+
 def test_issue_2983():
     assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
     assert Or(x, z) * Or(x, z) == Or(x, z) * Or(x, z)
+
 
 def test_issue_2978():
     assert x**2.0/x == x**1.0
@@ -1354,6 +1407,7 @@ def test_issue_2978():
     assert 2**x*2**(2.0*x) == 2**(3.0*x)
     assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
 
+
 def test_mul_flatten_oo():
     p = symbols('p', positive=True)
     n, m = symbols('n,m', negative=True)
@@ -1362,6 +1416,7 @@ def test_mul_flatten_oo():
     assert n*m*oo == oo
     assert p*oo == oo
     assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
+
 
 def test_issue_2061_2988_2990_2991():
     #2988
@@ -1375,6 +1430,7 @@ def test_issue_2061_2988_2990_2991():
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     #2991
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
+
 
 def test_float_int():
     assert int(float(sqrt(10))) == int(sqrt(10))

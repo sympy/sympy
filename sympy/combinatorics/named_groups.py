@@ -4,6 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 
 _af_new = Permutation._af_new
 
+
 def AbelianGroup(*cyclic_orders):
     """
     Returns the direct product of cyclic groups with the given orders.
@@ -44,6 +45,7 @@ def AbelianGroup(*cyclic_orders):
     G._order = order
 
     return G
+
 
 def AlternatingGroup(n):
     """
@@ -109,6 +111,7 @@ def AlternatingGroup(n):
     G._is_alt = True
     return G
 
+
 def CyclicGroup(n):
     """
     Generates the cyclic group of order ``n`` as a permutation group.
@@ -146,6 +149,7 @@ def CyclicGroup(n):
     G._is_transitive = True
     G._order = n
     return G
+
 
 def DihedralGroup(n):
     r"""
@@ -205,6 +209,7 @@ def DihedralGroup(n):
     G._order = 2*n
     return G
 
+
 def SymmetricGroup(n):
     """
     Generates the symmetric group on ``n`` elements as a permutation group.
@@ -262,6 +267,7 @@ def SymmetricGroup(n):
     G._is_transitive = True
     G._is_sym = True
     return G
+
 
 def RubikGroup(n):
     """Return a group of Rubik's cube generators.

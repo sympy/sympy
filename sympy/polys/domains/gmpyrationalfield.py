@@ -9,6 +9,7 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class GMPYRationalField(RationalField):
     """Rational field based on GMPY mpq class. """
 

@@ -6,6 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
 from sympy.stats.rv import ProductPSpace, rs_swap
 from sympy.utilities.pytest import raises, XFAIL
 
+
 def test_where():
     X, Y = Die('X'), Die('Y')
     Z = Normal('Z', 0, 1)
@@ -27,6 +28,7 @@ def test_where():
     with raises(TypeError):
         XX = given(X, X+3)
 
+
 def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
@@ -35,6 +37,7 @@ def test_random_symbols():
     assert set(random_symbols(2*X+Y.symbol)) == set((X,))
     assert set(random_symbols(2)) == set()
 
+
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
@@ -42,6 +45,7 @@ def test_pspace():
     assert pspace(X) == X.pspace
     assert pspace(2*X+1) == X.pspace
     assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
+
 
 def test_rs_swap():
     X = Normal('x', 0, 1)
@@ -53,6 +57,7 @@ def test_rs_swap():
     expr = 2*X+Y
     assert expr.subs(rs_swap((X, Y), (YY, XX))) == 2*XX+YY
 
+
 def test_RandomSymbol():
 
     X = Normal('x', 0, 1)
@@ -62,11 +67,13 @@ def test_RandomSymbol():
 
     assert X.name == X.symbol.name
 
+
 def test_overlap():
     X = Normal('x', 0, 1)
     Y = Normal('x', 0, 2)
 
     raises(ValueError, lambda: P(X>Y))
+
 
 def test_ProductPSpace():
     X = Normal('X', 0, 1)
@@ -76,8 +83,10 @@ def test_ProductPSpace():
     assert pspace(X+Y) == ProductPSpace(px, py)
     assert pspace(X+Y) == ProductPSpace(py, px)
 
+
 def test_E():
     assert E(5) == 5
+
 
 def test_Sample():
     X = Die('X', 6)
@@ -99,6 +108,7 @@ def test_Sample():
     # Make sure this doesn't raise an error
     E(Sum(1/z**Y, (z, 1, oo)), Y>2, numsamples=3)
 
+
 def test_given():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
@@ -106,6 +116,7 @@ def test_given():
     B = given(X, Y>2)
 
     assert X == A == B
+
 
 def test_dependence():
     X, Y = Die('X'), Die('Y')
@@ -120,6 +131,7 @@ def test_dependence():
     XX, YY = given(Tuple(X, Y), Eq(X+Y, 3))
     assert dependent(XX, YY)
 
+
 @XFAIL
 def test_dependent_finite():
     X, Y = Die('X'), Die('Y')
@@ -129,6 +141,7 @@ def test_dependent_finite():
 
     XX, YY = given(Tuple(X, Y), X+Y>5)  # Create a dependency
     assert dependent(XX, YY)
+
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)

@@ -8,6 +8,7 @@ this stuff for general purpose.
 """
 from sympy.core.compatibility import iterable, cmp
 
+
 def fuzzy_bool(x):
     """Return True, False or None according to x.
 
@@ -17,6 +18,7 @@ def fuzzy_bool(x):
     if x is None:
         return None
     return bool(x)
+
 
 def fuzzy_and(*args):
     """Return True (all True), False (any False) or None.
@@ -67,12 +69,14 @@ def fuzzy_and(*args):
     elif len(args) == 1:
         return fuzzy_bool(args[0])
 
+
 def fuzzy_not(v):
     """'not' in fuzzy logic"""
     if v is None:
         return v
     else:
         return not v
+
 
 class Logic(object):
     """Logical expression"""
@@ -247,6 +251,7 @@ class Or(AndOr_Base):
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
         return And( *[Not(a) for a in self.args] )
+
 
 class Not(Logic):
 

@@ -2,6 +2,7 @@
 
 from sympy.polys.domains.domain import Domain
 
+
 class SimpleDomain(Domain):
     """Base class for simple domains, e.g. ZZ, QQ. """
 

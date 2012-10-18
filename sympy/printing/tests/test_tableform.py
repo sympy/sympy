@@ -8,6 +8,7 @@ from sympy.utilities.pytest import raises
 
 from textwrap import dedent
 
+
 def test_TableForm():
     s = str(TableForm([["a", "b"], ["c", "d"], ["e", 0]],
         headings="automatic"))
@@ -97,6 +98,7 @@ def test_TableForm():
     assert s == dedent('''\
         ? - 2
         1 ? ?''')
+
 
 def test_TableForm_latex():
     s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],

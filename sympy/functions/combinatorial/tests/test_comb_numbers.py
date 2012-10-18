@@ -7,6 +7,7 @@ from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 
+
 def test_bernoulli():
     assert bernoulli(0) == 1
     assert bernoulli(1) == Rational(-1, 2)
@@ -45,6 +46,7 @@ def test_fibonacci():
     assert fibonacci(3, x) == x**2 + 1
     assert fibonacci(4, x) == x**3 + 2*x
 
+
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
@@ -70,6 +72,7 @@ def test_bell():
     X = (1, 2, 3, 5)
     assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
 
+
 def test_harmonic():
     assert harmonic(1, 1) == 1
     assert harmonic(2, 1) == Rational(3, 2)
@@ -80,6 +83,7 @@ def test_harmonic():
     assert harmonic(10, 0) == 10
     assert harmonic(oo, 1) == zoo
     assert harmonic(oo, 2) == (pi**2)/6
+
 
 def test_euler():
     assert euler(0) == 1
@@ -103,10 +107,12 @@ def test_euler():
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
     assert euler(2*n+1).rewrite(Sum) == 0
 
+
 @XFAIL
 def test_euler_failing():
     # depends on dummy variables being implemented http://code.google.com/p/sympy/issues/detail?id=2566
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+
 
 def test_catalan():
     assert catalan(1) == 1

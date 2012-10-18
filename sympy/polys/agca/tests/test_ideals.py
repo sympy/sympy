@@ -4,6 +4,7 @@ from sympy.polys import QQ, lex, ilex
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import raises
 
+
 def test_ideal_operations():
     R = QQ[x, y]
     I = R.ideal(x)
@@ -45,6 +46,7 @@ def test_ideal_operations():
     assert T**2 == R.ideal(x**2, y**2, x*y)
     assert I**5 == R.ideal(x**5)
 
+
 def test_exceptions():
     I = QQ[x].ideal(x)
     J = QQ[y].ideal(1)
@@ -54,6 +56,7 @@ def test_exceptions():
     raises(ValueError, lambda: I.union(J))
     assert (I == J) is False
     assert I != J
+
 
 def test_nontriv_global():
     R = QQ[x, y, z]
@@ -82,6 +85,7 @@ def test_nontriv_global():
     assert not contains([x*(1+x+y), y*(1+z)], x)
     assert not contains([x*(1+x+y), y*(1+z)], x + y)
 
+
 def test_nontriv_local():
     R = QQ.poly_ring(x, y, z, order=ilex)
 
@@ -97,6 +101,7 @@ def test_nontriv_local():
     assert contains([x*(1+x+y), y*(1+z)], x)
     assert contains([x*(1+x+y), y*(1+z)], x + y)
 
+
 def test_intersection():
     R = QQ[x, y, z]
     # SCA, example 1.8.11
@@ -108,10 +113,12 @@ def test_intersection():
     assert R.ideal(x, y).intersect(R.ideal(y**2 + y**2*z, z + z*x**3*y)) == \
            R.ideal(y**2, y*z, x*z)
 
+
 def test_quotient():
     # SCA, example 1.8.13
     R = QQ[x, y, z]
     assert R.ideal(x, y).quotient(R.ideal(y**2, z)) == R.ideal(x, y)
+
 
 def test_reduction():
     from sympy.polys.distributedmodules import sdm_nf_buchberger_reduced

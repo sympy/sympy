@@ -6,17 +6,22 @@ from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
 
 x = Symbol("x")
 
+
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3, 0)
+
 
 def root3(x):
     return root(x, 3)
 
+
 def root4(x):
     return root(x, 4)
 
+
 def test_Limits_simple_0():
     assert limit((2**(x+1)+3**(x+1))/(2**x+3**x), x, oo)==3  # 175
+
 
 def test_Limits_simple_1():
     assert limit((x+1)*(x+2)*(x+3)/x**3, x, oo)==1  # 172
@@ -24,6 +29,7 @@ def test_Limits_simple_1():
     assert limit((2*x-3)*(3*x+5)*(4*x-6)/(3*x**3+x-1), x, oo)==8  # Primjer 1
     assert limit(x/root3(x**3+10), x, oo)==1  # Primjer 2
     assert limit((x+1)**2/(x**2+1), x, oo)==1  # 181
+
 
 def test_Limits_simple_2():
     assert limit(1000*x/(x**2-1), x, oo)==0  # 182
@@ -35,11 +41,13 @@ def test_Limits_simple_2():
     assert limit(root3(x**2+1)/(x+1), x, oo)==0  # 189
     assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))), x, oo)==1  # 190
 
+
 def test_Limits_simple_3a():
     a = Symbol('a')
     #issue 414
     assert together(limit((x**2-(a+1)*x+a)/(x**3-a**3), x, a)) == \
             (a-1)/(3*a**2)  # 196
+
 
 def test_Limits_simple_3b():
     h = Symbol("h")
@@ -51,6 +59,7 @@ def test_Limits_simple_3b():
     assert limit((root3(x)-1)/(root4(x)-1), x, 1)==Rational(4)/3  # 201
     assert limit((root3(x**2)-2*root3(x)+1)/(x-1)**2, x, 1)==Rational(1)/9  # 202
 
+
 def test_Limits_simple_4a():
     a = Symbol('a')
     assert limit((sqrt(x)-sqrt(a))/(x-a), x, a)==1/(2*sqrt(a))  # Primer 5
@@ -58,29 +67,36 @@ def test_Limits_simple_4a():
     assert limit((sqrt(1+x)-sqrt(1-x))/x, x, 0)==1  # 207
     assert limit(sqrt(x**2-5*x+6)-x, x, oo)==-Rational(5)/2  # 213
 
+
 def test_limits_simple_4aa():
     assert limit(x*(sqrt(x**2+1)-x), x, oo)==Rational(1)/2  # 214
+
 
 def test_Limits_simple_4b():
     #issue 412
     assert limit(x-root3(x**3-1), x, oo)==0  # 215
 
+
 def test_Limits_simple_4c():
     assert limit(log(1+exp(x))/x, x, -oo)==0  # 267a
     assert limit(log(1+exp(x))/x, x, oo)==1  # 267b
 
+
 def test_bounded():
     assert limit(sin(x)/x, x, oo) == 0  # 216b
     assert limit(x*sin(1/x), x, 0) == 0  # 227a
+
 
 def test_f1a():
     h = Symbol("h")
     #issue 409:
     assert limit((sin(2*x)/x)**(1+x), x, 0) == 2  # Primer 7
 
+
 def test_f1a2():
     #issue 410:
     assert limit(((x-1)/(x+1))**x, x, oo) == exp(-2)  # Primer 9
+
 
 def test_f1b():
     m = Symbol("m")
@@ -105,11 +121,14 @@ def test_f1b():
     assert limit((cos(x)-cos(a))/(x-a), x, a) == -sin(a)  # 223
     assert limit((sin(x+h)-sin(x))/h, h, 0) == cos(x)  # 225
 
+
 def test_f2a():
     assert limit(((x+1)/(2*x+1))**(x**2), x, oo) == 0  # Primer 8
 
+
 def test_f2():
     assert limit((sqrt(cos(x))-root3(cos(x)))/(sin(x)**2), x, 0) == -Rational(1, 12)  # *184
+
 
 def test_f3():
     a = Symbol('a')

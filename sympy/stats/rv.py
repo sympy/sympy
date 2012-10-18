@@ -15,6 +15,7 @@ sympy.stats.rv_interface
 from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
 from sympy.core.sets import FiniteSet, ProductSet
 
+
 class RandomDomain(Basic):
     """
     Represents a set of variables and the values which they can take
@@ -47,6 +48,7 @@ class RandomDomain(Basic):
     def integrate(self, expr):
         raise NotImplementedError()
 
+
 class SingleDomain(RandomDomain):
     """
     A single variable and its domain
@@ -70,6 +72,7 @@ class SingleDomain(RandomDomain):
             return False
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
+
 
 class ConditionalDomain(RandomDomain):
     """
@@ -100,6 +103,7 @@ class ConditionalDomain(RandomDomain):
 
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
+
 
 class PSpace(Basic):
     """
@@ -149,6 +153,7 @@ class PSpace(Basic):
     def integrate(self, expr):
         raise NotImplementedError()
 
+
 class SinglePSpace(PSpace):
     """
     Represents the probabilities of a set of random events that can be
@@ -158,6 +163,7 @@ class SinglePSpace(PSpace):
     @property
     def value(self):
         return tuple(self.values)[0]
+
 
 class RandomSymbol(Symbol):
     """
@@ -204,6 +210,7 @@ class RandomSymbol(Symbol):
 
     def _hashable_content(self):
         return self.pspace, self.symbol
+
 
 class ProductPSpace(PSpace):
     """
@@ -263,6 +270,7 @@ class ProductPSpace(PSpace):
     def sample(self):
         return dict([(k, v) for space in self.spaces
             for k, v in space.sample().items()])
+
 
 class ProductDomain(RandomDomain):
     """
@@ -326,6 +334,7 @@ class ProductDomain(RandomDomain):
     def as_boolean(self):
         return And(*[domain.as_boolean() for domain in self.domains])
 
+
 def random_symbols(expr):
     """
     Returns all RandomSymbols within a SymPy Expression.
@@ -334,6 +343,7 @@ def random_symbols(expr):
         return list(expr.atoms(RandomSymbol))
     except AttributeError:
         return []
+
 
 def pspace(expr):
     """
@@ -360,11 +370,13 @@ def pspace(expr):
     # Otherwise make a product space
     return ProductPSpace(*[rv.pspace for rv in rvs])
 
+
 def sumsets(sets):
     """
     Union of sets
     """
     return reduce(frozenset.union, sets, frozenset())
+
 
 def rs_swap(a, b):
     """
@@ -383,6 +395,7 @@ def rs_swap(a, b):
     for rsa in a:
         d[rsa] = [rsb for rsb in b if rsa.symbol==rsb.symbol][0]
     return d
+
 
 def given(expr, condition=None, **kwargs):
     """
@@ -413,6 +426,7 @@ def given(expr, condition=None, **kwargs):
     # Swap random variables in the expression
     expr = expr.subs(swapdict)
     return expr
+
 
 def expectation(expr, condition=None, numsamples=None, **kwargs):
     """
@@ -462,6 +476,7 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
+
 def probability(condition, given_condition=None, numsamples=None, **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
@@ -503,6 +518,7 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).probability(condition, **kwargs)
 
+
 def density(expr, condition=None, **kwargs):
     """
     Probability density of a random expression
@@ -536,6 +552,7 @@ def density(expr, condition=None, **kwargs):
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(expr).compute_density(expr, **kwargs)
+
 
 def cdf(expr, condition=None, **kwargs):
     """
@@ -574,6 +591,7 @@ def cdf(expr, condition=None, **kwargs):
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(expr).compute_cdf(expr, **kwargs)
 
+
 def where(condition, given_condition=None, **kwargs):
     """
     Returns the domain where a condition is True.
@@ -604,6 +622,7 @@ def where(condition, given_condition=None, **kwargs):
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).where(condition, **kwargs)
 
+
 def sample(expr, condition=None, **kwargs):
     """
     A realization of the random expression
@@ -617,6 +636,7 @@ def sample(expr, condition=None, **kwargs):
     >>> die_roll = sample(X+Y+Z) # A random realization of three dice
     """
     return sample_iter(expr, condition, numsamples=1).next()
+
 
 def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
@@ -649,6 +669,7 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     # use subs when lambdify fails
     except TypeError:
         return sample_iter_subs(expr, condition, numsamples, **kwargs)
+
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
@@ -694,6 +715,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
             count += 1
     return return_generator()
 
+
 def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
     See sample_iter
@@ -721,6 +743,8 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         yield expr.subs(d)
 
         count += 1
+
+
 def sampling_P(condition, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
@@ -753,6 +777,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
     else:
         return result
 
+
 def sampling_E(condition, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
@@ -772,6 +797,7 @@ def sampling_E(condition, given_condition=None, numsamples=1,
         return result.evalf()
     else:
         return result
+
 
 def dependent(a, b):
     """
@@ -808,6 +834,7 @@ def dependent(a, b):
     return (density(a, Eq(b, z)) != density(a) or
             density(b, Eq(a, z)) != density(b))
 
+
 def independent(a, b):
     """
     Independence of two random expressions
@@ -836,6 +863,7 @@ def independent(a, b):
     """
     return not dependent(a, b)
 
+
 def pspace_independent(a, b):
     """
     Tests for independence between a and b by checking if their PSpaces have
@@ -850,6 +878,7 @@ def pspace_independent(a, b):
     if len(a_symbols.intersect(b_symbols)) == 0:
         return True
     return None
+
 
 def rv_subs(expr, symbols=None):
     """

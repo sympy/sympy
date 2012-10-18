@@ -9,6 +9,7 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class PythonIntegerRing(IntegerRing):
     """Integer ring based on Python's ``int`` type. """
 

@@ -4,6 +4,7 @@ from sympy import I, sqrt, log, exp
 
 from sympy.core.facts import InconsistentAssumptions
 
+
 def test_symbol_unset():
     x = Symbol('x', real=True, integer=True)
     assert x.is_real == True
@@ -11,6 +12,7 @@ def test_symbol_unset():
     assert x.is_imaginary == False
     assert x.is_noninteger == False
     assert x.is_number is False
+
 
 def test_zero():
     z = Integer(0)
@@ -37,6 +39,7 @@ def test_zero():
     assert z.is_composite == False
     assert z.is_number is True
 
+
 def test_one():
     z = Integer(1)
     assert z.is_commutative == True
@@ -61,9 +64,11 @@ def test_one():
     assert z.is_prime == False
     assert z.is_number is True
 
+
 @XFAIL
 def test_one_is_composite():
     assert S(1).is_composite is False
+
 
 def test_negativeone():
     z = Integer(-1)
@@ -90,6 +95,7 @@ def test_negativeone():
     assert z.is_composite == False
     assert z.is_number is True
 
+
 def test_infinity():
     oo = S.Infinity
 
@@ -115,6 +121,7 @@ def test_infinity():
     assert oo.is_prime == None
     assert oo.is_composite == None
     assert oo.is_number is True
+
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
@@ -169,6 +176,7 @@ def test_nan():
     assert nan.is_composite == None
     assert nan.is_number is True
 
+
 def test_pos_rational():
     r = Rational(3, 4)
     assert r.is_commutative == True
@@ -209,6 +217,7 @@ def test_pos_rational():
     assert r.is_negative == False
     assert r.is_nonpositive == False
 
+
 def test_neg_rational():
     r = Rational(-3, 4)
     assert r.is_positive == False
@@ -230,6 +239,7 @@ def test_neg_rational():
     assert r.is_positive == False
     assert r.is_negative == True
     assert r.is_nonpositive == True
+
 
 def test_pi():
     z = S.Pi
@@ -255,6 +265,7 @@ def test_pi():
     assert z.is_prime == False
     assert z.is_composite == False
 
+
 def test_E():
     z = S.Exp1
     assert z.is_commutative == True
@@ -278,6 +289,7 @@ def test_E():
     assert z.is_comparable == True
     assert z.is_prime == False
     assert z.is_composite == False
+
 
 def test_I():
     z = S.ImaginaryUnit
@@ -303,6 +315,7 @@ def test_I():
     assert z.is_prime is False
     assert z.is_composite is False
 
+
 def test_symbol_real():
     # issue 749
     a = Symbol('a', real=False)
@@ -315,6 +328,7 @@ def test_symbol_real():
     assert a.is_nonpositive == False
     assert a.is_zero == False
 
+
 def test_symbol_zero():
     x = Symbol('x', zero=True)
     assert x.is_positive == False
@@ -323,6 +337,7 @@ def test_symbol_zero():
     assert x.is_nonnegative == True
     assert x.is_zero == True
     assert x.is_nonzero == False
+
 
 def test_symbol_positive():
     x = Symbol('x', positive=True)
@@ -333,6 +348,7 @@ def test_symbol_positive():
     assert x.is_zero == False
     assert x.is_nonzero == True
 
+
 def test_neg_symbol_positive():
     x = -Symbol('x', positive=True)
     assert x.is_positive == False
@@ -340,10 +356,12 @@ def test_neg_symbol_positive():
     assert x.is_negative == True
     assert x.is_nonnegative == False
 
+
 def test_neg_symbol_positive2():
     x = -Symbol('x', positive=True)
     assert x.is_zero == False
     assert x.is_nonzero == True
+
 
 def test_symbol_nonpositive():
     x = Symbol('x', nonpositive=True)
@@ -354,6 +372,7 @@ def test_symbol_nonpositive():
     assert x.is_zero == None
     assert x.is_nonzero == None
 
+
 def test_neg_symbol_nonpositive():
     x = -Symbol('x', nonpositive=True)
     assert x.is_positive == None
@@ -362,6 +381,7 @@ def test_neg_symbol_nonpositive():
     assert x.is_nonnegative == True
     assert x.is_zero == None
     assert x.is_nonzero == None
+
 
 def test_prime():
     assert S(-1).is_prime is False
@@ -373,6 +393,7 @@ def test_prime():
     assert S(17).is_prime is True
     assert S(4).is_prime is False
 
+
 def test_composite():
     assert S(-1).is_composite is False
     assert S(-2).is_composite is False
@@ -381,6 +402,7 @@ def test_composite():
     assert S(2).is_composite is False
     assert S(17).is_composite is False
     assert S(4).is_composite is True
+
 
 def test_prime_symbol():
     x = Symbol('x', prime=True)
@@ -399,6 +421,7 @@ def test_prime_symbol():
     assert x.is_nonpositive == None
     assert x.is_nonnegative == None
 
+
 def test_symbol_noncommutative():
     x = Symbol('x', commutative=True)
     assert x.is_complex is None
@@ -409,6 +432,7 @@ def test_symbol_noncommutative():
     assert x.is_irrational is False
     assert x.is_real is False
     assert x.is_complex is False
+
 
 def test_other_symbol():
     x = Symbol('x', integer=True)
@@ -458,6 +482,7 @@ def test_other_symbol():
     with raises(AttributeError):
         x.is_real = False
 
+
 def test_issue726():
     """catch: hash instability"""
     x = Symbol("x")
@@ -470,9 +495,11 @@ def test_issue726():
     h2 = hash(a2)
     assert h1 == h2
 
+
 def test_issue1723():
     z = (-1)**Rational(1, 3)*(1-I*sqrt(3))
     assert z.is_real in [True, None]
+
 
 def test_hash_vs_typeinfo():
     """seemingly different typeinfo, but in fact equal"""
@@ -484,6 +511,7 @@ def test_hash_vs_typeinfo():
     assert hash(x1) == hash(x2)
     assert x1 == x2
 
+
 def test_hash_vs_typeinfo_2():
     """different typeinfo should mean !eq"""
     # the following two are semantically different
@@ -492,6 +520,7 @@ def test_hash_vs_typeinfo_2():
 
     assert x != x1
     assert hash(x) != hash(x1)  # This might fail with very low probability
+
 
 def test_hash_vs_eq():
     """catch: different hash for equal objects"""
@@ -511,6 +540,7 @@ def test_hash_vs_eq():
     assert a == b
     assert ha== hb
 
+
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
     n = Symbol('n', negative=True, bounded=False)
@@ -522,6 +552,7 @@ def test_Add_is_pos_neg():
     assert (n + p).is_negative is None
     assert (n + x).is_negative is True
     assert (p + x).is_negative is False
+
 
 def test_special_is_rational():
     i = Symbol('i', integer=True)
@@ -548,6 +579,7 @@ def test_special_is_rational():
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
 
+
 @XFAIL
 def test_issue_3176():
     x = Symbol('x')
@@ -557,6 +589,7 @@ def test_issue_3176():
     if 0*S.Infinity is S.NaN:
         b = Symbol('b', bounded=None)
         assert (b*0).is_zero is None
+
 
 def test_special_assumptions():
     x = Symbol('x')
@@ -574,6 +607,7 @@ def test_special_assumptions():
     assert (e > 0) is False
     assert (e == 0) is False  # it's not a literal 0
     assert e.equals(0) is True
+
 
 def test_inconsistent():
     # cf. issues 2696 and 2446

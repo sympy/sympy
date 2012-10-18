@@ -17,6 +17,7 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
+
 def test_trailing():
     assert trailing(0) == 0
     assert trailing(1) == 0
@@ -29,6 +30,7 @@ def test_trailing():
         assert trailing((1<<i) * 31337) == i
     assert trailing((1<<1000001)) == 1000001
     assert trailing((1<<273956)*7**37) == 273956
+
 
 def test_multiplicity():
     for b in range(2, 20):
@@ -44,6 +46,7 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+
 
 def test_perfect_power():
     assert perfect_power(0) is False
@@ -80,6 +83,7 @@ def test_perfect_power():
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
 
+
 def test_isprime():
     s = Sieve()
     s.extend(100000)
@@ -110,6 +114,7 @@ def test_isprime():
         "if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])") == \
         ' # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases'
 
+
 def test_prime():
     assert prime(1) == 2
     assert prime(2) == 3
@@ -124,6 +129,7 @@ def test_prime():
     assert prime(25023) == 287341
     raises(ValueError, lambda: prime(0))
 
+
 def test_primepi():
     assert primepi(1) == 0
     assert primepi(2) == 1
@@ -136,6 +142,7 @@ def test_primepi():
     assert primepi(4096) == 564
     assert primepi(9096) == 1128
     assert primepi(25023) == 2763
+
 
 def test_generate():
     assert nextprime(-4) == 2
@@ -178,6 +185,7 @@ def test_generate():
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
            [17, 35, 2, 5, 26]
 
+
 def test_randprime():
     import random
     random.seed(1234)
@@ -190,6 +198,7 @@ def test_randprime():
             p = randprime(a, a+b)
             assert a <= p < (a+b) and isprime(p)
 
+
 def fac_multiplicity(n, p):
     """Return the power of the prime number p in the
     factorization of n!"""
@@ -200,6 +209,7 @@ def fac_multiplicity(n, p):
         q //= p
         m += q
     return m
+
 
 def multiproduct(seq=(), start=1):
     """
@@ -227,6 +237,7 @@ def multiproduct(seq=(), start=1):
                 units *= base
             multi.append((base, exp//2))
     return units * multiproduct(multi)**2
+
 
 def test_factorint():
     assert primefactors(123456) == [2, 3, 643]
@@ -312,6 +323,7 @@ def test_factorint():
     p2 = nextprime(2*p1)
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
 
+
 def divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
@@ -332,12 +344,14 @@ def divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
+
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
         [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
     assert totient(5005) == 2880
     assert totient(5006) == 2502
     assert totient(5009) == 5008
+
 
 def test_partitions():
     assert [npartitions(k) for k in range(13)] == \
@@ -348,6 +362,7 @@ def test_partitions():
     assert npartitions(2000) == 4720819175619413888601432406799959512200344166
     assert npartitions(10000) % 10**10 == 6916435144
     assert npartitions(100000) % 10**10 == 9421098519
+
 
 def test_residue():
     assert n_order(2, 13) == 12
@@ -394,10 +409,12 @@ def test_residue():
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
 
+
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
     assert pi_hex_digits(1) == '243f6a8885a308'
     assert pi_hex_digits(10000) == '68ac8fcfb8016c'
+
 
 def test_crt():
     def mcrt(m, v, r, symmetric=False):
@@ -413,6 +430,7 @@ def test_crt():
 
     assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
+
 def test_binomial_coefficients_list():
     assert binomial_coefficients_list(0) == [1]
     assert binomial_coefficients_list(1) == [1, 1]
@@ -422,11 +440,13 @@ def test_binomial_coefficients_list():
     assert binomial_coefficients_list(5) == [1, 5, 10, 10, 5, 1]
     assert binomial_coefficients_list(6) == [1, 6, 15, 20, 15, 6, 1]
 
+
 def test_binomial_coefficients():
     for n in range(15):
         c = binomial_coefficients(n)
         l = [c[k] for k in sorted(c)]
         assert l == binomial_coefficients_list(n)
+
 
 def test_multinomial_coefficients():
     assert multinomial_coefficients(1, 1) == {(1,): 1}
@@ -455,17 +475,21 @@ def test_multinomial_coefficients():
         [((2, 0, 0, 0, 0, 0, 0), 1), ((1, 1, 0, 0, 0, 0, 0), 2),
       ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
+
 def test_issue1257():
     assert factorint(1030903) == {53: 2, 367: 1}
+
 
 def test_divisors():
     assert divisors(28) == [1, 2, 4, 7, 14, 28]
     assert [x for x in divisors(3*5*7, 1)] == [1, 3, 5, 15, 7, 21, 35, 105]
     assert divisors(0) == []
 
+
 def test_divisor_count():
     assert divisor_count(0) == 0
     assert divisor_count(6) == 4
+
 
 def test_primorial():
     assert primorial(1) == 2
@@ -473,6 +497,7 @@ def test_primorial():
     assert primorial(2) == 6
     assert primorial(2, nth=0) == 2
     assert primorial(4, nth=0) == 6
+
 
 def test_smoothness_and_smoothness_p():
     assert smoothness(1) == (1, 1)
@@ -488,6 +513,7 @@ def test_smoothness_and_smoothness_p():
         'p**i=4410317**1 has p-1 B=1787, B-pow=1787\n' + \
         'p**i=4869863**1 has p-1 B=2434931, B-pow=2434931'
 
+
 def test_visual_factorint():
     assert factorint(1, visual=1) == 1
     forty2 = factorint(42, visual=True)
@@ -499,6 +525,7 @@ def test_visual_factorint():
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
     assert -1 in factorint(-42, visual=True).args
+
 
 def test_visual_io():
     sm = smoothness_p
@@ -536,6 +563,7 @@ def test_visual_io():
     assert fi(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == fi(2**10)
 
+
 def test_modular():
     assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
     assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
@@ -547,6 +575,7 @@ def test_modular():
     assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip((1, 1, 2), (3, 2, 4))) is None
     raises(ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
+
 
 def test_search():
     assert 2 in sieve

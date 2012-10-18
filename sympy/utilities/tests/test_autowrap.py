@@ -12,6 +12,7 @@ from sympy.utilities.codegen import Routine, CCodeGen, CodeGenArgumentListError
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
 
+
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
@@ -26,6 +27,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     output.close()
     return source
 
+
 def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x+y)*z
@@ -39,6 +41,7 @@ def test_cython_wrapper_scalar_function():
             '   return test(x, y, z)\n'
     )
     assert source == expected
+
 
 def test_cython_wrapper_outarg():
     from sympy import Equality
@@ -57,6 +60,7 @@ def test_cython_wrapper_outarg():
     )
     assert source == expected
 
+
 def test_cython_wrapper_inoutarg():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
@@ -71,6 +75,7 @@ def test_cython_wrapper_inoutarg():
             '   return z\n'
     )
     assert source == expected
+
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
@@ -90,6 +95,7 @@ def test_autowrap_dummy():
     assert f.args == "x, y, z"
     assert f.returns == "z"
 
+
 def test_autowrap_args():
     x, y, z = symbols('x y z')
 
@@ -105,6 +111,7 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
+
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
@@ -115,10 +122,12 @@ def test_autowrap_store_files():
     finally:
         shutil.rmtree(tmp)
 
+
 def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')
     assert f._imp_() == str(x + y)
+
 
 def test_ufuncify():
     x, y = symbols('x y')

@@ -14,6 +14,7 @@ from sympy.utilities.misc import default_sort_key
 from sympy.core.compatibility import (is_sequence, iterable,
     product as cartes, combinations, combinations_with_replacement)
 
+
 def flatten(iterable, levels=None, cls=None):
     """
     Recursively denest iterable containers.
@@ -75,6 +76,7 @@ def flatten(iterable, levels=None, cls=None):
 
     return result
 
+
 def unflatten(iter, n=2):
     """Group ``iter`` into tuples of length ``n``. Raise an error if
     the length of ``iter`` is not a multiple of ``n``.
@@ -82,6 +84,7 @@ def unflatten(iter, n=2):
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
     return zip(*(iter[i::n] for i in xrange(n)))
+
 
 def reshape(seq, how):
     """Reshape the sequence according to the template in ``how``.
@@ -138,6 +141,7 @@ def reshape(seq, how):
         rv[k] = container(rv[k])
     return type(seq)(rv)
 
+
 def group(container, multiple=True):
     """
     Splits a container into a list of lists of equal, adjacent elements.
@@ -172,6 +176,7 @@ def group(container, multiple=True):
         groups[i] = (current[0], len(current))
 
     return groups
+
 
 def postorder_traversal(node, key=None):
     """
@@ -223,6 +228,7 @@ def postorder_traversal(node, key=None):
             for subtree in postorder_traversal(item, key):
                 yield subtree
     yield node
+
 
 def interactive_traversal(expr):
     """Traverse a tree asking a user which branch to choose. """
@@ -314,6 +320,7 @@ def interactive_traversal(expr):
 
     return _interactive_traversal(expr, 0)
 
+
 def variations(seq, n, repetition=False):
     """Returns a generator of the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
@@ -362,6 +369,7 @@ def variations(seq, n, repetition=False):
             for i in xrange(len(seq)):
                 for cc in variations(seq, n - 1, True):
                     yield (seq[i],) + cc
+
 
 def subsets(seq, k=None, repetition=False):
     """Generates all k-subsets (combinations) from an n-element set, seq.
@@ -414,6 +422,7 @@ def subsets(seq, k=None, repetition=False):
             for i in combinations_with_replacement(seq, k):
                 yield i
 
+
 def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
@@ -455,6 +464,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         yield cls(name, *args, **assumptions)
         start += 1
 
+
 def capture(func):
     """Return the printed output of func().
 
@@ -483,6 +493,7 @@ def capture(func):
     finally:
         sys.stdout = stdout
     return file.getvalue()
+
 
 def sift(expr, keyfunc):
     """
@@ -536,9 +547,11 @@ def sift(expr, keyfunc):
         d[keyfunc(e)].append(e)
     return d
 
+
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
     return [ value for _, value in zip(xrange(n), iter) ]
+
 
 def dict_merge(*dicts):
     """Merge dictionaries into a single dictionary. """
@@ -548,6 +561,7 @@ def dict_merge(*dicts):
         merged.update(dict)
 
     return merged
+
 
 def common_prefix(*seqs):
     """Return the subsequence that is a common start of sequences in ``seqs``.
@@ -573,6 +587,7 @@ def common_prefix(*seqs):
     else:
         i += 1
     return seqs[0][:i]
+
 
 def common_suffix(*seqs):
     """Return the subsequence that is a common ending of sequences in ``seqs``.
@@ -603,6 +618,7 @@ def common_suffix(*seqs):
     else:
         return seqs[0][i + 1:]
 
+
 def prefixes(seq):
     """
     Generate all prefixes of a sequence.
@@ -621,6 +637,7 @@ def prefixes(seq):
     for i in xrange(n):
         yield seq[:i+1]
 
+
 def postfixes(seq):
     """
     Generate all postfixes of a sequence.
@@ -638,6 +655,7 @@ def postfixes(seq):
 
     for i in xrange(n):
         yield seq[n-i-1:]
+
 
 def topological_sort(graph, key=None):
     r"""
@@ -748,6 +766,7 @@ def topological_sort(graph, key=None):
     else:
         return L
 
+
 def rotate_left(x, y):
     """
     Left rotates a list x by the number of steps specified
@@ -766,6 +785,7 @@ def rotate_left(x, y):
     y = y % len(x)
     return x[y:] + x[:y]
 
+
 def rotate_right(x, y):
     """
     Left rotates a list x by the number of steps specified
@@ -783,6 +803,7 @@ def rotate_right(x, y):
         return x
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
 
 def multiset_partitions(multiset, m):
     """
@@ -898,6 +919,7 @@ def multiset_partitions(multiset, m):
     for j in xrange(1, m + 1):
         a[n - m + j] = j - 1
     return f(m, n, 0, n, a)
+
 
 def partitions(n, m=None, k=None):
     """Generate all partitions of integer n (>= 0).
@@ -1016,6 +1038,7 @@ def partitions(n, m=None, k=None):
         room -= need
         yield ms
 
+
 def binary_partitions(n):
     """
     Generates the binary partition of n.
@@ -1069,6 +1092,7 @@ def binary_partitions(n):
                 x >>= 1
     yield [1]*n
 
+
 def has_dups(seq):
     """Return True if there are any duplicate elements in ``seq``.
 
@@ -1088,6 +1112,7 @@ def has_dups(seq):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
+
 
 def has_variety(seq):
     """Return True if there are any different elements in ``seq``.
@@ -1109,6 +1134,7 @@ def has_variety(seq):
             if s != sentinel:
                 return True
     return False
+
 
 def uniq(seq):
     """
@@ -1138,6 +1164,7 @@ def uniq(seq):
     if isinstance(seq, Tuple):
         return Tuple(*tuple(result))
     return type(seq)(result)
+
 
 def generate_bell(n):
     """
@@ -1177,6 +1204,7 @@ def generate_bell(n):
             T.remove(t + 1)
     gen(P, T, 0)
     return sorted(cache)
+
 
 def generate_involutions(n):
     """
@@ -1227,6 +1255,7 @@ def generate_involutions(n):
     gen(P, F, 1)
     return sorted(cache)
 
+
 def generate_derangements(perm):
     """
     Routine to generate derangements.
@@ -1255,6 +1284,7 @@ def generate_derangements(perm):
                  for idx in p if all(perm[k] != \
                                      perm[idx[k]] for k in xrange(len(perm)))):
         yield list(rv)
+
 
 def unrestricted_necklace(n, k):
     """
@@ -1293,6 +1323,7 @@ def unrestricted_necklace(n, k):
                 for necklace in gen(t + 1, t):
                     yield necklace
     return gen(1, 1)
+
 
 def generate_oriented_forest(n):
     """
@@ -1334,6 +1365,7 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
 
 def lazyDSU_sort(seq, keys, warn=False):
     """Return sorted seq, breaking ties by applying keys only when needed.
@@ -1412,6 +1444,7 @@ def lazyDSU_sort(seq, keys, warn=False):
             seq.append(d[k][0])
     return seq
 
+
 def minlex(seq, directed=True):
     """Return a tuple where the smallest element appears first; if
     ``directed`` is True (default) then the order is preserved, otherwise the
@@ -1440,6 +1473,7 @@ def minlex(seq, directed=True):
     if i:
         seq = rotate_left(seq, i)
     return tuple(seq)
+
 
 def runs(seq, op=gt):
     """Group the sequence into lists in which successive elements

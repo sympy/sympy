@@ -6,6 +6,7 @@ from sympy.polys import PolynomialError
 from sympy.solvers.polysys import solve_poly_system, solve_triangulated
 from sympy.utilities.pytest import raises
 
+
 def test_solve_poly_system():
     assert solve_poly_system([x-1], x) == [(S.One,)]
 
@@ -42,6 +43,7 @@ def test_solve_poly_system():
     raises(NotImplementedError, lambda: solve_poly_system([x**3-y**3], x, y))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
+
 def test_solve_biquadratic():
     x0, y0, x1, y1, r = symbols('x0 y0 x1 y1 r')
 
@@ -76,6 +78,7 @@ def test_solve_biquadratic():
 
     assert len(result) == 2 and all(len(r) == 2 for r in result)
     assert all(len(r.find(query)) == 1 for r in flatten(result))
+
 
 def test_solve_triangualted():
     f_1 = x**2 + y + z - 1

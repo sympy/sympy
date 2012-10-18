@@ -8,6 +8,7 @@ from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.core.compatibility import product
 
+
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
 
@@ -209,6 +210,7 @@ class Density(HermitianOperator):
         Refer to density.entropy() method  for examples.
         """
         return entropy(self)
+
 
 def entropy(density):
     """Compute the entropy of a matrix/density object.

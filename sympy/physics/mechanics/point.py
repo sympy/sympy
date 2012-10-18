@@ -2,6 +2,7 @@ __all__ = ['Point']
 
 from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
+
 class Point(object):
     """This object represents a point in a dynamic system.
 

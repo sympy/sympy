@@ -1,6 +1,7 @@
 import re
 from sympy import sympify, Sum, product, sin, cos
 
+
 class MaximaHelpers:
     def maxima_expand(expr):
         return expr.expand()
@@ -42,6 +43,7 @@ sub_dict = {
 }
 
 var_name = re.compile('^\s*(\w+)\s*:')
+
 
 def parse_maxima(str, globals=None, name_dict={}):
     str = str.strip()

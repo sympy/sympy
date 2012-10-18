@@ -11,6 +11,7 @@ from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
 
+
 def _prep_tuple(v):
     """
     Turn an iterable argument V into a Tuple and unpolarify, since both
@@ -27,6 +28,7 @@ def _prep_tuple(v):
     """
     from sympy.simplify.simplify import unpolarify
     return Tuple(*[unpolarify(x) for x in v])
+
 
 class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of
@@ -45,6 +47,7 @@ class TupleParametersBase(Function):
             return res + self.fdiff(3)*self.args[2].diff(s)
         except (ArgumentIndexError, NotImplementedError):
             return Derivative(self, s)
+
 
 class hyper(TupleParametersBase):
     r"""
@@ -274,6 +277,7 @@ class hyper(TupleParametersBase):
         c2 = And(0 <= re(e), re(e) < 1, abs(z) <= 1, Ne(z, 1))
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
+
 
 class meijerg(TupleParametersBase):
     r"""
@@ -666,6 +670,7 @@ class meijerg(TupleParametersBase):
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
+
 class HyperRep(Function):
     """
     A base class for "hyper representation functions".
@@ -737,6 +742,7 @@ class HyperRep(Function):
             return self._expr_small_minus(*args)
         return self._expr_small(*args)
 
+
 class HyperRep_power1(HyperRep):
     """ Return a representative for hyper([-a], [], z) == (1 - z)**a. """
     nargs = 2
@@ -760,6 +766,7 @@ class HyperRep_power1(HyperRep):
         if a.is_integer:
             return cls._expr_small_minus(a, x)
         return (1 + x)**a*exp(2*n*pi*I*a)
+
 
 class HyperRep_power2(HyperRep):
     """ Return a representative for hyper([a, a - 1/2], [2*a], z). """
@@ -789,6 +796,7 @@ class HyperRep_power2(HyperRep):
             sgn = -1
         return sgn*2**(2*a - 1)*(sqrt(1 + x) + sgn)**(1 - 2*a)*exp(-2*pi*I*a*n)
 
+
 class HyperRep_log1(HyperRep):
     """ Represent -z*hyper([1, 1], [2], z) == log(1 - z). """
     @classmethod
@@ -806,6 +814,7 @@ class HyperRep_log1(HyperRep):
     @classmethod
     def _expr_big_minus(cls, x, n):
         return log(1 + x) + 2*n*pi*I
+
 
 class HyperRep_atanh(HyperRep):
     """ Represent hyper([1/2, 1], [3/2], z) == atanh(sqrt(z))/sqrt(z). """
@@ -828,6 +837,7 @@ class HyperRep_atanh(HyperRep):
         else:
             return (atan(sqrt(x)) - pi)/sqrt(x)
 
+
 class HyperRep_asin1(HyperRep):
     """ Represent hyper([1/2, 1/2], [3/2], z) == asin(sqrt(z))/sqrt(z). """
     @classmethod
@@ -845,6 +855,7 @@ class HyperRep_asin1(HyperRep):
     @classmethod
     def _expr_big_minus(cls, z, n):
         return S(-1)**n*(asinh(sqrt(z))/sqrt(z)+n*pi*I/sqrt(z))
+
 
 class HyperRep_asin2(HyperRep):
     """ Represent hyper([1, 1], [3/2], z) == asin(sqrt(z))/sqrt(z)/sqrt(1-z). """
@@ -930,6 +941,7 @@ class HyperRep_sqrts2(HyperRep):
         else:
             return (1 + z)**a*exp(2*pi*I*n*a)*sqrt(z) \
                    *sin(2*a*atan(sqrt(z)) - 2*pi*a)
+
 
 class HyperRep_log2(HyperRep):
     """ Represent log(1/2 + sqrt(1 - z)/2) == -z/4*hyper([3/2, 1, 1], [2, 2], z) """

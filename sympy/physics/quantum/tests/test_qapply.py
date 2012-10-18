@@ -93,6 +93,7 @@ def test_issue2974():
     assert qapply(A) == A
     assert qapply(A.dual*B) == A.dual*B
 
+
 def test_density():
     d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
     assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])

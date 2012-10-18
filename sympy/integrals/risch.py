@@ -21,6 +21,7 @@ from sympy.polys.polyroots import root_factors
 from sympy.core.compatibility import reduce
 from sympy.utilities.misc import default_sort_key
 
+
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and
@@ -67,6 +68,8 @@ def components(f, x):
 _symbols_cache = {}
 
 # NB @cacheit is not convenient here
+
+
 def _symbols(name, n):
     """get vector of symbols local to this module"""
     try:

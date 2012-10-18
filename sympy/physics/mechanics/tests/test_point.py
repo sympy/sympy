@@ -1,5 +1,6 @@
 from sympy.physics.mechanics import dynamicsymbols, Point, ReferenceFrame
 
+
 def test_point_v1pt_theorys():
     q, q2 = dynamicsymbols('q q2')
     qd, q2d = dynamicsymbols('q q2', 1)
@@ -16,6 +17,7 @@ def test_point_v1pt_theorys():
     assert P.v1pt_theory(O, N, B) == N.x + qd * B.y
     P.set_vel(B, B.z)
     assert P.v1pt_theory(O, N, B) == B.z + N.x + qd * B.y
+
 
 def test_point_a1pt_theorys():
     q, q2 = dynamicsymbols('q q2')
@@ -35,6 +37,7 @@ def test_point_a1pt_theorys():
     assert P.a1pt_theory(O, N, B) == ((q2dd - qd**2) * B.x + (q2d * qd + qdd) * B.y +
                                q2dd * B.z)
 
+
 def test_point_v2pt_theorys():
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
@@ -49,6 +52,7 @@ def test_point_v2pt_theorys():
     O.set_vel(N, N.x)
     assert P.v2pt_theory(O, N, B) == N.x + qd * B.y
 
+
 def test_point_a2pt_theorys():
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
@@ -61,6 +65,7 @@ def test_point_a2pt_theorys():
     assert P.a2pt_theory(O, N, B) == 0
     P.set_pos(O, B.x)
     assert P.a2pt_theory(O, N, B) == (-qd**2) * B.x + (qdd) * B.y
+
 
 def test_point_funcs():
     q, q2 = dynamicsymbols('q q2')
@@ -92,6 +97,7 @@ def test_point_funcs():
     P.set_vel(B, qd * B.x + q2d * B.y)
     O.set_vel(N, 0)
     assert P.v1pt_theory(O, N, B) == qd * B.x + q2d * B.y - 5 * q * B.z
+
 
 def test_point_pos():
     q = dynamicsymbols('q')

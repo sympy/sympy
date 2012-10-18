@@ -19,8 +19,12 @@ mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
 sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                                           bounded=True, positive=True)
 rate = Symbol('lambda', real=True, positive=True, bounded=True)
+
+
 def normal(x, mu, sigma):
     return 1/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/2/sigma**2)
+
+
 def exponential(x, rate):
     return rate*exp(-rate*x)
 alpha, beta = symbols('alpha beta', positive=True)
@@ -42,6 +46,7 @@ u = Symbol('u', polar=True)
 tpos = Symbol('t', positive=True)
 
 from sympy import Chi as cosint
+
 
 def E(expr):
     res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),

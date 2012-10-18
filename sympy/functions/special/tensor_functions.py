@@ -7,6 +7,7 @@ from sympy.utilities.iterables import has_dups
 ###################### Kronecker Delta, Levi-Civita etc. ######################
 ###############################################################################
 
+
 def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
@@ -21,6 +22,7 @@ def Eijk(*args, **kwargs):
     """
     return LeviCivita(*args, **kwargs)
 
+
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""
     from sympy import factorial
@@ -29,6 +31,7 @@ def eval_levicivita(*args):
         prod(args[j] - args[i] for j in xrange(i + 1, n))
         / factorial(i) for i in xrange(n))
     # converting factorial(i) to int is slightly faster
+
 
 class LeviCivita(Function):
     """Represent the Levi-Civita symbol.
@@ -69,6 +72,7 @@ class LeviCivita(Function):
 
     def doit(self):
         return eval_levicivita(*self.args)
+
 
 class KroneckerDelta(Function):
     """The discrete, or Kronecker, delta function.

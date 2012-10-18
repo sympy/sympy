@@ -376,6 +376,7 @@ class FCodePrinter(CodePrinter):
             return self._wrap_fortran(new_code)
         return new_code
 
+
 def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code
 

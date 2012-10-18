@@ -9,6 +9,7 @@ from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
 
+
 def load(s):
     """Loads a boolean expression from a string.
 
@@ -57,6 +58,7 @@ def load(s):
                     clauses.append(Or(*list))
 
     return And(*clauses)
+
 
 def load_file(location):
     """Loads a boolean expression from a file."""

@@ -4,12 +4,14 @@ from sympy import symbols, Rational
 
 x, y = symbols('x,y')
 
+
 def test_basic_degree_0():
     d = 0
     knots = range(5)
     splines = bspline_basis_set(d, knots, x)
     for i in range(len(splines)):
         assert splines[i] == Piecewise((1, Interval(i, i+1).contains(x)), (0, True))
+
 
 def test_basic_degree_1():
     d = 1
@@ -21,6 +23,7 @@ def test_basic_degree_1():
         (3 - x, Interval(2, 3).contains(x)), (0, True))
     assert splines[2] == Piecewise((-2 + x, Interval(2, 3, False, True).contains(x)),
         (4 - x, Interval(3, 4).contains(x)), (0, True))
+
 
 def test_basic_degree_2():
     d = 2
@@ -35,6 +38,7 @@ def test_basic_degree_2():
     assert splines[0] == b0
     assert splines[1] == b1
 
+
 def test_basic_degree_3():
     d = 3
     knots = range(5)
@@ -47,6 +51,7 @@ def test_basic_degree_3():
         (0, True)
     )
     assert splines[0] == b0
+
 
 def test_repeated_degree_1():
     d = 1

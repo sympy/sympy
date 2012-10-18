@@ -34,6 +34,7 @@ from sympy.interactive.printing import init_printing
 
 _loaded = False
 
+
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
     import IPython

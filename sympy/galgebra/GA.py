@@ -31,9 +31,11 @@ from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
 from sympy.core import Add as add_type
 
+
 @sympy.vectorize(0)
 def substitute_array(array, *args):
     return(array.subs(*args))
+
 
 def is_quasi_unit_numpy_array(array):
     """
@@ -57,10 +59,12 @@ def is_quasi_unit_numpy_array(array):
     else:
         return(False)
 
+
 @deprecated(value="This function is no longer needed.", issue=3379,
             deprecated_since_version="0.7.2")
 def set_main(main_program):
     pass
+
 
 def plist(lst):
     if type(lst) == list:
@@ -69,6 +73,7 @@ def plist(lst):
     else:
         sys.stderr.write(lst+'\n')
     return
+
 
 def numeric(num_str):
     """
@@ -89,6 +94,7 @@ def numeric(num_str):
             b = int(tmp[1])
     return(sympy.Rational(a, b))
 
+
 def collect(expr, lst):
     """
     Wrapper for sympy.collect.
@@ -96,14 +102,17 @@ def collect(expr, lst):
     lst = MV.scalar_to_symbol(lst)
     return(sympy.collect(expr, lst))
 
+
 def sqrt(expr):
     return(sympy.sqrt(expr))
+
 
 def isint(a):
     """
     Test for integer.
     """
     return(type(a) == int)
+
 
 def make_null_array(n):
     """
@@ -114,6 +123,7 @@ def make_null_array(n):
         a.append([])
     return(a)
 
+
 def test_int_flgs(lst):
     """
     Test if all elements in list are 0.
@@ -122,6 +132,7 @@ def test_int_flgs(lst):
         if i:
             return(1)
     return(0)
+
 
 def comb(N, P):
     """
@@ -144,6 +155,7 @@ def comb(N, P):
         comb.sort()
     return(combs)
 
+
 def diagpq(p, q=0):
     """
     Return string equivalent metric tensor for signature (p, q).
@@ -162,6 +174,7 @@ def diagpq(p, q=0):
                 D.append('0 ')
     return ','.join(D)
 
+
 def make_scalars(symnamelst):
     """
     make_scalars takes a string of symbol names separated by
@@ -175,10 +188,12 @@ def make_scalars(symnamelst):
         scalar_lst.append(tmp)
     return(scalar_lst)
 
+
 @deprecated(useinstead="sympy.symbols()", issue=3379,
             deprecated_since_version="0.7.2")
 def make_symbols(symnamelst):
     return sympy.symbols(symnamelst)
+
 
 def israt(numstr):
     """
@@ -188,6 +203,7 @@ def israt(numstr):
     if NUMPAT.match(numstr):
         return(1)
     return(0)
+
 
 def dualsort(lst1, lst2):
     """
@@ -199,12 +215,14 @@ def dualsort(lst1, lst2):
     lst2[:] = map(lst2.__getitem__, _indices)
     return
 
+
 def cp(A, B):
     """
     Calculates the commutator product (A*B-B*A)/2 for
     the objects A and B.
     """
     return(HALF*(A*B-B*A))
+
 
 def reduce_base(k, base):
     """
@@ -246,6 +264,7 @@ def reduce_base(k, base):
     else:
         return(-1, base[:ihi]+[k]+base[ihi:])
 
+
 def sub_base(k, base):
     """
     If base is a list of sorted integers [i_1,...,i_R] then sub_base returns
@@ -261,6 +280,7 @@ def sub_base(k, base):
         else:
             return([base[0]])
     return(base[:k]+base[k+1:])
+
 
 def magnitude(vector):
     """
@@ -279,6 +299,7 @@ def magnitude(vector):
     #print mag
     return(mag)
 
+
 def LaTeX_lst(lst, title=''):
     """
     Output a list in LaTeX format.
@@ -288,6 +309,7 @@ def LaTeX_lst(lst, title=''):
     for x in lst:
         sympy.galgebra.latex_ex.LaTeX(x)
     return
+
 
 def unabs(x):
     """
@@ -310,6 +332,7 @@ def unabs(x):
         return(x.args[0])
     return(x)
 
+
 def function_lst(fstr, xtuple):
     sys.stderr.write(fstr+'\n')
     fct_lst = []
@@ -317,6 +340,7 @@ def function_lst(fstr, xtuple):
         f = sympy.Function(xstr)(*xtuple)
         fct_lst.append(f)
     return(fct_lst)
+
 
 def vector_fct(Fstr, x):
     """
@@ -334,10 +358,12 @@ def vector_fct(Fstr, x):
         Fvec.append(ftmp)
     return(Fvec)
 
+
 def print_lst(lst):
     for x in lst:
         print x
     return
+
 
 def normalize(elst, nname_lst):
     """
@@ -359,6 +385,7 @@ def normalize(elst, nname_lst):
         i += 1
     return(enlst, mags)
 
+
 def build_base(base_index, base_vectors, reverse=False):
     base = base_vectors[base_index[0]]
     if len(base_index) > 1:
@@ -367,6 +394,7 @@ def build_base(base_index, base_vectors, reverse=False):
     if reverse:
         base = base.rev()
     return(base)
+
 
 class MV(object):
 
@@ -2459,6 +2487,7 @@ class MV(object):
         """
         return(sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(self.name))
 
+
 def set_names(var_lst, var_str):
     """
     Set the names of a list of multivectors (var_lst) for a space delimited
@@ -2472,6 +2501,7 @@ def set_names(var_lst, var_str):
     sys.stderr.write('Error in set_names. Lists incongruent!\n')
     sys.exit()
     return
+
 
 def reciprocal_frame(vlst, names=''):
     """
@@ -2509,6 +2539,7 @@ def reciprocal_frame(vlst, names=''):
             recp[i].set_name(name_lst[i])
             i += 1
     return(recp)
+
 
 def S(value):
     return(MV(value, 'scalar'))

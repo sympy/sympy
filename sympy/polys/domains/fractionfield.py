@@ -8,6 +8,7 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
+
 class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """
 

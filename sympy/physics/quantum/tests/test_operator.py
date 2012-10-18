@@ -17,6 +17,7 @@ class TestKet(Ket):
     def default_args(self):
         return ("t",)
 
+
 class TestOp(HermitianOperator):
     @classmethod
     def default_args(self):
@@ -24,6 +25,7 @@ class TestOp(HermitianOperator):
 
 t_ket = TestKet()
 t_op = TestOp()
+
 
 def test_operator():
     A = Operator('A')
@@ -63,6 +65,7 @@ def test_hermitian():
     assert H.inv() != H
     assert H.is_commutative == False
     assert Dagger(H).is_commutative == False
+
 
 def test_unitary():
     U = UnitaryOperator('U')
@@ -114,12 +117,14 @@ def test_outer_product():
     #test the _eval_trace
     assert Tr(OuterProduct(JzKet(1, 1), JzBra(1, 1))).doit() == 1
 
+
 def test_operator_dagger():
     A = Operator('A')
     B = Operator('B')
     assert Dagger(A*B) == Dagger(B)*Dagger(A)
     assert Dagger(A+B) == Dagger(A) + Dagger(B)
     assert Dagger(A**2) == Dagger(A)**2
+
 
 def test_differential_operator():
     x = Symbol('x')

@@ -28,8 +28,10 @@ from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
+
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
+
 
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
@@ -108,18 +110,23 @@ def fraction(expr, exact=False):
 
     return Mul(*numer), Mul(*denom)
 
+
 def numer(expr):
     return fraction(expr)[0]
+
 
 def denom(expr):
     return fraction(expr)[1]
 
+
 def fraction_expand(expr, **hints):
     return expr.expand(frac=True, **hints)
+
 
 def numer_expand(expr, **hints):
     a, b = fraction(expr)
     return a.expand(numer=True, **hints) / b
+
 
 def denom_expand(expr, **hints):
     a, b = fraction(expr)
@@ -128,6 +135,7 @@ def denom_expand(expr, **hints):
 expand_numer = numer_expand
 expand_denom = denom_expand
 expand_fraction = fraction_expand
+
 
 def separate(expr, deep=False, force=False):
     """
@@ -140,6 +148,7 @@ def separate(expr, deep=False, force=False):
         "defaults to False, whereas in expand_power_base(), deep defaults to True.",
     ).warn()
     return expand_power_base(sympify(expr), deep=deep, force=force)
+
 
 def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
     """
@@ -512,6 +521,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     else:
         return collected
 
+
 def rcollect(expr, *vars):
     """
     Recursively collect sums in an expression.
@@ -537,6 +547,7 @@ def rcollect(expr, *vars):
             return collect(expr, vars)
         else:
             return expr
+
 
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
@@ -606,6 +617,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
         return _separatevars_dict(_separatevars(expr, force), symbols)
     else:
         return _separatevars(expr, force)
+
 
 def _separatevars(expr, force):
     if len(expr.free_symbols) == 1:
@@ -693,6 +705,7 @@ def _separatevars_dict(expr, symbols):
 
     return ret
 
+
 def ratsimp(expr):
     """
     Put an expression over a common denominator, cancel and reduce.
@@ -713,6 +726,7 @@ def ratsimp(expr):
         return f/g
 
     return Add(*Q) + cancel(r/g)
+
 
 def ratsimpmodprime(expr, G, *gens, **args):
     """
@@ -858,6 +872,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
     return c/d
 
+
 def trigsimp(expr, deep=False, recursive=False):
     """
     reduces expression by using known trig identities
@@ -902,6 +917,7 @@ def trigsimp(expr, deep=False, recursive=False):
         result = _trigsimp(expr, deep)
 
     return result
+
 
 def _trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
@@ -1122,6 +1138,7 @@ def collect_sqrt(expr, evaluate=True):
 
     return d
 
+
 def collect_const(expr, *vars, **first):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
@@ -1207,6 +1224,7 @@ def collect_const(expr, *vars, **first):
                 break
     return expr
 
+
 def _split_gcd(*a):
     """
     split the list of integers `a` into a list of integers a1 having
@@ -1230,6 +1248,7 @@ def _split_gcd(*a):
             g = g1
             b1.append(x)
     return g, b1, b2
+
 
 def split_surds(expr):
     """
@@ -1269,6 +1288,7 @@ def split_surds(expr):
     a = Add(*a1v)
     b = Add(*a2v)
     return g2, a, b
+
 
 def rad_rationalize(num, den):
     """
@@ -1451,6 +1471,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             expr = Add(*Add.make_args(nexpr))
     return _keep_coeff(coeff, expr)
 
+
 def posify(eq):
     """Return eq (with generic symbols made positive) and a restore
     dictionary.
@@ -1498,6 +1519,7 @@ def posify(eq):
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.iteritems()])
 
+
 def _polarify(eq, lift, pause=False):
     from sympy import polar_lift, Integral
     if eq.is_polar:
@@ -1526,6 +1548,7 @@ def _polarify(eq, lift, pause=False):
         return Integral(*((func,) + tuple(limits)))
     else:
         return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
+
 
 def polarify(eq, subs=True, lift=False):
     """
@@ -1573,6 +1596,7 @@ def polarify(eq, subs=True, lift=False):
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.iteritems()])
 
+
 def _unpolarify(eq, exponents_only, pause=False):
     from sympy import polar_lift, exp, principal_branch, pi
 
@@ -1605,6 +1629,7 @@ def _unpolarify(eq, exponents_only, pause=False):
             for x in eq.args])
 
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
+
 
 def unpolarify(eq, subs={}, exponents_only=False):
     """
@@ -1642,6 +1667,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
     # Finally, replacing Exp(0) by 1 is always correct.
     # So is polar_lift(0) -> 0.
     return res.subs({exp_polar(0): 1, polar_lift(0): 0})
+
 
 def _denest_pow(eq):
     """
@@ -1751,6 +1777,7 @@ def _denest_pow(eq):
             other.append(a)
     return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
+
 def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
@@ -1856,6 +1883,8 @@ def powdenest(eq, force=False, polar=False):
     return new.xreplace(Transform(_denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
 
 _y = Dummy('y')
+
+
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
@@ -2269,6 +2298,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     else:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
+
 def hypersimp(f, k):
     """Given combinatorial term f(k) simplify its consecutive term ratio
        i.e. f(k+1)/f(k).  The input term can be composed of functions and
@@ -2309,6 +2339,7 @@ def hypersimp(f, k):
     else:
         return None
 
+
 def hypersimilar(f, g, k):
     """Returns True if 'f' and 'g' are hyper-similar.
 
@@ -2327,6 +2358,8 @@ def hypersimilar(f, g, k):
     return h.is_rational_function(k)
 
 from sympy.utilities.timeutils import timethis
+
+
 @timethis('combsimp')
 def combsimp(expr):
     r"""
@@ -2748,6 +2781,7 @@ def combsimp(expr):
 
     return factor(expr)
 
+
 def signsimp(expr, evaluate=True):
     """Make all Add sub-expressions canonical wrt sign.
 
@@ -2798,6 +2832,7 @@ def signsimp(expr, evaluate=True):
     if evaluate:
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
+
 
 def simplify(expr, ratio=1.7, measure=count_ops):
     """
@@ -3022,6 +3057,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     return expr
 
+
 def _real_to_rational(expr):
     """
     Replace all reals in expr with rationals.
@@ -3049,6 +3085,7 @@ def _real_to_rational(expr):
             newr = s*Rational(str(newr/d))*d
         reps[r] = newr
     return p.subs(reps, simultaneous=True)
+
 
 def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
@@ -3197,6 +3234,7 @@ def logcombine(expr, force=False):
     expr = expand_mul(expr)
     return _logcombine(expr, force)
 
+
 def _logcombine(expr, force=False):
     """
     Does the main work for logcombine, it's a separate function to avoid an
@@ -3306,6 +3344,7 @@ def _logcombine(expr, force=False):
             _logcombine(expr.args[1], force)
 
     return expr
+
 
 def besselsimp(expr):
     """

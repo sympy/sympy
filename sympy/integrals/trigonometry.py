@@ -12,6 +12,8 @@ from sympy.core.cache import cacheit
 # effectively block caching.
 #
 # so we cache the pattern
+
+
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
@@ -21,6 +23,7 @@ def _pat_sincos(x):
     return pat, a, n, m
 
 _u = Dummy('u')
+
 
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
@@ -215,6 +218,7 @@ def trigintegrate(f, x):
                         integrate(cos(x)**(m+2)*sin(x)**(n-2), x))
     return res.subs(x, a*x) / a
 
+
 def _sin_pow_integrate(n, x):
     if n > 0:
         if n == 1:
@@ -258,6 +262,7 @@ def _sin_pow_integrate(n, x):
         #n == 0
         #Recursion break.
         return x
+
 
 def _cos_pow_integrate(n, x):
     if n > 0:

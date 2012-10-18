@@ -139,6 +139,7 @@ def test_cg_simp_add():
     i = CG(1, m1, 1, m2, 0, 0)*CG(1, m1p, 1, m2p, 0, 0)
     assert cg_simp(a+b+c+d+e+f+g+h+i) == KroneckerDelta(m1, m1p)*KroneckerDelta(m2, m2p)
 
+
 def test_cg_simp_sum():
     x, a, b, c, cp, alpha, beta, gamma, gammap = symbols('x a b c cp alpha beta gamma gammap')
     # Varshalovich 8.7.1 Eq 1
@@ -154,6 +155,7 @@ def test_cg_simp_sum():
     assert cg_simp(Sum(CG(a, alpha, b, beta, c, gamma)*CG(a, alpha, b, beta, cp, gamma), (alpha, -a, a), (beta, -b, b))) == KroneckerDelta(c, cp)
     assert cg_simp(Sum(CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b))) == 1
     assert cg_simp(Sum(CG(2, alpha, 1, beta, 2, gamma)*CG(2, alpha, 1, beta, 2, gammap), (alpha, -2, 2), (beta, -1, 1))) == KroneckerDelta(gamma, gammap)
+
 
 def test_doit():
     assert Wigner3j(1/2, -1/2, 1/2, 1/2, 0, 0).doit() == -sqrt(2)/2

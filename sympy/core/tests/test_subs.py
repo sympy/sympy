@@ -4,6 +4,7 @@ from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL, raises
 
+
 def test_subs():
     n3 = Rational(3)
     x = Symbol('x')
@@ -15,6 +16,7 @@ def test_subs():
     assert e == 2*x
     e = e.subs(x, n3)
     assert e == Rational(6)
+
 
 def test_trigonometric():
     x = Symbol('x')
@@ -42,6 +44,7 @@ def test_trigonometric():
     o = Symbol('o', odd=True)
     assert tan(o*x).subs(x, pi/2) == tan(o*pi/2)
 
+
 def test_powers():
     x, y = symbols('x,y')
     assert sqrt(1 - sqrt(x)).subs(x, 4) == I
@@ -54,6 +57,7 @@ def test_powers():
     assert exp(-1).subs(S.Exp1, 0) is S.Infinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
 
+
 def test_logexppow():   # no eval()
     x = Symbol('x', real=True)
     w = Symbol('w')
@@ -61,21 +65,25 @@ def test_logexppow():   # no eval()
     assert e.subs(2**x, w) != e
     assert e.subs(exp(x*log(Rational(2))), w) != e
 
+
 def test_bug():
     x1 = Symbol('x1')
     x2 = Symbol('x2')
     y = x1*x2
     assert y.subs(x1, Float(3.0)) == Float(3.0)*x2
 
+
 def test_subbug1():
     x = Symbol('x')
     e = (x**x).subs(x, 1)
     e = (x**x).subs(x, 1.0)
 
+
 def test_subbug2():
     # Ensure this does not cause infinite recursion
     x = Symbol('x')
     assert Float(7.7).epsilon_eq(abs(x).subs(x, -7.7))
+
 
 def test_dict_set():
     x = Symbol('x')
@@ -94,6 +102,7 @@ def test_dict_set():
     assert e.subs(r) == r[a]/r[b]*sin(r[b]*x)
     assert e.subs(r) == 3*sin(4*x) / 4
     assert x.subs(Dict((x, 1))) == 1
+
 
 def test_dict_ambigous():   # see #467
     x = Symbol('x')
@@ -123,6 +132,7 @@ def test_dict_ambigous():   # see #467
     # but the results depend on the order
     assert exp(x/2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == exp(y + 1)
 
+
 def test_deriv_sub_bug3():
     x = Symbol('x')
     y = Symbol('y')
@@ -131,12 +141,14 @@ def test_deriv_sub_bug3():
     assert pat.subs(y, y**2) == Derivative(f(x), x, x)
     assert pat.subs(y, y**2) != Derivative(f(x), x)
 
+
 def test_equality_subs1():
     f = Function('f')
     x = abc.x
     eq = Eq(f(x)**2, x)
     res = Eq(Integer(16), x)
     assert eq.subs(f(x), 4) == res
+
 
 def test_equality_subs2():
     f = Function('f')
@@ -145,12 +157,14 @@ def test_equality_subs2():
     assert bool(eq.subs(f(x), 3)) == False
     assert bool(eq.subs(f(x), 4)) == True
 
+
 def test_issue643():
     x = Symbol('x')
     y = Symbol('y')
 
     e = sqrt(x)*exp(y)
     assert e.subs(sqrt(x), 1) == exp(y)
+
 
 def test_subs_dict1():
     x, y = symbols('x y')
@@ -163,6 +177,7 @@ def test_subs_dict1():
     assert (test.subs({c1**2: 1 - s1**2, c2**2: 1 - s2**2, c3**3: 1 - s3**2})
         == c3*q2p*(1 - s2**2) + c3*q2p*s2**2*(1 - s1**2)
             - c2*q1p*s3*(1 - s1**2) + c3*q2p*s1**2*s2**2 - c2*q1p*s3*s1**2)
+
 
 def test_mul():
     x, y, z, a, b, c = symbols('x,y,z,a,b,c')
@@ -218,6 +233,7 @@ def test_mul():
     assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(S(1)/7)**2*z**2
     assert (4*x).subs(-2*x, z) == 4*x  # try keep subs literal
 
+
 def test_subs_simple():
     a = symbols('a', commutative=True)
     x = symbols('x', commutative=False)
@@ -234,6 +250,7 @@ def test_subs_simple():
     assert (2*x).subs(x, 3) == 6
     assert sin(x).subs(x, 3) == sin(3)
 
+
 def test_subs_constants():
     a, b = symbols('a b', commutative=True)
     x, y = symbols('x y', commutative=False)
@@ -248,6 +265,7 @@ def test_subs_constants():
     assert (2*x*y).subs(2*x, 1) == y
     assert (2*x*y).subs(4*x, 1) == 2*x*y
 
+
 def test_subs_commutative():
     a, b, c, d, K = symbols('a b c d K', commutative=True)
 
@@ -260,6 +278,7 @@ def test_subs_commutative():
     assert (a*b**c).subs(c, K) == a*b**K
     assert (a*b*c*b*a).subs(a*b, K) == c*K**2
     assert (a**3*b**2*a).subs(a*b, K) == a**2*K**2
+
 
 def test_subs_noncommutative():
     w, x, y, z, L = symbols('w x y z L', commutative=False)
@@ -277,6 +296,7 @@ def test_subs_noncommutative():
     assert (w*x*y*z*x*y).subs(x*y*z, L) == w*L*x*y
     assert (w*x*y*y*w*x*x*y*x*y*y*x*y).subs(x*y, L) == w*L*y*w*x*L**2*y*L
 
+
 def test_subs_basic_funcs():
     a, b, c, d, K = symbols('a b c d K', commutative=True)
     w, x, y, z, L = symbols('w x y z L', commutative=False)
@@ -292,6 +312,7 @@ def test_subs_basic_funcs():
     assert ((a - b)/(c*d - a*b)).subs(c*d - a*b, K) == (a - b)/K
     assert (w*exp(a*b - c)*x*y/4).subs(x*y, L) == w*exp(a*b - c)*L/4
 
+
 def test_subs_wild():
     R, S, T, U = symbols('R,S,T,U', cls=Wild)
 
@@ -304,6 +325,7 @@ def test_subs_wild():
     assert (R*S**T).subs(S, U) == R*U**T
     assert (R*S**T).subs(T, U) == R*S**U
 
+
 def test_subs_mixed():
     a, b, c, d, K = symbols('a b c d K', commutative=True)
     w, x, y, z, L = symbols('w x y z L', commutative=False)
@@ -315,6 +337,7 @@ def test_subs_mixed():
     assert (a*x*y*y*x - x*y*z*exp(a*b)).subs(x*y, L) == a*L*y*x - L*z*exp(a*b)
     e = c*y*x*y*x**(R*S - a*b) - T*(a*R*b*S)
     assert e.subs(x*y, L).subs(a*b, K).subs(R*S, U) == c*y*L*x**(U - K) - T*(U*K)
+
 
 def test_division():
     a, b, c = symbols('a b c', commutative=True)
@@ -332,6 +355,7 @@ def test_division():
 
     #issue 2261
     assert (1/x).subs(x, 0) == 1/S(0)
+
 
 def test_add():
     a, b, c, d, x, y, t = symbols('a,b,c,d,x,y,t')
@@ -364,8 +388,10 @@ def test_add():
     ans = (-x*(x) - y*(-x)).expand()
     assert e.subs(-y + 1, x) == ans
 
+
 def test_subs_issue910():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
+
 
 def test_functions_subs():
     x, y = map(Symbol, 'xy')
@@ -377,6 +403,7 @@ def test_functions_subs():
     assert (f(x, y)).subs(f, sin) == f(x, y)
     assert (sin(x) + atan2(x, y)).subs([[atan2, f], [sin, g]]) == f(x, y) + g(x)
     assert (g(f(x + y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
+
 
 def test_derivative_subs():
     x = Symbol('x')
@@ -390,6 +417,7 @@ def test_derivative_subs():
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
+
 def test_issue2185():
     x = Symbol('x')
     A, B = symbols('A B', commutative=False)
@@ -397,12 +425,14 @@ def test_issue2185():
     assert (A**2).subs(A**3, B) == A**2
     assert (A**6).subs(A**3, B) == B**2
 
+
 def test_subs_iter():
     x, y = symbols('x,y')
     assert x.subs(reversed([[x, y]])) == y
     it = iter([[x, y]])
     assert x.subs(it) == y
     assert x.subs(Tuple((x, y))) == y
+
 
 def test_subs_dict():
     a, b, c, d, e = symbols('a b c d e')
@@ -437,6 +467,7 @@ def test_subs_dict():
     l = [(y, z + 2), (z, 3)]
     assert (y - 2).subs(l) == 3
 
+
 def test_no_arith_subs_on_floats():
     a, x, y = symbols('a,x,y')
 
@@ -452,10 +483,12 @@ def test_no_arith_subs_on_floats():
     assert (x + y + 3.0).subs(x + 3.0, a) == a + y
     assert (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
 
+
 @XFAIL
 def test_issue_2261():
     x = Symbol('x')
     assert (1/x).subs(x, 0) == 1/S(0)
+
 
 def test_issue_2552():
     a, b, c, K = symbols('a b c K', commutative=True)
@@ -467,8 +500,10 @@ def test_issue_2552():
     assert (x*y*z).subs(x*y, 2) == 2*z
     assert ((1 + x*y)/(x*y)/z).subs(x*y, 1) == 2/z
 
+
 def test_issue_2976():
     assert Tuple(1, True).subs(1, 2) == Tuple(2, True)
+
 
 def test_issue_2980():
     # since x + 2.0 == x + 2 we can't do a simple equality test
@@ -481,9 +516,11 @@ def test_issue_2980():
     assert not _aresame(1, S(1))
     assert not _aresame(x, symbols('x', positive=True))
 
+
 def test_issue_1581():
     N = Symbol('N')
     assert N.subs(dict(N=3)) == 3
+
 
 def test_issue_3059():
     from sympy.abc import x, y
@@ -492,12 +529,14 @@ def test_issue_3059():
     assert (x - oo).subs(oo, y) == x - y
     assert (x - oo).subs(-oo, y) == x + y
 
+
 def test_Function_subs():
     from sympy.abc import x, y
     f, g, h, i = symbols('f,g,h,i', cls=Function)
     p = Piecewise((g(f(x, y)), x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h(f(x, y)), x < -1), (h(x), x <= 1))
     assert (f(y) + g(x)).subs({f: h, g: i}) == i(x) + h(y)
+
 
 def test_simultaneous_subs():
     from sympy.abc import x, y
@@ -507,6 +546,7 @@ def test_simultaneous_subs():
     reps = reps.items()
     assert (x/y).subs(reps) != (y/x).subs(reps)
     assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
+
 
 def issue_3320_3322():
     from sympy.abc import x, y

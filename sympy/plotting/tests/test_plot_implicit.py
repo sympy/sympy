@@ -7,8 +7,10 @@ from sympy.utilities.pytest import skip
 #Set plots not to show
 unset_show()
 
+
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
+
 
 def plot_and_save():
     x = Symbol('x')
@@ -45,6 +47,7 @@ def plot_and_save():
     #Test plots which cannot be rendered using the adaptive algorithm
     #TODO: catch the warning.
     plot_implicit(Eq(y, re(cos(x) + I*sin(x)))).save(tmp_file())
+
 
 def test_matplotlib():
     if matplotlib:

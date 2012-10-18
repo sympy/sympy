@@ -1,5 +1,6 @@
 from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
 
+
 def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
@@ -79,6 +80,7 @@ def R_nl(n, l, r, Z=1):
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
     return C * r0**l * assoc_laguerre(n_r, 2*l+1, r0).expand() * exp(-r0/2)
 
+
 def E_nl(n, Z=1):
     """
     Returns the energy of the state (n, l) in Hartree atomic units.
@@ -108,6 +110,7 @@ def E_nl(n, Z=1):
     if n.is_integer and (n < 1):
         raise ValueError("'n' must be positive integer")
     return -Z**2/(2*n**2)
+
 
 def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     """

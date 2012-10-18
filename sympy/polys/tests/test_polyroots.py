@@ -12,8 +12,10 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
+
 def test_roots_linear():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
+
 
 def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
@@ -27,12 +29,14 @@ def test_roots_quadratic():
         [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
          -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
+
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3-3*x**2+3*x-1, x)) == [1, 1, 1]
 
     assert roots_cubic(Poly(x**3+1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+
 
 def test_roots_quartic():
     assert roots_quartic(Poly(x**4, x)) == [0, 0, 0, 0]
@@ -68,6 +72,7 @@ def test_roots_quartic():
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
         assert all(eq.subs(x, ai).n(chop=True) == 0 for ai in ans)
+
 
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
@@ -111,6 +116,7 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
         [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
+
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
@@ -130,6 +136,7 @@ def test_roots_binomial():
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
 
+
 def test_roots_rational():
     assert roots_rational(Poly(x**2-1, x)) == [-S.One, S.One]
     assert roots_rational(Poly(x**2-x, x)) == [S.Zero, S.One]
@@ -138,6 +145,7 @@ def test_roots_rational():
     assert roots_rational(Poly(2*x**2-x, x)) == [S.Zero]
 
     assert roots_rational(Poly(t*x**2-x, x)) == []
+
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b
@@ -192,6 +200,7 @@ def test_roots_preprocessing():
     assert coeff == 20*E*J/(F*L**2)
     assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
         809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
+
 
 def test_roots():
     assert roots(1, x) == {}
@@ -331,6 +340,7 @@ def test_roots():
         -I: 1, I: 1,
     }
 
+
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
@@ -355,6 +365,7 @@ def test_roots_slow():
     assert f.subs(x, R[1]).simplify() == 0
     assert f.subs(x, R[2]).simplify() == 0
 
+
 def test_roots_inexact():
     R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
     R2 = sorted([ r for r in roots(x**2 + x + 1.0, x) ])
@@ -369,6 +380,7 @@ def test_roots_inexact():
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-10
+
 
 def test_roots_preprocessed():
     E, F, J, L = symbols("E,F,J,L")
@@ -398,6 +410,7 @@ def test_roots_preprocessed():
         match = r1.match(p)
         assert match is not None and abs(match[w] - r2) < 1e-10
 
+
 def test_roots_mixed():
     f = -1936 - 5056*x - 7592*x**2 + 2704*x**3 - 49*x**4
 
@@ -420,6 +433,7 @@ def test_roots_mixed():
                 assert r in i
             else:
                 assert (re(r), im(r)) in i
+
 
 def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]

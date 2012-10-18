@@ -2,6 +2,7 @@ from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle)
 
+
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
     # It is described in more detail in the KanesMethod docstring.
@@ -24,6 +25,7 @@ def test_one_dof():
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
     assert KM.linearize() == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.
@@ -59,6 +61,7 @@ def test_two_dof():
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
+
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -145,6 +148,7 @@ def test_rolling_disc():
     assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
 
+
 def test_aux():
     # Same as above, except we have 2 auxiliary speeds for the ground contact
     # point, which is known to be zero. In one case, we go through then
@@ -193,6 +197,7 @@ def test_aux():
 
     assert fr.expand() == fr2.expand()
     assert frstar.expand() == frstar2.expand()
+
 
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.

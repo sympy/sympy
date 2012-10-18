@@ -4,6 +4,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import XFAIL
 
+
 def test_rational():
     a = Rational(1, 5)
 
@@ -19,9 +20,11 @@ def test_rational():
     assert a**Rational(17, 3) == r
     assert 2 * a**Rational(17, 3) == 2*r
 
+
 def test_large_rational():
     e = (Rational(123712**12-1, 7)+Rational(1, 7))**Rational(1, 3)
     assert e == 234232585392159195136 * (Rational(1, 7)**Rational(1, 3))
+
 
 def test_negative_real():
     def feq(a, b):
@@ -29,9 +32,11 @@ def test_negative_real():
 
     assert feq(S.One / Float(-0.5), -Integer(2))
 
+
 def test_expand():
     x = Symbol('x')
     assert (2**(-1-x)).expand() == Rational(1, 2)*2**(-x)
+
 
 def test_issue350():
     #test if powers are simplified correctly
@@ -63,13 +68,16 @@ def test_issue350():
     assert (a**2)**b == (a**b)**2
     assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
 
+
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
+
 
 def test_negative_one():
     x = Symbol('x', complex=True)
     y = Symbol('y', complex=True)
     assert 1/x**y == x**(-y)
+
 
 def test_issue1263():
     neg = Symbol('neg', negative=True)
@@ -172,6 +180,7 @@ def test_issue1263():
     i = Symbol('i', integer=True)
     assert (((1 + x/y)**i)).as_numer_denom() == ((x + y)**i, y**i)
 
+
 def test_Pow_signs():
     """Cf. issues 1496 and 2151"""
     x = Symbol('x')
@@ -182,11 +191,13 @@ def test_Pow_signs():
     assert (-3+y-x)**2 != (3-y+x)**2
     assert (y-3)**3 != -(3-y)**3
 
+
 def test_power_with_noncommutative_mul_as_base():
     x = Symbol('x', commutative=False)
     y = Symbol('y', commutative=False)
     assert not (x*y)**3 == x**3*y**3
     assert (2*x*y)**3 == 8*(x*y)**3
+
 
 def test_zero():
     x = Symbol('x')
@@ -203,12 +214,14 @@ def test_zero():
     i = Symbol('i', imaginary=True)
     assert 0**i == nan
 
+
 def test_pow_as_base_exp():
     x = Symbol('x')
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+
 
 def test_issue_3001():
     x = Symbol('x')
@@ -228,6 +241,7 @@ def test_issue_3001():
     # power-of-1.0 case.
     assert ((x*y)**1.0).func is Pow
 
+
 def test_issue_3109():
     from sympy import root, Rational
     I = S.ImaginaryUnit
@@ -236,6 +250,7 @@ def test_issue_3109():
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
     assert sqrt(exp(3*I)) == exp(3*I/2)
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
+
 
 @XFAIL
 def test_issue_3109_fail():

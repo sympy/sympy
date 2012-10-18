@@ -12,6 +12,7 @@ from sympy.combinatorics import Permutation
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
 
+
 class Manifold(Basic):
     """Object representing a mathematical manifold.
 

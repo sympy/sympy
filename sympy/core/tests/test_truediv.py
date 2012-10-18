@@ -4,9 +4,11 @@ from __future__ import division
 
 from sympy import Rational, Symbol, Float
 
+
 def test_truediv():
     assert 1/2 != 0
     assert Rational(1)/2 != 0
+
 
 def dotest(s):
     x = Symbol("x")
@@ -25,6 +27,7 @@ def dotest(s):
             s(x, y)
     return True
 
+
 def test_basic():
     def s(a, b):
         x = a
@@ -36,6 +39,7 @@ def test_basic():
         x = a/b
         x = a**b
     assert dotest(s)
+
 
 def test_ibasic():
     def s(a, b):

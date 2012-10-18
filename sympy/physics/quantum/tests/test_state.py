@@ -12,25 +12,30 @@ from sympy.physics.quantum.hilbert import HilbertSpace
 
 x, y, t = symbols('x,y,t')
 
+
 class TestKet(Ket):
     @classmethod
     def default_args(self):
         return ("test",)
+
 
 class TestKetMultipleLabels(Ket):
     @classmethod
     def default_args(self):
         return ("r", "theta", "phi")
 
+
 class TestTimeDepKet(TimeDepKet):
     @classmethod
     def default_args(self):
         return ("test", "t")
 
+
 class TestTimeDepKetMultipleLabels(TimeDepKet):
     @classmethod
     def default_args(self):
         return ("r", "theta", "phi", "t")
+
 
 def test_ket():
     k = Ket('0')
@@ -93,6 +98,7 @@ def test_bra():
 
     assert Bra() == Bra('psi')
 
+
 def test_ops():
     k0 = Ket(0)
     k1 = Ket(1)
@@ -134,6 +140,7 @@ def test_time_dep_ket():
 
     assert TimeDepKet() == TimeDepKet("psi", "t")
 
+
 def test_time_dep_bra():
     b = TimeDepBra(0, t)
 
@@ -155,6 +162,7 @@ def test_time_dep_bra():
 
     assert TimeDepBra() == TimeDepBra("psi", "t")
 
+
 def test_bra_ket_dagger():
     x = symbols('x', complex=True)
     k = Ket('k')
@@ -166,6 +174,7 @@ def test_bra_ket_dagger():
     k2 = Ket('k2')
     e = 2*I*k + x*k2
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
+
 
 def test_wavefunction():
     x, y, L = symbols('x,y,L', real=True)

@@ -14,6 +14,7 @@ from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
 
 from sympy.utilities.pytest import XFAIL
 
+
 def test_PermutationOperator():
     p, q, r, s = symbols('p,q,r,s')
     f, g, h, i = map(Function, 'fghi')
@@ -28,6 +29,7 @@ def test_PermutationOperator():
     perms = [P(p, q), P(r, s)]
     assert (simplify_index_permutations(expr, perms) ==
         P(p, q)*P(r, s)*f(p)*g(q)*h(r)*i(s))
+
 
 def test_index_permutations_with_dummies():
     a, b, c, d = symbols('a b c d')
@@ -56,6 +58,7 @@ def test_index_permutations_with_dummies():
     result = simplify_index_permutations(expr, [P(a, b)])
     assert expr == result
 
+
 def test_dagger():
     i, j, n, m = symbols('i,j,n,m')
     assert Dagger(1) == 1
@@ -72,6 +75,7 @@ def test_dagger():
     assert Dagger(B(n)*B(m)) == Bd(m)*Bd(n)
     assert Dagger(B(n)**10) == Dagger(B(n))**10
 
+
 def test_operator():
     i, j = symbols('i,j')
     o = BosonicOperator(i)
@@ -80,6 +84,7 @@ def test_operator():
     o = BosonicOperator(1)
     assert o.state == 1
     assert not o.is_symbolic
+
 
 def test_create():
     i, j, n, m = symbols('i,j,n,m')
@@ -92,6 +97,7 @@ def test_create():
     o = Bd(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
+
 def test_annihilate():
     i, j, n, m = symbols('i,j,n,m')
     o = B(i)
@@ -102,6 +108,7 @@ def test_annihilate():
     assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n-1])
     o = B(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
+
 
 def test_basic_state():
     i, j, n, m = symbols('i,j,n,m')
@@ -119,6 +126,7 @@ def test_basic_state():
     assert s.down(0) == BosonState([n-1, m])
     assert s.up(0) == BosonState([n+1, m])
 
+
 @XFAIL
 def Xtest_move1():
     i, j = symbols('i,j')
@@ -127,6 +135,7 @@ def Xtest_move1():
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
+
 @XFAIL
 def Xtest_move2():
     i, j = symbols('i,j')
@@ -134,6 +143,7 @@ def Xtest_move2():
     o = C(j)*A(i)
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
+
 
 def test_basic_apply():
     n = symbols("n")
@@ -150,11 +160,13 @@ def test_complex_apply():
     answer = sqrt(n)*sqrt(m+1)*(-1+n)*BKet([-1+n, 1+m])
     assert expand(e) == expand(answer)
 
+
 def test_number_operator():
     n = symbols("n")
     o = Bd(0)*B(0)
     e = apply_operators(o*BKet([n]))
     assert e == n*BKet([n])
+
 
 def test_inner_product():
     i, j, k, l = symbols('i,j,k,l')
@@ -167,6 +179,7 @@ def test_inner_product():
     r = InnerProduct(s1, s2)
     assert r == KroneckerDelta(i, k)*KroneckerDelta(j, l)
 
+
 def test_symbolic_matrix_elements():
     n, m = symbols('n,m')
     s1 = BBra([n])
@@ -174,6 +187,7 @@ def test_symbolic_matrix_elements():
     o = B(0)
     e = apply_operators(s1*o*s2)
     assert e == sqrt(m)*KroneckerDelta(n, m-1)
+
 
 def test_matrix_elements():
     b = VarBosonicBasis(5)
@@ -185,6 +199,7 @@ def test_matrix_elements():
     m = matrix_rep(o, b)
     for i in range(4):
         assert m[i+1, i] == sqrt(i+1)
+
 
 def test_sho():
     n, m = symbols('n,m')
@@ -198,6 +213,7 @@ def test_sho():
     diag = [1, 2, 3, 3, 4, 5, 4, 5, 6, 7, 5, 6, 7, 8, 9, 6, 7, 8, 9, 10, 11]
     for i in range(len(diag)):
         assert diag[i] == m[i, i]
+
 
 def test_commutation():
     n, m = symbols("n,m", above_fermi=True)
@@ -234,6 +250,7 @@ def test_commutation():
     assert C(Fd(a), F(i)) == -2*NO(F(i)*Fd(a))
     assert C(Fd(j), NO(Fd(a)*F(i))).doit(wicks=True) == -D(j, i)*Fd(a)
     assert C(Fd(a)*F(i), Fd(b)*F(j)).doit(wicks=True) == 0
+
 
 def test_create_f():
     i, j, n, m = symbols('i,j,n,m')
@@ -279,6 +296,7 @@ def test_annihilate_f():
     assert F(l).apply_operator(FKet([i, j, k], 3)) == 0
     assert F(l).apply_operator(FKet([i, j, k], 4)) == FKet([l, i, j, k], 4)
 
+
 def test_create_b():
     i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
@@ -290,6 +308,7 @@ def test_create_b():
     o = Bd(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
+
 def test_annihilate_b():
     i, j, n, m = symbols('i,j,n,m')
     o = B(i)
@@ -297,6 +316,7 @@ def test_annihilate_b():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = B(0)
+
 
 def test_wicks():
     p, q, r, s = symbols('p,q,r,s', above_fermi=True)
@@ -387,6 +407,7 @@ def test_NO():
     l2 = [ ind for ind in no.iter_q_annihilators() ]
     assert l2 == [3, 2]
 
+
 def test_sorting():
     i, j = symbols('i,j', below_fermi=True)
     a, b = symbols('a,b', above_fermi=True)
@@ -423,6 +444,7 @@ def test_sorting():
     assert _sort_anticommuting_fermions([Fd(i), Fd(a)]) == ([Fd(a), Fd(i)], 1)
     assert _sort_anticommuting_fermions([F(a), F(i)]) == ([F(i), F(a)], 1)
     assert _sort_anticommuting_fermions([F(i), F(a)]) == ([F(i), F(a)], 0)
+
 
 def test_contraction():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
@@ -487,20 +509,24 @@ def test_fully_contracted():
             simplify_kronecker_deltas=True)
     assert Vabij==AntiSymmetricTensor('v', (a, b), (i, j))
 
+
 def test_substitute_dummies_without_dummies():
     i, j = symbols('i,j')
     assert substitute_dummies(att(i, j) + 2) == att(i, j) + 2
     assert substitute_dummies(att(i, j) + 1) == att(i, j) + 1
+
 
 def test_substitute_dummies_NO_operator():
     i, j = symbols('i j', cls=Dummy)
     assert substitute_dummies(att(i, j)*NO(Fd(i)*F(j))
                 - att(j, i)*NO(Fd(j)*F(i))) == 0
 
+
 def test_substitute_dummies_SQ_operator():
     i, j = symbols('i j', cls=Dummy)
     assert substitute_dummies(att(i, j)*Fd(i)*F(j)
                 - att(j, i)*Fd(j)*F(i)) == 0
+
 
 def test_substitute_dummies_new_indices():
     i, j = symbols('i j', below_fermi=True, cls=Dummy)
@@ -509,12 +535,14 @@ def test_substitute_dummies_new_indices():
     f = Function('f')
     assert substitute_dummies(f(i, a, p) - f(j, b, q), new_indices=True) == 0
 
+
 def test_substitute_dummies_substitution_order():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
     f = Function('f')
     from sympy.utilities.iterables import variations
     for permut in variations([i, j, k, l], 4):
         assert substitute_dummies(f(*permut) - f(i, j, k, l)) == 0
+
 
 def test_dummy_order_inner_outer_lines_VT1T1T1():
     ii = symbols('i', below_fermi=True)
@@ -539,6 +567,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_dummy_order_inner_outer_lines_VT1T1T1T1():
     ii, jj = symbols('i j', below_fermi=True)
@@ -592,6 +621,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
+
 def test_equivalent_internal_lines_VT1T1():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
@@ -634,6 +664,7 @@ def test_equivalent_internal_lines_VT1T1():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_equivalent_internal_lines_VT2conjT2():
     # this diagram requires special handling in TCE
@@ -684,6 +715,7 @@ def test_equivalent_internal_lines_VT2conjT2():
         assert dums(base) != dums(expr)
         assert substitute_dummies(expr) == substitute_dummies(base)
 
+
 def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
     # These diagrams invokes _determine_ambiguous() because the
     # dummies can not be ordered unambiguously by the key alone
@@ -715,6 +747,7 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
         expr = template.subs(subslist)
         assert dums(base) != dums(expr)
         assert substitute_dummies(expr) == substitute_dummies(base)
+
 
 def test_equivalent_internal_lines_VT2():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
@@ -764,6 +797,7 @@ def test_equivalent_internal_lines_VT2():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
+
 def test_internal_external_VT2T2():
     ii, jj = symbols('i j', below_fermi=True)
     aa, bb = symbols('a b', above_fermi=True)
@@ -802,6 +836,7 @@ def test_internal_external_VT2T2():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
+
 def test_internal_external_pqrs():
     ii, jj = symbols('i j')
     aa, bb = symbols('a b')
@@ -821,6 +856,7 @@ def test_internal_external_pqrs():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_dummy_order_well_defined():
     aa, bb = symbols('a b', above_fermi=True)
@@ -877,6 +913,7 @@ def test_dummy_order_well_defined():
     assert dums(B(k, c, p)*A(p, c, k)) == [k, c, p]
     assert dums(B(k, p, c)*A(p, c, k)) == [k, c, p]
 
+
 def test_dummy_order_ambiguous():
     aa, bb = symbols('a b', above_fermi=True)
     i, j, k, l, m = symbols('i j k l m', below_fermi=True, cls=Dummy)
@@ -919,13 +956,17 @@ def test_dummy_order_ambiguous():
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
 
+
 def atv(*args):
     return AntiSymmetricTensor('v', args[:2], args[2:] )
+
+
 def att(*args):
     if len(args) == 4:
         return AntiSymmetricTensor('t', args[:2], args[2:] )
     elif len(args) == 2:
         return AntiSymmetricTensor('t', (args[0],), (args[1],))
+
 
 def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
     ii = symbols('i', below_fermi=True)
@@ -946,6 +987,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
     ii, jj = symbols('i j', below_fermi=True)
@@ -973,6 +1015,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_equivalent_internal_lines_VT1T1_AT():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
@@ -1009,6 +1052,7 @@ def test_equivalent_internal_lines_VT1T1_AT():
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_equivalent_internal_lines_VT2conjT2_AT():
     # this diagram requires special handling in TCE
@@ -1052,6 +1096,7 @@ def test_equivalent_internal_lines_VT2conjT2_AT():
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
 
+
 def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
     # These diagrams invokes _determine_ambiguous() because the
     # dummies can not be ordered unambiguously by the key alone
@@ -1078,6 +1123,7 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
+
 
 def test_equivalent_internal_lines_VT2_AT():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
@@ -1110,6 +1156,7 @@ def test_equivalent_internal_lines_VT2_AT():
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
+
 def test_internal_external_VT2T2_AT():
     ii, jj = symbols('i j', below_fermi=True)
     aa, bb = symbols('a b', above_fermi=True)
@@ -1140,6 +1187,7 @@ def test_internal_external_VT2T2_AT():
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
 
 def test_internal_external_pqrs_AT():
     ii, jj = symbols('i j')

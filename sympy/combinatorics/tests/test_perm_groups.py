@@ -10,6 +10,7 @@ from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
 
 rmul = Permutation.rmul
 
+
 def test_has():
     # return p in self.generators
     a = Permutation([1, 0])
@@ -28,6 +29,7 @@ def test_has():
     b = Permutation([0, 2, 1, 3, 4])
     assert PermutationGroup(a, b).degree == \
         PermutationGroup(a, b).degree == 6
+
 
 def test_generate():
     a = Permutation([1, 0])
@@ -50,11 +52,13 @@ def test_generate():
     g = PermutationGroup([a, b]).generate(af=True)
     assert len(list(g)) == 360
 
+
 def test_order():
     a = Permutation([2, 0, 1, 3, 4, 5, 6, 7, 8, 9])
     b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
+
 
 def test_stabilizer():
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -79,6 +83,7 @@ def test_stabilizer():
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
     assert G2.order() == 181440
+
 
 def test_center():
     # the center of the dihedral group D_n is of order 2 for even n
@@ -105,6 +110,7 @@ def test_center():
     C = CyclicGroup(4)
     G.is_subgroup(D*A*C)
     assert _verify_centralizer(G, G)
+
 
 def test_centralizer():
     # the centralizer of the trivial group is the entire group
@@ -151,6 +157,7 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
+
 def test_stabilizer_cosets():
     a = Permutation([0, 2, 1])
     b = Permutation([1, 0, 2])
@@ -158,6 +165,7 @@ def test_stabilizer_cosets():
     assert G.stabilizer_cosets(af=True) == \
         [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
     assert G.stabilizer_gens(af=True) == [[0, 2, 1]]
+
 
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
@@ -173,6 +181,7 @@ def test_coset_rank():
     assert G.coset_unrank(48) == None
     assert G.coset_rank(gens[0]) == 6
     assert G.coset_unrank(6) == gens[0]
+
 
 def test_coset_factor():
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -192,6 +201,7 @@ def test_coset_factor():
     c = Permutation([2, 1, 0])
     assert not g.coset_factor(c)
     assert g.coset_rank(c) == None
+
 
 def test_orbits():
     a = Permutation([2, 0, 1])
@@ -216,6 +226,7 @@ def test_orbits():
     assert not G.is_transitive() and G.is_transitive(strict=False)
     assert PermutationGroup(Permutation(3)).is_transitive(strict=False) is False
 
+
 def test_is_normal():
     gens_s5 = [Permutation(p) for p in [[1, 2, 3, 4, 0], [2, 1, 4, 0, 3]]]
     G1 = PermutationGroup(gens_s5)
@@ -239,6 +250,7 @@ def test_is_normal():
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
 
+
 def test_eq():
     a = [[1, 2, 0, 3, 4, 5], [1, 0, 2, 3, 4, 5], [2, 1, 0, 3, 4, 5], [1, 2, 0, 3, 4, 5]]
     a = [Permutation(p) for p in a + [[1, 2, 3, 4, 5, 0]]]
@@ -256,6 +268,7 @@ def test_eq():
     assert not CyclicGroup(5).is_subgroup(SymmetricGroup(3)*CyclicGroup(5), 0)
     assert CyclicGroup(3).is_subgroup(SymmetricGroup(3)*CyclicGroup(5), 0)
 
+
 def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
     b = Permutation([0, 1, 3, 2, 4])
@@ -271,6 +284,7 @@ def test_derived_subgroup():
     C = G.derived_subgroup()
     assert C.order() == 12
 
+
 def test_is_solvable():
     a = Permutation([1, 2, 0])
     b = Permutation([1, 0, 2])
@@ -280,6 +294,7 @@ def test_is_solvable():
     b = Permutation([1, 0, 2, 3, 4])
     G = PermutationGroup([a, b])
     assert not G.is_solvable
+
 
 def test_rubik1():
     gens = rubik_cube_generators()
@@ -298,6 +313,7 @@ def test_rubik1():
     G = RubikGroup(2)
     assert G.order() == 3674160
 
+
 @XFAIL
 def test_rubik():
     skip('takes too much time')
@@ -308,6 +324,7 @@ def test_rubik():
     assert not G1.is_normal(G)
     G2 = G.normal_closure(G1.generators)
     assert G2.is_subgroup(G)
+
 
 def test_direct_product():
     C = CyclicGroup(4)
@@ -321,12 +338,14 @@ def test_direct_product():
     assert H.order() == 32
     assert H.is_abelian == False
 
+
 def test_orbit_rep():
     G = DihedralGroup(6)
     assert G.orbit_rep(1, 3) in [Permutation([2, 3, 4, 5, 0, 1]),\
     Permutation([4, 3, 2, 1, 0, 5])]
     H = CyclicGroup(4)*G
     assert H.orbit_rep(1, 5) == False
+
 
 def test_schreier_vector():
     G = CyclicGroup(50)
@@ -337,6 +356,7 @@ def test_schreier_vector():
     assert H.schreier_vector(2) == [0, 1, -1, 0, 0, 1, 0, 0]
     L = SymmetricGroup(4)
     assert L.schreier_vector(1) == [1, -1, 0, 0]
+
 
 def test_random_pr():
     D = DihedralGroup(6)
@@ -351,6 +371,7 @@ def test_random_pr():
     _random_prec = {'s': 2, 't': 9, 'x': 1, 'e': -1}
     assert D.random_pr(_random_prec=_random_prec) == \
         Permutation([0, 5, 4, 3, 2, 1])
+
 
 def test_is_alt_sym():
     G = DihedralGroup(10)
@@ -383,6 +404,7 @@ def test_is_alt_sym():
         9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
     assert A.is_alt_sym(_random_prec=_random_prec) == False
 
+
 def test_minimal_block():
     D = DihedralGroup(6)
     block_system = D.minimal_block([0, 3])
@@ -393,15 +415,18 @@ def test_minimal_block():
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
 
+
 def test_max_div():
     S = SymmetricGroup(10)
     assert S.max_div == 5
+
 
 def test_is_primitive():
     S = SymmetricGroup(5)
     assert S.is_primitive() == True
     C = CyclicGroup(7)
     assert C.is_primitive() == True
+
 
 def test_random_stab():
     S = SymmetricGroup(5)
@@ -412,6 +437,7 @@ def test_random_stab():
     h = S.random_stab(1)
     assert h(1) == 1
 
+
 def test_transitivity_degree():
     perm = Permutation([1, 2, 0])
     C = PermutationGroup([perm])
@@ -421,6 +447,7 @@ def test_transitivity_degree():
     # alternating group of degree 5
     Alt = PermutationGroup([gen1, gen2])
     assert Alt.transitivity_degree == 3
+
 
 def test_schreier_sims_random():
     assert Tetra.pgroup.base == [0, 1]
@@ -439,6 +466,7 @@ def test_schreier_sims_random():
     assert D.schreier_sims_random([], D.generators, 2,\
            _random_prec=_random_prec) == (base, strong_gens)
 
+
 def test_baseswap():
     S = SymmetricGroup(4)
     S.schreier_sims()
@@ -451,6 +479,7 @@ def test_baseswap():
     assert _verify_bsgs(S, deterministic[0], deterministic[1]) == True
     assert randomized[0] == [0, 2, 1]
     assert _verify_bsgs(S, randomized[0], randomized[1]) == True
+
 
 def test_schreier_sims_incremental():
     identity = Permutation([0, 1, 2, 3, 4])
@@ -476,6 +505,7 @@ def test_schreier_sims_incremental():
     gen = C.generators[0]
     base, strong_gens = C.schreier_sims_incremental(gens=[gen**3])
     assert _verify_bsgs(C, base, strong_gens) == True
+
 
 def _subgroup_search(i, j, k):
     prop_true = lambda x: True
@@ -510,13 +540,16 @@ def _subgroup_search(i, j, k):
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]
 
+
 def test_subgroup_search():
     _subgroup_search(10, 15, 2)
+
 
 @XFAIL
 def test_subgroup_search2():
     skip('takes too much time')
     _subgroup_search(16, 17, 1)
+
 
 def test_normal_closure():
     # the normal closure of the trivial group is trivial
@@ -552,6 +585,7 @@ def test_normal_closure():
             if gp2.is_subgroup(gp, 0) and gp2.degree == gp.degree:
                 assert _verify_normal_closure(gp, gp2)
 
+
 def test_derived_series():
     # the derived series of the trivial group consists only of the trivial group
     triv = PermutationGroup([Permutation([0, 1, 2])])
@@ -567,6 +601,7 @@ def test_derived_series():
     assert series[2].is_subgroup(DihedralGroup(2))
     assert series[3].is_trivial
 
+
 def test_lower_central_series():
     # the lower central series of the trivial group consists of the trivial
     # group
@@ -581,6 +616,7 @@ def test_lower_central_series():
     series = S.lower_central_series()
     assert len(series) == 2
     assert series[1].is_subgroup(AlternatingGroup(6))
+
 
 def test_commutator():
     # the commutator of the trivial group and the trivial group is trivial
@@ -608,6 +644,7 @@ def test_commutator():
     A = AlternatingGroup(3)
     assert S.commutator(A, S).is_subgroup(A)
 
+
 def test_is_nilpotent():
     # every abelian group is nilpotent
     for i in (1, 2, 3):
@@ -620,10 +657,12 @@ def test_is_nilpotent():
     # A_5 is not solvable and thus not nilpotent
     assert AlternatingGroup(5).is_nilpotent == False
 
+
 def test_is_trivial():
     for i in range(5):
         triv = PermutationGroup([Permutation(range(i))])
         assert triv.is_trivial
+
 
 def test_pointwise_stabilizer():
     S = SymmetricGroup(5)
@@ -633,6 +672,7 @@ def test_pointwise_stabilizer():
         stab = stab.stabilizer(point)
         points.append(point)
         assert S.pointwise_stabilizer(points).is_subgroup(stab)
+
 
 def test_make_perm():
     assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \

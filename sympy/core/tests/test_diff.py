@@ -2,6 +2,7 @@ from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
                   Derivative, Expr, symbols, pi, I, S
 from sympy.utilities.pytest import raises
 
+
 def test_diff():
     x, y = symbols('x, y')
     assert Rational(1, 3).diff(x) is S.Zero
@@ -33,6 +34,7 @@ def test_diff():
     e = a*b*c
     assert e.diff(c) == a*b
 
+
 def test_diff2():
     n3 = Rational(3)
     n2 = Rational(2)
@@ -49,6 +51,7 @@ def test_diff2():
     assert e.diff(x) == (x + 1)**3 + 3*x*(x + 1)**2
     e = 2*exp(x*x)*x
     assert e.diff(x) == 2*exp(x**2) + 4*x**2*exp(x**2)
+
 
 def test_diff3():
     a, b, c = map(Symbol, 'abc')
@@ -70,6 +73,7 @@ def test_diff3():
     assert e == 2**a*log(Rational(2))**(-1)
     assert e.diff(a) == 2**a
 
+
 def test_diff_no_eval_derivative():
     class My(Expr):
         def __new__(cls, x):
@@ -81,10 +85,12 @@ def test_diff_no_eval_derivative():
     # it doesn't have y so it shouldn't need a method for this case
     assert My(x).diff(y) == 0
 
+
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.
     x = Symbol("x")
     assert x.diff(x, 10**8) == 0
+
 
 def test_deriv_noncommutative():
     A = Symbol("A", commutative=False)

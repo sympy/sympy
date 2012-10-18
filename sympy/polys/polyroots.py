@@ -19,6 +19,7 @@ from sympy.core.compatibility import reduce
 
 import math
 
+
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
@@ -31,6 +32,7 @@ def roots_linear(f):
             r = simplify(r)
 
     return [r]
+
 
 def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial."""
@@ -78,6 +80,7 @@ def roots_quadratic(f):
 
     return sorted([r0, r1], key=default_sort_key)
 
+
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
     _, a, b, c = f.monic().all_coeffs()
@@ -115,6 +118,7 @@ def roots_cubic(f):
     ]
 
     return soln
+
 
 def roots_quartic(f):
     r"""
@@ -217,6 +221,7 @@ def roots_quartic(f):
 
     return ans
 
+
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
     n = f.degree()
@@ -234,6 +239,7 @@ def roots_binomial(f):
         roots.append((alpha*zeta).expand(power_base=False))
 
     return sorted(roots, key=default_sort_key)
+
 
 def _inv_totient_estimate(m):
     """
@@ -279,6 +285,7 @@ def _inv_totient_estimate(m):
 
     return L, U
 
+
 def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
@@ -304,6 +311,7 @@ def roots_cyclotomic(f, factor=False):
             roots.append(-h.TC())
 
     return sorted(roots, key=default_sort_key)
+
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
@@ -335,6 +343,7 @@ def roots_rational(f):
                 zeros.append(-zero)
 
     return sorted(zeros, key=default_sort_key)
+
 
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
@@ -369,6 +378,7 @@ def _integer_basis(poly):
                     break
         else:
             return div
+
 
 def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
@@ -437,6 +447,7 @@ def preprocess_roots(poly):
             coeff *= basis
 
     return coeff, poly
+
 
 def roots(f, *gens, **flags):
     """
@@ -654,6 +665,7 @@ def roots(f, *gens, **flags):
             zeros.extend([zero]*k)
 
         return sorted(zeros, key=default_sort_key)
+
 
 def root_factors(f, *gens, **args):
     """

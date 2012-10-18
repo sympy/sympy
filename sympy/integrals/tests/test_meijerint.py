@@ -8,6 +8,7 @@ from sympy.utilities.randtest import (test_numerically,
          random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
+
 def test_rewrite_single():
     def t(expr, c, m):
         e = _rewrite_single(meijerg([a], [b], [c], [d], expr), x)
@@ -47,10 +48,12 @@ def test_rewrite_single():
               meijerg(((-S(1)/2, 0, S(1)/4, S(1)/2, S(3)/4), (1,)),
                        ((), (-S(1)/2, 0)), 64*exp_polar(-4*I*pi)/x**4))], True)
 
+
 def test_rewrite1():
     assert _rewrite1(x**3*meijerg([a], [b], [c], [d], x**2 + y*x**2)*5, x) \
            == (5, x**3, [(1, 0, meijerg([a], [b], [c], [d], x**2*(y + 1)))], \
                True)
+
 
 def test_meijerint_indefinite_numerically():
     def t(fac, arg):
@@ -68,6 +71,7 @@ def test_meijerint_indefinite_numerically():
     t(x**3, x)
     t(3*x**S('3/2'), 4*x**S('7/3'))
 
+
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
             d: randcplx(), y: randcplx()/10}
@@ -83,6 +87,7 @@ def test_inflate():
     assert t([[a, y], [b]], [[c], [d]], x, 3)
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
 
+
 def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
@@ -97,6 +102,7 @@ def test_recursive():
            == sqrt(pi)/2*(1 + erf(a + b + c))
     assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo))) \
            == sqrt(pi)/2*(1 - erf(a + b + c))
+
 
 def test_meijerint():
     from sympy import symbols, expand, arg
@@ -201,6 +207,7 @@ def test_meijerint():
     assert simplify(integrate(x**s*exp(-a*x**2), (x, -oo, oo))) == \
            a**(-s/2 - S(1)/2)*(exp(I*pi*s) + 1)*gamma(s/2 + S(1)/2)/2
 
+
 def test_bessel():
     from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
                        powdenest)
@@ -249,6 +256,7 @@ def test_bessel():
     assert integrate(besselj(1, x**2)*x, x, meijerg=True) == \
         -besselj(0, x**2)/2
 
+
 def test_inversion():
     from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
 
@@ -262,6 +270,7 @@ def test_inversion():
     assert meijerint_inversion(sqrt(s)/sqrt(1 + s**2), s, t) is None
     assert inv(exp(s**2)) is None
     assert meijerint_inversion(exp(-s**2), s, t) is None
+
 
 def test_lookup_table():
     from random import uniform, randrange
@@ -294,6 +303,7 @@ def test_lookup_table():
             else:
                 assert (abs(a - b)/r).n() <= 1e-10
 
+
 def test_branch_bug():
     from sympy import powdenest, lowergamma
     # TODO combsimp cannot prove that the factor is unity
@@ -303,10 +313,12 @@ def test_branch_bug():
        2*x*erf(x**3)*gamma(S(2)/3)/(3*gamma(S(5)/3)) \
        - 2*gamma(S(2)/3)*lowergamma(S(2)/3, x**6)/(3*sqrt(pi)*gamma(S(5)/3))
 
+
 def test_linear_subs():
     from sympy import besselj
     assert integrate(sin(x-1), x, meijerg=True) == -cos(1 - x)
     assert integrate(besselj(1, x-1), x, meijerg=True) == -besselj(0, 1 - x)
+
 
 def test_probability():
     # various integrals from probability theory
@@ -498,6 +510,7 @@ def test_probability():
     assert combsimp(expand_mul(integrate(log(x)*x**(k - 1)*exp(-x)/gamma(k),
                               (x, 0, oo)))) == polygamma(0, k)
 
+
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
@@ -550,6 +563,7 @@ def test_expint():
     assert integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True) == pi/4
     assert integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True) == log(2)/2
 
+
 def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
                        atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
@@ -581,9 +595,11 @@ def test_messy():
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
            Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
 
+
 def test_3023():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
            -I*sqrt(pi)*exp(I*pi/4)
+
 
 def test_3153():
     expr = 1/x/(a+b*x)**(S(1)/3)
@@ -592,9 +608,11 @@ def test_3153():
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
 
+
 def test_3249():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
            == pi*exp(-1)
+
 
 def test_fresnel():
     from sympy import fresnels, fresnelc

@@ -37,6 +37,7 @@ from sympy.core.compatibility import iterable
 ## Abstract base classes #################################################
 ##########################################################################
 
+
 class Module(object):
     """
     Abstract base class for modules.
@@ -151,6 +152,7 @@ class Module(object):
         """Return the identity homomorphism on ``self``."""
         raise NotImplementedError
 
+
 class ModuleElement(object):
     """
     Base class for module element wrappers.
@@ -252,6 +254,7 @@ class ModuleElement(object):
 ## Free Modules ##########################################################
 ##########################################################################
 
+
 class FreeModuleElement(ModuleElement):
     """Element of a free module. Data stored as a tuple."""
 
@@ -273,6 +276,7 @@ class FreeModuleElement(ModuleElement):
 
     def __getitem__(self, idx):
         return self.data[idx]
+
 
 class FreeModule(Module):
     """
@@ -419,6 +423,7 @@ class FreeModule(Module):
         from sympy.polys.agca.homomorphisms import homomorphism
         return homomorphism(self, self, self.basis())
 
+
 class FreeModulePolyRing(FreeModule):
     """
     Free module over a generalized polynomial ring.
@@ -461,6 +466,7 @@ class FreeModulePolyRing(FreeModule):
         False
         """
         return SubModulePolyRing(gens, self, **opts)
+
 
 class FreeModuleQuotientRing(FreeModule):
     """
@@ -550,6 +556,7 @@ class FreeModuleQuotientRing(FreeModule):
 ##########################################################################
 ## Submodules and subquotients ###########################################
 ##########################################################################
+
 
 class SubModule(Module):
     """
@@ -905,6 +912,7 @@ class SubModule(Module):
         return self.container.identity_hom().restrict_domain(
             self).restrict_codomain(self)
 
+
 class SubQuotientModule(SubModule):
     """
     Submodule of a quotient module.
@@ -987,6 +995,8 @@ class SubQuotientModule(SubModule):
 
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
+
+
 class ModuleOrder(ProductOrder):
     """A product monomial order with a zeroth term as module index."""
 
@@ -995,6 +1005,7 @@ class ModuleOrder(ProductOrder):
             ProductOrder.__init__(self, (o2, _subs1), (o1, _subs0))
         else:
             ProductOrder.__init__(self, (o1, _subs0), (o2, _subs1))
+
 
 class SubModulePolyRing(SubModule):
     """
@@ -1173,6 +1184,7 @@ class SubModulePolyRing(SubModule):
         return reduce(lambda x, y: x.intersect(y),
             (self._module_quotient(self.container.submodule(x)) for x in other.gens))
 
+
 class SubModuleQuotientRing(SubModule):
     """
     Class for submodules of free modules over quotient rings.
@@ -1214,6 +1226,7 @@ class SubModuleQuotientRing(SubModule):
 ## Quotient Modules ######################################################
 ##########################################################################
 
+
 class QuotientModuleElement(ModuleElement):
     """Element of a quotient module."""
 
@@ -1224,6 +1237,7 @@ class QuotientModuleElement(ModuleElement):
     def __repr__(self):
         from sympy import sstr
         return repr(self.data) + " + " + repr(self.module.killed_module)
+
 
 class QuotientModule(Module):
     """

@@ -20,6 +20,7 @@ from sympy.ntheory import multiplicity, perfect_power
 # log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
 # p.is_positive.]
 
+
 class ExpBase(Function):
 
     nargs = 1
@@ -124,6 +125,7 @@ class ExpBase(Function):
             return expr
         return self.func(arg)
 
+
 class exp_polar(ExpBase):
     r"""
     Represent a 'polar number' (see g-function Sphinx documentation).
@@ -184,6 +186,7 @@ class exp_polar(ExpBase):
         if self.args[0] == 0:
             return self, S(1)
         return ExpBase.as_base_exp(self)
+
 
 class exp(ExpBase):
     """
@@ -439,6 +442,7 @@ class exp(ExpBase):
     def _sage_(self):
         import sage.all as sage
         return sage.exp(self.args[0]._sage_())
+
 
 class log(Function):
     """
@@ -699,6 +703,7 @@ class log(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.log(self.args[0]._sage_())
+
 
 class LambertW(Function):
     """Lambert W function, defined as the inverse function of

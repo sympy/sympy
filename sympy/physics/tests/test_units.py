@@ -3,6 +3,7 @@ from sympy.physics.units import (au, amu, charge, day, find_unit,
                                  foot, km, m, meter, minute, s,
                                  speed_of_light, grams)
 
+
 def test_units():
     assert (5*m/s * day) / km == 432
     assert foot / meter == Rational('0.3048')
@@ -20,8 +21,10 @@ def test_units():
     assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
 
+
 def test_issue_2466():
     assert (m < s).is_Relational
+
 
 def test_find_unit():
     assert find_unit('charge') == ['charge']

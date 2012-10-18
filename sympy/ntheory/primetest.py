@@ -47,6 +47,7 @@ _pseudos = set([
         8757647355282841, 8903933671696381, 8996133652295653, 9074421465661261,
         9157536631454221, 9188353522314541])
 
+
 def _test(n, base):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
@@ -70,6 +71,7 @@ def _test(n, base):
             if b == n-1:
                 return True
     return False
+
 
 def mr(n, bases):
     """Perform a Miller-Rabin strong pseudoprime test on n using a
@@ -98,6 +100,7 @@ def mr(n, bases):
         if not _test(n, base):
             return False
     return True
+
 
 def _mr_safe(n):
     """For n < 10**16, use the Miller-Rabin test to determine with
@@ -170,6 +173,7 @@ def _mr_safe(n):
         # [2, 3, 7, 61, 24251] stot = 5 clear == bases
     raise ValueError("n too large")
 
+
 def isprime(n):
     """
     Test if n is a prime number (True) or not (False). For n < 10**16 the
@@ -219,6 +223,7 @@ def isprime(n):
         return _mr_safe(n)
     except ValueError:
         return mr(n, _isprime_fallback_primes)
+
 
 def _mr_safe_helper(_s):
     """

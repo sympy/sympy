@@ -54,23 +54,30 @@ __all__ = [
     'simplify_index_permutations',
 ]
 
+
 class SecondQuantizationError(Exception):
     pass
+
 
 class AppliesOnlyToSymbolicIndex(SecondQuantizationError):
     pass
 
+
 class ContractionAppliesOnlyToFermions(SecondQuantizationError):
     pass
+
 
 class ViolationOfPauliPrinciple(SecondQuantizationError):
     pass
 
+
 class SubstitutionOfAmbigousOperatorFailed(SecondQuantizationError):
     pass
 
+
 class WicksTheoremDoesNotApply(SecondQuantizationError):
     pass
+
 
 class Dagger(Expr):
     """
@@ -299,6 +306,7 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         return self
 
+
 class SqOperator(Expr):
     """
     Base class for Second Quantization operators.
@@ -369,11 +377,14 @@ class SqOperator(Expr):
         """
         raise NotImplementedError('implement apply_operator in a subclass')
 
+
 class BosonicOperator(SqOperator):
     pass
 
+
 class Annihilator(SqOperator):
     pass
+
 
 class Creator(SqOperator):
     pass
@@ -422,6 +433,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
 
     def __repr__(self):
         return "AnnihilateBoson(%s)"%self.state
+
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -740,6 +752,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def _latex(self, printer):
         return "a_{%s}"%self.state.name
 
+
 class CreateFermion(FermionicOperator, Creator):
     """
     Fermionic creation operator.
@@ -918,6 +931,7 @@ class FockState(Expr):
 
     def __len__(self):
         return len(self.args[0])
+
 
 class BosonState(FockState):
     """
@@ -1179,6 +1193,7 @@ class FockStateBra(FockState):
         else:
             return Expr.__mul__(self, other)
 
+
 class FockStateBosonKet(BosonState, FockStateKet):
     """
     Many particle Fock state with a sequence of occupation numbers.
@@ -1195,6 +1210,7 @@ class FockStateBosonKet(BosonState, FockStateKet):
     def _dagger_(self):
         return FockStateBosonBra(*self.args)
 
+
 class FockStateBosonBra(BosonState, FockStateBra):
     """
     Describes a collection of BosonBra particles.
@@ -1208,6 +1224,7 @@ class FockStateBosonBra(BosonState, FockStateBra):
     """
     def _dagger_(self):
         return FockStateBosonKet(*self.args)
+
 
 class FockStateFermionKet(FermionState, FockStateKet):
     """
@@ -1232,6 +1249,7 @@ class FockStateFermionKet(FermionState, FockStateKet):
     def _dagger_(self):
         return FockStateFermionBra(*self.args)
 
+
 class FockStateFermionBra(FermionState, FockStateBra):
     """
     See Also
@@ -1253,6 +1271,7 @@ BBra = FockStateBosonBra
 BKet = FockStateBosonKet
 FBra = FockStateFermionBra
 FKet = FockStateFermionKet
+
 
 def _apply_Mul(m):
     """
@@ -2157,9 +2176,11 @@ def contraction(a, b):
         t = ( isinstance(i, FermionicOperator) for i in (a, b) )
         raise ContractionAppliesOnlyToFermions(*t)
 
+
 def _sqkey(sq_operator):
     """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
+
 
 def _sort_anticommuting_fermions(string1, key=_sqkey):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
@@ -2212,6 +2233,7 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
                 sign = sign+1
     string1 = [ key_val[k] for k in keys ]
     return (string1, sign)
+
 
 def evaluate_deltas(e):
     """
@@ -2478,14 +2500,17 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         new_terms.append(term.subs(subslist))
     return Add(*new_terms)
 
+
 class KeyPrinter(StrPrinter):
     """Printer for which only equal objects are equal in print"""
     def _print_Dummy(self, expr):
         return "(%s_%i)" % (expr.name, expr.dummy_index)
 
+
 def __kprint(expr):
     p = KeyPrinter()
     return p.doprint(expr)
+
 
 def _get_ordered_dummies(mul, verbose=False):
     """Returns all dummies in the mul sorted in canonical order
@@ -2629,6 +2654,7 @@ def _get_ordered_dummies(mul, verbose=False):
         result = _determine_ambiguous(mul, result, unordered)
     return result
 
+
 def _determine_ambiguous(term, ordered, ambiguous_groups):
     # We encountered a term for which the dummy substitution is ambiguous.
     # This happens for terms with 2 or more contractions between factors that
@@ -2684,6 +2710,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
                 result.append(d)
         ordered = result
     return ordered
+
 
 class _SymbolFactory(object):
     def __init__(self, label):
@@ -2892,6 +2919,7 @@ def wicks(e, **kw_args):
 
     # there was nothing to do
     return e
+
 
 class PermutationOperator(Expr):
     """

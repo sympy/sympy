@@ -17,6 +17,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyconfig import query
 
+
 def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
@@ -43,6 +44,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
         return func(f, u, O, K, gens, verbose)
 
 # Buchberger algorithm
+
 
 def buchberger(f, u, O, K, gens='', verbose=False):
     """
@@ -820,6 +822,7 @@ def monomial_divides(m1, m2):
     return True
 
 # FGLM
+
 
 def matrix_fglm(F, u, O_from, O_to, K):
     """

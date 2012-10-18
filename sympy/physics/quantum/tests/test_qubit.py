@@ -18,6 +18,7 @@ x, y = symbols('x,y')
 
 epsilon = .000001
 
+
 def test_Qubit():
     array = [0, 0, 1, 1, 0]
     qb = Qubit('00110')
@@ -30,6 +31,7 @@ def test_Qubit():
     assert len(qb) == 5
     qb = Qubit('110')
 
+
 def test_QubitBra():
     assert Qubit(0).dual_class() == QubitBra
     assert QubitBra(0).dual_class() == Qubit
@@ -37,6 +39,7 @@ def test_QubitBra():
            represent(QubitBra(1, 1, 0), nqubits=3)
     assert Qubit(0, 1)._eval_innerproduct_QubitBra(QubitBra(1, 0)) == Integer(0)
     assert Qubit(0, 1)._eval_innerproduct_QubitBra(QubitBra(0, 1)) == Integer(1)
+
 
 def test_IntQubit():
     assert IntQubit(8).as_int() == 8
@@ -49,6 +52,7 @@ def test_IntQubit():
     assert IntQubitBra(3).dual_class() == IntQubit
 
     raises(ValueError, lambda: IntQubit(4, 1))
+
 
 def test_superposition_of_states():
     assert qapply(CNOT(0, 1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
@@ -93,6 +97,7 @@ def test_matrix_to_qubits():
     + Qubit(0, 1, 1) + Qubit(1, 0, 0) + Qubit(1, 0, 1) + Qubit(1, 1, 0) + Qubit(1, 1, 1)))\
         == sqrt(2)*2*Matrix([1, 1, 1, 1, 1, 1, 1, 1])
 
+
 def test_measure_normalize():
     a, b = symbols('a b')
     state = a*Qubit('110') + b*Qubit('111')
@@ -100,6 +105,7 @@ def test_measure_normalize():
      [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'), b*b.conjugate())]
     assert measure_all(state, normalize=False) ==\
         [(Qubit('110'), a*a.conjugate()), (Qubit('111'), b*b.conjugate())]
+
 
 def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)
@@ -135,6 +141,7 @@ def test_measure_all():
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
     assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1, 5)), \
            (Qubit('00'), Rational(4, 5))])
+
 
 def test_eval_trace():
 
@@ -172,6 +179,7 @@ def test_eval_trace():
     t = Tr(d, 0)
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
                         0.5*Density([Qubit('1'), 1]))
+
 
 def test_matrix_to_density():
     mat = Matrix([[0, 0], [0, 1]])

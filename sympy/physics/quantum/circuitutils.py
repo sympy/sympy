@@ -14,6 +14,7 @@ __all__ = [
     'random_insert'
 ]
 
+
 def kmp_table(word):
     """Build the 'partial match' table of the Knuth-Morris-Pratt algorithm.
 
@@ -44,6 +45,7 @@ def kmp_table(word):
             pos = pos + 1
 
     return table
+
 
 def find_subcircuit(circuit, subcircuit, start=0, end=0):
     """Finds the subcircuit in circuit, if it exists.
@@ -129,6 +131,7 @@ def find_subcircuit(circuit, subcircuit, start=0, end=0):
 
     return -1
 
+
 def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
     """Replaces a subcircuit with another subcircuit in circuit,
     if it exists.
@@ -210,11 +213,13 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
 
     return circuit
 
+
 def _sympify_qubit_map(mapping):
     new_map = {}
     for key in mapping:
         new_map[key] = sympify(mapping[key])
     return new_map
+
 
 def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
     """Returns the circuit with symbolic indices and the
@@ -312,6 +317,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
 
     return sym_seq, ndx_map, cur_ndx, index_gen
 
+
 def convert_to_real_indices(seq, qubit_map):
     """Returns the circuit with real indices.
 
@@ -366,6 +372,7 @@ def convert_to_real_indices(seq, qubit_map):
 
     return real_seq
 
+
 def random_reduce(circuit, gate_ids, seed=None):
     """Shorten the length of a quantum circuit.
 
@@ -412,6 +419,7 @@ def random_reduce(circuit, gate_ids, seed=None):
     # return circuit with the identity removed
     return replace_subcircuit(circuit, id)
 
+
 def random_insert(circuit, choices, seed=None):
     """Insert a circuit into another quantum circuit.
 
@@ -454,6 +462,8 @@ def random_insert(circuit, choices, seed=None):
     return tuple(circuit)
 
 # Flatten the GateIdentity objects (with gate rules) into one single list
+
+
 def flatten_ids(ids):
     collapse = lambda acc, an_id: acc + sorted(an_id.equivalent_ids,
                                         key=default_sort_key)

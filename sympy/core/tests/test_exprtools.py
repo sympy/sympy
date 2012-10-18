@@ -8,11 +8,13 @@ from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 
+
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
     assert decompose_power(x**2) == (x, 2)
     assert decompose_power(x**(2*y)) == (x**y, 2)
     assert decompose_power(x**(2*y/3)) == (x**(y/3), 2)
+
 
 def test_Factors():
     assert Factors() == Factors({})
@@ -39,6 +41,7 @@ def test_Factors():
     b = Factors({z: 1, t: 3})
 
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
@@ -72,6 +75,7 @@ def test_Term():
 
     assert Term((2*x + 2)**3) == Term(8, Factors({x + 1: 3}), Factors({}))
     assert Term((2*x + 2)*(3*x + 6)**2) == Term(18, Factors({x + 1: 1, x + 2: 2}), Factors({}))
+
 
 def test_gcd_terms():
     f = 2*(x + 1)*(x + 4)/(5*x**2 + 5) + (2*x + 2)*(x + 5)/(x**2 + 1)/5 + (2*x + 2)*(x + 6)/(5*x**2 + 5)
@@ -119,6 +123,7 @@ def test_gcd_terms():
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
 
+
 def test_factor_terms():
     A = Symbol('A', commutative=False)
     assert factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x)) == \
@@ -159,10 +164,12 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
+
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
     assert e.xreplace({}) == e
     assert e.xreplace({y: x}) == e
+
 
 def test_factor_nc():
     x, y = symbols('x,y')
@@ -218,6 +225,7 @@ def test_factor_nc():
 
     # issue 3435
     assert (2*n+2*m).factor() == 2*(n + m)
+
 
 def test_issue_3261():
     a, b = symbols("a b")

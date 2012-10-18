@@ -12,20 +12,25 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 x, y = symbols("x,y")
 
+
 def test_Add():
     assert precedence(x+y) == PRECEDENCE["Add"]
     assert precedence(x*y+1) == PRECEDENCE["Add"]
+
 
 def test_Function():
     assert precedence(sin(x)) == PRECEDENCE["Atom"]
     assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]
 
+
 def test_Integral():
     assert precedence(Integral(x, y)) == PRECEDENCE["Atom"]
+
 
 def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
     assert precedence(-x*y) == PRECEDENCE["Add"]
+
 
 def test_Number():
     assert precedence(Integer(0)) == PRECEDENCE["Atom"]
@@ -39,25 +44,32 @@ def test_Number():
     assert precedence(oo) == PRECEDENCE["Atom"]
     assert precedence(-oo) == PRECEDENCE["Add"]
 
+
 def test_Order():
     assert precedence(Order(x)) == PRECEDENCE["Atom"]
+
 
 def test_Pow():
     assert precedence(x**y) == PRECEDENCE["Pow"]
     assert precedence(-x**y) == PRECEDENCE["Add"]
     assert precedence(x**-y) == PRECEDENCE["Pow"]
 
+
 def test_Product():
     assert precedence(Product(x, (x, y, y+1))) == PRECEDENCE["Atom"]
+
 
 def test_Relational():
     assert precedence(Rel(x+y, y, "<")) == PRECEDENCE["Relational"]
 
+
 def test_Sum():
     assert precedence(Sum(x, (x, y, y+1))) == PRECEDENCE["Atom"]
 
+
 def test_Symbol():
     assert precedence(x) == PRECEDENCE["Atom"]
+
 
 def test_And_Or():
     # precendence relations between logical operators, ...

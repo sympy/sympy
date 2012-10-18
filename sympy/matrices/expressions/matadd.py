@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr, ShapeError, matrixify, ZeroMatrix
 from sympy import Add, S
 
+
 class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 

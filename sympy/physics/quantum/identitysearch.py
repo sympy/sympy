@@ -29,6 +29,7 @@ __all__ = [
 np = import_module('numpy', min_python_version=(2, 6))
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
+
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
 
@@ -116,6 +117,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         is_identity = is_one if identity_only else True
         return is_diagonal and has_correct_trace and is_identity
 
+
 def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
     """Checks if a given circuit, in matrix form, is equivalent to
     a scalar value.
@@ -166,11 +168,13 @@ if np and scipy:
 else:
     is_scalar_matrix = is_scalar_nonsparse_matrix
 
+
 def _get_min_qubits(a_gate):
     if isinstance(a_gate, Pow):
         return a_gate.base.min_qubits
     else:
         return a_gate.min_qubits
+
 
 def ll_op(left, right):
     """Perform a LL operation.
@@ -224,6 +228,7 @@ def ll_op(left, right):
 
     return None
 
+
 def lr_op(left, right):
     """Perform a LR operation.
 
@@ -275,6 +280,7 @@ def lr_op(left, right):
         return (new_left, new_right)
 
     return None
+
 
 def rl_op(left, right):
     """Perform a RL operation.
@@ -328,6 +334,7 @@ def rl_op(left, right):
 
     return None
 
+
 def rr_op(left, right):
     """Perform a RR operation.
 
@@ -379,6 +386,7 @@ def rr_op(left, right):
         return (new_left, new_right)
 
     return None
+
 
 def generate_gate_rules(gate_seq, return_as_muls=False):
     """Returns a set of gate rules.  Each gate rules is represented
@@ -524,6 +532,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     return rules
 
+
 def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """Returns a set of equivalent gate identities.
 
@@ -602,6 +611,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
 
     return eq_ids
 
+
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
 
@@ -662,6 +672,7 @@ class GateIdentity(Basic):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
+
 def is_degenerate(identity_set, gate_identity):
     """Checks if a gate identity is a permutation of another identity.
 
@@ -699,6 +710,7 @@ def is_degenerate(identity_set, gate_identity):
         if (gate_identity in an_id.equivalent_ids):
             return True
     return False
+
 
 def is_reducible(circuit, nqubits, begin, end):
     """Determines if a circuit is reducible by checking
@@ -749,6 +761,7 @@ def is_reducible(circuit, nqubits, begin, end):
             return True
 
     return False
+
 
 def bfs_identity_search(gate_list, nqubits, max_depth=None,
        identity_only=False):
@@ -826,6 +839,7 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
                 queue.append(new_circuit)
 
     return ids
+
 
 def random_identity_search(gate_list, numgates, nqubits):
     """Randomly selects numgates from gate_list and checks if it is

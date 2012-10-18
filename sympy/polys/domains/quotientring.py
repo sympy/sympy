@@ -9,6 +9,7 @@ from sympy.polys.agca.modules import FreeModuleQuotientRing
 # - poly rings over quotients?
 # - division by non-units in integral domains?
 
+
 class QuotientRingElement(object):
     """
     Class representing elements of (commutative) quotient rings.
@@ -81,6 +82,7 @@ class QuotientRingElement(object):
 
     def __ne__(self, om):
         return not self.__eq__(om)
+
 
 class QuotientRing(Ring):
     """

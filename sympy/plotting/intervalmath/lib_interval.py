@@ -4,6 +4,7 @@ from sympy.external import import_module
 
 np = import_module('numpy')
 
+
 def Abs(x):
     if isinstance(x, (int, float)):
         return interval(abs(x))
@@ -16,6 +17,8 @@ def Abs(x):
         raise NotImplementedError
 
 #Monotonic
+
+
 def exp(x):
     """evaluates the exponential of an interval"""
     if isinstance(x, (int, float)):
