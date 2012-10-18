@@ -590,7 +590,7 @@ class Polygon(GeometryEntity):
         for s in self.sides:
             side_perim_fraction = s.length/perimeter
             perim_fraction_end = perim_fraction_start + side_perim_fraction
-            pt  = s.arbitrary_point(parameter).subs(
+            pt = s.arbitrary_point(parameter).subs(
                   t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
             perim_fraction_start = perim_fraction_end

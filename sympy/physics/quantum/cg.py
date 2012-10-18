@@ -111,7 +111,7 @@ class Wigner3j(Expr):
             for j in range(3):
                 s = m[j][i]
                 wdelta = maxw[j] - s.width()
-                wleft  = wdelta //2
+                wleft = wdelta //2
                 wright = wdelta - wleft
 
                 s = prettyForm(*s.right(' '*wright))
@@ -268,7 +268,7 @@ class Wigner6j(Expr):
             for j in range(3):
                 s = m[j][i]
                 wdelta = maxw[j] - s.width()
-                wleft  = wdelta //2
+                wleft = wdelta //2
                 wright = wdelta - wleft
 
                 s = prettyForm(*s.right(' '*wright))
@@ -368,7 +368,7 @@ class Wigner9j(Expr):
             for j in range(3):
                 s = m[j][i]
                 wdelta = maxw[j] - s.width()
-                wleft  = wdelta //2
+                wleft = wdelta //2
                 wright = wdelta - wleft
 
                 s = prettyForm(*s.right(' '*wright))

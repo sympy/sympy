@@ -403,9 +403,9 @@ class Domain(Option):
     after = ['gens']
 
     _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
-    _re_polynomial  = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
-    _re_fraction    = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
-    _re_algebraic   = re.compile("^(Q|QQ)\<(.+)\>$")
+    _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
+    _re_fraction = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
+    _re_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
     @classmethod
     def preprocess(cls, domain):

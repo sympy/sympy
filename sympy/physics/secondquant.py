@@ -2384,11 +2384,11 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     # setup the replacing dummies
     if new_indices:
-        letters_above  = pretty_indices.get('above', "")
-        letters_below  = pretty_indices.get('below', "")
+        letters_above = pretty_indices.get('above', "")
+        letters_below = pretty_indices.get('below', "")
         letters_general= pretty_indices.get('general', "")
-        len_above  = len(letters_above)
-        len_below  = len(letters_below)
+        len_above = len(letters_above)
+        len_below = len(letters_below)
         len_general= len(letters_general)
 
         def _i(number):
@@ -2445,7 +2445,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         i = iter(belows)
         a = iter(aboves)
         p = iter(generals)
-        ordered  = _get_ordered_dummies(term)
+        ordered = _get_ordered_dummies(term)
         subsdict = {}
         for d in ordered:
             if d.assumptions0.get('below_fermi'):

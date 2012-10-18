@@ -22,8 +22,8 @@ NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
 
 ZERO = sympy.Rational(0)
-ONE  = sympy.Rational(1)
-TWO  = sympy.Rational(2)
+ONE = sympy.Rational(1)
+TWO = sympy.Rational(2)
 HALF = sympy.Rational(1,2)
 
 from sympy.core import Pow as pow_type
@@ -394,18 +394,18 @@ class MV(object):
         Calculates all the MV static variables needed for
         basis operations.  See reference 5 section 2.
         """
-        MV.vbasis     = basis
-        MV.vsyms      = sympy.symbols(MV.vbasis)
-        MV.n          = len(MV.vbasis)
-        MV.nrg        = range(MV.n)
-        MV.n1         = MV.n+1
-        MV.n1rg       = range(MV.n1)
-        MV.npow       = 2**MV.n
-        MV.index      = range(MV.n)
-        MV.gabasis    = [[]]
-        MV.basis      = (MV.n+1)*[0]
+        MV.vbasis = basis
+        MV.vsyms = sympy.symbols(MV.vbasis)
+        MV.n = len(MV.vbasis)
+        MV.nrg = range(MV.n)
+        MV.n1 = MV.n+1
+        MV.n1rg = range(MV.n1)
+        MV.npow = 2**MV.n
+        MV.index = range(MV.n)
+        MV.gabasis = [[]]
+        MV.basis = (MV.n+1)*[0]
         MV.basislabel = (MV.n+1)*[0]
-        MV.basis[0]   = []
+        MV.basis[0] = []
         MV.basislabel[0] = '1'
         MV.basislabel_lst = [['1']]
         MV.nbasis = numpy.array((MV.n+1)*[1],dtype=numpy.object)
@@ -558,7 +558,7 @@ class MV(object):
         realized.  See reference 5 section 3.
         """
         if blst == []:
-            blst_coef   = []
+            blst_coef = []
             blst_expand = []
             for i in MV.n1rg:
                 blst_coef.append([])
@@ -567,8 +567,8 @@ class MV(object):
             blst_coef[0].append(ONE)
             return(blst_coef,blst_expand)
         blst_expand = [blst]
-        blst_coef      = [ONE]
-        blst_flg         = [1]
+        blst_coef = [ONE]
+        blst_flg = [1]
         while test_int_flgs(blst_flg):
             for i in range(len(blst_flg)):
                 if blst_flg[i]:
@@ -581,8 +581,8 @@ class MV(object):
                             blst_expand[i] = tmp[1]
                             blst_flg[i] = tmp[2]
                         else:
-                            blst_coef[i]      = -blst_coef[i]
-                            blst_flg[i]        = 1
+                            blst_coef[i] = -blst_coef[i]
+                            blst_flg[i] = 1
                             blst_expand[i] = tmp[3]
                             blst_coef.append(-blst_coef[i]*tmp[0])
                             blst_expand.append(tmp[1])
@@ -778,7 +778,7 @@ class MV(object):
         MV.debug = debug
         MV.bladeprint = 0
         MV.tables_flg = 0
-        MV.str_mode  = 0
+        MV.str_mode = 0
         MV.basisroot = ''
         MV.index_offset = offset
         if coords == None:
@@ -916,9 +916,9 @@ class MV(object):
         base_name += 'bm'
         base_name_hat = base_name+'hat'
 
-        base_name_lst   = []
-        nbase_name_lst  = []
-        rbase_name_lst  = []
+        base_name_lst = []
+        nbase_name_lst = []
+        rbase_name_lst = []
         rnbase_name_lst = []
         coords_lst = []
 
@@ -994,7 +994,7 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((nbases[irow]|nbases[icol])())
-                g[irow][icol]  = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
+                g[irow][icol] = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
 
         if debug:
             print 'Metric $\\hat{g}_{ij} = \\hat{'+LaTeX_base+'}_{i}\\cdot \\hat{'+\
@@ -1396,7 +1396,7 @@ class MV(object):
                     lblade = MV.basis[igrade-1].index(blade[:-1])
                     rblade = blade[-1]
                     igrade1 = igrade-1
-                    blade1  = MV.btable[igrade1][lblade]
+                    blade1 = MV.btable[igrade1][lblade]
                     vector2 = MV.btable[1][rblade]
                     b1Wv2 = MV.wedge(igrade1,blade1,vector2,name)
                     tmp.append(b1Wv2)
@@ -1632,9 +1632,9 @@ class MV(object):
         multivector field of MV.coords is instantiated.
         """
 
-        self.name      = mvname
-        self.mv        = MV.n1*[0]
-        self.bladeflg  = 0  #1 for blade expansion
+        self.name = mvname
+        self.mv = MV.n1*[0]
+        self.bladeflg = 0  #1 for blade expansion
         self.puregrade = 1
         if mvtype == 'basisvector':
             self.mv[1] = numpy.array(MV.nbasis[1]*[ZERO],dtype=numpy.object)
@@ -1682,7 +1682,7 @@ class MV(object):
                 self.mv[2] = numpy.array(value,dtype=numpy.object)
         if mvtype == 'grade':
             igrade = value[0]
-            coefs  = value[1]
+            coefs = value[1]
             if isinstance(coefs,str): #Most general pure grade multivector
                 base_symbol = coefs
                 coefs = []
@@ -2035,8 +2035,8 @@ class MV(object):
         Y so that Y can be modified without affecting X.
         """
         cpy = MV()
-        cpy.name      = self.name
-        cpy.bladeflg  = self.bladeflg
+        cpy.name = self.name
+        cpy.bladeflg = self.bladeflg
         cpy.puregrade = self.puregrade
         for i in MV.n1rg:
             if sub:
@@ -2134,7 +2134,7 @@ class MV(object):
         """
         egrades = MV()
         self.convert_to_blades()
-        egrades.bladeflg  = self.bladeflg
+        egrades.bladeflg = self.bladeflg
         egrades.puregrade = self.puregrade
         for igrade in range(0,MV.n1,2):
             egrades.mv[igrade] = +self.mv[igrade]
@@ -2147,7 +2147,7 @@ class MV(object):
         """
         ogrades = MV()
         self.convert_to_blades()
-        ogrades.bladeflg  = self.bladeflg
+        ogrades.bladeflg = self.bladeflg
         ogrades.puregrade = self.puregrade
         for igrade in range(1,MV.n1,2):
             ogrades.mv[igrade] = +self.mv[igrade]
@@ -2160,7 +2160,7 @@ class MV(object):
         """
         revmv = MV()
         self.convert_to_blades()
-        revmv.bladeflg  = self.bladeflg
+        revmv.bladeflg = self.bladeflg
         revmv.puregrade = self.puregrade
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):
@@ -2229,7 +2229,7 @@ class MV(object):
 
     def subs(self,*args):
         X = MV()
-        X.bladeflg  = self.bladeflg
+        X.bladeflg = self.bladeflg
         X.puregrade = self.puregrade
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):

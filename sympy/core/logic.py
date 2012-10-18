@@ -129,7 +129,7 @@ class Logic(object):
 
            !a & !b | c
         """
-        lexpr   = None  # current logical expression
+        lexpr = None  # current logical expression
         schedop = None  # scheduled operation
         for term in text.split():
             # operation symbol

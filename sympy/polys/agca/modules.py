@@ -1125,7 +1125,7 @@ class SubModulePolyRing(SubModule):
         # See: [SCA, section 2.8.2]
         fi = self.gens
         hi = other.gens
-        r  = self.rank
+        r = self.rank
         ci = [[0]*(2*r) for _ in range(r)]
         for k in range(r):
             ci[k][k] = 1

@@ -13,7 +13,7 @@ def test_build_order():
 
 def test_globalring():
     Qxy = QQ.frac_field(x, y)
-    R   = QQ[x, y]
+    R = QQ[x, y]
     X = R.convert(x)
     Y = R.convert(y)
 
@@ -40,7 +40,7 @@ def test_globalring():
 
 def test_localring():
     Qxy = QQ.frac_field(x, y)
-    R   = QQ.poly_ring(x, y, order="ilex")
+    R = QQ.poly_ring(x, y, order="ilex")
     X = R.convert(x)
     Y = R.convert(y)
 

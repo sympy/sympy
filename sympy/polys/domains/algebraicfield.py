@@ -10,12 +10,12 @@ from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, Is
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """
 
-    dtype        = ANP
+    dtype = ANP
 
     is_Numerical = True
     is_Algebraic = True
 
-    has_assoc_Ring  = False
+    has_assoc_Ring = False
     has_assoc_Field = True
 
     def __init__(self, dom, *ext):
@@ -24,15 +24,15 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         from sympy.polys.numberfields import to_number_field
 
-        self.ext  = to_number_field(ext)
-        self.mod  = self.ext.minpoly.rep
-        self.dom  = dom
+        self.ext = to_number_field(ext)
+        self.mod = self.ext.minpoly.rep
+        self.dom = dom
 
         self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
         self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one  = self.dtype.one(self.mod.rep, dom)
+        self.one = self.dtype.one(self.mod.rep, dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'

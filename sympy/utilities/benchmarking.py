@@ -24,7 +24,7 @@ precision = 3
 class Directory(py.test.collect.Directory):
 
     def filefilter(self, path):
-        b   = path.purebasename
+        b = path.purebasename
         ext = path.ext
         return b.startswith('bench_') and ext == '.py'
 
@@ -43,9 +43,9 @@ class Timer(timeit.Timer):
         # copy of timeit.Timer.__init__
         # similarity index 95%
         self.timer = timer
-        stmt  = timeit.reindent(stmt, 8)
+        stmt = timeit.reindent(stmt, 8)
         setup = timeit.reindent(setup, 4)
-        src   = timeit.template % {'stmt': stmt, 'setup': setup}
+        src = timeit.template % {'stmt': stmt, 'setup': setup}
         self.src = src # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
@@ -59,7 +59,7 @@ class Function(py.__.test.item.Function):
 
     def __init__(self, *args, **kw):
         super(Function, self).__init__(*args, **kw)
-        self.benchtime  = None
+        self.benchtime = None
         self.benchtitle = None
 
 
@@ -87,7 +87,7 @@ class Function(py.__.test.item.Function):
 
                 if t >= 0.2:
                     number *= (0.2 / t)
-                    number  = int(_ceil(number))
+                    number = int(_ceil(number))
                     break
 
                 if t <= 0.02:
@@ -98,7 +98,7 @@ class Function(py.__.test.item.Function):
                     # since we are very close to be > 0.2s we'd better adjust number
                     # so that timing time is not too high
                     number *= (0.2 / t)
-                    number  = int(_ceil(number))
+                    number = int(_ceil(number))
                     break
 
 
@@ -219,9 +219,9 @@ def main(args=None):
     # hook our Directory/Module/Function as defaults
     from py.__.test import defaultconftest
 
-    defaultconftest.Directory   = Directory
-    defaultconftest.Module      = Module
-    defaultconftest.Function    = Function
+    defaultconftest.Directory = Directory
+    defaultconftest.Module = Module
+    defaultconftest.Function = Function
 
     # hook BenchSession as py.test session
     config = py.test.config

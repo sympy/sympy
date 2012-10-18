@@ -234,10 +234,10 @@ class LatexPrinter(Printer):
     @staticmethod
     def format(sym=0,fct=0,pdiff=0,mv=0):
         LatexPrinter.LaTeX_flg = True
-        LatexPrinter.fmt_dict['sym']   = sym
-        LatexPrinter.fmt_dict['fct']   = fct
+        LatexPrinter.fmt_dict['sym'] = sym
+        LatexPrinter.fmt_dict['fct'] = fct
         LatexPrinter.fmt_dict['pdiff'] = pdiff
-        LatexPrinter.fmt_dict['mv']    = mv
+        LatexPrinter.fmt_dict['mv'] = mv
         LatexPrinter.fmt_dict['str'] = 1
         if sympy.galgebra.GA.MV.is_setup:
             LatexPrinter.latex_bases()
@@ -256,7 +256,7 @@ class LatexPrinter(Printer):
     @staticmethod
     def redirect():
         LatexPrinter.Basic__str__ = Basic.__str__
-        LatexPrinter.MV__str__    = sympy.galgebra.GA.MV.__str__
+        LatexPrinter.MV__str__ = sympy.galgebra.GA.MV.__str__
         LatexPrinter.stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
         Basic.__str__ = LaTeX
@@ -282,10 +282,10 @@ class LatexPrinter(Printer):
     def format_str(fmt='0 0 0 0'):
         fmt_lst = fmt.split()
         if '=' not in fmt:
-            LatexPrinter.fmt_dict['sym']   = int(fmt_lst[0])
-            LatexPrinter.fmt_dict['fct']   = int(fmt_lst[1])
+            LatexPrinter.fmt_dict['sym'] = int(fmt_lst[0])
+            LatexPrinter.fmt_dict['fct'] = int(fmt_lst[1])
             LatexPrinter.fmt_dict['pdiff'] = int(fmt_lst[2])
-            LatexPrinter.fmt_dict['mv']    = int(fmt_lst[3])
+            LatexPrinter.fmt_dict['mv'] = int(fmt_lst[3])
         else:
             for fmt in fmt_lst:
                 x = fmt.split('=')
@@ -333,7 +333,7 @@ class LatexPrinter(Printer):
             return(name_str)
         for token in LatexPrinter.greek_dict.keys():
             name_str = name_str.replace(token,'{\\'+LatexPrinter.greek_dict[token]+'}')
-        LatexPrinter.greek_cnt  = 0
+        LatexPrinter.greek_cnt = 0
         LatexPrinter.greek_dict = {}
         return(name_str)
 
@@ -346,7 +346,7 @@ class LatexPrinter(Printer):
         for x in tmp_lst[1:]:
             if x != '':
                 name_str = '{}'+LatexPrinter.accent_dict['#'+x+'#']+'{'+name_str+'}'
-        LatexPrinter.accent_cnt  = 0
+        LatexPrinter.accent_cnt = 0
         LatexPrinter.accent_dict = {}
         return(name_str)
 
@@ -1171,7 +1171,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
         latex_file.write(body)
 
     latex_str = None
-    xdvi_str  = None
+    xdvi_str = None
 
     if find_executable('latex') is not None:
         latex_str = 'latex'

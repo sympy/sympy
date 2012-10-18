@@ -369,7 +369,7 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
-        routine  = Routine('autofunc', expr, args)
+        routine = Routine('autofunc', expr, args)
     except CodeGenArgumentListError, e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -379,7 +379,7 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine  = Routine('autofunc', expr, args + new_args)
+        routine = Routine('autofunc', expr, args + new_args)
 
     helps = []
     for name, expr, args in helpers:

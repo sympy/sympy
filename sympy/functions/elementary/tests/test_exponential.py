@@ -70,7 +70,7 @@ def test_exp__as_base_exp():
     assert exp(-x).as_base_exp() == (E, -x)
 
     # Pow( *expr.as_base_exp() ) == expr    invariant should hold
-    assert E**x     == exp(x)
+    assert E**x == exp(x)
     assert E**(2*x) == exp(2*x)
     assert E**(x*y) == exp(x*y)
 

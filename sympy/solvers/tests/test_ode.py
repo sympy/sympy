@@ -1148,7 +1148,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq9 = f(x).diff(x, 3) - 3*f2 + 3*f(x).diff(x) - f(x) - exp(x)
     eq10 = f2 + 2*f(x).diff(x) + f(x) - exp(-x)/x
     eq11 = f2 + f(x) - 1/sin(x)*1/cos(x)
-    eq12 = f(x).diff(x, 4)  - 1/x
+    eq12 = f(x).diff(x, 4) - 1/x
     sol1 = Eq(f(x),
         -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
     sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))

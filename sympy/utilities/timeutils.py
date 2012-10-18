@@ -4,7 +4,7 @@
 import timeit, math
 
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units  = [u's', u'ms', u'\u03bcs', u'ns']
+_units = [u's', u'ms', u'\u03bcs', u'ns']
 
 def timed(func):
     """Adaptively measure execution time of a function. """

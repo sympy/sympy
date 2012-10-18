@@ -11,11 +11,11 @@ from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorde
 class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """
 
-    dtype        = DMF
-    is_Frac      = True
+    dtype = DMF
+    is_Frac = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     def __init__(self, dom, *gens):
         if not gens:
@@ -24,9 +24,9 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one  = self.dtype.one(lev, dom, ring=self)
+        self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom  = dom
+        self.dom = dom
         self.gens = gens
 
     def __str__(self):

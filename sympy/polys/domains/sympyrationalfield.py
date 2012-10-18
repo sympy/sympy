@@ -14,8 +14,8 @@ class SymPyRationalField(RationalField):
     """Rational field based on SymPy Rational class. """
 
     dtype = SymPyRationalType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'QQ_sympy'
 
     def __init__(self):

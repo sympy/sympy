@@ -58,7 +58,7 @@ def trigintegrate(f, x):
     if M is None:
         return
 
-    n, m  = M[n], M[m]
+    n, m = M[n], M[m]
     if n is S.Zero and m is S.Zero:
         return x
 

@@ -522,7 +522,7 @@ def _eval_sum_hyper(f, i, a):
     # hypergeometric series.
     ap = params[0] + [1]
     bq = params[1]
-    x  = ab[0]/ab[1]
+    x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
 
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement

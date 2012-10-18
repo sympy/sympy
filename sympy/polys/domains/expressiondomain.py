@@ -109,13 +109,13 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     dtype = Expression
 
-    zero  = Expression(0)
-    one   = Expression(1)
+    zero = Expression(0)
+    one = Expression(1)
 
-    rep   = 'EX'
+    rep = 'EX'
 
-    has_assoc_Ring         = False
-    has_assoc_Field        = True
+    has_assoc_Ring = False
+    has_assoc_Field = True
 
     def __init__(self):
         pass

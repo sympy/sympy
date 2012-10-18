@@ -410,8 +410,8 @@ def test_powsimp():
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
-    assert powsimp( f(4**x * 2**(-x) * 2**(-x)) )   == f(4**x * 2**(-x) * 2**(-x))
-    assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True )  == f(1)
+    assert powsimp( f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
+    assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True ) == f(1)
     assert exp(x)*exp(y) == exp(x)*exp(y)
     assert powsimp(exp(x)*exp(y)) == exp(x+y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)
@@ -576,18 +576,18 @@ def test_collect_5():
                 z*(1 + a + x**2*y**4) + x**2*y**4,
                 z*(1 + a) + x**2*y**4*(1 + z) ]
     assert collect((1+ (x+y) + (x+y)**2).expand(),
-                   [x, y]) == 1 + y + x*(1 + 2*y) + x**2  + y**2
+                   [x, y]) == 1 + y + x*(1 + 2*y) + x**2 + y**2
 
 def test_collect_D():
     D = Derivative
     f = Function('f')
     x, a, b = symbols('x,a,b')
-    fx  = D(f(x), x)
+    fx = D(f(x), x)
     fxx = D(f(x), x, x)
 
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
-    assert collect(a*D(fx, x) + b*D(fx, x), fx)   == (a + b)*D(fx, x)
-    assert collect(a*fxx     + b*fxx, fx)   == (a + b)*D(fx, x)
+    assert collect(a*D(fx, x) + b*D(fx, x), fx) == (a + b)*D(fx, x)
+    assert collect(a*fxx + b*fxx, fx) == (a + b)*D(fx, x)
     # 1685
     assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
     assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) ==\
@@ -610,7 +610,7 @@ def test_collect_D_0():
 
     # collect does not distinguish nested derivatives, so it returns
     #                                           -- (a + b)*D(D(f, x), x)
-    assert collect(a*fxx     + b*fxx, fxx)  == (a + b)*fxx
+    assert collect(a*fxx + b*fxx, fxx) == (a + b)*fxx
 
 def test_collect_Wild():
     """Collect with respect to functions with Wild argument"""
@@ -1080,10 +1080,10 @@ def test_radsimp():
     assert radsimp(1/(r2*a + r3 + r5 + r7)) == 1/(r2*a + r3 + r5 + r7)
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
         ((sqrt(42)*(a + b) +
-        sqrt(3)*(-a**2 - 2*a*b - b**2 - 2)  +
-        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2)  +
+        sqrt(3)*(-a**2 - 2*a*b - b**2 - 2) +
+        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2) +
         sqrt(2)*(a**3 + 3*a**2*b + 3*a*b**2 - 5*a + b**3 - 5*b))/
-        ((a**4 + 4*a**3*b + 6*a**2*b**2 - 10*a**2  +
+        ((a**4 + 4*a**3*b + 6*a**2*b**2 - 10*a**2 +
         4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)))/2
     assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
         (sqrt(2)/(a + b + c + d))/2

@@ -77,8 +77,8 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
-        -cos(pi/7)   - I*sin(pi/7),
-        -cos(pi/7)   + I*sin(pi/7),
+        -cos(pi/7) - I*sin(pi/7),
+        -cos(pi/7) + I*sin(pi/7),
          cos(2*pi/7) - I*sin(2*pi/7),
          cos(2*pi/7) + I*sin(2*pi/7),
         -cos(3*pi/7) - I*sin(3*pi/7),
@@ -311,10 +311,10 @@ def test_roots():
     f = x**6 - x**5 + x**4 - x**3 + x**2 - x + 1
 
     assert roots(f) == {
-        -I*sin(pi/7)   + cos(pi/7):   1,
+        -I*sin(pi/7) + cos(pi/7):   1,
         -I*sin(2*pi/7) - cos(2*pi/7): 1,
         -I*sin(3*pi/7) + cos(3*pi/7): 1,
-         I*sin(pi/7)   + cos(pi/7):   1,
+         I*sin(pi/7) + cos(pi/7):   1,
          I*sin(2*pi/7) - cos(2*pi/7): 1,
          I*sin(3*pi/7) + cos(3*pi/7): 1,
     }
@@ -322,10 +322,10 @@ def test_roots():
     g = ((x**2 + 1)*f**2).expand()
 
     assert roots(g) == {
-        -I*sin(pi/7)   + cos(pi/7):   2,
+        -I*sin(pi/7) + cos(pi/7):   2,
         -I*sin(2*pi/7) - cos(2*pi/7): 2,
         -I*sin(3*pi/7) + cos(3*pi/7): 2,
-         I*sin(pi/7)   + cos(pi/7):   2,
+         I*sin(pi/7) + cos(pi/7):   2,
          I*sin(2*pi/7) - cos(2*pi/7): 2,
          I*sin(3*pi/7) + cos(3*pi/7): 2,
         -I: 1, I: 1,

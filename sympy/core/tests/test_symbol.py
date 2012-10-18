@@ -49,23 +49,23 @@ def test_lt_gt():
     from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')
 
-    assert (x >= y)    == GreaterThan(x, y)
-    assert (x >= 0)    == GreaterThan(x, 0)
-    assert (x <= y)    == LessThan(x, y)
-    assert (x <= 0)    == LessThan(x, 0)
+    assert (x >= y) == GreaterThan(x, y)
+    assert (x >= 0) == GreaterThan(x, 0)
+    assert (x <= y) == LessThan(x, y)
+    assert (x <= 0) == LessThan(x, 0)
 
-    assert (0 <= x)    == GreaterThan(x, 0)
-    assert (0 >= x)    == LessThan(x, 0)
+    assert (0 <= x) == GreaterThan(x, 0)
+    assert (0 >= x) == LessThan(x, 0)
     assert (S(0) >= x) == GreaterThan(0, x)
     assert (S(0) <= x) == LessThan(0, x)
 
-    assert (x > y)    == StrictGreaterThan(x, y)
-    assert (x > 0)    == StrictGreaterThan(x, 0)
-    assert (x < y)    == StrictLessThan(x, y)
-    assert (x < 0)    == StrictLessThan(x, 0)
+    assert (x > y) == StrictGreaterThan(x, y)
+    assert (x > 0) == StrictGreaterThan(x, 0)
+    assert (x < y) == StrictLessThan(x, y)
+    assert (x < 0) == StrictLessThan(x, 0)
 
-    assert (0 < x)    == StrictGreaterThan(x, 0)
-    assert (0 > x)    == StrictLessThan(x, 0)
+    assert (0 < x) == StrictGreaterThan(x, 0)
+    assert (0 > x) == StrictLessThan(x, 0)
     assert (S(0) > x) == StrictGreaterThan(0, x)
     assert (S(0) < x) == StrictLessThan(0, x)
 
@@ -96,42 +96,42 @@ def test_ineq_unequal():
     x, y, z = symbols('x,y,z')
 
     e = (
-      S(-1)    >=  x,   S(-1)    >=  y,   S(-1)    >=  z,
-      S(-1)    >   x,   S(-1)    >   y,   S(-1)    >   z,
-      S(-1)    <=  x,   S(-1)    <=  y,   S(-1)    <=  z,
-      S(-1)    <   x,   S(-1)    <   y,   S(-1)    <   z,
-      S(0)     >=  x,   S(0)     >=  y,   S(0)     >=  z,
-      S(0)     >   x,   S(0)     >   y,   S(0)     >   z,
-      S(0)     <=  x,   S(0)     <=  y,   S(0)     <=  z,
-      S(0)     <   x,   S(0)     <   y,   S(0)     <   z,
+      S(-1) >=  x,   S(-1) >=  y,   S(-1) >=  z,
+      S(-1) >   x,   S(-1) >   y,   S(-1) >   z,
+      S(-1) <=  x,   S(-1) <=  y,   S(-1) <=  z,
+      S(-1) <   x,   S(-1) <   y,   S(-1) <   z,
+      S(0) >=  x,   S(0) >=  y,   S(0) >=  z,
+      S(0) >   x,   S(0) >   y,   S(0) >   z,
+      S(0) <=  x,   S(0) <=  y,   S(0) <=  z,
+      S(0) <   x,   S(0) <   y,   S(0) <   z,
       S('3/7') >=  x,   S('3/7') >=  y,   S('3/7') >=  z,
       S('3/7') >   x,   S('3/7') >   y,   S('3/7') >   z,
       S('3/7') <=  x,   S('3/7') <=  y,   S('3/7') <=  z,
       S('3/7') <   x,   S('3/7') <   y,   S('3/7') <   z,
-      S(1.5)   >=  x,   S(1.5)   >=  y,   S(1.5)   >=  z,
-      S(1.5)   >   x,   S(1.5)   >   y,   S(1.5)   >   z,
-      S(1.5)   <=  x,   S(1.5)   <=  y,   S(1.5)   <=  z,
-      S(1.5)   <   x,   S(1.5)   <   y,   S(1.5)   <   z,
-      S(2)     >=  x,   S(2)     >=  y,   S(2)     >=  z,
-      S(2)     >   x,   S(2)     >   y,   S(2)     >   z,
-      S(2)     <=  x,   S(2)     <=  y,   S(2)     <=  z,
-      S(2)     <   x,   S(2)     <   y,   S(2)     <   z,
-      x      >= -1,   y      >= -1,   z      >= -1,
-      x      >  -1,   y      >  -1,   z      >  -1,
-      x      <= -1,   y      <= -1,   z      <= -1,
-      x      <  -1,   y      <  -1,   z      <  -1,
-      x      >=  0,   y      >=  0,   z      >=  0,
-      x      >   0,   y      >   0,   z      >   0,
-      x      <=  0,   y      <=  0,   z      <=  0,
-      x      <   0,   y      <   0,   z      <   0,
-      x      >=  1.5, y      >=  1.5, z      >=  1.5,
-      x      >   1.5, y      >   1.5, z      >   1.5,
-      x      <=  1.5, y      <=  1.5, z      <=  1.5,
-      x      <   1.5, y      <   1.5, z      <   1.5,
-      x      >=  2,   y      >=  2,   z      >=  2,
-      x      >   2,   y      >   2,   z      >   2,
-      x      <=  2,   y      <=  2,   z      <=  2,
-      x      <   2,   y      <   2,   z      <   2,
+      S(1.5) >=  x,   S(1.5) >=  y,   S(1.5) >=  z,
+      S(1.5) >   x,   S(1.5) >   y,   S(1.5) >   z,
+      S(1.5) <=  x,   S(1.5) <=  y,   S(1.5) <=  z,
+      S(1.5) <   x,   S(1.5) <   y,   S(1.5) <   z,
+      S(2) >=  x,   S(2) >=  y,   S(2) >=  z,
+      S(2) >   x,   S(2) >   y,   S(2) >   z,
+      S(2) <=  x,   S(2) <=  y,   S(2) <=  z,
+      S(2) <   x,   S(2) <   y,   S(2) <   z,
+      x >= -1,   y >= -1,   z >= -1,
+      x >  -1,   y >  -1,   z >  -1,
+      x <= -1,   y <= -1,   z <= -1,
+      x <  -1,   y <  -1,   z <  -1,
+      x >=  0,   y >=  0,   z >=  0,
+      x >   0,   y >   0,   z >   0,
+      x <=  0,   y <=  0,   z <=  0,
+      x <   0,   y <   0,   z <   0,
+      x >=  1.5, y >=  1.5, z >=  1.5,
+      x >   1.5, y >   1.5, z >   1.5,
+      x <=  1.5, y <=  1.5, z <=  1.5,
+      x <   1.5, y <   1.5, z <   1.5,
+      x >=  2,   y >=  2,   z >=  2,
+      x >   2,   y >   2,   z >   2,
+      x <=  2,   y <=  2,   z <=  2,
+      x <   2,   y <   2,   z <   2,
 
       x >= y,  x >= z,  y >= x, y >= z, z >= x, z >= y,
       x >  y,  x >  z,  y >  x, y >  z, z >  x, z >  y,
@@ -152,11 +152,11 @@ def test_ineq_unequal():
 
 def test_Wild_properties():
     # these tests only include Atoms
-    x   = Symbol("x")
-    y   = Symbol("y")
-    p   = Symbol("p", positive=True)
-    k   = Symbol("k", integer=True)
-    n   = Symbol("n", integer=True, positive=True)
+    x = Symbol("x")
+    y = Symbol("y")
+    p = Symbol("p", positive=True)
+    k = Symbol("k", integer=True)
+    n = Symbol("n", integer=True, positive=True)
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
 

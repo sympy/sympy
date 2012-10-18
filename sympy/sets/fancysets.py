@@ -148,7 +148,7 @@ class TransformationSet(Set):
     def __new__(cls, lamda, base_set):
         return Basic.__new__(cls, lamda, base_set)
 
-    lamda    = property(lambda self: self.args[0])
+    lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
 
     def __iter__(self):
@@ -225,8 +225,8 @@ class Range(Set):
         return Basic.__new__(cls, start, stop + step, step)
 
     start = property(lambda self: self.args[0])
-    stop  = property(lambda self: self.args[1])
-    step  = property(lambda self: self.args[2])
+    stop = property(lambda self: self.args[1])
+    step = property(lambda self: self.args[2])
 
     def _intersect(self, other):
         if other.is_Interval:

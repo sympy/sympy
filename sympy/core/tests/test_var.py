@@ -17,22 +17,22 @@ def make_z2():
 
 def test_var():
     var("a")
-    assert a  == Symbol("a")
+    assert a == Symbol("a")
 
     var("b bb cc zz _x")
-    assert b  == Symbol("b")
+    assert b == Symbol("b")
     assert bb == Symbol("bb")
     assert cc == Symbol("cc")
     assert zz == Symbol("zz")
     assert _x == Symbol("_x")
 
     v = var(['d','e','fg'])
-    assert d  == Symbol('d')
-    assert e  == Symbol('e')
+    assert d == Symbol('d')
+    assert e == Symbol('e')
     assert fg == Symbol('fg')
 
     # check return value
-    assert v  == [d, e, fg]
+    assert v == [d, e, fg]
 
     # see if var() really injects into global namespace
     raises(NameError, lambda: z1)

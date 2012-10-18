@@ -141,8 +141,8 @@ class Cylindrical(PlotSurface):
 
     def _get_sympy_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        h  = self.v_interval.v
+        t = self.u_interval.v
+        h = self.v_interval.v
         def e(_t, _h):
             _r = float(fr.subs(t, _t).subs(h, _h))
             return (_r*p_cos(_t), _r*p_sin(_t), _h)
@@ -150,8 +150,8 @@ class Cylindrical(PlotSurface):
 
     def _get_lambda_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        h  = self.v_interval.v
+        t = self.u_interval.v
+        h = self.v_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
         return lambdify([t, h], [fx, fy, h])
 
@@ -163,8 +163,8 @@ class Spherical(PlotSurface):
 
     def _get_sympy_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        p  = self.v_interval.v
+        t = self.u_interval.v
+        p = self.v_interval.v
         def e(_t, _p):
             _r = float(fr.subs(t, _t).subs(p, _p))
             return (_r*p_cos(_t)*p_sin(_p),
@@ -174,8 +174,8 @@ class Spherical(PlotSurface):
 
     def _get_lambda_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        p  = self.v_interval.v
+        t = self.u_interval.v
+        p = self.v_interval.v
         fx = fr * cos(t) * sin(p)
         fy = fr * sin(t) * sin(p)
         fz = fr * cos(p)

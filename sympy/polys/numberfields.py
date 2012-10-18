@@ -486,10 +486,10 @@ class AlgebraicNumber(Expr):
             return self
 
         coeff = f.LC()**(f.degree()-1)
-        poly  = f.compose(Poly(f.gen/f.LC()))
+        poly = f.compose(Poly(f.gen/f.LC()))
 
         minpoly = poly*coeff
-        root    = f.LC()*self.root
+        root = f.LC()*self.root
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 

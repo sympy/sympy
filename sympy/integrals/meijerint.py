@@ -370,8 +370,8 @@ def _split_mul(f, x):
     """
     from sympy import polarify, unpolarify
     fac = S(1)
-    po  = S(1)
-    g   = S(1)
+    po = S(1)
+    g = S(1)
     f = expand_power_base(f)
 
     args = Mul.make_args(f)
@@ -659,7 +659,7 @@ def _check_antecedents_1(g, x, helper=False):
     delta = g.delta
     eta, _ = _get_coeff_exp(g.argument, x)
     m, n, p, q = S([len(g.bm), len(g.an), len(g.ap), len(g.bq)])
-    xi    = m + n - p
+    xi = m + n - p
 
     if p > q:
         def tr(l): return [1 - x for x in l]
@@ -870,7 +870,7 @@ def _check_antecedents(g1, g2, x):
     bstar = s + t - (u + v)/2
     cstar = m + n - (p + q)/2
     rho = g1.nu + (u - v)/2 + 1
-    mu  = g2.nu + (p - q)/2 + 1
+    mu = g2.nu + (p - q)/2 + 1
     phi = q - p - (v - u)
     eta = 1 - (v - u) - mu - rho
     psi = (pi*(q - m - n) + abs(arg(omega)))/(q - p)
@@ -1162,7 +1162,7 @@ def _int0oo(g1, g2, x):
     4*meijerg(((1/2, 0), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
     """
     # See: [L, section 5.6.2, equation (1)]
-    eta, _   = _get_coeff_exp(g1.argument, x)
+    eta, _ = _get_coeff_exp(g1.argument, x)
     omega, _ = _get_coeff_exp(g2.argument, x)
     def neg(l): return [-x for x in l]
     a1 = neg(g1.bm) + list(g2.an)

@@ -5867,7 +5867,7 @@ class GroebnerBasis(Basic):
 
         opt = opt.clone(dict(
             domain = domain.get_field(),
-            order  = dst_order,
+            order = dst_order,
         ))
 
         for i, poly in enumerate(polys):

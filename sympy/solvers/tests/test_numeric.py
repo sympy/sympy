@@ -30,7 +30,7 @@ def test_nsolve():
     y = Symbol('y')
     z = Symbol('z')
     f1 = -x + 2*y
-    f2 = (x**2 + x*(y**2 - 2) - 4*y)  /  (x + 4)
+    f2 = (x**2 + x*(y**2 - 2) - 4*y) /  (x + 4)
     f3 = sqrt(x**2 + y**2)*z
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x, y, z), f.T, modules='mpmath')

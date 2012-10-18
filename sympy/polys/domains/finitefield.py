@@ -14,8 +14,8 @@ class FiniteField(Field, SimpleDomain):
 
     is_Numerical = True
 
-    has_assoc_Ring         = False
-    has_assoc_Field        = True
+    has_assoc_Ring = False
+    has_assoc_Field = True
 
     dom = None
     mod = None
@@ -25,9 +25,9 @@ class FiniteField(Field, SimpleDomain):
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
         self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
-        self.zero  = self.dtype(0)
-        self.one   = self.dtype(1)
-        self.mod   = mod
+        self.zero = self.dtype(0)
+        self.one = self.dtype(1)
+        self.mod = mod
 
     def __str__(self):
         return 'GF(%s)' % self.mod

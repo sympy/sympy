@@ -130,12 +130,12 @@ def test_bool_symbol():
     works as expected"""
     A, B, C = map(Boolean, symbols('A,B,C'))
 
-    assert And(A, True)  == A
+    assert And(A, True) == A
     assert And(A, True, True) == A
     assert And(A, False) == False
     assert And(A, True, False) == False
-    assert Or(A, True)   == True
-    assert Or(A, False)  == A
+    assert Or(A, True) == True
+    assert Or(A, False) == A
 
 def test_subs():
     A, B, C = map(Boolean, symbols('A,B,C'))
@@ -183,7 +183,7 @@ def test_De_Morgan():
 
     assert ~(A & B) == (~A) | (~B)
     assert ~(A | B) == (~A) & (~B)
-    assert ~(A | B | C) == ~A & ~B  & ~C
+    assert ~(A | B | C) == ~A & ~B & ~C
 
 # test methods
 def test_eliminate_implications():

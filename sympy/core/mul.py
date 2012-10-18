@@ -12,10 +12,10 @@ from compatibility import cmp_to_key
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
 class NC_Marker:
-    is_Order    = False
-    is_Mul      = False
-    is_Number   = False
-    is_Poly     = False
+    is_Order = False
+    is_Mul = False
+    is_Number = False
+    is_Poly = False
 
     is_commutative = False
 

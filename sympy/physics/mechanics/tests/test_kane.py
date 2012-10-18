@@ -151,7 +151,7 @@ def test_aux():
     # substitute the aux. speeds in at the end (they are zero, as well as their
     # derivative), in the other case, we use the built-in auxiliary speed part
     # of KanesMethod. The equations from each should be the same.
-    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     u4, u5, f1, f2 = dynamicsymbols('u4, u5, f1, f2')
     u4d, u5d = dynamicsymbols('u4, u5', 1)
@@ -200,16 +200,16 @@ def test_parallel_axis():
     # pendulum is defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
-    gravity        = symbols('g')
-    k, ls          = symbols('k ls')
-    a, mA, mC      = symbols('a mA mC')
-    F              = dynamicsymbols('F')
-    Ix, Iy, Iz     = symbols('Ix Iy Iz')
+    gravity = symbols('g')
+    k, ls = symbols('k ls')
+    a, mA, mC = symbols('a mA mC')
+    F = dynamicsymbols('F')
+    Ix, Iy, Iz = symbols('Ix Iy Iz')
 
     # Declaring the Generalized coordinates and speeds
-    q1, q2   = dynamicsymbols('q1 q2')
+    q1, q2 = dynamicsymbols('q1 q2')
     q1d, q2d = dynamicsymbols('q1 q2', 1)
-    u1, u2   = dynamicsymbols('u1 u2')
+    u1, u2 = dynamicsymbols('u1 u2')
     u1d, u2d = dynamicsymbols('u1 u2', 1)
 
     # Creating reference frames
@@ -224,25 +224,25 @@ def test_parallel_axis():
 
     # Creating and Locating the positions of the cart, C, and the
     # center of mass of the pendulum, A
-    C  = O.locatenew('C',  q1 * N.x)
+    C = O.locatenew('C',  q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 
     # Defining velocities of the points
     O.set_vel(N, 0)
     C.set_vel(N, u1 * N.x)
     Ao.v2pt_theory(C, N, A)
-    Cart     = Particle('Cart', C, mC)
+    Cart = Particle('Cart', C, mC)
     Pendulum = RigidBody('Pendulum', Ao, A, mA, (inertia(A, Ix, Iy, Iz), C))
 
     # kinematical differential equations
 
-    kindiffs  = [q1d - u1, q2d - u2]
+    kindiffs = [q1d - u1, q2d - u2]
 
-    bodyList  = [Cart, Pendulum]
+    bodyList = [Cart, Pendulum]
 
     forceList = [(Ao, -N.y * gravity * mA),
-                 (C,  -N.y * gravity * mC),
-                 (C,  -N.x * k * (q1 - ls)),
+                 (C, -N.y * gravity * mC),
+                 (C, -N.x * k * (q1 - ls)),
                  (C,   N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)

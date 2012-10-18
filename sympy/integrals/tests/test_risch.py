@@ -112,8 +112,8 @@ def test_heurisch_special():
     assert heurisch(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
 
 def test_heurisch_symbolic_coeffs():
-    assert heurisch(1/(x+y), x)         == log(x+y)
-    assert heurisch(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
+    assert heurisch(1/(x+y), x) == log(x+y)
+    assert heurisch(1/(x+sqrt(2)), x) == log(x+sqrt(2))
     assert simplify(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
 def test_heurisch_symbolic_coeffs_1130():
@@ -144,10 +144,10 @@ def test_heurisch_hacking():
 def test_heurisch_function():
     df = diff(f(x), x)
 
-    assert heurisch(f(x), x)            == None
-    assert heurisch(f(x)*df, x)         == f(x)**2/2
-    assert heurisch(f(x)**2 * df, x)    == f(x)**3/3
-    assert heurisch(df / f(x), x)       == log(f(x))
+    assert heurisch(f(x), x) == None
+    assert heurisch(f(x)*df, x) == f(x)**2/2
+    assert heurisch(f(x)**2 * df, x) == f(x)**3/3
+    assert heurisch(df / f(x), x) == log(f(x))
 
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
@@ -164,14 +164,14 @@ def test_issue510():
 @XFAIL
 def test_pmint_rat():
     f = (x**7-24*x**4-4*x**2+8*x-8) / (x**8+6*x**6+12*x**4+8*x**2)
-    g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4))  +  log(x)
+    g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4)) +  log(x)
 
     assert heurisch(f, x) == g
 
 @XFAIL
 def test_pmint_trig():
-    f = (x-tan(x)) / tan(x)**2  +  tan(x)
-    g = (-x - tan(x)*x**2 / 2) / tan(x)  +  log(1+tan(x)**2) / 2
+    f = (x-tan(x)) / tan(x)**2 +  tan(x)
+    g = (-x - tan(x)*x**2 / 2) / tan(x) +  log(1+tan(x)**2) / 2
 
     assert heurisch(f, x) == g
 

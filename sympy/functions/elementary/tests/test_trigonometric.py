@@ -117,7 +117,7 @@ def test_sin_rewrite():
     assert sin(cos(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cos(3)).n()
     assert sin(tan(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tan(3)).n()
     assert sin(cot(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
-    assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
+    assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
     # Note: these formulas are not unique.  The ones here come from the
@@ -470,9 +470,9 @@ def test_asin():
     assert asin(-oo) == I*oo
 
     # Note: asin(-x) = - asin(x)
-    assert asin(0)  == 0
-    assert asin(1)  == pi/2
-    assert asin(-1)  == -pi/2
+    assert asin(0) == 0
+    assert asin(1) == pi/2
+    assert asin(-1) == -pi/2
     assert asin(sqrt(3)/2) == pi/3
     assert asin(-sqrt(3)/2) == -pi/3
     assert asin(sqrt(2)/2) == pi/4
@@ -518,10 +518,10 @@ def test_acos():
     assert acos(-oo) == -I*oo
 
     # Note: acos(-x) = pi - acos(x)
-    assert acos(0)  == pi/2
+    assert acos(0) == pi/2
     assert acos(Rational(1,2)) == pi/3
     assert acos(-Rational(1,2)) ==  (2*pi)/3
-    assert acos(1)  == 0
+    assert acos(1) == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
     assert acos(-sqrt(2)/2) == (3*pi)/4
@@ -557,8 +557,8 @@ def test_atan():
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
 
-    assert atan(0)  == 0
-    assert atan(1)  == pi/4
+    assert atan(0) == 0
+    assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
     assert atan(oo) == pi/2
     assert atan(x).diff(x) ==  1/(1+x**2)
@@ -588,8 +588,8 @@ def test_acot():
 
     assert acot(-oo) == 0
     assert acot(oo) == 0
-    assert acot(1)  == pi/4
-    assert acot(0)  == pi/2
+    assert acot(1) == pi/4
+    assert acot(0) == pi/2
     assert acot(sqrt(3)/3) == pi/3
     assert acot(1/sqrt(3)) == pi/3
     assert acot(-1/sqrt(3)) == -pi/3

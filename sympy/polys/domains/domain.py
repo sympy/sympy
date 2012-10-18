@@ -12,13 +12,13 @@ class Domain(object):
     """Represents an abstract domain. """
 
     dtype = None
-    zero  = None
-    one   = None
+    zero = None
+    one = None
 
-    has_Ring  = False
+    has_Ring = False
     has_Field = False
 
-    has_assoc_Ring  = False
+    has_assoc_Ring = False
     has_assoc_Field = False
 
     is_ZZ = False
@@ -35,14 +35,14 @@ class Domain(object):
     is_Numerical = False
     is_Algebraic = False
 
-    is_Simple    = False
+    is_Simple = False
     is_Composite = False
 
     has_CharacteristicZero = False
 
     is_EX = False
 
-    rep   = None
+    rep = None
     alias = None
 
     def __init__(self):

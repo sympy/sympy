@@ -94,28 +94,28 @@ def test_apply_beta_to_alpha_route():
     A = {'x': set(['a','b'])}
     B = [ (And('a','y'), 'z'),
           (And('a','b'), 'y') ]
-    assert APPLY(A,B)  == {'x': (set(['a','b','y','z']), []), 'a':(set(), [0,1]), 'y':Q(0), 'b':Q(1)}
+    assert APPLY(A,B) == {'x': (set(['a','b','y','z']), []), 'a':(set(), [0,1]), 'y':Q(0), 'b':Q(1)}
 
     # x -> a b      &(a,!b) -> c    --  x -> a b
     A = {'x': set(['a', 'b'])}
     B = [ (And('a', Not('b')), 'c') ]
-    assert APPLY(A,B)  == {'x': (set(['a', 'b']), []), 'a':Q(0), Not('b'):Q(0)}
+    assert APPLY(A,B) == {'x': (set(['a', 'b']), []), 'a':Q(0), Not('b'):Q(0)}
 
     # !x -> !a !b   &(!a,b) -> c    --  !x -> !a !b
     A = {Not('x'): set([Not('a'), Not('b')])}
     B = [ (And(Not('a'),'b'), 'c') ]
-    assert APPLY(A,B)  == {Not('x'): (set([Not('a'), Not('b')]), []), Not('a'):Q(0), 'b':Q(0)}
+    assert APPLY(A,B) == {Not('x'): (set([Not('a'), Not('b')]), []), Not('a'):Q(0), 'b':Q(0)}
 
     # x -> a b      &(b,c) -> !a    --  x -> a b
     A = {'x': set(['a','b'])}
     B = [ (And('b','c'), Not('a')) ]
-    assert APPLY(A,B)  == {'x': (set(['a','b']), []), 'b':Q(0), 'c':Q(0)}
+    assert APPLY(A,B) == {'x': (set(['a','b']), []), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a, b) -> c    --  x -> a b c p
     # c -> p a
     A = {'x': set(['a','b']), 'c': set(['p','a'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (set(['a','b','c','p']), []),
+    assert APPLY(A,B) == {'x': (set(['a','b','c','p']), []),
                             'c': (set(['p','a']), []), 'a':Q(0), 'b':Q(0)}
 
 

@@ -187,10 +187,10 @@ class stringPict(object):
 
         if left:
             lparen = stringPict(vobj(left,  h), baseline=b)
-            res    = stringPict(*lparen.right(self))
+            res = stringPict(*lparen.right(self))
         if right:
             rparen = stringPict(vobj(right, h), baseline=b)
-            res    = stringPict(*res.right(rparen))
+            res = stringPict(*res.right(rparen))
 
         return ('\n'.join(res.picture), res.baseline)
 

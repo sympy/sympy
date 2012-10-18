@@ -499,7 +499,7 @@ class RootSum(Expr):
         obj = Expr.__new__(cls)
 
         obj.poly = poly
-        obj.fun  = func
+        obj.fun = func
         obj.auto = auto
 
         return obj

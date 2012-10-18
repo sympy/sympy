@@ -124,10 +124,10 @@ def _getenv(key, default=None):
 USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
 
 if USE_CACHE == 'no':
-    cacheit  = __cacheit_nocache
+    cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
-    cacheit  = __cacheit
+    cacheit = __cacheit
 elif USE_CACHE == 'debug':
-    cacheit  = __cacheit_debug   # a lot slower
+    cacheit = __cacheit_debug   # a lot slower
 else:
     raise RuntimeError('unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)

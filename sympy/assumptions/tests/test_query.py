@@ -11,447 +11,447 @@ from sympy.utilities.pytest import raises, XFAIL, slow
 
 def test_int_1():
     z = 1
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == True
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == True
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == True
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == True
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_int_11():
     z = 11
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == True
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == True
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == True
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == True
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_int_12():
     z = 12
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == True
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == True
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == True
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == True
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_float_1():
     z = 1.0
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == True
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == True
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == True
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == True
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
     z = 7.2123
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_zero_0():
     z = Integer(0)
-    assert ask(Q.nonzero(z))          == False
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == False
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == True
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == True
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.nonzero(z)) == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == False
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == True
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == True
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_negativeone():
     z = Integer(-1)
-    assert ask(Q.nonzero(z))          == True
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == True
-    assert ask(Q.rational(z))         == True
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == False
-    assert ask(Q.negative(z))         == True
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == True
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.nonzero(z)) == True
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == True
+    assert ask(Q.rational(z)) == True
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == False
+    assert ask(Q.negative(z)) == True
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == True
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_infinity():
-    assert ask(Q.commutative(oo))     == True
-    assert ask(Q.integer(oo))         == False
-    assert ask(Q.rational(oo))        == False
-    assert ask(Q.real(oo))            == False
-    assert ask(Q.extended_real(oo))   == True
-    assert ask(Q.complex(oo))         == False
-    assert ask(Q.irrational(oo))      == False
-    assert ask(Q.imaginary(oo))       == False
-    assert ask(Q.positive(oo))        == True
-    assert ask(Q.negative(oo))        == False
-    assert ask(Q.even(oo))            == False
-    assert ask(Q.odd(oo))             == False
-    assert ask(Q.bounded(oo))         == False
-    assert ask(Q.infinitesimal(oo))   == False
-    assert ask(Q.prime(oo))           == False
-    assert ask(Q.composite(oo))       == False
-    assert ask(Q.hermitian(oo))       == False
-    assert ask(Q.antihermitian(oo))   == False
+    assert ask(Q.commutative(oo)) == True
+    assert ask(Q.integer(oo)) == False
+    assert ask(Q.rational(oo)) == False
+    assert ask(Q.real(oo)) == False
+    assert ask(Q.extended_real(oo)) == True
+    assert ask(Q.complex(oo)) == False
+    assert ask(Q.irrational(oo)) == False
+    assert ask(Q.imaginary(oo)) == False
+    assert ask(Q.positive(oo)) == True
+    assert ask(Q.negative(oo)) == False
+    assert ask(Q.even(oo)) == False
+    assert ask(Q.odd(oo)) == False
+    assert ask(Q.bounded(oo)) == False
+    assert ask(Q.infinitesimal(oo)) == False
+    assert ask(Q.prime(oo)) == False
+    assert ask(Q.composite(oo)) == False
+    assert ask(Q.hermitian(oo)) == False
+    assert ask(Q.antihermitian(oo)) == False
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
-    assert ask(Q.commutative(mm))    == True
-    assert ask(Q.integer(mm))        == False
-    assert ask(Q.rational(mm))       == False
-    assert ask(Q.real(mm))           == False
-    assert ask(Q.extended_real(mm))  == True
-    assert ask(Q.complex(mm))        == False
-    assert ask(Q.irrational(mm))     == False
-    assert ask(Q.imaginary(mm))      == False
-    assert ask(Q.positive(mm))       == False
-    assert ask(Q.negative(mm))       == True
-    assert ask(Q.even(mm))           == False
-    assert ask(Q.odd(mm))            == False
-    assert ask(Q.bounded(mm))        == False
-    assert ask(Q.infinitesimal(mm))  == False
-    assert ask(Q.prime(mm))          == False
-    assert ask(Q.composite(mm))      == False
-    assert ask(Q.hermitian(mm))      == False
-    assert ask(Q.antihermitian(mm))  == False
+    assert ask(Q.commutative(mm)) == True
+    assert ask(Q.integer(mm)) == False
+    assert ask(Q.rational(mm)) == False
+    assert ask(Q.real(mm)) == False
+    assert ask(Q.extended_real(mm)) == True
+    assert ask(Q.complex(mm)) == False
+    assert ask(Q.irrational(mm)) == False
+    assert ask(Q.imaginary(mm)) == False
+    assert ask(Q.positive(mm)) == False
+    assert ask(Q.negative(mm)) == True
+    assert ask(Q.even(mm)) == False
+    assert ask(Q.odd(mm)) == False
+    assert ask(Q.bounded(mm)) == False
+    assert ask(Q.infinitesimal(mm)) == False
+    assert ask(Q.prime(mm)) == False
+    assert ask(Q.composite(mm)) == False
+    assert ask(Q.hermitian(mm)) == False
+    assert ask(Q.antihermitian(mm)) == False
 
 def test_nan():
     nan = S.NaN
-    assert ask(Q.commutative(nan))   == True
-    assert ask(Q.integer(nan))       == False
-    assert ask(Q.rational(nan))      == False
-    assert ask(Q.real(nan))          == False
+    assert ask(Q.commutative(nan)) == True
+    assert ask(Q.integer(nan)) == False
+    assert ask(Q.rational(nan)) == False
+    assert ask(Q.real(nan)) == False
     assert ask(Q.extended_real(nan)) == False
-    assert ask(Q.complex(nan))       == False
-    assert ask(Q.irrational(nan))    == False
-    assert ask(Q.imaginary(nan))     == False
-    assert ask(Q.positive(nan))      == False
-    assert ask(Q.nonzero(nan))       == True
-    assert ask(Q.even(nan))          == False
-    assert ask(Q.odd(nan))           == False
-    assert ask(Q.bounded(nan))       == False
+    assert ask(Q.complex(nan)) == False
+    assert ask(Q.irrational(nan)) == False
+    assert ask(Q.imaginary(nan)) == False
+    assert ask(Q.positive(nan)) == False
+    assert ask(Q.nonzero(nan)) == True
+    assert ask(Q.even(nan)) == False
+    assert ask(Q.odd(nan)) == False
+    assert ask(Q.bounded(nan)) == False
     assert ask(Q.infinitesimal(nan)) == False
-    assert ask(Q.prime(nan))         == False
-    assert ask(Q.composite(nan))     == False
-    assert ask(Q.hermitian(nan))     == False
+    assert ask(Q.prime(nan)) == False
+    assert ask(Q.composite(nan)) == False
+    assert ask(Q.hermitian(nan)) == False
     assert ask(Q.antihermitian(nan)) == False
 
 def test_Rational_number():
     r = Rational(3,4)
-    assert ask(Q.commutative(r))      == True
-    assert ask(Q.integer(r))          == False
-    assert ask(Q.rational(r))         == True
-    assert ask(Q.real(r))             == True
-    assert ask(Q.complex(r))          == True
-    assert ask(Q.irrational(r))       == False
-    assert ask(Q.imaginary(r))        == False
-    assert ask(Q.positive(r))         == True
-    assert ask(Q.negative(r))         == False
-    assert ask(Q.even(r))             == False
-    assert ask(Q.odd(r))              == False
-    assert ask(Q.bounded(r))          == True
-    assert ask(Q.infinitesimal(r))    == False
-    assert ask(Q.prime(r))            == False
-    assert ask(Q.composite(r))        == False
-    assert ask(Q.hermitian(r))        == True
-    assert ask(Q.antihermitian(r))    == False
+    assert ask(Q.commutative(r)) == True
+    assert ask(Q.integer(r)) == False
+    assert ask(Q.rational(r)) == True
+    assert ask(Q.real(r)) == True
+    assert ask(Q.complex(r)) == True
+    assert ask(Q.irrational(r)) == False
+    assert ask(Q.imaginary(r)) == False
+    assert ask(Q.positive(r)) == True
+    assert ask(Q.negative(r)) == False
+    assert ask(Q.even(r)) == False
+    assert ask(Q.odd(r)) == False
+    assert ask(Q.bounded(r)) == True
+    assert ask(Q.infinitesimal(r)) == False
+    assert ask(Q.prime(r)) == False
+    assert ask(Q.composite(r)) == False
+    assert ask(Q.hermitian(r)) == True
+    assert ask(Q.antihermitian(r)) == False
 
     r = Rational(1,4)
-    assert ask(Q.positive(r))         == True
-    assert ask(Q.negative(r))         == False
+    assert ask(Q.positive(r)) == True
+    assert ask(Q.negative(r)) == False
 
     r = Rational(5,4)
-    assert ask(Q.negative(r))         == False
-    assert ask(Q.positive(r))         == True
+    assert ask(Q.negative(r)) == False
+    assert ask(Q.positive(r)) == True
 
     r = Rational(5,3)
-    assert ask(Q.positive(r))         == True
-    assert ask(Q.negative(r))         == False
+    assert ask(Q.positive(r)) == True
+    assert ask(Q.negative(r)) == False
 
     r = Rational(-3,4)
-    assert ask(Q.positive(r))         == False
-    assert ask(Q.negative(r))         == True
+    assert ask(Q.positive(r)) == False
+    assert ask(Q.negative(r)) == True
 
     r = Rational(-1,4)
-    assert ask(Q.positive(r))         == False
-    assert ask(Q.negative(r))         == True
+    assert ask(Q.positive(r)) == False
+    assert ask(Q.negative(r)) == True
 
     r = Rational(-5,4)
-    assert ask(Q.negative(r))         == True
-    assert ask(Q.positive(r))         == False
+    assert ask(Q.negative(r)) == True
+    assert ask(Q.positive(r)) == False
 
     r = Rational(-5,3)
-    assert ask(Q.positive(r))         == False
-    assert ask(Q.negative(r))         == True
+    assert ask(Q.positive(r)) == False
+    assert ask(Q.negative(r)) == True
 
 def test_sqrt_2():
     z = sqrt(2)
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_pi():
     z = S.Pi
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
     z = S.Pi + 1
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
     z = 2*S.Pi
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
     z = S.Pi ** 2
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
     z = (1+S.Pi) ** 2
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_E():
     z = S.Exp1
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == True
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == True
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == True
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == True
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == True
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == True
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == True
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == True
+    assert ask(Q.antihermitian(z)) == False
 
 def test_I():
     z = I
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == False
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == True
-    assert ask(Q.positive(z))         == False
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == False
-    assert ask(Q.antihermitian(z))    == True
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == False
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == True
+    assert ask(Q.positive(z)) == False
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == False
+    assert ask(Q.antihermitian(z)) == True
 
     z = 1 + I
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == False
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == False
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == False
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == False
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == False
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == False
+    assert ask(Q.antihermitian(z)) == False
 
     z = I*(1+I)
-    assert ask(Q.commutative(z))      == True
-    assert ask(Q.integer(z))          == False
-    assert ask(Q.rational(z))         == False
-    assert ask(Q.real(z))             == False
-    assert ask(Q.complex(z))          == True
-    assert ask(Q.irrational(z))       == False
-    assert ask(Q.imaginary(z))        == False
-    assert ask(Q.positive(z))         == False
-    assert ask(Q.negative(z))         == False
-    assert ask(Q.even(z))             == False
-    assert ask(Q.odd(z))              == False
-    assert ask(Q.bounded(z))          == True
-    assert ask(Q.infinitesimal(z))    == False
-    assert ask(Q.prime(z))            == False
-    assert ask(Q.composite(z))        == False
-    assert ask(Q.hermitian(z))        == False
-    assert ask(Q.antihermitian(z))    == False
+    assert ask(Q.commutative(z)) == True
+    assert ask(Q.integer(z)) == False
+    assert ask(Q.rational(z)) == False
+    assert ask(Q.real(z)) == False
+    assert ask(Q.complex(z)) == True
+    assert ask(Q.irrational(z)) == False
+    assert ask(Q.imaginary(z)) == False
+    assert ask(Q.positive(z)) == False
+    assert ask(Q.negative(z)) == False
+    assert ask(Q.even(z)) == False
+    assert ask(Q.odd(z)) == False
+    assert ask(Q.bounded(z)) == True
+    assert ask(Q.infinitesimal(z)) == False
+    assert ask(Q.prime(z)) == False
+    assert ask(Q.composite(z)) == False
+    assert ask(Q.hermitian(z)) == False
+    assert ask(Q.antihermitian(z)) == False
 
 @slow
 def test_bounded():
@@ -776,7 +776,7 @@ def test_commutative():
     assert ask(Q.commutative(x), Q.imaginary(x)) == True
     assert ask(Q.commutative(x), Q.real(x)) == True
     assert ask(Q.commutative(x), Q.positive(x)) == True
-    assert ask(Q.commutative(x), ~Q.commutative(y))  == True
+    assert ask(Q.commutative(x), ~Q.commutative(y)) == True
 
     assert ask(Q.commutative(2*x)) == True
     assert ask(Q.commutative(2*x), ~Q.commutative(x)) == False
@@ -807,9 +807,9 @@ def test_complex():
     assert ask(Q.complex(x+1), Q.rational(x)) == True
     assert ask(Q.complex(x+1), Q.irrational(x)) == True
     assert ask(Q.complex(x+1), Q.imaginary(x)) == True
-    assert ask(Q.complex(x+1), Q.integer(x))  == True
-    assert ask(Q.complex(x+1), Q.even(x))  == True
-    assert ask(Q.complex(x+1), Q.odd(x))  == True
+    assert ask(Q.complex(x+1), Q.integer(x)) == True
+    assert ask(Q.complex(x+1), Q.even(x)) == True
+    assert ask(Q.complex(x+1), Q.odd(x)) == True
     assert ask(Q.complex(x+y), Q.complex(x) & Q.complex(y)) == True
     assert ask(Q.complex(x+y), Q.real(x) & Q.imaginary(y)) == True
 
@@ -820,9 +820,9 @@ def test_complex():
     assert ask(Q.complex(2*x+1), Q.rational(x)) == True
     assert ask(Q.complex(2*x+1), Q.irrational(x)) == True
     assert ask(Q.complex(2*x+1), Q.imaginary(x)) == True
-    assert ask(Q.complex(2*x+1), Q.integer(x))  == True
-    assert ask(Q.complex(2*x+1), Q.even(x))  == True
-    assert ask(Q.complex(2*x+1), Q.odd(x))  == True
+    assert ask(Q.complex(2*x+1), Q.integer(x)) == True
+    assert ask(Q.complex(2*x+1), Q.even(x)) == True
+    assert ask(Q.complex(2*x+1), Q.odd(x)) == True
 
     # x**2
     assert ask(Q.complex(x**2), Q.complex(x)) == True
@@ -831,9 +831,9 @@ def test_complex():
     assert ask(Q.complex(x**2), Q.rational(x)) == True
     assert ask(Q.complex(x**2), Q.irrational(x)) == True
     assert ask(Q.complex(x**2), Q.imaginary(x)) == True
-    assert ask(Q.complex(x**2), Q.integer(x))  == True
-    assert ask(Q.complex(x**2), Q.even(x))  == True
-    assert ask(Q.complex(x**2), Q.odd(x))  == True
+    assert ask(Q.complex(x**2), Q.integer(x)) == True
+    assert ask(Q.complex(x**2), Q.even(x)) == True
+    assert ask(Q.complex(x**2), Q.odd(x)) == True
 
     # 2**x
     assert ask(Q.complex(2**x), Q.complex(x)) == True
@@ -842,9 +842,9 @@ def test_complex():
     assert ask(Q.complex(2**x), Q.rational(x)) == True
     assert ask(Q.complex(2**x), Q.irrational(x)) == True
     assert ask(Q.complex(2**x), Q.imaginary(x)) == True
-    assert ask(Q.complex(2**x), Q.integer(x))  == True
-    assert ask(Q.complex(2**x), Q.even(x))  == True
-    assert ask(Q.complex(2**x), Q.odd(x))  == True
+    assert ask(Q.complex(2**x), Q.integer(x)) == True
+    assert ask(Q.complex(2**x), Q.even(x)) == True
+    assert ask(Q.complex(2**x), Q.odd(x)) == True
     assert ask(Q.complex(x**y), Q.complex(x) & Q.complex(y)) == True
 
     # trigonometric expressions
@@ -1164,11 +1164,11 @@ def test_odd():
 
     assert ask(Q.odd(x+1), Q.even(x)) == True
     assert ask(Q.odd(x+2), Q.even(x)) == False
-    assert ask(Q.odd(x+2), Q.odd(x))  == True
-    assert ask(Q.odd(3-x), Q.odd(x))  == False
-    assert ask(Q.odd(3-x), Q.even(x))  == True
-    assert ask(Q.odd(3+x), Q.odd(x))  == False
-    assert ask(Q.odd(3+x), Q.even(x))  == True
+    assert ask(Q.odd(x+2), Q.odd(x)) == True
+    assert ask(Q.odd(3-x), Q.odd(x)) == False
+    assert ask(Q.odd(3-x), Q.even(x)) == True
+    assert ask(Q.odd(3+x), Q.odd(x)) == False
+    assert ask(Q.odd(3+x), Q.even(x)) == True
     assert ask(Q.odd(x+y), Q.odd(x) & Q.odd(y)) == False
     assert ask(Q.odd(x+y), Q.odd(x) & Q.even(y)) == True
     assert ask(Q.odd(x-y), Q.even(x) & Q.odd(y)) == True
@@ -1216,7 +1216,7 @@ def test_positive():
 
     assert ask(Q.positive(2*x), Q.positive(x)) == True
     assumptions =  Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
-    assert ask(Q.positive(x*y*z))  == None
+    assert ask(Q.positive(x*y*z)) == None
     assert ask(Q.positive(x*y*z), assumptions) == True
     assert ask(Q.positive(-x*y*z), assumptions) == False
 

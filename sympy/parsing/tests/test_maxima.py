@@ -36,6 +36,6 @@ def test_maxima_functions():
                 n=Symbol('n',integer=True),
                 k=Symbol('k',integer=True)
                 )
-            )  == factorial(n)
+            ) == factorial(n)
     assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x-1
     assert Abs( parse_maxima('float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)

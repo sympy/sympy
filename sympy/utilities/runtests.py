@@ -1390,8 +1390,8 @@ class PyTestReporter(Reporter):
                 # 2) OS X    -> 80 columns
                 # 3) Solaris -> columns = 80
 
-                re_linux   = r"columns\s+(?P<columns>\d+);"
-                re_osx     = r"(?P<columns>\d+)\s*columns;"
+                re_linux = r"columns\s+(?P<columns>\d+);"
+                re_osx = r"(?P<columns>\d+)\s*columns;"
                 re_solaris = r"columns\s+=\s+(?P<columns>\d+);"
 
                 for regex in (re_linux, re_osx, re_solaris):

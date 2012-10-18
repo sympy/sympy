@@ -157,18 +157,18 @@ def test_doit():
 def test_new_relational():
     x = Symbol('x')
 
-    assert Eq(x)     == Relational(x, 0)       # None ==> Equality
-    assert Eq(x)     == Relational(x, 0, '==')
-    assert Eq(x)     == Relational(x, 0, 'eq')
-    assert Eq(x)     == Equality(x, 0)
+    assert Eq(x) == Relational(x, 0)       # None ==> Equality
+    assert Eq(x) == Relational(x, 0, '==')
+    assert Eq(x) == Relational(x, 0, 'eq')
+    assert Eq(x) == Equality(x, 0)
     assert Eq(x, -1) == Relational(x, -1)       # None ==> Equality
     assert Eq(x, -1) == Relational(x, -1, '==')
     assert Eq(x, -1) == Relational(x, -1, 'eq')
     assert Eq(x, -1) == Equality(x, -1)
-    assert Eq(x)     != Relational(x, 1)       # None ==> Equality
-    assert Eq(x)     != Relational(x, 1, '==')
-    assert Eq(x)     != Relational(x, 1, 'eq')
-    assert Eq(x)     != Equality(x, 1)
+    assert Eq(x) != Relational(x, 1)       # None ==> Equality
+    assert Eq(x) != Relational(x, 1, '==')
+    assert Eq(x) != Relational(x, 1, 'eq')
+    assert Eq(x) != Equality(x, 1)
     assert Eq(x, -1) != Relational(x, 1)       # None ==> Equality
     assert Eq(x, -1) != Relational(x, 1, '==')
     assert Eq(x, -1) != Relational(x, 1, 'eq')
@@ -228,12 +228,12 @@ def test_new_relational():
     assert Lt(x, 1) != Relational(x, 0, '<')
     assert Lt(x, 1) != Relational(x, 0, 'lt')
     assert Lt(x, 1) != StrictLessThan(x, 0)
-    assert (x < 1)  == Relational(x, 1, '<')
-    assert (x < 1)  == Relational(x, 1, 'lt')
-    assert (x < 1)  == StrictLessThan(x, 1)
-    assert (x < 0)  != Relational(x, 1, '<')
-    assert (x < 0)  != Relational(x, 1, 'lt')
-    assert (x < 0)  != StrictLessThan(x, 1)
+    assert (x < 1) == Relational(x, 1, '<')
+    assert (x < 1) == Relational(x, 1, 'lt')
+    assert (x < 1) == StrictLessThan(x, 1)
+    assert (x < 0) != Relational(x, 1, '<')
+    assert (x < 0) != Relational(x, 1, 'lt')
+    assert (x < 0) != StrictLessThan(x, 1)
 
 
     # finally, some fuzz testing

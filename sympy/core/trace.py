@@ -209,4 +209,4 @@ class Tr(Expr):
         else:
             args = [self.args[0]]
 
-        return tuple(args)  + (self.args[1], )
+        return tuple(args) + (self.args[1], )

@@ -45,9 +45,9 @@ def test_basics():
     assert Integral(oo, x) != oo
     assert Integral(S.NaN, x) == S.NaN
 
-    assert diff(Integral(y, y), x)       == 0
+    assert diff(Integral(y, y), x) == 0
     assert diff(Integral(x, (x,0,1)), x) == 0
-    assert diff(Integral(x, x), x)       == x
+    assert diff(Integral(x, x), x) == x
     assert diff(Integral(t, (t,0,x)), x) == x + Integral(0, (t, 0, x))
 
     e=(t+1)**2
@@ -161,7 +161,7 @@ def test_integrate_omit_var():
 
 def test_integrate_poly_accurately():
     y = Symbol('y')
-    assert integrate(x*sin(y), x)       == x**2*sin(y)/2
+    assert integrate(x*sin(y), x) == x**2*sin(y)/2
 
     # when passed to risch_norman, this will be a CPU hog, so this really
     # checks, that integrated function is recognized as polynomial
@@ -177,23 +177,23 @@ def test_integrate_linearterm_pow():
     # check integrate((a*x+b)^c, x)  --  #400
     y = Symbol('y')
     assert integrate(x**y, x) == x**(y+1)/(y+1)
-    assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
+    assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x) == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
 
 def test_issue519():
     assert integrate(pi*sqrt(x),x) == 2*pi*sqrt(x)**3/3
     assert integrate(pi*sqrt(x) + E*sqrt(x)**3,x) == \
-                                               2*pi*sqrt(x)**3/3  + \
+                                               2*pi*sqrt(x)**3/3 + \
                                                2*E *sqrt(x)**5/5
 def test_issue524():
-    assert integrate(cos((n+1) * x), x)   == sin(x*(n+1)) / (n+1)
-    assert integrate(cos((n-1) * x), x)   == sin(x*(n-1)) / (n-1)
+    assert integrate(cos((n+1) * x), x) == sin(x*(n+1)) / (n+1)
+    assert integrate(cos((n-1) * x), x) == sin(x*(n-1)) / (n-1)
 
     assert integrate(cos((n+1) * x) + cos((n-1) * x), x) == \
-                                             sin(x*(n+1)) / (n+1)  + \
+                                             sin(x*(n+1)) / (n+1) + \
                                              sin(x*(n-1)) / (n-1)
 
 def test_issue565():
-    assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0])  == 2*cos(pi*n)/(pi*n)
+    assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == 2*cos(pi*n)/(pi*n)
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) \
                                                                  == 2*cos(pi*n)/(pi*n)
 def test_issue580():
@@ -231,13 +231,13 @@ def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i+j+1)*sin((i+j+1)*x))
 
     assert integrate(M, x) == Matrix([
-        [-cos(x),   -cos(2*x)],
+        [-cos(x), -cos(2*x)],
         [-cos(2*x), -cos(3*x)],
     ])
 
 # issue1012
 def test_integrate_functions():
-    assert integrate(f(x), x)       == Integral(f(x), x)
+    assert integrate(f(x), x) == Integral(f(x), x)
     assert integrate(f(x), (x,0,1)) == Integral(f(x), (x,0,1))
     assert integrate(f(x)*diff(f(x), x), x) == f(x)**2/2
     assert integrate(diff(f(x),x) / f(x),x) == log(f(x))

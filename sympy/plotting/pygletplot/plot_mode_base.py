@@ -141,7 +141,7 @@ class PlotModeBase(PlotMode):
 
         self._draw_lock = RLock()
 
-        self._calculating_verts  = Event()
+        self._calculating_verts = Event()
         self._calculating_cverts = Event()
         self._calculating_verts_pos = 0.0
         self._calculating_verts_len = 0.0

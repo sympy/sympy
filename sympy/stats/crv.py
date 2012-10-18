@@ -169,7 +169,7 @@ class ContinuousPSpace(PSpace):
         if expr in self.values:
             # Marginalize all other random symbols out of the density
             density = self.domain.integrate(self.density, set(rs.symbol
-                for rs in self.values - frozenset((expr,))),  **kwargs)
+                for rs in self.values - frozenset((expr,))), **kwargs)
             return Lambda(expr.symbol, density)
 
         z = Dummy('z', real=True, bounded=True)

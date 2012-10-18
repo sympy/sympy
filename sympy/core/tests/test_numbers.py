@@ -408,9 +408,9 @@ def test_Infinity():
     assert -oo*3 == -oo
     assert oo + oo == oo
     assert -oo + oo*(-5) == -oo
-    assert 1/oo  == 0
-    assert 1/(-oo)  == 0
-    assert 8/oo  == 0
+    assert 1/oo == 0
+    assert 1/(-oo) == 0
+    assert 8/oo == 0
     assert oo % 2 == nan
     assert 2 % oo == nan
     assert oo/oo == nan
@@ -565,9 +565,9 @@ def test_NaN():
     assert -nan*3 == nan
     assert nan + nan == nan
     assert -nan + nan*(-5) == nan
-    assert 1/nan  == nan
-    assert 1/(-nan)  == nan
-    assert 8/nan  == nan
+    assert 1/nan == nan
+    assert 1/(-nan) == nan
+    assert 8/nan == nan
     assert not nan > 0
     assert not nan < 0
     assert not nan >= 0
@@ -656,37 +656,37 @@ def test_powers_Integer():
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1)  ** S.NaN == S.One
+    assert S(1) ** S.NaN == S.One
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots
-    assert S(-1)  ** Rational(6, 5) == - (-1)**(S(1)/5)
+    assert S(-1) ** Rational(6, 5) == - (-1)**(S(1)/5)
     assert sqrt(S(4)) == 2
     assert sqrt(S(-4)) == I * 2
-    assert S(16)  ** Rational(1, 4) == 2
+    assert S(16) ** Rational(1, 4) == 2
     assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1,4)
-    assert S(9)   ** Rational(3, 2) == 27
-    assert S(-9)  ** Rational(3, 2) == -27*I
-    assert S(27)  ** Rational(2, 3) == 9
+    assert S(9) ** Rational(3, 2) == 27
+    assert S(-9) ** Rational(3, 2) == -27*I
+    assert S(27) ** Rational(2, 3) == 9
     assert S(-27) ** Rational(2, 3) == 9 * (S(-1) ** Rational(2, 3))
     assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
     # not exact roots
-    assert sqrt(-3)  == I*sqrt(3)
-    assert (3)  ** (S(3)/2)  == 3 * sqrt(3)
-    assert (-3) ** (S(3)/2)  == - 3 * sqrt(-3)
-    assert (-3) ** (S(5)/2)  ==  9 * I * sqrt(3)
-    assert (-3) ** (S(7)/2)  == - I * 27 * sqrt(3)
-    assert (2)  ** (S(3)/2)  == 2 * sqrt(2)
-    assert (2)  ** (S(-3)/2) == sqrt(2) / 4
-    assert (81) ** (S(2)/3)  == 9 * (S(3) ** (S(2)/3))
-    assert (-81) ** (S(2)/3)  == 9 * (S(-3) ** (S(2)/3))
+    assert sqrt(-3) == I*sqrt(3)
+    assert (3) ** (S(3)/2) == 3 * sqrt(3)
+    assert (-3) ** (S(3)/2) == - 3 * sqrt(-3)
+    assert (-3) ** (S(5)/2) ==  9 * I * sqrt(3)
+    assert (-3) ** (S(7)/2) == - I * 27 * sqrt(3)
+    assert (2) ** (S(3)/2) == 2 * sqrt(2)
+    assert (2) ** (S(-3)/2) == sqrt(2) / 4
+    assert (81) ** (S(2)/3) == 9 * (S(3) ** (S(2)/3))
+    assert (-81) ** (S(2)/3) == 9 * (S(-3) ** (S(2)/3))
     assert (-3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
     assert (-3) ** Rational(-2, 3) == -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
-    assert sqrt(2) * sqrt(3)  == sqrt(6)
+    assert sqrt(2) * sqrt(3) == sqrt(6)
 
     # separate symbols & constansts
     x = Symbol("x")
@@ -743,12 +743,12 @@ def test_powers_Rational():
     assert Rational(-3,2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
 
     # check Nan
-    assert Rational(3,4)  ** S.NaN == S.NaN
+    assert Rational(3,4) ** S.NaN == S.NaN
     assert Rational(-2,3) ** S.NaN == S.NaN
 
     # exact roots on numerator
     assert sqrt(Rational(4,3)) == 2 * sqrt(3) / 3
-    assert Rational(4,3)  ** Rational(3,2) == 8 * sqrt(3) / 9
+    assert Rational(4,3) ** Rational(3,2) == 8 * sqrt(3) / 9
     assert sqrt(Rational(-4,3)) == I * 2 * sqrt(3) / 3
     assert Rational(-4,3) ** Rational(3,2) == - I * 8 * sqrt(3) / 9
     assert Rational(27,2) ** Rational(1,3) == 3 * (2 ** Rational(2,3)) / 2
@@ -912,12 +912,12 @@ def test_Rational_factors():
     assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 def test_issue1008():
-    assert pi*(E + 10) + pi*(-E - 10)         != 0
+    assert pi*(E + 10) + pi*(-E - 10) != 0
     assert pi*(E + 10**10) + pi*(-E - 10**10) != 0
     assert pi*(E + 10**20) + pi*(-E - 10**20) != 0
     assert pi*(E + 10**80) + pi*(-E - 10**80) != 0
 
-    assert (pi*(E + 10) + pi*(-E - 10)).expand()         == 0
+    assert (pi*(E + 10) + pi*(-E - 10)).expand() == 0
     assert (pi*(E + 10**10) + pi*(-E - 10**10)).expand() == 0
     assert (pi*(E + 10**20) + pi*(-E - 10**20)).expand() == 0
     assert (pi*(E + 10**80) + pi*(-E - 10**80)).expand() == 0

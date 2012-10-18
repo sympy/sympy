@@ -279,7 +279,7 @@ def add_formulae(formulae):
                   cosh(2*sqrt(z)) ]),
          Matrix([[6, 0, 0]]),
          Matrix([[-S(3)/4,  S(1)/16, 0],
-                 [ 0,      -S(1)/2,  1],
+                 [ 0, -S(1)/2,  1],
                  [ 0,       z,       0]]))
 
     # FresnelC

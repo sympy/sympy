@@ -331,9 +331,9 @@ def test_conjugate():
 
 def test_issue936():
     x = Symbol('x')
-    assert Abs(x).expand(trig=True)     == Abs(x)
-    assert sign(x).expand(trig=True)    == sign(x)
-    assert arg(x).expand(trig=True)     == arg(x)
+    assert Abs(x).expand(trig=True) == Abs(x)
+    assert sign(x).expand(trig=True) == sign(x)
+    assert arg(x).expand(trig=True) == arg(x)
 
 def test_issue3206():
     x = Symbol('x')

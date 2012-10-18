@@ -10,12 +10,12 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """
 
     is_ZZ = True
-    rep   = 'ZZ'
+    rep = 'ZZ'
 
     is_Numerical = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     def get_field(self):
         """Returns a field associated with ``self``. """

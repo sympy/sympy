@@ -426,11 +426,11 @@ def test_AlgebraicNumber():
     b = AlgebraicNumber(sqrt(2), [1,0], alias=y)
 
     assert a.as_poly(x) == Poly(x)
-    assert b.as_poly()  == Poly(y)
+    assert b.as_poly() == Poly(y)
 
-    assert a.as_expr()  == sqrt(2)
+    assert a.as_expr() == sqrt(2)
     assert a.as_expr(x) == x
-    assert b.as_expr()  == sqrt(2)
+    assert b.as_expr() == sqrt(2)
     assert b.as_expr(x) == x
 
     a = AlgebraicNumber(sqrt(2), [2,3])
@@ -441,11 +441,11 @@ def test_AlgebraicNumber():
     assert p == Poly(2*p.gen+3)
 
     assert a.as_poly(x) == Poly(2*x+3)
-    assert b.as_poly()  == Poly(2*y+3)
+    assert b.as_poly() == Poly(2*y+3)
 
-    assert a.as_expr()  == 2*sqrt(2)+3
+    assert a.as_expr() == 2*sqrt(2)+3
     assert a.as_expr(x) == 2*x+3
-    assert b.as_expr()  == 2*sqrt(2)+3
+    assert b.as_expr() == 2*sqrt(2)+3
     assert b.as_expr(x) == 2*x+3
 
     a = AlgebraicNumber(sqrt(2))
@@ -461,26 +461,26 @@ def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 3
-    assert a.root    == sqrt(3)
-    assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
+    assert a.root == sqrt(3)
+    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(2*sqrt(3), gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
-    assert a.root    == 2*sqrt(3)
-    assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
+    assert a.root == 2*sqrt(3)
+    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
-    assert a.root    == 2*sqrt(3)
-    assert a.rep     == DMP([QQ(1),QQ(0)], QQ)
+    assert a.root == 2*sqrt(3)
+    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, [S(7)/19, 3], gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
-    assert a.root    == 2*sqrt(3)
-    assert a.rep     == DMP([QQ(7,19),QQ(3)], QQ)
+    assert a.root == 2*sqrt(3)
+    assert a.rep == DMP([QQ(7,19),QQ(3)], QQ)
 
 def test_IntervalPrinter():
     ip = IntervalPrinter()

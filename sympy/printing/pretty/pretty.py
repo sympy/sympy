@@ -76,12 +76,12 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(e)
 
     # Infinity inherits from Number, so we have to override _print_XXX order
-    _print_Infinity         = _print_Atom
+    _print_Infinity = _print_Atom
     _print_NegativeInfinity = _print_Atom
-    _print_EmptySet         = _print_Atom
-    _print_Naturals         = _print_Atom
-    _print_Integers         = _print_Atom
-    _print_Reals            = _print_Atom
+    _print_EmptySet = _print_Atom
+    _print_Naturals = _print_Atom
+    _print_Integers = _print_Atom
+    _print_Reals = _print_Atom
 
     def _print_factorial(self, e):
         x = e.args[0]
@@ -278,7 +278,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Integral(self, integral):
-        f   = integral.function
+        f = integral.function
 
         # Add parentheses if arg involves addition of terms and
         # create a pretty form for the argument
@@ -518,15 +518,15 @@ class PrettyPrinter(Printer):
         # XXX we do not print dir ...
         e, z, z0, dir = l.args
 
-        E       = self._print(e)
-        Lim     = prettyForm('lim')
+        E = self._print(e)
+        Lim = prettyForm('lim')
 
-        LimArg  = self._print(z)
-        LimArg  = prettyForm(*LimArg.right('->'))
-        LimArg  = prettyForm(*LimArg.right(self._print(z0)))
+        LimArg = self._print(z)
+        LimArg = prettyForm(*LimArg.right('->'))
+        LimArg = prettyForm(*LimArg.right(self._print(z0)))
 
-        Lim     = prettyForm(*Lim.below(LimArg))
-        Lim     = prettyForm(*Lim.right(E))
+        Lim = prettyForm(*Lim.below(LimArg))
+        Lim = prettyForm(*Lim.right(E))
 
 
         return Lim
@@ -563,13 +563,13 @@ class PrettyPrinter(Printer):
 
                 # reshape s to maxw
                 # XXX this should be generalized, and go to stringPict.reshape ?
-                assert s.width()  <= maxw[j]
+                assert s.width() <= maxw[j]
 
                 # hcenter it, +0.5 to the right                        2
                 # ( it's better to align formula starts for say 0 and r )
                 # XXX this is not good in all cases -- maybe introduce vbaseline?
                 wdelta = maxw[j] - s.width()
-                wleft  = wdelta // 2
+                wleft = wdelta // 2
                 wright = wdelta - wleft
 
                 s = prettyForm(*s.right(' '*wright))
@@ -673,7 +673,7 @@ class PrettyPrinter(Printer):
                 assert p.width() <= maxw[j]
 
                 wdelta = maxw[j] - p.width()
-                wleft  = wdelta // 2
+                wleft = wdelta // 2
                 wright = wdelta - wleft
 
                 p = prettyForm(*p.right(' '*wright))
@@ -795,7 +795,7 @@ class PrettyPrinter(Printer):
         D1 = prettyForm(*vp[(0, 0)].right('  ', vp[(0, 1)]))
         D1 = prettyForm(*D1.below(' '))
         D2 = prettyForm(*vp[(1, 0)].right('  ', vp[(1, 1)]))
-        D  = prettyForm(*D1.below(D2))
+        D = prettyForm(*D1.below(D2))
 
         # make sure that the argument `z' is centred vertically
         D.baseline = D.height()//2

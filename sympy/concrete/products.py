@@ -139,7 +139,7 @@ class Product(Expr):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif  + 1)])
+            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)

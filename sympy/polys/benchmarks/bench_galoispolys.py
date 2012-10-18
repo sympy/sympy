@@ -34,7 +34,7 @@ def timeit_gathen_poly_f20_zassenhaus():
 def timeit_gathen_poly_f20_shoup():
     gf_factor_sqf(f_20, p_20, ZZ, method='shoup')
 
-P_08  = genprime(8, ZZ)
+P_08 = genprime(8, ZZ)
 F_10 = shoup_poly(10, P_08, ZZ)
 
 P_18 = genprime(18, ZZ)

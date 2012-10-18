@@ -462,7 +462,7 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
-def probability(condition, given_condition=None, numsamples=None,  **kwargs):
+def probability(condition, given_condition=None, numsamples=None, **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 

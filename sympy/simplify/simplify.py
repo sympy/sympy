@@ -976,19 +976,19 @@ def _trigsimp(expr, deep=False):
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
     artifacts = (
         (a - a*cos(b)**2 + c,        a*sin(b)**2 + c, cos),
-        (a - a*(1/cos(b))**2 + c,   -a*tan(b)**2 + c, cos),
-        (a - a*(1/sin(b))**2 + c,   -a*cot(b)**2 + c, sin),
+        (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
+        (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin),
 
-        (a - a*cosh(b)**2 + c,      -a*sinh(b)**2 + c, cosh),
+        (a - a*cosh(b)**2 + c, -a*sinh(b)**2 + c, cosh),
         (a - a*(1/cosh(b))**2 + c,   a*tanh(b)**2 + c, cosh),
         (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh),
 
         # same as above but with noncommutative prefactor
         (a*d - a*d*cos(b)**2 + c,        a*d*sin(b)**2 + c, cos),
-        (a*d - a*d*(1/cos(b))**2 + c,   -a*d*tan(b)**2 + c, cos),
-        (a*d - a*d*(1/sin(b))**2 + c,   -a*d*cot(b)**2 + c, sin),
+        (a*d - a*d*(1/cos(b))**2 + c, -a*d*tan(b)**2 + c, cos),
+        (a*d - a*d*(1/sin(b))**2 + c, -a*d*cot(b)**2 + c, sin),
 
-        (a*d - a*d*cosh(b)**2 + c,      -a*d*sinh(b)**2 + c, cosh),
+        (a*d - a*d*cosh(b)**2 + c, -a*d*sinh(b)**2 + c, cosh),
         (a*d - a*d*(1/cosh(b))**2 + c,   a*d*tanh(b)**2 + c, cosh),
         (a*d + a*d*(1/sinh(b))**2 + c,   a*d*coth(b)**2 + c, sinh),
         )

@@ -1033,7 +1033,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 if fermat:
                     break
                 b2 += 2*a + 1 # equiv to (a+1)**2 - n
-                a  += 1
+                a += 1
             if fermat:
                 if verbose:
                     print fermat_msg

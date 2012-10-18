@@ -125,7 +125,7 @@ def interpolating_poly(n, x, X='x', Y='y'):
             if i == j:
                 continue
 
-            numer.append(x    - X[j])
+            numer.append(x - X[j])
             denom.append(X[i] - X[j])
 
         numer = Mul(*numer)
@@ -142,7 +142,7 @@ def fateman_poly_F_1(n):
 
     y_0, y_1 = Y[0], Y[1]
 
-    u = y_0    + Add(*[ y    for y in Y[1:] ])
+    u = y_0 + Add(*[ y    for y in Y[1:] ])
     v = y_0**2 + Add(*[ y**2 for y in Y[1:] ])
 
     F = ((u + 1)*(u + 2)).as_poly(*Y)

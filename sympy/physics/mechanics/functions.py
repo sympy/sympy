@@ -95,7 +95,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
-    ol  = sympify(ixx) * (frame.x | frame.x)
+    ol = sympify(ixx) * (frame.x | frame.x)
     ol += sympify(ixy) * (frame.x | frame.y)
     ol += sympify(izx) * (frame.x | frame.z)
     ol += sympify(ixy) * (frame.y | frame.x)
@@ -306,7 +306,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     approved_orders = ('123', '231', '312', '132', '213', '321', '121', '131',
                        '212', '232', '313', '323', '1', '2', '3', '')
     rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
-    rot_type  = rot_type.upper()
+    rot_type = rot_type.upper()
     rot_order = [i.replace('X', '1') for i in rot_order]
     rot_order = [i.replace('Y', '2') for i in rot_order]
     rot_order = [i.replace('Z', '3') for i in rot_order]

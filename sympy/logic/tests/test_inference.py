@@ -38,7 +38,7 @@ def test_unit_clause():
     assert find_unit_clause([A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B], {B: True}) == (A, True)
     assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True}) == (B, False)
-    assert find_unit_clause([A | B | C, B | ~C, A | B], {A:True})  == (B, True)
+    assert find_unit_clause([A | B | C, B | ~C, A | B], {A:True}) == (B, True)
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_clause_int_repr():

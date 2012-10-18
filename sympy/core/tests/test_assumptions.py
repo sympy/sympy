@@ -93,80 +93,80 @@ def test_negativeone():
 def test_infinity():
     oo = S.Infinity
 
-    assert oo.is_commutative    == True
-    assert oo.is_integer        == None
-    assert oo.is_rational       == None
-    assert oo.is_real           == True
-    assert oo.is_complex        == True
-    assert oo.is_noninteger     == None
-    assert oo.is_irrational     == None
-    assert oo.is_imaginary      == False
-    assert oo.is_positive       == True
-    assert oo.is_negative       == False
-    assert oo.is_nonpositive    == False
-    assert oo.is_nonnegative    == True
-    assert oo.is_even           == None
-    assert oo.is_odd            == None
-    assert oo.is_bounded        == False
-    assert oo.is_unbounded      == True
-    assert oo.is_finite         == False
-    assert oo.is_infinitesimal  == False
-    assert oo.is_comparable     == True
-    assert oo.is_prime          == None
-    assert oo.is_composite      == None
+    assert oo.is_commutative == True
+    assert oo.is_integer == None
+    assert oo.is_rational == None
+    assert oo.is_real == True
+    assert oo.is_complex == True
+    assert oo.is_noninteger == None
+    assert oo.is_irrational == None
+    assert oo.is_imaginary == False
+    assert oo.is_positive == True
+    assert oo.is_negative == False
+    assert oo.is_nonpositive == False
+    assert oo.is_nonnegative == True
+    assert oo.is_even == None
+    assert oo.is_odd == None
+    assert oo.is_bounded == False
+    assert oo.is_unbounded == True
+    assert oo.is_finite == False
+    assert oo.is_infinitesimal == False
+    assert oo.is_comparable == True
+    assert oo.is_prime == None
+    assert oo.is_composite == None
     assert oo.is_number is True
 
 def test_neg_infinity():
     mm = S.NegativeInfinity
 
-    assert mm.is_commutative    == True
-    assert mm.is_integer        == None
-    assert mm.is_rational       == None
-    assert mm.is_real           == True
-    assert mm.is_complex        == True
-    assert mm.is_noninteger     == None
-    assert mm.is_irrational     == None
-    assert mm.is_imaginary      == False
-    assert mm.is_positive       == False
-    assert mm.is_negative       == True
-    assert mm.is_nonpositive    == True
-    assert mm.is_nonnegative    == False
-    assert mm.is_even           == None
-    assert mm.is_odd            == None
-    assert mm.is_bounded        == False
-    assert mm.is_unbounded      == True
-    assert mm.is_finite         == False
-    assert mm.is_infinitesimal  == False
-    assert mm.is_comparable     == True
-    assert mm.is_prime          == False
-    assert mm.is_composite      == False
+    assert mm.is_commutative == True
+    assert mm.is_integer == None
+    assert mm.is_rational == None
+    assert mm.is_real == True
+    assert mm.is_complex == True
+    assert mm.is_noninteger == None
+    assert mm.is_irrational == None
+    assert mm.is_imaginary == False
+    assert mm.is_positive == False
+    assert mm.is_negative == True
+    assert mm.is_nonpositive == True
+    assert mm.is_nonnegative == False
+    assert mm.is_even == None
+    assert mm.is_odd == None
+    assert mm.is_bounded == False
+    assert mm.is_unbounded == True
+    assert mm.is_finite == False
+    assert mm.is_infinitesimal == False
+    assert mm.is_comparable == True
+    assert mm.is_prime == False
+    assert mm.is_composite == False
     assert mm.is_number is True
 
 
 def test_nan():
     nan = S.NaN
 
-    assert nan.is_commutative   == True
-    assert nan.is_integer       == None
-    assert nan.is_rational      == None
-    assert nan.is_real          == None
-    assert nan.is_complex       == None
-    assert nan.is_noninteger    == None
-    assert nan.is_irrational    == None
-    assert nan.is_imaginary     == None
-    assert nan.is_positive      == None
-    assert nan.is_negative      == None
-    assert nan.is_nonpositive   == None
-    assert nan.is_nonnegative   == None
-    assert nan.is_even          == None
-    assert nan.is_odd           == None
-    assert nan.is_bounded       == None
-    assert nan.is_unbounded     == None
-    assert nan.is_finite        == None
+    assert nan.is_commutative == True
+    assert nan.is_integer == None
+    assert nan.is_rational == None
+    assert nan.is_real == None
+    assert nan.is_complex == None
+    assert nan.is_noninteger == None
+    assert nan.is_irrational == None
+    assert nan.is_imaginary == None
+    assert nan.is_positive == None
+    assert nan.is_negative == None
+    assert nan.is_nonpositive == None
+    assert nan.is_nonnegative == None
+    assert nan.is_even == None
+    assert nan.is_odd == None
+    assert nan.is_bounded == None
+    assert nan.is_unbounded == None
+    assert nan.is_finite == None
     assert nan.is_infinitesimal == None
-    assert nan.is_comparable    == False
-    assert nan.is_prime         == None
-    assert nan.is_composite     == None
+    assert nan.is_comparable == False
+    assert nan.is_prime == None
+    assert nan.is_composite == None
     assert nan.is_number is True
 
 def test_pos_rational():
@@ -307,13 +307,13 @@ def test_symbol_real():
     # issue 749
     a = Symbol('a', real=False)
 
-    assert a.is_real        == False
-    assert a.is_integer     == False
-    assert a.is_negative    == False
-    assert a.is_positive    == False
+    assert a.is_real == False
+    assert a.is_integer == False
+    assert a.is_negative == False
+    assert a.is_positive == False
     assert a.is_nonnegative == False
     assert a.is_nonpositive == False
-    assert a.is_zero        == False
+    assert a.is_zero == False
 
 def test_symbol_zero():
     x = Symbol('x',zero=True)
@@ -416,16 +416,16 @@ def test_other_symbol():
     assert x.is_real == True
 
     x = Symbol('x', integer=True, nonnegative=True)
-    assert x.is_integer     == True
+    assert x.is_integer == True
     assert x.is_nonnegative == True
-    assert x.is_negative    == False
-    assert x.is_positive    == None
+    assert x.is_negative == False
+    assert x.is_positive == None
 
     x = Symbol('x', integer=True, nonpositive=True)
-    assert x.is_integer     == True
+    assert x.is_integer == True
     assert x.is_nonpositive == True
-    assert x.is_positive    == False
-    assert x.is_negative    == None
+    assert x.is_positive == False
+    assert x.is_negative == None
 
     x = Symbol('x', odd=True)
     assert x.is_odd == True

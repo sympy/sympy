@@ -1,7 +1,7 @@
 from sympy import eye, zeros, Integer
 
 i3 = Integer(3)
-M  = eye(100)
+M = eye(100)
 
 
 def timeit_Matrix__getitem_ii():

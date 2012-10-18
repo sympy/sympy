@@ -102,8 +102,8 @@ def test_Function():
     assert str(w) == "w_"
 
 def test_Geometry():
-    assert sstr(Point(0,0))  == 'Point(0, 0)'
-    assert sstr(Circle(Point(0,0), 3))   == 'Circle(Point(0, 0), 3)'
+    assert sstr(Point(0,0)) == 'Point(0, 0)'
+    assert sstr(Circle(Point(0,0), 3)) == 'Circle(Point(0, 0), 3)'
     # TODO test other Geometry entities
 
 def test_GoldenRatio():
@@ -161,8 +161,8 @@ def test_Mul():
     assert str(y/x) == "y/x"
     assert str(x/y/z) == "x/(y*z)"
     assert str((x+1)/(y+2)) == "(x + 1)/(y + 2)"
-    assert str(2*x/3)  ==  '2*x/3'
-    assert str(-2*x/3)  == '-2*x/3'
+    assert str(2*x/3) ==  '2*x/3'
+    assert str(-2*x/3) == '-2*x/3'
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -356,12 +356,12 @@ def test_Rational():
 
 def test_Float():
     # NOTE prec is the whole number of decimal digits
-    assert str(Float('1.23', prec=1+2))    == '1.23'
-    assert str(Float('1.23456789', prec=1+8))  == '1.23456789'
-    assert str(Float('1.234567890123456789', prec=1+18))    == '1.234567890123456789'
-    assert str(pi.evalf(1+2))   == '3.14'
-    assert str(pi.evalf(1+14))  == '3.14159265358979'
-    assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
+    assert str(Float('1.23', prec=1+2)) == '1.23'
+    assert str(Float('1.23456789', prec=1+8)) == '1.23456789'
+    assert str(Float('1.234567890123456789', prec=1+18)) == '1.234567890123456789'
+    assert str(pi.evalf(1+2)) == '3.14'
+    assert str(pi.evalf(1+14)) == '3.14159265358979'
+    assert str(pi.evalf(1+64)) == '3.1415926535897932384626433832795028841971693993751058209749445923'
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
 
@@ -399,11 +399,11 @@ def test_Sample():
             ]
 
 def test_set():
-    assert sstr(set())       == 'set()'
+    assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
     assert sstr(set([1,2,3]))== 'set([1, 2, 3])'
-    assert sstr(set([1,x,x**2,x**3,x**4]))   == 'set([1, x, x**2, x**3, x**4])'
+    assert sstr(set([1,x,x**2,x**3,x**4])) == 'set([1, x, x**2, x**3, x**4])'
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x+y]])
@@ -436,12 +436,12 @@ def test_Unit():
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
     w = Wild('x')
-    assert str(w + 1)           == 'x_ + 1'
-    assert str(exp(2**w) + 5)   == 'exp(2**x_) + 5'
-    assert str(3*w + 1)         == '3*x_ + 1'
-    assert str(1/w + 1)         == '1 + 1/x_'
-    assert str(w**2 + 1)        == 'x_**2 + 1'
-    assert str(1/(1-w))         == '1/(-x_ + 1)'
+    assert str(w + 1) == 'x_ + 1'
+    assert str(exp(2**w) + 5) == 'exp(2**x_) + 5'
+    assert str(3*w + 1) == '3*x_ + 1'
+    assert str(1/w + 1) == '1 + 1/x_'
+    assert str(w**2 + 1) == 'x_**2 + 1'
+    assert str(1/(1-w)) == '1/(-x_ + 1)'
 
 def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
@@ -461,15 +461,15 @@ def test_bug4():
 
 def test_issue922():
     e = Integral(x,x) + 1
-    assert str(e)   == 'Integral(x, x) + 1'
+    assert str(e) == 'Integral(x, x) + 1'
 
 def test_sstrrepr():
-    assert sstr('abc')      == 'abc'
-    assert sstrrepr('abc')  == "'abc'"
+    assert sstr('abc') == 'abc'
+    assert sstrrepr('abc') == "'abc'"
 
     e = ['a', 'b', 'c', x]
-    assert sstr(e)      == "[a, b, c, x]"
-    assert sstrrepr(e)  == "['a', 'b', 'c', x]"
+    assert sstr(e) == "[a, b, c, x]"
+    assert sstrrepr(e) == "['a', 'b', 'c', x]"
 
 def test_infinity():
     assert sstr(oo*I) == "oo*I"

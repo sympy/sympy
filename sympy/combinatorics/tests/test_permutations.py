@@ -189,7 +189,7 @@ def test_Permutation():
     assert p.get_positional_distance(q) == 8
     p = Permutation([0, 3, 1, 2, 4])
     q = Permutation.josephus(4, 5, 2)
-    assert p.get_adjacency_distance(q)  == 3
+    assert p.get_adjacency_distance(q) == 3
     raises(ValueError, lambda: p.get_adjacency_distance(Permutation([])))
     raises(ValueError, lambda: p.get_positional_distance(Permutation([])))
     raises(ValueError, lambda: p.get_precedence_distance(Permutation([])))

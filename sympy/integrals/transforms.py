@@ -551,10 +551,10 @@ def _rewrite_gamma(f, s, a, b):
         elif fact.is_Pow or isinstance(fact, exp_):
             if fact.is_Pow:
                 base = fact.base
-                exp  = fact.exp
+                exp = fact.exp
             else:
                 base = exp_polar(1)
-                exp  = fact.args[0]
+                exp = fact.args[0]
             if exp.is_Integer:
                 cond = is_numer
                 if exp < 0:
@@ -748,7 +748,7 @@ class InverseMellinTransform(IntegralTransform):
 
     @property
     def fundamental_strip(self):
-        a, b  = self.args[3], self.args[4]
+        a, b = self.args[3], self.args[4]
         if a is InverseMellinTransform._none_sentinel:
             a = None
         if b is InverseMellinTransform._none_sentinel:

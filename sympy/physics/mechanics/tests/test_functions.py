@@ -284,7 +284,7 @@ def test_inertia_of_point_mass():
                  m * (r**2 + s**2) * (N.z | N.z))
 
 def test_partial_velocity():
-    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     u4, u5 = dynamicsymbols('u4, u5')
     r = symbols('r')
 

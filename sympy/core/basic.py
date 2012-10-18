@@ -79,7 +79,7 @@ class Basic(object):
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._assumptions  = cls.default_assumptions
+        obj._assumptions = cls.default_assumptions
         obj._mhash = None # will be set by __hash__ method.
 
         obj._args = args  # all items in args must be Basic objects

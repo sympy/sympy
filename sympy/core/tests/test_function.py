@@ -13,10 +13,10 @@ f, g, h = symbols('f g h', cls=Function)
 def test_f_expand_complex():
     x = Symbol('x', real=True)
 
-    assert f(x).expand(complex=True)        == I*im(f(x)) + re(f(x))
-    assert exp(x).expand(complex=True)      == exp(x)
-    assert exp(I*x).expand(complex=True)    == cos(x) + I*sin(x)
-    assert exp(z).expand(complex=True)      == cos(im(z))*exp(re(z)) + \
+    assert f(x).expand(complex=True) == I*im(f(x)) + re(f(x))
+    assert exp(x).expand(complex=True) == exp(x)
+    assert exp(I*x).expand(complex=True) == cos(x) + I*sin(x)
+    assert exp(z).expand(complex=True) == cos(im(z))*exp(re(z)) + \
                                              I*sin(im(z))*exp(re(z))
 
 def test_bug1():
@@ -200,21 +200,21 @@ def test_function_comparable():
     assert sin(x).is_comparable == False
     assert cos(x).is_comparable == False
 
-    assert sin(Float('0.1')).is_comparable   == True
-    assert cos(Float('0.1')).is_comparable   == True
+    assert sin(Float('0.1')).is_comparable == True
+    assert cos(Float('0.1')).is_comparable == True
 
-    assert sin(E).is_comparable     == True
-    assert cos(E).is_comparable     == True
+    assert sin(E).is_comparable == True
+    assert cos(E).is_comparable == True
 
     assert sin(Rational(1,3)).is_comparable == True
     assert cos(Rational(1,3)).is_comparable == True
 
 @XFAIL
 def test_function_comparable_infinities():
-    assert sin(oo).is_comparable    == False
-    assert sin(-oo).is_comparable   == False
-    assert sin(zoo).is_comparable   == False
-    assert sin(nan).is_comparable   == False
+    assert sin(oo).is_comparable == False
+    assert sin(-oo).is_comparable == False
+    assert sin(zoo).is_comparable == False
+    assert sin(nan).is_comparable == False
 
 def test_deriv1():
     # These all requre derivatives evaluated at a point (issue 1620) to work.

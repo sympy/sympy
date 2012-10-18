@@ -54,13 +54,13 @@ else:
         def __init__(self, obj):
             pass
 
-    gmpy_factorial   = None
-    gmpy_numer       = None
-    gmpy_denom       = None
-    gmpy_gcdex       = None
-    gmpy_gcd         = None
-    gmpy_lcm         = None
-    gmpy_sqrt        = None
+    gmpy_factorial = None
+    gmpy_numer = None
+    gmpy_denom = None
+    gmpy_gcdex = None
+    gmpy_gcd = None
+    gmpy_lcm = None
+    gmpy_sqrt = None
 
 from sympy.mpmath import (
     mpf as MPmathRealType,

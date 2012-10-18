@@ -1115,9 +1115,9 @@ def dmp_swap(f, i, j, u, K):
     F, H = dmp_to_dict(f, u), {}
 
     for exp, coeff in F.iteritems():
-        H[exp[:i]    + (exp[j],) +
+        H[exp[:i] + (exp[j],) +
           exp[i+1:j] +
-          (exp[i],)  + exp[j+1:]] = coeff
+          (exp[i],) + exp[j+1:]] = coeff
 
     return dmp_from_dict(H, u, K)
 

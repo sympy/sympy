@@ -46,10 +46,10 @@ def test_logic_onearg():
     assert And() == True
     assert Or() == False
 
-    assert And(T)   == T
-    assert And(F)   == F
-    assert Or(T)   == T
-    assert Or(F)   == F
+    assert And(T) == T
+    assert And(F) == F
+    assert Or(T) == T
+    assert Or(F) == F
 
     assert And('a') == 'a'
     assert Or('a') == 'a'
@@ -59,15 +59,15 @@ def test_logic_xnotx():
     assert Or('a', Not('a')) == T
 
 def test_logic_eval_TF():
-    assert And(F, F)   == F
-    assert And(F, T)   == F
-    assert And(T, F)   == F
-    assert And(T, T)   == T
+    assert And(F, F) == F
+    assert And(F, T) == F
+    assert And(T, F) == F
+    assert And(T, T) == T
 
-    assert Or(F, F)   == F
-    assert Or(F, T)   == T
-    assert Or(T, F)   == T
-    assert Or(T, T)   == T
+    assert Or(F, F) == F
+    assert Or(F, T) == T
+    assert Or(T, F) == T
+    assert Or(T, T) == T
 
     assert And('a', T) == 'a'
     assert And('a', F) == F
@@ -75,36 +75,36 @@ def test_logic_eval_TF():
     assert Or('a', F) == 'a'
 
 def test_logic_combine_args():
-    assert And('a', 'b', 'a')   == And('a', 'b')
-    assert Or('a', 'b', 'a')   == Or('a', 'b')
+    assert And('a', 'b', 'a') == And('a', 'b')
+    assert Or('a', 'b', 'a') == Or('a', 'b')
 
-    assert And( And('a','b'), And('c','d') )    == And('a','b','c','d')
-    assert Or( Or('a','b'), Or('c','d') )    == Or('a','b','c','d')
+    assert And( And('a','b'), And('c','d') ) == And('a','b','c','d')
+    assert Or( Or('a','b'), Or('c','d') ) == Or('a','b','c','d')
 
     assert Or( 't', And('n','p','r'), And('n','r'), And('n','p','r'), 't', And('n','r') ) == \
                     Or('t', And('n','p','r'), And('n','r'))
 
 def test_logic_expand():
     t = And(Or('a','b'), 'c')
-    assert t.expand()  == Or(And('a','c'), And('b','c'))
+    assert t.expand() == Or(And('a','c'), And('b','c'))
 
     t = And(Or('a', Not('b')), 'b')
-    assert t.expand()  == And('a','b')
+    assert t.expand() == And('a','b')
 
     t = And(Or('a','b'), Or('c','d'))
-    assert t.expand()  == Or(And('a','c'), And('a','d'), And('b','c'), And('b','d'))
+    assert t.expand() == Or(And('a','c'), And('a','d'), And('b','c'), And('b','d'))
 
 def test_logic_fromstring():
     S = Logic.fromstring
 
-    assert S('a')           == 'a'
-    assert S('!a')          == Not('a')
-    assert S('a & b')       == And('a','b')
-    assert S('a | b')       == Or('a','b')
-    assert S('a | b & c')   == And(Or('a','b'), 'c')
-    assert S('a & b | c')   == Or(And('a','b'), 'c')
-    assert S('a & b & c')   == And('a','b','c')
-    assert S('a | b | c')   == Or('a','b','c')
+    assert S('a') == 'a'
+    assert S('!a') == Not('a')
+    assert S('a & b') == And('a','b')
+    assert S('a | b') == Or('a','b')
+    assert S('a | b & c') == And(Or('a','b'), 'c')
+    assert S('a & b | c') == Or(And('a','b'), 'c')
+    assert S('a & b & c') == And('a','b','c')
+    assert S('a | b | c') == Or('a','b','c')
 
     raises(ValueError, lambda: S('| a'))
     raises(ValueError, lambda: S('& a'))

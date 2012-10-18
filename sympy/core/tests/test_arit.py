@@ -297,7 +297,7 @@ def test_ncmul():
     assert (A+B)*(A+B) == (A+B)**2
     assert ((A+B)**2).expand() == A**2 + A*B + B*A +B**2
 
-    assert A**-1  * A == 1
+    assert A**-1 * A == 1
     assert A/A == 1
     assert A/(A**2) == 1/A
 

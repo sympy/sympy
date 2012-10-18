@@ -326,7 +326,7 @@ def test_acosh():
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
-    assert acosh(Rational(1,2))  == I*pi/3
+    assert acosh(Rational(1,2)) == I*pi/3
     assert acosh(Rational(-1,2)) == 2*pi*I/3
 
     assert acosh(zoo) == oo

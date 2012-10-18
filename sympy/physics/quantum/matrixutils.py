@@ -188,7 +188,7 @@ def _sympy_tensor_product(*matrices):
         )
 
     # Pull out the first element in the product.
-    matrix_expansion  = matrices[-1]
+    matrix_expansion = matrices[-1]
     # Do the tensor product working from right to left.
     for mat in reversed(matrices[:-1]):
         rows = mat.rows

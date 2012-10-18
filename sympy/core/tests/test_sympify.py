@@ -221,16 +221,16 @@ def test__sympify():
     # positive _sympify
     assert _sympify(x)      is x
     assert _sympify(f)      is f
-    assert _sympify(1)      == Integer(1)
-    assert _sympify(0.5)    == Float("0.5")
-    assert _sympify(1+1j)   == 1.0 + I*1.0
+    assert _sympify(1) == Integer(1)
+    assert _sympify(0.5) == Float("0.5")
+    assert _sympify(1+1j) == 1.0 + I*1.0
 
     class A:
         def _sympy_(self):
             return Integer(5)
 
     a = A()
-    assert _sympify(a)      == Integer(5)
+    assert _sympify(a) == Integer(5)
 
     # negative _sympify
     raises(SympifyError, lambda: _sympify('1'))

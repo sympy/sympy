@@ -270,11 +270,11 @@ def test_tsolve():
         Rational(-4, 3) - 5/log(7)/3*LambertW(B),
     ]
 
-    assert solve(z*cos(x)-y, x)      == [acos(y/z)]
-    assert solve(z*cos(2*x)-y, x)    == [acos(y/z)/2]
+    assert solve(z*cos(x)-y, x) == [acos(y/z)]
+    assert solve(z*cos(2*x)-y, x) == [acos(y/z)/2]
     assert solve(z*cos(sin(x))-y, x) == [asin(acos(y/z))]
 
-    assert solve(z*cos(x), x)        == [acos(0)]
+    assert solve(z*cos(x), x) == [acos(0)]
 
     # issue #1409
     assert solve(y - b*x/(a+x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
@@ -351,14 +351,14 @@ def test_solve_linear():
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 def test_solve_undetermined_coeffs():
-    assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x  + 2*c*x + c + 1, [a, b, c], x) == \
+    assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x + 2*c*x + c + 1, [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
     # Test that rational functions work
-    assert solve_undetermined_coeffs(a/x  + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
+    assert solve_undetermined_coeffs(a/x + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
         {a: 1, b: 1}
     # Test cancellation in rational functions
     assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
-    (c + 1)*b*x  + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
+    (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
 
 def test_solve_inequalities():

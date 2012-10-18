@@ -109,7 +109,7 @@ class QuotientRing(Ring):
     - base_ideal - the ideal we are quotienting by
     """
 
-    has_assoc_Ring  = True
+    has_assoc_Ring = True
     has_assoc_Field = False
     dtype = QuotientRingElement
 

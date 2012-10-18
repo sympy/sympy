@@ -163,9 +163,9 @@ def test_relational():
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
     A, B = symbols('A,B', commutative=False)
-    assert (A < B)  == Lt(A, B)
+    assert (A < B) == Lt(A, B)
     assert (A <= B) == Le(A, B)
-    assert (A > B)  == Gt(A, B)
+    assert (A > B) == Gt(A, B)
     assert (A >= B) == Ge(A, B)
 
 def test_basic_nostr():
@@ -729,13 +729,13 @@ def test_as_poly_as_expr():
 
 def test_nonzero():
     assert bool(S.Zero) == False
-    assert bool(S.One)  == True
-    assert bool(x)      == True
-    assert bool(x+y)    == True
-    assert bool(x-x)    == False
-    assert bool(x*y)    == True
-    assert bool(x*1)    == True
-    assert bool(x*0)    == False
+    assert bool(S.One) == True
+    assert bool(x) == True
+    assert bool(x+y) == True
+    assert bool(x-x) == False
+    assert bool(x*y) == True
+    assert bool(x*1) == True
+    assert bool(x*0) == False
 
 def test_is_number():
     assert Float(3.14).is_number == True
@@ -815,7 +815,7 @@ def test_as_coeff_exponent():
     # 1685
     D = Derivative
     f = Function('f')
-    fx  = D(f(x), x)
+    fx = D(f(x), x)
     assert fx.as_coeff_exponent(f(x)) == (fx,0)
 
 def test_extractions():

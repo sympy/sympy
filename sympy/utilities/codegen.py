@@ -856,7 +856,7 @@ class FCodeGen(CodeGen):
         if empty: print >> f
         # declaration of the function prototypes
         for routine in routines:
-            prototype  = self.get_interface(routine)
+            prototype = self.get_interface(routine)
             f.write(prototype)
         if empty: print >> f
     dump_h.extension = interface_extension

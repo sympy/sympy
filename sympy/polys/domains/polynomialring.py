@@ -27,8 +27,8 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     Do not instantiate.
     """
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     default_order = "grevlex"
 
@@ -39,9 +39,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one  = self.dtype.one(lev, dom, ring=self)
+        self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom  = dom
+        self.dom = dom
         self.gens = gens
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))

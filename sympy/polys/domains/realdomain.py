@@ -11,9 +11,9 @@ import math
 class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
     """Abstract domain for real numbers. """
 
-    rep   = 'RR'
+    rep = 'RR'
 
-    is_Exact     = False
+    is_Exact = False
     is_Numerical = True
 
     _convert_excludes = [
@@ -60,7 +60,7 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
         p0, q0, p1, q1 = 0, 1, 1, 0
 
         while True:
-            a  = n//d
+            a = n//d
             q2 = q0 + a*q1
 
             if q2 > max_denom:
