@@ -490,9 +490,9 @@ class polygamma(Function):
                 if coeff.is_Integer:
                     e = -(n + 1)
                     if coeff > 0:
-                        tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
+                        tail = Add(*[C.Pow(z - i, e) for i in xrange(1, int(coeff) + 1)])
                     else:
-                        tail = -Add(*[C.Pow(z + i, e)  for i in xrange(0, int(-coeff))])
+                        tail = -Add(*[C.Pow(z + i, e) for i in xrange(0, int(-coeff))])
                     return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:

@@ -506,7 +506,7 @@ def sdp_lcm(f, g, u, O, K):
     H = [ h for h in basis if sdp_indep_p(h, 0, u) ]
 
     if K.is_one(lcm):
-        h = [ (m[1:], c)     for m, c in H[0] ]
+        h = [ (m[1:], c) for m, c in H[0] ]
     else:
         h = [ (m[1:], c * lcm) for m, c in H[0] ]
 

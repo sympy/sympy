@@ -251,8 +251,8 @@ def test_shift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
-    raises(ValueError,  lambda: ShiftA(0))
-    raises(ValueError,  lambda: ShiftB(1))
+    raises(ValueError, lambda: ShiftA(0))
+    raises(ValueError, lambda: ShiftB(1))
 
     assert tn(ShiftA(a1).apply(h, op), hyper((a1 + 1, a2), (b1, b2, b3), z), z)
     assert tn(ShiftA(a2).apply(h, op), hyper((a1, a2 + 1), (b1, b2, b3), z), z)
@@ -264,10 +264,10 @@ def test_ushift_operators():
     a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
-    raises(ValueError,  lambda: UnShiftA((1,), (), 0, z))
-    raises(ValueError,  lambda: UnShiftB((), (-1,), 0, z))
-    raises(ValueError,  lambda: UnShiftA((1,), (0, -1, 1), 0, z))
-    raises(ValueError,  lambda: UnShiftB((0, 1), (1,), 0, z))
+    raises(ValueError, lambda: UnShiftA((1,), (), 0, z))
+    raises(ValueError, lambda: UnShiftB((), (-1,), 0, z))
+    raises(ValueError, lambda: UnShiftA((1,), (0, -1, 1), 0, z))
+    raises(ValueError, lambda: UnShiftB((0, 1), (1,), 0, z))
 
     s = UnShiftA((a1, a2), (b1, b2, b3), 0, z)
     assert tn(s.apply(h, op), hyper((a1 - 1, a2), (b1, b2, b3), z), z)

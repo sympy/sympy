@@ -106,7 +106,7 @@ def int_to_Integer(s):
 
     result = []
     g = generate_tokens(StringIO(s).readline)   # tokenize the string
-    for toknum, tokval, _, _, _  in g:
+    for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
                 (NAME, 'Integer'),

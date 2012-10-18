@@ -357,7 +357,7 @@ def test_roots_slow():
 
 def test_roots_inexact():
     R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
-    R2 = sorted([ r         for r in roots(x**2 + x + 1.0, x) ])
+    R2 = sorted([ r for r in roots(x**2 + x + 1.0, x) ])
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-12

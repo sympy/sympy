@@ -7,8 +7,8 @@ y = Symbol('y')
 
 def test_trigintegrate_odd():
     assert trigintegrate(Rational(1), x) == x
-    assert trigintegrate(x, x)      is None
-    assert trigintegrate(x**2, x)   is None
+    assert trigintegrate(x, x) is None
+    assert trigintegrate(x**2, x) is None
 
     assert trigintegrate(sin(x), x) == -cos(x)
     assert trigintegrate(cos(x), x) == sin(x)

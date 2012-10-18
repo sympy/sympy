@@ -219,8 +219,8 @@ def test__sympify():
     f = Function('f')
 
     # positive _sympify
-    assert _sympify(x)      is x
-    assert _sympify(f)      is f
+    assert _sympify(x) is x
+    assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
     assert _sympify(1+1j) == 1.0 + I*1.0

@@ -549,7 +549,7 @@ class PrettyPrinter(Printer):
         maxw = [-1] * M.cols
 
         for j in range(M.cols):
-            maxw[j] = max([Ms[i, j].width()  for i in range(M.rows)] or [0])
+            maxw[j] = max([Ms[i, j].width() for i in range(M.rows)] or [0])
 
 
         # drawing result

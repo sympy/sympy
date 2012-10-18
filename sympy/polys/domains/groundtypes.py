@@ -14,36 +14,36 @@ gmpy = import_module('gmpy', min_module_version='1.03',
 HAS_GMPY = bool(gmpy)
 
 from __builtin__ import (
-    int     as PythonIntegerType,
-    float   as PythonRealType,
+    int as PythonIntegerType,
+    float as PythonRealType,
     complex as PythonComplexType,
 )
 
 from pythonrationaltype import PythonRationalType
 
 from sympy.core.numbers import (
-    igcdex     as python_gcdex,
-    igcd       as python_gcd,
-    ilcm       as python_lcm,
+    igcdex as python_gcdex,
+    igcd as python_gcd,
+    ilcm as python_lcm,
 )
 
 from sympy import (
-    Float    as SymPyRealType,
-    Integer  as SymPyIntegerType,
+    Float as SymPyRealType,
+    Integer as SymPyIntegerType,
     Rational as SymPyRationalType,
 )
 
 if HAS_GMPY:
     from gmpy import (
-        mpz    as GMPYIntegerType,
-        mpq    as GMPYRationalType,
-        fac    as gmpy_factorial,
-        numer  as gmpy_numer,
-        denom  as gmpy_denom,
+        mpz as GMPYIntegerType,
+        mpq as GMPYRationalType,
+        fac as gmpy_factorial,
+        numer as gmpy_numer,
+        denom as gmpy_denom,
         gcdext as gmpy_gcdex,
-        gcd    as gmpy_gcd,
-        lcm    as gmpy_lcm,
-        sqrt   as gmpy_sqrt,
+        gcd as gmpy_gcd,
+        lcm as gmpy_lcm,
+        sqrt as gmpy_sqrt,
     )
 else:
     class GMPYIntegerType(object):

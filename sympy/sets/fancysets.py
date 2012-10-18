@@ -174,9 +174,9 @@ class TransformationSet(Set):
 
         for soln in solns:
             try:
-                if soln in self.base_set:           return True
+                if soln in self.base_set: return True
             except TypeError:
-                if soln.evalf() in self.base_set:   return True
+                if soln.evalf() in self.base_set: return True
         return False
 
     @property

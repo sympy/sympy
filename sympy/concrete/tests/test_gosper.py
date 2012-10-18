@@ -111,9 +111,9 @@ def test_gosper_sum_AeqB_part2():
     g2c = 1/ff*(1 - 1/x**2) + factorial(m)**2/(x**2*factorial(m - x)*factorial(m + x))
 
     g = gosper_sum(f2a, (n, 0, m))
-    assert g is not None  and simplify(g - g2a) == 0
+    assert g is not None and simplify(g - g2a) == 0
     g = gosper_sum(f2b, (n, 0, m))
-    assert g is not None  and simplify(g - g2b) == 0
+    assert g is not None and simplify(g - g2b) == 0
     g = gosper_sum(f2c, (n, 1, m))
     assert g is not None and simplify(g - g2c) == 0
 
@@ -149,14 +149,14 @@ def test_gosper_sum_AeqB_part3():
     g = gosper_sum(f3a, (n, 1, m))
     assert g is None
     g = gosper_sum(f3b, (n, 1, m))
-    assert g is not None  and simplify(g - g3b) == 0
+    assert g is not None and simplify(g - g3b) == 0
     g = gosper_sum(f3c, (n, 1, m-1))
-    assert g is not None  and simplify(g - g3c) == 0
+    assert g is not None and simplify(g - g3c) == 0
     g = gosper_sum(f3d, (n, 1, m))
-    assert g is not None  and simplify(g - g3d) == 0
+    assert g is not None and simplify(g - g3d) == 0
     g = gosper_sum(f3e, (n, 0, m-1))
     assert g is None
     g = gosper_sum(f3f, (n, 4, m))
     assert g is not None and simplify(g - g3f) == 0
     g = gosper_sum(f3g, (n, 1, m))
-    assert g is not None  and simplify(g - g3g) == 0
+    assert g is not None and simplify(g - g3g) == 0

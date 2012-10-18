@@ -174,7 +174,7 @@ class Density(HermitianOperator):
         c_part1, nc_part1 = arg1.args_cnc()
         c_part2, nc_part2 = arg2.args_cnc()
 
-        if ( len(nc_part1) == 0  or
+        if ( len(nc_part1) == 0 or
              len(nc_part2) == 0 ):
             raise ValueError('Atleast one-pair of'
                              ' Non-commutative instance required'

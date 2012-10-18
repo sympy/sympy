@@ -9,7 +9,7 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.core.trace import Tr
-from sympy.physics.quantum.spin  import JzKet, JzBra
+from sympy.physics.quantum.spin import JzKet, JzBra
 
 
 class TestKet(Ket):

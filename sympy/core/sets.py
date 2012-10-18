@@ -589,19 +589,19 @@ class Interval(Set, EvalfMixin):
                 start = Min(self.start, other.start)
                 end = Max(self.end, other.end)
 
-                left_open = ((self.start != start or self.left_open)  and
+                left_open = ((self.start != start or self.left_open) and
                               (other.start != start or other.left_open))
-                right_open = ((self.end != end   or self.right_open) and
-                              (other.end != end   or other.right_open))
+                right_open = ((self.end != end or self.right_open) and
+                              (other.end != end or other.right_open))
 
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open  and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end)   is True)):
+        if ((self.left_open and other.contains(self.start) is True) or
+                (self.right_open and other.contains(self.end) is True)):
             # Fill in my end points and return
-            open_left = self.left_open  and self.start not in other
-            open_right = self.right_open and self.end   not in other
+            open_left = self.left_open and self.start not in other
+            open_right = self.right_open and self.end not in other
             new_self = Interval(self.start, self.end, open_left, open_right)
             return set((new_self, other))
 

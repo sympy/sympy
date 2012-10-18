@@ -338,7 +338,7 @@ class SparseMatrix(MatrixBase):
             Blist[i].append((j, v))
         Cdict = defaultdict(int)
         for k, j, Akj in A.row_list():
-            for n, Bjn  in Blist[j]:
+            for n, Bjn in Blist[j]:
                 temp = Akj*Bjn
                 Cdict[k, n] += temp
         rv = self.zeros(A.rows, B.cols)

@@ -238,7 +238,7 @@ class bernoulli(Function):
                     return S.One
                 elif n is S.One:
                     if sym is None: return -S.Half
-                    else:           return sym - S.Half
+                    else: return sym - S.Half
                 # Bernoulli numbers
                 elif sym is None:
                     if n.is_odd:
