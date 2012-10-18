@@ -88,7 +88,8 @@ def test_creation():
             return None
     raises(TypeError, lambda: homomorphism(dummy(), G, matrix))
     raises(TypeError, lambda: homomorphism(F, dummy(), matrix))
-    raises(ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))
+    raises(
+        ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))
     raises(ValueError, lambda: homomorphism(F, G, [0, 0]))
 
 
@@ -102,7 +103,8 @@ def test_properties():
     assert not h.is_surjective()
     assert h.restrict_codomain(h.image()).is_surjective()
     assert h.restrict_domain(F.submodule([1, 0])).is_injective()
-    assert h.quotient_domain(h.kernel()).restrict_codomain(h.image()).is_isomorphism()
+    assert h.quotient_domain(
+        h.kernel()).restrict_codomain(h.image()).is_isomorphism()
 
     R2 = QQ.poly_ring(x, y, order=(("lex", x), ("ilex", y))) / [x**2 + 1]
     F = R2.free_module(2)

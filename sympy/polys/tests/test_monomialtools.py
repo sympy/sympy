@@ -32,7 +32,8 @@ def test_monomials():
     assert sorted(monomials([x, y], 0)) == [1]
     assert sorted(monomials([x, y], 1)) == [1, x, y]
     assert sorted(monomials([x, y], 2)) == [1, x, y, x**2, y**2, x*y]
-    assert sorted(monomials([x, y], 3)) == [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
+    assert sorted(monomials(
+        [x, y], 3)) == [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
 
 
 def test_monomial_count():
@@ -144,10 +145,12 @@ def test_monomial_key():
 
 def test_build_product_order():
     from sympy.abc import x, y, z, t
-    assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])((4, 5, 6, 7)) == ((9, (4, 5)), (13, (6, 7)))
+    assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]
+                               )((4, 5, 6, 7)) == ((9, (4, 5)), (13, (6, 7)))
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
-               build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
+               build_product_order(
+                   (("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
     assert (build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) !=
                build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])) \
            is False

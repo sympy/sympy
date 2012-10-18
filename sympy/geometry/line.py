@@ -614,7 +614,8 @@ class LinearEntity(GeometryEntity):
         if projected is None:
             n1 = self.__class__.__name__
             n2 = o.__class__.__name__
-            raise GeometryError("Do not know how to project %s onto %s" % (n2, n1))
+            raise GeometryError(
+                "Do not know how to project %s onto %s" % (n2, n1))
 
         return self.intersection(projected)[0]
 
@@ -865,7 +866,8 @@ class LinearEntity(GeometryEntity):
         if result is not None:
             return result
         else:
-            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))
+            raise Undecidable(
+                "can't decide whether '%s' contains '%s'" % (self, other))
 
     def contains(self, other):
         """Subclasses should implement this method and should return
@@ -1422,7 +1424,8 @@ class Ray(LinearEntity):
                     rv = o.y <= self.source.y
                 if isinstance(rv, bool):
                     return rv
-                raise Undecidable('Cannot determine if %s is in %s' % (o, self))
+                raise Undecidable(
+                    'Cannot determine if %s is in %s' % (o, self))
             else:
                 # Points are not collinear, so the rays are not parallel
                 # and hence it is impossible for self to contain o
@@ -1696,7 +1699,8 @@ class Segment(LinearEntity):
         elif t <= 0:
             distance = Point.distance(self.p1, pt)
         else:
-            distance = Point.distance(self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
+            distance = Point.distance(
+                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
         return distance
 
     def __eq__(self, other):

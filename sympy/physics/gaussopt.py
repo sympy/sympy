@@ -794,7 +794,8 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
-    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
+    f*w_o**2*(
+        w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2]
     f

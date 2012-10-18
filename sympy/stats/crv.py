@@ -115,7 +115,8 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     for i, limit in enumerate(limits):
                         if limit[0]==symbol:
                             # Make condition into an Interval like [0, oo]
-                            cintvl = reduce_poly_inequalities_wrap(cond, symbol)
+                            cintvl = reduce_poly_inequalities_wrap(
+                                cond, symbol)
                             # Make limit into an Interval like [-oo, oo]
                             lintvl = Interval(limit[1], limit[2])
                             # Intersect them to get [0, oo]
@@ -182,7 +183,8 @@ class ContinuousPSpace(PSpace):
     @cacheit
     def compute_cdf(self, expr, **kwargs):
         if not self.domain.set.is_Interval:
-            raise ValueError("CDF not well defined on multivariate expressions")
+            raise ValueError(
+                "CDF not well defined on multivariate expressions")
 
         d = self.compute_density(expr, **kwargs)
         x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)

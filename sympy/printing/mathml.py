@@ -439,7 +439,8 @@ class MathMLPrinter(Printer):
                 else:
                     writer.write(newl)
                     for node in self.childNodes:
-                        node.writexml(writer, indent+addindent, addindent, newl)
+                        node.writexml(
+                            writer, indent+addindent, addindent, newl)
                     writer.write(indent)
                 writer.write("</%s>%s" % (self.tagName, newl))
             else:

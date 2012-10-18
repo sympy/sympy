@@ -663,7 +663,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self._intersect(other, **options)
 
     def module_quotient(self, other, **options):
@@ -699,7 +700,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self._module_quotient(other, **options)
 
     def union(self, other):
@@ -717,7 +719,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self.__class__(self.gens + other.gens, self.container)
 
     def is_zero(self):
@@ -1101,7 +1104,8 @@ class SubModulePolyRing(SubModule):
         G = F._groebner_vec()
 
         # Third bullet point: G0 = G intersect the new k components
-        G0 = [x[r:] for x in G if all(y == self.ring.convert(0) for y in x[:r])]
+        G0 = [x[r:] for x in G if all(y == self.ring.convert(0)
+                                      for y in x[:r])]
 
         # Fourth and fifth bullet points: we are done
         return G0
@@ -1110,7 +1114,8 @@ class SubModulePolyRing(SubModule):
         """Expression in terms of generators. See [SCA, 2.8.1]."""
         # NOTE: if gens is a standard basis, this can be done more efficiently
         M = self.ring.free_module(self.rank).submodule(*((e,) + self.gens))
-        S = M.syzygy_module(order="ilex", TOP=False)  # We want decreasing order!
+        S = M.syzygy_module(
+            order="ilex", TOP=False)  # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]

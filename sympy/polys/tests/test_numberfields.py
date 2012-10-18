@@ -56,12 +56,15 @@ def test_minimal_polynomial():
     assert minimal_polynomial(2*I + sqrt(2 + I), x) == x**4 + 4*x**2 + 8*x + 37
 
     assert minimal_polynomial(sqrt(2) + sqrt(3), x) == x**4 - 10*x**2 + 1
-    assert minimal_polynomial(sqrt(2) + sqrt(3) + sqrt(6), x) == x**4 - 22*x**2 - 48*x - 23
+    assert minimal_polynomial(
+        sqrt(2) + sqrt(3) + sqrt(6), x) == x**4 - 22*x**2 - 48*x - 23
 
     a = 1 - 9*sqrt(2) + 7*sqrt(3)
 
-    assert minimal_polynomial(1/a, x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
-    assert minimal_polynomial(1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
+    assert minimal_polynomial(
+        1/a, x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
+    assert minimal_polynomial(
+        1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
     raises(NotAlgebraic, lambda: minimal_polynomial(y, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(oo, x))
@@ -88,28 +91,36 @@ def test_minimal_polynomial():
 
     a, b = sqrt(2)/3 + 7, AlgebraicNumber(sqrt(2)/3 + 7)
 
-    f = 81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 - 31608*x**2 - 189648*x + 141358
+    f = 81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 - \
+        31608*x**2 - 189648*x + 141358
 
     assert minimal_polynomial(sqrt(a) + sqrt(sqrt(a)), x) == f
     assert minimal_polynomial(sqrt(b) + sqrt(sqrt(b)), x) == f
 
-    assert minimal_polynomial(a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
+    assert minimal_polynomial(
+        a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
-    assert primitive_element([sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
+    assert primitive_element(
+        [sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
 
     assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2), [1])
-    assert primitive_element([sqrt(2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1), [1, 1])
+    assert primitive_element([sqrt(
+        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1), [1, 1])
 
-    assert primitive_element([sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
+    assert primitive_element(
+        [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
-        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-Q(1, 2), 0, Q(11, 2), 0]])
+        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [- \
+         Q(1, 2), 0, Q(11, 2), 0]])
 
-    assert primitive_element([sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
+    assert primitive_element(
+        [sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
-        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-Q(1, 2), 0, Q(11, 2), 0]])
+        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
+         0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
 
@@ -133,25 +144,29 @@ def test_field_isomorphism_pslq():
     assert field_isomorphism_pslq(a, b) is None
     assert field_isomorphism_pslq(a, c) is None
     assert field_isomorphism_pslq(a, d) == [Q(1, 2), 0, -Q(9, 2), 0]
-    assert field_isomorphism_pslq(a, e) == [Q(1, 80), 0, -Q(1, 2), 0, Q(59, 20), 0]
+    assert field_isomorphism_pslq(
+        a, e) == [Q(1, 80), 0, -Q(1, 2), 0, Q(59, 20), 0]
 
     assert field_isomorphism_pslq(b, a) is None
     assert field_isomorphism_pslq(b, b) == [1, 0]
     assert field_isomorphism_pslq(b, c) is None
     assert field_isomorphism_pslq(b, d) == [-Q(1, 2), 0, Q(11, 2), 0]
-    assert field_isomorphism_pslq(b, e) == [-Q(3, 640), 0, Q(67, 320), 0, -Q(297, 160), 0, Q(313, 80), 0]
+    assert field_isomorphism_pslq(b, e) == [-Q(
+        3, 640), 0, Q(67, 320), 0, -Q(297, 160), 0, Q(313, 80), 0]
 
     assert field_isomorphism_pslq(c, a) is None
     assert field_isomorphism_pslq(c, b) is None
     assert field_isomorphism_pslq(c, c) == [1, 0]
     assert field_isomorphism_pslq(c, d) is None
-    assert field_isomorphism_pslq(c, e) == [Q(3, 640), 0, -Q(71, 320), 0, Q(377, 160), 0, -Q(469, 80), 0]
+    assert field_isomorphism_pslq(c, e) == [Q(
+        3, 640), 0, -Q(71, 320), 0, Q(377, 160), 0, -Q(469, 80), 0]
 
     assert field_isomorphism_pslq(d, a) is None
     assert field_isomorphism_pslq(d, b) is None
     assert field_isomorphism_pslq(d, c) is None
     assert field_isomorphism_pslq(d, d) == [1, 0]
-    assert field_isomorphism_pslq(d, e) == [-Q(3, 640), 0, Q(71, 320), 0, -Q(377, 160), 0, Q(549, 80), 0]
+    assert field_isomorphism_pslq(d, e) == [-Q(
+        3, 640), 0, Q(71, 320), 0, -Q(377, 160), 0, Q(549, 80), 0]
 
     assert field_isomorphism_pslq(e, a) is None
     assert field_isomorphism_pslq(e, b) is None
@@ -161,7 +176,8 @@ def test_field_isomorphism_pslq():
 
     f = AlgebraicNumber(3*sqrt(2)+8*sqrt(7)-5)
 
-    assert field_isomorphism_pslq(f, e) == [Q(3, 80), 0, -Q(139, 80), 0, Q(347, 20), 0, -Q(761, 20), -5]
+    assert field_isomorphism_pslq(
+        f, e) == [Q(3, 80), 0, -Q(139, 80), 0, Q(347, 20), 0, -Q(761, 20), -5]
 
 
 def test_field_isomorphism():
@@ -179,11 +195,15 @@ def test_field_isomorphism():
     assert field_isomorphism( 2*I*sqrt(3)/7, -5*I*sqrt(3)/3) == [-S(6)/35, 0]
     assert field_isomorphism(-2*I*sqrt(3)/7, -5*I*sqrt(3)/3) == [ S(6)/35, 0]
 
-    assert field_isomorphism( 2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
-    assert field_isomorphism(-2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
+    assert field_isomorphism(
+        2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
+    assert field_isomorphism(
+        -2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
 
-    assert field_isomorphism( 2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [-S(6)/35, 27]
-    assert field_isomorphism(-2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [ S(6)/35, 27]
+    assert field_isomorphism(
+        2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [-S(6)/35, 27]
+    assert field_isomorphism(
+        -2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [ S(6)/35, 27]
 
     p = AlgebraicNumber( sqrt(2) + sqrt(3))
     q = AlgebraicNumber(-sqrt(2) + sqrt(3))
@@ -324,7 +344,8 @@ def test_field_isomorphism():
 
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
-    assert to_number_field([sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2)+sqrt(3))
+    assert to_number_field(
+        [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2)+sqrt(3))
 
     a = AlgebraicNumber(sqrt(2)+sqrt(3), [S(1)/2, S(0), -S(9)/2, S(0)])
 
@@ -373,7 +394,8 @@ def test_AlgebraicNumber():
     assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8, 3)], QQ)
 
     assert AlgebraicNumber(sqrt(2), [7, 3]).rep == DMP([QQ(7), QQ(3)], QQ)
-    assert AlgebraicNumber(sqrt(2), [S(7)/9, S(3)/2]).rep == DMP([QQ(7, 9), QQ(3, 2)], QQ)
+    assert AlgebraicNumber(
+        sqrt(2), [S(7)/9, S(3)/2]).rep == DMP([QQ(7, 9), QQ(3, 2)], QQ)
 
     assert AlgebraicNumber(sqrt(2), [1, 2, 3]).rep == DMP([QQ(2), QQ(5)], QQ)
 

@@ -33,7 +33,8 @@ from sympy.utilities import cythonized, subsets
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
     if n <= 0:
-        raise ValueError("can't generate Swinnerton-Dyer polynomial of order %s" % n)
+        raise ValueError(
+            "can't generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
         x, cls = sympify(x), Poly
@@ -69,7 +70,8 @@ def swinnerton_dyer_poly(n, x=None, **args):
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
-        raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
+        raise ValueError(
+            "can't generate cyclotomic polynomial of order %s" % n)
 
     poly = DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ)
 
@@ -256,7 +258,8 @@ def dmp_fateman_poly_F_3(n, K):
 
     v = dmp_add_term(u, dmp_ground(K(2), n-2), 0, n, K)
 
-    f = dmp_sqr(dmp_add_term([dmp_neg(v, n-1, K)], dmp_one(n-1, K), n+1, n, K), n, K)
+    f = dmp_sqr(
+        dmp_add_term([dmp_neg(v, n-1, K)], dmp_one(n-1, K), n+1, n, K), n, K)
     g = dmp_sqr(dmp_add_term([v], dmp_one(n-1, K), n+1, n, K), n, K)
 
     v = dmp_add_term(u, dmp_one(n-2, K), 0, n-1, K)
@@ -302,10 +305,13 @@ f_4 = dmp_normal([
     [[-1, 0], [], [], [], [], [], [], [], []],
     [[-1, 0, 0, 0], [], [], [], [], []],
     [[-1, 0, 0], [], [], [], [-5], [], [], [], [], [], [], [], []],
-    [[-1, 0, 0, 0, 0], [], [1, 0, 3, 0], [], [-5, 0, 0], [-1, 0, 0, 0], [], [], [], []],
+    [[-1, 0, 0, 0, 0], [], [1, 0, 3, 0], [], [-5, 0, 0], [-1, 0, 0, 0],
+        [], [], [], []],
     [[1, 0, 3, 0, 0, 0], [], [], [-1, 0, 0, 0, 0, 0], []],
-    [[1, 0, 3, 0, 0], [], [], [-1, 0, 0, 0, 0], [5, 0, 15], [], [], [-5, 0, 0], [], [], [], []],
-    [[1, 0, 3, 0, 0, 0, 0], [], [], [-1, 0, 0, 0, 0, 0, 0], [5, 0, 15, 0, 0], [1, 0, 3, 0, 0, 0], [], [-5, 0, 0, 0, 0], []],
+    [[1, 0, 3, 0, 0], [], [], [-1, 0, 0, 0, 0], [5, 0, 15], [], [], [- \
+        5, 0, 0], [], [], [], []],
+    [[1, 0, 3, 0, 0, 0, 0], [], [], [-1, 0, 0, 0, 0, 0, 0], [5, 0, 15,
+        0, 0], [1, 0, 3, 0, 0, 0], [], [-5, 0, 0, 0, 0], []],
     [[1, 0, 3, 0, 0, 0, 0, 0]],
     [[1, 0, 3, 0, 0, 0, 0], [], [], [], [5, 0, 15, 0, 0], [], [], []],
     [[1, 0, 3, 0, 0, 0, 0, 0, 0], [], [], [], [5, 0, 15, 0, 0, 0, 0]]
@@ -333,9 +339,11 @@ f_6 = dmp_normal([
 
 w_1 = dmp_normal([
     [[4, 0, 0], [4, 0, 0, 0], [-4, 0, 0, 0, 0], [-4, 0, 0, 0, 0, 0], []],
-    [[1, 0, 0, 0], [12, 0], [-1, 0, 0, 12, 0, 0], [-12, 0, 0, 0], [-12, 0, 0, 0, 0]],
+    [[1, 0, 0, 0], [12, 0], [-1, 0, 0, 12, 0, 0], [-12, 0, 0, 0], [-12,
+        0, 0, 0, 0]],
     [[8], [6, 8, 0], [-4, 4, -8, 0, 0], [-4, -2, -8, 0, 0, 0], []],
-    [[2, 0], [1, 0, 0, 0], [-1, 0, -2, 0, 9, 0], [-12, 12, 0, 0], [-12, 3, 0, 0, 0]],
+    [[2, 0], [1, 0, 0, 0], [-1, 0, -2, 0, 9, 0], [-12, 12, 0, 0], [-12,
+        3, 0, 0, 0]],
     [[6], [-6, 8, 0], [-2, -8, 2, 0, 0], []],
     [[2, 0], [-2, 0, 0, 0], [-3, 0], [3, 0, 0, 0]],
     [[-2], [2, 0, 0], []]

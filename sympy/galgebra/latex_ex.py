@@ -161,14 +161,16 @@ class LatexPrinter(Printer):
 
     fct_dict_keys = fct_dict.keys()
 
-    greek_keys = sorted(('alpha', 'beta', 'gamma', 'delta', 'varepsilon', 'epsilon', 'zeta',
+    greek_keys = sorted(
+        ('alpha', 'beta', 'gamma', 'delta', 'varepsilon', 'epsilon', 'zeta',
                          'vartheta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
                          'varpi', 'pi', 'rho', 'varrho', 'varsigma', 'sigma', 'tau', 'upsilon',
                          'varphi', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta',
                          'Lambda', 'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega', 'partial',
                          'nabla', 'eta'), key=cmp_to_key(len_cmp))
 
-    accent_keys = sorted(('hat', 'check', 'dot', 'breve', 'acute', 'ddot', 'grave', 'tilde',
+    accent_keys = sorted(
+        ('hat', 'check', 'dot', 'breve', 'acute', 'ddot', 'grave', 'tilde',
                           'mathring', 'bar', 'vec', 'bm', 'prm', 'abs'), key=cmp_to_key(len_cmp))
 
     greek_cnt = 0
@@ -208,7 +210,8 @@ class LatexPrinter(Printer):
         Generate LaTeX strings for multivector bases
         """
         if isinstance(sympy.galgebra.GA.MV.basislabel_lst, types.IntType):
-            sys.stderr.write('MV.setup() must be executed before LatexPrinter.format()!\n')
+            sys.stderr.write(
+                'MV.setup() must be executed before LatexPrinter.format()!\n')
             sys.exit(1)
         LatexPrinter.latexbasis_lst = [['']]
         for grades in sympy.galgebra.GA.MV.basislabel_lst[1:]:
@@ -339,7 +342,8 @@ class LatexPrinter(Printer):
         if name_str.find('@') == -1:
             return(name_str)
         for token in LatexPrinter.greek_dict.keys():
-            name_str = name_str.replace(token, '{\\'+LatexPrinter.greek_dict[token]+'}')
+            name_str = name_str.replace(
+                token, '{\\'+LatexPrinter.greek_dict[token]+'}')
         LatexPrinter.greek_cnt = 0
         LatexPrinter.greek_dict = {}
         return(name_str)
@@ -352,7 +356,8 @@ class LatexPrinter(Printer):
             return(name_str)
         for x in tmp_lst[1:]:
             if x != '':
-                name_str = '{}'+LatexPrinter.accent_dict['#'+x+'#']+'{'+name_str+'}'
+                name_str = '{}'+LatexPrinter.accent_dict[
+                    '#'+x+'#']+'{'+name_str+'}'
         LatexPrinter.accent_cnt = 0
         LatexPrinter.accent_dict = {}
         return(name_str)
@@ -534,7 +539,8 @@ class LatexPrinter(Printer):
             if LatexPrinter.fmt_dict['pdiff'] == 1:
                 tex = r'\partial_{%s}' % self._print(expr.variables[0])
             else:
-                tex = r"\frac{\partial}{\partial %s}" % self._print(expr.variables[0])
+                tex = r"\frac{\partial}{\partial %s}" % self._print(
+                    expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
             current = expr.variables[0]
@@ -606,9 +612,11 @@ class LatexPrinter(Printer):
                 if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
                         if func in accepted_latex_functions:
-                            name = r"\%s^{%s}" % (LatexPrinter.fct_dict[func], exp)
+                            name = r"\%s^{%s}" % (
+                                LatexPrinter.fct_dict[func], exp)
                         else:
-                            name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
+                            name = r"\operatorname{%s}^{%s}" % (
+                                LatexPrinter.fct_dict[func], exp)
                     else:
                         if LatexPrinter.fct_dict[func] in accepted_latex_functions:
                             name = r"\%s" % LatexPrinter.fct_dict[func]
@@ -786,7 +794,8 @@ class LatexPrinter(Printer):
                 return tex
 
             # insert braces to expresions containing '_' or '^'
-            m = regrep.match('(^[a-zA-Z0-9]+)([_\^]{1})([a-zA-Z0-9]+)$', name_str)
+            m = regrep.match(
+                '(^[a-zA-Z0-9]+)([_\^]{1})([a-zA-Z0-9]+)$', name_str)
             if m is not None:
                 name, sep, rest=m.groups()
                 tex=self._print_Symbol(Symbol(name))
@@ -838,7 +847,8 @@ class LatexPrinter(Printer):
                 expr_str += self._print(row[-1]) + ' \\\\ \n'
             for xij in expr[-1][:-1]:
                 expr_str += self._print(xij) + ' & '
-            expr_str += self._print(expr[-1][-1]) + '\n \\end{array} \\right ] #\n'
+            expr_str += self._print(
+                expr[-1][-1]) + '\n \\end{array} \\right ] #\n'
             return(expr_str)
 
         if ndim == 3:
@@ -870,7 +880,8 @@ class LatexPrinter(Printer):
                         else:
                             base_str = base_str.replace('XYZW', '1')
                         MV_str += base_str+\
-                                  LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
+                                  LatexPrinter.build_base(
+                                      igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
                             line_lst.append(MV_str)
                             MV_str = ''
@@ -921,7 +932,8 @@ class LatexPrinter(Printer):
                         else:
                             base_str = base_str.replace('XYZW', '1')
                         MV_str += base_str+\
-                                  LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
+                                  LatexPrinter.build_base(
+                                      igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
                             line_lst.append(MV_str)
                             MV_str = ''

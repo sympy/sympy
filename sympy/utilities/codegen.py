@@ -168,12 +168,15 @@ class Routine(object):
                     dims = []
                     symbol = out_arg
                 else:
-                    raise CodeGenError("Only Indexed or Symbol can define output arguments")
+                    raise CodeGenError(
+                        "Only Indexed or Symbol can define output arguments")
 
                 if expr.has(symbol):
-                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                    output_args.append(
+                        InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 else:
-                    output_args.append(OutputArgument(symbol, out_arg, expr, dimensions=dims))
+                    output_args.append(OutputArgument(
+                        symbol, out_arg, expr, dimensions=dims))
 
                 # avoid duplicate arguments
                 symbols.remove(symbol)
@@ -210,7 +213,8 @@ class Routine(object):
                     new_sequence.append(arg)
             argument_sequence = new_sequence
 
-            missing = filter(lambda x: x.name not in argument_sequence, arg_list)
+            missing = filter(
+                lambda x: x.name not in argument_sequence, arg_list)
             if missing:
                 raise CodeGenArgumentListError("Argument list didn't specify: %s" %
                         ", ".join([str(m.name) for m in missing]), missing)
@@ -250,7 +254,8 @@ class Routine(object):
 
         If return values are present, they are at the end ot the list.
         """
-        args = [arg for arg in self.arguments if isinstance(arg, (OutputArgument, InOutArgument))]
+        args = [arg for arg in self.arguments if isinstance(
+            arg, (OutputArgument, InOutArgument))]
         args.extend(self.results)
         return args
 
@@ -298,7 +303,8 @@ class Variable(object):
         elif not isinstance(datatype, DataType):
             raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
-            raise TypeError("The dimension argument must be a sequence of tuples")
+            raise TypeError(
+                "The dimension argument must be a sequence of tuples")
 
         self._name = name
         self._datatype = {
@@ -542,7 +548,8 @@ class CCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("/" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy_version, "project": self.project}
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
         for line in tmp.splitlines():
             code_lines.append(" *%s*\n" % line.center(76))
         code_lines.append(" " + "*"*78 + "/\n")
@@ -602,11 +609,14 @@ class CCodeGen(CodeGen):
                 assign_to = result.result_var
 
             try:
-                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+                constants, not_c, c_expr = ccode(
+                    result.expr, assign_to=assign_to, human=False)
             except AssignmentError:
                 assign_to = result.result_var
-                code_lines.append("%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+                code_lines.append(
+                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                constants, not_c, c_expr = ccode(
+                    result.expr, assign_to=assign_to, human=False)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
@@ -653,7 +663,8 @@ class CCodeGen(CodeGen):
         """
         if header:
             print >> f, ''.join(self._get_header())
-        guard_name = "%s__%s__H" % (self.project.replace(" ", "_").upper(), prefix.replace("/", "_").upper())
+        guard_name = "%s__%s__H" % (self.project.replace(
+            " ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
         if empty:
             print >> f
@@ -700,7 +711,8 @@ class FCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("!" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy_version, "project": self.project}
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
         for line in tmp.splitlines():
             code_lines.append("!*%s*\n" % line.center(76))
         code_lines.append("!" + "*"*78 + '\n')
@@ -715,7 +727,8 @@ class FCodeGen(CodeGen):
         """
         code_list = []
         if len(routine.results) > 1:
-            raise CodeGenError("Fortran only supports a single or no return value.")
+            raise CodeGenError(
+                "Fortran only supports a single or no return value.")
         elif len(routine.results) == 1:
             result = routine.results[0]
             code_list.append(result.get_datatype('fortran'))
@@ -816,7 +829,8 @@ class FCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 t = get_default_datatype(obj)
-                declarations.append("%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+                declarations.append(
+                    "%s, parameter :: %s = %s\n" % (t.fname, obj, v))
             for obj in sorted(not_fortran, key=str):
                 t = get_default_datatype(obj)
                 if isinstance(obj, Function):
@@ -896,7 +910,8 @@ def get_code_generator(language, project):
 #
 
 
-def codegen(name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
+def codegen(
+    name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
         argument_sequence=None):
     """Write source code for the given expressions in the given language.
 

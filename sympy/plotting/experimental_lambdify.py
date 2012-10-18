@@ -113,7 +113,8 @@ class vectorized_lambdify(object):
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
-            results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+            results = np.ma.masked_where(
+                np.abs(results.imag) != 0, results.real, copy=False)
         except Exception, e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
@@ -131,10 +132,13 @@ class vectorized_lambdify(object):
                 #   other ugly exceptions that are not well understood (marked with XXX)
                 # TODO: Cleanup the ugly special cases marked with xxx above.
                 # Solution: use cmath and vectorize the final lambda.
-                self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_cmath=True)
-                self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                self.lambda_func = experimental_lambdify(
+                    self.args, self.expr, use_python_cmath=True)
+                self.vector_func = np.vectorize(
+                    self.lambda_func, otypes=[np.complex])
                 results = self.vector_func(*args)
-                results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+                results = np.ma.masked_where(
+                    np.abs(results.imag) != 0, results.real, copy=False)
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
@@ -143,12 +147,15 @@ class vectorized_lambdify(object):
                     raise e
                 else:
                     self.failure = True
-                    self.lambda_func = experimental_lambdify(self.args, self.expr,
+                    self.lambda_func = experimental_lambdify(
+                        self.args, self.expr,
                                                         use_evalf=True,
                                                         complex_wrap_evalf=True)
-                    self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                    self.vector_func = np.vectorize(
+                        self.lambda_func, otypes=[np.complex])
                     results = self.vector_func(*args)
-                    results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+                    results = np.ma.masked_where(
+                        np.abs(results.imag) != 0, results.real, copy=False)
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
@@ -267,9 +274,11 @@ class Lambdifier(object):
             try:
                 namespace.update({'np': __import__('numpy')})
             except ImportError:
-                raise ImportError('experimental_lambdify failed to import numpy.')
+                raise ImportError(
+                    'experimental_lambdify failed to import numpy.')
         if use_interval:
-            namespace.update({'imath': __import__('sympy.plotting.intervalmath', fromlist=['intervalmath'])})
+            namespace.update({'imath': __import__(
+                'sympy.plotting.intervalmath', fromlist=['intervalmath'])})
 
         # Construct the lambda
         if self.print_lambda:
@@ -597,7 +606,8 @@ class Lambdifier(object):
             # Either one of those can be used but not all at the same time.
             # The code considers the sin example as the right one.
             regexlist = [
-                    r'<class \'sympy[\w.]*?.([\w]*)\'>$',  # the example Integral
+                    r'<class \'sympy[\w.]*?.([\w]*)\'>$',
+                                             # the example Integral
                     r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
                     ]
             for r in regexlist:

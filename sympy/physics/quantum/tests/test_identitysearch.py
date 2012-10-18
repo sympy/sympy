@@ -42,12 +42,14 @@ def test_generate_gate_rules_1():
     actual = generate_gate_rules((x, y, z))
     assert actual == gate_rules
 
-    gate_rules = set([((), (h, z, y, x)), ((), (x, h, z, y)), ((), (y, x, h, z)),
+    gate_rules = set(
+        [((), (h, z, y, x)), ((), (x, h, z, y)), ((), (y, x, h, z)),
                       ((), (z, y, x, h)), ((h,), (z, y, x)), ((x,), (h, z, y)),
                       ((y,), (x, h, z)), ((z,), (y, x, h)), ((h, x), (z, y)),
                       ((x, y), (h, z)), ((y, z), (x, h)), ((z, h), (y, x)),
                       ((h, x, y), (z,)), ((x, y, z), (h,)), ((y, z, h), (x,)),
-                      ((z, h, x), (y,)), ((h, x, y, z), ()), ((x, y, z, h), ()),
+                      ((z, h, x), (y,)), ((h, x, y,
+                       z), ()), ((x, y, z, h), ()),
                       ((y, z, h, x), ()), ((z, h, x, y), ())])
     actual = generate_gate_rules((x, y, z, h))
     assert actual == gate_rules

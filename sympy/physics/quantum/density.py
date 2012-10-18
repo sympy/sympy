@@ -254,7 +254,8 @@ def entropy(density):
         eigvals = np.linalg.eigvals(density)
         return -np.sum(eigvals*np.log(eigvals))
     else:
-        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+        raise ValueError(
+            "numpy.ndarray, scipy.sparse or sympy matrix expected")
 
 
 def fidelity(state1, state2):

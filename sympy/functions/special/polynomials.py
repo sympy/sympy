@@ -71,7 +71,8 @@ class jacobi(OrthogonalPolynomial):
     jacobi(n, a, b, x)
 
     >>> jacobi(n, a, a, x)
-    RisingFactorial(a + 1, n)*gegenbauer(n, a + 1/2, x)/RisingFactorial(2*a + 1, n)
+    RisingFactorial(
+        a + 1, n)*gegenbauer(n, a + 1/2, x)/RisingFactorial(2*a + 1, n)
 
     >>> jacobi(n, 0, 0, x)
     legendre(n, x)
@@ -321,8 +322,10 @@ class gegenbauer(OrthogonalPolynomial):
             # Diff wrt a
             n, a, x = self.args
             k = C.Dummy("k")
-            factor1 = 2 * (1 + (-1)**(n-k)) * (k + a) / ((k + n + 2*a) * (n - k))
-            factor2 = 2*(k+1) / ((k + 2*a) * (2*k + 2*a + 1)) + 2 / (k + n + 2*a)
+            factor1 = 2 * (1 + (-1)**(n-k)) * (k + a) / ((k + \
+                           n + 2*a) * (n - k))
+            factor2 = 2*(k+1) / ((k + 2*a) * (2*k + 2*a + 1)) + \
+                         2 / (k + n + 2*a)
             kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
             return C.Sum(kern, (k, 0, n-1))
         elif argindex == 3:
@@ -563,7 +566,8 @@ class chebyshevu(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         k = C.Dummy("k")
-        kern = S.NegativeOne**k * C.factorial(n-k) * (2*x)**(n-2*k) / (C.factorial(k) * C.factorial(n-2*k))
+        kern = S.NegativeOne**k * C.factorial(
+            n-k) * (2*x)**(n-2*k) / (C.factorial(k) * C.factorial(n-2*k))
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
 
@@ -723,7 +727,8 @@ class legendre(OrthogonalPolynomial):
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+                raise ValueError(
+                    "The index n must be nonnegative integer (got %r)" % n)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -840,7 +845,8 @@ class assoc_legendre(Function):
 
     def _eval_rewrite_as_polynomial(self, n, m, x):
         k = C.Dummy("k")
-        kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
+        kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(
+            k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
 
 #----------------------------------------------------------------------------
@@ -915,7 +921,8 @@ class hermite(OrthogonalPolynomial):
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+                raise ValueError(
+                    "The index n must be nonnegative integer (got %r)" % n)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -1013,7 +1020,8 @@ class laguerre(OrthogonalPolynomial):
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+                raise ValueError(
+                    "The index n must be nonnegative integer (got %r)" % n)
             else:
                 return laguerre_poly(n, x, 0)
 
@@ -1061,7 +1069,8 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> assoc_laguerre(2, a, x)
     a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1
     >>> assoc_laguerre(3, a, x)
-    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) + x*(-a**2/2 - 5*a/2 - 3) + 1
+    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) + x*(-a**2/2 - \
+                                            5*a/2 - 3) + 1
 
     >>> assoc_laguerre(n, a, 0)
     binomial(a + n, a)
@@ -1122,7 +1131,8 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+                raise ValueError(
+                    "The index n must be nonnegative integer (got %r)" % n)
             else:
                 return laguerre_poly(n, x, alpha)
 
@@ -1145,5 +1155,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
-        kern = C.RisingFactorial(-n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
+        kern = C.RisingFactorial(
+            -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))

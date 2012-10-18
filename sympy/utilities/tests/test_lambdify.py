@@ -1,5 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
+from sympy import (
+    symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
         Matrix, Lambda, exp, Integral, oo, I, Abs)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
@@ -95,7 +96,8 @@ def test_math_lambda():
     f = lambdify(x, sin(x), "math")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    raises(ValueError, lambda: f(x))  # if this succeeds, it can't be a python math function
+    raises(ValueError, lambda: f(x))
+           # if this succeeds, it can't be a python math function
 
 
 @conserve_mpmath_dps
@@ -105,7 +107,8 @@ def test_mpmath_lambda():
     f = lambdify(x, sin(x), "mpmath")
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
-    raises(TypeError, lambda: f(x))  # if this succeeds, it can't be a mpmath function
+    raises(TypeError, lambda: f(x))
+           # if this succeeds, it can't be a mpmath function
 
 
 @conserve_mpmath_dps

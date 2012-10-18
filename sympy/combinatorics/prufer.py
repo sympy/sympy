@@ -364,7 +364,8 @@ class Prufer(Basic):
         args = [list(args[0])]
         if args[0] and iterable(args[0][0]):
             if not args[0][0]:
-                raise ValueError('Prufer expects at least one edge in the tree.')
+                raise ValueError(
+                    'Prufer expects at least one edge in the tree.')
             if len(args) > 1:
                 nnodes = args[1]
             else:

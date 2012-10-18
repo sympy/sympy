@@ -114,7 +114,8 @@ def deduce_alpha_implications(implications):
         impl.discard(a)
         na = Not(a)
         if na in impl:
-            raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
+            raise ValueError(
+                'implications are inconsistent: %s -> %s %s' % (a, na, impl))
 
     return res
 

@@ -90,7 +90,8 @@ def bspline_basis(d, knots, n, x, close=True):
         raise ValueError('n+d+1 must not exceed len(knots)-1')
     if d==0:
         result = Piecewise(
-            (S.One, Interval(knots[n], knots[n+1], False, not close).contains(x)),
+            (S.One, Interval(knots[n], knots[n+1], False,
+             not close).contains(x)),
             (0, True)
         )
     elif d > 0:
@@ -104,7 +105,8 @@ def bspline_basis(d, knots, n, x, close=True):
         denom = knots[n+d] - knots[n]
         if denom != S.Zero:
             A = (x - knots[n])/denom
-            b1 = bspline_basis(d-1, knots, n, x, close and (B == S.Zero or b2 == S.Zero))
+            b1 = bspline_basis(
+                d-1, knots, n, x, close and (B == S.Zero or b2 == S.Zero))
         else:
             b1 = A = S.Zero
 

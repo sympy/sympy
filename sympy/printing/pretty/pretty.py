@@ -244,7 +244,8 @@ class PrettyPrinter(Printer):
                 x = prettyForm(*x.right(' '))
                 x = prettyForm(*x.right(ds))
 
-        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
+        f = prettyForm(
+            binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
         pform = prettyForm('d')
 
@@ -317,7 +318,8 @@ class PrettyPrinter(Printer):
             # Construct the pretty form with the integral sign and the argument
             pform = prettyForm(vint)
             #pform.baseline = pform.height()//2  # vcenter
-            pform.baseline = arg.baseline + (H-h)//2    # covering the whole argument
+            pform.baseline = arg.baseline + (
+                H-h)//2    # covering the whole argument
 
             if len(lim) > 1:
                 # Create pretty forms for endpoints, if definite integral.
@@ -487,7 +489,8 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, prettyUpper.height())
 
             # Create sum sign based on the height of the argument
-            d, h, slines, adjustment = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
+            d, h, slines, adjustment = asum(
+                H, prettyLower.width(), prettyUpper.width(), ascii_mode)
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
 
@@ -650,7 +653,8 @@ class PrettyPrinter(Printer):
             if ec.cond == True:
                 P[n, 1] = prettyForm('otherwise')
             else:
-                P[n, 1] = prettyForm(*prettyForm('for ').right(self._print(ec.cond)))
+                P[n, 1] = prettyForm(
+                    *prettyForm('for ').right(self._print(ec.cond)))
         hsep = 2
         vsep = 1
         len_args = len(pexpr.args)
@@ -865,7 +869,8 @@ class PrettyPrinter(Printer):
         prettyFunc = self._print(C.Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
 
-        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 
         # store pform parts so it can be reassembled e.g. when powered
         pform.prettyFunc = prettyFunc
@@ -890,7 +895,8 @@ class PrettyPrinter(Printer):
         prettyFunc = self._print(C.Symbol("Lambda"))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
 
-        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 
         # store pform parts so it can be reassembled e.g. when powered
         pform.prettyFunc = prettyFunc
@@ -945,7 +951,8 @@ class PrettyPrinter(Printer):
         prettyFunc = prettyForm("Chi")
         prettyArgs = prettyForm(*self._print_seq(e.args).parens())
 
-        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 
         # store pform parts so it can be reassembled e.g. when powered
         pform.prettyFunc = prettyFunc
@@ -1359,13 +1366,16 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
-        exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
+        exprs = [ self._print_Add(arg, order=basis.order)
+                                  for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
         gens = [ self._print(gen) for gen in basis.gens ]
 
-        domain = prettyForm(*prettyForm("domain=").right(self._print(basis.domain)))
-        order = prettyForm(*prettyForm("order=").right(self._print(basis.order)))
+        domain = prettyForm(
+            *prettyForm("domain=").right(self._print(basis.domain)))
+        order = prettyForm(
+            *prettyForm("order=").right(self._print(basis.order)))
 
         pform = self.join(", ", [exprs] + gens + [domain, order])
 
@@ -1498,7 +1508,8 @@ class PrettyPrinter(Printer):
             results_arrow = " %s " % xsym("==>")
 
             pretty_conclusions = self._print(diagram.conclusions)[0]
-            pretty_result = pretty_result.right(results_arrow, pretty_conclusions)
+            pretty_result = pretty_result.right(
+                results_arrow, pretty_conclusions)
 
         return prettyForm(pretty_result[0])
 

@@ -87,7 +87,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
                         viewer = candidate
                         break
                 else:
-                    raise SystemError("No viewers found for '%s' output format." % output)
+                    raise SystemError(
+                        "No viewers found for '%s' output format." % output)
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:

@@ -690,9 +690,11 @@ def rsolve(f, y, init=None):
                     if result is not None:
                         kspec = int(result[k])
                     else:
-                        raise ValueError("'%s(%s+k)' expected, got '%s'" % (y.func, n, h))
+                        raise ValueError(
+                            "'%s(%s+k)' expected, got '%s'" % (y.func, n, h))
                 else:
-                    raise ValueError("'%s' expected, got '%s'" % (y.func, h.func))
+                    raise ValueError(
+                        "'%s' expected, got '%s'" % (y.func, h.func))
             else:
                 coeff *= h
 
@@ -711,7 +713,8 @@ def rsolve(f, y, init=None):
             if not coeff.is_polynomial(n):
                 common = lcm(common, coeff.as_numer_denom()[1], n)
         else:
-            raise ValueError("Polynomial or rational function expected, got '%s'" % coeff)
+            raise ValueError(
+                "Polynomial or rational function expected, got '%s'" % coeff)
 
     i_numer, i_denom = i_part.as_numer_denom()
 
@@ -767,7 +770,8 @@ def rsolve(f, y, init=None):
                     if k.is_Function and k.func == y.func:
                         i = int(k.args[0])
                     else:
-                        raise ValueError("Integer or term expected, got '%s'" % k)
+                        raise ValueError(
+                            "Integer or term expected, got '%s'" % k)
 
                 eq = solution.subs(n, i) - v
                 equations.append(eq)

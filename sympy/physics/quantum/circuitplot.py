@@ -24,7 +24,8 @@ __all__ = [
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist': ['pyplot']},
+matplotlib = import_module(
+    'matplotlib', __import__kwargs={'fromlist': ['pyplot']},
     catch=(RuntimeError,))  # This is raised in environments that have no display.
 
 if not np or not matplotlib:

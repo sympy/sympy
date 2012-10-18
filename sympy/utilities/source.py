@@ -25,9 +25,11 @@ def get_class(lookup_view):
         lookup_view = lookup_view
         mod_name, func_name = get_mod_func(lookup_view)
         if func_name != '':
-            lookup_view = getattr(__import__(mod_name, {}, {}, ['*']), func_name)
+            lookup_view = getattr(
+                __import__(mod_name, {}, {}, ['*']), func_name)
             if not callable(lookup_view):
-                raise AttributeError("'%s.%s' is not a callable." % (mod_name, func_name))
+                raise AttributeError(
+                    "'%s.%s' is not a callable." % (mod_name, func_name))
     return lookup_view
 
 

@@ -79,7 +79,8 @@ def test_FreeModule():
 
     raises(NotImplementedError, lambda: ZZ[x].free_module(2))
     raises(NotImplementedError, lambda: FreeModulePolyRing(ZZ, 2))
-    raises(CoercionFailed, lambda: M1.convert(QQ[x].free_module(3).convert([1, 2, 3])))
+    raises(CoercionFailed, lambda: M1.convert(QQ[x].free_module(3)
+           .convert([1, 2, 3])))
     raises(CoercionFailed, lambda: M3.convert(1))
 
 
@@ -160,7 +161,8 @@ def test_SubModulePolyRing_local():
     assert M.contains([y**2, 1 - x*y, -x])
 
     assert F.submodule([1 + x, 0, 0]) == F.submodule([1, 0, 0])
-    assert F.submodule([1, 0, 0], [0, 1, 0]).union(F.submodule([0, 0, 1 + x*y])) == F
+    assert F.submodule(
+        [1, 0, 0], [0, 1, 0]).union(F.submodule([0, 0, 1 + x*y])) == F
 
     raises(ValueError, lambda: M.submodule([1, 0, 0]))
 
@@ -184,9 +186,11 @@ def test_SubModulePolyRing_nontriv_global():
     assert contains([x+y+z, x*y+x*z+y*z, x*y*z], x**4 + y**3 + 2*z*y*x)
     assert contains([x+y+z, x*y+x*z+y*z, x*y*z], x*y*z)
     assert contains([x, 1+x+y, 5-7*y], 1)
-    assert contains([x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
+    assert contains(
+        [x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
                     x**3)
-    assert not contains([x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
+    assert not contains(
+        [x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
                         x**2 + y**2)
 
     # compare local order
@@ -233,7 +237,8 @@ def test_syzygy():
 def test_in_terms_of_generators():
     R = QQ.poly_ring(x, order="ilex")
     M = R.free_module(2).submodule([2*x, 0], [1, 2])
-    assert M.in_terms_of_generators([x, x]) == [R.convert(S(1)/4), R.convert(x/2)]
+    assert M.in_terms_of_generators(
+        [x, x]) == [R.convert(S(1)/4), R.convert(x/2)]
     raises(ValueError, lambda: M.in_terms_of_generators([1, 0]))
 
     M = R.free_module(2) / ([x, 0], [1, 1])
@@ -243,7 +248,8 @@ def test_in_terms_of_generators():
     R = QQ[x, y] / [x**2 - y**2]
     M = R.free_module(2)
     SM = M.submodule([x, 0], [0, y])
-    assert SM.in_terms_of_generators([x**2, x**2]) == [R.convert(x), R.convert(y)]
+    assert SM.in_terms_of_generators(
+        [x**2, x**2]) == [R.convert(x), R.convert(y)]
 
 
 def test_QuotientModuleElement():

@@ -258,12 +258,14 @@ def viete(f, roots=None, *gens, **args):
         raise ComputationFailed('viete', 1, exc)
 
     if f.is_multivariate:
-        raise MultivariatePolynomialError("multivariate polynomials are not allowed")
+        raise MultivariatePolynomialError(
+            "multivariate polynomials are not allowed")
 
     n = f.degree()
 
     if n < 1:
-        raise ValueError("can't derive Viete's formulas for a constant polynomial")
+        raise ValueError(
+            "can't derive Viete's formulas for a constant polynomial")
 
     if roots is None:
         roots = numbered_symbols('r', start=1)

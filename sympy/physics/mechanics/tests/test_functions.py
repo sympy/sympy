@@ -342,8 +342,10 @@ def test_angular_momentum_and_linear_momentum():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    assert linear_momentum(
+        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
+    assert angular_momentum(
+        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
 
 
 def test_kinetic_energy():

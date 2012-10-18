@@ -719,7 +719,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
+    def __init__(
+        self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
                     **kwargs):
         super(ParametricSurfaceSeries, self).__init__()
         self.expr_x = sympify(expr_x)
@@ -967,9 +968,11 @@ class TextBackend(BaseBackend):
 
     def show(self):
         if len(self.parent._series) != 1:
-            raise ValueError('The TextBackend supports only one graph per Plot.')
+            raise ValueError(
+                'The TextBackend supports only one graph per Plot.')
         elif not isinstance(self.parent._series[0], LineOver1DRangeSeries):
-            raise ValueError('The TextBackend supports only expressions over a 1D range')
+            raise ValueError(
+                'The TextBackend supports only expressions over a 1D range')
         else:
             ser = self.parent._series[0]
             textplot(ser.expr, ser.start, ser.end)
@@ -1192,7 +1195,8 @@ def plot_parametric(*args, **kwargs):
 
     Multiple plots with same range.
 
-    ``plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
+    ``plot_parametric(
+        (expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
@@ -1485,7 +1489,8 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     Single plot.
 
-    ``plot3d_parametric_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
+    ``plot3d_parametric_surface(
+        expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
 
     If the ranges is not specified, then a default range of (-10, 10) is used.
 
@@ -1630,7 +1635,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             raise ValueError("The number of free_symbols in the expression"
                                 "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
-            ranges = Tuple(*[range_expr for range_expr in args[i:i + nb_of_free_symbols]])
+            ranges = Tuple(*[range_expr for range_expr in args[
+                           i:i + nb_of_free_symbols]])
             plots = [expr + ranges for expr in exprs]
             return plots
         else:

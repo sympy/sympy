@@ -23,7 +23,8 @@ def test_graycode():
     '101100', '100100', '100101', '100111', '100110', '100010', '100011',
     '100001', '100000']
     assert list(a.generate_gray(start='011001')) == codes
-    assert list(a.generate_gray(rank=GrayCode(6, start='011001').rank)) == codes
+    assert list(
+        a.generate_gray(rank=GrayCode(6, start='011001').rank)) == codes
     assert a.next().current == '000001'
     assert a.next(2).current == '000011'
     assert a.next(-1).current == '100000'
@@ -48,7 +49,8 @@ def test_graycode():
     assert len(a) == 5
     assert all(i in ['0', '1'] for i in a)
 
-    assert get_subset_from_bitstring(['a', 'b', 'c', 'd'], '0011') == ['c', 'd']
+    assert get_subset_from_bitstring(
+        ['a', 'b', 'c', 'd'], '0011') == ['c', 'd']
     assert get_subset_from_bitstring('abcd', '1001') == ['a', 'd']
     assert list(graycode_subsets(['a', 'b', 'c'])) == \
         [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],

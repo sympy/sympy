@@ -367,7 +367,8 @@ def mrv(e, x):
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
         return mrv(e.args[0], x)
-    raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
+    raise NotImplementedError(
+        "Don't know how to calculate the mrv of '%s'" % e)
 
 
 def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
@@ -627,7 +628,8 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1]  # g is going to be the "w" - the simplest one in the mrv set
+    g, _ = Omega[-1]
+        # g is going to be the "w" - the simplest one in the mrv set
     sig = sign(g.args[0], x)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w

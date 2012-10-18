@@ -45,25 +45,29 @@ def test_sdp_LM():
 def test_sdp_LT():
     assert sdp_LT([], 1, QQ) == ((0, 0), QQ(0))
     assert sdp_LT([((1, 0), QQ(1, 2))], 1, QQ) == ((1, 0), QQ(1, 2))
-    assert sdp_LT([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))], 1, QQ) == ((1, 1), QQ(1, 4))
+    assert sdp_LT(
+        [((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))], 1, QQ) == ((1, 1), QQ(1, 4))
 
 
 def test_sdp_del_LT():
     assert sdp_del_LT([]) == []
     assert sdp_del_LT([((1, 0), QQ(1, 2))]) == []
-    assert sdp_del_LT([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [((1, 0), QQ(1, 2))]
+    assert sdp_del_LT(
+        [((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [((1, 0), QQ(1, 2))]
 
 
 def test_sdp_coeffs():
     assert sdp_coeffs([]) == []
     assert sdp_coeffs([((1, 0), QQ(1, 2))]) == [QQ(1, 2)]
-    assert sdp_coeffs([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [QQ(1, 4), QQ(1, 2)]
+    assert sdp_coeffs(
+        [((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [QQ(1, 4), QQ(1, 2)]
 
 
 def test_sdp_monoms():
     assert sdp_monoms([]) == []
     assert sdp_monoms([((1, 0), QQ(1, 2))]) == [(1, 0)]
-    assert sdp_monoms([((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [(1, 1), (1, 0)]
+    assert sdp_monoms(
+        [((1, 1), QQ(1, 4)), ((1, 0), QQ(1, 2))]) == [(1, 1), (1, 0)]
 
 
 def test_sdp_strip():
@@ -81,12 +85,18 @@ def test_sdp_pow():
     assert sdp_pow(f, 3, 0, grlex, ZZ) == \
         sdp_from_dict({(3,): 8, (2,): 36, (1,): 54, (0,): 27}, grlex)
     assert sdp_pow(f, 4, 0, grlex, ZZ) == \
-        sdp_from_dict({(4,): 16, (3,): 96, (2,): 216, (1,): 216, (0,): 81}, grlex)
+        sdp_from_dict(
+            {(4,): 16, (3,): 96, (2,): 216, (1,): 216, (0,): 81}, grlex)
     assert sdp_pow(f, 5, 0, grlex, ZZ) == \
-        sdp_from_dict({(5,): 32, (4,): 240, (3,): 720, (2,): 1080, (1,): 810, (0,): 243}, grlex)
+        sdp_from_dict({(5,): 32, (
+            4,): 240, (3,): 720, (2,): 1080, (1,): 810, (0,): 243}, grlex)
 
-    f = sdp_from_dict({(3, 1, 0): 1, (1, 2, 0): -2, (0, 0, 1): -3, (0, 0, 0): 1}, grlex)
-    g = sdp_from_dict({(6, 2, 0): 1, (4, 3, 0): -4, (2, 4, 0): 4, (3, 1, 1): -6, (3, 1, 0): 2,
+    f = sdp_from_dict(
+        {(3, 1, 0): 1, (1, 2, 0): -2, (0, 0, 1): -3, (0, 0, 0): 1}, grlex)
+    g = sdp_from_dict(
+        {(
+            6, 2, 0): 1, (
+                4, 3, 0): -4, (2, 4, 0): 4, (3, 1, 1): -6, (3, 1, 0): 2,
                       (1, 2, 1): 12, (1, 2, 0): -4, (0, 0, 2): 9, (0, 0, 1): -6, (0, 0, 0): 1}, grlex)
 
     assert sdp_pow(f, 2, 2, grlex, ZZ) == g
@@ -95,10 +105,12 @@ def test_sdp_pow():
 
 
 def test_sdp_div():
-    f = sdp_from_dict({(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)
+    f = sdp_from_dict(
+        {(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)
 
     assert sdp_div(f, [sdp_from_dict({(0, 0): 2}, grlex)], 1, grlex, ZZ) == \
-        ([sdp_from_dict({(2, 1): 2, (1, 1): -1, (1, 0): 2, (0, 1): -1, (0, 0): 4}, grlex)], [])
+        ([sdp_from_dict({(2, 1): 2, (1, 1): -1, (1, 0): 2, (0, 1):
+         -1, (0, 0): 4}, grlex)], [])
 
     assert sdp_div(f, [sdp_from_dict({(0, 1): 2}, grlex)], 1, grlex, ZZ) == \
         ([sdp_from_dict({(2, 0): 2, (1, 0): -1, (0, 0): -1}, grlex)],
@@ -159,7 +171,8 @@ def test_sdp_div():
 
 
 def test_sdp_rem():
-    f = sdp_from_dict({(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)
+    f = sdp_from_dict(
+        {(2, 1): 4, (1, 1): -2, (1, 0): 4, (0, 1): -2, (0, 0): 8}, grlex)
 
     assert sdp_rem(f, [sdp_from_dict({(0, 0): 2}, grlex)], 1, grlex, ZZ) == []
     assert sdp_rem(f, [sdp_from_dict({(0, 1): 2}, grlex)], 1, grlex, ZZ) == \

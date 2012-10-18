@@ -17,7 +17,8 @@ def test_count_ops_non_visual():
 
 
 def test_count_ops_visual():
-    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols('Add Mul Pow sin cos exp And Derivative Integral'.upper())
+    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
+        'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
 
     def count(val):
@@ -63,7 +64,8 @@ def test_count_ops_visual():
     assert count(2*z + y**17 + x + 1) == 3*ADD + MUL + POW
     assert count(2*z + y**17 + x + sin(x)) == 3*ADD + POW + MUL + SIN
     assert count(2*z + y**17 + x + sin(x**2)) == 3*ADD + MUL + 2*POW + SIN
-    assert count(2*z + y**17 + x + sin(x**2) + exp(cos(x))) == 4*ADD + MUL + 2*POW + EXP + COS + SIN
+    assert count(2*z + y**17 + x + sin(
+        x**2) + exp(cos(x))) == 4*ADD + MUL + 2*POW + EXP + COS + SIN
 
     assert count(Derivative(x, x)) == D
     assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD

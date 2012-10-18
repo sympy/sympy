@@ -313,14 +313,16 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             if s == sym:
                 order += 1
             else:
-                raise NotImplementedError('Improve MV Derivative support in collect')
+                raise NotImplementedError(
+                    'Improve MV Derivative support in collect')
 
         while isinstance(expr, Derivative):
             s0 = expr.variables[0]
 
             for s in expr.variables:
                 if s != s0:
-                    raise NotImplementedError('Improve MV Derivative support in collect')
+                    raise NotImplementedError(
+                        'Improve MV Derivative support in collect')
 
             if s0 == sym:
                 expr, order = expr.expr, order+len(expr.variables)
@@ -447,7 +449,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         if expr.is_Mul:
             return Mul(*[ collect(term, syms, func, True, exact, distribute_order_term) for term in expr.args ])
         elif expr.is_Pow:
-            b = collect(expr.base, syms, func, True, exact, distribute_order_term)
+            b = collect(
+                expr.base, syms, func, True, exact, distribute_order_term)
             return Pow(b, expr.exp)
 
     if iterable(syms):
@@ -475,7 +478,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
         for symbol in syms:
             if SYMPY_DEBUG:
-                print "DEBUG: parsing of expression %s with symbol %s " % (str(terms), str(symbol))
+                print "DEBUG: parsing of expression %s with symbol %s " % (
+                    str(terms), str(symbol))
 
             result = parse_expression(terms, symbol)
 
@@ -514,7 +518,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             collected[key] = val + order_term
 
     if func is not None:
-        collected = dict([ (key, func(val)) for key, val in collected.iteritems() ])
+        collected = dict(
+            [ (key, func(val)) for key, val in collected.iteritems() ])
 
     if evaluate:
         return Add(*[key*val for key, val in collected.iteritems()])
@@ -770,7 +775,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
     if domain.has_assoc_Field:
         opt.domain = domain.get_field()
     else:
-        raise DomainError("can't compute rational simplification over %s" % domain)
+        raise DomainError(
+            "can't compute rational simplification over %s" % domain)
 
     # compute only once
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]
@@ -819,10 +825,13 @@ def ratsimpmodprime(expr, G, *gens, **args):
             Cs = symbols("c:%d" % len(M1))
             Ds = symbols("d:%d" % len(M2))
 
-            c_hat = Poly(sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens)
-            d_hat = Poly(sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens)
+            c_hat = Poly(
+                sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens)
+            d_hat = Poly(
+                sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens)
 
-            r = reduced(a * d_hat - b * c_hat, G, opt.gens, order=opt.order, polys=True)[1]
+            r = reduced(a * d_hat - b * c_hat, G, opt.gens,
+                        order=opt.order, polys=True)[1]
 
             S = r.coeffs()
             sol = solve(S, Cs + Ds)
@@ -832,7 +841,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
             # exprs. Set these to any value different from 0 to obtain
             # one nontrivial solution:
             for key in sol.keys():
-                sol[key] = sol[key].subs(dict(zip(Cs + Ds, [1] * (len(Cs) + len(Ds)))))
+                sol[key] = sol[key].subs(dict(zip(Cs + Ds,
+                                         [1] * (len(Cs) + len(Ds)))))
 
             if sol and not all([s == 0 for s in sol.itervalues()]):
                 c = c_hat.subs(sol)
@@ -2183,7 +2193,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # ==============================================================
 
         # rebuild the expression
-        newexpr = Mul(*(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
+        newexpr = Mul(
+            *(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
         if combine == 'exp':
             return Mul(newexpr, Mul(*nc_part))
         else:
@@ -2252,7 +2263,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     elif bi.is_nonnegative:
                         nonneg.append(bi)
                     elif bi.is_polar:
-                        nonneg.append(bi)  # polar can be treated like non-negative
+                        nonneg.append(
+                            bi)  # polar can be treated like non-negative
                     else:
                         unk.append(bi)
                 if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
@@ -2539,7 +2551,8 @@ def combsimp(expr):
 
         # Try to reduce the number of gamma factors by applying the
         # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
-        for gammas, numer, denom in [(numer_gammas, numer_others, denom_others),
+        for gammas, numer, denom in [(
+            numer_gammas, numer_others, denom_others),
                                 (denom_gammas, denom_others, numer_others)]:
             new = []
             while gammas:
@@ -2726,7 +2739,8 @@ def combsimp(expr):
         for expr in numer_gammas + denom_gammas + numer_others + denom_others:
             update_ST(expr)
 
-        for gammas, numer, denom in [(numer_gammas, numer_others, denom_others),
+        for gammas, numer, denom in [(
+            numer_gammas, numer_others, denom_others),
                                   (denom_gammas, denom_others, numer_others)]:
             new = []
             while gammas:
@@ -3399,8 +3413,10 @@ def besselsimp(expr):
                                           torewrite(besseli, besselj), ifactors))
 
     minusfactors = [-1, exp_polar(I*pi)]
-    expr = expr.replace(besselj, replacer(besselj, tominus(besselj), minusfactors))
-    expr = expr.replace(besseli, replacer(besseli, tominus(besseli), minusfactors))
+    expr = expr.replace(
+        besselj, replacer(besselj, tominus(besselj), minusfactors))
+    expr = expr.replace(
+        besseli, replacer(besseli, tominus(besseli), minusfactors))
 
     z0 = Dummy('z')
 

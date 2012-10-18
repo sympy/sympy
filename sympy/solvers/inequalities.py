@@ -71,18 +71,21 @@ def solve_poly_inequality(poly, rel):
         for left, multiplicity in reals:
             if multiplicity % 2:
                 if sign == eq_sign:
-                    intervals.insert(0, Interval(left, right, not equal, right_open))
+                    intervals.insert(
+                        0, Interval(left, right, not equal, right_open))
 
                 sign, right, right_open = -sign, left, not equal
             else:
                 if sign == eq_sign and not equal:
-                    intervals.insert(0, Interval(left, right, True, right_open))
+                    intervals.insert(
+                        0, Interval(left, right, True, right_open))
                     right, right_open = left, True
                 elif sign != eq_sign and equal:
                     intervals.insert(0, Interval(left, left))
 
         if sign == eq_sign:
-            intervals.insert(0, Interval(S.NegativeInfinity, right, True, right_open))
+            intervals.insert(
+                0, Interval(S.NegativeInfinity, right, True, right_open))
 
     return intervals
 
@@ -180,7 +183,8 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
             domain = poly.get_domain()
 
             if not (domain.is_ZZ or domain.is_QQ):
-                raise NotImplementedError("inequality solving is not supported over %s" % domain)
+                raise NotImplementedError(
+                    "inequality solving is not supported over %s" % domain)
 
             _polys.append((poly, rel))
 
@@ -250,7 +254,8 @@ def reduce_abs_inequality(expr, rel, gen, assume=True):
             n = expr.exp
 
             if not n.is_Integer or n < 0:
-                raise ValueError("only non-negative integer powers are allowed")
+                raise ValueError(
+                    "only non-negative integer powers are allowed")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -378,7 +383,8 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         elif len(gens) == 1:
             gen = gens.pop()
         else:
-            raise NotImplementedError("only univariate inequalities are supported")
+            raise NotImplementedError(
+                "only univariate inequalities are supported")
 
         components = expr.find(lambda u: u.is_Function)
 

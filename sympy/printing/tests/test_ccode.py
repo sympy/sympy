@@ -42,7 +42,8 @@ def test_ccode_constants_mathh():
 
 def test_ccode_constants_other():
     assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
-    assert ccode(2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
+    assert ccode(
+        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
     assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
@@ -67,7 +68,8 @@ def test_ccode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert ccode(g(x)) == "double const Catalan = %s;\n2*x/Catalan" %Catalan.n()
+    assert ccode(
+        g(x)) == "double const Catalan = %s;\n2*x/Catalan" %Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -309,7 +311,8 @@ def test_ccode_loops_multiple_terms():
         '   }\n'
         '}\n'
             )
-    c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    c = ccode(
+        b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or

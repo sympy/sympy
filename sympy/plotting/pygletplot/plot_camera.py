@@ -40,7 +40,8 @@ class PlotCamera(object):
         try:
             r = self.rot_presets[preset_name]
         except AttributeError:
-            raise ValueError("%s is not a valid rotation preset." % preset_name)
+            raise ValueError(
+                "%s is not a valid rotation preset." % preset_name)
         try:
             self.euler_rotate(r[0], 1, 0, 0)
             self.euler_rotate(r[1], 0, 1, 0)
@@ -70,10 +71,12 @@ class PlotCamera(object):
         glLoadIdentity()
         if self.ortho:
             # yep, this is pseudo ortho (don't tell anyone)
-            gluPerspective(0.3, float(self.window.width)/float(self.window.height),
+            gluPerspective(
+                0.3, float(self.window.width)/float(self.window.height),
                            self.min_ortho_dist-0.01, self.max_ortho_dist+0.01)
         else:
-            gluPerspective(30.0, float(self.window.width)/float(self.window.height),
+            gluPerspective(
+                30.0, float(self.window.width)/float(self.window.height),
                            self.min_dist-0.01, self.max_dist+0.01)
         glMatrixMode(GL_MODELVIEW)
 

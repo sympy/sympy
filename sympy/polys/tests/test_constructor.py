@@ -9,18 +9,24 @@ from sympy.abc import x, y
 
 def test_construct_domain():
     assert construct_domain([1, 2, 3]) == (ZZ, [ZZ(1), ZZ(2), ZZ(3)])
-    assert construct_domain([1, 2, 3], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
+    assert construct_domain(
+        [1, 2, 3], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
 
     assert construct_domain([S(1), S(2), S(3)]) == (ZZ, [ZZ(1), ZZ(2), ZZ(3)])
-    assert construct_domain([S(1), S(2), S(3)], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
+    assert construct_domain(
+        [S(1), S(2), S(3)], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
 
     assert construct_domain([S(1)/2, S(2)]) == (QQ, [QQ(1, 2), QQ(2)])
-    assert construct_domain([3.14, 1, S(1)/2]) == (RR, [RR(3.14), RR(1.0), RR(0.5)])
+    assert construct_domain(
+        [3.14, 1, S(1)/2]) == (RR, [RR(3.14), RR(1.0), RR(0.5)])
 
-    assert construct_domain([3.14, sqrt(2)], extension=None) == (EX, [EX(3.14), EX(sqrt(2))])
-    assert construct_domain([3.14, sqrt(2)], extension=True) == (EX, [EX(3.14), EX(sqrt(2))])
+    assert construct_domain(
+        [3.14, sqrt(2)], extension=None) == (EX, [EX(3.14), EX(sqrt(2))])
+    assert construct_domain(
+        [3.14, sqrt(2)], extension=True) == (EX, [EX(3.14), EX(sqrt(2))])
 
-    assert construct_domain([1, sqrt(2)], extension=None) == (EX, [EX(1), EX(sqrt(2))])
+    assert construct_domain(
+        [1, sqrt(2)], extension=None) == (EX, [EX(1), EX(sqrt(2))])
 
     alg = QQ.algebraic_field(sqrt(2))
 

@@ -97,7 +97,8 @@ def minimal_polynomial(ex, x=None, **args):
                         ex = base**(-ex.exp)
 
                 if not ex.exp.is_Integer:
-                    base, exp = (ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)
+                    base, exp = (
+                        ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)
                 else:
                     base, exp = ex.base, ex.exp
 
@@ -206,7 +207,8 @@ def primitive_element(extension, x=None, **args):
 
         for i, (h, y) in enumerate(zip(H, Y)):
             try:
-                H[i] = Poly(y - h, x, domain='QQ').all_coeffs()  # XXX: composite=False
+                H[i] = Poly(y - h, x,
+                            domain='QQ').all_coeffs()  # XXX: composite=False
             except CoercionFailed:  # pragma: no cover
                 break  # G is not a triangular set
         else:
@@ -392,7 +394,8 @@ def to_number_field(extension, theta=None, **args):
         if coeffs is not None:
             return AlgebraicNumber(theta, coeffs)
         else:
-            raise IsomorphismFailed("%s is not in a subfield of %s" % (root, theta.root))
+            raise IsomorphismFailed(
+                "%s is not in a subfield of %s" % (root, theta.root))
 
 
 class AlgebraicNumber(Expr):
@@ -414,7 +417,8 @@ class AlgebraicNumber(Expr):
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
         else:
-            minpoly, root = minimal_polynomial(expr, args.get('gen'), polys=True), expr
+            minpoly, root = minimal_polynomial(
+                expr, args.get('gen'), polys=True), expr
 
         dom = minpoly.get_domain()
 
@@ -522,7 +526,8 @@ def isolate(alg, eps=None, fast=False):
     if alg.is_Rational:
         return (alg, alg)
     elif not ask(Q.real(alg)):
-        raise NotImplementedError("complex algebraic numbers are not supported")
+        raise NotImplementedError(
+            "complex algebraic numbers are not supported")
 
     func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
 

@@ -25,7 +25,8 @@ def test_postorder_traversal():
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
      ]
     assert list(postorder_traversal(expr, key=default_sort_key)) == expected
-    assert list(postorder_traversal([expr], key=default_sort_key)) == expected + [[expr]]
+    assert list(postorder_traversal(
+        [expr], key=default_sort_key)) == expected + [[expr]]
 
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
         key=default_sort_key)) == [
@@ -75,7 +76,8 @@ def test_group():
     assert group([1, 2, 1], multiple=False) == [(1, 1), (2, 1), (1, 1)]
 
     assert group([1, 1, 2, 2, 2, 1, 3, 3]) == [[1, 1], [2, 2, 2], [1], [3, 3]]
-    assert group([1, 1, 2, 2, 2, 1, 3, 3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
+    assert group([1, 1, 2, 2, 2, 1, 3, 3], multiple=False) == [(1, 2),
+                 (2, 3), (1, 1), (3, 2)]
 
 
 def test_subsets():
@@ -136,9 +138,12 @@ def test_variations():
     assert len(list(variations(l, 3, repetition=True))) == 64
     assert len(list(variations(l, 4, repetition=True))) == 256
     assert list(variations(l[:2], 3, repetition=False)) == []
-    assert list(variations(l[:2], 3, repetition=True)) == [(0, 0, 0), (0, 0, 1),
-                                                           (0, 1, 0), (0, 1, 1),
-                                                           (1, 0, 0), (1, 0, 1),
+    assert list(
+        variations(l[:2], 3, repetition=True)) == [(0, 0, 0), (0, 0, 1),
+                                                           (0, 1,
+                                                            0), (0, 1, 1),
+                                                           (1, 0,
+                                                            0), (1, 0, 1),
                                                            (1, 1, 0), (1, 1, 1)]
 
 
@@ -200,10 +205,12 @@ def test_postfixes():
 
 def test_topological_sort():
     V = [2, 3, 5, 7, 8, 9, 10, 11]
-    E = [(7, 11), (7, 8), (5, 11), (3, 8), (3, 10), (11, 2), (11, 9), (11, 10), (8, 9)]
+    E = [(7, 11), (
+        7, 8), (5, 11), (3, 8), (3, 10), (11, 2), (11, 9), (11, 10), (8, 9)]
 
     assert topological_sort((V, E)) == [3, 5, 7, 8, 11, 2, 9, 10]
-    assert topological_sort((V, E), key=lambda v: -v) == [7, 5, 11, 3, 10, 8, 9, 2]
+    assert topological_sort(
+        (V, E), key=lambda v: -v) == [7, 5, 11, 3, 10, 8, 9, 2]
 
     raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
 
@@ -222,14 +229,16 @@ def test_multiset_partitions():
     assert len(list(multiset_partitions(A, 4))) == 10
     assert len(list(multiset_partitions(A, 3))) == 25
 
-    assert list(multiset_partitions([1, 1, 1, 2, 2], 2)) == [[[1, 1, 1, 2], [2]],
+    assert list(
+        multiset_partitions([1, 1, 1, 2, 2], 2)) == [[[1, 1, 1, 2], [2]],
     [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]], [[1], [1, 1, 2, 2]], [[1, 2],
     [1, 1, 2]], [[1, 1, 2, 2], [1]], [[1, 2, 2], [1, 1]]]
 
     assert list(multiset_partitions([1, 1, 2, 2], 2)) == [[[1, 1, 2], [2]],
     [[1, 2], [1, 2]], [[1], [1, 2, 2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]]]
 
-    assert list(multiset_partitions([1, 2, 3, 4], 2)) == [[[1, 2, 3], [4]], [[1, 3],
+    assert list(
+        multiset_partitions([1, 2, 3, 4], 2)) == [[[1, 2, 3], [4]], [[1, 3],
     [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 4], [3]],
         [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
 
@@ -260,14 +269,16 @@ def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1],
     [4, 4, 2], [4, 4, 1, 1], [4, 2, 2, 2], [4, 2, 2, 1, 1], [4, 2, 1, 1, 1, 1],
     [4, 1, 1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [2, 2, 2, 2, 1, 1],
-    [2, 2, 2, 1, 1, 1, 1], [2, 2, 1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1, 1, 1, 1], [2, 2, 1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1, 1,
+        1, 1, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
     assert len([j[:] for j in binary_partitions(16)]) == 36
 
 
 def test_bell_perm():
-    assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5, 15, 52, 203]
+    assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5,
+                15, 52, 203]
     assert list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
                                      (0, 3, 1, 2), (0, 3, 2, 1), (1, 0, 2, 3),
                                      (1, 0, 3, 2), (2, 0, 1, 3), (2, 1, 0, 3),
@@ -276,7 +287,8 @@ def test_bell_perm():
 
 
 def test_involutions():
-    assert [len(generate_involutions(n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
+    assert [len(generate_involutions(
+        n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
     assert generate_involutions(4) == [(0, 1, 2, 3), (0, 1, 3, 2),
                                        (0, 2, 1, 3), (0, 3, 2, 1),
                                        (1, 0, 2, 3), (2, 1, 0, 3),

@@ -123,7 +123,8 @@ def test_Singleton():
 
 def test_preorder_traversal():
     expr = Basic(b21, b3)
-    assert list(preorder_traversal(expr)) == [expr, b21, b2, b1, b1, b3, b2, b1]
+    assert list(
+        preorder_traversal(expr)) == [expr, b21, b2, b1, b1, b3, b2, b1]
     assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
         ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
 

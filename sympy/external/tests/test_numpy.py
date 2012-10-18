@@ -201,9 +201,11 @@ def test_Matrix_array():
 
 def test_issue629():
     assert (Rational(1, 2)*array([2*x, 0]) == array([x, 0])).all()
-    assert (Rational(1, 2) + array([2*x, 0]) == array([2*x + Rational(1, 2), Rational(1, 2)])).all()
+    assert (Rational(1, 2) + array(
+        [2*x, 0]) == array([2*x + Rational(1, 2), Rational(1, 2)])).all()
     assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
-    assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
+    assert (Float("0.5") + array(
+        [2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
 
 @conserve_mpmath_dps
@@ -296,4 +298,5 @@ def test_symarray():
 
 
 def test_vectorize():
-    assert (numpy.vectorize(sin)([1, 2, 3]) == numpy.array([sin(1), sin(2), sin(3)])).all()
+    assert (numpy.vectorize(
+        sin)([1, 2, 3]) == numpy.array([sin(1), sin(2), sin(3)])).all()

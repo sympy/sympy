@@ -1329,7 +1329,8 @@ def _intcache_printinfo():
     print
     print ' #hit   #miss               #total'
     print
-    print '%5i   %5i (%7.5f %%)   %5i' % (nhit, nmiss, miss_ratio*100, nhit + nmiss)
+    print '%5i   %5i (%7.5f %%)   %5i' % (
+        nhit, nmiss, miss_ratio*100, nhit + nmiss)
     print
     print ints
 

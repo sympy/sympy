@@ -36,8 +36,10 @@ message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 
 implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
-str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
-gen_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
+str_raise_re = re.compile(
+    r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
+gen_raise_re = re.compile(
+    r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 
 
@@ -119,7 +121,8 @@ def test_files():
             result = old_raise_re.search(line)
 
             if result is not None:
-                assert False, message_old_raise % (fname, idx+1, result.group(2))
+                assert False, message_old_raise % (
+                    fname, idx+1, result.group(2))
 
         if line is not None:
             if line == '\n' and idx > 0:

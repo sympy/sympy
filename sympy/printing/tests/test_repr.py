@@ -44,7 +44,8 @@ def test_Function():
 
 def test_Geometry():
     sT(Point(0, 0),  "Point(Integer(0), Integer(0))")
-    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
+    sT(Ellipse(Point(0, 0), 5, 1),
+       "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 
@@ -91,8 +92,10 @@ def test_Rational():
 def test_Float():
     sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
     sT(Float('1.23456789', prec=9), "Float('1.23456788994', prec=9)")
-    sT(Float('1.234567890123456789', prec=19), "Float('1.234567890123456789013', prec=19)")
-    sT(Float('0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
+    sT(Float('1.234567890123456789', prec=19),
+       "Float('1.234567890123456789013', prec=19)")
+    sT(Float(
+        '0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
 
 
 def test_Symbol():

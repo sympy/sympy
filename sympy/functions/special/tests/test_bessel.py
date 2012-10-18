@@ -45,7 +45,8 @@ def test_rewrite():
 
 def test_expand():
     assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert expand_func(bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+    assert expand_func(
+        bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
 
 
 def test_fn():

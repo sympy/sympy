@@ -98,9 +98,11 @@ def _import(module, reload="False"):
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[module]
+        namespace, namespace_default, translations, import_commands = MODULES[
+            module]
     except KeyError:
-        raise NameError("'%s' module can't be used for lambdification" % module)
+        raise NameError(
+            "'%s' module can't be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -125,7 +127,8 @@ def _import(module, reload="False"):
             except ImportError:
                 pass
 
-        raise ImportError("can't import '%s' with '%s' command" % (module, import_command))
+        raise ImportError(
+            "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():

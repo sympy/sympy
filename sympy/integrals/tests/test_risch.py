@@ -42,7 +42,8 @@ def test_heurisch_fractions():
     # result in the first case. The difference is because sympy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
-    assert heurisch(5*x**5/(2*x**6 - 5), x) in [5*log(2*x**6 - 5) / 12, 5*log(-2*x**6 + 5) / 12]
+    assert heurisch(5*x**5/(
+        2*x**6 - 5), x) in [5*log(2*x**6 - 5) / 12, 5*log(-2*x**6 + 5) / 12]
     assert heurisch(5*x**5/(2*x**6 + 5), x) == 5*log(2*x**6 + 5) / 12
 
     assert heurisch(1/x**2, x) == -1/x
@@ -87,7 +88,8 @@ def test_heurisch_trigonometric():
     assert heurisch(cos(x)/sin(x), x) == log(sin(x))
 
     assert heurisch(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
-    assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - 2*sin(x) + 2*x*cos(x))
+    assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - \
+                    2*sin(x) + 2*x*cos(x))
 
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16-x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
@@ -100,7 +102,8 @@ def test_heurisch_hyperbolic():
     assert heurisch(x*sinh(x), x) == x*cosh(x) - sinh(x)
     assert heurisch(x*cosh(x), x) == x*sinh(x) - cosh(x)
 
-    assert heurisch(x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4+x**2)/4
+    assert heurisch(
+        x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4+x**2)/4
 
 
 def test_heurisch_mixed():

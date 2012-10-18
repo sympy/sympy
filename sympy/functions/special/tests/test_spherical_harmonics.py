@@ -69,7 +69,8 @@ def test_Ylm():
     # These last 2 return the correct answer, but the answer can be simplified
     assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
             S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
-    assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
+    assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(
+        th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
 
 
 def test_Zlm():

@@ -65,7 +65,8 @@ def test_ComplexInfinity():
 def test_Derivative():
     assert str(Derivative(x, y)) == "Derivative(x, y)"
     assert str(Derivative(x**2, x, evaluate=False)) == "Derivative(x**2, x)"
-    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "Derivative(x**2/y, x, y)"
+    assert str(Derivative(
+        x**2/y, x, y, evaluate=False)) == "Derivative(x**2/y, x, y)"
 
 
 def test_dict():
@@ -164,7 +165,8 @@ def test_Lambda():
 def test_Limit():
     assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y)"
     assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0)"
-    assert str(Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
+    assert str(
+        Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
 
 def test_list():
@@ -304,18 +306,22 @@ def test_Poly():
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
 
-    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
-    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 + y - 1, x, domain='ZZ[y]')"
+    assert str(
+        Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
+    assert str(
+        Poly(x**2 - 1 + y, x)) == "Poly(x**2 + y - 1, x, domain='ZZ[y]')"
 
     assert str(Poly(x**2 + I*x, x)) == "Poly(x**2 + I*x, x, domain='EX')"
     assert str(Poly(x**2 - I*x, x)) == "Poly(x**2 - I*x, x, domain='EX')"
 
-    assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
+    assert str(Poly(-x*y*z + x*y - 1, x, y, z)
+               ) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
     assert str(Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)) == \
         "Poly(-w*x**21*y**7*z - 2*x*z + (w + 1)*z**3 + 1, x, y, z, domain='ZZ[w]')"
 
     assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
-    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)
+               ) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
 
 
 def test_Pow():
@@ -396,7 +402,8 @@ def test_Float():
     # NOTE prec is the whole number of decimal digits
     assert str(Float('1.23', prec=1+2)) == '1.23'
     assert str(Float('1.23456789', prec=1+8)) == '1.23456789'
-    assert str(Float('1.234567890123456789', prec=1+18)) == '1.234567890123456789'
+    assert str(
+        Float('1.234567890123456789', prec=1+18)) == '1.234567890123456789'
     assert str(pi.evalf(1+2)) == '3.14'
     assert str(pi.evalf(1+14)) == '3.14159265358979'
     assert str(pi.evalf(1+64)) == '3.1415926535897932384626433832795028841971693993751058209749445923'
@@ -416,12 +423,15 @@ def test_RootOf():
 def test_RootSum():
     f = x**5 + 2*x - 1
 
-    assert str(RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
-    assert str(RootSum(f, Lambda(z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+    assert str(
+        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
+    assert str(RootSum(f, Lambda(
+        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
 
 
 def test_GroebnerBasis():
-    assert str(groebner([], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"
+    assert str(groebner(
+        [], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"
 
     F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
 
@@ -447,7 +457,8 @@ def test_set():
     assert sstr(frozenset()) == 'frozenset()'
 
     assert sstr(set([1, 2, 3]))== 'set([1, 2, 3])'
-    assert sstr(set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
+    assert sstr(
+        set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
 
 
 def test_SparseMatrix():
@@ -471,7 +482,8 @@ def test_Symbol():
 def test_tuple():
     assert str((x,)) == sstr((x,)) == "(x,)"
     assert str((x+y, 1+x)) == sstr((x+y, 1+x)) == "(x + y, x + 1)"
-    assert str((x+y, (1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (x + 1, x**2))"
+    assert str((x+y, (
+        1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
 def test_Uniform():

@@ -16,7 +16,8 @@ def test_rsolve_poly():
     assert rsolve_poly([-n-1, n], 1, n) == C1*n - 1
     assert rsolve_poly([-4*n-2, 1], 4*n+1, n) == -1
 
-    assert rsolve_poly([-1, 1], n**5 + n**3, n) == C0 - n**3 / 2 - n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
+    assert rsolve_poly([-1, 1], n**5 + n**3, n) == C0 - n**3 / 2 - \
+                       n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
 
 
 def test_rsolve_ratio():
@@ -48,9 +49,11 @@ def test_rsolve_hyper():
         C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
     ]
 
-    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C1*factorial(n) + C0*2**n
+    assert rsolve_hyper(
+        [2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C1*factorial(n) + C0*2**n
 
-    assert rsolve_hyper([n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
+    assert rsolve_hyper(
+        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
 
     assert rsolve_hyper([-n-1, -1, 1], 0, n) == 0
 
@@ -68,8 +71,10 @@ def recurrence_term(c, f):
 
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
-    funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5 ]
-    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2-n+12, 1] ]
+    funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3* \
+        n**3 + 12*n**4 - 52*n**5 ]
+    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2- \
+        n+12, 1] ]
     for p in funcs:
         # compute difference
         for c in coeffs:
@@ -146,7 +151,8 @@ def test_rsolve():
     f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
 
     assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
-    assert rsolve(f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+    assert rsolve(
+        f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 

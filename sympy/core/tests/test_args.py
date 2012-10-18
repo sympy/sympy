@@ -1818,7 +1818,8 @@ def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
     from sympy.matrices.immutable import ImmutableMatrix
     from sympy import Integer, Tuple
-    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1, 0], [0, 2]])))
+    assert _test_args(
+        UGate(Tuple(Integer(1)), ImmutableMatrix([[1, 0], [0, 2]])))
 
 
 def test_sympy__physics__quantum__gate__XGate():
@@ -2011,9 +2012,11 @@ def test_sympy__physics__quantum__spin__CoupledSpinState():
     from sympy.physics.quantum.spin import CoupledSpinState
     assert _test_args(CoupledSpinState(1, 0, (1, 1)))
     assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2)))
-    assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2), ((2, 3, S(1)/2), (1, 2, 1)) ))
+    assert _test_args(CoupledSpinState(
+        1, 0, (1, S(1)/2, S(1)/2), ((2, 3, S(1)/2), (1, 2, 1)) ))
     j, m, j1, j2, j3, j12, x = symbols('j m j1:4 j12 x')
-    assert CoupledSpinState(j, m, (j1, j2, j3)).subs(j2, x) == CoupledSpinState(j, m, (j1, x, j3))
+    assert CoupledSpinState(
+        j, m, (j1, j2, j3)).subs(j2, x) == CoupledSpinState(j, m, (j1, x, j3))
     assert CoupledSpinState(j, m, (j1, j2, j3), ((1, 3, j12), (1, 2, j)) ).subs(j12, x) == \
         CoupledSpinState(j, m, (j1, j2, j3), ((1, 3, x), (1, 2, j)) )
 
@@ -2473,7 +2476,8 @@ def test_sympy__diffgeom__diffgeom__CoordSystem():
 @XFAIL
 def test_sympy__diffgeom__diffgeom__Point():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
-    assert _test_args(Point(CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
+    assert _test_args(Point(
+        CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
 
 
 @XFAIL

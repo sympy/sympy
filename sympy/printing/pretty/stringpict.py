@@ -479,7 +479,8 @@ class prettyForm(stringPict):
         """
         if function in prettyForm.simpleFunctions:
             #simple function: use only space if possible
-            assert len(args)==1, "Simple function %s must have 1 argument"%function
+            assert len(
+                args)==1, "Simple function %s must have 1 argument"%function
             arg = args[0].__pretty__()
             if arg.binding <= prettyForm.DIV:
                 #optimization: no parentheses necessary

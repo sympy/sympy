@@ -13,7 +13,8 @@ if __name__ == '__main__':
              '0 1 0,'+\
              '0 0 1'
 
-    gamma_x, gamma_y, gamma_z = GA.MV.setup('gamma_x gamma_y gamma_z', metric, True)
+    gamma_x, gamma_y, gamma_z = GA.MV.setup(
+        'gamma_x gamma_y gamma_z', metric, True)
     tex.Format()
 
     coords = r, theta, phi = sympy.symbols('r theta phi')

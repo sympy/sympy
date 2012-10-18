@@ -28,17 +28,21 @@ def test_R2():
     a, b = symbols('a b', positive=True)
     m = Matrix([[a], [b]])
     #TODO assert m == R2_r.coord_tuple_transform_to(R2_p, R2_p.coord_tuple_transform_to(R2_r, [a, b])).applyfunc(simplify)
-    assert m == R2_p.coord_tuple_transform_to(R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
+    assert m == R2_p.coord_tuple_transform_to(
+        R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
 
 
 def test_R3():
     a, b, c = symbols('a b c', positive=True)
     m = Matrix([[a], [b], [c]])
-    assert m == R3_c.coord_tuple_transform_to(R3_r, R3_r.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
+    assert m == R3_c.coord_tuple_transform_to(
+        R3_r, R3_r.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
     #TODO assert m == R3_r.coord_tuple_transform_to(R3_c, R3_c.coord_tuple_transform_to(R3_r, m)).applyfunc(simplify)
-    assert m == R3_s.coord_tuple_transform_to(R3_r, R3_r.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
+    assert m == R3_s.coord_tuple_transform_to(
+        R3_r, R3_r.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
     #TODO assert m == R3_r.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_r, m)).applyfunc(simplify)
-    assert m == R3_s.coord_tuple_transform_to(R3_c, R3_c.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
+    assert m == R3_s.coord_tuple_transform_to(
+        R3_c, R3_c.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
     #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
 
 
@@ -68,7 +72,8 @@ def test_differential():
 
 
 def test_products():
-    assert TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
+    assert TensorProduct(
+        R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
     assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
     assert TensorProduct(R2.dx, R2.dy)(None, R2.e_y) == R2.dx
     assert TensorProduct(R2.dx, R2.dy)(R2.e_x, None) == R2.dy
@@ -82,7 +87,8 @@ def test_lie_derivative():
     assert LieDerivative(R2.e_x, R2.e_x) == Commutator(R2.e_x, R2.e_x) == 0
     assert LieDerivative(R2.e_x, R2.e_r) == Commutator(R2.e_x, R2.e_r)
     assert LieDerivative(R2.e_x+R2.e_y, R2.x) == 1
-    assert LieDerivative(R2.e_x, TensorProduct(R2.dx, R2.dy))(R2.e_x, R2.e_y) == 0
+    assert LieDerivative(
+        R2.e_x, TensorProduct(R2.dx, R2.dy))(R2.e_x, R2.e_y) == 0
 
 
 def test_covar_deriv():
@@ -103,14 +109,16 @@ def test_intcurve_diffequ():
     assert str(equations) == '[f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
     equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
-    assert str(equations) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
+    assert str(
+        equations) == '[Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]'
     assert str(init_cond) == '[f_0(0) - 1, f_1(0)]'
 
 
 def test_helpers_and_coordinate_dependent():
     one_form = R2.dr + R2.dx
     two_form = Differential(R2.x*R2.dr + R2.r*R2.dx)
-    three_form = Differential(R2.y*two_form) + Differential(R2.x*Differential(R2.r*R2.dr))
+    three_form = Differential(
+        R2.y*two_form) + Differential(R2.x*Differential(R2.r*R2.dr))
     metric = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dy, R2.dy)
     metric_ambig = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dr, R2.dr)
     misform_a = TensorProduct(R2.dr, R2.dr) + R2.dr

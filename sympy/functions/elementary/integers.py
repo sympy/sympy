@@ -48,7 +48,8 @@ class RoundFunction(Function):
             npart.is_real and spart.is_imaginary or
                 npart.is_imaginary and spart.is_real):
             try:
-                re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
+                re, im = get_integer_part(
+                    npart, cls._dir, {}, return_ints=True)
                 ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):

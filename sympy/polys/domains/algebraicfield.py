@@ -80,7 +80,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         try:
             return self(to_number_field(a, self.ext).native_coeffs())
         except (NotAlgebraic, IsomorphismFailed):
-            raise CoercionFailed("%s is not a valid algebraic number in %s" % (a, self))
+            raise CoercionFailed(
+                "%s is not a valid algebraic number in %s" % (a, self))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """

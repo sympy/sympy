@@ -70,7 +70,8 @@ def dup_gegenbauer(n, a, K):
 def gegenbauer_poly(n, a, x=None, **args):
     """Generates Gegenbauer polynomial of degree `n` in `x`. """
     if n < 0:
-        raise ValueError("can't generate Gegenbauer polynomial of degree %s" % n)
+        raise ValueError(
+            "can't generate Gegenbauer polynomial of degree %s" % n)
 
     K, a = construct_domain(a, field=True)
     poly = DMP(dup_gegenbauer(int(n), a, K), K)
@@ -101,7 +102,8 @@ def dup_chebyshevt(n, K):
 def chebyshevt_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`. """
     if n < 0:
-        raise ValueError("can't generate 1st kind Chebyshev polynomial of degree %s" % n)
+        raise ValueError(
+            "can't generate 1st kind Chebyshev polynomial of degree %s" % n)
 
     poly = DMP(dup_chebyshevt(int(n), ZZ), ZZ)
 
@@ -131,7 +133,8 @@ def dup_chebyshevu(n, K):
 def chebyshevu_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`. """
     if n < 0:
-        raise ValueError("can't generate 2nd kind Chebyshev polynomial of degree %s" % n)
+        raise ValueError(
+            "can't generate 2nd kind Chebyshev polynomial of degree %s" % n)
 
     poly = DMP(dup_chebyshevu(int(n), ZZ), ZZ)
 
@@ -232,7 +235,8 @@ def laguerre_poly(n, x=None, alpha=None, **args):
         raise ValueError("can't generate Laguerre polynomial of degree %s" % n)
 
     if alpha is not None:
-        K, alpha = construct_domain(alpha, field=True)  # XXX: ground_field=True
+        K, alpha = construct_domain(
+            alpha, field=True)  # XXX: ground_field=True
     else:
         K, alpha = QQ, QQ(0)
 

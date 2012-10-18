@@ -350,13 +350,17 @@ def test_dmp_zz_wang():
 
     assert dmp_zz_wang_lead_coeffs(w_1, T, cs, E, H, A, 2, ZZ) == (w_1, H, LC)
 
-    H_1 = [ dmp_normal(t, 0, ZZ) for t in [[44L, 42L, 1L], [126L, -9L, 28L], [187L, 0L, -23L]] ]
-    H_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [[-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
-    H_3 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [[-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
+    H_1 = [ dmp_normal(t, 0, ZZ) for t in [[44L, 42L, 1L], [126L, -9L,
+                       28L], [187L, 0L, -23L]] ]
+    H_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [
+                       [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
+    H_3 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [
+                       [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
 
     c_1 = dmp_normal([-70686, -5863, -17826, 2009, 5031, 74], 0, ZZ)
     c_2 = dmp_normal([[9, 12, -45, -108, -324], [18, -216, -810, 0], [2, 9, -252, -288, -945], [-30, -414, 0], [2, -54, -3, 81], [12, 0]], 1, ZZ)
-    c_3 = dmp_normal([[-36, -108, 0], [-27, -36, -108], [-8, -42, 0], [-6, 0, 9], [2, 0]], 1, ZZ)
+    c_3 = dmp_normal([[-36, -108, 0], [-27, -36, -108], [-8, -42, 0], [
+                     -6, 0, 9], [2, 0]], 1, ZZ)
 
     T_1 = [ dmp_normal(t, 0, ZZ) for t in [[-3, 0], [-2], [1]] ]
     T_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-1, 0], []], [[-3], []], [[-6]]] ]
@@ -374,7 +378,8 @@ def test_dmp_zz_wang():
 def test_issue_3256():
     # This tests a bug in the Wang algorithm that occured only with a very
     # specific set of random numbers.
-    random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
+    random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3,
+        3, 3, -1, 3]
     f = [[[ZZ(2)]], [[]], [[ZZ(1), ZZ(-1)], [ZZ(-1), ZZ(1), ZZ(0)]]]
     u = 2
     K = ZZ
@@ -421,8 +426,10 @@ def test_dmp_zz_factor():
     assert dmp_zz_factor(ZZ.map([[[1, 0, 0], [], []], [[]], [[-9]]]), 2, ZZ) == \
         (1, [([[[1, 0], []], [[-3]]], 1), ([[[1, 0], []], [[3]]], 1)])
 
-    assert dmp_zz_factor(ZZ.map([[[[1, 0, 0], [], []], [[]], [[]]], [[[]]], [[[-9]]]]), 3, ZZ) == \
-        (1, [([[[[1, 0], []], [[]]], [[[-3]]]], 1), ([[[[1, 0], []], [[]]], [[[3]]]], 1)])
+    assert dmp_zz_factor(ZZ.map([[[[1, 0, 0], [], []], [[]], [[]]],
+        [[[]]], [[[-9]]]]), 3, ZZ) == \
+        (1, [([[[[1, 0], []], [[]]], [[[-3]]]], 1), ([[[[1, 0], []],
+        [[]]], [[[3]]]], 1)])
 
     assert dmp_zz_factor(f_1, 2, ZZ) == \
         (1, [([[[1]], [[1, 0], [20]]], 1),
@@ -485,36 +492,47 @@ def test_dup_ext_factor():
 
     assert dup_ext_factor(g, K) == (ANP([QQ(2)], h, QQ), [(f, 1)])
 
-    f = [ANP([QQ(7)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 1)], h, QQ)]
-    g = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 7)], h, QQ)]
+    f = [ANP([QQ(7)], h, QQ), ANP(
+        [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 1)], h, QQ)]
+    g = [ANP([QQ(1)], h, QQ), ANP(
+        [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 7)], h, QQ)]
 
     assert dup_ext_factor(f, K) == (ANP([QQ(7)], h, QQ), [(g, 1)])
 
-    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
+    f = [ANP([QQ(1)], h, QQ), ANP(
+        [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
 
     assert dup_ext_factor(f, K) == \
         (ANP([QQ(1, 1)], h, QQ), [
-            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
-            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(
+                1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(
+                1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
          ])
 
-    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
+    f = [ANP([QQ(1)], h, QQ), ANP(
+        [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
 
     assert dup_ext_factor(f, K) == \
         (ANP([QQ(1, 1)], h, QQ), [
-            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
-            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(
+                1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(
+                1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
          ])
 
     h = [QQ(1), QQ(0), QQ(-2)]
     K = QQ.algebraic_field(sqrt(2))
 
-    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 1)], h, QQ)]
+    f = [ANP([QQ(1)], h, QQ), ANP(
+        [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1, 1)], h, QQ)]
 
     assert dup_ext_factor(f, K) == \
         (ANP([QQ(1)], h, QQ), [
-            ([ANP([QQ(1)], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ), ANP([QQ(1)], h, QQ)], 1),
-            ([ANP([QQ(1)], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ), ANP([QQ(1)], h, QQ)], 1),
+            ([ANP([QQ(1)], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ),
+             ANP([QQ(1)], h, QQ)], 1),
+            ([ANP([QQ(1)], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ),
+             ANP([QQ(1)], h, QQ)], 1),
          ])
 
     f = [ANP([QQ(1, 1)], h, QQ), ANP([2, 0], h, QQ), ANP([QQ(2, 1)], h, QQ)]
@@ -552,7 +570,8 @@ def test_dup_ext_factor():
             ([ANP([QQ(1, 1)], h, QQ), ANP([ QQ(3, 2), QQ(0, 1)], h, QQ)], 1),
         ])
 
-    f = [ANP([QQ(4, 1)], h, QQ), ANP([QQ(8, 1)], h, QQ), ANP([QQ(77, 1)], h, QQ), ANP([QQ(18, 1)], h, QQ), ANP([QQ(153, 1)], h, QQ)]
+    f = [ANP([QQ(4, 1)], h, QQ), ANP([QQ(8, 1)], h, QQ), ANP([QQ(
+        77, 1)], h, QQ), ANP([QQ(18, 1)], h, QQ), ANP([QQ(153, 1)], h, QQ)]
 
     assert dup_ext_factor(f, K) == \
         (ANP([QQ(4, 1)], h, QQ), [
@@ -578,20 +597,26 @@ def test_dmp_ext_factor():
 
     assert dmp_ext_factor(g, 1, K) == (ANP([QQ(2)], h, QQ), [(f, 1)])
 
-    f = [[ANP([QQ(1)], h, QQ)], [], [ANP([QQ(-2)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]]
+    f = [[ANP([QQ(1)], h, QQ)], [], [ANP([QQ(-2)], h, QQ), ANP([], h,
+              QQ), ANP([], h, QQ)]]
 
     assert dmp_ext_factor(f, 1, K) == \
         (ANP([QQ(1)], h, QQ), [
-            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
-            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1), QQ(0)], h,
+             QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1), QQ(0)], h,
+             QQ), ANP([], h, QQ)]], 1),
         ])
 
-    f = [[ANP([QQ(2)], h, QQ)], [], [ANP([QQ(-4)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]]
+    f = [[ANP([QQ(2)], h, QQ)], [], [ANP([QQ(-4)], h, QQ), ANP([], h,
+              QQ), ANP([], h, QQ)]]
 
     assert dmp_ext_factor(f, 1, K) == \
         (ANP([QQ(2)], h, QQ), [
-            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
-            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1), QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1), QQ(0)], h,
+             QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1), QQ(0)], h,
+             QQ), ANP([], h, QQ)]], 1),
         ])
 
 
@@ -605,8 +630,10 @@ def test_dup_factor_list():
 
     assert dup_factor_list([ZZ(7)], ZZ) == (ZZ(7), [])
     assert dup_factor_list([QQ(1, 7)], QQ) == (QQ(1, 7), [])
-    assert dup_factor_list([DMP([ZZ(7)], ZZ)], ZZ['y']) == (DMP([ZZ(7)], ZZ), [])
-    assert dup_factor_list([DMP([QQ(1, 7)], QQ)], QQ['y']) == (DMP([QQ(1, 7)], QQ), [])
+    assert dup_factor_list(
+        [DMP([ZZ(7)], ZZ)], ZZ['y']) == (DMP([ZZ(7)], ZZ), [])
+    assert dup_factor_list(
+        [DMP([QQ(1, 7)], QQ)], QQ['y']) == (DMP([QQ(1, 7)], QQ), [])
 
     assert dup_factor_list_include([ZZ(7)], ZZ) == [([ZZ(7)], 1)]
 
@@ -635,7 +662,8 @@ def test_dup_factor_list():
                            ([DMP([ZZ(1)], ZZ), DMP([], ZZ)], 1),
                            ([DMP([ZZ(1)], ZZ), DMP([ZZ(1), ZZ(0)], ZZ)], 1)])
 
-    f = [DMP([QQ(1, 2), QQ(0)], ZZ), DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ), DMP([], ZZ)]
+    f = [DMP([QQ(
+        1, 2), QQ(0)], ZZ), DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ), DMP([], ZZ)]
 
     assert dup_factor_list(f, QQ['y']) == \
         (DMP([QQ(1, 2)], QQ), [([DMP([QQ(1), QQ(0)], QQ)], 1),
@@ -645,10 +673,13 @@ def test_dup_factor_list():
     K = QQ.algebraic_field(I)
     h = [QQ(1, 1), QQ(0, 1), QQ(1, 1)]
 
-    f = [ANP([QQ(1, 1)], h, QQ), ANP([], h, QQ), ANP([QQ(2, 1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]
+    f = [ANP([QQ(1, 1)], h, QQ), ANP(
+        [], h, QQ), ANP([QQ(2, 1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]
 
     assert dup_factor_list(f, K) == \
-        (ANP([QQ(1, 1)], h, QQ), [([ANP([QQ(1, 1)], h, QQ), ANP([], h, QQ)], 2),
+        (
+            ANP(
+                [QQ(1, 1)], h, QQ), [([ANP([QQ(1, 1)], h, QQ), ANP([], h, QQ)], 2),
                                  ([ANP([QQ(1, 1)], h, QQ), ANP([], h, QQ), ANP([QQ(2, 1)], h, QQ)], 1)])
 
     raises(DomainError, lambda: dup_factor_list([EX(sin(1))], EX))
@@ -664,8 +695,10 @@ def test_dmp_factor_list():
 
     assert dmp_factor_list([[ZZ(7)]], 1, ZZ) == (ZZ(7), [])
     assert dmp_factor_list([[QQ(1, 7)]], 1, QQ) == (QQ(1, 7), [])
-    assert dmp_factor_list([[DMP([ZZ(7)], ZZ)]], 1, ZZ['y']) == (DMP([ZZ(7)], ZZ), [])
-    assert dmp_factor_list([[DMP([QQ(1, 7)], QQ)]], 1, QQ['y']) == (DMP([QQ(1, 7)], QQ), [])
+    assert dmp_factor_list(
+        [[DMP([ZZ(7)], ZZ)]], 1, ZZ['y']) == (DMP([ZZ(7)], ZZ), [])
+    assert dmp_factor_list(
+        [[DMP([QQ(1, 7)], QQ)]], 1, QQ['y']) == (DMP([QQ(1, 7)], QQ), [])
 
     assert dmp_factor_list_include([[ZZ(7)]], 1, ZZ) == [([[ZZ(7)]], 1)]
 
@@ -712,14 +745,16 @@ def test_dmp_factor_list():
         (RR(2.0), [([[RR(1.0)], [-RR(2.0), RR(0.0)]], 1),
                    ([[RR(1.0)], [ RR(2.0), RR(0.0)]], 1)])
 
-    f = [[DMP([ZZ(4), ZZ(0)], ZZ)], [DMP([ZZ(4), ZZ(0), ZZ(0)], ZZ)], [DMP([], ZZ)]]
+    f = [[DMP(
+        [ZZ(4), ZZ(0)], ZZ)], [DMP([ZZ(4), ZZ(0), ZZ(0)], ZZ)], [DMP([], ZZ)]]
 
     assert dmp_factor_list(f, 1, ZZ['y']) == \
         (DMP([ZZ(4)], ZZ), [([[DMP([ZZ(1), ZZ(0)], ZZ)]], 1),
                            ([[DMP([ZZ(1)], ZZ)], []], 1),
                            ([[DMP([ZZ(1)], ZZ)], [DMP([ZZ(1), ZZ(0)], ZZ)]], 1)])
 
-    f = [[DMP([QQ(1, 2), QQ(0)], ZZ)], [DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ)], [DMP([], ZZ)]]
+    f = [[DMP([QQ(1, 2), QQ(
+        0)], ZZ)], [DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ)], [DMP([], ZZ)]]
 
     assert dmp_factor_list(f, 1, QQ['y']) == \
         (DMP([QQ(1, 2)], QQ), [([[DMP([QQ(1), QQ(0)], QQ)]], 1),
@@ -728,7 +763,8 @@ def test_dmp_factor_list():
 
     K = FF(2)
 
-    raises(DomainError, lambda: dmp_factor_list([[K(1)], [], [K(1), K(0), K(0)]], 1, K))
+    raises(DomainError, lambda: dmp_factor_list([[K(1)], [], [K(1), K(
+        0), K(0)]], 1, K))
     raises(DomainError, lambda: dmp_factor_list([[EX(sin(1))]], 1, EX))
 
 

@@ -272,7 +272,8 @@ def rep_innerproduct(expr, **options):
         bra = expr
         ket = (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
     else:
-        bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
+        bra = (basis_kets[1].dual if basis_kets[0]
+               == expr else basis_kets[0].dual)
         ket = expr
 
     prod = InnerProduct(bra, ket)

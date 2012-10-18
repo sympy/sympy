@@ -28,7 +28,8 @@ def test_rewrite_single():
     def u(expr, x):
         from sympy import Add, exp, exp_polar
         r = _rewrite_single(expr, x)
-        e = Add(*[res[0]*res[2] for res in r[0]]).replace(exp_polar, exp)  # XXX Hack?
+        e = Add(*[res[0]*res[2] for res in r[0]]).replace(
+            exp_polar, exp)  # XXX Hack?
         assert test_numerically(e, expr, x)
 
     u(exp(-x)*sin(x), x)

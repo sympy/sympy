@@ -12,7 +12,8 @@ def test_where():
     Z = Normal('Z', 0, 1)
 
     assert where(Z**2<=1).set == Interval(-1, 1)
-    assert where(Z**2<=1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
+    assert where(
+        Z**2<=1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
     assert where(And(X>Y, Y>4)).as_boolean() == And(
             Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
@@ -23,7 +24,8 @@ def test_where():
     assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     XX = given(X, And(X**2 <= 1, X >= 0))
     assert XX.pspace.domain.set == Interval(0, 1)
-    assert XX.pspace.domain.as_boolean() == And(0 <= X.symbol, X.symbol**2 <= 1)
+    assert XX.pspace.domain.as_boolean(
+        ) == And(0 <= X.symbol, X.symbol**2 <= 1)
 
     with raises(TypeError):
         XX = given(X, X+3)

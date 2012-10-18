@@ -67,13 +67,20 @@ def test_fcode_NumberSymbol():
     assert fcode(E) == '      parameter (E = 2.71828182845905d0)\n      E'
     assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989d0)\n      GoldenRatio'
     assert fcode(pi) == '      parameter (pi = 3.14159265358979d0)\n      pi'
-    assert fcode(pi, precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
-    assert fcode(Catalan, human=False) == (set([(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
-    assert fcode(EulerGamma, human=False) == (set([(EulerGamma, p._print(EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
-    assert fcode(E, human=False) == (set([(E, p._print(E.evalf(15)))]), set([]), '      E')
-    assert fcode(GoldenRatio, human=False) == (set([(GoldenRatio, p._print(GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
-    assert fcode(pi, human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
-    assert fcode(pi, precision=5, human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
+    assert fcode(
+        pi, precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
+    assert fcode(Catalan, human=False) == (set(
+        [(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
+    assert fcode(EulerGamma, human=False) == (set([(EulerGamma, p._print(
+        EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
+    assert fcode(E, human=False) == (
+        set([(E, p._print(E.evalf(15)))]), set([]), '      E')
+    assert fcode(GoldenRatio, human=False) == (set([(GoldenRatio, p._print(
+        GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
+    assert fcode(pi, human=False) == (
+        set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
+    assert fcode(pi, precision=5, human=False) == (
+        set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
 
 
 def test_fcode_complex():
@@ -100,7 +107,8 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
+    assert fcode(
+        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
     assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
 
@@ -109,11 +117,13 @@ def test_user_functions():
     x = symbols('x')
     assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
     x = symbols('x')
-    assert fcode(gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+    assert fcode(
+        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
     g = Function('g')
     assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
     n = symbols('n', integer=True)
-    assert fcode(factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+    assert fcode(
+        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
 
 
 def test_inline_function():

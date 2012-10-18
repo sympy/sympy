@@ -166,7 +166,8 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     #    includes the numerical tests
     test_strings = []
     for fn_name, args, expected, threshold in numerical_tests:
-        call_string = "%s(%s)-(%s)" % (fn_name, ",".join(str(arg) for arg in args), expected)
+        call_string = "%s(%s)-(%s)" % (
+            fn_name, ",".join(str(arg) for arg in args), expected)
         if language == "F95":
             call_string = fortranize_double_constants(call_string)
             threshold = fortranize_double_constants(str(threshold))
@@ -184,7 +185,8 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
                 "FIXME: filename extension unknown for language: %s"%language)
 
     with open(f_name, "w") as f:
-        f.write(main_template[language] % {'statements': "".join(test_strings)})
+        f.write(
+            main_template[language] % {'statements': "".join(test_strings)})
 
     # 4) Compile and link
     compiled = try_run(commands)
@@ -215,8 +217,10 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end
-    assert compiled, "failed to compile %s code with:\n%s" %(language, "\n".join(commands))
-    assert executed, "failed to execute %s code from:\n%s" %(language, "\n".join(commands))
+    assert compiled, "failed to compile %s code with:\n%s" %(
+        language, "\n".join(commands))
+    assert executed, "failed to execute %s code from:\n%s" %(
+        language, "\n".join(commands))
 
 
 def fortranize_double_constants(code_string):
@@ -329,7 +333,8 @@ def test_intrinsic_math1_codegen():
             name_expr_C = [("test_floor", floor(x)), ("test_ceil", ceiling(x))]
         else:
             name_expr_C = []
-        run_test("intrinsic_math1", name_expr + name_expr_C, numerical_tests, lang, commands)
+        run_test("intrinsic_math1", name_expr + name_expr_C,
+                 numerical_tests, lang, commands)
 
 
 def test_instrinsic_math2_codegen():
@@ -362,4 +367,5 @@ def test_complicated_codegen():
             expected = N(expr.subs(x, xval).subs(y, yval).subs(z, zval))
             numerical_tests.append((name, (xval, yval, zval), expected, 1e-12))
     for lang, commands in valid_lang_commands:
-        run_test("complicated_codegen", name_expr, numerical_tests, lang, commands)
+        run_test(
+            "complicated_codegen", name_expr, numerical_tests, lang, commands)

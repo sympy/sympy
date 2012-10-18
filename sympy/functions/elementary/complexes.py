@@ -693,7 +693,8 @@ class periodic_argument(Function):
                 unbranched += a.exp.as_real_imag()[1]
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
-                unbranched += re*unbranched_argument(a.base) + im*log(abs(a.base))
+                unbranched += re*unbranched_argument(
+                    a.base) + im*log(abs(a.base))
             elif a.func is polar_lift:
                 unbranched += arg(a.args[0])
             else:

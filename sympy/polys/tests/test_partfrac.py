@@ -49,13 +49,16 @@ def test_apart_matrix():
 
 
 def test_apart_symbolic():
-    f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
-    g = a**2*x**4 + (2*a*b + 2*c*a**2)*x**3 + (4*a*b*c + b**2 + a**2*c**2)*x**2 + (2*c*b**2 + 2*a*b*c**2)*x + b**2*c**2
+    f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (- \
+                  2*a*b + 2*b*c**2)*x - b**2
+    g = a**2*x**4 + (2*a*b + 2*c*a**2)*x**3 + (4*a*b*c + b**2 + a**2* \
+                     c**2)*x**2 + (2*c*b**2 + 2*a*b*c**2)*x + b**2*c**2
 
     assert apart(f/g, x) == 1/a - 1/(x + c)**2 - b**2/(a*(a*x + b)**2)
 
     assert apart(1/((x + a)*(x + b)*(x + c)), x) == \
-        1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + 1/((a - b)*(a - c)*(a + x))
+        1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + \
+           1/((a - b)*(a - c)*(a + x))
 
 
 def test_apart_extension():
@@ -74,19 +77,23 @@ def test_apart_full():
     f = 1/(x**2 + 1)
 
     assert apart(f, full=False) == f
-    assert apart(f, full=True) == -RootSum(x**2 + 1, Lambda(a, a/(x - a)), auto=False)/2
+    assert apart(f, full=True) == -RootSum(x**2 + 1, Lambda(a, a/(x - \
+                 a)), auto=False)/2
 
     f = 1/(x**3 + x + 1)
 
     assert apart(f, full=False) == f
-    assert apart(f, full=True) == RootSum(x**3 + x + 1, Lambda(a, (6*a**2/31 - 9*a/31 + S(4)/31)/(x - a)), auto=False)
+    assert apart(f, full=True) == RootSum(x**3 + x + 1, Lambda(
+        a, (6*a**2/31 - 9*a/31 + S(4)/31)/(x - a)), auto=False)
 
     f = 1/(x**5 + 1)
 
     assert apart(f, full=False) == \
-        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
+        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - \
+         x + 1)) + (S(1)/5)/(x + 1)
     assert apart(f, full=True) == \
-        -RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(a, a/(x - a)), auto=False)/5 + (S(1)/5)/(x + 1)
+        -RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(a, a/(x - a)),
+                 auto=False)/5 + (S(1)/5)/(x + 1)
 
 
 def test_apart_undetermined_coeffs():

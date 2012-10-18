@@ -227,7 +227,8 @@ def test_pretty_unicode_str():
     assert pretty( u"xxx'xxx" ) in [u'"xxx\'xxx"', u'xxx\'xxx']
     assert pretty( u"xxx\'xxx" ) in [u'"xxx\'xxx"', u'xxx\'xxx']
     assert pretty( u"xxx\"xxx" ) in [u"'xxx\"xxx'", u'xxx\"xxx']
-    assert pretty( u"xxx\"xxx\'xxx" ) in [u'\'xxx"xxx\\\'xxx\'', u'xxx"xxx\'xxx']
+    assert pretty(
+        u"xxx\"xxx\'xxx" ) in [u'\'xxx"xxx\\\'xxx\'', u'xxx"xxx\'xxx']
     assert pretty( u"xxx\nxxx" ) in [u"'xxx\nxxx'", u'xxx\nxxx']
 
 
@@ -1497,7 +1498,8 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (2+(1+x**2)/(2+x))**Rational(1, 4)+(1+x**Rational(1, 1000))/sqrt(3+x**2)
+    expr = (2+(
+        1+x**2)/(2+x))**Rational(1, 4)+(1+x**Rational(1, 1000))/sqrt(3+x**2)
     ascii_str = \
 """\
      ____________              \n\
@@ -2412,9 +2414,12 @@ def test_any_object_in_sequence():
     expr = {b2: b1, b1: b2}
     expr2 = Dict({b2: b1, b1: b2})
     assert pretty(expr) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
-    assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
-    assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
-    assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert pretty(
+        expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert upretty(
+        expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert upretty(
+        expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
 
 def test_pretty_sets():
@@ -2828,7 +2833,8 @@ k = 0           \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, 0, Integral(x**x, (x, -oo, oo))))
+    expr = Sum(k**(
+        Integral(x**n, (x, -oo, oo))), (k, 0, Integral(x**x, (x, -oo, oo))))
     ascii_str = \
 """\
  oo                 \n\
@@ -2878,7 +2884,8 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, x+n+x**2 + n**2 + (x/n)+(1/x), Integral(x**x, (x, -oo, oo))))
+    expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (
+        k, x+n+x**2 + n**2 + (x/n)+(1/x), Integral(x**x, (x, -oo, oo))))
     ascii_str = \
 """\
           oo                          \n\
@@ -2932,7 +2939,8 @@ k = n  + n + x  + x + ─ + ─          \n\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, 0, x+n+x**2 + n**2 + (x/n)+(1/x)))
+    expr = Sum(k**(
+        Integral(x**n, (x, -oo, oo))), (k, 0, x+n+x**2 + n**2 + (x/n)+(1/x)))
     ascii_str = \
 """\
  2        2       1   x           \n\
@@ -3203,7 +3211,8 @@ ____  ____     \n\
 ‾‾‾‾  ‾‾‾‾     \n\
 y = 1 x = 0    \
 """
-    expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
+    expr = Sum(1/(1 + 1/(
+        1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
     ascii_str = \
 """\
                1                         \n\

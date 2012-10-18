@@ -516,8 +516,10 @@ def test_dmp_multi_deflate():
     assert dmp_multi_deflate(([[2, 0]], [[2, 0]]), 1, ZZ) == \
         ((1, 1), ([[2, 0]], [[2, 0]]))
 
-    assert dmp_multi_deflate(([[2]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
-    assert dmp_multi_deflate(([[2, 0, 0]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2, 0]], [[2, 0]]))
+    assert dmp_multi_deflate(
+        ([[2]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
+    assert dmp_multi_deflate(
+        ([[2, 0, 0]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2, 0]], [[2, 0]]))
 
     assert dmp_multi_deflate(([2, 0, 0], [1, 0, 4, 0, 1]), 0, ZZ) == \
         ((2,), ([2, 0], [1, 4, 1]))
@@ -593,9 +595,11 @@ def test_dmp_inject():
     assert dmp_inject([K([[1]])], 0, K) == ([[[1]]], 2)
     assert dmp_inject([[K([[1]])]], 1, K) == ([[[[1]]]], 3)
 
-    assert dmp_inject([K([[1]]), K([[2], [3, 4]])], 0, K) == ([[[1]], [[2], [3, 4]]], 2)
+    assert dmp_inject(
+        [K([[1]]), K([[2], [3, 4]])], 0, K) == ([[[1]], [[2], [3, 4]]], 2)
 
-    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0, 0], [11]])]
+    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0,
+           0], [11]])]
     g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_inject(f, 0, K) == (g, 2)
@@ -610,9 +614,11 @@ def test_dmp_eject():
     assert dmp_eject([[[1]]], 2, K) == [K([[1]])]
     assert dmp_eject([[[[1]]]], 3, K) == [[K([[1]])]]
 
-    assert dmp_eject([[[1]], [[2], [3, 4]]], 2, K) == [K([[1]]), K([[2], [3, 4]])]
+    assert dmp_eject(
+        [[[1]], [[2], [3, 4]]], 2, K) == [K([[1]]), K([[2], [3, 4]])]
 
-    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0, 0], [11]])]
+    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0,
+           0], [11]])]
     g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_eject(g, 2, K) == f
@@ -630,8 +636,10 @@ def test_dmp_terms_gcd():
     assert dmp_terms_gcd([1, 0, 1, 0], 0, ZZ) == ((1,), [1, 0, 1])
     assert dmp_terms_gcd([[1], [], [1], []], 1, ZZ) == ((1, 0), [[1], [], [1]])
 
-    assert dmp_terms_gcd([[1, 0], [], [1]], 1, ZZ) == ((0, 0), [[1, 0], [], [1]])
-    assert dmp_terms_gcd([[1, 0], [1, 0, 0], [], []], 1, ZZ) == ((2, 1), [[1], [1, 0]])
+    assert dmp_terms_gcd(
+        [[1, 0], [], [1]], 1, ZZ) == ((0, 0), [[1, 0], [], [1]])
+    assert dmp_terms_gcd(
+        [[1, 0], [1, 0, 0], [], []], 1, ZZ) == ((2, 1), [[1], [1, 0]])
 
 
 def test_dmp_list_terms():
@@ -647,12 +655,14 @@ def test_dmp_list_terms():
     f = [[2, 0, 0, 0], [1, 0, 0], []]
 
     assert dmp_list_terms(f, 1, ZZ, order='lex') == [((2, 3), 2), ((1, 2), 1)]
-    assert dmp_list_terms(f, 1, ZZ, order='grlex') == [((2, 3), 2), ((1, 2), 1)]
+    assert dmp_list_terms(
+        f, 1, ZZ, order='grlex') == [((2, 3), 2), ((1, 2), 1)]
 
     f = [[2, 0, 0, 0], [1, 0, 0, 0, 0, 0], []]
 
     assert dmp_list_terms(f, 1, ZZ, order='lex') == [((2, 3), 2), ((1, 5), 1)]
-    assert dmp_list_terms(f, 1, ZZ, order='grlex') == [((1, 5), 1), ((2, 3), 2)]
+    assert dmp_list_terms(
+        f, 1, ZZ, order='grlex') == [((1, 5), 1), ((2, 3), 2)]
 
 
 def test_dmp_apply_pairs():
@@ -663,10 +673,13 @@ def test_dmp_apply_pairs():
     assert dmp_apply_pairs([2, 3], [4, 5, 6], h, [], 0, ZZ) == [10, 18]
     assert dmp_apply_pairs([1, 2, 3], [5, 6], h, [], 0, ZZ) == [10, 18]
 
-    assert dmp_apply_pairs([[1, 2], [3]], [[4, 5], [6]], h, [], 1, ZZ) == [[4, 10], [18]]
+    assert dmp_apply_pairs(
+        [[1, 2], [3]], [[4, 5], [6]], h, [], 1, ZZ) == [[4, 10], [18]]
 
-    assert dmp_apply_pairs([[1, 2], [3]], [[4], [5, 6]], h, [], 1, ZZ) == [[8], [18]]
-    assert dmp_apply_pairs([[1], [2, 3]], [[4, 5], [6]], h, [], 1, ZZ) == [[5], [18]]
+    assert dmp_apply_pairs(
+        [[1, 2], [3]], [[4], [5, 6]], h, [], 1, ZZ) == [[8], [18]]
+    assert dmp_apply_pairs(
+        [[1], [2, 3]], [[4, 5], [6]], h, [], 1, ZZ) == [[5], [18]]
 
 
 def test_dup_slice():

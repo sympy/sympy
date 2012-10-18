@@ -498,7 +498,8 @@ class MV(object):
                             if i == j:
                                 gij = '('+MV.vbasis[j]+'**2)'
                             else:
-                                gij = '('+MV.vbasis[min(i, j)]+'.'+MV.vbasis[max(i, j)]+')'
+                                gij = '('+MV.vbasis[min(
+                                    i, j)]+'.'+MV.vbasis[max(i, j)]+')'
                         tmp = sympy.Symbol(gij)
                         MV.metric[i][j] = tmp
                         if i <= j:
@@ -616,7 +617,8 @@ class MV(object):
                             blst_coef.append(-blst_coef[i]*tmp[0])
                             blst_expand.append(tmp[1])
                             blst_flg.append(tmp[2])
-        (blst_coef, blst_expand) = MV.combine_common_factors(blst_coef, blst_expand)
+        (blst_coef, blst_expand) = MV.combine_common_factors(
+            blst_coef, blst_expand)
         return(blst_coef, blst_expand)
 
     @staticmethod
@@ -677,7 +679,8 @@ class MV(object):
                         k = MV.basis[igrade].index(base[ibase])
                         mv.mv[igrade][k] = coef[ibase]
                     else:
-                        mv.mv[igrade] = numpy.array([coef[0]], dtype=numpy.object)
+                        mv.mv[igrade] = numpy.array(
+                            [coef[0]], dtype=numpy.object)
         return(mv)
 
     @staticmethod
@@ -724,7 +727,8 @@ class MV(object):
                         if xstr[0] != '-' and len(value) > 0:
                             xstr = '+'+xstr
                         if xstr.find('_dummy') < 2 and xstr[-5:] != '_dummy':
-                            xstr = xstr.replace('_dummy*', '')+'*'+labels[igrade][j]
+                            xstr = xstr.replace(
+                                '_dummy*', '')+'*'+labels[igrade][j]
                         else:
                             xstr = xstr.replace('_dummy', labels[igrade][j])
                         if MV.str_mode == 2:
@@ -938,7 +942,8 @@ class MV(object):
         if base_name == '':
             base_name = MV.basisroot+'prm'
 
-        LaTeX_base = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(base_name)
+        LaTeX_base = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(
+            base_name)
         bm = '\\bm{'+LaTeX_base+'}'
         bmhat = '\\hat{'+bm+'}'
         bstr = bmhat+'_{[i_{1},\dots, i_{R}]}'
@@ -1023,7 +1028,8 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((nbases[irow]|nbases[icol])())
-                g[irow][icol] = sympy.simplify(sympy.trigsimp(magsq, deep=True, recursive=True))
+                g[irow][icol] = sympy.simplify(
+                    sympy.trigsimp(magsq, deep=True, recursive=True))
 
         if debug:
             print 'Metric $\\hat{g}_{ij} = \\hat{'+LaTeX_base+'}_{i}\\cdot \\hat{'+\
@@ -1082,7 +1088,8 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((rnbases[irow]|rnbases[icol])())
-                gr[irow][icol] = sympy.simplify(sympy.trigsimp(magsq, deep=True, recursive=True))
+                gr[irow][icol] = sympy.simplify(
+                    sympy.trigsimp(magsq, deep=True, recursive=True))
 
         if debug:
             print 'Metric $\\hat{g}^{ij} = \\hat{'+LaTeX_base+'}^{i}\\cdot \\hat{'+\
@@ -1137,7 +1144,8 @@ class MV(object):
             igrade += 1
 
         if debug:
-            print 'Curvilinear Bases: $'+bstr+' = '+bmhat+'_{i_{1}}\\W\\dots\\W'+bmhat+'_{i_{R}}$'
+            print 'Curvilinear Bases: $'+bstr+' = '+bmhat+ \
+                '_{i_{1}}\\W\\dots\\W'+bmhat+'_{i_{R}}$'
             igrade = 1
             for grade in MV_bases[1:]:
                 ibase = 0
@@ -1183,7 +1191,8 @@ class MV(object):
                     while jbase < p1base:
                         Cp1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade+1][jbase], C))(), deep=True, recursive=True)
                         jbase += 1
-                    X += MV((igrade-1, Cm1), 'grade')+MV((igrade+1, Cp1), 'grade')
+                    X += MV(
+                        (igrade-1, Cm1), 'grade')+MV((igrade+1, Cp1), 'grade')
                     X.simplify()
                     X.trigsimp()
                     grade_connect.append(X)
@@ -1210,7 +1219,8 @@ class MV(object):
 
         base_str = ''
         for coord in coords:
-            base_str += base_name+'_'+sympy.galgebra.latex_ex.LatexPrinter.str_basic(coord)+' '
+            base_str += base_name+'_'+ \
+                sympy.galgebra.latex_ex.LatexPrinter.str_basic(coord)+' '
         base_str = base_str[:-1]
 
         old_names = MV.vbasis
@@ -1256,7 +1266,8 @@ class MV(object):
 
             ibasis = 0
             while ibasis < MV.n:
-                c_str = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(coords_lst[ibasis])
+                c_str = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(
+                    coords_lst[ibasis])
                 print '\\bfrac{\\bm{\\hat{'+LaTeX_base+\
                        '}}^{'+c_str+'}}{\\abs{\\bm{'+LaTeX_base+\
                        '}_{'+c_str+'}}} =', MV.Rframe[ibasis]
@@ -1276,7 +1287,8 @@ class MV(object):
                     for i in index:
                         sub_str += sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(coords_lst[i])
 
-                    base_str = 'C\\lbrc\\hat{'+LaTeX_base+'}_{['+sub_str+']}\\rbrc = '
+                    base_str = 'C\\lbrc\\hat{'+ \
+                        LaTeX_base+'}_{['+sub_str+']}\\rbrc = '
                     print base_str, base
                     ibase += 1
                 igrade += 1
@@ -1412,7 +1424,8 @@ class MV(object):
                 tmp = []
                 for ibase in range(MV.nbasis[1]):
                     MV.bladelabel[1].append(basis_str[ibase])
-                    tmp.append(MV(value=ibase, mvtype='basisvector', mvname=basis_str[ibase]))
+                    tmp.append(MV(value=ibase,
+                               mvtype='basisvector', mvname=basis_str[ibase]))
             if igrade >= 2:
                 tmp = []
                 basis = MV.basis[igrade]
@@ -1467,7 +1480,8 @@ class MV(object):
                         jgrade = igrade-2
                         while jgrade > 1:
                             for ibase in range(MV.nbasis[jgrade]):
-                                invblade.substitute_base(jgrade, ibase, MV.ibtable[jgrade][ibase])
+                                invblade.substitute_base(
+                                    jgrade, ibase, MV.ibtable[jgrade][ibase])
                             jgrade -= 2
                     invblade.name = MV.basislabel[igrade][iblade]
                     iblade += 1
@@ -1716,7 +1730,8 @@ class MV(object):
                 coefs = []
                 bases = MV.basis[igrade]
                 if igrade == 0:
-                    self.mv[0] = numpy.array([sympy.Symbol(base_symbol)], dtype=numpy.object)
+                    self.mv[0] = numpy.array(
+                        [sympy.Symbol(base_symbol)], dtype=numpy.object)
                 else:
                     for base in bases:
                         coef = base_symbol+MV.construct_index(base)
@@ -1726,7 +1741,8 @@ class MV(object):
             else:
                 self.mv[igrade] = coefs
         if mvtype == 'base':
-            self.mv[value[0]] = numpy.array(MV.nbasis[value[0]]*[ZERO], dtype=numpy.object)
+            self.mv[value[0]] = numpy.array(
+                MV.nbasis[value[0]]*[ZERO], dtype=numpy.object)
             self.mv[value[0]][value[1]] = ONE
         if mvtype == 'spinor':
             if isinstance(value, str):  # Most general spinor
@@ -1736,11 +1752,14 @@ class MV(object):
                         if grade != 0:
                             symbol_lst = []
                             for base in MV.basis[grade]:
-                                symbol = sympy.Symbol(value+MV.construct_index(base))
+                                symbol = sympy.Symbol(
+                                    value+MV.construct_index(base))
                                 symbol_lst.append(symbol)
-                            self.mv[grade] = numpy.array(symbol_lst, dtype=numpy.object)
+                            self.mv[grade] = numpy.array(
+                                symbol_lst, dtype=numpy.object)
                         else:
-                            self.mv[0] = numpy.array([sympy.Symbol(value)], dtype=numpy.object)
+                            self.mv[0] = numpy.array(
+                                [sympy.Symbol(value)], dtype=numpy.object)
                 self.name = value+'bm'
         if isinstance(value, str) and mvtype == '':  # Most general multivector
             if value != '':
@@ -1749,11 +1768,14 @@ class MV(object):
                     if grade != 0:
                         symbol_lst = []
                         for base in MV.basis[grade]:
-                            symbol = sympy.Symbol(value+MV.construct_index(base))
+                            symbol = sympy.Symbol(
+                                value+MV.construct_index(base))
                             symbol_lst.append(symbol)
-                        self.mv[grade] = numpy.array(symbol_lst, dtype=numpy.object)
+                        self.mv[grade] = numpy.array(
+                            symbol_lst, dtype=numpy.object)
                     else:
-                        self.mv[0] = numpy.array([sympy.Symbol(value)], dtype=numpy.object)
+                        self.mv[0] = numpy.array(
+                            [sympy.Symbol(value)], dtype=numpy.object)
                 self.name = value+'bm'
         if fct:
             if vars is not None:
@@ -1761,18 +1783,23 @@ class MV(object):
             for grade in MV.n1rg:
                 if not isinstance(self.mv[grade], int):
                     if grade == 0:
-                        coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[0][0])
+                        coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(
+                            self.mv[0][0])
                         if vars is None and MV.coords is not None:
-                            self.mv[0]= numpy.array([sympy.Function(coef)(*MV.coords)], dtype=numpy.object)
+                            self.mv[0]= numpy.array([sympy.Function(
+                                coef)(*MV.coords)], dtype=numpy.object)
                         else:
-                            self.mv[0]= numpy.array([sympy.Function(coef)(*vars)], dtype=numpy.object)
+                            self.mv[0]= numpy.array([sympy.Function(
+                                coef)(*vars)], dtype=numpy.object)
                     else:
                         for base in range(MV.nbasis[grade]):
                             coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[grade][base])
                             if vars is None and MV.coords is not None:
-                                self.mv[grade][base] = sympy.Function(coef)(*MV.coords)
+                                self.mv[grade][
+                                    base] = sympy.Function(coef)(*MV.coords)
                             else:
-                                self.mv[grade][base] = sympy.Function(coef)(*vars)
+                                self.mv[
+                                    grade][base] = sympy.Function(coef)(*vars)
 
     @staticmethod
     def construct_index(base):
@@ -1816,7 +1843,8 @@ class MV(object):
 
     def set_coef(self, grade, base, value):
         if isinstance(self.mv[grade], int):
-            self.mv[grade] = numpy.array(MV.nbasis[grade]*[ZERO], dtype=numpy.object)
+            self.mv[grade] = numpy.array(
+                MV.nbasis[grade]*[ZERO], dtype=numpy.object)
         self.mv[grade][base] = value
         return
 
@@ -1850,7 +1878,8 @@ class MV(object):
         if isinstance(self.mv[igrade], numpy.ndarray):
             self.mv[igrade][ibase] = value
         else:
-            self.mv[igrade] = numpy.array(MV.nbasis[igrade]*[ZERO], dtype=numpy.object)
+            self.mv[igrade] = numpy.array(
+                MV.nbasis[igrade]*[ZERO], dtype=numpy.object)
             self.mv[igrade][ibase] = value
         return
 
@@ -2211,7 +2240,8 @@ class MV(object):
         if isinstance(self.mv[grade], numpy.ndarray):
             for ibase in range(MV.nbasis[grade]):
                 if self.mv[grade][ibase] != ZERO:
-                    div_lst.append(self.mv[grade][ibase].as_coefficient(divisor))
+                    div_lst.append(
+                        self.mv[grade][ibase].as_coefficient(divisor))
         return(div_lst)
 
     # don't know which one is correctly named
@@ -2261,7 +2291,8 @@ class MV(object):
         X.puregrade = self.puregrade
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade], numpy.ndarray):
-                X.mv[igrade] = numpy.array(substitute_array(self.mv[igrade], *args))
+                X.mv[igrade] = numpy.array(
+                    substitute_array(self.mv[igrade], *args))
         return(X)
 
     def sub_mv(self, mv1, mv2):
@@ -2280,7 +2311,8 @@ class MV(object):
                 if not isinstance(self.mv[igrade], int):
                     for ibase in range(MV.nbasis[igrade]):
                         if expr1 != ZERO:
-                            self.mv[igrade][ibase] = self.mv[igrade][ibase].subs(expr1, expr2)
+                            self.mv[igrade][ibase] = self.mv[
+                                igrade][ibase].subs(expr1, expr2)
         return
 
     def simplify(self):
@@ -2307,7 +2339,8 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                            sympy.trigsimp(self.mv[igrade][ibase], deep=True, recursive=True)
+                            sympy.trigsimp(self.mv[igrade]
+                                           [ibase], deep=True, recursive=True)
         return
 
     def cancel(self):

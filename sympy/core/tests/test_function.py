@@ -193,7 +193,8 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
-    assert Derivative(f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert Derivative(
+        f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
@@ -238,7 +239,8 @@ def test_deriv1():
     # See issue 1525
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
-    assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
+    assert (
+        f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
             Tuple(2*x))
 
     assert f(2+x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
@@ -278,11 +280,16 @@ def test_function_evalf():
     def eq(a, b, eps):
         return abs(a-b) < eps
     assert eq(sin(1).evalf(15), Float("0.841470984807897"), 1e-13)
-    assert eq(sin(2).evalf(25), Float("0.9092974268256816953960199", 25), 1e-23)
-    assert eq(sin(1+I).evalf(15), Float("1.29845758141598") + Float("0.634963914784736")*I, 1e-13)
-    assert eq(exp(1+I).evalf(15), Float("1.46869393991588") + Float("2.28735528717884239")*I, 1e-13)
-    assert eq(exp(-0.5+1.5*I).evalf(15), Float("0.0429042815937374") + Float("0.605011292285002")*I, 1e-13)
-    assert eq(log(pi+sqrt(2)*I).evalf(15), Float("1.23699044022052") + Float("0.422985442737893")*I, 1e-13)
+    assert eq(
+        sin(2).evalf(25), Float("0.9092974268256816953960199", 25), 1e-23)
+    assert eq(sin(1+I).evalf(
+        15), Float("1.29845758141598") + Float("0.634963914784736")*I, 1e-13)
+    assert eq(exp(1+I).evalf(15), Float(
+        "1.46869393991588") + Float("2.28735528717884239")*I, 1e-13)
+    assert eq(exp(-0.5+1.5*I).evalf(15), Float(
+        "0.0429042815937374") + Float("0.605011292285002")*I, 1e-13)
+    assert eq(log(pi+sqrt(2)*I).evalf(
+        15), Float("1.23699044022052") + Float("0.422985442737893")*I, 1e-13)
     assert eq(cos(100).evalf(15), Float("0.86231887228768"), 1e-13)
 
 
@@ -442,7 +449,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(x)), x) ==\
         Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) +\
         Subs(Derivative(f(g(x), y), y), (y,), (h(x),))*Derivative(h(x), x)
-    assert f(sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
+    assert f(
+        sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
     assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
@@ -462,7 +470,8 @@ def test_klein_gordon_lagrangian():
     phi = f(x, t)
 
     L = -(diff(phi, t)**2 - diff(phi, x)**2 - m**2*phi**2)/2
-    eqna = Eq(diff(L, phi) - diff(L, diff(phi, x), x) - diff(L, diff(phi, t), t), 0)
+    eqna = Eq(
+        diff(L, phi) - diff(L, diff(phi, x), x) - diff(L, diff(phi, t), t), 0)
     eqnb = Eq(diff(phi, t, t) - diff(phi, x, x) + m**2*phi, 0)
     assert eqna == eqnb
 

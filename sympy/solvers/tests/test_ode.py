@@ -29,7 +29,8 @@ def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
     raises(ValueError, lambda: checkodesol(f(x, y).diff(x), Eq(f(x, y), x)))
-    raises(ValueError, lambda: checkodesol(f(x).diff(x), Eq(f(x, y), x), f(x, y)))
+    raises(ValueError, lambda: checkodesol(f(x).diff(x), Eq(f(x, y),
+           x), f(x, y)))
     assert checkodesol(f(x).diff(x), Eq(f(x, y), x)) == \
         (False, -f(x).diff(x) + f(x, y).diff(x) - 1)
     assert checkodesol(f(x).diff(x), Eq(f(x), x)) is not True
@@ -155,7 +156,8 @@ def test_classify_ode():
         ) == ('Bernoulli', 'Bernoulli_Integral')
     assert 'Riccati_special_minus2' in\
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
-    raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(y), f(x, y)))
+    raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
+        y), f(x, y)))
     # 2077
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
@@ -447,7 +449,8 @@ def test_separable5():
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
-    assert dsolve(eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
+    assert dsolve(
+        eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
                                               sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
@@ -1258,7 +1261,8 @@ def test_Liouville_ODE():
     sol1 = Eq(f(x), log(x/(C1 + C2*x)))
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
-    sol3 = set([Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
+    sol3 = set(
+        [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
     sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
                 Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))

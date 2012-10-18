@@ -554,7 +554,8 @@ class KanesMethod(object):
         if (self._q is None) or (self._u is None):
             raise ValueError('Speeds and coordinates must be supplied first.')
         if (self._k_kqdot is None):
-            raise ValueError('Supply kinematic differential equations, please.')
+            raise ValueError(
+                'Supply kinematic differential equations, please.')
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
@@ -621,7 +622,8 @@ class KanesMethod(object):
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
+        insyms = set(
+            self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
         if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
                                                               self._k_ku,
                                                               self._f_k,

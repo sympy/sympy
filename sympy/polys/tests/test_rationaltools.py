@@ -40,7 +40,8 @@ def test_together():
 
     assert together(1 + 1/(x + 1)**2) == (1 + (x + 1)**2)/(x + 1)**2
     assert together(1 + 1/(x*(1 + x))) == (1 + x*(1 + x))/(x*(1 + x))
-    assert together(1/(x*(x + 1)) + 1/(x*(x + 2))) == (3 + 2*x)/(x*(1 + x)*(2 + x))
+    assert together(
+        1/(x*(x + 1)) + 1/(x*(x + 2))) == (3 + 2*x)/(x*(1 + x)*(2 + x))
     assert together(1 + 1/(2*x + 2)**2) == (4*(x + 1)**2 + 1)/(4*(x + 1)**2)
 
     assert together(sin(1/x + 1/y)) == sin(1/x + 1/y)

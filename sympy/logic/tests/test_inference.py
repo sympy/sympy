@@ -17,7 +17,8 @@ def test_find_pure_symbol():
     assert find_pure_symbol([A, B, C], [ A | ~B, ~B | ~C, C | A]) == (A, True)
     assert find_pure_symbol([A, B, C], [~A | B,  B | ~C, C | A]) == (B, True)
     assert find_pure_symbol([A, B, C], [~A | ~B, ~B | ~C, C | A]) == (B, False)
-    assert find_pure_symbol([A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
+    assert find_pure_symbol(
+        [A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
 
 
 def test_find_pure_symbol_int_repr():
@@ -40,7 +41,8 @@ def test_unit_clause():
     assert find_unit_clause([A, ~A], {}) == (A, True)  # Wrong ??
     assert find_unit_clause([A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B], {B: True}) == (A, True)
-    assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A: True}) == (B, False)
+    assert find_unit_clause(
+        [A | B | C, B | ~C, A | ~B], {A: True}) == (B, False)
     assert find_unit_clause([A | B | C, B | ~C, A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
@@ -81,8 +83,10 @@ def test_dpll_satisfiable():
     A, B, C = symbols('A,B,C')
     assert dpll_satisfiable( A & ~A ) == False
     assert dpll_satisfiable( A & ~B ) == {A: True, B: False}
-    assert dpll_satisfiable( A | B ) in ({A: True}, {B: True}, {A: True, B: True})
-    assert dpll_satisfiable( (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert dpll_satisfiable(
+        A | B ) in ({A: True}, {B: True}, {A: True, B: True})
+    assert dpll_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
     assert dpll_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False},
             {A: True, C: True}, {B: True, C: True})
     assert dpll_satisfiable( A & B & C  ) == {A: True, B: True, C: True}

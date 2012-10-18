@@ -64,7 +64,8 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     pre, post, repetend = match.groups()
 
                     zeros = '0'*len(post)
-                    post, repetends = [w.lstrip('0') for w in [post, repetend]]  # or else interpreted as octal
+                    post, repetends = [w.lstrip('0') for w in [post, repetend]]
+                                                # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
@@ -72,19 +73,25 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
                     seq = [
                         (OP, '('),
-                            (NAME, 'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
+                            (NAME,
+                             'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
+                            (NAME, 'Rational'), (OP, '('), (
+                                NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
+                            (NAME, 'Rational'), (OP, '('), (
+                                NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
                         (OP, ')'),
                     ]
                 elif rationalize:
-                    seq = [(NAME, 'Rational'), (OP, '('), (STRING, repr(str(number))), (OP, ')')]
+                    seq = [(NAME, 'Rational'), (OP,
+                            '('), (STRING, repr(str(number))), (OP, ')')]
                 else:
-                    seq = [(NAME, 'Float'), (OP, '('), (NUMBER, repr(str(number))), (OP, ')')]
+                    seq = [(NAME, 'Float'), (OP, '('),
+                            (NUMBER, repr(str(number))), (OP, ')')]
             else:
-                seq = [(NAME, 'Integer'), (OP, '('), (NUMBER, number), (OP, ')')]
+                seq = [(NAME, 'Integer'), (OP, '('), (
+                    NUMBER, number), (OP, ')')]
 
             result.extend(seq + postfix)
         elif toknum == NAME:
@@ -161,8 +168,10 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
         hit = kern in s
 
-    code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
-    expr = eval(code, global_dict, local_dict)  # take local objects in preference
+    code = _transform(
+        s.strip(), local_dict, global_dict, rationalize, convert_xor)
+    expr = eval(
+        code, global_dict, local_dict)  # take local objects in preference
 
     if not hit:
         return expr

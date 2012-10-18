@@ -61,7 +61,8 @@ def test_bell():
     # but we must supply zero-based indexed object X[1:] = (x1, .. x5)
 
     assert bell(6, 2, X[1:]) == 6*X[5]*X[1] + 15*X[4]*X[2] + 10*X[3]**2
-    assert bell(6, 3, X[1:]) == 15*X[4]*X[1]**2 + 60*X[3]*X[2]*X[1] + 15*X[2]**3
+    assert bell(
+        6, 3, X[1:]) == 15*X[4]*X[1]**2 + 60*X[3]*X[2]*X[1] + 15*X[2]**3
 
     X = (1, 10, 100, 1000, 10000)
     assert bell(6, 2, X) == (6 + 15 + 10)*10000
@@ -123,10 +124,12 @@ def test_catalan():
     assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
-    assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
+    assert catalan(3*x).rewrite(gamma) == 4**(
+        3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
-    assert diff(catalan(x), x) == (polygamma(0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+    assert diff(catalan(x), x) == (polygamma(
+        0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'

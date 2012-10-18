@@ -68,8 +68,10 @@ def test_conjugate():
     assert (A*A).conjugate() == conjugate(A)**2
     assert (A*B).conjugate() == conjugate(A)*conjugate(B)
     assert (A*B**2).conjugate() == conjugate(A)*conjugate(B)**2
-    assert (A*B - B*A).conjugate() == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
-    assert (A*B).conjugate() - (B*A).conjugate() == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
+    assert (A*B - B*A).conjugate(
+        ) == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
+    assert (A*B).conjugate() - (B*A).conjugate(
+        ) == conjugate(A)*conjugate(B) - conjugate(B)*conjugate(A)
     assert (A + I*B).conjugate() == conjugate(A) - I*conjugate(B)
 
 
@@ -126,7 +128,8 @@ def test_transpose():
     assert transpose(A*A) == transpose(A)**2
     assert transpose(A*B) == transpose(B)*transpose(A)
     assert transpose(A*B**2) == transpose(B)**2*transpose(A)
-    assert transpose(A*B - B*A) == transpose(B)*transpose(A) - transpose(A)*transpose(B)
+    assert transpose(
+        A*B - B*A) == transpose(B)*transpose(A) - transpose(A)*transpose(B)
     assert transpose(A + I*B) == transpose(A) + I*transpose(B)
 
     assert transpose(X) == conjugate(X)

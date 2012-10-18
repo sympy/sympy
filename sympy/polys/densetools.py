@@ -812,7 +812,8 @@ def dup_real_imag(f, K):
 
     """
     if not K.is_ZZ and not K.is_QQ:
-        raise DomainError("computing real and imaginary parts is not supported over %s" % K)
+        raise DomainError(
+            "computing real and imaginary parts is not supported over %s" % K)
 
     f1 = dmp_zero(1)
     f2 = dmp_zero(1)
@@ -1153,7 +1154,8 @@ def dmp_lift(f, u, K):
 
     """
     if not K.is_Algebraic:
-        raise DomainError('computation can be done only in an algebraic domain')
+        raise DomainError(
+            'computation can be done only in an algebraic domain')
 
     F, monoms, polys = dmp_to_dict(f, u), [], []
 

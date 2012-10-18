@@ -214,7 +214,8 @@ def period_find(a, N):
         answer += n*register[i+t]
         n = n<<1
     if answer == 0:
-        raise OrderFindingException("Order finder returned 0. Happens with chance %f" % epsilon)
+        raise OrderFindingException(
+            "Order finder returned 0. Happens with chance %f" % epsilon)
     #turn answer into r using continued fractions
     g = getr(answer, 2**t, N)
     print g

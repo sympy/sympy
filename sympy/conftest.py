@@ -35,7 +35,8 @@ def pytest_runtest_setup(item):
 def pytest_terminal_summary(terminalreporter):
     if (terminalreporter.stats.get('error', None) or
             terminalreporter.stats.get('failed', None)):
-        terminalreporter.write_sep(' ', 'DO *NOT* COMMIT!', red=True, bold=True)
+        terminalreporter.write_sep(
+            ' ', 'DO *NOT* COMMIT!', red=True, bold=True)
 
 
 def pytest_runtest_teardown():

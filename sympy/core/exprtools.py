@@ -245,7 +245,8 @@ class Term(object):
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:
             if not term.is_commutative:
-                raise NonCommutativeExpression('commutative expression expected')
+                raise NonCommutativeExpression(
+                    'commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
             numer, denom = defaultdict(int), defaultdict(int)
@@ -590,7 +591,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         fraction=fraction) for a in Add.make_args(p)]
         p = Add._from_args(list_args)  # gcd_terms will fix up ordering
     elif p.args:
-        p = p.func(*[factor_terms(a, radical, clear, fraction) for a in p.args])
+        p = p.func(
+            *[factor_terms(a, radical, clear, fraction) for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,

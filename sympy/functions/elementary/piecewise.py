@@ -149,7 +149,8 @@ class Piecewise(Function):
                 if all_conds_evaled:
                     return expr
             if len(non_false_ecpairs) != 0 and non_false_ecpairs[-1].expr == expr:
-                non_false_ecpairs[-1] = ExprCondPair(expr, Or(cond, non_false_ecpairs[-1].cond))
+                non_false_ecpairs[-1] = ExprCondPair(
+                    expr, Or(cond, non_false_ecpairs[-1].cond))
             else:
                 non_false_ecpairs.append( ExprCondPair(expr, cond) )
         if len(non_false_ecpairs) != len(args) or piecewise_again:
@@ -205,7 +206,8 @@ class Piecewise(Function):
         elif (a <= b) is not True:
             newargs = []
             for e, c in self.args:
-                intervals = self._sort_expr_cond(sym, S.NegativeInfinity, S.Infinity, c)
+                intervals = self._sort_expr_cond(
+                    sym, S.NegativeInfinity, S.Infinity, c)
                 values = []
                 for lower, upper in intervals:
                     if (a < lower) is True:
@@ -349,8 +351,10 @@ class Piecewise(Function):
                     or_intervals.sort(key=lambda x: x[0])
                     return or_intervals
 
-        int_expr.sort(key=lambda x: x[1].sort_key() if x[1].is_number else S.NegativeInfinity.sort_key())
-        int_expr.sort(key=lambda x: x[0].sort_key() if x[0].is_number else S.Infinity.sort_key())
+        int_expr.sort(key=lambda x: x[1].sort_key(
+            ) if x[1].is_number else S.NegativeInfinity.sort_key())
+        int_expr.sort(key=lambda x: x[0].sort_key(
+            ) if x[0].is_number else S.Infinity.sort_key())
         from sympy.functions.elementary.miscellaneous import MinMaxBase
         for n in xrange(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
@@ -428,21 +432,28 @@ class Piecewise(Function):
                 return when_multiple
         return b
 
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=False)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr(
+        'is_bounded', when_multiple=False)
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary')
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
+        'is_imaginary')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_irrational = lambda self: self._eval_template_is_attr('is_irrational')
+    _eval_is_irrational = lambda self: self._eval_template_is_attr(
+        'is_irrational')
     _eval_is_negative = lambda self: self._eval_template_is_attr('is_negative')
-    _eval_is_nonnegative = lambda self: self._eval_template_is_attr('is_nonnegative')
-    _eval_is_nonpositive = lambda self: self._eval_template_is_attr('is_nonpositive')
-    _eval_is_nonzero = lambda self: self._eval_template_is_attr('is_nonzero', when_multiple=True)
+    _eval_is_nonnegative = lambda self: self._eval_template_is_attr(
+        'is_nonnegative')
+    _eval_is_nonpositive = lambda self: self._eval_template_is_attr(
+        'is_nonpositive')
+    _eval_is_nonzero = lambda self: self._eval_template_is_attr(
+        'is_nonzero', when_multiple=True)
     _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
     _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_zero = lambda self: self._eval_template_is_attr('is_zero', when_multiple=False)
+    _eval_is_zero = lambda self: self._eval_template_is_attr(
+        'is_zero', when_multiple=False)
 
     @classmethod
     def __eval_cond(cls, cond):

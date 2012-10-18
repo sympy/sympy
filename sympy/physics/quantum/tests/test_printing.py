@@ -380,7 +380,8 @@ H ⨂ C \
     assert pretty(h1*h2) == ascii_str
     assert upretty(h1*h2) == ucode_str
     assert latex(h1*h2)
-    sT(h1*h2, "TensorProductHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
+    sT(h1*h2,
+       "TensorProductHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
     assert str(h1**2) == 'H**2'
     ascii_str = \
 """\
@@ -410,7 +411,8 @@ def test_innerproduct():
     assert str(ip1) == '<psi|psi>'
     assert pretty(ip1) == '<psi|psi>'
     assert upretty(ip1) == u'⟨ψ❘ψ⟩'
-    assert latex(ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
+    assert latex(
+        ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
     sT(ip1, "InnerProduct(Bra(Symbol('psi')),Ket(Symbol('psi')))")
     assert str(ip2) == '<psi;t|psi;t>'
     assert pretty(ip2) == '<psi;t|psi;t>'
@@ -468,7 +470,8 @@ u"""\
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
         r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
-    sT(ip_tall2, "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
+    sT(ip_tall2,
+       "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall3) == '<x/2|x>'
     ascii_str = \
 """\
@@ -488,7 +491,8 @@ u"""\
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
         r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
-    sT(ip_tall3, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
+    sT(ip_tall3,
+       "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
 
 
 def test_operator():
@@ -788,7 +792,8 @@ def test_big_expr():
     e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'), Pow(DifferentialOperator(Derivative(f(x), x), f(x)), 3))*TensorProduct(Jz**2, Operator('A')+Operator('B')))*(JzBra(1, 0)+JzBra(1, 1))*(JzKet(0, 0)+JzKet(1, -1))
     e2 = Commutator(Jz**2, Operator('A')+Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')), Operator('E').inv()**2)*Dagger(Commutator(Jz, J2))
     e3 = Wigner3j(1, 2, 3, 4, 5, 6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')), Operator('C')+Operator('D')), Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1, 1)), JzBra(1, 0)))*TensorProduct(JzKetCoupled(1, 1, (1, 1))+JzKetCoupled(1, 0, (1, 1)), JzKetCoupled(1, -1, (1, 1)))
-    e4 = (ComplexSpace(1)*ComplexSpace(2)+FockSpace()**2)*(L2(Interval(0, oo))+HilbertSpace())
+    e4 = (ComplexSpace(1)*ComplexSpace(2)+FockSpace()**2)*(L2(Interval(
+        0, oo))+HilbertSpace())
     assert str(e1) == '(Jz**2)x(Dagger(A) + Dagger(B))*{Dagger(DifferentialOperator(Derivative(f(x), x),f(x)))**3,Dagger(A) + Dagger(B)}*(<1,0| + <1,1|)*(|0,0> + |1,-1>)'
     ascii_str = \
 """\

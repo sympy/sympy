@@ -707,7 +707,8 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
             if condition:  # Check that these values satisfy the condition
                 gd = given_fn(*args)
                 if not isinstance(gd, bool):
-                    raise ValueError("Conditions must not contain free symbols")
+                    raise ValueError(
+                        "Conditions must not contain free symbols")
                 if gd == False:  # If the values don't satisfy then try again
                     continue
 

@@ -157,7 +157,8 @@ def test_RootOf_evalf():
 
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
-    assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(x**3 - x**2 + 1, 0)]
+    assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(
+        x**3 - x**2 + 1, 0)]
 
 
 def test_RootOf_all_roots():
@@ -218,16 +219,20 @@ def test_RootSum___new__():
     assert RootSum(x**2 - 1, Lambda(x, z*x**2), x) == 2*z
     assert RootSum(x**2 - y, Lambda(x, z*x**2), x) == 2*z*y
 
-    assert RootSum(x**2 - 1, Lambda(x, exp(x)), quadratic=True) == exp(-1) + exp(1)
+    assert RootSum(
+        x**2 - 1, Lambda(x, exp(x)), quadratic=True) == exp(-1) + exp(1)
 
-    assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
-    assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
+    assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1,
+                   Lambda(x, tan(a*x)))
+    assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + \
+                   1, Lambda(x, tan(x/a)))
 
 
 def test_RootSum_free_symbols():
     assert RootSum(x**3 + x + 3, Lambda(r, exp(r))).free_symbols == set()
     assert RootSum(x**3 + x + 3, Lambda(r, exp(a*r))).free_symbols == set([a])
-    assert RootSum(x**3 + x + y, Lambda(r, exp(a*r)), x).free_symbols == set([a, y])
+    assert RootSum(
+        x**3 + x + y, Lambda(r, exp(a*r)), x).free_symbols == set([a, y])
 
 
 def test_RootSum___eq__():
@@ -255,8 +260,10 @@ def test_RootSum_doit():
 def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
-    assert rs.evalf(n=20, chop=True).epsilon_eq(Float("1.0806046117362794348", 20), Float("1e-20")) == True
-    assert rs.evalf(n=15, chop=True).epsilon_eq(Float("1.08060461173628", 15), Float("1e-15")) == True
+    assert rs.evalf(n=20, chop=True).epsilon_eq(
+        Float("1.0806046117362794348", 20), Float("1e-20")) == True
+    assert rs.evalf(n=15, chop=True).epsilon_eq(
+        Float("1.08060461173628", 15), Float("1e-15")) == True
 
     rs = RootSum(x**2 + a, exp, x)
 
@@ -284,12 +291,15 @@ def test_RootSum_subs():
 
 
 def test_RootSum_rational():
-    assert RootSum(z**5 - z + 1, Lambda(z, z/(x - z))) == (4*x - 5)/(x**5 - x + 1)
+    assert RootSum(
+        z**5 - z + 1, Lambda(z, z/(x - z))) == (4*x - 5)/(x**5 - x + 1)
 
     f = 161*z**3 + 115*z**2 + 19*z + 1
-    g = Lambda(z, z*log(-3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
+    g = Lambda(z, z*log(
+        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
 
-    assert RootSum(f, g).diff(x) == -((5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
+    assert RootSum(f, g).diff(x) == -(
+        (5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
 
 
 def test_RootSum_independent():

@@ -143,7 +143,8 @@ class BenchSession(TerminalSession):
                     else:
                         order = 3
 
-                    tstr = "%.*g %s" % (precision, best * scaling[order], units[order])
+                    tstr = "%.*g %s" % (
+                        precision, best * scaling[order], units[order])
 
                 results.append( [item.name, tstr, item.benchtitle] )
 

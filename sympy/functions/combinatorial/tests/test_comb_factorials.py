@@ -138,20 +138,24 @@ def test_binomial_diff():
     assert binomial(n, k).diff(n) == \
         (-polygamma(0, 1 + n - k) + polygamma(0, 1 + n))*binomial(n, k)
     assert binomial(n**2, k**3).diff(n) == \
-        2*n*(-polygamma(0, 1 + n**2 - k**3) + polygamma(0, 1 + n**2))*binomial(n**2, k**3)
+        2*n*(-polygamma(
+            0, 1 + n**2 - k**3) + polygamma(0, 1 + n**2))*binomial(n**2, k**3)
 
     assert binomial(n, k).diff(k) == \
         (-polygamma(0, 1 + k) + polygamma(0, 1 + n - k))*binomial(n, k)
     assert binomial(n**2, k**3).diff(k) == \
-        3*k**2*(-polygamma(0, 1 + k**3) + polygamma(0, 1 + n**2 - k**3))*binomial(n**2, k**3)
+        3*k**2*(-polygamma(
+            0, 1 + k**3) + polygamma(0, 1 + n**2 - k**3))*binomial(n**2, k**3)
 
 
 def test_binomial_rewrite():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
 
-    assert binomial(n, k).rewrite(factorial) == factorial(n)/(factorial(k)*factorial(n - k))
-    assert binomial(n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+    assert binomial(n, k).rewrite(
+        factorial) == factorial(n)/(factorial(k)*factorial(n - k))
+    assert binomial(
+        n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
 
 @XFAIL

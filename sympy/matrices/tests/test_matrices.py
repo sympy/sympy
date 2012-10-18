@@ -399,7 +399,8 @@ def test_reshape():
     m0 = eye(3)
     assert m0.reshape(1, 9) == Matrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
     m1 = Matrix(3, 4, lambda i, j: i+j)
-    assert m1.reshape(4, 3) == Matrix(((0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)))
+    assert m1.reshape(
+        4, 3) == Matrix(((0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)))
     assert m1.reshape(2, 6) == Matrix(((0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)))
 
 
@@ -575,9 +576,11 @@ def test_util():
     # cofactor
     assert eye(3) == eye(3).cofactorMatrix()
     test = Matrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactorMatrix() == Matrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
+    assert test.cofactorMatrix(
+        ) == Matrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
     test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactorMatrix() == Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
+    assert test.cofactorMatrix(
+        ) == Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
 
 def test_jacobian_hessian():
@@ -593,7 +596,8 @@ def test_jacobian_hessian():
     assert hessian(f, syms) == Matrix([[2*y, 2*x], [2*x, 0]])
 
     f = x**2*y**3
-    assert hessian(f, syms) == Matrix([[2*y**3, 6*x*y**2], [6*x*y**2, 6*x**2*y]])
+    assert hessian(
+        f, syms) == Matrix([[2*y**3, 6*x*y**2], [6*x*y**2, 6*x**2*y]])
 
     f = z + x*y**2
     g = x**2 + 2*y**3
@@ -1433,7 +1437,8 @@ def test_Matrix_berkowitz_charpoly():
 
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
-    assert m.exp() == Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
+    assert m.exp(
+        ) == Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
 
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
@@ -1458,19 +1463,25 @@ def test_errors():
     raises(ValueError, lambda: Matrix([1, 2]).reshape(4, 6))
     raises(ShapeError,
         lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
-    raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+    raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0,
+           1], set([])))
     raises(NonSquareMatrixError, lambda: Matrix([[1, 2, 3], [2, 3, 0]]).inv())
     raises(ShapeError,
         lambda: Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]])))
-    raises(ShapeError, lambda: Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]])))
-    raises(ShapeError, lambda: Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]])))
-    raises(ShapeError, lambda: Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]])))
+    raises(
+        ShapeError, lambda: Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1]).row_insert(1, Matrix([[1,
+           2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1]).col_insert(1, Matrix([[1,
+           2], [3, 4]])))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
-    raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).QRdecomposition())
+    raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
+           ]).QRdecomposition())
     raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
+    raises(
+        NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -1478,7 +1489,8 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    raises(NotImplementedError, lambda: Matrix([[0, 1, 2], [0, 0, -1], [0, 0, 0]]).exp())
+    raises(NotImplementedError, lambda: Matrix([[0, 1, 2], [0, 0, -1],
+           [0, 0, 0]]).exp())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
@@ -1997,7 +2009,8 @@ def test_dot():
 
 
 def test_dual():
-    B_x, B_y, B_z, E_x, E_y, E_z = symbols('B_x B_y B_z E_x E_y E_z', real=True)
+    B_x, B_y, B_z, E_x, E_y, E_z = symbols(
+        'B_x B_y B_z E_x E_y E_z', real=True)
     F = Matrix((
                 (0, E_x, E_y, E_z),
     (-E_x, 0, B_z, -B_y),

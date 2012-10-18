@@ -61,14 +61,17 @@ def test_UGate():
 def test_cgate():
     """Test the general CGate."""
     # Test single control functionality
-    CNOTMatrix = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    CNOTMatrix = Matrix(
+        [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
     assert represent(CGate(1, XGate(0)), nqubits=2) == CNOTMatrix
 
     # Test multiple control bit functionality
     ToffoliGate = CGate((1, 2), XGate(0))
     assert represent(ToffoliGate, nqubits=3) == \
-        Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1],
+        Matrix(
+            [[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0,
+        1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1],
     [0, 0, 0, 0, 0, 0, 1, 0]])
 
     ToffoliGate = CGate((3, 0), XGate(1))
@@ -78,12 +81,14 @@ def test_cgate():
         matrix_to_qubit(represent(ToffoliGate*Qubit('0000'), nqubits=4))
 
     CYGate = CGate(1, YGate(0))
-    CYGate_matrix = Matrix(((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, -I), (0, 0, I, 0)))
+    CYGate_matrix = Matrix(
+        ((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 0, -I), (0, 0, I, 0)))
     # Test 2 qubit controlled-Y gate decompose method.
     assert represent(CYGate.decompose(), nqubits=2) == CYGate_matrix
 
     CZGate = CGate(0, ZGate(1))
-    CZGate_matrix = Matrix(((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, -1)))
+    CZGate_matrix = Matrix(
+        ((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, -1)))
     assert qapply(CZGate*Qubit('11')) == -Qubit('11')
     assert matrix_to_qubit(represent(CZGate*Qubit('11'), nqubits=2)) ==\
         -Qubit('11')
@@ -237,7 +242,8 @@ def test_gate_simp():
 
 def test_swap_gate():
     """Test the SWAP gate."""
-    swap_gate_matrix = Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+    swap_gate_matrix = Matrix(
+        ((1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
     assert represent(SwapGate(1, 0).decompose(), nqubits=2) == swap_gate_matrix
     assert qapply(SwapGate(1, 3)*Qubit('0010')) == Qubit('1000')
     nqubits = 4

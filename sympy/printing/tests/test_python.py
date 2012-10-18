@@ -23,7 +23,8 @@ def test_python_basic():
     assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
-    assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
+    assert python(
+        x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
 
     # Sums of terms
     assert python((x**2 + x + 1)) in [
@@ -65,7 +66,8 @@ def test_python_basic():
 
 def test_python_keyword_symbol_name_escaping():
     # Check for escaping of keywords
-    assert python(5*Symbol("lambda")) == "lambda_ = Symbol('lambda')\ne = 5*lambda_"
+    assert python(
+        5*Symbol("lambda")) == "lambda_ = Symbol('lambda')\ne = 5*lambda_"
     assert (python(5*Symbol("lambda") + 7*Symbol("lambda_")) ==
             "lambda__ = Symbol('lambda')\nlambda_ = Symbol('lambda_')\ne = 7*lambda_ + 5*lambda__")
     assert (python(5*Symbol("for") + Function("for_")(8)) ==
@@ -73,7 +75,8 @@ def test_python_keyword_symbol_name_escaping():
 
 
 def test_python_keyword_function_name_escaping():
-    assert python(5*Function("for")(8)) == "for_ = Function('for')\ne = 5*for_(8)"
+    assert python(
+        5*Function("for")(8)) == "for_ = Function('for')\ne = 5*for_(8)"
 
 
 def test_python_relational():
@@ -96,7 +99,8 @@ def test_python_functions():
     assert python((2 + pi)**Rational(1, 3)) == 'e = (2 + pi)**Rational(1, 3)'
     assert python(2**Rational(1, 4)) == 'e = 2**Rational(1, 4)'
     assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
-    assert python(Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
+    assert python(
+        Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
             "x = Symbol('x')\ne = Abs(x/(x**2 + 1))"]
 
     # Univariate/Multivariate functions
@@ -164,7 +168,8 @@ def test_python_integrals():
     assert python(f_4) == "x = Symbol('x')\ne = Integral(x**2, (x, 1, 2))"
 
     f_5 = Integral(x**2, (x, Rational(1, 2), 10))
-    assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, Rational(1, 2), 10))"
+    assert python(
+        f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, Rational(1, 2), 10))"
 
     # Nested integrals
     f_6 = Integral(x**2*y**2, x, y)

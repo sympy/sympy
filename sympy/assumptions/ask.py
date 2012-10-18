@@ -193,7 +193,8 @@ def compute_known_facts():
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "
-    fact_string += ",\n    ".join(["%s: %s" % item for item in mapping.items()])
+    fact_string += ",\n    ".join(
+        ["%s: %s" % item for item in mapping.items()])
     fact_string += "\n}\n"
     return fact_string
 

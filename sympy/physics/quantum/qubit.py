@@ -66,7 +66,8 @@ class QubitState(State):
         # Validate input (must have 0 or 1 input)
         for element in args:
             if not (element == 1 or element == 0):
-                raise ValueError("Qubit values must be 0 or 1, got: %r" % element)
+                raise ValueError(
+                    "Qubit values must be 0 or 1, got: %r" % element)
         return args
 
     @classmethod
@@ -295,7 +296,8 @@ class IntQubitState(QubitState):
         elif len(args) == 2 and args[1] > 1:
             need = bitcount(abs(args[0]))
             if args[1] < need:
-                raise ValueError('cannot represent %s with %s bits' % (args[0], args[1]))
+                raise ValueError(
+                    'cannot represent %s with %s bits' % (args[0], args[1]))
             qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
@@ -466,7 +468,8 @@ def matrix_to_density(mat):
     """
     from sympy.physics.quantum.density import Density
     eigen = mat.eigenvects()
-    args = [[matrix_to_qubit(Matrix([vector, ])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
+    args = [[matrix_to_qubit(Matrix(
+        [vector, ])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
     if (len(args) == 0):
         return 0
     else:

@@ -61,7 +61,8 @@ class RootOf(Expr):
             raise PolynomialError("can't construct RootOf object for %s" % f)
 
         if index < -degree or index >= degree:
-            raise IndexError("root index out of [%d, %d] range, got %d" % (-degree, degree-1, index))
+            raise IndexError("root index out of [%d, %d] range, got %d" %
+                             (-degree, degree-1, index))
         elif index < 0:
             index += degree
 
@@ -140,7 +141,8 @@ class RootOf(Expr):
             real_part = _reals_cache[factor]
         else:
             _reals_cache[factor] = real_part = \
-                dup_isolate_real_roots_sqf(factor.rep.rep, factor.rep.dom, blackbox=True)
+                dup_isolate_real_roots_sqf(
+                    factor.rep.rep, factor.rep.dom, blackbox=True)
 
         return real_part
 
@@ -151,7 +153,8 @@ class RootOf(Expr):
             complex_part = _complexes_cache[factor]
         else:
             _complexes_cache[factor] = complex_part = \
-                dup_isolate_complex_roots_sqf(factor.rep.rep, factor.rep.dom, blackbox=True)
+                dup_isolate_complex_roots_sqf(
+                    factor.rep.rep, factor.rep.dom, blackbox=True)
 
         return complex_part
 
@@ -439,7 +442,8 @@ class RootSum(Expr):
         coeff, poly = cls._transform(expr, x)
 
         if not poly.is_univariate:
-            raise MultivariatePolynomialError("only univariate polynomials are allowed")
+            raise MultivariatePolynomialError(
+                "only univariate polynomials are allowed")
 
         if func is None:
             func = Lambda(poly.gen, poly.gen)
@@ -453,7 +457,8 @@ class RootSum(Expr):
                 if not isinstance(func, Lambda):
                     func = Lambda(poly.gen, func(poly.gen))
             else:
-                raise ValueError("expected a univariate function, got %s" % func)
+                raise ValueError(
+                    "expected a univariate function, got %s" % func)
 
         var, expr = func.variables[0], func.expr
 

@@ -46,16 +46,20 @@ def test_sympify1():
     assert sympify('2.1+3/4', rational=1) == Rational(21, 10) + Rational(3, 4)
     assert sympify('2.234456', rational=1) == Rational(279307, 125000)
     assert sympify('2.234456e23', rational=1) == 223445600000000000000000
-    assert sympify('2.234456e-23', rational=1) == Rational(279307, 12500000000000000000000000000)
-    assert sympify('-2.234456e-23', rational=1) == Rational(-279307, 12500000000000000000000000000)
+    assert sympify('2.234456e-23', rational=1) == Rational(
+        279307, 12500000000000000000000000000)
+    assert sympify('-2.234456e-23', rational=1) == Rational(
+        -279307, 12500000000000000000000000000)
     assert sympify('12345678901/17', rational=1) == Rational(12345678901, 17)
     assert sympify('1/.3 + x', rational=1) == Rational(10, 3) + x
     # make sure longs in fractions work
-    assert sympify('222222222222/11111111111') == Rational(222222222222, 11111111111)
+    assert sympify(
+        '222222222222/11111111111') == Rational(222222222222, 11111111111)
     # ... even if they come from repetend notation
     assert sympify('1/.2[123456789012]') == Rational(333333333333, 70781892967)
     # ... or from high precision reals
-    assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
+    assert sympify('.1234567890123456', rational=1) == Rational(
+        19290123283179,  156250000000000)
 
 
 def test_sympify_Fraction():
@@ -87,12 +91,16 @@ def test_sympify_mpmath():
     assert value == Float(1.0) and type(value) is Float
 
     mpmath.mp.dps = 12
-    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
-    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
+    assert sympify(
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+    assert sympify(
+        mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
 
     mpmath.mp.dps = 6
-    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
-    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
+    assert sympify(
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+    assert sympify(
+        mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
@@ -432,6 +440,7 @@ def test_no_autosimplify_into_Mul():
     # or else the structure can change dramatically
     ss = S(s)
     assert ss != 1 and ss.simplify() == -1
-    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace('x', '_kern')
+    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace(
+        'x', '_kern')
     ss = S(s)
     assert ss != 1 and ss.simplify() == -1

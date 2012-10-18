@@ -328,7 +328,8 @@ class ITE(BooleanFunction):
         args = list(args)
         if len(args) == 3:
             return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
-        raise ValueError("ITE expects 3 arguments, but got %d: %s" % (len(args), str(args)))
+        raise ValueError("ITE expects 3 arguments, but got %d: %s" %
+                         (len(args), str(args)))
 
 ### end class definitions. Some useful methods
 

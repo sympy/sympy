@@ -1005,7 +1005,8 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         if query('EEZ_RESTART_IF_NEEDED'):
             return dmp_zz_wang(orig_f, u, K, mod+1)
         else:
-            raise ExtraneousFactors("we need to restart algorithm with better parameters")
+            raise ExtraneousFactors(
+                "we need to restart algorithm with better parameters")
 
     negative, result = 0, []
 

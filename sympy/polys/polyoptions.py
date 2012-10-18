@@ -127,7 +127,8 @@ class Options(dict):
         dict.__init__(self)
 
         if gens and args.get('gens', ()):
-            raise OptionError("both '*gens' and keyword argument 'gens' supplied")
+            raise OptionError(
+                "both '*gens' and keyword argument 'gens' supplied")
         elif gens:
             args = dict(args)
             args['gens'] = gens
@@ -196,7 +197,8 @@ class Options(dict):
             try:
                 cls.__order__ = topological_sort((vertices, list(edges)))
             except ValueError:
-                raise RuntimeError("cycle detected in sympy.polys options framework")
+                raise RuntimeError(
+                    "cycle detected in sympy.polys options framework")
 
     def clone(self, updates={}):
         """Clone ``self`` and update specified options. """
@@ -386,7 +388,8 @@ class Greedy(BooleanOption):
     option = 'greedy'
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
+        'symmetric']
 
 
 class Composite(BooleanOption):
@@ -401,7 +404,8 @@ class Composite(BooleanOption):
         return True
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
+        'symmetric']
 
 
 class Domain(Option):
@@ -473,13 +477,15 @@ class Domain(Option):
                 gens = map(sympify, r.groups()[1].split(','))
                 return sympy.polys.domains.QQ.algebraic_field(*gens)
 
-            raise OptionError('expected a valid domain specification, got %s' % domain)
+            raise OptionError(
+                'expected a valid domain specification, got %s' % domain)
 
     @classmethod
     def postprocess(cls, options):
         if 'gens' in options and 'domain' in options and options['domain'].is_Composite and \
                 (set(options['domain'].gens) & set(options['gens'])):
-            raise GeneratorsError("ground domain and generators interfere together")
+            raise GeneratorsError(
+                "ground domain and generators interfere together")
         elif ('gens' not in options or not options['gens']) and \
                 'domain' in options and options['domain'] == sympy.polys.domains.EX:
             raise GeneratorsError("you have to provide generators because EX domain was requested")
@@ -493,7 +499,8 @@ class Split(BooleanOption):
     option = 'split'
 
     requires = []
-    excludes = ['field', 'greedy', 'domain', 'gaussian', 'extension', 'modulus', 'symmetric']
+    excludes = ['field', 'greedy', 'domain', 'gaussian', 'extension',
+        'modulus', 'symmetric']
 
     @classmethod
     def postprocess(cls, options):
@@ -509,7 +516,8 @@ class Gaussian(BooleanOption):
     option = 'gaussian'
 
     requires = []
-    excludes = ['field', 'greedy', 'domain', 'split', 'extension', 'modulus', 'symmetric']
+    excludes = ['field', 'greedy', 'domain', 'split', 'extension',
+        'modulus', 'symmetric']
 
     @classmethod
     def postprocess(cls, options):
@@ -526,7 +534,8 @@ class Extension(Option):
     option = 'extension'
 
     requires = []
-    excludes = ['greedy', 'domain', 'split', 'gaussian', 'modulus', 'symmetric']
+    excludes = ['greedy', 'domain', 'split', 'gaussian', 'modulus',
+        'symmetric']
 
     @classmethod
     def preprocess(cls, extension):
@@ -548,7 +557,8 @@ class Extension(Option):
     @classmethod
     def postprocess(cls, options):
         if 'extension' in options and options['extension'] is not True:
-            options['domain'] = sympy.polys.domains.QQ.algebraic_field(*options['extension'])
+            options['domain'] = sympy.polys.domains.QQ.algebraic_field(
+                *options['extension'])
 
 
 class Modulus(Option):
@@ -568,7 +578,8 @@ class Modulus(Option):
         if modulus.is_Integer and modulus > 0:
             return int(modulus)
         else:
-            raise OptionError("'modulus' must a positive integer, got %s" % modulus)
+            raise OptionError(
+                "'modulus' must a positive integer, got %s" % modulus)
 
     @classmethod
     def postprocess(cls, options):
@@ -765,7 +776,8 @@ def allowed_flags(args, flags):
     for arg in args.iterkeys():
         try:
             if Options.__options__[arg].is_Flag and not arg in flags:
-                raise FlagError("'%s' flag is not allowed in this context" % arg)
+                raise FlagError(
+                    "'%s' flag is not allowed in this context" % arg)
         except KeyError:
             raise OptionError("'%s' is not a valid option" % arg)
 

@@ -668,7 +668,8 @@ class DiagramGrid(object):
         Returns a key for the supplied triangle.  It should be the
         same independently of the hash randomisation.
         """
-        objects = sorted(DiagramGrid._triangle_objects(tri), key=default_sort_key)
+        objects = sorted(
+            DiagramGrid._triangle_objects(tri), key=default_sort_key)
         return (triangle_sizes[tri], default_sort_key(objects))
 
     @staticmethod
@@ -899,7 +900,8 @@ class DiagramGrid(object):
                     local_grid = groups_grids[obj]
                     for i in xrange(local_grid.height):
                         for j in xrange(local_grid.width):
-                            grid[real_row + i, real_column + j] = local_grid[i, j]
+                            grid[real_row + i,
+                                real_column + j] = local_grid[i, j]
                 else:
                     # This is an object.  Just put it there.
                     grid[real_row, real_column] = obj
@@ -953,7 +955,8 @@ class DiagramGrid(object):
         placed_objects = set(root_edge)
 
         while placed_objects != all_objects:
-            welding = DiagramGrid._find_triangle_to_weld(triangles, fringe, grid)
+            welding = DiagramGrid._find_triangle_to_weld(
+                triangles, fringe, grid)
 
             if welding:
                 (triangle, welding_edge) = welding
@@ -1367,7 +1370,8 @@ class ArrowStringDescription(object):
     This works as follows (disregard the yet unexplained arguments):
 
     >>> from sympy.categories.diagram_drawing import ArrowStringDescription
-    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    >>> astr = ArrowStringDescription(
+        unit="mm", curving=None, curving_amount=None,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> print str(astr)
@@ -1377,7 +1381,8 @@ class ArrowStringDescription(object):
     direction the arrow is going to curve. ``curving_amount`` is a number
     describing how many ``unit``'s the morphism is going to curve:
 
-    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    >>> astr = ArrowStringDescription(
+        unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> print str(astr)
@@ -1389,7 +1394,8 @@ class ArrowStringDescription(object):
     specify, correspondingly, the direction the arrow gets out into
     and the direction the arrow gets back from:
 
-    >>> astr = ArrowStringDescription(unit="mm", curving=None, curving_amount=None,
+    >>> astr = ArrowStringDescription(
+        unit="mm", curving=None, curving_amount=None,
     ... looping_start="u", looping_end="l", horizontal_direction="",
     ... vertical_direction="", label_position="_", label="f")
     >>> print str(astr)
@@ -1399,7 +1405,8 @@ class ArrowStringDescription(object):
     the ends of the arrow.  For example, to position the arrow label
     near the arrow head, use ">":
 
-    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    >>> astr = ArrowStringDescription(
+        unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.label_displacement = ">"
@@ -1409,7 +1416,8 @@ class ArrowStringDescription(object):
     Finally, ``arrow_style`` is used to specify the arrow style.  To
     get a dashed arrow, for example, use "{-->}" as arrow style:
 
-    >>> astr = ArrowStringDescription(unit="mm", curving="^", curving_amount=12,
+    >>> astr = ArrowStringDescription(
+        unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.arrow_style = "{-->}"

@@ -28,7 +28,8 @@ if sys.version_info[0] == 2:
                           "Python 3 or get the original source code.")
     else:
         if sys.version_info[1] < 5:
-            raise ImportError("Python Version 2.5 or above is required for SymPy.")
+            raise ImportError(
+                "Python Version 2.5 or above is required for SymPy.")
 else:  # Python 3
     if not HAS_2TO3:
         raise ImportError("This is the Python 2 version of SymPy. To use SymPy "

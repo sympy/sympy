@@ -82,7 +82,8 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import (exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
+    from sympy import (
+        exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
                        EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
                        fresnels, fresnelc)
@@ -274,7 +275,13 @@ def add_formulae(formulae):
     #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
     # Manually tuned rule
     addb([S(3)/4], [S(3)/2, S(7)/4],
-         Matrix([ fresnels( exp(pi*I/4)*root(z, 4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z, 4)*2/sqrt(pi))**3 ),
+         Matrix(
+             [ fresnels(
+                 exp(
+                     pi*I/4)*root(
+                         z, 4)*2/sqrt(
+                             pi) ) / (
+                                 pi * (exp(pi*I/4)*root(z, 4)*2/sqrt(pi))**3 ),
                   sinh(2*sqrt(z))/sqrt(z),
                   cosh(2*sqrt(z)) ]),
          Matrix([[6, 0, 0]]),
@@ -287,7 +294,11 @@ def add_formulae(formulae):
     #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
     # Manually tuned rule
     addb([S(1)/4], [S(1)/2, S(5)/4],
-         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))/(2*root(z, 4)),
+         Matrix(
+             [ sqrt(
+                 pi)*exp(
+                     -I*pi/4)*fresnelc(
+                         2*root(z, 4)*exp(I*pi/4)/sqrt(pi))/(2*root(z, 4)),
                   cosh(2*sqrt(z)),
                   sinh(2*sqrt(z))*sqrt(z) ]),
          Matrix([[1, 0, 0]]),

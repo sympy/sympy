@@ -91,7 +91,8 @@ def test_domains():
     d = where(X>Y)
     assert d.condition == (x > y)
     d = where(And(X>Y, Y>3))
-    assert d.as_boolean() == Or(And(Eq(x, 5), Eq(y, 4)), And(Eq(x, 6), Eq(y, 5)),
+    assert d.as_boolean(
+        ) == Or(And(Eq(x, 5), Eq(y, 4)), And(Eq(x, 6), Eq(y, 5)),
         And(Eq(x, 6), Eq(y, 4)))
     assert len(d.elements) == 3
 
@@ -139,7 +140,8 @@ def test_cdf():
     D = Die('D', 6)
     o = S.One
 
-    assert cdf(D) == sympify({1: o/6, 2: o/3, 3: o/2, 4: 2*o/3, 5: 5*o/6, 6: o})
+    assert cdf(
+        D) == sympify({1: o/6, 2: o/3, 3: o/2, 4: 2*o/3, 5: 5*o/6, 6: o})
 
 
 def test_coins():

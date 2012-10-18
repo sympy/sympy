@@ -103,7 +103,8 @@ class BlockMatrix(MatrixExpr):
         if self.rowblocksizes == self.colblocksizes:
             return Add(*[Trace(self._mat[i, i])
                         for i in range(self.blockshape[0])])
-        raise NotImplementedError("Can't perform trace of irregular blockshape")
+        raise NotImplementedError(
+            "Can't perform trace of irregular blockshape")
 
     def transpose(self):
         """Return transpose of matrix.

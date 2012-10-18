@@ -32,7 +32,8 @@ def plot_and_save():
     #Test all input args for plot_implicit
     plot_implicit(Eq(y**2, x**3 - x)).save(tmp_file())
     plot_implicit(Eq(y**2, x**3 - x), adaptive=False).save(tmp_file())
-    plot_implicit(Eq(y**2, x**3 - x), adaptive=False, points=500).save(tmp_file())
+    plot_implicit(
+        Eq(y**2, x**3 - x), adaptive=False, points=500).save(tmp_file())
     plot_implicit(y > x, (x, -5, 5)).save(tmp_file())
     plot_implicit(And(y > exp(x), y > x + 2)).save(tmp_file())
     plot_implicit(Or(y > x, y > -x)).save(tmp_file())

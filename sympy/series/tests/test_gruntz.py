@@ -244,18 +244,23 @@ def test_mrv2b():
 
 
 def test_mrv2c():
-    assert mmrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
+    assert mmrv(
+        exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
 def test_mrv3():
     assert mmrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
-    assert mmrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
-    assert mmrv(log(x**2+2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
+    assert mmrv(
+        exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
+    assert mmrv(log(
+        x**2+2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
     assert mmrv(log(x-log(x))/log(x), x) == set([x])
-    assert mmrv((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
-    assert mmrv(1/exp(-x+exp(-x))-exp(x), x) == set([exp(x), exp(-x), exp(x-exp(-x))])
+    assert mmrv(
+        (exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
+    assert mmrv(
+        1/exp(-x+exp(-x))-exp(x), x) == set([exp(x), exp(-x), exp(x-exp(-x))])
     assert mmrv(log(log(x*exp(x*exp(x))+1)), x) == set([exp(x*exp(x))])
     assert mmrv(exp(exp(log(log(x)+1/x))), x) == set([x])
 
@@ -294,13 +299,15 @@ def test_rewrite2():
 def test_rewrite3():
     e = exp(-x+1/x**2)-exp(x+1/x)
     #both of these are correct and should be equivalent:
-    assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
+    assert mrewrite(mrv(e, x), x, m) in [(-1/m + m*exp(
+        1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
 
 
 def test_mrv_leadterm1():
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
     assert mrv_leadterm(1/exp(-x+exp(-x))-exp(x), x) == (-1, 0)
-    assert mrv_leadterm((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == (-exp(1/x), 0)
+    assert mrv_leadterm(
+        (exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == (-exp(1/x), 0)
 
 
 def test_mrv_leadterm2():

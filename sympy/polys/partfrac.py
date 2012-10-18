@@ -41,7 +41,8 @@ def apart(f, x=None, full=False, **options):
     (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
 
     if P.is_multivariate:
-        raise NotImplementedError("multivariate partial fraction decomposition")
+        raise NotImplementedError(
+            "multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
 

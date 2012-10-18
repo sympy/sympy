@@ -15,9 +15,11 @@ def NS(e, n=15, **options):
 def test_evalf_helpers():
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
     assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
-    assert complex_accuracy((from_float(2.0), from_float(1000.0), 35, 100)) == 43
+    assert complex_accuracy(
+        (from_float(2.0), from_float(1000.0), 35, 100)) == 43
     assert complex_accuracy((from_float(2.0), from_float(10.0), 100, 35)) == 35
-    assert complex_accuracy((from_float(2.0), from_float(1000.0), 100, 35)) == 35
+    assert complex_accuracy(
+        (from_float(2.0), from_float(1000.0), 100, 35)) == 35
 
 
 def test_evalf_basic():
@@ -28,7 +30,8 @@ def test_evalf_basic():
 
 
 def test_cancellation():
-    assert NS(Add(pi, Rational(1, 10**1000), -pi, evaluate=False), 15, maxn=1200) == '1.00000000000000e-1000'
+    assert NS(Add(pi, Rational(1, 10**1000), -pi, evaluate=False), 15,
+              maxn=1200) == '1.00000000000000e-1000'
 
 
 def test_evalf_powers():
@@ -57,7 +60,8 @@ def test_evalf_complex():
 
 @XFAIL
 def test_evalf_complex_bug():
-    assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
+    assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I',
+              '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
 
 
 def test_evalf_complex_powers():
@@ -66,12 +70,15 @@ def test_evalf_complex_powers():
     # XXX: rewrite if a+a*I simplification introduced in sympy
     #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
-    assert NS('(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
+    assert NS(
+        '(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
     assert NS('(pi + pi*I)**4', chop=True) == '-389.636364136010'
-    assert NS('(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
+    assert NS(
+        '(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
-    assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
+    assert NS(
+        '(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
 
 
 @XFAIL
@@ -81,7 +88,8 @@ def test_evalf_complex_powers_bug():
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
-    assert NS(Pow(pi*I, Rational(1, 2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
+    assert NS(Pow(pi*I, Rational(
+        1, 2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
     assert NS(pi**I) == '0.413292116101594 + 0.910598499212615*I'
     assert NS(pi**(E+I/3)) == '20.8438653991931 + 8.36343473930031*I'
     assert NS((pi+I/3)**(E+I/3)) == '17.2442906093590 + 13.6839376767037*I'
@@ -109,7 +117,8 @@ def test_evalf_complex_cancellation():
     # 8925286452L
     assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
     assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
+    assert NS((A+B*I)*(
+        C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
 
 def test_evalf_logs():
@@ -162,11 +171,14 @@ def test_evalf_bugs():
     assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
-    assert NS('(sin(x)-x)/x**3', 15, subs={x: '1/10**50'}) == '-0.166666666666667'
-    assert NS(sin(1)+Rational(1, 10**100)*I, 15) == '0.841470984807897 + 1.00000000000000e-100*I'
+    assert NS(
+        '(sin(x)-x)/x**3', 15, subs={x: '1/10**50'}) == '-0.166666666666667'
+    assert NS(sin(1)+Rational(
+        1, 10**100)*I, 15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
     assert NS((1+I)**2*I, 6) == '-2.00000'
-    d={n: (-1)**Rational(6, 7), y: (-1)**Rational(4, 7), x: (-1)**Rational(2, 7)}
+    d={n: (
+        -1)**Rational(6, 7), y: (-1)**Rational(4, 7), x: (-1)**Rational(2, 7)}
     assert NS((x*(1+y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
     assert NS((1+I)**2*I, 15) == '-2.00000000000000'
@@ -177,7 +189,8 @@ def test_evalf_bugs():
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n: .01}) == '19.8100000000000'
-    assert NS(((x - 1)*((1 - x))**1000).n()) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+    assert NS(((x - 1)*((1 - x))**1000).n()
+              ) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
@@ -197,8 +210,10 @@ def test_evalf_integer_parts():
         11188719610782480504630258070757734324011354208865721592720336800L
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336801L
-    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(1000)
+    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
+               .evalf(1000)) == fibonacci(999)
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
+               .evalf(1000)) == fibonacci(1000)
 
 
 def test_evalf_trig_zero_detection():
@@ -225,7 +240,8 @@ def test_evalf_divergent_series():
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
-    assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
+    assert abs(
+        complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
     raises(TypeError, lambda: float(pi+x))
 
 

@@ -61,7 +61,8 @@ def test_mathml_functions():
     assert mml_2.nodeName == 'apply'
     assert mml_2.childNodes[0].nodeName == 'diff'
     assert mml_2.childNodes[1].nodeName == 'bvar'
-    assert mml_2.childNodes[1].childNodes[0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+    assert mml_2.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
 
 def test_mathml_limits():
@@ -276,11 +277,14 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
 
     mml = mp._print(Symbol("x^2^a"))
@@ -290,11 +294,14 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
 
     mml = mp._print(Symbol("x__2__a"))
@@ -304,11 +311,14 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
 
 
@@ -402,7 +412,8 @@ def test_settings():
 def test_toprettyxml_hooking():
     # test that the patch doesn't influence the behavior of the standard library
     import xml.dom.minidom
-    doc = xml.dom.minidom.parseString("<apply><plus/><ci>x</ci><cn>1</cn></apply>")
+    doc = xml.dom.minidom.parseString(
+        "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
     prettyxml_old = doc.toprettyxml()
 
     mp.apply_patch()

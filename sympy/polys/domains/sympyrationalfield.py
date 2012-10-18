@@ -36,7 +36,8 @@ class SymPyRationalField(RationalField):
         >>> QQ_sympy().of_type(2)
         False
         """
-        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
+        return type(
+            a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
                            type(sympy_rat(2)), type(sympy_rat(1, 2)),
                            type(sympy_rat(3, 2))]
 

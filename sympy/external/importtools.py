@@ -113,7 +113,8 @@ def import_module(module, min_module_version=None, min_python_version=None,
         if sys.version_info < min_python_version:
             if warn_old_version:
                 warnings.warn("Python version is too old to use %s "
-                    "(%s or newer required)" % (module, '.'.join(map(str, min_python_version))),
+                    "(%s or newer required)" % (
+                        module, '.'.join(map(str, min_python_version))),
                     UserWarning)
             return
 
@@ -131,7 +132,8 @@ def import_module(module, min_module_version=None, min_python_version=None,
     #except catch as e:
     except catch, e:
         if warn_not_installed:
-            warnings.warn("%s module could not be used (%s)" % (module, repr(e)))
+            warnings.warn(
+                "%s module could not be used (%s)" % (module, repr(e)))
         return
 
     if min_module_version:

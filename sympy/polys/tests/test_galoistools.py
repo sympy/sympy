@@ -198,8 +198,10 @@ def test_gf_arith():
 
     assert gf_sub([3, 2, 1], [8, 9, 10], 11, ZZ) == [6, 4, 2]
 
-    assert gf_add_mul([1, 5, 6], [7, 3], [8, 0, 6, 1], 11, ZZ) == [1, 2, 10, 8, 9]
-    assert gf_sub_mul([1, 5, 6], [7, 3], [8, 0, 6, 1], 11, ZZ) == [10, 9, 3, 2, 3]
+    assert gf_add_mul(
+        [1, 5, 6], [7, 3], [8, 0, 6, 1], 11, ZZ) == [1, 2, 10, 8, 9]
+    assert gf_sub_mul(
+        [1, 5, 6], [7, 3], [8, 0, 6, 1], 11, ZZ) == [10, 9, 3, 2, 3]
 
     assert gf_mul([], [], 11, ZZ) == []
     assert gf_mul([], [1], 11, ZZ) == []
@@ -207,10 +209,13 @@ def test_gf_arith():
     assert gf_mul([1], [1], 11, ZZ) == [1]
     assert gf_mul([5], [7], 11, ZZ) == [2]
 
-    assert gf_mul([3, 0, 0, 6, 1, 2], [4, 0, 1, 0], 11, ZZ) == [1, 0, 3, 2, 4, 3, 1, 2, 0]
-    assert gf_mul([4, 0, 1, 0], [3, 0, 0, 6, 1, 2], 11, ZZ) == [1, 0, 3, 2, 4, 3, 1, 2, 0]
+    assert gf_mul([3, 0, 0, 6, 1, 2], [4, 0, 1, 0], 11, ZZ) == [1, 0,
+                  3, 2, 4, 3, 1, 2, 0]
+    assert gf_mul([4, 0, 1, 0], [3, 0, 0, 6, 1, 2], 11, ZZ) == [1, 0,
+                  3, 2, 4, 3, 1, 2, 0]
 
-    assert gf_mul([2, 0, 0, 1, 7], [2, 0, 0, 1, 7], 11, ZZ) == [4, 0, 0, 4, 6, 0, 1, 3, 5]
+    assert gf_mul([2, 0, 0, 1, 7], [2, 0, 0, 1, 7], 11, ZZ) == [4, 0,
+                  0, 4, 6, 0, 1, 3, 5]
 
     assert gf_sqr([], 11, ZZ) == []
     assert gf_sqr([2], 11, ZZ) == [4]
@@ -356,8 +361,10 @@ def test_gf_cofactors():
     assert gf_cofactors(ZZ.map([]), ZZ.map([1, 0]), 11, ZZ) == ([1, 0], [], [1])
     assert gf_cofactors(ZZ.map([1, 0]), ZZ.map([]), 11, ZZ) == ([1, 0], [1], [])
 
-    assert gf_cofactors(ZZ.map([3, 0]), ZZ.map([3, 0]), 11, ZZ) == ([1, 0], [3], [3])
-    assert gf_cofactors(ZZ.map([1, 8, 7]), ZZ.map([1, 7, 1, 7]), 11, ZZ) == (([1, 7], [1, 1], [1, 0, 1]))
+    assert gf_cofactors(ZZ.map([3, 0]), ZZ.map([3, 0]), 11, ZZ) == (
+        [1, 0], [3], [3])
+    assert gf_cofactors(ZZ.map([1, 8, 7]), ZZ.map([1, 7, 1, 7]), 11, ZZ) == (
+        ([1, 7], [1, 1], [1, 0, 1]))
 
 
 def test_gf_diff():
@@ -833,7 +840,8 @@ def test_gf_csolve():
     assert csolve_prime([1, 3, 1, 5], 5) == [0, 1]
     assert csolve_prime([3, 6, 9, 3], 3) == [0, 1, 2]
     # with power > 1
-    assert csolve_prime([1, 1, 223], 3, 4) == [4, 13, 22, 31, 40, 49, 58, 67, 76]
+    assert csolve_prime(
+        [1, 1, 223], 3, 4) == [4, 13, 22, 31, 40, 49, 58, 67, 76]
     assert csolve_prime([3, 5, 2, 25], 5, 3) == [16, 50, 99]
     assert csolve_prime([3, 2, 2, 49], 7, 3) == [147, 190, 234]
 

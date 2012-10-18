@@ -180,7 +180,8 @@ class Polygon(GeometryEntity):
                             ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
                             if (tx or ty) and ty.is_number and 0 <= ty <= 1:
                                 print ai, aj
-                                raise GeometryError("Polygon has intersecting sides.")
+                                raise GeometryError(
+                                    "Polygon has intersecting sides.")
 
         return rv
 
@@ -593,7 +594,8 @@ class Polygon(GeometryEntity):
             perim_fraction_end = perim_fraction_start + side_perim_fraction
             pt = s.arbitrary_point(parameter).subs(
                   t, (t - perim_fraction_start)/side_perim_fraction)
-            sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
+            sides.append(
+                (pt, (perim_fraction_start <= t < perim_fraction_end)))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -834,7 +836,8 @@ class Polygon(GeometryEntity):
         '''
         while True:
             e1_angle = support_line.angle_between(Line(e1_current, e1_next))
-            e2_angle = pi - support_line.angle_between(Line(e2_current, e2_next))
+            e2_angle = pi - support_line.angle_between(Line(
+                e2_current, e2_next))
 
             if e1_angle < e2_angle:
                 support_line = Line(e1_current, e1_next)
@@ -1371,7 +1374,8 @@ class RegularPolygon(Polygon):
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.angles
-        {Point(-5/2, -5*sqrt(3)/2): pi/3, Point(-5/2, 5*sqrt(3)/2): pi/3, Point(5, 0): pi/3}
+        {Point(-5/2, -5*sqrt(
+            3)/2): pi/3, Point(-5/2, 5*sqrt(3)/2): pi/3, Point(5, 0): pi/3}
         """
         ret = {}
         ang = self.interior_angle

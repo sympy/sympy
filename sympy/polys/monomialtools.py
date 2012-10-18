@@ -551,7 +551,8 @@ class Monomial(PicklableWithSlots):
         gens = gens or self.gens
 
         if not gens:
-            raise ValueError("can't convert %s to an expression without generators" % self)
+            raise ValueError(
+                "can't convert %s to an expression without generators" % self)
 
         return Mul(*[ gen**exp for gen, exp in zip(gens, self.exponents) ])
 
@@ -617,7 +618,8 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            raise TypeError("an instance of Monomial class expected, got %s" % other)
+            raise TypeError(
+                "an instance of Monomial class expected, got %s" % other)
 
         return self.rebuild(monomial_gcd(self.exponents, exponents))
 
@@ -628,6 +630,7 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            raise TypeError("an instance of Monomial class expected, got %s" % other)
+            raise TypeError(
+                "an instance of Monomial class expected, got %s" % other)
 
         return self.rebuild(monomial_lcm(self.exponents, exponents))

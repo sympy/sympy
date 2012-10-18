@@ -27,7 +27,8 @@ def test_swinnerton_dyer_poly():
 
     assert swinnerton_dyer_poly(1, x) == x**2 - 2
     assert swinnerton_dyer_poly(2, x) == x**4 - 10*x**2 + 1
-    assert swinnerton_dyer_poly(3, x) == x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+    assert swinnerton_dyer_poly(
+        3, x) == x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
 
 
 def test_cyclotomic_poly():

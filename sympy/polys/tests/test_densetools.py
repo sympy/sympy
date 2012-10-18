@@ -99,13 +99,17 @@ def test_dmp_integrate_in():
     f = dmp_convert(f_6, 3, ZZ, QQ)
 
     assert dmp_integrate_in(f, 2, 1, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 2, 3, QQ), 0, 1, 3, QQ)
+        dmp_swap(
+            dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 2, 3, QQ), 0, 1, 3, QQ)
     assert dmp_integrate_in(f, 3, 1, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 3, 3, QQ), 0, 1, 3, QQ)
+        dmp_swap(
+            dmp_integrate(dmp_swap(f, 0, 1, 3, QQ), 3, 3, QQ), 0, 1, 3, QQ)
     assert dmp_integrate_in(f, 2, 2, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 2, 3, QQ), 0, 2, 3, QQ)
+        dmp_swap(
+            dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 2, 3, QQ), 0, 2, 3, QQ)
     assert dmp_integrate_in(f, 3, 2, 3, QQ) == \
-        dmp_swap(dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 3, 3, QQ), 0, 2, 3, QQ)
+        dmp_swap(
+            dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 3, 3, QQ), 0, 2, 3, QQ)
 
 
 def test_dup_diff():
@@ -121,7 +125,8 @@ def test_dup_diff():
     assert dup_diff(f, 0, ZZ) == f
     assert dup_diff(f, 1, ZZ) == dup_diff(f, 1, ZZ)
     assert dup_diff(f, 2, ZZ) == dup_diff(dup_diff(f, 1, ZZ), 1, ZZ)
-    assert dup_diff(f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
+    assert dup_diff(
+        f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
 
     K = FF(3)
     f = dup_normal([17, 34, 56, -345, 23, 76, 0, 0, 12, 3, 7], K)
@@ -133,7 +138,8 @@ def test_dup_diff():
     assert dup_diff(f, 0, K) == f
     assert dup_diff(f, 1, K) == dup_diff(f, 1, K)
     assert dup_diff(f, 2, K) == dup_diff(dup_diff(f, 1, K), 1, K)
-    assert dup_diff(f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
+    assert dup_diff(
+        f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
 
 
 def test_dmp_diff():
@@ -151,8 +157,10 @@ def test_dmp_diff():
 
     assert dmp_diff(f_6, 0, 3, ZZ) == f_6
     assert dmp_diff(f_6, 1, 3, ZZ) == dmp_diff(f_6, 1, 3, ZZ)
-    assert dmp_diff(f_6, 2, 3, ZZ) == dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
-    assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ), 1, 3, ZZ)
+    assert dmp_diff(
+        f_6, 2, 3, ZZ) == dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
+    assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(
+        dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ), 1, 3, ZZ)
 
     K = FF(23)
     F_6 = dmp_normal(f_6, 3, K)
@@ -160,7 +168,8 @@ def test_dmp_diff():
     assert dmp_diff(F_6, 0, 3, K) == F_6
     assert dmp_diff(F_6, 1, 3, K) == dmp_diff(F_6, 1, 3, K)
     assert dmp_diff(F_6, 2, 3, K) == dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K)
-    assert dmp_diff(F_6, 3, 3, K) == dmp_diff(dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K), 1, 3, K)
+    assert dmp_diff(F_6, 3, 3, K) == dmp_diff(
+        dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K), 1, 3, K)
 
 
 def test_dmp_diff_in():
@@ -196,10 +205,14 @@ def test_dmp_eval():
 
 
 def test_dmp_eval_in():
-    assert dmp_eval_in(f_6, -2, 1, 3, ZZ) == dmp_eval(dmp_swap(f_6, 0, 1, 3, ZZ), -2, 3, ZZ)
-    assert dmp_eval_in(f_6, 7, 1, 3, ZZ) == dmp_eval(dmp_swap(f_6, 0, 1, 3, ZZ), 7, 3, ZZ)
-    assert dmp_eval_in(f_6, -2, 2, 3, ZZ) == dmp_swap(dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), -2, 3, ZZ), 0, 1, 2, ZZ)
-    assert dmp_eval_in(f_6, 7, 2, 3, ZZ) == dmp_swap(dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), 7, 3, ZZ), 0, 1, 2, ZZ)
+    assert dmp_eval_in(
+        f_6, -2, 1, 3, ZZ) == dmp_eval(dmp_swap(f_6, 0, 1, 3, ZZ), -2, 3, ZZ)
+    assert dmp_eval_in(
+        f_6, 7, 1, 3, ZZ) == dmp_eval(dmp_swap(f_6, 0, 1, 3, ZZ), 7, 3, ZZ)
+    assert dmp_eval_in(f_6, -2, 2, 3, ZZ) == dmp_swap(
+        dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), -2, 3, ZZ), 0, 1, 2, ZZ)
+    assert dmp_eval_in(f_6, 7, 2, 3, ZZ) == dmp_swap(
+        dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), 7, 3, ZZ), 0, 1, 2, ZZ)
 
     f = [[[45L]], [[]], [[]], [[-9L], [-1L], [], [3L, 0L, 10L, 0L]]]
 
@@ -220,10 +233,13 @@ def test_dmp_eval_tail():
 
     assert dmp_eval_tail(f_1, [-17, 8], 2, ZZ) == [-136, 15699, 9166, -27144]
 
-    assert dmp_eval_tail(f_2, [-12, 3], 2, ZZ) == [-1377, 0, -702, -1224, 0, -624]
-    assert dmp_eval_tail(f_3, [-12, 3], 2, ZZ) == [144, 82, -5181, -28872, -14868, -540]
+    assert dmp_eval_tail(
+        f_2, [-12, 3], 2, ZZ) == [-1377, 0, -702, -1224, 0, -624]
+    assert dmp_eval_tail(
+        f_3, [-12, 3], 2, ZZ) == [144, 82, -5181, -28872, -14868, -540]
 
-    assert dmp_eval_tail(f_4, [25, -1], 2, ZZ) == [152587890625, 9765625, -59605407714843750,
+    assert dmp_eval_tail(
+        f_4, [25, -1], 2, ZZ) == [152587890625, 9765625, -59605407714843750,
         -3839159765625, -1562475, 9536712644531250, 610349546750, -4, 24414375000, 1562520]
     assert dmp_eval_tail(f_5, [25, -1], 2, ZZ) == [-1, -78, -2028, -17576]
 
@@ -265,7 +281,8 @@ def test_dmp_trunc():
 
 def test_dmp_ground_trunc():
     assert dmp_ground_trunc(f_0, ZZ(3), 2, ZZ) == \
-        dmp_normal([[[1, -1, 0], [-1]], [[]], [[1, -1, 0], [1, -1, 1], [1]]], 2, ZZ)
+        dmp_normal(
+            [[[1, -1, 0], [-1]], [[]], [[1, -1, 0], [1, -1, 1], [1]]], 2, ZZ)
 
 
 def test_dup_monic():
@@ -281,11 +298,13 @@ def test_dup_monic():
 def test_dmp_ground_monic():
     assert dmp_ground_monic([[3], [6], [9]], 1, ZZ) == [[1], [2], [3]]
 
-    raises(ExactQuotientFailed, lambda: dmp_ground_monic([[3], [4], [5]], 1, ZZ))
+    raises(
+        ExactQuotientFailed, lambda: dmp_ground_monic([[3], [4], [5]], 1, ZZ))
 
     assert dmp_ground_monic([[]], 1, QQ) == [[]]
     assert dmp_ground_monic([[QQ(1)]], 1, QQ) == [[QQ(1)]]
-    assert dmp_ground_monic([[QQ(7)], [QQ(1)], [QQ(21)]], 1, QQ) == [[QQ(1)], [QQ(1, 7)], [QQ(3)]]
+    assert dmp_ground_monic(
+        [[QQ(7)], [QQ(1)], [QQ(21)]], 1, QQ) == [[QQ(1)], [QQ(1, 7)], [QQ(3)]]
 
 
 def test_dup_content():
@@ -315,25 +334,32 @@ def test_dmp_ground_content():
     assert dmp_ground_content([[QQ(2, 3)], [QQ(4, 5)]], 1, QQ) == QQ(2, 15)
 
     assert dmp_ground_content(f_0, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == ZZ(2)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == ZZ(2)
 
     assert dmp_ground_content(f_1, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_1, ZZ(3), 2, ZZ), 2, ZZ) == ZZ(3)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_1, ZZ(3), 2, ZZ), 2, ZZ) == ZZ(3)
 
     assert dmp_ground_content(f_2, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_2, ZZ(4), 2, ZZ), 2, ZZ) == ZZ(4)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_2, ZZ(4), 2, ZZ), 2, ZZ) == ZZ(4)
 
     assert dmp_ground_content(f_3, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_3, ZZ(5), 2, ZZ), 2, ZZ) == ZZ(5)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_3, ZZ(5), 2, ZZ), 2, ZZ) == ZZ(5)
 
     assert dmp_ground_content(f_4, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_4, ZZ(6), 2, ZZ), 2, ZZ) == ZZ(6)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_4, ZZ(6), 2, ZZ), 2, ZZ) == ZZ(6)
 
     assert dmp_ground_content(f_5, 2, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_5, ZZ(7), 2, ZZ), 2, ZZ) == ZZ(7)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_5, ZZ(7), 2, ZZ), 2, ZZ) == ZZ(7)
 
     assert dmp_ground_content(f_6, 3, ZZ) == ZZ(1)
-    assert dmp_ground_content(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == ZZ(8)
+    assert dmp_ground_content(
+        dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == ZZ(8)
 
 
 def test_dup_primitive():
@@ -341,49 +367,64 @@ def test_dup_primitive():
     assert dup_primitive([ZZ(1)], ZZ) == (ZZ(1), [ZZ(1)])
     assert dup_primitive([ZZ(1), ZZ(1)], ZZ) == (ZZ(1), [ZZ(1), ZZ(1)])
     assert dup_primitive([ZZ(2), ZZ(2)], ZZ) == (ZZ(2), [ZZ(1), ZZ(1)])
-    assert dup_primitive([ZZ(1), ZZ(2), ZZ(1)], ZZ) == (ZZ(1), [ZZ(1), ZZ(2), ZZ(1)])
-    assert dup_primitive([ZZ(2), ZZ(4), ZZ(2)], ZZ) == (ZZ(2), [ZZ(1), ZZ(2), ZZ(1)])
+    assert dup_primitive(
+        [ZZ(1), ZZ(2), ZZ(1)], ZZ) == (ZZ(1), [ZZ(1), ZZ(2), ZZ(1)])
+    assert dup_primitive(
+        [ZZ(2), ZZ(4), ZZ(2)], ZZ) == (ZZ(2), [ZZ(1), ZZ(2), ZZ(1)])
 
     assert dup_primitive([], QQ) == (QQ(0), [])
     assert dup_primitive([QQ(1)], QQ) == (QQ(1), [QQ(1)])
     assert dup_primitive([QQ(1), QQ(1)], QQ) == (QQ(1), [QQ(1), QQ(1)])
     assert dup_primitive([QQ(2), QQ(2)], QQ) == (QQ(2), [QQ(1), QQ(1)])
-    assert dup_primitive([QQ(1), QQ(2), QQ(1)], QQ) == (QQ(1), [QQ(1), QQ(2), QQ(1)])
-    assert dup_primitive([QQ(2), QQ(4), QQ(2)], QQ) == (QQ(2), [QQ(1), QQ(2), QQ(1)])
+    assert dup_primitive(
+        [QQ(1), QQ(2), QQ(1)], QQ) == (QQ(1), [QQ(1), QQ(2), QQ(1)])
+    assert dup_primitive(
+        [QQ(2), QQ(4), QQ(2)], QQ) == (QQ(2), [QQ(1), QQ(2), QQ(1)])
 
-    assert dup_primitive([QQ(2, 3), QQ(4, 9)], QQ) == (QQ(2, 9), [QQ(3), QQ(2)])
-    assert dup_primitive([QQ(2, 3), QQ(4, 5)], QQ) == (QQ(2, 15), [QQ(5), QQ(6)])
+    assert dup_primitive(
+        [QQ(2, 3), QQ(4, 9)], QQ) == (QQ(2, 9), [QQ(3), QQ(2)])
+    assert dup_primitive(
+        [QQ(2, 3), QQ(4, 5)], QQ) == (QQ(2, 15), [QQ(5), QQ(6)])
 
 
 def test_dmp_ground_primitive():
     assert dmp_ground_primitive([[]], 1, ZZ) == (ZZ(0), [[]])
 
     assert dmp_ground_primitive(f_0, 2, ZZ) == (ZZ(1), f_0)
-    assert dmp_ground_primitive(dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == (ZZ(2), f_0)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == (ZZ(2), f_0)
 
     assert dmp_ground_primitive(f_1, 2, ZZ) == (ZZ(1), f_1)
-    assert dmp_ground_primitive(dmp_mul_ground(f_1, ZZ(3), 2, ZZ), 2, ZZ) == (ZZ(3), f_1)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_1, ZZ(3), 2, ZZ), 2, ZZ) == (ZZ(3), f_1)
 
     assert dmp_ground_primitive(f_2, 2, ZZ) == (ZZ(1), f_2)
-    assert dmp_ground_primitive(dmp_mul_ground(f_2, ZZ(4), 2, ZZ), 2, ZZ) == (ZZ(4), f_2)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_2, ZZ(4), 2, ZZ), 2, ZZ) == (ZZ(4), f_2)
 
     assert dmp_ground_primitive(f_3, 2, ZZ) == (ZZ(1), f_3)
-    assert dmp_ground_primitive(dmp_mul_ground(f_3, ZZ(5), 2, ZZ), 2, ZZ) == (ZZ(5), f_3)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_3, ZZ(5), 2, ZZ), 2, ZZ) == (ZZ(5), f_3)
 
     assert dmp_ground_primitive(f_4, 2, ZZ) == (ZZ(1), f_4)
-    assert dmp_ground_primitive(dmp_mul_ground(f_4, ZZ(6), 2, ZZ), 2, ZZ) == (ZZ(6), f_4)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_4, ZZ(6), 2, ZZ), 2, ZZ) == (ZZ(6), f_4)
 
     assert dmp_ground_primitive(f_5, 2, ZZ) == (ZZ(1), f_5)
-    assert dmp_ground_primitive(dmp_mul_ground(f_5, ZZ(7), 2, ZZ), 2, ZZ) == (ZZ(7), f_5)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_5, ZZ(7), 2, ZZ), 2, ZZ) == (ZZ(7), f_5)
 
     assert dmp_ground_primitive(f_6, 3, ZZ) == (ZZ(1), f_6)
-    assert dmp_ground_primitive(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == (ZZ(8), f_6)
+    assert dmp_ground_primitive(
+        dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == (ZZ(8), f_6)
 
     assert dmp_ground_primitive([[ZZ(2)]], 1, ZZ) == (ZZ(2), [[ZZ(1)]])
     assert dmp_ground_primitive([[QQ(2)]], 1, QQ) == (QQ(2), [[QQ(1)]])
 
-    assert dmp_ground_primitive([[QQ(2, 3)], [QQ(4, 9)]], 1, QQ) == (QQ(2, 9), [[QQ(3)], [QQ(2)]])
-    assert dmp_ground_primitive([[QQ(2, 3)], [QQ(4, 5)]], 1, QQ) == (QQ(2, 15), [[QQ(5)], [QQ(6)]])
+    assert dmp_ground_primitive(
+        [[QQ(2, 3)], [QQ(4, 9)]], 1, QQ) == (QQ(2, 9), [[QQ(3)], [QQ(2)]])
+    assert dmp_ground_primitive(
+        [[QQ(2, 3)], [QQ(4, 5)]], 1, QQ) == (QQ(2, 15), [[QQ(5)], [QQ(6)]])
 
 
 def test_dup_extract():
@@ -397,7 +438,8 @@ def test_dup_extract():
 
 
 def test_dmp_ground_extract():
-    f = dmp_normal([[2930944], [], [2198208], [], [549552], [], [45796]], 1, ZZ)
+    f = dmp_normal(
+        [[2930944], [], [2198208], [], [549552], [], [45796]], 1, ZZ)
     g = dmp_normal([[17585664], [], [8792832], [], [1099104], []], 1, ZZ)
 
     F = dmp_normal([[64], [], [48], [], [12], [], [1]], 1, ZZ)
@@ -413,7 +455,8 @@ def test_dup_real_imag():
     assert dup_real_imag([1, 1], ZZ) == ([[1], [1]], [[1, 0]])
     assert dup_real_imag([1, 2], ZZ) == ([[1], [2]], [[1, 0]])
 
-    assert dup_real_imag([1, 2, 3], ZZ) == ([[1], [2], [-1, 0, 3]], [[2, 0], [2, 0]])
+    assert dup_real_imag(
+        [1, 2, 3], ZZ) == ([[1], [2], [-1, 0, 3]], [[2, 0], [2, 0]])
 
     raises(DomainError, lambda: dup_real_imag([EX(1), EX(2)], EX))
 
@@ -487,7 +530,8 @@ def test_dmp_compose():
     assert dmp_compose([[1], [2], [1]], [[1], [-1]], 1, ZZ) == [[1], [ ], [ ]]
     assert dmp_compose([[1], [2], [1]], [[1], [ 1]], 1, ZZ) == [[1], [4], [4]]
 
-    assert dmp_compose([[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
+    assert dmp_compose(
+        [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
 
 
 def test_dup_decompose():
@@ -497,7 +541,8 @@ def test_dup_decompose():
     assert dup_decompose([1, 0, 0, 0], ZZ) == [[1, 0, 0, 0]]
 
     assert dup_decompose([1, 0, 0, 0, 0], ZZ) == [[1, 0, 0], [1, 0, 0]]
-    assert dup_decompose([1, 0, 0, 0, 0, 0, 0], ZZ) == [[1, 0, 0, 0], [1, 0, 0]]
+    assert dup_decompose(
+        [1, 0, 0, 0, 0, 0, 0], ZZ) == [[1, 0, 0, 0], [1, 0, 0]]
 
     assert dup_decompose([7, 0, 0, 0, 1], ZZ) == [[7, 0, 1], [1, 0, 0]]
     assert dup_decompose([4, 0, 3, 0, 2], ZZ) == [[4, 3, 2], [1, 0, 0]]
@@ -572,13 +617,18 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms([QQ(7, 3)], QQ) == (ZZ(3), [QQ(7)])
     assert dup_clear_denoms([QQ(7, 3)], QQ, ZZ) == (ZZ(3), [QQ(7)])
 
-    assert dup_clear_denoms([QQ(3), QQ(1), QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3), QQ(1), QQ(0)])
-    assert dup_clear_denoms([QQ(1), QQ(1, 2), QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2), QQ(1), QQ(0)])
+    assert dup_clear_denoms(
+        [QQ(3), QQ(1), QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3), QQ(1), QQ(0)])
+    assert dup_clear_denoms(
+        [QQ(1), QQ(1, 2), QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2), QQ(1), QQ(0)])
 
-    assert dup_clear_denoms([QQ(3), QQ(1), QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3), ZZ(1), ZZ(0)])
-    assert dup_clear_denoms([QQ(1), QQ(1, 2), QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2), ZZ(1), ZZ(0)])
+    assert dup_clear_denoms([QQ(3), QQ(
+        1), QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3), ZZ(1), ZZ(0)])
+    assert dup_clear_denoms([QQ(1), QQ(
+        1, 2), QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2), ZZ(1), ZZ(0)])
 
-    assert dup_clear_denoms([EX(S(3)/2), EX(S(9)/4)], EX) == (EX(4), [EX(6), EX(9)])
+    assert dup_clear_denoms(
+        [EX(S(3)/2), EX(S(9)/4)], EX) == (EX(4), [EX(6), EX(9)])
 
 
 def test_dmp_clear_denoms():
@@ -590,13 +640,20 @@ def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[QQ(7, 3)]], 1, QQ) == (ZZ(3), [[QQ(7)]])
     assert dmp_clear_denoms([[QQ(7, 3)]], 1, QQ, ZZ) == (ZZ(3), [[QQ(7)]])
 
-    assert dmp_clear_denoms([[QQ(3)], [QQ(1)], []], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)], [QQ(1)], []])
-    assert dmp_clear_denoms([[QQ(1)], [QQ(1, 2)], []], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)], [QQ(1)], []])
+    assert dmp_clear_denoms(
+        [[QQ(3)], [QQ(1)], []], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)], [QQ(1)], []])
+    assert dmp_clear_denoms([[QQ(
+        1)], [QQ(1, 2)], []], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)], [QQ(1)], []])
 
-    assert dmp_clear_denoms([QQ(3), QQ(1), QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3), ZZ(1), ZZ(0)])
-    assert dmp_clear_denoms([QQ(1), QQ(1, 2), QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2), ZZ(1), ZZ(0)])
+    assert dmp_clear_denoms([QQ(3), QQ(
+        1), QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3), ZZ(1), ZZ(0)])
+    assert dmp_clear_denoms([QQ(1), QQ(1, 2), QQ(
+        0)], 0, QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2), ZZ(1), ZZ(0)])
 
-    assert dmp_clear_denoms([[QQ(3)], [QQ(1)], []], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)], [QQ(1)], []])
-    assert dmp_clear_denoms([[QQ(1)], [QQ(1, 2)], []], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)], [QQ(1)], []])
+    assert dmp_clear_denoms([[QQ(3)], [QQ(
+        1)], []], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)], [QQ(1)], []])
+    assert dmp_clear_denoms([[QQ(1)], [QQ(1, 2)], []], 1, QQ, ZZ,
+                            convert=True) == (ZZ(2), [[QQ(2)], [QQ(1)], []])
 
-    assert dmp_clear_denoms([[EX(S(3)/2)], [EX(S(9)/4)]], 1, EX) == (EX(4), [[EX(6)], [EX(9)]])
+    assert dmp_clear_denoms(
+        [[EX(S(3)/2)], [EX(S(9)/4)]], 1, EX) == (EX(4), [[EX(6)], [EX(9)]])

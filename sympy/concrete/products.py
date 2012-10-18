@@ -30,7 +30,8 @@ class Product(Expr):
         # Only limits with lower and upper bounds are supported; the indefinite
         # Product is not supported
         if any(len(l) != 3 or None in l for l in limits):
-            raise ValueError('Product requires values for lower and upper bounds.')
+            raise ValueError(
+                'Product requires values for lower and upper bounds.')
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [sign*function]

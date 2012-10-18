@@ -208,7 +208,8 @@ def test_eliminate_implications():
     A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert eliminate_implications(Implies(A, B, evaluate=False)) == (~A) | B
-    assert eliminate_implications(A >> (C >>Not(B))) == Or(Or(Not(B), Not(C)), Not(A))
+    assert eliminate_implications(
+        A >> (C >>Not(B))) == Or(Or(Not(B), Not(C)), Not(A))
 
 
 def test_conjuncts():

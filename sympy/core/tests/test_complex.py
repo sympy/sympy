@@ -59,7 +59,8 @@ def test_evalc():
     assert ((x+I*y)**2).expand(complex=True) == x**2+2*I*x*y - y**2
     assert expand_complex(z**(2*I)) == (re((re(z) + I*im(z))**(2*I)) +
         I*im((re(z) + I*im(z))**(2*I)))
-    assert expand_complex(z**(2*I), deep=False) == I*im(z**(2*I)) + re(z**(2*I))
+    assert expand_complex(
+        z**(2*I), deep=False) == I*im(z**(2*I)) + re(z**(2*I))
 
     assert exp(I*x) != cos(x)+I*sin(x)
     assert exp(I*x).expand(complex=True) == cos(x)+I*sin(x)
@@ -74,8 +75,9 @@ def test_evalc():
         I * sinh(y) * sin(x)
 
     assert tan(I*x).expand(complex=True) == tanh(x) * I
-    assert tan(x+I*y).expand(complex=True) == \
-        ((sin(x)*cos(x) + I*cosh(y)*sinh(y)) / (cos(x)**2 + sinh(y)**2)).expand()
+    assert tan(x+I*y).expand(complex=True) == (
+        (sin(x)*cos(x) + I*cosh(y)*sinh(y)) /
+        (cos(x)**2 + sinh(y)**2)).expand()
 
     assert sinh(I*x).expand(complex=True) == I * sin(x)
     assert sinh(x+I*y).expand(complex=True) == sinh(x)*cos(y) + \
@@ -86,8 +88,9 @@ def test_evalc():
         I * sin(y) * sinh(x)
 
     assert tanh(I*x).expand(complex=True) == tan(x) * I
-    assert tanh(x+I*y).expand(complex=True) == \
-        ((sinh(x)*cosh(x) + I*cos(y)*sin(y)) / (sinh(x)**2 + cos(y)**2)).expand()
+    assert tanh(x+I*y).expand(complex=True) == (
+        (sinh(x)*cosh(x) + I*cos(y)*sin(y)) /
+        (sinh(x)**2 + cos(y)**2)).expand()
 
 
 def test_pythoncomplex():
@@ -99,8 +102,10 @@ def test_pythoncomplex():
 
 def test_rootcomplex():
     R = Rational
-    assert ((+1+I)**R(1, 2)).expand(complex=True) == 2**R(1, 4)*cos(  pi/8) + 2**R(1, 4)*sin(  pi/8)*I
-    assert ((-1-I)**R(1, 2)).expand(complex=True) == 2**R(1, 4)*cos(3*pi/8) - 2**R(1, 4)*sin(3*pi/8)*I
+    assert ((+1+I)**R(1, 2)).expand(
+        complex=True) == 2**R(1, 4)*cos(  pi/8) + 2**R(1, 4)*sin(  pi/8)*I
+    assert ((-1-I)**R(1, 2)).expand(
+        complex=True) == 2**R(1, 4)*cos(3*pi/8) - 2**R(1, 4)*sin(3*pi/8)*I
     assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)
 
 
@@ -150,7 +155,8 @@ def test_re_im1652():
 
 def test_issue_1985():
     x = Symbol('x')
-    assert ((x + x*I)/(1 + I)).as_real_imag() == (re((x + I*x)/(1 + I)), im((x + I*x)/(1 + I)))
+    assert ((x + x*I)/(1 + I)).as_real_imag() == (re((x + I*x)/(1 + I)
+            ), im((x + I*x)/(1 + I)))
 
 
 def test_issue_2137():

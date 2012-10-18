@@ -102,7 +102,8 @@ class Ellipse(GeometryEntity):
 
     """
 
-    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None,
+    def __new__(
+        cls, center=None, hradius=None, vradius=None, eccentricity=None,
                 **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
@@ -648,7 +649,8 @@ class Ellipse(GeometryEntity):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][0] == p.x or tangent_points[0][1] == p.y
+                assert tangent_points[0][
+                    0] == p.x or tangent_points[0][1] == p.y
                 return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
 
             # others
@@ -856,7 +858,8 @@ class Ellipse(GeometryEntity):
             p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
             if p1 in self:
                 return p1
-        raise GeometryError('Having problems generating a point in the ellipse.')
+        raise GeometryError(
+            'Having problems generating a point in the ellipse.')
 
     def equation(self, x='x', y='y'):
         """The equation of the ellipse.
@@ -1123,7 +1126,8 @@ class Circle(Ellipse):
         if len(args) == 3:
             args = [Point(a) for a in args]
             if Point.is_collinear(*args):
-                raise GeometryError("Cannot construct a circle from three collinear points")
+                raise GeometryError(
+                    "Cannot construct a circle from three collinear points")
             from polygon import Triangle
             t = Triangle(*args)
             c = t.circumcenter

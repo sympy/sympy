@@ -376,7 +376,8 @@ class LatexPrinter(Printer):
         latex_expr = self._print(expr)
         latex_old = (self._print(e) for e in old)
         latex_new = (self._print(e) for e in new)
-        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        latex_subs = r'\\ '.join(
+            e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
         return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
 
     def _print_Integral(self, expr):
@@ -387,7 +388,8 @@ class LatexPrinter(Printer):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
             tex = r"\i" + "i"*(len(expr.limits)-1) + "nt"
-            symbols = [r"\, d%s" % self._print(symbol[0]) for symbol in expr.limits]
+            symbols = [r"\, d%s" % self._print(symbol[0])
+                                               for symbol in expr.limits]
 
         else:
             for lim in reversed(expr.limits):
@@ -464,7 +466,8 @@ class LatexPrinter(Printer):
                     name = r"\%s^{%s}" % (func, exp)
                 else:
                     # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
+                    name = r"\operatorname{%s}^{%s}" % (
+                        func.replace("_", r"\_"), exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func

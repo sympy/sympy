@@ -213,10 +213,12 @@ def test_geometry():
     p2 = Point(2, 3)
     p3 = Point(0, 0)
     p4 = Point(0, 1)
-    for c in (GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1, 2),
+    for c in (
+        GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1, 2),
               Ellipse, Ellipse(p1, 3, 4), Line, Line(p1, p2), LinearEntity,
               LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
-              Polygon, Polygon(p1, p2, p3, p4), RegularPolygon, RegularPolygon(p1, 4, 5),
+              Polygon, Polygon(
+                  p1, p2, p3, p4), RegularPolygon, RegularPolygon(p1, 4, 5),
               Triangle, Triangle(p1, p2, p3)):
         check(c, check_attr=False)
 
@@ -282,7 +284,8 @@ def test_plotting():
     from sympy.plotting.plot_object import PlotObject
     from sympy.plotting.plot_surface import PlotSurface
     from sympy.plotting.plot_window import PlotWindow
-    for c in (ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
+    for c in (
+        ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
               ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
               PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
               PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,

@@ -38,7 +38,8 @@ d1, d2 = symbols('d1 d2', positive=True)
 f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1+d2))/x \
       /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
 nupos, sigmapos = symbols('nu sigma', positive=True)
-rice = x/sigmapos**2*exp(-(x**2+ nupos**2)/2/sigmapos**2)*besseli(0, x*nupos/sigmapos**2)
+rice = x/sigmapos**2*exp(-(x**2+ nupos**2)/2/sigmapos**2)*besseli(0, x* \
+                         nupos/sigmapos**2)
 mu = Symbol('mu', real=True)
 laplace = exp(-abs(x-mu)/bpos)/2/bpos
 

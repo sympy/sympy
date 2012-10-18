@@ -133,7 +133,8 @@ class Wigner3j(Expr):
         return D
 
     def _latex(self, printer, *args):
-        label = map(printer._print, (self.j1, self.j2, self.j3, self.m1, self.m2, self.m3))
+        label = map(printer._print, (self.j1, self.j2, self.j3,
+                    self.m1, self.m2, self.m3))
         return r'\left(\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right)' % \
                 tuple(label)
 
@@ -191,7 +192,8 @@ class CG(Wigner3j):
         return clebsch_gordan(self.j1, self.j2, self.j3, self.m1, self.m2, self.m3)
 
     def _pretty(self, printer, *args):
-        bot = printer._print_seq((self.j1, self.m1, self.j2, self.m2), delimiter=',')
+        bot = printer._print_seq(
+            (self.j1, self.m1, self.j2, self.m2), delimiter=',')
         top = printer._print_seq((self.j3, self.m3), delimiter=',')
 
         pad = max(top.width(), bot.width())
@@ -208,7 +210,8 @@ class CG(Wigner3j):
         return s
 
     def _latex(self, printer, *args):
-        label = map(printer._print, (self.j3, self.m3, self.j1, self.m1, self.j2, self.m2))
+        label = map(printer._print, (self.j3, self.m3, self.j1,
+                    self.m1, self.j2, self.m2))
         return r'C^{%s,%s}_{%s,%s,%s,%s}' % tuple(label)
 
 
@@ -290,7 +293,8 @@ class Wigner6j(Expr):
         return D
 
     def _latex(self, printer, *args):
-        label = map(printer._print, (self.j1, self.j2, self.j12, self.j3, self.j, self.j23))
+        label = map(printer._print, (self.j1, self.j2, self.j12,
+                    self.j3, self.j, self.j23))
         return r'\left\{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right\}' % \
                 tuple(label)
 
@@ -355,8 +359,11 @@ class Wigner9j(Expr):
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
-        m = ((printer._print(self.j1), printer._print(self.j3), printer._print(self.j13)),
-            (printer._print(self.j2), printer._print(self.j4), printer._print(self.j24)),
+        m = (
+            (printer._print(
+                self.j1), printer._print(self.j3), printer._print(self.j13)),
+            (printer._print(
+                self.j2), printer._print(self.j4), printer._print(self.j24)),
             (printer._print(self.j12), printer._print(self.j34), printer._print(self.j)))
         hsep = 2
         vsep = 1
@@ -510,7 +517,8 @@ def _check_varsh_871_2(term_list):
 
 def _check_varsh_872_9(term_list):
     # Sum( CG(a,alpha,b,beta,c,gamma)*CG(a,alpha',b,beta',c,gamma), (gamma, -c, c), (c, abs(a-b), a+b))
-    a, alpha, alphap, b, beta, betap, c, gamma, lt = map(Wild, ('a', 'alpha', 'alphap', 'b', 'beta', 'betap', 'c', 'gamma', 'lt'))
+    a, alpha, alphap, b, beta, betap, c, gamma, lt = map(Wild, (
+        'a', 'alpha', 'alphap', 'b', 'beta', 'betap', 'c', 'gamma', 'lt'))
     # Case alpha==alphap, beta==betap
 
     # For numerical alpha,beta
@@ -663,7 +671,8 @@ def _check_varsh_sum_871_2(e):
     a = Wild('a')
     alpha = symbols('alpha')
     c = Wild('c')
-    match = e.match(Sum((-1)**(a-alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
+    match = e.match(
+        Sum((-1)**(a-alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
     if match is not None and len(match) == 2:
         return (sqrt(2*a+1)*KroneckerDelta(c, 0)).subs(match)
     return e
@@ -678,10 +687,12 @@ def _check_varsh_sum_872_4(e):
     cp = Wild('cp')
     gamma = Wild('gamma')
     gammap = Wild('gammap')
-    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
+    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(
+        a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
     if match1 is not None and len(match1) == 8:
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
-    match2 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
+    match2 = e.match(Sum(
+        CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
     if match2 is not None and len(match2) == 6:
         return 1
     return e

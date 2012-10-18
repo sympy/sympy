@@ -129,7 +129,8 @@ def test_geometry():
     Plane = A^B^n^D^X
 
     #Circle through a, b, and c
-    Circle_test = -x2*(e0^e1^e2^n)+x2*(e0^e1^e2^nbar)+HALF*(-1+x0**2+x1**2+x2**2)*(e0^e1^n^nbar)
+    Circle_test = -x2*(e0^e1^e2^n)+x2*(
+        e0^e1^e2^nbar)+HALF*(-1+x0**2+x1**2+x2**2)*(e0^e1^n^nbar)
     diff = Circle-Circle_test
     diff.compact()
     assert diff == ZERO
@@ -285,7 +286,8 @@ def test_constructor():
     assert str(MV('a', 'pseudo')) == 'a*e_1e_2e_3'
     assert str(MV('a', 'spinor')) == 'a+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
-    assert str(MV([2, 'a'], 'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(
+        MV([2, 'a'], 'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a', 'grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
 
 

@@ -97,13 +97,17 @@ class ImplicitSeries(BaseSeries):
         #Add a small jitter so that there are no false positives for equality.
         # Ex: y==x becomes True for x interval(1, 2) and y interval(1, 2)
         #which will draw a rectangle.
-        jitterx = (np.random.rand(len(xsample)) * 2 - 1) * (self.end_x - self.start_x) / 2**20
-        jittery = (np.random.rand(len(ysample)) * 2 - 1) * (self.end_y - self.start_y) / 2**20
+        jitterx = (np.random.rand(
+            len(xsample)) * 2 - 1) * (self.end_x - self.start_x) / 2**20
+        jittery = (np.random.rand(
+            len(ysample)) * 2 - 1) * (self.end_y - self.start_y) / 2**20
         xsample += jitterx
         ysample += jittery
 
-        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1], xsample[1:])]
-        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1], ysample[1:])]
+        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1],
+                           xsample[1:])]
+        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1],
+                           ysample[1:])]
         interval_list = [[x, y] for x in xinter for y in yinter]
         plot_list = []
 

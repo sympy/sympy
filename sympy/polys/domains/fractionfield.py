@@ -144,8 +144,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
                 return K1((a.numer().convert(K1.dom).rep,
                            a.denom().convert(K1.dom).rep))
         elif set(K0.gens).issubset(K1.gens):
-            nmonoms, ncoeffs = _dict_reorder(a.numer().to_dict(), K0.gens, K1.gens)
-            dmonoms, dcoeffs = _dict_reorder(a.denom().to_dict(), K0.gens, K1.gens)
+            nmonoms, ncoeffs = _dict_reorder(
+                a.numer().to_dict(), K0.gens, K1.gens)
+            dmonoms, dcoeffs = _dict_reorder(
+                a.denom().to_dict(), K0.gens, K1.gens)
 
             if K1.dom != K0.dom:
                 ncoeffs = [ K1.dom.convert(c, K0.dom) for c in ncoeffs ]

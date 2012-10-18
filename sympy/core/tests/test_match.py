@@ -449,8 +449,10 @@ def test_issue_1319():
 
     eq = diff(g(x)*f(x).diff(x), x)
 
-    assert eq.match(g(x).diff(x)*f(x).diff(x) + g(x)*f(x).diff(x, x) + c) == {c: 0}
-    assert eq.match(a*g(x).diff(x)*f(x).diff(x) + b*g(x)*f(x).diff(x, x) + c) == {a: 1, b: 1, c: 0}
+    assert eq.match(
+        g(x).diff(x)*f(x).diff(x) + g(x)*f(x).diff(x, x) + c) == {c: 0}
+    assert eq.match(a*g(x).diff(
+        x)*f(x).diff(x) + b*g(x)*f(x).diff(x, x) + c) == {a: 1, b: 1, c: 0}
 
 
 def test_issue_1601():

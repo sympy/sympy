@@ -29,7 +29,8 @@ def test_basic1():
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
     assert limit(y/x/log(x), x, 0) == -y*oo
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
-    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - log(y), y, oo))
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - \
+           log(y), y, oo))
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN

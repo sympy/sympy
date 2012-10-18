@@ -63,7 +63,8 @@ def test_get_indices_add():
     assert get_indices(y[i] + 2*A[i, j]*x[j]) == (set([i, ]), {})
     assert get_indices(y[i] + 2*(x[i] + A[i, j]*x[j])) == (set([i, ]), {})
     assert get_indices(y[i] + x[i]*(A[j, j] + 1)) == (set([i, ]), {})
-    assert get_indices(y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i, ]), {})
+    assert get_indices(
+        y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i, ]), {})
 
 
 def test_get_indices_Pow():
@@ -87,7 +88,8 @@ def test_get_contraction_structure_basic():
     assert get_contraction_structure(x[i]*y[j]) == {None: set([x[i]*y[j]])}
     assert get_contraction_structure(x[i] + y[j]) == {None: set([x[i], y[j]])}
     assert get_contraction_structure(x[i]*y[i]) == {(i,): set([x[i]*y[i]])}
-    assert get_contraction_structure(1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
+    assert get_contraction_structure(
+        1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
     assert get_contraction_structure(x[i]**y[i]) == {None: set([x[i]**y[i]])}
 
 
@@ -200,6 +202,9 @@ def test_ufunc_support():
     assert get_indices(g(f(x[i]))) == (set([i]), {})
 
     assert get_contraction_structure(f(x[i])) == {None: set([f(x[i])])}
-    assert get_contraction_structure(f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
-    assert get_contraction_structure(f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
-    assert get_contraction_structure(f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}
+    assert get_contraction_structure(
+        f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
+    assert get_contraction_structure(
+        f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
+    assert get_contraction_structure(
+        f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}

@@ -137,9 +137,11 @@ class Logic(object):
             # operation symbol
             if term in '&|':
                 if schedop is not None:
-                    raise ValueError('double op forbidden: "%s %s"' % (term, schedop))
+                    raise ValueError(
+                        'double op forbidden: "%s %s"' % (term, schedop))
                 if lexpr is None:
-                    raise ValueError('%s cannot be in the beginning of expression' % term)
+                    raise ValueError(
+                        '%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
             if term[0] == '!':
@@ -153,7 +155,8 @@ class Logic(object):
 
             # this should be atom
             if lexpr is not None:
-                raise ValueError('missing op between "%s" and "%s"' % (lexpr, term))
+                raise ValueError(
+                    'missing op between "%s" and "%s"' % (lexpr, term))
 
             lexpr = term
 

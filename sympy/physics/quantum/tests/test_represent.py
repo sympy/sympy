@@ -177,10 +177,12 @@ def test_innerprod_represent():
 
 def test_operator_represent():
     basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
-    assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+    assert rep_expectation(
+        x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
 
 
 def test_enumerate_states():
     test = XKet("foo")
     assert enumerate_states(test, 1, 1) == [XKet("foo_1")]
-    assert enumerate_states(test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]
+    assert enumerate_states(
+        test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]

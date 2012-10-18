@@ -552,7 +552,8 @@ class Pow(Expr):
                     expr = expand_multinomial(self.base**exp)
                     return expr.as_real_imag()
 
-                expr = poly((a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
+                expr = poly(
+                    (a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
             else:
                 mag = re**2 + im**2
                 re, im = re/mag, -im/mag
@@ -749,7 +750,8 @@ class Pow(Expr):
                 for m in xrange(1, ceiling(n/l)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
-                        new_term = new_term._eval_expand_multinomial(deep=False)
+                        new_term = new_term._eval_expand_multinomial(
+                            deep=False)
                     else:
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
@@ -820,7 +822,8 @@ class Pow(Expr):
                 return b0**e  # XXX what order
 
             if not ei.is_number:  # if not, how will we proceed?
-                raise ValueError('expecting numerical exponent but got %s' % ei)
+                raise ValueError(
+                    'expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
             bs = b._eval_nseries(x, n=nuse, logx=logx)

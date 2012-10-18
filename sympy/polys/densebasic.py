@@ -374,7 +374,8 @@ def dmp_validate(f, K=None):
     if not levels:
         return _rec_strip(f, u), u
     else:
-        raise ValueError("invalid data structure for a multivariate polynomial")
+        raise ValueError(
+            "invalid data structure for a multivariate polynomial")
 
 
 def dup_reverse(f):

@@ -737,10 +737,14 @@ class WignerD(Expr):
     def _latex(self, printer, *args):
         if self.alpha == 0 and self.gamma == 0:
             return r'd^{%s}_{%s,%s}\left(%s\right)' % \
-                ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
+                (
+                    printer._print(self.j), printer._print(
+                        self.m), printer._print(self.mp),
                 printer._print(self.beta) )
         return r'D^{%s}_{%s,%s}\left(%s,%s,%s\right)' % \
-            ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
+            (
+                printer._print(
+                    self.j), printer._print(self.m), printer._print(self.mp),
             printer._print(self.alpha), printer._print(self.beta), printer._print(self.gamma) )
 
     def _pretty(self, printer, *args):
@@ -787,7 +791,8 @@ class WignerD(Expr):
         beta = sympify(self.beta)
         gamma = sympify(self.gamma)
         if not j.is_number:
-            raise ValueError("j parameter must be numerical to evaluate, got %s", j)
+            raise ValueError(
+                "j parameter must be numerical to evaluate, got %s", j)
         r = 0
         if beta == pi/2:
             # Varshalovich Equation (5), Section 4.16, page 113, setting
@@ -843,12 +848,14 @@ class SpinState(State):
         m = sympify(m)
         if j.is_number:
             if 2*j != int(2*j):
-                raise ValueError('j must be integer or half-integer, got: %s' % j)
+                raise ValueError(
+                    'j must be integer or half-integer, got: %s' % j)
             if j < 0:
                 raise ValueError('j must be >= 0, got: %s' % j)
         if m.is_number:
             if 2*m != int(2*m):
-                raise ValueError('m must be integer or half-integer, got: %s' % m)
+                raise ValueError(
+                    'm must be integer or half-integer, got: %s' % m)
         if j.is_number and m.is_number:
             if abs(m) > j:
                 raise ValueError('Allowed values for m are -j <= m <= j, got j, m: %s, %s' % (j, m))
@@ -880,9 +887,11 @@ class SpinState(State):
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
             if m.is_number:
-                result[p, 0] = Rotation.D(self.j, mval, self.m, alpha, beta, gamma).doit()
+                result[p, 0] = Rotation.D(
+                    self.j, mval, self.m, alpha, beta, gamma).doit()
             else:
-                result[p, 0] = Rotation.D(self.j, mval, self.m, alpha, beta, gamma)
+                result[p, 0] = Rotation.D(self.j, mval,
+                                          self.m, alpha, beta, gamma)
         return result
 
     def _eval_rewrite_as_Jx(self, *args, **options):
@@ -913,7 +922,8 @@ class SpinState(State):
             else:
                 start = 0
             vect = represent(self, basis=basis, **options)
-            result = Add(*[vect[start+i] * evect(j, j-i, *args) for i in range(2*j+1)])
+            result = Add(
+                *[vect[start+i] * evect(j, j-i, *args) for i in range(2*j+1)])
             if isinstance(self, CoupledSpinState) and options.get('coupled') is False:
                 return uncouple(result)
             return result
@@ -931,9 +941,11 @@ class SpinState(State):
             else:
                 test_args = (0, mi)
             if isinstance(self, Ket):
-                angles = represent(self.__class__(*test_args), basis=basis)[0].args[3:6]
+                angles = represent(
+                    self.__class__(*test_args), basis=basis)[0].args[3:6]
             else:
-                angles = represent(self.__class__(*test_args), basis=basis)[0].args[0].args[3:6]
+                angles = represent(self.__class__(
+                    *test_args), basis=basis)[0].args[0].args[3:6]
             if angles == (0, 0, 0):
                 return self
             else:
@@ -946,7 +958,8 @@ class SpinState(State):
         if bra.dual_class() is not self.__class__:
             result *= self._represent_JxOp(None)[bra.j-bra.m]
         else:
-            result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+            result *= KroneckerDelta(
+                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_innerproduct_JyBra(self, bra, **hints):
@@ -954,7 +967,8 @@ class SpinState(State):
         if bra.dual_class() is not self.__class__:
             result *= self._represent_JyOp(None)[bra.j-bra.m]
         else:
-            result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+            result *= KroneckerDelta(
+                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
@@ -962,7 +976,8 @@ class SpinState(State):
         if bra.dual_class() is not self.__class__:
             result *= self._represent_JzOp(None)[bra.j-bra.m]
         else:
-            result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+            result *= KroneckerDelta(
+                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_trace(self, bra, **hints):
@@ -1275,20 +1290,25 @@ class CoupledSpinState(SpinState):
             raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling)+3) )
         # Check arguments have correct form
         if not (isinstance(jn, list) or isinstance(jn, tuple) or isinstance(jn, Tuple)):
-            raise TypeError('jn must be Tuple, list or tuple, got %s' % jn.__class__.__name__)
+            raise TypeError('jn must be Tuple, list or tuple, got %s' %
+                            jn.__class__.__name__)
         if not (isinstance(jcoupling, list) or isinstance(jcoupling, tuple) or isinstance(jcoupling, Tuple)):
-            raise TypeError('jcoupling must be Tuple, list or tuple, got %s' % jcoupling.__class__.__name__)
+            raise TypeError('jcoupling must be Tuple, list or tuple, got %s' %
+                            jcoupling.__class__.__name__)
         if not all(isinstance(term, list) or isinstance(term, tuple) or isinstance(term, Tuple) for term in jcoupling):
-            raise TypeError('All elements of jcoupling must be list, tuple or Tuple')
+            raise TypeError(
+                'All elements of jcoupling must be list, tuple or Tuple')
         if not len(jn)-1 == len(jcoupling):
-            raise ValueError('jcoupling must have length of %d, got %d' % (len(jn)-1, len(jcoupling)))
+            raise ValueError('jcoupling must have length of %d, got %d' %
+                             (len(jn)-1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
             raise ValueError('All elements of jcoupling must have length 3')
         # Build sympified args
         j = sympify(j)
         m = sympify(m)
         jn = Tuple( *[sympify(ji) for ji in jn] )
-        jcoupling = Tuple( *[Tuple(sympify(n1), sympify(n2), sympify(ji)) for (n1, n2, ji) in jcoupling] )
+        jcoupling = Tuple( *[Tuple(sympify(
+            n1), sympify(n2), sympify(ji)) for (n1, n2, ji) in jcoupling] )
         # Check values in coupling scheme give physical state
         if any(2*ji != int(2*ji) for ji in jn if ji.is_number):
             raise ValueError('All elements of jn must be integer or half-integer, got: %s' % jn)
@@ -1400,15 +1420,18 @@ class CoupledSpinState(SpinState):
     def _represent_coupled_base(self, **options):
         evect = self.uncoupled_class()
         if not self.j.is_number:
-            raise ValueError('State must not have symbolic j value to represent')
+            raise ValueError(
+                'State must not have symbolic j value to represent')
         if not self.hilbert_space.dimension.is_number:
-            raise ValueError('State must not have symbolic j values to represent')
+            raise ValueError(
+                'State must not have symbolic j values to represent')
         result = zeros(self.hilbert_space.dimension, 1)
         if self.j == int(self.j):
             start = self.j**2
         else:
             start = (2*self.j-1)*(1+2*self.j)/4
-        result[start:start+2*self.j+1, 0] = evect(self.j, self.m)._represent_base(**options)
+        result[start:start+2*self.j+1, 0] = evect(
+            self.j, self.m)._represent_base(**options)
         return result
 
     def _eval_rewrite_as_Jx(self, *args, **options):
@@ -1779,7 +1802,8 @@ def _couple(tp, jcoupling_list):
 
     # Check jcoupling_list valid
     if not len(jcoupling_list) == len(states)-1:
-        raise TypeError('jcoupling_list must be length %d, got %d' % (len(states)-1, len(jcoupling_list)))
+        raise TypeError('jcoupling_list must be length %d, got %d' %
+                        (len(states)-1, len(jcoupling_list)))
     if not all( len(coupling) == 2 for coupling in jcoupling_list):
         raise ValueError('Each coupling must define 2 spaces')
     if any([n1 == n2 for n1, n2 in jcoupling_list]):
@@ -1812,7 +1836,8 @@ def _couple(tp, jcoupling_list):
     if all(state.j.is_number and state.m.is_number for state in states):
         # Numerical coupling
         # Iterate over difference between maximum possible j value of each coupling and the actual value
-        diff_max = [ Add( *[ jn[n-1]-mn[n-1] for n in coupling[0]+coupling[1] ] ) for coupling in coupling_list ]
+        diff_max = [ Add( *[ jn[n-1]-mn[n-1] for n in coupling[0]+ \
+                         coupling[1] ] ) for coupling in coupling_list ]
         result = []
         for diff in range(diff_max[-1]+1):
             # Determine available configurations
@@ -1967,7 +1992,8 @@ def _uncouple(state, jn, jcoupling_list):
             # Use default
             jcoupling_list = []
             for i in range(1, len(jn)):
-                jcoupling_list.append( (1, 1+i, Add(*[jn[j] for j in range(i+1)])) )
+                jcoupling_list.append(
+                    (1, 1+i, Add(*[jn[j] for j in range(i+1)])) )
         if not (isinstance(jcoupling_list, list) or isinstance(jcoupling_list, tuple)):
             raise TypeError("jcoupling must be a list or tuple")
         if not len(jcoupling_list) == len(jn)-1:
@@ -2012,7 +2038,8 @@ def _uncouple(state, jn, jcoupling_list):
                 m3 = m1+m2
                 cg_terms.append( (j1, m1, j2, m2, j3, m3) )
             coeff = Mul( *[ CG(*term).doit() for term in cg_terms ] )
-            state = TensorProduct( *[ evect(j, j - d) for j, d in zip(jn, diff_list) ] )
+            state = TensorProduct(
+                *[ evect(j, j - d) for j, d in zip(jn, diff_list) ] )
             result.append(coeff*state)
         return Add(*result)
     else:

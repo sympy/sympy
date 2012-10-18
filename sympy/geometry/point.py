@@ -83,7 +83,8 @@ class Point(GeometryEntity):
             coords = Tuple(*args)
 
         if len(coords) != 2:
-            raise NotImplementedError("Only two dimensional points currently supported")
+            raise NotImplementedError(
+                "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
             coords = [nsimplify(c) for c in coords]
 
@@ -568,7 +569,8 @@ class Point(GeometryEntity):
                 return Point(*[simplify(a + b) for a, b in
                                zip(self.args, other.args)])
             else:
-                raise TypeError("Points must have the same number of dimensions")
+                raise TypeError(
+                    "Points must have the same number of dimensions")
         else:
             raise ValueError('Cannot add non-Point, %s, to a Point' % other)
 

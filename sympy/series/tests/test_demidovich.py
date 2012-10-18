@@ -57,7 +57,8 @@ def test_Limits_simple_3b():
     assert limit((sqrt(x)-1)/(x-1), x, 1)==Rational(1)/2  # 199
     assert limit((sqrt(x)-8)/(root3(x)-4), x, 64)==3  # 200
     assert limit((root3(x)-1)/(root4(x)-1), x, 1)==Rational(4)/3  # 201
-    assert limit((root3(x**2)-2*root3(x)+1)/(x-1)**2, x, 1)==Rational(1)/9  # 202
+    assert limit(
+        (root3(x**2)-2*root3(x)+1)/(x-1)**2, x, 1)==Rational(1)/9  # 202
 
 
 def test_Limits_simple_4a():
@@ -127,7 +128,8 @@ def test_f2a():
 
 
 def test_f2():
-    assert limit((sqrt(cos(x))-root3(cos(x)))/(sin(x)**2), x, 0) == -Rational(1, 12)  # *184
+    assert limit((sqrt(
+        cos(x))-root3(cos(x)))/(sin(x)**2), x, 0) == -Rational(1, 12)  # *184
 
 
 def test_f3():

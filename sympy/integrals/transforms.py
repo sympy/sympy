@@ -141,7 +141,8 @@ class IntegralTransform(Function):
                 pass
 
         if needeval:
-            raise IntegralTransformError(self.__class__._name, self.function, 'needeval')
+            raise IntegralTransformError(
+                self.__class__._name, self.function, 'needeval')
 
         # TODO handle derivatives etc
 
@@ -222,7 +223,8 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
 
     F, cond = F.args[0]
     if F.has(Integral):
-        raise IntegralTransformError('Mellin', f, 'integral in unexpected form')
+        raise IntegralTransformError(
+            'Mellin', f, 'integral in unexpected form')
 
     def process_conds(cond):
         """
@@ -238,7 +240,8 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
             b_ = -oo
             aux_ = []
             for d in disjuncts(c):
-                d_ = d.replace(re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
+                d_ = d.replace(
+                    re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
                    d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
@@ -302,7 +305,8 @@ class MellinTransform(IntegralTransform):
             cond += [c]
         res = (Max(*a), Min(*b)), And(*cond)
         if (res[0][0] >= res[0][1]) is True or res[1] is False:
-            raise IntegralTransformError('Mellin', None, 'no combined convergence.')
+            raise IntegralTransformError(
+                'Mellin', None, 'no combined convergence.')
         return res
 
 
@@ -505,7 +509,8 @@ def _rewrite_gamma(f, s, a, b):
     s_multipliers = [x/common_coefficient for x in s_multipliers]
     if any(not x.is_Rational for x in s_multipliers):
         raise NotImplementedError
-    s_multiplier = common_coefficient/reduce(ilcm, [S(x.q) for x in s_multipliers], S(1))
+    s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
+                                             for x in s_multipliers], S(1))
     if s_multiplier == common_coefficient:
         if len(s_multipliers) == 0:
             s_multiplier = common_coefficient
@@ -612,7 +617,8 @@ def _rewrite_gamma(f, s, a, b):
             if is_numer:
                 if (a > 0 and (left(-b/a, is_numer) is False)) or \
                    (a < 0 and (left(-b/a, is_numer) is True)):
-                    raise NotImplementedError('Gammas partially over the strip.')
+                    raise NotImplementedError(
+                        'Gammas partially over the strip.')
             ugammas += [(a, b)]
         elif isinstance(fact, sin):
             # We try to re-write all trigs as gammas. This is not in
@@ -731,7 +737,8 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
                      abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
         if cond is False:
-            raise IntegralTransformError('Inverse Mellin', F, 'does not converge')
+            raise IntegralTransformError(
+                'Inverse Mellin', F, 'does not converge')
         return (h*fac).subs(x, x_), cond
 
     raise IntegralTransformError('Inverse Mellin', F, '')
@@ -775,9 +782,11 @@ class InverseMellinTransform(IntegralTransform):
         from sympy import postorder_traversal
         global _allowed
         if _allowed is None:
-            from sympy import (exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh,
+            from sympy import (
+                exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh,
                                coth, factorial, rf)
-            _allowed = set([exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
+            _allowed = set(
+                [exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
                             factorial, rf])
         for f in postorder_traversal(F):
             if f.is_Function and f.has(s) and f.func not in _allowed:
@@ -942,11 +951,13 @@ def _laplace_transform(f, t, s_, simplify=True):
         return _simplify(F.subs(s, s_), simplify), -oo, True
 
     if not F.is_Piecewise:
-        raise IntegralTransformError('Laplace', f, 'could not compute integral')
+        raise IntegralTransformError(
+            'Laplace', f, 'could not compute integral')
 
     F, cond = F.args[0]
     if F.has(Integral):
-        raise IntegralTransformError('Laplace', f, 'integral in unexpected form')
+        raise IntegralTransformError(
+            'Laplace', f, 'integral in unexpected form')
 
     def process_conds(conds):
         """ Turn ``conds`` into a strip and auxiliary conditions. """
@@ -954,7 +965,8 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = True
         conds = conjuncts(to_cnf(conds))
         u = Dummy('u', real=True)
-        p, q, w1, w2, w3, w4, w5 = symbols('p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
+        p, q, w1, w2, w3, w4, w5 = symbols(
+            'p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
         for c in conds:
             a_ = oo
             aux_ = []
@@ -969,12 +981,15 @@ def _laplace_transform(f, t, s_, simplify=True):
                 if m:
                     if m[q] > 0 and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
-                m = d.match(0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                m = d.match(
+                    0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
                 if not m:
-                    m = d.match(0 < cos(abs(arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                    m = d.match(0 < cos(abs(
+                        arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
                 if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
-                d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
+                d_ = d.replace(
+                    re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
                    d.rel_op not in ('>', '>=', '<', '<=') \
                    or d_.has(s) or not d_.has(t):
@@ -1058,7 +1073,8 @@ class LaplaceTransform(IntegralTransform):
         cond = And(*conds)
         plane = Max(*planes)
         if cond is False:
-            raise IntegralTransformError('Laplace', None, 'No combined convergence.')
+            raise IntegralTransformError(
+                'Laplace', None, 'No combined convergence.')
         return plane, cond
 
 

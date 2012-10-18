@@ -56,7 +56,8 @@ def test_doit():
     # Density with simple tensor products as args
     t = TensorProduct(A, B, C)
     d = Density([t, 1.0])
-    assert d.doit() == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
+    assert d.doit(
+        ) == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
 
     # Density with multiple Tensorproducts as states
     t2 = TensorProduct(A, B)
@@ -168,7 +169,8 @@ def test_entropy():
     assert entropy(d) == 0.5*log(2)
     assert d.entropy() == 0.5*log(2)
 
-    np = import_module('numpy', min_python_version=(2, 6), min_module_version='1.4.0')
+    np = import_module(
+        'numpy', min_python_version=(2, 6), min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')

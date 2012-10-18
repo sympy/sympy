@@ -230,7 +230,8 @@ def enable_automatic_symbols(app):
     # multiple times.
 
     import re
-    re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
+    re_nameerror = re.compile(
+        "name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
     def _handler(self, etype, value, tb, tb_offset=None):
         """Handle :exc:`NameError` exception and allow injection of missing symbols. """
@@ -253,7 +254,8 @@ def enable_automatic_symbols(app):
                     self.run_cell("del %s" % match.group("symbol"),
                                   store_history=False)
 
-        stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
+        stb = self.InteractiveTB.structured_traceback(
+            etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
     if hasattr(app, 'shell'):
@@ -446,7 +448,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # runsource is gone, use run_cell instead, which doesn't
                 # take a symbol arg.  The second arg is `store_history`,
                 # and False means don't add the line to IPython's history.
-                ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+                ip.runsource = lambda src, symbol='exec': ip.run_cell(
+                    src, False)
 
                 #Enable interactive plotting using pylab.
                 try:

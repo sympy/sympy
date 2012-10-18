@@ -611,4 +611,5 @@ def test_special_assumptions():
 
 def test_inconsistent():
     # cf. issues 2696 and 2446
-    raises(InconsistentAssumptions, lambda: Symbol('x', real=True, commutative=False))
+    raises(InconsistentAssumptions, lambda: Symbol('x', real=True,
+           commutative=False))

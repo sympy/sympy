@@ -236,7 +236,8 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
-allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
+allhints = (
+    "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
@@ -523,7 +524,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
                             'order': kwargs['order']})
 
     if hints['order'] == 0:
-        raise ValueError(str(eq) + " is not a differential equation in " + str(func))
+        raise ValueError(
+            str(eq) + " is not a differential equation in " + str(func))
 
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
@@ -571,7 +573,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     elif hint.endswith('_Integral'):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint]  # convert the string into a function
+        solvefunc = globals(
+            )['ode_' + hint]  # convert the string into a function
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
@@ -778,7 +781,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             matching_hints["1st_linear_Integral"] = r
 
         # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
-        r = collect(reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
+        r = collect(
+            reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
         if r and r[c] != 0 and r[n] != 1:  # See issue 1577
             r['a'] = a
             r['b'] = b
@@ -788,7 +792,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             matching_hints["Bernoulli_Integral"] = r
 
         # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
-        r = collect(reduced_eq, f(x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
+        r = collect(reduced_eq, f(
+            x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
         if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
             r['a2'] = a2
             r['b2'] = b2
@@ -844,10 +849,12 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 u1 = Dummy('u1')
                 u2 = Dummy('u2')
                 if simplify((r[d]+u1*r[e]).subs({x: 1, y: u1})) != 0:
-                    matching_hints["1st_homogeneous_coeff_subs_dep_div_indep"] = r
+                    matching_hints[
+                        "1st_homogeneous_coeff_subs_dep_div_indep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
                 if simplify((r[e]+u2*r[d]).subs({x: u2, y: 1})) != 0:
-                    matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
+                    matching_hints[
+                        "1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
@@ -882,7 +889,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             # Inhomogeneous case: F(x) is not identically 0
             if r[-1]:
                 undetcoeff = _undetermined_coefficients_match(r[-1], x)
-                matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
+                matching_hints[
+                    "nth_linear_constant_coeff_variation_of_parameters"] = r
                 matching_hints["nth_linear_constant_coeff_variation_of_parameters" +
                     "_Integral"] = r
                 if undetcoeff['test']:
@@ -1046,7 +1054,8 @@ def odesimp(eq, func, order, hint):
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
-        eq[i] = constant_renumber(constantsimp(eqi, x, 2*order), 'C', 1, 2*order)
+        eq[i] = constant_renumber(
+            constantsimp(eqi, x, 2*order), 'C', 1, 2*order)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -1119,10 +1128,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         try:
             _, func = preprocess(ode.lhs)
         except ValueError:
-            funcs = [s.atoms(AppliedUndef) for s in (sol if is_sequence(sol, set) else [sol])]
+            funcs = [s.atoms(AppliedUndef) for s in (
+                sol if is_sequence(sol, set) else [sol])]
             funcs = reduce(set.union, funcs, set())
             if len(funcs) != 1:
-                raise ValueError('must pass func arg to checkodesol for this case.')
+                raise ValueError(
+                    'must pass func arg to checkodesol for this case.')
             func = funcs.pop()
     # ========== deprecation handling
     # After the deprecation period this handling section becomes:
@@ -1463,7 +1474,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # expression.
 
     constant_iter = numbered_symbols('C', start=startnumber)
-    constantsymbols = [constant_iter.next() for t in range(startnumber, endnumber + 1)]
+    constantsymbols = [constant_iter.next() for t in range(startnumber,
+                                          endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
     x = independentsymbol
     if isinstance(expr, Equality):
@@ -1669,7 +1681,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
     """
     if type(expr) in (set, list, tuple):
-        return type(expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
+        return type(
+            expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
             startnumber=startnumber, endnumber=endnumber), expr))
     global newstartnumber
     newstartnumber = 1
@@ -1680,12 +1693,15 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
+        constantsymbols = [Symbol(
+            symbolname+"%d" % t) for t in range(startnumber,
         endnumber + 1)]
         global newstartnumber
 
         if isinstance(expr, Equality):
-            return Eq(_constant_renumber(expr.lhs, symbolname, startnumber, endnumber),
+            return Eq(
+                _constant_renumber(
+                    expr.lhs, symbolname, startnumber, endnumber),
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
@@ -1700,7 +1716,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return newconst
         else:
             if expr.is_Function or expr.is_Pow:
-                return expr.func(*[_constant_renumber(x, symbolname, startnumber,
+                return expr.func(
+                    *[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
@@ -1708,8 +1725,10 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # that to make sure that term ordering is not dependent on
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(key=lambda arg: default_sort_key(arg.subs(C_1)))
-                return expr.func(*[_constant_renumber(x, symbolname, startnumber,
+                sortedargs.sort(
+                    key=lambda arg: default_sort_key(arg.subs(C_1)))
+                return expr.func(
+                    *[_constant_renumber(x, symbolname, startnumber,
                     endnumber) for x in sortedargs])
 
     return _constant_renumber(expr, symbolname, startnumber, endnumber)
@@ -1864,7 +1883,8 @@ def ode_1st_exact(eq, func, order, match):
     # _handle_Integral
     exactvars = {'y0': y0, 'x0': x0, 'y': r['y']}
     # If we ever get a Constant class, x0 and y0 should be constants, I think
-    sol = C.Integral(r[r['e']].subs(x, x0), (r['y'], y0, f(x)))+C.Integral(r[r['d']], (x, x0, x))
+    sol = C.Integral(r[r['e']].subs(
+        x, x0), (r['y'], y0, f(x)))+C.Integral(r[r['d']], (x, x0, x))
     return Eq(sol, C1)
 
 
@@ -1916,8 +1936,10 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     func, order, match)
     simplify = match.get('simplify', True)
     if simplify:
-        sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
-        sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
+        sol1 = odesimp(
+            sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
+        sol2 = odesimp(
+            sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
     return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
@@ -2001,7 +2023,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     u1 = Dummy('u1')  # u1 == f(x)/x
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    int = C.Integral((-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x: 1, r['y']: u1}),
+    int = C.Integral(
+        (-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
     sol = logcombine(Eq(log(x), int + log(C1)), force=True)
     return sol
@@ -2087,7 +2110,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     u2 = Dummy('u2')  # u2 == x/f(x)
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    int = C.Integral(simplify((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x: u2, r['y']: 1})),
+    int = C.Integral(
+        simplify(
+            (-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x: u2, r['y']: 1})),
         (u2, None, x/f(x)))
     sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
     return sol

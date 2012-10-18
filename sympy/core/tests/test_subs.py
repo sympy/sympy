@@ -308,7 +308,8 @@ def test_subs_basic_funcs():
     assert (x**y).subs(y, L) == x**L
     assert ((a - c)/b).subs(b, K) == (a - c)/K
     assert (exp(x*y - z)).subs(x*y, L) == exp(L - z)
-    assert (a*exp(x*y - w*z) + b*exp(x*y + w*z)).subs(z, 0) == a*exp(x*y) + b*exp(x*y)
+    assert (a*exp(
+        x*y - w*z) + b*exp(x*y + w*z)).subs(z, 0) == a*exp(x*y) + b*exp(x*y)
     assert ((a - b)/(c*d - a*b)).subs(c*d - a*b, K) == (a - b)/K
     assert (w*exp(a*b - c)*x*y/4).subs(x*y, L) == w*exp(a*b - c)*L/4
 
@@ -336,7 +337,8 @@ def test_subs_mixed():
     assert (R*x*y*exp(x*y)).subs(x*y, L) == R*L*exp(L)
     assert (a*x*y*y*x - x*y*z*exp(a*b)).subs(x*y, L) == a*L*y*x - L*z*exp(a*b)
     e = c*y*x*y*x**(R*S - a*b) - T*(a*R*b*S)
-    assert e.subs(x*y, L).subs(a*b, K).subs(R*S, U) == c*y*L*x**(U - K) - T*(U*K)
+    assert e.subs(
+        x*y, L).subs(a*b, K).subs(R*S, U) == c*y*L*x**(U - K) - T*(U*K)
 
 
 def test_division():
@@ -401,7 +403,8 @@ def test_functions_subs():
     assert (f(x)**2).subs(f, sin) == sin(x)**2
     assert (f(x, y)).subs(f, log) == log(x, y)
     assert (f(x, y)).subs(f, sin) == f(x, y)
-    assert (sin(x) + atan2(x, y)).subs([[atan2, f], [sin, g]]) == f(x, y) + g(x)
+    assert (
+        sin(x) + atan2(x, y)).subs([[atan2, f], [sin, g]]) == f(x, y) + g(x)
     assert (g(f(x + y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
 
 
@@ -542,10 +545,12 @@ def test_simultaneous_subs():
     from sympy.abc import x, y
     reps = {x: 0, y: 0}
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
+    assert (x/y).subs(
+        reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
     reps = reps.items()
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
+    assert (x/y).subs(
+        reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
 
 
 def issue_3320_3322():

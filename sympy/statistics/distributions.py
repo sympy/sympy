@@ -440,7 +440,8 @@ class PDF(ContinuousProbability):
             from sympy import integrate
             w = Dummy('w', real=True)
             self._cdf = integrate(self.pdf(w), w)
-            self._cdf = Lambda(w, self._cdf - self._cdf.subs(w, self.domain[0]))
+            self._cdf = Lambda(
+                w, self._cdf - self._cdf.subs(w, self.domain[0]))
             return self._cdf(x)
 
     def _get_mean(self):
@@ -449,7 +450,8 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate
             w = Dummy('w', real=True)
-            self._mean = integrate(self.pdf(w)*w, (w, self.domain[0], self.domain[1]))
+            self._mean = integrate(
+                self.pdf(w)*w, (w, self.domain[0], self.domain[1]))
             return self._mean
 
     def _get_variance(self):
@@ -458,7 +460,8 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate, simplify
             w = Dummy('w', real=True)
-            self._variance = integrate(self.pdf(w)*w**2, (w, self.domain[0], self.domain[1])) - self.mean**2
+            self._variance = integrate(self.pdf(
+                w)*w**2, (w, self.domain[0], self.domain[1])) - self.mean**2
             self._variance = simplify(self._variance)
             return self._variance
 

@@ -84,8 +84,10 @@ class Symbol(AtomicExpr, Boolean):
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
-    __xnew__ = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
-    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
+    __xnew__ = staticmethod(
+        __new_stage2__)            # never cached (e.g. dummy)
+    __xnew_cached_ = staticmethod(
+        cacheit(__new_stage2__))   # symbols are always cached
 
     def __getnewargs__(self):
         return (self.name,)
@@ -376,7 +378,8 @@ def symbols(names, **args):
                 seq = True
                 continue
 
-            raise ValueError("'%s' is not a valid symbol range specification" % name)
+            raise ValueError(
+                "'%s' is not a valid symbol range specification" % name)
 
         if not seq and len(result) <= 1:
             if not result:

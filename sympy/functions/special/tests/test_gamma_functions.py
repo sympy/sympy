@@ -1,4 +1,5 @@
-from sympy import (Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
+from sympy import (
+    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
         polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
         cos, O, cancel, lowergamma, exp,  erf, beta, exp_polar)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -35,11 +36,16 @@ def test_gamma():
 
     assert gamma(Rational(-15, 2)) == Rational(256, 2027025)*sqrt(pi)
 
-    assert gamma(Rational(-11, 8)).expand(func=True) == Rational(64, 33)*gamma(Rational(5, 8))
-    assert gamma(Rational(-10, 3)).expand(func=True) == Rational(81, 280)*gamma(Rational(2, 3))
-    assert gamma(Rational(14, 3)).expand(func=True) == Rational(880, 81)*gamma(Rational(2, 3))
-    assert gamma(Rational(17, 7)).expand(func=True) == Rational(30, 49)*gamma(Rational(3, 7))
-    assert gamma(Rational(19, 8)).expand(func=True) == Rational(33, 64)*gamma(Rational(3, 8))
+    assert gamma(Rational(
+        -11, 8)).expand(func=True) == Rational(64, 33)*gamma(Rational(5, 8))
+    assert gamma(Rational(
+        -10, 3)).expand(func=True) == Rational(81, 280)*gamma(Rational(2, 3))
+    assert gamma(Rational(
+        14, 3)).expand(func=True) == Rational(880, 81)*gamma(Rational(2, 3))
+    assert gamma(Rational(
+        17, 7)).expand(func=True) == Rational(30, 49)*gamma(Rational(3, 7))
+    assert gamma(Rational(
+        19, 8)).expand(func=True) == Rational(33, 64)*gamma(Rational(3, 8))
 
     assert gamma(x).diff(x) == gamma(x)*polygamma(0, x)
 
@@ -107,9 +113,11 @@ def test_lowergamma():
     assert lowergamma(-2, exp_polar(5*pi*I)*x) == \
            lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
-    assert lowergamma(x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
+    assert lowergamma(
+        x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)
-    assert lowergamma(k, y).rewrite(expint) == -y**k*expint(-k + 1, y) + gamma(k)
+    assert lowergamma(
+        k, y).rewrite(expint) == -y**k*expint(-k + 1, y) + gamma(k)
     k = Symbol('k', integer=True, positive=False)
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
 
@@ -140,7 +148,8 @@ def test_uppergamma():
     assert tn_branch(pi, uppergamma)
     assert uppergamma(3, exp_polar(4*pi*I)*x) == uppergamma(3, x)
     assert uppergamma(y, exp_polar(5*pi*I)*x) == \
-           exp(4*I*pi*y)*uppergamma(y, x*exp_polar(pi*I)) + gamma(y)*(1-exp(4*pi*I*y))
+           exp(4*I*pi*y)*uppergamma(y, x*exp_polar(pi*I)) + \
+               gamma(y)*(1-exp(4*pi*I*y))
     assert uppergamma(-2, exp_polar(5*pi*I)*x) == \
            uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 

@@ -38,7 +38,8 @@ def test_solve_poly_system():
     assert solve_poly_system([x**2 - y**2, x - 1], x, y) == solution
     assert solve_poly_system([x**2 - y**2, x - 1]) == solution
 
-    assert solve_poly_system([x + x*y - 3, y + x*y - 4], x, y) == [(-3, -2), (1, 2)]
+    assert solve_poly_system(
+        [x + x*y - 3, y + x*y - 4], x, y) == [(-3, -2), (1, 2)]
 
     raises(NotImplementedError, lambda: solve_poly_system([x**3-y**3], x, y))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))

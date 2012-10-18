@@ -38,9 +38,11 @@ def test_jscode_constants_mathh():
 
 
 def test_jscode_constants_other():
-    assert jscode(2*GoldenRatio) == "var GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert jscode(
+        2*GoldenRatio) == "var GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert jscode(2*Catalan) == "var Catalan = 0.915965594177219;\n2*Catalan"
-    assert jscode(2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
+    assert jscode(
+        2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
 def test_jscode_Rational():
@@ -306,7 +308,8 @@ def test_jscode_loops_multiple_terms():
         '   }\n'
         '}\n'
             )
-    c = jscode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    c = jscode(
+        b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or

@@ -61,7 +61,8 @@ def test_re():
     assert re(i*r*x).diff(r) == re(i*x)
     assert re(i*r*x).diff(i) == -I * im(r*x)
 
-    assert re(sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)
+    assert re(
+        sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == \
@@ -119,7 +120,8 @@ def test_im():
     assert im(i*r*x).diff(r) == im(i*x)
     assert im(i*r*x).diff(i) == -I * re(r*x)
 
-    assert im(sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)
+    assert im(
+        sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)
     assert im(a * (2 + b*I)) == a*b
 
     assert im((1 + sqrt(a + b*I))/2) == \
@@ -202,7 +204,9 @@ def test_as_real_imag():
     # issue 754
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
-           ((a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
+           (
+               (a**2 + b**2)**Rational(
+                   1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
             (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
 
@@ -250,7 +254,8 @@ def test_Abs():
     assert abs(x) == Abs(x)  # Python built-in
     assert Abs(x)**3 == x**2*Abs(x)
     assert Abs(x)**4 == x**4
-    assert (Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
+    assert (
+        Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 

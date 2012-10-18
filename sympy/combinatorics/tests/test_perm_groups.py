@@ -44,7 +44,8 @@ def test_generate():
     g = G.generate()
     v1 = [p.array_form for p in list(g)]
     v1.sort()
-    assert v1 == [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
+    assert v1 == [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0,
+        1], [2, 1, 0]]
     v2 = list(G.generate(method='dimino', af=True))
     assert v1 == sorted(v2)
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -76,8 +77,10 @@ def test_stabilizer():
     v = list(G2_1.generate(af=True))
     assert v == [[0, 1, 2, 3, 4, 5, 6, 7], [3, 1, 2, 0, 7, 5, 6, 4]]
 
-    gens = ((1, 2, 0, 4, 5, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
-            (0, 1, 2, 3, 4, 5, 19, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 7, 17, 18),
+    gens = (
+        (1, 2, 0, 4, 5, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+            (0, 1, 2, 3, 4, 5, 19, 6, 8, 9, 10, 11, 12, 13, 14,
+             15, 16, 7, 17, 18),
             (0, 1, 2, 3, 4, 5, 6, 7, 9, 18, 16, 11, 12, 13, 14, 15, 8, 17, 10, 19))
     gens = [Permutation(p) for p in gens]
     G = PermutationGroup(gens)
@@ -211,7 +214,8 @@ def test_orbits():
     assert g.orbits() == [set([0, 1, 2])]
     assert g.is_transitive() and g.is_transitive(strict=False)
     assert g.orbit_transversal(0) == \
-        [Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 2, 0])]
+        [Permutation(
+            [0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 2, 0])]
     assert g.orbit_transversal(0, True) == \
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
@@ -224,7 +228,8 @@ def test_orbits():
     assert not G.is_transitive() and not G.is_transitive(strict=False)
     G = PermutationGroup([Permutation(0, 1, 3), Permutation(3)(0, 1)])
     assert not G.is_transitive() and G.is_transitive(strict=False)
-    assert PermutationGroup(Permutation(3)).is_transitive(strict=False) is False
+    assert PermutationGroup(
+        Permutation(3)).is_transitive(strict=False) is False
 
 
 def test_is_normal():
@@ -252,7 +257,8 @@ def test_is_normal():
 
 
 def test_eq():
-    a = [[1, 2, 0, 3, 4, 5], [1, 0, 2, 3, 4, 5], [2, 1, 0, 3, 4, 5], [1, 2, 0, 3, 4, 5]]
+    a = [[1, 2, 0, 3, 4, 5], [1, 0, 2, 3, 4, 5], [2, 1, 0, 3, 4, 5], [
+        1, 2, 0, 3, 4, 5]]
     a = [Permutation(p) for p in a + [[1, 2, 3, 4, 5, 0]]]
     g = Permutation([1, 2, 3, 4, 5, 0])
     G1, G2, G3 = [PermutationGroup(x) for x in [a[:2], a[2:4], [g, g**2]]]

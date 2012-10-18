@@ -68,7 +68,8 @@ class Expr(Basic, EvalfMixin):
             else:
                 args = expr.args
 
-            args = tuple([ default_sort_key(arg, order=order) for arg in args ])
+            args = tuple(
+                [ default_sort_key(arg, order=order) for arg in args ])
 
         args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
@@ -92,7 +93,8 @@ class Expr(Basic, EvalfMixin):
             else:
                 return expr_to_call(*on_args)
         elif expr_to_call.args:
-            args = [Expr._recursive_call(sub, on_args) for sub in expr_to_call.args]
+            args = [Expr._recursive_call(
+                sub, on_args) for sub in expr_to_call.args]
             return type(expr_to_call)(*args)
         else:
             return expr_to_call
@@ -1205,7 +1207,8 @@ class Expr(Basic, EvalfMixin):
                     else:
                         m = ii + len(nx)
                         return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
-            end = list(reversed(reduce(incommon, (list(reversed(n[1])) for n in co))))
+            end = list(reversed(
+                reduce(incommon, (list(reversed(n[1])) for n in co))))
             if end:
                 ii = find(end, nx, right)
                 if ii is not None:
@@ -1950,7 +1953,8 @@ class Expr(Basic, EvalfMixin):
         """
         negative_self = -self
         self_has_minus = (self.extract_multiplicatively(-1) is not None)
-        negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) is not None)
+        negative_self_has_minus = (
+            (negative_self).extract_multiplicatively(-1) is not None)
         if self_has_minus != negative_self_has_minus:
             return self_has_minus
         else:
@@ -2708,7 +2712,8 @@ class Expr(Basic, EvalfMixin):
             modulus = sympify(modulus)
 
             if not modulus.is_Integer or modulus <= 0:
-                raise ValueError("modulus must be a positive integer, got %s" % modulus)
+                raise ValueError(
+                    "modulus must be a positive integer, got %s" % modulus)
 
             terms = []
 

@@ -79,7 +79,8 @@ def test_composite_sums():
 
 
 def test_hypergeometric_sums():
-    assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+    assert summation(
+        binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
 
 
 def test_other_sums():
@@ -98,7 +99,8 @@ def NS(e, n=15, **options):
 
 def test_evalf_fast_series():
     # Euler transformed series for sqrt(1+x)
-    assert NS(Sum(fac(2*n+1)/fac(n)**2/2**(3*n+1), (n, 0, oo)), 100) == NS(sqrt(2), 100)
+    assert NS(Sum(
+        fac(2*n+1)/fac(n)**2/2**(3*n+1), (n, 0, oo)), 100) == NS(sqrt(2), 100)
 
     # Some series for exp(1)
     estr = NS(E, 100)
@@ -109,17 +111,22 @@ def test_evalf_fast_series():
 
     pistr = NS(pi, 100)
     # Ramanujan series for pi
-    assert NS(9801/sqrt(8)/Sum(fac(4*n)*(1103+26390*n)/fac(n)**4/396**(4*n), (n, 0, oo)), 100) == pistr
-    assert NS(1/Sum(binomial(2*n, n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
+    assert NS(9801/sqrt(8)/Sum(fac(
+        4*n)*(1103+26390*n)/fac(n)**4/396**(4*n), (n, 0, oo)), 100) == pistr
+    assert NS(1/Sum(
+        binomial(2*n, n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
     # Machin's formula for pi
     assert NS(16*Sum((-1)**n/(2*n+1)/5**(2*n+1), (n, 0, oo)) -
         4*Sum((-1)**n/(2*n+1)/239**(2*n+1), (n, 0, oo)), 100) == pistr
 
     # Apery's constant
     astr = NS(zeta(3), 100)
-    P = 126392*n**5 + 412708*n**4 + 531578*n**3 + 336367*n**2 + 104000*n + 12463
-    assert NS(Sum((-1)**n * P / 24 * (fac(2*n+1)*fac(2*n)*fac(n))**3 / fac(3*n+2) / fac(4*n+3)**3, (n, 0, oo)), 100) == astr
-    assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 / fac(2*n+1)**5, (n, 0, oo)), 100) == astr
+    P = 126392*n**5 + 412708*n**4 + 531578*n**3 + 336367*n**2 + 104000* \
+        n + 12463
+    assert NS(Sum((-1)**n * P / 24 * (fac(2*n+1)*fac(2*n)*fac(
+        n))**3 / fac(3*n+2) / fac(4*n+3)**3, (n, 0, oo)), 100) == astr
+    assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 / \
+              fac(2*n+1)**5, (n, 0, oo)), 100) == astr
 
 
 def test_evalf_fast_series_issue998():
@@ -128,8 +135,10 @@ def test_evalf_fast_series_issue998():
         fac(n)**2/n**3/(2*n-1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
         NS(Catalan, 100)
     astr = NS(zeta(3), 100)
-    assert NS(5*Sum((-1)**(n-1)*fac(n)**2 / n**3 / fac(2*n), (n, 1, oo))/2, 100) == astr
-    assert NS(Sum((-1)**(n-1)*(56*n**2-32*n+5) / (2*n-1)**2 * fac(n-1)**3 / fac(3*n), (n, 1, oo))/4, 100) == astr
+    assert NS(5*Sum(
+        (-1)**(n-1)*fac(n)**2 / n**3 / fac(2*n), (n, 1, oo))/2, 100) == astr
+    assert NS(Sum((-1)**(n-1)*(56*n**2-32*n+5) / (2*n-1)**2 * fac(n-1)
+              **3 / fac(3*n), (n, 1, oo))/4, 100) == astr
 
 
 def test_evalf_slow_series():
@@ -164,13 +173,16 @@ def test_euler_maclaurin():
 
 def test_evalf_euler_maclaurin():
     assert NS(Sum(1/k**k, (k, 1, oo)), 15) == '1.29128599706266'
-    assert NS(Sum(1/k**k, (k, 1, oo)), 50) == '1.2912859970626635404072825905956005414986193682745'
+    assert NS(Sum(1/k**k, (k, 1, oo)),
+              50) == '1.2912859970626635404072825905956005414986193682745'
     assert NS(Sum(1/k-log(1+1/k), (k, 1, oo)), 15) == NS(EulerGamma, 15)
     assert NS(Sum(1/k-log(1+1/k), (k, 1, oo)), 50) == NS(EulerGamma, 50)
     assert NS(Sum(log(k)/k**2, (k, 1, oo)), 15) == '0.937548254315844'
-    assert NS(Sum(log(k)/k**2, (k, 1, oo)), 50) == '0.93754825431584375370257409456786497789786028861483'
+    assert NS(Sum(log(k)/k**2, (k, 1, oo)),
+              50) == '0.93754825431584375370257409456786497789786028861483'
     assert NS(Sum(1/k, (k, 1000000, 2000000)), 15) == '0.693147930560008'
-    assert NS(Sum(1/k, (k, 1000000, 2000000)), 50) == '0.69314793056000780941723211364567656807940638436025'
+    assert NS(Sum(1/k, (k, 1000000, 2000000)),
+              50) == '0.69314793056000780941723211364567656807940638436025'
 
 
 def test_simple_products():
@@ -232,9 +244,11 @@ def test_telescopic_sums():
     #checks also input 2 of comment 1 issue 1028
     assert Sum(1/k - 1/(k+1), (k, 1, n)).doit() == 1 - 1/(1 + n)
     f = Function("f")
-    assert Sum(f(k)-f(k+2), (k, m, n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
+    assert Sum(
+        f(k)-f(k+2), (k, m, n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
     assert Sum(cos(k)-cos(k+3), (k, 1, n)).doit() == -cos(1 + n) - cos(2 + n) - \
-                                           cos(3 + n) + cos(1) + cos(2) + cos(3)
+                                           cos(3 + \
+                                               n) + cos(1) + cos(2) + cos(3)
 
     # dummy variable shouldn't matter
     assert telescopic(1/m, -m/(1+m), (m, n-1, n)) == \

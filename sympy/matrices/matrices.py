@@ -172,7 +172,8 @@ class MatrixBase(object):
                     flat_list[i] = sympify(arr[i])
                 return rows, cols, flat_list
             else:
-                raise NotImplementedError("SymPy supports just 1D and 2D matrices")
+                raise NotImplementedError(
+                    "SymPy supports just 1D and 2D matrices")
 
         # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
         elif len(args) == 1 and is_sequence(args[0]):
@@ -499,12 +500,14 @@ class MatrixBase(object):
             try:
                 P, D = self.diagonalize()
             except MatrixError:
-                raise NotImplementedError("Implemented only for diagonalizable matrices")
+                raise NotImplementedError(
+                    "Implemented only for diagonalizable matrices")
             for i in range(D.rows):
                 D[i, i] = D[i, i]**num
             return self._new(P*D*P.inv())
         else:
-            raise NotImplementedError("Only integer and rational values are supported")
+            raise NotImplementedError(
+                "Only integer and rational values are supported")
 
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
@@ -1089,7 +1092,8 @@ class MatrixBase(object):
         LUdecomposition
         """
         if rhs.rows != self.rows:
-            raise ShapeError("`self` and `rhs` must have the same number of rows.")
+            raise ShapeError(
+                "`self` and `rhs` must have the same number of rows.")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
@@ -1398,7 +1402,8 @@ class MatrixBase(object):
         self = self.as_mutable()
 
         if not self.rows >= self.cols:
-            raise MatrixError("The number of rows must be greater than columns")
+            raise MatrixError(
+                "The number of rows must be greater than columns")
         n = self.rows
         m = self.cols
         rank = n
@@ -1419,7 +1424,8 @@ class MatrixBase(object):
             R[j, j] = tmp.norm()
             Q[:, j] = tmp / R[j, j]
             if Q[:, j].norm() != 1:
-                raise NotImplementedError("Could not normalize the vector %d." % j)
+                raise NotImplementedError(
+                    "Could not normalize the vector %d." % j)
             for i in range(j):
                 R[i, j] = Q[:, i].dot(self[:, j])
         return cls(Q), cls(R)
@@ -1737,7 +1743,8 @@ class MatrixBase(object):
     def exp(self):
         """Return the exponentiation of a square matrix."""
         if not self.is_square:
-            raise NonSquareMatrixError("Exponentiation is valid only for square matrices")
+            raise NonSquareMatrixError(
+                "Exponentiation is valid only for square matrices")
         try:
             U, D = self.diagonalize()
         except MatrixError:
@@ -1816,7 +1823,8 @@ class MatrixBase(object):
         False
         """
         if not self.is_square:
-            raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
+            raise NonSquareMatrixError(
+                "Nilpotency is valid only for square matrices")
         x = Dummy('x')
         if self.charpoly(x).args[0] == x**self.rows:
             return True
@@ -2406,8 +2414,10 @@ class MatrixBase(object):
                 issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
-        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-        pivot, r = 0, self.as_mutable()  # pivot: index of next row to contain a pivot
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
+        pivot, r = 0, self.as_mutable(
+            )  # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
             if pivot == r.rows:
@@ -2447,7 +2457,8 @@ class MatrixBase(object):
                 issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
-        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
         reduced, pivots = self.rref(simplify=simpfunc)
 
         basis = []
@@ -2472,7 +2483,8 @@ class MatrixBase(object):
                     if v:
                         if j in pivots:
                             # XXX: Is this the correct error?
-                            raise NotImplementedError("Could not compute the nullspace of `self`.")
+                            raise NotImplementedError(
+                                "Could not compute the nullspace of `self`.")
                         basis[basiskey.index(j)][i, 0] = -v
         return [self._new(b) for b in basis]
 
@@ -2697,7 +2709,8 @@ class MatrixBase(object):
         float = False
         if any(v.has(Float) for v in self):
             float = True
-            self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
+            self = self._new(self.rows, self.cols, [nsimplify(
+                v, rational=True) for v in self])
             flags['rational'] = False  # to tell eigenvals not to do this
 
         out, vlist = [], self.eigenvals(**flags)
@@ -2715,7 +2728,8 @@ class MatrixBase(object):
                 # The nullspace routine failed, try it again with simplification
                 basis = tmp.nullspace(simplify=simplify)
                 if not basis:
-                    raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+                    raise NotImplementedError(
+                        "Can't evaluate eigenvector for eigenvalue %s" % r)
             if primitive:
                 # the relationship A*e = lambda*e will still hold if we change the
                 # eigenvector; so if simplify is True we tidy up any normalization
@@ -2731,7 +2745,8 @@ class MatrixBase(object):
                 if l != 1:
                     basis[0] *= l
             if float:
-                out.append((r.evalf(chop=chop), k, [self._new(b).evalf(chop=chop) for b in basis]))
+                out.append((r.evalf(chop=chop), k, [
+                           self._new(b).evalf(chop=chop) for b in basis]))
             else:
                 out.append((r, k, [self._new(b) for b in basis]))
         return out
@@ -2795,7 +2810,8 @@ class MatrixBase(object):
                 return self.applyfunc(item_doit)
             return doit
         else:
-            raise AttributeError("%s has no attribute %s." % (self.__class__.__name__, attr))
+            raise AttributeError(
+                "%s has no attribute %s." % (self.__class__.__name__, attr))
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -3338,7 +3354,8 @@ class MatrixBase(object):
         col_join
         """
         if self.rows != rhs.rows:
-            raise ShapeError("`self` and `rhs` must have the same number of rows.")
+            raise ShapeError(
+                "`self` and `rhs` must have the same number of rows.")
 
         newmat = self.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
@@ -3367,7 +3384,8 @@ class MatrixBase(object):
         row_join
         """
         if self.cols != bott.cols:
-            raise ShapeError("`self` and `bott` must have the same number of columns.")
+            raise ShapeError(
+                "`self` and `bott` must have the same number of columns.")
 
         newmat = self.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
@@ -3405,7 +3423,8 @@ class MatrixBase(object):
             pos = self.rows
 
         if self.cols != mti.cols:
-            raise ShapeError("`self` and `mti` must have the same number of columns.")
+            raise ShapeError(
+                "`self` and `mti` must have the same number of columns.")
 
         newmat = self.zeros(self.rows + mti.rows, self.cols)
         i, j = pos, pos + mti.rows

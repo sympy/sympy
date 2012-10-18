@@ -35,7 +35,8 @@ def idiff(eq, y, x, dep=None):
     dep = set(dep)
     dep.add(y)
 
-    f = dict([(s, Function(s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+    f = dict([(s, Function(
+        s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
     dydx = Function(y.name)(x).diff(x)
     return solve(eq.subs(f).diff(x), dydx)[0].subs(
         [(b, a) for a, b in f.iteritems()])
@@ -135,7 +136,8 @@ def intersection(*entities):
     >>> intersection(c, Point(1, 0))
     [Point(1, 0)]
     >>> intersection(c, l2)
-    [Point(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1), Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+    [Point(-sqrt(
+        5)/5 + 1, 2*sqrt(5)/5 + 1), Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
 
     """
     from entity import GeometryEntity
@@ -184,7 +186,8 @@ def convex_hull(*args):
     [1] http://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
-    ( A.M. Andrew, "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+    ( A.M. Andrew,
+     "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
     http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
     See Also
@@ -220,7 +223,8 @@ def convex_hull(*args):
         elif isinstance(e, Polygon):
             p.update(e.vertices)
         else:
-            raise NotImplementedError('Convex hull for %s not implemented.' % type(e))
+            raise NotImplementedError(
+                'Convex hull for %s not implemented.' % type(e))
 
     p = list(p)
     if len(p) == 1:
@@ -310,7 +314,8 @@ def are_similar(e1, e2):
         except AttributeError:
             n1 = e1.__class__.__name__
             n2 = e2.__class__.__name__
-            raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))
+            raise GeometryError(
+                "Cannot test similarity between %s and %s" % (n1, n2))
 
 
 def centroid(*args):

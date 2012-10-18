@@ -101,7 +101,8 @@ class Poly(Expr):
     def new(cls, rep, *gens):
         """Construct :class:`Poly` instance from raw representation. """
         if not isinstance(rep, DMP):
-            raise PolynomialError("invalid polynomial representation: %s" % rep)
+            raise PolynomialError(
+                "invalid polynomial representation: %s" % rep)
         elif rep.lev != len(gens)-1:
             raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
 
@@ -142,7 +143,8 @@ class Poly(Expr):
         gens = opt.gens
 
         if not gens:
-            raise GeneratorsNeeded("can't initialize from 'dict' without generators")
+            raise GeneratorsNeeded(
+                "can't initialize from 'dict' without generators")
 
         level = len(gens)-1
         domain = opt.domain
@@ -161,9 +163,11 @@ class Poly(Expr):
         gens = opt.gens
 
         if not gens:
-            raise GeneratorsNeeded("can't initialize from 'list' without generators")
+            raise GeneratorsNeeded(
+                "can't initialize from 'list' without generators")
         elif len(gens) != 1:
-            raise MultivariatePolynomialError("'list' representation not supported")
+            raise MultivariatePolynomialError(
+                "'list' representation not supported")
 
         level = len(gens)-1
         domain = opt.domain
@@ -364,7 +368,8 @@ class Poly(Expr):
             dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens)-1
 
             if f.gens != gens:
-                f_monoms, f_coeffs = _dict_reorder(f.rep.to_dict(), f.gens, gens)
+                f_monoms, f_coeffs = _dict_reorder(
+                    f.rep.to_dict(), f.gens, gens)
 
                 if f.rep.dom != dom:
                     f_coeffs = [ dom.convert(c, f.rep.dom) for c in f_coeffs ]
@@ -374,7 +379,8 @@ class Poly(Expr):
                 F = f.rep.convert(dom)
 
             if g.gens != gens:
-                g_monoms, g_coeffs = _dict_reorder(g.rep.to_dict(), g.gens, gens)
+                g_monoms, g_coeffs = _dict_reorder(
+                    g.rep.to_dict(), g.gens, gens)
 
                 if g.rep.dom != dom:
                     g_coeffs = [ dom.convert(c, g.rep.dom) for c in g_coeffs ]
@@ -528,7 +534,8 @@ class Poly(Expr):
             if f.is_univariate:
                 x, y = f.gen, x
             else:
-                raise PolynomialError("syntax supported only in univariate case")
+                raise PolynomialError(
+                    "syntax supported only in univariate case")
 
         if x == y:
             return f
@@ -562,7 +569,8 @@ class Poly(Expr):
         if not gens:
             gens = _sort_gens(f.gens, opt=opt)
         elif set(f.gens) != set(gens):
-            raise PolynomialError("generators list can differ only up to order of elements")
+            raise PolynomialError(
+                "generators list can differ only up to order of elements")
 
         rep = dict(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens)))
 
@@ -621,7 +629,8 @@ class Poly(Expr):
             try:
                 index = f_gens.index(gen)
             except ValueError:
-                raise GeneratorsError("%s doesn't have %s as generator" % (f, gen))
+                raise GeneratorsError(
+                    "%s doesn't have %s as generator" % (f, gen))
             else:
                 indices.add(index)
 
@@ -861,7 +870,8 @@ class Poly(Expr):
                 if monom not in terms:
                     terms[monom] = coeff
                 else:
-                    raise PolynomialError("%s monomial was generated twice" % monom)
+                    raise PolynomialError(
+                        "%s monomial was generated twice" % monom)
 
         return f.from_dict(terms, *(gens or f.gens), **args)
 
@@ -937,7 +947,8 @@ class Poly(Expr):
                 try:
                     index = gens.index(gen)
                 except ValueError:
-                    raise GeneratorsError("%s doesn't have %s as generator" % (f, gen))
+                    raise GeneratorsError(
+                        "%s doesn't have %s as generator" % (f, gen))
                 else:
                     gens[index] = value
 
@@ -1052,7 +1063,8 @@ class Poly(Expr):
         elif f.gens[-k:] == gens:
             _gens, front = f.gens[:n-k], False
         else:
-            raise NotImplementedError("can only eject front or back generators")
+            raise NotImplementedError(
+                "can only eject front or back generators")
 
         dom = dom.inject(*gens)
 
@@ -1654,12 +1666,14 @@ class Poly(Expr):
                 else:
                     return gen
             else:
-                raise PolynomialError("-%s <= gen < %s expected, got %s" % (length, length, gen))
+                raise PolynomialError("-%s <= gen < %s expected, got %s" %
+                                      (length, length, gen))
         else:
             try:
                 return list(f.gens).index(sympify(gen))
             except ValueError:
-                raise PolynomialError("a valid generator expected, got %s" % gen)
+                raise PolynomialError(
+                    "a valid generator expected, got %s" % gen)
 
     def degree(f, gen=0):
         """
@@ -2150,7 +2164,8 @@ class Poly(Expr):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError(
+                    "can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
                 domain, [a] = construct_domain([a])
                 f = f.set_domain(domain)
@@ -2831,7 +2846,8 @@ class Poly(Expr):
             sup = QQ.convert(sup)
 
         if hasattr(f.rep, 'intervals'):
-            result = f.rep.intervals(all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
+            result = f.rep.intervals(
+                all=all, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
@@ -3033,7 +3049,8 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).all_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).all_roots()
-        [RootOf(x**3 + x + 1, 0), RootOf(x**3 + x + 1, 1), RootOf(x**3 + x + 1, 2)]
+        [RootOf(x**3 + x + 1, 0), RootOf(
+            x**3 + x + 1, 1), RootOf(x**3 + x + 1, 2)]
 
         """
         roots = sympy.polys.rootoftools.RootOf.all_roots(f, radicals=radicals)
@@ -3060,12 +3077,14 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute numerical roots of %s" % f)
+            raise MultivariatePolynomialError(
+                "can't compute numerical roots of %s" % f)
 
         if f.degree() <= 0:
             return []
 
-        coeffs = [ coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs() ]
+        coeffs = [ coeff.evalf(n=n).as_real_imag()
+                               for coeff in f.all_coeffs() ]
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
@@ -3074,9 +3093,11 @@ class Poly(Expr):
             try:
                 coeffs = [ sympy.mpmath.mpc(*coeff) for coeff in coeffs ]
             except TypeError:
-                raise DomainError("numerical domain expected, got %s" % f.rep.dom)
+                raise DomainError(
+                    "numerical domain expected, got %s" % f.rep.dom)
 
-            result = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
+            result = sympy.mpmath.polyroots(
+                coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
             if error:
                 roots, error = result
@@ -3107,7 +3128,8 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute ground roots of %s" % f)
+            raise MultivariatePolynomialError(
+                "can't compute ground roots of %s" % f)
 
         roots = {}
 
@@ -3141,7 +3163,8 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("must be a univariate polynomial")
+            raise MultivariatePolynomialError(
+                "must be a univariate polynomial")
 
         N = sympify(n)
 
@@ -3779,7 +3802,8 @@ def _poly_from_expr(expr, opt):
 
     level = len(opt.gens)-1
 
-    poly = Poly.new(DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
+    poly = Poly.new(
+        DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
 
     opt['domain'] = domain
 
@@ -5444,7 +5468,8 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     try:
         F = Poly(f)
     except GeneratorsNeeded:
-        raise PolynomialError("can't refine a root of %s, not a polynomial" % f)
+        raise PolynomialError(
+            "can't refine a root of %s, not a polynomial" % f)
 
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
 
@@ -5493,7 +5518,8 @@ def real_roots(f, multiple=True):
     try:
         F = Poly(f, greedy=False)
     except GeneratorsNeeded:
-        raise PolynomialError("can't compute real roots of %s, not a polynomial" % f)
+        raise PolynomialError(
+            "can't compute real roots of %s, not a polynomial" % f)
 
     return F.real_roots(multiple=multiple)
 
@@ -5517,7 +5543,8 @@ def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     try:
         F = Poly(f, greedy=False)
     except GeneratorsNeeded:
-        raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
+        raise PolynomialError(
+            "can't compute numerical roots of %s, not a polynomial" % f)
 
     return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
@@ -5705,11 +5732,14 @@ def groebner(F, *gens, **args):
     >>> F = [x*y - 2*y, 2*y**2 - x**2]
 
     >>> groebner(F, x, y, order='lex')
-    GroebnerBasis([x**2 - 2*y**2, x*y - 2*y, y**3 - 2*y], x, y, domain='ZZ', order='lex')
+    GroebnerBasis([x**2 - 2*y**2, x*y - 2*y, y**3 - 2*y], x, y,
+                  domain='ZZ', order='lex')
     >>> groebner(F, x, y, order='grlex')
-    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y, domain='ZZ', order='grlex')
+    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y,
+                  domain='ZZ', order='grlex')
     >>> groebner(F, x, y, order='grevlex')
-    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y, domain='ZZ', order='grevlex')
+    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y,
+                  domain='ZZ', order='grevlex')
 
     By default, an improved implementation of the Buchberger algorithm is
     used. Optionally, an implementation of the F5B algorithm can be used.
@@ -5769,7 +5799,8 @@ class GroebnerBasis(Basic):
         if domain.has_assoc_Field:
             opt.domain = domain.get_field()
         else:
-            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
+            raise DomainError(
+                "can't compute a Groebner basis over %s" % opt.domain)
 
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
@@ -5777,7 +5808,8 @@ class GroebnerBasis(Basic):
 
         level = len(opt.gens) - 1
 
-        G = sdp_groebner(polys, level, opt.order, opt.domain, method=opt.method)
+        G = sdp_groebner(
+            polys, level, opt.order, opt.domain, method=opt.method)
         G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
         if not domain.has_Field:
@@ -6062,7 +6094,8 @@ def poly(expr, *gens, **args):
                 if factor.is_Add:
                     poly_factors.append(_poly(factor, opt))
                 elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
-                    poly_factors.append(_poly(factor.base, opt).pow(factor.exp))
+                    poly_factors.append(
+                        _poly(factor.base, opt).pow(factor.exp))
                 else:
                     factors.append(factor)
 

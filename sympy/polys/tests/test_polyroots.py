@@ -21,12 +21,15 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
-    assert roots_quadratic(Poly(2*x**2 + 4*x+3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
+    assert roots_quadratic(
+        Poly(2*x**2 + 4*x+3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
+        [-e*(
+            a + c)/(
+                a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
          -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
 
@@ -77,9 +80,11 @@ def test_roots_quartic():
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
-    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*sqrt(3)/2, -S(1)/2 + I*sqrt(3)/2]
+    assert roots_cyclotomic(cyclotomic_poly(
+        3, x, polys=True)) == [-S(1)/2 - I*sqrt(3)/2, -S(1)/2 + I*sqrt(3)/2]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
-    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
+    assert roots_cyclotomic(cyclotomic_poly(
+        6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7) - I*sin(pi/7),
@@ -104,15 +109,18 @@ def test_roots_cyclotomic():
          sqrt(3)/2 + I/2,
     ]
 
-    assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True), factor=True) == [1]
-    assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
+    assert roots_cyclotomic(
+        cyclotomic_poly(1, x, polys=True), factor=True) == [1]
+    assert roots_cyclotomic(
+        cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
 
     assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True), factor=True) == \
         [-(-1)**(S(1)/3), -1 + (-1)**(S(1)/3)]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
         [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5), -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
+        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5), -1 + (- \
+           1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
         [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
@@ -199,14 +207,16 @@ def test_roots_preprocessing():
 
     assert coeff == 20*E*J/(F*L**2)
     assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
-        809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
+        809735812500*x**3 - 10673859375000*x**2 + 63529101562500* \
+            x - 135006591796875
 
 
 def test_roots():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
-    assert roots(((x-2)*(x+3)*(x-4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
+    assert roots(
+        ((x-2)*(x+3)*(x-4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
     assert roots(2*x+1, x) == {-S.Half: 1}
     assert roots((2*x+1)**2, x) == {-S.Half: 2}
@@ -241,14 +251,17 @@ def test_roots():
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
-    f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - 224*x**7 - 384*x**8 - 64*x**9
+    f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - \
+        224*x**7 - 384*x**8 - 64*x**9
 
-    assert roots(f) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
+    assert roots(f) == {S(0): 2, -S(
+        2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
     assert roots((a+b+c)*x - (a+b+c+d), x) == {(a+b+c+d)/(a+b+c): 1}
 
     assert roots(x**3+x**2-x+1, x, cubics=False) == {}
-    assert roots(((x-2)*(x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
+    assert roots(((x-2)*(
+        x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
     assert roots(((x-2)*(x+3)*(x-4)*(x-5)).expand(), x, cubics=False) == \
             {-S(3): 1, S(2): 1, S(4): 1, S(5): 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
@@ -309,7 +322,8 @@ def test_roots():
     assert roots(x**4-1, x, filter='I') == {I: 1, -I: 1}
 
     assert roots((x-1)*(x+1), x) == {S.One: 1, -S.One: 1}
-    assert roots((x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
+    assert roots(
+        (x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
     assert roots(x**4-1, x, filter='Z', multiple=True) == [-S.One, S.One]
     assert roots(x**4-1, x, filter='I', multiple=True) == [-I, I]
@@ -373,10 +387,12 @@ def test_roots_inexact():
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-12
 
-    f = x**4 + 3.0*sqrt(2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 + 144.0*(2*sqrt(3.0) + 9.0)
+    f = x**4 + 3.0*sqrt(
+        2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 + 144.0*(2*sqrt(3.0) + 9.0)
 
     R1 = sorted(roots(f, multiple=True))
-    R2 = sorted([-12.7530479110482, -3.85012393732929, 4.89897948556636, 7.46155167569183])
+    R2 = sorted([-12.7530479110482, -3.85012393732929,
+                4.89897948556636, 7.46155167569183])
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-10
@@ -419,7 +435,8 @@ def test_roots_mixed():
     _sroots = roots(f, multiple=True)
 
     _re = [ Interval(a, b) for (a, b), _ in _re ]
-    _im = [ Interval(re(a), re(b))*Interval(im(a), im(b)) for (a, b), _ in _im ]
+    _im = [ Interval(re(a), re(b))*Interval(im(a), im(b)) for (a, b),
+                     _ in _im ]
 
     _intervals = _re + _im
     _sroots = [ r.evalf() for r in _sroots ]

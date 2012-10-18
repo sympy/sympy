@@ -85,7 +85,8 @@ class StateBase(QExpr):
         operator instances. See cartesian.py for examples,
         """
 
-        raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
+        raise NotImplementedError(
+            "Cannot map this state to operators. Method not implemented!")
 
     @property
     def operators(self):
@@ -145,18 +146,22 @@ class StateBase(QExpr):
         for bracket in lbracket, rbracket:
             # Create left bracket
             if bracket in set([_lbracket, _lbracket_ucode]):
-                bracket_args = [ ' ' * (height//2-i-1) + slash for i in range(height // 2)]
-                bracket_args.extend([ ' ' * i + bslash for i in range(height // 2)])
+                bracket_args = [ ' ' * (height//2-i-1) + \
+                                        slash for i in range(height // 2)]
+                bracket_args.extend(
+                    [ ' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
             elif bracket in set([_rbracket, _rbracket_ucode]):
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
-                bracket_args.extend([ ' ' * (height//2-i-1) + slash for i in range(height // 2)])
+                bracket_args.extend([ ' ' * (
+                    height//2-i-1) + slash for i in range(height // 2)])
             # Create straight bracket
             elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
                 bracket_args = [vert for i in range(height)]
             else:
                 raise ValueError(bracket)
-            brackets.append(stringPict('\n'.join(bracket_args), baseline=height//2))
+            brackets.append(
+                stringPict('\n'.join(bracket_args), baseline=height//2))
         return brackets
 
     def _sympystr(self, printer, *args):
@@ -167,7 +172,8 @@ class StateBase(QExpr):
         from sympy.printing.pretty.stringpict import prettyForm
         # Get brackets
         pform = self._print_contents_pretty(printer, *args)
-        lbracket, rbracket = self._pretty_brackets(pform.height(), printer._use_unicode)
+        lbracket, rbracket = self._pretty_brackets(
+            pform.height(), printer._use_unicode)
         # Put together state
         pform = prettyForm(*pform.left(lbracket))
         pform = prettyForm(*pform.right(rbracket))
@@ -520,7 +526,8 @@ class TimeDepState(StateBase):
         return printer._print_seq((label, time), delimiter=';')
 
     def _print_contents_latex(self, printer, *args):
-        label = self._print_sequence(self.label, self._label_separator, printer, *args)
+        label = self._print_sequence(
+            self.label, self._label_separator, printer, *args)
         time = self._print_time_latex(printer, *args)
         return '%s;%s' % (label, time)
 
@@ -710,7 +717,8 @@ class Wavefunction(Function):
         var = self.variables
 
         if len(args) != len(var):
-            raise NotImplementedError("Incorrect number of arguments to function!")
+            raise NotImplementedError(
+                "Incorrect number of arguments to function!")
 
         ct = 0
         #If the passed value is outside the specified bounds, return 0

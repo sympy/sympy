@@ -113,14 +113,22 @@ def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
-    assert sin(sinh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert sin(cosh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert sin(tanh(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert sin(coth(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, coth(3)).n()
-    assert sin(sin(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sin(3)).n()
-    assert sin(cos(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cos(3)).n()
-    assert sin(tan(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tan(3)).n()
-    assert sin(cot(x)).rewrite(exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
+    assert sin(sinh(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert sin(cosh(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert sin(tanh(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert sin(coth(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, coth(3)).n()
+    assert sin(sin(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sin(3)).n()
+    assert sin(cos(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cos(3)).n()
+    assert sin(tan(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, tan(3)).n()
+    assert sin(cot(x)).rewrite(
+        exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
 
 
@@ -280,14 +288,22 @@ def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
-    assert cos(sinh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert cos(cosh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert cos(tanh(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert cos(coth(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, coth(3)).n()
-    assert cos(sin(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sin(3)).n()
-    assert cos(cos(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cos(3)).n()
-    assert cos(tan(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tan(3)).n()
-    assert cos(cot(x)).rewrite(exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
+    assert cos(sinh(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert cos(cosh(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert cos(tanh(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert cos(coth(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, coth(3)).n()
+    assert cos(sin(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sin(3)).n()
+    assert cos(cos(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cos(3)).n()
+    assert cos(tan(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, tan(3)).n()
+    assert cos(cot(x)).rewrite(
+        exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
 
 
@@ -376,14 +392,22 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == -cos(x + S.Pi/2)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
-    assert tan(sinh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert tan(cosh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert tan(tanh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert tan(coth(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
-    assert tan(sin(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
-    assert tan(cos(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
-    assert tan(tan(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
-    assert tan(cot(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
+    assert tan(sinh(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert tan(cosh(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert tan(tanh(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert tan(coth(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
+    assert tan(sin(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
+    assert tan(cos(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
+    assert tan(tan(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
+    assert tan(cot(x)).rewrite(
+        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
 
 
@@ -464,12 +488,18 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
     assert cot(x).rewrite(cos) == -cos(x)/cos(x + S.Pi/2)
     assert cot(x).rewrite(tan) == 1/tan(x)
-    assert cot(sinh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert cot(cosh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert cot(tanh(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert cot(coth(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, coth(3)).n()
-    assert cot(sin(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sin(3)).n()
-    assert cot(tan(x)).rewrite(exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
+    assert cot(sinh(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert cot(cosh(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert cot(tanh(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert cot(coth(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, coth(3)).n()
+    assert cot(sin(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sin(3)).n()
+    assert cot(tan(x)).rewrite(
+        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
 
 
@@ -679,12 +709,14 @@ def test_evenodd_rewrite():
         for expr in with_minus:
             assert _check_even_rewrite(func, expr)
         assert _check_no_rewrite(func, a*b)
-        assert func(x-y) == func(y-x)  # it doesn't matter which form is canonical
+        assert func(
+            x-y) == func(y-x)  # it doesn't matter which form is canonical
     for func in odd:
         for expr in with_minus:
             assert _check_odd_rewrite(func, expr)
         assert _check_no_rewrite(func, a*b)
-        assert func(x-y) == -func(y-x)  # it doesn't matter which form is canonical
+        assert func(
+            x-y) == -func(y-x)  # it doesn't matter which form is canonical
 
 
 def test_issue1448():
@@ -733,7 +765,8 @@ def test_aseries():
     x = Symbol('x')
 
     def t(n, v, d, e):
-        assert abs(n(1/v).evalf() - n(1/x).series(x, dir=d).removeO().subs(x, v)) < e
+        assert abs(
+            n(1/v).evalf() - n(1/x).series(x, dir=d).removeO().subs(x, v)) < e
     t(atan, 0.1, '+', 1e-5)
     t(atan, -0.1, '-', 1e-5)
     t(acot, 0.1, '+', 1e-5)
@@ -860,10 +893,14 @@ def test_real_imag():
     a, b = symbols('a,b', real=True)
     z = a+b*I
     for deep in [True, False]:
-        assert sin(z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
-        assert cos(z).as_real_imag(deep=deep) == (cos(a)*cosh(b), -sin(a)*sinh(b))
-        assert tan(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(cos(a)**2+sinh(b)**2), sinh(b)*cosh(b)/(cos(a)**2+sinh(b)**2))
-        assert cot(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(sin(a)**2+sinh(b)**2), -sinh(b)*cosh(b)/(sin(a)**2+sinh(b)**2))
+        assert sin(
+            z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
+        assert cos(
+            z).as_real_imag(deep=deep) == (cos(a)*cosh(b), -sin(a)*sinh(b))
+        assert tan(z).as_real_imag(deep=deep) == (sin(a)*cos(
+            a)/(cos(a)**2+sinh(b)**2), sinh(b)*cosh(b)/(cos(a)**2+sinh(b)**2))
+        assert cot(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(
+            sin(a)**2+sinh(b)**2), -sinh(b)*cosh(b)/(sin(a)**2+sinh(b)**2))
         assert sin(a).as_real_imag(deep=deep) == (sin(a), 0)
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)

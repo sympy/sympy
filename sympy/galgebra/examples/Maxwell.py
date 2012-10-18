@@ -13,7 +13,8 @@ if __name__ == '__main__':
              '0  0  0 -1'
 
     vars = sympy.symbols('t x y z')
-    gamma_t, gamma_x, gamma_y, gamma_z = GA.MV.setup('gamma_t gamma_x gamma_y gamma_z', metric, True, vars)
+    gamma_t, gamma_x, gamma_y, gamma_z = GA.MV.setup(
+        'gamma_t gamma_x gamma_y gamma_z', metric, True, vars)
     tex.Format()
     I = GA.MV(1, 'pseudo')
     I.convert_to_blades()

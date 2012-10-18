@@ -1342,7 +1342,8 @@ class acos(Function):
         if x > -1 and x <= 1:
             return 2 * atan(sqrt(1 - x**2)/(1 + x))
         else:
-            raise ValueError("The argument must be bounded in the interval (-1,1]")
+            raise ValueError(
+                "The argument must be bounded in the interval (-1,1]")
 
     def _sage_(self):
         import sage.all as sage
@@ -1449,7 +1450,8 @@ class atan(Function):
 
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
-               (C.log((S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
+               (C.log(
+                   (S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:

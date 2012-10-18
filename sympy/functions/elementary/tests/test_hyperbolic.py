@@ -490,10 +490,14 @@ def test_complex():
     for func in [sinh, cosh, tanh, coth]:
         assert func(z).conjugate() == func(a - b*I)
     for deep in [True, False]:
-        assert sinh(z).expand(complex=True, deep=deep) == sinh(a)*cos(b) + I*cosh(a)*sin(b)
-        assert cosh(z).expand(complex=True, deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
-        assert tanh(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
-        assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
+        assert sinh(z).expand(
+            complex=True, deep=deep) == sinh(a)*cos(b) + I*cosh(a)*sin(b)
+        assert cosh(z).expand(
+            complex=True, deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
+        assert tanh(z).expand(complex=True, deep=deep) == sinh(a)*cosh(
+            a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
+        assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(
+            a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
 
 
 def test_complex_2899():

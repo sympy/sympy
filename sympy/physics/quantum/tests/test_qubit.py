@@ -37,8 +37,10 @@ def test_QubitBra():
     assert QubitBra(0).dual_class() == Qubit
     assert represent(Qubit(1, 1, 0), nqubits=3).H ==\
            represent(QubitBra(1, 1, 0), nqubits=3)
-    assert Qubit(0, 1)._eval_innerproduct_QubitBra(QubitBra(1, 0)) == Integer(0)
-    assert Qubit(0, 1)._eval_innerproduct_QubitBra(QubitBra(0, 1)) == Integer(1)
+    assert Qubit(
+        0, 1)._eval_innerproduct_QubitBra(QubitBra(1, 0)) == Integer(0)
+    assert Qubit(
+        0, 1)._eval_innerproduct_QubitBra(QubitBra(0, 1)) == Integer(1)
 
 
 def test_IntQubit():
@@ -125,10 +127,16 @@ def test_measure_partial():
     #test of measuring multiple bits at once
     state2 = Qubit('1111') + Qubit('1101') + Qubit('1011') + Qubit('1000')
     assert sorted(measure_partial(state2, (0, 1, 3))) ==\
-           sorted([(Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1, 2)),
+           sorted(
+               [(
+                   Qubit(
+                       '1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1, 2)),
            (Qubit('1101'), Rational(1, 4)), (Qubit('1000'), Rational(1, 4))])
     assert sorted(measure_partial(state2, (0,))) ==\
-           sorted([(Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) + Qubit('1011')/sqrt(3), Rational(3, 4)),
+           sorted(
+               [(
+                   Qubit(
+                       '1111')/sqrt(3) + Qubit('1101')/sqrt(3) + Qubit('1011')/sqrt(3), Rational(3, 4)),
            (Qubit('1000'), Rational(1, 4))])
 
 
@@ -138,7 +146,8 @@ def test_measure_all():
     assert sorted(measure_all(state)) == sorted([(Qubit('11'), Rational(1, 2)),
            (Qubit('10'), Rational(1, 2))])
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
-    assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1, 5)),
+    assert sorted(
+        measure_all(state2)) == sorted([(Qubit('11'), Rational(1, 5)),
            (Qubit('00'), Rational(4, 5))])
 
 

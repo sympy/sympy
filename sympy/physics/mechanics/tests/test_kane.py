@@ -24,7 +24,8 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+    assert KM.linearize(
+        ) == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
 
 
 def test_two_dof():
@@ -105,7 +106,8 @@ def test_rolling_disc():
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
+    R.set_ang_acc(
+        N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form

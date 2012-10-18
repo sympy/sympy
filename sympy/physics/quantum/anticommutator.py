@@ -124,7 +124,8 @@ class AntiCommutator(Expr):
 
     def _sympyrepr(self, printer, *args):
         return "%s(%s,%s)" % (
-            self.__class__.__name__, printer._print(self.args[0]), printer._print(self.args[1])
+            self.__class__.__name__, printer._print(
+                self.args[0]), printer._print(self.args[1])
         )
 
     def _sympystr(self, printer, *args):

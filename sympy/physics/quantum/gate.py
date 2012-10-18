@@ -177,7 +177,8 @@ class Gate(UnitaryOperator):
         format : str
             The format string ('sympy','numpy', etc.)
         """
-        raise NotImplementedError('get_target_matrix is not implemented in Gate.')
+        raise NotImplementedError(
+            'get_target_matrix is not implemented in Gate.')
 
     #-------------------------------------------------------------------------
     # Apply
@@ -241,7 +242,8 @@ class Gate(UnitaryOperator):
         format = options.get('format', 'sympy')
         nqubits = options.get('nqubits', 0)
         if nqubits == 0:
-            raise QuantumError('The number of qubits must be given as nqubits.')
+            raise QuantumError(
+                'The number of qubits must be given as nqubits.')
 
         # Make sure we have enough qubits for the gate.
         if nqubits < self.min_qubits:
@@ -400,7 +402,8 @@ class CGate(Gate):
             (controls, gate)
 
     def _pretty(self, printer, *args):
-        controls = self._print_sequence_pretty(self.controls, ',', printer, *args)
+        controls = self._print_sequence_pretty(
+            self.controls, ',', printer, *args)
         gate = printer._print(self.gate)
         gate_name = stringPict(unicode(self.gate_name))
         first = self._print_subscript_pretty(gate_name, controls)
@@ -517,7 +520,8 @@ class UGate(Gate):
     # Print methods
     #-------------------------------------------------------------------------
     def _pretty(self, printer, *args):
-        targets = self._print_sequence_pretty(self.targets, ',', printer, *args)
+        targets = self._print_sequence_pretty(
+            self.targets, ',', printer, *args)
         gate_name = stringPict(unicode(self.gate_name))
         return self._print_subscript_pretty(gate_name, targets)
 

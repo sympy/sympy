@@ -233,7 +233,8 @@ def test_ranking():
     p = Permutation([1, 5, 2, 0, 3, 6, 4])
     q = Permutation([[1, 2, 3, 5, 6], [0, 4]])
     a = [Permutation.unrank_trotterjohnson(4, i).array_form for i in range(5)]
-    assert a == [[0, 1, 2, 3], [0, 1, 3, 2], [0, 3, 1, 2], [3, 0, 1, 2], [3, 0, 2, 1] ]
+    assert a == [[0, 1, 2, 3], [0, 1, 3, 2], [0, 3, 1, 2], [3, 0, 1,
+        2], [3, 0, 2, 1] ]
     assert [Permutation(pa).rank_trotterjohnson() for pa in a] == range(5)
     assert Permutation([0, 1, 2, 3]).next_trotterjohnson() == \
         Permutation([0, 1, 3, 2])
@@ -324,14 +325,17 @@ def test_args():
     assert Permutation([[1, 2]]) == Permutation([0, 2, 1])
     assert Permutation([[1], [4, 2]]) == Permutation([0, 1, 4, 3, 2])
     assert Permutation([[1], [4, 2]], size=1) == Permutation([0, 1, 4, 3, 2])
-    assert Permutation([[1], [4, 2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
+    assert Permutation(
+        [[1], [4, 2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
     assert Permutation([], size=3) == Permutation([0, 1, 2])
     assert Permutation(3).list(5) == [0, 1, 2, 3, 4]
     assert Permutation(3).list(-1) == []
     assert Permutation(5)(1, 2).list(-1) == [0, 2, 1]
     assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
-    raises(TypeError, lambda: Permutation([1, 2], [0]))  # enclosing brackets needed
-    raises(ValueError, lambda: Permutation([[1, 2], 0]))  # enclosing brackets needed on 0
+    raises(TypeError, lambda: Permutation([1, 2], [0]))
+           # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([[1, 2], 0]))
+           # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1, 1, 0]))
     raises(ValueError, lambda: Permutation([[1], [1, 2]]))
     raises(ValueError, lambda: Permutation([4, 5], size=10))  # where are 0-3?

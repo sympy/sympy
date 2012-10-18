@@ -434,8 +434,10 @@ def evalf_add(v, prec, options):
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
-        re, re_acc = add_terms([a[0::2] for a in terms if a[0]], prec, target_prec)
-        im, im_acc = add_terms([a[1::2] for a in terms if a[1]], prec, target_prec)
+        re, re_acc = add_terms(
+            [a[0::2] for a in terms if a[0]], prec, target_prec)
+        im, im_acc = add_terms(
+            [a[1::2] for a in terms if a[1]], prec, target_prec)
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
@@ -640,7 +642,8 @@ def evalf_pow(v, prec, options):
 
     # (real ** complex) or (complex ** complex)
     if yim:
-        re, im = libmp.mpc_pow((xre or fzero, xim or fzero), (yre or fzero, yim),
+        re, im = libmp.mpc_pow(
+            (xre or fzero, xim or fzero), (yre or fzero, yim),
             target_prec)
         return finalize_complex(re, im, target_prec)
     # complex ** real
@@ -726,7 +729,8 @@ def evalf_log(expr, prec, options):
 
     if xim:
         # XXX: use get_abs etc instead
-        re = evalf_log(C.log(C.Abs(arg, evaluate=False), evaluate=False), prec, options)
+        re = evalf_log(
+            C.log(C.Abs(arg, evaluate=False), evaluate=False), prec, options)
         im = mpf_atan2(xim, xre or fzero, prec)
         return re[0], im, re[2], prec
 
@@ -879,20 +883,24 @@ def do_integral(expr, prec, options):
     if have_part[0]:
         re = result.real._mpf_
         if re == fzero:
-            re, re_acc = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
+            re, re_acc = scaled_zero(
+                min(-prec, -max_real_term[0], -quadrature_error))
             re = scaled_zero(re)  # handled ok in evalf_integral
         else:
-            re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
+            re_acc = -max(max_real_term[0] - fastlog(re) - \
+                          prec, quadrature_error)
     else:
         re, re_acc = None, None
 
     if have_part[1]:
         im = result.imag._mpf_
         if im == fzero:
-            im, im_acc = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
+            im, im_acc = scaled_zero(
+                min(-prec, -max_imag_term[0], -quadrature_error))
             im = scaled_zero(im)  # handled ok in evalf_integral
         else:
-            im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
+            im_acc = -max(max_imag_term[0] - fastlog(im) - \
+                          prec, quadrature_error)
     else:
         im, im_acc = None, None
 

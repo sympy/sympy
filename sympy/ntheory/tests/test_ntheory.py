@@ -272,7 +272,8 @@ def test_factorint():
     assert pollard_rho(19, seed=1) is None
     assert factorint(3, limit=2) == {3: 1}
     assert factorint(12345) == {3: 1, 5: 1, 823: 1}
-    assert factorint(12345, limit=3) == {4115: 1, 3: 1}  # the 5 is greater than the limit
+    assert factorint(
+        12345, limit=3) == {4115: 1, 3: 1}  # the 5 is greater than the limit
     assert factorint(1, limit=1) == {}
     assert factorint(12, limit=1) == {12: 1}
     assert factorint(30, limit=2) == {2: 1, 15: 1}
@@ -315,7 +316,8 @@ def test_factorint():
     n*=nextprime(2*n)
     # exceed 2nd
     assert '2001' in capture(lambda: factorint(n, limit=2000, verbose=1))
-    assert capture(lambda: factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
+    assert capture(
+        lambda: factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
     # non-prime pm1 result
     n=nextprime(8069)
     n*=nextprime(2*n)*nextprime(2*n, 2)
@@ -468,7 +470,8 @@ def test_multinomial_coefficients():
             (1, 0, 2): 3, (0, 2, 1): 3, (0, 1, 2): 3, (3, 0, 0): 1,
             (2, 0, 1): 3, (1, 2, 0): 3, (1, 1, 1): 6, (0, 0, 3): 1}
     assert dict(multinomial_coefficients_iterator(2, 0)) == {(0, 0): 1}
-    assert dict(multinomial_coefficients_iterator(2, 1)) == {(0, 1): 1, (1, 0): 1}
+    assert dict(
+        multinomial_coefficients_iterator(2, 1)) == {(0, 1): 1, (1, 0): 1}
     assert dict(multinomial_coefficients_iterator(2, 2)) == \
         {(2, 0): 1, (0, 2): 1, (1, 1): 2}
     assert dict(multinomial_coefficients_iterator(3, 3)) == mc
@@ -572,11 +575,15 @@ def test_modular():
     assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
     assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
     assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(
+        *zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
+    assert solve_congruence(
+        *zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(
+        *zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip((1, 1, 2), (3, 2, 4))) is None
-    raises(ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
+    raises(
+        ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
 
 
 def test_search():

@@ -961,7 +961,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     # special cases
     if n < 0:
-        factors = factorint(-n, limit=limit, use_trial=use_trial, use_rho=use_rho,
+        factors = factorint(
+            -n, limit=limit, use_trial=use_trial, use_rho=use_rho,
         use_pm1=use_pm1, verbose=verbose, visual=False)
         factors[-1] = 1
         return factors

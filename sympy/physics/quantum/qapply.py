@@ -79,7 +79,8 @@ def qapply(e, **options):
 
     # For a Density operator call qapply on its state
     elif isinstance(e, Density):
-        new_args = [(qapply(state, **options), prob) for (state, prob) in e.args]
+        new_args = [(qapply(state, **options), prob) for (state,
+                     prob) in e.args]
         return Density(*new_args)
 
     # For a raw TensorProduct, call qapply on its args.

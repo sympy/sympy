@@ -56,7 +56,8 @@ def _create_lookup_table(table):
                                      [(fac, meijerg(an, ap, bm, bq, arg))], cond, hint))
 
     def addi(formula, inst, cond, hint=True):
-        table.setdefault(_mytype(formula, z), []).append((formula, inst, cond, hint))
+        table.setdefault(
+            _mytype(formula, z), []).append((formula, inst, cond, hint))
 
     def constant(a):
         return [(a, meijerg([1], [], [], [0], z)),
@@ -169,7 +170,8 @@ def _create_lookup_table(table):
     # Section 8.4.11
     from sympy import Ei, I, expint, Si, Ci, Shi, Chi, fresnels, fresnelc
     addi(Ei(t),
-         constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [], t*polar_lift(-1)))],
+         constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [],
+                  t*polar_lift(-1)))],
          True)
 
     # Section 8.4.12
@@ -179,7 +181,8 @@ def _create_lookup_table(table):
     # Section 8.4.13
     add(Shi(t), [S(1)/2], [], [0], [S(-1)/2, S(-1)/2], polar_lift(-1)*t**2/4,
         t*sqrt(pi)/4)
-    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, -pi**S('3/2')/2)
+    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, - \
+        pi**S('3/2')/2)
 
     # generalized exponential integral
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
@@ -557,7 +560,8 @@ def _condsimp(cond):
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """
-    from sympy import (symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
+    from sympy import (
+        symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
                        periodic_argument, oo, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
@@ -591,7 +595,8 @@ def _condsimp(cond):
                     m = arg.match(fro.args[0])
                 if not m:
                     continue
-                otherargs = map(lambda x: x.subs(m), fro.args[:num] + fro.args[num+1:])
+                otherargs = map(
+                    lambda x: x.subs(m), fro.args[:num] + fro.args[num+1:])
                 otherlist = [n]
                 for arg2 in otherargs:
                     for k, arg3 in enumerate(cond.args):
@@ -631,7 +636,8 @@ def _condsimp(cond):
                 return (expr.args[0] > 0)
             return orig
         return (m[p] > 0)
-    return cond.replace(lambda expr: expr.is_Relational and expr.rel_op == '==',
+    return cond.replace(
+        lambda expr: expr.is_Relational and expr.rel_op == '==',
                         repl_eq)
 
 
@@ -761,7 +767,8 @@ def _check_antecedents_1(g, x, helper=False):
     extra = [cond_3, cond_4]
     if helper:
         extra = []
-    case3 = [And(p < q, 1 <= m, delta > 0, Eq(abs(arg(eta)), delta*pi), *extra)]
+    case3 = [And(p < q, 1 <= m, delta > 0, Eq(abs(arg(eta)), delta*pi),
+                 *extra)]
     case3 += [And(p <= q - 2, Eq(delta, 0), Eq(abs(arg(eta)), 0), *extra)]
     conds += case3
     debug('  case 3:', case3)
@@ -980,8 +987,10 @@ def _check_antecedents(g1, g2, x):
         tmp += [(u - v)*re(1 + d) - re(rho) > -S(3)/2]
     c7 = And(*tmp)
 
-    c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - 1)*(v - u)) > 0)
-    c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - 1)*(v - u)) > 0)
+    c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - \
+          1)*(v - u)) > 0)
+    c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - \
+          1)*(v - u)) > 0)
     c10 = (abs(arg(sigma)) < bstar*pi)
     c11 = Eq(abs(arg(sigma)), bstar*pi)
     c12 = (abs(arg(omega)) < cstar*pi)
@@ -1040,7 +1049,8 @@ def _check_antecedents(g1, g2, x):
 
     def pr(count):
         _debug('  case %s:' % count, conds[-1])
-    conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10, c12)]  # 1
+    conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10,
+                  c12)]  # 1
     pr(1)
     conds += [And(Eq(u, v), Eq(bstar, 0), cstar > 0, sigma > 0, re(rho) < 1,
                   c1, c2, c3, c12)]  # 2
@@ -1151,7 +1161,8 @@ def _check_antecedents(g1, g2, x):
                   abs(arg(omega)) < (m + n - p + 1)*pi,
                   c1, c2, c10, c14, c15)]  # 28
     pr(28)
-    conds += [And(p > q + 1, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar >= 0,
+    conds += [And(
+        p > q + 1, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar >= 0,
                   cstar*pi < abs(arg(omega)),
                   abs(arg(omega)) < (m + n - q + 1)*pi,
                   c1, c3, c10, c14, c15)]  # 29
@@ -1174,12 +1185,14 @@ def _check_antecedents(g1, g2, x):
                   abs(arg(sigma)) < (bstar + 1)*pi,
                   c1, c3, c12, c14, c15)]  # 33
     pr(33)
-    conds += [And(Eq(n, 0), Eq(phi, 0), u < v - 1, m > 0, cstar > 0, bstar >= 0,
+    conds += [And(
+        Eq(n, 0), Eq(phi, 0), u < v - 1, m > 0, cstar > 0, bstar >= 0,
                   bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (s + t - u + 1)*pi,
                   c1, c2, c12, c14, c15)]  # 34
     pr(34)
-    conds += [And(Eq(m, 0), Eq(phi, 0), u > v + 1, n > 0, cstar > 0, bstar >= 0,
+    conds += [And(
+        Eq(m, 0), Eq(phi, 0), u > v + 1, n > 0, cstar > 0, bstar >= 0,
                   bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (s + t - v + 1)*pi,
                   c1, c3, c12, c14, c15)]  # 35
@@ -1452,7 +1465,8 @@ def _rewrite_single(f, x, recursive=True):
             return inverse_mellin_transform(F, s, x, strip,
                                             as_meijerg=True, needeval=True)
         except MellinTransformStripError:
-            return inverse_mellin_transform(simplify(cancel(expand(F))), s, x, strip,
+            return inverse_mellin_transform(
+                simplify(cancel(expand(F))), s, x, strip,
                                             as_meijerg=True, needeval=True)
     f = f_
     s = _dummy('s', 'rewrite-single', f)
@@ -1498,7 +1512,8 @@ def _rewrite_single(f, x, recursive=True):
         g = m[0]
         a, b = _get_coeff_exp(g.argument, x)
         res += [(c, 0, meijerg(g.an, g.aother, g.bm, g.bother,
-                               unpolarify(polarify(a, lift=True), exponents_only=True)
+                               unpolarify(polarify(
+                                   a, lift=True), exponents_only=True)
                                *x**b))]
     _debug('Recursive mellin transform worked:', g)
     return res, True
@@ -1532,8 +1547,10 @@ def _rewrite2(f, x):
     l = _mul_as_two_parts(g)
     if not l:
         return None
-    l.sort(key=lambda p: (max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
-                          max(len(_functions(p[0], x)), len(_functions(p[1], x))),
+    l.sort(
+        key=lambda p: (max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
+                          max(len(
+                              _functions(p[0], x)), len(_functions(p[1], x))),
                           max(len(_find_splitting_points(p[0], x)),
                               len(_find_splitting_points(p[1], x)))))
     for recursive in [False, True]:
@@ -1604,9 +1621,11 @@ def _meijerint_indefinite_1(f, x):
         def tr(p):
             return [a + rho + 1 for a in p]
         if any(b.is_integer and b <= 0 for b in tr(g.bm)):
-            r = -meijerg(tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
+            r = -meijerg(
+                tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:
-            r = meijerg(tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
+            r = meijerg(
+                tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
         r = hyperexpand(r.subs(t, a*x**b))
 
         # now substitute back

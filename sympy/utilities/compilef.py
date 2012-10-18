@@ -215,7 +215,8 @@ def genfcode(lambdastr, use_cse=False):
         cfstr = ''
         for symbol, expr in subs:
             vardec += '    double %s;\n' % symbol.name
-            cfstr += '    %s = %s;\n' % (symbol.name, cexpr(str(expr.evalf(dps))))
+            cfstr += '    %s = %s;\n' % (
+                symbol.name, cexpr(str(expr.evalf(dps))))
         cfstr = vardec + cfstr
         finalexpr = cexpr(str(finalexpr[0].evalf(dps)))
     # generate C code
@@ -544,7 +545,8 @@ def benchmark():
         global cf, pf, psyf
         start = time()
         cf = clambdify(var, f)
-        print 'compile time (including sympy overhead): %f s' % (time() - start)
+        print 'compile time (including sympy overhead): %f s' % (
+            time() - start)
         pf = lambdify(var, f, 'math')
         psyf = None
         psyco = import_module('psyco')

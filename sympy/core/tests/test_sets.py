@@ -49,7 +49,8 @@ def test_union():
            Interval(1, 3, False, True)
     assert Union(Interval(1, 3), Interval(1, 2, False, True)) == Interval(1, 3)
     assert Union(Interval(1, 2, True), Interval(1, 3)) == Interval(1, 3)
-    assert Union(Interval(1, 2, True), Interval(1, 3, True)) == Interval(1, 3, True)
+    assert Union(
+        Interval(1, 2, True), Interval(1, 3, True)) == Interval(1, 3, True)
     assert Union(Interval(1, 2, True), Interval(1, 3, True, True)) == \
            Interval(1, 3, True, True)
     assert Union(Interval(1, 2, True, True), Interval(1, 3, True)) == \
@@ -87,7 +88,8 @@ def test_union():
 
     # Test that Intervals and FiniteSets play nicely
     assert Interval(1, 3) + FiniteSet(2) == Interval(1, 3)
-    assert Interval(1, 3, True, True) + FiniteSet(3) == Interval(1, 3, True, False)
+    assert Interval(
+        1, 3, True, True) + FiniteSet(3) == Interval(1, 3, True, False)
     X = Interval(1, 3)+FiniteSet(5)
     Y = Interval(1, 2)+FiniteSet(3)
     XandY = X.intersect(Y)
@@ -110,7 +112,8 @@ def test_difference():
 
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
     assert FiniteSet('ham', 'eggs') - FiniteSet(['eggs']) == FiniteSet(['ham'])
-    assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == FiniteSet(1, 2)
+    assert FiniteSet(
+        1, 2, 3, 4) - Interval(2, 10, True, False) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
     assert Union(Interval(0, 2), FiniteSet(2, 3, 4)) - Interval(1, 3) == \
             Union(Interval(0, 1, False, True), FiniteSet(4))
@@ -151,7 +154,8 @@ def test_complement():
     notsquare = square.complement
 
     assert all(pt in square for pt in [(0, 0), (.5, .5), (1, 0), (1, 1)])
-    assert not any(pt in notsquare for pt in [(0, 0), (.5, .5), (1, 0), (1, 1)])
+    assert not any(
+        pt in notsquare for pt in [(0, 0), (.5, .5), (1, 0), (1, 1)])
     assert not any(pt in square for pt in [(-1, 0), (1.5, .5), (10, 10)])
     assert all(pt in notsquare for pt in [(-1, 0), (1.5, .5), (10, 10)])
 
@@ -233,7 +237,8 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
-    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure == 2
+    assert Union(
+        Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure == 2
 
     assert FiniteSet(1, 2, oo, a, -oo, -5).measure == 0
 
@@ -264,7 +269,8 @@ def test_subset():
             Interval(1, 2)+FiniteSet(3))
 
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) == True
-    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) == False
+    assert Union(
+        Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) == False
 
     assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) == True
     assert FiniteSet(1, 2, 3).subset(S.EmptySet) == True
@@ -348,10 +354,14 @@ def test_Interval_is_right_unbounded():
 def test_Interval_as_relational():
     x = Symbol('x')
 
-    assert Interval(-1, 2, False, False).as_relational(x) == And(Le(-1, x), Le(x, 2))
-    assert Interval(-1, 2, True, False).as_relational(x) == And(Lt(-1, x), Le(x, 2))
-    assert Interval(-1, 2, False, True).as_relational(x) == And(Le(-1, x), Lt(x, 2))
-    assert Interval(-1, 2, True, True).as_relational(x) == And(Lt(-1, x), Lt(x, 2))
+    assert Interval(
+        -1, 2, False, False).as_relational(x) == And(Le(-1, x), Le(x, 2))
+    assert Interval(
+        -1, 2, True, False).as_relational(x) == And(Lt(-1, x), Le(x, 2))
+    assert Interval(
+        -1, 2, False, True).as_relational(x) == And(Le(-1, x), Lt(x, 2))
+    assert Interval(
+        -1, 2, True, True).as_relational(x) == And(Lt(-1, x), Lt(x, 2))
 
     assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
     assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
@@ -429,8 +439,10 @@ def test_product_basic():
 
     inf, neginf = S.Infinity, S.NegativeInfinity
     assert square.complement == Union(
-       Interval(0, 1) * (Interval(neginf, 0, True, True)+Interval(1, inf, True, True)),
-       (Interval(neginf, 0, True, True)+Interval(1, inf, True, True))*Interval(0, 1),
+       Interval(0, 1) * (
+           Interval(neginf, 0, True, True)+Interval(1, inf, True, True)),
+       (Interval(neginf, 0, True, True)+Interval(1, inf, True, True)
+        )*Interval(0, 1),
        ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
                 * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
 
@@ -471,8 +483,10 @@ def test_supinf():
     assert FiniteSet(5, 1, x).inf == Min(1, x)
     assert FiniteSet(5, 1, x, y).sup == Max(5, x, y)
     assert FiniteSet(5, 1, x, y).inf == Min(1, x, y)
-    assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).sup == S.Infinity
-    assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
+    assert FiniteSet(
+        5, 1, x, y, S.Infinity, S.NegativeInfinity).sup == S.Infinity
+    assert FiniteSet(
+        5, 1, x, y, S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
     assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
 
 

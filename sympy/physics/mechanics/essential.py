@@ -2,7 +2,8 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
            'MechanicsLatexPrinter']
 
-from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
+from sympy import (
+    Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
                    expand, zeros, Derivative, Function, symbols, Add,
                    solve, S)
 from sympy.core import C
@@ -824,7 +825,8 @@ class ReferenceFrame(object):
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
                            '131', '212', '232', '313', '323', '')
-        rot_order = str(rot_order).upper()  # Now we need to make sure XYZ = 123
+        rot_order = str(
+            rot_order).upper()  # Now we need to make sure XYZ = 123
         rot_type = rot_type.upper()
         rot_order = [i.replace('X', '1') for i in rot_order]
         rot_order = [i.replace('Y', '2') for i in rot_order]
@@ -851,7 +853,8 @@ class ReferenceFrame(object):
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
         elif rot_type == 'QUATERNION':
             if not rot_order == '':
-                raise TypeError('Quaternion orientation takes no rotation order')
+                raise TypeError(
+                    'Quaternion orientation takes no rotation order')
             if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
                 raise TypeError('Amounts are a list or tuple of length 4')
             q0, q1, q2, q3 = amounts

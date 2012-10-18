@@ -117,7 +117,8 @@ class CodeWrapper:
 
     def _generate_code(self, main_routine, routines):
         routines.append(main_routine)
-        self.generator.write(routines, self.filename, True, self.include_header,
+        self.generator.write(
+            routines, self.filename, True, self.include_header,
                 self.include_empty)
 
     def wrap_code(self, routine, helpers=[]):
@@ -148,7 +149,8 @@ class CodeWrapper:
         null = open(os.devnull, 'w')
         try:
             if self.quiet:
-                retcode = subprocess.call(command, stdout=null, stderr=subprocess.STDOUT)
+                retcode = subprocess.call(
+                    command, stdout=null, stderr=subprocess.STDOUT)
             else:
                 retcode = subprocess.call(command)
         except OSError:
@@ -173,9 +175,11 @@ def %(name)s():
 
     def _generate_code(self, routine, helpers):
         with open('%s.py' % self.module_name, 'w') as f:
-            printed = ", ".join([str(res.expr) for res in routine.result_variables])
+            printed = ", ".join(
+                [str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            inargs = filter(lambda x: not isinstance(x, OutputArgument), routine.arguments)
+            inargs = filter(lambda x: not isinstance(
+                x, OutputArgument), routine.arguments)
             retvals = []
             for val in routine.result_variables:
                 if isinstance(val, Result):
@@ -229,7 +233,8 @@ setup(
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         with open('setup.py', 'w') as f:
-            print >> f, CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}
+            print >> f, CythonCodeWrapper.setup_template % {
+                'args': ", ".join(ext_args)}
 
     @classmethod
     def _get_wrapped_function(cls, mod):
@@ -330,11 +335,13 @@ class F2PyCodeWrapper(CodeWrapper):
 
 
 def _get_code_wrapper_class(backend):
-    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper, 'DUMMY': DummyWrapper}
+    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper,
+        'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
 
-def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
+def autowrap(
+    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
     """Generates python callable binaries based on the math expression.
 

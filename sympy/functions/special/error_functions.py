@@ -574,7 +574,8 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 + expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    -I*(-expint(
+        1, z*exp_polar(-I*pi/2))/2 + expint(1, z*exp_polar(I*pi/2))/2) + pi/2
 
     """
 
@@ -915,7 +916,8 @@ class FresnelIntegral(Function):
         x, y = self._as_real_imag(deep=deep, **hints)
         sq = -y**2/x**2
         re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - \
+                self.func(x+x*sqrt(sq)))
         return (re, im)
 
 
@@ -1148,7 +1150,8 @@ class _erfs(Function):
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0, n) ]
+        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
+            4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0, n) ]
         o = C.Order(1/z**(2*n+1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o

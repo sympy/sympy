@@ -57,7 +57,8 @@ def flatten(iterable, levels=None, cls=None):
         elif levels > 0:
             levels -= 1
         else:
-            raise ValueError("expected non-negative number of levels, got %s" % levels)
+            raise ValueError(
+                "expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
         reducible = lambda x: is_sequence(x, set)
@@ -288,7 +289,8 @@ def interactive_traversal(expr):
             print
         else:
             if choice == '?':
-                cprint(RED, "%s - select subexpression with the given index" % choices)
+                cprint(RED, "%s - select subexpression with the given index" %
+                       choices)
                 cprint(RED, "f - select the first subexpression")
                 cprint(RED, "l - select the last subexpression")
                 cprint(RED, "r - select a random subexpression")
@@ -307,7 +309,8 @@ def interactive_traversal(expr):
                 try:
                     choice = int(choice)
                 except ValueError:
-                    cprint(BRED, "Choice must be a number in %s range\n" % choices)
+                    cprint(BRED,
+                           "Choice must be a number in %s range\n" % choices)
                     result = _interactive_traversal(expr, stage)
                 else:
                     if choice < 0 or choice >= n_args:

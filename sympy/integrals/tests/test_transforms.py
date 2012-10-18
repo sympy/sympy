@@ -7,7 +7,8 @@ from sympy.integrals.transforms import (mellin_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
     InverseLaplaceTransform, InverseFourierTransform, InverseSineTransform, InverseCosineTransform,
     HankelTransform, InverseHankelTransform)
-from sympy import (gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
+from sympy import (
+    gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
                    exp_polar, polar_lift, unpolarify, Function, expint)
@@ -73,7 +74,9 @@ def test_mellin_transform_fail():
 
     expr = (sqrt(x+b**2)+b)**a
     assert MT(expr.subs(b, -bpos), x, s) == \
-           (2**(a + 2*s)*a*bpos**(a + 2*s)*gamma(-a - 2*s)*gamma(a + s)/gamma(-s + 1),
+           (
+               2**(a + 2*s)*a*bpos**(a + 2*s)*gamma(-a - 2* \
+                   s)*gamma(a + s)/gamma(-s + 1),
             (-re(a), -re(a)/2), True)
 
     # Test exponent 1:
@@ -106,7 +109,9 @@ def test_mellin_transform():
 
     # TODO also the conditions should be simplified
     assert MT(abs(1-x)**(-rho), x, s) == \
-        (cos(pi*(rho/2 - s))*gamma(s)*gamma(rho - s)/(cos(pi*rho/2)*gamma(rho)),
+        (
+            cos(pi*(rho/2 - s))*gamma(s)*gamma(rho - s)/(cos(
+                pi*rho/2)*gamma(rho)),
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1-x)**(beta-1)*Heaviside(1-x)
             + a*(x-1)**(beta-1)*Heaviside(x-1), x, s)
@@ -226,13 +231,16 @@ def test_mellin_transform_bessel():
 
     # Section 8.4.23
     assert MT(besselk(a, 2*sqrt(x)), x, s) == \
-           (gamma(s - a/2)*gamma(s + a/2)/2, (Max(-re(a)/2, re(a)/2), oo), True)
+           (gamma(
+               s - a/2)*gamma(s + a/2)/2, (Max(-re(a)/2, re(a)/2), oo), True)
     assert MT(besselj(a, 2*sqrt(2*sqrt(x)))*besselk(a, 2*sqrt(2*sqrt(x))), x, s) == \
            (4**(-s)*gamma(2*s)*gamma(a/2 + s)/gamma(a/2 - s + 1)/2,
             (Max(-re(a)/2, 0), oo), True)
     # TODO bessely(a, x)*besselk(a, x) is a mess
     assert MT(besseli(a, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
-           (gamma(s)*gamma(a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
+           (
+               gamma(s)*gamma(
+                   a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
             (Max(-re(a), 0), S(1)/2), True)
     assert MT(besseli(b, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
             (4**s*gamma(-2*s + 1)*gamma(-a/2 + b/2 + s)*gamma(a/2 + b/2 + s)/
@@ -266,14 +274,16 @@ def test_expint():
            == expint(aneg, x)
 
     assert mellin_transform(Si(x), x, s) == \
-           (-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)), (-1, 0), True)
+           (-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)
+            ), (-1, 0), True)
     assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2)
                                     /(2*s*gamma(-s/2 + 1)), s, x, (-1, 0)) \
            == Si(x)
 
     assert mellin_transform(Ci(sqrt(x)), x, s) == \
            (-4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)), (0, 1), True)
-    assert inverse_mellin_transform(-4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)),
+    assert inverse_mellin_transform(
+        -4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)),
                s, u, (0, 1)).expand() == Ci(sqrt(u))
 
     # TODO LT of Si, Shi, Chi is a mess ...
@@ -352,7 +362,8 @@ def test_inverse_mellin_transform():
            (1 + sqrt(x + 1))**c
     assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s)
                         /gamma(1 - a - s), s, x, (0, (-re(a) + 1)/2))) == \
-           (b + sqrt(b**2 + x))**(a - 1)*(b**2 + b*sqrt(b**2 + x) + x)/(b**2 + x)
+           (b + sqrt(
+               b**2 + x))**(a - 1)*(b**2 + b*sqrt(b**2 + x) + x)/(b**2 + x)
     assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s)
                           / gamma(-c - s + 1), s, x, (0, -re(c)/2))) == \
            (b + sqrt(b**2 + x))**c
@@ -369,7 +380,8 @@ def test_inverse_mellin_transform():
     # TODO
     def mysimp(expr):
         from sympy import expand, logcombine, powsimp
-        return expand(powsimp(logcombine(expr, force=True), force=True, deep=True),
+        return expand(
+            powsimp(logcombine(expr, force=True), force=True, deep=True),
                       force=True).replace(exp_polar, exp)
     assert mysimp(mysimp(IMT(pi/(s*tan(pi*s)), s, x, (-1, 0)))) in [
         log(1-x)*Heaviside(1-x) + log(x-1)*Heaviside(x-1),
@@ -437,7 +449,8 @@ def test_laplace_transform():
 
     # Test unevaluated form
     assert laplace_transform(f(t), t, w) == LaplaceTransform(f(t), t, w)
-    assert inverse_laplace_transform(f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
+    assert inverse_laplace_transform(
+        f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
 
     # test a bug
     spos = symbols('s', positive=True)
@@ -466,7 +479,8 @@ def test_laplace_transform():
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
     # TODO would be nice to have these come out better
-    assert LT(exp(-a*t)*sin(b*t), t, s) == (1/b/(1 + (a + s)**2/b**2), -a, True)
+    assert LT(
+        exp(-a*t)*sin(b*t), t, s) == (1/b/(1 + (a + s)**2/b**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
            (1/(s + a)/(1 + b**2/(a + s)**2), -a, True)
     # TODO sinh, cosh have delicate cancellation
@@ -514,7 +528,8 @@ def test_inverse_laplace_transform():
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
     assert ILT(a/((s+b)**2 + a**2), s, t) == exp(-b*t)*sin(a*t)*Heaviside(t)
-    assert ILT((s+b)/((s+b)**2 + a**2), s, t) == exp(-b*t)*cos(a*t)*Heaviside(t)
+    assert ILT(
+        (s+b)/((s+b)**2 + a**2), s, t) == exp(-b*t)*cos(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
     # TODO should this simplify further?
     assert ILT(exp(-a*s)/s**b, s, t) == \
@@ -556,7 +571,8 @@ def test_fourier_transform():
 
     # Test unevaluated form
     assert fourier_transform(f(x), x, k) == FourierTransform(f(x), x, k)
-    assert inverse_fourier_transform(f(k), k, x) == InverseFourierTransform(f(k), k, x)
+    assert inverse_fourier_transform(
+        f(k), k, x) == InverseFourierTransform(f(k), k, x)
 
     # basic examples from wikipedia
     assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
@@ -600,23 +616,32 @@ def test_sine_transform():
 
     # Test unevaluated form
     assert sine_transform(f(t), t, w) == SineTransform(f(t), t, w)
-    assert inverse_sine_transform(f(w), w, t) == InverseSineTransform(f(w), w, t)
+    assert inverse_sine_transform(
+        f(w), w, t) == InverseSineTransform(f(w), w, t)
 
     assert sine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_sine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
-    assert sine_transform((1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
+    assert sine_transform(
+        (1/sqrt(t))**3, t, w) == sqrt(w)*gamma(S(1)/4)/(2*gamma(S(5)/4))
 
-    assert sine_transform(t**(-a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma((a + 1)/2)
-    assert inverse_sine_transform(2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2), w, t) == t**(-a)
+    assert sine_transform(t**(-a), t, w) == 2**(
+        -a + S(1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma((a + 1)/2)
+    assert inverse_sine_transform(2**(-a + S(
+        1)/2)*w**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + S(1)/2), w, t) == t**(-a)
 
-    assert sine_transform(exp(-a*t), t, w) == sqrt(2)*w/(sqrt(pi)*(a**2 + w**2))
-    assert inverse_sine_transform(sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+    assert sine_transform(
+        exp(-a*t), t, w) == sqrt(2)*w/(sqrt(pi)*(a**2 + w**2))
+    assert inverse_sine_transform(
+        sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
 
-    assert sine_transform(log(t)/t, t, w) == sqrt(2)*sqrt(pi)*(-log(w**2) - 2*EulerGamma)/4
+    assert sine_transform(
+        log(t)/t, t, w) == sqrt(2)*sqrt(pi)*(-log(w**2) - 2*EulerGamma)/4
 
-    assert sine_transform(t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
-    assert inverse_sine_transform(sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
+    assert sine_transform(
+        t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2))
+    assert inverse_sine_transform(
+        sqrt(2)*w*exp(-w**2/(4*a))/(4*a**(S(3)/2)), w, t) == t*exp(-a*t**2)
 
 
 def test_cosine_transform():
@@ -629,25 +654,35 @@ def test_cosine_transform():
 
     # Test unevaluated form
     assert cosine_transform(f(t), t, w) == CosineTransform(f(t), t, w)
-    assert inverse_cosine_transform(f(w), w, t) == InverseCosineTransform(f(w), w, t)
+    assert inverse_cosine_transform(
+        f(w), w, t) == InverseCosineTransform(f(w), w, t)
 
     assert cosine_transform(1/sqrt(t), t, w) == 1/sqrt(w)
     assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
-    assert cosine_transform(1/(a**2+t**2), t, w) == sqrt(2)*sqrt(pi)*(-sinh(a*w) + cosh(a*w))/(2*a)
+    assert cosine_transform(1/(
+        a**2+t**2), t, w) == sqrt(2)*sqrt(pi)*(-sinh(a*w) + cosh(a*w))/(2*a)
 
-    assert cosine_transform(t**(-a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma((-a + 1)/2)/gamma(a/2)
-    assert inverse_cosine_transform(2**(-a + S(1)/2)*w**(a - 1)*gamma(-a/2 + S(1)/2)/gamma(a/2), w, t) == t**(-a)
+    assert cosine_transform(t**(
+        -a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma((-a + 1)/2)/gamma(a/2)
+    assert inverse_cosine_transform(2**(-a + S(
+        1)/2)*w**(a - 1)*gamma(-a/2 + S(1)/2)/gamma(a/2), w, t) == t**(-a)
 
-    assert cosine_transform(exp(-a*t), t, w) == sqrt(2)*a/(sqrt(pi)*(a**2 + w**2))
-    assert inverse_cosine_transform(sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+    assert cosine_transform(
+        exp(-a*t), t, w) == sqrt(2)*a/(sqrt(pi)*(a**2 + w**2))
+    assert inverse_cosine_transform(
+        sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
 
-    assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
+    assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(
+        t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
 
-    assert cosine_transform(1/(a+t), t, w) == -sqrt(2)*((2*Si(a*w) - pi)*sin(a*w) + 2*cos(a*w)*Ci(a*w))/(2*sqrt(pi))
-    assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), ((S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
+    assert cosine_transform(1/(a+t), t, w) == -sqrt(
+        2)*((2*Si(a*w) - pi)*sin(a*w) + 2*cos(a*w)*Ci(a*w))/(2*sqrt(pi))
+    assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), (
+        (S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
-    assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
+    assert cosine_transform(1/sqrt(a**2+t**2), t, w) == sqrt(2)*meijerg(
+        ((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2,), ()), ((0, 0), (S(1)/2,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
 
 
@@ -663,13 +698,18 @@ def test_hankel_transform():
     assert hankel_transform(1/r, r, k, 0) == 1/k
     assert inverse_hankel_transform(1/k, k, r, 0) == 1/r
 
-    assert hankel_transform(1/r**m, r, k, 0) == 2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2)
-    assert inverse_hankel_transform(2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2), k, r, 0) == r**(-m)
+    assert hankel_transform(
+        1/r**m, r, k, 0) == 2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2)
+    assert inverse_hankel_transform(
+        2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2), k, r, 0) == r**(-m)
 
-    assert hankel_transform(1/r**m, r, k, nu) == 2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
-    assert inverse_hankel_transform(2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2), k, r, nu) == r**(-m)
+    assert hankel_transform(1/r**m, r, k, nu) == 2**(
+        -m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    assert inverse_hankel_transform(2**(-m + 1)*k**(
+        m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2), k, r, nu) == r**(-m)
 
     assert hankel_transform(r**nu*exp(-a*r), r, k, nu) == \
-           2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
+           2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(
+               3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
     assert inverse_hankel_transform(2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(nu + S(3)/2)/sqrt(pi), k, r, nu) == \
            r**nu*(-sinh(a*r) + cosh(a*r))

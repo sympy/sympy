@@ -82,7 +82,8 @@ class RkGate(OneQubitGate):
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
             return Matrix([[1, 0], [0, exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
-        raise NotImplementedError('Invalid format for the R_k gate: %r' % format)
+        raise NotImplementedError(
+            'Invalid format for the R_k gate: %r' % format)
 
 
 Rk = RkGate
@@ -110,7 +111,8 @@ class Fourier(Gate):
         """
         nqubits = options.get('nqubits', 0)
         if nqubits == 0:
-            raise QuantumError('The number of qubits must be given as nqubits.')
+            raise QuantumError(
+                'The number of qubits must be given as nqubits.')
         if nqubits < self.min_qubits:
             raise QuantumError(
                 'The number of qubits %r is too small for the gate.' % nqubits
@@ -119,14 +121,16 @@ class Fourier(Gate):
         omega = self.omega
 
         #Make a matrix that has the basic Fourier Transform Matrix
-        arrayFT = [[omega**(i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
+        arrayFT = [[omega**(
+            i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
         matrixFT = Matrix(arrayFT)
 
         #Embed the FT Matrix in a higher space, if necessary
         if self.label[0] != 0:
             matrixFT = matrix_tensor_product(eye(2**self.label[0]), matrixFT)
         if self.min_qubits < nqubits:
-            matrixFT = matrix_tensor_product(matrixFT, eye(2**(nqubits-self.min_qubits)))
+            matrixFT = matrix_tensor_product(
+                matrixFT, eye(2**(nqubits-self.min_qubits)))
 
         return matrixFT
 

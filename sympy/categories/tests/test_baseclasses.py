@@ -179,7 +179,8 @@ def test_diagram():
     d = Diagram([f, g], {f: "unique", g * f: "veryunique"})
     d1 = d.subdiagram_from_objects(FiniteSet(A, B))
     assert d1 == Diagram([f], {f: "unique"})
-    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
+    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A,
+           Object("D"))))
 
     raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))
 

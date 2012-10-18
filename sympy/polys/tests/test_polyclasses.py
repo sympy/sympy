@@ -60,7 +60,8 @@ def test_DMP_to_dict():
     assert f.to_dict() == \
         {(4, 0): 3, (2, 0): 2, (0, 0): 8}
     assert f.to_sympy_dict() == \
-        {(4, 0): ZZ.to_sympy(3), (2, 0): ZZ.to_sympy(2), (0, 0): ZZ.to_sympy(8)}
+        {(4, 0): ZZ.to_sympy(3), (2, 0): ZZ.to_sympy(2), (0, 0):
+          ZZ.to_sympy(8)}
 
 
 def test_DMP_properties():
@@ -262,7 +263,8 @@ def test_DMP_functionality():
 
 def test_DMP_exclude():
     f = [[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
-    J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25]
+    J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        18, 19, 20, 21, 22, 24, 25]
 
     assert DMP(f, ZZ).exclude() == (J, DMP([1, 0], ZZ))
     assert DMP([[1], [1, 0]], ZZ).exclude() == ([], DMP([[1], [1, 0]], ZZ))
@@ -520,7 +522,10 @@ def test___hash__():
     # Make sure int vs. long doesn't affect hashing with Python ground types
     assert DMP([[1, 2], [3]], ZZ) == DMP([[1l, 2l], [3l]], ZZ)
     assert hash(DMP([[1, 2], [3]], ZZ)) == hash(DMP([[1l, 2l], [3l]], ZZ))
-    assert DMF(([[1, 2], [3]], [[1]]), ZZ) == DMF(([[1L, 2L], [3L]], [[1L]]), ZZ)
-    assert hash(DMF(([[1, 2], [3]], [[1]]), ZZ)) == hash(DMF(([[1L, 2L], [3L]], [[1L]]), ZZ))
+    assert DMF(
+        ([[1, 2], [3]], [[1]]), ZZ) == DMF(([[1L, 2L], [3L]], [[1L]]), ZZ)
+    assert hash(DMF(([[1, 2], [3]], [[1]]), ZZ)) == hash(DMF(([[1L,
+                2L], [3L]], [[1L]]), ZZ))
     assert ANP([1, 1], [1, 0, 1], ZZ) == ANP([1l, 1l], [1l, 0l, 1l], ZZ)
-    assert hash(ANP([1, 1], [1, 0, 1], ZZ)) == hash(ANP([1l, 1l], [1l, 0l, 1l], ZZ))
+    assert hash(
+        ANP([1, 1], [1, 0, 1], ZZ)) == hash(ANP([1l, 1l], [1l, 0l, 1l], ZZ))

@@ -23,7 +23,8 @@ class FiniteField(Field, SimpleDomain):
 
     def __init__(self, mod, symmetric=True):
         if mod <= 0:
-            raise ValueError('modulus must be a positive integer, got %s' % mod)
+            raise ValueError(
+                'modulus must be a positive integer, got %s' % mod)
 
         self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
         self.zero = self.dtype(0)

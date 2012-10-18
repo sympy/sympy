@@ -205,15 +205,18 @@ def test_Domain_preprocess():
     assert Domain.preprocess('QQ<I>') == QQ.algebraic_field(I)
 
     assert Domain.preprocess('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
-    assert Domain.preprocess('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
+    assert Domain.preprocess(
+        'QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
 
     raises(OptionError, lambda: Domain.preprocess('abc'))
 
 
 def test_Domain_postprocess():
-    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (x, y), 'domain': ZZ[y, z]}))
+    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (x, y),
+           'domain': ZZ[y, z]}))
 
-    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (), 'domain': EX}))
+    raises(GeneratorsError, lambda: Domain.postprocess({'gens': (),
+           'domain': EX}))
     raises(GeneratorsError, lambda: Domain.postprocess({'domain': EX}))
 
 

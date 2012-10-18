@@ -49,7 +49,8 @@ def test_2124():
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert D(cos(x), x).lseries().next() == D(1, x)
-    assert D(exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
+    assert D(
+        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
@@ -94,7 +95,8 @@ def test_acceleration():
 def test_1484():
     assert cos(1+x+x**2).series(x, 0, 5) == cos(1) - x*sin(1) + x**2*(-sin(1) -
                                           cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
-                                          x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
+                                          x**4*(-11*cos(
+                                              1)/24 + sin(1)/2) + O(x**5)
 
 
 def test_issue_3219():

@@ -590,7 +590,8 @@ class Mul(AssocOp):
                     if len(neg) % 2:
                         unk.append(S.NegativeOne)
 
-                done.extend([Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
+                done.extend(
+                    [Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
                 return Mul(*done)
 
         if e.is_even and coeff.is_negative:
@@ -917,8 +918,10 @@ class Mul(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
+    _eval_is_integer = lambda self: self._eval_template_is_attr(
+        'is_integer', when_multiple=None)
+    _eval_is_commutative = lambda self: self._eval_template_is_attr(
+        'is_commutative')
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)

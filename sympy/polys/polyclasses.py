@@ -751,14 +751,16 @@ class DMP(PicklableWithSlots):
                 else:
                     return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
-            raise PolynomialError("can't isolate roots of a multivariate polynomial")
+            raise PolynomialError(
+                "can't isolate roots of a multivariate polynomial")
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False):
         """Refine an isolating interval to the given precision. """
         if not f.lev:
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
         else:
-            raise PolynomialError("can't refine a root of a multivariate polynomial")
+            raise PolynomialError(
+                "can't refine a root of a multivariate polynomial")
 
     def count_real_roots(f, inf=None, sup=None):
         """Return the number of real roots of ``f`` in ``[inf, sup]``. """

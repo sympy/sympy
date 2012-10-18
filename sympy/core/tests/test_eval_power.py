@@ -43,7 +43,8 @@ def test_issue350():
     #see also issue 896
     x = Symbol('x')
     assert ((x**Rational(1, 3))**Rational(2)) == x**Rational(2, 3)
-    assert ((x**Rational(3))**Rational(2, 5)) == (x**Rational(3))**Rational(2, 5)
+    assert (
+        (x**Rational(3))**Rational(2, 5)) == (x**Rational(3))**Rational(2, 5)
 
     a = Symbol('a', real=True)
     b = Symbol('b', real=True)
@@ -162,7 +163,8 @@ def test_issue1263():
     assert (b**(-y)).as_numer_denom() == (1, b**y)
     assert (b**(-S.One)).as_numer_denom() == ((notp + x)**2, notp**2)
     nonp = Symbol('nonp', nonpositive=True)
-    assert (((1 + x/nonp)**-2)**(-S.One)).as_numer_denom() == ((-nonp - x)**2, nonp**2)
+    assert (((1 + x/nonp)**-2)**(-S.One)).as_numer_denom() == ((-nonp - \
+            x)**2, nonp**2)
 
     n = Symbol('n', negative=True)
     assert (x**n).as_numer_denom() == (1, x**-n)

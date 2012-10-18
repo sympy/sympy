@@ -3287,7 +3287,8 @@ class PermutationGroup(Basic):
                     table[temp] = gen_temp
                     used[temp] = True
                 else:
-                    schreier_gen = _af_rmuln(_af_invert(table[temp]), gen, table[b])
+                    schreier_gen = _af_rmuln(
+                        _af_invert(table[temp]), gen, table[b])
                     if schreier_gen not in stab_gens:
                         stab_gens.append(schreier_gen)
         return PermutationGroup([_af_new(x) for x in stab_gens])
@@ -3513,7 +3514,8 @@ class PermutationGroup(Basic):
         # line 2: set the base for K to the base for G
         res_base = base[:]
         # line 3: compute BSGS and related structures for K
-        res_base, res_strong_gens = res.schreier_sims_incremental(base=res_base)
+        res_base, res_strong_gens = res.schreier_sims_incremental(
+            base=res_base)
         res_strong_gens_distr = _distribute_gens_by_base(res_base,
                                 res_strong_gens)
         res_basic_orbits_init_base =\

@@ -362,9 +362,11 @@ def test_triangular():
 
     X = Triangular('x', a, b, c)
     assert Density(X) == Lambda(_x,
-             Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
+             Piecewise(
+                 ((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
                        (2/(-a + b), _x == c),
-                       ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
+                       ((-2*_x + 2*b)/((-a + b)*(b - \
+                        c)), And(_x <= b, c < _x)),
                        (0, True)))
 
 

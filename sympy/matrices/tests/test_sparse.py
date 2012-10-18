@@ -190,7 +190,8 @@ def test_sparse_matrix():
     assert m1[0, :] == SparseMatrix(1, 3, (0, 1, 2))
     assert m1[1:3, 1] == SparseMatrix(2, 1, (2, 3))
 
-    m2 = SparseMatrix([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
+    m2 = SparseMatrix(
+        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
     assert m2[:, -1] == SparseMatrix(4, 1, [3, 7, 11, 15])
     assert m2[-2:, :] == SparseMatrix([[8, 9, 10, 11], [12, 13, 14, 15]])
 
@@ -228,8 +229,10 @@ def test_sparse_matrix():
     m0 = sparse_eye(3)
     assert m0.reshape(1, 9) == SparseMatrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
     m1 = SparseMatrix(3, 4, lambda i, j: i+j)
-    assert m1.reshape(4, 3) == SparseMatrix([(0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)])
-    assert m1.reshape(2, 6) == SparseMatrix([(0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)])
+    assert m1.reshape(
+        4, 3) == SparseMatrix([(0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)])
+    assert m1.reshape(
+        2, 6) == SparseMatrix([(0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)])
 
     # test_applyfunc
     m0 = sparse_eye(3)
@@ -452,7 +455,8 @@ def test_errors():
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2, 3])
     raises(TypeError,
         lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
-    raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2)))
+    raises(
+        IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2)))
     raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))
     raises(IndexError, lambda: SparseMatrix(1, 2, [1, 2])[3])
     raises(ShapeError,

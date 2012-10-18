@@ -550,8 +550,10 @@ def _doctest(*paths, **kwargs):
                     "sympy/utilities/benchmarking.py",  # needs py.test
                     "examples/advanced/autowrap_integrators.py",  # needs numpy
                     "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-                    "examples/intermediate/mplot2d.py",  # needs numpy and matplotlib
-                    "examples/intermediate/mplot3d.py",  # needs numpy and matplotlib
+                    "examples/intermediate/mplot2d.py",
+                        # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py",
+                        # needs numpy and matplotlib
                     "examples/intermediate/sample.py",  # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
@@ -651,11 +653,13 @@ def _doctest(*paths, **kwargs):
                     print
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id,  # get at least the name out so it is know who is being tested
+            print file_id,
+                # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join([test_file, ' '*(wid-len(test_file)-len(report)), report])
+            print ''.join(
+                [test_file, ' '*(wid-len(test_file)-len(report)), report])
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
@@ -1148,7 +1152,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         # and just appears to come from a different module.
                         pat = r'\s*(def|class)\s+%s\s*\(' % rawname
                         PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in source_lines)
+                        in_module = any(
+                            PAT.match(line) for line in source_lines)
                     if in_module:
                         try:
                             valname = '%s.%s' % (name, rawname)

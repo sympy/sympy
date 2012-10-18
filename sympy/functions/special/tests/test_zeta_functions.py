@@ -58,7 +58,8 @@ def test_zeta_eval():
     assert zeta(0, 2) == -Rational(3, 2)
     assert zeta(0, -2) == Rational(3, 2)
 
-    assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
+    assert zeta(
+        3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
 
 
 def test_dirichlet_eta_eval():
@@ -87,7 +88,8 @@ def test_derivatives():
     from sympy import Derivative
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
     assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
-    assert lerchphi(z, s, a).diff(z) == (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
+    assert lerchphi(
+        z, s, a).diff(z) == (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
     assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s+1, a)
     assert polylog(s, z).diff(z) == polylog(s - 1, z)/z
 

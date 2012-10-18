@@ -136,7 +136,8 @@ def test_conversion():
     g = [((1, 0, 0, 1), QQ(2)), ((0, 2, 0, 0), QQ(1)), ((0, 0, 2, 0), QQ(1))]
     assert sdm_to_vector(g, [x, y, z], QQ) == f
     assert sdm_from_vector(f, lex, QQ) == g
-    assert sdm_from_vector([x, 1], lex, QQ) == [((1, 0), QQ(1)), ((0, 1), QQ(1))]
+    assert sdm_from_vector(
+        [x, 1], lex, QQ) == [((1, 0), QQ(1)), ((0, 1), QQ(1))]
     assert sdm_to_vector([((1, 1, 0, 0), 1)], [x, y, z], QQ, n=3) == [0, x, 0]
     assert sdm_from_vector([0, 0], lex, QQ, gens=[x, y]) == sdm_zero()
 
@@ -162,9 +163,11 @@ def test_nontrivial():
     assert contains([x+y+z, x*y+x*z+y*z, x*y*z], x**4 + y**3 + 2*z*y*x)
     assert contains([x+y+z, x*y+x*z+y*z, x*y*z], x*y*z)
     assert contains([x, 1+x+y, 5-7*y], 1)
-    assert contains([x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
+    assert contains(
+        [x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
                     x**3)
-    assert not contains([x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
+    assert not contains(
+        [x**3+y**3, y**3+z**3, z**3+x**3, x**2*y + x**2*z + y**2*z],
                         x**2 + y**2)
 
     # compare local order

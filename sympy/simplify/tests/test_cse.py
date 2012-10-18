@@ -13,11 +13,14 @@ negone = sympify(-1)
 
 def test_numbered_symbols():
     ns = cse_main.numbered_symbols(prefix='y')
-    assert list(itertools.islice(ns, 0, 10)) == [Symbol('y%s'%i) for i in range(0, 10)]
+    assert list(itertools.islice(
+        ns, 0, 10)) == [Symbol('y%s'%i) for i in range(0, 10)]
     ns = cse_main.numbered_symbols(prefix='y')
-    assert list(itertools.islice(ns, 10, 20)) == [Symbol('y%s'%i) for i in range(10, 20)]
+    assert list(itertools.islice(
+        ns, 10, 20)) == [Symbol('y%s'%i) for i in range(10, 20)]
     ns = cse_main.numbered_symbols()
-    assert list(itertools.islice(ns, 0, 10)) == [Symbol('x%s'%i) for i in range(0, 10)]
+    assert list(itertools.islice(
+        ns, 0, 10)) == [Symbol('x%s'%i) for i in range(0, 10)]
 
 # Dummy "optimization" functions for testing.
 
@@ -35,7 +38,8 @@ def test_preprocess_for_cse():
     assert cse_main.preprocess_for_cse(x, [(None, opt1)]) == x
     assert cse_main.preprocess_for_cse(x, [(None, None)]) == x
     assert cse_main.preprocess_for_cse(x, [(opt1, opt2)]) == x+y
-    assert cse_main.preprocess_for_cse(x, [(opt1, None), (opt2, None)]) == (x+y)*z
+    assert cse_main.preprocess_for_cse(
+        x, [(opt1, None), (opt2, None)]) == (x+y)*z
 
 
 def test_postprocess_for_cse():
@@ -44,7 +48,8 @@ def test_postprocess_for_cse():
     assert cse_main.postprocess_for_cse(x, [(None, None)]) == x
     assert cse_main.postprocess_for_cse(x, [(opt1, opt2)]) == x*z
     # Note the reverse order of application.
-    assert cse_main.postprocess_for_cse(x, [(None, opt1), (None, opt2)]) == x*z+y
+    assert cse_main.postprocess_for_cse(
+        x, [(None, opt1), (None, opt2)]) == x*z+y
 
 
 def test_cse_single():
@@ -87,7 +92,8 @@ def test_nested_substitution():
 def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
-    substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
+    substs, reduced = cse(
+        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
     assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
     assert reduced == [-x2 + exp(-x2)]
     assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
@@ -147,7 +153,8 @@ def test_issues_1399():
 
 
 def test_issue_921():
-    assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
+    assert cse(
+        x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
 def test_issue_1104():
@@ -206,4 +213,5 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2],
            postprocess=cse_main.cse_separate) == \
-        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + cos(x0), z - 2]]
+        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + \
+           cos(x0), z - 2]]

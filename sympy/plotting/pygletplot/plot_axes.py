@@ -64,8 +64,10 @@ class PlotAxes(PlotObject):
         self.visible = flexible_boolean(kwargs.pop('visible', ''), True)
         self._overlay = flexible_boolean(kwargs.pop('overlay', ''), True)
         self._colored = flexible_boolean(kwargs.pop('colored', ''), False)
-        self._label_axes = flexible_boolean(kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(kwargs.pop('label_ticks', ''), True)
+        self._label_axes = flexible_boolean(
+            kwargs.pop('label_axes', ''), False)
+        self._label_ticks = flexible_boolean(
+            kwargs.pop('label_ticks', ''), True)
 
         # setup label font
         self.font_face = kwargs.pop('font_face', 'Arial')
@@ -228,7 +230,8 @@ class PlotAxesOrdinate(PlotAxesBase):
             return
         tick_label_vector = [0, 0, 0]
         tick_label_vector[axis] = tick
-        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][axis] * radius * 3.5
+        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][
+            axis] * radius * 3.5
         self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
 
 

@@ -99,7 +99,8 @@ def test_dup_sqf():
     A = [[1], [], [-3], [], [6]]
     D = [[1], [], [-5], [], [5], [], [4]]
 
-    f, g = D, dmp_sub(A, dmp_mul(dmp_diff(D, 1, 1, ZZ), [[1, 0]], 1, ZZ), 1, ZZ)
+    f, g = D, dmp_sub(
+        A, dmp_mul(dmp_diff(D, 1, 1, ZZ), [[1, 0]], 1, ZZ), 1, ZZ)
 
     res = dmp_resultant(f, g, 1, ZZ)
 
@@ -171,6 +172,7 @@ def test_dup_gff_list():
 
     g = [1, -20, 166, -744, 1965, -3132, 2948, -1504, 320, 0]
 
-    assert dup_gff_list(g, ZZ) == [([1, -5, 4], 1), ([1, -5, 4], 2), ([1, 0], 3)]
+    assert dup_gff_list(
+        g, ZZ) == [([1, -5, 4], 1), ([1, -5, 4], 2), ([1, 0], 3)]
 
     raises(ValueError, lambda: dup_gff_list([], ZZ))

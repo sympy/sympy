@@ -1,4 +1,5 @@
-from sympy import (symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
+from sympy import (
+    symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
                    sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
                    polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
                    log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
@@ -40,7 +41,8 @@ def test_erf():
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
 
-    assert limit(exp(x)*exp(x**2)*(erf(x+1/exp(x))-erf(x)), x, oo) == 2/sqrt(pi)
+    assert limit(
+        exp(x)*exp(x**2)*(erf(x+1/exp(x))-erf(x)), x, oo) == 2/sqrt(pi)
     assert limit((1-erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
     assert limit((1-erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1-erf(x))*exp(x**2)*sqrt(pi)*x-1)*2*x**2, x, oo) == -1
@@ -60,9 +62,11 @@ def test_erf_evalf():
 def test__erfs():
     assert _erfs(z).diff(z) == -2/sqrt(S.Pi)+2*z*_erfs(z)
 
-    assert _erfs(1/z).series(z) == z/sqrt(pi) - z**3/(2*sqrt(pi)) + 3*z**5/(4*sqrt(pi)) + O(z**6)
+    assert _erfs(1/z).series(
+        z) == z/sqrt(pi) - z**3/(2*sqrt(pi)) + 3*z**5/(4*sqrt(pi)) + O(z**6)
 
-    assert expand(erf(z).rewrite('tractable').diff(z).rewrite('intractable')) == erf(z).diff(z)
+    assert expand(erf(z).rewrite(
+        'tractable').diff(z).rewrite('intractable')) == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
@@ -127,7 +131,8 @@ def test_ei():
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
                 y**(x-1)*uppergamma(1 - x, y), x)
-    assert mytd(expint(x, y), -y**(x - 1)*meijerg([], [1, 1], [0, 0, 1-x], [], y), x)
+    assert mytd(
+        expint(x, y), -y**(x - 1)*meijerg([], [1, 1], [0, 0, 1-x], [], y), x)
     assert mytd(expint(x, y), -expint(x - 1, y), y)
     assert mytn(expint(1, x), expint(1, x).rewrite(Ei),
                 -Ei(x*polar_lift(-1)) + I*pi, x)
@@ -205,10 +210,13 @@ def test_si():
     assert tn_arg(Shi)
 
     from sympy import O
-    assert Si(x).nseries(x, n=8) == x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
-    assert Shi(x).nseries(x, n=8) == x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
+    assert Si(
+        x).nseries(x, n=8) == x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
+    assert Shi(
+        x).nseries(x, n=8) == x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
-    assert Si(x).nseries(x, 1, n=3) == Si(1) + x*sin(1) + x**2*(-sin(1)/2 + cos(1)/2) + O(x**3)
+    assert Si(x).nseries(
+        x, 1, n=3) == Si(1) + x*sin(1) + x**2*(-sin(1)/2 + cos(1)/2) + O(x**3)
 
 
 def test_ci():
@@ -242,8 +250,10 @@ def test_ci():
     assert tn_arg(Chi)
 
     from sympy import O, EulerGamma, log, limit
-    assert Ci(x).nseries(x, n=4) == EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
-    assert Chi(x).nseries(x, n=4) == EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
+    assert Ci(
+        x).nseries(x, n=4) == EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
+    assert Chi(
+        x).nseries(x, n=4) == EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
 
 
@@ -261,24 +271,34 @@ def test_fresnel():
 
     assert fresnels(z).diff(z) == sin(pi*z**2/2)
 
-    assert fresnels(z).rewrite(erf) == (S.One+I)/4 * (erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
+    assert fresnels(z).rewrite(erf) == (S.One+I)/4 * (
+        erf((S.One+I)/2*sqrt(pi)*z) - I*erf((S.One-I)/2*sqrt(pi)*z))
 
-    assert fresnels(z).rewrite(hyper) == pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
+    assert fresnels(z).rewrite(hyper) == pi*z**3/6 * hyper([S(3)/4], [
+                    S(3)/2, S(7)/4], -pi**2*z**4/16)
 
-    assert fresnels(z).series(z, n=15) == pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
+    assert fresnels(z).series(
+        z, n=15) == pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
 
     assert fresnels(w).is_real is True
 
-    assert fresnels(z).as_real_imag() == ((fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
+    assert fresnels(
+        z).as_real_imag(
+            ) == (
+                (
+                    fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
                                           I*(fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
                                           re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
 
-    assert fresnels(2+3*I).as_real_imag() == (fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2, I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2)
+    assert fresnels(2+3*I).as_real_imag() == (fresnels(2 + 3*I)/2 + fresnels(
+        2 - 3*I)/2, I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2)
 
-    assert expand_func(integrate(fresnels(z), z)) == z*fresnels(z) + cos(pi*z**2/2)/pi
+    assert expand_func(
+        integrate(fresnels(z), z)) == z*fresnels(z) + cos(pi*z**2/2)/pi
 
     assert fresnels(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(9)/4)* \
-           meijerg(((), (1,)), ((S(3)/4,), (S(1)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
+           meijerg(((), (1,)), ((S(3)/4,), (S(
+               1)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(3)/4)*(z**2)**(S(3)/4))
 
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
@@ -293,24 +313,34 @@ def test_fresnel():
 
     assert fresnelc(z).diff(z) == cos(pi*z**2/2)
 
-    assert fresnelc(z).rewrite(erf) == (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
+    assert fresnelc(z).rewrite(erf) == (S.One - I)/4 * (
+        erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
-    assert fresnelc(z).rewrite(hyper) == z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
+    assert fresnelc(z).rewrite(
+        hyper) == z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
-    assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
+    assert fresnelc(z).series(z, n=15) == z - pi**2*z**5/40 + pi**4* \
+                    z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
     assert fresnelc(w).is_real is True
 
-    assert fresnelc(z).as_real_imag() == ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
+    assert fresnelc(
+        z).as_real_imag(
+            ) == (
+                (
+                    fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 + fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
                                            I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) - fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z))))*
                                            re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
 
-    assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
+    assert fresnelc(2+3*I).as_real_imag() == (fresnelc(2 - 3*I)/2 + fresnelc(
+        2 + 3*I)/2, I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2)
 
-    assert expand_func(integrate(fresnelc(z), z)) == z*fresnelc(z) - sin(pi*z**2/2)/pi
+    assert expand_func(
+        integrate(fresnelc(z), z)) == z*fresnelc(z) - sin(pi*z**2/2)/pi
 
     assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4)* \
-           meijerg(((), (1,)), ((S(1)/4,), (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
+           meijerg(((), (1,)), ((S(1)/4,), (S(
+               3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
 
     from sympy.utilities.randtest import test_numerically
 

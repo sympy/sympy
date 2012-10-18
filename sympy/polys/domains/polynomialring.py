@@ -50,7 +50,8 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def __str__(self):
         s_order = str(self.order)
-        orderstr = (" order=" + s_order) if s_order != self.default_order else ""
+        orderstr = (
+            " order=" + s_order) if s_order != self.default_order else ""
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + orderstr + ']'
 
     def __hash__(self):
@@ -351,7 +352,8 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         >>> f = R.convert((x + 2*y) / (1 + x))
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], ilex)
-        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1, 2, 1), 1/1)]
+        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1,
+          2, 1), 1/1)]
         """
         # NOTE this is quite inefficient...
         u = self.one.numer()

@@ -77,7 +77,8 @@ class FCodePrinter(CodePrinter):
             self._lead_comment = "! "
         else:
             raise ValueError(
-                    "Unknown source format: %s" % self._settings['source_format']
+                    "Unknown source format: %s" % self._settings[
+                        'source_format']
                     )
 
     def _pad_leading_columns(self, lines):
@@ -121,10 +122,12 @@ class FCodePrinter(CodePrinter):
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                lines.extend(self._doprint_a_piece(e, self._settings['assign_to']))
+                lines.extend(
+                    self._doprint_a_piece(e, self._settings['assign_to']))
             lines.append("end if")
         else:
-            lines.extend(self._doprint_a_piece(expr, self._settings['assign_to']))
+            lines.extend(
+                self._doprint_a_piece(expr, self._settings['assign_to']))
 
         # format the output
         if self._settings["human"]:
@@ -143,7 +146,8 @@ class FCodePrinter(CodePrinter):
         else:
             lines = self.indent_code(lines)
             lines = self._wrap_fortran(lines)
-            result = self._number_symbols, self._not_supported, "\n".join(lines)
+            result = self._number_symbols, self._not_supported, "\n".join(
+                lines)
 
         del self._not_supported
         del self._number_symbols
@@ -341,9 +345,12 @@ class FCodePrinter(CodePrinter):
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
-        increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_keyword))) for line in code ]
-        continuation = [ int(any(map(line.endswith, ['&', '&\n']))) for line in code ]
+        increase = [ int(any(map(line.startswith, inc_keyword)))
+                         for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_keyword)))
+                         for line in code ]
+        continuation = [ int(any(map(line.endswith, ['&', '&\n'])))
+                             for line in code ]
 
         level = 0
         cont_padding = 0

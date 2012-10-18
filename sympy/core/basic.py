@@ -427,7 +427,8 @@ class Basic(object):
         elif len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError("only one dummy symbol allowed on the left-hand side")
+            raise ValueError(
+                "only one dummy symbol allowed on the left-hand side")
 
         if symbol is None:
             symbols = other.free_symbols
@@ -526,7 +527,8 @@ class Basic(object):
 
         """
         if types:
-            types = tuple([t if isinstance(t, type) else type(t) for t in types])
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
         else:
             types = (Atom,)
         result = set()
@@ -849,7 +851,8 @@ class Basic(object):
                     d.setdefault(ops, []).append((o, n))
                 newseq = []
                 for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+                    newseq.extend(
+                        sorted([v[0] for v in d[k]], key=default_sort_key))
                 sequence = [(k, sequence[k]) for k in newseq]
                 del newseq, d
             else:
@@ -1189,7 +1192,8 @@ class Basic(object):
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
             elif callable(value):
-                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+                _value = lambda expr, result: value(**dict([ (
+                    str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
                 raise TypeError("given an expression, replace() expects another expression or a callable")
         elif callable(query):
@@ -1198,7 +1202,8 @@ class Basic(object):
             if callable(value):
                 _value = lambda expr, result: value(expr)
             else:
-                raise TypeError("given a callable, replace() expects another callable")
+                raise TypeError(
+                    "given a callable, replace() expects another callable")
         else:
             raise TypeError("first argument to replace() must be a type, an expression or a callable")
 

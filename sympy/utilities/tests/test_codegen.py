@@ -30,8 +30,10 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
     expr = (x+y)*z
-    raises(CodeGenArgumentListError, lambda: Routine("test", expr, argument_sequence=[z, x]))
-    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a, expr), argument_sequence=[z, x, y]))
+    raises(CodeGenArgumentListError, lambda: Routine("test", expr,
+           argument_sequence=[z, x]))
+    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a,
+           expr), argument_sequence=[z, x, y]))
     r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
@@ -549,7 +551,8 @@ def test_simple_f_header():
 def test_simple_f_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x+y)*z
-    result = codegen(("test", (x+y)*z), "F95", "file", header=False, empty=False)
+    result = codegen(
+        ("test", (x+y)*z), "F95", "file", header=False, empty=False)
     expected = [
        ("file.f90",
         "REAL*8 function test(x, y, z)\n"

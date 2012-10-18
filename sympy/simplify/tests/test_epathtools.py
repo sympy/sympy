@@ -37,7 +37,8 @@ def test_epath_select():
 
     assert epath("/*/int|__iter__?", expr) == [(x, 1, t), 2, (3, y, 4)]
     assert epath("/*/Symbol|__iter__?", expr) == [(x, 1, t), (3, y, 4), z]
-    assert epath("/*/int|Symbol|__iter__?", expr) == [(x, 1, t), 2, (3, y, 4), z]
+    assert epath(
+        "/*/int|Symbol|__iter__?", expr) == [(x, 1, t), 2, (3, y, 4), z]
 
     assert epath("/*/[0]/int", expr) == [1, 3, 4]
     assert epath("/*/[0]/Symbol", expr) == [x, t, y]
@@ -60,9 +61,12 @@ def test_epath_apply():
     assert epath("/*/[2]", expr, list) == expr
 
     assert epath("/*/[0]/int", expr, func) == [((x, 1, t), 2), ((9, y, 16), z)]
-    assert epath("/*/[0]/Symbol", expr, func) == [((x**2, 1, t**2), 2), ((3, y**2, 4), z)]
-    assert epath("/*/[0]/int[1:]", expr, func) == [((x, 1, t), 2), ((3, y, 16), z)]
-    assert epath("/*/[0]/Symbol[1:]", expr, func) == [((x, 1, t**2), 2), ((3, y**2, 4), z)]
+    assert epath("/*/[0]/Symbol", expr, func) == [((x**2, 1, t**2), 2),
+                 ((3, y**2, 4), z)]
+    assert epath(
+        "/*/[0]/int[1:]", expr, func) == [((x, 1, t), 2), ((3, y, 16), z)]
+    assert epath("/*/[0]/Symbol[1:]", expr, func) == [((x, 1, t**2),
+                 2), ((3, y**2, 4), z)]
 
     assert epath("/Symbol", x + y + z + 1, func) == x**2 + y**2 + z**2 + 1
     assert epath("/*/*/Symbol", t + sin(x + 1) + cos(x + y + E), func) == \

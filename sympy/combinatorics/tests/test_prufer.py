@@ -29,7 +29,8 @@ def test_prufer():
 
     raises(ValueError, lambda: Prufer([[1, 2], [3, 4]]))  # 0 is missing
     assert Prufer(*Prufer.edges([1, 2], [3, 4])).prufer_repr == [1, 3]
-    raises(ValueError, lambda: Prufer.edges([1, 3], [3, 4]))  # a broken tree but edges doesn't care
+    raises(ValueError, lambda: Prufer.edges(
+        [1, 3], [3, 4]))  # a broken tree but edges doesn't care
     raises(ValueError, lambda: Prufer.edges([1, 2], [5, 6]))
 
 

@@ -11,10 +11,14 @@ def test_piecewise():
 
     # Test canonization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise((x, x < 1), (0, True), (1, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == Piecewise((x, x < 1))
-    assert Piecewise((x, x < 1), (0, x < 2), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise((x, x < 1), (x, x < 2), (0, True)) == Piecewise((x, Or(x < 1, x < 2)), (0, True))
+    assert Piecewise(
+        (x, x < 1), (0, True), (1, True)) == Piecewise((x, x < 1), (0, True))
+    assert Piecewise(
+        (x, x < 1), (0, False), (-1, 1 > 2)) == Piecewise((x, x < 1))
+    assert Piecewise(
+        (x, x < 1), (0, x < 2), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (
+        x, x < 2), (0, True)) == Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
     raises(TypeError, lambda: Piecewise(x))
@@ -72,7 +76,8 @@ def test_piecewise():
     f1 = x*y + 2
     f2 = x*y**2 + 3
     peval = Piecewise( (f1, x<0), (f2, x>0))
-    peval_interval = f1.subs(x, 0) - f1.subs(x, -1) + f2.subs(x, 1) - f2.subs(x, 0)
+    peval_interval = f1.subs(
+        x, 0) - f1.subs(x, -1) + f2.subs(x, 1) - f2.subs(x, 0)
     assert peval._eval_interval(x, 0, 0) == 0
     assert peval._eval_interval(x, -1, 1) == peval_interval
     peval2 = Piecewise((f1, x < 0), (f2, True))
@@ -259,7 +264,8 @@ def test_piecewise_fold():
     p2 = Piecewise((0, x < 0), (1 - x, x <=1), (0, True))
 
     p = 4*p1 + 2*p2
-    assert integrate(piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
+    assert integrate(
+        piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
 
 def test_piecewise_fold_expand():
@@ -270,7 +276,8 @@ def test_piecewise_fold_expand():
         (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
 
     p2 = expand(piecewise_fold((1-x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
+    assert p2 == Piecewise(
+        (1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
 
 def test_piecewise_duplicate():
@@ -290,7 +297,8 @@ def test_piecewise_interval():
     assert p1.subs(x, -0.5) == 0
     assert p1.subs(x, 0.5) == 0.5
     assert p1.diff(x) == Piecewise((1, Interval(0, 1).contains(x)), (0, True))
-    assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
+    assert integrate(
+        p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
 
 
 def test_piecewise_collapse():

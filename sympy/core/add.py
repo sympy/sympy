@@ -85,7 +85,8 @@ class Add(AssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
+                order_factors = [o]+[
+                    o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
             # 3 or NaN
@@ -408,13 +409,20 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
-    _eval_is_antihermitian = lambda self: self._eval_template_is_attr('is_antihermitian', when_multiple=None)
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
-    _eval_is_hermitian = lambda self: self._eval_template_is_attr('is_hermitian', when_multiple=None)
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
+    _eval_is_real = lambda self: self._eval_template_is_attr(
+        'is_real', when_multiple=None)
+    _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
+        'is_antihermitian', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr(
+        'is_bounded', when_multiple=None)
+    _eval_is_hermitian = lambda self: self._eval_template_is_attr(
+        'is_hermitian', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
+        'is_imaginary', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr(
+        'is_integer', when_multiple=None)
+    _eval_is_commutative = lambda self: self._eval_template_is_attr(
+        'is_commutative')
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even==True)]
@@ -551,7 +559,8 @@ class Add(AssocOp):
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
-            args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
+            args_old, args_self = Add.make_args(
+                terms_old), Add.make_args(terms_self)
             if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
                 self_set = set(args_self)
                 old_set = set(args_old)
@@ -561,7 +570,8 @@ class Add(AssocOp):
                     return Add(new, coeff_self, -coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-                args_old = Add.make_args(-terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                args_old = Add.make_args(
+                    -terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
@@ -778,7 +788,8 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(radical=radical)) for a in self.args]).primitive()
+        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(
+            radical=radical)) for a in self.args]).primitive()
         if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args

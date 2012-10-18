@@ -906,7 +906,8 @@ class Diagram(Basic):
         True
         """
         if not self.objects.subset(objects):
-            raise ValueError("Supplied objects should all belong to the diagram.")
+            raise ValueError(
+                "Supplied objects should all belong to the diagram.")
 
         new_premises = {}
         for morphism, props in self.premises.items():

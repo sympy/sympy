@@ -80,7 +80,8 @@ def plot_and_save(name):
     p = plot3d_parametric_line(sin(x), cos(x), x)
     p.save(tmp_file('%s_3d_line.png' % name))
 
-    p = plot3d_parametric_line((sin(x), cos(x), x, (x, -5, 5)), (cos(x), sin(x), x, (x, -3, 3)))
+    p = plot3d_parametric_line(
+        (sin(x), cos(x), x, (x, -5, 5)), (cos(x), sin(x), x, (x, -3, 3)))
     p.save(tmp_file('%s_3d_line_multiple' % name))
 
     p = plot3d_parametric_line(sin(x), cos(x), x, nb_of_points=30)
@@ -95,7 +96,8 @@ def plot_and_save(name):
     p.save(tmp_file('%s_surface_multiple' % name))
 
     # Multiple 3D plots with different ranges.
-    p = plot3d((x * y, (x, -3, 3), (y, -3, 3)), (-x * y, (x, -3, 3), (y, -3, 3)))
+    p = plot3d(
+        (x * y, (x, -3, 3), (y, -3, 3)), (-x * y, (x, -3, 3), (y, -3, 3)))
     p.save(tmp_file('%s_surface_multiple_ranges' % name))
 
     # Single Parametric 3D plot
@@ -103,7 +105,8 @@ def plot_and_save(name):
     p.save(tmp_file('%s_parametric_surface' % name))
 
     # Multiple Parametric 3D plots.
-    p = plot3d_parametric_surface((x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
+    p = plot3d_parametric_surface(
+        (x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
                 (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface.png' % name))
 

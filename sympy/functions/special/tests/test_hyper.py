@@ -30,7 +30,8 @@ def test_hyper():
     assert tn(z*hyper((1, 1), Tuple(2), -z), log(1 + z), z)
 
     # differentiation
-    h = hyper((randcplx(), randcplx(), randcplx()), (randcplx(), randcplx()), z)
+    h = hyper(
+        (randcplx(), randcplx(), randcplx()), (randcplx(), randcplx()), z)
     assert td(h, z)
 
     a1, a2, b1, b2, b3 = symbols('a1:3, b1:4')
@@ -167,8 +168,10 @@ def test_meijerg_period():
     assert meijerg([], [1], [0], [], x).get_period() == 2*pi
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
     assert meijerg([], [], [0], [], x).get_period() == 2*pi  # exp(x)
-    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
-    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
+    assert meijerg(
+        [], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
+    assert meijerg(
+        [], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
     assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
 
 
@@ -228,7 +231,9 @@ def test_hyperrep():
                   a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
             return False
         # Next check that the two small representations agree.
-        if not tn(func.rewrite('nonrepsmall').subs(z, exp_polar(I*pi)*z).replace(exp_polar, exp),
+        if not tn(
+            func.rewrite('nonrepsmall').subs(
+                z, exp_polar(I*pi)*z).replace(exp_polar, exp),
                   func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
                   z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
             return False

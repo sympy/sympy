@@ -179,8 +179,10 @@ class AntiSymmetricTensor(TensorSymbol):
     def __new__(cls, symbol, upper, lower):
 
         try:
-            upper, signu = _sort_anticommuting_fermions(upper, key=cls._sortkey)
-            lower, signl = _sort_anticommuting_fermions(lower, key=cls._sortkey)
+            upper, signu = _sort_anticommuting_fermions(
+                upper, key=cls._sortkey)
+            lower, signl = _sort_anticommuting_fermions(
+                lower, key=cls._sortkey)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -993,7 +995,8 @@ class FermionState(FockState):
         occupations = map(sympify, occupations)
         if len(occupations) >1:
             try:
-                (occupations, sign) = _sort_anticommuting_fermions(occupations, key=hash)
+                (occupations, sign) = _sort_anticommuting_fermions(
+                    occupations, key=hash)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -1434,7 +1437,8 @@ class VarBosonicBasis(object):
     >>> from sympy.physics.secondquant import VarBosonicBasis
     >>> b = VarBosonicBasis(5)
     >>> b
-    [FockState((0,)), FockState((1,)), FockState((2,)), FockState((3,)), FockState((4,))]
+    [FockState((0,)), FockState(
+        (1,)), FockState((2,)), FockState((3,)), FockState((4,))]
     """
 
     def __init__(self, n_max):
@@ -1660,7 +1664,8 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
+    -KroneckerDelta(
+        p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
 
     """
 
@@ -2589,7 +2594,8 @@ def _get_ordered_dummies(mul, verbose=False):
 
     def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
+        other_dums = reduce(
+            set.union, [ fac_dum[fac] for fac in dumstruct ], set())
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
@@ -2598,7 +2604,8 @@ def _get_ordered_dummies(mul, verbose=False):
         for d2 in other_dums:
             masked_facs = [ fac.replace(dum_repr[d2], mask[d2])
                     for fac in masked_facs ]
-        all_masked = [ fac.replace(dum_repr[d], mask[d]) for fac in masked_facs ]
+        all_masked = [ fac.replace(dum_repr[d], mask[d])
+                                   for fac in masked_facs ]
         masked_facs = dict(zip(dumstruct, masked_facs))
 
         # dummies for which the ordering cannot be determined
@@ -2819,7 +2826,8 @@ def wicks(e, **kw_args):
     By default, the expression is expanded:
 
     >>> wicks(F(p)*(F(q)+F(r))) # doctest: +SKIP
-    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
+    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(
+        AnnihilateFermion(p)*AnnihilateFermion(r))
 
     With the keyword 'keep_only_fully_contracted=True', only fully contracted
     terms are returned.
@@ -2830,7 +2838,8 @@ def wicks(e, **kw_args):
 
     >>> p, q, r = symbols('p q r', cls=Dummy)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
-    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
+    KroneckerDelta(_i, _q)*KroneckerDelta(
+        _p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 
     """
 

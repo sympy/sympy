@@ -103,7 +103,8 @@ class Order(Expr):
         if symbols:
             symbols = map(sympify, symbols)
             if not all(isinstance(s, Symbol) for s in symbols):
-                raise NotImplementedError('Order at points other than 0 not supported.')
+                raise NotImplementedError(
+                    'Order at points other than 0 not supported.')
         else:
             symbols = list(expr.free_symbols)
 
@@ -214,7 +215,8 @@ class Order(Expr):
             return False
         if expr.is_Order:
             if self.variables and expr.variables:
-                common_symbols = tuple([s for s in self.variables if s in expr.variables])
+                common_symbols = tuple(
+                    [s for s in self.variables if s in expr.variables])
             elif self.variables:
                 common_symbols = self.variables
             else:

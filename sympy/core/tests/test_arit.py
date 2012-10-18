@@ -143,8 +143,10 @@ def test_pow():
     assert (x**5*(-3*x)**(-3)).expand() == -Rational(1, 27) * x**2
 
     # expand_power_exp
-    assert (x**(y**(x+exp(x+y))+z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
-    assert (x**(y**(x+exp(x+y))+z)).expand() == x**z*x**(y**x*y**(exp(x)*exp(y)))
+    assert (x**(y**(
+        x+exp(x+y))+z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
+    assert (
+        x**(y**(x+exp(x+y))+z)).expand() == x**z*x**(y**x*y**(exp(x)*exp(y)))
 
     n = Symbol('k', even=False)
     k = Symbol('k', even=True)
@@ -231,10 +233,13 @@ def test_expand():
     assert e.expand() == 1+x**2/2+O(x**4)
 
     e = (x*(y+z))**(x*(y+z))*(x+y)
-    assert e.expand(power_exp=False, power_base=False) == x*(x*y + x*z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
-    assert e.expand(power_exp=False, power_base=False, deep=False) == x*(x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
+    assert e.expand(power_exp=False, power_base=False) == x*(x*y + x* \
+                    z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
+    assert e.expand(power_exp=False, power_base=False, deep=False) == x* \
+                    (x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
     e = (x*(y+z))**z
-    assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + z)**z, (x*y + x*z)**z]
+    assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + \
+                    z)**z, (x*y + x*z)**z]
     assert ((2*y)**z).expand() == 2**z*y**z
     p=Symbol('p', positive=True)
     assert sqrt(-x).expand().is_Pow
@@ -251,7 +256,8 @@ def test_expand():
     # issue 2383
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
     # issue 2506 (2)
-    assert (cos(x+y)**2).expand(trig=True) in [(-sin(x)*sin(y) + cos(x)*cos(y))**2,
+    assert (
+        cos(x+y)**2).expand(trig=True) in [(-sin(x)*sin(y) + cos(x)*cos(y))**2,
       sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2]
 
     # Check that this isn't too slow
@@ -1272,8 +1278,10 @@ def test_Add_as_content_primitive():
     assert (3/x + 3*x*y*z**2).as_content_primitive() == (3, 1/x + x*y*z**2)
     assert (3/x + 6*x*y*z**2).as_content_primitive() == (3, 1/x + 2*x*y*z**2)
 
-    assert (2*x/3 + 4*y/9).as_content_primitive() == (Rational(2, 9), 3*x + 2*y)
-    assert (2*x/3 + 2.5*y).as_content_primitive() == (Rational(1, 3), 2*x + 7.5*y)
+    assert (
+        2*x/3 + 4*y/9).as_content_primitive() == (Rational(2, 9), 3*x + 2*y)
+    assert (
+        2*x/3 + 2.5*y).as_content_primitive() == (Rational(1, 3), 2*x + 7.5*y)
 
     # the coefficient may sort to a position other than 0
     p = 3 + x + y
@@ -1286,13 +1294,16 @@ def test_Add_as_content_primitive():
 def test_Mul_as_content_primitive():
     assert (2*x).as_content_primitive() == (2, x)
     assert (x*(2+2*x)).as_content_primitive() == (2, x*(1 + x))
-    assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x*(1 + y)*(x + 1)**2)
-    assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive() == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
+    assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x* \
+            (1 + y)*(x + 1)**2)
+    assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive(
+        ) == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
 
 
 def test_Pow_as_content_primitive():
     assert (x**y).as_content_primitive() == (1, x**y)
-    assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2, (x + 1), evaluate=False))**y)
+    assert ((2*x + 2)**y).as_content_primitive(
+        ) == (1, (Mul(2, (x + 1), evaluate=False))**y)
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 
@@ -1455,4 +1466,5 @@ def test_float_int():
     raises(TypeError, lambda: float(x))
     raises(TypeError, lambda: float(sqrt(-1)))
 
-    assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == 12345678901234567891
+    assert int(
+        12345678901234567890 + cos(1)**2 + sin(1)**2) == 12345678901234567891

@@ -12,7 +12,8 @@ def parse(s):
     #Begin rules
     rules = (
         (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
-        lambda m: translateFunction(m.group(1)) + "(" + parse(m.group(2)) + ")" ),
+        lambda m: translateFunction(
+            m.group(1)) + "(" + parse(m.group(2)) + ")" ),
 
         (r"\((.+)\)\((.+)\)",  # Parenthesized implied multiplication
         lambda m: "(" + parse(m.group(1)) + ")*(" + parse(m.group(2)) + ")" ),

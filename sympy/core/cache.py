@@ -136,4 +136,5 @@ elif USE_CACHE == 'yes':
 elif USE_CACHE == 'debug':
     cacheit = __cacheit_debug   # a lot slower
 else:
-    raise RuntimeError('unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+    raise RuntimeError(
+        'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
