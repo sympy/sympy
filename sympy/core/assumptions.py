@@ -242,7 +242,7 @@ class ManagedProperties(BasicMeta):
             try:
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
-                continue        #not an assumption-aware class
+                continue  # not an assumption-aware class
         for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:

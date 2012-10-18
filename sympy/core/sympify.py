@@ -109,7 +109,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
     try:
         cls = a.__class__
-    except AttributeError:  #a is probably an old-style class object
+    except AttributeError:  # a is probably an old-style class object
         cls = type(a)
     if cls in sympy_classes:
         return a

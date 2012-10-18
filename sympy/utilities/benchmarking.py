@@ -50,7 +50,7 @@ class Timer(timeit.Timer):
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
         #exec code in globals(), ns      -- original timeit code
-        exec code in globals, ns    #   -- we use caller-provided globals instead
+        exec code in globals, ns  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 

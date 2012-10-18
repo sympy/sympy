@@ -643,12 +643,12 @@ def test_evenodd_rewrite():
         for expr in with_minus:
             assert _check_even_rewrite(func, expr)
         assert _check_no_rewrite(func, a*b)
-        assert func(x-y) == func(y-x)   #it doesn't matter which form is canonical
+        assert func(x-y) == func(y-x)  # it doesn't matter which form is canonical
     for func in odd:
         for expr in with_minus:
             assert _check_odd_rewrite(func, expr)
         assert _check_no_rewrite(func, a*b)
-        assert func(x-y) == -func(y-x)  #it doesn't matter which form is canonical
+        assert func(x-y) == -func(y-x)  # it doesn't matter which form is canonical
 
 def test_issue1448():
     x = Symbol('x')

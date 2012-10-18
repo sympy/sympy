@@ -33,7 +33,7 @@ def test_polyhedron():
         (0, 1), (6, 7), (1, 2), (5, 6), (0, 3), (2, 3),
         (4, 7), (4, 5), (3, 7), (1, 5), (0, 4), (2, 6)))
 
-    for i in xrange(3):    #  add 180 degree face rotations
+    for i in xrange(3):  # add 180 degree face rotations
         cube.rotate(cube.pgroup[i]**2)
 
     assert cube.corners == corners

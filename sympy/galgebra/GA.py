@@ -1634,7 +1634,7 @@ class MV(object):
 
         self.name = mvname
         self.mv = MV.n1*[0]
-        self.bladeflg = 0  #1 for blade expansion
+        self.bladeflg = 0  # 1 for blade expansion
         self.puregrade = 1
         if mvtype == 'basisvector':
             self.mv[1] = numpy.array(MV.nbasis[1]*[ZERO], dtype=numpy.object)

@@ -496,7 +496,7 @@ def eliminate_implications(expr):
     """
     expr = sympify(expr)
     if expr.is_Atom:
-        return expr     ## (Atoms are unchanged.)
+        return expr  # (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
     if expr.func is Implies:
         a, b = args[0], args[-1]

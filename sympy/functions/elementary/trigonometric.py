@@ -694,7 +694,7 @@ class cos(TrigonometricFunction):
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
-class sec(TrigonometricFunction):    #TODO implement rest all functions for sec. see cos, sin, tan.
+class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. see cos, sin, tan.
 
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
@@ -702,7 +702,7 @@ class sec(TrigonometricFunction):    #TODO implement rest all functions for sec.
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
-class csc(TrigonometricFunction):    #TODO implement rest all functions for csc. see cos, sin, tan.
+class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))

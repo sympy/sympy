@@ -71,7 +71,7 @@ def trigintegrate(f, x):
         # take smallest n or m -- to choose simplest substitution
         if n_ and m_:
             n_ = n_ and     (n < m)  # NB: careful here, one of the
-            m_ = m_ and not (n < m)  #     conditions *must* be true
+            m_ = m_ and not (n < m)  # conditions *must* be true
 
         #  n      m       u=C        (n-1)/2    m
         # S(x) * C(x) dx  --> -(1-u^2)       * u  du
