@@ -574,8 +574,8 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(
-        1, z*exp_polar(-I*pi/2))/2 + expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
+         expint(1, z*exp_polar(I*pi/2))/2) + pi/2
 
     """
 

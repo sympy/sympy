@@ -80,9 +80,8 @@ def dihedral(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
-    [Permutation(
-        2), Permutation(0, 2), Permutation(0, 1, 2), Permutation(1, 2),
-     Permutation(0, 2, 1), Permutation(2)(0, 1)]
+    [Permutation(2), Permutation(0, 2), Permutation(0, 1, 2),
+     Permutation(1, 2), Permutation(0, 2, 1), Permutation(2)(0, 1)]
 
     See Also
     ========

@@ -71,8 +71,8 @@ class jacobi(OrthogonalPolynomial):
     jacobi(n, a, b, x)
 
     >>> jacobi(n, a, a, x)
-    RisingFactorial(
-        a + 1, n)*gegenbauer(n, a + 1/2, x)/RisingFactorial(2*a + 1, n)
+    RisingFactorial(a + 1, n)*gegenbauer(n,
+        a + 1/2, x)/RisingFactorial(2*a + 1, n)
 
     >>> jacobi(n, 0, 0, x)
     legendre(n, x)
@@ -1069,8 +1069,8 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> assoc_laguerre(2, a, x)
     a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1
     >>> assoc_laguerre(3, a, x)
-    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) + x*(-a**2/2 - \
-                                            5*a/2 - 3) + 1
+    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) +
+        x*(-a**2/2 - 5*a/2 - 3) + 1
 
     >>> assoc_laguerre(n, a, 0)
     binomial(a + n, a)

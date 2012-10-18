@@ -1480,13 +1480,14 @@ def metric_to_Riemann_components(expr):
     ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0),
      (0, 0))))
 
-    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + R2.r**2*TP(R2.dtheta, R2.dtheta)
+    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
+        R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0]
-    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)), (exp(-2*r)* \
-     r - 2*r*exp(-2*r), 0)))
+    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)),
+        (exp(-2*r)*r - 2*r*exp(-2*r), 0)))
     >>> riemann[1]
     (((0, -r**(-1)), (r**(-1), 0)), ((0, 0), (0, 0)))
 

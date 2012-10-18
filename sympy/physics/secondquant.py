@@ -1437,8 +1437,8 @@ class VarBosonicBasis(object):
     >>> from sympy.physics.secondquant import VarBosonicBasis
     >>> b = VarBosonicBasis(5)
     >>> b
-    [FockState((0,)), FockState(
-        (1,)), FockState((2,)), FockState((3,)), FockState((4,))]
+    [FockState((0,)), FockState((1,)), FockState((2,)),
+     FockState((3,)), FockState((4,))]
     """
 
     def __init__(self, n_max):
@@ -1664,8 +1664,8 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(
-        p, i)*CreateFermion(q) + KroneckerDelta(q, i)*CreateFermion(p)
+    -KroneckerDelta(p, i)*CreateFermion(q) +
+     KroneckerDelta(q, i)*CreateFermion(p)
 
     """
 

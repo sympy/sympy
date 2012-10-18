@@ -219,9 +219,10 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     ... basic_orbits=D.basic_orbits)
     ([{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},
     {1: Permutation(2), 2: Permutation(1, 2)}],
-    [[0, 1, 2], [1, 2]], [[Permutation(
-        0, 1, 2), Permutation(0, 2), Permutation(1, 2)],
-    [Permutation(1, 2)]])
+    [[0, 1, 2], [1, 2]], [[Permutation(0, 1, 2),
+                           Permutation(0, 2),
+                           Permutation(1, 2)],
+                          [Permutation(1, 2)]])
 
     See Also
     ========

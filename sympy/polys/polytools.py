@@ -3049,8 +3049,9 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).all_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).all_roots()
-        [RootOf(x**3 + x + 1, 0), RootOf(
-            x**3 + x + 1, 1), RootOf(x**3 + x + 1, 2)]
+        [RootOf(x**3 + x + 1, 0),
+         RootOf(x**3 + x + 1, 1),
+         RootOf(x**3 + x + 1, 2)]
 
         """
         roots = sympy.polys.rootoftools.RootOf.all_roots(f, radicals=radicals)

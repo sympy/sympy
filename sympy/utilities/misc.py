@@ -45,8 +45,8 @@ def default_sort_key(item, order=None):
     Here are some examples of the key that is produced:
 
     >>> default_sort_key(UndefinedFunction('f'))
-    ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'), (0, (
-        )), (), 1), 1)
+    ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'),
+        (0, ()), (), 1), 1)
     >>> default_sort_key('1')
     ((0, 0, 'str'), (1, ('1',)), ((1, 0, 'Number'), (0, ()), (), 1), 1)
     >>> default_sort_key(S.One)

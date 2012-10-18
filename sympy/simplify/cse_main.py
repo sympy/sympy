@@ -72,8 +72,8 @@ def cse_separate(r, e):
     >>> from sympy import cos, exp, cse, Eq
     >>> eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate)
-    [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + cos(
-        x0), z - 2]]
+    [[(x0, y + 1), (x, z + 1), (x1, x + 1)],
+     [x1 + exp(x1/x0) + cos(x0), z - 2]]
     """
     syms = set([k for k, v in r])
     d = sift(

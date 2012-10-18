@@ -143,8 +143,8 @@ class GeometryEntity(Basic):
         >>> t.translate(2)
         Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point(
-            3, 2), Point(3/2, sqrt(3)/2 + 2), Point(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2),
+            Point(3/2, -sqrt(3)/2 + 2))
 
         """
         newargs = []

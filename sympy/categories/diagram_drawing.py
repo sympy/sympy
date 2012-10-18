@@ -1371,7 +1371,7 @@ class ArrowStringDescription(object):
 
     >>> from sympy.categories.diagram_drawing import ArrowStringDescription
     >>> astr = ArrowStringDescription(
-        unit="mm", curving=None, curving_amount=None,
+    ... unit="mm", curving=None, curving_amount=None,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> print str(astr)
@@ -1382,7 +1382,7 @@ class ArrowStringDescription(object):
     describing how many ``unit``'s the morphism is going to curve:
 
     >>> astr = ArrowStringDescription(
-        unit="mm", curving="^", curving_amount=12,
+    ... unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> print str(astr)
@@ -1395,7 +1395,7 @@ class ArrowStringDescription(object):
     and the direction the arrow gets back from:
 
     >>> astr = ArrowStringDescription(
-        unit="mm", curving=None, curving_amount=None,
+    ... unit="mm", curving=None, curving_amount=None,
     ... looping_start="u", looping_end="l", horizontal_direction="",
     ... vertical_direction="", label_position="_", label="f")
     >>> print str(astr)
@@ -1406,7 +1406,7 @@ class ArrowStringDescription(object):
     near the arrow head, use ">":
 
     >>> astr = ArrowStringDescription(
-        unit="mm", curving="^", curving_amount=12,
+    ... unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.label_displacement = ">"
@@ -1417,7 +1417,7 @@ class ArrowStringDescription(object):
     get a dashed arrow, for example, use "{-->}" as arrow style:
 
     >>> astr = ArrowStringDescription(
-        unit="mm", curving="^", curving_amount=12,
+    ... unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.arrow_style = "{-->}"
