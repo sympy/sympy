@@ -647,8 +647,8 @@ def test_issue_1793a():
     assert integrate(c*(P2 - P1), t) in [
         c*(-A*(-h1)*log(c*t)/c + A*t*exp(-z)),
         c*(-A*(-h2)*log(c*t)/c + A*t*exp(-z)),
-        c*( A*  h1 *log(c*t)/c + A*t*exp(-z)),
-        c*( A*  h2 *log(c*t)/c + A*t*exp(-z)),
+        c*( A* h1 *log(c*t)/c + A*t*exp(-z)),
+        c*( A* h2 *log(c*t)/c + A*t*exp(-z)),
     ]
 
 def test_issue_1793b():

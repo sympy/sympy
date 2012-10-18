@@ -598,7 +598,7 @@ def _doctest(*paths, **kwargs):
         # Paths were already made native in *py tests so don't repeat here.
         # There's no chance of having a *py file slip through since we
         # only have *rst files in test_files.
-        matched =  []
+        matched = []
         for f in not_blacklisted:
             basename = os.path.basename(f)
             for p in paths:

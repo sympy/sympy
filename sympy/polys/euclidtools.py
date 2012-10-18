@@ -334,7 +334,7 @@ def dup_inner_subresultants(f, g, K):
     d = n - m
 
     b = (-K.one)**(d+1)
-    c =  -K.one
+    c = -K.one
 
     B, D = [b], [d]
 

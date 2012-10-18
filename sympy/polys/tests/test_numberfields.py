@@ -41,15 +41,15 @@ def test_minimal_polynomial():
     assert minimal_polynomial(3*sqrt(5), x) == x**2 - 45
     assert minimal_polynomial(4*sqrt(6), x) == x**2 - 96
 
-    assert minimal_polynomial(2*sqrt(2) + 3, x) == x**2 -  6*x +  1
-    assert minimal_polynomial(3*sqrt(5) + 6, x) == x**2 - 12*x -  9
+    assert minimal_polynomial(2*sqrt(2) + 3, x) == x**2 - 6*x + 1
+    assert minimal_polynomial(3*sqrt(5) + 6, x) == x**2 - 12*x - 9
     assert minimal_polynomial(4*sqrt(6) + 7, x) == x**2 - 14*x - 47
 
-    assert minimal_polynomial(2*sqrt(2) - 3, x) == x**2 +  6*x +  1
-    assert minimal_polynomial(3*sqrt(5) - 6, x) == x**2 + 12*x -  9
+    assert minimal_polynomial(2*sqrt(2) - 3, x) == x**2 + 6*x + 1
+    assert minimal_polynomial(3*sqrt(5) - 6, x) == x**2 + 12*x - 9
     assert minimal_polynomial(4*sqrt(6) - 7, x) == x**2 + 14*x - 47
 
-    assert minimal_polynomial(sqrt(1 + sqrt(6)), x) == x**4 -  2*x**2 -  5
+    assert minimal_polynomial(sqrt(1 + sqrt(6)), x) == x**4 - 2*x**2 - 5
     assert minimal_polynomial(sqrt(I + sqrt(6)), x) == x**8 - 10*x**4 + 49
 
     assert minimal_polynomial(2*I + sqrt(2 + I), x) == x**4 + 4*x**2 + 8*x + 37
@@ -82,7 +82,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(a, x, polys=True) == Poly(x**2 - 2)
     assert minimal_polynomial(b, x, polys=True) == Poly(x**2 - 3)
 
-    assert minimal_polynomial(sqrt(a/2 + 17), x) == 2*x**4 -  68*x**2 +  577
+    assert minimal_polynomial(sqrt(a/2 + 17), x) == 2*x**4 - 68*x**2 + 577
     assert minimal_polynomial(sqrt(b/2 + 17), x) == 4*x**4 - 136*x**2 + 1153
 
     a, b = sqrt(2)/3 + 7, AlgebraicNumber(sqrt(2)/3 + 7)

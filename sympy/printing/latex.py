@@ -224,7 +224,7 @@ class LatexPrinter(Printer):
                 # confusion
                 if separator == " " and re.search("[0-9][} ]*$", tex) and \
                         re.match("[{ ]*[-+0-9]", _tex):
-                    tex +=  r" \times " + _tex
+                    tex += r" \times " + _tex
                 else:
                     tex += separator + _tex
             else:

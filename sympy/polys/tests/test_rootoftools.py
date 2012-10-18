@@ -89,7 +89,7 @@ def test_RootOf___new__():
     assert RootOf(Poly(x - y, x), 0) == y
 
     assert RootOf(Poly(x**2 - y, x), 0) == -sqrt(y)
-    assert RootOf(Poly(x**2 - y, x), 1) ==  sqrt(y)
+    assert RootOf(Poly(x**2 - y, x), 1) == sqrt(y)
 
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 

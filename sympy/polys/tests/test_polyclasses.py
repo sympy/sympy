@@ -105,9 +105,9 @@ def test_DMP_arithmetics():
     h = DMP([[-10]], ZZ)
 
     assert f.sub(g) == h
-    assert f - g ==  h
+    assert f - g == h
     assert g - f == -h
-    assert f - 5 ==  h
+    assert f - 5 == h
     assert 5 - f == -h
 
     h = DMP([[-25]], ZZ)

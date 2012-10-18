@@ -471,7 +471,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             result = parse_expression(terms, symbol)
 
             if SYMPY_DEBUG:
-                print "DEBUG: returned %s" %  str(result)
+                print "DEBUG: returned %s" % str(result)
 
             if result is not None:
                 terms, elems, common_expo, has_deriv = result
@@ -1245,7 +1245,7 @@ def split_surds(expr):
     (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
     """
     args = sorted(expr.args, key=default_sort_key)
-    coeff_muls =  [x.as_coeff_Mul() for x in args]
+    coeff_muls = [x.as_coeff_Mul() for x in args]
     surds = [x[1]**2 for x in coeff_muls if x[1].is_Pow]
     surds.sort(key=default_sort_key)
     g, b1, b2 = _split_gcd(*surds)

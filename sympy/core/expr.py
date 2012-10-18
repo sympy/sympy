@@ -242,7 +242,7 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
-        if dif.is_positive !=  dif.is_nonpositive:
+        if dif.is_positive != dif.is_nonpositive:
             return dif.is_positive
         return C.StrictGreaterThan(self, other)
 

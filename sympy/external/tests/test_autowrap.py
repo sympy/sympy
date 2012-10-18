@@ -45,7 +45,7 @@ def runtest_autowrap_twice(language, backend):
 
     # check that autowrap updates the module name.  Else, g gives the same as f
     assert f(1, -2, 1) == -1.0
-    assert g(1, -2, 1) ==  1.0
+    assert g(1, -2, 1) == 1.0
 
 def runtest_autowrap_trace(language, backend):
     has_module('numpy')

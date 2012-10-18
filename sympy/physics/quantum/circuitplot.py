@@ -94,7 +94,7 @@ else:
         def _plot_wires(self):
             """Plot the wires of the circuit diagram."""
             xstart = self._gate_grid[0]
-            xstop =  self._gate_grid[-1]
+            xstop = self._gate_grid[-1]
             xdata = (xstart-self.scale, xstop+self.scale)
             for i in range(self.nqubits):
                 ydata = (self._wire_grid[i], self._wire_grid[i])

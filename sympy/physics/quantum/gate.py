@@ -1048,7 +1048,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
 
     # Single target, multiple controls.
     elif len(targets) == 1 and len(controls) >= 1:
-        target =  targets[0]
+        target = targets[0]
 
         # Build the non-trivial part.
         product2 = []
@@ -1124,7 +1124,7 @@ def gate_simp(circuit):
                 # Append the last elements.
                 newargs = newargs + circuit_args[i+1:]
                 # Recursively simplify the new circuit.
-                circuit =  gate_simp(Mul(*newargs))
+                circuit = gate_simp(Mul(*newargs))
                 break
             elif isinstance(circuit_args[i].base, TGate):
                 # Build a new circuit taking all the old elements.
@@ -1138,7 +1138,7 @@ def gate_simp(circuit):
                 # Append the last elements.
                 newargs = newargs + circuit_args[i+1:]
                 # Recursively simplify the new circuit.
-                circuit =  gate_simp(Mul(*newargs))
+                circuit = gate_simp(Mul(*newargs))
                 break
     return circuit
 

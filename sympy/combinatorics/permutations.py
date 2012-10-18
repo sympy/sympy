@@ -799,7 +799,7 @@ class Permutation(Basic):
         # of the args
         args = list(args[0])
 
-        is_cycle =  args and is_sequence(args[0])
+        is_cycle = args and is_sequence(args[0])
         if is_cycle: # e
             args = [[int(i) for i in c] for c in args]
         else: # d

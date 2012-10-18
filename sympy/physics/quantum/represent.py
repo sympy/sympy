@@ -268,7 +268,7 @@ def rep_innerproduct(expr, **options):
 
     if isinstance(expr, BraBase):
         bra = expr
-        ket =  (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
+        ket = (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
     else:
         bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
         ket = expr

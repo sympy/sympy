@@ -232,7 +232,7 @@ def test_pretty_unicode_str():
 
 def test_upretty_greek():
     assert upretty( oo ) == u'∞'
-    assert upretty( Symbol('alpha^+_1') ) ==  u'α⁺₁'
+    assert upretty( Symbol('alpha^+_1') ) == u'α⁺₁'
     assert upretty( Symbol('beta') ) == u'β'
     assert upretty(Symbol('lambda')) == u'λ'
 

@@ -361,7 +361,7 @@ def test_deriv_wrt_function():
     assert diff(2 * x + 4 + y * x, x) == 2 + y
     assert (diff(4 * x**2 + 3 * x + x * y, t) == 3 * xd + x * yd + xd * y +
             8 * x * xd)
-    assert (diff(4 * x**2 + 3 * xd + x * y, t) ==  3 * xdd + x * yd + xd * y +
+    assert (diff(4 * x**2 + 3 * xd + x * y, t) == 3 * xdd + x * yd + xd * y +
             8 * x * xd)
     assert diff(4 * x**2 + 3 * xd + x * y, xd) == 3
     assert diff(4 * x**2 + 3 * xd + x * y, xdd) == 0

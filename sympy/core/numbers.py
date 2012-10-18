@@ -1490,16 +1490,16 @@ class Integer(Rational):
 
     def __gt__(self, other):
         if isinstance(other, (int, long)):
-            return (self.p >  other)
+            return (self.p > other)
         elif isinstance(other, Integer):
-            return (self.p >  other.p)
+            return (self.p > other.p)
         return Rational.__gt__(self, other)
 
     def __lt__(self, other):
         if isinstance(other, (int, long)):
-            return (self.p <  other)
+            return (self.p < other)
         elif isinstance(other, Integer):
-            return (self.p <  other.p)
+            return (self.p < other.p)
         return Rational.__lt__(self, other)
 
     def __ge__(self, other):

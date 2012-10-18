@@ -218,7 +218,7 @@ def test_expand():
     x=Symbol("x")
     s=exp(x*x)-1
     e=s.nseries(x,0,3)/x**2
-    assert e.expand() ==  1+x**2/2+O(x**4)
+    assert e.expand() == 1+x**2/2+O(x**4)
 
     e = (x*(y+z))**(x*(y+z))*(x+y)
     assert e.expand(power_exp=False, power_base=False) == x*(x*y + x*z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
@@ -232,7 +232,7 @@ def test_expand():
     assert ((2*y*p)**z).expand() == 2**z*p**z*y**z
     assert ((2*y*p*x)**z).expand() == 2**z*p**z*(x*y)**z
     assert ((2*y*p*x)**z).expand(force=True) == 2**z*p**z*x**z*y**z
-    assert ((2*y*p*-pi)**z).expand() ==  2**z*pi**z*p**z*(-y)**z
+    assert ((2*y*p*-pi)**z).expand() == 2**z*pi**z*p**z*(-y)**z
     assert ((2*y*p*-pi*x)**z).expand() == 2**z*pi**z*p**z*(-x*y)**z
     n=Symbol('n', negative=True)
     m=Symbol('m', negative=True)

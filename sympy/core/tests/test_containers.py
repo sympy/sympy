@@ -5,7 +5,7 @@ from sympy.core.compatibility import is_sequence, iterable
 
 def test_Tuple():
     t = (1, 2, 3, 4)
-    st =  Tuple(*t)
+    st = Tuple(*t)
     assert set(sympify(t)) == set(st)
     assert len(t) == len(st)
     assert set(sympify(t[:2])) == set(st[:2])

@@ -84,7 +84,7 @@ def test_dict_set():
     f = 3*cos(4*x)
     r = f.match(a*cos(b*x))
     assert r == {a: 3, b: 4}
-    e =  a/b*sin(b*x)
+    e = a/b*sin(b*x)
     assert e.subs(r) == r[a]/r[b]*sin(r[b]*x)
     assert e.subs(r) == 3*sin(4*x) / 4
     s = set(r.items())

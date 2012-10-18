@@ -56,7 +56,7 @@ def roots_quadratic(f):
         else:
             R = sqrt(r)
 
-        r0 =  R
+        r0 = R
         r1 = -R
     else:
         d = b**2 - 4*a*c

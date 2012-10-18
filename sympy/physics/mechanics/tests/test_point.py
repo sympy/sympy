@@ -28,7 +28,7 @@ def test_point_a1pt_theorys():
     P = O.locatenew('P', B.x)
     P.set_vel(B, 0)
     O.set_vel(N, 0)
-    assert P.a1pt_theory(O, N, B) ==  -(qd**2) * B.x + qdd * B.y
+    assert P.a1pt_theory(O, N, B) == -(qd**2) * B.x + qdd * B.y
     P.set_vel(B, q2d * B.z)
     assert P.a1pt_theory(O, N, B) == -(qd**2) * B.x + qdd * B.y + q2dd * B.z
     O.set_vel(N, q2d * B.x)

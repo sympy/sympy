@@ -106,7 +106,7 @@ def test_euler():
 @XFAIL
 def test_euler_failing():
     # depends on dummy variables being implemented http://code.google.com/p/sympy/issues/detail?id=2566
-    assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+    assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
 
 def test_catalan():
     assert catalan(1) == 1

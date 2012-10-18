@@ -403,7 +403,7 @@ class RootOf(Expr):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
-            refined =  False
+            refined = False
 
             while True:
                 if self.is_real:

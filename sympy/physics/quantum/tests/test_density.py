@@ -255,7 +255,7 @@ def test_fidelity():
     #using qubits/density(mixed states)
     d1 = Density([state3, 0.70], [state4, 0.30])
     d2 = Density([state3, 0.20], [state4, 0.80])
-    assert abs(fidelity(d1, d1) -  1) < 1e-3
+    assert abs(fidelity(d1, d1) - 1) < 1e-3
     assert abs(fidelity(d1, d2) - 0.996) < 1e-3
     assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 

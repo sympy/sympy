@@ -13,14 +13,14 @@ rmul = Permutation.rmul
 def test_has():
     # return p in self.generators
     a = Permutation([1, 0])
-    G =  PermutationGroup([a])
+    G = PermutationGroup([a])
     assert G.is_abelian
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
-    G =  PermutationGroup([a, b])
+    G = PermutationGroup([a, b])
     assert not G.is_abelian
 
-    G =  PermutationGroup([a])
+    G = PermutationGroup([a])
     assert G.has(a)
     assert not G.has(b)
 

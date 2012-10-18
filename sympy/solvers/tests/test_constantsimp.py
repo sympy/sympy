@@ -126,7 +126,7 @@ def test_ode_solutions():
     assert constant_renumber(constantsimp(Eq(f(x),acos((-C1)/cos(x))), x, 1), 'C', 1, 1) == \
         Eq(f(x),acos(C1/cos(x)))
     assert constant_renumber(constantsimp(Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0), x, 1),
-        'C', 1, 1) ==  Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
+        'C', 1, 1) == Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     assert constant_renumber(constantsimp(Eq(log(x*sqrt(2)*sqrt(1/x)*sqrt(f(x))\
         /C1) + x**2/(2*f(x)**2), 0), x, 1), 'C', 1, 1) == \
         Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)

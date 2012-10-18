@@ -28,7 +28,7 @@ def test_rigidbody():
     assert B.inertia == (I2, B.masscenter)
 
     # Testing linear momentum function assuming A2 is the inertial frame
-    N =  ReferenceFrame('N')
+    N = ReferenceFrame('N')
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
     assert B.linear_momentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
 

@@ -302,7 +302,7 @@ class Term(object):
         if other < 0:
             return self.inv().pow(-other)
         else:
-            return Term(self.coeff **  other,
+            return Term(self.coeff ** other,
                         self.numer.pow(other),
                         self.denom.pow(other))
 

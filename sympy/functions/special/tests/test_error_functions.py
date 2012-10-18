@@ -51,7 +51,7 @@ def test_erf_series():
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
 def test_erf_evalf():
-    assert abs( erf(Float(2.0)) - 0.995322265 ) <  1E-8  # XXX
+    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8  # XXX
 
 def test__erfs():
     assert _erfs(z).diff(z) == -2/sqrt(S.Pi)+2*z*_erfs(z)

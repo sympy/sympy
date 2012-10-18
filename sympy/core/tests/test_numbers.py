@@ -675,7 +675,7 @@ def test_powers_Integer():
     assert sqrt(-3) == I*sqrt(3)
     assert (3) ** (S(3)/2) == 3 * sqrt(3)
     assert (-3) ** (S(3)/2) == - 3 * sqrt(-3)
-    assert (-3) ** (S(5)/2) ==  9 * I * sqrt(3)
+    assert (-3) ** (S(5)/2) == 9 * I * sqrt(3)
     assert (-3) ** (S(7)/2) == - I * 27 * sqrt(3)
     assert (2) ** (S(3)/2) == 2 * sqrt(2)
     assert (2) ** (S(-3)/2) == sqrt(2) / 4
@@ -1013,9 +1013,9 @@ def test_Integer_as_index():
         assert 'hello'[Integer(2):] == 'llo'
 
 def test_Rational_int():
-    assert int( Rational(7, 5)) ==  1
-    assert int( Rational(1, 2)) ==  0
-    assert int(-Rational(1, 2)) ==  0
+    assert int( Rational(7, 5)) == 1
+    assert int( Rational(1, 2)) == 0
+    assert int(-Rational(1, 2)) == 0
     assert int(-Rational(7, 5)) == -1
 
 def test_zoo():

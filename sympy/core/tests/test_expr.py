@@ -867,7 +867,7 @@ def test_extractions():
     assert (1-x-y).could_extract_minus_sign() == True
     assert (1-x+y).could_extract_minus_sign() == False
     assert ((-x-x*y)/y).could_extract_minus_sign() == True
-    assert (-(x+x*y)/y).could_extract_minus_sign() ==  True
+    assert (-(x+x*y)/y).could_extract_minus_sign() == True
     assert ((x+x*y)/(-y)).could_extract_minus_sign() == True
     assert ((x+x*y)/y).could_extract_minus_sign() == False
     assert (x*(-x-x**3)).could_extract_minus_sign() == True # used to give inf recurs
@@ -924,7 +924,7 @@ def test_coeff():
     assert (3 + 2*x + 4*x**2).coeff(1) == 0
     assert (-x - 2*y).coeff(2) == -y
     assert (x + sqrt(2)*x).coeff(sqrt(2)) == x
-    assert (3 + 2*x + 4*x**2).coeff(x) ==  2
+    assert (3 + 2*x + 4*x**2).coeff(x) == 2
     assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
     assert (3 + 2*x + 4*x**2).coeff(x**3) == 0
     assert (z*(x + y)**2).coeff((x + y)**2) == z
@@ -938,7 +938,7 @@ def test_coeff():
     assert x.coeff(x, 0) == 0
 
     n, m, o, l = symbols('n m o l', commutative=False)
-    assert n.coeff(n) ==  1
+    assert n.coeff(n) == 1
     assert y.coeff(n) == 0
     assert (3*n).coeff(n) == 3
     assert (2 + n).coeff(x*m) == 0
@@ -1376,7 +1376,7 @@ def test_round():
     # the floats
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
-    assert (pi/10 + E*I).round(2) == Float(0.31, 2) +  I*Float(2.72, 3)
+    assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
 
     # issue 3815
     assert (I**(I+3)).round(3) == Float('-0.208','')*I

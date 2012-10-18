@@ -255,7 +255,7 @@ def test_loggamma():
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
     s2 = (1/x-S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
-         x/12 - x**3/360 + x**5/1260 +  O(x**7)
+         x/12 - x**3/360 + x**5/1260 + O(x**7)
     assert ((s1 - s2).expand(force=True)).removeO() == 0
 
     def tN(N, M):

@@ -1215,7 +1215,7 @@ def test_positive():
     assert ask(Q.positive(x+y), Q.positive(x) & Q.negative(y)) == None
 
     assert ask(Q.positive(2*x), Q.positive(x)) == True
-    assumptions =  Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
+    assumptions = Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
     assert ask(Q.positive(x*y*z)) == None
     assert ask(Q.positive(x*y*z), assumptions) == True
     assert ask(Q.positive(-x*y*z), assumptions) == False

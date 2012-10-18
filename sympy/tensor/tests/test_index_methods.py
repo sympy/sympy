@@ -145,7 +145,7 @@ def test_contraction_structure_Add_in_Pow():
                 {None: set([S.One]), (j,): set([y[j, j]])}
                 ]
             }
-    result =  get_contraction_structure(s_ii_jj_s)
+    result = get_contraction_structure(s_ii_jj_s)
     assert result == expected
 
 def test_contraction_structure_Pow_in_Pow():

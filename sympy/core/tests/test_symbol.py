@@ -72,18 +72,18 @@ def test_lt_gt():
     e = x**2 + 4*x + 1
     assert (e >= 0) == GreaterThan(e, 0)
     assert (0 <= e) == GreaterThan(e, 0)
-    assert (e >  0) == StrictGreaterThan(e, 0)
-    assert (0 <  e) == StrictGreaterThan(e, 0)
+    assert (e > 0) == StrictGreaterThan(e, 0)
+    assert (0 < e) == StrictGreaterThan(e, 0)
 
     assert (e <= 0) == LessThan(e, 0)
     assert (0 >= e) == LessThan(e, 0)
-    assert (e <  0) == StrictLessThan(e, 0)
-    assert (0 >  e) == StrictLessThan(e, 0)
+    assert (e < 0) == StrictLessThan(e, 0)
+    assert (0 > e) == StrictLessThan(e, 0)
 
     assert (S(0) >= e) == GreaterThan(0, e)
     assert (S(0) <= e) == LessThan(0, e)
-    assert (S(0) <  e) == StrictLessThan(0, e)
-    assert (S(0) >  e) == StrictGreaterThan(0, e)
+    assert (S(0) < e) == StrictLessThan(0, e)
+    assert (S(0) > e) == StrictGreaterThan(0, e)
 
 def test_no_len():
     # there should be no len for numbers
@@ -96,52 +96,52 @@ def test_ineq_unequal():
     x, y, z = symbols('x,y,z')
 
     e = (
-      S(-1) >=  x,   S(-1) >=  y,   S(-1) >=  z,
-      S(-1) >   x,   S(-1) >   y,   S(-1) >   z,
-      S(-1) <=  x,   S(-1) <=  y,   S(-1) <=  z,
-      S(-1) <   x,   S(-1) <   y,   S(-1) <   z,
-      S(0) >=  x,   S(0) >=  y,   S(0) >=  z,
-      S(0) >   x,   S(0) >   y,   S(0) >   z,
-      S(0) <=  x,   S(0) <=  y,   S(0) <=  z,
-      S(0) <   x,   S(0) <   y,   S(0) <   z,
-      S('3/7') >=  x,   S('3/7') >=  y,   S('3/7') >=  z,
-      S('3/7') >   x,   S('3/7') >   y,   S('3/7') >   z,
-      S('3/7') <=  x,   S('3/7') <=  y,   S('3/7') <=  z,
-      S('3/7') <   x,   S('3/7') <   y,   S('3/7') <   z,
-      S(1.5) >=  x,   S(1.5) >=  y,   S(1.5) >=  z,
-      S(1.5) >   x,   S(1.5) >   y,   S(1.5) >   z,
-      S(1.5) <=  x,   S(1.5) <=  y,   S(1.5) <=  z,
-      S(1.5) <   x,   S(1.5) <   y,   S(1.5) <   z,
-      S(2) >=  x,   S(2) >=  y,   S(2) >=  z,
-      S(2) >   x,   S(2) >   y,   S(2) >   z,
-      S(2) <=  x,   S(2) <=  y,   S(2) <=  z,
-      S(2) <   x,   S(2) <   y,   S(2) <   z,
+      S(-1) >= x,   S(-1) >= y,   S(-1) >= z,
+      S(-1) > x,   S(-1) > y,   S(-1) > z,
+      S(-1) <= x,   S(-1) <= y,   S(-1) <= z,
+      S(-1) < x,   S(-1) < y,   S(-1) < z,
+      S(0) >= x,   S(0) >= y,   S(0) >= z,
+      S(0) > x,   S(0) > y,   S(0) > z,
+      S(0) <= x,   S(0) <= y,   S(0) <= z,
+      S(0) < x,   S(0) < y,   S(0) < z,
+      S('3/7') >= x,   S('3/7') >= y,   S('3/7') >= z,
+      S('3/7') > x,   S('3/7') > y,   S('3/7') > z,
+      S('3/7') <= x,   S('3/7') <= y,   S('3/7') <= z,
+      S('3/7') < x,   S('3/7') < y,   S('3/7') < z,
+      S(1.5) >= x,   S(1.5) >= y,   S(1.5) >= z,
+      S(1.5) > x,   S(1.5) > y,   S(1.5) > z,
+      S(1.5) <= x,   S(1.5) <= y,   S(1.5) <= z,
+      S(1.5) < x,   S(1.5) < y,   S(1.5) < z,
+      S(2) >= x,   S(2) >= y,   S(2) >= z,
+      S(2) > x,   S(2) > y,   S(2) > z,
+      S(2) <= x,   S(2) <= y,   S(2) <= z,
+      S(2) < x,   S(2) < y,   S(2) < z,
       x >= -1,   y >= -1,   z >= -1,
-      x >  -1,   y >  -1,   z >  -1,
+      x > -1,   y > -1,   z > -1,
       x <= -1,   y <= -1,   z <= -1,
-      x <  -1,   y <  -1,   z <  -1,
-      x >=  0,   y >=  0,   z >=  0,
-      x >   0,   y >   0,   z >   0,
-      x <=  0,   y <=  0,   z <=  0,
-      x <   0,   y <   0,   z <   0,
-      x >=  1.5, y >=  1.5, z >=  1.5,
-      x >   1.5, y >   1.5, z >   1.5,
-      x <=  1.5, y <=  1.5, z <=  1.5,
-      x <   1.5, y <   1.5, z <   1.5,
-      x >=  2,   y >=  2,   z >=  2,
-      x >   2,   y >   2,   z >   2,
-      x <=  2,   y <=  2,   z <=  2,
-      x <   2,   y <   2,   z <   2,
+      x < -1,   y < -1,   z < -1,
+      x >= 0,   y >= 0,   z >= 0,
+      x > 0,   y > 0,   z > 0,
+      x <= 0,   y <= 0,   z <= 0,
+      x < 0,   y < 0,   z < 0,
+      x >= 1.5, y >= 1.5, z >= 1.5,
+      x > 1.5, y > 1.5, z > 1.5,
+      x <= 1.5, y <= 1.5, z <= 1.5,
+      x < 1.5, y < 1.5, z < 1.5,
+      x >= 2,   y >= 2,   z >= 2,
+      x > 2,   y > 2,   z > 2,
+      x <= 2,   y <= 2,   z <= 2,
+      x < 2,   y < 2,   z < 2,
 
       x >= y,  x >= z,  y >= x, y >= z, z >= x, z >= y,
-      x >  y,  x >  z,  y >  x, y >  z, z >  x, z >  y,
+      x > y,  x > z,  y > x, y > z, z > x, z > y,
       x <= y,  x <= z,  y <= x, y <= z, z <= x, z <= y,
-      x <  y,  x <  z,  y <  x, y <  z, z <  x, z <  y,
+      x < y,  x < z,  y < x, y < z, z < x, z < y,
 
       x - pi >= y + z,  y - pi >= x + z,  z - pi >= x + y,
-      x - pi >  y + z,  y - pi >  x + z,  z - pi >  x + y,
+      x - pi > y + z,  y - pi > x + z,  z - pi > x + y,
       x - pi <= y + z,  y - pi <= x + z,  z - pi <= x + y,
-      x - pi <  y + z,  y - pi <  x + z,  z - pi <  x + y,
+      x - pi < y + z,  y - pi < x + z,  z - pi < x + y,
       True, False
     )
 

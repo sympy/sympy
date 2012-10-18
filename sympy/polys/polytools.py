@@ -5610,7 +5610,7 @@ def reduced(f, G, *gens, **args):
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
     Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
-    r =   Poly._from_dict(dict(r), opt)
+    r = Poly._from_dict(dict(r), opt)
 
     if retract:
         try:
@@ -5934,7 +5934,7 @@ class GroebnerBasis(Basic):
         Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
         Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
-        r =   Poly._from_dict(dict(r), opt)
+        r = Poly._from_dict(dict(r), opt)
 
         if retract:
             try:

@@ -989,7 +989,7 @@ class MV(object):
             for nbase in nbases:
                 print nbase
 
-        g =  numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
+        g = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
 
         for irow in MV.nrg:
             for icol in MV.nrg:
@@ -1139,8 +1139,8 @@ class MV(object):
                 p1base = len(MV_bases[igrade+1])
                 m1base = len(MV_bases[igrade-1])
                 while ibase < nbase:
-                    Cm1 =  numpy.array(m1base*[ZERO],dtype=numpy.object)
-                    Cp1 =  numpy.array(p1base*[ZERO],dtype=numpy.object)
+                    Cm1 = numpy.array(m1base*[ZERO],dtype=numpy.object)
+                    Cp1 = numpy.array(p1base*[ZERO],dtype=numpy.object)
                     C = MV_connect[igrade][ibase]
                     if igrade == 1:
                         X = C(0)
@@ -1163,7 +1163,7 @@ class MV(object):
                 ibase = 0
                 m1base = len(MV_bases[igrade-1])
                 while ibase < nbase:
-                    Cm1 =  numpy.array(m1base*[ZERO],dtype=numpy.object)
+                    Cm1 = numpy.array(m1base*[ZERO],dtype=numpy.object)
                     C = MV_connect[igrade][ibase]
                     jbase = 0
                     while jbase < m1base:

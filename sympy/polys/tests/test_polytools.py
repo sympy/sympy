@@ -1818,7 +1818,7 @@ def test_compose():
     raises(ComputationFailed, lambda: compose(4, 2))
     raises(ComputationFailed, lambda: decompose(4))
 
-    assert compose(x**2 - y**2, x - y, x, y) ==  x**2 - 2*x*y
+    assert compose(x**2 - y**2, x - y, x, y) == x**2 - 2*x*y
     assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
 
 def test_shift():
@@ -2354,7 +2354,7 @@ def test_nroots():
     eps = Float("1e-5")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is True
-    assert im(roots[0]) ==  0.0
+    assert im(roots[0]) == 0.0
     assert re(roots[1]) == -0.5
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is True
     assert re(roots[2]) == -0.5
@@ -2367,7 +2367,7 @@ def test_nroots():
     eps = Float("1e-6")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is False
-    assert im(roots[0]) ==  0.0
+    assert im(roots[0]) == 0.0
     assert re(roots[1]) == -0.5
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is False
     assert re(roots[2]) == -0.5

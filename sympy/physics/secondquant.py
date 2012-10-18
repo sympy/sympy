@@ -2881,7 +2881,7 @@ def wicks(e, **kw_args):
             # recursion over higher order contractions
             result = _get_contractions(string1,
                 keep_only_fully_contracted=opts['keep_only_fully_contracted'] )
-            result =  Mul(*c_part)*result
+            result = Mul(*c_part)*result
 
         if opts['expand']:
             result = result.expand()
@@ -2903,9 +2903,9 @@ class PermutationOperator(Expr):
     def __new__(cls, i,j):
         i,j = map(sympify,(i,j))
         if (i>j):
-            obj =  Basic.__new__(cls,j,i)
+            obj = Basic.__new__(cls,j,i)
         else:
-            obj =  Basic.__new__(cls,i,j)
+            obj = Basic.__new__(cls,i,j)
         return obj
 
 

@@ -308,5 +308,5 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the"
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 =  state1**Rational(1,2)
+    sqrt_state1 = state1**Rational(1,2)
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()

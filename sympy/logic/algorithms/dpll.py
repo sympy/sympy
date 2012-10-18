@@ -67,7 +67,7 @@ def dpll(clauses, symbols, model):
     # end DP kernel
     unknown_clauses = []
     for c in clauses:
-        val =  pl_true(c, model)
+        val = pl_true(c, model)
         if val == False:
             return False
         if val != True:
@@ -113,7 +113,7 @@ def dpll_int_repr(clauses, symbols, model):
     # end DP kernel
     unknown_clauses = []
     for c in clauses:
-        val =  pl_true_int_repr(c, model)
+        val = pl_true_int_repr(c, model)
         if val is False:
             return False
         if val is not True:

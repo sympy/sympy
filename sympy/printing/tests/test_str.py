@@ -161,7 +161,7 @@ def test_Mul():
     assert str(y/x) == "y/x"
     assert str(x/y/z) == "x/(y*z)"
     assert str((x+1)/(y+2)) == "(x + 1)/(y + 2)"
-    assert str(2*x/3) ==  '2*x/3'
+    assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
 
     class CustomClass1(Expr):

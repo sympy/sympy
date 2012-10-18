@@ -73,7 +73,7 @@ def R_nl(n, l, r, Z=1):
     a = 1/Z # Bohr radius
     r0 = 2 * r / (n * a)
     # normalization coefficient
-    C =  sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n+l)))
+    C = sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n+l)))
     # This is an equivalent normalization coefficient, that can be found in
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))

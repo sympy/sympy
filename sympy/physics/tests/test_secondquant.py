@@ -381,7 +381,7 @@ def test_NO():
 
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
 
-    no =  NO(Fd(a)*F(i)*F(b)*Fd(j))
+    no = NO(Fd(a)*F(i)*F(b)*Fd(j))
     l1 = [ ind for ind in no.iter_q_creators() ]
     assert l1 == [0,1]
     l2 = [ ind for ind in no.iter_q_annihilators() ]
@@ -449,7 +449,7 @@ def test_Tensors():
 
     AT= AntiSymmetricTensor
     assert AT('t',(a,b),(i,j)) == -AT('t',(b,a),(i,j))
-    assert AT('t',(a,b),(i,j)) ==  AT('t',(b,a),(j,i))
+    assert AT('t',(a,b),(i,j)) == AT('t',(b,a),(j,i))
     assert AT('t',(a,b),(i,j)) == -AT('t',(a,b),(j,i))
     assert AT('t',(a,a),(i,j)) == 0
     assert AT('t',(a,b),(i,i)) == 0

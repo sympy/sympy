@@ -83,11 +83,11 @@ def pi_hex_digits(n):
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
-    a=  [4,2,1,1]
+    a= [4,2,1,1]
     j = [1,4,5,6]
 
     #formulae
-    x =  + (a[0]*_series(j[0], n)
+    x = + (a[0]*_series(j[0], n)
          - a[1]*_series(j[1], n)
          - a[2]*_series(j[2], n)
          - a[3]*_series(j[3], n)) & (16**(_dn(n)) -1)

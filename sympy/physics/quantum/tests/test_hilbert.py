@@ -36,7 +36,7 @@ def test_L2():
     y = Symbol('y', real=True)
     b2 = L2(Interval(x,y))
     assert b2.dimension == oo
-    assert b2.interval ==  Interval(x,y)
+    assert b2.interval == Interval(x,y)
     assert b2.subs(x,-1) == L2(Interval(-1,y))
 
 def test_fock_space():

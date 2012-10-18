@@ -476,11 +476,11 @@ def test_PythonRationalType__init__():
     assert Q(-1,-1).q == 1
 
     assert Q(-1).p == -1
-    assert Q(-1).q ==  1
+    assert Q(-1).q == 1
     assert Q(-1, 1).p == -1
-    assert Q(-1, 1).q ==  1
+    assert Q(-1, 1).q == 1
     assert Q( 1,-1).p == -1
-    assert Q( 1,-1).q ==  1
+    assert Q( 1,-1).q == 1
 
     assert Q(1, 2).p == 1
     assert Q(1, 2).q == 2
@@ -501,11 +501,11 @@ def test_PythonRationalType__int__():
     assert int(Q(-1, 4)) == 0
     assert int(Q( 1, 4)) == 0
     assert int(Q(-5, 4)) == -1
-    assert int(Q( 5, 4)) ==  1
+    assert int(Q( 5, 4)) == 1
 
 def test_PythonRationalType__float__():
     assert float(Q(-1, 2)) == -0.5
-    assert float(Q( 1, 2)) ==  0.5
+    assert float(Q( 1, 2)) == 0.5
 
 def test_PythonRationalType__abs__():
     assert abs(Q(-1, 2)) == Q(1, 2)
@@ -585,14 +585,14 @@ def test_PythonRationalType__eq__():
     assert (Q(1, 2) != Q(1, 3)) is True
 
 def test_PythonRationalType__lt_le_gt_ge__():
-    assert (Q(1, 2) <  Q(1, 4)) is False
+    assert (Q(1, 2) < Q(1, 4)) is False
     assert (Q(1, 2) <= Q(1, 4)) is False
-    assert (Q(1, 2) >  Q(1, 4)) is True
+    assert (Q(1, 2) > Q(1, 4)) is True
     assert (Q(1, 2) >= Q(1, 4)) is True
 
-    assert (Q(1, 4) <  Q(1, 2)) is True
+    assert (Q(1, 4) < Q(1, 2)) is True
     assert (Q(1, 4) <= Q(1, 2)) is True
-    assert (Q(1, 4) >  Q(1, 2)) is False
+    assert (Q(1, 4) > Q(1, 2)) is False
     assert (Q(1, 4) >= Q(1, 2)) is False
 
 def test_sympy_of_type():
@@ -725,44 +725,44 @@ def test_ModularInteger():
     a = GF(4)**(-1)
     assert isinstance(a, GF) and a == 4
 
-    assert (GF(1) <  GF(2)) == True
+    assert (GF(1) < GF(2)) == True
     assert (GF(1) <= GF(2)) == True
-    assert (GF(1) >  GF(2)) == False
+    assert (GF(1) > GF(2)) == False
     assert (GF(1) >= GF(2)) == False
 
-    assert (GF(3) <  GF(2)) == False
+    assert (GF(3) < GF(2)) == False
     assert (GF(3) <= GF(2)) == False
-    assert (GF(3) >  GF(2)) == True
+    assert (GF(3) > GF(2)) == True
     assert (GF(3) >= GF(2)) == True
 
-    assert (GF(1) <  GF(7)) == True
+    assert (GF(1) < GF(7)) == True
     assert (GF(1) <= GF(7)) == True
-    assert (GF(1) >  GF(7)) == False
+    assert (GF(1) > GF(7)) == False
     assert (GF(1) >= GF(7)) == False
 
-    assert (GF(3) <  GF(7)) == False
+    assert (GF(3) < GF(7)) == False
     assert (GF(3) <= GF(7)) == False
-    assert (GF(3) >  GF(7)) == True
+    assert (GF(3) > GF(7)) == True
     assert (GF(3) >= GF(7)) == True
 
-    assert (GF(1) <  2) == True
+    assert (GF(1) < 2) == True
     assert (GF(1) <= 2) == True
-    assert (GF(1) >  2) == False
+    assert (GF(1) > 2) == False
     assert (GF(1) >= 2) == False
 
-    assert (GF(3) <  2) == False
+    assert (GF(3) < 2) == False
     assert (GF(3) <= 2) == False
-    assert (GF(3) >  2) == True
+    assert (GF(3) > 2) == True
     assert (GF(3) >= 2) == True
 
-    assert (GF(1) <  7) == True
+    assert (GF(1) < 7) == True
     assert (GF(1) <= 7) == True
-    assert (GF(1) >  7) == False
+    assert (GF(1) > 7) == False
     assert (GF(1) >= 7) == False
 
-    assert (GF(3) <  7) == False
+    assert (GF(3) < 7) == False
     assert (GF(3) <= 7) == False
-    assert (GF(3) >  7) == True
+    assert (GF(3) > 7) == True
     assert (GF(3) >= 7) == True
 
     raises(NotInvertible, lambda: GF(0)**(-1))

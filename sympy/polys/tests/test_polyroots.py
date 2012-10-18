@@ -258,7 +258,7 @@ def test_roots():
     assert roots(x**3+x**2-x+1, x, cubics=True) == {
         -r1_3 - U*W - r4_9*(U*W)**(-1): 1,
         -r1_3 - V*W - r4_9*(V*W)**(-1): 1,
-        -r1_3 -   W - r4_9*(  W)**(-1): 1,
+        -r1_3 - W - r4_9*(  W)**(-1): 1,
     }
 
     f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)

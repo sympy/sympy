@@ -806,5 +806,5 @@ def test_gf_csolve():
     assert csolve_prime([3, 2, 2, 49], 7, 3) == [147, 190, 234]
 
     assert gf_csolve([1, 1, 7], 189) == [13, 49, 76, 112, 139, 175]
-    assert gf_csolve([1, 3, 4, 1, 30], 60) ==  [10, 30]
+    assert gf_csolve([1, 3, 4, 1, 30], 60) == [10, 30]
     assert gf_csolve([1, 1, 7], 15) == []

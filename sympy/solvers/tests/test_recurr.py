@@ -116,8 +116,8 @@ def test_rsolve():
 
     f = 3*y(n - 1) - y(n) - 1
 
-    assert rsolve(f, y(n), {y(0): 0}) ==  -3**n/2 + S.Half
-    assert rsolve(f, y(n), {y(0): 1}) ==   3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 0}) == -3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 1}) == 3**n/2 + S.Half
     assert rsolve(f, y(n), {y(0): 2}) == 3*3**n/2 + S.Half
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0

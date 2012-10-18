@@ -28,7 +28,7 @@ def _cycle_permute(l):
         return l
 
     min_item = min(l)
-    indices = [i for i, x in enumerate(l) if x ==  min_item]
+    indices = [i for i, x in enumerate(l) if x == min_item]
 
     le = list(l)
     le.extend(l) # duplicate and extend string for easy processing

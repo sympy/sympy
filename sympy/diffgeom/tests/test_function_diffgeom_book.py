@@ -56,7 +56,7 @@ def test_functional_diffgeom_ch3():
 
     s_field = f(R2.x,R2.y)
     v_field = b1(R2.x)*R2.e_x + b2(R2.y)*R2.e_y
-    assert v_field(s_field)(p_r).doit() ==  b1(x0)*Derivative(f(x0, y0), x0) + b2(y0)*Derivative(f(x0, y0), y0)
+    assert v_field(s_field)(p_r).doit() == b1(x0)*Derivative(f(x0, y0), x0) + b2(y0)*Derivative(f(x0, y0), y0)
 
     assert R2.e_x(R2.r**2)(p_r) == 2*x0
     v = R2.e_x + 2*R2.e_y

@@ -126,7 +126,7 @@ def test_dup_subresultants():
 
     a = dup_normal([-2], ZZ)
 
-    assert dup_subresultants(f, g, ZZ) ==  [f, g, a]
+    assert dup_subresultants(f, g, ZZ) == [f, g, a]
     assert dup_resultant(f, g, ZZ) == 4
 
     f = dup_normal([1,0,-1], ZZ)

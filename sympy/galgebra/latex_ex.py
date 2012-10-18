@@ -373,7 +373,7 @@ class LatexPrinter(Printer):
 
     def coefficient(self,coef,first_flg):
         if isinstance(coef, C.AssocOp) and isinstance(-coef, C.AssocOp):
-            coef_str =  r"\lp %s\rp " % self._print(coef)
+            coef_str = r"\lp %s\rp " % self._print(coef)
         else:
             coef_str = self._print(coef)
         if first_flg:
@@ -599,7 +599,7 @@ class LatexPrinter(Printer):
                 if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
                         if func in accepted_latex_functions:
-                            name = r"\%s^{%s}" %  (LatexPrinter.fct_dict[func], exp)
+                            name = r"\%s^{%s}" % (LatexPrinter.fct_dict[func], exp)
                         else:
                             name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:

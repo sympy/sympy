@@ -571,7 +571,7 @@ def _disjoint_p(M, N, strict=False):
     if not strict:
         return a2*d1 >= c2*b1 or b2*c1 <= d2*a1
     else:
-        return a2*d1 >  c2*b1 or b2*c1 <  d2*a1
+        return a2*d1 > c2*b1 or b2*c1 < d2*a1
 
 def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
     """Isolate real roots of a list of polynomials and disjoin intervals. """

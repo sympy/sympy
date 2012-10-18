@@ -22,9 +22,9 @@ def test_spin():
     assert operators_to_state(set([J2Op, JxOp])) == JxKet()
     assert operators_to_state(set([J2Op, JyOp])) == JyKet()
     assert operators_to_state(set([J2Op, JzOp])) == JzKet()
-    assert operators_to_state(set([J2Op(), JxOp()])) ==  JxKet()
-    assert operators_to_state(set([J2Op(), JyOp()])) ==  JyKet()
-    assert operators_to_state(set([J2Op(), JzOp()])) ==  JzKet()
+    assert operators_to_state(set([J2Op(), JxOp()])) == JxKet()
+    assert operators_to_state(set([J2Op(), JyOp()])) == JyKet()
+    assert operators_to_state(set([J2Op(), JzOp()])) == JzKet()
 
     assert state_to_operators(JxKet) == set([J2Op(), JxOp()])
     assert state_to_operators(JyKet) == set([J2Op(), JyOp()])

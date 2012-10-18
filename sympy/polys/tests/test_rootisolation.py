@@ -282,7 +282,7 @@ def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots([], ZZ) == []
     assert dup_isolate_real_roots([3], ZZ) == []
 
-    assert dup_isolate_real_roots([5,0], ZZ) ==  [((QQ(0), QQ(0)), 1)]
+    assert dup_isolate_real_roots([5,0], ZZ) == [((QQ(0), QQ(0)), 1)]
     assert dup_isolate_real_roots([7,0,0,0,0], ZZ) == [((QQ(0), QQ(0)), 4)]
 
     assert dup_isolate_real_roots([1, 1,0], ZZ) == [((-QQ(1), -QQ(1)), 1), ((QQ(0), QQ(0)), 1)]

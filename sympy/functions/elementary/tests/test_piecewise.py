@@ -81,7 +81,7 @@ def test_piecewise():
     assert peval2._eval_interval(x, -1, 1) == peval_interval
 
     # Test integration
-    p_int =  Piecewise((-x,x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
+    p_int = Piecewise((-x,x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
     assert integrate(p,x) == p_int
     p = Piecewise((x, x < 1),(x**2, -1 <= x),(x,3<x))
     assert integrate(p,(x,-2,2)) == 5.0/6.0

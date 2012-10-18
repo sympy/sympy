@@ -488,7 +488,7 @@ def test_asin():
     assert asin((sqrt(3)-1)/sqrt(2**3)) == pi/12
     assert asin(-(sqrt(3)-1)/sqrt(2**3)) == -pi/12
 
-    assert asin(x).diff(x) ==  1/sqrt(1-x**2)
+    assert asin(x).diff(x) == 1/sqrt(1-x**2)
 
     assert asin(0.2).is_real == True
     assert asin(-2).is_real == False
@@ -520,7 +520,7 @@ def test_acos():
     # Note: acos(-x) = pi - acos(x)
     assert acos(0) == pi/2
     assert acos(Rational(1,2)) == pi/3
-    assert acos(-Rational(1,2)) ==  (2*pi)/3
+    assert acos(-Rational(1,2)) == (2*pi)/3
     assert acos(1) == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
@@ -561,7 +561,7 @@ def test_atan():
     assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
     assert atan(oo) == pi/2
-    assert atan(x).diff(x) ==  1/(1+x**2)
+    assert atan(x).diff(x) == 1/(1+x**2)
 
     assert atan(r).is_real == True
 

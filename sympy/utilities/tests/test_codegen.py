@@ -653,7 +653,7 @@ def test_intrinsic_math_codegen():
     assert result[0][1] == expected
 
     assert result[1][0] == "file.h"
-    expected =  (
+    expected = (
             'interface\n'
             'REAL*8 function test_abs(x)\n'
             'implicit none\n'
