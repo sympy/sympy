@@ -1067,12 +1067,14 @@ class LatexPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
-    def _print_DiracDelta(self, expr):
+    def _print_DiracDelta(self, expr, exp=None):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (
                 self._print(expr.args[1]), self._print(expr.args[0]))
+        if exp:
+            tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
     def _print_ProductSet(self, p):
