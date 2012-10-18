@@ -1,10 +1,10 @@
 from re import match
 from sympy import sympify
 
-def mathematica (s):
+def mathematica(s):
     return sympify(parse(s))
 
-def parse (s):
+def parse(s):
     s = s.strip()
 
     #Begin rules
@@ -38,12 +38,12 @@ def parse (s):
 
     return s
 
-def translateFunction (s):
+def translateFunction(s):
     if s.startswith("Arc"):
         return "a" + s[3:]
     return s.lower()
 
-def translateOperator (s):
+def translateOperator(s):
     dictionary = {'^':'**'}
     if s in dictionary:
         return dictionary[s]

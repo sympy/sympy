@@ -168,7 +168,7 @@ def test_eval_trace():
 
     # mixed states
     q = (1/sqrt(2)) * (Qubit('00') + Qubit('11'))
-    d = Density ( [q, 1.0] )
+    d = Density( [q, 1.0] )
     t = Tr(d, 0)
     assert t.doit() == (0.5*Density([Qubit('0'), 1]) +
                         0.5*Density([Qubit('1'), 1]))

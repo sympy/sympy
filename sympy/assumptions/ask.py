@@ -227,21 +227,21 @@ for name, value in _handlers_dict.iteritems():
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__ \
                                                 if not attr.startswith('__')]
 known_facts = And(
-    Implies   (Q.real, Q.complex),
-    Implies   (Q.real, Q.hermitian),
+    Implies(Q.real, Q.complex),
+    Implies(Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
     Equivalent(Q.extended_real, Q.real | Q.infinity),
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
-    Implies   (Q.integer, Q.rational),
-    Implies   (Q.imaginary, Q.complex & ~Q.real),
-    Implies   (Q.imaginary, Q.antihermitian),
-    Implies   (Q.antihermitian, ~Q.hermitian),
+    Implies(Q.integer, Q.rational),
+    Implies(Q.imaginary, Q.complex & ~Q.real),
+    Implies(Q.imaginary, Q.antihermitian),
+    Implies(Q.antihermitian, ~Q.hermitian),
     Equivalent(Q.negative, Q.nonzero & ~Q.positive),
     Equivalent(Q.positive, Q.nonzero & ~Q.negative),
     Equivalent(Q.rational, Q.real & ~Q.irrational),
     Equivalent(Q.real, Q.rational | Q.irrational),
-    Implies   (Q.nonzero, Q.real),
+    Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative)
 )
 

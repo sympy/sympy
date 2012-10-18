@@ -48,11 +48,11 @@ def test_logic_onearg():
 
     assert And(T)   == T
     assert And(F)   == F
-    assert Or (T)   == T
-    assert Or (F)   == F
+    assert Or(T)   == T
+    assert Or(F)   == F
 
     assert And('a') == 'a'
-    assert Or ('a') == 'a'
+    assert Or('a') == 'a'
 
 def test_logic_xnotx():
     assert And('a', Not('a')) == F
@@ -64,22 +64,22 @@ def test_logic_eval_TF():
     assert And(T, F)   == F
     assert And(T, T)   == T
 
-    assert Or (F, F)   == F
-    assert Or (F, T)   == T
-    assert Or (T, F)   == T
-    assert Or (T, T)   == T
+    assert Or(F, F)   == F
+    assert Or(F, T)   == T
+    assert Or(T, F)   == T
+    assert Or(T, T)   == T
 
     assert And('a', T) == 'a'
     assert And('a', F) == F
-    assert Or ('a', T) == T
-    assert Or ('a', F) == 'a'
+    assert Or('a', T) == T
+    assert Or('a', F) == 'a'
 
 def test_logic_combine_args():
     assert And('a', 'b', 'a')   == And('a', 'b')
-    assert Or ('a', 'b', 'a')   == Or ('a', 'b')
+    assert Or('a', 'b', 'a')   == Or('a', 'b')
 
     assert And( And('a','b'), And('c','d') )    == And('a','b','c','d')
-    assert Or ( Or ('a','b'), Or ('c','d') )    == Or ('a','b','c','d')
+    assert Or( Or('a','b'), Or('c','d') )    == Or('a','b','c','d')
 
     assert Or( 't', And('n','p','r'), And('n','r'), And('n','p','r'), 't', And('n','r') ) == \
                     Or('t', And('n','p','r'), And('n','r'))
@@ -100,11 +100,11 @@ def test_logic_fromstring():
     assert S('a')           == 'a'
     assert S('!a')          == Not('a')
     assert S('a & b')       == And('a','b')
-    assert S('a | b')       == Or ('a','b')
-    assert S('a | b & c')   == And(Or ('a','b'), 'c')
-    assert S('a & b | c')   == Or (And('a','b'), 'c')
+    assert S('a | b')       == Or('a','b')
+    assert S('a | b & c')   == And(Or('a','b'), 'c')
+    assert S('a & b | c')   == Or(And('a','b'), 'c')
     assert S('a & b & c')   == And('a','b','c')
-    assert S('a | b | c')   == Or ('a','b','c')
+    assert S('a | b | c')   == Or('a','b','c')
 
     raises(ValueError, lambda: S('| a'))
     raises(ValueError, lambda: S('& a'))

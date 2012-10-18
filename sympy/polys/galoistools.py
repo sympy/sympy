@@ -2112,7 +2112,7 @@ def linear_congruence(a, b, m):
     r, _, g = gcdex(a, m)
     if b % g != 0:
         return []
-    return [(r * b // g + t * m // g) % m for t in range (g)]
+    return [(r * b // g + t * m // g) % m for t in range(g)]
 
 def _raise_mod_power(x, s, p, f):
     """

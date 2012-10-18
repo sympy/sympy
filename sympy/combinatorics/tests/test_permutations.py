@@ -292,7 +292,7 @@ def test_mul():
     c = (3, 1, 2, 0)
     assert Permutation.rmul(a, b, c) == Permutation([1, 2, 3, 0])
     assert Permutation.rmul(a, c) == Permutation([3, 2, 1, 0])
-    raises (TypeError, lambda: Permutation.rmul(b, c))
+    raises(TypeError, lambda: Permutation.rmul(b, c))
 
     n = 6
     m = 8

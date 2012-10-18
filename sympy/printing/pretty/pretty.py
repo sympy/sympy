@@ -573,7 +573,7 @@ class PrettyPrinter(Printer):
                 wright = wdelta - wleft
 
                 s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left (' '*wleft))
+                s = prettyForm(*s.left(' '*wleft))
 
                 # we don't need vcenter cells -- this is automatically done in
                 # a pretty way because when their baselines are taking into
@@ -677,7 +677,7 @@ class PrettyPrinter(Printer):
                 wright = wdelta - wleft
 
                 p = prettyForm(*p.right(' '*wright))
-                p = prettyForm(*p.left (' '*wleft))
+                p = prettyForm(*p.left(' '*wleft))
 
                 if D_row is None:
                     D_row = p
@@ -1060,7 +1060,7 @@ class PrettyPrinter(Printer):
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
     # A helper function for _print_Pow to print x**(1/n)
-    def _print_nth_root (self, base, expt):
+    def _print_nth_root(self, base, expt):
         bpretty = self._print(base)
 
         # Construct root sign, start with the \/ shape

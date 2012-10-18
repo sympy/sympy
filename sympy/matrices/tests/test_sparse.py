@@ -52,7 +52,7 @@ def test_sparse_matrix():
         (0, 6),
         ))
 
-    b = SparseMatrix ((
+    b = SparseMatrix((
         (1, 2),
         (3, 0),
         ))

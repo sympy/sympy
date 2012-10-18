@@ -326,8 +326,8 @@ def test_Float():
 
     # do not automatically evalf
     def teq(a):
-        assert (a.evalf () == a) is False
-        assert (a.evalf () != a) is True
+        assert (a.evalf() == a) is False
+        assert (a.evalf() != a) is True
         assert (a == a.evalf()) is False
         assert (a != a.evalf()) is True
 

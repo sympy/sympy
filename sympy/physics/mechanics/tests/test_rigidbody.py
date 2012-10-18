@@ -38,7 +38,7 @@ def test_rigidbody2():
     b = ReferenceFrame('b')
     b.set_ang_vel(N, omega * b.x)
     P = Point('P')
-    I = outer (b.x, b.x)
+    I = outer(b.x, b.x)
     Inertia_tuple = (I, P)
     B = RigidBody('B', P, b, M, Inertia_tuple)
     P.set_vel(N, v * b.x)

@@ -135,8 +135,7 @@ def test_monomial_key():
 
 def test_build_product_order():
     from sympy.abc import x, y, z, t
-    assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) \
-        ((4, 5, 6, 7)) == ((9, (4, 5)), (13, (6, 7)))
+    assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])((4, 5, 6, 7)) == ((9, (4, 5)), (13, (6, 7)))
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
                build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])

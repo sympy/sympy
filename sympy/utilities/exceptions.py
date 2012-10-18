@@ -143,4 +143,4 @@ class SymPyDeprecationWarning(DeprecationWarning):
     def warn(self):
         see_above = self
         # the next line is what the user will see after the error is printed
-        warning (see_above, SymPyDeprecationWarning)
+        warning(see_above, SymPyDeprecationWarning)

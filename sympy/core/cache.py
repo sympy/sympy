@@ -96,7 +96,7 @@ def __cacheit_debug(func):
     @wraps(func)
     def wrapper(*args, **kw_args):
         # always call function itself and compare it with cached version
-        r1 = func (*args, **kw_args)
+        r1 = func(*args, **kw_args)
         r2 = cfunc(*args, **kw_args)
 
         # try to see if the result is immutable

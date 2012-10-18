@@ -280,7 +280,7 @@ def test_lookup_table():
 
             # First test that hyperexpand can do this.
             expanded = [hyperexpand(g) for (_, g) in terms]
-            assert all (x.is_Piecewise or not x.has(meijerg) for x in expanded)
+            assert all(x.is_Piecewise or not x.has(meijerg) for x in expanded)
 
             # Now test that the meijer g-function is indeed as advertised.
             expanded = Add(*[f*x for (f, x) in terms])
