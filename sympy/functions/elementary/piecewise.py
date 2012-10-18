@@ -259,7 +259,7 @@ class Piecewise(Function):
             ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
         return mul * ret_fun
 
-    def _sort_expr_cond(self, sym, a, b, targetcond = None):
+    def _sort_expr_cond(self, sym, a, b, targetcond=None):
         """Determine what intervals the expr, cond pairs affect.
 
         1) If cond is True, then log it as default

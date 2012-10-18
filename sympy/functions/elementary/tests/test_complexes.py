@@ -138,9 +138,9 @@ def test_sign():
     assert sign(-2*I*x) == -I*sign(x)
     assert sign(conjugate(x)) == conjugate(sign(x))
 
-    p = Symbol('p', positive = True)
-    n = Symbol('n', negative = True)
-    m = Symbol('m', negative = True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    m = Symbol('m', negative=True)
     assert sign(2*p*x) == sign(x)
     assert sign(n*x) == -sign(x)
     assert sign(n*m*x) == sign(x)
@@ -363,7 +363,7 @@ def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,
                        principal_branch, polar_lift, pi)
     x = Symbol('x')
-    p = Symbol('p', positive = True)
+    p = Symbol('p', positive=True)
 
     assert unbranched_argument(2 + I) == periodic_argument(2 + I, oo)
     assert unbranched_argument(1 + x) == periodic_argument(1 + x, oo)

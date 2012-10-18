@@ -346,10 +346,10 @@ def test_random_pr():
     _random_prec_n[0] = {'s': 7, 't': 3, 'x': 2, 'e': -1}
     _random_prec_n[1] = {'s': 5, 't': 5, 'x': 1, 'e': -1}
     _random_prec_n[2] = {'s': 3, 't': 4, 'x': 2, 'e': 1}
-    D._random_pr_init(r, n, _random_prec_n = _random_prec_n)
+    D._random_pr_init(r, n, _random_prec_n=_random_prec_n)
     assert D._random_gens[11] == Permutation([0, 1, 2, 3, 4, 5])
     _random_prec = {'s': 2, 't': 9, 'x': 1, 'e': -1}
-    assert D.random_pr(_random_prec = _random_prec) == \
+    assert D.random_pr(_random_prec=_random_prec) == \
         Permutation([0, 5, 4, 3, 2, 1])
 
 def test_is_alt_sym():
@@ -368,7 +368,7 @@ def test_is_alt_sym():
         7: Permutation([[4], [0, 2, 9, 1, 3, 8, 6, 5, 7]]),
         8: Permutation([[1, 5, 6, 3], [0, 2, 7, 8, 4, 9]]),
         9: Permutation([[8], [6, 7], [2, 3, 4, 5], [0, 1, 9]])}
-    assert S.is_alt_sym(_random_prec = _random_prec) == True
+    assert S.is_alt_sym(_random_prec=_random_prec) == True
     A = AlternatingGroup(10)
     _random_prec = {'N_eps': N_eps,
         0: Permutation([[1, 6, 4, 2, 7, 8, 5, 9, 3], [0]]),
@@ -381,7 +381,7 @@ def test_is_alt_sym():
         7: Permutation([[1, 8, 4, 7, 2, 3], [0, 6, 9, 5]]),
         8: Permutation([[5, 8, 7], [3], [1, 4, 2, 6], [0, 9]]),
         9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
-    assert A.is_alt_sym(_random_prec = _random_prec) == False
+    assert A.is_alt_sym(_random_prec=_random_prec) == False
 
 def test_minimal_block():
     D = DihedralGroup(6)
@@ -407,7 +407,7 @@ def test_random_stab():
     S = SymmetricGroup(5)
     _random_el = Permutation([1, 3, 2, 0, 4])
     _random_prec = {'rand': _random_el}
-    g = S.random_stab(2, _random_prec = _random_prec)
+    g = S.random_stab(2, _random_prec=_random_prec)
     assert g == Permutation([1, 3, 2, 0, 4])
     h = S.random_stab(1)
     assert h(1) == 1

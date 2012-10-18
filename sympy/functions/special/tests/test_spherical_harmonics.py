@@ -35,7 +35,7 @@ def test_Plm():
 
 def test_Plmcos():
     #http://en.wikipedia.org/wiki/Legendre_function
-    th = Symbol("th", real = True)
+    th = Symbol("th", real=True)
     assert Plmcos(0, 0, th) == 1
     assert Plmcos(1, -1, th) == sin(th)/2
     assert Plmcos(1, 0, th) == cos(th)
@@ -50,7 +50,7 @@ def test_Plmcos():
 
 def test_Ylm():
     #http://en.wikipedia.org/wiki/Spherical_harmonics
-    th, ph = Symbol("theta", real = True), Symbol("phi", real = True)
+    th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
     assert Ylm(0, 0, th, ph) == sympify(1)/(2*sqrt(pi))
     assert Ylm(1, -1, th, ph) == sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
             exp(-I*ph)
@@ -69,7 +69,7 @@ def test_Ylm():
 
 def test_Zlm():
     #http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
-    th, ph = Symbol("theta", real = True), Symbol("phi", real = True)
+    th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
     assert Zlm(0, 0, th, ph) == sqrt(1/(4*pi))
     assert Zlm(1, -1, th, ph) == sqrt(3/(4*pi))*sin(th)*sin(ph)
     assert Zlm(1, 0, th, ph) == sqrt(3/(4*pi))*cos(th)

@@ -1592,7 +1592,7 @@ class Permutation(Basic):
         _unrank1(n, r, id_perm)
         return Perm._af_new(id_perm)
 
-    def rank_nonlex(self, inv_perm = None):
+    def rank_nonlex(self, inv_perm=None):
         """
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [3].
@@ -2586,7 +2586,7 @@ class Permutation(Basic):
         return sum([abs(a[i] - b[i]) for i in range(len(a))])
 
     @classmethod
-    def josephus(self, m, n, s = 1):
+    def josephus(self, m, n, s=1):
         """Return as a permutation the shuffling of range(n) using the Josephus
         scheme in which every m-th item is selected until all have been chosen.
         The returned permutation has elements listed by the order in which they

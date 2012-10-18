@@ -941,7 +941,7 @@ class SymPyTests(object):
             return True
         return x.__name__.find(self._kw) != -1
 
-    def get_test_files(self, dir, pat = 'test_*.py'):
+    def get_test_files(self, dir, pat='test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
         ``dir`` relative to the sympy home directory.

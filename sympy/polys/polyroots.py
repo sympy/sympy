@@ -83,7 +83,7 @@ def roots_cubic(f):
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
-        x1, x2 = roots([1, a, b], multiple = True)
+        x1, x2 = roots([1, a, b], multiple=True)
         return [x1, S.Zero, x2]
 
     p = b - a**2/3
@@ -190,10 +190,10 @@ def roots_quartic(f):
 
         if f is S.Zero:
             y1, y2 = [sqrt(tmp) for tmp in
-                      roots([1, e, g], multiple = True)]
+                      roots([1, e, g], multiple=True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
         if g is S.Zero:
-            y = [S.Zero] + roots([1, 0, e, f], multiple = True)
+            y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
             p = -e**2/12 - g

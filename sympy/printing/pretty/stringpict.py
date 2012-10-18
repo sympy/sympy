@@ -390,7 +390,7 @@ class prettyForm(stringPict):
             result.append(arg)
         return prettyForm(binding=prettyForm.ADD, *stringPict.next(*result))
 
-    def __div__(self, den, slashed = False):
+    def __div__(self, den, slashed=False):
         """Make a pretty division; stacked or slashed.
         """
         if slashed: raise NotImplementedError("Can't do slashed fraction yet")

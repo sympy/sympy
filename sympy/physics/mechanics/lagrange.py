@@ -90,7 +90,7 @@ class LagrangesMethod(object):
 
     """
 
-    def __init__(self, Lagrangian, q_list, coneqs = None, forcelist = None, frame = None):
+    def __init__(self, Lagrangian, q_list, coneqs=None, forcelist=None, frame=None):
         """Supply the following for the initialization of LagrangesMethod
 
         Lagrangian : Sympifyable
@@ -314,7 +314,7 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def rhs(self, method = "GE"):
+    def rhs(self, method="GE"):
         """ Returns equations that can be solved numerically
 
         Parameters
@@ -328,5 +328,5 @@ class LagrangesMethod(object):
 
         # TODO- should probably use the matinvmul method from Kane
 
-        return ((self.mass_matrix_full).inv(method, try_block_diag = True) *
+        return ((self.mass_matrix_full).inv(method, try_block_diag=True) *
                 self.forcing_full)

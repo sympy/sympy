@@ -192,7 +192,7 @@ def period_find(a, N):
     # circuit = qapply(circuit)
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
-    circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
+    circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
     print "QFT'd"
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i+t)

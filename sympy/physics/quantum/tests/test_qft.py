@@ -16,8 +16,7 @@ def test_RkGate():
     assert RkGate(2, 2) == PhaseGate(2)
     assert RkGate(3, 3) == TGate(3)
 
-    assert represent(RkGate(0, x), nqubits =1) ==\
-        Matrix([[1, 0], [0, exp(2*I*pi/2**x)]])
+    assert represent(RkGate(0, x), nqubits=1) ==Matrix([[1, 0], [0, exp(2*I*pi/2**x)]])
 
 def test_quantum_fourier():
     assert QFT(0, 3).decompose() == SwapGate(0, 2)*HadamardGate(0)*CGate((0,), PhaseGate(1))\

@@ -1317,7 +1317,7 @@ def test_custom_context():
     assert ask(Q.integer(x)) == None
     local_context = AssumptionsContext()
     local_context.add(Q.integer(x))
-    assert ask(Q.integer(x), context = local_context) == True
+    assert ask(Q.integer(x), context=local_context) == True
     assert ask(Q.integer(x)) == None
 
 def test_functions_in_assumptions():

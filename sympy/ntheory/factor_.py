@@ -1203,7 +1203,7 @@ def _divisors(n):
     factordict = factorint(n)
     ps = sorted(factordict.keys())
 
-    def rec_gen(n = 0):
+    def rec_gen(n=0):
         if n == len(ps):
             yield 1
         else:

@@ -174,7 +174,7 @@ class BeniniPSpace(SingleContinuousPSpace):
         pdf = (exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)
                *(alpha/x+2*beta*log(x/sigma)/x))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf,
-                                             set = Interval(sigma, oo))
+                                             set=Interval(sigma, oo))
         return obj
 
 def Benini(name, alpha, beta, sigma):
@@ -313,7 +313,7 @@ class BetaPrimePSpace(SingleContinuousPSpace):
         alpha, beta = sympify(alpha), sympify(beta)
         x = Symbol(name)
         pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
 def BetaPrime(name, alpha, beta):
@@ -428,7 +428,7 @@ class ChiPSpace(SingleContinuousPSpace):
         k = sympify(k)
         x = Symbol(name)
         pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
 def Chi(name, k):
@@ -909,7 +909,7 @@ class MaxwellPSpace(SingleContinuousPSpace):
         x = Symbol(name)
 
         pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
 def Maxwell(name, a):
@@ -969,7 +969,7 @@ class NakagamiPSpace(SingleContinuousPSpace):
         mu, omega = sympify(mu), sympify(omega)
         x = Symbol(name)
         pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
 def Nakagami(name, mu, omega):
@@ -1194,7 +1194,7 @@ class RayleighPSpace(SingleContinuousPSpace):
         sigma = sympify(sigma)
         x = Symbol(name)
         pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
 def Rayleigh(name, sigma):
@@ -1633,7 +1633,7 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
         x = Symbol(name)
         pdf = 2/(pi*R**2)*sqrt(R**2-x**2)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(-R, R))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(-R, R))
         return obj
 
 def WignerSemicircle(name, R):

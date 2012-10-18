@@ -247,7 +247,7 @@ def test_polygamma_expand_func():
     e = polygamma(3, 4*x + y + S(3)/2)
     assert e.expand(func=True) == e
     e = polygamma(3, x + y + S(3)/4)
-    assert e.expand(func = True, basic = False) == e
+    assert e.expand(func=True, basic=False) == e
 
 def test_loggamma():
     s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x, n=4)

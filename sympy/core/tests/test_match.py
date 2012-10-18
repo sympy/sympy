@@ -286,7 +286,7 @@ def test_behavior1():
     x = Symbol('x')
     p = Wild('p')
     e = 3*x**2
-    a = Wild('a', exclude = [x])
+    a = Wild('a', exclude=[x])
     assert e.match(a*x) == None
     assert e.match(p*x) == {p: 3*x}
 
@@ -298,7 +298,7 @@ def test_behavior2():
     assert e.match(2*p) == {p: 3}
 
     e = 3*x + 3 + 6/x
-    a = Wild('a', exclude = [x])
+    a = Wild('a', exclude=[x])
     assert e.expand().match(a*x**2 + a*x + 2*a) == None
     assert e.expand().match(p*x**2 + p*x + 2*p) == {p: 3/x}
 

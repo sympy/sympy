@@ -775,7 +775,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             matching_hints["1st_linear_Integral"] = r
 
         # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
-        r = collect(reduced_eq, f(x), exact = True).match(a*df + b*f(x) + c*f(x)**n)
+        r = collect(reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
         if r and r[c] != 0 and r[n] != 1: # See issue 1577
             r['a'] = a
             r['b'] = b
@@ -785,7 +785,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             matching_hints["Bernoulli_Integral"] = r
 
         # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
-        r = collect(reduced_eq, f(x), exact = True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
+        r = collect(reduced_eq, f(x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
         if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
             r['a2'] = a2
             r['b2'] = b2
@@ -795,7 +795,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
         # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         # WITH NON-REDUCED FORM OF EQUATION
-        r = collect(eq, df, exact = True).match(d + e * df)
+        r = collect(eq, df, exact=True).match(d + e * df)
         if r:
             r['d'] = d
             r['e'] = e
@@ -813,7 +813,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
-        r = collect(reduced_eq, df, exact = True).match(d+e*df)
+        r = collect(reduced_eq, df, exact=True).match(d+e*df)
         if r:
             r['d'] = d
             r['e'] = e

@@ -2487,7 +2487,7 @@ def __kprint(expr):
     p = KeyPrinter()
     return p.doprint(expr)
 
-def _get_ordered_dummies(mul, verbose = False):
+def _get_ordered_dummies(mul, verbose=False):
     """Returns all dummies in the mul sorted in canonical order
 
     The purpose of the canonical ordering is that dummies can be substituted

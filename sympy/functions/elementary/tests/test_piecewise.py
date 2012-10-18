@@ -271,7 +271,7 @@ def test_doit():
     p1 = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3 < x))
     p2 = Piecewise((x, x < 1), (Integral(2 * x), -1 <= x), (x, 3 < x))
     assert p2.doit() == p1
-    assert p2.doit(deep = False) == p2
+    assert p2.doit(deep=False) == p2
 
 def test_piecewise_interval():
     p1 = Piecewise((x, Interval(0, 1).contains(x)), (0, True))

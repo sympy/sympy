@@ -242,7 +242,7 @@ def test_convert_to_symbolic_indices():
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args,
                                          qubit_map=ndx_map,
                                          start=i0,
-                                         gen = index_gen)
+                                         gen=index_gen)
     assert actual == expected
     assert act_map == exp_map
 

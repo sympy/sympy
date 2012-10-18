@@ -106,7 +106,7 @@ class RayTransferMatrix(Matrix):
             q = (temp[0]/temp[1]).expand(complex=True)
             return BeamParameter(other.wavelen, \
                                  together(re(q)), \
-                                 z_r = together(im(q)))
+                                 z_r=together(im(q)))
         else:
             return Matrix.__mul__(self, other)
 

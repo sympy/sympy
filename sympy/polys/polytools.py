@@ -5598,7 +5598,7 @@ def reduced(f, G, *gens, **args):
     retract = False
 
     if opt.auto and domain.has_Ring and not domain.has_Field:
-        opt = opt.clone(dict(domain = domain.get_field()))
+        opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
     for i, poly in enumerate(polys):
@@ -5866,8 +5866,8 @@ class GroebnerBasis(Basic):
         domain = opt.domain
 
         opt = opt.clone(dict(
-            domain = domain.get_field(),
-            order = dst_order,
+            domain=domain.get_field(),
+            order=dst_order,
         ))
 
         for i, poly in enumerate(polys):
@@ -5922,7 +5922,7 @@ class GroebnerBasis(Basic):
         retract = False
 
         if auto and domain.has_Ring and not domain.has_Field:
-            opt = opt.clone(dict(domain = domain.get_field()))
+            opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 
         for i, poly in enumerate(polys):

@@ -57,8 +57,8 @@ class SATSolver(object):
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', \
-                 clause_learning = 'none', INTERVAL = 500):
+    def __init__(self, clauses, variables, var_settings, heuristic='vsids', \
+                 clause_learning='none', INTERVAL=500):
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
@@ -209,7 +209,7 @@ class SATSolver(object):
                 # Try the opposite setting of the most recent decision
                 flip_lit = -self._current_level.decision
                 self._undo()
-                self.levels.append(Level(flip_lit, flipped = True))
+                self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
 
 
@@ -611,7 +611,7 @@ class Level(object):
     enough information for a sound backtracking procedure.
     """
 
-    def __init__(self, decision, flipped = False):
+    def __init__(self, decision, flipped=False):
         self.decision = decision
         self.var_settings = set()
         self.flipped = flipped

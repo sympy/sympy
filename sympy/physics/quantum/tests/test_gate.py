@@ -44,7 +44,7 @@ def test_UGate():
 
     # Test basic case where gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
-    assert represent(u1, nqubits = 1) == uMat
+    assert represent(u1, nqubits=1) == uMat
     assert qapply(u1*Qubit('0')) == a*Qubit('0') + c*Qubit('1')
     assert qapply(u1*Qubit('1')) == b*Qubit('0') + d*Qubit('1')
 
@@ -111,7 +111,7 @@ def test_UGate_CGate_combo():
     # Test basic case where gate exists in 1-qubit space.
     u1 = UGate((0,), uMat)
     cu1 = CGate(1, u1)
-    assert represent(cu1, nqubits = 2) == cMat
+    assert represent(cu1, nqubits=2) == cMat
     assert qapply(cu1*Qubit('10')) == a*Qubit('10') + c*Qubit('11')
     assert qapply(cu1*Qubit('11')) == b*Qubit('10') + d*Qubit('11')
     assert qapply(cu1*Qubit('01')) == Qubit('01')

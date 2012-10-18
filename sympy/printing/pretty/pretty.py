@@ -755,7 +755,7 @@ class PrettyPrinter(Printer):
 
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
-                       baseline = above + sz)
+                       baseline=above + sz)
         add = (sz+1)//2
 
         F = prettyForm(*F.left(self._print(len(e.ap))))
@@ -816,7 +816,7 @@ class PrettyPrinter(Printer):
 
         sz, t, b, add, img = annotated('G')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
-                       baseline = above + sz)
+                       baseline=above + sz)
 
         pp = self._print(len(e.ap))
         pq = self._print(len(e.bq))
@@ -1152,7 +1152,7 @@ class PrettyPrinter(Printer):
         else:
             prod_char = u'\xd7'
             return self._print_seq(p.sets, None, None, ' %s '%prod_char,
-                parenthesize = lambda set: set.is_Union or set.is_Intersection)
+                parenthesize=lambda set: set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1195,14 +1195,14 @@ class PrettyPrinter(Printer):
         delimiter = ' %s ' % pretty_atom('Intersection')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize = lambda set: set.is_ProductSet or set.is_Union)
+                parenthesize=lambda set: set.is_ProductSet or set.is_Union)
 
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize = lambda set: set.is_ProductSet or set.is_Intersection)
+             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
         if self._use_unicode:

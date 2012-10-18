@@ -58,7 +58,7 @@ class XOp(HermitianOperator):
     def _represent_PxKet(self, basis, **options):
         index = options.pop("index", 1)
 
-        states = basis._enumerate_state(2, start_index = index)
+        states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
         d = DifferentialOperator(coord1)
@@ -115,7 +115,7 @@ class PxOp(HermitianOperator):
     def _represent_XKet(self, basis, **options):
         index = options.pop("index", 1)
 
-        states = basis._enumerate_state(2, start_index = index)
+        states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].position
         coord2 = states[1].position
         d = DifferentialOperator(coord1)

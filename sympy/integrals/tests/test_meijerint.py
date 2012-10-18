@@ -183,7 +183,7 @@ def test_meijerint():
 
     # Test hyperexpand bug.
     from sympy import lowergamma
-    n = symbols('n', integer = True)
+    n = symbols('n', integer=True)
     assert simplify(integrate(exp(-x)*x**n, x, meijerg=True)) == \
            lowergamma(n + 1, x)
 

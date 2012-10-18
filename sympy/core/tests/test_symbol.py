@@ -40,7 +40,7 @@ def test_as_dummy():
     assert x1 != x
     assert x1 != x.as_dummy()
 
-    x = Symbol('x', commutative = False)
+    x = Symbol('x', commutative=False)
     x1 = x.as_dummy()
     assert x1 != x
     assert x1.is_commutative == False

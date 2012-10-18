@@ -2075,7 +2075,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
         bases.sort(key=default_sort_key) # this makes tie-breaking canonical
-        bases.sort(key=measure, reverse= True) # handle longest first
+        bases.sort(key=measure, reverse=True) # handle longest first
         for base in bases:
             if base not in common_b: # it may have been removed already
                 continue

@@ -3161,7 +3161,7 @@ class MatrixBase(object):
         J = diag(*Jcells)
         return (P, J)
 
-    def jordan_cells(self, calc_transformation = True):
+    def jordan_cells(self, calc_transformation=True):
         """Return a list of Jordan cells of current matrix.
         This list shape Jordan matrix J.
 

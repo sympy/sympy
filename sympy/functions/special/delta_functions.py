@@ -38,7 +38,7 @@ class DiracDelta(Function):
 
     nargs = (1, 2)
 
-    def fdiff(self, argindex = 1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
             k = 0
@@ -207,7 +207,7 @@ class Heaviside(Function):
     """
     nargs = 1
 
-    def fdiff(self, argindex = 1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             # property number 1
             return DiracDelta(self.args[0])

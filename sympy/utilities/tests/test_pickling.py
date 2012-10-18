@@ -202,7 +202,7 @@ def test_geometry():
               LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
               Polygon, Polygon(p1, p2, p3, p4), RegularPolygon, RegularPolygon(p1, 4, 5),
               Triangle, Triangle(p1, p2, p3)):
-        check(c, check_attr = False)
+        check(c, check_attr=False)
 
 #================== integrals ====================
 from sympy.integrals.integrals import Integral

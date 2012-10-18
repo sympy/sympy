@@ -555,7 +555,7 @@ class cos(TrigonometricFunction):
             g = migcdex(x[1:])
             u, v, h = igcdex(x[0], g[-1])
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
-        def ipartfrac(r, factors = None):
+        def ipartfrac(r, factors=None):
             if isinstance(r, int):
                 return r
             assert isinstance(r, C.Rational)

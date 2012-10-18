@@ -34,9 +34,9 @@ def test_integers_cache():
     assert sympy_hash_int not in _intcache
 
 def test_seterr():
-    seterr(divide = True)
+    seterr(divide=True)
     raises(ValueError, lambda: S.Zero/S.Zero)
-    seterr(divide = False)
+    seterr(divide=False)
     assert S.Zero / S.Zero == S.NaN
 
 def test_mod():

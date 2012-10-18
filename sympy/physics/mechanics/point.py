@@ -44,7 +44,7 @@ class Point(object):
         for i, v in enumerate(oldlist):
             if v[-1] != other:
                 outlist.remove(v)
-        outlist.sort(key = len)
+        outlist.sort(key=len)
         if len(outlist) != 0:
             return outlist[0]
         raise ValueError('No Connecting Path found between ' + other.name +

@@ -32,13 +32,13 @@ def test_x():
     assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
     assert represent(XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
 
-    rep_p = represent(XOp(), basis = PxOp)
+    rep_p = represent(XOp(), basis=PxOp)
     assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
-    assert rep_p == represent(XOp(), basis = PxOp())
-    assert rep_p == represent(XOp(), basis = PxKet)
-    assert rep_p == represent(XOp(), basis = PxKet())
+    assert rep_p == represent(XOp(), basis=PxOp())
+    assert rep_p == represent(XOp(), basis=PxKet)
+    assert rep_p == represent(XOp(), basis=PxKet())
 
-    assert represent(XOp()*PxKet(), basis = PxKet) == \
+    assert represent(XOp()*PxKet(), basis=PxKet) == \
            hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
 
 def test_p():
@@ -51,11 +51,11 @@ def test_p():
         exp(I*x*px/hbar)/sqrt(2*pi*hbar)
     assert represent(PxKet(px)) == DiracDelta(px-px_1)
 
-    rep_x = represent(PxOp(), basis = XOp)
+    rep_x = represent(PxOp(), basis=XOp)
     assert rep_x == -hbar*I*DiracDelta(x_1 - x_2)*DifferentialOperator(x_1)
-    assert rep_x == represent(PxOp(), basis = XOp())
-    assert rep_x == represent(PxOp(), basis = XKet)
-    assert rep_x == represent(PxOp(), basis = XKet())
+    assert rep_x == represent(PxOp(), basis=XOp())
+    assert rep_x == represent(PxOp(), basis=XKet)
+    assert rep_x == represent(PxOp(), basis=XKet())
 
     assert represent(PxOp()*XKet(), basis=XKet) == \
            -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)

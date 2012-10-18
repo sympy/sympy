@@ -1357,7 +1357,7 @@ def integrate(*args, **kwargs):
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep = False, meijerg = meijerg, conds = conds)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds)
     else:
         return integral
 
@@ -1406,5 +1406,5 @@ def line_integrate(field, curve, vars):
         Ft = Ft.subs(var, _f)
     Ft = Ft * sqrt(dldt)
 
-    integral = Integral(Ft, curve.limits).doit(deep = False)
+    integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral

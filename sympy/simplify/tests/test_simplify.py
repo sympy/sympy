@@ -411,7 +411,7 @@ def test_powsimp():
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
-    assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True ) == f(1)
+    assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep=True ) == f(1)
     assert exp(x)*exp(y) == exp(x)*exp(y)
     assert powsimp(exp(x)*exp(y)) == exp(x+y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)

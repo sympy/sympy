@@ -994,7 +994,7 @@ def test_issue1864():
 def test_action_verbs():
     assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
-    assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep = True)
+    assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
     assert radsimp(1/(2+sqrt(2))) == (1/(2+sqrt(2))).radsimp()
     assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()

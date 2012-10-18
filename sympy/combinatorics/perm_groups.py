@@ -601,7 +601,7 @@ class PermutationGroup(Basic):
                 self.random_pr()
         else:
             for i in range(n):
-                self.random_pr(_random_prec = _random_prec_n[i])
+                self.random_pr(_random_prec=_random_prec_n[i])
 
     def _union_find_merge(self, first, second, ranks, parents, not_rep):
         """Merges two classes in a union-find data structure.
@@ -1071,7 +1071,7 @@ class PermutationGroup(Basic):
             identity = _af_new(range(degree))
             orbits = other.orbits()
             num_orbits = len(orbits)
-            orbits.sort(key = lambda x: -len(x))
+            orbits.sort(key=lambda x: -len(x))
             long_base = []
             orbit_reps = [None]*num_orbits
             orbit_reps_indices = [None]*num_orbits
@@ -3522,7 +3522,7 @@ class PermutationGroup(Basic):
         reps = []
         for orbit in orbits:
             # get the minimal element in the base ordering
-            rep = min(orbit, key = lambda point: base_ordering[point])
+            rep = min(orbit, key=lambda point: base_ordering[point])
             reps.append(rep)
         orbit_reps[f] = reps
         # line 5: remove the base point from the representatives to avoid
@@ -3534,7 +3534,7 @@ class PermutationGroup(Basic):
         sorted_orbits = [None]*base_len
         for i in range(base_len):
             sorted_orbits[i] = basic_orbits[i][:]
-            sorted_orbits[i].sort(key = lambda point: base_ordering[point])
+            sorted_orbits[i].sort(key=lambda point: base_ordering[point])
         # line 7: initializations
         mu = [None]*base_len
         nu = [None]*base_len
@@ -3569,14 +3569,14 @@ class PermutationGroup(Basic):
                 orbits = new_stab.orbits()
                 reps = []
                 for orbit in orbits:
-                    rep = min(orbit, key = lambda point: base_ordering[point])
+                    rep = min(orbit, key=lambda point: base_ordering[point])
                     reps.append(rep)
                 orbit_reps[l + 1] = reps
                 # line 13: amend sorted orbits
                 l += 1
                 temp_orbit = [computed_words[l-1](point) for point\
                              in basic_orbits[l]]
-                temp_orbit.sort(key = lambda point: base_ordering[point])
+                temp_orbit.sort(key=lambda point: base_ordering[point])
                 sorted_orbits[l] = temp_orbit
                 # lines 14 and 15: update variables used minimality tests
                 new_mu = degree + 1
@@ -3626,7 +3626,7 @@ class PermutationGroup(Basic):
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
-                    rep = min(orbit, key = lambda point: base_ordering[point])
+                    rep = min(orbit, key=lambda point: base_ordering[point])
                     reps.append(rep)
                 orbit_reps[f] = reps
                 # line 22: reset the search depth
@@ -3648,7 +3648,7 @@ class PermutationGroup(Basic):
                 temp_orbits = stab_f.orbits()
                 reps = []
                 for orbit in orbits:
-                    rep = min(orbit, key = lambda point: base_ordering[point])
+                    rep = min(orbit, key=lambda point: base_ordering[point])
                     reps.append(rep)
                 orbit_reps[f] = reps
                 # line 28: update variables used for minimality testing
