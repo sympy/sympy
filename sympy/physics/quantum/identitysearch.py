@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
-scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     """Checks if a given scipy.sparse matrix is a scalar matrix.

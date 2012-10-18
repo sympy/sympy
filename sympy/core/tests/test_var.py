@@ -26,7 +26,7 @@ def test_var():
     assert zz == Symbol("zz")
     assert _x == Symbol("_x")
 
-    v = var(['d','e','fg'])
+    v = var(['d', 'e', 'fg'])
     assert d == Symbol('d')
     assert e == Symbol('e')
     assert fg == Symbol('fg')

@@ -96,9 +96,9 @@ def test_gruntz_eval_special():
     assert gruntz(exp(exp(x)) * (exp(sin(1/x+exp(-exp(x)))) - exp(sin(1/x))),
                   x, oo) == 1
     assert gruntz(exp(x)*(gamma(x+exp(-x)) - gamma(x)), x, oo) == oo
-    assert gruntz(exp(exp(digamma(digamma(x))))/x,x,oo) == exp(-S(1)/2)
-    assert gruntz(exp(exp(digamma(log(x))))/x,x,oo) == exp(-S(1)/2)
-    assert gruntz(digamma(digamma(digamma(x))),x,oo) == oo
+    assert gruntz(exp(exp(digamma(digamma(x))))/x, x, oo) == exp(-S(1)/2)
+    assert gruntz(exp(exp(digamma(log(x))))/x, x, oo) == exp(-S(1)/2)
+    assert gruntz(digamma(digamma(digamma(x))), x, oo) == oo
     assert gruntz(loggamma(loggamma(x)), x, oo) == oo
     assert gruntz(((gamma(x+1/gamma(x)) - gamma(x))/log(x) - cos(1/x))
                   * x*log(x), x, oo) == -S(1)/2
@@ -135,8 +135,8 @@ def test_compare1():
     assert compare(2, x, x) == "<"
     assert compare(x, exp(x), x) == "<"
     assert compare(exp(x), exp(x**2), x) == "<"
-    assert compare(exp(x**2),exp(exp(x)), x) == "<"
-    assert compare(1,exp(exp(x)), x) == "<"
+    assert compare(exp(x**2), exp(exp(x)), x) == "<"
+    assert compare(1, exp(exp(x)), x) == "<"
 
     assert compare(x, 2, x) == ">"
     assert compare(exp(x), x, x) == ">"
@@ -163,19 +163,19 @@ def test_compare1():
     assert compare(exp(x**2), 1/exp(x**2), x) == "="
 
 def test_compare2():
-    assert compare(exp(x),x**5,x) == ">"
-    assert compare(exp(x**2),exp(x)**2,x) == ">"
-    assert compare(exp(x),exp(x+exp(-x)),x) == "="
-    assert compare(exp(x+exp(-x)),exp(x),x) == "="
-    assert compare(exp(x+exp(-x)),exp(-x),x) == "="
-    assert compare(exp(-x),x,x) == ">"
-    assert compare(x,exp(-x),x) == "<"
-    assert compare(exp(x+1/x),x,x) == ">"
-    assert compare(exp(-exp(x)),exp(x),x) == ">"
-    assert compare(exp(exp(-exp(x))+x),exp(-exp(x)),x) == "<"
+    assert compare(exp(x), x**5, x) == ">"
+    assert compare(exp(x**2), exp(x)**2, x) == ">"
+    assert compare(exp(x), exp(x+exp(-x)), x) == "="
+    assert compare(exp(x+exp(-x)), exp(x), x) == "="
+    assert compare(exp(x+exp(-x)), exp(-x), x) == "="
+    assert compare(exp(-x), x, x) == ">"
+    assert compare(x, exp(-x), x) == "<"
+    assert compare(exp(x+1/x), x, x) == ">"
+    assert compare(exp(-exp(x)), exp(x), x) == ">"
+    assert compare(exp(exp(-exp(x))+x), exp(-exp(x)), x) == "<"
 
 def test_compare3():
-    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
+    assert compare(exp(exp(x)), exp(x+exp(-exp(x))), x) == ">"
 
 def test_sign1():
     assert sign(Rational(0), x) == 0
@@ -287,23 +287,23 @@ def test_limit1():
     assert gruntz(x**2, x, -oo) == oo
     assert gruntz(-x**2, x, oo) == -oo
     assert gruntz(x*log(x), x, 0, dir="+") == 0
-    assert gruntz(1/x,x,oo) == 0
-    assert gruntz(exp(x),x,oo) == oo
-    assert gruntz(-exp(x),x,oo) == -oo
-    assert gruntz(exp(x)/x,x,oo) == oo
-    assert gruntz(1/x-exp(-x),x,oo) == 0
-    assert gruntz(x+1/x,x,oo) == oo
+    assert gruntz(1/x, x, oo) == 0
+    assert gruntz(exp(x), x, oo) == oo
+    assert gruntz(-exp(x), x, oo) == -oo
+    assert gruntz(exp(x)/x, x, oo) == oo
+    assert gruntz(1/x-exp(-x), x, oo) == 0
+    assert gruntz(x+1/x, x, oo) == oo
 
 
 def test_limit2():
     assert gruntz(x**x, x, 0, dir="+") == 1
     assert gruntz((exp(x)-1)/x, x, 0) == 1
-    assert gruntz(1+1/x,x,oo) == 1
-    assert gruntz(-exp(1/x),x,oo) == -1
-    assert gruntz(x+exp(-x),x,oo) == oo
-    assert gruntz(x+exp(-x**2),x,oo) == oo
-    assert gruntz(x+exp(-exp(x)),x,oo) == oo
-    assert gruntz(13+1/x-exp(-x),x,oo) == 13
+    assert gruntz(1+1/x, x, oo) == 1
+    assert gruntz(-exp(1/x), x, oo) == -1
+    assert gruntz(x+exp(-x), x, oo) == oo
+    assert gruntz(x+exp(-x**2), x, oo) == oo
+    assert gruntz(x+exp(-exp(x)), x, oo) == oo
+    assert gruntz(13+1/x-exp(-x), x, oo) == 13
 
 def test_limit3():
     a = Symbol('a')
@@ -322,9 +322,9 @@ def test_limit4():
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1+exp(-x)))
     expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
-    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+    expected = set([1/h, exp(x), exp(x-h), exp(x/(1+h))])
     # XXX Incorrect result
-    assert mrv(expr,x).difference(expected) == set()
+    assert mrv(expr, x).difference(expected) == set()
 
 def test_I():
     y = Symbol("y")

@@ -21,7 +21,7 @@ def test_structure():
     assert bool(b1)
 
 def test_equality():
-    instances = [b1, b2, b3, b21, Basic(b1,b1,b1), Basic]
+    instances = [b1, b2, b3, b21, Basic(b1, b1, b1), Basic]
     for i, b_i in enumerate(instances):
         for j, b_j in enumerate(instances):
             assert (b_i == b_j) == (i == j)
@@ -33,7 +33,7 @@ def test_equality():
     assert not(Basic() == 0)
 
 def test_matches_basic():
-    instances = [Basic(b1,b1,b2), Basic(b1,b2,b1), Basic(b2, b1, b1),
+    instances = [Basic(b1, b1, b2), Basic(b1, b2, b1), Basic(b2, b1, b1),
                     Basic(b1, b2), Basic(b2, b1), b2, b1]
     for i, b_i in enumerate(instances):
         for j, b_j in enumerate(instances):
@@ -83,7 +83,7 @@ def test_xreplace():
     assert Atom(b1).xreplace({b1: b2}) == Atom(b1)
     assert Atom(b1).xreplace({Atom(b1): b2}) == b2
     raises(TypeError, lambda: b1.xreplace())
-    raises(TypeError, lambda: b1.xreplace([b1,b2]))
+    raises(TypeError, lambda: b1.xreplace([b1, b2]))
 
 def test_Singleton():
     global instanciated

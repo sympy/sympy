@@ -217,7 +217,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             os.environ["PYTHONHASHSEED"] = hash_seed
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
+                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
     """
     Run all tests.
 
@@ -642,7 +642,7 @@ def _doctest(*paths, **kwargs):
             wid = r.terminal_width - len(file_id) - 1 #update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
+            print ''.join([test_file, ' '*(wid-len(test_file)-len(report)), report])
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
@@ -655,7 +655,7 @@ def _doctest(*paths, **kwargs):
 
 # The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
 # (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2,5):
+if sys.version_info[:2] > (2, 5):
     from collections import namedtuple
     SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 else:
@@ -826,7 +826,7 @@ class SymPyTests(object):
     def test_file(self, filename, sort=True, timeout=False, slow=False):
         clear_cache()
         self._count += 1
-        gl = {'__file__':filename}
+        gl = {'__file__': filename}
         random.seed(self._seed)
         try:
             if IS_PYTHON_3:
@@ -923,7 +923,7 @@ class SymPyTests(object):
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
-        def callback(x,y):
+        def callback(x, y):
             signal.alarm(0)
             raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)

@@ -378,7 +378,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x*y, arg_list)
+            return reduce(lambda x, y: x*y, arg_list)
 
     @property
     def spaces(self):
@@ -498,7 +498,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x+y, arg_list)
+            return reduce(lambda x, y: x+y, arg_list)
 
     @property
     def spaces(self):

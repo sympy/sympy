@@ -1393,7 +1393,7 @@ class Permutation(Basic):
             elif nx > 2:
                 first = x[0]
                 for y in x[nx-1:0:-1]:
-                    res.append((first,y))
+                    res.append((first, y))
         return res
 
     @classmethod

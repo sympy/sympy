@@ -20,10 +20,10 @@ import re
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
-accepted_latex_functions = ['arcsin','arccos','arctan','sin','cos','tan',
-                    'theta','beta','alpha','gamma','sinh','cosh','tanh','sqrt',
-                    'ln','log','sec','csc','cot','coth','re','im','frac','root',
-                    'arg','zeta','psi']
+accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                    'theta', 'beta', 'alpha', 'gamma', 'sinh', 'cosh', 'tanh', 'sqrt',
+                    'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                    'arg', 'zeta', 'psi']
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -65,7 +65,7 @@ class LatexPrinter(Printer):
         self._settings['mul_symbol_latex'] = \
             mul_symbol_table[self._settings['mul_symbol']]
 
-        self._delim_dict = {'(':')','[':']'}
+        self._delim_dict = {'(': ')', '[': ']'}
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -261,9 +261,9 @@ class LatexPrinter(Printer):
             if expq == 2:
                 tex = r"\sqrt{%s}" % base
             elif self._settings['itex']:
-                tex = r"\root{%d}{%s}" % (expq,base)
+                tex = r"\root{%d}{%s}" % (expq, base)
             else:
-                tex = r"\sqrt[%d]{%s}" % (expq,base)
+                tex = r"\sqrt[%d]{%s}" % (expq, base)
 
             if expr.exp.is_negative:
                 return r"\frac{1}{%s}" % tex
@@ -394,7 +394,7 @@ class LatexPrinter(Printer):
                 tex += r"\int"
 
                 if len(lim) > 1:
-                    if self._settings['mode'] in ['equation','equation*'] \
+                    if self._settings['mode'] in ['equation', 'equation*'] \
                        and not self._settings['itex']:
                         tex += r"\limits"
 
@@ -460,7 +460,7 @@ class LatexPrinter(Printer):
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
                 if func in accepted_latex_functions:
-                    name = r"\%s^{%s}" % (func,exp)
+                    name = r"\%s^{%s}" % (func, exp)
                 else:
                     # If the generic function name contains an underscore, handle it
                     name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
@@ -982,7 +982,7 @@ class LatexPrinter(Printer):
         lines = []
 
         for line in range(expr.rows): # horrible, should be 'rows'
-            lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
+            lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
         out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])

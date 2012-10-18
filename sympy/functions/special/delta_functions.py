@@ -104,8 +104,8 @@ class DiracDelta(Function):
             darg = diff(self.args[0], x)
             for r in argroots:
                 #should I care about multiplicities of roots?
-                if r.is_real and not darg.subs(x,r).is_zero:
-                    result = result + DiracDelta(x - r)/abs(darg.subs(x,r))
+                if r.is_real and not darg.subs(x, r).is_zero:
+                    result = result + DiracDelta(x - r)/abs(darg.subs(x, r))
                 else:
                     valid = False
                     break
@@ -115,7 +115,7 @@ class DiracDelta(Function):
             pass
         return self
 
-    def is_simple(self,x):
+    def is_simple(self, x):
         """is_simple(self, x)
 
            Tells whether the argument(args[0]) of DiracDelta is a linear

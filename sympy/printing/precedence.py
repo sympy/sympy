@@ -4,15 +4,15 @@ from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
 PRECEDENCE = {
-    "Lambda":1,
-    "Relational":20,
-    "Or":20,
-    "And":30,
-    "Add":40,
-    "Mul":50,
-    "Pow":60,
-    "Not":100,
-    "Atom":1000
+    "Lambda": 1,
+    "Relational": 20,
+    "Or": 20,
+    "And": 30,
+    "Add": 40,
+    "Mul": 50,
+    "Pow": 60,
+    "Not": 100,
+    "Atom": 1000
 }
 
 # A dictionary assigning precedence values to certain classes. These values are

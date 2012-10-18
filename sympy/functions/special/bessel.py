@@ -151,7 +151,7 @@ class besselj(BesselBase):
 
     def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self._eval_rewrite_as_jn(*self.args, **{'expand':True})
+            return self._eval_rewrite_as_jn(*self.args, **{'expand': True})
         return self
 
     def _eval_rewrite_as_besseli(self, nu, z):
@@ -208,7 +208,7 @@ class bessely(BesselBase):
 
     def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self._eval_rewrite_as_yn(*self.args, **{'expand':True})
+            return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
         return self
 
 class besseli(BesselBase):

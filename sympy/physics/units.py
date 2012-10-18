@@ -100,8 +100,8 @@ class Unit(AtomicExpr):
 
     def __new__(cls, name, abbrev, **assumptions):
         obj = AtomicExpr.__new__(cls, **assumptions)
-        assert isinstance(name, str),repr(type(name))
-        assert isinstance(abbrev, str),repr(type(abbrev))
+        assert isinstance(name, str), repr(type(name))
+        assert isinstance(abbrev, str), repr(type(abbrev))
         obj.name = name
         obj.abbrev = abbrev
         return obj
@@ -124,8 +124,8 @@ class Unit(AtomicExpr):
 
 # Dimensionless
 
-percent = percents = Rational(1,100)
-permille = permille = Rational(1,1000)
+percent = percents = Rational(1, 100)
+permille = permille = Rational(1, 1000)
 
 ten = Rational(10)
 

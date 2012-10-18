@@ -81,7 +81,7 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.subs(dict((rs,rs.symbol)
+        condition = condition.subs(dict((rs, rs.symbol)
             for rs in random_symbols(condition)))
         return RandomDomain.__new__(
                 cls, fulldomain.symbols, fulldomain, condition)
@@ -261,8 +261,8 @@ class ProductPSpace(PSpace):
         raise NotImplementedError("Density not available for ProductSpaces")
 
     def sample(self):
-        return dict([(k,v) for space in self.spaces
-            for k,v in space.sample().items()])
+        return dict([(k, v) for space in self.spaces
+            for k, v in space.sample().items()])
 
 class ProductDomain(RandomDomain):
     """
@@ -366,7 +366,7 @@ def sumsets(sets):
     """
     return reduce(frozenset.union, sets, frozenset())
 
-def rs_swap(a,b):
+def rs_swap(a, b):
     """
     Build a dictionary to swap RandomSymbols based on their underlying symbol.
 
@@ -498,7 +498,7 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
                 **kwargs)
     if given_condition is not None: # If there is a condition
         # Recompute on new conditional expr
-        return probability(given(condition, given_condition, **kwargs),**kwargs)
+        return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).probability(condition, **kwargs)
@@ -799,7 +799,7 @@ def dependent(a, b):
     ========
     independent
     """
-    if pspace_independent(a,b):
+    if pspace_independent(a, b):
         return False
 
     z = Symbol('z', real=True)
@@ -836,7 +836,7 @@ def independent(a, b):
     """
     return not dependent(a, b)
 
-def pspace_independent(a,b):
+def pspace_independent(a, b):
     """
     Tests for independence between a and b by checking if their PSpaces have
     overlapping symbols. This is a sufficient but not necessary condition for

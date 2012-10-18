@@ -10,41 +10,41 @@ from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
 
-A,B,C = symbols('A,B,C', commutative=False)
+A, B, C = symbols('A,B,C', commutative=False)
 x = symbols('x')
 
-mat1 = Matrix([[1,2*I],[1+I,3]])
-mat2 = Matrix([[2*I,3],[4*I,2]])
+mat1 = Matrix([[1, 2*I], [1+I, 3]])
+mat2 = Matrix([[2*I, 3], [4*I, 2]])
 
 def test_tensor_product_dagger():
     assert Dagger(TensorProduct(I*A, B)) ==\
-           -I*TensorProduct(Dagger(A),Dagger(B))
-    assert Dagger(TensorProduct(mat1,mat2)) ==\
-        TensorProduct(Dagger(mat1),Dagger(mat2))
+           -I*TensorProduct(Dagger(A), Dagger(B))
+    assert Dagger(TensorProduct(mat1, mat2)) ==\
+        TensorProduct(Dagger(mat1), Dagger(mat2))
 
 def test_tensor_product_abstract():
 
-    assert TP(x*A,2*B) == x*2*TP(A,B)
-    assert TP(A,B) != TP(B,A)
-    assert TP(A,B).is_commutative == False
-    assert isinstance(TP(A,B), TP)
-    assert TP(A,B).subs(A,C) == TP(C,B)
+    assert TP(x*A, 2*B) == x*2*TP(A, B)
+    assert TP(A, B) != TP(B, A)
+    assert TP(A, B).is_commutative == False
+    assert isinstance(TP(A, B), TP)
+    assert TP(A, B).subs(A, C) == TP(C, B)
 
 
 def test_tensor_product_expand():
-    assert TP(A+B,B+C).expand(tensorproduct=True) ==\
-        TP(A,B) + TP(A,C) + TP(B,B) + TP(B,C)
+    assert TP(A+B, B+C).expand(tensorproduct=True) ==\
+        TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
 
 
 def test_tensor_product_commutator():
-    assert TP(Comm(A,B),C).doit().expand(tensorproduct=True) ==\
-        TP(A*B,C) - TP(B*A,C)
-    assert Comm(TP(A,B),TP(B,C)).doit() ==\
-        TP(A,B)*TP(B,C) - TP(B,C)*TP(A,B)
+    assert TP(Comm(A, B), C).doit().expand(tensorproduct=True) ==\
+        TP(A*B, C) - TP(B*A, C)
+    assert Comm(TP(A, B), TP(B, C)).doit() ==\
+        TP(A, B)*TP(B, C) - TP(B, C)*TP(A, B)
 
 
 def test_tensor_product_simp():
-    assert tensor_product_simp(TP(A,B)*TP(B,C)) == TP(A*B,B*C)
+    assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
 
 def test_issue_2824():
     # most of the issue regarding sympification of args has been handled
@@ -69,7 +69,7 @@ def test_eval_trace():
     ## partial trace with simple tensor products as args
     t = TensorProduct(A, B, C)
     d = Density([t, 1.0])
-    tr = Tr(d,[1])
+    tr = Tr(d, [1])
     assert tr.doit() == 1.0*A*Dagger(A)*Tr(B*Dagger(B))*C*Dagger(C)
 
     tr = Tr(d, [0, 2])

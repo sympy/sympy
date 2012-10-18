@@ -3,7 +3,7 @@ from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer
 
 def test_rigidbody():
-    m, m2, v1,v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
+    m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
     A = ReferenceFrame('A')
     A2 = ReferenceFrame('A2')
     P = Point('P')

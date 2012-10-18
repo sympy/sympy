@@ -139,7 +139,7 @@ def test_expint():
            == x**(y - 1)*(exp(-2*I*pi*y) - 1)*gamma(-y + 1) + expint(y, x)
     assert expint(2, x*exp_polar(2*I*pi)) == 2*I*pi*x + expint(2, x)
     assert expint(2, x*exp_polar(-2*I*pi)) == -2*I*pi*x + expint(2, x)
-    assert expint(1,x).rewrite(Ei).rewrite(expint) == expint(1, x)
+    assert expint(1, x).rewrite(Ei).rewrite(expint) == expint(1, x)
 
     assert mytn(E1(x), E1(x).rewrite(Shi), Shi(x) - Chi(x), x)
     assert mytn(E1(polar_lift(I)*x), E1(polar_lift(I)*x).rewrite(Si),

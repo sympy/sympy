@@ -29,7 +29,7 @@ if not np:
 else:
     numpy_ndarray = np.ndarray
 
-scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 if not scipy:
     class scipy_sparse_matrix(object):
         pass
@@ -49,7 +49,7 @@ def sympy_to_numpy(m, **options):
     """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
     if not np:
         raise ImportError
-    dtype = options.get('dtype','complex')
+    dtype = options.get('dtype', 'complex')
     if isinstance(m, Matrix):
         return np.matrix(m.tolist(), dtype=dtype)
     elif isinstance(m, Expr):
@@ -62,7 +62,7 @@ def sympy_to_scipy_sparse(m, **options):
     """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
     if not np or not sparse:
         raise ImportError
-    dtype = options.get('dtype','complex')
+    dtype = options.get('dtype', 'complex')
     if isinstance(m, Matrix):
         return sparse.csr_matrix(np.matrix(m.tolist(), dtype=dtype))
     elif isinstance(m, Expr):
@@ -95,7 +95,7 @@ def to_sympy(m, **options):
 
 def to_numpy(m, **options):
     """Convert a sympy/scipy.sparse matrix to a numpy matrix."""
-    dtype = options.get('dtype','complex')
+    dtype = options.get('dtype', 'complex')
     if isinstance(m, (Matrix, Expr)):
         return sympy_to_numpy(m, dtype=dtype)
     elif isinstance(m, numpy_ndarray):
@@ -107,7 +107,7 @@ def to_numpy(m, **options):
 
 def to_scipy_sparse(m, **options):
     """Convert a sympy/numpy matrix to a scipy.sparse matrix."""
-    dtype = options.get('dtype','complex')
+    dtype = options.get('dtype', 'complex')
     if isinstance(m,  (Matrix, Expr)):
         return sympy_to_scipy_sparse(m, dtype=dtype)
     elif isinstance(m, numpy_ndarray):
@@ -122,11 +122,11 @@ def to_scipy_sparse(m, **options):
 def flatten_scalar(e):
     """Flatten a 1x1 matrix to a scalar, return larger matrices unchanged."""
     if isinstance(e, Matrix):
-        if e.shape == (1,1):
+        if e.shape == (1, 1):
             e = e[0]
     if isinstance(e, (numpy_ndarray, scipy_sparse_matrix)):
-        if e.shape == (1,1):
-            e = complex(e[0,0])
+        if e.shape == (1, 1):
+            e = complex(e[0, 0])
     return e
 
 
@@ -260,7 +260,7 @@ def _scipy_sparse_eye(n):
 
 def matrix_eye(n, **options):
     """Get the version of eye and tensor_product for a given format."""
-    format = options.get('format','sympy')
+    format = options.get('format', 'sympy')
     if format == 'sympy':
         return eye(n)
     elif format == 'numpy':

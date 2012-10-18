@@ -38,67 +38,67 @@ def test_monomial_count():
     assert monomial_count(2, 3) == 10
 
 def test_lex_order():
-    assert lex((1,2,3)) == (1,2,3)
+    assert lex((1, 2, 3)) == (1, 2, 3)
     assert str(lex) == 'lex'
 
-    assert lex((1,2,3)) == lex((1,2,3))
+    assert lex((1, 2, 3)) == lex((1, 2, 3))
 
-    assert lex((2,2,3)) > lex((1,2,3))
-    assert lex((1,3,3)) > lex((1,2,3))
-    assert lex((1,2,4)) > lex((1,2,3))
+    assert lex((2, 2, 3)) > lex((1, 2, 3))
+    assert lex((1, 3, 3)) > lex((1, 2, 3))
+    assert lex((1, 2, 4)) > lex((1, 2, 3))
 
-    assert lex((0,2,3)) < lex((1,2,3))
-    assert lex((1,1,3)) < lex((1,2,3))
-    assert lex((1,2,2)) < lex((1,2,3))
+    assert lex((0, 2, 3)) < lex((1, 2, 3))
+    assert lex((1, 1, 3)) < lex((1, 2, 3))
+    assert lex((1, 2, 2)) < lex((1, 2, 3))
 
     assert lex.is_global is True
     assert lex == LexOrder()
     assert lex != grlex
 
 def test_grlex_order():
-    assert grlex((1,2,3)) == (6, (1,2,3))
+    assert grlex((1, 2, 3)) == (6, (1, 2, 3))
     assert str(grlex) == 'grlex'
 
-    assert grlex((1,2,3)) == grlex((1,2,3))
+    assert grlex((1, 2, 3)) == grlex((1, 2, 3))
 
-    assert grlex((2,2,3)) > grlex((1,2,3))
-    assert grlex((1,3,3)) > grlex((1,2,3))
-    assert grlex((1,2,4)) > grlex((1,2,3))
+    assert grlex((2, 2, 3)) > grlex((1, 2, 3))
+    assert grlex((1, 3, 3)) > grlex((1, 2, 3))
+    assert grlex((1, 2, 4)) > grlex((1, 2, 3))
 
-    assert grlex((0,2,3)) < grlex((1,2,3))
-    assert grlex((1,1,3)) < grlex((1,2,3))
-    assert grlex((1,2,2)) < grlex((1,2,3))
+    assert grlex((0, 2, 3)) < grlex((1, 2, 3))
+    assert grlex((1, 1, 3)) < grlex((1, 2, 3))
+    assert grlex((1, 2, 2)) < grlex((1, 2, 3))
 
-    assert grlex((2,2,3)) > grlex((1,2,4))
-    assert grlex((1,3,3)) > grlex((1,2,4))
+    assert grlex((2, 2, 3)) > grlex((1, 2, 4))
+    assert grlex((1, 3, 3)) > grlex((1, 2, 4))
 
-    assert grlex((0,2,3)) < grlex((1,2,2))
-    assert grlex((1,1,3)) < grlex((1,2,2))
+    assert grlex((0, 2, 3)) < grlex((1, 2, 2))
+    assert grlex((1, 1, 3)) < grlex((1, 2, 2))
 
     assert grlex.is_global is True
 
 def test_grevlex_order():
-    assert grevlex((1,2,3)) == (6, (-3,-2,-1))
+    assert grevlex((1, 2, 3)) == (6, (-3, -2, -1))
     assert str(grevlex) == 'grevlex'
 
-    assert grevlex((1,2,3)) == grevlex((1,2,3))
+    assert grevlex((1, 2, 3)) == grevlex((1, 2, 3))
 
-    assert grevlex((2,2,3)) > grevlex((1,2,3))
-    assert grevlex((1,3,3)) > grevlex((1,2,3))
-    assert grevlex((1,2,4)) > grevlex((1,2,3))
+    assert grevlex((2, 2, 3)) > grevlex((1, 2, 3))
+    assert grevlex((1, 3, 3)) > grevlex((1, 2, 3))
+    assert grevlex((1, 2, 4)) > grevlex((1, 2, 3))
 
-    assert grevlex((0,2,3)) < grevlex((1,2,3))
-    assert grevlex((1,1,3)) < grevlex((1,2,3))
-    assert grevlex((1,2,2)) < grevlex((1,2,3))
+    assert grevlex((0, 2, 3)) < grevlex((1, 2, 3))
+    assert grevlex((1, 1, 3)) < grevlex((1, 2, 3))
+    assert grevlex((1, 2, 2)) < grevlex((1, 2, 3))
 
-    assert grevlex((2,2,3)) > grevlex((1,2,4))
-    assert grevlex((1,3,3)) > grevlex((1,2,4))
+    assert grevlex((2, 2, 3)) > grevlex((1, 2, 4))
+    assert grevlex((1, 3, 3)) > grevlex((1, 2, 4))
 
-    assert grevlex((0,2,3)) < grevlex((1,2,2))
-    assert grevlex((1,1,3)) < grevlex((1,2,2))
+    assert grevlex((0, 2, 3)) < grevlex((1, 2, 2))
+    assert grevlex((1, 1, 3)) < grevlex((1, 2, 2))
 
-    assert grevlex((0,1,1)) > grevlex((0,0,2))
-    assert grevlex((0,3,1)) < grevlex((2,2,1))
+    assert grevlex((0, 1, 1)) > grevlex((0, 0, 2))
+    assert grevlex((0, 3, 1)) < grevlex((2, 2, 1))
 
     assert grevlex.is_global is True
 
@@ -106,7 +106,7 @@ def test_InverseOrder():
     ilex = InverseOrder(lex)
     igrlex = InverseOrder(grlex)
 
-    assert ilex((1,2,3)) > ilex((2, 0, 3))
+    assert ilex((1, 2, 3)) > ilex((2, 0, 3))
     assert igrlex((1, 2, 3)) < igrlex((0, 2, 3))
     assert str(ilex) == "ilex"
     assert str(igrlex) == "igrlex"
@@ -144,26 +144,26 @@ def test_build_product_order():
            is False
 
 def test_monomial_mul():
-    assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)
+    assert monomial_mul((3, 4, 1), (1, 2, 0)) == (4, 6, 1)
 
 def test_monomial_div():
-    assert monomial_div((3,4,1), (1,2,0)) == (2,2,1)
+    assert monomial_div((3, 4, 1), (1, 2, 0)) == (2, 2, 1)
 
 def test_monomial_gcd():
-    assert monomial_gcd((3,4,1), (1,2,0)) == (1,2,0)
+    assert monomial_gcd((3, 4, 1), (1, 2, 0)) == (1, 2, 0)
 
 def test_monomial_lcm():
-    assert monomial_lcm((3,4,1), (1,2,0)) == (3,4,1)
+    assert monomial_lcm((3, 4, 1), (1, 2, 0)) == (3, 4, 1)
 
 def test_monomial_max():
-    assert monomial_max((3,4,5), (0,5,1), (6,3,9)) == (6,5,9)
+    assert monomial_max((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (6, 5, 9)
 
 def test_monomial_min():
-    assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
+    assert monomial_min((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (0, 3, 1)
 
 def test_monomial_divides():
-    assert monomial_divides((1,2,3), (4,5,6)) is True
-    assert monomial_divides((1,2,3), (0,5,6)) is False
+    assert monomial_divides((1, 2, 3), (4, 5, 6)) is True
+    assert monomial_divides((1, 2, 3), (0, 5, 6)) is False
 
 def test_Monomial():
     m = Monomial((3, 4, 1), (x, y, z))
@@ -212,6 +212,6 @@ def test_Monomial():
     assert m**0 == Monomial((0, 0, 0))
     assert m**1 == m
     assert m**2 == Monomial((6, 8, 2))
-    assert m**3 == Monomial((9,12, 3))
+    assert m**3 == Monomial((9, 12, 3))
 
     raises(ExactQuotientFailed, lambda: m/Monomial((5, 2, 0)))

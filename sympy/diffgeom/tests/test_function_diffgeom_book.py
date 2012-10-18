@@ -29,7 +29,7 @@ def test_functional_diffgeom_ch2():
 
     field = f(R2.x, R2.y)
     p1_in_rect = R2_r.point([x0, y0])
-    p1_in_polar = R2_p.point([sqrt(x0**2 + y0**2), atan2(y0,x0)])
+    p1_in_polar = R2_p.point([sqrt(x0**2 + y0**2), atan2(y0, x0)])
     assert field(p1_in_rect) == f(x0, y0)
     assert field(p1_in_polar) == f(x0, y0)
 
@@ -54,7 +54,7 @@ def test_functional_diffgeom_ch3():
     b2 = Function('b2')
     p_r = R2_r.point([x0, y0])
 
-    s_field = f(R2.x,R2.y)
+    s_field = f(R2.x, R2.y)
     v_field = b1(R2.x)*R2.e_x + b2(R2.y)*R2.e_y
     assert v_field(s_field)(p_r).doit() == b1(x0)*Derivative(f(x0, y0), x0) + b2(y0)*Derivative(f(x0, y0), y0)
 
@@ -66,8 +66,8 @@ def test_functional_diffgeom_ch3():
     circ = -R2.y*R2.e_x + R2.x*R2.e_y
     series = intcurve_series(circ, t, R2_r.point([1, 0]), coeffs=True)
     series_x, series_y = zip(*series)
-    assert all([term == cos(t).taylor_term(i,t) for i, term in enumerate(series_x)])
-    assert all([term == sin(t).taylor_term(i,t) for i, term in enumerate(series_y)])
+    assert all([term == cos(t).taylor_term(i, t) for i, term in enumerate(series_x)])
+    assert all([term == sin(t).taylor_term(i, t) for i, term in enumerate(series_y)])
 
 
 def test_functional_diffgeom_ch4():
@@ -80,16 +80,16 @@ def test_functional_diffgeom_ch4():
     p_r = R2_r.point([x0, y0])
     p_p = R2_p.point([r0, theta0])
 
-    f_field = b1(R2.x,R2.y)*R2.dx + b2(R2.x,R2.y)*R2.dy
+    f_field = b1(R2.x, R2.y)*R2.dx + b2(R2.x, R2.y)*R2.dy
     assert f_field(R2.e_x)(p_r) == b1(x0, y0)
     assert f_field(R2.e_y)(p_r) == b2(x0, y0)
 
-    s_field_r = f(R2.x,R2.y)
+    s_field_r = f(R2.x, R2.y)
     df = Differential(s_field_r)
     assert df(R2.e_x)(p_r).doit() == Derivative(f(x0, y0), x0)
     assert df(R2.e_y)(p_r).doit() == Derivative(f(x0, y0), y0)
 
-    s_field_p = f(R2.r,R2.theta)
+    s_field_p = f(R2.r, R2.theta)
     df = Differential(s_field_p)
     assert trigsimp(df(R2.e_x)(p_p).doit()) == cos(theta0)*Derivative(f(r0, theta0), r0) - sin(theta0)*Derivative(f(r0, theta0), theta0)/r0
     assert trigsimp(df(R2.e_y)(p_p).doit()) == sin(theta0)*Derivative(f(r0, theta0), r0) + cos(theta0)*Derivative(f(r0, theta0), theta0)/r0
@@ -121,9 +121,9 @@ def test_functional_diffgeom_ch6():
     assert wp(u, v, w) == Matrix(3, 3, [u0, u1, u2, v0, v1, v2, w0, w1, w2]).det()
 
     a, b, c = symbols('a, b, c', cls=Function)
-    a_f = a(R3_r.x,R3_r.y,R3_r.z)
-    b_f = b(R3_r.x,R3_r.y,R3_r.z)
-    c_f = c(R3_r.x,R3_r.y,R3_r.z)
+    a_f = a(R3_r.x, R3_r.y, R3_r.z)
+    b_f = b(R3_r.x, R3_r.y, R3_r.z)
+    c_f = c(R3_r.x, R3_r.y, R3_r.z)
     theta = a_f*R3_r.dx + b_f*R3_r.dy + c_f*R3_r.dz
     dtheta = Differential(theta)
     da = Differential(a_f)

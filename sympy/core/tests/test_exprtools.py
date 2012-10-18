@@ -88,10 +88,10 @@ def test_gcd_terms():
     assert gcd_terms(set(args)) == newf
     # but a Basic sequence is treated as a container
     assert gcd_terms(Tuple(*args)) != newf
-    assert gcd_terms(Basic(Tuple(1,3*y + 3*x*y), Tuple(1, 3))) == \
+    assert gcd_terms(Basic(Tuple(1, 3*y + 3*x*y), Tuple(1, 3))) == \
         Basic((1, 3*y*(x + 1)), (1, 3))
     # but we shouldn't change keys of a dictionary or some may be lost
-    assert gcd_terms(Dict((x*(1 + y), 2),(x + x*y, y + x*y))) == \
+    assert gcd_terms(Dict((x*(1 + y), 2), (x + x*y, y + x*y))) == \
                     Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
 
     assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)

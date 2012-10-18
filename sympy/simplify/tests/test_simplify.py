@@ -289,7 +289,7 @@ def test_simplify():
 
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
-    assert simplify((A*Matrix([0,f]))[1]) == \
+    assert simplify((A*Matrix([0, f]))[1]) == \
         f*(2*k - m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
@@ -427,10 +427,10 @@ def test_powsimp():
     assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + exp(1 + E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + exp(1 + E))*exp(-E)
     assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == (1 + E*exp(E))*exp(-E)
-    x,y = symbols('x,y', nonnegative=True)
+    x, y = symbols('x,y', nonnegative=True)
     n = Symbol('n', real=True)
     assert powsimp( y**n * (y/x)**(-n) ) == x**n
-    assert powsimp(x**(x**(x*y)*y**(x*y))*y**(x**(x*y)*y**(x*y)),deep=True) == (x*y)**(x*y)**(x*y)
+    assert powsimp(x**(x**(x*y)*y**(x*y))*y**(x**(x*y)*y**(x*y)), deep=True) == (x*y)**(x*y)**(x*y)
     assert powsimp(2**(2**(2*x)*x), deep=False) == 2**(2**(2*x)*x)
     assert powsimp(2**(2**(2*x)*x), deep=True) == 2**(x*4**x)
     assert powsimp(exp(-x + exp(-x)*exp(-x*log(x))), deep=False, combine='exp') == exp(-x + exp(-x)*exp(-x*log(x)))
@@ -665,7 +665,7 @@ def test_rcollect():
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
 
 def test_separatevars():
-    x,y,z,n = symbols('x,y,z,n')
+    x, y, z, n = symbols('x,y,z,n')
     assert separatevars(2*n*x*z+2*x*y*z) == 2*x*z*(n+y)
     assert separatevars(x*z+x*y*z) == x*z*(1+y)
     assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
@@ -676,7 +676,7 @@ def test_separatevars():
     assert separatevars(y/pi*exp(-(z - x)/cos(n))) == y*exp(x/cos(n))*exp(-z/cos(n))/pi
     assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
     # 1759
-    p=Symbol('p',positive=True)
+    p=Symbol('p', positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
     assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
     assert separatevars(sqrt(y*(p**2 + x*p**2)), force=True) == p*sqrt(y)*sqrt(1 + x)
@@ -708,7 +708,7 @@ def test_separatevars():
     assert separatevars(eq) == eq
 
 def test_separatevars_advanced_factor():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     assert separatevars(1 + log(x)*log(y) + log(x) + log(y)) == (log(x) + 1)*(log(y) + 1)
     assert separatevars(1 + x - log(z) - x*log(z) - exp(y)*log(z) - x*exp(y)*log(z) + x*exp(y) + exp(y)) == \
         -((x + 1)*(log(z) - 1)*(exp(y) + 1))
@@ -760,8 +760,8 @@ def test_nsimplify():
     assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
     assert nsimplify(log(3).n(), rational=True) == \
            sympify('109861228866811/100000000000000')
-    assert nsimplify(Float(0.272198261287950), [pi,log(2)]) == pi*log(2)/8
-    assert nsimplify(Float(0.272198261287950).n(3), [pi,log(2)]) == \
+    assert nsimplify(Float(0.272198261287950), [pi, log(2)]) == pi*log(2)/8
+    assert nsimplify(Float(0.272198261287950).n(3), [pi, log(2)]) == \
         -pi/4 - log(2) + S(7)/4
     assert nsimplify(x/7.0) == x/7
     assert nsimplify(pi/1e2) == pi/100
@@ -910,7 +910,7 @@ def test_powdenest_polar():
     assert powdenest(((x**a)**b*y**c)**c) == x**(a*b*c)*y**(c**2)
 
 def test_issue_2706():
-    arg = ((gamma(x)*hyper((),(),x))*pi)**2
+    arg = ((gamma(x)*hyper((), (), x))*pi)**2
     assert powdenest(arg) == (pi*gamma(x)*hyper((), (), x))**2
     assert arg.is_positive is None
 

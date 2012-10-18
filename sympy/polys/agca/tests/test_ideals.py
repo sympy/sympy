@@ -9,7 +9,7 @@ def test_ideal_operations():
     I = R.ideal(x)
     J = R.ideal(y)
     S = R.ideal(x*y)
-    T = R.ideal(x,y)
+    T = R.ideal(x, y)
 
     assert not (I == J)
     assert I == I

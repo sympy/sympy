@@ -4316,7 +4316,7 @@ def gcdex(f, g, *gens, **args):
         except NotImplementedError:
             raise ComputationFailed('gcdex', 2, exc)
         else:
-            return domain.to_sympy(s), domain.to_sympy(t),domain.to_sympy(h)
+            return domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(h)
 
     s, t, h = F.gcdex(G, auto=opt.auto)
 

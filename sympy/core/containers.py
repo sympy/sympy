@@ -33,8 +33,8 @@ class Tuple(Basic):
         obj = Basic.__new__(cls, *args, **assumptions)
         return obj
 
-    def __getitem__(self,i):
-        if isinstance(i,slice):
+    def __getitem__(self, i):
+        if isinstance(i, slice):
             indices = i.indices(len(self))
             return Tuple(*[self.args[i] for i in range(*indices)])
         return self.args[i]

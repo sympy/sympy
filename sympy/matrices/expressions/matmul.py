@@ -20,7 +20,7 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in args if arg.is_Matrix]
 
         for i in range(len(matrices)-1):
-            A,B = matrices[i:i+2]
+            A, B = matrices[i:i+2]
             if A.cols != B.rows:
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
@@ -60,7 +60,7 @@ class MatMul(MatrixExpr, Mul):
     def _entry(self, i, j):
         coeff, matmul = self.as_coeff_mmul()
         if not matmul.is_Mul: # situation like 2*X, matmul is just X
-            return coeff * matmul[i,j]
+            return coeff * matmul[i, j]
 
         head, tail = matmul.args[0], matmul.args[1:]
         assert len(tail) != 0
@@ -70,12 +70,12 @@ class MatMul(MatrixExpr, Mul):
 
         if X.shape[1].is_Number:
             # Numeric shape like (3,5)
-            return coeff*Add(*[X[i,k]*Y[k,j] for k in range(X.shape[1])])
+            return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.shape[1])])
         else:
             # Symbolic shape like (n, m)
             from sympy import Dummy, summation
             k = Dummy('k', integer=True)
-            return summation(coeff*X[i,k]*Y[k,j], (k, 0, X.cols-1))
+            return summation(coeff*X[i, k]*Y[k, j], (k, 0, X.cols-1))
 
     def as_coeff_mmul(self):
         scalars = [x for x in self.args if not x.is_Matrix]

@@ -198,7 +198,7 @@ class Routine(object):
 
             arg_list.append(InputArgument(symbol, **metadata))
 
-        output_args.sort(key=lambda x:str(x.name))
+        output_args.sort(key=lambda x: str(x.name))
         arg_list.extend(output_args)
 
         if argument_sequence is not None:

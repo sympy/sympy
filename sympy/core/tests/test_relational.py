@@ -13,43 +13,43 @@ def test_rel_ne():
 
 def test_rel_subs():
     e = Relational(x, y, '==')
-    e = e.subs(x,z)
+    e = e.subs(x, z)
 
     assert isinstance(e, Equality)
     assert e.lhs == z
     assert e.rhs == y
 
     e = Relational(x, y, '>=')
-    e = e.subs(x,z)
+    e = e.subs(x, z)
 
     assert isinstance(e, GreaterThan)
     assert e.lhs == z
     assert e.rhs == y
 
     e = Relational(x, y, '<=')
-    e = e.subs(x,z)
+    e = e.subs(x, z)
 
     assert isinstance(e, LessThan)
     assert e.lhs == z
     assert e.rhs == y
 
     e = Relational(x, y, '>')
-    e = e.subs(x,z)
+    e = e.subs(x, z)
 
     assert isinstance(e, StrictGreaterThan)
     assert e.lhs == z
     assert e.rhs == y
 
     e = Relational(x, y, '<')
-    e = e.subs(x,z)
+    e = e.subs(x, z)
 
     assert isinstance(e, StrictLessThan)
     assert e.lhs == z
     assert e.rhs == y
 
-    e = Eq(x,0)
-    assert e.subs(x,0) == True
-    assert e.subs(x,1) == False
+    e = Eq(x, 0)
+    assert e.subs(x, 0) == True
+    assert e.subs(x, 1) == False
 
 
 def test_wrappers():
@@ -106,20 +106,20 @@ def test_rel_Infinity():
     assert (-oo <= 1) is True
 
 def test_bool():
-    assert Eq(0,0) is True
-    assert Eq(1,0) is False
-    assert Ne(0,0) is False
-    assert Ne(1,0) is True
-    assert Lt(0,1) is True
-    assert Lt(1,0) is False
-    assert Le(0,1) is True
-    assert Le(1,0) is False
-    assert Le(0,0) is True
-    assert Gt(1,0) is True
-    assert Gt(0,1) is False
-    assert Ge(1,0) is True
-    assert Ge(0,1) is False
-    assert Ge(1,1) is True
+    assert Eq(0, 0) is True
+    assert Eq(1, 0) is False
+    assert Ne(0, 0) is False
+    assert Ne(1, 0) is True
+    assert Lt(0, 1) is True
+    assert Lt(1, 0) is False
+    assert Le(0, 1) is True
+    assert Le(1, 0) is False
+    assert Le(0, 0) is True
+    assert Gt(1, 0) is True
+    assert Gt(0, 1) is False
+    assert Ge(1, 0) is True
+    assert Ge(0, 1) is False
+    assert Ge(1, 1) is True
     assert Eq(I, 2) is False
     assert Ne(I, 2) is True
     assert Gt(I, 2) not in [True, False]
@@ -131,10 +131,10 @@ def test_bool():
     assert Eq(pi + a, pi + b) is False
 
 def test_rich_cmp():
-    assert (x<y) == Lt(x,y)
-    assert (x<=y) == Le(x,y)
-    assert (x>y) == Gt(x,y)
-    assert (x>=y) == Ge(x,y)
+    assert (x<y) == Lt(x, y)
+    assert (x<=y) == Le(x, y)
+    assert (x>y) == Gt(x, y)
+    assert (x>=y) == Ge(x, y)
 
 def test_doit():
     from sympy import Symbol

@@ -11,20 +11,20 @@ rmul = Permutation.rmul
 def test_polyhedron():
     raises(ValueError, lambda: Polyhedron(list('ab'),
         pgroup=[Permutation([0])]))
-    pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
-              Permutation([[0,7,1,6],[5,2,4,3]]),\
-              Permutation([[3,6,0,5],[4,1,7,2]]),\
-              Permutation([[7,4,5],[1,3,0],[2],[6]]),\
-              Permutation([[1,3,2],[7,6,5],[4],[0]]),\
-              Permutation([[4,7,6],[2,0,3],[1],[5]]),\
-              Permutation([[1,2,0],[4,5,6],[3],[7]]),\
-              Permutation([[4,2],[0,6],[3,7],[1,5]]),\
-              Permutation([[3,5],[7,1],[2,6],[0,4]]),\
-              Permutation([[2,5],[1,6],[0,4],[3,7]]),\
-              Permutation([[4,3],[7,0],[5,1],[6,2]]),\
-              Permutation([[4,1],[0,5],[6,2],[7,3]]),\
-              Permutation([[7,2],[3,6],[0,4],[1,5]]),\
-              Permutation([0,1,2,3,4,5,6,7])]
+    pgroup = [Permutation([[0, 7, 2, 5], [6, 1, 4, 3]]),\
+              Permutation([[0, 7, 1, 6], [5, 2, 4, 3]]),\
+              Permutation([[3, 6, 0, 5], [4, 1, 7, 2]]),\
+              Permutation([[7, 4, 5], [1, 3, 0], [2], [6]]),\
+              Permutation([[1, 3, 2], [7, 6, 5], [4], [0]]),\
+              Permutation([[4, 7, 6], [2, 0, 3], [1], [5]]),\
+              Permutation([[1, 2, 0], [4, 5, 6], [3], [7]]),\
+              Permutation([[4, 2], [0, 6], [3, 7], [1, 5]]),\
+              Permutation([[3, 5], [7, 1], [2, 6], [0, 4]]),\
+              Permutation([[2, 5], [1, 6], [0, 4], [3, 7]]),\
+              Permutation([[4, 3], [7, 0], [5, 1], [6, 2]]),\
+              Permutation([[4, 1], [0, 5], [6, 2], [7, 3]]),\
+              Permutation([[7, 2], [3, 6], [0, 4], [1, 5]]),\
+              Permutation([0, 1, 2, 3, 4, 5, 6, 7])]
     corners = tuple(symbols('A:H'))
     faces = cube_faces
     cube = Polyhedron(corners, faces, pgroup)
@@ -38,7 +38,7 @@ def test_polyhedron():
 
     assert cube.corners == corners
 
-    for i in range(3,7):  # add 240 degree axial corner rotations
+    for i in range(3, 7):  # add 240 degree axial corner rotations
         cube.rotate(cube.pgroup[i]**2)
 
     assert cube.corners == corners

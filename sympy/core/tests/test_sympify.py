@@ -234,7 +234,7 @@ def test__sympify():
 
     # negative _sympify
     raises(SympifyError, lambda: _sympify('1'))
-    raises(SympifyError, lambda: _sympify([1,2,3]))
+    raises(SympifyError, lambda: _sympify([1, 2, 3]))
 
 
 def test_sympifyit():

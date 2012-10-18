@@ -42,18 +42,18 @@ def test_plot_3d_discontinuous():
 
 def test_plot_2d_polar():
     from sympy.plotting.pygletplot import PygletPlot
-    p = PygletPlot(1/x, [x,-1,1,4], 'mode=polar', visible=False)
+    p = PygletPlot(1/x, [x, -1, 1, 4], 'mode=polar', visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_cylinder():
     from sympy.plotting.pygletplot import PygletPlot
-    p = PygletPlot(1/y, [x,0,6.282,4], [y,-1,1,4], 'mode=polar;style=solid',
+    p = PygletPlot(1/y, [x, 0, 6.282, 4], [y, -1, 1, 4], 'mode=polar;style=solid',
              visible=False)
     p.wait_for_calculations()
 
 def test_plot_3d_spherical():
     from sympy.plotting.pygletplot import PygletPlot
-    p = PygletPlot(1, [x,0,6.282,4], [y,0,3.141,4], 'mode=spherical;style=wireframe',
+    p = PygletPlot(1, [x, 0, 6.282, 4], [y, 0, 3.141, 4], 'mode=spherical;style=wireframe',
              visible=False)
     p.wait_for_calculations()
 
@@ -69,7 +69,7 @@ def test_plot_3d_parametric():
 
 def _test_plot_log():
     from sympy.plotting.pygletplot import PygletPlot
-    p = PygletPlot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
+    p = PygletPlot(log(x), [x, 0, 6.282, 4], 'mode=polar', visible=False)
     p.wait_for_calculations()
 
 def test_plot_integral():

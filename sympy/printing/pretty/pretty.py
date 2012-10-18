@@ -202,7 +202,7 @@ class PrettyPrinter(Printer):
 
     def _print_conjugate(self, e):
         pform = self._print(e.args[0])
-        return prettyForm( *pform.above( hobj('_',pform.width())) )
+        return prettyForm( *pform.above( hobj('_', pform.width())) )
 
     def _print_Abs(self, e):
         pform = self._print(e.args[0])
@@ -539,7 +539,7 @@ class PrettyPrinter(Printer):
         Ms = {}  # i,j -> pretty(M[i,j])
         for i in range(M.rows):
             for j in range(M.cols):
-                Ms[i,j] = self._print(M[i,j])
+                Ms[i, j] = self._print(M[i, j])
 
         # h- and v- spacers
         hsep = 2
@@ -549,7 +549,7 @@ class PrettyPrinter(Printer):
         maxw = [-1] * M.cols
 
         for j in range(M.cols):
-            maxw[j] = max([Ms[i,j].width()  for i in range(M.rows)] or [0])
+            maxw[j] = max([Ms[i, j].width()  for i in range(M.rows)] or [0])
 
 
         # drawing result
@@ -559,7 +559,7 @@ class PrettyPrinter(Printer):
 
             D_row = None
             for j in range(M.cols):
-                s = Ms[i,j]
+                s = Ms[i, j]
 
                 # reshape s to maxw
                 # XXX this should be generalized, and go to stringPict.reshape ?
@@ -603,7 +603,7 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixBase(self, e):
         D = self._print_matrix_contents(e)
-        D = prettyForm(*D.parens('[',']'))
+        D = prettyForm(*D.parens('[', ']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
@@ -623,8 +623,8 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_BlockMatrix(self, B):
-        if B.mat.shape == (1,1):
-            return self._print(B.mat[0,0])
+        if B.mat.shape == (1, 1):
+            return self._print(B.mat[0, 0])
         return self._print(B.mat)
 
     def _print_MatMul(self, expr):
@@ -642,24 +642,24 @@ class PrettyPrinter(Printer):
 
     def _print_FunctionMatrix(self, X):
         D = self._print(X.lamda.expr)
-        D = prettyForm(*D.parens('[',']'))
+        D = prettyForm(*D.parens('[', ']'))
         return D
 
     def _print_Piecewise(self, pexpr):
 
         P = {}
         for n, ec in enumerate(pexpr.args):
-            P[n,0] = self._print(ec.expr)
+            P[n, 0] = self._print(ec.expr)
             if ec.cond == True:
-                P[n,1] = prettyForm('otherwise')
+                P[n, 1] = prettyForm('otherwise')
             else:
-                P[n,1] = prettyForm(*prettyForm('for ').right(self._print(ec.cond)))
+                P[n, 1] = prettyForm(*prettyForm('for ').right(self._print(ec.cond)))
         hsep = 2
         vsep = 1
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i,j].width() for i in xrange(len_args)]) \
+        maxw = [max([P[i, j].width() for i in xrange(len_args)]) \
                     for j in xrange(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
@@ -669,7 +669,7 @@ class PrettyPrinter(Printer):
         for i in xrange(len_args):
             D_row = None
             for j in xrange(2):
-                p = P[i,j]
+                p = P[i, j]
                 assert p.width() <= maxw[j]
 
                 wdelta = maxw[j] - p.width()
@@ -695,7 +695,7 @@ class PrettyPrinter(Printer):
 
             D = prettyForm(*D.below(D_row))
 
-        D = prettyForm(*D.parens('{',''))
+        D = prettyForm(*D.parens('{', ''))
         return D
 
     def _hprint_vec(self, v):
@@ -1064,8 +1064,8 @@ class PrettyPrinter(Printer):
         bpretty = self._print(base)
 
         # Construct root sign, start with the \/ shape
-        _zZ = xobj('/',1)
-        rootsign = xobj('\\',1) + _zZ
+        _zZ = xobj('/', 1)
+        rootsign = xobj('\\', 1) + _zZ
         # Make exponent number to put above it
         if isinstance(expt, C.Rational):
             exp = str(expt.q)
@@ -1116,7 +1116,7 @@ class PrettyPrinter(Printer):
     def __print_numer_denom(self, p, q):
         if q == 1:
             if p < 0:
-                return prettyForm(str(p),binding=prettyForm.NEG)
+                return prettyForm(str(p), binding=prettyForm.NEG)
             else:
                 return prettyForm(str(p))
         elif abs(p) >= 10 and abs(q) >= 10:
@@ -1152,7 +1152,7 @@ class PrettyPrinter(Printer):
         else:
             prod_char = u'\xd7'
             return self._print_seq(p.sets, None, None, ' %s '%prod_char,
-                parenthesize = lambda set:set.is_Union or set.is_Intersection)
+                parenthesize = lambda set: set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1195,14 +1195,14 @@ class PrettyPrinter(Printer):
         delimiter = ' %s ' % pretty_atom('Intersection')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize = lambda set:set.is_ProductSet or set.is_Union)
+                parenthesize = lambda set: set.is_ProductSet or set.is_Union)
 
     def _print_Union(self, u):
 
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize = lambda set:set.is_ProductSet or set.is_Intersection)
+             parenthesize = lambda set: set.is_ProductSet or set.is_Intersection)
 
     def _print_TransformationSet(self, ts):
         if self._use_unicode:

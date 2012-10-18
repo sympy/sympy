@@ -38,7 +38,7 @@ def test_Function():
     sT(Function('f'), "Function('f')")
 
 def test_Geometry():
-    sT(Point(0,0),  "Point(Integer(0), Integer(0))")
+    sT(Point(0, 0),  "Point(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
@@ -74,8 +74,8 @@ def test_Matrix():
         sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
 def test_Rational():
-    sT(Rational(1,3), "Rational(1, 3)")
-    sT(Rational(-1,3), "Rational(-1, 3)")
+    sT(Rational(1, 3), "Rational(1, 3)")
+    sT(Rational(-1, 3), "Rational(-1, 3)")
 
 def test_Float():
     sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
@@ -89,7 +89,7 @@ def test_Symbol():
 
 def test_tuple():
     sT((x,), "(Symbol('x'),)")
-    sT((x,y), "(Symbol('x'), Symbol('y'))")
+    sT((x, y), "(Symbol('x'), Symbol('y'))")
 
 def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")

@@ -173,11 +173,11 @@ def add_formulae(formulae):
     #    / (2*root(polar_lift(-1)*z,4)))
     # Manually tuned rule
     addb([1], [S(3)/4, S(5)/4],
-         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
-                            + cosh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
-                  * exp(-I*pi/4)/(2*root(z,4)),
-                  sqrt(pi)*root(z,4)*(sinh(2*sqrt(z))*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))
-                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z,4)*exp(I*pi/4)/sqrt(pi)))
+         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))
+                            + cosh(2*sqrt(z))*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi)))
+                  * exp(-I*pi/4)/(2*root(z, 4)),
+                  sqrt(pi)*root(z, 4)*(sinh(2*sqrt(z))*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))
+                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z, 4)*exp(I*pi/4)/sqrt(pi)))
                   *exp(-I*pi/4)/2,
                   1 ]),
          Matrix([[1, 0, 0]]),
@@ -273,8 +273,8 @@ def add_formulae(formulae):
     # Basic rule
     #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
     # Manually tuned rule
-    addb([S(3)/4], [S(3)/2,S(7)/4],
-         Matrix([ fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ),
+    addb([S(3)/4], [S(3)/2, S(7)/4],
+         Matrix([ fresnels( exp(pi*I/4)*root(z, 4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z, 4)*2/sqrt(pi))**3 ),
                   sinh(2*sqrt(z))/sqrt(z),
                   cosh(2*sqrt(z)) ]),
          Matrix([[6, 0, 0]]),
@@ -286,8 +286,8 @@ def add_formulae(formulae):
     # Basic rule
     #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
     # Manually tuned rule
-    addb([S(1)/4], [S(1)/2,S(5)/4],
-         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4)),
+    addb([S(1)/4], [S(1)/2, S(5)/4],
+         Matrix([ sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))/(2*root(z, 4)),
                   cosh(2*sqrt(z)),
                   sinh(2*sqrt(z))*sqrt(z) ]),
          Matrix([[1, 0, 0]]),

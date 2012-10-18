@@ -32,7 +32,7 @@ def test_prufer():
     raises(ValueError, lambda: Prufer.edges([1, 2], [5, 6]))
 
 def test_round_trip():
-    def doit(t,b):
+    def doit(t, b):
         e, n = Prufer.edges(*t)
         t = Prufer(e, n)
         a = sorted(t.tree_repr)

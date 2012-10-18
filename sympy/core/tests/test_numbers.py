@@ -62,9 +62,9 @@ def test_mod():
 
     # No rounding required since these numbers can be represented
     # exactly.
-    assert Rational(3,4) % Float(1.1) == 0.75
+    assert Rational(3, 4) % Float(1.1) == 0.75
     assert Float(1.5) % Rational(5, 4) == 0.25
-    assert Rational(5,4).__rmod__(Float('1.5')) == 0.25
+    assert Rational(5, 4).__rmod__(Float('1.5')) == 0.25
     assert Float('1.5').__rmod__(Float('2.75')) == Float('1.25')
     assert 2.75 % Float('1.5') == Float('1.25')
 
@@ -74,7 +74,7 @@ def test_mod():
     assert type(a % b) == Integer
     assert a % b == Integer(3)
     assert Integer(1) % Rational(2, 3) == Rational(1, 3)
-    assert Rational(7,5) % Integer(1) == Rational(2,5)
+    assert Rational(7, 5) % Integer(1) == Rational(2, 5)
     assert Integer(2) % 1.5 == 0.5
 
     assert Integer(3).__rmod__(Integer(10)) == Integer(1)
@@ -233,8 +233,8 @@ def test_Rational_new():
     assert n1 == Rational(1.2, 2)
     assert n1 == Rational('.5')
     assert 1 == Rational(n1, n1)
-    assert Rational(3, 2) == Rational(Rational(1,2),Rational(1,3))
-    assert Rational(3, 1) == Rational(1,Rational(1,3))
+    assert Rational(3, 2) == Rational(Rational(1, 2), Rational(1, 3))
+    assert Rational(3, 1) == Rational(1, Rational(1, 3))
     n3_4 = Rational(3, 4)
     assert Rational('3/4') == n3_4
     assert -Rational('-3/4') == n3_4
@@ -258,7 +258,7 @@ def test_Number_new():
     assert Number(1) is S.One
     assert Number(2).__class__ is Integer
     assert Number(-622).__class__ is Integer
-    assert Number(5,3).__class__ is Rational
+    assert Number(5, 3).__class__ is Rational
     assert Number(5.3).__class__ is Float
     assert Number('1') is S.One
     assert Number('2').__class__ is Integer
@@ -267,14 +267,14 @@ def test_Number_new():
     assert Number('5.3').__class__ is Float
     raises(ValueError, lambda: Number('cos'))
     raises(TypeError, lambda: Number(cos))
-    a = Rational(3,5)
+    a = Rational(3, 5)
     assert Number(a) is a # Check idempotence on Numbers
 
 def test_Rational_cmp():
-    n1 = Rational(1,4)
-    n2 = Rational(1,3)
-    n3 = Rational(2,4)
-    n4 = Rational(2,-4)
+    n1 = Rational(1, 4)
+    n2 = Rational(1, 3)
+    n3 = Rational(2, 4)
+    n4 = Rational(2, -4)
     n5 = Rational(0)
     n6 = Rational(1)
     n7 = Rational(3)
@@ -368,9 +368,9 @@ def test_Float():
     assert Float('2.0', '') == Float('2', 2)
 
     raises(ValueError, lambda: Float("12.3d-4", ""))
-    raises(ValueError, lambda:Float(12.3, ""))
-    raises(ValueError, lambda:Float('.'))
-    raises(ValueError, lambda:Float('-.'))
+    raises(ValueError, lambda: Float(12.3, ""))
+    raises(ValueError, lambda: Float('.'))
+    raises(ValueError, lambda: Float('-.'))
     assert Float('-0') == Float('0.0')
     assert Float('.0') == Float('0.0')
     assert Float('-.0') == Float('-0.0')
@@ -614,13 +614,13 @@ def test_powers():
     assert integer_nthroot(123**25, 25) == (123, True)
     assert integer_nthroot(123**25+1, 25) == (123, False)
     assert integer_nthroot(123**25-1, 25) == (122, False)
-    assert integer_nthroot(1,1) == (1, True)
-    assert integer_nthroot(0,1) == (0, True)
-    assert integer_nthroot(0,3) == (0, True)
+    assert integer_nthroot(1, 1) == (1, True)
+    assert integer_nthroot(0, 1) == (0, True)
+    assert integer_nthroot(0, 3) == (0, True)
     assert integer_nthroot(10000, 1) == (10000, True)
-    assert integer_nthroot(4,2) == (2, True)
-    assert integer_nthroot(16,2) == (4, True)
-    assert integer_nthroot(26,2) == (5, False)
+    assert integer_nthroot(4, 2) == (2, True)
+    assert integer_nthroot(16, 2) == (4, True)
+    assert integer_nthroot(26, 2) == (5, False)
     assert integer_nthroot(1234567**7, 7) == (1234567, True)
     assert integer_nthroot(1234567**7+1, 7) == (1234567, False)
     assert integer_nthroot(1234567**7-1, 7) == (1234566, False)
@@ -633,14 +633,14 @@ def test_powers():
     assert integer_nthroot(c2, 2) == (c, True)
     assert integer_nthroot(c2+1, 2) == (c, False)
     assert integer_nthroot(c2-1, 2) == (c-1, False)
-    assert integer_nthroot(2,10**10) == (1, False)
+    assert integer_nthroot(2, 10**10) == (1, False)
 
     p, r = integer_nthroot(int(factorial(10000)), 100)
     assert p % (10**10) == 5322420655
     assert not r
 
     # Test that this is fast
-    assert integer_nthroot(2,10**10) == (1, False)
+    assert integer_nthroot(2, 10**10) == (1, False)
 
 def test_integer_nthroot_overflow():
     assert integer_nthroot(10**(50*50), 50) == (10**50, True)
@@ -664,7 +664,7 @@ def test_powers_Integer():
     assert sqrt(S(4)) == 2
     assert sqrt(S(-4)) == I * 2
     assert S(16) ** Rational(1, 4) == 2
-    assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1,4)
+    assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1, 4)
     assert S(9) ** Rational(3, 2) == 27
     assert S(-9) ** Rational(3, 2) == -27*I
     assert S(27) ** Rational(2, 3) == 9
@@ -695,7 +695,7 @@ def test_powers_Integer():
 
     # check that it is fast for big numbers
     assert (2**64+1) ** Rational(4, 3)
-    assert (2**64+1) ** Rational(17,25)
+    assert (2**64+1) ** Rational(17, 25)
 
     # negative rational power and negative base
     assert (-3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
@@ -737,33 +737,33 @@ def test_powers_Integer():
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
-    assert Rational(1,2) ** S.Infinity == 0
-    assert Rational(3,2) ** S.Infinity == S.Infinity
-    assert Rational(-1,2) ** S.Infinity == 0
-    assert Rational(-3,2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
+    assert Rational(1, 2) ** S.Infinity == 0
+    assert Rational(3, 2) ** S.Infinity == S.Infinity
+    assert Rational(-1, 2) ** S.Infinity == 0
+    assert Rational(-3, 2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
 
     # check Nan
-    assert Rational(3,4) ** S.NaN == S.NaN
-    assert Rational(-2,3) ** S.NaN == S.NaN
+    assert Rational(3, 4) ** S.NaN == S.NaN
+    assert Rational(-2, 3) ** S.NaN == S.NaN
 
     # exact roots on numerator
-    assert sqrt(Rational(4,3)) == 2 * sqrt(3) / 3
-    assert Rational(4,3) ** Rational(3,2) == 8 * sqrt(3) / 9
-    assert sqrt(Rational(-4,3)) == I * 2 * sqrt(3) / 3
-    assert Rational(-4,3) ** Rational(3,2) == - I * 8 * sqrt(3) / 9
-    assert Rational(27,2) ** Rational(1,3) == 3 * (2 ** Rational(2,3)) / 2
-    assert Rational(5**3, 8**3) ** Rational(4,3) == Rational(5**4, 8**4)
+    assert sqrt(Rational(4, 3)) == 2 * sqrt(3) / 3
+    assert Rational(4, 3) ** Rational(3, 2) == 8 * sqrt(3) / 9
+    assert sqrt(Rational(-4, 3)) == I * 2 * sqrt(3) / 3
+    assert Rational(-4, 3) ** Rational(3, 2) == - I * 8 * sqrt(3) / 9
+    assert Rational(27, 2) ** Rational(1, 3) == 3 * (2 ** Rational(2, 3)) / 2
+    assert Rational(5**3, 8**3) ** Rational(4, 3) == Rational(5**4, 8**4)
 
     # exact root on denominator
-    assert sqrt(Rational(1,4)) == Rational(1,2)
-    assert sqrt(Rational(1,-4)) == I * Rational(1,2)
-    assert sqrt(Rational(3,4)) == sqrt(3) / 2
-    assert sqrt(Rational(3,-4)) == I * sqrt(3) / 2
-    assert Rational(5,27) ** Rational(1,3) == (5 ** Rational(1,3)) / 3
+    assert sqrt(Rational(1, 4)) == Rational(1, 2)
+    assert sqrt(Rational(1, -4)) == I * Rational(1, 2)
+    assert sqrt(Rational(3, 4)) == sqrt(3) / 2
+    assert sqrt(Rational(3, -4)) == I * sqrt(3) / 2
+    assert Rational(5, 27) ** Rational(1, 3) == (5 ** Rational(1, 3)) / 3
 
     # not exact roots
-    assert sqrt(Rational(1,2)) == sqrt(2) / 2
-    assert sqrt(Rational(-4,7)) == I * sqrt(Rational(4,7))
+    assert sqrt(Rational(1, 2)) == sqrt(2) / 2
+    assert sqrt(Rational(-4, 7)) == I * sqrt(Rational(4, 7))
     assert Rational(-3, 2)**Rational(-7, 3) == \
            -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
@@ -780,8 +780,8 @@ def test_powers_Float():
     assert str((S('-1/10')**S('3/10')).n()) == str(Float(-.1)**(.3))
 
 def test_abs1():
-    assert Rational(1,6) != Rational(-1,6)
-    assert abs(Rational(1,6)) == abs(Rational(-1,6))
+    assert Rational(1, 6) != Rational(-1, 6)
+    assert abs(Rational(1, 6)) == abs(Rational(-1, 6))
 
 def test_accept_int():
     assert Float(4) == 4
@@ -802,7 +802,7 @@ def test_int():
 
 def test_real_bug():
     x = Symbol("x")
-    assert str(2.0*x*x) in ["(2.0*x)*x","2.0*x**2","2.00000000000000*x**2"]
+    assert str(2.0*x*x) in ["(2.0*x)*x", "2.0*x**2", "2.00000000000000*x**2"]
     assert str(2.1*x*x)!="(2.0*x)*x"
 
 def test_bug_sqrt():
@@ -817,18 +817,18 @@ def test_pi_Pi():
 def test_no_len():
     # there should be no len for numbers
     raises(TypeError, lambda: len(Rational(2)))
-    raises(TypeError, lambda: len(Rational(2,3)))
+    raises(TypeError, lambda: len(Rational(2, 3)))
     raises(TypeError, lambda: len(Integer(2)))
 
 def test_issue222():
     assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
-    assert 5 * sqrt(Rational(1,5)) == sqrt(5)
+    assert 5 * sqrt(Rational(1, 5)) == sqrt(5)
 
 def test_issue593():
-    assert ((-1)**Rational(1,6)).expand(complex=True) == I/2 + sqrt(3)/2
-    assert ((-5)**Rational(1,6)).expand(complex=True) == \
-            5**Rational(1,6)*I/2 + 5**Rational(1,6)*sqrt(3)/2
-    assert ((-64)**Rational(1,6)).expand(complex=True) == I + sqrt(3)
+    assert ((-1)**Rational(1, 6)).expand(complex=True) == I/2 + sqrt(3)/2
+    assert ((-5)**Rational(1, 6)).expand(complex=True) == \
+            5**Rational(1, 6)*I/2 + 5**Rational(1, 6)*sqrt(3)/2
+    assert ((-64)**Rational(1, 6)).expand(complex=True) == I + sqrt(3)
 
 def test_issue324():
     x = Symbol("x")
@@ -838,7 +838,7 @@ def test_issue324():
 def test_issue350():
     x = Symbol("x", real=True)
     assert sqrt(x**2) == abs(x)
-    assert sqrt(x-1).subs(x,5) == 2
+    assert sqrt(x-1).subs(x, 5) == 2
 
 
 def test_Integer_factors():
@@ -939,18 +939,18 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).gcd(Integer(3)) == Integer(1)
     assert Integer(4).lcm(Integer(3)) == Integer(12)
 
-    assert Rational(4,3).gcd(2) == Rational(2,3)
-    assert Rational(4,3).lcm(2) == Integer(4)
-    assert Rational(4,3).gcd(Integer(2)) == Rational(2,3)
-    assert Rational(4,3).lcm(Integer(2)) == Integer(4)
+    assert Rational(4, 3).gcd(2) == Rational(2, 3)
+    assert Rational(4, 3).lcm(2) == Integer(4)
+    assert Rational(4, 3).gcd(Integer(2)) == Rational(2, 3)
+    assert Rational(4, 3).lcm(Integer(2)) == Integer(4)
 
-    assert Integer(4).gcd(Rational(2,9)) == Rational(2,9)
-    assert Integer(4).lcm(Rational(2,9)) == Integer(4)
+    assert Integer(4).gcd(Rational(2, 9)) == Rational(2, 9)
+    assert Integer(4).lcm(Rational(2, 9)) == Integer(4)
 
-    assert Rational(4,3).gcd(Rational(2,9)) == Rational(2,9)
-    assert Rational(4,3).lcm(Rational(2,9)) == Rational(4,3)
-    assert Rational(4,5).gcd(Rational(2,9)) == Rational(2,45)
-    assert Rational(4,5).lcm(Rational(2,9)) == Integer(4)
+    assert Rational(4, 3).gcd(Rational(2, 9)) == Rational(2, 9)
+    assert Rational(4, 3).lcm(Rational(2, 9)) == Rational(4, 3)
+    assert Rational(4, 5).gcd(Rational(2, 9)) == Rational(2, 45)
+    assert Rational(4, 5).lcm(Rational(2, 9)) == Integer(4)
 
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == (Integer(2), Integer(2), Integer(1))
@@ -959,18 +959,18 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
     assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
 
-    assert Rational(1,2).gcd(Float(2.0)) == S.One
-    assert Rational(1,2).lcm(Float(2.0)) == Float(1.0)
-    assert Rational(1,2).cofactors(Float(2.0)) == (S.One, Rational(1,2), Float(2.0))
+    assert Rational(1, 2).gcd(Float(2.0)) == S.One
+    assert Rational(1, 2).lcm(Float(2.0)) == Float(1.0)
+    assert Rational(1, 2).cofactors(Float(2.0)) == (S.One, Rational(1, 2), Float(2.0))
 
 def test_Float_gcd_lcm_cofactors():
     assert Float(2.0).gcd(Integer(4)) == S.One
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
     assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
 
-    assert Float(2.0).gcd(Rational(1,2)) == S.One
-    assert Float(2.0).lcm(Rational(1,2)) == Float(1.0)
-    assert Float(2.0).cofactors(Rational(1,2)) == (S.One, Float(2.0), Rational(1,2))
+    assert Float(2.0).gcd(Rational(1, 2)) == S.One
+    assert Float(2.0).lcm(Rational(1, 2)) == Float(1.0)
+    assert Float(2.0).cofactors(Rational(1, 2)) == (S.One, Float(2.0), Rational(1, 2))
 
 def test_issue1512():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
@@ -997,7 +997,7 @@ def test_relational():
     assert (x == cos) is False
 
     # rational
-    x = Rational(1,3)
+    x = Rational(1, 3)
     assert (x != cos) is True
     assert (x == cos) is False
 

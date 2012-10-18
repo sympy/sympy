@@ -77,7 +77,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        assert isinstance(name, str),repr(type(name))
+        assert isinstance(name, str), repr(type(name))
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)

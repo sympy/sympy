@@ -14,7 +14,7 @@ def bench_R2():
     def hermite(n, y):
         if n == 1: return 2*y
         if n == 0: return 1
-        return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
+        return (2*y*hermite(n-1, y) - 2*(n-1)*hermite(n-2, y)).expand()
 
     #def phi(n, y):
     #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
@@ -33,7 +33,7 @@ def bench_R4():
 
 def bench_R5():
     "blowup(L, 8); L=uniq(L)"
-    def blowup(L,n):
+    def blowup(L, n):
         for i in range(n):
             L.append( (L[i] + L[i+1]) * L[i+2] )
     def uniq(x):
@@ -55,7 +55,7 @@ def bench_R7():
 
 def bench_R8():
     "right(x^2,0,5,10^4)"
-    def right(f,a,b,n):
+    def right(f, a, b, n):
         a = sympify(a)
         b = sympify(b)
         n = sympify(n)
@@ -68,7 +68,7 @@ def bench_R8():
             est += f.subs(x, c)
         return est*Deltax
 
-    a = right(x**2,0,5,10**4)
+    a = right(x**2, 0, 5, 10**4)
 
 def _bench_R9():
     "factor(x^20 - pi^5*y^20)"

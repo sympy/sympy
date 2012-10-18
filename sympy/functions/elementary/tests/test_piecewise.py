@@ -4,7 +4,7 @@ from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
                    Max, Min)
 from sympy.utilities.pytest import XFAIL, raises
 
-x,y = symbols('x,y')
+x, y = symbols('x,y')
 
 def test_piecewise():
 
@@ -17,21 +17,21 @@ def test_piecewise():
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
     raises(TypeError, lambda: Piecewise(x))
-    raises(TypeError, lambda: Piecewise((x,x**2)))
+    raises(TypeError, lambda: Piecewise((x, x**2)))
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >=0))
     p_x2 = Piecewise((-1, x**2 < -1), (x**4, x**2 < 0), (log(x**2), x**2 >=0))
-    assert p.subs(x,x**2) == p_x2
-    assert p.subs(x,-5) == -1
-    assert p.subs(x,-1) == 1
-    assert p.subs(x,1) == log(1)
+    assert p.subs(x, x**2) == p_x2
+    assert p.subs(x, -5) == -1
+    assert p.subs(x, -1) == 1
+    assert p.subs(x, 1) == log(1)
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
     assert p2.subs(x, 2) == 1
-    assert p2.subs(x,4) == -1
-    assert p2.subs(x,10) == 0
+    assert p2.subs(x, 4) == -1
+    assert p2.subs(x, 10) == 0
 
     f, g, h = symbols('f,g,h', cls=Function)
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
@@ -40,12 +40,12 @@ def test_piecewise():
 
     # Test evalf
     assert p.evalf() == p
-    assert p.evalf(subs={x:-2}) == -1
-    assert p.evalf(subs={x:-1}) == 1
-    assert p.evalf(subs={x:1}) == log(1)
+    assert p.evalf(subs={x: -2}) == -1
+    assert p.evalf(subs={x: -1}) == 1
+    assert p.evalf(subs={x: 1}) == log(1)
 
     # Test doit
-    f_int = Piecewise((Integral(x,(x,0,1)), x < 1))
+    f_int = Piecewise((Integral(x, (x, 0, 1)), x < 1))
     assert f_int.doit() == Piecewise( (1.0/2.0, x < 1) )
 
     # Test differentiation
@@ -53,8 +53,8 @@ def test_piecewise():
     fp = x*p
     dp = Piecewise((0, x < -1), (2*x, x < 0), (1/x, x >= 0))
     fp_dx = x*dp + p
-    assert diff(p,x) == dp
-    assert diff(f*p,x) == fp_dx
+    assert diff(p, x) == dp
+    assert diff(f*p, x) == fp_dx
 
     # Test simple arithmetic
     assert x*p == fp
@@ -71,7 +71,7 @@ def test_piecewise():
     f1 = x*y + 2
     f2 = x*y**2 + 3
     peval = Piecewise( (f1, x<0), (f2, x>0))
-    peval_interval = f1.subs(x,0) - f1.subs(x,-1) + f2.subs(x,1) - f2.subs(x,0)
+    peval_interval = f1.subs(x, 0) - f1.subs(x, -1) + f2.subs(x, 1) - f2.subs(x, 0)
     assert peval._eval_interval(x, 0, 0) == 0
     assert peval._eval_interval(x, -1, 1) == peval_interval
     peval2 = Piecewise((f1, x < 0), (f2, True))
@@ -81,15 +81,15 @@ def test_piecewise():
     assert peval2._eval_interval(x, -1, 1) == peval_interval
 
     # Test integration
-    p_int = Piecewise((-x,x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
-    assert integrate(p,x) == p_int
-    p = Piecewise((x, x < 1),(x**2, -1 <= x),(x,3<x))
-    assert integrate(p,(x,-2,2)) == 5.0/6.0
-    assert integrate(p,(x,2,-2)) == -5.0/6.0
-    p = Piecewise((0, x < 0), (1,x < 1), (0, x < 2), (1, x < 3), (0, True))
-    assert integrate(p, (x,-oo,oo)) == 2
-    p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
-    raises(ValueError, lambda: integrate(p,(x,-2,2)))
+    p_int = Piecewise((-x, x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
+    assert integrate(p, x) == p_int
+    p = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3<x))
+    assert integrate(p, (x, -2, 2)) == 5.0/6.0
+    assert integrate(p, (x, 2, -2)) == -5.0/6.0
+    p = Piecewise((0, x < 0), (1, x < 1), (0, x < 2), (1, x < 3), (0, True))
+    assert integrate(p, (x, -oo, oo)) == 2
+    p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
+    raises(ValueError, lambda: integrate(p, (x, -2, 2)))
 
     # Test commutativity
     assert p.is_commutative is True
@@ -132,11 +132,11 @@ def test_piecewise_integrate():
 
     g = Piecewise((0, x < 0), (x, x <= 1), (1, True))
     assert integrate(g, (x, -5, 1)) == Rational(1, 2)
-    assert integrate(g, (x, -5, y)).subs(y, 1) == Rational(1,2)
-    assert integrate(g, (x, y, 1)).subs(y, -5) == Rational(1,2)
+    assert integrate(g, (x, -5, y)).subs(y, 1) == Rational(1, 2)
+    assert integrate(g, (x, y, 1)).subs(y, -5) == Rational(1, 2)
     assert integrate(g, (x, 1, -5)) == -Rational(1, 2)
-    assert integrate(g, (x, 1, y)).subs(y, -5) == -Rational(1,2)
-    assert integrate(g, (x, y, -5)).subs(y, 1) == -Rational(1,2)
+    assert integrate(g, (x, 1, y)).subs(y, -5) == -Rational(1, 2)
+    assert integrate(g, (x, y, -5)).subs(y, 1) == -Rational(1, 2)
     assert integrate(g, (x, -5, y)) == Piecewise((0, y < 0),
         (y**2/2, y <= 1), (y - 0.5, True))
     assert integrate(g, (x, y, 1)) == Piecewise((0.5, y < 0),
@@ -211,7 +211,7 @@ def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
     assert solve(f, x) == [2]
-    assert solve(f - 1,x) == [1, 3]
+    assert solve(f - 1, x) == [1, 3]
 
     f = Piecewise(((x - 2)**2, x >= 0), (1, True))
     assert solve(f, x) == [2]
@@ -251,7 +251,7 @@ def test_piecewise_fold():
     p2 = Piecewise((0, x < 0), (1 - x, x <=1), (0, True))
 
     p = 4*p1 + 2*p2
-    assert integrate(piecewise_fold(p),(x,-oo,oo)) == integrate(2*x + 2, (x, 0, 1))
+    assert integrate(piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
 def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
@@ -264,7 +264,7 @@ def test_piecewise_fold_expand():
     assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
 def test_piecewise_duplicate():
-    p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
+    p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
     assert p == Piecewise(*p.args)
 
 def test_doit():
@@ -274,19 +274,19 @@ def test_doit():
     assert p2.doit(deep = False) == p2
 
 def test_piecewise_interval():
-    p1 = Piecewise((x, Interval(0,1).contains(x)), (0, True))
+    p1 = Piecewise((x, Interval(0, 1).contains(x)), (0, True))
     assert p1.subs(x, -0.5) == 0
     assert p1.subs(x, 0.5) == 0.5
     assert p1.diff(x) == Piecewise((1, Interval(0, 1).contains(x)), (0, True))
     assert integrate(p1, x) == Piecewise((x**2/2, Interval(0, 1).contains(x)), (0, True))
 
 def test_piecewise_collapse():
-    p1 = Piecewise((x, x<0),(x**2,x>1))
-    p2 = Piecewise((p1,x<0),(p1,x>1))
+    p1 = Piecewise((x, x<0), (x**2, x>1))
+    p2 = Piecewise((p1, x<0), (p1, x>1))
     assert p2 == Piecewise((x, x < 0), (x**2, 1 < x))
 
-    p1 = Piecewise((Piecewise((x,x<0),(1,True)),True))
-    assert p1 == Piecewise((Piecewise((x,x<0),(1,True)),True))
+    p1 = Piecewise((Piecewise((x, x<0), (1, True)), True))
+    assert p1 == Piecewise((Piecewise((x, x<0), (1, True)), True))
 
 def test_piecewise_lambdify():
     p = Piecewise(
@@ -304,9 +304,9 @@ def test_piecewise_lambdify():
 
 def test_piecewise_series():
     from sympy import sin, cos, O
-    p1 = Piecewise((sin(x), x<0),(cos(x),x>0))
-    p2 = Piecewise((x+O(x**2), x<0),(1+O(x**2),x>0))
-    assert p1.nseries(x,n=2) == p2
+    p1 = Piecewise((sin(x), x<0), (cos(x), x>0))
+    p2 = Piecewise((x+O(x**2), x<0), (1+O(x**2), x>0))
+    assert p1.nseries(x, n=2) == p2
 
 def test_piecewise_as_leading_term():
     p1 = Piecewise((1/x, x > 1), (0, True))

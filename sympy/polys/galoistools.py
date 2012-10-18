@@ -1820,7 +1820,7 @@ def gf_ddf_shoup(f, p, K):
 
     h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
 
-    U = [[K.one,K.zero], h] + [K.zero]*(k-1)
+    U = [[K.one, K.zero], h] + [K.zero]*(k-1)
 
     for i in xrange(2, k+1):
         U[i] = gf_compose_mod(U[i-1], h, f, p, K)

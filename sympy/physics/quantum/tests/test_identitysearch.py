@@ -21,32 +21,32 @@ def test_generate_gate_rules_1():
 
     assert generate_gate_rules((x,)) == set([((x,), ())])
 
-    gate_rules = set([((x,x), ()),
+    gate_rules = set([((x, x), ()),
                       ((x,), (x,))])
     assert generate_gate_rules((x, x)) == gate_rules
 
-    gate_rules = set([((x,y,x), ()),
-                      ((y,x,x), ()),
-                      ((x,x,y), ()),
-                      ((y,x), (x,)),
-                      ((x,y), (x,)),
-                      ((y,), (x,x))])
+    gate_rules = set([((x, y, x), ()),
+                      ((y, x, x), ()),
+                      ((x, x, y), ()),
+                      ((y, x), (x,)),
+                      ((x, y), (x,)),
+                      ((y,), (x, x))])
     assert generate_gate_rules((x, y, x)) == gate_rules
 
-    gate_rules = set([((x,y,z), ()), ((y,z,x), ()), ((z,x,y), ()),
-                      ((), (x,z,y)), ((), (y,x,z)), ((), (z,y,x)),
-                      ((x,), (z,y)), ((y,z), (x,)), ((y,), (x,z)),
-                      ((z,x), (y,)), ((z,), (y,x)), ((x,y), (z,))])
+    gate_rules = set([((x, y, z), ()), ((y, z, x), ()), ((z, x, y), ()),
+                      ((), (x, z, y)), ((), (y, x, z)), ((), (z, y, x)),
+                      ((x,), (z, y)), ((y, z), (x,)), ((y,), (x, z)),
+                      ((z, x), (y,)), ((z,), (y, x)), ((x, y), (z,))])
     actual = generate_gate_rules((x, y, z))
     assert actual == gate_rules
 
-    gate_rules = set([((), (h,z,y,x)), ((), (x,h,z,y)), ((), (y,x,h,z)),
-                      ((), (z,y,x,h)), ((h,), (z,y,x)), ((x,), (h,z,y)),
-                      ((y,), (x,h,z)), ((z,), (y,x,h)), ((h,x), (z,y)),
-                      ((x,y), (h,z)), ((y,z), (x,h)), ((z,h), (y,x)),
-                      ((h,x,y), (z,)), ((x,y,z), (h,)), ((y,z,h), (x,)),
-                      ((z,h,x), (y,)), ((h,x,y,z), ()), ((x,y,z,h), ()),
-                      ((y,z,h,x), ()), ((z,h,x,y), ())])
+    gate_rules = set([((), (h, z, y, x)), ((), (x, h, z, y)), ((), (y, x, h, z)),
+                      ((), (z, y, x, h)), ((h,), (z, y, x)), ((x,), (h, z, y)),
+                      ((y,), (x, h, z)), ((z,), (y, x, h)), ((h, x), (z, y)),
+                      ((x, y), (h, z)), ((y, z), (x, h)), ((z, h), (y, x)),
+                      ((h, x, y), (z,)), ((x, y, z), (h,)), ((y, z, h), (x,)),
+                      ((z, h, x), (y,)), ((h, x, y, z), ()), ((x, y, z, h), ()),
+                      ((y, z, h, x), ()), ((z, h, x, y), ())])
     actual = generate_gate_rules((x, y, z, h))
     assert actual == gate_rules
 
@@ -169,7 +169,7 @@ def test_generate_equivalent_ids_1():
     (x, y, z, h) = create_gate_sequence()
 
     assert generate_equivalent_ids((x,)) == set([(x,)])
-    assert generate_equivalent_ids((x, x)) == set([(x,x)])
+    assert generate_equivalent_ids((x, x)) == set([(x, x)])
     assert generate_equivalent_ids((x, y)) == set([(x, y), (y, x)])
 
     gate_seq = (x, y, z)
@@ -185,7 +185,7 @@ def test_generate_equivalent_ids_1():
     gate_ids = set([(x, y, z, h), (y, z, h, x),
                     (h, x, y, z), (h, z, y, x),
                     (z, y, x, h), (y, x, h, z),
-                    (z, h, x, y),(x, h, z, y)])
+                    (z, h, x, y), (x, h, z, y)])
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
     gate_seq = (x, y, x, y)
@@ -197,7 +197,7 @@ def test_generate_equivalent_ids_1():
     gate_ids = set([(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)])
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
     gate_seq = (cnot, h, cgate_z, h)
     gate_ids = set([(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
@@ -240,7 +240,7 @@ def test_generate_equivalent_ids_2():
     gate_ids = set([y*cgate_y*y*cgate_y, cgate_y*y*cgate_y*y])
     assert generate_equivalent_ids(circuit, return_as_muls=True) == gate_ids
 
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
     circuit = Mul(*(cnot, h, cgate_z, h))
     gate_ids = set([cnot*h*cgate_z*h, h*cgate_z*h*cnot,
@@ -271,7 +271,7 @@ def test_is_scalar_nonsparse_matrix():
     actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only)
     assert actual == True
 
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cnot_circuit = (cnot, cnot)
     actual = is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only)
     assert actual == True
@@ -301,7 +301,7 @@ def test_is_scalar_sparse_matrix():
     if not np:
         skip("numpy not installed or Python too old.")
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
     if not scipy:
         skip("scipy not installed.")
 
@@ -324,7 +324,7 @@ def test_is_scalar_sparse_matrix():
     xyz_circuit = (x1, y1, z1)
     assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == True
 
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cnot_circuit = (cnot, cnot)
     assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
 
@@ -443,7 +443,7 @@ def test_bfs_identity_search():
     assert id_set == bfs_identity_search(gate_list, 1, max_depth=4,
                                          identity_only=True)
 
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     gate_list = [x, cnot]
     id_set = set([GateIdentity(x, x),
                   GateIdentity(cnot, cnot),

@@ -7,7 +7,7 @@ from sympy.utilities.pytest import XFAIL
 
 def test_symbol():
     x = Symbol('x')
-    a,b,c,p,q = map(Wild, 'abcpq')
+    a, b, c, p, q = map(Wild, 'abcpq')
 
     e = x
     assert e.match(x) == {}
@@ -20,8 +20,8 @@ def test_symbol():
     assert e.match(e+1) == None
 
 def test_add():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q,r = map(Wild, 'pqr')
+    x, y, a, b, c = map(Symbol, 'xyabc')
+    p, q, r = map(Wild, 'pqr')
 
     e = a+b
     assert e.match(p+b) == {p: a}
@@ -49,8 +49,8 @@ def test_add():
 
 
 def test_power():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q,r = map(Wild, 'pqr')
+    x, y, a, b, c = map(Symbol, 'xyabc')
+    p, q, r = map(Wild, 'pqr')
 
     e = (x+y)**a
     assert e.match(p**q) == {p: x+y, q: a}
@@ -93,8 +93,8 @@ def test_match_exclude():
     assert e.match(p*x+q*y+r) == {p: 4, q: 5, r: 6}
 
 def test_mul():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q = map(Wild, 'pq')
+    x, y, a, b, c = map(Symbol, 'xyabc')
+    p, q = map(Wild, 'pq')
 
     e = 4*x
     assert e.match(p*x) == {p: 4}
@@ -150,8 +150,8 @@ def test_mul_noncommutative():
     assert (v*w).matches(-x*y*A*B) == {w: A*B, v: -x*y}
 
 def test_complex():
-    a,b,c = map(Symbol, 'abc')
-    x,y = map(Wild, 'xy')
+    a, b, c = map(Symbol, 'abc')
+    x, y = map(Wild, 'xy')
 
     assert (1+I).match(x+I) == {x: 1}
     assert (a+I).match(x+I) == {x: a}
@@ -183,8 +183,8 @@ def test_functions_X1():
     assert f.match(p*g(q*x)) == {p: 1, g: cos, q: 5}
 
 def test_interface():
-    x,y = map(Symbol, 'xy')
-    p,q = map(Wild, 'pq')
+    x, y = map(Symbol, 'xy')
+    p, q = map(Wild, 'pq')
 
     assert (x+1).match(p+1) == {p: x}
     assert (x*3).match(p*3) == {p: x}
@@ -196,10 +196,10 @@ def test_interface():
     assert (x*y+1).match(p*q) in [{p:1, q:1+x*y}, {p:1+x*y, q:1}]
 
 def test_derivative1():
-    x,y = map(Symbol, 'xy')
-    p,q = map(Wild, 'pq')
+    x, y = map(Symbol, 'xy')
+    p, q = map(Wild, 'pq')
 
-    f = Function('f',nargs=1)
+    f = Function('f', nargs=1)
     fd = Derivative(f(x), x)
 
     assert fd.match(p) == {p: fd}
@@ -254,13 +254,13 @@ def test_match_deriv_bug1():
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
 
 def test_match_bug2():
-    x,y = map(Symbol, 'xy')
-    p,q,r = map(Wild, 'pqr')
+    x, y = map(Symbol, 'xy')
+    p, q, r = map(Wild, 'pqr')
     res = (x+y).match(p+q+r)
     assert (p+q+r).subs(res) == x+y
 
 def test_match_bug3():
-    x,a,b = map(Symbol, 'xab')
+    x, a, b = map(Symbol, 'xab')
     p = Wild('p')
     assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
 
@@ -317,10 +317,10 @@ def test_match_polynomial():
            {b: 1, a: sqrt(2) + 3, c: 0}
 
 def test_exclude():
-    x,y,a = map(Symbol, 'xya')
-    p = Wild('p', exclude=[1,x])
+    x, y, a = map(Symbol, 'xya')
+    p = Wild('p', exclude=[1, x])
     q = Wild('q', exclude=[x])
-    r = Wild('r', exclude=[sin,y])
+    r = Wild('r', exclude=[sin, y])
 
     assert sin(x).match(r) == None
     assert cos(y).match(r) == None
@@ -339,7 +339,7 @@ def test_exclude():
     assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
 
 def test_floats():
-    a,b = map(Wild, 'ab')
+    a, b = map(Wild, 'ab')
 
     e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)

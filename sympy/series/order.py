@@ -120,7 +120,7 @@ class Order(Expr):
 
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
-                expr = Add(*[f.expr for (e,f) in lst])
+                expr = Add(*[f.expr for (e, f) in lst])
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO

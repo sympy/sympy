@@ -16,17 +16,17 @@ def dotest(s):
         Float("1.3"),
         x,
         y,
-        pow(x,y)*y,
+        pow(x, y)*y,
         5,
         5.5
     ]
     for x in l:
         for y in l:
-            s(x,y)
+            s(x, y)
     return True
 
 def test_basic():
-    def s(a,b):
+    def s(a, b):
         x = a
         x = +a
         x = -a
@@ -38,7 +38,7 @@ def test_basic():
     assert dotest(s)
 
 def test_ibasic():
-    def s(a,b):
+    def s(a, b):
         x = a
         x += b
         x = a

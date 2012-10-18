@@ -6,33 +6,33 @@ from sympy.core.compatibility import cmp
 # FIXME this is *so* irrelevant and outdated!
 ordering_of_classes = [
     # singleton numbers
-    'Zero', 'One','Half','Infinity','NaN','NegativeOne','NegativeInfinity',
+    'Zero', 'One', 'Half', 'Infinity', 'NaN', 'NegativeOne', 'NegativeInfinity',
     # numbers
-    'Integer','Rational','Float',
+    'Integer', 'Rational', 'Float',
     # singleton symbols
-    'Exp1','Pi','ImaginaryUnit',
+    'Exp1', 'Pi', 'ImaginaryUnit',
     # symbols
-    'Symbol','Wild','Temporary',
+    'Symbol', 'Wild', 'Temporary',
     # arithmetic operations
     'Pow', 'Mul', 'Add',
     # function values
-    'Derivative','Integral',
+    'Derivative', 'Integral',
     # defined singleton functions
-    'Abs','Sign','Sqrt',
+    'Abs', 'Sign', 'Sqrt',
     'Floor', 'Ceiling',
     'Re', 'Im', 'Arg',
     'Conjugate',
-    'Exp','Log',
-    'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
-    'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
-    'RisingFactorial','FallingFactorial',
-    'factorial','binomial',
-    'Gamma','LowerGamma','UpperGamma','PolyGamma',
+    'Exp', 'Log',
+    'Sin', 'Cos', 'Tan', 'Cot', 'ASin', 'ACos', 'ATan', 'ACot',
+    'Sinh', 'Cosh', 'Tanh', 'Coth', 'ASinh', 'ACosh', 'ATanh', 'ACoth',
+    'RisingFactorial', 'FallingFactorial',
+    'factorial', 'binomial',
+    'Gamma', 'LowerGamma', 'UpperGamma', 'PolyGamma',
     'Erf',
     # special polynomials
-    'Chebyshev','Chebyshev2',
+    'Chebyshev', 'Chebyshev2',
     # undefined functions
-    'Function','WildFunction',
+    'Function', 'WildFunction',
     # anonymous functions
     'Lambda',
     # Landau O symbol

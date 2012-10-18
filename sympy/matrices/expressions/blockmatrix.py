@@ -48,9 +48,9 @@ class BlockMatrix(MatrixExpr):
         numrows = numcols = 0
         M = self._mat
         for i in range(M.shape[0]):
-            numrows += M[i,0].shape[0]
+            numrows += M[i, 0].shape[0]
         for i in range(M.shape[1]):
-            numcols += M[0,i].shape[1]
+            numcols += M[0, i].shape[1]
         return (numrows, numcols)
 
     @property
@@ -63,11 +63,11 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def rowblocksizes(self):
-        return [self.blocks[i,0].rows for i in range(self.blockshape[0])]
+        return [self.blocks[i, 0].rows for i in range(self.blockshape[0])]
 
     @property
     def colblocksizes(self):
-        return [self.blocks[0,i].cols for i in range(self.blockshape[1])]
+        return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
     def _blockmul(self, other):
 
@@ -99,7 +99,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self._mat[i,i])
+            return Add(*[Trace(self._mat[i, i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError("Can't perform trace of irregular blockshape")
 
@@ -183,7 +183,7 @@ class BlockMatrix(MatrixExpr):
                 break
             else:
                 j -= numcols
-        return self.blocks[row_block, col_block][i,j]
+        return self.blocks[row_block, col_block][i, j]
 
     @property
     def is_Identity(self):
@@ -191,9 +191,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self._mat[i,j].is_Identity:
+                if i==j and not self._mat[i, j].is_Identity:
                     return False
-                if i!=j and not self._mat[i,j].is_ZeroMatrix:
+                if i!=j and not self._mat[i, j].is_ZeroMatrix:
                     return False
         return True
     @property
@@ -216,7 +216,7 @@ class BlockDiagMatrix(BlockMatrix):
     def __new__(cls, *mats):
         data_matrix = eye(len(mats))
         for i, mat in enumerate(mats):
-            data_matrix[i,i] = mat
+            data_matrix[i, i] = mat
 
         for r in range(len(mats)):
             for c in range(len(mats)):
@@ -244,7 +244,7 @@ class BlockDiagMatrix(BlockMatrix):
                 other.is_BlockDiagMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag,other.diag)])
+            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockmul(self, other)
 
@@ -255,7 +255,7 @@ class BlockDiagMatrix(BlockMatrix):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag,other.diag)])
+            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockadd(self, other)
 
@@ -328,9 +328,9 @@ def block_collapse(expr):
         block = blocks[0]
         for b in blocks[1:]:
             block = block._blockadd(b)
-        if block.blockshape == (1,1):
+        if block.blockshape == (1, 1):
             # Bring all the non-blocks into the block_matrix
-            mat = Matrix(1, 1, (block.blocks[0,0] + MatAdd(*nonblocks), ))
+            mat = Matrix(1, 1, (block.blocks[0, 0] + MatAdd(*nonblocks), ))
             return BlockMatrix(mat)
         # Add identities to the blocks as block identities
         for i, mat in enumerate(nonblocks):

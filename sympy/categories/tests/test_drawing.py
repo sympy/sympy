@@ -657,7 +657,7 @@ def test_XypicDiagramDrawer_triangle():
     f = NamedMorphism(A, B, "f")
     g = NamedMorphism(B, C, "g")
 
-    d = Diagram([f, g], {g * f:"unique"})
+    d = Diagram([f, g], {g * f: "unique"})
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \

@@ -450,7 +450,7 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate
             w = Dummy('w', real=True)
-            self._mean = integrate(self.pdf(w)*w,(w,self.domain[0],self.domain[1]))
+            self._mean = integrate(self.pdf(w)*w, (w, self.domain[0], self.domain[1]))
             return self._mean
 
     def _get_variance(self):
@@ -459,7 +459,7 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate, simplify
             w = Dummy('w', real=True)
-            self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
+            self._variance = integrate(self.pdf(w)*w**2, (w, self.domain[0], self.domain[1])) - self.mean**2
             self._variance = simplify(self._variance)
             return self._variance
 
@@ -478,7 +478,7 @@ class PDF(ContinuousProbability):
     def _random(s):
         raise NotImplementedError
 
-    def transform(self,func,var):
+    def transform(self, func, var):
         """
         Return a probability distribution of random variable func(x)
         currently only some simple injective functions are supported
@@ -506,6 +506,6 @@ class PDF(ContinuousProbability):
             # this assignment holds only for x in domain
             # in general it would require implementing
             # piecewise defined functions in sympy
-            newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
+            newPdf += (self.pdf(var)/abs(funcdiff)).subs(var, x)
 
         return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))

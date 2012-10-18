@@ -24,7 +24,7 @@ def test_complex_space():
     assert c2.dimension == n
     assert sstr(c2) == 'C(n)'
     assert srepr(c2) == "ComplexSpace(Symbol('n'))"
-    assert c2.subs(n,2) == ComplexSpace(2)
+    assert c2.subs(n, 2) == ComplexSpace(2)
 
 def test_L2():
     b1 = L2(Interval(-oo, 1))
@@ -34,10 +34,10 @@ def test_L2():
 
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
-    b2 = L2(Interval(x,y))
+    b2 = L2(Interval(x, y))
     assert b2.dimension == oo
-    assert b2.interval == Interval(x,y)
-    assert b2.subs(x,-1) == L2(Interval(-1,y))
+    assert b2.interval == Interval(x, y)
+    assert b2.subs(x, -1) == L2(Interval(-1, y))
 
 def test_fock_space():
     f1 = FockSpace()

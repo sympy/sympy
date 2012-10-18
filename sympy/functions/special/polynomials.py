@@ -171,7 +171,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = ((a + b + 2*k + 1) * C.RisingFactorial(b + k + 1, n-k) /
                   ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
-            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)), (k,0,n-1))
+            return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n-1))
         elif argindex == 3:
             # Diff wrt b
             n, a, b, x = self.args
@@ -179,7 +179,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = (-1)**(n-k) * ((a + b + 2*k + 1) * C.RisingFactorial(a + k + 1, n-k) /
                   ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
-            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)), (k,0,n-1))
+            return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n-1))
         elif argindex == 4:
             # Diff wrt x
             n, a, b, x = self.args
@@ -306,7 +306,7 @@ class gegenbauer(OrthogonalPolynomial):
                 return C.gamma(2*a+n) / (C.gamma(2*a) * C.gamma(n+1))
             elif x == S.Infinity:
                 if n.is_positive:
-                    return C.RisingFactorial(a,n) * S.Infinity
+                    return C.RisingFactorial(a, n) * S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
             return gegenbauer_poly(n, a, x)
@@ -415,10 +415,10 @@ class chebyshevt(OrthogonalPolynomial):
             # Symbolic result T_n(x)
             # T_n(-x)  --->  (-1)**n * T_n(x)
             if x.could_extract_minus_sign():
-                return S.NegativeOne**n * chebyshevt(n,-x)
+                return S.NegativeOne**n * chebyshevt(n, -x)
             # T_{-n}(x)  --->  T_n(x)
             if n.could_extract_minus_sign():
-                return chebyshevt(-n,x)
+                return chebyshevt(-n, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return C.cos(S.Half * S.Pi * n)
@@ -521,13 +521,13 @@ class chebyshevu(OrthogonalPolynomial):
             # Symbolic result U_n(x)
             # U_n(-x)  --->  (-1)**n * U_n(x)
             if x.could_extract_minus_sign():
-                return S.NegativeOne**n * chebyshevu(n,-x)
+                return S.NegativeOne**n * chebyshevu(n, -x)
             # U_{-n}(x)  --->  -U_{n-2}(x)
             if n.could_extract_minus_sign():
                 if n == S.NegativeOne:
                     return S.Zero
                 else:
-                    return -chebyshevu(-n-2,x)
+                    return -chebyshevu(-n-2, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return C.cos(S.Half * S.Pi * n)
@@ -553,7 +553,7 @@ class chebyshevu(OrthogonalPolynomial):
         elif argindex == 2:
             # Diff wrt x
             n, x = self.args
-            return ((n+1) * chebyshevt(n+1, x) - x * chebyshevu(n,x)) / (x**2 - 1)
+            return ((n+1) * chebyshevt(n+1, x) - x * chebyshevu(n, x)) / (x**2 - 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -702,10 +702,10 @@ class legendre(OrthogonalPolynomial):
             # Symbolic result L_n(x)
             # L_n(-x)  --->  (-1)**n * L_n(x)
             if x.could_extract_minus_sign():
-                return S.NegativeOne**n * legendre(n,-x)
+                return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
             if n.could_extract_minus_sign():
-                return legendre(-n - S.One,x)
+                return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return sqrt(S.Pi)/(C.gamma(S.Half - n/2)*C.gamma(S.One + n/2))
@@ -826,7 +826,7 @@ class assoc_legendre(Function):
             # Diff wrt x
             # Find better formula, this is unsuitable for x = 1
             n, m, x = self.args
-            return 1/(x**2 - 1)*(x*n*assoc_legendre(n,m,x) - (m + n)*assoc_legendre(n - 1,m,x))
+            return 1/(x**2 - 1)*(x*n*assoc_legendre(n, m, x) - (m + n)*assoc_legendre(n - 1, m, x))
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -897,7 +897,7 @@ class hermite(OrthogonalPolynomial):
             # Symbolic result H_n(x)
             # H_n(-x)  --->  (-1)**n * H_n(x)
             if x.could_extract_minus_sign():
-                return S.NegativeOne**n * hermite(n,-x)
+                return S.NegativeOne**n * hermite(n, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return 2**n * sqrt(S.Pi) / C.gamma((S.One - n)/2)
@@ -1021,7 +1021,7 @@ class laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
-        kern = C.RisingFactorial(-n,k) / C.factorial(k)**2 * x**k
+        kern = C.RisingFactorial(-n, k) / C.factorial(k)**2 * x**k
         return C.Sum(kern, (k, 0, n))
 
 
@@ -1135,5 +1135,5 @@ class assoc_laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
-        kern = C.RisingFactorial(-n,k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
+        kern = C.RisingFactorial(-n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))

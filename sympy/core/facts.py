@@ -174,7 +174,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     seen_static_extension=True
 
     # attach beta-nodes which can be possibly triggered by an alpha-chain
-    for bidx, (bcond,bimpl) in enumerate(beta_rules):
+    for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
         for x, (ximpls, bb) in x_impl.iteritems():
             x_all = ximpls | set([x])
@@ -269,9 +269,9 @@ class Prover(object):
         rules_beta = []     # &(...) -> b
         for a,b in self.proved_rules:
             if isinstance(a, And):
-                rules_beta.append((a,b))
+                rules_beta.append((a, b))
             else:
-                rules_alpha.append((a,b) )
+                rules_alpha.append((a, b) )
         return rules_alpha, rules_beta
 
     @property
@@ -288,10 +288,10 @@ class Prover(object):
             return
         if isinstance(a, bool):
             return
-        if (a,b) in self._rules_seen:
+        if (a, b) in self._rules_seen:
             return
         else:
-            self._rules_seen.add((a,b))
+            self._rules_seen.add((a, b))
 
         # this is the core of processing
         try:
@@ -316,7 +316,7 @@ class Prover(object):
             if not isinstance(a, Logic):    # Atom
                 # tautology:  a -> a|c|...
                 if a in b.args:
-                    raise TautologyDetected(a,b, 'a -> a|c|...')
+                    raise TautologyDetected(a, b, 'a -> a|c|...')
             self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
 
             for bidx in range(len(b.args)):
@@ -330,13 +330,13 @@ class Prover(object):
         #                    (this will be the basis of beta-network)
         elif isinstance(a, And):
             if b in a.args:
-                raise TautologyDetected(a,b, 'a & b -> a')
-            self.proved_rules.append((a,b))
+                raise TautologyDetected(a, b, 'a & b -> a')
+            self.proved_rules.append((a, b))
             # XXX NOTE at present we ignore  !c -> !a | !b
 
         elif isinstance(a, Or):
             if b in a.args:
-                raise TautologyDetected(a,b, 'a | b -> a')
+                raise TautologyDetected(a, b, 'a | b -> a')
             for aarg in a.args:
                 self.process_rule(aarg, b)
 

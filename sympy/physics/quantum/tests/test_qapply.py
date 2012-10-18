@@ -16,9 +16,9 @@ from sympy.physics.quantum.gate import UGate
 
 j, jp, m, mp = symbols("j j' m m'")
 
-z = JzKet(1,0)
-po = JzKet(1,1)
-mo = JzKet(1,-1)
+z = JzKet(1, 0)
+po = JzKet(1, 1)
+mo = JzKet(1, -1)
 
 A = Operator('A')
 
@@ -62,7 +62,7 @@ def test_zero():
 
 
 def test_commutator():
-    assert qapply(Commutator(Jx,Jy)*Jz*po) == I*hbar**3*po
+    assert qapply(Commutator(Jx, Jy)*Jz*po) == I*hbar**3*po
     assert qapply(Commutator(J2, Jz)*Jz*po) == 0
     assert qapply(Commutator(Jz, Foo('F'))*po) == 0
     assert qapply(Commutator(Foo('F'), Jz)*po) == 0
@@ -88,7 +88,7 @@ def test_dagger():
 
 def test_issue2974():
     x, y = symbols('x y', commutative=False)
-    A = Ket(x,y)
+    A = Ket(x, y)
     B = Operator('B')
     assert qapply(A) == A
     assert qapply(A.dual*B) == A.dual*B

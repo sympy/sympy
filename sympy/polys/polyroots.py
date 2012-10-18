@@ -83,7 +83,7 @@ def roots_cubic(f):
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
-        x1, x2 = roots([1,a,b], multiple = True)
+        x1, x2 = roots([1, a, b], multiple = True)
         return [x1, S.Zero, x2]
 
     p = b - a**2/3
@@ -693,7 +693,7 @@ def root_factors(f, *gens, **args):
             factors, N = factors + [Poly(x-r, x)]*n, N + n
 
         if N < F.degree():
-            G = reduce(lambda p,q: p*q, factors)
+            G = reduce(lambda p, q: p*q, factors)
             factors.append(F.quo(G))
 
     if not isinstance(f, Poly):

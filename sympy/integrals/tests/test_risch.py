@@ -15,12 +15,12 @@ def test_components():
        set([log(x), sin(x), sqrt(log(x)), x])
     assert components(x*sin(exp(x)*y), x) == \
        set([sin(y*exp(x)), x, exp(x)])
-    assert components(x**Rational(17,54)/sqrt(sin(x)), x) == \
-       set([sin(x), x**Rational(1,54), sqrt(sin(x)), x])
+    assert components(x**Rational(17, 54)/sqrt(sin(x)), x) == \
+       set([sin(x), x**Rational(1, 54), sqrt(sin(x)), x])
 
     assert components(f(x), x) == \
         set([x, f(x)])
-    assert components(Derivative(f(x),x), x) == \
+    assert components(Derivative(f(x), x), x) == \
         set([x, f(x), Derivative(f(x), x)])
     assert components(f(x)*diff(f(x), x),  x) == \
         set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
@@ -132,7 +132,7 @@ def test_heurisch_hacking():
     assert heurisch(1/sqrt(1 - 7*x**2), x, hints=[]) == \
         sqrt(7)*asin(sqrt(7)*x)/7
 
-    assert heurisch(exp(-7*x**2),x,hints=[]) == \
+    assert heurisch(exp(-7*x**2), x, hints=[]) == \
         sqrt(7*pi)*erf(sqrt(7)*x)/14
 
     assert heurisch(1/sqrt(9 - 4*x**2), x, hints=[]) == \

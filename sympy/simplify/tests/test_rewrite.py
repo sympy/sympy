@@ -2,7 +2,7 @@ from sympy import (sin, cos, exp, cot, sqrt, S, I, E, pi, symbols, Function,
     Matrix, Eq, RootSum, Lambda)
 from sympy.integrals import integrate
 
-x,y,z,n = symbols('x,y,z,n')
+x, y, z, n = symbols('x,y,z,n')
 
 def test_has():
     assert cot(x).has(x)

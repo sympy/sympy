@@ -40,53 +40,53 @@ def test_dup_sqf():
     assert dup_sqf_part([7], ZZ) == [1]
     assert dup_sqf_p([7], ZZ) == True
 
-    assert dup_sqf_part([2,2], ZZ) == [1,1]
-    assert dup_sqf_p([2,2], ZZ) == True
+    assert dup_sqf_part([2, 2], ZZ) == [1, 1]
+    assert dup_sqf_p([2, 2], ZZ) == True
 
-    assert dup_sqf_part([1,0,1,1], ZZ) == [1,0,1,1]
-    assert dup_sqf_p([1,0,1,1], ZZ) == True
+    assert dup_sqf_part([1, 0, 1, 1], ZZ) == [1, 0, 1, 1]
+    assert dup_sqf_p([1, 0, 1, 1], ZZ) == True
 
-    assert dup_sqf_part([-1,0,1,1], ZZ) == [1,0,-1,-1]
-    assert dup_sqf_p([-1,0,1,1], ZZ) == True
+    assert dup_sqf_part([-1, 0, 1, 1], ZZ) == [1, 0, -1, -1]
+    assert dup_sqf_p([-1, 0, 1, 1], ZZ) == True
 
-    assert dup_sqf_part([2,3,0,0], ZZ) == [2,3,0]
-    assert dup_sqf_p([2,3,0,0], ZZ) == False
+    assert dup_sqf_part([2, 3, 0, 0], ZZ) == [2, 3, 0]
+    assert dup_sqf_p([2, 3, 0, 0], ZZ) == False
 
-    assert dup_sqf_part([-2,3,0,0], ZZ) == [2,-3,0]
-    assert dup_sqf_p([-2,3,0,0], ZZ) == False
+    assert dup_sqf_part([-2, 3, 0, 0], ZZ) == [2, -3, 0]
+    assert dup_sqf_p([-2, 3, 0, 0], ZZ) == False
 
     assert dup_sqf_list([], ZZ) == (0, [])
     assert dup_sqf_list([1], ZZ) == (1, [])
 
-    assert dup_sqf_list([1,0], ZZ) == (1, [([1,0], 1)])
-    assert dup_sqf_list([2,0,0], ZZ) == (2, [([1,0], 2)])
-    assert dup_sqf_list([3,0,0,0], ZZ) == (3, [([1,0], 3)])
+    assert dup_sqf_list([1, 0], ZZ) == (1, [([1, 0], 1)])
+    assert dup_sqf_list([2, 0, 0], ZZ) == (2, [([1, 0], 2)])
+    assert dup_sqf_list([3, 0, 0, 0], ZZ) == (3, [([1, 0], 3)])
 
-    assert dup_sqf_list([ZZ(2),ZZ(4),ZZ(2)], ZZ) == \
-        (ZZ(2), [([ZZ(1),ZZ(1)], 2)])
-    assert dup_sqf_list([QQ(2),QQ(4),QQ(2)], QQ) == \
-        (QQ(2), [([QQ(1),QQ(1)], 2)])
+    assert dup_sqf_list([ZZ(2), ZZ(4), ZZ(2)], ZZ) == \
+        (ZZ(2), [([ZZ(1), ZZ(1)], 2)])
+    assert dup_sqf_list([QQ(2), QQ(4), QQ(2)], QQ) == \
+        (QQ(2), [([QQ(1), QQ(1)], 2)])
 
-    assert dup_sqf_list([-1,1,0,0,1,-1], ZZ) == \
-        (-1, [([1,1,1,1], 1), ([1,-1], 2)])
-    assert dup_sqf_list([1,0,6,0,12,0,8,0,0], ZZ) == \
-        (1, [([1,0], 2), ([1,0,2], 3)])
+    assert dup_sqf_list([-1, 1, 0, 0, 1, -1], ZZ) == \
+        (-1, [([1, 1, 1, 1], 1), ([1, -1], 2)])
+    assert dup_sqf_list([1, 0, 6, 0, 12, 0, 8, 0, 0], ZZ) == \
+        (1, [([1, 0], 2), ([1, 0, 2], 3)])
 
     K = FF(2)
-    f = map(K, [1,0,1])
+    f = map(K, [1, 0, 1])
 
     assert dup_sqf_list(f, K) == \
-        (K(1), [([K(1),K(1)], 2)])
+        (K(1), [([K(1), K(1)], 2)])
 
     K = FF(3)
-    f = map(K, [1,0,0,2,0,0,2,0,0,1,0])
+    f = map(K, [1, 0, 0, 2, 0, 0, 2, 0, 0, 1, 0])
 
     assert dup_sqf_list(f, K) == \
         (K(1), [([K(1), K(0)], 1),
                 ([K(1), K(1)], 3),
                 ([K(1), K(2)], 6)])
 
-    f = [1,0,0,1]
+    f = [1, 0, 0, 1]
     g = map(K, f)
 
     assert dup_sqf_part(f, ZZ) == f
@@ -95,14 +95,14 @@ def test_dup_sqf():
     assert dup_sqf_p(f, ZZ) == True
     assert dup_sqf_p(g, K) == False
 
-    A = [[1],[],[-3],[],[6]]
-    D = [[1],[],[-5],[],[5],[],[4]]
+    A = [[1], [], [-3], [], [6]]
+    D = [[1], [], [-5], [], [5], [], [4]]
 
-    f, g = D, dmp_sub(A, dmp_mul(dmp_diff(D, 1, 1, ZZ), [[1,0]], 1, ZZ), 1, ZZ)
+    f, g = D, dmp_sub(A, dmp_mul(dmp_diff(D, 1, 1, ZZ), [[1, 0]], 1, ZZ), 1, ZZ)
 
     res = dmp_resultant(f, g, 1, ZZ)
 
-    assert dup_sqf_list(res, ZZ) == (45796, [([4,0,1], 3)])
+    assert dup_sqf_list(res, ZZ) == (45796, [([4, 0, 1], 3)])
 
     assert dup_sqf_list_include([DMP([1, 0, 0, 0], ZZ), DMP([], ZZ), DMP([], ZZ)], ZZ[x]) == \
         [([DMP([1, 0, 0, 0], ZZ)], 1), ([DMP([1], ZZ), DMP([], ZZ)], 2)]
@@ -138,19 +138,19 @@ def test_dmp_sqf():
     assert dmp_sqf_list([[ZZ(3)]], 1, ZZ) == (ZZ(3), [])
     assert dmp_sqf_list_include([[ZZ(3)]], 1, ZZ) == [([[ZZ(3)]], 1)]
 
-    f = [-1,1,0,0,1,-1]
+    f = [-1, 1, 0, 0, 1, -1]
 
     assert dmp_sqf_list(f, 0, ZZ) == \
-        (-1, [([1,1,1,1], 1), ([1,-1], 2)])
+        (-1, [([1, 1, 1, 1], 1), ([1, -1], 2)])
     assert dmp_sqf_list_include(f, 0, ZZ) == \
-        [([-1,-1,-1,-1], 1), ([1,-1], 2)]
+        [([-1, -1, -1, -1], 1), ([1, -1], 2)]
 
-    f = [[-1],[1],[],[],[1],[-1]]
+    f = [[-1], [1], [], [], [1], [-1]]
 
     assert dmp_sqf_list(f, 1, ZZ) == \
-        (-1, [([[1],[1],[1],[1]], 1), ([[1],[-1]], 2)])
+        (-1, [([[1], [1], [1], [1]], 1), ([[1], [-1]], 2)])
     assert dmp_sqf_list_include(f, 1, ZZ) == \
-        [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
+        [([[-1], [-1], [-1], [-1]], 1), ([[1], [-1]], 2)]
 
     K = FF(2)
 

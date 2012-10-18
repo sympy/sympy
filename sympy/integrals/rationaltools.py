@@ -319,8 +319,8 @@ def log_to_real(h, q, x, t):
     """
     u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t:u+I*v}).expand()
-    Q = q.as_expr().subs({t:u+I*v}).expand()
+    H = h.as_expr().subs({t: u+I*v}).expand()
+    Q = q.as_expr().subs({t: u+I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -338,7 +338,7 @@ def log_to_real(h, q, x, t):
     result = S(0)
 
     for r_u in R_u.iterkeys():
-        C = Poly(c.subs({u:r_u}), v)
+        C = Poly(c.subs({u: r_u}), v)
         R_v = roots(C, filter='R')
 
         if len(R_v) != C.count_roots():
@@ -348,13 +348,13 @@ def log_to_real(h, q, x, t):
             if not r_v.is_positive:
                 continue
 
-            D = d.subs({u:r_u, v:r_v})
+            D = d.subs({u: r_u, v: r_v})
 
             if D.evalf(chop=True) != 0:
                 continue
 
-            A = Poly(a.subs({u:r_u, v:r_v}), x)
-            B = Poly(b.subs({u:r_u, v:r_v}), x)
+            A = Poly(a.subs({u: r_u, v: r_v}), x)
+            B = Poly(b.subs({u: r_u, v: r_v}), x)
 
             AB = (A**2 + B**2).as_expr()
 

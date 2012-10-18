@@ -15,7 +15,7 @@ x1 = Symbol('x1', real=True)
 x2 = Symbol('x2', real=True)
 y1 = Symbol('y1', real=True)
 y2 = Symbol('y2', real=True)
-half = Rational(1,2)
+half = Rational(1, 2)
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
@@ -180,7 +180,7 @@ def test_line():
     assert l7.equation() == y - 1
     assert p1 in l1 # is p1 on the line l1?
     assert p1 not in l3
-    assert Line((-x,x),(-x+1,x-1)).coefficients == (1, 1, 0)
+    assert Line((-x, x), (-x+1, x-1)).coefficients == (1, 1, 0)
 
     assert simplify(l1.equation()) in (x-y, y-x)
     assert simplify(l3.equation()) in (x-x1, x1-x)
@@ -217,7 +217,7 @@ def test_line():
     assert intersection(l1, l1.parallel_line(p5)) == []
 
     # Concurrency
-    l3_1 = Line(Point(5, x1), Point(-Rational(3,5), x1))
+    l3_1 = Line(Point(5, x1), Point(-Rational(3, 5), x1))
     assert Line.is_concurrent(l1) == False
     assert Line.is_concurrent(l1, l3)
     assert Line.is_concurrent(l1, l3, l3_1)
@@ -264,7 +264,7 @@ def test_line():
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
-    assert s1.midpoint == Point(Rational(1,2), Rational(1,2))
+    assert s1.midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
@@ -338,8 +338,8 @@ def test_line():
     assert intersection(r1, l1) == [r1]
     assert intersection(s1, l1) == [s1]
 
-    entity1 = Segment(Point(-10,10), Point(10,10))
-    entity2 = Segment(Point(-5,-5), Point(-5,5))
+    entity1 = Segment(Point(-10, 10), Point(10, 10))
+    entity2 = Segment(Point(-5, -5), Point(-5, 5))
     assert intersection(entity1, entity2) == []
 
     r1 = Ray(p1, Point(0, 1))
@@ -388,11 +388,11 @@ def test_ellipse():
 
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
-    assert Circle(Point(0,0), Point(3,0), Point(0,4)) == Circle(cen, rad)
-    raises(GeometryError, lambda: Circle(Point(0,0), Point(1,1), Point(2,2)))
+    assert Circle(Point(0, 0), Point(3, 0), Point(0, 4)) == Circle(cen, rad)
+    raises(GeometryError, lambda: Circle(Point(0, 0), Point(1, 1), Point(2, 2)))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
-    raises(GeometryError, lambda: Circle(Point(0,0)))
+    raises(GeometryError, lambda: Circle(Point(0, 0)))
 
     # Basic Stuff
     assert Ellipse(None, 1, 1).center == Point(0, 0)
@@ -475,7 +475,7 @@ def test_ellipse():
         [Line(Point(3, 3), Point(3, 5)), Line(Point(3, 3), Point(5, 3))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
-     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))),]
+     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
 
     # Properties
     major = 3
@@ -601,11 +601,11 @@ def test_polygon():
     assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
 
     p1 = Polygon(
-        Point(0, 0), Point(3,-1),
+        Point(0, 0), Point(3, -1),
         Point(6, 0), Point(4, 5),
         Point(2, 3), Point(0, 3))
     p2 = Polygon(
-        Point(6, 0), Point(3,-1),
+        Point(6, 0), Point(3, -1),
         Point(0, 0), Point(0, 3),
         Point(2, 3), Point(4, 5))
     p3 = Polygon(
@@ -640,7 +640,7 @@ def test_polygon():
     assert p5.distance(Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
     raises(UserWarning,
-           lambda: Polygon(Point(0, 0), Point(1, 0), Point(1,1)).distance(Polygon(Point(0, 0), Point(0, 1), Point(1, 1))))
+           lambda: Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(Polygon(Point(0, 0), Point(0, 1), Point(1, 1))))
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert p5 == Polygon(Point(4, 4), Point(0, 4), Point(0, 0))
     assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
@@ -722,7 +722,7 @@ def test_polygon():
     p2 = Point(5, 0)
     p3 = Point(0, 5)
     t1 = Triangle(p1, p2, p3)
-    t2 = Triangle(p1, p2, Point(Rational(5,2), sqrt(Rational(75,4))))
+    t2 = Triangle(p1, p2, Point(Rational(5, 2), sqrt(Rational(75, 4))))
     t3 = Triangle(p1, Point(x1, 0), Point(0, x1))
     s1 = t1.sides
     assert Triangle(p1, p2, p1) == Polygon(p1, p2, p1) == Segment(p1, p2)
@@ -731,7 +731,7 @@ def test_polygon():
     # Basic stuff
     assert Triangle(p1, p1, p1) == p1
     assert Triangle(p2, p2*2, p2*3) == Segment(p2, p2*3)
-    assert t1.area == Rational(25,2)
+    assert t1.area == Rational(25, 2)
     assert t1.is_right()
     assert t2.is_right() == False
     assert t3.is_right()
@@ -752,7 +752,7 @@ def test_polygon():
 
     # Bisectors
     bisectors = t1.bisectors()
-    assert bisectors[p1] == Segment(p1, Point(Rational(5,2), Rational(5,2)))
+    assert bisectors[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
     ic = (250 - 125*sqrt(2)) / 50
     assert t1.incenter == Point(ic, ic)
 
@@ -766,15 +766,15 @@ def test_polygon():
 
     # Medians + Centroid
     m = t1.medians
-    assert t1.centroid == Point(Rational(5,3), Rational(5,3))
-    assert m[p1] == Segment(p1, Point(Rational(5,2), Rational(5,2)))
+    assert t1.centroid == Point(Rational(5, 3), Rational(5, 3))
+    assert m[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
     assert t3.medians[p1] == Segment(p1, Point(x1/2, x1/2))
     assert intersection(m[p1], m[p2], m[p3]) == [t1.centroid]
     assert t1.medial == Triangle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
 
     # Perpendicular
     altitudes = t1.altitudes
-    assert altitudes[p1] == Segment(p1, Point(Rational(5,2), Rational(5,2)))
+    assert altitudes[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
     assert altitudes[p2] == s1[0]
     assert altitudes[p3] == s1[2]
     assert t1.orthocenter == p1
@@ -839,14 +839,14 @@ def test_polygon_to_polygon():
     assert p5.distance(p6) == Rational(7)/10
 
 def test_convex_hull():
-    p = [Point(-5,-1), Point(-2,1), Point(-2,-1), Point(-1,-3), Point(0,0),
-         Point(1,1), Point(2,2), Point(2,-1), Point(3,1), Point(4,-1), Point(6,2)]
+    p = [Point(-5, -1), Point(-2, 1), Point(-2, -1), Point(-1, -3), Point(0, 0),
+         Point(1, 1), Point(2, 2), Point(2, -1), Point(3, 1), Point(4, -1), Point(6, 2)]
     ch = Polygon(p[0], p[3], p[9], p[10], p[6], p[1])
     #test handling of duplicate points
     p.append(p[3])
 
     #more than 3 collinear points
-    another_p = [Point(-45, -85), Point(-45, 85), Point(-45, 26),Point(-45, -24)]
+    another_p = [Point(-45, -85), Point(-45, 85), Point(-45, 26), Point(-45, -24)]
     ch2 = Segment(another_p[0], another_p[1])
 
     assert convex_hull(*another_p) == ch2
@@ -858,14 +858,14 @@ def test_convex_hull():
     assert convex_hull(*[p[-1]]*3) == p[-1]
 
     # collection of items
-    assert convex_hull(*[Point(0,0),
+    assert convex_hull(*[Point(0, 0),
                         Segment(Point(1, 0), Point(1, 1)),
                         RegularPolygon(Point(2, 0), 2, 4)]) == \
             Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))
 
 def test_concyclic_doctest_bug():
-    p1,p2 = Point(-1, 0), Point(1, 0)
-    p3,p4 = Point(0, 1), Point(-1, 2)
+    p1, p2 = Point(-1, 0), Point(1, 0)
+    p3, p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
 
@@ -879,14 +879,14 @@ def test_subs():
               Line(p, q),
               Triangle(p, q, r),
               RegularPolygon(p, 3, 6),
-              Polygon(p, q, r, Point(5,4)),
+              Polygon(p, q, r, Point(5, 4)),
               Circle(p, 3),
               Ellipse(p, 3, 4)]:
         assert 'y' in str(o.subs(x, y))
     assert p.subs({x: 1}) == Point(1, 2)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
-    assert Point(1, 2).subs((1,2), Point(3,4)) == Point(3, 4)
-    assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
+    assert Point(1, 2).subs((1, 2), Point(3, 4)) == Point(3, 4)
+    assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs(set([(1, 2)])) == Point(2, 2)
     raises(ValueError, lambda: Point(1, 2).subs(1))
     raises(ValueError, lambda: Point(1, 1).subs((Point(1, 1), Point(1, 2)), 1, 2))
@@ -901,30 +901,30 @@ def test_encloses():
 
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
-    assert Point(a,b).free_symbols == set([a, b])
-    assert Line((a,b),(c,d)).free_symbols == set([a, b, c, d])
-    assert Ray((a,b),(c,d)).free_symbols == set([a, b, c, d])
-    assert Ray((a,b),angle=c).free_symbols == set([a, b, c])
-    assert Segment((a,b),(c,d)).free_symbols == set([a, b, c, d])
-    assert Line((a,b),slope=c).free_symbols == set([a, b, c])
-    assert Curve((a*s,b*s),(s,c,d)).free_symbols == set([a, b, c, d])
-    assert Ellipse((a,b),c,d).free_symbols == set([a, b, c, d])
-    assert Ellipse((a,b),c, eccentricity=d).free_symbols == set([a, b, c, d])
-    assert Ellipse((a,b),vradius=c, eccentricity=d).free_symbols == set([a, b, c, d])
-    assert Circle((a,b),c).free_symbols == set([a, b, c])
-    assert Circle((a,b),(c,d),(e,f)).free_symbols == set([e, d, c, b, f, a])
-    assert Polygon((a,b),(c,d),(e,f)).free_symbols == set([e, b, d, f, a, c])
-    assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])
+    assert Point(a, b).free_symbols == set([a, b])
+    assert Line((a, b), (c, d)).free_symbols == set([a, b, c, d])
+    assert Ray((a, b), (c, d)).free_symbols == set([a, b, c, d])
+    assert Ray((a, b), angle=c).free_symbols == set([a, b, c])
+    assert Segment((a, b), (c, d)).free_symbols == set([a, b, c, d])
+    assert Line((a, b), slope=c).free_symbols == set([a, b, c])
+    assert Curve((a*s, b*s), (s, c, d)).free_symbols == set([a, b, c, d])
+    assert Ellipse((a, b), c, d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a, b), c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Ellipse((a, b), vradius=c, eccentricity=d).free_symbols == set([a, b, c, d])
+    assert Circle((a, b), c).free_symbols == set([a, b, c])
+    assert Circle((a, b), (c, d), (e, f)).free_symbols == set([e, d, c, b, f, a])
+    assert Polygon((a, b), (c, d), (e, f)).free_symbols == set([e, b, d, f, a, c])
+    assert RegularPolygon((a, b), c, d, e).free_symbols == set([e, a, b, c, d])
 
 def test_util_centroid():
     p = Polygon((0, 0), (10, 0), (10, 10))
     q = p.translate(0, 20)
     assert centroid(p, q) == Point(20, 40)/3
-    p = Segment((0,0),(2,0))
-    q = Segment((0,0),(2,2))
+    p = Segment((0, 0), (2, 0))
+    q = Segment((0, 0), (2, 2))
     assert centroid(p, q) == Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
-    assert centroid(Point(0,0), Point(2,0)) == Point(2, 0)/2
-    assert centroid(Point(0,0), Point(0,0), Point(2,0)) == Point(2, 0)/3
+    assert centroid(Point(0, 0), Point(2, 0)) == Point(2, 0)/2
+    assert centroid(Point(0, 0), Point(0, 0), Point(2, 0)) == Point(2, 0)/3
 
 def test_util():
     # coverage for some leftover functions in sympy.geometry.util
@@ -950,12 +950,12 @@ def test_line_intersection():
                             8*tan(32*pi/45)/(tan(32*pi/45) + sqrt(3)),
                             (24*tan(32*pi/45) - 8*sqrt(3)*tan(32*pi/45)**2)/
                                 (-3 + tan(32*pi/45)**2)))
-    assert Line((0,0), (1,1)).intersection(Ray((1,0), (1,2))) == [Point(1,1)]
-    assert Line((0,0), (1,1)).intersection(Segment((1,0), (1,2))) == [Point(1,1)]
-    assert Ray((0,0), (1,1)).intersection(Ray((1,0), (1,2))) == [Point(1,1)]
-    assert Ray((0,0), (1,1)).intersection(Segment((1,0), (1,2))) == [Point(1,1)]
-    assert Ray((0,0), (10,10)).contains(Segment((1,1), (2,2))) is True
-    assert Segment((1,1),(2,2)) in Line((0,0),(10,10))
+    assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
+    assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
     x = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
     y = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/\
         (-3 + tan(13*pi/45)**2)
@@ -968,7 +968,7 @@ def test_triangle_kwargs():
         Triangle(Point(0, 0), Point(2, 0), Point(1, sqrt(3)/3))
     assert Triangle(sas=(1, 45, 2)) == \
         Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
-    assert Triangle(sss=(1,2,5)) is None
+    assert Triangle(sss=(1, 2, 5)) is None
     assert deg(rad(180)) == 180
 
 def test_geometry_transforms():

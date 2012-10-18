@@ -22,7 +22,7 @@ def test_basic1():
     assert limit(1/x - exp(-x), x, oo) == 0
     assert limit(x + 1/x, x, oo) == oo
     assert limit(x - x**2, x, oo) == -oo
-    assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
+    assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
     assert limit((1 + x)**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
@@ -84,7 +84,7 @@ def test_basic4():
     assert limit(2*x + y*x, x, 1) == 2+y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
-    assert integrate(1/(x**3+1),(x,0,oo)) == 2*pi*sqrt(3)/9
+    assert integrate(1/(x**3+1), (x, 0, oo)) == 2*pi*sqrt(3)/9
 
 def test_issue786():
     assert limit(x*y + x*z, z, 2) == x*y+2*x
@@ -169,15 +169,15 @@ def test_issue772():
 def test_exponential():
     n = Symbol('n')
     x = Symbol('x', real=True)
-    assert limit((1+x/n)**n,n,oo) == exp(x)
-    assert limit((1+x/(2*n))**n,n,oo) == exp(x/2)
-    assert limit((1+x/(2*n+1))**n,n,oo) == exp(x/2)
-    assert limit(((x-1)/(x+1))**x,x,oo) == exp(-2)
+    assert limit((1+x/n)**n, n, oo) == exp(x)
+    assert limit((1+x/(2*n))**n, n, oo) == exp(x/2)
+    assert limit((1+x/(2*n+1))**n, n, oo) == exp(x/2)
+    assert limit(((x-1)/(x+1))**x, x, oo) == exp(-2)
 
 @XFAIL
 def test_exponential2():
     n = Symbol('n')
-    assert limit((1+x/(n+sin(n)))**n,n,oo) == exp(x)
+    assert limit((1+x/(n+sin(n)))**n, n, oo) == exp(x)
 
 def test_doit():
     f = Integral(2 * x, x)
@@ -192,7 +192,7 @@ def test_doit2():
     assert l.doit(deep = False) == l
 
 def test_bug693a():
-    assert sin(sin(x+1)+1).limit(x,0) == sin(sin(1)+1)
+    assert sin(sin(x+1)+1).limit(x, 0) == sin(sin(1)+1)
 
 def test_issue693():
     assert limit( (1-cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
@@ -206,8 +206,8 @@ def test_issue991():
     assert limit(log(x)/(x**2+pi), x, 2) == log(2)/(4+pi)
 
 def test_issue1448():
-    assert limit(cot(x),x,0,dir='+') == oo
-    assert limit(cot(x),x,pi/2,dir='+') == 0
+    assert limit(cot(x), x, 0, dir='+') == oo
+    assert limit(cot(x), x, pi/2, dir='+') == 0
 
 def test_issue2065():
     assert limit(x**0.5, x, oo) == oo**0.5 == oo

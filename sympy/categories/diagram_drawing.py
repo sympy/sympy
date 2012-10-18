@@ -369,7 +369,7 @@ class DiagramGrid(object):
         # Create edges for morphisms.
         for morphism in morphisms:
             DiagramGrid._add_edge_append(
-                edges, frozenset([morphism.domain,morphism.codomain]), morphism)
+                edges, frozenset([morphism.domain, morphism.codomain]), morphism)
 
         # Create new edges by juxtaposing existing edges.
         edges1 = dict(edges)
@@ -755,7 +755,7 @@ class DiagramGrid(object):
                 # free directions, prefer the horizontal and vertical
                 # directions.
                 neighbours = [(i-1, j), (i, j+1), (i+1, j), (i, j-1),
-                              (i-1,j-1), (i-1, j+1), (i+1,j-1), (i+1, j+1)]
+                              (i-1, j-1), (i-1, j+1), (i+1, j-1), (i+1, j+1)]
 
                 for pt in neighbours:
                     if DiagramGrid._empty_point(pt, grid):
@@ -1745,8 +1745,8 @@ class XypicDiagramDrawer(object):
                 freest_quadrant = i
 
         # Now set up proper looping.
-        (looping_start, looping_end) = [("r","u"), ("u","l"), ("l","d"),
-                                        ("d","r")][freest_quadrant]
+        (looping_start, looping_end) = [("r", "u"), ("u", "l"), ("l", "d"),
+                                        ("d", "r")][freest_quadrant]
 
         return (curving, label_pos, looping_start, looping_end)
 

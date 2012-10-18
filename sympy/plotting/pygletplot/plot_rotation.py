@@ -17,8 +17,8 @@ def norm(a):
     return (a[0] / m, a[1] / m, a[2] / m)
 
 def get_sphere_mapping(x, y, width, height):
-    x = min([max([x,0]), width])
-    y = min([max([y,0]), height])
+    x = min([max([x, 0]), width])
+    y = min([max([y, 0]), height])
 
     sr = _sqrt((width/2)**2+(height/2)**2)
     #sr *= 1.5

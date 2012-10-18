@@ -1,6 +1,6 @@
 from sympy.core import Add, Mul, symbols
 
-x,y,z = symbols('x,y,z')
+x, y, z = symbols('x,y,z')
 
 def timeit_neg():
     -x
@@ -18,13 +18,13 @@ def timeit_Add_xy():
     x+y
 
 def timeit_Add_xyz():
-    Add(*[x,y,z])
+    Add(*[x, y, z])
 
 def timeit_Mul_xy():
     x*y
 
 def timeit_Mul_xyz():
-    Mul(*[x,y,z])
+    Mul(*[x, y, z])
 
 def timeit_Div_xy():
     x/y

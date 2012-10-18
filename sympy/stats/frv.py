@@ -157,7 +157,7 @@ class FinitePSpace(PSpace):
         return obj
 
     def prob_of(self, elem):
-        return self._density.get(elem,0)
+        return self._density.get(elem, 0)
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
@@ -221,7 +221,7 @@ class FinitePSpace(PSpace):
         expr = Tuple(*self.values)
         cdf = self.sorted_cdf(expr, python_float=True)
 
-        x = random.uniform(0,1)
+        x = random.uniform(0, 1)
         # Find first occurence with cumulative probability less than x
         # This should be replaced with binary search
         for value, cum_prob in cdf:

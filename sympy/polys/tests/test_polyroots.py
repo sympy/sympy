@@ -37,16 +37,16 @@ def test_roots_cubic():
 def test_roots_quartic():
     assert roots_quartic(Poly(x**4, x)) == [0, 0, 0, 0]
     assert roots_quartic(Poly(x**4 + x**3, x)) in [
-        [-1,0,0,0],
-        [0,-1,0,0],
-        [0,0,-1,0],
-        [0,0,0,-1]
+        [-1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, -1]
     ]
     assert roots_quartic(Poly(x**4 - x**3, x)) in [
-        [1,0,0,0],
-        [0,1,0,0],
-        [0,0,1,0],
-        [0,0,0,1]
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
     ]
 
     lhs = roots_quartic(Poly(x**4 + x, x))
@@ -207,14 +207,14 @@ def test_roots():
     assert roots(x**4 - 1, x) == {I: 1, S.One: 1, -S.One: 1, -I: 1}
     assert roots((x**4 - 1)**2, x) == {I: 2, S.One: 2, -S.One: 2, -I: 2}
 
-    assert roots(((2*x-3)**2).expand(), x) == { Rational(3,2): 2}
-    assert roots(((2*x+3)**2).expand(), x) == {-Rational(3,2): 2}
+    assert roots(((2*x-3)**2).expand(), x) == { Rational(3, 2): 2}
+    assert roots(((2*x+3)**2).expand(), x) == {-Rational(3, 2): 2}
 
-    assert roots(((2*x-3)**3).expand(), x) == { Rational(3,2): 3}
-    assert roots(((2*x+3)**3).expand(), x) == {-Rational(3,2): 3}
+    assert roots(((2*x-3)**3).expand(), x) == { Rational(3, 2): 3}
+    assert roots(((2*x+3)**3).expand(), x) == {-Rational(3, 2): 3}
 
-    assert roots(((2*x-3)**5).expand(), x) == { Rational(3,2): 5}
-    assert roots(((2*x+3)**5).expand(), x) == {-Rational(3,2): 5}
+    assert roots(((2*x-3)**5).expand(), x) == { Rational(3, 2): 5}
+    assert roots(((2*x+3)**5).expand(), x) == {-Rational(3, 2): 5}
 
     assert roots(((a*x-b)**5).expand(), x) == { b/a: 5}
     assert roots(((a*x+b)**5).expand(), x) == {-b/a: 5}
@@ -249,7 +249,7 @@ def test_roots():
                 {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
     r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r) \
-        for r in ((1,2), (1,3), (1,9), (4,9), (19,27)) ]
+        for r in ((1, 2), (1, 3), (1, 9), (4, 9), (19, 27)) ]
 
     U = -r1_2 - r1_2*I*3**r1_2
     V = -r1_2 + r1_2*I*3**r1_2
@@ -264,7 +264,7 @@ def test_roots():
     f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
 
     r13_20, r1_20 = [ Rational(*r) \
-        for r in ((13,20), (1,20)) ]
+        for r in ((13, 20), (1, 20)) ]
 
     s2 = sqrt(2)
     assert roots(f, x) == {
@@ -276,7 +276,7 @@ def test_roots():
 
     f = x**4 + x**3 + x**2 + x + 1
 
-    r1_4, r1_8, r5_8 = [ Rational(*r) for r in ((1,4), (1,8), (5,8)) ]
+    r1_4, r1_8, r5_8 = [ Rational(*r) for r in ((1, 4), (1, 8), (5, 8)) ]
 
     assert roots(f, x) == {
         -r1_4 + r1_4*5**r1_2 + I*(r5_8 + r1_8*5**r1_2)**r1_2: 1,

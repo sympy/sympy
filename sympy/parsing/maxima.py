@@ -14,8 +14,8 @@ class MaximaHelpers:
     def maxima_sum(a1, a2, a3, a4):
         return Sum(a1, (a2, a3, a4)).doit()
 
-    def maxima_product(a1,a2,a3,a4):
-        return product(a1, (a2,a3,a4))
+    def maxima_product(a1, a2, a3, a4):
+        return product(a1, (a2, a3, a4))
 
     def maxima_csc(expr):
         return 1/sin(expr)
@@ -47,7 +47,7 @@ def parse_maxima(str, globals=None, name_dict={}):
     str = str.strip()
     str = str.rstrip('; ')
 
-    for k,v in sub_dict.items():
+    for k, v in sub_dict.items():
         str = v.sub(k, str)
 
     assign_var = None

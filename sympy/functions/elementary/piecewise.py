@@ -344,7 +344,7 @@ class Piecewise(Function):
                 or_cond = Or(or_cond, cond)
                 or_intervals.append((lower, upper))
                 if or_cond == targetcond:
-                    or_intervals.sort(key=lambda x:x[0])
+                    or_intervals.sort(key=lambda x: x[0])
                     return or_intervals
 
         int_expr.sort(key=lambda x: x[1].sort_key() if x[1].is_number else S.NegativeInfinity.sort_key())

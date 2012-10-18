@@ -15,7 +15,7 @@ def test_TupleParametersBase():
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
 
-    assert hyper((1, 2),(1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((1, 2), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
 
     h = hyper((1, 2), (3, 4, 5), z)
     assert h.ap == Tuple(1, 2)
@@ -56,9 +56,9 @@ def test_expand_func():
     # hyperexpand wrapper for hyper:
     assert expand_func(hyper([], [], z)) == exp(z)
     assert expand_func(hyper([1, 2, 3], [], z)) == hyper([1, 2, 3], [], z)
-    assert expand_func(meijerg([[1,1],[]], [[1],[0]], z)) == log(z + 1)
-    assert expand_func(meijerg([[1,1],[]], [[],[]], z)) \
-           == meijerg([[1,1],[]], [[],[]], z)
+    assert expand_func(meijerg([[1, 1], []], [[1], [0]], z)) == log(z + 1)
+    assert expand_func(meijerg([[1, 1], []], [[], []], z)) \
+           == meijerg([[1, 1], []], [[], []], z)
 
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
@@ -104,7 +104,7 @@ def test_meijer():
     assert tn(meijerg(Tuple(), Tuple(), Tuple(0), Tuple(), -z), exp(z), z)
     assert tn(sqrt(pi)*meijerg(Tuple(), Tuple(),
                                Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
-    assert tn(meijerg(Tuple(1, 1),Tuple(), Tuple(1), Tuple(0), z),
+    assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
     # differentiation

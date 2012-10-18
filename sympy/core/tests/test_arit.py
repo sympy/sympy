@@ -11,7 +11,7 @@ z = Symbol('z')
 
 def test_bug1():
     assert re(x) != x
-    x.series(x,0,1)
+    x.series(x, 0, 1)
     assert re(x) != x
 
 a = Symbol("a")
@@ -71,8 +71,8 @@ def test_arit0():
     assert e == 2**(a**2)
     e = -(1+a)
     assert e == -1 -a
-    e = Rational(1,2)*(1+a)
-    assert e == Rational(1,2) + a/2
+    e = Rational(1, 2)*(1+a)
+    assert e == Rational(1, 2) + a/2
 
 def test_div():
     e=a/b
@@ -124,7 +124,7 @@ def test_pow():
     e=a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1,2)))**Rational(1,2)
+    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1, 2)))**Rational(1, 2)
 
     x = Symbol('x')
     y = Symbol('y')
@@ -134,8 +134,8 @@ def test_pow():
 
     assert (x**5*(3*x)**(3)).expand() == 27 * x**8
     assert (x**5*(-3*x)**(3)).expand() == -27 * x**8
-    assert (x**5*(3*x)**(-3)).expand() == Rational(1,27) * x**2
-    assert (x**5*(-3*x)**(-3)).expand() == -Rational(1,27) * x**2
+    assert (x**5*(3*x)**(-3)).expand() == Rational(1, 27) * x**2
+    assert (x**5*(-3*x)**(-3)).expand() == -Rational(1, 27) * x**2
 
     # expand_power_exp
     assert (x**(y**(x+exp(x+y))+z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
@@ -154,9 +154,9 @@ def test_pow2():
     # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
     #                                  x.is_positive or y.is_integer
     # let x = 1 to see why the following are not true.
-    assert ((-x)**2)**Rational(1,3) != ((-x)**Rational(1,3))**2
-    assert (-x)**Rational(2,3) != x**Rational(2,3)
-    assert (-x)**Rational(5,7) != -x**Rational(5,7)
+    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
+    assert (-x)**Rational(2, 3) != x**Rational(2, 3)
+    assert (-x)**Rational(5, 7) != -x**Rational(5, 7)
 
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
@@ -217,7 +217,7 @@ def test_expand():
     assert e.expand() == 5*a+5*b+5*c+2*a*c+b*c+a*b+a**2+c**2
     x=Symbol("x")
     s=exp(x*x)-1
-    e=s.nseries(x,0,3)/x**2
+    e=s.nseries(x, 0, 3)/x**2
     assert e.expand() == 1+x**2/2+O(x**4)
 
     e = (x*(y+z))**(x*(y+z))*(x+y)
@@ -353,7 +353,7 @@ def test_Mul_doesnt_expand_exp():
     assert x**(y)*x**(2*y) == x**(3*y)
     assert sqrt(2)*sqrt(2) == 2
     assert 2**x*2**(2*x) == 2**(3*x)
-    assert sqrt(2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
+    assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Add_Mul_is_integer():
@@ -1055,7 +1055,7 @@ def test_Pow_is_nonpositive_nonnegative():
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
-    ii= Symbol('ii',imaginary=True)
+    ii= Symbol('ii', imaginary=True)
     x = Symbol('x')
 
     assert I.is_imaginary == True
@@ -1084,22 +1084,22 @@ def test_Mul_is_imaginary_real():
 def test_Add_is_comparable():
     assert (x+y).is_comparable == False
     assert (x+1).is_comparable == False
-    assert (Rational(1,3) - sqrt(8)).is_comparable == True
+    assert (Rational(1, 3) - sqrt(8)).is_comparable == True
 
 def test_Mul_is_comparable():
     assert (x*y).is_comparable == False
     assert (x*2).is_comparable == False
-    assert (sqrt(2)*Rational(1,3)).is_comparable == True
+    assert (sqrt(2)*Rational(1, 3)).is_comparable == True
 
 
 def test_Pow_is_comparable():
     assert (x**y).is_comparable == False
     assert (x**2).is_comparable == False
-    assert (sqrt(Rational(1,3))).is_comparable == True
+    assert (sqrt(Rational(1, 3))).is_comparable == True
 
 
 def test_Add_is_positive_2():
-    e = Rational(1,3) - sqrt(8)
+    e = Rational(1, 3) - sqrt(8)
     assert e.is_positive == False
     assert e.is_negative == True
 
@@ -1125,7 +1125,7 @@ def test_issue432():
 
         def __rtruediv__(self, other):
             return "something"
-    assert sympify(1)/MightyNumeric((1,2)) == "something"
+    assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 def test_issue432b():
     class Foo:
@@ -1147,18 +1147,18 @@ def test_bug3():
     assert e == f
 
 def test_suppressed_evaluation():
-    a = Add(0,3,2,evaluate=False)
-    b = Mul(1,3,2,evaluate=False)
-    c = Pow(3,2,evaluate=False)
+    a = Add(0, 3, 2, evaluate=False)
+    b = Mul(1, 3, 2, evaluate=False)
+    c = Pow(3, 2, evaluate=False)
     assert a != 6
     assert a.func is Add
-    assert a.args == (3,2)
+    assert a.args == (3, 2)
     assert b != 6
     assert b.func is Mul
-    assert b.args == (3,2)
+    assert b.args == (3, 2)
     assert c != 9
     assert c.func is Pow
-    assert c.args == (3,2)
+    assert c.args == (3, 2)
 
 
 def test_Add_as_coeff_mul():
@@ -1247,7 +1247,7 @@ def test_Mul_as_content_primitive():
 
 def test_Pow_as_content_primitive():
     assert (x**y).as_content_primitive() == (1, x**y)
-    assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2,(x + 1), evaluate=False))**y)
+    assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2, (x + 1), evaluate=False))**y)
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 def test_issue2361():
@@ -1377,17 +1377,17 @@ def test_issue_2061_2988_2990_2991():
 def test_float_int():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
-    assert int(Float('1.123456789012345678901234567890e20','')) == \
+    assert int(Float('1.123456789012345678901234567890e20', '')) == \
         112345678901234567890L
-    assert int(Float('1.123456789012345678901234567890e25','')) == \
+    assert int(Float('1.123456789012345678901234567890e25', '')) == \
         11234567890123456789012345L
-    assert int(Float('1.123456789012345678901234567890e35','')) == \
+    assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000000L
-    assert Integer(Float('1.123456789012345678901234567890e20','')) == \
+    assert Integer(Float('1.123456789012345678901234567890e20', '')) == \
         112345678901234567890
-    assert Integer(Float('1.123456789012345678901234567890e25','')) == \
+    assert Integer(Float('1.123456789012345678901234567890e25', '')) == \
         11234567890123456789012345
-    assert Integer(Float('1.123456789012345678901234567890e35','')) == \
+    assert Integer(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000000
     assert int(1 + Rational('.9999999999999999999999999')) == 1
     assert int(pi/1e20) == 0

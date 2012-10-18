@@ -54,7 +54,7 @@ def test_rewrite1():
 def test_meijerint_indefinite_numerically():
     def t(fac, arg):
         g = meijerg([a], [b], [c], [d], arg)*fac
-        subs = {a: randcplx()/10, b:randcplx()/10 + I,
+        subs = {a: randcplx()/10, b: randcplx()/10 + I,
                 c: randcplx(), d: randcplx()}
         integral = meijerint_indefinite(g, x)
         assert integral is not None
@@ -69,7 +69,7 @@ def test_meijerint_indefinite_numerically():
 
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
-            d: randcplx(), y:randcplx()/10}
+            d: randcplx(), y: randcplx()/10}
     def t(a, b, arg, n):
         from sympy import Mul
         m1 = meijerg(a, b, arg)
@@ -103,11 +103,11 @@ def test_meijerint():
                      *meijerg([], [], [mu/2], [-mu/2], t**2/4),
                      (t, 0, oo)).is_Piecewise
     s = symbols('s', positive=True)
-    assert integrate(x**s*meijerg([[],[]], [[0],[]], x), (x, 0, oo)) \
+    assert integrate(x**s*meijerg([[], []], [[0], []], x), (x, 0, oo)) \
            == gamma(s + 1)
-    assert integrate(x**s*meijerg([[],[]], [[0],[]], x), (x, 0, oo),
+    assert integrate(x**s*meijerg([[], []], [[0], []], x), (x, 0, oo),
                      meijerg=True) == gamma(s + 1)
-    assert isinstance(integrate(x**s*meijerg([[],[]], [[0],[]], x),
+    assert isinstance(integrate(x**s*meijerg([[], []], [[0], []], x),
                                 (x, 0, oo), meijerg=False),
                       Integral)
 
@@ -152,7 +152,7 @@ def test_meijerint():
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
 
     # Test a bug
-    def res(n): return (1/(1+x**2)).diff(x, n).subs(x,1)*(-1)**n
+    def res(n): return (1/(1+x**2)).diff(x, n).subs(x, 1)*(-1)**n
     for n in range(6):
         assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
          res(n)
@@ -533,7 +533,7 @@ def test_expint():
     assert integrate(expint(2, x), x, meijerg=True
             ).rewrite(expint).expand() == \
             -x**2*expint(1, x)/2 + x*exp(-x)/2 - exp(-x)/2
-    assert simplify(unpolarify(integrate(expint(y,x), x,
+    assert simplify(unpolarify(integrate(expint(y, x), x,
                  meijerg=True).rewrite(expint).expand(func=True))) == \
            -expint(y + 1, x)
 
@@ -594,5 +594,5 @@ def test_3249():
 def test_fresnel():
     from sympy import fresnels, fresnelc
 
-    assert expand_func(integrate(sin(pi*x**2/2),x)) == fresnels(x)
-    assert expand_func(integrate(cos(pi*x**2/2),x)) == fresnelc(x)
+    assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
+    assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)

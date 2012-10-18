@@ -38,9 +38,9 @@ def test_logic_cmp():
     assert (l1!=l2) == F
     assert cmp(l1, l2) == 0
 
-    assert And('a','b','c') == And('b','a','c')
-    assert And('a','b','c') == And('c','b','a')
-    assert And('a','b','c') == And('c','a','b')
+    assert And('a', 'b', 'c') == And('b', 'a', 'c')
+    assert And('a', 'b', 'c') == And('c', 'b', 'a')
+    assert And('a', 'b', 'c') == And('c', 'a', 'b')
 
 def test_logic_onearg():
     assert And() == True
@@ -78,33 +78,33 @@ def test_logic_combine_args():
     assert And('a', 'b', 'a') == And('a', 'b')
     assert Or('a', 'b', 'a') == Or('a', 'b')
 
-    assert And( And('a','b'), And('c','d') ) == And('a','b','c','d')
-    assert Or( Or('a','b'), Or('c','d') ) == Or('a','b','c','d')
+    assert And( And('a', 'b'), And('c', 'd') ) == And('a', 'b', 'c', 'd')
+    assert Or( Or('a', 'b'), Or('c', 'd') ) == Or('a', 'b', 'c', 'd')
 
-    assert Or( 't', And('n','p','r'), And('n','r'), And('n','p','r'), 't', And('n','r') ) == \
-                    Or('t', And('n','p','r'), And('n','r'))
+    assert Or( 't', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't', And('n', 'r') ) == \
+                    Or('t', And('n', 'p', 'r'), And('n', 'r'))
 
 def test_logic_expand():
-    t = And(Or('a','b'), 'c')
-    assert t.expand() == Or(And('a','c'), And('b','c'))
+    t = And(Or('a', 'b'), 'c')
+    assert t.expand() == Or(And('a', 'c'), And('b', 'c'))
 
     t = And(Or('a', Not('b')), 'b')
-    assert t.expand() == And('a','b')
+    assert t.expand() == And('a', 'b')
 
-    t = And(Or('a','b'), Or('c','d'))
-    assert t.expand() == Or(And('a','c'), And('a','d'), And('b','c'), And('b','d'))
+    t = And(Or('a', 'b'), Or('c', 'd'))
+    assert t.expand() == Or(And('a', 'c'), And('a', 'd'), And('b', 'c'), And('b', 'd'))
 
 def test_logic_fromstring():
     S = Logic.fromstring
 
     assert S('a') == 'a'
     assert S('!a') == Not('a')
-    assert S('a & b') == And('a','b')
-    assert S('a | b') == Or('a','b')
-    assert S('a | b & c') == And(Or('a','b'), 'c')
-    assert S('a & b | c') == Or(And('a','b'), 'c')
-    assert S('a & b & c') == And('a','b','c')
-    assert S('a | b | c') == Or('a','b','c')
+    assert S('a & b') == And('a', 'b')
+    assert S('a | b') == Or('a', 'b')
+    assert S('a | b & c') == And(Or('a', 'b'), 'c')
+    assert S('a & b | c') == Or(And('a', 'b'), 'c')
+    assert S('a & b & c') == And('a', 'b', 'c')
+    assert S('a | b | c') == Or('a', 'b', 'c')
 
     raises(ValueError, lambda: S('| a'))
     raises(ValueError, lambda: S('& a'))

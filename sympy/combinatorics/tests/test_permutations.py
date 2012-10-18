@@ -26,7 +26,7 @@ def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
     assert len(set([p, p])) == 1
-    r = Permutation([1,3,2,0,4,6,5])
+    r = Permutation([1, 3, 2, 0, 4, 6, 5])
     ans = Permutation(_af_rmuln(*[w.array_form for w in (p, q, r)])).array_form
     assert rmul(p, q, r).array_form == ans
     # make sure no other permutation of p, q, r could have given
@@ -46,8 +46,8 @@ def test_Permutation():
     assert _af_rmul(p.array_form, q.array_form) == \
         [6, 5, 3, 0, 2, 4, 1]
 
-    assert rmul(Permutation([[1,2,3],[0,4]]),
-                Permutation([[1,2,4],[0],[3]])).cyclic_form == \
+    assert rmul(Permutation([[1, 2, 3], [0, 4]]),
+                Permutation([[1, 2, 4], [0], [3]])).cyclic_form == \
         [[0, 4, 2], [1, 3]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
@@ -111,7 +111,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
            == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
-    assert Permutation([i for i in range(500,-1,-1)]).inversions() == 125250
+    assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
@@ -229,10 +229,10 @@ def test_ranking():
     p = Permutation([1, 5, 2, 0, 3, 6, 4])
     q = Permutation([[1, 2, 3, 5, 6], [0, 4]])
     a = [Permutation.unrank_trotterjohnson(4, i).array_form for i in range(5)]
-    assert a == [[0,1,2,3], [0,1,3,2], [0,3,1,2], [3,0,1,2], [3,0,2,1] ]
+    assert a == [[0, 1, 2, 3], [0, 1, 3, 2], [0, 3, 1, 2], [3, 0, 1, 2], [3, 0, 2, 1] ]
     assert [Permutation(pa).rank_trotterjohnson() for pa in a] == range(5)
-    assert Permutation([0,1,2,3]).next_trotterjohnson() == \
-        Permutation([0,1,3,2])
+    assert Permutation([0, 1, 2, 3]).next_trotterjohnson() == \
+        Permutation([0, 1, 3, 2])
 
     assert q.rank_trotterjohnson() == 2283
     assert p.rank_trotterjohnson() == 3389
@@ -282,7 +282,7 @@ def test_ranking():
     assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
 def test_mul():
-    a, b = [0,2,1,3], [0,1,3,2]
+    a, b = [0, 2, 1, 3], [0, 1, 3, 2]
     assert _af_rmul(a, b) == [0, 2, 3, 1]
     assert _af_rmuln(a, b, range(4)) == [0, 2, 3, 1]
     assert rmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
@@ -315,10 +315,10 @@ def test_args():
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == \
         Permutation(((0, ), [1]))
-    assert Permutation([[1,2]]) == Permutation([0, 2, 1])
-    assert Permutation([[1], [4,2]]) == Permutation([0, 1, 4, 3, 2])
-    assert Permutation([[1], [4,2]], size=1) == Permutation([0, 1, 4, 3, 2])
-    assert Permutation([[1], [4,2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
+    assert Permutation([[1, 2]]) == Permutation([0, 2, 1])
+    assert Permutation([[1], [4, 2]]) == Permutation([0, 1, 4, 3, 2])
+    assert Permutation([[1], [4, 2]], size=1) == Permutation([0, 1, 4, 3, 2])
+    assert Permutation([[1], [4, 2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
     assert Permutation([], size=3) == Permutation([0, 1, 2])
     assert Permutation(3).list(5) == [0, 1, 2, 3, 4]
     assert Permutation(3).list(-1) == []
@@ -326,32 +326,32 @@ def test_args():
     assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
     raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
-    raises(ValueError, lambda: Permutation([1,1,0]))
+    raises(ValueError, lambda: Permutation([1, 1, 0]))
     raises(ValueError, lambda: Permutation([[1], [1, 2]]))
     raises(ValueError, lambda: Permutation([4, 5], size=10)) # where are 0-3?
     # but this is ok because cycles imply that only those listed moved
     assert Permutation(4, 5) == Permutation([0, 1, 2, 3, 5, 4])
 
 def test_Cycle():
-    assert Cycle(1, 2)(2,3) == Cycle(1, 3, 2)
+    assert Cycle(1, 2)(2, 3) == Cycle(1, 3, 2)
     assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
     assert Permutation(Cycle(1, 2)(2, 1, 0, 3)).cyclic_form, Cycle(0, 2, 1)
     raises(ValueError, lambda: Cycle().list())
-    assert Cycle(1,2).list() == [0, 2, 1]
-    assert Cycle(1,2).list(4) == [0, 2, 1, 3]
+    assert Cycle(1, 2).list() == [0, 2, 1]
+    assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
-    assert str(Cycle(1,2)(4,5)) == 'Cycle(1, 2)(4, 5)'
-    assert str(Cycle(1,2)) == 'Cycle(1, 2)'
+    assert str(Cycle(1, 2)(4, 5)) == 'Cycle(1, 2)(4, 5)'
+    assert str(Cycle(1, 2)) == 'Cycle(1, 2)'
     assert Cycle(Permutation(range(3))) == Cycle()
-    assert Cycle(1,2).list() == [0, 2, 1]
-    assert Cycle(1,2).list(4) == [0, 2, 1, 3]
+    assert Cycle(1, 2).list() == [0, 2, 1]
+    assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     raises(TypeError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
 
     # check round-trip
-    p = Permutation([[1,2], [4,3]], size=5)
+    p = Permutation([[1, 2], [4, 3]], size=5)
     assert Permutation(Cycle(p)) == p
 
 def test_from_sequence():

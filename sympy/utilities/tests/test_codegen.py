@@ -74,7 +74,7 @@ def test_empty_c_header():
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
 def test_simple_c_code():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
@@ -103,7 +103,7 @@ def test_numbersymbol_c_code():
     assert source == expected
 
 def test_c_code_argument_order():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
@@ -118,7 +118,7 @@ def test_c_code_argument_order():
     assert source == expected
 
 def test_simple_c_header():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
@@ -132,7 +132,7 @@ def test_simple_c_header():
     assert source == expected
 
 def test_simple_c_codegen():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
     expected = [
@@ -151,12 +151,12 @@ def test_simple_c_codegen():
     assert result == expected
 
 def test_multiple_results_c():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr1 = (x+y)*z
     expr2 = (x-y)*z
     routine = Routine(
         "test",
-        [expr1,expr2]
+        [expr1, expr2]
     )
     code_gen = CCodeGen()
     raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
@@ -224,7 +224,7 @@ def test_ansi_math2_codegen():
     from sympy import atan2, N
     x, y = symbols('x,y')
     name_expr = [
-        ("test_atan2", atan2(x,y)),
+        ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
     ]
     result = codegen(name_expr, "C", "file", header=False, empty=False)
@@ -244,7 +244,7 @@ def test_ansi_math2_codegen():
 
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
@@ -308,7 +308,7 @@ def test_complicated_codegen():
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -374,7 +374,7 @@ def test_partial_loops_c():
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m,o,p = symbols('n m o p', integer=True)
+    n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -455,7 +455,7 @@ def test_empty_f_header():
     assert source == ""
 
 def test_simple_f_code():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
@@ -486,7 +486,7 @@ def test_numbersymbol_f_code():
     assert source == expected
 
 def test_f_code_argument_order():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
@@ -503,7 +503,7 @@ def test_f_code_argument_order():
     assert source == expected
 
 def test_simple_f_header():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
@@ -521,7 +521,7 @@ def test_simple_f_header():
     assert source == expected
 
 def test_simple_f_codegen():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = (x+y)*z
     result = codegen(("test", (x+y)*z), "F95", "file", header=False, empty=False)
     expected = [
@@ -546,12 +546,12 @@ def test_simple_f_codegen():
     assert result == expected
 
 def test_multiple_results_f():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr1 = (x+y)*z
     expr2 = (x-y)*z
     routine = Routine(
         "test",
-        [expr1,expr2]
+        [expr1, expr2]
     )
     code_gen = FCodeGen()
     raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
@@ -740,7 +740,7 @@ def test_intrinsic_math2_codegen():
     from sympy import atan2, N
     x, y = symbols('x,y')
     name_expr = [
-        ("test_atan2", atan2(x,y)),
+        ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
     ]
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
@@ -782,7 +782,7 @@ def test_intrinsic_math2_codegen():
 
 def test_complicated_codegen_f95():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
@@ -920,8 +920,8 @@ def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
 
-    i,j,n,m = symbols('i,j,n,m', integer=True)
-    A,x,y = symbols('A,x,y')
+    i, j, n, m = symbols('i,j,n,m', integer=True)
+    A, x, y = symbols('A,x,y')
     A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
     x = IndexedBase(x)[Idx(j, n)]
     y = IndexedBase(y)[Idx(i, m)]
@@ -969,7 +969,7 @@ def test_partial_loops_f():
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m,o,p = symbols('n m o p', integer=True)
+    n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -1029,7 +1029,7 @@ def test_output_arg_f():
 def test_inline_function():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)
     j = Idx('j', n)

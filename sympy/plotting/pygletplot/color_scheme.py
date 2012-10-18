@@ -169,7 +169,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i'%(i)) for i in xrange(1,6)]
+        vars = [Symbol('unbound%i'%(i)) for i in xrange(1, 6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]
@@ -329,7 +329,7 @@ default_color_schemes['zfade3'] = ColorScheme(z, (None, None, z),
 default_color_schemes['zfade4'] = ColorScheme(z, (None, None, z),
                                               [0.0,  (0.3, 0.3, 1.0),
                                                0.30, (0.3, 1.0, 0.3),
-                                               0.55, (0.95,1.0, 0.2),
-                                               0.65, (1.0,0.95, 0.2),
+                                               0.55, (0.95, 1.0, 0.2),
+                                               0.65, (1.0, 0.95, 0.2),
                                                0.85, (1.0, 0.7, 0.2),
                                                1.0,  (1.0, 0.3, 0.2)])

@@ -326,8 +326,8 @@ def test_acosh():
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
-    assert acosh(Rational(1,2)) == I*pi/3
-    assert acosh(Rational(-1,2)) == 2*pi*I/3
+    assert acosh(Rational(1, 2)) == I*pi/3
+    assert acosh(Rational(-1, 2)) == 2*pi*I/3
 
     assert acosh(zoo) == oo
 
@@ -466,21 +466,21 @@ def test_leading_term():
             assert eq.as_leading_term(x) == eq
 
 def test_complex():
-    a,b = symbols('a,b', real=True)
+    a, b = symbols('a,b', real=True)
     z = a + b*I
     for func in [sinh, cosh, tanh, coth]:
         assert func(z).conjugate() == func(a - b*I)
-    for deep in [True,False]:
-        assert sinh(z).expand(complex=True,deep=deep) == sinh(a)*cos(b) + I*cosh(a)*sin(b)
-        assert cosh(z).expand(complex=True,deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
-        assert tanh(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
-        assert coth(z).expand(complex=True,deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
+    for deep in [True, False]:
+        assert sinh(z).expand(complex=True, deep=deep) == sinh(a)*cos(b) + I*cosh(a)*sin(b)
+        assert cosh(z).expand(complex=True, deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
+        assert tanh(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
+        assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
 
 def test_complex_2899():
-    a,b = symbols('a,b', real=True)
-    for deep in [True,False]:
+    a, b = symbols('a,b', real=True)
+    for deep in [True, False]:
         for func in [sinh, cosh, tanh, coth]:
-            assert func(a).expand(complex=True,deep=deep) == func(a)
+            assert func(a).expand(complex=True, deep=deep) == func(a)
 
 def test_simplifications():
     x = Symbol('x')

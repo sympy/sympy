@@ -108,11 +108,11 @@ def test_outer_product():
 
     assert op == Mul(Integer(2), OuterProduct(k, b))
 
-    assert Dagger(k*b) == OuterProduct(Dagger(b),Dagger(k))
+    assert Dagger(k*b) == OuterProduct(Dagger(b), Dagger(k))
     assert Dagger(k*b).is_commutative == False
 
     #test the _eval_trace
-    assert Tr(OuterProduct(JzKet(1,1), JzBra(1,1))).doit() == 1
+    assert Tr(OuterProduct(JzKet(1, 1), JzBra(1, 1))).doit() == 1
 
 def test_operator_dagger():
     A = Operator('A')

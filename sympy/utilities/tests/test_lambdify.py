@@ -13,7 +13,7 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy', min_python_version=(2, 6))
 
-x,y,z = symbols('x,y,z')
+x, y, z = symbols('x,y,z')
 
 #================== Test different arguments ==============
 def test_no_args():
@@ -26,19 +26,19 @@ def test_single_arg():
     assert f(1) == 2
 
 def test_list_args():
-    f = lambdify([x,y], x+y)
-    assert f(1,2) == 3
+    f = lambdify([x, y], x+y)
+    assert f(1, 2) == 3
 
 def test_str_args():
     f = lambdify('x,y,z', 'z,y,x')
-    assert f(3,2,1) == (1,2,3)
-    assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
+    assert f(3, 2, 1) == (1, 2, 3)
+    assert f(1.0, 2.0, 3.0) == (3.0, 2.0, 1.0)
     # make sure correct number of args required
     raises(TypeError, lambda: f(0))
 
 def test_own_namespace():
-    myfunc = lambda x:1
-    f = lambdify(x, sin(x), {"sin":myfunc})
+    myfunc = lambda x: 1
+    f = lambdify(x, sin(x), {"sin": myfunc})
     assert f(0.1) == 1
     assert f(100) == 1
 
@@ -52,7 +52,7 @@ def test_bad_args():
     # no vargs given
     raises(TypeError, lambda: lambdify(1))
     # same with vector exprs
-    raises(TypeError, lambda: lambdify([1,2]))
+    raises(TypeError, lambda: lambdify([1, 2]))
 
 def test_atoms():
     # Non-Symbol atoms should not be pulled out from the expression namespace
@@ -71,7 +71,7 @@ def test_sympy_lambda():
     f = lambdify(x, sin(x), "sympy")
     assert f(x) == sin(x)
     prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+    assert -prec < f(Rational(1, 5)).evalf() - Float(str(sin02)) < prec
     # arctan is in numpy module and should not be available
     raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
 
@@ -154,7 +154,7 @@ def test_sqrt():
     assert f(6.25) == 2.5
 
 def test_trig():
-    f = lambdify([x], [cos(x),sin(x)])
+    f = lambdify([x], [cos(x), sin(x)])
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0]+1 < prec
@@ -166,9 +166,9 @@ def test_trig():
 
 #================== Test vectors ==========================
 def test_vector_simple():
-    f = lambdify((x,y,z), (z,y,x))
-    assert f(3,2,1) == (1,2,3)
-    assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
+    f = lambdify((x, y, z), (z, y, x))
+    assert f(3, 2, 1) == (1, 2, 3)
+    assert f(1.0, 2.0, 3.0) == (3.0, 2.0, 1.0)
     # make sure correct number of args required
     raises(TypeError, lambda: f(0))
 
@@ -180,13 +180,13 @@ def test_vector_discontinuous():
     assert f(-2) == (0.5, -0.5)
 
 def test_trig_symbolic():
-    f = lambdify([x], [cos(x),sin(x)])
+    f = lambdify([x], [cos(x), sin(x)])
     d = f(pi)
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 
 def test_trig_float():
-    f = lambdify([x], [cos(x),sin(x)])
+    f = lambdify([x], [cos(x), sin(x)])
     d = f(3.14159)
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
@@ -194,11 +194,11 @@ def test_trig_float():
 def test_docs():
     f = lambdify(x, x**2)
     assert f(2) == 4
-    f = lambdify([x,y,z], [z,y,x])
+    f = lambdify([x, y, z], [z, y, x])
     assert f(1, 2, 3) == [3, 2, 1]
     f = lambdify(x, sqrt(x))
     assert f(4) == 2.0
-    f = lambdify((x,y), sin(x*y)**2)
+    f = lambdify((x, y), sin(x*y)**2)
     assert f(0, 5) == 0
 
 def test_math():
@@ -214,10 +214,10 @@ def test_sin():
 def test_matrix():
     A = Matrix([[x, x*y], [sin(z)+4, x**z]])
     sol = Matrix([[1, 2], [sin(3)+4, 1]])
-    f = lambdify((x,y,z), A, modules="sympy")
-    assert f(1,2,3) == sol
-    f = lambdify((x,y,z), (A, [A]), modules="sympy")
-    assert f(1,2,3) == (sol,[sol])
+    f = lambdify((x, y, z), A, modules="sympy")
+    assert f(1, 2, 3) == sol
+    f = lambdify((x, y, z), (A, [A]), modules="sympy")
+    assert f(1, 2, 3) == (sol, [sol])
     J = Matrix((x, x + y)).jacobian((x, y))
     v = Matrix((x, y))
     sol = Matrix([[1, 0], [1, 1]])
@@ -235,8 +235,8 @@ def test_sym_single_arg():
     assert f(z) == z * y
 
 def test_sym_list_args():
-    f = lambdify([x,y], x + y + z)
-    assert f(1,2) == 3 + z
+    f = lambdify([x, y], x + y + z)
+    assert f(1, 2) == 3 + z
 
 def test_sym_integral():
     f = Lambda(x, exp(-x**2))
@@ -250,9 +250,9 @@ def test_namespace_order():
     # generated lambda, this meant that the behavior of a previously
     # generated lambda function could change as a result of later calls
     # to lambdify.
-    n1 = {'f': lambda x:'first f'}
-    n2 = {'f': lambda x:'second f',
-          'g': lambda x:'function g'}
+    n1 = {'f': lambda x: 'first f'}
+    n2 = {'f': lambda x: 'second f',
+          'g': lambda x: 'function g'}
     f = sympy.Function('f')
     g = sympy.Function('g')
     if1 = lambdify(x, f(x), modules=(n1, "sympy"))
@@ -281,7 +281,7 @@ def test_imps():
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
 
 def test_imps_wrong_args():
-    raises(ValueError, lambda: implemented_function(sin, lambda x:x))
+    raises(ValueError, lambda: implemented_function(sin, lambda x: x))
 
 def test_lambdify_imps():
     # Test lambdify with implemented functions

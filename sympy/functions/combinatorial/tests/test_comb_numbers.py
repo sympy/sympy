@@ -9,20 +9,20 @@ x = Symbol('x')
 
 def test_bernoulli():
     assert bernoulli(0) == 1
-    assert bernoulli(1) == Rational(-1,2)
-    assert bernoulli(2) == Rational(1,6)
+    assert bernoulli(1) == Rational(-1, 2)
+    assert bernoulli(2) == Rational(1, 6)
     assert bernoulli(3) == 0
-    assert bernoulli(4) == Rational(-1,30)
+    assert bernoulli(4) == Rational(-1, 30)
     assert bernoulli(5) == 0
-    assert bernoulli(6) == Rational(1,42)
+    assert bernoulli(6) == Rational(1, 42)
     assert bernoulli(7) == 0
-    assert bernoulli(8) == Rational(-1,30)
-    assert bernoulli(10) == Rational(5,66)
+    assert bernoulli(8) == Rational(-1, 30)
+    assert bernoulli(10) == Rational(5, 66)
     assert bernoulli(1000001) == 0
 
     assert bernoulli(0, x) == 1
-    assert bernoulli(1, x) == x-Rational(1,2)
-    assert bernoulli(2, x) == x**2-x+Rational(1,6)
+    assert bernoulli(1, x) == x-Rational(1, 2)
+    assert bernoulli(2, x) == x**2-x+Rational(1, 6)
     assert bernoulli(3, x) == x**3 - (3*x**2)/2 + x/2
 
     # Should be fast; computed with mpmath
@@ -71,15 +71,15 @@ def test_bell():
     assert bell(6, 3, X) == 15*5 + 60*3*2 + 15*2**3
 
 def test_harmonic():
-    assert harmonic(1,1) == 1
-    assert harmonic(2,1) == Rational(3,2)
-    assert harmonic(3,1) == Rational(11,6)
-    assert harmonic(4,1) == Rational(25,12)
-    assert harmonic(3,1) == harmonic(3)
-    assert harmonic(3,5) == 1 + Rational(1,2**5) + Rational(1,3**5)
-    assert harmonic(10,0) == 10
-    assert harmonic(oo,1) == zoo
-    assert harmonic(oo,2) == (pi**2)/6
+    assert harmonic(1, 1) == 1
+    assert harmonic(2, 1) == Rational(3, 2)
+    assert harmonic(3, 1) == Rational(11, 6)
+    assert harmonic(4, 1) == Rational(25, 12)
+    assert harmonic(3, 1) == harmonic(3)
+    assert harmonic(3, 5) == 1 + Rational(1, 2**5) + Rational(1, 3**5)
+    assert harmonic(10, 0) == 10
+    assert harmonic(oo, 1) == zoo
+    assert harmonic(oo, 2) == (pi**2)/6
 
 def test_euler():
     assert euler(0) == 1
@@ -116,11 +116,11 @@ def test_catalan():
 
     assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
-    assert catalan(Rational(1,2)).rewrite(gamma) == 8/(3*pi)
-    assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1,2))/(sqrt(pi)*gamma(3*x + 2))
+    assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
+    assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1, 2))/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
-    assert diff(catalan(x),x) == (polygamma(0, x + Rational(1,2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+    assert diff(catalan(x), x) == (polygamma(0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'

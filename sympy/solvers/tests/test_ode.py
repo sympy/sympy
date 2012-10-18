@@ -5,7 +5,7 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
                    erf, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
                    Piecewise, symbols)
-x,y,z = symbols('x:z', real=True)
+x, y, z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
@@ -185,21 +185,21 @@ def test_ode_order():
     g = Function('g')
     x = Symbol('x')
     assert ode_order(3*x*exp(f(x)), f(x)) == 0
-    assert ode_order(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
-    assert ode_order(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
-    assert ode_order(diff(x*exp(f(x)),x,x), f(x)) == 2
-    assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
+    assert ode_order(x*diff(f(x), x)+3*x*f(x)-sin(x)/x, f(x)) == 1
+    assert ode_order(x**2*f(x).diff(x, x)+x*diff(f(x), x)-f(x), f(x)) == 2
+    assert ode_order(diff(x*exp(f(x)), x, x), f(x)) == 2
+    assert ode_order(diff(x*diff(x*exp(f(x)), x, x), x), f(x)) == 3
     assert ode_order(diff(f(x), x, x), g(x)) == 0
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
-    assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(diff(x*diff(x*exp(f(x)), x, x), x), g(x)) == 0
     # issue 2736: ode_order has to also work for unevaluated derivatives
     # (ie, without using doit()).
     assert ode_order(Derivative(x*f(x), x), f(x)) == 1
     assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
-    assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x, x), x), g(x)) == 0
     assert ode_order(Derivative(f(x), x, x), g(x)) == 0
-    assert ode_order(Derivative(x*exp(f(x)),x,x), f(x)) == 2
+    assert ode_order(Derivative(x*exp(f(x)), x, x), f(x)) == 2
     assert ode_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
     assert ode_order(Derivative(x*Derivative(f(x), x, x), x), f(x)) == 3
     assert ode_order(
@@ -219,14 +219,14 @@ def test_old_ode_tests():
     eq5 = Eq(9*f(x).diff(x, x), f(x))
     # Type: a(x)f'(x)+b(x)*f(x)+c(x)=0
     eq6 = Eq(x**2*f(x).diff(x) + 3*x*f(x) - sin(x)/x, 0)
-    eq7 = Eq(f(x).diff(x,x) - 3*diff(f(x),x) + 2*f(x), 0)
+    eq7 = Eq(f(x).diff(x, x) - 3*diff(f(x), x) + 2*f(x), 0)
     # Type: 2nd order, constant coefficients (two real different roots)
-    eq8 = Eq(f(x).diff(x,x) - 4*diff(f(x),x) + 4*f(x), 0)
+    eq8 = Eq(f(x).diff(x, x) - 4*diff(f(x), x) + 4*f(x), 0)
     # Type: 2nd order, constant coefficients (two real equal roots)
-    eq9 = Eq(f(x).diff(x,x)+2*diff(f(x),x)+3*f(x), 0)
+    eq9 = Eq(f(x).diff(x, x)+2*diff(f(x), x)+3*f(x), 0)
     # Type: 2nd order, constant coefficients (two complex roots)
-    eq10 = Eq(3*f(x).diff(x) -1,0)
-    eq11 = Eq(x*f(x).diff(x) -1,0)
+    eq10 = Eq(3*f(x).diff(x) -1, 0)
+    eq11 = Eq(x*f(x).diff(x) -1, 0)
     sol1 = Eq(f(x), C1)
     sol2 = Eq(f(x), C1+5*x/3)
     sol3 = Eq(f(x), C1+5*x/3)
@@ -265,7 +265,7 @@ def test_old_ode_tests():
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x),exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 \
+    sol = Eq(f(x), exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 \
     + x*exp(x**2/2) + C1))
     assert dsolve(eq, hint='1st_linear') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -273,15 +273,15 @@ def test_1st_linear():
 
 def test_Bernoulli():
     # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
-    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2,0)
-    sol = dsolve(eq,f(x), hint='Bernoulli')
-    assert sol == Eq(f(x),1/(x*(C1 + 1/x)))
+    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
+    sol = dsolve(eq, f(x), hint='Bernoulli')
+    assert sol == Eq(f(x), 1/(x*(C1 + 1/x)))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 def test_Riccati_special_minus2():
     # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
     eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
-    sol = dsolve(eq,f(x), hint='Riccati_special_minus2')
+    sol = dsolve(eq, f(x), hint='Riccati_special_minus2')
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 def test_1st_exact1():
@@ -292,14 +292,14 @@ def test_1st_exact1():
     eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
     eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
-    sol1 = Eq(f(x),acos((C1)/cos(x)))
-    sol2 = Eq(log(f(x))+x/f(x)+x**2,C1)
-    sol3 = Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
-    sol4 = Eq(x*cos(f(x))+f(x)**3/3,C1)
+    sol1 = Eq(f(x), acos((C1)/cos(x)))
+    sol2 = Eq(log(f(x))+x/f(x)+x**2, C1)
+    sol3 = Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2, C1)
+    sol4 = Eq(x*cos(f(x))+f(x)**3/3, C1)
     sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
-    assert dsolve(eq1,f(x), hint='1st_exact') == sol1
-    assert dsolve(eq2,f(x), hint='1st_exact') == sol2
-    assert dsolve(eq3,f(x), hint='1st_exact') == sol3
+    assert dsolve(eq1, f(x), hint='1st_exact') == sol1
+    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
+    assert dsolve(eq3, f(x), hint='1st_exact') == sol3
     assert dsolve(eq4, hint='1st_exact') == sol4
     assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
@@ -455,17 +455,17 @@ def test_homogeneous_order():
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
     assert homogeneous_order(x - y - x*sin(y/x), x, y) == 1
     assert homogeneous_order((x*y + sqrt(x**4+y**4) + x**2*(log(x) - log(y)))/\
-        (pi*x**Rational(2,3)*sqrt(y)**3), x, y) == Rational(-1,6)
+        (pi*x**Rational(2, 3)*sqrt(y)**3), x, y) == Rational(-1, 6)
     assert homogeneous_order(y/x*cos(y/x) - x/y*sin(y/x) + cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
     assert homogeneous_order(f(x)**2, x, f(x)) == 2
     assert homogeneous_order(x*y*z, x, y) == 2
     assert homogeneous_order(x*y*z, x, y, z) == 3
     assert homogeneous_order(x**2*f(x)/sqrt(x**2 + f(x)**2), f(x)) == None
-    assert homogeneous_order(f(x,y)**2, x, f(x,y), y) == 2
-    assert homogeneous_order(f(x,y)**2, x, f(x), y) == None
-    assert homogeneous_order(f(x,y)**2, x, f(x,y)) == None
-    assert homogeneous_order(f(y,x)**2, x, y, f(x, y)) == None
+    assert homogeneous_order(f(x, y)**2, x, f(x, y), y) == 2
+    assert homogeneous_order(f(x, y)**2, x, f(x), y) == None
+    assert homogeneous_order(f(x, y)**2, x, f(x, y)) == None
+    assert homogeneous_order(f(y, x)**2, x, y, f(x, y)) == None
     assert homogeneous_order(f(y), f(x), x) == None
     assert homogeneous_order(-f(x)/x + 1/sin(f(x)/ x), f(x), x) == 0
     assert homogeneous_order(log(1/y) + log(x**2), x, y) == None
@@ -487,7 +487,7 @@ def test_1st_homogeneous_coeff_ode():
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
-    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
+    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     eq4 = 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x)
     eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
@@ -566,7 +566,7 @@ def test_1st_homogeneous_coeff_ode_check3():
     # (False,
     #   x*(log(exp(-LambertW(C1*x))) +
     #   LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
-    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
+    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     assert checkodesol(eq3, sol3, solve_for_func=True)[0]
     # and without an assumption about x and f(x), the implicit form doesn't
@@ -1212,7 +1212,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
 def test_Liouville_ODE():
     hint = 'Liouville'
     # The first part here used to be test_ODE_1() from test_solvers.py
-    eq1 = diff(f(x),x)/x + diff(f(x),x,x)/2 - diff(f(x),x)**2/2
+    eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
     eq1a = diff(x*exp(-f(x)), x, x)
     # compare to test_unexpanded_Liouville_ODE() below
     eq2 = (eq1*exp(-f(x))/exp(f(x))).expand()
@@ -1245,10 +1245,10 @@ def test_Liouville_ODE():
     assert all(i[0] for i in checkodesol(eq4, sol4, order=2,
         solve_for_func=False))
     assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
-    not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
-        diff(f(x),x)**2/2, f(x))
-    not_Liouville2 = classify_ode(diff(f(x),x)/x + diff(f(x),x,x)/2 -
-        x*diff(f(x),x)**2/2, f(x))
+    not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
+        diff(f(x), x)**2/2, f(x))
+    not_Liouville2 = classify_ode(diff(f(x), x)/x + diff(f(x), x, x)/2 -
+        x*diff(f(x), x)**2/2, f(x))
     assert hint not in not_Liouville1
     assert hint not in not_Liouville2
     assert hint+'_Integral' not in not_Liouville1
@@ -1256,7 +1256,7 @@ def test_Liouville_ODE():
 
 def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
-    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    eq1 = diff(f(x), x)/x+diff(f(x), x, x)/2- diff(f(x), x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
     sol2 = Eq(f(x), log(x/(C1 + C2*x)))
     sol2s = constant_renumber(sol2, 'C', 1, 2)

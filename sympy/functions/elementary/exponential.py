@@ -424,7 +424,7 @@ class exp(ExpBase):
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
-        if C.Order(1,x).contains(arg):
+        if C.Order(1, x).contains(arg):
             return S.One
         return exp(arg)
 
@@ -450,7 +450,7 @@ class log(Function):
     exp
     """
 
-    nargs = (1,2)
+    nargs = (1, 2)
 
     def fdiff(self, argindex=1):
         """

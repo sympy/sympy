@@ -214,8 +214,8 @@ class LagrangesMethod(object):
                 raise TypeError('Forces must be supplied in a list of: lists'
                         ' or tuples')
             self._term4 = zeros(n, 1)
-            for i,v in enumerate(qd):
-                for j,w in enumerate(forcelist):
+            for i, v in enumerate(qd):
+                for j, w in enumerate(forcelist):
                     if isinstance(w[0], ReferenceFrame):
                         speed = w[0].ang_vel_in(N)
                         self._term4[i] += speed.diff(v, N) & w[1]
@@ -267,13 +267,13 @@ class LagrangesMethod(object):
         if self.eom == None:
             raise ValueError('Need to compute the equations of motion first')
         #THE FIRST TWO ROWS OF THE MATRIX
-        row1 = eye(n).row_join(zeros(n,n))
-        row2 = zeros(n,n).row_join(self.mass_matrix)
+        row1 = eye(n).row_join(zeros(n, n))
+        row2 = zeros(n, n).row_join(self.mass_matrix)
         if self.coneqs != None:
             m = len(self.coneqs)
-            I = eye(n).row_join(zeros(n,n+m))
-            below_eye = zeros(n+m,n)
-            A = (self.mass_matrix).col_join((self._m_cd).row_join(zeros(m,m)))
+            I = eye(n).row_join(zeros(n, n+m))
+            below_eye = zeros(n+m, n)
+            A = (self.mass_matrix).col_join((self._m_cd).row_join(zeros(m, m)))
             below_I = below_eye.row_join(A)
             return I.col_join(below_I)
         else:

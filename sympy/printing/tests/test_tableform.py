@@ -69,22 +69,22 @@ def test_TableForm():
         Group C | 10  3''')
 
     # other alignment permutations
-    d = [[1,100],[100,1]]
-    s = TableForm(d, headings=(('xxx', 'x'),None), alignments='l')
+    d = [[1, 100], [100, 1]]
+    s = TableForm(d, headings=(('xxx', 'x'), None), alignments='l')
     assert str(s) == (
         'xxx | 1   100\n'
         '  x | 100 1  '
     )
-    s = TableForm(d, headings=(('xxx', 'x'),None), alignments='lr')
+    s = TableForm(d, headings=(('xxx', 'x'), None), alignments='lr')
     assert str(s) == dedent('''\
     xxx | 1   100
       x | 100   1''')
-    s = TableForm(d, headings=(('xxx', 'x'),None), alignments='clr')
+    s = TableForm(d, headings=(('xxx', 'x'), None), alignments='clr')
     assert str(s) == dedent('''\
     xxx | 1   100
      x  | 100   1''')
 
-    s = TableForm(d,headings=(('xxx','x'),None))
+    s = TableForm(d, headings=(('xxx', 'x'), None))
     assert str(s) == (
         'xxx | 1   100\n'
         '  x | 100 1  '
@@ -93,7 +93,7 @@ def test_TableForm():
     raises(ValueError, lambda: TableForm(d, alignments='clr'))
 
     #pad
-    s = str(TableForm([[None, "-", 2],[1]], pad='?'))
+    s = str(TableForm([[None, "-", 2], [1]], pad='?'))
     assert s == dedent('''\
         ? - 2
         1 ? ?''')

@@ -2354,7 +2354,7 @@ class Expr(Basic, EvalfMixin):
                     o = S.Zero
 
             try:
-                return collect(s1,x) + o
+                return collect(s1, x) + o
             except NotImplementedError:
                 return s1 + o
 

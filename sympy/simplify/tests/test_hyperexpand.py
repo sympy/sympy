@@ -61,7 +61,7 @@ def test_roach():
     assert can_do([-S.Half, 1, 2], [3, 4])
     assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
     assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
-    assert can_do([-S(3)/2,], [-S(1)/2, S(1)/2]) # shine-integral
+    assert can_do([-S(3)/2, ], [-S(1)/2, S(1)/2]) # shine-integral
 
 @XFAIL
 def test_roach_fail():
@@ -314,15 +314,15 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
 def test_meijerg_expand():
     from sympy import combsimp, simplify
     # from mpmath docs
-    assert hyperexpand(meijerg([[],[]], [[0],[]], -z)) == exp(z)
+    assert hyperexpand(meijerg([[], []], [[0], []], -z)) == exp(z)
 
-    assert hyperexpand(meijerg([[1,1],[]], [[1],[0]], z)) == \
+    assert hyperexpand(meijerg([[1, 1], []], [[1], [0]], z)) == \
         log(z + 1)
-    assert hyperexpand(meijerg([[1,1],[]], [[1],[1]], z)) == \
+    assert hyperexpand(meijerg([[1, 1], []], [[1], [1]], z)) == \
         z/(z + 1)
-    assert hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (z/2)**2)) \
+    assert hyperexpand(meijerg([[], []], [[S(1)/2], [0]], (z/2)**2)) \
            == sin(z)/sqrt(pi)
-    assert hyperexpand(meijerg([[],[]], [[0], [S(1)/2]], (z/2)**2)) \
+    assert hyperexpand(meijerg([[], []], [[0], [S(1)/2]], (z/2)**2)) \
            == cos(z)/sqrt(pi)
     assert can_do_meijer([], [a], [a-1, a-S.Half], [])
     assert can_do_meijer([], [], [a/2], [-a/2], False) # branches...

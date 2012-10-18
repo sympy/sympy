@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL, skip
 
 numpy = import_module('numpy')
 Cython = import_module('Cython')
-f2py = import_module('numpy.f2py', __import__kwargs={'fromlist':['f2py']})
+f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
 if f2py:
@@ -26,7 +26,7 @@ def has_module(module):
     # To give a string of the module name to skip(), this function takes a
     # string.  So we don't waste time running import_module() more than once,
     # just map the three modules tested here in this dict.
-    modnames = {'numpy':numpy, 'Cython':Cython, 'f2py':f2py}
+    modnames = {'numpy': numpy, 'Cython': Cython, 'f2py': f2py}
 
     if modnames[module]:
         if module == 'f2py' and not f2pyworks:

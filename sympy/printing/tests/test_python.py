@@ -28,14 +28,14 @@ def test_python_basic():
     assert python((x**2 + x + 1)) in [
             "x = Symbol('x')\ne = 1 + x + x**2",
             "x = Symbol('x')\ne = x + x**2 + 1",
-            "x = Symbol('x')\ne = x**2 + x + 1",]
+            "x = Symbol('x')\ne = x**2 + x + 1", ]
     assert python(1-x) in [
             "x = Symbol('x')\ne = 1 - x",
             "x = Symbol('x')\ne = -x + 1"]
     assert python(1-2*x) in [
             "x = Symbol('x')\ne = 1 - 2*x",
             "x = Symbol('x')\ne = -2*x + 1"]
-    assert python(1-Rational(3,2)*y/x) in [
+    assert python(1-Rational(3, 2)*y/x) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3/2*y/x",
             "y = Symbol('y')\nx = Symbol('x')\ne = -3/2*y/x + 1",
             "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3*y/(2*x)"]
@@ -51,11 +51,11 @@ def test_python_basic():
             "x = Symbol('x')\ny = Symbol('y')\ne = (x + 2)/y"]
     assert python((1+x)*y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)",
-            "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)",]
+            "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)", ]
 
     # Check for proper placement of negative sign
     assert python(-5*x/(x+10)) == "x = Symbol('x')\ne = -5*x/(x + 10)"
-    assert python(1 - Rational(3,2)*(x+1)) in [
+    assert python(1 - Rational(3, 2)*(x+1)) in [
             "x = Symbol('x')\ne = Rational(-3, 2)*x + Rational(-1, 2)",
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)",
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)"
@@ -153,14 +153,14 @@ def test_python_integrals():
     assert python(f_3) == "x = Symbol('x')\ne = Integral(x**(2**x), x)"
 
     # Definite integrals
-    f_4 = Integral(x**2, (x,1,2))
+    f_4 = Integral(x**2, (x, 1, 2))
     assert python(f_4) == "x = Symbol('x')\ne = Integral(x**2, (x, 1, 2))"
 
-    f_5 = Integral(x**2, (x,Rational(1,2),10))
+    f_5 = Integral(x**2, (x, Rational(1, 2), 10))
     assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, Rational(1, 2), 10))"
 
     # Nested integrals
-    f_6 = Integral(x**2*y**2, x,y)
+    f_6 = Integral(x**2*y**2, x, y)
     assert python(f_6) == "x = Symbol('x')\ny = Symbol('y')\ne = Integral(x**2*y**2, x, y)"
 
 

@@ -33,7 +33,7 @@ def test_generate():
     a = Permutation([1, 0])
     g = list(PermutationGroup([a]).generate())
     assert g == [Permutation([0, 1]), Permutation([1, 0])]
-    assert len(list(PermutationGroup(Permutation((0,1))).generate())) == 1
+    assert len(list(PermutationGroup(Permutation((0, 1))).generate())) == 1
     g = PermutationGroup([a]).generate(method='dimino')
     assert list(g) == [Permutation([0, 1]), Permutation([1, 0])]
     a = Permutation([2, 0, 1])
@@ -42,7 +42,7 @@ def test_generate():
     g = G.generate()
     v1 = [p.array_form for p in list(g)]
     v1.sort()
-    assert v1 == [[0,1,2], [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0]]
+    assert v1 == [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
     v2 = list(G.generate(method='dimino', af=True))
     assert v1 == sorted(v2)
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -51,15 +51,15 @@ def test_generate():
     assert len(list(g)) == 360
 
 def test_order():
-    a = Permutation([2,0,1,3,4,5,6,7,8,9])
-    b = Permutation([2,1,3,4,5,6,7,8,9,0])
+    a = Permutation([2, 0, 1, 3, 4, 5, 6, 7, 8, 9])
+    b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
 
 def test_stabilizer():
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
-    G = PermutationGroup([a,b])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
+    G = PermutationGroup([a, b])
     G0 = G.stabilizer(0)
     assert G0.order() == 60
 
@@ -72,9 +72,9 @@ def test_stabilizer():
     v = list(G2_1.generate(af=True))
     assert v == [[0, 1, 2, 3, 4, 5, 6, 7], [3, 1, 2, 0, 7, 5, 6, 4]]
 
-    gens = ((1,2,0,4,5,3,6,7,8,9,10,11,12,13,14,15,16,17,18,19),
-            (0,1,2,3,4,5,19,6,8,9,10,11,12,13,14,15,16,7,17,18),
-            (0,1,2,3,4,5,6,7,9,18,16,11,12,13,14,15,8,17,10,19))
+    gens = ((1, 2, 0, 4, 5, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+            (0, 1, 2, 3, 4, 5, 19, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 7, 17, 18),
+            (0, 1, 2, 3, 4, 5, 6, 7, 9, 18, 16, 11, 12, 13, 14, 15, 8, 17, 10, 19))
     gens = [Permutation(p) for p in gens]
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
@@ -113,7 +113,7 @@ def test_centralizer():
     A = AlternatingGroup(5)
     assert A.centralizer(Permutation(range(5))).is_subgroup(A)
     # a centralizer in the trivial group is the trivial group itself
-    triv = PermutationGroup([Permutation([0,1,2,3])])
+    triv = PermutationGroup([Permutation([0, 1, 2, 3])])
     D = DihedralGroup(4)
     assert triv.centralizer(D).is_subgroup(triv)
     # brute-force verifications for centralizers of groups
@@ -156,7 +156,7 @@ def test_stabilizer_cosets():
     b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
     assert G.stabilizer_cosets(af=True) == \
-        [[[0,1,2], [1,0,2], [2,0,1]], [[0,1,2], [0,2,1]]]
+        [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
     assert G.stabilizer_gens(af=True) == [[0, 2, 1]]
 
 def test_coset_rank():
@@ -175,21 +175,21 @@ def test_coset_rank():
     assert G.coset_unrank(6) == gens[0]
 
 def test_coset_factor():
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1,0,2,3,4,5])
+    d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1,0,2,3,5,4])
+    c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, af=True)
-    assert _af_rmuln(*v) == [1,0,2,3,5,4]
+    assert _af_rmuln(*v) == [1, 0, 2, 3, 5, 4]
     assert g.contains(c)
 
-    a = Permutation([0,2,1])
+    a = Permutation([0, 2, 1])
     g = PermutationGroup([a])
-    c = Permutation([2,1,0])
+    c = Permutation([2, 1, 0])
     assert not g.coset_factor(c)
     assert g.coset_rank(c) == None
 
@@ -217,20 +217,20 @@ def test_orbits():
     assert PermutationGroup(Permutation(3)).is_transitive(strict=False) is False
 
 def test_is_normal():
-    gens_s5 = [Permutation(p) for p in [[1,2,3,4,0], [2,1,4,0,3]]]
+    gens_s5 = [Permutation(p) for p in [[1, 2, 3, 4, 0], [2, 1, 4, 0, 3]]]
     G1 = PermutationGroup(gens_s5)
     assert G1.order() == 120
-    gens_a5 = [Permutation(p) for p in [[1,0,3,2,4], [2,1,4,3,0]]]
+    gens_a5 = [Permutation(p) for p in [[1, 0, 3, 2, 4], [2, 1, 4, 3, 0]]]
     G2 = PermutationGroup(gens_a5)
     assert G2.order() == 60
     assert G2.is_normal(G1)
-    gens3 = [Permutation(p) for p in [[2,1,3,0,4], [1,2,0,3,4]]]
+    gens3 = [Permutation(p) for p in [[2, 1, 3, 0, 4], [1, 2, 0, 3, 4]]]
     G3 = PermutationGroup(gens3)
     assert not G3.is_normal(G1)
     assert G3.order() == 12
     G4 = G1.normal_closure(G3.generators)
     assert G4.order() == 60
-    gens5 = [Permutation(p) for p in [[1,2,3,0,4], [1,2,0,3,4]]]
+    gens5 = [Permutation(p) for p in [[1, 2, 3, 0, 4], [1, 2, 0, 3, 4]]]
     G5 = PermutationGroup(gens5)
     assert G5.order() == 24
     G6 = G1.normal_closure(G5.generators)
@@ -240,14 +240,14 @@ def test_is_normal():
     assert G2.is_subgroup(G4)
 
 def test_eq():
-    a = [[1,2,0,3,4,5], [1,0,2,3,4,5], [2,1,0,3,4,5], [1,2,0,3,4,5]]
-    a = [Permutation(p) for p in a + [[1,2,3,4,5,0]]]
-    g = Permutation([1,2,3,4,5,0])
-    G1, G2, G3 = [PermutationGroup(x) for x in [a[:2],a[2:4],[g, g**2]]]
+    a = [[1, 2, 0, 3, 4, 5], [1, 0, 2, 3, 4, 5], [2, 1, 0, 3, 4, 5], [1, 2, 0, 3, 4, 5]]
+    a = [Permutation(p) for p in a + [[1, 2, 3, 4, 5, 0]]]
+    g = Permutation([1, 2, 3, 4, 5, 0])
+    G1, G2, G3 = [PermutationGroup(x) for x in [a[:2], a[2:4], [g, g**2]]]
     assert G1.order() == G2.order() == G3.order() == 6
     assert G1.is_subgroup(G2)
     assert not G1.is_subgroup(G3)
-    G4 = PermutationGroup([Permutation([0,1])])
+    G4 = PermutationGroup([Permutation([0, 1])])
     assert not G1.is_subgroup(G4)
     assert G4.is_subgroup(G1, 0)
     assert PermutationGroup(g, g).is_subgroup(PermutationGroup(g))
@@ -259,7 +259,7 @@ def test_eq():
 def test_derived_subgroup():
     a = Permutation([1, 0, 2, 4, 3])
     b = Permutation([0, 1, 3, 2, 4])
-    G = PermutationGroup([a,b])
+    G = PermutationGroup([a, b])
     C = G.derived_subgroup()
     assert C.order() == 3
     assert C.is_normal(G)
@@ -272,12 +272,12 @@ def test_derived_subgroup():
     assert C.order() == 12
 
 def test_is_solvable():
-    a = Permutation([1,2,0])
-    b = Permutation([1,0,2])
+    a = Permutation([1, 2, 0])
+    b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
     assert G.is_solvable
-    a = Permutation([1,2,3,4,0])
-    b = Permutation([1,0,2,3,4])
+    a = Permutation([1, 2, 3, 4, 0])
+    b = Permutation([1, 0, 2, 3, 4])
     G = PermutationGroup([a, b])
     assert not G.is_solvable
 
@@ -323,7 +323,7 @@ def test_direct_product():
 
 def test_orbit_rep():
     G = DihedralGroup(6)
-    assert G.orbit_rep(1,3) in [Permutation([2, 3, 4, 5, 0, 1]),\
+    assert G.orbit_rep(1, 3) in [Permutation([2, 3, 4, 5, 0, 1]),\
     Permutation([4, 3, 2, 1, 0, 5])]
     H = CyclicGroup(4)*G
     assert H.orbit_rep(1, 5) == False
@@ -385,7 +385,7 @@ def test_is_alt_sym():
 
 def test_minimal_block():
     D = DihedralGroup(6)
-    block_system = D.minimal_block([0,3])
+    block_system = D.minimal_block([0, 3])
     for i in range(3):
         assert block_system[i] == block_system[i + 3]
     S = SymmetricGroup(6)
@@ -458,7 +458,7 @@ def test_schreier_sims_incremental():
     base, strong_gens = TrivialGroup.schreier_sims_incremental(base=[0, 1, 2])
     assert _verify_bsgs(TrivialGroup, base, strong_gens) == True
     S = SymmetricGroup(5)
-    base, strong_gens = S.schreier_sims_incremental(base=[0,1,2])
+    base, strong_gens = S.schreier_sims_incremental(base=[0, 1, 2])
     assert _verify_bsgs(S, base, strong_gens) == True
     D = DihedralGroup(2)
     base, strong_gens = D.schreier_sims_incremental(base=[1])
@@ -470,7 +470,7 @@ def test_schreier_sims_incremental():
     gen1 = rmul(gen1, ~gen0)
     gen0 = rmul(gen0, gen1)
     gen1 = rmul(gen0, gen1)
-    base, strong_gens = A.schreier_sims_incremental(base=[0,1], gens=gens)
+    base, strong_gens = A.schreier_sims_incremental(base=[0, 1], gens=gens)
     assert _verify_bsgs(A, base, strong_gens) == True
     C = CyclicGroup(11)
     gen = C.generators[0]

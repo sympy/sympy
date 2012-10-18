@@ -10,7 +10,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
-w,x,y,z= symbols('w,x,y,z')
+w, x, y, z= symbols('w,x,y,z')
 
 def test_postorder_traversal():
     expr = z + w*(x+y)
@@ -54,7 +54,7 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
-    assert flatten(set([1,11,2])) == list(set([1,11,2]))
+    assert flatten(set([1, 11, 2])) == list(set([1, 11, 2]))
 
 def test_group():
     assert group([]) == []
@@ -63,23 +63,23 @@ def test_group():
     assert group([1]) == [[1]]
     assert group([1], multiple=False) == [(1, 1)]
 
-    assert group([1,1]) == [[1,1]]
-    assert group([1,1], multiple=False) == [(1, 2)]
+    assert group([1, 1]) == [[1, 1]]
+    assert group([1, 1], multiple=False) == [(1, 2)]
 
-    assert group([1,1,1]) == [[1,1,1]]
-    assert group([1,1,1], multiple=False) == [(1, 3)]
+    assert group([1, 1, 1]) == [[1, 1, 1]]
+    assert group([1, 1, 1], multiple=False) == [(1, 3)]
 
-    assert group([1,2,1]) == [[1],[2],[1]]
-    assert group([1,2,1], multiple=False) == [(1, 1), (2, 1), (1, 1)]
+    assert group([1, 2, 1]) == [[1], [2], [1]]
+    assert group([1, 2, 1], multiple=False) == [(1, 1), (2, 1), (1, 1)]
 
-    assert group([1,1,2,2,2,1,3,3]) == [[1,1], [2,2,2], [1], [3,3]]
-    assert group([1,1,2,2,2,1,3,3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
+    assert group([1, 1, 2, 2, 2, 1, 3, 3]) == [[1, 1], [2, 2, 2], [1], [3, 3]]
+    assert group([1, 1, 2, 2, 2, 1, 3, 3], multiple=False) == [(1, 2), (2, 3), (1, 1), (3, 2)]
 
 def test_subsets():
     # combinations
     assert list(subsets([1, 2, 3], 0)) == [()]
     assert list(subsets([1, 2, 3], 1)) == [(1,), (2,), (3,)]
-    assert list(subsets([1, 2, 3], 2)) == [(1, 2), (1,3), (2, 3)]
+    assert list(subsets([1, 2, 3], 2)) == [(1, 2), (1, 3), (2, 3)]
     assert list(subsets([1, 2, 3], 3)) == [(1, 2, 3)]
     l = range(4)
     assert list(subsets(l, 0, repetition=True)) == [()]
@@ -158,7 +158,7 @@ def test_take():
     assert take(X, 5) == list(symbols('x0:5'))
     assert take(X, 5) == list(symbols('x5:10'))
 
-    assert take([1,2,3,4,5], 5) == [1,2,3,4,5]
+    assert take([1, 2, 3, 4, 5], 5) == [1, 2, 3, 4, 5]
 
 def test_dict_merge():
     assert dict_merge({}, {1: x, y: z}) == {1: x, y: z}
@@ -175,7 +175,7 @@ def test_prefixes():
     assert list(prefixes([1])) == [[1]]
     assert list(prefixes([1, 2])) == [[1], [1, 2]]
 
-    assert list(prefixes([1,2,3,4,5])) == \
+    assert list(prefixes([1, 2, 3, 4, 5])) == \
         [[1], [1, 2], [1, 2, 3], [1, 2, 3, 4], [1, 2, 3, 4, 5]]
 
 def test_postfixes():
@@ -183,7 +183,7 @@ def test_postfixes():
     assert list(postfixes([1])) == [[1]]
     assert list(postfixes([1, 2])) == [[2], [1, 2]]
 
-    assert list(postfixes([1,2,3,4,5])) == \
+    assert list(postfixes([1, 2, 3, 4, 5])) == \
         [[5], [4, 5], [3, 4, 5], [2, 3, 4, 5], [1, 2, 3, 4, 5]]
 
 def test_topological_sort():
@@ -209,18 +209,18 @@ def test_multiset_partitions():
     assert len(list(multiset_partitions(A, 3))) == 25
 
 
-    assert list(multiset_partitions([1,1,1,2,2], 2)) == [[[1, 1, 1, 2], [2]],\
+    assert list(multiset_partitions([1, 1, 1, 2, 2], 2)) == [[[1, 1, 1, 2], [2]],\
     [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]], [[1], [1, 1, 2, 2]], [[1, 2],\
     [1, 1, 2]], [[1, 1, 2, 2], [1]], [[1, 2, 2], [1, 1]]]
 
-    assert list(multiset_partitions([1,1,2,2], 2)) == [[[1, 1, 2], [2]], \
+    assert list(multiset_partitions([1, 1, 2, 2], 2)) == [[[1, 1, 2], [2]], \
     [[1, 2], [1, 2]], [[1], [1, 2, 2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]]]
 
-    assert list(multiset_partitions([1,2,3,4], 2)) == [[[1, 2, 3], [4]], [[1, 3], \
+    assert list(multiset_partitions([1, 2, 3, 4], 2)) == [[[1, 2, 3], [4]], [[1, 3], \
     [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 4], [3]], \
         [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
 
-    assert list(multiset_partitions([1,2,2], 2)) == [[[1, 2], [2]],
+    assert list(multiset_partitions([1, 2, 2], 2)) == [[[1, 2], [2]],
                                                      [[1], [2, 2]]]
 
 def test_partitions():

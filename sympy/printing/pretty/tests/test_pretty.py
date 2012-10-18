@@ -341,7 +341,7 @@ x \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = x**Rational(-5,2)
+    expr = x**Rational(-5, 2)
     ascii_str = \
 """\
  1  \n\
@@ -815,7 +815,7 @@ x \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = y**Rational(3,2) * x**Rational(-5,2)
+    expr = y**Rational(3, 2) * x**Rational(-5, 2)
     ascii_str = \
 """\
  3/2\n\
@@ -1405,7 +1405,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = 2**Rational(1,3)
+    expr = 2**Rational(1, 3)
     ascii_str = \
 """\
 3 ___\n\
@@ -1419,7 +1419,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = 2**Rational(1,1000)
+    expr = 2**Rational(1, 1000)
     ascii_str = \
 """\
 1000___\n\
@@ -1449,7 +1449,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (1 + sqrt(5))**Rational(1,3)
+    expr = (1 + sqrt(5))**Rational(1, 3)
     ascii_str = \
 """\
    ___________\n\
@@ -1493,7 +1493,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (2+(1+x**2)/(2+x))**Rational(1,4)+(1+x**Rational(1,1000))/sqrt(3+x**2)
+    expr = (2+(1+x**2)/(2+x))**Rational(1, 4)+(1+x**Rational(1, 1000))/sqrt(3+x**2)
     ascii_str = \
 """\
      ____________              \n\
@@ -1518,8 +1518,8 @@ u"""\
     assert upretty(expr) == ucode_str
 
 def test_pretty_KroneckerDelta():
-    x,y = symbols("x, y")
-    expr = KroneckerDelta(x,y)
+    x, y = symbols("x, y")
+    expr = KroneckerDelta(x, y)
     ascii_str = \
 """\
 d   \n\
@@ -1985,7 +1985,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Integral(x**2, (x,1,2))
+    expr = Integral(x**2, (x, 1, 2))
     ascii_str = \
 """\
   2      \n\
@@ -2009,7 +2009,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Integral(x**2, (x,Rational(1,2),10))
+    expr = Integral(x**2, (x, Rational(1, 2), 10))
     ascii_str = \
 """\
  10      \n\
@@ -2033,7 +2033,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Integral(x**2*y**2, x,y)
+    expr = Integral(x**2*y**2, x, y)
     ascii_str = \
 """\
   /  /           \n\
@@ -2053,7 +2053,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi))
+    expr = Integral(sin(th)/cos(ph), (th, 0, pi), (ph, 0, 2*pi))
     ascii_str = \
 """\
  2*pi pi                           \n\
@@ -2153,7 +2153,7 @@ u"""\
 
 
 def test_pretty_piecewise():
-    expr = Piecewise((x,x<1),(x**2,True))
+    expr = Piecewise((x, x<1), (x**2, True))
     ascii_str = \
 """\
 /x   for x < 1\n\
@@ -2398,8 +2398,8 @@ def test_any_object_in_sequence():
     assert pretty(expr) == "set([Basic(), Basic(Basic())])"
     assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
 
-    expr = {b2:b1, b1:b2}
-    expr2 = Dict({b2:b1, b1:b2})
+    expr = {b2: b1, b1: b2}
+    expr2 = Dict({b2: b1, b1: b2})
     assert pretty(expr) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
@@ -3153,7 +3153,7 @@ x = 0    \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Sum(1/y**(a/b), (x, 0, oo), (y,1,2))
+    expr = Sum(1/y**(a/b), (x, 0, oo), (y, 1, 2))
     ascii_str = \
 """\
   2     oo     \n\
@@ -3378,7 +3378,7 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = hyper((pi,S('2/3'),-2*k), (3,4,5,-3), x**2)
+    expr = hyper((pi, S('2/3'), -2*k), (3, 4, 5, -3), x**2)
     ucode_str = \
 u"""\
  ┌─  ⎛π, 2/3, -2⋅k │  2⎞\n\
@@ -3395,7 +3395,7 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = hyper([1,2],[3,4],  1/(1/(1/(1/x + 1) + 1) + 1))
+    expr = hyper([1, 2], [3, 4],  1/(1/(1/(1/x + 1) + 1) + 1))
     ucode_str = \
 u"""\
      ⎛     │       1      ⎞\n\
@@ -3481,7 +3481,7 @@ u"""\
     assert upretty(expr) == ucode_str
 
 
-    expr = meijerg([1, 2,], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
+    expr = meijerg([1, 2, ], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
 
     ucode_str = \
 u"""\
@@ -3615,10 +3615,10 @@ A⋅C  ⋅B\n\
 
 
 def test_pretty_special_functions():
-    x,y = symbols("x y")
+    x, y = symbols("x y")
 
     # atan2
-    expr = atan2(y/sqrt(200),sqrt(x))
+    expr = atan2(y/sqrt(200), sqrt(x))
     ascii_str = \
 """\
      /  ___         \\\n\
@@ -3673,7 +3673,7 @@ def test_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A,B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+    assert upretty(pspace(Tuple(A, B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
 def test_PrettyPoly():
     F = QQ.frac_field(x, y)
@@ -3728,7 +3728,7 @@ def test_categories():
     assert pretty(d) == "EmptySet()"
     assert upretty(d) == u"∅"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet})
+    d = Diagram({f1: "unique", f2: S.EmptySet})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
@@ -3736,7 +3736,7 @@ def test_categories():
     assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
            u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
            "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
            "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \

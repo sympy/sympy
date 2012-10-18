@@ -60,10 +60,10 @@ def check(a, check_attr=True):
                     continue
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
-                    assert hasattr(b,i), i
-                    assert getattr(b,i) == attr
-        c(a,b,d1)
-        c(b,a,d2)
+                    assert hasattr(b, i), i
+                    assert getattr(b, i) == attr
+        c(a, b, d1)
+        c(b, a, d2)
 
     warnings.filterwarnings("default", category=SymPyDeprecationWarning)
 
@@ -94,25 +94,25 @@ def test_core_numbers():
 def test_core_relational():
     x = Symbol("x")
     y = Symbol("y")
-    for c in (Equality, Equality(x,y), GreaterThan, GreaterThan(x, y),
-              LessThan, LessThan(x,y), Relational, Relational(x,y),
-              StrictGreaterThan, StrictGreaterThan(x,y), StrictLessThan,
-              StrictLessThan(x,y), Unequality, Unequality(x,y)):
+    for c in (Equality, Equality(x, y), GreaterThan, GreaterThan(x, y),
+              LessThan, LessThan(x, y), Relational, Relational(x, y),
+              StrictGreaterThan, StrictGreaterThan(x, y), StrictLessThan,
+              StrictLessThan(x, y), Unequality, Unequality(x, y)):
         check(c)
 
 def test_core_add():
     x = Symbol("x")
-    for c in (Add, Add(x,4)):
+    for c in (Add, Add(x, 4)):
         check(c)
 
 def test_core_mul():
     x = Symbol("x")
-    for c in (Mul, Mul(x,4)):
+    for c in (Mul, Mul(x, 4)):
         check(c)
 
 def test_core_power():
     x = Symbol("x")
-    for c in (Pow, Pow(x,4)):
+    for c in (Pow, Pow(x, 4)):
         check(c)
 
 def test_core_function():
@@ -128,7 +128,7 @@ def test_core_dynamicfunctions():
     check(f)
 
 def test_core_interval():
-    for c in (Interval, Interval(0,2)):
+    for c in (Interval, Interval(0, 2)):
         check(c)
 
 def test_core_multidimensional():
@@ -193,15 +193,15 @@ from sympy.geometry.line import Line, LinearEntity, Ray, Segment
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
 
 def test_geometry():
-    p1 = Point(1,2)
-    p2 = Point(2,3)
-    p3 = Point(0,0)
-    p4 = Point(0,1)
-    for c in (GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1,2),
-              Ellipse, Ellipse(p1,3,4), Line, Line(p1,p2), LinearEntity,
-              LinearEntity(p1,p2), Ray, Ray(p1,p2), Segment, Segment(p1,p2),
-              Polygon, Polygon(p1,p2,p3,p4), RegularPolygon, RegularPolygon(p1,4,5),
-              Triangle, Triangle(p1,p2,p3)):
+    p1 = Point(1, 2)
+    p2 = Point(2, 3)
+    p3 = Point(0, 0)
+    p4 = Point(0, 1)
+    for c in (GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1, 2),
+              Ellipse, Ellipse(p1, 3, 4), Line, Line(p1, p2), LinearEntity,
+              LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
+              Polygon, Polygon(p1, p2, p3, p4), RegularPolygon, RegularPolygon(p1, 4, 5),
+              Triangle, Triangle(p1, p2, p3)):
         check(c, check_attr = False)
 
 #================== integrals ====================
@@ -223,7 +223,7 @@ def test_logic():
 from sympy.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1, 2, 3]), SparseMatrix, SparseMatrix([[1, 2], [3, 4]])):
         check(c)
 
 #================== ntheory =====================
@@ -260,7 +260,7 @@ def test_plotting():
     from sympy.plotting.plot_object import PlotObject
     from sympy.plotting.plot_surface import PlotSurface
     from sympy.plotting.plot_window import PlotWindow
-    for c in (ColorGradient, ColorGradient(0.2,0.4), ColorScheme, ManagedWindow,
+    for c in (ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
               ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
               PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
               PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,
@@ -286,7 +286,7 @@ def test_plotting2():
     from sympy.plotting.plot_surface import PlotSurface
     from sympy.plotting.plot_window import PlotWindow
     check(ColorScheme("rainbow"))
-    check(Plot(1,visible=False))
+    check(Plot(1, visible=False))
     check(PlotAxes())
 
 #================== polys =======================
@@ -312,11 +312,11 @@ def test_polys():
     for c in (Poly, Poly(x, x)):
         check(c)
 
-    for c in (DMP, DMP([[ZZ(1)],[ZZ(2)],[ZZ(3)]], ZZ)):
+    for c in (DMP, DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)):
         check(c)
-    for c in (DMF, DMF(([ZZ(1),ZZ(2)], [ZZ(1),ZZ(3)]), ZZ)):
+    for c in (DMF, DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(3)]), ZZ)):
         check(c)
-    for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
+    for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
@@ -394,7 +394,7 @@ def test_statistics():
     x = Symbol("x")
     y = Symbol("y")
     for c in (ContinuousProbability, ContinuousProbability(), Normal,
-              Normal(x,y), Sample, Sample([1,3,4]), Uniform, Uniform(x,y)):
+              Normal(x, y), Sample, Sample([1, 3, 4]), Uniform, Uniform(x, y)):
         check(c)
 
 #================== concrete ==================

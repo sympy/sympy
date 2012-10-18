@@ -85,8 +85,8 @@ def test_rsolve():
     ]
 
     assert rsolve(f, y(n), [      0,      5 ]) == h
-    assert rsolve(f, y(n), {   0:0,   1:5 }) == h
-    assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
+    assert rsolve(f, y(n), {   0: 0,   1: 5 }) == h
+    assert rsolve(f, y(n), { y(0): 0, y(1): 5 }) == h
     assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
     assert rsolve(Eq(y(n), y(n-1) + y(n-2)), y(n), [0, 5]) == h
 
@@ -101,8 +101,8 @@ def test_rsolve():
     assert rsolve(f, y(n), {}) == g
 
     assert rsolve(f, y(n), [      0,      3 ]) == h
-    assert rsolve(f, y(n), {   0:0,   1:3 }) == h
-    assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
+    assert rsolve(f, y(n), {   0: 0,   1: 3 }) == h
+    assert rsolve(f, y(n), { y(0): 0, y(1): 3 }) == h
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -140,7 +140,7 @@ def test_rsolve():
     f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
 
     assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
-    assert rsolve(f, y(n), {y(3): 6, y(4):-24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+    assert rsolve(f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 

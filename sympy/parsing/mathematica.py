@@ -44,7 +44,7 @@ def translateFunction(s):
     return s.lower()
 
 def translateOperator(s):
-    dictionary = {'^':'**'}
+    dictionary = {'^': '**'}
     if s in dictionary:
         return dictionary[s]
     return s

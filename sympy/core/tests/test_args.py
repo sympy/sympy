@@ -100,7 +100,7 @@ def test_sympy__combinatorics__graycode__GrayCode():
 def test_sympy__combinatorics__subsets__Subset():
     from sympy.combinatorics.subsets import Subset
     assert _test_args(Subset([0, 1], [0, 1, 2, 3]))
-    assert _test_args(Subset(['c','d'], ['a','b','c','d']))
+    assert _test_args(Subset(['c', 'd'], ['a', 'b', 'c', 'd']))
 
 @XFAIL
 def test_sympy__combinatorics__permutations__Permutation():
@@ -117,16 +117,16 @@ def test_sympy__combinatorics__polyhedron__Polyhedron():
     from sympy.combinatorics.permutations import Permutation
     from sympy.combinatorics.polyhedron import Polyhedron
     from sympy.abc import w, x, y, z
-    pgroup = [Permutation([[0,1,2], [3]]),\
-              Permutation([[0,1,3], [2]]),\
-              Permutation([[0,2,3], [1]]),\
-              Permutation([[1,2,3], [0]]),\
-              Permutation([[0,1], [2,3]]),\
-              Permutation([[0,2], [1,3]]),\
-              Permutation([[0,3], [1,2]]),\
+    pgroup = [Permutation([[0, 1, 2], [3]]),\
+              Permutation([[0, 1, 3], [2]]),\
+              Permutation([[0, 2, 3], [1]]),\
+              Permutation([[1, 2, 3], [0]]),\
+              Permutation([[0, 1], [2, 3]]),\
+              Permutation([[0, 2], [1, 3]]),\
+              Permutation([[0, 3], [1, 2]]),\
               Permutation([[0, 1, 2, 3]])]
     corners = [w, x, y, z]
-    faces = [(w,x,y),(w,y,z),(w,z,x),(x,y,z)]
+    faces = [(w, x, y), (w, y, z), (w, z, x), (x, y, z)]
     assert _test_args(Polyhedron(corners, faces, pgroup))
 
 @XFAIL
@@ -378,7 +378,7 @@ def test_sympy__core__sets__Union():
 
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
-    a,b = symbols('a b')
+    a, b = symbols('a b')
     assert _test_args(Tr(a+b))
 
 def test_sympy__sets__fancysets__Naturals():
@@ -412,91 +412,91 @@ def normal_pdf(x):
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
-    assert _test_args(ContinuousDomain(set([x]), Interval(-oo,oo)))
+    assert _test_args(ContinuousDomain(set([x]), Interval(-oo, oo)))
 
 def test_sympy__stats__crv__SingleContinuousDomain():
     from sympy.stats.crv import SingleContinuousDomain
-    assert _test_args(SingleContinuousDomain(x, Interval(-oo,oo)))
+    assert _test_args(SingleContinuousDomain(x, Interval(-oo, oo)))
 
 def test_sympy__stats__crv__ProductContinuousDomain():
     from sympy.stats.crv import SingleContinuousDomain, ProductContinuousDomain
-    D = SingleContinuousDomain(x, Interval(-oo,oo))
-    E = SingleContinuousDomain(y, Interval(0,oo))
+    D = SingleContinuousDomain(x, Interval(-oo, oo))
+    E = SingleContinuousDomain(y, Interval(0, oo))
     assert _test_args(ProductContinuousDomain(D, E))
 
 def test_sympy__stats__crv__ConditionalContinuousDomain():
     from sympy.stats.crv import (SingleContinuousDomain,
             ConditionalContinuousDomain)
-    D = SingleContinuousDomain(x, Interval(-oo,oo))
+    D = SingleContinuousDomain(x, Interval(-oo, oo))
     assert _test_args(ConditionalContinuousDomain(D, x>0))
 
 def test_sympy__stats__crv__ContinuousPSpace():
     from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
     pdf = normal_pdf(x)
-    D = SingleContinuousDomain(x, Interval(-oo,oo))
+    D = SingleContinuousDomain(x, Interval(-oo, oo))
     assert _test_args(ContinuousPSpace(D, pdf))
 
 def test_sympy__stats__crv__SingleContinuousPSpace():
     from sympy.stats.crv import SingleContinuousPSpace
     pdf = normal_pdf(x)
-    assert _test_args(SingleContinuousPSpace(x, pdf, Interval(-oo,oo)))
+    assert _test_args(SingleContinuousPSpace(x, pdf, Interval(-oo, oo)))
 
 def test_sympy__stats__crv__ProductContinuousPSpace():
     from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
     pdf1 = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf1, Interval(-oo,oo))
+    A = SingleContinuousPSpace(x, pdf1, Interval(-oo, oo))
     pdf2 = normal_pdf(y)
-    B = SingleContinuousPSpace(y, pdf2, Interval(-oo,oo))
-    assert _test_args(ProductContinuousPSpace(A,B))
+    B = SingleContinuousPSpace(y, pdf2, Interval(-oo, oo))
+    assert _test_args(ProductContinuousPSpace(A, B))
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
     from sympy.core.sets import FiniteSet
-    assert _test_args(RandomDomain(FiniteSet(x), FiniteSet(1,2,3)))
+    assert _test_args(RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3)))
 
 def test_sympy__stats__rv__SingleDomain():
     from sympy.stats.rv import SingleDomain
     from sympy.core.sets import FiniteSet
-    assert _test_args(SingleDomain(x, FiniteSet(1,2,3)))
+    assert _test_args(SingleDomain(x, FiniteSet(1, 2, 3)))
 
 def test_sympy__stats__rv__ConditionalDomain():
     from sympy.stats.rv import ConditionalDomain, RandomDomain
     from sympy.core.sets import FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
+    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
     assert _test_args(ConditionalDomain(D, x>1))
 
 def test_sympy__stats__rv__PSpace():
     from sympy.stats.rv import PSpace, RandomDomain
     from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
-    assert _test_args(PSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
+    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
+    assert _test_args(PSpace(D, Dict({(x, 1): S.Half, (x, 2): S.Half})))
 
 def test_sympy__stats__rv__SinglePSpace():
     from sympy.stats.rv import SinglePSpace, RandomDomain
     from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1,2))
-    assert _test_args(SinglePSpace(D, Dict({(x,1):S.Half, (x,2):S.Half})))
+    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
+    assert _test_args(SinglePSpace(D, Dict({(x, 1): S.Half, (x, 2): S.Half})))
 
 def test_sympy__stats__rv__RandomSymbol():
     from sympy.stats.rv import RandomSymbol
     from sympy.stats.crv import SingleContinuousPSpace
     pdf = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf, Interval(-oo,oo))
+    A = SingleContinuousPSpace(x, pdf, Interval(-oo, oo))
     assert _test_args(RandomSymbol(A, x))
 
 def test_sympy__stats__rv__ProductPSpace():
     from sympy.stats.rv import ProductPSpace
     from sympy.stats.crv import SingleContinuousPSpace
     pdf1 = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf1, Interval(-oo,oo))
+    A = SingleContinuousPSpace(x, pdf1, Interval(-oo, oo))
     pdf2 = normal_pdf(y)
-    B = SingleContinuousPSpace(y, pdf2, Interval(-oo,oo))
-    assert _test_args(ProductPSpace(A,B))
+    B = SingleContinuousPSpace(y, pdf2, Interval(-oo, oo))
+    assert _test_args(ProductPSpace(A, B))
 
 def test_sympy__stats__rv__ProductDomain():
     from sympy.stats.rv import ProductDomain, SingleDomain
-    D = SingleDomain(x, Interval(-oo,oo))
-    E = SingleDomain(y, Interval(0,oo))
+    D = SingleDomain(x, Interval(-oo, oo))
+    E = SingleDomain(y, Interval(0, oo))
     assert _test_args(ProductDomain(D, E))
 
 def test_sympy__stats__frv_types__DiscreteUniformPSpace():
@@ -525,61 +525,61 @@ def test_sympy__stats__frv_types__HypergeometricPSpace():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain(set([(x,1), (x,2)]))) # x can be 1 or 2
+    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)]))) # x can be 1 or 2
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, set([1,2]))) # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, set([1, 2]))) # x can be 1 or 2
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
-    xd = SingleFiniteDomain(x, set([1,2]))
-    yd = SingleFiniteDomain(y, set([1,2]))
+    xd = SingleFiniteDomain(x, set([1, 2]))
+    yd = SingleFiniteDomain(y, set([1, 2]))
     assert _test_args(ProductFiniteDomain(xd, yd))
 
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
-    xd = SingleFiniteDomain(x, set([1,2]))
+    xd = SingleFiniteDomain(x, set([1, 2]))
     assert _test_args(ConditionalFiniteDomain(xd, x>1))
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1,2]))
-    assert _test_args(FinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
+    xd = SingleFiniteDomain(x, set([1, 2]))
+    assert _test_args(FinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 def test_sympy__stats__frv__SingleFinitePSpace():
     from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1,2]))
-    assert _test_args(SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half}))
+    xd = SingleFiniteDomain(x, set([1, 2]))
+    assert _test_args(SingleFinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 def test_sympy__stats__frv__ProductFinitePSpace():
     from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
         ProductFinitePSpace)
-    xd = SingleFiniteDomain(x, set([1,2]))
-    xp = SingleFinitePSpace(xd, {(x,1):S.Half, (x,2):S.Half})
-    yd = SingleFiniteDomain(y, set([1,2]))
-    yp = SingleFinitePSpace(yd, {(y,1):S.Half, (y,2):S.Half})
+    xd = SingleFiniteDomain(x, set([1, 2]))
+    xp = SingleFinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half})
+    yd = SingleFiniteDomain(y, set([1, 2]))
+    yp = SingleFinitePSpace(yd, {(y, 1): S.Half, (y, 2): S.Half})
     assert _test_args(ProductFinitePSpace(xp, yp))
 
 def test_sympy__stats__crv_types__ArcsinPSpace():
     from sympy.stats.crv_types import ArcsinPSpace
-    assert _test_args(ArcsinPSpace('X', 0,1))
+    assert _test_args(ArcsinPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__BeniniPSpace():
     from sympy.stats.crv_types import BeniniPSpace
-    assert _test_args(BeniniPSpace('X', 1,1,1))
+    assert _test_args(BeniniPSpace('X', 1, 1, 1))
 
 def test_sympy__stats__crv_types__BetaPSpace():
     from sympy.stats.crv_types import BetaPSpace
-    assert _test_args(BetaPSpace('X', 1,1))
+    assert _test_args(BetaPSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__BetaPrimePSpace():
     from sympy.stats.crv_types import BetaPrimePSpace
-    assert _test_args(BetaPrimePSpace('X', 1,1))
+    assert _test_args(BetaPrimePSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__CauchyPSpace():
     from sympy.stats.crv_types import CauchyPSpace
-    assert _test_args(CauchyPSpace('X', 0,1))
+    assert _test_args(CauchyPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__ChiPSpace():
     from sympy.stats.crv_types import ChiPSpace
@@ -587,7 +587,7 @@ def test_sympy__stats__crv_types__ChiPSpace():
 
 def test_sympy__stats__crv_types__DagumPSpace():
     from sympy.stats.crv_types import DagumPSpace
-    assert _test_args(DagumPSpace('X', 1,1,1))
+    assert _test_args(DagumPSpace('X', 1, 1, 1))
 
 def test_sympy__stats__crv_types__ExponentialPSpace():
     from sympy.stats.crv_types import ExponentialPSpace
@@ -595,19 +595,19 @@ def test_sympy__stats__crv_types__ExponentialPSpace():
 
 def test_sympy__stats__crv_types__GammaPSpace():
     from sympy.stats.crv_types import GammaPSpace
-    assert _test_args(GammaPSpace('X', 1,1))
+    assert _test_args(GammaPSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__LaplacePSpace():
     from sympy.stats.crv_types import LaplacePSpace
-    assert _test_args(LaplacePSpace('X', 0,1))
+    assert _test_args(LaplacePSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__LogisticPSpace():
     from sympy.stats.crv_types import LogisticPSpace
-    assert _test_args(LogisticPSpace('X', 0,1))
+    assert _test_args(LogisticPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__LogNormalPSpace():
     from sympy.stats.crv_types import LogNormalPSpace
-    assert _test_args(LogNormalPSpace('X', 0,1))
+    assert _test_args(LogNormalPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__MaxwellPSpace():
     from sympy.stats.crv_types import MaxwellPSpace
@@ -615,15 +615,15 @@ def test_sympy__stats__crv_types__MaxwellPSpace():
 
 def test_sympy__stats__crv_types__NakagamiPSpace():
     from sympy.stats.crv_types import NakagamiPSpace
-    assert _test_args(NakagamiPSpace('X', 1,1))
+    assert _test_args(NakagamiPSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__NormalPSpace():
     from sympy.stats.crv_types import NormalPSpace
-    assert _test_args(NormalPSpace('X', 0,1))
+    assert _test_args(NormalPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__ParetoPSpace():
     from sympy.stats.crv_types import ParetoPSpace
-    assert _test_args(ParetoPSpace('X', 1,1))
+    assert _test_args(ParetoPSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__RayleighPSpace():
     from sympy.stats.crv_types import RayleighPSpace
@@ -635,11 +635,11 @@ def test_sympy__stats__crv_types__StudentTPSpace():
 
 def test_sympy__stats__crv_types__TriangularPSpace():
     from sympy.stats.crv_types import TriangularPSpace
-    assert _test_args(TriangularPSpace('X', -1,0,1))
+    assert _test_args(TriangularPSpace('X', -1, 0, 1))
 
 def test_sympy__stats__crv_types__UniformPSpace():
     from sympy.stats.crv_types import UniformPSpace
-    assert _test_args(UniformPSpace('X', 0,1))
+    assert _test_args(UniformPSpace('X', 0, 1))
 
 def test_sympy__stats__crv_types__UniformSumPSpace():
     from sympy.stats.crv_types import UniformSumPSpace
@@ -647,7 +647,7 @@ def test_sympy__stats__crv_types__UniformSumPSpace():
 
 def test_sympy__stats__crv_types__WeibullPSpace():
     from sympy.stats.crv_types import WeibullPSpace
-    assert _test_args(WeibullPSpace('X', 1,1))
+    assert _test_args(WeibullPSpace('X', 1, 1))
 
 def test_sympy__stats__crv_types__WignerSemicirclePSpace():
     from sympy.stats.crv_types import WignerSemicirclePSpace
@@ -1275,11 +1275,11 @@ def test_sympy__matrices__expressions__matexpr__MatrixBase():
 
 def test_sympy__matrices__immutable__ImmutableMatrix():
     from sympy.matrices.immutable import ImmutableMatrix
-    assert _test_args(ImmutableMatrix([[1,2],[3,4]]))
+    assert _test_args(ImmutableMatrix([[1, 2], [3, 4]]))
 
 def test_sympy__matrices__immutable__ImmutableSparseMatrix():
     from sympy.matrices.immutable import ImmutableSparseMatrix
-    assert _test_args(ImmutableSparseMatrix([[1,2],[3,4]]))
+    assert _test_args(ImmutableSparseMatrix([[1, 2], [3, 4]]))
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
@@ -1355,7 +1355,7 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
     from sympy import Lambda, symbols
     i, j = symbols('i,j')
-    assert _test_args(FunctionMatrix(3,3, Lambda((i,j), i-j) ))
+    assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i-j) ))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -1420,15 +1420,15 @@ def test_sympy__physics__quantum__cg__CG():
 
 def test_sympy__physics__quantum__cg__Wigner3j():
     from sympy.physics.quantum.cg import Wigner3j
-    assert _test_args(Wigner3j(6,0,4,0,2,0))
+    assert _test_args(Wigner3j(6, 0, 4, 0, 2, 0))
 
 def test_sympy__physics__quantum__cg__Wigner6j():
     from sympy.physics.quantum.cg import Wigner6j
-    assert _test_args(Wigner6j(1,2,3,2,1,2))
+    assert _test_args(Wigner6j(1, 2, 3, 2, 1, 2))
 
 def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
-    assert _test_args(Wigner9j(2,1,1,S(3)/2,S(1)/2,1,S(1)/2,S(1)/2,0))
+    assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
 
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
@@ -1446,7 +1446,7 @@ def test_sympy__physics__quantum__dagger__Dagger():
 
 def test_sympy__physics__quantum__gate__CGate():
     from sympy.physics.quantum.gate import CGate, Gate
-    assert _test_args(CGate((0,1), Gate(2)))
+    assert _test_args(CGate((0, 1), Gate(2)))
 
 def test_sympy__physics__quantum__gate__CNotGate():
     from sympy.physics.quantum.gate import CNotGate
@@ -1488,7 +1488,7 @@ def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
     from sympy.matrices.immutable import ImmutableMatrix
     from sympy import Integer, Tuple
-    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1,0],[0,2]])))
+    assert _test_args(UGate(Tuple(Integer(1)), ImmutableMatrix([[1, 0], [0, 2]])))
 
 def test_sympy__physics__quantum__gate__XGate():
     from sympy.physics.quantum.gate import XGate
@@ -1635,7 +1635,7 @@ def test_sympy__physics__quantum__qubit__QubitState():
 def test_sympy__physics__quantum__density__Density():
     from sympy.physics.quantum.density import Density
     from sympy.physics.quantum.state import Ket
-    assert _test_args(Density([Ket(0),0.5], [Ket(1),0.5]))
+    assert _test_args(Density([Ket(0), 0.5], [Ket(1), 0.5]))
 
 @SKIP("TODO: sympy.physics.quantum.shor: Cmod Not Implemented")
 def test_sympy__physics__quantum__shor__CMod():
@@ -1646,11 +1646,11 @@ def test_sympy__physics__quantum__spin__CoupledSpinState():
     from sympy.physics.quantum.spin import CoupledSpinState
     assert _test_args(CoupledSpinState(1, 0, (1, 1)))
     assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2)))
-    assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2), ((2,3,S(1)/2),(1,2,1)) ))
-    j,m,j1,j2,j3,j12,x = symbols('j m j1:4 j12 x')
-    assert CoupledSpinState(j, m, (j1,j2,j3)).subs(j2,x) == CoupledSpinState(j, m, (j1,x,j3))
-    assert CoupledSpinState(j, m, (j1,j2,j3),((1,3,j12),(1,2,j)) ).subs(j12,x) == \
-        CoupledSpinState(j, m, (j1,j2,j3), ((1,3,x),(1,2,j)) )
+    assert _test_args(CoupledSpinState(1, 0, (1, S(1)/2, S(1)/2), ((2, 3, S(1)/2), (1, 2, 1)) ))
+    j, m, j1, j2, j3, j12, x = symbols('j m j1:4 j12 x')
+    assert CoupledSpinState(j, m, (j1, j2, j3)).subs(j2, x) == CoupledSpinState(j, m, (j1, x, j3))
+    assert CoupledSpinState(j, m, (j1, j2, j3), ((1, 3, j12), (1, 2, j)) ).subs(j12, x) == \
+        CoupledSpinState(j, m, (j1, j2, j3), ((1, 3, x), (1, 2, j)) )
 
 def test_sympy__physics__quantum__spin__J2Op():
     from sympy.physics.quantum.spin import J2Op
@@ -2071,13 +2071,13 @@ def test_sympy__diffgeom__diffgeom__LieDerivative():
 def test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseCovarDerivativeOp
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    assert _test_args(BaseCovarDerivativeOp(cs, 0, [[[0,]*3,]*3,]*3))
+    assert _test_args(BaseCovarDerivativeOp(cs, 0, [[[0, ]*3, ]*3, ]*3))
 
 def test_sympy__diffgeom__diffgeom__CovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, CovarDerivativeOp
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     v = BaseVectorField(cs, 0)
-    _test_args(CovarDerivativeOp(v, [[[0,]*3,]*3,]*3))
+    _test_args(CovarDerivativeOp(v, [[[0, ]*3, ]*3, ]*3))
 
 def test_sympy__categories__baseclasses__Class():
     from sympy.categories.baseclasses import Class

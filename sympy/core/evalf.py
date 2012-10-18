@@ -551,7 +551,7 @@ def evalf_pow(v, prec, options):
             return fone, None, prec, None
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
-        prec += int(math.log(abs(p),2))
+        prec += int(math.log(abs(p), 2))
         re, im, re_acc, im_acc = evalf(base, prec+5, options)
         # Real to integer power
         if re and not im:
@@ -688,7 +688,7 @@ def evalf_trig(v, prec, options):
         if accuracy < prec:
             if options.get('verbose'):
                 print "SIN/COS", accuracy, "wanted", prec, "gap", gap
-                print to_str(y,10)
+                print to_str(y, 10)
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
@@ -750,7 +750,7 @@ def evalf_piecewise(expr, prec, options):
         expr = expr.subs(evalf_subs(prec, options['subs']))
         newopts = options.copy()
         del newopts['subs']
-        if hasattr(expr,'func'):
+        if hasattr(expr, 'func'):
             return evalf(expr, prec, newopts)
         if type(expr) == float:
             return evalf(C.Float(expr), prec, newopts)
@@ -814,7 +814,7 @@ def do_integral(expr, prec, options):
         max_imag_term = [MINUS_INF]
 
         def f(t):
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs':{x:t}})
+            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1189,7 +1189,7 @@ class EvalfMixin(object):
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
-        options = {'maxprec': max(prec,int(maxn*LG10)), 'chop': chop,
+        options = {'maxprec': max(prec, int(maxn*LG10)), 'chop': chop,
                'strict': strict, 'verbose': verbose}
         if subs is not None:
             options['subs'] = subs

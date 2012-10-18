@@ -287,15 +287,15 @@ class Lambdifier(object):
 
     # Functions with different names in builtins
     builtin_functions_different = {
-            'Min':'min',
-            'Max':'max',
-            'Abs':'abs',
+            'Min': 'min',
+            'Max': 'max',
+            'Abs': 'abs',
             }
 
     # Strings that should be translated
     builtin_not_functions = {
-            'I':'1j',
-            'oo':'1e400',
+            'I': '1j',
+            'oo': '1e400',
             }
 
     ###
@@ -314,28 +314,28 @@ class Lambdifier(object):
 
     # Functions with different names in numpy
     numpy_functions_different = {
-            "acos":"arccos",
-            "acosh":"arccosh",
-            "arg":"angle",
-            "asin":"arcsin",
-            "asinh":"arcsinh",
-            "atan":"arctan",
-            "atan2":"arctan2",
-            "atanh":"arctanh",
-            "ceiling":"ceil",
-            "im":"imag",
-            "ln":"log",
-            "Max":"amax",
-            "Min":"amin",
-            "re":"real",
-            "Abs":"abs",
+            "acos": "arccos",
+            "acosh": "arccosh",
+            "arg": "angle",
+            "asin": "arcsin",
+            "asinh": "arcsinh",
+            "atan": "arctan",
+            "atan2": "arctan2",
+            "atanh": "arctanh",
+            "ceiling": "ceil",
+            "im": "imag",
+            "ln": "log",
+            "Max": "amax",
+            "Min": "amin",
+            "re": "real",
+            "Abs": "abs",
             }
 
     # Strings that should be translated
     numpy_not_functions = {
-            'pi':'np.pi',
-            'oo':'np.inf',
-            'E':'np.e',
+            'pi': 'np.pi',
+            'oo': 'np.inf',
+            'E': 'np.e',
             }
 
     ###
@@ -356,15 +356,15 @@ class Lambdifier(object):
 
     # Functions with different names in math
     math_functions_different = {
-            'ceiling':'ceil',
-            'ln':'log',
-            'loggamma':'lgamma'
+            'ceiling': 'ceil',
+            'ln': 'log',
+            'loggamma': 'lgamma'
             }
 
     # Strings that should be translated
     math_not_functions = {
-            'pi':'math.pi',
-            'E':'math.e',
+            'pi': 'math.pi',
+            'E': 'math.e',
             }
 
     ###
@@ -383,25 +383,25 @@ class Lambdifier(object):
 
     # Functions with different names in cmath
     cmath_functions_different = {
-            'ln':'log',
-            'arg':'phase',
+            'ln': 'log',
+            'arg': 'phase',
             }
 
     # Strings that should be translated
     cmath_not_functions = {
-            'pi':'cmath.pi',
-            'E':'cmath.e',
+            'pi': 'cmath.pi',
+            'E': 'cmath.e',
             }
     ###
     # intervalmath
     ###
     interval_not_functions = {
-            'pi':'cmath.pi',
-            'E':'cmath.e'
+            'pi': 'cmath.pi',
+            'E': 'cmath.e'
             }
     interval_functions_same = [
        'sin', 'cos', 'exp', 'tan', 'atan', 'log',
-       'sqrt','cosh', 'sinh', 'tanh', 'floor',
+       'sqrt', 'cosh', 'sinh', 'tanh', 'floor',
        'acos', 'asin', 'acosh', 'asinh', 'atanh',
        'Abs', 'And', 'Or'
        ]
@@ -409,7 +409,7 @@ class Lambdifier(object):
     interval_functions_different = {
             'Min': 'imin',
             'Max': 'imax',
-            'ceiling':'ceil',
+            'ceiling': 'ceil',
 
             }
 

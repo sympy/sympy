@@ -108,7 +108,7 @@ basic_objs = [
     Float("1.3"),
     x,
     y,
-    pow(x,y)*y,
+    pow(x, y)*y,
 ]
 
 # all supported objects
@@ -122,11 +122,11 @@ all_objs = basic_objs + [
 def dotest(s):
     for x in all_objs:
         for y in all_objs:
-            s(x,y)
+            s(x, y)
     return True
 
 def test_basic():
-    def j(a,b):
+    def j(a, b):
         x = a
         x = +a
         x = -a
@@ -138,7 +138,7 @@ def test_basic():
     assert dotest(j)
 
 def test_ibasic():
-    def s(a,b):
+    def s(a, b):
         x = a
         x += b
         x = a
@@ -181,7 +181,7 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj ** '1')
 
 def test_leadterm():
-    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
+    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3, 0)
 
     assert (1/x**2+1+x+x**2).leadterm(x)[1] == -2
     assert (1/x+1+x+x**2).leadterm(x)[1] == -1
@@ -229,12 +229,12 @@ def test_atoms():
     assert sorted(list((1+x).atoms())) == sorted([1, x])
 
     assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
-    assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
+    assert sorted(list((1+2*cos(x)).atoms(Symbol, Number))) == sorted([1, 2, x])
 
     assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
 
-    assert sorted(list(Rational(1,2).atoms())) == [S.Half]
-    assert sorted(list(Rational(1,2).atoms(Symbol))) == []
+    assert sorted(list(Rational(1, 2).atoms())) == [S.Half]
+    assert sorted(list(Rational(1, 2).atoms(Symbol))) == []
 
     assert sorted(list(sin(oo).atoms(oo))) == [oo]
 
@@ -249,7 +249,7 @@ def test_atoms():
 
     assert list((I*pi).atoms(NumberSymbol)) == [pi]
     assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-           sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
+           sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
 
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
@@ -318,8 +318,8 @@ def test_is_rational_function():
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
 
-    assert Rational(17,54).is_rational_function() == True
-    assert Rational(17,54).is_rational_function(x) == True
+    assert Rational(17, 54).is_rational_function() == True
+    assert Rational(17, 54).is_rational_function(x) == True
 
     assert (12/x).is_rational_function() == True
     assert (12/x).is_rational_function(x) == True
@@ -395,7 +395,7 @@ def test_args():
     assert (x*y+1).args in ((x*y, 1), (1, x*y))
     assert sin(x*y).args == (x*y,)
     assert sin(x*y).args[0] == x*y
-    assert (x**y).args == (x,y)
+    assert (x**y).args == (x, y)
     assert (x**y).args[0] == x
     assert (x**y).args[1] == y
 
@@ -816,7 +816,7 @@ def test_as_coeff_exponent():
     D = Derivative
     f = Function('f')
     fx = D(f(x), x)
-    assert fx.as_coeff_exponent(f(x)) == (fx,0)
+    assert fx.as_coeff_exponent(f(x)) == (fx, 0)
 
 def test_extractions():
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
@@ -1247,7 +1247,7 @@ def test_is_constant():
     Sum(x, (x, 1, n)).is_constant(x) == True
     eq = a*cos(x)**2 + a*sin(x)**2 - a
     eq.is_constant() == True
-    assert eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+    assert eq.subs({x: pi, a: 2}) == eq.subs({x: pi, a: 3}) == 0
     assert x.is_constant() is False
     assert x.is_constant(y) is True
 
@@ -1353,11 +1353,11 @@ def test_round():
     assert S.Zero.round() == 0
 
     a = (Add(1, Float('1.'+'9'*27, ''), evaluate=0))
-    assert a.round(10) == Float('3.0000000000','')
-    assert a.round(25) == Float('3.0000000000000000000000000','')
-    assert a.round(26) == Float('3.00000000000000000000000000','')
-    assert a.round(27) == Float('2.999999999999999999999999999','')
-    assert a.round(30) == Float('2.999999999999999999999999999','')
+    assert a.round(10) == Float('3.0000000000', '')
+    assert a.round(25) == Float('3.0000000000000000000000000', '')
+    assert a.round(26) == Float('3.00000000000000000000000000', '')
+    assert a.round(27) == Float('2.999999999999999999999999999', '')
+    assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
 
@@ -1379,7 +1379,7 @@ def test_round():
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
 
     # issue 3815
-    assert (I**(I+3)).round(3) == Float('-0.208','')*I
+    assert (I**(I+3)).round(3) == Float('-0.208', '')*I
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)

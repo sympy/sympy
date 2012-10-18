@@ -14,7 +14,7 @@ from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
 
-small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
+small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8)) \
     for i in range(256)]
 
 def smoothness(n):
@@ -938,7 +938,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             args = []
         args.extend([Pow(*i, **{'evaluate':False})
                      for i in sorted(factordict.items())])
-        return Mul(*args, **{'evaluate':False})
+        return Mul(*args, **{'evaluate': False})
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 

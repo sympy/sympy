@@ -22,7 +22,7 @@ def test_Symbol():
     assert Dummy("x") != Dummy("x")
     d = symbols('d', cls=Dummy)
     assert isinstance(d, Dummy)
-    c,d = symbols('c,d', cls=Dummy)
+    c, d = symbols('c,d', cls=Dummy)
     assert isinstance(c, Dummy)
     assert isinstance(d, Dummy)
     raises(TypeError, lambda: Symbol())
@@ -158,7 +158,7 @@ def test_Wild_properties():
     k = Symbol("k", integer=True)
     n = Symbol("n", integer=True, positive=True)
 
-    given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
+    given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3, 2), I ]
 
     integerp = lambda k: k.is_integer
     positivep = lambda k: k.is_positive
@@ -167,7 +167,7 @@ def test_Wild_properties():
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
-    Y = Wild("Y", exclude=[x,p,k,n])
+    Y = Wild("Y", exclude=[x, p, k, n])
     P = Wild("P", properties=[positivep])
     K = Wild("K", properties=[integerp])
     N = Wild("N", properties=[positivep, integerp])
@@ -175,12 +175,12 @@ def test_Wild_properties():
     given_wildcards = [ S, R, Y, P, K, N ]
 
     goodmatch = {
-        S: (x,y,p,k,n),
-        R: (p,k,-k,n,-n,-3,3,pi,Rational(3,2)),
-        Y: (y,-3,3,pi,Rational(3,2),I ),
-        P: (p, n,3,pi, Rational(3,2)),
-        K: (k,-k,n,-n,-3,3),
-        N: (n,3)}
+        S: (x, y, p, k, n),
+        R: (p, k, -k, n, -n, -3, 3, pi, Rational(3, 2)),
+        Y: (y, -3, 3, pi, Rational(3, 2), I ),
+        P: (p, n, 3, pi, Rational(3, 2)),
+        K: (k, -k, n, -n, -3, 3),
+        N: (n, 3)}
 
     for A in given_wildcards:
         for pat in given_patterns:

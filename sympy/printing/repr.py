@@ -76,7 +76,7 @@ class ReprPrinter(Printer):
         for i in range(expr.rows):
             l.append([])
             for j in range(expr.cols):
-                l[-1].append(expr[i,j])
+                l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
     _print_SparseMatrix = \

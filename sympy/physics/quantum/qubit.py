@@ -247,7 +247,7 @@ class Qubit(QubitState, Ket):
                 for k in xrange(2):
                     col = find_index_that_is_projected(j, k, qubit)
                     row = find_index_that_is_projected(i, k, qubit)
-                    new_matrix[i,j] += old_matrix[row,col]
+                    new_matrix[i, j] += old_matrix[row, col]
 
         return new_matrix
 
@@ -438,9 +438,9 @@ def matrix_to_qubit(matrix):
     result = 0
     for i in range(mlistlen):
         if ket:
-            element = matrix[i,0]
+            element = matrix[i, 0]
         else:
-            element = matrix[0,i]
+            element = matrix[0, i]
         if format == 'numpy' or format == 'scipy.sparse':
             element = complex(element)
         if element != 0.0:
@@ -451,7 +451,7 @@ def matrix_to_qubit(matrix):
             result = result + element*cls(*qubit_array)
 
     # If sympy simplified by pulling out a constant coefficient, undo that.
-    if isinstance(result, (Mul,Add,Pow)):
+    if isinstance(result, (Mul, Add, Pow)):
         result = result.expand()
 
     return result
@@ -464,7 +464,7 @@ def matrix_to_density(mat):
     """
     from sympy.physics.quantum.density import Density
     eigen = mat.eigenvects()
-    args = [[matrix_to_qubit(Matrix([vector,])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
+    args = [[matrix_to_qubit(Matrix([vector, ])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
     if (len(args) == 0):
         return 0
     else:
@@ -684,7 +684,7 @@ def _get_possible_outcomes(m, bits):
     # This is filled with loads of dirty binary tricks...You have been warned
 
     size = max(m.shape) # Max of shape to account for bra or ket
-    nqubits = int(math.log(size,2)+.1) # Number of qubits possible
+    nqubits = int(math.log(size, 2)+.1) # Number of qubits possible
 
     # Make the output states and put in output_matrices, nothing in them now.
     # Each state will represent a possible outcome of the measurement
@@ -751,7 +751,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             if total > random_number:
                 break
             result += 1
-        return Qubit(IntQubit(result, int(math.log(max(m.shape),2)+.1)))
+        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2)+.1)))
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"

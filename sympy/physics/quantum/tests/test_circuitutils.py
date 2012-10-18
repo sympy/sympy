@@ -87,7 +87,7 @@ def test_replace_subcircuit():
     y = Y(0)
     z = Z(0)
     h = H(0)
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
 
     # Standard cases
@@ -247,7 +247,7 @@ def test_convert_to_symbolic_indices():
     assert act_map == exp_map
 
     i3 = Symbol('i3')
-    cgate_x0_c321 = CGate((3,2,1), X(0))
+    cgate_x0_c321 = CGate((3, 2, 1), X(0))
     exp_map = {i0: Integer(3), i1: Integer(2),
                i2: Integer(1), i3: Integer(0)}
     expected = (CGate((i0, i1, i2), X(i3)),)
@@ -272,8 +272,8 @@ def test_convert_to_real_indices():
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    cnot_10 = CNOT(1,0)
-    cnot_01 = CNOT(0,1)
+    cnot_10 = CNOT(1, 0)
+    cnot_01 = CNOT(0, 1)
     cgate_z_10 = CGate(1, Z(0))
     cgate_z_01 = CGate(0, Z(1))
 
@@ -324,7 +324,7 @@ def test_random_reduce():
     y = Y(0)
     z = Z(0)
     h = H(0)
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
 
     gate_list = [x, y, z]

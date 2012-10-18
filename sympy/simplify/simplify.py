@@ -1416,7 +1416,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                     if r is None:
                         break
                     r[a] = S.Zero
-                va, vb, vc = r[a],r[b],r[c]
+                va, vb, vc = r[a], r[b], r[c]
 
                 dold = d
                 d = va**2 - vc*vb**2
@@ -1571,7 +1571,7 @@ def polarify(eq, subs=True, lift=False):
         return eq
     reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
     eq = eq.subs(reps)
-    return eq, dict([(r,s) for s, r in reps.iteritems()])
+    return eq, dict([(r, s) for s, r in reps.iteritems()])
 
 def _unpolarify(eq, exponents_only, pause=False):
     from sympy import polar_lift, exp, principal_branch, pi
@@ -3245,7 +3245,7 @@ def _logcombine(expr, force=False):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t,'func', False)==log,\
+            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False)==log,\
             i.args)):
                 largs = _getlogargs(i)
                 assert len(largs) != 0
@@ -3253,10 +3253,10 @@ def _logcombine(expr, force=False):
                 for j in largs:
                     loglargs *= log(j)
 
-                if all(getattr(t,'is_positive') for t in largs)\
-                    and getattr(i.extract_multiplicatively(loglargs),'is_real', False)\
+                if all(getattr(t, 'is_positive') for t in largs)\
+                    and getattr(i.extract_multiplicatively(loglargs), 'is_real', False)\
                     or (force\
-                        and not all(getattr(t,'is_nonpositive') for t in largs)\
+                        and not all(getattr(t, 'is_nonpositive') for t in largs)\
                         and not getattr(i.extract_multiplicatively(loglargs),\
                         'is_real')==False):
 
@@ -3286,7 +3286,7 @@ def _logcombine(expr, force=False):
                 and not coef[a].is_imaginary))\
             and (coef[a].func != log\
                 or force\
-                or (not getattr(coef[a],'is_real')==False\
+                or (not getattr(coef[a], 'is_real')==False\
                     and getattr(x, 'is_positive'))):
 
             return log(coef[x]**coef[a])

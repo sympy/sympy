@@ -19,20 +19,20 @@ from sympy.abc import a, b, c, d, x, y, z, r
 
 def test_RootOf___new__():
     assert RootOf(x, 0) == 0
-    assert RootOf(x,-1) == 0
+    assert RootOf(x, -1) == 0
 
     assert RootOf(x, S.Zero) == 0
 
     assert RootOf(x - 1, 0) == 1
-    assert RootOf(x - 1,-1) == 1
+    assert RootOf(x - 1, -1) == 1
 
     assert RootOf(x + 1, 0) ==-1
-    assert RootOf(x + 1,-1) ==-1
+    assert RootOf(x + 1, -1) ==-1
 
     assert RootOf(x**2 + 2*x + 3, 0) == -1 - I*sqrt(2)
     assert RootOf(x**2 + 2*x + 3, 1) == -1 + I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-1) == -1 + I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-2) == -1 - I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, -1) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, -2) == -1 - I*sqrt(2)
 
     r = RootOf(x**2 + 2*x + 3, 0, radicals=False)
     assert isinstance(r, RootOf) == True
@@ -40,30 +40,30 @@ def test_RootOf___new__():
     r = RootOf(x**2 + 2*x + 3, 1, radicals=False)
     assert isinstance(r, RootOf) == True
 
-    r = RootOf(x**2 + 2*x + 3,-1, radicals=False)
+    r = RootOf(x**2 + 2*x + 3, -1, radicals=False)
     assert isinstance(r, RootOf) == True
 
-    r = RootOf(x**2 + 2*x + 3,-2, radicals=False)
+    r = RootOf(x**2 + 2*x + 3, -2, radicals=False)
     assert isinstance(r, RootOf) == True
 
     assert RootOf((x - 1)*(x + 1), 0, radicals=False) ==-1
     assert RootOf((x - 1)*(x + 1), 1, radicals=False) == 1
-    assert RootOf((x - 1)*(x + 1),-1, radicals=False) == 1
-    assert RootOf((x - 1)*(x + 1),-2, radicals=False) ==-1
+    assert RootOf((x - 1)*(x + 1), -1, radicals=False) == 1
+    assert RootOf((x - 1)*(x + 1), -2, radicals=False) ==-1
 
     assert RootOf((x - 1)*(x + 1), 0, radicals=True) ==-1
     assert RootOf((x - 1)*(x + 1), 1, radicals=True) == 1
-    assert RootOf((x - 1)*(x + 1),-1, radicals=True) == 1
-    assert RootOf((x - 1)*(x + 1),-2, radicals=True) ==-1
+    assert RootOf((x - 1)*(x + 1), -1, radicals=True) == 1
+    assert RootOf((x - 1)*(x + 1), -2, radicals=True) ==-1
 
     assert RootOf((x - 1)*(x**3 + x + 3), 0) == RootOf(x**3 + x + 3, 0)
     assert RootOf((x - 1)*(x**3 + x + 3), 1) == 1
     assert RootOf((x - 1)*(x**3 + x + 3), 2) == RootOf(x**3 + x + 3, 1)
     assert RootOf((x - 1)*(x**3 + x + 3), 3) == RootOf(x**3 + x + 3, 2)
-    assert RootOf((x - 1)*(x**3 + x + 3),-1) == RootOf(x**3 + x + 3, 2)
-    assert RootOf((x - 1)*(x**3 + x + 3),-2) == RootOf(x**3 + x + 3, 1)
-    assert RootOf((x - 1)*(x**3 + x + 3),-3) == 1
-    assert RootOf((x - 1)*(x**3 + x + 3),-4) == RootOf(x**3 + x + 3, 0)
+    assert RootOf((x - 1)*(x**3 + x + 3), -1) == RootOf(x**3 + x + 3, 2)
+    assert RootOf((x - 1)*(x**3 + x + 3), -2) == RootOf(x**3 + x + 3, 1)
+    assert RootOf((x - 1)*(x**3 + x + 3), -3) == 1
+    assert RootOf((x - 1)*(x**3 + x + 3), -4) == RootOf(x**3 + x + 3, 0)
 
     assert RootOf(x**4 + 3*x**3, 0) ==-3
     assert RootOf(x**4 + 3*x**3, 1) == 0
@@ -81,8 +81,8 @@ def test_RootOf___new__():
     raises(NotImplementedError, lambda: RootOf(x**3 - x + sqrt(2), 0))
     raises(NotImplementedError, lambda: RootOf(x**3 - x + I, 0))
 
-    raises(IndexError, lambda: RootOf(x**2 - 1,-4))
-    raises(IndexError, lambda: RootOf(x**2 - 1,-3))
+    raises(IndexError, lambda: RootOf(x**2 - 1, -4))
+    raises(IndexError, lambda: RootOf(x**2 - 1, -3))
     raises(IndexError, lambda: RootOf(x**2 - 1, 2))
     raises(IndexError, lambda: RootOf(x**2 - 1, 3))
 
@@ -91,7 +91,7 @@ def test_RootOf___new__():
     assert RootOf(Poly(x**2 - y, x), 0) == -sqrt(y)
     assert RootOf(Poly(x**2 - y, x), 1) == sqrt(y)
 
-    assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
+    assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1, 3)
 
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
     raises(NotImplementedError, lambda: RootOf(x**3 + x + 2*y, x, 0))

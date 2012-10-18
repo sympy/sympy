@@ -55,7 +55,7 @@ def test_systematic_basic():
         pow(x, y)*y,
         Integer(5),
         Float(5.5),
-    ]
+        ]
     numpy_objs = [
         array([1]),
         array([3, 8, -1]),

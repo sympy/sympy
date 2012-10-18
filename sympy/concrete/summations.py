@@ -329,7 +329,7 @@ def telescopic_direct(L, R, n, limits):
     (i, a, b) = limits
     s = 0
     for m in xrange(n):
-        s += L.subs(i,a+m) + R.subs(i,b-m)
+        s += L.subs(i, a+m) + R.subs(i, b-m)
     return s
 
 def telescopic(L, R, limits):
@@ -350,7 +350,7 @@ def telescopic(L, R, limits):
     s = None
     if sol and k in sol:
         s = sol[k]
-        if not (s.is_Integer and L.subs(i,i + s) == -R):
+        if not (s.is_Integer and L.subs(i, i + s) == -R):
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
@@ -364,7 +364,7 @@ def telescopic(L, R, limits):
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
-                                   (L.subs(i,i + si) + R).expand().is_zero]
+                                   (L.subs(i, i + si) + R).expand().is_zero]
         if len(sol) != 1:
             return None
         s = sol[0]

@@ -15,8 +15,8 @@ def test_zeta_eval():
     assert zeta(nan) == nan
     assert zeta(x, nan) == nan
 
-    assert zeta(0) == Rational(-1,2)
-    assert zeta(0, x) == Rational(1,2) - x
+    assert zeta(0) == Rational(-1, 2)
+    assert zeta(0, x) == Rational(1, 2) - x
 
     assert zeta(1) == zoo
     assert zeta(1, 2) == zoo
@@ -57,15 +57,15 @@ def test_zeta_eval():
     assert zeta(0, 2) == -Rational(3, 2)
     assert zeta(0, -2) == Rational(3, 2)
 
-    assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854",20), 1e-19)
+    assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
 
 def test_dirichlet_eta_eval():
 
-    assert dirichlet_eta(0) == Rational(1,2)
-    assert dirichlet_eta(-1) == Rational(1,4)
+    assert dirichlet_eta(0) == Rational(1, 2)
+    assert dirichlet_eta(-1) == Rational(1, 4)
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12
-    assert dirichlet_eta(4) == pi**4*Rational(7,720)
+    assert dirichlet_eta(4) == pi**4*Rational(7, 720)
 
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)

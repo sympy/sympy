@@ -46,7 +46,7 @@ def test_point():
     p = R2_r.point([x, y])
     #TODO assert p.free_symbols() == set([x, y])
     assert p.coords(R2_r) == p.coords() == Matrix([x, y])
-    assert p.coords(R2_p) == Matrix([sqrt(x**2+y**2), atan2(y,x)])
+    assert p.coords(R2_p) == Matrix([sqrt(x**2+y**2), atan2(y, x)])
 
 
 def test_commutator():
@@ -130,9 +130,9 @@ def test_helpers_and_coordinate_dependent():
     raises(ValueError, lambda: covariant_order(misform_b))
     raises(ValueError, lambda: covariant_order(misform_c))
 
-    assert twoform_to_matrix(metric) == Matrix([[1,0],[0,1]])
-    assert twoform_to_matrix(twoform_not_sym) == Matrix([[1,0],[1,0]])
-    assert twoform_to_matrix(twoform_not_TP) == Matrix([[0,-1],[1,0]])
+    assert twoform_to_matrix(metric) == Matrix([[1, 0], [0, 1]])
+    assert twoform_to_matrix(twoform_not_sym) == Matrix([[1, 0], [1, 0]])
+    assert twoform_to_matrix(twoform_not_TP) == Matrix([[0, -1], [1, 0]])
 
     raises(ValueError, lambda: twoform_to_matrix(one_form))
     raises(ValueError, lambda: twoform_to_matrix(three_form))
@@ -164,11 +164,11 @@ def test_correct_arguments():
     raises(ValueError, lambda: CovarDerivativeOp(R2.x, []))
 
     a = Symbol('a')
-    raises(ValueError, lambda: intcurve_series(R2.dx, a, R2_r.point([1,2])))
-    raises(ValueError, lambda: intcurve_series(R2.x, a, R2_r.point([1,2])))
+    raises(ValueError, lambda: intcurve_series(R2.dx, a, R2_r.point([1, 2])))
+    raises(ValueError, lambda: intcurve_series(R2.x, a, R2_r.point([1, 2])))
 
-    raises(ValueError, lambda: intcurve_diffequ(R2.dx, a, R2_r.point([1,2])))
-    raises(ValueError, lambda: intcurve_diffequ(R2.x, a, R2_r.point([1,2])))
+    raises(ValueError, lambda: intcurve_diffequ(R2.dx, a, R2_r.point([1, 2])))
+    raises(ValueError, lambda: intcurve_diffequ(R2.x, a, R2_r.point([1, 2])))
 
     raises(ValueError, lambda: contravariant_order(R2.e_x + R2.dx))
     raises(ValueError, lambda: covariant_order(R2.e_x + R2.dx))

@@ -10,8 +10,8 @@ def test_partition():
     raises(ValueError, lambda: Partition(range(3)))
     raises(ValueError, lambda: Partition([[1, 1, 2]]))
 
-    a = Partition([[1,2,3], [4]])
-    b = Partition([[1,2], [3,4]])
+    a = Partition([[1, 2, 3], [4]])
+    b = Partition([[1, 2], [3, 4]])
     c = Partition([[x]])
     l = [a, b, c]
     l.sort(key=default_sort_key)
@@ -43,10 +43,10 @@ def test_integer_partition():
     raises(ValueError, lambda: IntegerPartition(range(3)))
     # check fails since 1 + 2 != 100
     raises(ValueError, lambda: IntegerPartition(100, range(1, 3)))
-    a = IntegerPartition(8, [1,3,4])
+    a = IntegerPartition(8, [1, 3, 4])
     b = a.next_lex()
-    c = IntegerPartition([1,3,4])
-    d = IntegerPartition(8, {1:3, 3:1, 2:1})
+    c = IntegerPartition([1, 3, 4])
+    d = IntegerPartition(8, {1: 3, 3: 1, 2: 1})
     assert a == c
     assert a.integer == d.integer
     assert a.conjugate == [3, 2, 2, 1]
@@ -79,7 +79,7 @@ def test_integer_partition():
 
     raises(ValueError, lambda: random_integer_partition(-1))
     assert random_integer_partition(1) == [1]
-    assert random_integer_partition(10, seed=[1,3,2,1,5,1]
+    assert random_integer_partition(10, seed=[1, 3, 2, 1, 5, 1]
             ) == [5, 2, 1, 1, 1]
 
 def test_rgs():

@@ -289,7 +289,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             P[i] = (P[i-1] * (n-a-i+1)/i).expand()
 
         for i in xrange(0, A):
-            Q[i] = Add(*[ (v*p).expand() for v, p in zip(V[:,i], P) ])
+            Q[i] = Add(*[ (v*p).expand() for v, p in zip(V[:, i], P) ])
 
         if not homogeneous:
             h = Add(*[ (g*p).expand() for g, p in zip(G, P) ])

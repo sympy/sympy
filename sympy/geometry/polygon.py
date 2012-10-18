@@ -1913,7 +1913,7 @@ class Triangle(Polygon):
         >>> t.circumcenter
         Point(1/2, 1/2)
         """
-        a,b,c = [x.perpendicular_bisector() for x in self.sides]
+        a, b, c = [x.perpendicular_bisector() for x in self.sides]
         return a.intersection(b)[0]
 
     @property
@@ -2182,17 +2182,17 @@ def _asa(d1, l, d2):
     """Return triangle having side with length l on the x-axis."""
     xy = Line((0, 0), slope=_slope(d1)).intersection(
          Line((l, 0), slope=_slope(180 - d2)))[0]
-    return Triangle((0,0),(l,0),xy)
+    return Triangle((0, 0), (l, 0), xy)
 
 def _sss(l1, l2, l3):
     """Return triangle having side of length l1 on the x-axis."""
-    c1 = Circle((0,0), l3)
+    c1 = Circle((0, 0), l3)
     c2 = Circle((l1, 0), l2)
     inter = [a for a in c1.intersection(c2) if a.y.is_nonnegative]
     if not inter:
         return None
     pt = inter[0]
-    return Triangle((0,0), (l1,0), pt)
+    return Triangle((0, 0), (l1, 0), pt)
 
 def _sas(l1, d, l2):
     """Return triangle having side with length l2 on the x-axis."""

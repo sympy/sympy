@@ -36,14 +36,14 @@ np = import_module('numpy')
 
 # Backend specific imports - matplotlib
 matplotlib = import_module('matplotlib',
-    __import__kwargs={'fromlist':['pyplot', 'cm', 'collections']},
+    __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
     min_module_version='1.0.0', catch=(RuntimeError,))
 if matplotlib:
     plt = matplotlib.pyplot
     cm = matplotlib.cm
     LineCollection = matplotlib.collections.LineCollection
     mpl_toolkits = import_module('mpl_toolkits',
-            __import__kwargs={'fromlist':['mplot3d']})
+            __import__kwargs={'fromlist': ['mplot3d']})
     Axes3D = mpl_toolkits.mplot3d.Axes3D
     art3d = mpl_toolkits.mplot3d.art3d
     ListedColormap = matplotlib.colors.ListedColormap

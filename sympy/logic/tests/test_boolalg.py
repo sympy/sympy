@@ -68,7 +68,7 @@ def test_Not():
     assert Not(False) == True
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
-    assert Not(False,False) == [True,  True ]
+    assert Not(False, False) == [True,  True ]
 
 def test_Nand():
     A, B, C = map(Boolean, symbols('A,B,C'))
@@ -105,7 +105,7 @@ def test_Nor():
 def test_Implies():
     A, B, C = map(Boolean, symbols('A,B,C'))
 
-    raises(ValueError, lambda: Implies(A,B,C))
+    raises(ValueError, lambda: Implies(A, B, C))
     assert Implies(True, True) == True
     assert Implies(True, False) == False
     assert Implies(False, True) == True
@@ -144,12 +144,12 @@ def test_subs():
     assert (A & B).subs(A, False) == False
     assert (A & B).subs(B, True) == A
     assert (A & B).subs(B, False) == False
-    assert (A & B).subs({A: True, B:True}) == True
+    assert (A & B).subs({A: True, B: True}) == True
     assert (A | B).subs(A, True) == True
     assert (A | B).subs(A, False) == B
     assert (A | B).subs(B, True) == True
     assert (A | B).subs(B, False) == A
-    assert (A | B).subs({A: True, B:True}) == True
+    assert (A | B).subs({A: True, B: True}) == True
 
 """
 we test for axioms of boolean algebra

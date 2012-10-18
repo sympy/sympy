@@ -20,7 +20,7 @@ def test_ratint():
     g = x + 1
 
     assert ratint(f / g, x) == log(x + 1)
-    assert ratint((f,g), x) == log(x + 1)
+    assert ratint((f, g), x) == log(x + 1)
 
     f = x**3 - x
     g = x - 1

@@ -5,7 +5,7 @@ from sympy import I, sqrt, log, exp
 from sympy.core.facts import InconsistentAssumptions
 
 def test_symbol_unset():
-    x = Symbol('x',real=True, integer=True)
+    x = Symbol('x', real=True, integer=True)
     assert x.is_real == True
     assert x.is_integer == True
     assert x.is_imaginary == False
@@ -170,7 +170,7 @@ def test_nan():
     assert nan.is_number is True
 
 def test_pos_rational():
-    r = Rational(3,4)
+    r = Rational(3, 4)
     assert r.is_commutative == True
     assert r.is_integer == False
     assert r.is_rational == True
@@ -193,39 +193,39 @@ def test_pos_rational():
     assert r.is_prime == False
     assert r.is_composite == False
 
-    r = Rational(1,4)
+    r = Rational(1, 4)
     assert r.is_nonpositive == False
     assert r.is_positive == True
     assert r.is_negative == False
     assert r.is_nonnegative == True
-    r = Rational(5,4)
+    r = Rational(5, 4)
     assert r.is_negative == False
     assert r.is_positive == True
     assert r.is_nonpositive == False
     assert r.is_nonnegative == True
-    r = Rational(5,3)
+    r = Rational(5, 3)
     assert r.is_nonnegative == True
     assert r.is_positive == True
     assert r.is_negative == False
     assert r.is_nonpositive == False
 
 def test_neg_rational():
-    r = Rational(-3,4)
+    r = Rational(-3, 4)
     assert r.is_positive == False
     assert r.is_nonpositive == True
     assert r.is_negative == True
     assert r.is_nonnegative == False
-    r = Rational(-1,4)
+    r = Rational(-1, 4)
     assert r.is_nonpositive == True
     assert r.is_positive == False
     assert r.is_negative == True
     assert r.is_nonnegative == False
-    r = Rational(-5,4)
+    r = Rational(-5, 4)
     assert r.is_negative == True
     assert r.is_positive == False
     assert r.is_nonpositive == True
     assert r.is_nonnegative == False
-    r = Rational(-5,3)
+    r = Rational(-5, 3)
     assert r.is_nonnegative == False
     assert r.is_positive == False
     assert r.is_negative == True
@@ -316,7 +316,7 @@ def test_symbol_real():
     assert a.is_zero == False
 
 def test_symbol_zero():
-    x = Symbol('x',zero=True)
+    x = Symbol('x', zero=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == False
@@ -325,7 +325,7 @@ def test_symbol_zero():
     assert x.is_nonzero == False
 
 def test_symbol_positive():
-    x = Symbol('x',positive=True)
+    x = Symbol('x', positive=True)
     assert x.is_positive == True
     assert x.is_nonpositive == False
     assert x.is_negative == False
@@ -334,19 +334,19 @@ def test_symbol_positive():
     assert x.is_nonzero == True
 
 def test_neg_symbol_positive():
-    x = -Symbol('x',positive=True)
+    x = -Symbol('x', positive=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == True
     assert x.is_nonnegative == False
 
 def test_neg_symbol_positive2():
-    x = -Symbol('x',positive=True)
+    x = -Symbol('x', positive=True)
     assert x.is_zero == False
     assert x.is_nonzero == True
 
 def test_symbol_nonpositive():
-    x = Symbol('x',nonpositive=True)
+    x = Symbol('x', nonpositive=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == None
@@ -355,7 +355,7 @@ def test_symbol_nonpositive():
     assert x.is_nonzero == None
 
 def test_neg_symbol_nonpositive():
-    x = -Symbol('x',nonpositive=True)
+    x = -Symbol('x', nonpositive=True)
     assert x.is_positive == None
     assert x.is_nonpositive == None
     assert x.is_negative == False
@@ -471,7 +471,7 @@ def test_issue726():
     assert h1 == h2
 
 def test_issue1723():
-    z = (-1)**Rational(1,3)*(1-I*sqrt(3))
+    z = (-1)**Rational(1, 3)*(1-I*sqrt(3))
     assert z.is_real in [True, None]
 
 def test_hash_vs_typeinfo():

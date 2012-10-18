@@ -1039,7 +1039,7 @@ def _check_antecedents(g1, g2, x):
                   re(mu) < 1, c1, c2, c3, c6, c11)] #13
     pr(13)
     conds += [And(p < q, u > v, bstar >= 0, cstar >= 0,
-                  c1, c2,c3, c4, c7, c11, c13)] #14
+                  c1, c2, c3, c4, c7, c11, c13)] #14
     pr(14)
     conds += [And(p > q, u < v, bstar >= 0, cstar >= 0,
                   c1, c2, c3, c5, c6, c11, c13)] #15

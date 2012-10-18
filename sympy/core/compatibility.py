@@ -138,7 +138,7 @@ try:
     import __builtin__
     cmp = __builtin__.cmp
 except AttributeError:
-    def cmp(a,b):
+    def cmp(a, b):
         return (a > b) - (a < b)
 
 try:
@@ -382,9 +382,9 @@ try:
     from __builtin__ import bin
 except ImportError: # Python 2.5
     _hexDict = {
-        '0':'0000', '1':'0001', '2':'0010', '3':'0011', '4':'0100', '5':'0101',
-        '6':'0110', '7':'0111', '8':'1000', '9':'1001', 'a':'1010', 'b':'1011',
-        'c':'1100', 'd':'1101', 'e':'1110', 'f':'1111', 'L':''}
+        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
+        '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
+        'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
     def bin(n):
         """Return the equivalent to Python 2.6's bin function.
 

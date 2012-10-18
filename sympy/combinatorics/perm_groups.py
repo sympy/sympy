@@ -1367,7 +1367,7 @@ class PermutationGroup(Basic):
         nb = len(base)
         assert nb == len(un)
         v = [0]*m
-        for i in range(nb-1, -1,-1):
+        for i in range(nb-1, -1, -1):
             j = base[i]
             rank, c = divmod(rank, un[i])
             v[j] = c

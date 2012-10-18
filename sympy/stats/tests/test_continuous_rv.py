@@ -18,7 +18,7 @@ _z = Dummy("z")
 def test_single_normal():
     mu = Symbol('mu', real=True, bounded=True)
     sigma = Symbol('sigma', real=True, positive=True, bounded=True)
-    X = Normal('x', 0,1)
+    X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
     assert simplify(E(Y)) == mu
@@ -34,7 +34,7 @@ def test_single_normal():
 
 @XFAIL
 def test_conditional_1d():
-    X = Normal('x', 0,1)
+    X = Normal('x', 0, 1)
     Y = given(X, X>=0)
 
     assert density(Y) == 2 * density(X)
@@ -45,10 +45,10 @@ def test_conditional_1d():
     assert E(X**2) == E(Y**2)
 
 def test_ContinuousDomain():
-    X = Normal('x', 0,1)
-    assert where(X**2<=1).set == Interval(-1,1)
+    X = Normal('x', 0, 1)
+    assert where(X**2<=1).set == Interval(-1, 1)
     assert where(X**2<=1).symbol == X.symbol
-    where(And(X**2<=1, X>=0)).set == Interval(0,1)
+    where(And(X**2<=1, X>=0)).set == Interval(0, 1)
     raises(ValueError, lambda: where(sin(X)>1))
 
     Y = given(X, X>=0)
@@ -56,7 +56,7 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 def test_multiple_normal():
-    X, Y = Normal('x', 0,1), Normal('y', 0,1)
+    X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
 
     assert E(X+Y) == 0
     assert variance(X+Y) == 2
@@ -87,7 +87,7 @@ def test_symbolic():
     assert E(X+a*Z+b) == mu1 + a/rate + b
 
 def test_cdf():
-    X = Normal('x', 0,1)
+    X = Normal('x', 0, 1)
 
     d = cdf(X)
     assert P(X<1) == d(1)
@@ -110,7 +110,7 @@ def test_cdf():
 
 def test_sample():
     z = Symbol('z')
-    Z = ContinuousRV(z, exp(-z), set=Interval(0,oo))
+    Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
     sym, val = Z.pspace.sample().items()[0]
     assert sym == Z and val in Interval(0, oo)
@@ -153,7 +153,7 @@ def test_beta():
 
     dens = density(B)
     x = Symbol('x')
-    assert dens(x) == x**(a-1)*(1-x)**(b-1) / beta(a,b)
+    assert dens(x) == x**(a-1)*(1-x)**(b-1) / beta(a, b)
 
     # This is too slow
     # assert E(B) == a / (a + b)
@@ -212,7 +212,7 @@ def test_exponential():
     assert P(X>1) == exp(-rate)
     assert P(X>10) == exp(-10*rate)
 
-    assert where(X<=1).set == Interval(0,1)
+    assert where(X<=1).set == Interval(0, 1)
 
 
 def test_gamma():
@@ -231,7 +231,7 @@ def test_gamma():
     X = Gamma('x', k, theta)
     assert simplify(E(X)) == k*theta
     # can't get things to simplify on this one so we use subs
-    assert variance(X).subs(k,5) == (k*theta**2).subs(k, 5)
+    assert variance(X).subs(k, 5) == (k*theta**2).subs(k, 5)
     # The following is too slow
     # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
@@ -346,7 +346,7 @@ def test_triangular():
     b = Symbol("b")
     c = Symbol("c")
 
-    X = Triangular('x', a,b,c)
+    X = Triangular('x', a, b, c)
     assert Density(X) == Lambda(_x,
              Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
                        (2/(-a + b), _x == c),
@@ -414,7 +414,7 @@ def test_prefab_sampling():
     B = Beta('B', 2, 5)
     G = Gamma('G', 1, 3)
 
-    variables = [N,L,E,P,W,U,B,G]
+    variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
         for i in xrange(niter):
@@ -436,7 +436,7 @@ def test_input_value_assertions():
 
 @XFAIL
 def test_unevaluated():
-    X = Normal('x', 0,1)
+    X = Normal('x', 0, 1)
     assert E(X, evaluate=False) == (
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
 

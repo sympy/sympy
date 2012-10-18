@@ -65,7 +65,7 @@ class SymPyTransformer(Transformer):
         lineno = nodelist[1][2]
         code = self.com_node(nodelist[-1])
 
-        assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
+        assert not defaults, `defaults` # sympy.Lambda does not support optional arguments
 
         def convert(x):
             return CallFunc(Name('sympify'), [Const(x)])

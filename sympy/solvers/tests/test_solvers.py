@@ -36,7 +36,7 @@ def test_guess_poly():
     assert guess_solve_strategy( x + a, x ) #== GS_POLY
     assert guess_solve_strategy( 2*x, x ) #== GS_POLY
     assert guess_solve_strategy( x + sqrt(2), x) #== GS_POLY
-    assert guess_solve_strategy( x + 2**Rational(1,4), x) #== GS_POLY
+    assert guess_solve_strategy( x + 2**Rational(1, 4), x) #== GS_POLY
     assert guess_solve_strategy( x**2 + 1, x ) #== GS_POLY
     assert guess_solve_strategy( x**2 - 1, x ) #== GS_POLY
     assert guess_solve_strategy( x*y + y, x ) #== GS_POLY
@@ -46,7 +46,7 @@ def test_guess_poly():
 def test_guess_poly_cv():
     # polynomial equations via a change of variable
     assert guess_solve_strategy( sqrt(x) + 1, x ) #== GS_POLY_CV_1
-    assert guess_solve_strategy( x**Rational(1,3) + sqrt(x) + 1, x ) #== GS_POLY_CV_1
+    assert guess_solve_strategy( x**Rational(1, 3) + sqrt(x) + 1, x ) #== GS_POLY_CV_1
     assert guess_solve_strategy( 4*x*(1 - sqrt(x)), x ) #== GS_POLY_CV_1
 
     # polynomial equation multiplying both sides by x**n
@@ -58,7 +58,7 @@ def test_guess_rational_cv():
     assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y) #== GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
-    assert guess_solve_strategy( (sqrt(x) + 1)/(x**Rational(1,3) + sqrt(x) + 1), x ) \
+    assert guess_solve_strategy( (sqrt(x) + 1)/(x**Rational(1, 3) + sqrt(x) + 1), x ) \
                                 #== GS_RATIONAL_CV_1
 
 def test_guess_transcendental():
@@ -123,12 +123,12 @@ def test_solve_polynomial1():
 
     assert solve(x - y**3, x) == [y**3]
     assert set(solve(x - y**3, y)) == set([
-        (-x**Rational(1,3))/2 + I*sqrt(3)*x**Rational(1,3)/2,
-        x**Rational(1,3),
-        (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2,
+        (-x**Rational(1, 3))/2 + I*sqrt(3)*x**Rational(1, 3)/2,
+        x**Rational(1, 3),
+        (-x**Rational(1, 3))/2 - I*sqrt(3)*x**Rational(1, 3)/2,
     ])
 
-    a11,a12,a21,a22,b1,b2 = symbols('a11,a12,a21,a22,b1,b2')
+    a11, a12, a21, a22, b1, b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         {
@@ -142,9 +142,9 @@ def test_solve_polynomial1():
     assert solve((x - y, x+y), (x, y)) == solution
     assert solve((x - y, x+y), [x, y]) == solution
 
-    assert set(solve(x**3 - 15*x - 4, x)) == set([-2 + 3**Rational(1,2),
+    assert set(solve(x**3 - 15*x - 4, x)) == set([-2 + 3**Rational(1, 2),
                                            S(4),
-                                           -2 - 3**Rational(1,2) ])
+                                           -2 - 3**Rational(1, 2) ])
 
     assert set(solve((x**2 - 1)**2 - a, x)) == \
            set([sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
@@ -160,9 +160,9 @@ def test_solve_polynomial_cv_1a():
     """
     assert solve( sqrt(x) - 1, x) == [1]
     assert solve( sqrt(x) - 2, x) == [4]
-    assert solve( x**Rational(1,4) - 2, x) == [16]
-    assert solve( x**Rational(1,3) - 3, x) == [27]
-    assert solve(sqrt(x) + x**Rational(1,3) + x**Rational(1,4), x) == [0]
+    assert solve( x**Rational(1, 4) - 2, x) == [16]
+    assert solve( x**Rational(1, 3) - 3, x) == [27]
+    assert solve(sqrt(x) + x**Rational(1, 3) + x**Rational(1, 4), x) == [0]
 
 def test_solve_polynomial_cv_1b():
     assert set(solve(4*x*(1 - a*sqrt(x)), x)) == set([S(0), 1/a**2])
@@ -174,8 +174,8 @@ def test_solve_polynomial_cv_2():
     multiplying both sides of the equation by x**m
     """
     assert solve(x + 1/x - 1, x) in \
-        [[ Rational(1,2) + I*sqrt(3)/2, Rational(1,2) - I*sqrt(3)/2],
-         [ Rational(1,2) - I*sqrt(3)/2, Rational(1,2) + I*sqrt(3)/2]]
+        [[ Rational(1, 2) + I*sqrt(3)/2, Rational(1, 2) - I*sqrt(3)/2],
+         [ Rational(1, 2) - I*sqrt(3)/2, Rational(1, 2) + I*sqrt(3)/2]]
 
 def test_solve_rational():
     """Test solve for rational functions"""
@@ -184,15 +184,15 @@ def test_solve_rational():
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
-    assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) == []
+    assert solve([x - 1, x - y, x - 2*y, y - 1], [x, y]) == []
 
-    assert solve([x - 1, x - y, x - 2*y, x - 1], [x,y]) == []
-    assert solve([x - 1, x - 1, x - y, x - 2*y], [x,y]) == []
+    assert solve([x - 1, x - y, x - 2*y, x - 1], [x, y]) == []
+    assert solve([x - 1, x - 1, x - y, x - 2*y], [x, y]) == []
 
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
 
-    M = Matrix([[0,0,n*(n+1),(n+1)**2,0],
-                [n+1,n+1,-2*n-1,-(n+1),0],
+    M = Matrix([[0, 0, n*(n+1), (n+1)**2, 0],
+                [n+1, n+1, -2*n-1, -(n+1), 0],
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
@@ -208,9 +208,9 @@ def test_linear_system_function():
 def test_linear_systemLU():
     n = Symbol('n')
 
-    M = Matrix([[1,2,0,1],[1,3,2*n,1],[4,-1,n**2,1]])
+    M = Matrix([[1, 2, 0, 1], [1, 3, 2*n, 1], [4, -1, n**2, 1]])
 
-    assert solve_linear_system_LU(M, [x,y,z]) == {z: -3/(n**2+18*n),
+    assert solve_linear_system_LU(M, [x, y, z]) == {z: -3/(n**2+18*n),
                                                   x: 1-12*n/(n**2+18*n),
                                                   y: 6*n/(n**2+18*n)}
 
@@ -221,7 +221,7 @@ def test_tsolve():
     assert solve(exp(x)-3, x) == [log(3)]
     assert set(solve((a*x+b)*(exp(x)-3), x)) == set([-b/a, log(3)])
     assert solve(cos(x)-y, x) == [acos(y)]
-    assert solve(2*cos(x)-y,x)== [acos(y/2)]
+    assert solve(2*cos(x)-y, x)== [acos(y/2)]
     assert set(solve(Eq(cos(x), sin(x)), x)) == set([-3*pi/4, pi/4])
 
     assert set(solve(exp(x) + exp(-x) - y, x)) in [set([
@@ -233,29 +233,29 @@ def test_tsolve():
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
-    assert solve(sqrt(3*x)-4, x) == [Rational(16,3)]
+    assert solve(sqrt(3*x)-4, x) == [Rational(16, 3)]
     assert solve(3**(x+2), x) == []
     assert solve(3**(2-x), x) == []
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
         [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2)))],
         [-Rational(5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
-        [-Rational(5, 3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],
+        [-Rational(5, 3) + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2))],
         [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))],
         [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3)))/(15*log(2))],
         [-(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(15*log(2))],
         [(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(-15*log(2))]
         ]
     assert solve(5*x-1+3*exp(2-7*x), x) == \
-        [Rational(1,5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
+        [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve(2*x+5+log(3*x-2), x) == \
-        [Rational(2,3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
-    assert solve(3*x+log(4*x), x) == [LambertW(Rational(3,4))/3]
+        [Rational(2, 3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
+    assert solve(3*x+log(4*x), x) == [LambertW(Rational(3, 4))/3]
     assert set(solve((2*x+8)*(8+exp(x)), x)) == set([S(-4), log(8) + pi*I])
     eq = 2*exp(3*x+4)-3
     ans = solve(eq, x)
     assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
-    assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
+    assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3, 2))-4)/3]
     assert solve(exp(x)+1, x) == [pi*I]
     assert solve(x**2 - 2**x, x) == [2]
     assert solve(x**3 - 3**x, x) == [-3*LambertW(-log(3)/3)/log(3)]
@@ -309,10 +309,10 @@ def test_solve_for_functions_derivatives():
             x.diff(t): (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
     assert solve(x.diff(t)-1, x.diff(t)) == [1]
-    assert solve(3*x.diff(t)-2, x.diff(t)) == [Rational(2,3)]
+    assert solve(3*x.diff(t)-2, x.diff(t)) == [Rational(2, 3)]
 
     eqns = set((3*x - 1, 2*y-4))
-    assert solve(eqns, set((x,y))) == { x: Rational(1, 3), y: 2 }
+    assert solve(eqns, set((x, y))) == { x: Rational(1, 3), y: 2 }
     x = Symbol('x')
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
@@ -377,7 +377,7 @@ def test_issue_1694():
     assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == []
     assert solve(-x**2 - 2*x + (x + 1)**2 - 1) == []
     assert solve((x/(x + 1) + 3)**(-2)) == []
-    assert solve(x/sqrt(x**2 + 1),x) == [0]
+    assert solve(x/sqrt(x**2 + 1), x) == [0]
     assert solve(exp(x) - y, x) == [log(y)]
     assert solve(exp(x)) == []
     assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
@@ -398,9 +398,9 @@ def test_issue_1694():
     assert solve(sqrt(x - 1)) == [1]
     # 1363
     a = Symbol('a')
-    assert solve(-3*a/sqrt(x),x) == []
+    assert solve(-3*a/sqrt(x), x) == []
     # 1387
-    assert solve(2*x/(x + 2) - 1,x) == [2]
+    assert solve(2*x/(x + 2) - 1, x) == [2]
     # 1397
     assert set(solve((x**2/(7 - x)).diff(x))) == set([S(0), S(14)])
     # 1596
@@ -453,8 +453,8 @@ def test_failing():
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
 
 def test_checking():
-    assert set(solve(x*(x - y/x),x, check=False)) == set([sqrt(y), S(0), -sqrt(y)])
-    assert set(solve(x*(x - y/x),x, check=True)) == set([sqrt(y), -sqrt(y)])
+    assert set(solve(x*(x - y/x), x, check=False)) == set([sqrt(y), S(0), -sqrt(y)])
+    assert set(solve(x*(x - y/x), x, check=True)) == set([sqrt(y), -sqrt(y)])
     # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
     assert solve((1/(1/x + 2), 1/(y - 3) - 1)) == []
     # 0 sets denominator of 1/x to zero so None is returned
@@ -603,11 +603,11 @@ def test_unrad():
                    (x, [], []))
     assert check(unrad(sqrt(x) + 1),
                    (x - 1, [], []))
-    assert s_check(unrad(sqrt(x) + x**Rational(1,3) + 2),
+    assert s_check(unrad(sqrt(x) + x**Rational(1, 3) + 2),
                    (2 + s**2 + s**3, [(s, x - s**6)], []))
     assert check(unrad(sqrt(x)*x**Rational(1, 3) + 2),
                    (x**5 - 64, [], []))
-    assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3)),
+    assert check(unrad(sqrt(x) + (x + 1)**Rational(1, 3)),
                    (x**3 - (x + 1)**2, [], []))
     assert check(unrad(sqrt(x) + sqrt(x + 1) + sqrt(2*x)),
                 (-2*sqrt(2)*x - 2*x + 1, [], []))
@@ -684,11 +684,11 @@ def test_unrad():
     assert any((a - ans).expand().is_zero for a in Y)
 
     raises(ValueError, lambda: unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3))
-    raises(ValueError, lambda: unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y)))
+    raises(ValueError, lambda: unrad(sqrt(x) + (x+1)**Rational(1, 3) + 2*sqrt(y)))
     # same as last but consider only y
-    assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3) + 2*sqrt(y), y),
+    assert check(unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
-    assert check(unrad(sqrt(x/(1 - x)) + (x + 1)**Rational(1,3)),
+    assert check(unrad(sqrt(x/(1 - x)) + (x + 1)**Rational(1, 3)),
                 (x**3/(-x + 1)**3 - (x + 1)**2, [], [(-x + 1)**3]))
     # same as last but consider only y; no y-containing denominators now
     assert s_check(unrad(sqrt(x/(1 - x)) + 2*sqrt(y), y),

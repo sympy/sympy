@@ -412,7 +412,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 @cythonized("n,p,k")
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polnomial. """
-    h = [K.one,-K.one]
+    h = [K.one, -K.one]
 
     for p, k in factorint(n).iteritems():
         h = dup_quo(dup_inflate(h, p, K), h, K)
@@ -422,7 +422,7 @@ def dup_zz_cyclotomic_poly(n, K):
 
 @cythonized("n,p,k,i")
 def _dup_cyclotomic_decompose(n, K):
-    H = [[K.one,-K.one]]
+    H = [[K.one, -K.one]]
 
     for p, k in factorint(n).iteritems():
         Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]

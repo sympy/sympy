@@ -8,7 +8,7 @@ def test_complex():
     b = Symbol("b", real=True)
     e = (a+I*b)*(a-I*b)
     assert e.expand() == a**2+b**2
-    assert sqrt(I) == (-1)**Rational(1,4)
+    assert sqrt(I) == (-1)**Rational(1, 4)
 
 def test_conjugate():
     a = Symbol("a", real=True)
@@ -92,14 +92,14 @@ def test_pythoncomplex():
 
 def test_rootcomplex():
     R = Rational
-    assert ((+1+I)**R(1,2)).expand(complex=True) == 2**R(1,4)*cos(  pi/8) + 2**R(1,4)*sin(  pi/8)*I
-    assert ((-1-I)**R(1,2)).expand(complex=True) == 2**R(1,4)*cos(3*pi/8) - 2**R(1,4)*sin(3*pi/8)*I
+    assert ((+1+I)**R(1, 2)).expand(complex=True) == 2**R(1, 4)*cos(  pi/8) + 2**R(1, 4)*sin(  pi/8)*I
+    assert ((-1-I)**R(1, 2)).expand(complex=True) == 2**R(1, 4)*cos(3*pi/8) - 2**R(1, 4)*sin(3*pi/8)*I
     assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)
 
 def test_expand_inverse():
     assert (1/(1+I)).expand(complex=True) == (1-I)/2
     assert ((1+2*I)**(-2)).expand(complex=True) == (-3-4*I)/25
-    assert ((1+I)**(-8)).expand(complex=True) == Rational(1,16)
+    assert ((1+I)**(-8)).expand(complex=True) == Rational(1, 16)
 
 def test_expand_complex():
     assert ((2+3*I)**10).expand(complex=True) == -341525 - 145668*I

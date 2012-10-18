@@ -26,7 +26,7 @@ def Rel(a, b, op):
     y == x**2 + x
 
     """
-    return Relational(a,b,op)
+    return Relational(a, b, op)
 
 def Eq(a, b=0):
     """
@@ -42,7 +42,7 @@ def Eq(a, b=0):
     y == x**2 + x
 
     """
-    return Relational(a,b,'==')
+    return Relational(a, b, '==')
 
 def Ne(a, b):
     """
@@ -58,7 +58,7 @@ def Ne(a, b):
     y != x**2 + x
 
     """
-    return Relational(a,b,'!=')
+    return Relational(a, b, '!=')
 
 def Lt(a, b):
     """
@@ -74,7 +74,7 @@ def Lt(a, b):
     y < x**2 + x
 
     """
-    return Relational(a,b,'<')
+    return Relational(a, b, '<')
 
 def Le(a, b):
     """
@@ -90,7 +90,7 @@ def Le(a, b):
     y <= x**2 + x
 
     """
-    return Relational(a,b,'<=')
+    return Relational(a, b, '<=')
 
 def Gt(a, b):
     """
@@ -106,7 +106,7 @@ def Gt(a, b):
     y > x**2 + x
 
     """
-    return Relational(a,b,'>')
+    return Relational(a, b, '>')
 
 def Ge(a, b):
     """
@@ -122,7 +122,7 @@ def Ge(a, b):
     y >= x**2 + x
 
     """
-    return Relational(a,b,'>=')
+    return Relational(a, b, '>=')
 
 # Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.

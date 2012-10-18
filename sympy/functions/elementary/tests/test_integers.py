@@ -199,7 +199,7 @@ def test_ceiling():
         11188719610782480504630258070757734324011354208865721592720336801
 
 def test_series():
-    x,y = symbols('x,y')
+    x, y = symbols('x,y')
     assert floor(x).nseries(x, y, 100) == floor(y)
     assert ceiling(x).nseries(x, y, 100) == ceiling(y)
     assert floor(x).nseries(x, pi, 100) == 3

@@ -274,8 +274,8 @@ class Mul(AssocOp):
                     #                             b    c       b+c
                     # try to combine last terms: a  * a   ->  a
                     o1 = nc_part.pop()
-                    b1,e1 = o1.as_base_exp()
-                    b2,e2 = o.as_base_exp()
+                    b1, e1 = o1.as_base_exp()
+                    b2, e2 = o.as_base_exp()
                     new_exp = e1 + e2
                     # Only allow powers to combine if the new exponent is
                     # not an Add. This allow things like a**2*b**3 == a**5

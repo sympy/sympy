@@ -33,7 +33,7 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+__all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
            'annotated']
 
 
@@ -63,7 +63,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g,G in greek.itervalues():
+        for g, G in greek.itervalues():
             symbols.append(g)
             symbols.append(G)
 

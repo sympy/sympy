@@ -843,7 +843,7 @@ class ReferenceFrame(object):
             axis = axis.express(parent).normalize()
             axis = axis.args[0][0]
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                    Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
+                    Matrix([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]],
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
         elif rot_type == 'QUATERNION':
             if not rot_order == '':
@@ -1495,7 +1495,7 @@ class Vector(object):
         wrt = sympify(wrt)
         _check_frame(otherframe)
         outvec = S(0)
-        for i,v in enumerate(self.args):
+        for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
             else:

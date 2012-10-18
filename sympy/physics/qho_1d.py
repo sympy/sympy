@@ -37,7 +37,7 @@ def psi_n(n, x, m, omega):
     return C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
 
 
-def E_n(n,omega):
+def E_n(n, omega):
     """
     Returns the Energy of the One-dimensional harmonic oscillator
 
@@ -62,4 +62,4 @@ def E_n(n,omega):
     hbar*omega*(x + 1/2)
     """
 
-    return hbar * omega*(n + Rational(1,2))
+    return hbar * omega*(n + Rational(1, 2))

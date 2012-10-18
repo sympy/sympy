@@ -689,13 +689,13 @@ def _pgroup_calcs():
     # cw from top
     #
     _t_pgroup = [
-        Perm([[1,2,3], [0]]), # cw from top
-        Perm([[0,1,2], [3]]), # cw from front face
-        Perm([[0,3,2], [1]]), # cw from back right face
-        Perm([[0,3,1], [2]]), # cw from back left face
-        Perm([[0,1], [2,3]]), # through front left edge
-        Perm([[0,2], [1,3]]), # through front right edge
-        Perm([[0,3], [1,2]]), # through back edge
+        Perm([[1, 2, 3], [0]]), # cw from top
+        Perm([[0, 1, 2], [3]]), # cw from front face
+        Perm([[0, 3, 2], [1]]), # cw from back right face
+        Perm([[0, 3, 1], [2]]), # cw from back left face
+        Perm([[0, 1], [2, 3]]), # through front left edge
+        Perm([[0, 2], [1, 3]]), # through front right edge
+        Perm([[0, 3], [1, 2]]), # through back edge
         ]
 
     tetrahedron = Polyhedron(
@@ -712,21 +712,21 @@ def _pgroup_calcs():
     # U, D, F, B, L, R = up, down, front, back, left, right
     _c_pgroup = [Perm(p) for p in
         [
-        [1,2,3,0,5,6,7,4], # cw from top, U
-        [4,0,3,7,5,1,2,6], # cw from F face
-        [4,5,1,0,7,6,2,3], # cw from R face
+        [1, 2, 3, 0, 5, 6, 7, 4], # cw from top, U
+        [4, 0, 3, 7, 5, 1, 2, 6], # cw from F face
+        [4, 5, 1, 0, 7, 6, 2, 3], # cw from R face
 
-        [1,0,4,5,2,3,7,6], # cw through UF edge
-        [6,2,1,5,7,3,0,4], # cw through UR edge
-        [6,7,3,2,5,4,0,1], # cw through UB edge
-        [3,7,4,0,2,6,5,1], # cw through UL edge
-        [4,7,6,5,0,3,2,1], # cw through FL edge
-        [6,5,4,7,2,1,0,3], # cw through FR edge
+        [1, 0, 4, 5, 2, 3, 7, 6], # cw through UF edge
+        [6, 2, 1, 5, 7, 3, 0, 4], # cw through UR edge
+        [6, 7, 3, 2, 5, 4, 0, 1], # cw through UB edge
+        [3, 7, 4, 0, 2, 6, 5, 1], # cw through UL edge
+        [4, 7, 6, 5, 0, 3, 2, 1], # cw through FL edge
+        [6, 5, 4, 7, 2, 1, 0, 3], # cw through FR edge
 
-        [0,3,7,4,1,2,6,5], # cw through UFL vertex
-        [5,1,0,4,6,2,3,7], # cw through UFR vertex
-        [5,6,2,1,4,7,3,0], # cw through UBR vertex
-        [7,4,0,3,6,5,1,2], # cw through UBL
+        [0, 3, 7, 4, 1, 2, 6, 5], # cw through UFL vertex
+        [5, 1, 0, 4, 6, 2, 3, 7], # cw through UFR vertex
+        [5, 6, 2, 1, 4, 7, 3, 0], # cw through UBR vertex
+        [7, 4, 0, 3, 6, 5, 1, 2], # cw through UBL
         ]]
 
     cube = Polyhedron(
@@ -745,12 +745,12 @@ def _pgroup_calcs():
         _pgroup_of_double(cube, cube_faces, _c_pgroup))
 
     dodecahedron_faces = [
-         (0,1,2,3,4), # top
-         (0,1,6,10,5), (1,2,7,11,6), (2,3,8,12,7), # upper 5
-         (3,4,9,13,8), (0,4,9,14,5),
-         (5,10,16,15,14), (6,10,16,17,11), (7,11,17,18,12), # lower 5
-         (8,12,18,19,13), (9,13,19,15,14),
-         (15,16,17,18,19) # bottom
+         (0, 1, 2, 3, 4), # top
+         (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7), # upper 5
+         (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
+         (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18, 12), # lower 5
+         (8, 12, 18, 19, 13), (9, 13, 19, 15, 14),
+         (15, 16, 17, 18, 19) # bottom
          ]
 
     def _string_to_perm(s):
@@ -794,7 +794,7 @@ def _pgroup_calcs():
     icosahedron_faces = [
         [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
         [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9 ],
-        [3, 4, 9], [4,9,10 ], [4, 5,10], [5, 6, 10], [1, 5, 6 ],
+        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6 ],
         [6, 7, 11], [7, 8, 11], [8, 9, 11], [9, 10, 11], [6, 10, 11]]
 
     icosahedron = Polyhedron(

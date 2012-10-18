@@ -24,9 +24,9 @@ def test_exp_values():
     assert exp(2*pi*I) == 1
 
     assert exp(pi*I*2*k) == 1
-    assert exp(pi*I*2*(k+Rational(1,2))) == -1
-    assert exp(pi*I*2*(k+Rational(1,4))) == I
-    assert exp(pi*I*2*(k+Rational(3,4))) == -I
+    assert exp(pi*I*2*(k+Rational(1, 2))) == -1
+    assert exp(pi*I*2*(k+Rational(1, 4))) == I
+    assert exp(pi*I*2*(k+Rational(3, 4))) == -I
 
     assert exp(log(x)) == x
     assert exp(2*log(x)) == x**2
@@ -62,7 +62,7 @@ def test_exp_expand():
     assert exp(x+y).expand() == exp(x)*exp(y)
 
 def test_exp__as_base_exp():
-    x,y = symbols('x,y')
+    x, y = symbols('x,y')
 
     assert exp(x).as_base_exp() == (E, x)
     assert exp(2*x).as_base_exp() == (E, 2*x)
@@ -90,12 +90,12 @@ def test_exp_subs():
     assert e.subs(x**3, y**3) == e
     assert e.subs(x**2, 5) == e
     assert exp(3*log(x)).subs(x**2, y) == x**3
-    assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
-    assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
+    assert exp(5*x).subs(exp(7*x), y) == y**Rational(5, 7)
+    assert exp(2*x + 7).subs(exp(3*x), y) == y**Rational(2, 3) * exp(7)
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
-    assert exp(x).subs(E,y) == y**x
+    assert exp(x).subs(E, y) == y**x
     x = symbols('x', positive=True)
-    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3, 2)
 
 def test_exp_conjugate():
     x = Symbol('x')
@@ -264,7 +264,7 @@ def test_log_expand():
         log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
-    assert (log(x*(y+z))*(x+y)),expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
+    assert (log(x*(y+z))*(x+y)), expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
@@ -289,11 +289,11 @@ def test_lambertw():
     assert LambertW(oo) == oo
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1+LambertW(x**2))
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
-        Float("0.701338383413663009202120278965",30),1e-29)
+        Float("0.701338383413663009202120278965", 30), 1e-29)
 
 def test_exp_expand():
-    A,B,C = symbols('A,B,C', commutative=False)
-    x,y,z = symbols('x,y,z')
+    A, B, C = symbols('A,B,C', commutative=False)
+    x, y, z = symbols('x,y,z')
 
     assert exp(A+B).expand() == exp(A+B)
     assert exp(A+B+C).expand() == exp(A+B+C)

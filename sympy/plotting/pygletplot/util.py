@@ -40,7 +40,7 @@ def get_view_direction_vectors():
 def get_basis_vectors():
     return ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 
-def screen_to_model(x,y,z):
+def screen_to_model(x, y, z):
     m = get_model_matrix(c_double, glGetDoublev)
     p = get_projection_matrix(c_double, glGetDoublev)
     w = get_viewport()
@@ -48,7 +48,7 @@ def screen_to_model(x,y,z):
     gluUnProject(x, y, z, m, p, w, mx, my, mz)
     return float(mx.value), float(my.value), float(mz.value)
 
-def model_to_screen(x,y,z):
+def model_to_screen(x, y, z):
     m = get_model_matrix(c_double, glGetDoublev)
     p = get_projection_matrix(c_double, glGetDoublev)
     w = get_viewport()
@@ -56,7 +56,7 @@ def model_to_screen(x,y,z):
     gluProject(x, y, z, m, p, w, mx, my, mz)
     return float(mx.value), float(my.value), float(mz.value)
 
-def vec_subs(a,b):
+def vec_subs(a, b):
     return tuple(a[i]-b[i] for i in xrange(len(a)))
 
 def billboard_matrix():

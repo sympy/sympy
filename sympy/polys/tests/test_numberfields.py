@@ -103,11 +103,11 @@ def test_primitive_element():
 
     assert primitive_element([sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
-        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
+        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element([sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
-        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
+        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
 
@@ -129,26 +129,26 @@ def test_field_isomorphism_pslq():
     assert field_isomorphism_pslq(a, a) == [1, 0]
     assert field_isomorphism_pslq(a, b) == None
     assert field_isomorphism_pslq(a, c) == None
-    assert field_isomorphism_pslq(a, d) == [Q(1,2), 0, -Q(9,2), 0]
-    assert field_isomorphism_pslq(a, e) == [Q(1,80), 0, -Q(1,2), 0, Q(59,20), 0]
+    assert field_isomorphism_pslq(a, d) == [Q(1, 2), 0, -Q(9, 2), 0]
+    assert field_isomorphism_pslq(a, e) == [Q(1, 80), 0, -Q(1, 2), 0, Q(59, 20), 0]
 
     assert field_isomorphism_pslq(b, a) == None
     assert field_isomorphism_pslq(b, b) == [1, 0]
     assert field_isomorphism_pslq(b, c) == None
-    assert field_isomorphism_pslq(b, d) == [-Q(1,2), 0, Q(11,2), 0]
-    assert field_isomorphism_pslq(b, e) == [-Q(3,640), 0, Q(67,320), 0, -Q(297,160), 0, Q(313,80), 0]
+    assert field_isomorphism_pslq(b, d) == [-Q(1, 2), 0, Q(11, 2), 0]
+    assert field_isomorphism_pslq(b, e) == [-Q(3, 640), 0, Q(67, 320), 0, -Q(297, 160), 0, Q(313, 80), 0]
 
     assert field_isomorphism_pslq(c, a) == None
     assert field_isomorphism_pslq(c, b) == None
     assert field_isomorphism_pslq(c, c) == [1, 0]
     assert field_isomorphism_pslq(c, d) == None
-    assert field_isomorphism_pslq(c, e) == [Q(3,640), 0, -Q(71,320), 0, Q(377,160), 0, -Q(469,80), 0]
+    assert field_isomorphism_pslq(c, e) == [Q(3, 640), 0, -Q(71, 320), 0, Q(377, 160), 0, -Q(469, 80), 0]
 
     assert field_isomorphism_pslq(d, a) == None
     assert field_isomorphism_pslq(d, b) == None
     assert field_isomorphism_pslq(d, c) == None
     assert field_isomorphism_pslq(d, d) == [1, 0]
-    assert field_isomorphism_pslq(d, e) == [-Q(3,640), 0, Q(71,320), 0, -Q(377,160), 0, Q(549,80), 0]
+    assert field_isomorphism_pslq(d, e) == [-Q(3, 640), 0, Q(71, 320), 0, -Q(377, 160), 0, Q(549, 80), 0]
 
     assert field_isomorphism_pslq(e, a) == None
     assert field_isomorphism_pslq(e, b) == None
@@ -158,7 +158,7 @@ def test_field_isomorphism_pslq():
 
     f = AlgebraicNumber(3*sqrt(2)+8*sqrt(7)-5)
 
-    assert field_isomorphism_pslq(f, e) == [Q(3,80), 0, -Q(139,80), 0, Q(347,20), 0, -Q(761,20), -5]
+    assert field_isomorphism_pslq(f, e) == [Q(3, 80), 0, -Q(139, 80), 0, Q(347, 20), 0, -Q(761, 20), -5]
 
 def test_field_isomorphism():
     assert field_isomorphism(3, sqrt(2)) == [3]
@@ -166,20 +166,20 @@ def test_field_isomorphism():
     assert field_isomorphism( I*sqrt(3), I*sqrt(3)/2) == [ 2, 0]
     assert field_isomorphism(-I*sqrt(3), I*sqrt(3)/2) == [-2, 0]
 
-    assert field_isomorphism( I*sqrt(3),-I*sqrt(3)/2) == [-2, 0]
-    assert field_isomorphism(-I*sqrt(3),-I*sqrt(3)/2) == [ 2, 0]
+    assert field_isomorphism( I*sqrt(3), -I*sqrt(3)/2) == [-2, 0]
+    assert field_isomorphism(-I*sqrt(3), -I*sqrt(3)/2) == [ 2, 0]
 
     assert field_isomorphism( 2*I*sqrt(3)/7, 5*I*sqrt(3)/3) == [ S(6)/35, 0]
     assert field_isomorphism(-2*I*sqrt(3)/7, 5*I*sqrt(3)/3) == [-S(6)/35, 0]
 
-    assert field_isomorphism( 2*I*sqrt(3)/7,-5*I*sqrt(3)/3) == [-S(6)/35, 0]
-    assert field_isomorphism(-2*I*sqrt(3)/7,-5*I*sqrt(3)/3) == [ S(6)/35, 0]
+    assert field_isomorphism( 2*I*sqrt(3)/7, -5*I*sqrt(3)/3) == [-S(6)/35, 0]
+    assert field_isomorphism(-2*I*sqrt(3)/7, -5*I*sqrt(3)/3) == [ S(6)/35, 0]
 
     assert field_isomorphism( 2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
     assert field_isomorphism(-2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
 
-    assert field_isomorphism( 2*I*sqrt(3)/7+27,-5*I*sqrt(3)/3) == [-S(6)/35, 27]
-    assert field_isomorphism(-2*I*sqrt(3)/7+27,-5*I*sqrt(3)/3) == [ S(6)/35, 27]
+    assert field_isomorphism( 2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [-S(6)/35, 27]
+    assert field_isomorphism(-2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [ S(6)/35, 27]
 
     p = AlgebraicNumber( sqrt(2) + sqrt(3))
     q = AlgebraicNumber(-sqrt(2) + sqrt(3))
@@ -333,7 +333,7 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(root, gen=x)
 
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
@@ -345,7 +345,7 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(root, gen=x, alias='y')
 
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
@@ -354,7 +354,7 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(root, gen=x, alias=Symbol('y'))
 
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
     assert a.root == root
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
@@ -364,16 +364,16 @@ def test_AlgebraicNumber():
     assert AlgebraicNumber(sqrt(2), []).rep == DMP([], QQ)
 
     assert AlgebraicNumber(sqrt(2), [8]).rep == DMP([QQ(8)], QQ)
-    assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8,3)], QQ)
+    assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8, 3)], QQ)
 
-    assert AlgebraicNumber(sqrt(2), [7, 3]).rep == DMP([QQ(7),QQ(3)], QQ)
-    assert AlgebraicNumber(sqrt(2), [S(7)/9, S(3)/2]).rep == DMP([QQ(7,9),QQ(3,2)], QQ)
+    assert AlgebraicNumber(sqrt(2), [7, 3]).rep == DMP([QQ(7), QQ(3)], QQ)
+    assert AlgebraicNumber(sqrt(2), [S(7)/9, S(3)/2]).rep == DMP([QQ(7, 9), QQ(3, 2)], QQ)
 
-    assert AlgebraicNumber(sqrt(2), [1, 2, 3]).rep == DMP([QQ(2),QQ(5)], QQ)
+    assert AlgebraicNumber(sqrt(2), [1, 2, 3]).rep == DMP([QQ(2), QQ(5)], QQ)
 
-    a = AlgebraicNumber(AlgebraicNumber(root, gen=x), [1,2])
+    a = AlgebraicNumber(AlgebraicNumber(root, gen=x), [1, 2])
 
-    assert a.rep == DMP([QQ(1),QQ(2)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
@@ -383,26 +383,26 @@ def test_AlgebraicNumber():
     assert a.coeffs() == [S(1), S(2)]
     assert a.native_coeffs() == [QQ(1), QQ(2)]
 
-    a = AlgebraicNumber((minpoly, root), [1,2])
+    a = AlgebraicNumber((minpoly, root), [1, 2])
 
-    assert a.rep == DMP([QQ(1),QQ(2)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
 
     assert a.is_aliased == False
 
-    a = AlgebraicNumber((Poly(minpoly), root), [1,2])
+    a = AlgebraicNumber((Poly(minpoly), root), [1, 2])
 
-    assert a.rep == DMP([QQ(1),QQ(2)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(2)], QQ)
     assert a.root == root
     assert a.alias is None
     assert a.minpoly == minpoly
 
     assert a.is_aliased == False
 
-    assert AlgebraicNumber( sqrt(3)).rep == DMP([ QQ(1),QQ(0)], QQ)
-    assert AlgebraicNumber(-sqrt(3)).rep == DMP([-QQ(1),QQ(0)], QQ)
+    assert AlgebraicNumber( sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
+    assert AlgebraicNumber(-sqrt(3)).rep == DMP([-QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(2))
@@ -415,15 +415,15 @@ def test_AlgebraicNumber():
     assert a == b
     assert a == c
 
-    a = AlgebraicNumber(sqrt(2), [1,2])
-    b = AlgebraicNumber(sqrt(2), [1,3])
+    a = AlgebraicNumber(sqrt(2), [1, 2])
+    b = AlgebraicNumber(sqrt(2), [1, 3])
 
     assert a != b and a != sqrt(2)+3
 
     assert (a == x) == False and (a != x) == True
 
-    a = AlgebraicNumber(sqrt(2), [1,0])
-    b = AlgebraicNumber(sqrt(2), [1,0], alias=y)
+    a = AlgebraicNumber(sqrt(2), [1, 0])
+    b = AlgebraicNumber(sqrt(2), [1, 0], alias=y)
 
     assert a.as_poly(x) == Poly(x)
     assert b.as_poly() == Poly(y)
@@ -433,8 +433,8 @@ def test_AlgebraicNumber():
     assert b.as_expr() == sqrt(2)
     assert b.as_expr(x) == x
 
-    a = AlgebraicNumber(sqrt(2), [2,3])
-    b = AlgebraicNumber(sqrt(2), [2,3], alias=y)
+    a = AlgebraicNumber(sqrt(2), [2, 3])
+    b = AlgebraicNumber(sqrt(2), [2, 3], alias=y)
 
     p = a.as_poly()
 
@@ -462,25 +462,25 @@ def test_to_algebraic_integer():
 
     assert a.minpoly == x**2 - 3
     assert a.root == sqrt(3)
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(2*sqrt(3), gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
     assert a.root == 2*sqrt(3)
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
     assert a.root == 2*sqrt(3)
-    assert a.rep == DMP([QQ(1),QQ(0)], QQ)
+    assert a.rep == DMP([QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(3)/2, [S(7)/19, 3], gen=x).to_algebraic_integer()
 
     assert a.minpoly == x**2 - 12
     assert a.root == 2*sqrt(3)
-    assert a.rep == DMP([QQ(7,19),QQ(3)], QQ)
+    assert a.rep == DMP([QQ(7, 19), QQ(3)], QQ)
 
 def test_IntervalPrinter():
     ip = IntervalPrinter()

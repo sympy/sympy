@@ -284,7 +284,7 @@ class TableForm(object):
                       zip(self._alignments, column_widths)]
         if self._headings[0]:
             format_str.insert(0, _align(self._head_align, _head_width))
-            format_str.insert(1,'|')
+            format_str.insert(1, '|')
         format_str = ' '.join(format_str) + '\n'
 
         s = []
@@ -297,7 +297,7 @@ class TableForm(object):
             s.append("-" * (len(first_line) - 1) + "\n")
         for i, line in enumerate(lines):
             d = [l if self._alignments[j] != 'c' else
-                 l.center(column_widths[j]) for j,l in enumerate(line)]
+                 l.center(column_widths[j]) for j, l in enumerate(line)]
             if self._headings[0]:
                 l = self._headings[0][i]
                 l = (l if self._head_align != 'c' else

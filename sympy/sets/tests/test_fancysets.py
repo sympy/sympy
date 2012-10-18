@@ -13,8 +13,8 @@ def test_naturals():
     assert -5 not in N
     assert 5.5 not in N
     ni = iter(N)
-    a,b,c,d = ni.next(), ni.next(), ni.next(), ni.next()
-    assert (a,b,c,d) == (1,2,3,4)
+    a, b, c, d = ni.next(), ni.next(), ni.next(), ni.next()
+    assert (a, b, c, d) == (1, 2, 3, 4)
     assert isinstance(a, Basic)
 
     assert N.intersect(Interval(-5, 5)) == Range(1, 6)
@@ -29,12 +29,12 @@ def test_integers():
     assert -5 in Z
     assert 5.5 not in Z
     zi = iter(Z)
-    a,b,c,d = zi.next(), zi.next(), zi.next(), zi.next()
-    assert (a,b,c,d) == (0, 1, -1, 2)
+    a, b, c, d = zi.next(), zi.next(), zi.next(), zi.next()
+    assert (a, b, c, d) == (0, 1, -1, 2)
     assert isinstance(a, Basic)
 
     assert Z.intersect(Interval(-5, 5)) == Range(-5, 6)
-    assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4,5)
+    assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4, 5)
 
     assert Z.inf == -oo
     assert Z.sup == oo
@@ -48,11 +48,11 @@ def test_TransformationSet():
     assert 16 not in squares.intersect(Interval(0, 10))
 
     si = iter(squares)
-    a,b,c,d = si.next(), si.next(), si.next(), si.next()
-    assert (a,b,c,d) == (1, 4, 9, 16)
+    a, b, c, d = si.next(), si.next(), si.next(), si.next()
+    assert (a, b, c, d) == (1, 4, 9, 16)
 
     harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
-    assert Rational(1,5) in harmonics
+    assert Rational(1, 5) in harmonics
     assert .25 in harmonics
     assert .3 not in harmonics
 
@@ -125,13 +125,13 @@ def test_range_interval_intersection():
 
 def test_fun():
     assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),
-        Range(-10,11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+        Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
 
 def test_reals():
     assert 5 in S.Reals
     assert S.Pi in S.Reals
     assert -sqrt(2) in S.Reals
-    assert (2,5) not in S.Reals
+    assert (2, 5) not in S.Reals
 
 @XFAIL # this is because contains is now very strict
 def test_reals_fail():

@@ -182,7 +182,7 @@ def represent(expr, **options):
         B = represent(expr.args[1], **options)
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra,expr.ket), **options)
+        return represent(Mul(expr.bra, expr.ket), **options)
     elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':

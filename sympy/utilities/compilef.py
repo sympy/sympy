@@ -563,7 +563,7 @@ def benchmark():
     print 'simple function:'
     y = Symbol('y')
     f2 = sqrt(x*y)+x*5
-    fbenchmark(f2, [x,y])
+    fbenchmark(f2, [x, y])
     times = 100000
     fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print

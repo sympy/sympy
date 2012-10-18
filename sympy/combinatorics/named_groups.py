@@ -246,7 +246,7 @@ def SymmetricGroup(n):
     elif n == 2:
         G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(1,n)
+        a = range(1, n)
         a.append(0)
         gen1 = _af_new(a)
         a = range(n)

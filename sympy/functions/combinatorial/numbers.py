@@ -227,8 +227,8 @@ class bernoulli(Function):
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
-    _cache = {0: S.One, 2:Rational(1,6), 4:Rational(-1,30)}
-    _highest = {0:0, 2:2, 4:4}
+    _cache = {0: S.One, 2: Rational(1, 6), 4: Rational(-1, 30)}
+    _highest = {0: 0, 2: 2, 4: 4}
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -537,8 +537,8 @@ class euler(Function):
             k = C.Dummy("k", integer=True)
             j = C.Dummy("j", integer=True)
             n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
-                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k, j) * ((-1)**j * (k-2*j)**(2*n+1)) /
+                  (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n+1)))
 
             return Em
 
@@ -648,17 +648,17 @@ class catalan(Function):
 
     def fdiff(self, argindex=1):
         n = self.args[0]
-        return catalan(n)*(C.polygamma(0,n+Rational(1,2))-C.polygamma(0,n+2)+C.log(4))
+        return catalan(n)*(C.polygamma(0, n+Rational(1, 2))-C.polygamma(0, n+2)+C.log(4))
 
-    def _eval_rewrite_as_binomial(self,n):
-        return C.binomial(2*n,n)/(n + 1)
+    def _eval_rewrite_as_binomial(self, n):
+        return C.binomial(2*n, n)/(n + 1)
 
-    def _eval_rewrite_as_gamma(self,n):
+    def _eval_rewrite_as_gamma(self, n):
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
 
-    def _eval_rewrite_as_hyper(self,n):
-        return C.hyper([1-n,-n],[2],1)
+    def _eval_rewrite_as_hyper(self, n):
+        return C.hyper([1-n, -n], [2], 1)
 
     def _eval_evalf(self, prec):
         return self.rewrite(C.gamma).evalf(prec)

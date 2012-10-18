@@ -22,7 +22,7 @@ def test_Options_clone():
     assert opt.domain == ZZ
     assert ('order' in opt) == False
 
-    new_opt = opt.clone({'gens': (x,y), 'order': 'lex'})
+    new_opt = opt.clone({'gens': (x, y), 'order': 'lex'})
 
     assert opt.gens == (x, y, z)
     assert opt.domain == ZZ
@@ -144,7 +144,7 @@ def test_Domain_preprocess():
     assert Domain.preprocess(QQ) == QQ
     assert Domain.preprocess(EX) == EX
     assert Domain.preprocess(FF(2)) == FF(2)
-    assert Domain.preprocess(ZZ[x,y]) == ZZ[x,y]
+    assert Domain.preprocess(ZZ[x, y]) == ZZ[x, y]
 
     assert Domain.preprocess('Z') == ZZ
     assert Domain.preprocess('Q') == QQ
@@ -165,11 +165,11 @@ def test_Domain_preprocess():
     assert Domain.preprocess('ZZ[x]') == ZZ[x]
     assert Domain.preprocess('QQ[x]') == QQ[x]
 
-    assert Domain.preprocess('Z[x,y]') == ZZ[x,y]
-    assert Domain.preprocess('Q[x,y]') == QQ[x,y]
+    assert Domain.preprocess('Z[x,y]') == ZZ[x, y]
+    assert Domain.preprocess('Q[x,y]') == QQ[x, y]
 
-    assert Domain.preprocess('ZZ[x,y]') == ZZ[x,y]
-    assert Domain.preprocess('QQ[x,y]') == QQ[x,y]
+    assert Domain.preprocess('ZZ[x,y]') == ZZ[x, y]
+    assert Domain.preprocess('QQ[x,y]') == QQ[x, y]
 
     raises(OptionError, lambda: Domain.preprocess('Z()'))
 
@@ -179,11 +179,11 @@ def test_Domain_preprocess():
     assert Domain.preprocess('ZZ(x)') == ZZ.frac_field(x)
     assert Domain.preprocess('QQ(x)') == QQ.frac_field(x)
 
-    assert Domain.preprocess('Z(x,y)') == ZZ.frac_field(x,y)
-    assert Domain.preprocess('Q(x,y)') == QQ.frac_field(x,y)
+    assert Domain.preprocess('Z(x,y)') == ZZ.frac_field(x, y)
+    assert Domain.preprocess('Q(x,y)') == QQ.frac_field(x, y)
 
-    assert Domain.preprocess('ZZ(x,y)') == ZZ.frac_field(x,y)
-    assert Domain.preprocess('QQ(x,y)') == QQ.frac_field(x,y)
+    assert Domain.preprocess('ZZ(x,y)') == ZZ.frac_field(x, y)
+    assert Domain.preprocess('QQ(x,y)') == QQ.frac_field(x, y)
 
     assert Domain.preprocess('Q<I>') == QQ.algebraic_field(I)
     assert Domain.preprocess('QQ<I>') == QQ.algebraic_field(I)

@@ -17,7 +17,7 @@ def test_units():
     assert (sqrt(m))**2 == m
 
     t = Symbol('t')
-    assert integrate(t*m/s,(t, 1*s, 5*s)) == 12*m*s
+    assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
 
 def test_issue_2466():

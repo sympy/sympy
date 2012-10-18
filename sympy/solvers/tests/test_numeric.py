@@ -10,8 +10,8 @@ def test_nsolve():
     assert nsolve(sin(x), 2) - pi.evalf() < 1e-15
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
     # Testing checks on number of inputs
-    raises(TypeError, lambda: nsolve(Eq(2*x,2)))
-    raises(TypeError, lambda: nsolve(Eq(2*x,2),x,1,2))
+    raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
+    raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
     # Issue 1730
     assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
     # multidimensional
@@ -36,7 +36,7 @@ def test_nsolve():
     F = lambdify((x, y, z), f.T, modules='mpmath')
     def getroot(x0):
         root = nsolve(f, (x, y, z), x0)
-        assert mnorm(F(*root),1) <= 1.e-8
+        assert mnorm(F(*root), 1) <= 1.e-8
         return root
     assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
     assert nsolve([Eq(f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1)) # just see that it works
@@ -46,9 +46,9 @@ def test_nsolve():
 
 def test_issue_3309():
     x = Symbol('x')
-    assert nsolve(Piecewise((x,x<1),(x**2,True)),x,2) == 0.0
+    assert nsolve(Piecewise((x, x<1), (x**2, True)), x, 2) == 0.0
 
 @XFAIL
 def test_issue_3309_fail():
     x, y = symbols('x y')
-    assert nsolve(Integral(x*y,(x,0,5)),y,2) == 0.0
+    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0

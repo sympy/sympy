@@ -31,8 +31,8 @@ def test_rmul():
     numpy were not working together and __mul__ and __rmul__ would not give the
     same answer.
     """
-    x,y,z = MV.setup('x y z')
-    a,b,c = sympy.symbols('a b c')
+    x, y, z = MV.setup('x y z')
+    a, b, c = sympy.symbols('a b c')
     assert 5*x == x*5
     assert HALF*x == x*HALF
     assert a*x == x*a
@@ -42,7 +42,7 @@ def test_contraction():
     Test for inner product and left and right contraction
     """
 
-    e_1,e_2,e_3 = MV.setup('e_1 e_2 e_3','1 0 0, 0 1 0, 0 0 1',offset=1)
+    e_1, e_2, e_3 = MV.setup('e_1 e_2 e_3', '1 0 0, 0 1 0, 0 0 1', offset=1)
 
     assert ((e_1^e_3)|e_1) == -e_3
     assert ((e_1^e_3)>e_1) == -e_3
@@ -53,11 +53,11 @@ def test_contraction():
 
 def test_substitution():
 
-    e_x,e_y,e_z = MV.setup('e_x e_y e_z','1 0 0, 0 1 0, 0 0 1',offset=1)
-    x,y,z = sympy.symbols('x y z')
+    e_x, e_y, e_z = MV.setup('e_x e_y e_z', '1 0 0, 0 1 0, 0 0 1', offset=1)
+    x, y, z = sympy.symbols('x y z')
 
     X = x*e_x+y*e_y+z*e_z
-    Y = X.subs([(x,2),(y,3),(z,4)])
+    Y = X.subs([(x, 2), (y, 3), (z, 4)])
     assert Y == 2*e_x+3*e_y+4*e_z
 
 
@@ -69,7 +69,7 @@ def test_vector_extraction():
              '-1  0 #,'+ \
              ' #  # #,'
 
-    P1,P2,a = MV.setup('P1 P2 a',metric)
+    P1, P2, a = MV.setup('P1 P2 a', metric)
     """
     P1 and P2 are null vectors and hence encode points in conformal space.
     Show that P1 and P2 can be extracted from the bivector B = P1^P2. a is a
@@ -107,16 +107,16 @@ def test_geometry():
              '0 0 0 0 2,'+ \
              '0 0 0 2 0'
 
-    e0,e1,e2,n,nbar = MV.setup('e0 e1 e2 n nbar',metric,debug=0)
+    e0, e1, e2, n, nbar = MV.setup('e0 e1 e2 n nbar', metric, debug=0)
     e = n+nbar
     #conformal representation of points
 
-    A = F(e0,n,nbar)    # point a = (1,0,0)  A = F(a)
-    B = F(e1,n,nbar)    # point b = (0,1,0)  B = F(b)
-    C = F(-1*e0,n,nbar) # point c = (-1,0,0) C = F(c)
-    D = F(e2,n,nbar)    # point d = (0,0,1)  D = F(d)
-    x0,x1,x2 = sympy.symbols('x0 x1 x2')
-    X = F(MV([x0,x1,x2],'vector'),n,nbar)
+    A = F(e0, n, nbar)    # point a = (1,0,0)  A = F(a)
+    B = F(e1, n, nbar)    # point b = (0,1,0)  B = F(b)
+    C = F(-1*e0, n, nbar) # point c = (-1,0,0) C = F(c)
+    D = F(e2, n, nbar)    # point d = (0,0,1)  D = F(d)
+    x0, x1, x2 = sympy.symbols('x0 x1 x2')
+    X = F(MV([x0, x1, x2], 'vector'), n, nbar)
 
     Circle = A^B^C^X
     Line = A^B^n^X
@@ -159,12 +159,12 @@ def test_extract_plane_and_line():
              '0 0 0 0 2,'+ \
              '0 0 0 2 0'
 
-    p1,p2,p3,n,nbar = MV.setup('p1 p2 p3 n nbar',metric,debug=0)
+    p1, p2, p3, n, nbar = MV.setup('p1 p2 p3 n nbar', metric, debug=0)
     MV.set_str_format(1)
 
-    P1 = F(p1,n,nbar)
-    P2 = F(p2,n,nbar)
-    P3 = F(p3,n,nbar)
+    P1 = F(p1, n, nbar)
+    P2 = F(p2, n, nbar)
+    P3 = F(p3, n, nbar)
 
     #Line through p1 and p2
     L = P1^P2^n
@@ -194,7 +194,7 @@ def test_reciprocal_frame():
              '# 1 #,'+ \
              '# # 1,'
 
-    e1,e2,e3 = MV.setup('e1 e2 e3',metric)
+    e1, e2, e3 = MV.setup('e1 e2 e3', metric)
     E = e1^e2^e3
     Esq = (E*E)()
     Esq_inv = 1/Esq
@@ -236,10 +236,10 @@ def test_reciprocal_frame():
     assert w/Esq == 1
 
 def test_derivative():
-    coords = x,y,z = sympy.symbols('x y z')
-    e_x,e_y,e_z = MV.setup('e','1 0 0, 0 1 0, 0 0 1',coords=coords)
+    coords = x, y, z = sympy.symbols('x y z')
+    e_x, e_y, e_z = MV.setup('e', '1 0 0, 0 1 0, 0 0 1', coords=coords)
     X = x*e_x+y*e_y+z*e_z
-    a = MV('a','vector')
+    a = MV('a', 'vector')
 
     assert ((X|a).grad()) == a
     assert ((X*X).grad()) == 2*X
@@ -247,35 +247,35 @@ def test_derivative():
     assert X.grad_int() == 3
 
 def test_str():
-    e_1,e_2,e_3 = MV.setup('e_1 e_2 e_3','1 0 0, 0 1 0, 0 0 1')
+    e_1, e_2, e_3 = MV.setup('e_1 e_2 e_3', '1 0 0, 0 1 0, 0 0 1')
 
     X = MV('x')
     assert str(X) == 'x+x__0*e_1+x__1*e_2+x__2*e_3+x__01*e_1e_2+x__02*e_1e_3+x__12*e_2e_3+x__012*e_1e_2e_3'
-    Y = MV('y','spinor')
+    Y = MV('y', 'spinor')
     assert str(Y) == 'y+y__01*e_1e_2+y__02*e_1e_3+y__12*e_2e_3'
     Z = X+Y
     assert str(Z) == 'x+y+x__0*e_1+x__1*e_2+x__2*e_3+(x__01+y__01)*e_1e_2+(x__02+y__02)*e_1e_3+(x__12+y__12)*e_2e_3+x__012*e_1e_2e_3'
     assert str(e_1|e_1) == '1'
 
 def test_metric():
-    MV.setup('e_1 e_2 e_3','[1,1,1]')
+    MV.setup('e_1 e_2 e_3', '[1,1,1]')
     assert str(MV.metric) == '[[1 0 0]\n [0 1 0]\n [0 0 1]]'
 
 def test_constructor():
     """
     Test various multivector constructors
     """
-    e_1,e_2,e_3 = MV.setup('e_1 e_2 e_3','[1,1,1]')
+    e_1, e_2, e_3 = MV.setup('e_1 e_2 e_3', '[1,1,1]')
     x = sympy.symbols('x')
     assert str(S(1)) == '1'
     assert str(S(x)) == 'x'
-    assert str(MV('a','scalar')) == 'a'
-    assert str(MV('a','vector')) == 'a__0*e_1+a__1*e_2+a__2*e_3'
-    assert str(MV('a','pseudo')) == 'a*e_1e_2e_3'
-    assert str(MV('a','spinor')) == 'a+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(MV('a', 'scalar')) == 'a'
+    assert str(MV('a', 'vector')) == 'a__0*e_1+a__1*e_2+a__2*e_3'
+    assert str(MV('a', 'pseudo')) == 'a*e_1e_2e_3'
+    assert str(MV('a', 'spinor')) == 'a+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
-    assert str(MV([2,'a'],'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
-    assert str(MV('a','grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(MV([2, 'a'], 'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(MV('a', 'grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
 
 def test__print_Mul_Add():
     from sympy.galgebra.latex_ex import LatexPrinter

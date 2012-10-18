@@ -11,7 +11,7 @@ def test_where():
     Z = Normal('Z', 0, 1)
 
     assert where(Z**2<=1).set == Interval(-1, 1)
-    assert where(Z**2<=1).as_boolean() == Interval(-1,1).as_relational(Z.symbol)
+    assert where(Z**2<=1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
     assert where(And(X>Y, Y>4)).as_boolean() == And(
             Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
@@ -31,7 +31,7 @@ def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
     assert set(random_symbols(2*X+1)) == set((X,))
-    assert set(random_symbols(2*X+Y)) == set((X,Y))
+    assert set(random_symbols(2*X+Y)) == set((X, Y))
     assert set(random_symbols(2*X+Y.symbol)) == set((X,))
     assert set(random_symbols(2)) == set()
 
@@ -51,7 +51,7 @@ def test_rs_swap():
     YY = Normal('y', 0, 3)
 
     expr = 2*X+Y
-    assert expr.subs(rs_swap((X,Y), (YY,XX))) == 2*XX+YY
+    assert expr.subs(rs_swap((X, Y), (YY, XX))) == 2*XX+YY
 
 def test_RandomSymbol():
 
@@ -81,10 +81,10 @@ def test_E():
 
 def test_Sample():
     X = Die('X', 6)
-    Y = Normal('Y', 0,1)
+    Y = Normal('Y', 0, 1)
     z = Symbol('z')
 
-    assert sample(X) in [1,2,3,4,5,6]
+    assert sample(X) in [1, 2, 3, 4, 5, 6]
     assert sample(X+Y).is_Float
 
     P(X+Y>0, Y<0, numsamples=10).is_number
@@ -97,7 +97,7 @@ def test_Sample():
     assert P(sin(Y)<=1, cos(Y)<1, numsamples=10) == 1
 
     # Make sure this doesn't raise an error
-    E(Sum(1/z**Y, (z,1,oo)), Y>2, numsamples=3)
+    E(Sum(1/z**Y, (z, 1, oo)), Y>2, numsamples=3)
 
 def test_given():
     X = Normal('X', 0, 1)
@@ -117,7 +117,7 @@ def test_dependence():
     assert dependent(X, 2*X)
 
     # Create a dependency
-    XX, YY = given(Tuple(X,Y), Eq(X+Y, 3))
+    XX, YY = given(Tuple(X, Y), Eq(X+Y, 3))
     assert dependent(XX, YY)
 
 @XFAIL
@@ -131,7 +131,7 @@ def test_dependent_finite():
     assert dependent(XX, YY)
 
 def test_normality():
-    X, Y = Normal('X', 0,1), Normal('Y', 0,1)
+    X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     x, z = symbols('x, z', real=True)
     dens = density(X-Y, Eq(X+Y, z))
 

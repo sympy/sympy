@@ -38,9 +38,9 @@ def test_pow():
 
 def test_exp():
     assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
-    assert refine(exp(pi*I*2*(x+Rational(1,2))), Q.integer(x)) == -1
-    assert refine(exp(pi*I*2*(x+Rational(1,4))), Q.integer(x)) == I
-    assert refine(exp(pi*I*2*(x+Rational(3,4))), Q.integer(x)) == -I
+    assert refine(exp(pi*I*2*(x+Rational(1, 2))), Q.integer(x)) == -1
+    assert refine(exp(pi*I*2*(x+Rational(1, 4))), Q.integer(x)) == I
+    assert refine(exp(pi*I*2*(x+Rational(3, 4))), Q.integer(x)) == -I
 
 
 def test_func_args():

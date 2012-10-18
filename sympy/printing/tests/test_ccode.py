@@ -41,10 +41,10 @@ def test_ccode_constants_other():
     assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 def test_ccode_Rational():
-    assert ccode(Rational(3,7)) == "3.0/7.0"
-    assert ccode(Rational(18,9)) == "2"
-    assert ccode(Rational(3,-7)) == "-3.0/7.0"
-    assert ccode(Rational(-3,-7)) == "3.0/7.0"
+    assert ccode(Rational(3, 7)) == "3.0/7.0"
+    assert ccode(Rational(18, 9)) == "2"
+    assert ccode(Rational(3, -7)) == "-3.0/7.0"
+    assert ccode(Rational(-3, -7)) == "3.0/7.0"
 
 def test_ccode_Integer():
     assert ccode(Integer(67)) == "67"
@@ -95,7 +95,7 @@ else {
     assert p == s
 
 def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x,x<1),(x**2,True)))
+    p = ccode(2*Piecewise((x, x<1), (x**2, True)))
     s = \
 """\
 2*if (x < 1) {
@@ -108,12 +108,12 @@ else {
     assert p == s
 
 def test_ccode_settings():
-    raises(TypeError, lambda: ccode(sin(x),method="garbage"))
+    raises(TypeError, lambda: ccode(sin(x), method="garbage"))
 
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i,j,k,n,m,o = symbols('i j k n m o', integer=True)
+    i, j, k, n, m, o = symbols('i j k n m o', integer=True)
 
     p = CCodePrinter()
     p._not_c = set()
@@ -129,7 +129,7 @@ def test_ccode_Indexed():
 
 
 def test_ccode_loops_matrix_vector():
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
     y = IndexedBase('y')

@@ -83,7 +83,7 @@ class StrPrinter(Printer):
 
     def _print_BlockMatrix(self, B):
         if B._mat.shape == (1, 1):
-            self._print(B._mat[0,0])
+            self._print(B._mat[0, 0])
         return self._print(B._mat)
 
     def _print_Catalan(self, expr):
@@ -257,8 +257,8 @@ class StrPrinter(Printer):
 
         a = a or [S.One]
 
-        a_str = map(lambda x:self.parenthesize(x, prec), a)
-        b_str = map(lambda x:self.parenthesize(x, prec), b)
+        a_str = map(lambda x: self.parenthesize(x, prec), a)
+        b_str = map(lambda x: self.parenthesize(x, prec), b)
 
         if len(b) == 0:
             return sign + '*'.join(a_str)

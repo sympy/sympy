@@ -103,8 +103,8 @@ def test_dict_ambigous():   # see #467
     f = x*exp(x)
     g = z*exp(z)
 
-    df= {x:y, exp(x): y}
-    dg= {z:y, exp(z): y}
+    df= {x: y, exp(x): y}
+    dg= {z: y, exp(z): y}
 
     assert f.subs(df) == y**2
     assert g.subs(dg) == y**2
@@ -121,7 +121,7 @@ def test_dict_ambigous():   # see #467
     assert e.subs({x: y, y: 2}) == 5
     # here, there are no obviously clashing keys or values
     # but the results depend on the order
-    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2),(x, 2)])) == exp(y + 1)
+    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == exp(y + 1)
 
 def test_deriv_sub_bug3():
     x = Symbol('x')
@@ -155,7 +155,7 @@ def test_issue643():
 def test_subs_dict1():
     x, y = symbols('x y')
     assert (1 + x*y).subs(x, pi) == 1 + pi*y
-    assert (1 + x*y).subs({x:pi, y:2}) == 1 + 2*pi
+    assert (1 + x*y).subs({x: pi, y: 2}) == 1 + 2*pi
 
     c2, c3, q1p, q2p, c1, s1, s2, s3 = symbols('c2 c3 q1p q2p c1 s1 s2 s3')
     test = (c2**2*q2p*c3 + c1**2*s2**2*q2p*c3 + s1**2*s2**2*q2p*c3
@@ -464,7 +464,7 @@ def test_issue_2552():
     assert (a/(b**2*c**3)).subs(b*c, K) == a/(c*K**2)
     assert (1/(x*y)).subs(x*y, 2) == S.Half
     assert ((1 + x*y)/(x*y)).subs(x*y, 1) == 2
-    assert (x*y*z).subs(x*y,2) == 2*z
+    assert (x*y*z).subs(x*y, 2) == 2*z
     assert ((1 + x*y)/(x*y)/z).subs(x*y, 1) == 2/z
 
 def test_issue_2976():
@@ -495,9 +495,9 @@ def test_issue_3059():
 def test_Function_subs():
     from sympy.abc import x, y
     f, g, h, i = symbols('f,g,h,i', cls=Function)
-    p = Piecewise((g(f(x,y)), x < -1), (g(x), x <= 1))
-    assert p.subs(g, h) == Piecewise((h(f(x,y)), x < -1), (h(x), x <= 1))
-    assert (f(y) + g(x)).subs({f:h,g:i}) == i(x) + h(y)
+    p = Piecewise((g(f(x, y)), x < -1), (g(x), x <= 1))
+    assert p.subs(g, h) == Piecewise((h(f(x, y)), x < -1), (h(x), x <= 1))
+    assert (f(y) + g(x)).subs({f: h, g: i}) == i(x) + h(y)
 
 def test_simultaneous_subs():
     from sympy.abc import x, y
@@ -513,4 +513,4 @@ def issue_3320_3322():
     assert (1/(1+x/y)).subs(x/y, x) == 1/(1+x)
     assert (-2*I).subs(2*I, x) == -x
     assert (-I*x).subs(I*x, x) == -x
-    assert (-3*I*y**4).subs(3*I*y**2,x) == -x*y**2
+    assert (-3*I*y**4).subs(3*I*y**2, x) == -x*y**2

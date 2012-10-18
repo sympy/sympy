@@ -37,21 +37,21 @@ def test_unit_clause():
     assert find_unit_clause([A, ~A], {}) == (A, True) ### Wrong ??
     assert find_unit_clause([A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B], {B: True}) == (A, True)
-    assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True}) == (B, False)
-    assert find_unit_clause([A | B | C, B | ~C, A | B], {A:True}) == (B, True)
+    assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A: True}) == (B, False)
+    assert find_unit_clause([A | B | C, B | ~C, A | B], {A: True}) == (B, True)
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_clause_int_repr():
     assert find_unit_clause_int_repr(map(set, [[1]]), {}) == (1, True)
     assert find_unit_clause_int_repr(map(set, [[1], [-1]]), {}) == (1, True)
-    assert find_unit_clause_int_repr([set([1,2])], {1: True}) == (2, True)
-    assert find_unit_clause_int_repr([set([1,2])], {2: True}) == (1, True)
-    assert find_unit_clause_int_repr(map(set, [[1,2,3], [2, -3], [1, -2]]), {1: True}) == \
+    assert find_unit_clause_int_repr([set([1, 2])], {1: True}) == (2, True)
+    assert find_unit_clause_int_repr([set([1, 2])], {2: True}) == (1, True)
+    assert find_unit_clause_int_repr(map(set, [[1, 2, 3], [2, -3], [1, -2]]), {1: True}) == \
         (2, False)
     assert find_unit_clause_int_repr(map(set, [[1, 2, 3], [3, -3], [1, 2]]), {1: True}) == \
         (2, True)
 
-    A,B,C = symbols('A,B,C')
+    A, B, C = symbols('A,B,C')
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_propagate():
@@ -74,9 +74,9 @@ def test_dpll_satisfiable():
     assert dpll_satisfiable( A & ~A ) == False
     assert dpll_satisfiable( A & ~B ) == {A: True, B: False}
     assert dpll_satisfiable( A | B ) in ({A: True}, {B: True}, {A: True, B: True})
-    assert dpll_satisfiable( (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B:False})
+    assert dpll_satisfiable( (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
     assert dpll_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False},
-            {A: True, C:True}, {B: True, C: True})
+            {A: True, C: True}, {B: True, C: True})
     assert dpll_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
     assert dpll_satisfiable( (A | B) & (A >> B) ) == {B: True}
     assert dpll_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
@@ -95,7 +95,7 @@ def test_pl_true():
     assert pl_true( A | B, {A: None, B: True}) == True
     assert pl_true( A >> B, {A: False}) == True
     assert pl_true( A | B | ~C, {A: False, B: True, C: True}) == True
-    assert pl_true(Equivalent(A, B), {A:False, B:False}) == True
+    assert pl_true(Equivalent(A, B), {A: False, B: False}) == True
 
     # test for false
     assert pl_true(False) == False
@@ -108,8 +108,8 @@ def test_pl_true():
     assert pl_true(B, {B: None}) is None
     assert pl_true( A & B, {A: True, B: None}) is None
     assert pl_true( A >> B, {A: True, B: None}) is None
-    assert pl_true(Equivalent(A, B), {A:None}) is None
-    assert pl_true(Equivalent(A, B), {A:True, B:None}) is None
+    assert pl_true(Equivalent(A, B), {A: None}) is None
+    assert pl_true(Equivalent(A, B), {A: True, B: None}) is None
 
 def test_pl_true_wrong_input():
     from sympy import pi

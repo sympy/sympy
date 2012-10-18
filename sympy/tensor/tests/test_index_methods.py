@@ -52,24 +52,24 @@ def test_get_indices_add():
     y = IndexedBase('y')
     A = IndexedBase('A')
     i, j, k = Idx('i'), Idx('j'), Idx('k')
-    assert get_indices(x[i] + 2*y[i]) == (set([i,]), {})
-    assert get_indices(y[i] + 2*A[i, j]*x[j]) == (set([i,]), {})
-    assert get_indices(y[i] + 2*(x[i] + A[i, j]*x[j])) == (set([i,]), {})
-    assert get_indices(y[i] + x[i]*(A[j, j] + 1)) == (set([i,]), {})
-    assert get_indices(y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i,]), {})
+    assert get_indices(x[i] + 2*y[i]) == (set([i, ]), {})
+    assert get_indices(y[i] + 2*A[i, j]*x[j]) == (set([i, ]), {})
+    assert get_indices(y[i] + 2*(x[i] + A[i, j]*x[j])) == (set([i, ]), {})
+    assert get_indices(y[i] + x[i]*(A[j, j] + 1)) == (set([i, ]), {})
+    assert get_indices(y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i, ]), {})
 
 def test_get_indices_Pow():
     x = IndexedBase('x')
     y = IndexedBase('y')
     A = IndexedBase('A')
     i, j, k = Idx('i'), Idx('j'), Idx('k')
-    assert get_indices(Pow(x[i], y[j])) == (set([i,j]), {})
+    assert get_indices(Pow(x[i], y[j])) == (set([i, j]), {})
     assert get_indices(Pow(x[i, k], y[j, k])) == (set([i, j, k]), {})
     assert get_indices(Pow(A[i, k], y[k] + A[k, j]*x[j])) == (set([i, k]), {})
     assert get_indices(Pow(2, x[i])) == get_indices(exp(x[i]))
 
     # test of a design decision, this may change:
-    assert get_indices(Pow(x[i], 2)) == (set([i,]), {})
+    assert get_indices(Pow(x[i], 2)) == (set([i, ]), {})
 
 def test_get_contraction_structure_basic():
     x = IndexedBase('x')

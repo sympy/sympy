@@ -24,9 +24,9 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_poly_inequalities([[Le(x**2, 1)]], x, relational=False) == Interval(-1, 1)
     assert reduce_poly_inequalities([[Lt(x**2, 1)]], x, relational=False) == Interval(-1, 1, True, True)
     assert reduce_poly_inequalities([[Ge(x**2, 1)]], x, relational=False) == Union(Interval(-oo, -1), Interval(1, oo))
-    assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=False) == Interval(-1,1).complement
-    assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1,1).complement
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0,1.0).evalf()
+    assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=False) == Interval(-1, 1).complement
+    assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1).complement
+    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).evalf()
     assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0)
     assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0, True, True)
     assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0), Interval(1.0, inf))
@@ -36,7 +36,7 @@ def test_reduce_poly_inequalities_real_interval():
     s = sqrt(2)
 
     assert reduce_poly_inequalities([[Lt(x**2 - 1, 0), Gt(x**2 - 1, 0)]], x, relational=False) == S.EmptySet
-    assert reduce_poly_inequalities([[Le(x**2 - 1, 0), Ge(x**2 - 1, 0)]], x, relational=False) == FiniteSet(-1,1)
+    assert reduce_poly_inequalities([[Le(x**2 - 1, 0), Ge(x**2 - 1, 0)]], x, relational=False) == FiniteSet(-1, 1)
     assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, False, False), Interval(1, s, False, False))
     assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, False, True), Interval(1, s, True, False))
     assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))

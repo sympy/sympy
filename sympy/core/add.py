@@ -156,7 +156,7 @@ class Add(AssocOp):
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
-        for s,c in terms.items():
+        for s, c in terms.items():
             # 0*s
             if c is S.Zero:
                 continue
@@ -173,7 +173,7 @@ class Add(AssocOp):
 
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    newseq.append(Mul(c,s))
+                    newseq.append(Mul(c, s))
 
             noncommutative = noncommutative or not s.is_commutative
 

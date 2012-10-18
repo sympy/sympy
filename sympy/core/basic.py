@@ -218,7 +218,7 @@ class Basic(object):
                     if c != 0:
                         return c
 
-        return Basic.compare(a,b)
+        return Basic.compare(a, b)
 
     @staticmethod
     @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
@@ -271,7 +271,7 @@ class Basic(object):
 
         # both objects are non-SymPy
         if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
-            return cmp(a,b)
+            return cmp(a, b)
 
         if not isinstance(a, Basic):
             return -1   # other < sympy

@@ -10,9 +10,9 @@ def streq(a, b):
     return str(a) == str(b)
 
 def test_gauss_opt():
-    mat = RayTransferMatrix(1,2,3,4)
-    assert mat == Matrix([[1, 2],[3, 4]])
-    assert mat == RayTransferMatrix( Matrix([[1,2],[3,4]]) )
+    mat = RayTransferMatrix(1, 2, 3, 4)
+    assert mat == Matrix([[1, 2], [3, 4]])
+    assert mat == RayTransferMatrix( Matrix([[1, 2], [3, 4]]) )
     assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
     d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
@@ -28,17 +28,17 @@ def test_gauss_opt():
 
     mul = CurvedMirror(R)*FreeSpace(d)
     mul_mat = Matrix([[   1, 0], [-2/R, 1]])*Matrix([[ 1, d], [0, 1]])
-    assert mul.A == mul_mat[0,0]
-    assert mul.B == mul_mat[0,1]
-    assert mul.C == mul_mat[1,0]
-    assert mul.D == mul_mat[1,1]
+    assert mul.A == mul_mat[0, 0]
+    assert mul.B == mul_mat[0, 1]
+    assert mul.C == mul_mat[1, 0]
+    assert mul.D == mul_mat[1, 1]
 
     angle = symbols('angle')
-    assert GeometricRay(h,angle) == Matrix([[    h], [angle]])
-    assert FreeSpace(d)*GeometricRay(h,angle) == Matrix([[angle*d + h], [angle]])
-    assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
-    assert (FreeSpace(d)*GeometricRay(h,angle)).height == angle*d + h
-    assert (FreeSpace(d)*GeometricRay(h,angle)).angle == angle
+    assert GeometricRay(h, angle) == Matrix([[    h], [angle]])
+    assert FreeSpace(d)*GeometricRay(h, angle) == Matrix([[angle*d + h], [angle]])
+    assert GeometricRay( Matrix( ((h,), (angle,)) ) ) == Matrix([[h], [angle]])
+    assert (FreeSpace(d)*GeometricRay(h, angle)).height == angle*d + h
+    assert (FreeSpace(d)*GeometricRay(h, angle)).angle == angle
 
     p = BeamParameter(530e-9, 1, w=1e-3)
     assert streq(p.q, 1 + 1.88679245283019*I*pi)

@@ -10,7 +10,7 @@ def test_simple_1():
     assert x.nseries(x, n=5) == x
     assert y.nseries(x, n=5) == y
     assert (1/(x*y)).nseries(y, n=5) == 1/(x*y)
-    assert Rational(3,4).nseries(x, n=5) == Rational(3,4)
+    assert Rational(3, 4).nseries(x, n=5) == Rational(3, 4)
     assert x.nseries() == x
 
 def test_mul_0():
@@ -24,7 +24,7 @@ def test_pow_0():
     assert (x**2).nseries(x, n=5) == x**2
     assert (1/x).nseries(x, n=5) == 1/x
     assert (1/x**2).nseries(x, n=5) == 1/x**2
-    assert (x**Rational(2,3)).nseries(x, n=5) == (x**Rational(2,3))
+    assert (x**Rational(2, 3)).nseries(x, n=5) == (x**Rational(2, 3))
     assert (sqrt(x)**3).nseries(x, n=5) == (sqrt(x)**3)
 
 def test_pow_1():
@@ -86,43 +86,43 @@ def test_log3():
 def test_series1():
     x = Symbol("x")
     e = sin(x)
-    assert e.nseries(x,0,0) != 0
-    assert e.nseries(x,0,0) == O(1, x)
-    assert e.nseries(x,0,1) == O(x, x)
-    assert e.nseries(x,0,2) == x + O(x**2, x)
-    assert e.nseries(x,0,3) == x + O(x**3, x)
-    assert e.nseries(x,0,4) == x-x**3/6 + O(x**4, x)
+    assert e.nseries(x, 0, 0) != 0
+    assert e.nseries(x, 0, 0) == O(1, x)
+    assert e.nseries(x, 0, 1) == O(x, x)
+    assert e.nseries(x, 0, 2) == x + O(x**2, x)
+    assert e.nseries(x, 0, 3) == x + O(x**3, x)
+    assert e.nseries(x, 0, 4) == x-x**3/6 + O(x**4, x)
 
     e = (exp(x)-1)/x
-    assert e.nseries(x,0,3) == 1+x/2+O(x**2, x)
+    assert e.nseries(x, 0, 3) == 1+x/2+O(x**2, x)
 
-    assert x.nseries(x,0,2) == x
+    assert x.nseries(x, 0, 2) == x
 
 @XFAIL
 def test_series1_failing():
-    assert x.nseries(x,0,0) == O(1, x)
-    assert x.nseries(x,0,1) == O(x, x)
+    assert x.nseries(x, 0, 0) == O(1, x)
+    assert x.nseries(x, 0, 1) == O(x, x)
 
 def test_seriesbug1():
     x = Symbol("x")
-    assert (1/x).nseries(x,0,3) == 1/x
-    assert (x+1/x).nseries(x,0,3) == x+1/x
+    assert (1/x).nseries(x, 0, 3) == 1/x
+    assert (x+1/x).nseries(x, 0, 3) == x+1/x
 
 def test_series2x():
     x = Symbol("x")
-    assert ((x+1)**(-2)).nseries(x,0,4) == 1-2*x+3*x**2-4*x**3+O(x**4, x)
-    assert ((x+1)**(-1)).nseries(x,0,4) == 1-x+x**2-x**3+O(x**4, x)
-    assert ((x+1)**0).nseries(x,0,3) == 1
-    assert ((x+1)**1).nseries(x,0,3) == 1+x
-    assert ((x+1)**2).nseries(x,0,3) == 1+2*x+x**2
-    assert ((x+1)**3).nseries(x,0,3) == 1 + 3*x + 3*x**2 + x**3 # 1+3*x+3*x**2+O(x**3)
+    assert ((x+1)**(-2)).nseries(x, 0, 4) == 1-2*x+3*x**2-4*x**3+O(x**4, x)
+    assert ((x+1)**(-1)).nseries(x, 0, 4) == 1-x+x**2-x**3+O(x**4, x)
+    assert ((x+1)**0).nseries(x, 0, 3) == 1
+    assert ((x+1)**1).nseries(x, 0, 3) == 1+x
+    assert ((x+1)**2).nseries(x, 0, 3) == 1+2*x+x**2
+    assert ((x+1)**3).nseries(x, 0, 3) == 1 + 3*x + 3*x**2 + x**3 # 1+3*x+3*x**2+O(x**3)
 
-    assert (1/(1+x)).nseries(x,0,4) == 1-x+x**2-x**3+O(x**4, x)
-    assert (x+3/(1+2*x)).nseries(x,0,4) == 3-5*x+12*x**2-24*x**3+O(x**4, x)
+    assert (1/(1+x)).nseries(x, 0, 4) == 1-x+x**2-x**3+O(x**4, x)
+    assert (x+3/(1+2*x)).nseries(x, 0, 4) == 3-5*x+12*x**2-24*x**3+O(x**4, x)
 
-    assert ((1/x+1)**3).nseries(x,0,3)== 1+x**(-3)+3*x**(-2)+3/x
-    assert (1/(1+1/x)).nseries(x,0,4) == x-x**2+x**3-O(x**4, x)
-    assert (1/(1+1/x**2)).nseries(x,0,6) == x**2-x**4+O(x**6, x)
+    assert ((1/x+1)**3).nseries(x, 0, 3)== 1+x**(-3)+3*x**(-2)+3/x
+    assert (1/(1+1/x)).nseries(x, 0, 4) == x-x**2+x**3-O(x**4, x)
+    assert (1/(1+1/x**2)).nseries(x, 0, 6) == x**2-x**4+O(x**6, x)
 
 def test_bug2(): ### 1/log(0) * log(0) problem
     w = Symbol("w")
@@ -140,7 +140,7 @@ def test_exp2():
     w = Symbol("w")
     e = w**(1-log(x)/(log(2) + log(x)))
     logw = Symbol("logw")
-    assert e.nseries(w,0,1,logx=logw) == exp(logw - logw*log(x)/(log(2) + log(x)))
+    assert e.nseries(w, 0, 1, logx=logw) == exp(logw - logw*log(x)/(log(2) + log(x)))
 
 def test_bug3():
     x = Symbol("x")
@@ -151,40 +151,40 @@ def test_generalexponent():
     x = Symbol("x")
     p = 2
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.nseries(x,0,3) == 3 + O(x)
-    p = Rational(1,2)
+    assert e.nseries(x, 0, 3) == 3 + O(x)
+    p = Rational(1, 2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.nseries(x,0,2) == 2 + sqrt(x) + O(x)
+    assert e.nseries(x, 0, 2) == 2 + sqrt(x) + O(x)
 
     e=1+sqrt(x)
-    assert e.nseries(x,0,4) == 1+sqrt(x)
+    assert e.nseries(x, 0, 4) == 1+sqrt(x)
 
 # more complicated example
 def test_genexp_x():
     x = Symbol("x")
     e=1/(1+sqrt(x))
-    assert e.nseries(x,0,2) == \
+    assert e.nseries(x, 0, 2) == \
                 1+x-sqrt(x)-sqrt(x)**3+O(x**2, x)
 
 # more complicated example
 def test_genexp_x2():
     x = Symbol("x")
-    p = Rational(3,2)
+    p = Rational(3, 2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.nseries(x,0,3) == 3 - sqrt(x) + x + O(sqrt(x)**3)
+    assert e.nseries(x, 0, 3) == 3 - sqrt(x) + x + O(sqrt(x)**3)
 
 def test_seriesbug2():
     w = Symbol("w")
     #simple case (1):
     e = ((2*w)/w)**(1+w)
-    assert e.nseries(w,0,1) == 2 + O(w, w)
-    assert e.nseries(w,0,1).subs(w,0) == 2
+    assert e.nseries(w, 0, 1) == 2 + O(w, w)
+    assert e.nseries(w, 0, 1).subs(w, 0) == 2
 
 def test_seriesbug2b():
     w = Symbol("w")
     #test sin
     e = sin(2*w)/w
-    assert e.nseries(w,0,3) == 2 + O(w**2, w)
+    assert e.nseries(w, 0, 3) == 2 + O(w**2, w)
 
 def test_seriesbug2d():
     w = Symbol("w", real=True)
@@ -195,24 +195,24 @@ def test_seriesbug2c():
     w = Symbol("w", real=True)
     #more complicated case, but sin(x)~x, so the result is the same as in (1)
     e=(sin(2*w)/w)**(1+w)
-    assert e.series(w,0,1) == 2 + O(w)
-    assert e.series(w,0,3) == 2 + 2*w*log(2) + w**2*(-Rational(4,3) + log(2)**2) + O(w**3)
-    assert e.series(w,0,2).subs(w,0) == 2
+    assert e.series(w, 0, 1) == 2 + O(w)
+    assert e.series(w, 0, 3) == 2 + 2*w*log(2) + w**2*(-Rational(4, 3) + log(2)**2) + O(w**3)
+    assert e.series(w, 0, 2).subs(w, 0) == 2
 
 def test_expbug4():
     x = Symbol("x", real=True)
-    assert (log(sin(2*x)/x)*(1+x)).series(x,0,2) == log(2) + x*log(2) + O(x**2, x)
-    assert exp(log(sin(2*x)/x)*(1+x)).series(x,0,2) == 2 + 2*x*log(2) + O(x**2)
+    assert (log(sin(2*x)/x)*(1+x)).series(x, 0, 2) == log(2) + x*log(2) + O(x**2, x)
+    assert exp(log(sin(2*x)/x)*(1+x)).series(x, 0, 2) == 2 + 2*x*log(2) + O(x**2)
 
 @XFAIL
 def test_expbug4_failing():
     x = Symbol("x", real=True)
-    assert exp(log(2)+O(x)).nseries(x,0,2) == 2 +O(x**2, x)
-    assert ((2+O(x))**(1+x)).nseries(x,0,2) == 2 + O(x**2, x)
+    assert exp(log(2)+O(x)).nseries(x, 0, 2) == 2 +O(x**2, x)
+    assert ((2+O(x))**(1+x)).nseries(x, 0, 2) == 2 + O(x**2, x)
 
 def test_logbug4():
     x = Symbol("x")
-    assert log(2+O(x)).nseries(x,0,2) == log(2) + O(x, x)
+    assert log(2+O(x)).nseries(x, 0, 2) == log(2) + O(x, x)
 
 def test_expbug5():
     x = Symbol("x")
@@ -220,30 +220,30 @@ def test_expbug5():
 
 @XFAIL
 def test_expbug5_failing():
-    assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
+    assert exp(O(x)).nseries(x, 0, 2) == 1 + O(x**2, x)
 
 def test_sinsinbug():
     x = Symbol("x")
-    assert sin(sin(x)).nseries(x,0,8) == x-x**3/3+x**5/10-8*x**7/315+O(x**8)
+    assert sin(sin(x)).nseries(x, 0, 8) == x-x**3/3+x**5/10-8*x**7/315+O(x**8)
 
 def test_issue159():
     x = Symbol("x")
     a=x/(exp(x)-1)
-    assert a.nseries(x,0,6) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
+    assert a.nseries(x, 0, 6) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
 
 def test_issue105():
     x = Symbol("x", nonnegative=True)
-    f = sin(x**3)**Rational(1,3)
-    assert f.nseries(x,0,17) == x - x**7/18 - x**13/3240 + O(x**17)
+    f = sin(x**3)**Rational(1, 3)
+    assert f.nseries(x, 0, 17) == x - x**7/18 - x**13/3240 + O(x**17)
 
 def test_issue125():
     y = Symbol("y")
     f = sqrt(1-sqrt(y))
-    assert f.nseries(y,0,2) == 1 - sqrt(y)/2-y/8-sqrt(y)**3/16+O(y**2)
+    assert f.nseries(y, 0, 2) == 1 - sqrt(y)/2-y/8-sqrt(y)**3/16+O(y**2)
 
 def test_issue364():
     from sympy import summation, symbols
-    w,x,i = symbols('w,x,i')
+    w, x, i = symbols('w,x,i')
     r = log(5)/log(3)
     p = w**(-1 + r)
     e = 1/x*(-log(w**(1 + r)) + log(w + w**r))
@@ -267,7 +267,7 @@ def test_issue416():
 def test_issue406():
     x = Symbol("x")
     e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 - \
-            cos(x)**Rational(1,3)*sin(x)**2)
+            cos(x)**Rational(1, 3)*sin(x)**2)
     assert e.nseries(x, n=8) == -Rational(1)/12 - 7*x**2/288 - \
             43*x**4/10368 + O(x**5)
 
@@ -284,8 +284,8 @@ def test_issue402():
 def test_issue403():
     x = Symbol("x")
     e = sin(5*x)/sin(2*x)
-    assert e.nseries(x, n=2) == Rational(5,2) + O(x)
-    assert e.nseries(x, n=6) == Rational(5,2) - 35*x**2/4 + 329*x**4/48 + O(x**5)
+    assert e.nseries(x, n=2) == Rational(5, 2) + O(x)
+    assert e.nseries(x, n=6) == Rational(5, 2) - 35*x**2/4 + 329*x**4/48 + O(x**5)
 
 def test_issue404():
     x = Symbol("x")
@@ -295,7 +295,7 @@ def test_issue404():
 def test_issue407():
     x = Symbol("x")
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
-    assert e.nseries(x, n=6) == -Rational(1,4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
+    assert e.nseries(x, n=6) == -Rational(1, 4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
 
 def test_issue409():
     x = Symbol("x", real=True)
@@ -306,7 +306,7 @@ def test_issue409():
 def test_issue408():
     x = Symbol("x")
     e = x**(-4)*(x**2 - x**2*sqrt(cos(x)))
-    assert e.nseries(x, n=7) == Rational(1,4) + x**2/96 + 19*x**4/5760 + O(x**5)
+    assert e.nseries(x, n=7) == Rational(1, 4) + x**2/96 + 19*x**4/5760 + O(x**5)
 
 def test_issue540():
     x = Symbol("x")
@@ -419,11 +419,11 @@ def test_dir():
     y = Symbol('y')
     assert abs(x).series(x, 0, dir="+") == x
     assert abs(x).series(x, 0, dir="-") == -x
-    assert floor(x+2).series(x,0,dir='+') == 2
-    assert floor(x+2).series(x,0,dir='-') == 1
-    assert floor(x+2.2).series(x,0,dir='-') == 2
-    assert ceiling(x+2.2).series(x,0,dir='-') == 3
-    assert sin(x+y).series(x,0,dir='-') == sin(x+y).series(x,0,dir='+')
+    assert floor(x+2).series(x, 0, dir='+') == 2
+    assert floor(x+2).series(x, 0, dir='-') == 1
+    assert floor(x+2.2).series(x, 0, dir='-') == 2
+    assert ceiling(x+2.2).series(x, 0, dir='-') == 3
+    assert sin(x+y).series(x, 0, dir='-') == sin(x+y).series(x, 0, dir='+')
 
 def test_issue405():
     a = Symbol("a")

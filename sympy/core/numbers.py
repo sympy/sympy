@@ -90,7 +90,7 @@ def igcd(a, b):
        improve speed, igcd() has its own caching mechanism implemented.
     """
     try:
-        return _gcdcache[(a,b)]
+        return _gcdcache[(a, b)]
     except KeyError:
         a, b = as_int(a), as_int(b)
 
@@ -103,7 +103,7 @@ def igcd(a, b):
         else:
             a = abs(a or b)
 
-        _gcdcache[(a,b)] = a
+        _gcdcache[(a, b)] = a
         return a
 
 def ilcm(a, b):
@@ -1264,7 +1264,7 @@ class Rational(Number):
                 args = []
             args.extend([Pow(*i, **{'evaluate':False})
                          for i in sorted(f.items())])
-            return Mul(*args, **{'evaluate':False})
+            return Mul(*args, **{'evaluate': False})
 
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
@@ -2305,7 +2305,7 @@ class NumberSymbol(AtomicExpr):
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
             if approx is not None:
-                l,u = approx
+                l, u = approx
                 if other < l:
                     return False
                 if other > u:
@@ -2364,9 +2364,9 @@ class Exp1(NumberSymbol):
         return mpf_e(prec)
 
     def approximation_interval(self, number_cls):
-        if issubclass(number_cls,Integer):
-            return (Integer(2),Integer(3))
-        elif issubclass(number_cls,Rational):
+        if issubclass(number_cls, Integer):
+            return (Integer(2), Integer(3))
+        elif issubclass(number_cls, Rational):
             pass
 
     def _eval_power(self, expt):
@@ -2402,7 +2402,7 @@ class Pi(NumberSymbol):
         if issubclass(number_cls, Integer):
             return (Integer(3), Integer(4))
         elif issubclass(number_cls, Rational):
-            return (Rational(223,71), Rational(22,7))
+            return (Rational(223, 71), Rational(22, 7))
 
     def _sage_(self):
         import sage.all as sage

@@ -50,7 +50,7 @@ def test_basic_degree_3():
 
 def test_repeated_degree_1():
     d = 1
-    knots = [0,0,1,2,2,3,4,4]
+    knots = [0, 0, 1, 2, 2, 3, 4, 4]
     splines = bspline_basis_set(d, knots, x)
     assert splines[0] == Piecewise((1 - x, Interval(0, 1).contains(x)), (0, True))
     assert splines[1] == Piecewise((x, Interval(0, 1, False, True).contains(x)),

@@ -353,11 +353,11 @@ class OuterProduct(Operator):
         b = self.bra._represent(**options)
         return k*b
 
-    def _eval_trace(self,**kwargs):
+    def _eval_trace(self, **kwargs):
         # TODO if operands are tensorproducts this may be will be handled
         # differently.
 
-        return self.ket._eval_trace(self.bra,**kwargs)
+        return self.ket._eval_trace(self.bra, **kwargs);
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx

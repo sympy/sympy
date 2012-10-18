@@ -33,24 +33,24 @@ def test_pow_eval():
 
     assert sqrt(-4) == 2*I
     assert sqrt( 4) == 2
-    assert (8)**Rational(1,3) == 2
-    assert (-8)**Rational(1,3) == 2*((-1)**Rational(1,3))
+    assert (8)**Rational(1, 3) == 2
+    assert (-8)**Rational(1, 3) == 2*((-1)**Rational(1, 3))
 
     assert sqrt(-2) == I*sqrt(2)
-    assert (-1)**Rational(1,3) != I
-    assert (-10)**Rational(1,3) != I*((10)**Rational(1,3))
-    assert (-2)**Rational(1,4) != (2)**Rational(1,4)
+    assert (-1)**Rational(1, 3) != I
+    assert (-10)**Rational(1, 3) != I*((10)**Rational(1, 3))
+    assert (-2)**Rational(1, 4) != (2)**Rational(1, 4)
 
-    assert 64**Rational(1,3) == 4
-    assert 64**Rational(2,3) == 16
+    assert 64**Rational(1, 3) == 4
+    assert 64**Rational(2, 3) == 16
     assert 24/sqrt(64) == 3
-    assert (-27)**Rational(1,3) == 3*(-1)**Rational(1,3)
+    assert (-27)**Rational(1, 3) == 3*(-1)**Rational(1, 3)
 
     assert (cos(2) / tan(2))**2 == (cos(2) / tan(2))**2
 
 @XFAIL
 def test_pow_eval_X1():
-    assert (-1)**Rational(1,3) == Rational(1,2)+Rational(1,2)*I*sqrt(3)
+    assert (-1)**Rational(1, 3) == Rational(1, 2)+Rational(1, 2)*I*sqrt(3)
 
 def test_mulpow_eval():
     x = Symbol('x')
@@ -77,6 +77,6 @@ def test_symbol_expand():
 
 def test_function():
     f = Function('f')
-    l,x = map(Symbol, 'lx')
+    l, x = map(Symbol, 'lx')
     assert exp(l(x))*l(x)/exp(l(x)) == l(x)
     assert exp(f(x))*f(x)/exp(f(x)) == f(x)

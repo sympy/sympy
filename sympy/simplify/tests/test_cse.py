@@ -6,8 +6,8 @@ from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
-w,x,y,z = symbols('w,x,y,z')
-x0,x1,x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
+w, x, y, z = symbols('w,x,y,z')
+x0, x1, x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
 negone = sympify(-1)
 
 
@@ -43,14 +43,14 @@ def test_postprocess_for_cse():
 
 def test_cse_single():
     # Simple substitution.
-    e = Add(Pow(x+y,2), sqrt(x+y))
+    e = Add(Pow(x+y, 2), sqrt(x+y))
     substs, reduced = cse([e], optimizations=[])
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
-    e = Add(Pow(x+y,2), sqrt(x+y))
+    e = Add(Pow(x+y, 2), sqrt(x+y))
     substs, reduced = cse(e, optimizations=[])
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
@@ -69,7 +69,7 @@ def test_cse_not_possible():
 
 def test_nested_substitution():
     # Substitution within a substitution.
-    e = Add(Pow(w*x+y,2), sqrt(w*x+y))
+    e = Add(Pow(w*x+y, 2), sqrt(w*x+y))
     substs, reduced = cse([e], optimizations=[])
     assert substs == [(x0, w*x+y)]
     assert reduced == [sqrt(x0) + x0**2]

@@ -47,8 +47,8 @@ def test_graycode():
     assert len(a) == 5
     assert all(i in ['0', '1'] for i in a)
 
-    assert get_subset_from_bitstring(['a','b','c','d'], '0011') == ['c', 'd']
-    assert get_subset_from_bitstring('abcd','1001') == ['a', 'd']
-    assert list(graycode_subsets(['a','b','c'])) == \
+    assert get_subset_from_bitstring(['a', 'b', 'c', 'd'], '0011') == ['c', 'd']
+    assert get_subset_from_bitstring('abcd', '1001') == ['a', 'd']
+    assert list(graycode_subsets(['a', 'b', 'c'])) == \
         [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
     ['a', 'c'], ['a']]

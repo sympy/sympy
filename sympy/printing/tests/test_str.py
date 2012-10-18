@@ -31,8 +31,8 @@ def test_printmethod():
 
 def test_Abs():
     assert str(Abs(x)) == "Abs(x)"
-    assert str(Abs(Rational(1,6))) == "1/6"
-    assert str(Abs(Rational(-1,6))) == "1/6"
+    assert str(Abs(Rational(1, 6))) == "1/6"
+    assert str(Abs(Rational(-1, 6))) == "1/6"
 
 def test_Add():
     assert str(x+y) == "x + y"
@@ -102,8 +102,8 @@ def test_Function():
     assert str(w) == "w_"
 
 def test_Geometry():
-    assert sstr(Point(0,0)) == 'Point(0, 0)'
-    assert sstr(Circle(Point(0,0), 3)) == 'Circle(Point(0, 0), 3)'
+    assert sstr(Point(0, 0)) == 'Point(0, 0)'
+    assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point(0, 0), 3)'
     # TODO test other Geometry entities
 
 def test_GoldenRatio():
@@ -306,10 +306,10 @@ def test_sqrt():
     assert str(1/x**(1/2)) == "x**(-0.5)"
 
 def test_Rational():
-    n1 = Rational(1,4)
-    n2 = Rational(1,3)
-    n3 = Rational(2,4)
-    n4 = Rational(2,-4)
+    n1 = Rational(1, 4)
+    n2 = Rational(1, 3)
+    n3 = Rational(2, 4)
+    n4 = Rational(2, -4)
     n5 = Rational(0)
     n7 = Rational(3)
     n8 = Rational(-3)
@@ -340,19 +340,19 @@ def test_Rational():
     assert str(S("0.[9]", rational=1)) == "1"
     assert str(S("-0.[9]", rational=1)) == "-1"
 
-    assert str(sqrt(Rational(1,4))) == "1/2"
-    assert str(sqrt(Rational(1,36))) == "1/6"
+    assert str(sqrt(Rational(1, 4))) == "1/2"
+    assert str(sqrt(Rational(1, 36))) == "1/6"
 
-    assert str((123**25) ** Rational(1,25)) == "123"
-    assert str((123**25+1)**Rational(1,25)) != "123"
-    assert str((123**25-1)**Rational(1,25)) != "123"
-    assert str((123**25-1)**Rational(1,25)) != "122"
+    assert str((123**25) ** Rational(1, 25)) == "123"
+    assert str((123**25+1)**Rational(1, 25)) != "123"
+    assert str((123**25-1)**Rational(1, 25)) != "123"
+    assert str((123**25-1)**Rational(1, 25)) != "122"
 
-    assert str(sqrt(Rational(81,36))**3) == "27/8"
-    assert str(1/sqrt(Rational(81,36))**3) == "8/27"
+    assert str(sqrt(Rational(81, 36))**3) == "27/8"
+    assert str(1/sqrt(Rational(81, 36))**3) == "8/27"
 
     assert str(sqrt(-4)) == str(2*I)
-    assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
+    assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
 def test_Float():
     # NOTE prec is the whole number of decimal digits
@@ -402,8 +402,8 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1,2,3]))== 'set([1, 2, 3])'
-    assert sstr(set([1,x,x**2,x**3,x**4])) == 'set([1, x, x**2, x**3, x**4])'
+    assert sstr(set([1, 2, 3]))== 'set([1, 2, 3])'
+    assert sstr(set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x+y]])
@@ -456,11 +456,11 @@ def test_bug2():
 def test_bug4():
     e = -2*sqrt(x)-y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
-            "-2*x**1/2(-1/2)*x**(-1/2)*y","-2*x**1/2-1/2*x**-1/2*w"]
+            "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 def test_issue922():
-    e = Integral(x,x) + 1
+    e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
 def test_sstrrepr():
@@ -519,7 +519,7 @@ def test_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A,B)).domain) =="Domain: And(0 <= a, 0 <= b)"
+    assert str(pspace(Tuple(A, B)).domain) =="Domain: And(0 <= a, 0 <= b)"
 
 def test_FiniteSet():
     assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'

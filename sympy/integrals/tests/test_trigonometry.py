@@ -48,10 +48,10 @@ def test_trigintegrate_even():
                                                           + cos(x)**3*sin(x)/24 \
                                                           - cos(x)**5*sin(x)/6
 
-    assert trigintegrate(sin(x)**(-4),x) == -2*cos(x)/(3*sin(x)) \
+    assert trigintegrate(sin(x)**(-4), x) == -2*cos(x)/(3*sin(x)) \
                                             - cos(x)/(3*sin(x)**3)
 
-    assert trigintegrate(cos(x)**(-6),x) == sin(x)/(5*cos(x)**5)\
+    assert trigintegrate(cos(x)**(-6), x) == sin(x)/(5*cos(x)**5)\
                                             + 4*sin(x)/(15*cos(x)**3)\
                                             + 8*sin(x)/(15*cos(x))
 

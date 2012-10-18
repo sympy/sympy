@@ -13,15 +13,15 @@ if __name__ == '__main__':
              '0  0  0 -1'
 
     vars = sympy.symbols('t x y z')
-    gamma_t,gamma_x,gamma_y,gamma_z = GA.MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
+    gamma_t, gamma_x, gamma_y, gamma_z = GA.MV.setup('gamma_t gamma_x gamma_y gamma_z', metric, True, vars)
 
-    m,e = sympy.symbols('m e')
+    m, e = sympy.symbols('m e')
     tex.Format()
-    I = GA.MV(GA.ONE,'pseudo')
+    I = GA.MV(GA.ONE, 'pseudo')
     nvars = len(vars)
-    psi = GA.MV('psi','spinor',fct=True)
+    psi = GA.MV('psi', 'spinor', fct=True)
     psi.convert_to_blades()
-    A = GA.MV('A','vector',fct=True)
+    A = GA.MV('A', 'vector', fct=True)
     sig_x = gamma_x*gamma_t
     sig_y = gamma_y*gamma_t
     sig_z = gamma_z*gamma_t
@@ -36,5 +36,5 @@ if __name__ == '__main__':
           r'$\lp\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi} = m\bm{\psi}\gamma_{t}\rp$'
     print 'Spin measured with respect to $z$ axis'
     tex.MV_format(3)
-    print r'\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi}-m\bm{\psi}\gamma_{t} = ',dirac_eq,' = 0'
+    print r'\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi}-m\bm{\psi}\gamma_{t} = ', dirac_eq, ' = 0'
     tex.xdvi(filename='Dirac.tex')

@@ -373,7 +373,7 @@ def test_tan_rewrite():
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
 
 def test_tan_subs():
-    x,y = symbols('x,y')
+    x, y = symbols('x,y')
     assert tan(x).subs(tan(x), y) == y
     assert tan(x).subs(x, y) == tan(y)
     assert tan(x).subs(x, S.Pi/2) == zoo
@@ -398,7 +398,7 @@ def test_cot():
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
     assert cot(acos(x)) == x / sqrt(1 - x**2)
-    assert cot(atan2(y,x)) == x/y
+    assert cot(atan2(y, x)) == x/y
 
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
@@ -455,7 +455,7 @@ def test_cot_rewrite():
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
 
 def test_cot_subs():
-    x,y = symbols('x,y')
+    x, y = symbols('x,y')
     assert cot(x).subs(cot(x), y) == y
     assert cot(x).subs(x, y) == cot(y)
     assert cot(x).subs(x, 0) == zoo
@@ -479,8 +479,8 @@ def test_asin():
     assert asin(-sqrt(2)/2) == -pi/4
     assert asin(sqrt((5-sqrt(5))/8)) == pi/5
     assert asin(-sqrt((5-sqrt(5))/8)) == -pi/5
-    assert asin(Rational(1,2)) == pi/6
-    assert asin(-Rational(1,2)) == -pi/6
+    assert asin(Rational(1, 2)) == pi/6
+    assert asin(-Rational(1, 2)) == -pi/6
     assert asin((sqrt(2-sqrt(2)))/2) == pi/8
     assert asin(-(sqrt(2-sqrt(2)))/2) == -pi/8
     assert asin((sqrt(5)-1)/4) == pi/10
@@ -519,8 +519,8 @@ def test_acos():
 
     # Note: acos(-x) = pi - acos(x)
     assert acos(0) == pi/2
-    assert acos(Rational(1,2)) == pi/3
-    assert acos(-Rational(1,2)) == (2*pi)/3
+    assert acos(Rational(1, 2)) == pi/3
+    assert acos(-Rational(1, 2)) == (2*pi)/3
     assert acos(1) == 0
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
@@ -678,7 +678,7 @@ def test_leading_terms():
 
 def test_atan2_expansion():
     x, y = symbols("x,y")
-    assert cancel(atan2(x+1,x**2).diff(x) - atan((x+1)/x**2).diff(x)) == 0
+    assert cancel(atan2(x+1, x**2).diff(x) - atan((x+1)/x**2).diff(x)) == 0
     assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5) \
                   + atan2(0, y) - atan(0)) == O(x**5)
     assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)  \
@@ -812,7 +812,7 @@ def test_inverses():
         assert pair[0](x).inverse() == pair[1]
 
 def test_real_imag():
-    a,b = symbols('a,b', real=True)
+    a, b = symbols('a,b', real=True)
     z = a+b*I
     for deep in [True, False]:
         assert sin(z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
@@ -841,7 +841,7 @@ def test_sincos_rewrite_sqrt():
                     s1 = sin(x).rewrite(sqrt)
                     c1 = cos(x).rewrite(sqrt)
 
-                    assert not s1.has(cos, sin), "fails for %d*pi/%d"%(i,n)
-                    assert not c1.has(cos, sin), "fails for %d*pi/%d"%(i,n)
+                    assert not s1.has(cos, sin), "fails for %d*pi/%d"%(i, n)
+                    assert not c1.has(cos, sin), "fails for %d*pi/%d"%(i, n)
                     assert 1e-10 > abs( sin(float(x)) - float(s1) )
                     assert 1e-10 > abs( cos(float(x)) - float(c1) )

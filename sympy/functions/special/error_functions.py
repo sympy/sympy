@@ -1015,7 +1015,7 @@ class fresnels(FresnelIntegral):
 
     def _eval_rewrite_as_meijerg(self, z):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
-                * meijerg([],[1],[S(3)/4],[S(1)/4,0],-pi**2*z**4/16))
+                * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
 
 class fresnelc(FresnelIntegral):
     r"""
@@ -1119,8 +1119,8 @@ class fresnelc(FresnelIntegral):
         return z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z):
-        return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2,4)*root(-z,4))
-                * meijerg([],[1],[S(1)/4],[S(3)/4,0],-pi**2*z**4/16))
+        return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
+                * meijerg([], [1], [S(1)/4], [S(3)/4, 0], -pi**2*z**4/16))
 
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
@@ -1139,7 +1139,7 @@ class _erfs(Function):
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0,n) ]
+        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0, n) ]
         o = C.Order(1/z**(2*n+1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o

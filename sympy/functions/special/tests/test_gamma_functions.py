@@ -22,7 +22,7 @@ def test_gamma():
 
     assert gamma(102) == factorial(101)
 
-    assert gamma(Rational(1,2)) == sqrt(pi)
+    assert gamma(Rational(1, 2)) == sqrt(pi)
 
     assert gamma(Rational(3, 2)) == Rational(1, 2)*sqrt(pi)
     assert gamma(Rational(5, 2)) == Rational(3, 4)*sqrt(pi)
@@ -166,7 +166,7 @@ def test_polygamma():
     assert polygamma(1, 2) == pi**2/6 - 1
     assert polygamma(1, 3) == pi**2/6 - Rational(5, 4)
     assert polygamma(3, 1) == pi**4 / 15
-    assert polygamma(3, 5) == 6*(Rational(-22369,20736) + pi**4/90)
+    assert polygamma(3, 5) == 6*(Rational(-22369, 20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
     def t(m, n):
@@ -250,7 +250,7 @@ def test_polygamma_expand_func():
     assert e.expand(func = True, basic = False) == e
 
 def test_loggamma():
-    s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x,n=4)
+    s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x, n=4)
     s2 = (-log(2*x)-1)/(2*x) - log(x/pi)/2 + (4-log(2*x))*x/24 + O(x**2)
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
@@ -259,7 +259,7 @@ def test_loggamma():
     assert ((s1 - s2).expand(force=True)).removeO() == 0
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x,n=N,logx=None).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)
@@ -278,5 +278,5 @@ def test_polygamma_expansion():
 
 def test_beta_function():
     x, y = Symbol('x'), Symbol('y')
-    assert beta(x,y) == gamma(x)*gamma(y)/gamma(x+y)
-    assert beta(x,y) == beta(y,x) # Symmetric
+    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x+y)
+    assert beta(x, y) == beta(y, x) # Symmetric

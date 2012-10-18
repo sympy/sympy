@@ -18,7 +18,7 @@ def test_simple_1():
     assert Order(Order(x)) == Order(x)
     assert Order(Order(x), y) == Order(Order(x), x, y)
     assert Order(-23) == Order(1)
-    assert Order(exp(x)) == Order(1,x)
+    assert Order(exp(x)) == Order(1, x)
     assert Order(exp(1/x)).expr == exp(1/x)
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
@@ -29,7 +29,7 @@ def test_simple_1():
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
-    assert Order(2*x)/x == Order(1,x)
+    assert Order(2*x)/x == Order(1, x)
     assert Order(2*x)*x*exp(1/x) == Order(x**2*exp(1/x))
     assert (Order(2*x)*x*exp(1/x)/ln(x)**3).expr == x**2*exp(1/x)*ln(x)**-3
 
@@ -72,9 +72,9 @@ def test_as_expr_variables():
     assert Order(y).as_expr_variables((x, y)) == (y, (x, y))
 
 def test_contains_0():
-    assert Order(1,x).contains(Order(1,x))
-    assert Order(1,x).contains(Order(1))
-    assert Order(1).contains(Order(1,x))
+    assert Order(1, x).contains(Order(1, x))
+    assert Order(1, x).contains(Order(1))
+    assert Order(1).contains(Order(1, x))
 
 def test_contains_1():
     assert Order(x).contains(Order(x))
@@ -104,7 +104,7 @@ def test_contains_3():
 def test_add_1():
     assert Order(x+x) == Order(x)
     assert Order(3*x-2*x**2) == Order(x)
-    assert Order(1+x) == Order(1,x)
+    assert Order(1+x) == Order(1, x)
     assert Order(1+1/x) == Order(1/x)
     assert Order(ln(x)+1/ln(x)) == Order(ln(x))
     assert Order(exp(1/x)+x) == Order(exp(1/x))
@@ -118,8 +118,8 @@ def test_ln_args():
 def test_multivar_0():
     assert Order(x*y).expr == x*y
     assert Order(x*y**2).expr == x*y**2
-    assert Order(x*y,x).expr == x
-    assert Order(x*y**2,y).expr == y**2
+    assert Order(x*y, x).expr == x
+    assert Order(x*y**2, y).expr == y**2
     assert Order(x*y*z).expr == x*y*z
     assert Order(x/y).expr == x/y
     assert Order(x*exp(1/y)).expr == x*exp(1/y)
@@ -137,10 +137,10 @@ def test_multivar_1():
     assert Order(x**2+y*x).expr == x**2+y*x
 
 def test_multivar_2():
-    assert Order(x**2*y+y**2*x,x,y).expr == x**2*y+y**2*x
+    assert Order(x**2*y+y**2*x, x, y).expr == x**2*y+y**2*x
 
 def test_multivar_mul_1():
-    assert Order(x+y)*x == Order(x**2+y*x,x,y)
+    assert Order(x+y)*x == Order(x**2+y*x, x, y)
 
 def test_multivar_3():
     assert (Order(x)+Order(y)).args in [
@@ -239,7 +239,7 @@ def test_oseries():
 @XFAIL
 def test_issue_1180():
     a, b = symbols('a b')
-    assert O(a+b,a,b)+O(1,a,b) == O(1, a, b)
+    assert O(a+b, a, b)+O(1, a, b) == O(1, a, b)
 
 @XFAIL
 def test_issue_1756():

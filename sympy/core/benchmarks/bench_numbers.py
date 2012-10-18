@@ -3,8 +3,8 @@ from sympy import S, pi, oo
 
 i3 = Integer(3)
 i4 = Integer(4)
-r34= Rational(3,4)
-q45= Rational(4,5)
+r34= Rational(3, 4)
+q45= Rational(4, 5)
 
 def timeit_Integer_create():
     Integer(2)
@@ -62,10 +62,10 @@ def timeit_integer_nthroot():
     integer_nthroot(100, 2)
 
 def timeit_number_igcd_23_17():
-    igcd(23,17)
+    igcd(23, 17)
 
 def timeit_number_igcd_60_3600():
-    igcd(60,3600)
+    igcd(60, 3600)
 
 
 def timeit_Rational_add_r1():

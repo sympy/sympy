@@ -377,7 +377,7 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        basis = options.pop('basis',None)
+        basis = options.pop('basis', None)
         if basis is None:
             result = self._represent_default_basis(**options)
         else:

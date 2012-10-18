@@ -67,7 +67,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
             return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
-        elif isinstance(o,(sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
             return True
         return False
 

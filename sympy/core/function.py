@@ -39,7 +39,7 @@ from singleton import S
 from sympify import sympify
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit
-from compatibility import iterable,is_sequence
+from compatibility import iterable, is_sequence
 from cache import cacheit
 from numbers import Rational, Float
 from add import Add
@@ -546,7 +546,7 @@ class Function(Application, Expr):
             return Subs(Derivative(
                 self.subs(self.args[argindex-1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex-1])
-        return Derivative(self,self.args[argindex-1],evaluate=False)
+        return Derivative(self, self.args[argindex-1], evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -620,7 +620,7 @@ class WildFunction(Function, AtomicExpr):
 
     def matches(self, expr, repl_dict={}):
         if self.nargs is not None:
-            if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
+            if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr

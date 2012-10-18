@@ -312,11 +312,11 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     rot_order = [i.replace('Z', '3') for i in rot_order]
     rot_order = ''.join(rot_order)
 
-    if not isinstance(speeds,(list, tuple)):
+    if not isinstance(speeds, (list, tuple)):
         raise TypeError('Need to supply speeds in a list')
     if len(speeds) != 3:
         raise TypeError('Need to supply 3 body-fixed speeds')
-    if not isinstance(coords,(list, tuple)):
+    if not isinstance(coords, (list, tuple)):
         raise TypeError('Need to supply coordinates in a list')
     if rot_type.lower() in ['body', 'space']:
         if rot_order not in approved_orders:

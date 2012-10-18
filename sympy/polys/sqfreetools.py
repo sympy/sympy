@@ -159,7 +159,7 @@ def dmp_sqf_norm(f, u, K):
         raise DomainError("ground domain must be algebraic")
 
     g = dmp_raise(K.mod.rep, u+1, 0, K.dom)
-    F = dmp_raise([K.one,-K.unit], u, 0, K)
+    F = dmp_raise([K.one, -K.unit], u, 0, K)
 
     s = 0
 

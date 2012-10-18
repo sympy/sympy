@@ -15,7 +15,7 @@ from inspect import getsource
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
-unitn = dict((s,i) for i,s in enumerate(units))
+unitn = dict((s, i) for i, s in enumerate(units))
 
 precision = 3
 
@@ -82,7 +82,7 @@ class Function(py.__.test.item.Function):
             # from IPython.Magic.magic_timeit
             repeat = 3
             number = 1
-            for i in range(1,10):
+            for i in range(1, 10):
                 t = timer.timeit(number)
 
                 if t >= 0.2:
@@ -159,37 +159,37 @@ class BenchSession(TerminalSession):
 
         for s in results:
             tstr = s[1]
-            n,u = tstr.split()
+            n, u = tstr.split()
 
             # unit n
             un = unitn[u]
 
             try:
-                m,e = n.split('.')
+                m, e = n.split('.')
             except ValueError:
-                m,e = n,''
+                m, e = n, ''
 
             wm[un] = max(len(m), wm[un])
             we[un] = max(len(e), we[un])
 
         for s in results:
             tstr = s[1]
-            n,u = tstr.split()
+            n, u = tstr.split()
 
             un = unitn[u]
 
             try:
-                m,e = n.split('.')
+                m, e = n.split('.')
             except ValueError:
-                m,e = n,''
+                m, e = n, ''
 
             m = m.rjust(wm[un])
             e = e.ljust(we[un])
 
             if e.strip():
-                n = '.'.join((m,e))
+                n = '.'.join((m, e))
             else:
-                n = ' '.join((m,e))
+                n = ' '.join((m, e))
 
 
             # let's put the number into the right place

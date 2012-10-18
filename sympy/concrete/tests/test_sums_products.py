@@ -48,12 +48,12 @@ def test_polynomial_sums():
 def test_geometric_sums():
     assert summation(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
     assert summation(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
-    assert summation(Rational(1,2)**n, (n, 1, oo)) == 1
+    assert summation(Rational(1, 2)**n, (n, 1, oo)) == 1
     assert summation(2**n, (n, 0, b)) == 2**(b+1) - 1
     assert summation(2**n, (n, 1, oo)) == oo
     assert summation(2**(-n), (n, 1, oo)) == 1
-    assert summation(3**(-n), (n, 4, oo)) == Rational(1,54)
-    assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
+    assert summation(3**(-n), (n, 4, oo)) == Rational(1, 54)
+    assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
 
 def test_harmonic_sums():
@@ -63,13 +63,13 @@ def test_harmonic_sums():
     assert summation(1/k, (k, 5, n)) == harmonic(n) - harmonic(4)
 
 def test_composite_sums():
-    f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
+    f = Rational(1, 2)*(7 - 6*n + Rational(1, 7)*n**3)
     s = summation(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
     for i in range(-3, 5):
         A += f.subs(n, i)
-    B = s.subs(a,-3).subs(b,4)
+    B = s.subs(a, -3).subs(b, 4)
     assert A == B
 
 def test_hypergeometric_sums():
@@ -101,7 +101,7 @@ def test_evalf_fast_series():
     pistr = NS(pi, 100)
     # Ramanujan series for pi
     assert NS(9801/sqrt(8)/Sum(fac(4*n)*(1103+26390*n)/fac(n)**4/396**(4*n), (n, 0, oo)), 100) == pistr
-    assert NS(1/Sum(binomial(2*n,n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
+    assert NS(1/Sum(binomial(2*n, n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
     # Machin's formula for pi
     assert NS(16*Sum((-1)**n/(2*n+1)/5**(2*n+1), (n, 0, oo)) - \
         4*Sum((-1)**n/(2*n+1)/239**(2*n+1), (n, 0, oo)), 100) == pistr
@@ -175,7 +175,7 @@ def test_simple_products():
     s2 = Product(n, (n, hi, lo))
     assert s1 != s2
     assert s1.doit() == s2.doit() == x*(x + 1)
-    assert Product(Integral(2*x, (x,1,y)) + 2*x, (x,1,2)).doit() == \
+    assert Product(Integral(2*x, (x, 1, y)) + 2*x, (x, 1, 2)).doit() == \
         (y**2 + 1)*(y**2 + 3)
     assert product(2, (n, a, b)) == 2**(b-a+1)
     assert product(n, (n, 1, b)) == factorial(b)
@@ -204,7 +204,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2-1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n-1)/(2*n+1), (n, 1, b))
-    half = Rational(1,2)
+    half = Rational(1, 2)
     R = pi/2 * factorial(b)**2 / factorial(b-half) / factorial(b+half)
     assert A == R
     assert B == R
@@ -213,15 +213,15 @@ def test_wallis_product():
 
 def test_telescopic_sums():
     #checks also input 2 of comment 1 issue 1028
-    assert Sum(1/k - 1/(k+1),(k,1,n)).doit() == 1 - 1/(1 + n)
+    assert Sum(1/k - 1/(k+1), (k, 1, n)).doit() == 1 - 1/(1 + n)
     f = Function("f")
-    assert Sum(f(k)-f(k+2),(k,m,n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
-    assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
+    assert Sum(f(k)-f(k+2), (k, m, n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
+    assert Sum(cos(k)-cos(k+3), (k, 1, n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
 
     # dummy variable shouldn't matter
-    assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
-           telescopic(1/k, -k/(1+k),(k, n-1, n))
+    assert telescopic(1/m, -m/(1+m), (m, n-1, n)) == \
+           telescopic(1/k, -k/(1+k), (k, n-1, n))
 
     assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 

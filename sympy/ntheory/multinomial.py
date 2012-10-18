@@ -16,7 +16,7 @@ def binomial_coefficients(n):
 
     binomial_coefficients_list, multinomial_coefficients
     """
-    d = {(0, n):1, (n, 0):1}
+    d = {(0, n): 1, (n, 0): 1}
     a = 1
     for k in xrange(1, n//2+1):
         a = (a * (n-k+1))//k

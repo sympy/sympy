@@ -81,7 +81,7 @@ class RkGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
-            return Matrix([[1,0],[0,exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
+            return Matrix([[1, 0], [0, exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
         raise NotImplementedError('Invalid format for the R_k gate: %r' % format)
 
 
@@ -108,7 +108,7 @@ class Fourier(Gate):
         """
             Represents the (I)QFT In the Z Basis
         """
-        nqubits = options.get('nqubits',0)
+        nqubits = options.get('nqubits', 0)
         if nqubits == 0:
             raise QuantumError('The number of qubits must be given as nqubits.')
         if nqubits < self.min_qubits:
@@ -132,7 +132,7 @@ class Fourier(Gate):
 
     @property
     def targets(self):
-        return range(self.label[0],self.label[1])
+        return range(self.label[0], self.label[1])
 
     @property
     def min_qubits(self):

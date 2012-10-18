@@ -11,44 +11,44 @@ def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 def test_evalf_helpers():
-    assert complex_accuracy((from_float(2.0),None,35,None)) == 35
-    assert complex_accuracy((from_float(2.0),from_float(10.0),35,100)) == 37
-    assert complex_accuracy((from_float(2.0),from_float(1000.0),35,100)) == 43
-    assert complex_accuracy((from_float(2.0),from_float(10.0),100,35)) == 35
-    assert complex_accuracy((from_float(2.0),from_float(1000.0),100,35)) == 35
+    assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
+    assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
+    assert complex_accuracy((from_float(2.0), from_float(1000.0), 35, 100)) == 43
+    assert complex_accuracy((from_float(2.0), from_float(10.0), 100, 35)) == 35
+    assert complex_accuracy((from_float(2.0), from_float(1000.0), 100, 35)) == 35
 
 def test_evalf_basic():
-    assert NS('pi',15) == '3.14159265358979'
-    assert NS('2/3',10) == '0.6666666667'
-    assert NS('355/113-pi',6) == '2.66764e-7'
+    assert NS('pi', 15) == '3.14159265358979'
+    assert NS('2/3', 10) == '0.6666666667'
+    assert NS('355/113-pi', 6) == '2.66764e-7'
     assert NS('16*atan(1/5)-4*atan(1/239)', 15) == '3.14159265358979'
 
 def test_cancellation():
-    assert NS(Add(pi,Rational(1,10**1000),-pi,evaluate=False),15,maxn=1200) == '1.00000000000000e-1000'
+    assert NS(Add(pi, Rational(1, 10**1000), -pi, evaluate=False), 15, maxn=1200) == '1.00000000000000e-1000'
 
 def test_evalf_powers():
-    assert NS('pi**(10**20)',10) == '1.339148777e+49714987269413385435'
-    assert NS(pi**(10**100),10) == ('4.946362032e+4971498726941338543512682882'
+    assert NS('pi**(10**20)', 10) == '1.339148777e+49714987269413385435'
+    assert NS(pi**(10**100), 10) == ('4.946362032e+4971498726941338543512682882'
           '9089887365167832438044244613405349992494711208'
           '95526746555473864642912223')
-    assert NS('2**(1/10**50)',15) == '1.00000000000000'
-    assert NS('2**(1/10**50)-1',15) == '6.93147180559945e-51'
+    assert NS('2**(1/10**50)', 15) == '1.00000000000000'
+    assert NS('2**(1/10**50)-1', 15) == '6.93147180559945e-51'
 
 # Evaluation of Rump's ill-conditioned polynomial
 def test_evalf_rump():
     a = 1335*y**6/4+x**2*(11*x**2*y**2-y**6-121*y**4-2)+11*y**8/2+x/(2*y)
-    assert NS(a, 15, subs={x:77617, y:33096}) == '-0.827396059946821'
+    assert NS(a, 15, subs={x: 77617, y: 33096}) == '-0.827396059946821'
 
 def test_evalf_complex():
-    assert NS('2*sqrt(pi)*I',10) == '3.544907702*I'
-    assert NS('3+3*I',15) == '3.00000000000000 + 3.00000000000000*I'
-    assert NS('E+pi*I',15) == '2.71828182845905 + 3.14159265358979*I'
-    assert NS('pi * (3+4*I)',15) == '9.42477796076938 + 12.5663706143592*I'
-    assert NS('I*(2+I)',15) == '-1.00000000000000 + 2.00000000000000*I'
+    assert NS('2*sqrt(pi)*I', 10) == '3.544907702*I'
+    assert NS('3+3*I', 15) == '3.00000000000000 + 3.00000000000000*I'
+    assert NS('E+pi*I', 15) == '2.71828182845905 + 3.14159265358979*I'
+    assert NS('pi * (3+4*I)', 15) == '9.42477796076938 + 12.5663706143592*I'
+    assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
 
 @XFAIL
 def test_evalf_complex_bug():
-    assert NS('(pi+E*I)*(E+pi*I)',15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
+    assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I', '0.e-17 + 17.25866050002*I', '-0.e-17 + 17.25866050002*I')
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
@@ -69,7 +69,7 @@ def test_evalf_complex_powers_bug():
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'
-    assert NS(Pow(pi*I, Rational(1,2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
+    assert NS(Pow(pi*I, Rational(1, 2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
     assert NS(pi**I) == '0.413292116101594 + 0.910598499212615*I'
     assert NS(pi**(E+I/3)) == '20.8438653991931 + 8.36343473930031*I'
     assert NS((pi+I/3)**(E+I/3)) == '17.2442906093590 + 13.6839376767037*I'
@@ -102,16 +102,16 @@ def test_evalf_logs():
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
 
 def test_evalf_trig():
-    assert NS('sin(1)',15) == '0.841470984807897'
-    assert NS('cos(1)',15) == '0.540302305868140'
-    assert NS('sin(10**-6)',15) == '9.99999999999833e-7'
-    assert NS('cos(10**-6)',15) == '0.999999999999500'
-    assert NS('sin(E*10**100)',15) == '0.409160531722613'
+    assert NS('sin(1)', 15) == '0.841470984807897'
+    assert NS('cos(1)', 15) == '0.540302305868140'
+    assert NS('sin(10**-6)', 15) == '9.99999999999833e-7'
+    assert NS('cos(10**-6)', 15) == '0.999999999999500'
+    assert NS('sin(E*10**100)', 15) == '0.409160531722613'
     # Some input near roots
     assert NS(sin(exp(pi*sqrt(163))*pi), 15) == '-2.35596641936785e-12'
-    assert NS(sin(pi*10**100 + Rational(7,10**5), evaluate=False), 15, maxn=120) == \
+    assert NS(sin(pi*10**100 + Rational(7, 10**5), evaluate=False), 15, maxn=120) == \
         '6.99999999428333e-5'
-    assert NS(sin(Rational(7,10**5), evaluate=False), 15) == \
+    assert NS(sin(Rational(7, 10**5), evaluate=False), 15) == \
         '6.99999999428333e-5'
 
 # Check detection of various false identities
@@ -121,9 +121,9 @@ def test_evalf_near_integers():
     assert NS(f(5000) - fibonacci(5000), 10, maxn=1500) == '5.156009964e-1046'
     # Some near-integer identities from
     # http://mathworld.wolfram.com/AlmostInteger.html
-    assert NS('sin(2017*2**(1/5))',15) == '-1.00000000000000'
-    assert NS('sin(2017*2**(1/5))',20) == '-0.99999999999999997857'
-    assert NS('1+sin(2017*2**(1/5))',15) == '2.14322287389390e-17'
+    assert NS('sin(2017*2**(1/5))', 15) == '-1.00000000000000'
+    assert NS('sin(2017*2**(1/5))', 20) == '-0.99999999999999997857'
+    assert NS('1+sin(2017*2**(1/5))', 15) == '2.14322287389390e-17'
     assert NS('45 - 613*E/37 + 35/991', 15) == '6.03764498766326e-11'
 
 def test_evalf_ramanujan():
@@ -132,30 +132,30 @@ def test_evalf_ramanujan():
     A = 262537412640768744*exp(-pi*sqrt(163))
     B = 196884*exp(-2*pi*sqrt(163))
     C = 103378831900730205293632*exp(-3*pi*sqrt(163))
-    assert NS(1-A-B+C,10) == '1.613679005e-59'
+    assert NS(1-A-B+C, 10) == '1.613679005e-59'
 
 # Input that for various reasons have failed at some point
 def test_evalf_bugs():
-    assert NS(sin(1)+exp(-10**10),10) == NS(sin(1),10)
-    assert NS(exp(10**10)+sin(1),10) == NS(exp(10**10),10)
-    assert NS('log(1+1/10**50)',20) == '1.0000000000000000000e-50'
-    assert NS('log(10**100,10)',10) == '100.0000000'
-    assert NS('log(2)',10) == '0.6931471806'
-    assert NS('(sin(x)-x)/x**3', 15, subs={x:'1/10**50'}) == '-0.166666666666667'
-    assert NS(sin(1)+Rational(1,10**100)*I,15) == '0.841470984807897 + 1.00000000000000e-100*I'
+    assert NS(sin(1)+exp(-10**10), 10) == NS(sin(1), 10)
+    assert NS(exp(10**10)+sin(1), 10) == NS(exp(10**10), 10)
+    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('log(10**100,10)', 10) == '100.0000000'
+    assert NS('log(2)', 10) == '0.6931471806'
+    assert NS('(sin(x)-x)/x**3', 15, subs={x: '1/10**50'}) == '-0.166666666666667'
+    assert NS(sin(1)+Rational(1, 10**100)*I, 15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
     assert NS((1+I)**2*I, 6) == '-2.00000'
-    d={n: (-1)**Rational(6,7), y: (-1)**Rational(4,7), x: (-1)**Rational(2,7)}
-    assert NS((x*(1+y*(1 + n))).subs(d).evalf(),6) == '0.346011 + 0.433884*I'
+    d={n: (-1)**Rational(6, 7), y: (-1)**Rational(4, 7), x: (-1)**Rational(2, 7)}
+    assert NS((x*(1+y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
-    assert NS((1+I)**2*I,15) == '-2.00000000000000'
+    assert NS((1+I)**2*I, 15) == '-2.00000000000000'
     #1659 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
     #1659 (2/2): With the bug present, this still only fails if the
     # terms are in the order given here. This is not generally the case,
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
-              subs={n:.01}) == '19.8100000000000'
+              subs={n: .01}) == '19.8100000000000'
     assert NS(((x - 1)*((1 - x))**1000).n()) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
@@ -171,12 +171,12 @@ def test_evalf_integer_parts():
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
-    assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
+    assert int(floor(factorial(50)/E, evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336800L
-    assert int(ceiling(factorial(50)/E,evaluate=False).evalf()) == \
+    assert int(ceiling(factorial(50)/E, evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336801L
-    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(1000)
+    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(999)
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2))).evalf(1000)) == fibonacci(1000)
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -194,8 +194,8 @@ def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum(n**2, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum(2**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
-    raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf())
-    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf())
+    raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n, 0, oo)).evalf())
+    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1), (n, 0, oo)).evalf())
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
@@ -204,14 +204,14 @@ def test_evalf_py_methods():
     raises(TypeError, lambda: float(pi+x))
 
 def test_evalf_power_subs_bugs():
-    assert (x**2).evalf(subs={x:0}) == 0
-    assert sqrt(x).evalf(subs={x:0}) == 0
-    assert (x**Rational(2,3)).evalf(subs={x:0}) == 0
-    assert (x**x).evalf(subs={x:0}) == 1
-    assert (3**x).evalf(subs={x:0}) == 1
-    assert exp(x).evalf(subs={x:0}) == 1
-    assert ((2+I)**x).evalf(subs={x:0}) == 1
-    assert (0**x).evalf(subs={x:0}) == 1
+    assert (x**2).evalf(subs={x: 0}) == 0
+    assert sqrt(x).evalf(subs={x: 0}) == 0
+    assert (x**Rational(2, 3)).evalf(subs={x: 0}) == 0
+    assert (x**x).evalf(subs={x: 0}) == 1
+    assert (3**x).evalf(subs={x: 0}) == 1
+    assert exp(x).evalf(subs={x: 0}) == 1
+    assert ((2+I)**x).evalf(subs={x: 0}) == 1
+    assert (0**x).evalf(subs={x: 0}) == 1
 
 def test_evalf_arguments():
     raises(TypeError, lambda: pi.evalf(method="garbage"))
@@ -253,9 +253,9 @@ def test_bugs():
 
 def test_subs_bugs():
     from sympy import besseli
-    assert NS('besseli(-x, y) - besseli(x, y)', subs={x:3.5, y:20.0}) == \
+    assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
            '-4.92535585957223e-10'
-    assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
+    assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
            '1.00000000000000'
 
 def test_issue_1857_2105():

@@ -49,56 +49,56 @@ from sympy.utilities.pytest import raises
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
-    assert dup_LC([2,3,4,5], ZZ) == 2
+    assert dup_LC([2, 3, 4, 5], ZZ) == 2
 
 def test_dup_TC():
     assert dup_TC([], ZZ) == 0
-    assert dup_TC([2,3,4,5], ZZ) == 5
+    assert dup_TC([2, 3, 4, 5], ZZ) == 5
 
 def test_dmp_LC():
     assert dmp_LC([[]], ZZ) == []
-    assert dmp_LC([[2,3,4],[5]], ZZ) == [2,3,4]
+    assert dmp_LC([[2, 3, 4], [5]], ZZ) == [2, 3, 4]
     assert dmp_LC([[[]]], ZZ) == [[]]
-    assert dmp_LC([[[2],[3,4]],[[5]]], ZZ) == [[2],[3,4]]
+    assert dmp_LC([[[2], [3, 4]], [[5]]], ZZ) == [[2], [3, 4]]
 
 def test_dmp_TC():
     assert dmp_TC([[]], ZZ) == []
-    assert dmp_TC([[2,3,4],[5]], ZZ) == [5]
+    assert dmp_TC([[2, 3, 4], [5]], ZZ) == [5]
     assert dmp_TC([[[]]], ZZ) == [[]]
-    assert dmp_TC([[[2],[3,4]],[[5]]], ZZ) == [[5]]
+    assert dmp_TC([[[2], [3, 4]], [[5]]], ZZ) == [[5]]
 
 def test_dmp_ground_LC():
     assert dmp_ground_LC([[]], 1, ZZ) == 0
-    assert dmp_ground_LC([[2,3,4],[5]], 1, ZZ) == 2
+    assert dmp_ground_LC([[2, 3, 4], [5]], 1, ZZ) == 2
     assert dmp_ground_LC([[[]]], 2, ZZ) == 0
-    assert dmp_ground_LC([[[2],[3,4]],[[5]]], 2, ZZ) == 2
+    assert dmp_ground_LC([[[2], [3, 4]], [[5]]], 2, ZZ) == 2
 
 def test_dmp_ground_TC():
     assert dmp_ground_TC([[]], 1, ZZ) == 0
-    assert dmp_ground_TC([[2,3,4],[5]], 1, ZZ) == 5
+    assert dmp_ground_TC([[2, 3, 4], [5]], 1, ZZ) == 5
     assert dmp_ground_TC([[[]]], 2, ZZ) == 0
-    assert dmp_ground_TC([[[2],[3,4]],[[5]]], 2, ZZ) == 5
+    assert dmp_ground_TC([[[2], [3, 4]], [[5]]], 2, ZZ) == 5
 
 def test_dmp_true_LT():
     assert dmp_true_LT([[]], 1, ZZ) == ((0, 0), 0)
     assert dmp_true_LT([[7]], 1, ZZ) == ((0, 0), 7)
 
-    assert dmp_true_LT([[1,0]], 1, ZZ) == ((0, 1), 1)
-    assert dmp_true_LT([[1],[]], 1, ZZ) == ((1, 0), 1)
-    assert dmp_true_LT([[1,0],[]], 1, ZZ) == ((1, 1), 1)
+    assert dmp_true_LT([[1, 0]], 1, ZZ) == ((0, 1), 1)
+    assert dmp_true_LT([[1], []], 1, ZZ) == ((1, 0), 1)
+    assert dmp_true_LT([[1, 0], []], 1, ZZ) == ((1, 1), 1)
 
 def test_dup_degree():
     assert dup_degree([]) == -1
     assert dup_degree([1]) == 0
-    assert dup_degree([1,0]) == 1
-    assert dup_degree([1,0,0,0,1]) == 4
+    assert dup_degree([1, 0]) == 1
+    assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 def test_dmp_degree():
     assert dmp_degree([[]], 1) == -1
     assert dmp_degree([[[]]], 2) == -1
 
     assert dmp_degree([[1]], 1) == 0
-    assert dmp_degree([[2],[1]], 1) == 1
+    assert dmp_degree([[2], [1]], 1) == 1
 
 def test_dmp_degree_in():
     assert dmp_degree_in([[[]]], 0, 2) == -1
@@ -121,7 +121,7 @@ def test_dmp_degree_in():
     raises(IndexError, lambda: dmp_degree_in([[1]], -5, 1))
 
 def test_dmp_degree_list():
-    assert dmp_degree_list([[[[ ]]]], 3) == (-1,-1,-1,-1)
+    assert dmp_degree_list([[[[ ]]]], 3) == (-1, -1, -1, -1)
     assert dmp_degree_list([[[[1]]]], 3) == ( 0, 0, 0, 0)
 
     assert dmp_degree_list(f_0, 2) == (2, 2, 2)
@@ -135,18 +135,18 @@ def test_dmp_degree_list():
 def test_dup_strip():
     assert dup_strip([]) == []
     assert dup_strip([0]) == []
-    assert dup_strip([0,0,0]) == []
+    assert dup_strip([0, 0, 0]) == []
 
     assert dup_strip([1]) == [1]
-    assert dup_strip([0,1]) == [1]
-    assert dup_strip([0,0,0,1]) == [1]
+    assert dup_strip([0, 1]) == [1]
+    assert dup_strip([0, 0, 0, 1]) == [1]
 
-    assert dup_strip([1,2,0]) == [1,2,0]
-    assert dup_strip([0,1,2,0]) == [1,2,0]
-    assert dup_strip([0,0,0,1,2,0]) == [1,2,0]
+    assert dup_strip([1, 2, 0]) == [1, 2, 0]
+    assert dup_strip([0, 1, 2, 0]) == [1, 2, 0]
+    assert dup_strip([0, 0, 0, 1, 2, 0]) == [1, 2, 0]
 
 def test_dmp_strip():
-    assert dmp_strip([0,1,0], 0) == [1,0]
+    assert dmp_strip([0, 1, 0], 0) == [1, 0]
 
     assert dmp_strip([[]], 1) == [[]]
     assert dmp_strip([[], []], 1) == [[]]
@@ -162,19 +162,19 @@ def test_dmp_strip():
 
 def test_dmp_validate():
     assert dmp_validate([]) == ([], 0)
-    assert dmp_validate([0,0,0,1,0]) == ([1,0], 0)
+    assert dmp_validate([0, 0, 0, 1, 0]) == ([1, 0], 0)
 
     assert dmp_validate([[[]]]) == ([[[]]], 2)
-    assert dmp_validate([[0],[],[0],[1],[0]]) == ([[1],[]], 1)
+    assert dmp_validate([[0], [], [0], [1], [0]]) == ([[1], []], 1)
 
-    raises(ValueError, lambda: dmp_validate([[0],0,[0],[1],[0]]))
+    raises(ValueError, lambda: dmp_validate([[0], 0, [0], [1], [0]]))
 
 def test_dup_reverse():
-    assert dup_reverse([1,2,0,3]) == [3,0,2,1]
-    assert dup_reverse([1,2,3,0]) == [3,2,1]
+    assert dup_reverse([1, 2, 0, 3]) == [3, 0, 2, 1]
+    assert dup_reverse([1, 2, 3, 0]) == [3, 2, 1]
 
 def test_dup_copy():
-    f = [ZZ(1),ZZ(0),ZZ(2)]
+    f = [ZZ(1), ZZ(0), ZZ(2)]
     g = dup_copy(f)
 
     g[0], g[2] = ZZ(7), ZZ(0)
@@ -182,7 +182,7 @@ def test_dup_copy():
     assert f != g
 
 def test_dmp_copy():
-    f = [[ZZ(1)],[ZZ(2),ZZ(0)]]
+    f = [[ZZ(1)], [ZZ(2), ZZ(0)]]
     g = dmp_copy(f, 1)
 
     g[0][0], g[1][1] = ZZ(7), ZZ(1)
@@ -190,28 +190,28 @@ def test_dmp_copy():
     assert f != g
 
 def test_dup_normal():
-    assert dup_normal([0,0,2,1,0,11,0], ZZ) == \
-        [ZZ(2),ZZ(1),ZZ(0),ZZ(11),ZZ(0)]
+    assert dup_normal([0, 0, 2, 1, 0, 11, 0], ZZ) == \
+        [ZZ(2), ZZ(1), ZZ(0), ZZ(11), ZZ(0)]
 
 def test_dmp_normal():
-    assert dmp_normal([[0],[],[0,2,1],[0],[11],[]], 1, ZZ) == \
-        [[ZZ(2),ZZ(1)],[],[ZZ(11)],[]]
+    assert dmp_normal([[0], [], [0, 2, 1], [0], [11], []], 1, ZZ) == \
+        [[ZZ(2), ZZ(1)], [], [ZZ(11)], []]
 
 def test_dup_convert():
     K0, K1 = ZZ['x'], ZZ
 
-    f = [DMP([1], ZZ),DMP([2], ZZ),DMP([], ZZ),DMP([3], ZZ)]
+    f = [DMP([1], ZZ), DMP([2], ZZ), DMP([], ZZ), DMP([3], ZZ)]
 
     assert dup_convert(f, K0, K1) == \
-        [ZZ(1),ZZ(2),ZZ(0),ZZ(3)]
+        [ZZ(1), ZZ(2), ZZ(0), ZZ(3)]
 
 def test_dmp_convert():
     K0, K1 = ZZ['x'], ZZ
 
-    f = [[DMP([1], ZZ)],[DMP([2], ZZ)],[],[DMP([3], ZZ)]]
+    f = [[DMP([1], ZZ)], [DMP([2], ZZ)], [], [DMP([3], ZZ)]]
 
     assert dmp_convert(f, 1, K0, K1) == \
-        [[ZZ(1)],[ZZ(2)],[],[ZZ(3)]]
+        [[ZZ(1)], [ZZ(2)], [], [ZZ(3)]]
 
 def test_dup_from_sympy():
     assert dup_from_sympy([S(1), S(2)], ZZ) == \
@@ -226,32 +226,32 @@ def test_dmp_from_sympy():
         [[QQ(1, 2), QQ(2, 1)]]
 
 def test_dup_nth():
-    assert dup_nth([1,2,3], 0, ZZ) == 3
-    assert dup_nth([1,2,3], 1, ZZ) == 2
-    assert dup_nth([1,2,3], 2, ZZ) == 1
+    assert dup_nth([1, 2, 3], 0, ZZ) == 3
+    assert dup_nth([1, 2, 3], 1, ZZ) == 2
+    assert dup_nth([1, 2, 3], 2, ZZ) == 1
 
-    assert dup_nth([1,2,3], 9, ZZ) == 0
+    assert dup_nth([1, 2, 3], 9, ZZ) == 0
 
-    raises(IndexError, lambda: dup_nth([3,4,5], -1, ZZ))
+    raises(IndexError, lambda: dup_nth([3, 4, 5], -1, ZZ))
 
 def test_dmp_nth():
-    assert dmp_nth([[1],[2],[3]], 0, 1, ZZ) == [3]
-    assert dmp_nth([[1],[2],[3]], 1, 1, ZZ) == [2]
-    assert dmp_nth([[1],[2],[3]], 2, 1, ZZ) == [1]
+    assert dmp_nth([[1], [2], [3]], 0, 1, ZZ) == [3]
+    assert dmp_nth([[1], [2], [3]], 1, 1, ZZ) == [2]
+    assert dmp_nth([[1], [2], [3]], 2, 1, ZZ) == [1]
 
-    assert dmp_nth([[1],[2],[3]], 9, 1, ZZ) == []
+    assert dmp_nth([[1], [2], [3]], 9, 1, ZZ) == []
 
-    raises(IndexError, lambda: dmp_nth([[3],[4],[5]], -1, 1, ZZ))
+    raises(IndexError, lambda: dmp_nth([[3], [4], [5]], -1, 1, ZZ))
 
 def test_dmp_ground_nth():
-    assert dmp_ground_nth([[1],[2],[3]], (0,0), 1, ZZ) == 3
-    assert dmp_ground_nth([[1],[2],[3]], (1,0), 1, ZZ) == 2
-    assert dmp_ground_nth([[1],[2],[3]], (2,0), 1, ZZ) == 1
+    assert dmp_ground_nth([[1], [2], [3]], (0, 0), 1, ZZ) == 3
+    assert dmp_ground_nth([[1], [2], [3]], (1, 0), 1, ZZ) == 2
+    assert dmp_ground_nth([[1], [2], [3]], (2, 0), 1, ZZ) == 1
 
-    assert dmp_ground_nth([[1],[2],[3]], (2,1), 1, ZZ) == 0
-    assert dmp_ground_nth([[1],[2],[3]], (3,0), 1, ZZ) == 0
+    assert dmp_ground_nth([[1], [2], [3]], (2, 1), 1, ZZ) == 0
+    assert dmp_ground_nth([[1], [2], [3]], (3, 0), 1, ZZ) == 0
 
-    raises(IndexError, lambda: dmp_ground_nth([[3],[4],[5]], (2,-1), 1, ZZ))
+    raises(IndexError, lambda: dmp_ground_nth([[3], [4], [5]], (2, -1), 1, ZZ))
 
 def test_dmp_zero_p():
     assert dmp_zero_p([], 0) == True
@@ -296,7 +296,7 @@ def test_dmp_ground_p():
 def test_dmp_ground():
     assert dmp_ground(ZZ(0), 2) == [[[]]]
 
-    assert dmp_ground(ZZ(7),-1) == ZZ(7)
+    assert dmp_ground(ZZ(7), -1) == ZZ(7)
     assert dmp_ground(ZZ(7), 0) == [ZZ(7)]
     assert dmp_ground(ZZ(7), 2) == [[[ZZ(7)]]]
 
@@ -339,7 +339,7 @@ def test_dup_from_to_dict():
     assert dup_to_raw_dict([], ZZ, zero=True) == {0: ZZ(0)}
     assert dup_to_dict([], ZZ, zero=True) == {(0,): ZZ(0)}
 
-    f = [3,0,0,2,0,0,0,0,8]
+    f = [3, 0, 0, 2, 0, 0, 0, 0, 8]
     g = {8: 3, 5: 2, 0: 8}
     h = {(8,): 3, (5,): 2, (0,): 8}
 
@@ -349,9 +349,9 @@ def test_dup_from_to_dict():
     assert dup_to_raw_dict(f) == g
     assert dup_to_dict(f) == h
 
-    K = ZZ['x','y']
+    K = ZZ['x', 'y']
 
-    f = [K([[3]]),K([[]]),K([[2]]),K([[]]),K([[]]),K([[8]])]
+    f = [K([[3]]), K([[]]), K([[2]]), K([[]]), K([[]]), K([[8]])]
     g = {5: K([[3]]), 3: K([[2]]), 0: K([[8]])}
     h = {(5,): K([[3]]), (3,): K([[2]]), (0,): K([[8]])}
 
@@ -366,17 +366,17 @@ def test_dmp_from_to_dict():
     assert dmp_to_dict([[]], 1) == {}
 
     assert dmp_to_dict([], 0, ZZ, zero=True) == {(0,): ZZ(0)}
-    assert dmp_to_dict([[]], 1, ZZ, zero=True) == {(0,0): ZZ(0)}
+    assert dmp_to_dict([[]], 1, ZZ, zero=True) == {(0, 0): ZZ(0)}
 
-    f = [[3],[],[],[2],[],[],[],[],[8]]
-    g = {(8,0): 3, (5,0): 2, (0,0): 8}
+    f = [[3], [], [], [2], [], [], [], [], [8]]
+    g = {(8, 0): 3, (5, 0): 2, (0, 0): 8}
 
     assert dmp_from_dict(g, 1, ZZ) == f
     assert dmp_to_dict(f, 1) == g
 
 def test_dmp_swap():
-    f = dmp_normal([[1,0,0],[],[1,0],[],[1]], 1, ZZ)
-    g = dmp_normal([[1,0,0,0,0],[1,0,0],[1]], 1, ZZ)
+    f = dmp_normal([[1, 0, 0], [], [1, 0], [], [1]], 1, ZZ)
+    g = dmp_normal([[1, 0, 0, 0, 0], [1, 0, 0], [1]], 1, ZZ)
 
     assert dmp_swap(f, 1, 1, 1, ZZ) == f
 
@@ -386,8 +386,8 @@ def test_dmp_swap():
     raises(IndexError, lambda: dmp_swap(f, -1, -7, 1, ZZ))
 
 def test_dmp_permute():
-    f = dmp_normal([[1,0,0],[],[1,0],[],[1]], 1, ZZ)
-    g = dmp_normal([[1,0,0,0,0],[1,0,0],[1]], 1, ZZ)
+    f = dmp_normal([[1, 0, 0], [], [1, 0], [], [1]], 1, ZZ)
+    g = dmp_normal([[1, 0, 0, 0, 0], [1, 0, 0], [1]], 1, ZZ)
 
     assert dmp_permute(f, [0, 1], 1, ZZ) == f
     assert dmp_permute(g, [0, 1], 1, ZZ) == g
@@ -406,32 +406,32 @@ def test_dmp_raise():
     assert dmp_raise([], 2, 0, ZZ) == [[[]]]
     assert dmp_raise([[1]], 0, 1, ZZ) == [[1]]
 
-    assert dmp_raise([[1,2,3], [], [2,3]], 2, 1, ZZ) == \
-        [[[[1]],[[2]],[[3]]], [[[]]], [[[2]],[[3]]]]
+    assert dmp_raise([[1, 2, 3], [], [2, 3]], 2, 1, ZZ) == \
+        [[[[1]], [[2]], [[3]]], [[[]]], [[[2]], [[3]]]]
 
 def test_dup_deflate():
     assert dup_deflate([], ZZ) == (1, [])
     assert dup_deflate([2], ZZ) == (1, [2])
-    assert dup_deflate([1,2,3], ZZ) == (1, [1,2,3])
-    assert dup_deflate([1,0,2,0,3], ZZ) == (2, [1,2,3])
+    assert dup_deflate([1, 2, 3], ZZ) == (1, [1, 2, 3])
+    assert dup_deflate([1, 0, 2, 0, 3], ZZ) == (2, [1, 2, 3])
 
-    assert dup_deflate(dup_from_raw_dict({7:1,1:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({7: 1, 1: 1}, ZZ), ZZ) == \
         (1, [1, 0, 0, 0, 0, 0, 1, 0])
-    assert dup_deflate(dup_from_raw_dict({7:1,0:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({7: 1, 0: 1}, ZZ), ZZ) == \
         (7, [1, 1])
-    assert dup_deflate(dup_from_raw_dict({7:1,3:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({7: 1, 3: 1}, ZZ), ZZ) == \
         (1, [1, 0, 0, 0, 1, 0, 0, 0])
 
-    assert dup_deflate(dup_from_raw_dict({7:1,4:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({7: 1, 4: 1}, ZZ), ZZ) == \
         (1, [1, 0, 0, 1, 0, 0, 0, 0])
-    assert dup_deflate(dup_from_raw_dict({8:1,4:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({8: 1, 4: 1}, ZZ), ZZ) == \
         (4, [1, 1, 0])
 
-    assert dup_deflate(dup_from_raw_dict({8:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({8: 1}, ZZ), ZZ) == \
         (8, [1, 0])
-    assert dup_deflate(dup_from_raw_dict({7:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({7: 1}, ZZ), ZZ) == \
         (7, [1, 0])
-    assert dup_deflate(dup_from_raw_dict({1:1}, ZZ), ZZ) == \
+    assert dup_deflate(dup_from_raw_dict({1: 1}, ZZ), ZZ) == \
         (1, [1, 0])
 
 def test_dmp_deflate():
@@ -446,13 +446,13 @@ def test_dup_multi_deflate():
     assert dup_multi_deflate(([2],), ZZ) == (1, ([2],))
     assert dup_multi_deflate(([], []), ZZ) == (1, ([], []))
 
-    assert dup_multi_deflate(([1,2,3],), ZZ) == (1, ([1,2,3],))
-    assert dup_multi_deflate(([1,0,2,0,3],), ZZ) == (2, ([1,2,3],))
+    assert dup_multi_deflate(([1, 2, 3],), ZZ) == (1, ([1, 2, 3],))
+    assert dup_multi_deflate(([1, 0, 2, 0, 3],), ZZ) == (2, ([1, 2, 3],))
 
-    assert dup_multi_deflate(([1,0,2,0,3], [2,0,0]), ZZ) == \
-        (2, ([1,2,3], [2,0]))
-    assert dup_multi_deflate(([1,0,2,0,3], [2,1,0]), ZZ) == \
-        (1, ([1,0,2,0,3], [2,1,0]))
+    assert dup_multi_deflate(([1, 0, 2, 0, 3], [2, 0, 0]), ZZ) == \
+        (2, ([1, 2, 3], [2, 0]))
+    assert dup_multi_deflate(([1, 0, 2, 0, 3], [2, 1, 0]), ZZ) == \
+        (1, ([1, 0, 2, 0, 3], [2, 1, 0]))
 
 def test_dmp_multi_deflate():
     assert dmp_multi_deflate(([[]],), 1, ZZ) == \
@@ -464,16 +464,16 @@ def test_dmp_multi_deflate():
         ((1, 1), ([[1]], [[]]))
     assert dmp_multi_deflate(([[1]], [[2]]), 1, ZZ) == \
         ((1, 1), ([[1]], [[2]]))
-    assert dmp_multi_deflate(([[1]], [[2,0]]), 1, ZZ) == \
+    assert dmp_multi_deflate(([[1]], [[2, 0]]), 1, ZZ) == \
         ((1, 1), ([[1]], [[2, 0]]))
 
-    assert dmp_multi_deflate(([[2,0]], [[2,0]]), 1, ZZ) == \
+    assert dmp_multi_deflate(([[2, 0]], [[2, 0]]), 1, ZZ) == \
         ((1, 1), ([[2, 0]], [[2, 0]]))
 
-    assert dmp_multi_deflate(([[2]], [[2,0,0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
-    assert dmp_multi_deflate(([[2,0,0]], [[2,0,0]]), 1, ZZ) == ((1, 2), ([[2, 0]], [[2, 0]]))
+    assert dmp_multi_deflate(([[2]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
+    assert dmp_multi_deflate(([[2, 0, 0]], [[2, 0, 0]]), 1, ZZ) == ((1, 2), ([[2, 0]], [[2, 0]]))
 
-    assert dmp_multi_deflate(([2,0,0], [1,0,4,0,1]), 0, ZZ) == \
+    assert dmp_multi_deflate(([2, 0, 0], [1, 0, 4, 0, 1]), 0, ZZ) == \
         ((2,), ([2, 0], [1, 4, 1]))
 
     f = [[1, 0, 0], [], [1, 0], [], [1]]
@@ -489,12 +489,12 @@ def test_dmp_multi_deflate():
 def test_dup_inflate():
     assert dup_inflate([], 17, ZZ) == []
 
-    assert dup_inflate([1,2,3], 1, ZZ) == [1,2,3]
-    assert dup_inflate([1,2,3], 2, ZZ) == [1,0,2,0,3]
-    assert dup_inflate([1,2,3], 3, ZZ) == [1,0,0,2,0,0,3]
-    assert dup_inflate([1,2,3], 4, ZZ) == [1,0,0,0,2,0,0,0,3]
+    assert dup_inflate([1, 2, 3], 1, ZZ) == [1, 2, 3]
+    assert dup_inflate([1, 2, 3], 2, ZZ) == [1, 0, 2, 0, 3]
+    assert dup_inflate([1, 2, 3], 3, ZZ) == [1, 0, 0, 2, 0, 0, 3]
+    assert dup_inflate([1, 2, 3], 4, ZZ) == [1, 0, 0, 0, 2, 0, 0, 0, 3]
 
-    raises(IndexError, lambda: dup_inflate([1,2,3], 0, ZZ))
+    raises(IndexError, lambda: dup_inflate([1, 2, 3], 0, ZZ))
 
 def test_dmp_inflate():
     assert dmp_inflate([1], (3,), 0, ZZ) == [1]
@@ -502,9 +502,9 @@ def test_dmp_inflate():
     assert dmp_inflate([[]], (3, 7), 1, ZZ) == [[]]
     assert dmp_inflate([[2]], (1, 2), 1, ZZ) == [[2]]
 
-    assert dmp_inflate([[2,0]], (1, 1), 1, ZZ) == [[2,0]]
-    assert dmp_inflate([[2,0]], (1, 2), 1, ZZ) == [[2,0,0]]
-    assert dmp_inflate([[2,0]], (1, 3), 1, ZZ) == [[2,0,0,0]]
+    assert dmp_inflate([[2, 0]], (1, 1), 1, ZZ) == [[2, 0]]
+    assert dmp_inflate([[2, 0]], (1, 2), 1, ZZ) == [[2, 0, 0]]
+    assert dmp_inflate([[2, 0]], (1, 3), 1, ZZ) == [[2, 0, 0, 0]]
 
     assert dmp_inflate([[1, 0, 0], [1], [1, 0]], (2, 1), 1, ZZ) == \
         [[1, 0, 0], [], [1], [], [1, 0]]
@@ -515,26 +515,26 @@ def test_dmp_exclude():
     assert dmp_exclude([[[]]], 2, ZZ) == ([], [[[]]], 2)
     assert dmp_exclude([[[7]]], 2, ZZ) == ([], [[[7]]], 2)
 
-    assert dmp_exclude([1,2,3], 0, ZZ) == ([], [1,2,3], 0)
-    assert dmp_exclude([[1],[2,3]], 1, ZZ) == ([], [[1],[2,3]], 1)
+    assert dmp_exclude([1, 2, 3], 0, ZZ) == ([], [1, 2, 3], 0)
+    assert dmp_exclude([[1], [2, 3]], 1, ZZ) == ([], [[1], [2, 3]], 1)
 
-    assert dmp_exclude([[1,2,3]], 1, ZZ) == ([0], [1,2,3], 0)
-    assert dmp_exclude([[1],[2],[3]], 1, ZZ) == ([1], [1,2,3], 0)
+    assert dmp_exclude([[1, 2, 3]], 1, ZZ) == ([0], [1, 2, 3], 0)
+    assert dmp_exclude([[1], [2], [3]], 1, ZZ) == ([1], [1, 2, 3], 0)
 
-    assert dmp_exclude([[[1,2,3]]], 2, ZZ) == ([0,1], [1,2,3], 0)
-    assert dmp_exclude([[[1]],[[2]],[[3]]], 2, ZZ) == ([1,2], [1,2,3], 0)
+    assert dmp_exclude([[[1, 2, 3]]], 2, ZZ) == ([0, 1], [1, 2, 3], 0)
+    assert dmp_exclude([[[1]], [[2]], [[3]]], 2, ZZ) == ([1, 2], [1, 2, 3], 0)
 
 def test_dmp_include():
-    assert dmp_include([1,2,3], [], 0, ZZ) == [1,2,3]
+    assert dmp_include([1, 2, 3], [], 0, ZZ) == [1, 2, 3]
 
-    assert dmp_include([1,2,3], [0], 0, ZZ) == [[1,2,3]]
-    assert dmp_include([1,2,3], [1], 0, ZZ) == [[1],[2],[3]]
+    assert dmp_include([1, 2, 3], [0], 0, ZZ) == [[1, 2, 3]]
+    assert dmp_include([1, 2, 3], [1], 0, ZZ) == [[1], [2], [3]]
 
-    assert dmp_include([1,2,3], [0,1], 0, ZZ) == [[[1,2,3]]]
-    assert dmp_include([1,2,3], [1,2], 0, ZZ) == [[[1]],[[2]],[[3]]]
+    assert dmp_include([1, 2, 3], [0, 1], 0, ZZ) == [[[1, 2, 3]]]
+    assert dmp_include([1, 2, 3], [1, 2], 0, ZZ) == [[[1]], [[2]], [[3]]]
 
 def test_dmp_inject():
-    K = ZZ['x','y']
+    K = ZZ['x', 'y']
 
     assert dmp_inject([], 0, K) == ([[[]]], 2)
     assert dmp_inject([[]], 1, K) == ([[[[]]]], 3)
@@ -542,15 +542,15 @@ def test_dmp_inject():
     assert dmp_inject([K([[1]])], 0, K) == ([[[1]]], 2)
     assert dmp_inject([[K([[1]])]], 1, K) == ([[[[1]]]], 3)
 
-    assert dmp_inject([K([[1]]),K([[2],[3,4]])], 0, K) == ([[[1]],[[2],[3,4]]], 2)
+    assert dmp_inject([K([[1]]), K([[2], [3, 4]])], 0, K) == ([[[1]], [[2], [3, 4]]], 2)
 
-    f = [K([[3],[7,0],[5,0,0]]),K([[2],[]]),K([[]]),K([[1,0,0],[11]])]
-    g = [[[3],[7,0],[5,0,0]],[[2],[]],[[]],[[1,0,0],[11]]]
+    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0, 0], [11]])]
+    g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_inject(f, 0, K) == (g, 2)
 
 def test_dmp_eject():
-    K = ZZ['x','y']
+    K = ZZ['x', 'y']
 
     assert dmp_eject([[[]]], 2, K) == []
     assert dmp_eject([[[[]]]], 3, K) == [[]]
@@ -558,35 +558,35 @@ def test_dmp_eject():
     assert dmp_eject([[[1]]], 2, K) == [K([[1]])]
     assert dmp_eject([[[[1]]]], 3, K) == [[K([[1]])]]
 
-    assert dmp_eject([[[1]],[[2],[3,4]]], 2, K) == [K([[1]]),K([[2],[3,4]])]
+    assert dmp_eject([[[1]], [[2], [3, 4]]], 2, K) == [K([[1]]), K([[2], [3, 4]])]
 
-    f = [K([[3],[7,0],[5,0,0]]),K([[2],[]]),K([[]]),K([[1,0,0],[11]])]
-    g = [[[3],[7,0],[5,0,0]],[[2],[]],[[]],[[1,0,0],[11]]]
+    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0, 0], [11]])]
+    g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_eject(g, 2, K) == f
 
 def test_dup_terms_gcd():
     assert dup_terms_gcd([], ZZ) == (0, [])
-    assert dup_terms_gcd([1,0,1], ZZ) == (0, [1,0,1])
-    assert dup_terms_gcd([1,0,1,0], ZZ) == (1, [1,0,1])
+    assert dup_terms_gcd([1, 0, 1], ZZ) == (0, [1, 0, 1])
+    assert dup_terms_gcd([1, 0, 1, 0], ZZ) == (1, [1, 0, 1])
 
 def test_dmp_terms_gcd():
-    assert dmp_terms_gcd([[]], 1, ZZ) == ((0,0), [[]])
+    assert dmp_terms_gcd([[]], 1, ZZ) == ((0, 0), [[]])
 
-    assert dmp_terms_gcd([1,0,1,0], 0, ZZ) == ((1,), [1,0,1])
-    assert dmp_terms_gcd([[1],[],[1],[]], 1, ZZ) == ((1,0), [[1],[],[1]])
+    assert dmp_terms_gcd([1, 0, 1, 0], 0, ZZ) == ((1,), [1, 0, 1])
+    assert dmp_terms_gcd([[1], [], [1], []], 1, ZZ) == ((1, 0), [[1], [], [1]])
 
-    assert dmp_terms_gcd([[1,0],[],[1]], 1, ZZ) == ((0,0), [[1,0],[],[1]])
-    assert dmp_terms_gcd([[1,0],[1,0,0],[],[]], 1, ZZ) == ((2,1), [[1],[1,0]])
+    assert dmp_terms_gcd([[1, 0], [], [1]], 1, ZZ) == ((0, 0), [[1, 0], [], [1]])
+    assert dmp_terms_gcd([[1, 0], [1, 0, 0], [], []], 1, ZZ) == ((2, 1), [[1], [1, 0]])
 
 def test_dmp_list_terms():
-    assert dmp_list_terms([[[]]], 2, ZZ) == [((0,0,0), 0)]
-    assert dmp_list_terms([[[1]]], 2, ZZ) == [((0,0,0), 1)]
+    assert dmp_list_terms([[[]]], 2, ZZ) == [((0, 0, 0), 0)]
+    assert dmp_list_terms([[[1]]], 2, ZZ) == [((0, 0, 0), 1)]
 
-    assert dmp_list_terms([1,2,4,3,5], 0, ZZ) == \
+    assert dmp_list_terms([1, 2, 4, 3, 5], 0, ZZ) == \
         [((4,), 1), ((3,), 2), ((2,), 4), ((1,), 3), ((0,), 5)]
 
-    assert dmp_list_terms([[1],[2,4],[3,5,0]], 1, ZZ) == \
+    assert dmp_list_terms([[1], [2, 4], [3, 5, 0]], 1, ZZ) == \
         [((2, 0), 1), ((1, 1), 2), ((1, 0), 4), ((0, 2), 3), ((0, 1), 5)]
 
     f = [[2, 0, 0, 0], [1, 0, 0], []]
@@ -602,33 +602,33 @@ def test_dmp_list_terms():
 def test_dmp_apply_pairs():
     h = lambda a, b: a*b
 
-    assert dmp_apply_pairs([1,2,3], [4,5,6], h, [], 0, ZZ) == [4,10,18]
+    assert dmp_apply_pairs([1, 2, 3], [4, 5, 6], h, [], 0, ZZ) == [4, 10, 18]
 
-    assert dmp_apply_pairs([2,3], [4,5,6], h, [], 0, ZZ) == [10,18]
-    assert dmp_apply_pairs([1,2,3], [5,6], h, [], 0, ZZ) == [10,18]
+    assert dmp_apply_pairs([2, 3], [4, 5, 6], h, [], 0, ZZ) == [10, 18]
+    assert dmp_apply_pairs([1, 2, 3], [5, 6], h, [], 0, ZZ) == [10, 18]
 
-    assert dmp_apply_pairs([[1,2],[3]], [[4,5],[6]], h, [], 1, ZZ) == [[4,10],[18]]
+    assert dmp_apply_pairs([[1, 2], [3]], [[4, 5], [6]], h, [], 1, ZZ) == [[4, 10], [18]]
 
-    assert dmp_apply_pairs([[1,2],[3]], [[4],[5,6]], h, [], 1, ZZ) == [[8],[18]]
-    assert dmp_apply_pairs([[1],[2,3]], [[4,5],[6]], h, [], 1, ZZ) == [[5],[18]]
+    assert dmp_apply_pairs([[1, 2], [3]], [[4], [5, 6]], h, [], 1, ZZ) == [[8], [18]]
+    assert dmp_apply_pairs([[1], [2, 3]], [[4, 5], [6]], h, [], 1, ZZ) == [[5], [18]]
 
 def test_dup_slice():
     f = [1, 2, 3, 4]
 
     assert dup_slice(f, 0, 0, ZZ) == []
     assert dup_slice(f, 0, 1, ZZ) == [4]
-    assert dup_slice(f, 0, 2, ZZ) == [3,4]
-    assert dup_slice(f, 0, 3, ZZ) == [2,3,4]
-    assert dup_slice(f, 0, 4, ZZ) == [1,2,3,4]
+    assert dup_slice(f, 0, 2, ZZ) == [3, 4]
+    assert dup_slice(f, 0, 3, ZZ) == [2, 3, 4]
+    assert dup_slice(f, 0, 4, ZZ) == [1, 2, 3, 4]
 
     assert dup_slice(f, 0, 4, ZZ) == f
     assert dup_slice(f, 0, 9, ZZ) == f
 
     assert dup_slice(f, 1, 0, ZZ) == []
     assert dup_slice(f, 1, 1, ZZ) == []
-    assert dup_slice(f, 1, 2, ZZ) == [3,0]
-    assert dup_slice(f, 1, 3, ZZ) == [2,3,0]
-    assert dup_slice(f, 1, 4, ZZ) == [1,2,3,0]
+    assert dup_slice(f, 1, 2, ZZ) == [3, 0]
+    assert dup_slice(f, 1, 3, ZZ) == [2, 3, 0]
+    assert dup_slice(f, 1, 4, ZZ) == [1, 2, 3, 0]
 
 def test_dup_random():
     f = dup_random(0, -10, 10, ZZ)

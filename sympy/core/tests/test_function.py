@@ -21,10 +21,10 @@ def test_f_expand_complex():
 
 def test_bug1():
     e = sqrt(-log(w))
-    assert e.subs(log(w),-x) == sqrt(x)
+    assert e.subs(log(w), -x) == sqrt(x)
 
     e = sqrt(-5*log(w))
-    assert e.subs(log(w),-x) == sqrt(5*x)
+    assert e.subs(log(w), -x) == sqrt(5*x)
 
 def test_general_function():
     nu = Function('nu')
@@ -126,8 +126,8 @@ def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda((x, y), x+y)(x))
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) != Lambda((x,y), 2*x)
-    assert (Lambda(x, 2*x) == Lambda((x,y), 2*x)) is False
+    assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
+    assert (Lambda(x, 2*x) == Lambda((x, y), 2*x)) is False
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
     assert (Lambda((x, y), 2*x) != Lambda((x, y), 2*x)) is False
     assert Lambda(x, 2*x) != 2*x
@@ -180,7 +180,7 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
-    assert Derivative(f(x),x).subs(x,g(x)) == Subs(Derivative(f(x),x), (x,), (g(x),))
+    assert Derivative(f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
@@ -206,8 +206,8 @@ def test_function_comparable():
     assert sin(E).is_comparable == True
     assert cos(E).is_comparable == True
 
-    assert sin(Rational(1,3)).is_comparable == True
-    assert cos(Rational(1,3)).is_comparable == True
+    assert sin(Rational(1, 3)).is_comparable == True
+    assert cos(Rational(1, 3)).is_comparable == True
 
 @XFAIL
 def test_function_comparable_infinities():
@@ -254,10 +254,10 @@ def test_suppressed_evaluation():
     assert a.args == (0,)
 
 def test_function_evalf():
-    def eq(a,b,eps):
+    def eq(a, b, eps):
         return abs(a-b) < eps
     assert eq(sin(1).evalf(15), Float("0.841470984807897"), 1e-13)
-    assert eq(sin(2).evalf(25), Float("0.9092974268256816953960199",25), 1e-23)
+    assert eq(sin(2).evalf(25), Float("0.9092974268256816953960199", 25), 1e-23)
     assert eq(sin(1+I).evalf(15), Float("1.29845758141598") + Float("0.634963914784736")*I, 1e-13)
     assert eq(exp(1+I).evalf(15), Float("1.46869393991588") + Float("2.28735528717884239")*I, 1e-13)
     assert eq(exp(-0.5+1.5*I).evalf(15), Float("0.0429042815937374") + Float("0.605011292285002")*I, 1e-13)
@@ -268,8 +268,8 @@ def test_extensibility_eval():
     class MyFunc(Function):
         @classmethod
         def eval(cls, *args):
-            return (0,0,0)
-    assert MyFunc(0) == (0,0,0)
+            return (0, 0, 0)
+    assert MyFunc(0) == (0, 0, 0)
 
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
@@ -281,18 +281,18 @@ def test_function_non_commutative():
 def test_function__eval_nseries():
     n = Symbol('n')
 
-    assert sin(x)._eval_nseries(x,2,None) == x + O(x**2)
-    assert sin(x+1)._eval_nseries(x,2,None) == x*cos(1) + sin(1) + O(x**2)
-    assert sin(pi*(1-x))._eval_nseries(x,2,None) == pi*x + O(x**2)
-    assert acos(1-x**2)._eval_nseries(x,2,None) == sqrt(2)*x + O(x**2)
-    assert polygamma(n,x+1)._eval_nseries(x,2,None) == \
-                   polygamma(n,1) + polygamma(n+1,1)*x + O(x**2)
-    raises(PoleError, lambda: sin(1/x)._eval_nseries(x,2,None))
-    raises(PoleError, lambda: acos(1-x)._eval_nseries(x,2,None))
-    raises(PoleError, lambda: acos(1+x)._eval_nseries(x,2,None))
-    assert loggamma(1/x)._eval_nseries(x,0,None) \
+    assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
+    assert sin(x+1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1-x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
+    assert acos(1-x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
+    assert polygamma(n, x+1)._eval_nseries(x, 2, None) == \
+                   polygamma(n, 1) + polygamma(n+1, 1)*x + O(x**2)
+    raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
+    raises(PoleError, lambda: acos(1-x)._eval_nseries(x, 2, None))
+    raises(PoleError, lambda: acos(1+x)._eval_nseries(x, 2, None))
+    assert loggamma(1/x)._eval_nseries(x, 0, None) \
            == log(x)/2 - log(x)/x - 1/x + O(1, x)
-    assert loggamma(log(1/x)).nseries(x,n=1,logx=y) == loggamma(-y)
+    assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
 def test_doit():
     n = Symbol('n', integer=True)
@@ -307,8 +307,8 @@ def test_evalf_default():
     assert type(re(sin(I + 1.0))) == Float
     assert type(im(sin(I + 1.0))) == Float
     assert type(sin(4)) == sin
-    assert type(polygamma(2.0,4.0)) == Float
-    assert type(sin(Rational(1,4))) == sin
+    assert type(polygamma(2.0, 4.0)) == Float
+    assert type(sin(Rational(1, 4))) == sin
 
 def test_issue2300():
     args = [x, y, S(2), S.Half]
@@ -373,13 +373,13 @@ def test_diff_wrt_value():
     assert Expr()._diff_wrt == False
     assert x._diff_wrt == True
     assert f(x)._diff_wrt == True
-    assert Derivative(f(x),x)._diff_wrt == True
-    assert Derivative(x**2,x)._diff_wrt == False
+    assert Derivative(f(x), x)._diff_wrt == True
+    assert Derivative(x**2, x)._diff_wrt == False
 
 def test_diff_wrt():
     fx = f(x)
-    dfx = diff(f(x),x)
-    ddfx = diff(f(x),x,x)
+    dfx = diff(f(x), x)
+    ddfx = diff(f(x), x, x)
 
     assert diff(sin(fx)+fx**2, fx) == cos(fx)+2*fx
     assert diff(sin(dfx)+dfx**2, dfx) == cos(dfx)+2*dfx
@@ -401,29 +401,29 @@ def test_diff_wrt():
 
     # Chain rule cases
     assert f(g(x)).diff(x) ==\
-        Subs(Derivative(f(x),x), (x,), (g(x),))*Derivative(g(x),x)
-    assert diff(f(g(x),h(x)),x) ==\
-        Subs(Derivative(f(y,h(x)),y), (y,), (g(x),))*Derivative(g(x), x) +\
-        Subs(Derivative(f(g(x),y),y), (y,), (h(x),))*Derivative(h(x), x)
-    assert f(sin(x)).diff(x) == Subs(Derivative(f(x),x), (x,), (sin(x),))*cos(x)
+        Subs(Derivative(f(x), x), (x,), (g(x),))*Derivative(g(x), x)
+    assert diff(f(g(x), h(x)), x) ==\
+        Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) +\
+        Subs(Derivative(f(g(x), y), y), (y,), (h(x),))*Derivative(h(x), x)
+    assert f(sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)),g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
 def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
 
 def test_diff_wrt_not_allowed():
-    raises(ValueError, lambda: diff(sin(x**2),x**2))
-    raises(ValueError, lambda: diff(exp(x*y),x*y))
-    raises(ValueError, lambda: diff(1+x,1+x))
+    raises(ValueError, lambda: diff(sin(x**2), x**2))
+    raises(ValueError, lambda: diff(exp(x*y), x*y))
+    raises(ValueError, lambda: diff(1+x, 1+x))
 
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
     phi = f(x, t)
 
-    L = -(diff(phi,t)**2 - diff(phi,x)**2 - m**2*phi**2)/2
-    eqna = Eq(diff(L,phi) - diff(L,diff(phi,x),x) - diff(L,diff(phi,t),t), 0)
-    eqnb = Eq(diff(phi,t,t) - diff(phi,x,x) + m**2*phi, 0)
+    L = -(diff(phi, t)**2 - diff(phi, x)**2 - m**2*phi**2)/2
+    eqna = Eq(diff(L, phi) - diff(L, diff(phi, x), x) - diff(L, diff(phi, t), t), 0)
+    eqnb = Eq(diff(phi, t, t) - diff(phi, x, x) + m**2*phi, 0)
     assert eqna == eqnb
 
 def test_sho_lagrangian():
@@ -431,14 +431,14 @@ def test_sho_lagrangian():
     k = Symbol('k')
     x = f(t)
 
-    L = m*diff(x,t)**2/2 - k*x**2/2
-    eqna = Eq(diff(L,x), diff(L,diff(x,t),t))
-    eqnb = Eq(-k*x, m*diff(x,t,t))
+    L = m*diff(x, t)**2/2 - k*x**2/2
+    eqna = Eq(diff(L, x), diff(L, diff(x, t), t))
+    eqnb = Eq(-k*x, m*diff(x, t, t))
     assert eqna == eqnb
 
-    assert diff(L,x,t) == diff(L,t,x)
-    assert diff(L,diff(x,t),t) == m*diff(x,t,2)
-    assert diff(L,t,diff(x,t)) == -k*x + m*diff(x,t,2)
+    assert diff(L, x, t) == diff(L, t, x)
+    assert diff(L, diff(x, t), t) == m*diff(x, t, 2)
+    assert diff(L, t, diff(x, t)) == -k*x + m*diff(x, t, 2)
 
 def test_straight_line():
     F = f(x)
@@ -450,14 +450,14 @@ def test_straight_line():
 def test_sort_variable():
     vsort = Derivative._sort_variables
 
-    assert vsort((x,y,z)) == [x, y, z]
-    assert vsort((h(x),g(x),f(x))) == [f(x), g(x), h(x)]
-    assert vsort((z,y,x,h(x),g(x),f(x))) == [x, y, z, f(x), g(x), h(x)]
-    assert vsort((x,f(x),y,f(y))) == [x, f(x), y, f(y)]
-    assert vsort((y,x,g(x),f(x),z,h(x),y,x)) ==\
+    assert vsort((x, y, z)) == [x, y, z]
+    assert vsort((h(x), g(x), f(x))) == [f(x), g(x), h(x)]
+    assert vsort((z, y, x, h(x), g(x), f(x))) == [x, y, z, f(x), g(x), h(x)]
+    assert vsort((x, f(x), y, f(y))) == [x, f(x), y, f(y)]
+    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) ==\
         [x, y, f(x), g(x), z, h(x), x, y]
-    assert vsort((z,y,f(x),x,f(x),g(x))) == [y, z, f(x), x, f(x), g(x)]
-    assert vsort((z,y,f(x),x,f(x),g(x),z,z,y,x)) ==\
+    assert vsort((z, y, f(x), x, f(x), g(x))) == [y, z, f(x), x, f(x), g(x)]
+    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) ==\
         [y, z, f(x), x, f(x), g(x), x, y, z, z]
 
 def test_unhandled():
@@ -468,9 +468,9 @@ def test_unhandled():
             else:
                 return None
 
-    expr = MyExpr(x,y,z)
-    assert diff(expr,x,y,f(x),z) == Derivative(expr,f(x),z)
-    assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
+    expr = MyExpr(x, y, z)
+    assert diff(expr, x, y, f(x), z) == Derivative(expr, f(x), z)
+    assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 @XFAIL
 def test_issue_1612():

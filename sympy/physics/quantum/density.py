@@ -166,11 +166,11 @@ class Density(HermitianOperator):
                                  self._generate_outer_prod(arg[0], arg[1]))
             else:
                 terms.append(prob *
-                             self._generate_outer_prod(state,state))
+                             self._generate_outer_prod(state, state))
 
         return Add(*terms)
 
-    def _generate_outer_prod(self,arg1,arg2):
+    def _generate_outer_prod(self, arg1, arg2):
         c_part1, nc_part1 = arg1.args_cnc()
         c_part2, nc_part2 = arg2.args_cnc()
 
@@ -200,7 +200,7 @@ class Density(HermitianOperator):
         return prettyForm(u"\u03C1")
 
     def _eval_trace(self, **kwargs):
-        indices = kwargs.get('indices',[])
+        indices = kwargs.get('indices', [])
         return Tr(self.doit(), indices).doit()
 
     def entropy(self):
@@ -308,5 +308,5 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the"
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 = state1**Rational(1,2)
+    sqrt_state1 = state1**Rational(1, 2)
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()

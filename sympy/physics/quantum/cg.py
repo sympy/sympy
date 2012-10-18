@@ -64,7 +64,7 @@ class Wigner3j(Expr):
     is_commutative = True
 
     def __new__(cls, j1, m1, j2, m2, j3, m3):
-        args = map(sympify, (j1,m1,j2,m2,j3,m3))
+        args = map(sympify, (j1, m1, j2, m2, j3, m3))
         return Expr.__new__(cls, *args)
 
     @property
@@ -187,7 +187,7 @@ class CG(Wigner3j):
     def doit(self, **hints):
         if self.is_symbolic:
             raise ValueError("Coefficients must be numerical")
-        return clebsch_gordan(self.j1,self.j2, self.j3, self.m1, self.m2, self.m3)
+        return clebsch_gordan(self.j1, self.j2, self.j3, self.m1, self.m2, self.m3)
 
     def _pretty(self, printer, *args):
         bot = printer._print_seq((self.j1, self.m1, self.j2, self.m2), delimiter=',')
@@ -221,7 +221,7 @@ class Wigner6j(Expr):
 
     """
     def __new__(cls, j1, j2, j12, j3, j, j23):
-        args = map(sympify, (j1,j2,j12,j3,j,j23))
+        args = map(sympify, (j1, j2, j12, j3, j, j23))
         return Expr.__new__(cls, *args)
 
     @property
@@ -309,7 +309,7 @@ class Wigner9j(Expr):
 
     """
     def __new__(cls, j1, j2, j12, j3, j4, j34, j13, j24, j):
-        args = map(sympify, (j1,j2, j12, j3, j4, j34, j13, j24, j))
+        args = map(sympify, (j1, j2, j12, j3, j4, j34, j13, j24, j))
         return Expr.__new__(cls, *args)
 
     @property
@@ -486,65 +486,65 @@ def _cg_simp_add(e):
 
 def _check_varsh_871_1(term_list):
     # Sum( CG(a,alpha,b,0,a,alpha), (alpha, -a, a)) == KroneckerDelta(b,0)
-    a,alpha,b,lt = map(Wild,('a','alpha','b','lt'))
-    expr = lt*CG(a,alpha,b,0,a,alpha)
-    simp = (2*a+1)*KroneckerDelta(b,0)
+    a, alpha, b, lt = map(Wild, ('a', 'alpha', 'b', 'lt'))
+    expr = lt*CG(a, alpha, b, 0, a, alpha)
+    simp = (2*a+1)*KroneckerDelta(b, 0)
     sign = lt/abs(lt)
     build_expr = 2*a+1
     index_expr = a+alpha
-    return _check_cg_simp(expr, simp, sign, lt, term_list, (a,alpha,b,lt), (a,b), build_expr, index_expr)
+    return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, lt), (a, b), build_expr, index_expr)
 
 
 def _check_varsh_871_2(term_list):
     # Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a))
-    a,alpha,c,lt = map(Wild,('a','alpha','c','lt'))
-    expr = lt*CG(a,alpha,a,-alpha,c,0)
-    simp = sqrt(2*a+1)*KroneckerDelta(c,0)
+    a, alpha, c, lt = map(Wild, ('a', 'alpha', 'c', 'lt'))
+    expr = lt*CG(a, alpha, a, -alpha, c, 0)
+    simp = sqrt(2*a+1)*KroneckerDelta(c, 0)
     sign = (-1)**(a-alpha)*lt/abs(lt)
     build_expr = 2*a+1
     index_expr = a+alpha
-    return _check_cg_simp(expr, simp, sign, lt, term_list, (a,alpha,c,lt), (a,c), build_expr, index_expr)
+    return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, c, lt), (a, c), build_expr, index_expr)
 
 def _check_varsh_872_9(term_list):
     # Sum( CG(a,alpha,b,beta,c,gamma)*CG(a,alpha',b,beta',c,gamma), (gamma, -c, c), (c, abs(a-b), a+b))
-    a,alpha,alphap,b,beta,betap,c,gamma,lt = map(Wild, ('a','alpha','alphap','b','beta','betap','c','gamma','lt'))
+    a, alpha, alphap, b, beta, betap, c, gamma, lt = map(Wild, ('a', 'alpha', 'alphap', 'b', 'beta', 'betap', 'c', 'gamma', 'lt'))
     # Case alpha==alphap, beta==betap
 
     # For numerical alpha,beta
-    expr = lt*CG(a,alpha,b,beta,c,gamma)**2
+    expr = lt*CG(a, alpha, b, beta, c, gamma)**2
     simp = 1
     sign = lt/abs(lt)
     x = abs(a-b)
     y = abs(alpha+beta)
-    build_expr = a+b+1-Piecewise((x,x>y),(0,Eq(x,y)),(y,y>x))
+    build_expr = a+b+1-Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
     index_expr = a+b-c
-    term_list, other1 = _check_cg_simp(expr, simp, sign, lt, term_list, (a,alpha,b,beta,c,gamma,lt), (a,alpha,b,beta), build_expr, index_expr)
+    term_list, other1 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
 
     # For symbolic alpha,beta
     x = abs(a-b)
     y = a+b
     build_expr = (y+1-x)*(x+y+1)
     index_expr = (c-x)*(x+c)+c+gamma
-    term_list, other2 = _check_cg_simp(expr, simp, sign, lt, term_list, (a,alpha,b,beta,c,gamma,lt), (a,alpha,b,beta), build_expr, index_expr)
+    term_list, other2 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
 
     # Case alpha!=alphap or beta!=betap
     # Note: this only works with leading term of 1, pattern matching is unable to match when there is a Wild leading term
     # For numerical alpha,alphap,beta,betap
-    expr = CG(a,alpha,b,beta,c,gamma)*CG(a,alphap,b,betap,c,gamma)
-    simp = KroneckerDelta(alpha,alphap)*KroneckerDelta(beta,betap)
+    expr = CG(a, alpha, b, beta, c, gamma)*CG(a, alphap, b, betap, c, gamma)
+    simp = KroneckerDelta(alpha, alphap)*KroneckerDelta(beta, betap)
     sign = sympify(1)
     x = abs(a-b)
     y = abs(alpha+beta)
-    build_expr = a+b+1-Piecewise((x,x>y),(0,Eq(x,y)),(y,y>x))
+    build_expr = a+b+1-Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
     index_expr = a+b-c
-    term_list, other3 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a,alpha,alphap,b,beta,betap,c,gamma), (a,alpha,alphap,b,beta,betap), build_expr, index_expr)
+    term_list, other3 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     # For symbolic alpha,alphap,beta,betap
     x = abs(a-b)
     y = a+b
     build_expr = (y+1-x)*(x+y+1)
     index_expr = (c-x)*(x+c)+c+gamma
-    term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a,alpha,alphap,b,beta,betap,c,gamma), (a,alpha,alphap,b,beta,betap), build_expr, index_expr)
+    term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     return term_list, other1+other2+other4
 
@@ -599,15 +599,15 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
         if not sympify(build_index_expr.subs(sub_1)).is_number:
             i += 1
             continue
-        sub_dep = [(x,sub_1[x]) for x in dep_variables]
+        sub_dep = [(x, sub_1[x]) for x in dep_variables]
         cg_index = [None] * build_index_expr.subs(sub_1)
-        for j in range(i,len(term_list)):
-            sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables)-len(dep_variables), sign=(sign.subs(sub_1),sign.subs(sub_dep)))
+        for j in range(i, len(term_list)):
+            sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables)-len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
             if sub_2 is None:
                 continue
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
                 continue
-            cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt,1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
+            cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
         if all(i is not None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
             indicies = [ term[0] for term in cg_index]
@@ -646,18 +646,18 @@ def _check_varsh_sum_871_1(e):
     a = Wild('a')
     alpha = symbols('alpha')
     b = Wild('b')
-    match = e.match(Sum(CG(a,alpha,b,0,a,alpha),(alpha,-a,a)))
+    match = e.match(Sum(CG(a, alpha, b, 0, a, alpha), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return ((2*a+1)*KroneckerDelta(b,0)).subs(match)
+        return ((2*a+1)*KroneckerDelta(b, 0)).subs(match)
     return e
 
 def _check_varsh_sum_871_2(e):
     a = Wild('a')
     alpha = symbols('alpha')
     c = Wild('c')
-    match = e.match(Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a)))
+    match = e.match(Sum((-1)**(a-alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return (sqrt(2*a+1)*KroneckerDelta(c,0)).subs(match)
+        return (sqrt(2*a+1)*KroneckerDelta(c, 0)).subs(match)
     return e
 
 def _check_varsh_sum_872_4(e):
@@ -669,10 +669,10 @@ def _check_varsh_sum_872_4(e):
     cp = Wild('cp')
     gamma = Wild('gamma')
     gammap = Wild('gammap')
-    match1 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gammap),(alpha,-a,a),(beta,-b,b)))
+    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
     if match1 is not None and len(match1) == 8:
-        return (KroneckerDelta(c,cp)*KroneckerDelta(gamma,gammap)).subs(match1)
-    match2 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)**2,(alpha,-a,a),(beta,-b,b)))
+        return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
+    match2 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
     if match2 is not None and len(match2) == 6:
         return 1
     return e

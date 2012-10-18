@@ -148,7 +148,7 @@ minpoly = minimal_polynomial
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1,-1], n, repetition=True):
+    for coeffs in variations([1, -1], n, repetition=True):
         yield list(coeffs)
 
 def primitive_element(extension, x=None, **args):

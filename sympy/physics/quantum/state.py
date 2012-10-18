@@ -712,7 +712,7 @@ class Wavefunction(Function):
         ct = 0
         #If the passed value is outside the specified bounds, return 0
         for v in var:
-            lower,upper = self.limits[v]
+            lower, upper = self.limits[v]
 
             #Do the comparison to limits only if the passed symbol is actually
             #a symbol present in the limits;

@@ -733,7 +733,7 @@ class Differential(Expr):
             for i in range(k):
                 t = v[i](f(*v[:i]+v[i+1:]))
                 ret += (-1)**i*t
-                for j in range(i+1,k):
+                for j in range(i+1, k):
                     c = Commutator(v[i], v[j])
                     if c: # TODO this is ugly - the Commutator can be Zero and
                           # this causes the next line to fail
@@ -1106,7 +1106,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
         raise ValueError('The supplied field was not a vector field.')
     def iter_vfield(scalar_field, i):
         """Return `vector_field` called `i` times on `scalar_field`."""
-        return reduce(lambda s, v: v(s), [vector_field,]*i, scalar_field)
+        return reduce(lambda s, v: v(s), [vector_field, ]*i, scalar_field)
     def taylor_terms_per_coord(coord_function):
         """Return the series for one of the coordinates."""
         return [param**i*iter_vfield(coord_function, i)(start_point)/factorial(i)
@@ -1193,7 +1193,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     coord_functions = coord_sys.coord_functions()
     equations = [simplify(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [simplify(cf(arbitrary_p).subs(param,0) - cf(start_point))
+    init_cond = [simplify(cf(arbitrary_p).subs(param, 0) - cf(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 
@@ -1399,7 +1399,7 @@ def metric_to_Christoffel_1st(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a)) for d in coord_sys.base_vectors()]
     indices = range(coord_sys.dim)
-    christoffel = [[[(deriv_matrices[k][i,j] + deriv_matrices[j][i,k] - deriv_matrices[i][j,k])/2
+    christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
                      for j in indices]
                      for i in indices]
@@ -1438,7 +1438,7 @@ def metric_to_Christoffel_2nd(expr):
     dums = coord_sys._dummies
     matrix = matrix.subs(zip(s_fields, dums)).inv().subs(zip(dums, s_fields))
     # XXX end of workaround
-    christoffel = [[[Add(*[matrix[i,l]*ch_1st[l][j][k] for l in indices])
+    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
                      for k in indices]
                      for j in indices]
                      for i in indices]

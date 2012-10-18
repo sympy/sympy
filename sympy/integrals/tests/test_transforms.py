@@ -72,7 +72,7 @@ def test_mellin_transform_fail():
             (-re(a), -re(a)/2), True)
 
     # Test exponent 1:
-    assert MT(expr.subs({b: -bpos, a:1}), x, s) == \
+    assert MT(expr.subs({b: -bpos, a: 1}), x, s) == \
            (-bpos**(2*s + 1)*gamma(s)*gamma(-s - S(1)/2)/(2*sqrt(pi)),
             (-1, -S(1)/2), True)
 
@@ -370,7 +370,7 @@ def test_inverse_mellin_transform():
     assert mysimp(IMT(pi*cot(pi*s)/s, s, x, (0, 1))) in [
         log(1/x - 1)*Heaviside(1-x) + log(1 - 1/x)*Heaviside(x-1),
         -log(x)*Heaviside(-x + 1) + log(1 - 1/x)*Heaviside(x - 1) + log(-x +
-        1)*Heaviside(-x + 1),]
+        1)*Heaviside(-x + 1), ]
 
     # 8.4.14
     assert IMT(-gamma(s + S(1)/2)/(sqrt(pi)*s), s, x, (-S(1)/2, 0)) == \

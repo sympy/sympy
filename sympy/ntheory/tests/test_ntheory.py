@@ -230,28 +230,28 @@ def multiproduct(seq=(), start=1):
 
 def test_factorint():
     assert primefactors(123456) == [2, 3, 643]
-    assert factorint(0) == {0:1}
+    assert factorint(0) == {0: 1}
     assert factorint(1) == {}
-    assert factorint(-1) == {-1:1}
-    assert factorint(-2) == {-1:1, 2:1}
-    assert factorint(-16) == {-1:1, 2:4}
-    assert factorint(2) == {2:1}
-    assert factorint(126) == {2:1, 3:2, 7:1}
-    assert factorint(123456) == {2:6, 3:1, 643:1}
-    assert factorint(5951757) == {3:1, 7:1, 29:2, 337:1}
-    assert factorint(64015937) == {7993:1, 8009:1}
-    assert factorint(2**(2**6) + 1) == {274177:1, 67280421310721:1}
+    assert factorint(-1) == {-1: 1}
+    assert factorint(-2) == {-1: 1, 2: 1}
+    assert factorint(-16) == {-1: 1, 2: 4}
+    assert factorint(2) == {2: 1}
+    assert factorint(126) == {2: 1, 3: 2, 7: 1}
+    assert factorint(123456) == {2: 6, 3: 1, 643: 1}
+    assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
+    assert factorint(64015937) == {7993: 1, 8009: 1}
+    assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
     assert multiproduct(factorint(fac(200))) == fac(200)
     for b, e in factorint(fac(150)).items():
         assert e == fac_multiplicity(150, b)
-    assert factorint(103005006059**7) == {103005006059:7}
-    assert factorint(31337**191) == {31337:191}
+    assert factorint(103005006059**7) == {103005006059: 7}
+    assert factorint(31337**191) == {31337: 191}
     assert factorint(2**1000 * 3**500 * 257**127 * 383**60) == \
-        {2:1000, 3:500, 257:127, 383:60}
+        {2: 1000, 3: 500, 257: 127, 383: 60}
     assert len(factorint(fac(10000))) == 1229
     assert factorint(12932983746293756928584532764589230) == \
         {2: 1, 5: 1, 73: 1, 727719592270351: 1, 63564265087747: 1, 383: 1}
-    assert factorint(727719592270351) == {727719592270351:1}
+    assert factorint(727719592270351) == {727719592270351: 1}
     assert factorint(2**64+1, use_trial=False) == factorint(2**64+1)
     for n in range(60000):
         assert multiproduct(factorint(n)) == n
@@ -545,7 +545,7 @@ def test_modular():
     assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
     assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
     assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
+    assert solve_congruence(*zip((1, 1, 2), (3, 2, 4))) is None
     raises(ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
 
 def test_search():

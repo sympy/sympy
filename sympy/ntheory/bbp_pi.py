@@ -53,7 +53,7 @@ def _series(j, n):
     D = _dn(n)
     for k in range(0, n+1):
         r = 8*k+j
-        s = (s + (pow(16,n-k,r)<<4*(D))//r)
+        s = (s + (pow(16, n-k, r)<<4*(D))//r)
 
     # Right sum. should iterate to infinty, but now just iterates to the point where
     # one iterations change is beyond the resolution of the data type used
@@ -83,8 +83,8 @@ def pi_hex_digits(n):
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
-    a= [4,2,1,1]
-    j = [1,4,5,6]
+    a= [4, 2, 1, 1]
+    j = [1, 4, 5, 6]
 
     #formulae
     x = + (a[0]*_series(j[0], n)

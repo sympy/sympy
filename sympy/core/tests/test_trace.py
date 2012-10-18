@@ -26,7 +26,7 @@ def test_trace_new():
     assert isinstance(Tr(pow(A, a)), Tr)
 
     #Matrix
-    M = Matrix([[1,1], [2,2]])
+    M = Matrix([[1, 1], [2, 2]])
     assert Tr(M) == 3
 
     ##test indices in different forms
@@ -56,8 +56,8 @@ def test_trace_new():
     t = Tr((A+B), [2])
     assert t.args[0].args[1] == Tuple(2) and t.args[1].args[1] == Tuple(2)
 
-    t = Tr(a*A, [2,3])
-    assert t.args[1].args[1] == Tuple(2,3)
+    t = Tr(a*A, [2, 3])
+    assert t.args[1].args[1] == Tuple(2, 3)
 
     #class with trace method defined
     #to simulate numpy objects

@@ -74,7 +74,7 @@ def _value_check(condition, message):
         raise ValueError(message)
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
 
@@ -1253,7 +1253,7 @@ class StudentTPSpace(SingleContinuousPSpace):
     def __new__(cls, name, nu):
         nu = sympify(nu)
         x = Symbol(name)
-        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2,nu/2))*(1+x**2/nu)**(-(nu+1)/2)
+        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1+x**2/nu)**(-(nu+1)/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
@@ -1321,7 +1321,7 @@ class TriangularPSpace(SingleContinuousPSpace):
         x = Symbol(name)
         pdf = Piecewise(
                 (2*(x-a)/((b-a)*(c-a)), And(a<=x, x<c)),
-                (2/(b-a), Eq(x,c)),
+                (2/(b-a), Eq(x, c)),
                 (2*(b-x)/((b-a)*(b-c)), And(c<x, x<=b)),
                 (S.Zero, True))
 
@@ -1488,9 +1488,9 @@ class UniformSumPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         k = Dummy("k")
-        pdf =1/factorial(n-1)*Sum((-1)**k*binomial(n,k)*(x-k)**(n-1), (k,0,floor(x)))
+        pdf =1/factorial(n-1)*Sum((-1)**k*binomial(n, k)*(x-k)**(n-1), (k, 0, floor(x)))
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0,n))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, n))
         return obj
 
 def UniformSum(name, n):

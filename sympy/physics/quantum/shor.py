@@ -93,13 +93,13 @@ def shor(N):
     These values are returned.
     """
     a = random.randrange(N-2)+2
-    if igcd(N,a) != 1:
+    if igcd(N, a) != 1:
         print "got lucky with rand"
-        return igcd(N,a)
-    print "a= ",a
-    print "N= ",N
-    r = period_find(a,N)
-    print "r= ",r
+        return igcd(N, a)
+    print "a= ", a
+    print "N= ", N
+    r = period_find(a, N)
+    print "r= ", r
     if r%2 == 1:
         print "r is not even, begin again"
         shor(N)
@@ -126,7 +126,7 @@ def arr(num, t):
     return binary_array
 
 def getr(x, y, N):
-    fraction = continued_fraction(x,y)
+    fraction = continued_fraction(x, y)
     # Now convert into r
     total = ratioize(fraction, N)
     return total
@@ -153,7 +153,7 @@ def continued_fraction(x, y):
     y = int(y)
     temp = x//y
     if temp*y == x:
-        return [temp,]
+        return [temp, ]
 
     list = continued_fraction(y, x-temp*y)
     list.insert(0, temp)
@@ -170,7 +170,7 @@ def period_find(a, N):
     """
     epsilon = .5
     #picks out t's such that maintains accuracy within epsilon
-    t = int(2*math.ceil(log(N,2)))
+    t = int(2*math.ceil(log(N, 2)))
     # make the first half of register be 0's |000...000>
     start = [0 for x in range(t)]
     #Put second half into superposition of states so we have |1>x|0> + |2>x|0> + ... |k>x>|0> + ... + |2**n-1>x|0>
@@ -182,7 +182,7 @@ def period_find(a, N):
     circuit = (factor*qubits).expand()
     #Controlled second half of register so that we have:
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
-    circuit = CMod(t,a,N)*circuit
+    circuit = CMod(t, a, N)*circuit
     #will measure first half of register giving one of the a**k%N's
     circuit = qapply(circuit)
     print "controlled Mod'd"

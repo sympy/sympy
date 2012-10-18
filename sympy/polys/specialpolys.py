@@ -257,9 +257,9 @@ def dmp_fateman_poly_F_3(n, K):
 # A few useful polynomials from Wang's paper ('78).
 
 f_0 = dmp_normal([
-    [[1,2,3], [2]],
+    [[1, 2, 3], [2]],
     [[3]],
-    [[4,5,6], [1,2,1], [1]]
+    [[4, 5, 6], [1, 2, 1], [1]]
 ], 2, ZZ)
 
 f_1 = dmp_normal([

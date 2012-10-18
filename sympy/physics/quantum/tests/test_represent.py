@@ -19,9 +19,9 @@ from sympy.physics.quantum.cartesian import XKet, XOp, XBra
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state
 
-Amat = Matrix([[1,I],[-I,1]])
-Bmat = Matrix([[1,2],[3,4]])
-Avec = Matrix([[1],[I]])
+Amat = Matrix([[1, I], [-I, 1]])
+Bmat = Matrix([[1, 2], [3, 4]])
+Avec = Matrix([[1], [I]])
 
 class AKet(Ket):
 
@@ -77,19 +77,19 @@ _tests = [
     (A, Amat),
     (Dagger(A), Dagger(Amat)),
     # OuterProduct
-    (OuterProduct(k,b), Avec*Avec.H),
+    (OuterProduct(k, b), Avec*Avec.H),
     # TensorProduct
-    (TensorProduct(A,B), matrix_tensor_product(Amat,Bmat)),
+    (TensorProduct(A, B), matrix_tensor_product(Amat, Bmat)),
     # Pow
     (A**2, Amat**2),
     # Add/Mul
     (A*B + 2*A, Amat*Bmat + 2*Amat),
     # Commutator
-    (Commutator(A,B), Amat*Bmat - Bmat*Amat),
+    (Commutator(A, B), Amat*Bmat - Bmat*Amat),
     # AntiCommutator
-    (AntiCommutator(A,B), Amat*Bmat + Bmat*Amat),
+    (AntiCommutator(A, B), Amat*Bmat + Bmat*Amat),
     # InnerProduct
-    (InnerProduct(b,k), (Avec.H*Avec)[0])
+    (InnerProduct(b, k), (Avec.H*Avec)[0])
 ]
 
 
@@ -128,7 +128,7 @@ def test_scalar_numpy():
     assert represent(1.0+I, format='numpy') == 1.0+1.0j
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def test_format_scipy_sparse():
     if not np:

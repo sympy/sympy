@@ -36,8 +36,8 @@ def test_jacobi():
 
     assert conjugate(jacobi(m, a, b, x)) == jacobi(m, conjugate(a), conjugate(b), conjugate(x))
 
-    assert diff(jacobi(n,a,b,x), n) == Derivative(jacobi(n, a, b, x), n)
-    assert diff(jacobi(n,a,b,x), x) == (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
+    assert diff(jacobi(n, a, b, x), n) == Derivative(jacobi(n, a, b, x), n)
+    assert diff(jacobi(n, a, b, x), x) == (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -88,7 +88,7 @@ def test_legendre():
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
 
-    assert roots(legendre(4,x), x) == {
+    assert roots(legendre(4, x), x) == {
          sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
         -sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
          sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
@@ -97,13 +97,13 @@ def test_legendre():
 
     n = Symbol("n")
 
-    X = legendre(n,x)
+    X = legendre(n, x)
     assert isinstance(X, legendre)
 
-    assert legendre(-n,x) == legendre(n-1, x)
-    assert legendre(n,-x) == (-1)**n*legendre(n, x)
-    assert diff(legendre(n,x), x) == n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
-    assert diff(legendre(n,x), n) == Derivative(legendre(n, x), n)
+    assert legendre(-n, x) == legendre(n-1, x)
+    assert legendre(n, -x) == (-1)**n*legendre(n, x)
+    assert diff(legendre(n, x), x) == n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
+    assert diff(legendre(n, x), n) == Derivative(legendre(n, x), n)
 
 def test_assoc_legendre():
     Plm=assoc_legendre
@@ -121,20 +121,20 @@ def test_assoc_legendre():
     assert Plm(3, 3, x) == -15 * Q**3
 
     # negative m
-    assert Plm(1,-1, x) == -Plm(1, 1, x)/2
-    assert Plm(2,-2, x) == Plm(2, 2, x)/24
-    assert Plm(2,-1, x) == -Plm(2, 1, x)/6
-    assert Plm(3,-3, x) == -Plm(3, 3, x)/720
-    assert Plm(3,-2, x) == Plm(3, 2, x)/120
-    assert Plm(3,-1, x) == -Plm(3, 1, x)/12
+    assert Plm(1, -1, x) == -Plm(1, 1, x)/2
+    assert Plm(2, -2, x) == Plm(2, 2, x)/24
+    assert Plm(2, -1, x) == -Plm(2, 1, x)/6
+    assert Plm(3, -3, x) == -Plm(3, 3, x)/720
+    assert Plm(3, -2, x) == Plm(3, 2, x)/120
+    assert Plm(3, -1, x) == -Plm(3, 1, x)/12
 
     n = Symbol("n")
     m = Symbol("m")
 
-    X = Plm(n,m, x)
+    X = Plm(n, m, x)
     assert isinstance(X, assoc_legendre)
 
-    assert Plm(n,0, x) == legendre(n, x)
+    assert Plm(n, 0, x) == legendre(n, x)
 
     raises(ValueError, lambda: Plm(-1, 0, x))
     raises(ValueError, lambda: Plm(0, 1, x))

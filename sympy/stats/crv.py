@@ -227,7 +227,7 @@ class ContinuousPSpace(PSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.subs(dict((rv,rv.symbol) for rv in self.values))
+        condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
         density = self.density
@@ -278,7 +278,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         Returns dictionary mapping RandomSymbol to realization value.
         """
         icdf = self._inverse_cdf_expression()
-        return {self.value: icdf(random.uniform(0,1))}
+        return {self.value: icdf(random.uniform(0, 1))}
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """

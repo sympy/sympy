@@ -22,7 +22,7 @@ def plot_and_save(name):
     ###
 
     p = plot(x)
-    p = plot(x*sin(x),x*cos(x))
+    p = plot(x*sin(x), x*cos(x))
     p.extend(p)
     p[0].line_color = lambda a: a
     p[1].line_color='b'
@@ -30,18 +30,18 @@ def plot_and_save(name):
     p.xlabel = 'the x axis'
     p[1].label = 'straight line'
     p.legend = True
-    p.aspect_ratio = (1,1)
-    p.xlim = (-15,20)
+    p.aspect_ratio = (1, 1)
+    p.xlim = (-15, 20)
     p.save(tmp_file('%s_basic_options_and_colors.png' % name))
 
     p.extend(plot(x+1))
-    p.append(plot(x+3,x**2)[1])
+    p.append(plot(x+3, x**2)[1])
     p.save(tmp_file('%s_plot_extend_append.png' % name))
 
     p[2] = plot(x**2, (x, -2, 3))
     p.save(tmp_file('%s_plot_setitem.png' % name))
 
-    p = plot(sin(x),(x,-2*pi,4*pi))
+    p = plot(sin(x), (x, -2*pi, 4*pi))
     p.save(tmp_file('%s_line_explicit.png' % name))
 
     p = plot(sin(x))
@@ -76,7 +76,7 @@ def plot_and_save(name):
     p.save(tmp_file('%s_adaptive' % name))
 
     #3d parametric plots
-    p = plot3d_parametric_line(sin(x),cos(x),x)
+    p = plot3d_parametric_line(sin(x), cos(x), x)
     p.save(tmp_file('%s_3d_line.png' % name))
 
     p = plot3d_parametric_line((sin(x), cos(x), x, (x, -5, 5)), (cos(x), sin(x), x, (x, -3, 3)))
@@ -102,7 +102,7 @@ def plot_and_save(name):
     p.save(tmp_file('%s_parametric_surface' % name))
 
     # Multiple Parametric 3D plots.
-    p = plot3d_parametric_surface((x*sin(z),x*cos(z),z, (x, -5, 5), (z, -5, 5)),
+    p = plot3d_parametric_surface((x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
                 (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface.png' % name))
 
@@ -161,15 +161,15 @@ def plot_and_save(name):
     # Examples from the 'advanced' notebook
     ###
 
-    i = Integral(log((sin(x)**2+1)*sqrt(x**2+1)),(x,0,y))
-    p = plot(i,(y, 1, 5))
+    i = Integral(log((sin(x)**2+1)*sqrt(x**2+1)), (x, 0, y))
+    p = plot(i, (y, 1, 5))
     p.save(tmp_file('%s_advanced_integral.png' % name))
 
-    s = summation(1/x**y,(x, 1, oo))
+    s = summation(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum.png' % name))
 
-    p = plot(summation(1/x,(x,1,y)), (y, 2,10), show=False)
+    p = plot(summation(1/x, (x, 1, y)), (y, 2, 10), show=False)
     p[0].only_integers = True
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum.png' % name))

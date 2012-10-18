@@ -53,9 +53,9 @@ class PlotAxes(PlotObject):
         def flexible_boolean(input, default):
             if input in [True, False]:
                 return input
-            if input in ['f','F','false','False']:
+            if input in ['f', 'F', 'false', 'False']:
                 return False
-            if input in ['t','T','true','True']:
+            if input in ['t', 'T', 'true', 'True']:
                 return True
             return default
 
@@ -79,7 +79,7 @@ class PlotAxes(PlotObject):
 
     def reset_bounding_box(self):
         self._bounding_box = [[None, None], [None, None], [None, None]]
-        self._axis_ticks = [[],[],[]]
+        self._axis_ticks = [[], [], []]
 
     def draw(self):
         if self._render_object:
@@ -225,7 +225,7 @@ class PlotAxesOrdinate(PlotAxesBase):
             return
         tick_label_vector = [0, 0, 0]
         tick_label_vector[axis] = tick
-        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1,1,1][axis] * radius * 3.5
+        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][axis] * radius * 3.5
         self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
 
 class PlotAxesFrame(PlotAxesBase):

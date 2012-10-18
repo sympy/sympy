@@ -67,7 +67,7 @@ def test_constant_add():
 
 def test_constant_power_as_base():
     assert constant_renumber(constantsimp(C1**C1, x, 1), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(Pow(C1,C1), x, 1), 'C', 1, 1) == C1
+    assert constant_renumber(constantsimp(Pow(C1, C1), x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1**C2, x, 2), 'C', 1, 2) == C1
     assert constant_renumber(constantsimp(C2**C1, x, 2), 'C', 1, 2) == C1
@@ -121,10 +121,10 @@ def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
     assert constant_renumber(constantsimp(C1*exp(2*x)+exp(x)*(C2+C3), x, 3), 'C', 1, 3) == \
         constant_renumber((C1*exp(x) + C2*exp(2*x)), 'C', 1, 2)
-    assert constant_renumber(constantsimp(Eq(f(x),I*C1*sinh(x/3) + C2*cosh(x/3)), x, 2),
+    assert constant_renumber(constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), x, 2),
         'C', 1, 2) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)), 'C', 1, 2)
-    assert constant_renumber(constantsimp(Eq(f(x),acos((-C1)/cos(x))), x, 1), 'C', 1, 1) == \
-        Eq(f(x),acos(C1/cos(x)))
+    assert constant_renumber(constantsimp(Eq(f(x), acos((-C1)/cos(x))), x, 1), 'C', 1, 1) == \
+        Eq(f(x), acos(C1/cos(x)))
     assert constant_renumber(constantsimp(Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0), x, 1),
         'C', 1, 1) == Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     assert constant_renumber(constantsimp(Eq(log(x*sqrt(2)*sqrt(1/x)*sqrt(f(x))\

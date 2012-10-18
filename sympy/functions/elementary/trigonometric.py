@@ -696,7 +696,7 @@ class cos(TrigonometricFunction):
 
 class sec(TrigonometricFunction):    #TODO implement rest all functions for sec. see cos, sin, tan.
 
-    def _eval_rewrite_as_cos(self,arg):
+    def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
 
     def _eval_rewrite_as_sincos(self, arg):
@@ -704,7 +704,7 @@ class sec(TrigonometricFunction):    #TODO implement rest all functions for sec.
 
 class csc(TrigonometricFunction):    #TODO implement rest all functions for csc. see cos, sin, tan.
 
-    def _eval_rewrite_as_sin(self,arg):
+    def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
 
     def _eval_rewrite_as_sincos(self, arg):

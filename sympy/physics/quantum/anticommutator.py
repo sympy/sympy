@@ -99,7 +99,7 @@ class AntiCommutator(Expr):
         # Canonical ordering of arguments
         #The Commutator [A,B] is on canonical form if A < B.
         if a.compare(b) == 1:
-            return cls(b,a)
+            return cls(b, a)
 
     def doit(self, **hints):
         """ Evaluate anticommutator """

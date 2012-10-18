@@ -210,7 +210,7 @@ class Gate(UnitaryOperator):
         for target in targets:
             column_index += n*qubits[target]
             n = n<<1
-        column = target_matrix[:,int(column_index)]
+        column = target_matrix[:, int(column_index)]
 
         # Now apply each column element to the qubit.
         result = 0
@@ -237,8 +237,8 @@ class Gate(UnitaryOperator):
         return self._represent_ZGate(None, **options)
 
     def _represent_ZGate(self, basis, **options):
-        format = options.get('format','sympy')
-        nqubits = options.get('nqubits',0)
+        format = options.get('format', 'sympy')
+        nqubits = options.get('nqubits', 0)
         if nqubits == 0:
             raise QuantumError('The number of qubits must be given as nqubits.')
 
@@ -318,13 +318,13 @@ class CGate(Gate):
         if not is_sequence(controls):
             controls = (controls,)
         controls = UnitaryOperator._eval_args(controls)
-        _validate_targets_controls(chain(controls,gate.targets))
+        _validate_targets_controls(chain(controls, gate.targets))
         return (Tuple(*controls), gate)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**max(max(args[0])+1,args[1].min_qubits)
+        return ComplexSpace(2)**max(max(args[0])+1, args[1].min_qubits)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -342,7 +342,7 @@ class CGate(Gate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(max(self.controls),max(self.targets))+1
+        return max(max(self.controls), max(self.targets))+1
 
     @property
     def targets(self):
@@ -935,7 +935,7 @@ class SwapGate(TwoQubitGate):
 
     def decompose(self, **options):
         """Decompose the SWAP gate into CNOT gates."""
-        i,j = self.targets[0], self.targets[1]
+        i, j = self.targets[0], self.targets[1]
         g1 = CNotGate(i, j)
         g2 = CNotGate(j, i)
         return g1*g2*g1
@@ -958,7 +958,7 @@ class SwapGate(TwoQubitGate):
         targets = [int(t) for t in self.targets]
         min_target = min(targets)
         max_target = max(targets)
-        nqubits = options.get('nqubits',self.min_qubits)
+        nqubits = options.get('nqubits', self.min_qubits)
 
         op01 = matrix_cache.get_matrix('op01', format)
         op10 = matrix_cache.get_matrix('op10', format)
@@ -967,7 +967,7 @@ class SwapGate(TwoQubitGate):
         eye2 = matrix_cache.get_matrix('eye2', format)
 
         result = None
-        for i, j in ((op01,op10),(op10,op01),(op00,op00),(op11,op11)):
+        for i, j in ((op01, op10), (op10, op01), (op00, op00), (op11, op11)):
             product = nqubits*[eye2]
             product[nqubits-min_target-1] = i
             product[nqubits-max_target-1] = j
@@ -1224,7 +1224,7 @@ def random_circuit(ngates, nqubits, gate_space=(X, Y, Z, S, T, H, CNOT, SWAP)):
     for i in xrange(ngates):
         g = random.choice(gate_space)
         if g == CNotGate or g == SwapGate:
-            qubits = random.sample(qubit_space,2)
+            qubits = random.sample(qubit_space, 2)
             g = g(*qubits)
         else:
             qubit = random.choice(qubit_space)

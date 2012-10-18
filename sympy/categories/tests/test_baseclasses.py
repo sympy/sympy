@@ -132,7 +132,7 @@ def test_diagram():
     assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
 
     # Check how the properties of composite morphisms are computed.
-    d = Diagram({f: ["unique", "isomorphism"], g:"unique"})
+    d = Diagram({f: ["unique", "isomorphism"], g: "unique"})
     assert d.premises[g * f] == FiniteSet("unique")
 
     # Check that conclusion morphisms with new objects are not allowed.

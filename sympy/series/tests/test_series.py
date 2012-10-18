@@ -20,7 +20,7 @@ def test_exp():
 
 def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
-    e2 = series(exp(cos(x)),x,0)
+    e2 = series(exp(cos(x)), x, 0)
     assert e1 == e2
 
 
@@ -47,7 +47,7 @@ def test_2124():
     assert D(cos(x), x).lseries().next() == D(1, x)
     assert D(exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
 
-    assert Integral(x, (x, 1, 3),(y, 1, x)).series(x) == -4 + 4*x
+    assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() == None
@@ -86,7 +86,7 @@ def test_acceleration():
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
 
 def test_1484():
-    assert cos(1+x+x**2).series(x,0,5) == cos(1) - x*sin(1) + x**2*(-sin(1) - \
+    assert cos(1+x+x**2).series(x, 0, 5) == cos(1) - x*sin(1) + x**2*(-sin(1) - \
                                           cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
                                           x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
 

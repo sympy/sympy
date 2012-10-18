@@ -120,7 +120,7 @@ def test_gosper_sum_AeqB_part2():
     # delete these lines and unXFAIL the nan test below when it passes
     f2d = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
     g2d = 1/(factorial(a - 1)*factorial(b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
-    assert simplify(sum(f2d.subs(n,i) for i in range(3)) - g2d.subs(m, 2)) == 0
+    assert simplify(sum(f2d.subs(n, i) for i in range(3)) - g2d.subs(m, 2)) == 0
 
 @XFAIL
 def test_gosper_nan():
