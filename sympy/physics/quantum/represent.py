@@ -466,7 +466,7 @@ def get_basis(expr, **options):
             return (state_inst if state_inst is not None else None)
         else:
             return None
-    elif (isinstance(basis, Operator) or \
+    elif (isinstance(basis, Operator) or
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
         if state is None:

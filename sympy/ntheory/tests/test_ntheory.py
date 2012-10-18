@@ -158,7 +158,7 @@ def test_generate():
     assert prevprime(10**40) == (10**40 - 17)
     assert list(primerange(2, 7)) == [2, 3, 5]
     assert list(primerange(2, 10)) == [2, 3, 5, 7]
-    assert list(primerange(1050, 1100)) == [1051, 1061, \
+    assert list(primerange(1050, 1100)) == [1051, 1061,
         1063, 1069, 1087, 1091, 1093, 1097]
     s = Sieve()
     for i in range(30, 2350, 376):

@@ -35,8 +35,8 @@ def test_graycode():
 
     assert GrayCode(6, rank=4).current == '000110'
     assert GrayCode(6, rank=4).rank == 4
-    assert [GrayCode(4, start=s).rank for s in \
-            GrayCode(4).generate_gray()] == [0, 1, 2, 3, 4, 5, 6, 7, 8, \
+    assert [GrayCode(4, start=s).rank for s in
+            GrayCode(4).generate_gray()] == [0, 1, 2, 3, 4, 5, 6, 7, 8,
                                              9, 10, 11, 12, 13, 14, 15]
     a = GrayCode(15, rank=15)
     assert a.current == '000000000001000'
@@ -51,5 +51,5 @@ def test_graycode():
     assert get_subset_from_bitstring(['a', 'b', 'c', 'd'], '0011') == ['c', 'd']
     assert get_subset_from_bitstring('abcd', '1001') == ['a', 'd']
     assert list(graycode_subsets(['a', 'b', 'c'])) == \
-        [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
+        [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],
     ['a', 'c'], ['a']]

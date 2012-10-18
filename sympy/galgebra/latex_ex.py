@@ -151,24 +151,24 @@ class LatexPrinter(Printer):
 
     fmt_dict = {'sym': 0, 'fct': 0, 'pdiff': 0, 'mv': 0, 'str': 1}
 
-    fct_dict = {'sin': 'sin', 'cos': 'cos', 'tan': 'tan', 'cot': 'cot',\
-                'asin': 'Sin^{-1}', 'acos': 'Cos^{-1}',\
-                'atan': 'Tan^{-1}', 'acot': 'Cot^{-1}',\
-                'sinh': 'sinh', 'cosh': 'cosh', 'tanh': 'tanh', 'coth': 'coth',\
+    fct_dict = {'sin': 'sin', 'cos': 'cos', 'tan': 'tan', 'cot': 'cot',
+                'asin': 'Sin^{-1}', 'acos': 'Cos^{-1}',
+                'atan': 'Tan^{-1}', 'acot': 'Cot^{-1}',
+                'sinh': 'sinh', 'cosh': 'cosh', 'tanh': 'tanh', 'coth': 'coth',
                 'asinh': 'Sinh^{-1}', 'acosh': 'Cosh^{-1}',
-                'atanh': 'Tanh^{-1}', 'acoth': 'Coth^{-1}',\
+                'atanh': 'Tanh^{-1}', 'acoth': 'Coth^{-1}',
                 'sqrt': 'sqrt', 'exp': 'exp', 'log': 'ln'}
 
     fct_dict_keys = fct_dict.keys()
 
-    greek_keys = sorted(('alpha', 'beta', 'gamma', 'delta', 'varepsilon', 'epsilon', 'zeta',\
-                         'vartheta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',\
-                         'varpi', 'pi', 'rho', 'varrho', 'varsigma', 'sigma', 'tau', 'upsilon',\
-                         'varphi', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta',\
-                         'Lambda', 'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega', 'partial',\
+    greek_keys = sorted(('alpha', 'beta', 'gamma', 'delta', 'varepsilon', 'epsilon', 'zeta',
+                         'vartheta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
+                         'varpi', 'pi', 'rho', 'varrho', 'varsigma', 'sigma', 'tau', 'upsilon',
+                         'varphi', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta',
+                         'Lambda', 'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega', 'partial',
                          'nabla', 'eta'), key=cmp_to_key(len_cmp))
 
-    accent_keys = sorted(('hat', 'check', 'dot', 'breve', 'acute', 'ddot', 'grave', 'tilde',\
+    accent_keys = sorted(('hat', 'check', 'dot', 'breve', 'acute', 'ddot', 'grave', 'tilde',
                           'mathring', 'bar', 'vec', 'bm', 'prm', 'abs'), key=cmp_to_key(len_cmp))
 
     greek_cnt = 0
@@ -1001,7 +1001,7 @@ class LatexPrinter(Printer):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
+            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (
                 self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 

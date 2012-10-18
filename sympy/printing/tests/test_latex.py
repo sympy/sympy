@@ -218,7 +218,7 @@ def test_hyper_printing():
     from sympy import pi
     from sympy.abc import x, z
 
-    assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
+    assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
                          (0, 1), Tuple(1, 2, 3/pi), z)) == \
              r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \

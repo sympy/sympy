@@ -339,8 +339,8 @@ def test_simplify_other():
     # issue 3024
     # f = exp(-I*(k*sqrt(t) + x/(2*sqrt(t)))**2)
     # ans = integrate(f, (k, -oo, oo), conds='none')
-    ans = I*(-pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))*erf(x*exp(-3*I*pi/4)/\
-        (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/\
+    ans = I*(-pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))*erf(x*exp(-3*I*pi/4)/
+        (2*sqrt(t)))/(2*sqrt(t)) + pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))/
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi)*\
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
     assert simplify(ans) == -(-1)**(S(3)/4)*sqrt(pi)/sqrt(t)
@@ -858,10 +858,10 @@ def test_logcombine_1():
         log(x**(1/(x*y))*y**(-1/(x*y)))+x/y
     assert logcombine(log(x)*2*log(y)+log(z), force=True) == \
         log(z*y**log(x**2))
-    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
+    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*
         sqrt(y)**3), force=True) == \
-        log(x**(1/(pi*x**Rational(2, 3)*sqrt(y)**3))*y**(-1/(pi*\
-        x**Rational(2, 3)*sqrt(y)**3))) + sqrt(x**4 + y**4)/(pi*\
+        log(x**(1/(pi*x**Rational(2, 3)*sqrt(y)**3))*y**(-1/(pi*
+        x**Rational(2, 3)*sqrt(y)**3))) + sqrt(x**4 + y**4)/(pi*
         x**Rational(2, 3)*sqrt(y)**3) + x**Rational(1, 3)/(pi*sqrt(y))
     assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
         Eq(log(x*y**2), Integer(0))
@@ -880,7 +880,7 @@ def test_logcombine_complex_coeff():
     # these hold.
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), force=True) == \
         Integral((sin(x**2)+cos(x**3))/x, x)
-    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \
+    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x),
         force=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x, x)
 
@@ -1318,8 +1318,8 @@ def test_besselsimp():
            besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
            besselj(a, 2*sqrt(x))
-    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) * \
-                      besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) * \
+    assert besselsimp(sqrt(2)*sqrt(pi)*x**(S(1)/4)*exp(I*pi/4)*exp(-I*pi*a/2) *
+                      besseli(-S(1)/2, sqrt(x)*exp_polar(I*pi/2)) *
                       besseli(a, sqrt(x)*exp_polar(I*pi/2))/2) == \
            besselj(a, sqrt(x)) * cos(sqrt(x))
     assert besselsimp(besseli(S(-1)/2, z)) == sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))

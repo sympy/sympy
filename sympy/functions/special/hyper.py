@@ -412,7 +412,7 @@ class meijerg(TupleParametersBase):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
-            raise TypeError("args must eiter be as, as', bs, bs', z or " \
+            raise TypeError("args must eiter be as, as', bs, bs', z or "
                             "as, bs, z")
 
         def tr(p):
@@ -488,7 +488,7 @@ class meijerg(TupleParametersBase):
                         found = i
                         break
                 if found is None:
-                    raise NotImplementedError('Derivative not expressible ' \
+                    raise NotImplementedError('Derivative not expressible '
                                               'as G-function?')
                 y = l2[i]
                 l2.pop(i)

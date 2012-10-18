@@ -46,12 +46,12 @@ def test_checkodesol():
         235*x**4*log(x)**4 + 60*x**4*log(x)**5)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == \
         (True, 0)
-    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x), \
+    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x),
         solve_for_func=False) == (True, 0)
-    assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x), \
+    assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
             [(True, 0), (True, 0), (False, 2*C2)]
-    assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x), \
+    assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
             set([(True, 0), (True, 0), (False, 2*C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
@@ -69,12 +69,12 @@ def test_dsolve_options():
     a = dsolve(eq, hint='all')
     b = dsolve(eq, hint='all', simplify=False)
     c = dsolve(eq, hint='all_Integral')
-    keys = ['1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best', \
-        '1st_homogeneous_coeff_subs_dep_div_indep', \
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral', \
-        '1st_homogeneous_coeff_subs_indep_div_dep', \
-        '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear', \
-        '1st_linear_Integral', 'best', 'best_hint', 'default', 'order', \
+    keys = ['1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+        '1st_homogeneous_coeff_subs_indep_div_dep',
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
+        '1st_linear_Integral', 'best', 'best_hint', 'default', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
@@ -271,7 +271,7 @@ def test_old_ode_tests():
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x), exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 \
+    sol = Eq(f(x), exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2
     + x*exp(x**2/2) + C1))
     assert dsolve(eq, hint='1st_linear') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -470,7 +470,7 @@ def test_homogeneous_order():
     assert homogeneous_order(exp(y/x) + tan(y/x), x, y) == 0
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
     assert homogeneous_order(x - y - x*sin(y/x), x, y) == 1
-    assert homogeneous_order((x*y + sqrt(x**4+y**4) + x**2*(log(x) - log(y)))/\
+    assert homogeneous_order((x*y + sqrt(x**4+y**4) + x**2*(log(x) - log(y)))/
         (pi*x**Rational(2, 3)*sqrt(y)**3), x, y) == Rational(-1, 6)
     assert homogeneous_order(y/x*cos(y/x) - x/y*sin(y/x) + cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
@@ -863,10 +863,10 @@ def test_nth_linear_constant_coeff_homogeneous():
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
-        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
-        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
-        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) +
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) +
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) +
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) +
         C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert dsolve(eq) == sol
 
@@ -875,10 +875,10 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
-        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
-        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
-        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) +
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) +
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) +
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) +
         C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert checkodesol(eq, sol, order=5, solve_for_func=False)[0]
 
@@ -1061,7 +1061,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol22 = Eq(f(x), C1*sin(x) + (C2 - x/2)*cos(x) + exp(-x)/2)
     sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol24 = Eq(f(x), S(1)/2 - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
-    sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + \
+    sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) +
                     (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
     sol26 = Eq(f(x),
         C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
@@ -1194,7 +1194,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
-    sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 + \
+    sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 +
         Integral(1/sin(x), x)))
     sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
     sol1s = constant_renumber(sol1, 'C', 1, 3)

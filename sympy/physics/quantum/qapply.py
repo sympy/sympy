@@ -137,7 +137,7 @@ def qapply_Mul(e, **options):
         comm = lhs.doit()
         if isinstance(comm, Add):
             return qapply(
-                e.func(*(args + [comm.args[0], rhs])) +\
+                e.func(*(args + [comm.args[0], rhs])) +
                 e.func(*(args + [comm.args[1], rhs])),
                 **options
             )

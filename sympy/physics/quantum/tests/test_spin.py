@@ -239,10 +239,10 @@ def test_represent_coupled_states():
 
 def test_represent_rotation():
     assert represent(Rotation(0, pi/2, 0)) == \
-        Matrix([[WignerD(S(1)/2, S(1)/2, S(1)/2, 0, pi/2, 0), WignerD(S(1)/2, S(1)/2, -S(1)/2, 0, pi/2, 0)], \
+        Matrix([[WignerD(S(1)/2, S(1)/2, S(1)/2, 0, pi/2, 0), WignerD(S(1)/2, S(1)/2, -S(1)/2, 0, pi/2, 0)],
                 [WignerD(S(1)/2, -S(1)/2, S(1)/2, 0, pi/2, 0), WignerD(S(1)/2, -S(1)/2, -S(1)/2, 0, pi/2, 0)]])
     assert represent(Rotation(0, pi/2, 0), doit=True) == \
-        Matrix([[sqrt(2)/2, -sqrt(2)/2], \
+        Matrix([[sqrt(2)/2, -sqrt(2)/2],
                 [sqrt(2)/2, sqrt(2)/2]])
 
 
@@ -1366,24 +1366,24 @@ def test_uncouple_4_coupled_states_numerical():
 
 def test_uncouple_symbolic():
     assert uncouple(JzKetCoupled(j, m, (j1, j2) )) == \
-        Sum(CG(j1, m1, j2, m2, j, m) * \
-            TensorProduct(JzKet(j1, m1), JzKet(j2, m2)), \
+        Sum(CG(j1, m1, j2, m2, j, m) *
+            TensorProduct(JzKet(j1, m1), JzKet(j2, m2)),
             (m1, -j1, j1), (m2, -j2, j2))
     assert uncouple(JzKetCoupled(j, m, (j1, j2, j3) )) == \
-        Sum(CG(j1, m1, j2, m2, j1+j2, m1+m2) * CG(j1+j2, m1+m2, j3, m3, j, m) * \
-            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3)), \
+        Sum(CG(j1, m1, j2, m2, j1+j2, m1+m2) * CG(j1+j2, m1+m2, j3, m3, j, m) *
+            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3)),
             (m1, -j1, j1), (m2, -j2, j2), (m3, -j3, j3))
     assert uncouple(JzKetCoupled(j, m, (j1, j2, j3), ((1, 3, j13), (1, 2, j)) )) == \
-        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j2, m2, j, m) * \
-            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3)), \
+        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j2, m2, j, m) *
+            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3)),
             (m1, -j1, j1), (m2, -j2, j2), (m3, -j3, j3))
     assert uncouple(JzKetCoupled(j, m, (j1, j2, j3, j4) )) == \
-        Sum(CG(j1, m1, j2, m2, j1+j2, m1+m2) * CG(j1+j2, m1+m2, j3, m3, j1+j2+j3, m1+m2+m3) * CG(j1+j2+j3, m1+m2+m3, j4, m4, j, m) * \
-            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)), \
+        Sum(CG(j1, m1, j2, m2, j1+j2, m1+m2) * CG(j1+j2, m1+m2, j3, m3, j1+j2+j3, m1+m2+m3) * CG(j1+j2+j3, m1+m2+m3, j4, m4, j, m) *
+            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)),
             (m1, -j1, j1), (m2, -j2, j2), (m3, -j3, j3), (m4, -j4, j4))
     assert uncouple(JzKetCoupled(j, m, (j1, j2, j3, j4), ((1, 3, j13), (2, 4, j24), (1, 2, j)) )) ==  \
-        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j2, m2, j4, m4, j24, m2+m4) * CG(j13, m1+m3, j24, m2+m4, j, m) * \
-            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)), \
+        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j2, m2, j4, m4, j24, m2+m4) * CG(j13, m1+m3, j24, m2+m4, j, m) *
+            TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)),
             (m1, -j1, j1), (m2, -j2, j2), (m3, -j3, j3), (m4, -j4, j4))
 
 
@@ -2814,24 +2814,24 @@ def test_couple_symbolic():
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
         Sum(CG(j1, m1, j2, m2, j, m1+m2) * JzKetCoupled(j, m1+m2, (j1, j2)), (j, m1+m2, j1+j2))
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3))) == \
-        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j12, m1+m2, j3, m3, j, m1+m2+m3) * \
-            JzKetCoupled(j, m1+m2+m3, (j1, j2, j3), ((1, 2, j12), (1, 3, j)) ), \
+        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j12, m1+m2, j3, m3, j, m1+m2+m3) *
+            JzKetCoupled(j, m1+m2+m3, (j1, j2, j3), ((1, 2, j12), (1, 3, j)) ),
             (j12, m1 + m2, j1 + j2), (j, m1 + m2 + m3, j12 + j3))
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3)), ((1, 3), (1, 2)) ) == \
-        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j2, m2, j, m1+m2+m3) * \
-            JzKetCoupled(j, m1+m2+m3, (j1, j2, j3), ((1, 3, j13), (1, 2, j)) ), \
+        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j2, m2, j, m1+m2+m3) *
+            JzKetCoupled(j, m1+m2+m3, (j1, j2, j3), ((1, 3, j13), (1, 2, j)) ),
             (j13, m1+m3, j1+j3), (j, m1+m2+m3, j13+j2))
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4))) == \
-        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j12, m1+m2, j3, m3, j123, m1+m2+m3) * CG(j123, m1+m2+m3, j4, m4, j, m1+m2+m3+m4) * \
-            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 2, j12), (1, 3, j123), (1, 4, j)) ), \
+        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j12, m1+m2, j3, m3, j123, m1+m2+m3) * CG(j123, m1+m2+m3, j4, m4, j, m1+m2+m3+m4) *
+            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 2, j12), (1, 3, j123), (1, 4, j)) ),
             (j12, m1+m2, j1+j2), (j123, m1+m2+m3, j12+j3), (j, m1+m2+m3+m4, j123+j4))
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)), ((1, 2), (3, 4), (1, 3)) ) == \
-        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j3, m3, j4, m4, j34, m3+m4) * CG(j12, m1+m2, j34, m3+m4, j, m1+m2+m3+m4) * \
-            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 2, j12), (3, 4, j34), (1, 3, j)) ), \
+        Sum(CG(j1, m1, j2, m2, j12, m1+m2) * CG(j3, m3, j4, m4, j34, m3+m4) * CG(j12, m1+m2, j34, m3+m4, j, m1+m2+m3+m4) *
+            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 2, j12), (3, 4, j34), (1, 3, j)) ),
             (j12, m1+m2, j1+j2), (j34, m3+m4, j3+j4), (j, m1+m2+m3+m4, j12+j34))
     assert couple(TensorProduct(JzKet(j1, m1), JzKet(j2, m2), JzKet(j3, m3), JzKet(j4, m4)), ((1, 3), (1, 4), (1, 2)) ) == \
-        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j4, m4, j134, m1+m3+m4) * CG(j134, m1+m3+m4, j2, m2, j, m1+m2+m3+m4) * \
-            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 3, j13), (1, 4, j134), (1, 2, j)) ), \
+        Sum(CG(j1, m1, j3, m3, j13, m1+m3) * CG(j13, m1+m3, j4, m4, j134, m1+m3+m4) * CG(j134, m1+m3+m4, j2, m2, j, m1+m2+m3+m4) *
+            JzKetCoupled(j, m1+m2+m3+m4, (j1, j2, j3, j4), ((1, 3, j13), (1, 4, j134), (1, 2, j)) ),
             (j13, m1+m3, j1+j3), (j134, m1+m3+m4, j13+j4), (j, m1+m2+m3+m4, j134+j2))
 
 
@@ -3103,11 +3103,11 @@ def test_jplus():
     assert qapply(Jplus*JzKet(1, 1)) == 0
     # Symbolic
     assert qapply(Jplus*JxKet(j, m)) == \
-        Sum(hbar * sqrt(-mi**2-mi+j**2+j) * WignerD(j, mi, m, 0, pi/2, 0) * \
-        Sum(WignerD(j, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j, mi1), \
+        Sum(hbar * sqrt(-mi**2-mi+j**2+j) * WignerD(j, mi, m, 0, pi/2, 0) *
+        Sum(WignerD(j, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jplus*JyKet(j, m)) == \
-        Sum(hbar * sqrt(j**2+j-mi**2- mi) * WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) * \
+        Sum(hbar * sqrt(j**2+j-mi**2- mi) * WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi+1, 3*pi/2, pi/2, pi/2) * JyKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jplus*JzKet(j, m)) == \
@@ -3119,11 +3119,11 @@ def test_jplus():
     assert qapply(Jplus*JzKet(1, 1)) == 0
     # Symbolic
     assert qapply(Jplus*JxKetCoupled(j, m, (j1, j2))) == \
-        Sum(hbar * sqrt(-mi**2-mi+j**2+j) * WignerD(j, mi, m, 0, pi/2, 0) * \
-        Sum(WignerD(j, mi1, mi+1, 0, 3*pi/2, 0) * JxKetCoupled(j, mi1, (j1, j2)), \
+        Sum(hbar * sqrt(-mi**2-mi+j**2+j) * WignerD(j, mi, m, 0, pi/2, 0) *
+        Sum(WignerD(j, mi1, mi+1, 0, 3*pi/2, 0) * JxKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jplus*JyKetCoupled(j, m, (j1, j2))) == \
-        Sum(hbar * sqrt(j**2+j-mi**2- mi) * WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) * \
+        Sum(hbar * sqrt(j**2+j-mi**2- mi) * WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi+1, 3*pi/2, pi/2, pi/2) * JyKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jplus*JzKetCoupled(j, m, (j1, j2))) == \
@@ -3147,19 +3147,19 @@ def test_jplus():
         hbar*sqrt(2)*TensorProduct(JzKet(1, 1), JzKet(1, 0))
     # Symbolic
     assert qapply(TensorProduct(Jplus, 1)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        TensorProduct(Sum(hbar * sqrt(-mi**2-mi+j1**2+j1) * WignerD(j1, mi, m1, 0, pi/2, 0) * \
-        Sum(WignerD(j1, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j1, mi1), \
+        TensorProduct(Sum(hbar * sqrt(-mi**2-mi+j1**2+j1) * WignerD(j1, mi, m1, 0, pi/2, 0) *
+        Sum(WignerD(j1, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j1, mi1),
         (mi1, -j1, j1)), (mi, -j1, j1)), JxKet(j2, m2))
     assert qapply(TensorProduct(1, Jplus)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        TensorProduct(JxKet(j1, m1), Sum(hbar * sqrt(-mi**2-mi+j2**2+j2) * WignerD(j2, mi, m2, 0, pi/2, 0) * \
-        Sum(WignerD(j2, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j2, mi1), \
+        TensorProduct(JxKet(j1, m1), Sum(hbar * sqrt(-mi**2-mi+j2**2+j2) * WignerD(j2, mi, m2, 0, pi/2, 0) *
+        Sum(WignerD(j2, mi1, mi+1, 0, 3*pi/2, 0) * JxKet(j2, mi1),
         (mi1, -j2, j2)), (mi, -j2, j2)))
     assert qapply(TensorProduct(Jplus, 1)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        TensorProduct(Sum(hbar * sqrt(j1**2+j1-mi**2- mi) * WignerD(j1, mi, m1, 3*pi/2, -pi/2, pi/2) * \
+        TensorProduct(Sum(hbar * sqrt(j1**2+j1-mi**2- mi) * WignerD(j1, mi, m1, 3*pi/2, -pi/2, pi/2) *
         Sum(WignerD(j1, mi1, mi+1, 3*pi/2, pi/2, pi/2) * JyKet(j1, mi1),
         (mi1, -j1, j1)), (mi, -j1, j1)), JyKet(j2, m2))
     assert qapply(TensorProduct(1, Jplus)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        TensorProduct(JyKet(j1, m1), Sum(hbar * sqrt(j2**2+j2-mi**2- mi) * WignerD(j2, mi, m2, 3*pi/2, -pi/2, pi/2) * \
+        TensorProduct(JyKet(j1, m1), Sum(hbar * sqrt(j2**2+j2-mi**2- mi) * WignerD(j2, mi, m2, 3*pi/2, -pi/2, pi/2) *
         Sum(WignerD(j2, mi1, mi+1, 3*pi/2, pi/2, pi/2) * JyKet(j2, mi1),
         (mi1, -j2, j2)), (mi, -j2, j2)))
     assert qapply(TensorProduct(Jplus, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
@@ -3179,12 +3179,12 @@ def test_jminus():
     assert qapply(Jminus*JzKet(1, 1)) == sqrt(2)*hbar*JzKet(1, 0)
     # Symbolic
     assert qapply(Jminus*JxKet(j, m)) == \
-        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 0, pi/2, 0) * \
-        Sum(WignerD(j, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j, mi1), \
+        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 0, pi/2, 0) *
+        Sum(WignerD(j, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jminus*JyKet(j, m)) == \
-        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) * \
-        Sum(WignerD(j, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j, mi1), \
+        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
+        Sum(WignerD(j, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jminus*JzKet(j, m)) == \
         hbar*sqrt(j**2+j-m**2+m)*JzKet(j, m-1)
@@ -3200,12 +3200,12 @@ def test_jminus():
         sqrt(2)*hbar*JzKetCoupled(1, 0, (1, 1))
     # Symbolic
     assert qapply(Jminus*JxKetCoupled(j, m, (j1, j2))) == \
-        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 0, pi/2, 0) * \
-        Sum(WignerD(j, mi1, mi-1, 0, 3*pi/2, 0)*JxKetCoupled(j, mi1, (j1, j2)), \
+        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 0, pi/2, 0) *
+        Sum(WignerD(j, mi1, mi-1, 0, 3*pi/2, 0)*JxKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jminus*JyKetCoupled(j, m, (j1, j2))) == \
-        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) * \
-        Sum(WignerD(j, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKetCoupled(j, mi1, (j1, j2)), \
+        Sum(hbar*sqrt(j**2+j-mi**2+mi)*WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
+        Sum(WignerD(j, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jminus*JzKetCoupled(j, m, (j1, j2))) == \
         hbar*sqrt(j**2+j-m**2+m)*JzKetCoupled(j, m-1, (j1, j2))
@@ -3228,20 +3228,20 @@ def test_jminus():
     assert qapply(TensorProduct(1, Jminus)*TensorProduct(JzKet(1, 1), JzKet(1, -1))) == 0
     # Symbolic
     assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        TensorProduct(Sum(hbar*sqrt(j1**2+j1-mi**2+mi)*WignerD(j1, mi, m1, 0, pi/2, 0) * \
-        Sum(WignerD(j1, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j1, mi1), \
+        TensorProduct(Sum(hbar*sqrt(j1**2+j1-mi**2+mi)*WignerD(j1, mi, m1, 0, pi/2, 0) *
+        Sum(WignerD(j1, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j1, mi1),
         (mi1, -j1, j1)), (mi, -j1, j1)), JxKet(j2, m2))
     assert qapply(TensorProduct(1, Jminus)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        TensorProduct(JxKet(j1, m1), Sum(hbar*sqrt(j2**2+j2-mi**2+mi)*WignerD(j2, mi, m2, 0, pi/2, 0) * \
-        Sum(WignerD(j2, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j2, mi1), \
+        TensorProduct(JxKet(j1, m1), Sum(hbar*sqrt(j2**2+j2-mi**2+mi)*WignerD(j2, mi, m2, 0, pi/2, 0) *
+        Sum(WignerD(j2, mi1, mi-1, 0, 3*pi/2, 0)*JxKet(j2, mi1),
         (mi1, -j2, j2)), (mi, -j2, j2)))
     assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        TensorProduct(Sum(hbar*sqrt(j1**2+j1-mi**2+mi)*WignerD(j1, mi, m1, 3*pi/2, -pi/2, pi/2) * \
-        Sum(WignerD(j1, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j1, mi1), \
+        TensorProduct(Sum(hbar*sqrt(j1**2+j1-mi**2+mi)*WignerD(j1, mi, m1, 3*pi/2, -pi/2, pi/2) *
+        Sum(WignerD(j1, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j1, mi1),
         (mi1, -j1, j1)), (mi, -j1, j1)), JyKet(j2, m2))
     assert qapply(TensorProduct(1, Jminus)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        TensorProduct(JyKet(j1, m1), Sum(hbar*sqrt(j2**2+j2-mi**2+mi)*WignerD(j2, mi, m2, 3*pi/2, -pi/2, pi/2) * \
-        Sum(WignerD(j2, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j2, mi1), \
+        TensorProduct(JyKet(j1, m1), Sum(hbar*sqrt(j2**2+j2-mi**2+mi)*WignerD(j2, mi, m2, 3*pi/2, -pi/2, pi/2) *
+        Sum(WignerD(j2, mi1, mi-1, 3*pi/2, pi/2, pi/2)*JyKet(j2, mi1),
         (mi1, -j2, j2)), (mi, -j2, j2)))
     assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
         hbar*sqrt(j1**2+j1-m1**2+m1)*TensorProduct(JzKet(j1, m1-1), JzKet(j2, m2))

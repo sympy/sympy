@@ -71,7 +71,7 @@ def test_cse_not_possible():
     assert substs == []
     assert reduced == [x + y]
     # issue 3230
-    eq = (meijerg((1, 2), (y, 4), (5,), [], x) + \
+    eq = (meijerg((1, 2), (y, 4), (5,), [], x) +
           meijerg((1, 3), (y, 4), (5,), [], x))
     assert cse(eq) == ([], [eq])
 

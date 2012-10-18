@@ -644,7 +644,7 @@ class Integral(Expr):
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
         if conds not in ['separate', 'piecewise', 'none']:
-            raise ValueError('conds must be one of "separate", "piecewise", ' \
+            raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 
         # check for the trivial case of equal upper and lower limits
@@ -705,7 +705,7 @@ class Integral(Expr):
                                           (Integral(function, (x, a, b)), True))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
-                                raise ValueError('conds=separate not supported in ' \
+                                raise ValueError('conds=separate not supported in '
                                                  'multiple integrals')
                             ret = f, cond
                         else:

@@ -98,8 +98,8 @@ class Wigner3j(Expr):
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
-        m = ((printer._print(self.j1), printer._print(self.m1)), \
-            (printer._print(self.j2), printer._print(self.m2)), \
+        m = ((printer._print(self.j1), printer._print(self.m1)),
+            (printer._print(self.j2), printer._print(self.m2)),
             (printer._print(self.j3), printer._print(self.m3)))
         hsep = 2
         vsep = 1
@@ -255,8 +255,8 @@ class Wigner6j(Expr):
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
-        m = ((printer._print(self.j1), printer._print(self.j3)), \
-            (printer._print(self.j2), printer._print(self.j)), \
+        m = ((printer._print(self.j1), printer._print(self.j3)),
+            (printer._print(self.j2), printer._print(self.j)),
             (printer._print(self.j12), printer._print(self.j23)))
         hsep = 2
         vsep = 1
@@ -355,8 +355,8 @@ class Wigner9j(Expr):
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
-        m = ((printer._print(self.j1), printer._print(self.j3), printer._print(self.j13)), \
-            (printer._print(self.j2), printer._print(self.j4), printer._print(self.j24)), \
+        m = ((printer._print(self.j1), printer._print(self.j3), printer._print(self.j13)),
+            (printer._print(self.j2), printer._print(self.j4), printer._print(self.j24)),
             (printer._print(self.j12), printer._print(self.j34), printer._print(self.j)))
         hsep = 2
         vsep = 1

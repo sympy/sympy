@@ -451,7 +451,7 @@ def test_representing_matrices():
     F = [[((2, 0), QQ(1, 1)), ((1, 0), QQ(-1, 1)), ((0, 1), QQ(-3, 1)), ((0, 0), QQ(1, 1))],
         [((0, 2), QQ(1, 1)), ((1, 0), QQ(-2, 1)), ((0, 1), QQ(1, 1)), ((0, 0), QQ(-1, 1))]]
 
-    assert _representing_matrices(basis, F, 1, grlex, QQ) ==[ \
+    assert _representing_matrices(basis, F, 1, grlex, QQ) ==[
         [[QQ(0, 1), QQ(0, 1), QQ(-1, 1), QQ(3, 1)],
         [QQ(0, 1), QQ(0, 1), QQ(3, 1), QQ(-4, 1)],
         [QQ(1, 1), QQ(0, 1), QQ(1, 1), QQ(6, 1)],

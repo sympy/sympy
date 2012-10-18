@@ -134,21 +134,21 @@ bench = [
   'integrate(x*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
   'integrate(x**2*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
   'integrate(x**3*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
-  'integrate(normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x*y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x*y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate((x+y+1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate((x+y+1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate((x+y-1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate((x+y-1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '                   (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '                (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(y**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(y**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
   'integrate(exponential(x, rate), (x, 0, oo), meijerg=True)',
   'integrate(x*exponential(x, rate), (x, 0, oo), meijerg=True)',

@@ -37,22 +37,22 @@ def test_strip():
 
 def test_distribute_gens_by_base():
     base = [0, 1, 2]
-    gens = [Permutation([0, 1, 2, 3]), Permutation([0, 1, 3, 2]),\
+    gens = [Permutation([0, 1, 2, 3]), Permutation([0, 1, 3, 2]),
            Permutation([0, 2, 3, 1]), Permutation([3, 2, 1, 0])]
-    assert _distribute_gens_by_base(base, gens) == [gens,\
-                                                   [Permutation([0, 1, 2, 3]),\
-                                                   Permutation([0, 1, 3, 2]),\
-                                                   Permutation([0, 2, 3, 1])],\
-                                                   [Permutation([0, 1, 2, 3]),\
+    assert _distribute_gens_by_base(base, gens) == [gens,
+                                                   [Permutation([0, 1, 2, 3]),
+                                                   Permutation([0, 1, 3, 2]),
+                                                   Permutation([0, 2, 3, 1])],
+                                                   [Permutation([0, 1, 2, 3]),
                                                    Permutation([0, 1, 3, 2])]]
 
 
 def test_strong_gens_from_distr():
-    strong_gens_distr = [[Permutation([0, 2, 1]), Permutation([1, 2, 0]),\
+    strong_gens_distr = [[Permutation([0, 2, 1]), Permutation([1, 2, 0]),
                   Permutation([1, 0, 2])], [Permutation([0, 2, 1])]]
     assert _strong_gens_from_distr(strong_gens_distr) ==\
-                                                     [Permutation([0, 2, 1]),\
-                                                     Permutation([1, 2, 0]),\
+                                                     [Permutation([0, 2, 1]),
+                                                     Permutation([1, 2, 0]),
                                                      Permutation([1, 0, 2])]
 
 

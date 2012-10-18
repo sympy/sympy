@@ -40,21 +40,21 @@ def test_pde_separate_mul():
     assert res == [D(X(x), x, x)/X(x), D(T(t), t, t)/(c**2*T(t))]
 
     # Laplace equation in cylindrical coords
-    eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) + \
+    eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
             1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
-    assert res == [D(Z(z), z, z)/Z(z), \
-            -D(u(theta, r), r, r)/u(theta, r) - \
-            D(u(theta, r), r)/(r*u(theta, r)) - \
+    assert res == [D(Z(z), z, z)/Z(z),
+            -D(u(theta, r), r, r)/u(theta, r) -
+            D(u(theta, r), r)/(r*u(theta, r)) -
             D(u(theta, r), theta, theta)/(r**2*u(theta, r))]
     # Lets use the result to create a new equation...
     eq = Eq(res[1], c)
     # ...and separate theta...
     res = pde_separate_mul(eq, u(theta, r), [T(theta), R(r)])
-    assert res == [D(T(theta), theta, theta)/T(theta), \
+    assert res == [D(T(theta), theta, theta)/T(theta),
             -r*D(R(r), r)/R(r) - r**2*D(R(r), r, r)/R(r) - c*r**2]
     # ...or r...
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
-    assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2, \
+    assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]

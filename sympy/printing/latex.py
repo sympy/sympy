@@ -50,10 +50,10 @@ class LatexPrinter(Printer):
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
-            valid_modes = ['inline', 'plain', 'equation', \
+            valid_modes = ['inline', 'plain', 'equation',
                             'equation*']
             if self._settings['mode'] not in valid_modes:
-                raise ValueError("'mode' must be one of 'inline', 'plain', " \
+                raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
 
         mul_symbol_table = {
@@ -967,13 +967,13 @@ class LatexPrinter(Printer):
             charmap[expr.rel_op], self._print(expr.rhs))
 
     def _print_Piecewise(self, expr):
-        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c)) \
+        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                        for e, c in expr.args[:-1]]
         if expr.args[-1].cond == True:
-            ecpairs.append(r"%s & \text{otherwise}" % \
+            ecpairs.append(r"%s & \text{otherwise}" %
                                self._print(expr.args[-1].expr))
         else:
-            ecpairs.append(r"%s & \text{for}\: %s" % \
+            ecpairs.append(r"%s & \text{for}\: %s" %
                            (self._print(expr.args[-1].expr),
                             self._print(expr.args[-1].cond)))
         tex = r"\begin{cases} %s \end{cases}"
@@ -1053,7 +1053,7 @@ class LatexPrinter(Printer):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
+            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (
                 self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
@@ -1269,7 +1269,7 @@ class LatexPrinter(Printer):
     def _print_CompositeMorphism(self, morphism):
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
-        component_names_list = [self._print(Symbol(component.name)) for \
+        component_names_list = [self._print(Symbol(component.name)) for
                                 component in morphism.components]
         component_names_list.reverse()
         component_names = "\\circ ".join(component_names_list) + ":"

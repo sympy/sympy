@@ -570,5 +570,5 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols[arg]
 
-    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
+    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
                                                             for c in clauses]

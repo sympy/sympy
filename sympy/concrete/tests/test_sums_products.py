@@ -112,7 +112,7 @@ def test_evalf_fast_series():
     assert NS(9801/sqrt(8)/Sum(fac(4*n)*(1103+26390*n)/fac(n)**4/396**(4*n), (n, 0, oo)), 100) == pistr
     assert NS(1/Sum(binomial(2*n, n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
     # Machin's formula for pi
-    assert NS(16*Sum((-1)**n/(2*n+1)/5**(2*n+1), (n, 0, oo)) - \
+    assert NS(16*Sum((-1)**n/(2*n+1)/5**(2*n+1), (n, 0, oo)) -
         4*Sum((-1)**n/(2*n+1)/239**(2*n+1), (n, 0, oo)), 100) == pistr
 
     # Apery's constant
@@ -124,7 +124,7 @@ def test_evalf_fast_series():
 
 def test_evalf_fast_series_issue998():
     # Catalan's constant
-    assert NS(Sum((-1)**(n-1)*2**(8*n)*(40*n**2-24*n+3)*fac(2*n)**3*\
+    assert NS(Sum((-1)**(n-1)*2**(8*n)*(40*n**2-24*n+3)*fac(2*n)**3*
         fac(n)**2/n**3/(2*n-1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
         NS(Catalan, 100)
     astr = NS(zeta(3), 100)

@@ -427,7 +427,7 @@ class KroneckerDelta(Function):
             return 0
 
     def _sympyrepr(self, printer, *args):
-        return "%s(%s, %s)"% (self.__class__.__name__, self.args[0], \
+        return "%s(%s, %s)"% (self.__class__.__name__, self.args[0],
         self.args[1])
 
     def _latex(self, printer, *args):

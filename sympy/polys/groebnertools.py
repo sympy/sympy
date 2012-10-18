@@ -879,7 +879,7 @@ def matrix_fglm(F, u, O_from, O_to, K):
             L = list(set(L))
             L.sort(key=lambda (k, l): O_to(_incr_k(S[l], k)), reverse=True)
 
-        L = [(k, l) for (k, l) in L if \
+        L = [(k, l) for (k, l) in L if
             all(monomial_div(_incr_k(S[l], k), sdp_LM(g, u)) is None for g in G)]
 
         if not L:
@@ -960,8 +960,8 @@ def _basis(G, u, O, K):
         t = candidates.pop()
         basis.append(t)
 
-        new_candidates = [_incr_k(t, k) for k in xrange(u + 1) \
-            if all(monomial_div(_incr_k(t, k), lmg) is None \
+        new_candidates = [_incr_k(t, k) for k in xrange(u + 1)
+            if all(monomial_div(_incr_k(t, k), lmg) is None
             for lmg in leading_monomials)]
         candidates.extend(new_candidates)
         candidates.sort(key=lambda m: O(m), reverse=True)

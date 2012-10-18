@@ -1218,7 +1218,7 @@ class SubModuleQuotientRing(SubModule):
                     for x in self.quot._syzygies()]
 
     def _in_terms_of_generators(self, elem):
-        return [self.ring.convert(x, self.quot.ring) for x in \
+        return [self.ring.convert(x, self.quot.ring) for x in
             self.quot._in_terms_of_generators(self.container.lift(elem))]
 
 ##########################################################################

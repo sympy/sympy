@@ -479,7 +479,7 @@ def eval_sum_symbolic(f, limits):
         # TODO: more general limit handling
         return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
 
-    if not (a.has(S.Infinity, S.NegativeInfinity) or \
+    if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):
         r = gosper_sum(f, (i, a, b))
 

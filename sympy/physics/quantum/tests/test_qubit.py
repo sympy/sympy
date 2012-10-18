@@ -55,23 +55,23 @@ def test_IntQubit():
 
 
 def test_superposition_of_states():
-    assert qapply(CNOT(0, 1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
+    assert qapply(CNOT(0, 1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +
      Qubit('10')/2)
 
-    assert matrix_to_qubit(represent(CNOT(0, 1)*HadamardGate(0)\
+    assert matrix_to_qubit(represent(CNOT(0, 1)*HadamardGate(0)
     *(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')), nqubits=2))\
      == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 + Qubit('10')/2)
 
 
 #test apply methods
 def test_apply_represent_equality():
-    gates = [HadamardGate(int(3*random.random())),\
-     XGate(int(3*random.random())), ZGate(int(3*random.random())),\
-      YGate(int(3*random.random())), ZGate(int(3*random.random())),\
+    gates = [HadamardGate(int(3*random.random())),
+     XGate(int(3*random.random())), ZGate(int(3*random.random())),
+      YGate(int(3*random.random())), ZGate(int(3*random.random())),
        PhaseGate(int(3*random.random()))]
 
-    circuit = Qubit(int(random.random()*2), int(random.random()*2),\
-    int(random.random()*2), int(random.random()*2), int(random.random()*2),\
+    circuit = Qubit(int(random.random()*2), int(random.random()*2),
+    int(random.random()*2), int(random.random()*2), int(random.random()*2),
         int(random.random()*2))
     for i in range(int(random.random()*6)):
         circuit = gates[int(random.random()*6)]*circuit
@@ -90,9 +90,9 @@ def test_matrix_to_qubits():
     assert qubit_to_matrix(Qubit(0, 0, 0, 0)) ==\
         Matrix([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     assert matrix_to_qubit(sqrt(2)*2*Matrix([1, 1, 1, 1, 1, 1, 1, 1])) ==\
-        (2*sqrt(2)*(Qubit(0, 0, 0) + Qubit(0, 0, 1) + Qubit(0, 1, 0) + Qubit(0, 1, 1)\
+        (2*sqrt(2)*(Qubit(0, 0, 0) + Qubit(0, 0, 1) + Qubit(0, 1, 0) + Qubit(0, 1, 1)
     + Qubit(1, 0, 0) + Qubit(1, 0, 1) + Qubit(1, 1, 0) + Qubit(1, 1, 1))).expand()
-    assert qubit_to_matrix(2*sqrt(2)*(Qubit(0, 0, 0) + Qubit(0, 0, 1) + Qubit(0, 1, 0)\
+    assert qubit_to_matrix(2*sqrt(2)*(Qubit(0, 0, 0) + Qubit(0, 0, 1) + Qubit(0, 1, 0)
     + Qubit(0, 1, 1) + Qubit(1, 0, 0) + Qubit(1, 0, 1) + Qubit(1, 1, 0) + Qubit(1, 1, 1)))\
         == sqrt(2)*2*Matrix([1, 1, 1, 1, 1, 1, 1, 1])
 
@@ -125,20 +125,20 @@ def test_measure_partial():
     #test of measuring multiple bits at once
     state2 = Qubit('1111') + Qubit('1101') + Qubit('1011') + Qubit('1000')
     assert sorted(measure_partial(state2, (0, 1, 3))) ==\
-           sorted([(Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1, 2)), \
+           sorted([(Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1, 2)),
            (Qubit('1101'), Rational(1, 4)), (Qubit('1000'), Rational(1, 4))])
     assert sorted(measure_partial(state2, (0,))) ==\
-           sorted([(Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) + Qubit('1011')/sqrt(3), Rational(3, 4)),\
+           sorted([(Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) + Qubit('1011')/sqrt(3), Rational(3, 4)),
            (Qubit('1000'), Rational(1, 4))])
 
 
 def test_measure_all():
     assert measure_all(Qubit('11')) == [(Qubit('11'), 1)]
     state = Qubit('11') + Qubit('10')
-    assert sorted(measure_all(state)) == sorted([(Qubit('11'), Rational(1, 2)),\
+    assert sorted(measure_all(state)) == sorted([(Qubit('11'), Rational(1, 2)),
            (Qubit('10'), Rational(1, 2))])
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
-    assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1, 5)), \
+    assert sorted(measure_all(state2)) == sorted([(Qubit('11'), Rational(1, 5)),
            (Qubit('00'), Rational(4, 5))])
 
 

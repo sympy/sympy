@@ -17,7 +17,7 @@ if __name__ == '__main__':
     tex.Format()
 
     coords = r, theta, phi = sympy.symbols('r theta phi')
-    x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*\
+    x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*
         (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
     x.set_name('x')
 

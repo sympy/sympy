@@ -225,7 +225,7 @@ class Order(Expr):
                 return None
             r = None
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                l = limit(powsimp(self.expr/expr.expr, deep=True,
                 combine='exp'), s, 0) != 0
                 if r is None:
                     r = l

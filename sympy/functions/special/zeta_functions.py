@@ -150,7 +150,7 @@ class lerchphi(Function):
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
             return add + mul*n**(s-1)*Add(
-                *[polylog(s, zet**k*root)._eval_expand_func(**hints) \
+                *[polylog(s, zet**k*root)._eval_expand_func(**hints)
                    / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
@@ -165,7 +165,7 @@ class lerchphi(Function):
             else:
                 arg = z.args[0]/(2*pi*I)
                 p, q = S([arg.p, arg.q])
-            return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q) \
+            return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q)
                          for k in xrange(q)])
 
         return lerchphi(z, s, a)

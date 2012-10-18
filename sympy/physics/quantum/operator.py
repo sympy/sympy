@@ -312,7 +312,7 @@ class OuterProduct(Operator):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
         if not ket.dual_class() == bra.__class__:
             raise TypeError(
-                'ket and bra are not dual classes: %r, %r' % \
+                'ket and bra are not dual classes: %r, %r' %
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible

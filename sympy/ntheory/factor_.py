@@ -14,7 +14,7 @@ from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
 
-small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8)) \
+small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
 
 
@@ -1142,7 +1142,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                         max_steps = high_root
                         if verbose:
                             print (rho_msg % (1, max_steps, high_))
-                        c = pollard_rho(n, retries=1, max_steps=max_steps, \
+                        c = pollard_rho(n, retries=1, max_steps=max_steps,
                                            seed=high_)
                         if c:
                             # factor it and let _trial do the update

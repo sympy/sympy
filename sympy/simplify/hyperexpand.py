@@ -512,7 +512,7 @@ class IndexPair(object):
 
         gt0 = lambda x: (x > 0) is True
         if S(0) in abuckets and (not S(0) in oabuckets or
-             len(filter(gt0, abuckets[S(0)])) != \
+             len(filter(gt0, abuckets[S(0)])) !=
              len(filter(gt0, oabuckets[S(0)]))):
             return -1
 
@@ -1060,7 +1060,7 @@ class UnShiftA(Operator):
 
         b0 = -n.nth(0)
         if b0 == 0:
-            raise ValueError('Cannot decrement upper index: ' \
+            raise ValueError('Cannot decrement upper index: '
                                'cancels with lower')
         #print b0
 
@@ -1106,7 +1106,7 @@ class UnShiftB(Operator):
         b0 = n.nth(0)
         #print b0
         if b0 == 0:
-            raise ValueError('Cannot increment index: ' \
+            raise ValueError('Cannot increment index: '
                                'cancels with upper')
         #print b0
 
@@ -1848,7 +1848,7 @@ def try_lerchphi(nip):
             monomials += [(a/denom, b)]
             continue
         if numer.has(t):
-            raise NotImplementedError('Need partial fraction decomposition' \
+            raise NotImplementedError('Need partial fraction decomposition'
                                       ' with linear denominators')
         indep, [dep] = denom.as_coeff_mul(t)
         n = 1
@@ -2428,7 +2428,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
 
     m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
     if m.delta > 0 or \
-       (m.delta == 0 and len(m.ap) == len(m.bq) and \
+       (m.delta == 0 and len(m.ap) == len(m.bq) and
             (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
         # The condition delta > 0 means that the convergence region is
         # connected. Any expression we find can be continued analytically

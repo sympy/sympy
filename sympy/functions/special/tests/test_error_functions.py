@@ -191,10 +191,10 @@ def test_si():
     assert mytd(Shi(x), sinh(x)/x, x)
 
     assert mytn(Si(x), Si(x).rewrite(Ei),
-                -I*(-Ei(x*exp_polar(-I*pi/2))/2 \
+                -I*(-Ei(x*exp_polar(-I*pi/2))/2
                         + Ei(x*exp_polar(I*pi/2))/2 - I*pi) + pi/2, x)
     assert mytn(Si(x), Si(x).rewrite(expint),
-                -I*(-expint(1, x*exp_polar(-I*pi/2))/2 + \
+                -I*(-expint(1, x*exp_polar(-I*pi/2))/2 +
                     expint(1, x*exp_polar(I*pi/2))/2) + pi/2, x)
     assert mytn(Shi(x), Shi(x).rewrite(Ei),
                 Ei(x)/2 - Ei(x*exp_polar(I*pi))/2 + I*pi/2, x)

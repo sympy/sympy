@@ -897,11 +897,11 @@ class MV(object):
             x = MV.coords
             if isinstance(vars, sympy.core.symbol.Symbol):
                 for icoef in MV.nrg:
-                    Acoefs[icoef] = sympy.Function(fct_name+'__'+\
+                    Acoefs[icoef] = sympy.Function(fct_name+'__'+
                                    sympy.galgebra.latex_ex.LatexPrinter.str_basic(x[icoef]))(vars)
             else:
                 for icoef in MV.nrg:
-                    Acoefs[icoef] = sympy.Function(fct_name+'__'+\
+                    Acoefs[icoef] = sympy.Function(fct_name+'__'+
                                    sympy.galgebra.latex_ex.LatexPrinter.str_basic(x[icoef]))(*tuple(vars))
         A = MV(Acoefs, 'vector', fct_name)
         return(A)

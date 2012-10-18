@@ -25,16 +25,16 @@ def test_wavefunction():
             (1, 0): 2*sqrt(1/a**3) * exp(-r/a),
             (2, 0): sqrt(1/(2*a**3)) * exp(-r/(2*a)) * (1-r/(2*a)),
             (2, 1): S(1)/2 * sqrt(1/(6*a**3)) * exp(-r/(2*a)) * r/a,
-            (3, 0): S(2)/3 * sqrt(1/(3*a**3)) * exp(-r/(3*a)) * \
+            (3, 0): S(2)/3 * sqrt(1/(3*a**3)) * exp(-r/(3*a)) *
                     (1-2*r/(3*a) + S(2)/27 * (r/a)**2),
-            (3, 1): S(4)/27 * sqrt(2/(3*a**3)) * exp(-r/(3*a)) * \
+            (3, 1): S(4)/27 * sqrt(2/(3*a**3)) * exp(-r/(3*a)) *
                     (1-r/(6*a)) * r/a,
             (3, 2): S(2)/81 * sqrt(2/(15*a**3)) * exp(-r/(3*a)) * (r/a)**2,
-            (4, 0): S(1)/4 * sqrt(1/a**3) * exp(-r/(4*a)) * \
+            (4, 0): S(1)/4 * sqrt(1/a**3) * exp(-r/(4*a)) *
                     (1-3*r/(4*a)+S(1)/8 * (r/a)**2-S(1)/192 * (r/a)**3),
-            (4, 1): S(1)/16 * sqrt(5/(3*a**3)) * exp(-r/(4*a)) * \
+            (4, 1): S(1)/16 * sqrt(5/(3*a**3)) * exp(-r/(4*a)) *
                     (1-r/(4*a)+S(1)/80 * (r/a)**2) * (r/a),
-            (4, 2): S(1)/64 * sqrt(1/(5*a**3)) * exp(-r/(4*a)) * \
+            (4, 2): S(1)/64 * sqrt(1/(5*a**3)) * exp(-r/(4*a)) *
                     (1-r/(12*a)) * (r/a)**2,
             (4, 3): S(1)/768 * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
             }
@@ -71,18 +71,18 @@ def test_hydrogen_energies():
 def test_hydrogen_energies_relat():
     # First test exact formulas for small "c" so that we get nice expressions:
     assert E_nl_dirac(2, 0, Z=1, c=1) == 1/sqrt(2) - 1
-    assert simplify(E_nl_dirac(2, 0, Z=1, c=2) - ( (8*sqrt(3) + 16) \
+    assert simplify(E_nl_dirac(2, 0, Z=1, c=2) - ( (8*sqrt(3) + 16)
                 / sqrt(16*sqrt(3) + 32) - 4)) == 0
-    assert simplify(E_nl_dirac(2, 0, Z=1, c=3) - ( (54*sqrt(2) + 81) \
+    assert simplify(E_nl_dirac(2, 0, Z=1, c=3) - ( (54*sqrt(2) + 81)
                 / sqrt(108*sqrt(2) + 162) - 9)) == 0
 
     # Now test for almost the correct speed of light, without floating point
     # numbers:
-    assert simplify(E_nl_dirac(2, 0, Z=1, c=137) - ( (352275361 + 10285412 * \
-                sqrt(1173)) / sqrt(704550722 + 20570824 * sqrt(1173)) - \
+    assert simplify(E_nl_dirac(2, 0, Z=1, c=137) - ( (352275361 + 10285412 *
+                sqrt(1173)) / sqrt(704550722 + 20570824 * sqrt(1173)) -
                 18769)) == 0
-    assert simplify(E_nl_dirac(2, 0, Z=82, c=137) - ( (352275361 + \
-            2571353*sqrt(12045)) / sqrt(704550722 + 5142706*sqrt(12045)) \
+    assert simplify(E_nl_dirac(2, 0, Z=82, c=137) - ( (352275361 +
+            2571353*sqrt(12045)) / sqrt(704550722 + 5142706*sqrt(12045))
             - 18769)) == 0
 
     # Test using exact speed of light, and compare against the nonrelativistic

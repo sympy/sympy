@@ -814,7 +814,7 @@ class principal_branch(Function):
         arg = periodic_argument(c, period)
         if arg.has(periodic_argument):
             return None
-        if arg.is_number and (unbranched_argument(c) != arg or \
+        if arg.is_number and (unbranched_argument(c) != arg or
                               (arg == 0 and m != () and c != 1)):
             if arg == 0:
                 return abs(c)*principal_branch(Mul(*m), period)

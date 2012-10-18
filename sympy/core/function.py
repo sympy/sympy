@@ -1425,7 +1425,7 @@ def diff(f, *symbols, **kwargs):
     return Derivative(f, *symbols, **kwargs)
 
 
-def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
+def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
     """
     Expand an expression using methods given as hints.
@@ -1771,7 +1771,7 @@ def expand_mul(expr, deep=True):
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
+    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,
     power_base=False, basic=False, multinomial=False, log=False)
 
 
@@ -1789,7 +1789,7 @@ def expand_multinomial(expr, deep=True):
     x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,
     power_base=False, basic=False, multinomial=True, log=False)
 
 
@@ -1826,7 +1826,7 @@ def expand_func(expr, deep=True):
     x*(x + 1)*gamma(x)
 
     """
-    return sympify(expr).expand(deep=deep, func=True, basic=False,\
+    return sympify(expr).expand(deep=deep, func=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
@@ -1844,7 +1844,7 @@ def expand_trig(expr, deep=True):
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
-    return sympify(expr).expand(deep=deep, trig=True, basic=False,\
+    return sympify(expr).expand(deep=deep, trig=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
@@ -1867,7 +1867,7 @@ def expand_complex(expr, deep=True):
     ========
     Expr.as_real_imag
     """
-    return sympify(expr).expand(deep=deep, complex=True, basic=False,\
+    return sympify(expr).expand(deep=deep, complex=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
@@ -1950,7 +1950,7 @@ def expand_power_exp(expr, deep=True):
     >>> expand_power_exp(x**(y + 2))
     x**2*x**y
     """
-    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
+    return sympify(expr).expand(deep=deep, complex=False, basic=False,
     log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 

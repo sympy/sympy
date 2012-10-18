@@ -67,7 +67,7 @@ def test_mellin_transform_fail():
     expr = (sqrt(x+b**2)+b)**a/sqrt(x+b**2)
     # TODO does not work with bneg, argument wrong. Needs changes to matching.
     assert MT(expr.subs(b, -bpos), x, s) == \
-           ((-1)**(a+1)*2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(a + s) \
+           ((-1)**(a+1)*2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(a + s)
                                           *gamma(1 - a - 2*s)/gamma(1 - s),
             (-re(a), -re(a)/2 + S(1)/2), True)
 
@@ -124,7 +124,7 @@ def test_mellin_transform():
            (0, -re(a)/2), True)
     expr = (sqrt(x+b**2)+b)**a/sqrt(x+b**2)
     assert MT(expr.subs(b, bpos), x, s) == \
-           (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s) \
+           (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
                                          *gamma(1 - a - 2*s)/gamma(1 - a - s),
             (0, -re(a)/2 + S(1)/2), True)
 
@@ -166,7 +166,7 @@ def test_mellin_transform_bessel():
     assert MT(besselj(a, 2*sqrt(x)), x, s) == \
            (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, S(3)/4), True)
     assert MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
-           (2**a*gamma(S(1)/2 - 2*s)*gamma((a+1)/2 + s) \
+           (2**a*gamma(S(1)/2 - 2*s)*gamma((a+1)/2 + s)
                 / (gamma(1 - s- a/2)*gamma(1 + a - 2*s)),
             (-(re(a) + 1)/2, S(1)/4), True)
     assert MT(cos(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
@@ -267,7 +267,7 @@ def test_expint():
 
     assert mellin_transform(Si(x), x, s) == \
            (-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)), (-1, 0), True)
-    assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2) \
+    assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2)
                                     /(2*s*gamma(-s/2 + 1)), s, x, (-1, 0)) \
            == Si(x)
 
@@ -341,19 +341,19 @@ def test_inverse_mellin_transform():
            == (x - 1)**(beta - 1)*Heaviside(x - 1)
     assert simp_pows(IMT(gamma(s)*gamma(rho-s)/gamma(rho), s, x, (0, None))) \
            == (1/(x + 1))**rho
-    assert simp_pows(IMT(d**c*d**(s-1)*sin(pi*c) \
+    assert simp_pows(IMT(d**c*d**(s-1)*sin(pi*c)
                          *gamma(s)*gamma(s+c)*gamma(1-s)*gamma(1-s-c)/pi,
                          s, x, (Max(-re(c), 0), Min(1 - re(c), 1)))) \
            == (x**c - d**c)/(x - d)
 
-    assert simplify(IMT(1/sqrt(pi)*(-c/2)*gamma(s)*gamma((1-c)/2 - s) \
+    assert simplify(IMT(1/sqrt(pi)*(-c/2)*gamma(s)*gamma((1-c)/2 - s)
                                  *gamma(-c/2-s)/gamma(1-c-s),
                                  s, x, (0, -re(c)/2))) == \
            (1 + sqrt(x + 1))**c
-    assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s) \
+    assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s)
                         /gamma(1 - a - s), s, x, (0, (-re(a) + 1)/2))) == \
            (b + sqrt(b**2 + x))**(a - 1)*(b**2 + b*sqrt(b**2 + x) + x)/(b**2 + x)
-    assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s) \
+    assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s)
                           / gamma(-c - s + 1), s, x, (0, -re(c)/2))) == \
            (b + sqrt(b**2 + x))**c
 
@@ -388,33 +388,33 @@ def test_inverse_mellin_transform():
     # 8.4.19
     assert simplify(IMT(gamma(a/2 + s)/gamma(a/2 - s + 1), s, x, (-re(a)/2, S(3)/4))) \
            == besselj(a, 2*sqrt(x))
-    assert simplify(IMT(2**a*gamma(S(1)/2 - 2*s)*gamma(s + (a + 1)/2) \
+    assert simplify(IMT(2**a*gamma(S(1)/2 - 2*s)*gamma(s + (a + 1)/2)
                       / (gamma(1 - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-(re(a) + 1)/2, S(1)/4))) == \
            sin(sqrt(x))*besselj(a, sqrt(x))
-    assert simplify(IMT(2**a*gamma(a/2 + s)*gamma(S(1)/2 - 2*s) \
+    assert simplify(IMT(2**a*gamma(a/2 + s)*gamma(S(1)/2 - 2*s)
                       / (gamma(S(1)/2 - s - a/2)*gamma(1 - 2*s + a)),
                       s, x, (-re(a)/2, S(1)/4))) == \
            cos(sqrt(x))*besselj(a, sqrt(x))
     # TODO this comes out as an amazing mess, but simplifies nicely
-    assert simplify(IMT(gamma(a + s)*gamma(S(1)/2 - s) \
+    assert simplify(IMT(gamma(a + s)*gamma(S(1)/2 - s)
                       / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
                       s, x, (-re(a), S(1)/2))) == \
            besselj(a, sqrt(x))**2
-    assert simplify(IMT(gamma(s)*gamma(S(1)/2 - s) \
+    assert simplify(IMT(gamma(s)*gamma(S(1)/2 - s)
                       / (sqrt(pi)*gamma(1 - s - a)*gamma(1 + a - s)),
                       s, x, (0, S(1)/2))) == \
            besselj(-a, sqrt(x))*besselj(a, sqrt(x))
-    assert simplify(IMT(4**s*gamma(-2*s + 1)*gamma(a/2 + b/2 + s) \
-                      / (gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1) \
+    assert simplify(IMT(4**s*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
+                      / (gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
                          *gamma(a/2 + b/2 - s + 1)),
                       s, x, (-(re(a) + re(b))/2, S(1)/2))) == \
            besselj(a, sqrt(x))*besselj(b, sqrt(x))
 
     # Section 8.4.20
     # TODO this can be further simplified!
-    assert simplify(IMT(-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(-2*s + 1) * \
-                      gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) / \
+    assert simplify(IMT(-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(-2*s + 1) *
+                      gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) /
                       (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
                       s, x,
                       (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \

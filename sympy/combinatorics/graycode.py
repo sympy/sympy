@@ -380,7 +380,7 @@ def get_subset_from_bitstring(super_set, bitstring):
     """
     if len(super_set) != len(bitstring):
         raise ValueError("The sizes of the lists are not equal")
-    return [super_set[i] for i, j in enumerate(bitstring) \
+    return [super_set[i] for i, j in enumerate(bitstring)
             if bitstring[i] == '1']
 
 
@@ -404,5 +404,5 @@ def graycode_subsets(gray_code_set):
     ========
     get_subset_from_bitstring
     """
-    return [get_subset_from_bitstring(gray_code_set, bitstring) for \
+    return [get_subset_from_bitstring(gray_code_set, bitstring) for
             bitstring in list(GrayCode(len(gray_code_set)).generate_gray())]

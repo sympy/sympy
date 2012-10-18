@@ -58,7 +58,7 @@ class SATSolver(object):
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, heuristic='vsids', \
+    def __init__(self, clauses, variables, var_settings, heuristic='vsids',
                  clause_learning='none', INTERVAL=500):
         self.var_settings = var_settings
         self.heuristic = heuristic

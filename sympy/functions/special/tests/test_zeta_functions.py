@@ -136,7 +136,7 @@ def test_lerchphi_expansion():
 
     # polylog reduction
     assert myexpand(lerchphi(z, s, S(1)/2),
-                    2**(s-1)*(polylog(s, sqrt(z))/sqrt(z) \
+                    2**(s-1)*(polylog(s, sqrt(z))/sqrt(z)
                               - polylog(s, polar_lift(-1)*sqrt(z))/sqrt(z)))
     assert myexpand(lerchphi(z, s, 2), -1/z + polylog(s, z)/z**2)
     assert myexpand(lerchphi(z, s, S(3)/2), None)

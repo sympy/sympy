@@ -257,7 +257,7 @@ def test_roots():
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
                 {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
-    r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r) \
+    r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r)
         for r in ((1, 2), (1, 3), (1, 9), (4, 9), (19, 27)) ]
 
     U = -r1_2 - r1_2*I*3**r1_2
@@ -272,7 +272,7 @@ def test_roots():
 
     f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
 
-    r13_20, r1_20 = [ Rational(*r) \
+    r13_20, r1_20 = [ Rational(*r)
         for r in ((13, 20), (1, 20)) ]
 
     s2 = sqrt(2)

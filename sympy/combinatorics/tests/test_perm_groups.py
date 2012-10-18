@@ -213,7 +213,7 @@ def test_orbits():
     assert g.orbit_transversal(0) == \
         [Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 2, 0])]
     assert g.orbit_transversal(0, True) == \
-        [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])), \
+        [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
 
     a = Permutation(range(1, 100) + [0])
@@ -341,7 +341,7 @@ def test_direct_product():
 
 def test_orbit_rep():
     G = DihedralGroup(6)
-    assert G.orbit_rep(1, 3) in [Permutation([2, 3, 4, 5, 0, 1]),\
+    assert G.orbit_rep(1, 3) in [Permutation([2, 3, 4, 5, 0, 1]),
     Permutation([4, 3, 2, 1, 0, 5])]
     H = CyclicGroup(4)*G
     assert H.orbit_rep(1, 5) == False
@@ -454,16 +454,16 @@ def test_schreier_sims_random():
 
     S = SymmetricGroup(3)
     base = [0, 1]
-    strong_gens = [Permutation([1, 2, 0]), Permutation([1, 0, 2]),\
+    strong_gens = [Permutation([1, 2, 0]), Permutation([1, 0, 2]),
                   Permutation([0, 2, 1])]
     assert S.schreier_sims_random(base, strong_gens, 5) == (base, strong_gens)
     D = DihedralGroup(3)
-    _random_prec = {'g': [Permutation([2, 0, 1]), Permutation([1, 2, 0]),\
+    _random_prec = {'g': [Permutation([2, 0, 1]), Permutation([1, 2, 0]),
                          Permutation([1, 0, 2])]}
     base = [0, 1]
-    strong_gens = [Permutation([1, 2, 0]), Permutation([2, 1, 0]),\
+    strong_gens = [Permutation([1, 2, 0]), Permutation([2, 1, 0]),
                   Permutation([0, 2, 1])]
-    assert D.schreier_sims_random([], D.generators, 2,\
+    assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
 
 

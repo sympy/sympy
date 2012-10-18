@@ -263,7 +263,7 @@ def tensor_product_simp_Mul(e):
             if isinstance(next, TensorProduct):
                 if n_terms != len(next.args):
                     raise QuantumError(
-                        'TensorProducts of different lengths: %r and %r' % \
+                        'TensorProducts of different lengths: %r and %r' %
                         (current, next)
                     )
                 for i in range(len(new_args)):

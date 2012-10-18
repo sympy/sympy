@@ -99,7 +99,7 @@ class DiracDelta(Function):
         if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = roots(self.args[0], x, \
+            argroots = roots(self.args[0], x,
                                                      multiple=True)
             result = 0
             valid = True

@@ -30,7 +30,7 @@ def test_Plm():
     assert Plm(3, -2, x) == Plm(3, 2, x)/120
     assert Plm(3, -1, x) == -Plm(3, 1, x)/12
     assert Plm(3, 0, x) == (5*x**3-3*x)/2
-    assert Plm(3, 1, x).expand() == (( 3*(1-5*x**2)/2 ).expand() \
+    assert Plm(3, 1, x).expand() == (( 3*(1-5*x**2)/2 ).expand()
             *(1-x**2)**(sympify(1)/2)).expand()
     assert Plm(3, 2, x) == 15*x*(1-x**2)
     assert Plm(3, 3, x) == -15*(1-x**2)**(sympify(3)/2)
@@ -61,9 +61,9 @@ def test_Ylm():
     assert Ylm(1, 0, th, ph) == sympify(1)/2 * sqrt(3/pi) * cos(th)
     assert Ylm(1, 1, th, ph) == -sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
             exp(I*ph)
-    assert Ylm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) * \
+    assert Ylm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) *
             (3*cos(th)**2-1)).expand()
-    assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 * \
+    assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 *
             sqrt(3)*sqrt(5/(2*pi)) * (sin(th)*cos(th)) * exp(I*ph)).expand()
 
     # These last 2 return the correct answer, but the answer can be simplified
@@ -81,6 +81,6 @@ def test_Zlm():
     assert Zlm(1, 1, th, ph) == sqrt(3/(4*pi))*sin(th)*cos(ph)
 
     assert Zlm(2, -1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*sin(ph)
-    assert Zlm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) * \
+    assert Zlm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) *
             (3*cos(th)**2-1)).expand()
     assert Zlm(2, 1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*cos(ph)

@@ -99,7 +99,7 @@ class Piecewise(Function):
                 continue
             if not isinstance(cond, (bool, Relational, Boolean)):
                 raise TypeError(
-                    "Cond %s is of type %s, but must be a Relational," \
+                    "Cond %s is of type %s, but must be a Relational,"
                     " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
             if cond is True:
@@ -385,8 +385,8 @@ class Piecewise(Function):
             if targetcond is True:
                 return [(h[0], h[1]) for h in holes]
         elif holes and default == None:
-            raise ValueError("Called interval evaluation over piecewise " \
-                             "function on undefined intervals %s" % \
+            raise ValueError("Called interval evaluation over piecewise "
+                             "function on undefined intervals %s" %
                              ", ".join([str((h[0], h[1])) for h in holes]))
 
         return int_expr
@@ -412,7 +412,7 @@ class Piecewise(Function):
         return Piecewise(*args)
 
     def _eval_nseries(self, x, n, logx):
-        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
+        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
                    self.args)
         return self.func(*args)
 
@@ -482,7 +482,7 @@ def piecewise_fold(expr):
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
-        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n+1:])), c) \
+        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n+1:])), c)
                         for e, c in new_args[n].args]
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))

@@ -226,7 +226,7 @@ for name, value in _handlers_dict.iteritems():
     register_handler(name, value[0])
 
 
-known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__ \
+known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
                                                 if not attr.startswith('__')]
 known_facts = And(
     Implies(Q.real, Q.complex),

@@ -245,7 +245,7 @@ class Number(AtomicExpr):
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
-        raise NotImplementedError('%s needs ._as_mpf_val() method' % \
+        raise NotImplementedError('%s needs ._as_mpf_val() method' %
             (self.__class__.__name__))
 
     def _eval_evalf(self, prec):
@@ -1111,7 +1111,7 @@ class Rational(Number):
                     return Rational(self.q, self.p)
                 if self < 0:
                     if expt.q != 1:
-                        return -(S.NegativeOne)**((expt.p % expt.q) / \
+                        return -(S.NegativeOne)**((expt.p % expt.q) /
                                S(expt.q))*Rational(self.q, -self.p)**ne
                     else:
                         return S.NegativeOne**ne*Rational(self.q, -self.p)**ne
@@ -1578,7 +1578,7 @@ class Integer(Rational):
             ne = -expt
             if self < 0:
                 if expt.q != 1:
-                    return -(S.NegativeOne)**((expt.p % expt.q) / \
+                    return -(S.NegativeOne)**((expt.p % expt.q) /
                             S(expt.q))*Rational(1, -self)**ne
                 else:
                     return (S.NegativeOne)**ne*Rational(1, -self)**ne

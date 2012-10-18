@@ -333,7 +333,7 @@ class StrPrinter(Printer):
 
     def _print_PDF(self, expr):
         return 'PDF(%s, (%s, %s, %s))' % \
-            (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]), \
+            (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]),
             self._print(expr.domain[0]), self._print(expr.domain[1]))
 
     def _print_Pi(self, expr):

@@ -51,7 +51,7 @@ def test_rewrite_single():
 
 def test_rewrite1():
     assert _rewrite1(x**3*meijerg([a], [b], [c], [d], x**2 + y*x**2)*5, x) \
-           == (5, x**3, [(1, 0, meijerg([a], [b], [c], [d], x**2*(y + 1)))], \
+           == (5, x**3, [(1, 0, meijerg([a], [b], [c], [d], x**2*(y + 1)))],
                True)
 
 
@@ -174,10 +174,10 @@ def test_meijerint():
     #  recognised in the tables.)
     a, b, s = symbols('a b s')
     from sympy import And, re
-    assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4) \
+    assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
                   *meijerg([], [], [b/2], [-b/2], x/4)*x**(s-1), x, 0, oo) == \
-           (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s) \
-               /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1) \
+           (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
+               /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
                  *gamma(a/2 + b/2 - s + 1)),
             And(0 < -2*re(4*s) + 8, 0 < re(a/2 + b/2 + s), re(2*s) < 1))
 
@@ -198,7 +198,7 @@ def test_meijerint():
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2-x)**alpha*sin(alpha/x), x, 0, 2) == \
-           (sqrt(pi)*gamma(alpha + 1) \
+           (sqrt(pi)*gamma(alpha + 1)
             *meijerg([S(1)/2, 0, S(1)/2], [1], [],
                      [-alpha/2, -alpha/2 - S(1)/2], 16/alpha**2), True)
 
@@ -243,7 +243,7 @@ def test_bessel():
     assert integrate(x**2*besselj(0, x)*besselj(1, x), x, meijerg=True) == \
            x**2*besselj(1, x)**2/2
     assert integrate(besselj(0, x)*besselj(1, x)/x, x, meijerg=True) == \
-           (x*besselj(0, x)**2 + x*besselj(1, x)**2 - \
+           (x*besselj(0, x)**2 + x*besselj(1, x)**2 -
             besselj(0, x)*besselj(1, x))
     # TODO how does besselj(0, a*x)*besselj(0, b*x) work?
     # TODO how does besselj(0, x)**2*besselj(1, x)**2 work?

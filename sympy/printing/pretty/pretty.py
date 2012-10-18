@@ -656,7 +656,7 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in xrange(len_args)]) \
+        maxw = [max([P[i, j].width() for i in xrange(len_args)])
                     for j in xrange(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
@@ -1476,7 +1476,7 @@ class PrettyPrinter(Printer):
 
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
-        component_names_list = [pretty_symbol(component.name) for \
+        component_names_list = [pretty_symbol(component.name) for
                                 component in morphism.components]
         component_names_list.reverse()
         component_names = circle.join(component_names_list) + ":"

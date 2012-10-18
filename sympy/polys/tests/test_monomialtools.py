@@ -148,7 +148,7 @@ def test_build_product_order():
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
                build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
-    assert (build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) != \
+    assert (build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) !=
                build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])) \
            is False
 

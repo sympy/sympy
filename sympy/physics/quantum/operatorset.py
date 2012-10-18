@@ -99,13 +99,13 @@ def operators_to_state(operators, **options):
     |psi>
     """
 
-    if not (isinstance(operators, Operator) \
+    if not (isinstance(operators, Operator)
             or isinstance(operators, set) or issubclass(operators, Operator)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
     if isinstance(operators, set):
         for s in operators:
-            if not (isinstance(s, Operator) \
+            if not (isinstance(s, Operator)
                    or issubclass(s, Operator)):
                 raise NotImplementedError("Set is not all Operators!")
 
@@ -212,20 +212,20 @@ def state_to_operators(state, **options):
     if state in state_mapping:  # state is a class
         state_inst = _make_default(state)
         try:
-            ret = _get_ops(state_inst, \
+            ret = _get_ops(state_inst,
                            _make_set(state_mapping[state]), **options)
         except (NotImplementedError, TypeError):
             ret = state_mapping[state]
     elif type(state) in state_mapping:
-        ret = _get_ops(state, \
+        ret = _get_ops(state,
                        _make_set(state_mapping[type(state)]), **options)
     elif isinstance(state, BraBase) and state.dual_class() in state_mapping:
-        ret = _get_ops(state, \
+        ret = _get_ops(state,
                        _make_set(state_mapping[state.dual_class()]))
     elif issubclass(state, BraBase) and state.dual_class() in state_mapping:
         state_inst = _make_default(state)
         try:
-            ret = _get_ops(state_inst, \
+            ret = _get_ops(state_inst,
                            _make_set(state_mapping[state.dual_class()]))
         except (NotImplementedError, TypeError):
             ret = state_mapping[state.dual_class()]

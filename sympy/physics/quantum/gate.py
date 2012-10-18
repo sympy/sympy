@@ -193,7 +193,7 @@ class Gate(UnitaryOperator):
         # Check number of qubits this gate acts on.
         if qubits.nqubits < self.min_qubits:
             raise QuantumError(
-                'Gate needs a minimum of %r qubits to act on, got: %r' %\
+                'Gate needs a minimum of %r qubits to act on, got: %r' %
                     (self.min_qubits, qubits.nqubits)
             )
 
@@ -480,7 +480,7 @@ class UGate(Gate):
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):
             raise IndexError(
-                'Number of targets must match the matrix size: %r %r' %\
+                'Number of targets must match the matrix size: %r %r' %
                 (targets, mat)
             )
         return (targets, mat)
@@ -1109,8 +1109,8 @@ def gate_simp(circuit):
                     and isinstance(circuit_args[i].exp, Number):
                 # Build a new circuit taking replacing the
                 # H,X,Y,Z squared with one.
-                newargs = (circuit_args[:i] +\
-                          (circuit_args[i].base**(circuit_args[i].exp % 2),) +\
+                newargs = (circuit_args[:i] +
+                          (circuit_args[i].base**(circuit_args[i].exp % 2),) +
                            circuit_args[i+1:])
                 # Recursively simplify the new circuit.
                 circuit = gate_simp(Mul(*newargs))
@@ -1120,8 +1120,8 @@ def gate_simp(circuit):
                 # in simplification.
                 newargs = circuit_args[:i]
                 # Replace PhaseGate**2 with ZGate.
-                newargs = newargs + (ZGate(circuit_args[i].base.args[0])**\
-                (Integer(circuit_args[i].exp/2)), circuit_args[i].base**\
+                newargs = newargs + (ZGate(circuit_args[i].base.args[0])**
+                (Integer(circuit_args[i].exp/2)), circuit_args[i].base**
                 (circuit_args[i].exp % 2))
                 # Append the last elements.
                 newargs = newargs + circuit_args[i+1:]
@@ -1133,8 +1133,8 @@ def gate_simp(circuit):
                 newargs = circuit_args[:i]
 
                 # Put an Phasegate in place of any TGate**2.
-                newargs = newargs + (PhaseGate(circuit_args[i].base.args[0])**\
-                Integer(circuit_args[i].exp/2), circuit_args[i].base**\
+                newargs = newargs + (PhaseGate(circuit_args[i].base.args[0])**
+                Integer(circuit_args[i].exp/2), circuit_args[i].base**
                     (circuit_args[i].exp % 2))
 
                 # Append the last elements.
@@ -1182,14 +1182,14 @@ def gate_sort(circuit):
                 # See Basic.compare for details.
                 if first_base.compare(second_base) > 0:
                     if Commutator(first_base, second_base).doit() == 0:
-                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +\
+                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +
                                    (circuit.args[i],) + circuit.args[i+2:])
                         circuit = Mul(*new_args)
                         circ_array = circuit.args
                         changes = True
                         break
                     if AntiCommutator(first_base, second_base).doit() == 0:
-                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +\
+                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +
                                    (circuit.args[i],) + circuit.args[i+2:])
                         sign = Integer(-1)**(first_exp*second_exp)
                         circuit = sign*Mul(*new_args)

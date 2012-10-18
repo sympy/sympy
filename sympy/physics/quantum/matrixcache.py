@@ -58,7 +58,7 @@ class MatrixCache(object):
         if m is not None:
             return m
         raise NotImplementedError(
-            'Matrix with name %s and format %s is not available.' %\
+            'Matrix with name %s and format %s is not available.' %
             (name, format)
         )
 

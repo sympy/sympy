@@ -592,8 +592,8 @@ class cos(TrigonometricFunction):
         cst_table_some = {
             3: S.Half,
             5: (sqrt(5) + 1)/4,
-            17: sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) + \
-                sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17)) \
+            17: sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) +
+                sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17))
                 *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32)
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them

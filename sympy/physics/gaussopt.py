@@ -105,8 +105,8 @@ class RayTransferMatrix(Matrix):
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
-            return BeamParameter(other.wavelen, \
-                                 together(re(q)), \
+            return BeamParameter(other.wavelen,
+                                 together(re(q)),
                                  z_r=together(im(q)))
         else:
             return Matrix.__mul__(self, other)

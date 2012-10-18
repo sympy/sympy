@@ -251,7 +251,7 @@ def test_piecewise_fold():
 
     assert piecewise_fold(x*p) == Piecewise((x**2, x < 1), (x, 1 <= x))
     assert piecewise_fold(p+p) == Piecewise((2*x, x < 1), (2, 1 <= x))
-    assert piecewise_fold(Piecewise((1, x < 0), (2, True)) \
+    assert piecewise_fold(Piecewise((1, x < 0), (2, True))
                           + Piecewise((10, x < 0), (-10, True))) == \
            Piecewise((11, x < 0), (-8, True))
 
@@ -266,7 +266,7 @@ def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1-x)*p1))
-    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)), \
+    assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)),
         (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
 
     p2 = expand(piecewise_fold((1-x)*p1))

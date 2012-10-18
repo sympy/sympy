@@ -97,9 +97,9 @@ def test_express():
     assert express(N.x, A) == (cos(q1)*A.x - sin(q1)*A.y)
     assert express(N.y, A) == (sin(q1)*A.x + cos(q1)*A.y)
     assert express(N.z, A) == A.z
-    assert express(N.x, B) == (cos(q1)*B.x - sin(q1)*cos(q2)*B.y + \
+    assert express(N.x, B) == (cos(q1)*B.x - sin(q1)*cos(q2)*B.y +
             sin(q1)*sin(q2)*B.z)
-    assert express(N.y, B) == (sin(q1)*B.x + cos(q1)*cos(q2)*B.y - \
+    assert express(N.y, B) == (sin(q1)*B.x + cos(q1)*cos(q2)*B.y -
             sin(q2)*cos(q1)*B.z)
     assert express(N.z, B) == (sin(q2)*B.y + cos(q2)*B.z)
     assert express(N.x, C) == (

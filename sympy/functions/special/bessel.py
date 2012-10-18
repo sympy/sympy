@@ -551,7 +551,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(k)), prec) \
+                                              int(k)), prec)
                 for k in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn

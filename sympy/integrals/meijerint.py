@@ -155,7 +155,7 @@ def _create_lookup_table(table):
     addi(log(t + a),
          constant(log(a)) + [(S(1), meijerg([1, 1], [], [1], [0], t/a))],
          True)
-    addi(log(abs(t - a)), constant(log(abs(a))) + \
+    addi(log(abs(t - a)), constant(log(abs(a))) +
            [(pi, meijerg([1, 1], [S(1)/2], [1], [0, S(1)/2], t/a))],
          True)
     # TODO log(x)/(x+a) and log(x)/(x-1) can also be done. should they
@@ -608,7 +608,7 @@ def _condsimp(cond):
                             break
                 if len(otherlist) != len(otherargs) + 1:
                     continue
-                newargs = [arg for (k, arg) in enumerate(cond.args) \
+                newargs = [arg for (k, arg) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
                 cond = cond.func(*newargs)
                 change = True
@@ -1487,7 +1487,7 @@ def _rewrite_single(f, x, recursive=True):
         g = m[0]
         a, b = _get_coeff_exp(g.argument, x)
         res += [(c, 0, meijerg(g.an, g.aother, g.bm, g.bother,
-                               unpolarify(polarify(a, lift=True), exponents_only=True) \
+                               unpolarify(polarify(a, lift=True), exponents_only=True)
                                *x**b))]
     _debug('Recursive mellin transform worked:', g)
     return res, True
@@ -1724,7 +1724,7 @@ def meijerint_definite(f, x, a, b):
         for split in _find_splitting_points(f, x):
             if (a - split >= 0) is True:
                 _debug('Trying x --> x + %s' % split)
-                res = _meijerint_definite_2(f.subs(x, x + split) \
+                res = _meijerint_definite_2(f.subs(x, x + split)
                                             *Heaviside(x + split - a), x)
                 if res is not None:
                     if res[0].has(meijerg):

@@ -707,7 +707,7 @@ def test_unrad():
         set([i.n(chop=True) for i in ans]) == \
         set([i.n(chop=True) for i in (ra, rb)])
 
-    ans = solve(sqrt(x) + sqrt(x + 1) - \
+    ans = solve(sqrt(x) + sqrt(x + 1) -
                  sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
     # the fence optimization problem

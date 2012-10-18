@@ -31,7 +31,7 @@ def test_gruntz_evaluation():
     # 8.1
     assert gruntz(exp(x)*(exp(1/x-exp(-x))-exp(1/x)), x, oo) == -1
     # 8.2
-    assert gruntz(exp(x)*(exp(1/x+exp(-x)+exp(-x**2)) \
+    assert gruntz(exp(x)*(exp(1/x+exp(-x)+exp(-x**2))
                   - exp(1/x-exp(-exp(x)))), x, oo) == 1
     # 8.3
     assert gruntz(exp(exp(x-exp(-x))/(1-1/x)) - exp(exp(x)), x, oo) == oo
@@ -386,7 +386,7 @@ def test_intractable():
 
 
 def test_aseries_trig():
-    assert cancel(gruntz(1/log(atan(x)), x, oo) \
+    assert cancel(gruntz(1/log(atan(x)), x, oo)
            - 1/(log(pi) + log(S(1)/2))) == 0
     assert gruntz(1/acot(x), x, -oo) == -oo
 

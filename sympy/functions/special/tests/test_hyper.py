@@ -126,7 +126,7 @@ def test_meijer():
 
     a1, a2, b1, b2, c1, c2, d1, d2 = symbols('a1:3, b1:3, c1:3, d1:3')
     assert meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z).diff(z) == \
-        (meijerg((a1-1, a2), (b1, b2), (c1, c2), (d1, d2), z) \
+        (meijerg((a1-1, a2), (b1, b2), (c1, c2), (d1, d2), z)
          + (a1 - 1)*meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z))/z
 
     assert meijerg([z, z], [], [], [], z).diff(z) == \

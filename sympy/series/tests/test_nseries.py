@@ -312,7 +312,7 @@ def test_issue416():
 
 def test_issue406():
     x = Symbol("x")
-    e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 - \
+    e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 -
             cos(x)**Rational(1, 3)*sin(x)**2)
     assert e.nseries(x, n=8) == -Rational(1)/12 - 7*x**2/288 - \
             43*x**4/10368 + O(x**5)
@@ -403,8 +403,8 @@ def test_bug5():
     w = Symbol("w")
     x = Symbol("x")
     l = Symbol('l')
-    e = (-log(w) + log(1 + w*log(x)))**(-2)*w**(-2)*((-log(w) + log(1 + \
-        x*w))*(-log(w) + log(1 + w*log(x)))*w - x*(-log(w) + log(1 + \
+    e = (-log(w) + log(1 + w*log(x)))**(-2)*w**(-2)*((-log(w) + log(1 +
+        x*w))*(-log(w) + log(1 + w*log(x)))*w - x*(-log(w) + log(1 +
             w*log(x)))*w)
     assert e.nseries(w, n=1, logx=l) == x/w/l + 1/w + O(1, w)
     assert e.nseries(w, n=2, logx=l) == x/w/l + 1/w - x/l + 1/l*log(x)\
@@ -493,7 +493,7 @@ def test_dir():
 def test_issue405():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (x - 4)*(a/(4*sqrt(-16*a**2 + 1)) \
+    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == (x - 4)*(a/(4*sqrt(-16*a**2 + 1))
                                                            - asin(4*a)/16) + asin(4*a)/4
 
 

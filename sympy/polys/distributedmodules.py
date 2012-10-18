@@ -482,7 +482,7 @@ def sdm_nf_mora(f, G, O, K, phantom=None):
         phantom = False
     while h:
         # TODO better data structure!!!
-        Th = [(g, sdm_ecart(g), gp) for g, gp in zip(T, Tp) \
+        Th = [(g, sdm_ecart(g), gp) for g, gp in zip(T, Tp)
               if sdm_monomial_divides(sdm_LM(g), sdm_LM(h))]
         if not Th:
             break

@@ -179,7 +179,7 @@ def _distribute_gens_by_base(base, gens):
     return stabs
 
 
-def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
+def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
     """
     Calculate BSGS-related structures from those present.
@@ -247,7 +247,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     return transversals, basic_orbits, strong_gens_distr
 
 
-def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
+def _orbits_transversals_from_bsgs(base, strong_gens_distr,
                                    transversals_only=False):
     """
     Compute basic orbits and transversals from a base and strong generating set.

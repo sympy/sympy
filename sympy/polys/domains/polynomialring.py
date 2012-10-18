@@ -303,7 +303,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         # make sure res is actually in our ring
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):
             from sympy.printing.str import sstr
-            raise CoercionFailed("denominator %s not allowed in %s" \
+            raise CoercionFailed("denominator %s not allowed in %s"
                                   % (sstr(res), self))
         return res
 

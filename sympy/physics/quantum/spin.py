@@ -796,7 +796,7 @@ class WignerD(Expr):
                 if k > j+mp or k > j-m or k < mp-m:
                     continue
                 r += (-S(1))**k * binomial(j+mp, k) * binomial(j-mp, k+m-mp)
-            r *= (-S(1))**(m-mp) / 2**j * sqrt(factorial(j+m) * \
+            r *= (-S(1))**(m-mp) / 2**j * sqrt(factorial(j+m) *
                     factorial(j-m) / (factorial(j+mp) * factorial(j-mp)))
         else:
             # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
@@ -1306,10 +1306,10 @@ class CoupledSpinState(SpinState):
             j3 = coupled_jn[n]
             if sympify(j1).is_number and sympify(j2).is_number and sympify(j3).is_number:
                 if j1+j2 < j3:
-                    raise ValueError('All couplings must have j1+j2 >= j3, '\
+                    raise ValueError('All couplings must have j1+j2 >= j3, '
                         'in coupling number %d got j1,j2,j3: %d,%d,%d' % (n+1, j1, j2, j3))
                 if abs(j1-j2) > j3:
-                    raise ValueError("All couplings must have |j1+j2| <= j3, "\
+                    raise ValueError("All couplings must have |j1+j2| <= j3, "
                         "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n+1, j1, j2, j3))
                 if int(j1+j2) == j1+j2:
                     pass

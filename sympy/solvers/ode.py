@@ -704,7 +704,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     from sympy import expand
 
     if func and len(func.args) != 1:
-        raise ValueError("dsolve() and classify_ode() only work with functions " + \
+        raise ValueError("dsolve() and classify_ode() only work with functions " +
             "of one variable")
     if prep or func is None:
         eq, func_ = preprocess(eq, func)
@@ -883,11 +883,11 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             if r[-1]:
                 undetcoeff = _undetermined_coefficients_match(r[-1], x)
                 matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
-                matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters" +
                     "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_" + \
+                    matching_hints["nth_linear_constant_coeff_undetermined_" +
                         "coefficients"] = r
             # Homogeneous case: F(x) is identically 0
             else:
@@ -1169,7 +1169,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             pass
         else:
             if len(solved) == 1:
-                result = checkodesol(ode, Eq(func, solved[0]), \
+                result = checkodesol(ode, Eq(func, solved[0]),
                     order=order, solve_for_func=False)
             else:
                 result = checkodesol(ode, [Eq(func, t) for t in solved],
@@ -1202,7 +1202,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             # Second pass. If we cannot substitute f, try seeing if the nth
             # derivative is equal, this will only work for odes that are exact,
             # by definition.
-            s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) - \
+            s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
                 trigsimp(ode.lhs) + trigsimp(ode.rhs))
 #            s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
 #                ode.lhs + ode.rhs)
@@ -1276,7 +1276,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     if not s:
         return (True, s)
     elif s is True:  # The code above never was able to change s
-        raise NotImplementedError("Unable to test if " + str(sol) + \
+        raise NotImplementedError("Unable to test if " + str(sol) +
             " is a solution to " + str(ode) + ".")
     else:
         return (False, s)
@@ -1535,7 +1535,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     for o in other:
                         b, e = o.as_base_exp()
                         if b.is_Add and \
-                            all(a.args_cnc(cset=True, warn=False)[0] & \
+                            all(a.args_cnc(cset=True, warn=False)[0] &
                         con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
@@ -2470,7 +2470,7 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) or\
+            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) or
                     f == func):
                 return None
             else:
@@ -2590,7 +2590,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
+                gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x)
                 + constants.next()*cos(imroot*x))
                 # This ordering is important
                 collectterms = [(i, reroot, imroot)] + collectterms
@@ -2705,8 +2705,8 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     newtrialset = set([])
     global collectterms
     if len(gensols) != order:
-        raise NotImplementedError("Cannot find " + str(order) + \
-        " solutions to the homogeneous equation nessesary to apply " + \
+        raise NotImplementedError("Cannot find " + str(order) +
+        " solutions to the homogeneous equation nessesary to apply " +
         "undetermined coefficients to " + str(eq) + " (number of terms != order)")
     usedsin = set([])
     mult = 0  # The multiplicity of the root
@@ -2761,7 +2761,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     coeffvals = solve(coeffsdict.values(), coefflist)
 
     if not coeffvals:
-        raise NotImplementedError("Could not solve " + str(eq) + " using the " + \
+        raise NotImplementedError("Could not solve " + str(eq) + " using the " +
             " method of undetermined coefficients (unable to solve for coefficients).")
 
     psol = trialfunc.subs(coeffvals)
@@ -3020,16 +3020,16 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.
-        raise NotImplementedError("Cannot find " + str(order) + \
-        " solutions to the homogeneous equation nessesary to apply " + \
+        raise NotImplementedError("Cannot find " + str(order) +
+        " solutions to the homogeneous equation nessesary to apply " +
         "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
-        raise NotImplementedError("Cannot find " + str(order) + \
-        " solutions to the homogeneous equation nessesary to apply " + \
+        raise NotImplementedError("Cannot find " + str(order) +
+        " solutions to the homogeneous equation nessesary to apply " +
         "variation of parameters to " + str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
     for i in gensols:
-        psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
+        psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i,
         gensols), x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1
 

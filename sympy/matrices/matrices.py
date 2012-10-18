@@ -1003,7 +1003,7 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
+    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
 

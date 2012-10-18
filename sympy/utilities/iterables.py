@@ -1279,8 +1279,8 @@ def generate_derangements(perm):
     indices = range(len(perm))
     p = variations(indices, len(indices))
     for rv in \
-            uniq(tuple(perm[i] for i in idx) \
-                 for idx in p if all(perm[k] != \
+            uniq(tuple(perm[i] for i in idx)
+                 for idx in p if all(perm[k] !=
                                      perm[idx[k]] for k in xrange(len(perm)))):
         yield list(rv)
 

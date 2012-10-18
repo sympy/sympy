@@ -155,7 +155,7 @@ def test_differential_operator():
 
     # 2D cartesian Laplacian
     y = Symbol('y')
-    d = DifferentialOperator(Derivative(f(x, y), x, 2) + \
+    d = DifferentialOperator(Derivative(f(x, y), x, 2) +
                              Derivative(f(x, y), y, 2), f(x, y))
     w = Wavefunction(x**3*y**2 + y**3*x**2, x, y)
     assert d.expr == Derivative(f(x, y), x, 2) + Derivative(f(x, y), y, 2)
@@ -165,12 +165,12 @@ def test_differential_operator():
            DifferentialOperator(Derivative(d.expr, x), f(x, y))
     assert diff(d, y) == \
            DifferentialOperator(Derivative(d.expr, y), f(x, y))
-    assert qapply(d*w) == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3, \
+    assert qapply(d*w) == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3,
                                        x, y)
 
     # 2D polar Laplacian (th = theta)
     r, th = symbols('r th')
-    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r), r) + \
+    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r), r) +
                              1/(r**2)*Derivative(f(r, th), th, 2), f(r, th))
     w = Wavefunction(r**2*sin(th), r, (th, 0, pi))
     assert d.expr == \

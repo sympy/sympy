@@ -406,9 +406,9 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                     if t_ord is not None:
                         has_deriv= True
 
-                    if (term.match(elem) is not None and \
-                            (t_sym == e_sym or t_sym is not None and \
-                            e_sym is not None and \
+                    if (term.match(elem) is not None and
+                            (t_sym == e_sym or t_sym is not None and
+                            e_sym is not None and
                             t_sym.match(e_sym) is not None)):
                         if exact == False:
                             # we don't have to be exact so find common exponent
@@ -1107,7 +1107,7 @@ def collect_sqrt(expr, evaluate=True):
     vars = set()
     for a in Add.make_args(expr):
         for m in a.args_cnc()[0]:
-            if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or \
+            if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or
                                 m is S.ImaginaryUnit):
                 vars.add(m)
     vars = list(vars)
@@ -2694,7 +2694,7 @@ def combsimp(expr):
             S1, T1 = compute_ST(x)
             for y in l:
                 S2, T2 = inv[y]
-                if T1 != T2 or (not S1.intersection(S2) and \
+                if T1 != T2 or (not S1.intersection(S2) and
                                 (S1 != set() or S2 != set())):
                     continue
                 # XXX we want some simplification (e.g. cancel or
@@ -3261,7 +3261,7 @@ def _logcombine(expr, force=False):
         return expr
 
     if isinstance(expr, Equality):
-        retval = Equality(_logcombine(expr.lhs-expr.rhs, force),\
+        retval = Equality(_logcombine(expr.lhs-expr.rhs, force),
         Integer(0))
         # If logcombine couldn't do much with the equality, try to make it like
         # it was.  Hopefully extract_additively won't become smart enough to
@@ -3278,12 +3278,12 @@ def _logcombine(expr, force=False):
         coeflogs = 0
         for i in expr.args:
             if i.func is log:
-                if (i.args[0].is_positive or (force and not \
+                if (i.args[0].is_positive or (force and not
                 i.args[0].is_nonpositive)):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False)==log,\
+            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False)==log,
             i.args)):
                 largs = _getlogargs(i)
                 assert len(largs) != 0
@@ -3293,9 +3293,9 @@ def _logcombine(expr, force=False):
 
                 if all(getattr(t, 'is_positive') for t in largs)\
                     and getattr(i.extract_multiplicatively(loglargs), 'is_real', False)\
-                    or (force\
-                        and not all(getattr(t, 'is_nonpositive') for t in largs)\
-                        and not getattr(i.extract_multiplicatively(loglargs),\
+                    or (force
+                        and not all(getattr(t, 'is_nonpositive') for t in largs)
+                        and not getattr(i.extract_multiplicatively(loglargs),
                         'is_real')==False):
 
                     coeflogs += _logcombine(i, force)
@@ -3316,21 +3316,21 @@ def _logcombine(expr, force=False):
         x = Wild('x')
         coef = expr.match(a*log(x))
         if coef\
-            and (coef[a].is_real\
-                or expr.is_Number\
-                or expr.is_NumberSymbol\
-                or type(coef[a]) in (int, float)\
-                or (force\
+            and (coef[a].is_real
+                or expr.is_Number
+                or expr.is_NumberSymbol
+                or type(coef[a]) in (int, float)
+                or (force
                 and not coef[a].is_imaginary))\
-            and (coef[a].func != log\
-                or force\
-                or (not getattr(coef[a], 'is_real')==False\
+            and (coef[a].func != log
+                or force
+                or (not getattr(coef[a], 'is_real')==False
                     and getattr(x, 'is_positive'))):
 
             return log(coef[x]**coef[a])
         else:
-            return _logcombine(expr.args[0], force)*reduce(lambda x, y:\
-             _logcombine(x, force)*_logcombine(y, force),\
+            return _logcombine(expr.args[0], force)*reduce(lambda x, y:
+             _logcombine(x, force)*_logcombine(y, force),
              expr.args[1:], S.One)
 
     if expr.is_Function:

@@ -145,7 +145,7 @@ class XKet(Ket):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -196,7 +196,7 @@ class PositionState3D(State):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -254,7 +254,7 @@ class PxKet(Ket):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -331,7 +331,7 @@ def _uppercase_labels(ops):
     if not isinstance(ops, set):
         ops = [ops]
 
-    new_args = [str(arg.label[0])[0].upper() + \
+    new_args = [str(arg.label[0])[0].upper() +
                 str(arg.label[0])[1:] for arg in ops]
 
     return new_args

@@ -106,7 +106,7 @@ class IntegralTransform(Function):
         from sympy import Add, expand_mul, Mul
         from sympy.core.function import AppliedUndef
         needeval = hints.pop('needeval', False)
-        try_directly = not any(func.has(self.function_variable) \
+        try_directly = not any(func.has(self.function_variable)
                                for func in self.function.atoms(AppliedUndef))
         if try_directly:
             try:
@@ -699,7 +699,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         if g.is_Add:
             # do all terms separately
             ress = [_inverse_mellin_transform(G, s, x, strip, as_meijerg,
-                                              noconds=False) \
+                                              noconds=False)
                     for G in g.args]
             conds = [p[1] for p in ress]
             ress = [p[0] for p in ress]

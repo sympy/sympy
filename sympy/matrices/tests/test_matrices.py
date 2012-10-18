@@ -691,7 +691,7 @@ def test_wronskian():
         ).expand() == w1
     w2 = -x**3*cos(x)**2 - x**3*sin(x)**2 - 6*x*cos(x)**2 - 6*x*sin(x)**2
     assert wronskian([sin(x), cos(x), x**3], x).expand() == w2
-    assert wronskian([sin(x), cos(x), x**3], x, \
+    assert wronskian([sin(x), cos(x), x**3], x,
         method='berkowitz').expand() == w2
     assert wronskian([], x) == 1
 
@@ -1775,7 +1775,7 @@ def test_condition_number():
 
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
-    assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in \
+    assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in
             [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
 
 

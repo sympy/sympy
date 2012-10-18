@@ -721,7 +721,7 @@ class Wavefunction(Function):
             #a symbol present in the limits;
             #Had problems with a comparison of x > L
             if isinstance(args[ct], Expr) and \
-                   not (lower in args[ct].free_symbols \
+                   not (lower in args[ct].free_symbols
                         or upper in args[ct].free_symbols):
                 continue
 
@@ -813,7 +813,7 @@ class Wavefunction(Function):
             {x: (-oo, oo), y: (-1, 2)}
 
         """
-        limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo) \
+        limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo)
                   for g in self._args[1:]]
         return dict(zip(self.variables, tuple(limits)))
 
