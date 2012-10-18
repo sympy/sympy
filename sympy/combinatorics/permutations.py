@@ -791,8 +791,8 @@ class Permutation(Basic):
         else:
             ok = False
         if not ok:
-             raise ValueError("Permutation argument must be a list of ints, "
-                              "a list of lists, Permutation or Cycle.")
+            raise ValueError("Permutation argument must be a list of ints, "
+                             "a list of lists, Permutation or Cycle.")
 
 
         # safe to assume args are valid; this also makes a copy

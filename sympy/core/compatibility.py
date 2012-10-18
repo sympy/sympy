@@ -469,8 +469,8 @@ def quick_sort(seq, quick=True):
             d[hash(a)].append(a)
         seq = []
         for k in sorted(d.keys()):
-          if len(d[k]) > 1:
-              seq.extend(sorted(d[k], key=default_sort_key))
-          else:
-              seq.extend(d[k])
+            if len(d[k]) > 1:
+                seq.extend(sorted(d[k], key=default_sort_key))
+            else:
+                seq.extend(d[k])
     return tuple(seq)

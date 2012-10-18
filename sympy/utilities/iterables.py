@@ -1403,7 +1403,7 @@ def lazyDSU_sort(seq, keys, warn=False):
             if keys:
                 d[k] = lazyDSU_sort(d[k], keys, warn)
             elif warn:
-              raise ValueError('not enough keys to break ties')
+                raise ValueError('not enough keys to break ties')
             seq.extend(d[k])
         else:
             seq.append(d[k][0])

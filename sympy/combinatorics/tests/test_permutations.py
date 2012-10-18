@@ -242,10 +242,10 @@ def test_ranking():
     l = []
     tj = []
     for i in range(6):
-      l.append(a)
-      tj.append(b)
-      a=a.next_lex()
-      b=b.next_trotterjohnson()
+        l.append(a)
+        tj.append(b)
+        a=a.next_lex()
+        b=b.next_trotterjohnson()
     assert a == b == None
     assert set([tuple(a) for a in l]) == set([tuple(a) for a in tj])
 

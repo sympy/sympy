@@ -427,16 +427,16 @@ class MatrixHomomorphism(ModuleHomomorphism):
         return Matrix([[self.ring.to_sympy(y) for y in c(x)] for x in self.matrix]).T
 
     def __repr__(self):
-       lines = repr(self._sympy_matrix()).split('\n')
-       t = " : %s -> %s" % (self.domain, self.codomain)
-       s = ' '*len(t)
-       n = len(lines)
-       for i in range(n // 2):
-           lines[i] += s
-       lines[n // 2] += t
-       for i in range(n//2 + 1, n):
-           lines[i] += s
-       return '\n'.join(lines)
+        lines = repr(self._sympy_matrix()).split('\n')
+        t = " : %s -> %s" % (self.domain, self.codomain)
+        s = ' '*len(t)
+        n = len(lines)
+        for i in range(n // 2):
+            lines[i] += s
+        lines[n // 2] += t
+        for i in range(n//2 + 1, n):
+            lines[i] += s
+        return '\n'.join(lines)
 
     def _restrict_domain(self, sm):
         """Implementation of domain restriction."""

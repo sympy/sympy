@@ -125,9 +125,9 @@ def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
-         Matrix((1, 2))[1:2] = 5
+        Matrix((1, 2))[1:2] = 5
     with raises(IndexError):
-         Matrix((1, 2))[3] = 5
+        Matrix((1, 2))[3] = 5
 
     a = Matrix([[x, 0], [0, 0]])
     m = a

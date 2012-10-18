@@ -277,8 +277,8 @@ class LagrangesMethod(object):
             below_I = below_eye.row_join(A)
             return I.col_join(below_I)
         else:
-           A = row1.col_join(row2)
-           return A
+            A = row1.col_join(row2)
+            return A
 
     @property
     def forcing(self):

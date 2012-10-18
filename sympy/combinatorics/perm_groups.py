@@ -45,9 +45,9 @@ class _Vertex(object):
     """
     def __init__(self, n):
 
-      self.neighbor = []
-      self.perm = []
-      self.index_neighbor = [-1]*n
+        self.neighbor = []
+        self.perm = []
+        self.index_neighbor = [-1]*n
 
 class _JGraph(object):
     """Represents a Jerrum graph.

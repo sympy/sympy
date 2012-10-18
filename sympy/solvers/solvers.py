@@ -726,8 +726,8 @@ def solve(f, *symbols, **flags):
                     return []
                 ok = True
             else:
-              if fi.is_constant():
-                ok = True
+                if fi.is_constant():
+                    ok = True
         if ok:
             newf.append(fi)
     if not newf:

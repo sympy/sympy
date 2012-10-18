@@ -223,7 +223,7 @@ class Point(GeometryEntity):
             if test is False:
                 return False
             if rv and not test:
-                  rv = test
+                rv = test
         return rv
 
     def is_concyclic(*points):

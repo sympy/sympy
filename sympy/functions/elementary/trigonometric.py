@@ -537,7 +537,7 @@ class cos(TrigonometricFunction):
         return (cot_half-1)/(cot_half+1)
 
     def _eval_rewrite_as_pow(self, arg):
-         return self._eval_rewrite_as_sqrt(arg)
+        return self._eval_rewrite_as_sqrt(arg)
 
     def _eval_rewrite_as_sqrt(self, arg):
         _EXPAND_INTS = False

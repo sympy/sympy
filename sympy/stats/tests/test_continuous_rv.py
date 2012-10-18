@@ -452,5 +452,5 @@ def test_unevaluated():
                 (x, -1, 1))), (x, 0, 1)))
 
 def test_probability_unevaluated():
-     T = Normal('T', 30, 3)
-     assert type(P(T>33, evaluate=False)) == Integral
+    T = Normal('T', 30, 3)
+    assert type(P(T>33, evaluate=False)) == Integral
