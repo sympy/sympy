@@ -902,7 +902,7 @@ class MatplotlibBackend(BaseBackend):
         # XXX The order of those is important.
         if parent.xscale and not isinstance(self.ax, Axes3D):
             self.ax.set_xscale(parent.xscale)
-        if parent.yscale and  not isinstance(self.ax, Axes3D):
+        if parent.yscale and not isinstance(self.ax, Axes3D):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)

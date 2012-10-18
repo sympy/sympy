@@ -496,7 +496,7 @@ class FermionicOperator(SqOperator):
         """
         ass = self.args[0].assumptions0
         if ass.get("below_fermi"): return -1
-        if ass.get("above_fermi"): return  1
+        if ass.get("above_fermi"): return 1
         return 0
 
 
