@@ -184,13 +184,13 @@ def test_issue369():
     Order(y)
     Order(z)
 
-    assert x.is_positive == None
+    assert x.is_positive is None
     assert y.is_positive == False
-    assert z.is_positive == None
+    assert z.is_positive is None
 
-    assert x.is_infinitesimal == None
-    assert y.is_infinitesimal == None
-    assert z.is_infinitesimal == None
+    assert x.is_infinitesimal is None
+    assert y.is_infinitesimal is None
+    assert z.is_infinitesimal is None
 
 
 def test_leading_order():

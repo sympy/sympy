@@ -263,7 +263,7 @@ class _JGraph(object):
                 self.vertex[i].index_neighbor[j] = -1
 
         for i in range(n):
-            if cosrep[i] != None:
+            if cosrep[i] is not None:
                 p1 = cosrep[i]
                 for j in range(r):
                     p2 = gens[j]
@@ -272,7 +272,7 @@ class _JGraph(object):
                     self.insert(h, alpha)
         r = 0
         for j in range(n):
-            if self.jg[j] != None:
+            if self.jg[j] is not None:
                 gens[r] = self.jg[j]
                 r += 1
         self.r = r
@@ -600,7 +600,7 @@ class PermutationGroup(Basic):
         self._random_gens = random_gens
 
         # handle randomized input for testing purposes
-        if _random_prec_n == None:
+        if _random_prec_n is None:
             for i in range(n):
                 self.random_pr()
         else:
@@ -1828,7 +1828,7 @@ class PermutationGroup(Basic):
         _check_cycles_alt_sym
 
         """
-        if _random_prec == None:
+        if _random_prec is None:
             n = self.degree
             if n < 8:
                 return False
@@ -1964,7 +1964,7 @@ class PermutationGroup(Basic):
         minimal_block, random_stab
 
         """
-        if self._is_primitive != None:
+        if self._is_primitive is not None:
             return self._is_primitive
         n = self.degree
         if randomized:
@@ -2212,7 +2212,7 @@ class PermutationGroup(Basic):
         minimal_block, _union_find_merge
 
         """
-        if self._max_div != None:
+        if self._max_div is not None:
             return self._max_div
         n = self.degree
         if n == 1:
@@ -2502,9 +2502,9 @@ class PermutationGroup(Basic):
         schreier_vector
 
         """
-        if schreier_vector == None:
+        if schreier_vector is None:
             schreier_vector = self.schreier_vector(alpha)
-        if schreier_vector[beta] == None:
+        if schreier_vector[beta] is None:
             return False
         n = self.degree
         u = _af_new(range(n))
@@ -2628,7 +2628,7 @@ class PermutationGroup(Basic):
 
         degree
         """
-        if self._order != None:
+        if self._order is not None:
             return self._order
         if self._is_sym:
             n = self.degree
@@ -2770,7 +2770,7 @@ class PermutationGroup(Basic):
         r = len(random_gens) - 1
 
         # handle randomized input for testing purposes
-        if _random_prec == None:
+        if _random_prec is None:
             s = randrange(r)
             t = randrange(r - 1)
             if t == s:
@@ -2805,9 +2805,9 @@ class PermutationGroup(Basic):
         random_pr, orbit_rep
 
         """
-        if schreier_vector == None:
+        if schreier_vector is None:
             schreier_vector = self.schreier_vector(alpha)
-        if _random_prec == None:
+        if _random_prec is None:
             rand = self.random_pr()
         else:
             rand = _random_prec['rand']

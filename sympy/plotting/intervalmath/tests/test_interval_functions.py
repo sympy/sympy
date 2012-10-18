@@ -20,13 +20,13 @@ def test_interval_pow():
     a = interval(1, 2)**interval(1, 2) == interval(1, 4)
     assert a == (True, True)
     a = interval(-1, 1)**interval(0.5, 2)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(-2, -1) ** interval(1, 2)
     assert a.is_valid == False
     a = interval(-2, -1) ** (1 / 2)
     assert a.is_valid == False
     a = interval(-1, 1)**(1 / 2)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(-1, 1)**(1 / 3) == interval(-1, 1)
     assert a == (True, True)
     a = interval(-1, 1)**2 == interval(0, 1)

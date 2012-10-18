@@ -10,7 +10,7 @@ from sympy.utilities.pytest import raises
 def test_solve_poly_system():
     assert solve_poly_system([x-1], x) == [(S.One,)]
 
-    assert solve_poly_system([y - x, y - x - 1], x, y) == None
+    assert solve_poly_system([y - x, y - x - 1], x, y) is None
 
     assert solve_poly_system([y - x**2, y + x**2], x, y) == [(S.Zero, S.Zero)]
 

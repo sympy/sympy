@@ -348,7 +348,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
-            if prev_arg != None:
+            if prev_arg is not None:
                 if isinstance(new_arg, TensorPowerHilbertSpace) and\
                     isinstance(prev_arg, TensorPowerHilbertSpace) and\
                         new_arg.base == prev_arg.base:
@@ -364,7 +364,7 @@ class TensorProductHilbertSpace(HilbertSpace):
                 else:
                     comb_args.append(prev_arg)
                     prev_arg = new_arg
-            elif prev_arg == None:
+            elif prev_arg is None:
                 prev_arg = new_arg
         comb_args.append(prev_arg)
         if recall:

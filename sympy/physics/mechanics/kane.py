@@ -262,7 +262,7 @@ class KanesMethod(object):
         if len(udep) != len(coneqs):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and constraints.')
-        if diffconeqs != None:
+        if diffconeqs is not None:
             if len(udep) != len(diffconeqs):
                 raise ValueError('There must be an equal number of dependent '
                                  'speeds and constraints.')
@@ -277,7 +277,7 @@ class KanesMethod(object):
             self._f_nh = coneqs.subs(uzero)
             self._k_nh = (coneqs - self._f_nh).jacobian(u)
             # if no differentiated non holonomic constraints were given, calculate
-            if diffconeqs == None:
+            if diffconeqs is None:
                 self._k_dnh = self._k_nh
                 self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * Matrix(u) +
                                self._f_nh.diff(dynamicsymbols._t))
@@ -304,7 +304,7 @@ class KanesMethod(object):
 
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
-        if self._k_kqdot == None:
+        if self._k_kqdot is None:
             raise ValueError('Kin. diff. eqs need to be supplied first.')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
@@ -551,9 +551,9 @@ class KanesMethod(object):
 
         """
 
-        if (self._q == None) or (self._u == None):
+        if (self._q is None) or (self._u is None):
             raise ValueError('Speeds and coordinates must be supplied first.')
-        if (self._k_kqdot == None):
+        if (self._k_kqdot is None):
             raise ValueError('Supply kinematic differential equations, please.')
 
         fr = self._form_fr(FL)
@@ -603,7 +603,7 @@ class KanesMethod(object):
 
         """
 
-        if (self._fr == None) or (self._frstar == None):
+        if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
 
         # Note that this is now unneccessary, and it should never be
@@ -792,7 +792,7 @@ class KanesMethod(object):
 
         """
 
-        if inv_method == None:
+        if inv_method is None:
             self._rhs = self._mat_inv_mul(self.mass_matrix_full,
                                           self.forcing_full)
         else:
@@ -802,7 +802,7 @@ class KanesMethod(object):
 
     @property
     def auxiliary_eqs(self):
-        if (self._fr == None) or (self._frstar == None):
+        if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
         if self._uaux == []:
             raise ValueError('No auxiliary speeds have been declared.')
@@ -812,14 +812,14 @@ class KanesMethod(object):
     def mass_matrix(self):
         # Returns the mass matrix, which is augmented by the differentiated non
         # holonomic equations if necessary
-        if (self._frstar == None) & (self._fr == None):
+        if (self._frstar is None) & (self._fr is None):
             raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
         # Returns the mass matrix from above, augmented by kin diff's k_kqdot
-        if (self._frstar == None) & (self._fr == None):
+        if (self._frstar is None) & (self._fr is None):
             raise ValueError('Need to compute Fr, Fr* first.')
         o = len(self._u)
         n = len(self._q)
@@ -830,7 +830,7 @@ class KanesMethod(object):
     def forcing(self):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
-        if (self._frstar == None) & (self._fr == None):
+        if (self._frstar is None) & (self._fr is None):
             raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
@@ -838,7 +838,7 @@ class KanesMethod(object):
     def forcing_full(self):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
-        if (self._frstar == None) & (self._fr == None):
+        if (self._frstar is None) & (self._fr is None):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])

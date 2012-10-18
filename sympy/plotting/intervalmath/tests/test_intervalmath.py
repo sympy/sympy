@@ -49,11 +49,11 @@ def test_interval_add():
     a = 1 + interval(2, 5, is_valid=False)
     assert a.is_valid == False
     a = 1 + interval(2, 5, is_valid=None)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + interval(3, 5, is_valid=None)
     assert a.is_valid == False
     a = interval(3, 5) + interval(-1, 1, is_valid=None)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + 1
     assert a.is_valid == False
 
@@ -69,7 +69,7 @@ def test_interval_sub():
     a = interval(1, 3, is_valid=False) - interval(1, 3)
     assert a.is_valid == False
     a = interval(1, 3, is_valid=None) - interval(1, 3)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
 
 def test_interval_inequality():
@@ -147,12 +147,12 @@ def test_interval_div():
     a = interval(1, 2) / 0
     assert a.is_valid == False
     a = interval(0.5, 1) / interval(-1, 0)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(0, 1) / interval(0, 1)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
     a = interval(-1, 1) / interval(-1, 1)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
     a = interval(-1, 2) / interval(0.5, 1) == interval(-2.0, 4.0)
     assert a == (True, True)

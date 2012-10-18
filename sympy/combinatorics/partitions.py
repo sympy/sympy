@@ -194,7 +194,7 @@ class Partition(C.FiniteSet):
         >>> a.rank
         13
         """
-        if self._rank != None:
+        if self._rank is not None:
             return self._rank
         self._rank = RGS_rank(self.RGS)
         return self._rank

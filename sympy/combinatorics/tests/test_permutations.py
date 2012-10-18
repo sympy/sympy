@@ -228,7 +228,7 @@ def test_ranking():
     p = Permutation.unrank_lex(4, 23)
     assert p.rank() == 23
     assert p.array_form == [3, 2, 1, 0]
-    assert p.next_lex() == None
+    assert p.next_lex() is None
 
     p = Permutation([1, 5, 2, 0, 3, 6, 4])
     q = Permutation([[1, 2, 3, 5, 6], [0, 4]])
@@ -250,7 +250,7 @@ def test_ranking():
         tj.append(b)
         a=a.next_lex()
         b=b.next_trotterjohnson()
-    assert a == b == None
+    assert a == b is None
     assert set([tuple(a) for a in l]) == set([tuple(a) for a in tj])
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])

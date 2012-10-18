@@ -685,6 +685,6 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         sumres = sumres + Integer((-1) ** ii) / den
 
     res = ressqrt * prefac * sumres * (-1) ** (bigL + l_3 + m_1 - m_2)
-    if prec != None:
+    if prec is not None:
         res = res.n(prec)
     return res

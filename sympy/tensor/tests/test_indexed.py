@@ -29,8 +29,8 @@ def test_Idx_properties():
 
 def test_Idx_bounds():
     i, a, b = symbols('i a b', integer=True)
-    assert Idx(i).lower == None
-    assert Idx(i).upper == None
+    assert Idx(i).lower is None
+    assert Idx(i).upper is None
     assert Idx(i, a).lower == 0
     assert Idx(i, a).upper == a - 1
     assert Idx(i, 5).lower == 0
@@ -47,8 +47,8 @@ def test_Idx_bounds():
 
 def test_Idx_fixed_bounds():
     i, a, b = symbols('i a b', integer=True)
-    assert Idx(2).lower == None
-    assert Idx(2).upper == None
+    assert Idx(2).lower is None
+    assert Idx(2).upper is None
     assert Idx(2, a).lower == 0
     assert Idx(2, a).upper == a - 1
     assert Idx(2, 5).lower == 0

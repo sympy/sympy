@@ -171,7 +171,7 @@ class GrayCode(Basic):
             start = hints["start"]
         elif hints.has_key("rank"):
             start = GrayCode.unrank(self.n, hints["rank"])
-        if start != None:
+        if start is not None:
             self._current = start
         current = self.current
         graycode_bin = gray_to_bin(current)

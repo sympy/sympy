@@ -178,7 +178,7 @@ def test_coset_rank():
         h1 = G.coset_unrank(rk, af=True)
         assert h == h1
         i += 1
-    assert G.coset_unrank(48) == None
+    assert G.coset_unrank(48) is None
     assert G.coset_rank(gens[0]) == 6
     assert G.coset_unrank(6) == gens[0]
 
@@ -200,7 +200,7 @@ def test_coset_factor():
     g = PermutationGroup([a])
     c = Permutation([2, 1, 0])
     assert not g.coset_factor(c)
-    assert g.coset_rank(c) == None
+    assert g.coset_rank(c) is None
 
 
 def test_orbits():

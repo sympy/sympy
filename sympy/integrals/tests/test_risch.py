@@ -158,7 +158,7 @@ def test_heurisch_hacking():
 def test_heurisch_function():
     df = diff(f(x), x)
 
-    assert heurisch(f(x), x) == None
+    assert heurisch(f(x), x) is None
     assert heurisch(f(x)*df, x) == f(x)**2/2
     assert heurisch(f(x)**2 * df, x) == f(x)**3/3
     assert heurisch(df / f(x), x) == log(f(x))

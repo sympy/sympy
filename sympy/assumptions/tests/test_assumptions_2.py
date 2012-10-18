@@ -22,9 +22,9 @@ def test_pretty():
 def test_extract_facts():
     a, b = symbols('a b', cls=Predicate)
     assert _extract_facts(a(x), x) == a
-    assert _extract_facts(a(x), y) == None
+    assert _extract_facts(a(x), y) is None
     assert _extract_facts(~a(x), x) == ~a
-    assert _extract_facts(~a(x), y) == None
+    assert _extract_facts(~a(x), y) is None
     assert _extract_facts(a(x) | b(x), x) == a | b
     assert _extract_facts(a(x) | ~b(x), x) == a | ~b
 

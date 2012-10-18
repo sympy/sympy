@@ -638,7 +638,7 @@ def test_polygon():
     dict5 = p5.angles
     assert dict5[Point(0, 0)] == pi / 4
     assert dict5[Point(0, 4)] == pi / 2
-    assert p5.encloses_point(Point(x, y)) == None
+    assert p5.encloses_point(Point(x, y)) is None
     assert p5.encloses_point(Point(1, 3))
     assert p5.encloses_point(Point(0, 0)) == False
     assert p5.encloses_point(Point(4, 0)) == False

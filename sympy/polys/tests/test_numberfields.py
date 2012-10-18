@@ -130,33 +130,33 @@ def test_field_isomorphism_pslq():
     e = AlgebraicNumber(sqrt(2)+sqrt(3)+sqrt(7))
 
     assert field_isomorphism_pslq(a, a) == [1, 0]
-    assert field_isomorphism_pslq(a, b) == None
-    assert field_isomorphism_pslq(a, c) == None
+    assert field_isomorphism_pslq(a, b) is None
+    assert field_isomorphism_pslq(a, c) is None
     assert field_isomorphism_pslq(a, d) == [Q(1, 2), 0, -Q(9, 2), 0]
     assert field_isomorphism_pslq(a, e) == [Q(1, 80), 0, -Q(1, 2), 0, Q(59, 20), 0]
 
-    assert field_isomorphism_pslq(b, a) == None
+    assert field_isomorphism_pslq(b, a) is None
     assert field_isomorphism_pslq(b, b) == [1, 0]
-    assert field_isomorphism_pslq(b, c) == None
+    assert field_isomorphism_pslq(b, c) is None
     assert field_isomorphism_pslq(b, d) == [-Q(1, 2), 0, Q(11, 2), 0]
     assert field_isomorphism_pslq(b, e) == [-Q(3, 640), 0, Q(67, 320), 0, -Q(297, 160), 0, Q(313, 80), 0]
 
-    assert field_isomorphism_pslq(c, a) == None
-    assert field_isomorphism_pslq(c, b) == None
+    assert field_isomorphism_pslq(c, a) is None
+    assert field_isomorphism_pslq(c, b) is None
     assert field_isomorphism_pslq(c, c) == [1, 0]
-    assert field_isomorphism_pslq(c, d) == None
+    assert field_isomorphism_pslq(c, d) is None
     assert field_isomorphism_pslq(c, e) == [Q(3, 640), 0, -Q(71, 320), 0, Q(377, 160), 0, -Q(469, 80), 0]
 
-    assert field_isomorphism_pslq(d, a) == None
-    assert field_isomorphism_pslq(d, b) == None
-    assert field_isomorphism_pslq(d, c) == None
+    assert field_isomorphism_pslq(d, a) is None
+    assert field_isomorphism_pslq(d, b) is None
+    assert field_isomorphism_pslq(d, c) is None
     assert field_isomorphism_pslq(d, d) == [1, 0]
     assert field_isomorphism_pslq(d, e) == [-Q(3, 640), 0, Q(71, 320), 0, -Q(377, 160), 0, Q(549, 80), 0]
 
-    assert field_isomorphism_pslq(e, a) == None
-    assert field_isomorphism_pslq(e, b) == None
-    assert field_isomorphism_pslq(e, c) == None
-    assert field_isomorphism_pslq(e, d) == None
+    assert field_isomorphism_pslq(e, a) is None
+    assert field_isomorphism_pslq(e, b) is None
+    assert field_isomorphism_pslq(e, c) is None
+    assert field_isomorphism_pslq(e, d) is None
     assert field_isomorphism_pslq(e, e) == [1, 0]
 
     f = AlgebraicNumber(3*sqrt(2)+8*sqrt(7)-5)

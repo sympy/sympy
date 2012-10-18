@@ -172,7 +172,7 @@ class AskBoundedHandler(CommonHandler):
             # is None and Bounded is None or there was already
             # an unknown sign, return None
             if sign != -1 and s != sign or \
-               s == None and (s == _bounded or s == sign):
+               s is None and (s == _bounded or s == sign):
                 return None
             else:
                 sign = s
@@ -248,7 +248,7 @@ class AskBoundedHandler(CommonHandler):
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)
         exp_bounded = ask(Q.bounded(expr.exp), assumptions)
-        if base_bounded==None and exp_bounded==None:  # Common Case
+        if base_bounded is None and exp_bounded is None:  # Common Case
             return None
         if base_bounded==False and ask(Q.nonzero(expr.exp), assumptions):
             return False

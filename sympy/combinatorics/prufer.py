@@ -272,8 +272,8 @@ class Prufer(Basic):
             ei = e.pop()
             for i in ei:
                 got.add(i)
-            nmin = min(ei[0], nmin) if nmin != None else ei[0]
-            nmax = max(ei[1], nmax) if nmax != None else ei[1]
+            nmin = min(ei[0], nmin) if nmin is not None else ei[0]
+            nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))
         missing = set(range(nmin, nmax + 1)) - got
         if missing:

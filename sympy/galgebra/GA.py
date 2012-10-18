@@ -810,7 +810,7 @@ class MV(object):
         MV.str_mode = 0
         MV.basisroot = ''
         MV.index_offset = offset
-        if coords == None:
+        if coords is None:
             MV.coords = None
         else:
             MV.coords = tuple(coords)
@@ -1684,7 +1684,7 @@ class MV(object):
             if isinstance(value, str):  # Most general vector
                 symbol_str = ''
                 for ibase in MV.nrg:
-                    if MV.coords == None:
+                    if MV.coords is None:
                         symbol = value+'__'+str(ibase+MV.index_offset)
                         symbol_str += symbol+' '
                     else:
@@ -1762,14 +1762,14 @@ class MV(object):
                 if not isinstance(self.mv[grade], int):
                     if grade == 0:
                         coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[0][0])
-                        if vars == None and MV.coords is not None:
+                        if vars is None and MV.coords is not None:
                             self.mv[0]= numpy.array([sympy.Function(coef)(*MV.coords)], dtype=numpy.object)
                         else:
                             self.mv[0]= numpy.array([sympy.Function(coef)(*vars)], dtype=numpy.object)
                     else:
                         for base in range(MV.nbasis[grade]):
                             coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[grade][base])
-                            if vars == None and MV.coords is not None:
+                            if vars is None and MV.coords is not None:
                                 self.mv[grade][base] = sympy.Function(coef)(*MV.coords)
                             else:
                                 self.mv[grade][base] = sympy.Function(coef)(*vars)
@@ -1779,7 +1779,7 @@ class MV(object):
         index_str = ''
         if len(base) == 0:
             return('')
-        if MV.coords == None:
+        if MV.coords is None:
             for ix in base:
                 index_str += str(ix+MV.index_offset)
         else:

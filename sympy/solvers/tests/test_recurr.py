@@ -116,7 +116,7 @@ def test_rsolve():
 
     assert rsolve(f, y(n), {y(0): 0}) == 2*n
     assert rsolve(f, y(n), {y(0): 1}) == 2*n + 1
-    assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == None
+    assert rsolve(f, y(n), {y(0): 0, y(1): 1}) is None
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -133,7 +133,7 @@ def test_rsolve():
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
     f = y(n) - 1/n*y(n - 1) - 1
-    assert rsolve(f, y(n)) == None
+    assert rsolve(f, y(n)) is None
 
     f = 2*y(n - 1) + (1 - n)*y(n)/n
 

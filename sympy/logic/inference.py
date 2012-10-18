@@ -94,7 +94,7 @@ def pl_true(expr, model={}):
             p = pl_true(arg, model)
             if p == True:
                 return True
-            if p == None:
+            if p is None:
                 result = None
         return result
     elif func is And:
@@ -103,7 +103,7 @@ def pl_true(expr, model={}):
             p = pl_true(arg, model)
             if p == False:
                 return False
-            if p == None:
+            if p is None:
                 result = None
         return result
 
@@ -114,10 +114,10 @@ def pl_true(expr, model={}):
     elif func is Equivalent:
         p, q = args
         pt = pl_true(p, model)
-        if pt == None:
+        if pt is None:
             return None
         qt = pl_true(q, model)
-        if qt == None:
+        if qt is None:
             return None
         return pt == qt
     else:

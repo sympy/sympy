@@ -398,7 +398,7 @@ class Dyadic(object):
 
         """
 
-        if frame2 == None:
+        if frame2 is None:
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
@@ -526,7 +526,7 @@ class ReferenceFrame(object):
         # The if statements below are for custom printing of basis-vectors for
         # each frame.
         # First case, when custom indices are supplied
-        if indices != None:
+        if indices is not None:
             if not isinstance(indices, (tuple, list)):
                 raise TypeError('Supply the indices as a list')
             if len(indices) != 3:
@@ -563,7 +563,7 @@ class ReferenceFrame(object):
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
             self.indices = ['x', 'y', 'z']
         # Different step, for custom latex basis vectors
-        if latexs != None:
+        if latexs is not None:
             if not isinstance(latexs, (tuple, list)):
                 raise TypeError('Supply the indices as a list')
             if len(latexs) != 3:

@@ -2069,7 +2069,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # Try to recognise a shifted sum.
     p = S(0)
     res = try_shifted_sum(nip, z0)
-    if res != None:
+    if res is not None:
         nip, nops, p = res
         debug('  Recognised shifted sum, reducerd order to', nip)
         ops += nops

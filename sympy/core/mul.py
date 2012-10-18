@@ -813,7 +813,7 @@ class Mul(AssocOp):
                     return a.matches(Rational(sign), repl_dict)
                 # do more expensive match
                 dd = b.matches(expr, repl_dict)
-                if dd == None:
+                if dd is None:
                     return None
                 dd = a.matches(Rational(sign), dd)
                 return dd

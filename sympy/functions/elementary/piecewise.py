@@ -384,7 +384,7 @@ class Piecewise(Function):
             int_expr.extend(holes)
             if targetcond is True:
                 return [(h[0], h[1]) for h in holes]
-        elif holes and default == None:
+        elif holes and default is None:
             raise ValueError("Called interval evaluation over piecewise "
                              "function on undefined intervals %s" %
                              ", ".join([str((h[0], h[1])) for h in holes]))

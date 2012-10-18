@@ -1621,7 +1621,7 @@ class MatrixBase(object):
         # Row or Column Vector Norms
         vals = self.values() or [0]
         if self.rows == 1 or self.cols == 1:
-            if ord == 2 or ord == None:  # Common case sqrt(<x, x>)
+            if ord == 2 or ord is None:  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i)**2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -1650,7 +1650,7 @@ class MatrixBase(object):
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif (ord == None or isinstance(ord, str) and ord.lower() in
+            elif (ord is None or isinstance(ord, str) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)

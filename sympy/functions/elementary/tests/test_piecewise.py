@@ -357,8 +357,8 @@ def test_piecewise_complex():
     assert p1.is_real == True
     assert p2.is_imaginary == True
     assert p2.is_real == False
-    assert p3.is_imaginary == None
-    assert p3.is_real == None
+    assert p3.is_imaginary is None
+    assert p3.is_real is None
 
     assert p1.as_real_imag() == (p1, 0)
     assert p2.as_real_imag() == (0, -I*p2)

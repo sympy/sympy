@@ -195,7 +195,7 @@ def test_Wild_properties():
             if pat in goodmatch[A]:
                 assert d[A] in goodmatch[A]
             else:
-                assert d == None
+                assert d is None
 
 
 @XFAIL

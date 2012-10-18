@@ -178,7 +178,7 @@ class interval(object):
                 valid = True
             if self.start == other.start and self.end == other.end:
                 return (False, valid)
-            if not self.__lt__(other)[0] == None:
+            if not self.__lt__(other)[0] is None:
                 return (True, valid)
             return (None, valid)
         else:

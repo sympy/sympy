@@ -135,7 +135,7 @@ def test_sign():
     assert sign(nan) == nan
 
     x = Symbol('x')
-    assert sign(x).is_zero == None
+    assert sign(x).is_zero is None
     assert sign(x).doit() == sign(x)
     assert sign(1.2*x) == sign(x)
     assert sign(2*x) == sign(x)
@@ -157,7 +157,7 @@ def test_sign():
     assert conjugate(sign(x)) == -sign(x)
 
     x = Symbol('x', real=True)
-    assert sign(x).is_zero == None
+    assert sign(x).is_zero is None
     assert sign(x).diff(x) == 2*DiracDelta(x)
     assert sign(x).doit() == sign(x)
     assert conjugate(sign(x)) == sign(x)
@@ -289,7 +289,7 @@ def test_Abs_real():
 def test_Abs_properties():
     x = Symbol('x')
     assert Abs(x).is_real == True
-    assert Abs(x).is_positive == None
+    assert Abs(x).is_positive is None
     assert Abs(x).is_nonnegative == True
 
     w = Symbol('w', complex=True, zero=False)

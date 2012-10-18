@@ -54,7 +54,7 @@ def test_2124():
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
     assert (1 + x + O(x**2)).getn() == 2
-    assert (1 + x).getn() == None
+    assert (1 + x).getn() is None
 
     assert ((1/sin(x))**oo).series() == oo
     logx = Symbol('logx')

@@ -72,7 +72,7 @@ class TautologicalHandler(AskHandler):
             p = ask(arg, assumptions=assumptions)
             if p == True:
                 return True
-            if p == None:
+            if p is None:
                 result = None
         return result
 
@@ -83,7 +83,7 @@ class TautologicalHandler(AskHandler):
             p = ask(arg, assumptions=assumptions)
             if p == False:
                 return False
-            if p == None:
+            if p is None:
                 result = None
         return result
 
@@ -96,9 +96,9 @@ class TautologicalHandler(AskHandler):
     def Equivalent(expr, assumptions):
         p, q = expr.args
         pt = ask(p, assumptions=assumptions)
-        if pt == None:
+        if pt is None:
             return None
         qt = ask(q, assumptions=assumptions)
-        if qt == None:
+        if qt is None:
             return None
         return pt == qt

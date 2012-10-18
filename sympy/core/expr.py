@@ -1758,7 +1758,7 @@ class Expr(Basic, EvalfMixin):
         if c.is_Mul:
             a, b = c.as_two_terms()
             x = self.extract_multiplicatively(a)
-            if x != None:
+            if x is not None:
                 return x.extract_multiplicatively(b)
         quotient = self / c
         if self.is_Number:
@@ -1809,7 +1809,7 @@ class Expr(Basic, EvalfMixin):
             newargs = []
             for arg in self.args:
                 newarg = arg.extract_multiplicatively(c)
-                if newarg != None:
+                if newarg is not None:
                     newargs.append(newarg)
                 else:
                     return None
@@ -1824,11 +1824,11 @@ class Expr(Basic, EvalfMixin):
         elif self.is_Pow:
             if c.is_Pow and c.base == self.base:
                 new_exp = self.exp.extract_additively(c.exp)
-                if new_exp != None:
+                if new_exp is not None:
                     return self.base ** (new_exp)
             elif c == self.base:
                 new_exp = self.exp.extract_additively(1)
-                if new_exp != None:
+                if new_exp is not None:
                     return self.base ** (new_exp)
 
     def extract_additively(self, c):
@@ -1949,8 +1949,8 @@ class Expr(Basic, EvalfMixin):
 
         """
         negative_self = -self
-        self_has_minus = (self.extract_multiplicatively(-1) != None)
-        negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) != None)
+        self_has_minus = (self.extract_multiplicatively(-1) is not None)
+        negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) is not None)
         if self_has_minus != negative_self_has_minus:
             return self_has_minus
         else:
@@ -2324,7 +2324,7 @@ class Expr(Basic, EvalfMixin):
 
         # from here on it's x0=0 and dir='+' handling
 
-        if n != None:  # nseries handling
+        if n is not None:  # nseries handling
             s1 = self._eval_nseries(x, n=n, logx=None)
             o = s1.getO() or S.Zero
             if o:
@@ -2468,7 +2468,7 @@ class Expr(Basic, EvalfMixin):
         if x and not self.has(x):
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
-            assert logx == None
+            assert logx is None
             return self.series(x, x0, n, dir)
         else:
             return self._eval_nseries(x, n=n, logx=logx)

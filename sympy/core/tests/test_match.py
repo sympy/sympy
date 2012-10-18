@@ -17,7 +17,7 @@ def test_symbol():
     e = Rational(5)
     assert e.match(c) == {c: 5}
     assert e.match(e) == {}
-    assert e.match(e+1) == None
+    assert e.match(e+1) is None
 
 
 def test_add():
@@ -38,7 +38,7 @@ def test_add():
     e = a+b+c+x
     assert e.match(a+p+x+c) == {p: b}
     assert e.match(b+p+c+x) == {p: a}
-    assert e.match(b) == None
+    assert e.match(b) is None
     assert e.match(b+p) == {p: a+c+x}
     assert e.match(a+p+c) == {p: b+x}
     assert e.match(b+p+c) == {p: a+x}
@@ -55,7 +55,7 @@ def test_power():
 
     e = (x+y)**a
     assert e.match(p**q) == {p: x+y, q: a}
-    assert e.match(p**p) == None
+    assert e.match(p**p) is None
 
     e = (x+y)**(x+y)
     assert e.match(p**p) == {p: x+y}
@@ -128,15 +128,15 @@ def test_mul_noncommutative():
 
     assert (u*v).matches(x) in ({v: x, u: 1}, {u: x, v: 1})
     assert (u*v).matches(x*y) in ({v: y, u: x}, {u: y, v: x})
-    assert (u*v).matches(A) == None
-    assert (u*v).matches(A*B) == None
-    assert (u*v).matches(x*A) == None
-    assert (u*v).matches(x*y*A) == None
-    assert (u*v).matches(x*A*B) == None
-    assert (u*v).matches(x*y*A*B) == None
+    assert (u*v).matches(A) is None
+    assert (u*v).matches(A*B) is None
+    assert (u*v).matches(x*A) is None
+    assert (u*v).matches(x*y*A) is None
+    assert (u*v).matches(x*A*B) is None
+    assert (u*v).matches(x*y*A*B) is None
 
-    assert (v*w).matches(x) == None
-    assert (v*w).matches(x*y) == None
+    assert (v*w).matches(x) is None
+    assert (v*w).matches(x*y) is None
     assert (v*w).matches(A) == {w: A, v: 1}
     assert (v*w).matches(A*B) == {w: A*B, v: 1}
     assert (v*w).matches(x*A) == {w: A, v: x}
@@ -144,8 +144,8 @@ def test_mul_noncommutative():
     assert (v*w).matches(x*A*B) == {w: A*B, v: x}
     assert (v*w).matches(x*y*A*B) == {w: A*B, v: x*y}
 
-    assert (v*w).matches(-x) == None
-    assert (v*w).matches(-x*y) == None
+    assert (v*w).matches(-x) is None
+    assert (v*w).matches(-x*y) is None
     assert (v*w).matches(-A) == {w: A, v: -1}
     assert (v*w).matches(-A*B) == {w: A*B, v: -1}
     assert (v*w).matches(-x*A) == {w: A, v: -x}
@@ -182,7 +182,7 @@ def test_functions():
     notf = x
     assert f.match(p*cos(q*x)) == {p: 1, q: 5}
     assert f.match(p*g) == {p: 1, g: cos(5*x)}
-    assert notf.match(g) == None
+    assert notf.match(g) is None
 
 
 @XFAIL
@@ -229,7 +229,7 @@ def test_derivative_bug1():
     expr = Derivative(f(x), x)+x**2
     d1 = {b: x**2}
     d2 = pattern.xreplace(d1).matches(expr, d1)
-    assert d2 == None
+    assert d2 is None
 
 
 def test_derivative2():
@@ -239,15 +239,15 @@ def test_derivative2():
     b = Wild("b", exclude=[f])
     e = Derivative(f(x), x)
     assert e.match(Derivative(f(x), x)) == {}
-    assert e.match(Derivative(f(x), x, x)) == None
+    assert e.match(Derivative(f(x), x, x)) is None
     e = Derivative(f(x), x, x)
-    assert e.match(Derivative(f(x), x)) == None
+    assert e.match(Derivative(f(x), x)) is None
     assert e.match(Derivative(f(x), x, x)) == {}
     e = Derivative(f(x), x)+x**2
     assert e.match(a*Derivative(f(x), x) + b) == {a: 1, b: x**2}
-    assert e.match(a*Derivative(f(x), x, x) + b) == None
+    assert e.match(a*Derivative(f(x), x, x) + b) is None
     e = Derivative(f(x), x, x)+x**2
-    assert e.match(a*Derivative(f(x), x) + b) == None
+    assert e.match(a*Derivative(f(x), x) + b) is None
     assert e.match(a*Derivative(f(x), x, x) + b) == {a: 1, b: x**2}
 
 
@@ -276,7 +276,7 @@ def test_match_bug2():
 def test_match_bug3():
     x, a, b = map(Symbol, 'xab')
     p = Wild('p')
-    assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
+    assert (b*x*exp(a*x)).match(x*exp(p*x)) is None
 
 
 def test_match_bug4():
@@ -305,7 +305,7 @@ def test_behavior1():
     p = Wild('p')
     e = 3*x**2
     a = Wild('a', exclude=[x])
-    assert e.match(a*x) == None
+    assert e.match(a*x) is None
     assert e.match(p*x) == {p: 3*x}
 
 
@@ -318,7 +318,7 @@ def test_behavior2():
 
     e = 3*x + 3 + 6/x
     a = Wild('a', exclude=[x])
-    assert e.expand().match(a*x**2 + a*x + 2*a) == None
+    assert e.expand().match(a*x**2 + a*x + 2*a) is None
     assert e.expand().match(p*x**2 + p*x + 2*p) == {p: 3/x}
 
 
@@ -343,20 +343,20 @@ def test_exclude():
     q = Wild('q', exclude=[x])
     r = Wild('r', exclude=[sin, y])
 
-    assert sin(x).match(r) == None
-    assert cos(y).match(r) == None
+    assert sin(x).match(r) is None
+    assert cos(y).match(r) is None
 
     e = 3*x**2 + y*x + a
     assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
 
     e = x+1
-    assert e.match(x+p) == None
-    assert e.match(p+1) == None
+    assert e.match(x+p) is None
+    assert e.match(p+1) is None
     assert e.match(x+1+p) == {p: 0}
 
     e = cos(x) + 5*sin(y)
-    assert e.match(r) == None
-    assert e.match(cos(y) + r) == None
+    assert e.match(r) is None
+    assert e.match(cos(y) + r) is None
     assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
 
 
@@ -396,8 +396,8 @@ def test_match_wild_wild():
     q = Wild('q', exclude=[p])
     r = Wild('r', exclude=[p])
 
-    assert p.match(q+r) == None
-    assert p.match(q*r) == None
+    assert p.match(q+r) is None
+    assert p.match(q*r) is None
 
 
 def test_combine_inverse():

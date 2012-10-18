@@ -870,24 +870,24 @@ def test_as_coeff_exponent():
 
 def test_extractions():
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
-    assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
+    assert ((x*y)**3).extract_multiplicatively(x**4 * y) is None
     assert (2*x).extract_multiplicatively(2) == x
-    assert (2*x).extract_multiplicatively(3) == None
-    assert (2*x).extract_multiplicatively(-1) == None
+    assert (2*x).extract_multiplicatively(3) is None
+    assert (2*x).extract_multiplicatively(-1) is None
     assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
-    assert (sqrt(x)).extract_multiplicatively(x) == None
-    assert (sqrt(x)).extract_multiplicatively(1/x) == None
+    assert (sqrt(x)).extract_multiplicatively(x) is None
+    assert (sqrt(x)).extract_multiplicatively(1/x) is None
 
-    assert ((x*y)**3).extract_additively(1) == None
+    assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
-    assert (x + 1).extract_additively(2*x) == None
-    assert (x + 1).extract_additively(-x) == None
-    assert (-x + 1).extract_additively(2*x) == None
+    assert (x + 1).extract_additively(2*x) is None
+    assert (x + 1).extract_additively(-x) is None
+    assert (-x + 1).extract_additively(2*x) is None
     assert (2*x + 3).extract_additively(x) == x + 3
     assert (2*x + 3).extract_additively(2) == 2*x + 1
     assert (2*x + 3).extract_additively(3) == 2*x
-    assert (2*x + 3).extract_additively(-2) == None
-    assert (2*x + 3).extract_additively(3*x) == None
+    assert (2*x + 3).extract_additively(-2) is None
+    assert (2*x + 3).extract_additively(3*x) is None
     assert (2*x + 3).extract_additively(2*x) == 3
     assert x.extract_additively(0) == x
     assert S(2).extract_additively(x) is None
