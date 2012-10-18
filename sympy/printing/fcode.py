@@ -315,13 +315,15 @@ class FCodePrinter(CodePrinter):
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
-                if line: hunk += trailing
+                if line:
+                    hunk += trailing
                 result.append(hunk)
                 while len(line) > 0:
                     pos = split_pos_code(line, 65)
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()
-                    if line: hunk += trailing
+                    if line:
+                        hunk += trailing
                     result.append("%s%s" % (self._lead_cont, hunk))
             else:
                 result.append(line)

@@ -84,21 +84,27 @@ def pl_true(expr, model={}):
 
     if func is Not:
         p = pl_true(args[0], model)
-        if p is None: return None
-        else: return not p
+        if p is None:
+            return None
+        else:
+            return not p
     elif func is Or:
         result = False
         for arg in args:
             p = pl_true(arg, model)
-            if p == True: return True
-            if p == None: result = None
+            if p == True:
+                return True
+            if p == None:
+                result = None
         return result
     elif func is And:
         result = True
         for arg in args:
             p = pl_true(arg, model)
-            if p == False: return False
-            if p == None: result = None
+            if p == False:
+                return False
+            if p == None:
+                result = None
         return result
 
     elif func is Implies:
@@ -159,7 +165,8 @@ class PropKB(KB):
         [Or(x, y), y]
         """
         for c in conjuncts(to_cnf(sentence)):
-            if not c in self.clauses: self.clauses.append(c)
+            if not c in self.clauses:
+                self.clauses.append(c)
 
     def ask(self, query):
         """Checks if the query is true given the set of clauses.
@@ -176,7 +183,8 @@ class PropKB(KB):
         >>> l.ask(y)
         False
         """
-        if len(self.clauses) == 0: return False
+        if len(self.clauses) == 0:
+            return False
         from sympy.logic.algorithms.dpll import dpll
         query_conjuncts = self.clauses[:]
         query_conjuncts.extend(conjuncts(to_cnf(query)))

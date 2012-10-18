@@ -28,7 +28,8 @@ def refine(expr, assumptions=True):
         expr = expr.func(*args)
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
-    if handler is None: return expr
+    if handler is None:
+        return expr
     new_expr = handler(expr, assumptions)
     if (new_expr is None) or (expr == new_expr):
         return expr

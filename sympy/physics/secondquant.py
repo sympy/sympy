@@ -506,8 +506,10 @@ class FermionicOperator(SqOperator):
 
         """
         ass = self.args[0].assumptions0
-        if ass.get("below_fermi"): return -1
-        if ass.get("above_fermi"): return 1
+        if ass.get("below_fermi"):
+            return -1
+        if ass.get("above_fermi"):
+            return 1
         return 0
 
     @property
@@ -675,7 +677,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         -1
 
         """
-        if self.is_below_fermi: return -1
+        if self.is_below_fermi:
+            return -1
         return 0
 
     @property
@@ -698,7 +701,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         1
 
         """
-        if self.is_above_fermi: return 1
+        if self.is_above_fermi:
+            return 1
         return 0
 
     @property
@@ -808,7 +812,8 @@ class CreateFermion(FermionicOperator, Creator):
         1
 
         """
-        if self.is_above_fermi: return 1
+        if self.is_above_fermi:
+            return 1
         return 0
 
     @property
@@ -831,7 +836,8 @@ class CreateFermion(FermionicOperator, Creator):
         -1
 
         """
-        if self.is_below_fermi: return -1
+        if self.is_below_fermi:
+            return -1
         return 0
 
     @property
@@ -1304,7 +1310,8 @@ def _apply_Mul(m):
                         result = last
                         for i in range(next_to_last.exp):
                             result = next_to_last.base.apply_operator(result)
-                            if result == 0: break
+                            if result == 0:
+                                break
                         if result == 0:
                             return S.Zero
                         else:
@@ -1675,8 +1682,10 @@ class Commutator(Function):
         >>> Commutator.eval(c1, c2)
         0
         """
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return S.Zero
         if a.is_commutative or b.is_commutative:
             return S.Zero
 
@@ -2302,17 +2311,20 @@ def evaluate_deltas(e):
                     indices[s] += 1
                 else:
                     indices[s] = 0  # geek counting simplifies logic below
-            if isinstance(i, KroneckerDelta): deltas.append(i)
+            if isinstance(i, KroneckerDelta):
+                deltas.append(i)
 
         for d in deltas:
             # If we do something, and there are more deltas, we should recurse
             # to treat the resulting expression properly
             if indices[d.killable_index]:
                 e = e.subs(d.killable_index, d.preferred_index)
-                if len(deltas)>1: return evaluate_deltas(e)
+                if len(deltas)>1:
+                    return evaluate_deltas(e)
             elif indices[d.preferred_index] and d.indices_contain_equal_information:
                 e = e.subs(d.preferred_index, d.killable_index)
-                if len(deltas)>1: return evaluate_deltas(e)
+                if len(deltas)>1:
+                    return evaluate_deltas(e)
             else:
                 pass
 
@@ -2426,13 +2438,16 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         assum = d.assumptions0
 
         if assum.get("above_fermi"):
-            if new_indices: sym = _a(a); a +=1
+            if new_indices:
+                sym = _a(a); a +=1
             l1 = aboves
         elif assum.get("below_fermi"):
-            if new_indices: sym = _i(i); i +=1
+            if new_indices:
+                sym = _i(i); i +=1
             l1 = belows
         else:
-            if new_indices: sym = _p(p); p +=1
+            if new_indices:
+                sym = _p(p); p +=1
             l1 = generals
 
         if new_indices:

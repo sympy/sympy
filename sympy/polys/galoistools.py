@@ -321,7 +321,8 @@ def gf_to_dict(f, p, symmetric=True):
         else:
             a = f[n-k]
 
-        if a: result[k] = a
+        if a:
+            result[k] = a
 
     return result
 

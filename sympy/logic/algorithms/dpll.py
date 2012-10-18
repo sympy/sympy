@@ -56,14 +56,16 @@ def dpll(clauses, symbols, model):
     while P:
         model.update({P: value})
         symbols.remove(P)
-        if not value: P = ~P
+        if not value:
+            P = ~P
         clauses = unit_propagate(clauses, P)
         P, value = find_unit_clause(clauses, model)
     P, value = find_pure_symbol(symbols, clauses)
     while P:
         model.update({P: value})
         symbols.remove(P)
-        if not value: P = ~P
+        if not value:
+            P = ~P
         clauses = unit_propagate(clauses, P)
         P, value = find_pure_symbol(symbols, clauses)
     # end DP kernel
@@ -76,7 +78,8 @@ def dpll(clauses, symbols, model):
             unknown_clauses.append(c)
     if not unknown_clauses:
         return model
-    if not clauses: return model
+    if not clauses:
+        return model
     P = symbols.pop()
     model_copy = model.copy()
     model.update({P: True})
@@ -224,9 +227,12 @@ def find_pure_symbol(symbols, unknown_clauses):
     for sym in symbols:
         found_pos, found_neg = False, False
         for c in unknown_clauses:
-            if not found_pos and sym in disjuncts(c): found_pos = True
-            if not found_neg and Not(sym) in disjuncts(c): found_neg = True
-        if found_pos != found_neg: return sym, found_pos
+            if not found_pos and sym in disjuncts(c):
+                found_pos = True
+            if not found_neg and Not(sym) in disjuncts(c):
+                found_neg = True
+        if found_pos != found_neg:
+            return sym, found_pos
     return None, None
 
 

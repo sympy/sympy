@@ -424,11 +424,13 @@ def eval_sum_symbolic(f, limits):
 
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
-            if sR: return L*sR
+            if sR:
+                return L*sR
 
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
-            if sL: return R*sL
+            if sL:
+                return R*sL
 
         try:
             f = apart(f, i)  # see if it becomes an Add

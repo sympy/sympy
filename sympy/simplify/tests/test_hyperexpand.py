@@ -194,7 +194,8 @@ def test_meijerg_formulae():
                 assert tn(d1.subs(rep), d2.subs(rep), z)
 
 
-def op(f): return z*f.diff(z)
+def op(f):
+    return z*f.diff(z)
 
 
 def test_plan():

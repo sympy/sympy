@@ -56,10 +56,12 @@ def test_fn():
     assert fn(4, z) == 1/z - 45/z**3 + 105/z**5
 
 
-def mjn(n, z): return expand_func(jn(n, z))
+def mjn(n, z):
+    return expand_func(jn(n, z))
 
 
-def myn(n, z): return expand_func(yn(n, z))
+def myn(n, z):
+    return expand_func(yn(n, z))
 
 
 def test_jn():

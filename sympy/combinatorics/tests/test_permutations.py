@@ -33,7 +33,8 @@ def test_Permutation():
     # make sure no other permutation of p, q, r could have given
     # that answer
     for a, b, c in permutations((p, q, r)):
-        if (a, b, c) == (p, q, r): continue
+        if (a, b, c) == (p, q, r):
+            continue
         assert rmul(a, b, c).array_form != ans
 
     assert p.support() == range(7)

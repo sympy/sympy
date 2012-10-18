@@ -42,13 +42,16 @@ tok_name[NL] = 'NL'
 N_TOKENS += 2
 
 
-def group(*choices): return '(' + '|'.join(choices) + ')'
+def group(*choices):
+    return '(' + '|'.join(choices) + ')'
 
 
-def any(*choices): return group(*choices) + '*'
+def any(*choices):
+    return group(*choices) + '*'
 
 
-def maybe(*choices): return group(*choices) + '?'
+def maybe(*choices):
+    return group(*choices) + '?'
 
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
@@ -149,10 +152,12 @@ for t in ("'", '"',
 tabsize = 8
 
 
-class TokenError(Exception): pass
+class TokenError(Exception):
+    pass
 
 
-class StopTokenizing(Exception): pass
+class StopTokenizing(Exception):
+    pass
 
 
 def printtoken(type, token, srow_scol, erow_ecol, line):  # for testing
@@ -330,15 +335,21 @@ def generate_tokens(readline):
                 continue
 
         elif parenlev == 0 and not continued:  # new statement
-            if not line: break
+            if not line:
+                break
             column = 0
             while pos < max:                   # measure leading whitespace
-                if line[pos] == ' ': column = column + 1
-                elif line[pos] == '\t': column = (column/tabsize + 1)*tabsize
-                elif line[pos] == '\f': column = 0
-                else: break
+                if line[pos] == ' ':
+                    column = column + 1
+                elif line[pos] == '\t':
+                    column = (column/tabsize + 1)*tabsize
+                elif line[pos] == '\f':
+                    column = 0
+                else:
+                    break
                 pos = pos + 1
-            if pos == max: break
+            if pos == max:
+                break
 
             if line[pos] in '#\r\n':           # skip comments or blank lines
                 if line[pos] == '#':
@@ -411,8 +422,10 @@ def generate_tokens(readline):
                 elif initial == '\\':                      # continued stmt
                     continued = 1
                 else:
-                    if initial in '([{': parenlev = parenlev + 1
-                    elif initial in ')]}': parenlev = parenlev - 1
+                    if initial in '([{':
+                        parenlev = parenlev + 1
+                    elif initial in ')]}':
+                        parenlev = parenlev - 1
                     yield (OP, token, spos, epos, line)
             else:
                 yield (ERRORTOKEN, line[pos],
@@ -425,5 +438,7 @@ def generate_tokens(readline):
 
 if __name__ == '__main__':                     # testing
     import sys
-    if len(sys.argv) > 1: tokenize(open(sys.argv[1]).readline)
-    else: tokenize(sys.stdin.readline)
+    if len(sys.argv) > 1:
+        tokenize(open(sys.argv[1]).readline)
+    else:
+        tokenize(sys.stdin.readline)

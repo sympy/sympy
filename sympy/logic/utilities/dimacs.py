@@ -45,14 +45,17 @@ def load(s):
                 list = []
                 for lit in nums:
                     if lit != '':
-                        if int(lit) == 0: continue
+                        if int(lit) == 0:
+                            continue
                         num = abs(int(lit))
                         sign = True
                         if int(lit) < 0:
                             sign = False
 
-                        if sign: list.append(Symbol("cnf_%s" % num))
-                        else: list.append(~Symbol("cnf_%s" % num))
+                        if sign:
+                            list.append(Symbol("cnf_%s" % num))
+                        else:
+                            list.append(~Symbol("cnf_%s" % num))
 
                 if len(list) > 0:
                     clauses.append(Or(*list))

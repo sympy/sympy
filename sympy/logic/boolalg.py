@@ -99,7 +99,8 @@ class Xor(BooleanFunction):
         >>> Xor(True, False, True, False)
         False
         """
-        if not args: return False
+        if not args:
+            return False
         args = list(args)
         A = args.pop()
         while args:

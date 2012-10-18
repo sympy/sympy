@@ -96,7 +96,8 @@ def _create_lookup_table(table):
         b**(a-1)*sin(a*pi)/pi)
 
     # 12
-    def A1(r, sign, nu): return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
+    def A1(r, sign, nu):
+        return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
@@ -478,7 +479,8 @@ def _flip_g(g):
     """ Turn the G function into one of inverse argument
         (i.e. G(1/x) -> G'(x)) """
     # See [L], section 5.2
-    def tr(l): return [1 - a for a in l]
+    def tr(l):
+        return [1 - a for a in l]
     return meijerg(tr(g.bm), tr(g.bother), tr(g.an), tr(g.aother), 1/g.argument)
 
 
@@ -672,7 +674,8 @@ def _rewrite_saxena_1(fac, po, g, x):
     C = fac/(abs(b)*a**((s+1)/b - 1))
     # Absorb a factor of (at)**((1 + s)/b - 1).
 
-    def tr(l): return [a + (1 + s)/b - 1 for a in l]
+    def tr(l):
+        return [a + (1 + s)/b - 1 for a in l]
     return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother),
                       a*x)
 
@@ -696,7 +699,8 @@ def _check_antecedents_1(g, x, helper=False):
     xi = m + n - p
 
     if p > q:
-        def tr(l): return [1 - x for x in l]
+        def tr(l):
+            return [1 - x for x in l]
         return _check_antecedents_1(meijerg(tr(g.bm), tr(g.bother),
                                             tr(g.an), tr(g.aother), x/eta),
                                     x)
@@ -878,7 +882,8 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     exp = (s + 1)/b - 1
     fac = fac/(abs(b) * a1**exp)
 
-    def tr(l): return [a + exp for a in l]
+    def tr(l):
+        return [a + exp for a in l]
     g1 = meijerg(tr(g1.an), tr(g1.aother), tr(g1.bm), tr(g1.bother), a1*x)
     g2 = meijerg(g2.an, g2.aother, g2.bm, g2.bother, a2*x)
 
@@ -1203,7 +1208,8 @@ def _int0oo(g1, g2, x):
     eta, _ = _get_coeff_exp(g1.argument, x)
     omega, _ = _get_coeff_exp(g2.argument, x)
 
-    def neg(l): return [-x for x in l]
+    def neg(l):
+        return [-x for x in l]
     a1 = neg(g1.bm) + list(g2.an)
     a2 = list(g2.aother) + neg(g1.bother)
     b1 = neg(g1.an) + list(g2.bm)
@@ -1216,7 +1222,8 @@ def _rewrite_inversion(fac, po, g, x):
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
 
-    def tr(l): return [t + s/b for t in l]
+    def tr(l):
+        return [t + s/b for t in l]
     return (powdenest(fac/a**(s/b), polar=True),
             meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
 
@@ -1299,13 +1306,17 @@ def _check_antecedents_inversion(g, x):
         _debug('  Using asymptotic slater expansion.')
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
-    def E(z): return And(*[statement(a - 1, 0, z) for a in g.an])
+    def E(z):
+        return And(*[statement(a - 1, 0, z) for a in g.an])
 
-    def H(z): return statement(theta, -sigma, 1/sigma, z)
+    def H(z):
+        return statement(theta, -sigma, 1/sigma, z)
 
-    def Hp(z): return statement_half(theta, -sigma, 1/sigma, z, True)
+    def Hp(z):
+        return statement_half(theta, -sigma, 1/sigma, z, True)
 
-    def Hm(z): return statement_half(theta, -sigma, 1/sigma, z, False)
+    def Hm(z):
+        return statement_half(theta, -sigma, 1/sigma, z, False)
 
     # [L], section 5.10
     conds = []
@@ -1590,7 +1601,8 @@ def _meijerint_indefinite_1(f, x):
         #  can safely pass S(1) for ``expr``.)
         t = _dummy('t', 'meijerint-indefinite', S(1))
 
-        def tr(p): return [a + rho + 1 for a in p]
+        def tr(p):
+            return [a + rho + 1 for a in p]
         if any(b.is_integer and b <= 0 for b in tr(g.bm)):
             r = -meijerg(tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:

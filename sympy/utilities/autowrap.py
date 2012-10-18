@@ -80,7 +80,8 @@ from sympy.utilities.lambdify import implemented_function
 from sympy import C
 
 
-class CodeWrapError(Exception): pass
+class CodeWrapError(Exception):
+    pass
 
 
 class CodeWrapper:
@@ -263,7 +264,8 @@ setup(
             # declare
             print >> f, 'cdef extern from "%s.h":' % prefix
             print >> f, '   %s' % prototype
-            if empty: print >> f
+            if empty:
+                print >> f
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
@@ -284,7 +286,8 @@ setup(
                 print >> f, '   %s(%s)' % (routine.name, args_c)
                 print >> f, '   return %s' % rets
 
-            if empty: print >> f
+            if empty:
+                print >> f
     dump_pyx.extension = "pyx"
 
     def _split_retvals_inargs(self, args):

@@ -193,16 +193,20 @@ def test_hyperrep():
 
     class myrep(HyperRep):
         @classmethod
-        def _expr_small(cls, x): return a
+        def _expr_small(cls, x):
+            return a
 
         @classmethod
-        def _expr_small_minus(cls, x): return b
+        def _expr_small_minus(cls, x):
+            return b
 
         @classmethod
-        def _expr_big(cls, x, n): return c*n
+        def _expr_big(cls, x, n):
+            return c*n
 
         @classmethod
-        def _expr_big_minus(cls, x, n): return d*n
+        def _expr_big_minus(cls, x, n):
+            return d*n
     assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), (a, True))
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrep') == \
            Piecewise((0, abs(z) > 1), (b, True))

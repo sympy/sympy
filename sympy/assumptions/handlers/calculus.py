@@ -37,7 +37,8 @@ class AskInfinitesimalHandler(CommonHandler):
                 result = True
             elif ask(Q.bounded(arg), assumptions):
                 continue
-            else: break
+            else:
+                break
         else:
             return result
 

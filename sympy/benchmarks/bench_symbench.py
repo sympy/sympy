@@ -7,15 +7,18 @@ from timeit import default_timer as clock
 
 def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"
-    def f(z): return sqrt(Integer(1)/3)*z**2 + I/3
+    def f(z):
+        return sqrt(Integer(1)/3)*z**2 + I/3
     e = f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
 
 
 def bench_R2():
     "Hermite polynomial hermite(15, y)"
     def hermite(n, y):
-        if n == 1: return 2*y
-        if n == 0: return 1
+        if n == 1:
+            return 2*y
+        if n == 0:
+            return 1
         return (2*y*hermite(n-1, y) - 2*(n-1)*hermite(n-2, y)).expand()
 
     #def phi(n, y):

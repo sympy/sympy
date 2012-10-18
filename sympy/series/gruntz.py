@@ -291,7 +291,8 @@ class SubsSet(dict):
         tr = {}
         for expr, var in s2.iteritems():
             if expr in self:
-                if exps: exps = exps.subs(var, res[expr])
+                if exps:
+                    exps = exps.subs(var, res[expr])
                 tr[var] = res[expr]
             else:
                 res[expr] = var

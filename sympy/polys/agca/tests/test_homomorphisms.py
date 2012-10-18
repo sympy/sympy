@@ -78,12 +78,14 @@ def test_creation():
     assert SQ.quotient_hom() == homomorphism(SQ.base, SQ, im)
 
     class conv(object):
-        def convert(x, y=None): return x
+        def convert(x, y=None):
+            return x
 
     class dummy(object):
         container = conv()
 
-        def submodule(*args): return None
+        def submodule(*args):
+            return None
     raises(TypeError, lambda: homomorphism(dummy(), G, matrix))
     raises(TypeError, lambda: homomorphism(F, dummy(), matrix))
     raises(ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))

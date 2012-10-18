@@ -83,8 +83,10 @@ class AntiCommutator(Expr):
 
     @classmethod
     def eval(cls, a, b):
-        if not (a and b): return S.Zero
-        if a == b: return Integer(2)*a**2
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return Integer(2)*a**2
         if a.is_commutative or b.is_commutative:
             return Integer(2)*a*b
 

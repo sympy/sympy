@@ -23,8 +23,10 @@ def _a(n, j, prec):
         if j >= 3:
             for k in xrange(1, j):
                 t = h*k*one//j
-                if t > 0: frac = t & onemask
-                else:     frac = -((-t) & onemask)
+                if t > 0:
+                    frac = t & onemask
+                else:
+                    frac = -((-t) & onemask)
                 g += k*(frac - half)
         g = ((g - 2*h*n*one)*pi//j) >> prec
         s = mpf_add(s, mpf_cos(from_man_exp(g, -prec), prec), prec)
@@ -66,8 +68,10 @@ def npartitions(n, verbose=False):
     1958
     """
     n = int(n)
-    if n < 0: return 0
-    if n <= 5: return [1, 1, 2, 3, 5, 7][n]
+    if n < 0:
+        return 0
+    if n <= 5:
+        return [1, 1, 2, 3, 5, 7][n]
     # Estimate number of bits in p(n). This formula could be tidied
     pbits = int((math.pi*(2*n/3.)**0.5-math.log(4*n))/math.log(10)+1)*\
         math.log(10, 2)

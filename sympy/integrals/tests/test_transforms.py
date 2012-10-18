@@ -540,9 +540,11 @@ def test_fourier_transform():
     FT = fourier_transform
     IFT = inverse_fourier_transform
 
-    def simp(x): return simplify(expand_trig(expand_complex(expand(x))))
+    def simp(x):
+        return simplify(expand_trig(expand_complex(expand(x))))
 
-    def sinc(x): return sin(pi*x)/(pi*x)
+    def sinc(x):
+        return sin(pi*x)/(pi*x)
     k = symbols('k', real=True)
     f = Function("f")
 

@@ -25,7 +25,8 @@ class AskNegativeHandler(CommonHandler):
     def _number(expr, assumptions):
         if not expr.as_real_imag()[1]:
             return expr.evalf() < 0
-        else: return False
+        else:
+            return False
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -53,12 +54,14 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
         result = None
         for arg in expr.args:
-            if result is None: result = False
+            if result is None:
+                result = False
             if ask(Q.negative(arg), assumptions):
                 result = not result
             elif ask(Q.positive(arg), assumptions):
                 pass
-            else: return
+            else:
+                return
         return result
 
     @staticmethod
@@ -109,7 +112,8 @@ class AskNonZeroHandler(CommonHandler):
     def Mul(expr, assumptions):
         for arg in expr.args:
             result = ask(Q.nonzero(arg), assumptions)
-            if result: continue
+            if result:
+                continue
             return result
         return True
 
@@ -136,7 +140,8 @@ class AskPositiveHandler(CommonHandler):
     def _number(expr, assumptions):
         if not expr.as_real_imag()[1]:
             return expr.evalf() > 0
-        else: return False
+        else:
+            return False
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -149,10 +154,12 @@ class AskPositiveHandler(CommonHandler):
             return AskPositiveHandler._number(expr, assumptions)
         result = True
         for arg in expr.args:
-            if ask(Q.positive(arg), assumptions): continue
+            if ask(Q.positive(arg), assumptions):
+                continue
             elif ask(Q.negative(arg), assumptions):
                 result = result ^ True
-            else: return
+            else:
+                return
         return result
 
     @staticmethod
@@ -168,7 +175,8 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
-        if expr.is_number: return expr.evalf() > 0
+        if expr.is_number:
+            return expr.evalf() > 0
         if ask(Q.positive(expr.base), assumptions):
             return True
         if ask(Q.negative(expr.base), assumptions):

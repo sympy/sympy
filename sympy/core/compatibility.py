@@ -361,9 +361,11 @@ except NameError:  # Python 2.5
 
         Stringifies an int or long in base 2.
         """
-        if x < 0: return '-' + bin(-x)
+        if x < 0:
+            return '-' + bin(-x)
         out = []
-        if x == 0: out.append('0')
+        if x == 0:
+            out.append('0')
         while x > 0:
             out.append('01'[x & 1])
             x >>= 1

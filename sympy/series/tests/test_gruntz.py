@@ -23,7 +23,8 @@ runslow = False
 
 
 def sskip():
-    if not runslow: skip("slow")
+    if not runslow:
+        skip("slow")
 
 
 def test_gruntz_evaluation():
@@ -212,7 +213,8 @@ def test_sign2():
     assert sign(-y*x, x) == -1
 
 
-def mmrv(a, b): return set(mrv(a, b)[0].keys())
+def mmrv(a, b):
+    return set(mrv(a, b)[0].keys())
 
 
 def test_mrv1():
@@ -266,7 +268,8 @@ def test_mrv4():
         set([exp(x*exp(x))])
 
 
-def mrewrite(a, b, c): return rewrite(a[1], a[0], b, c)
+def mrewrite(a, b, c):
+    return rewrite(a[1], a[0], b, c)
 
 
 def test_rewrite1():

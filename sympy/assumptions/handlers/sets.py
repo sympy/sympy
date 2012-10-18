@@ -176,9 +176,11 @@ class AskIrrationalHandler(CommonHandler):
         _real = ask(Q.real(expr), assumptions)
         if _real:
             _rational = ask(Q.rational(expr), assumptions)
-            if _rational is None: return None
+            if _rational is None:
+                return None
             return not _rational
-        else: return _real
+        else:
+            return _real
 
 
 class AskRealHandler(CommonHandler):
@@ -238,7 +240,8 @@ class AskRealHandler(CommonHandler):
                 if (expr.exp.q % 2 == 0):
                     return ask(Q.real(expr.base), assumptions) and \
                        not ask(Q.negative(expr.base), assumptions)
-                else: return True
+                else:
+                    return True
             elif ask(Q.real(expr.exp), assumptions):
                 if ask(Q.positive(expr.base), assumptions):
                     return True
@@ -580,9 +583,12 @@ def test_closed_group(expr, assumptions, key):
     result = True
     for arg in expr.args:
         _out = ask(key(arg), assumptions)
-        if _out is None: break
+        if _out is None:
+            break
         elif _out is False:
-            if result: result = False
-            else: break
+            if result:
+                result = False
+            else:
+                break
     else:
         return result

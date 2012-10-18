@@ -26,14 +26,19 @@ def integer_nthroot(y, n):
 
     """
     y, n = int(y), int(n)
-    if y < 0: raise ValueError("y must be nonnegative")
-    if n < 1: raise ValueError("n must be positive")
-    if y in (0, 1): return y, True
-    if n == 1: return y, True
+    if y < 0:
+        raise ValueError("y must be nonnegative")
+    if n < 1:
+        raise ValueError("n must be positive")
+    if y in (0, 1):
+        return y, True
+    if n == 1:
+        return y, True
     if n == 2:
         x, rem = mpmath.libmp.sqrtrem(y)
         return int(x), not rem
-    if n > y: return 1, False
+    if n > y:
+        return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
     try:
@@ -186,9 +191,11 @@ class Pow(Expr):
 
     def _eval_is_real(self):
         real_b = self.base.is_real
-        if real_b is None: return
+        if real_b is None:
+            return
         real_e = self.exp.is_real
-        if real_e is None: return
+        if real_e is None:
+            return
         if real_b and real_e:
             if self.base.is_positive:
                 return True
@@ -230,9 +237,11 @@ class Pow(Expr):
             if self.base.is_unbounded:
                 return True
         c1 = self.base.is_bounded
-        if c1 is None: return
+        if c1 is None:
+            return
         c2 = self.exp.is_bounded
-        if c2 is None: return
+        if c2 is None:
+            return
         if c1 and c2:
             if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
@@ -864,7 +873,8 @@ class Pow(Expr):
 
     @cacheit
     def taylor_term(self, n, x, *previous_terms):  # of (1+x)**e
-        if n<0: return S.Zero
+        if n<0:
+            return S.Zero
         x = _sympify(x)
         return C.binomial(self.exp, n) * Pow(x, n)
 

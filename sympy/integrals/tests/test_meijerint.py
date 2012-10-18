@@ -160,7 +160,8 @@ def test_meijerint():
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
 
     # Test a bug
-    def res(n): return (1/(1+x**2)).diff(x, n).subs(x, 1)*(-1)**n
+    def res(n):
+        return (1/(1+x**2)).diff(x, n).subs(x, 1)*(-1)**n
     for n in range(6):
         assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
          res(n)
@@ -260,7 +261,8 @@ def test_bessel():
 def test_inversion():
     from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
 
-    def inv(f): return piecewise_fold(meijerint_inversion(f, s, t))
+    def inv(f):
+        return piecewise_fold(meijerint_inversion(f, s, t))
     assert inv(1/(s**2 + 1)) == sin(t)*Heaviside(t)
     assert inv(s/(s**2 + 1)) == cos(t)*Heaviside(t)
     assert inv(exp(-s)/s) == Heaviside(t - 1)

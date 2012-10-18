@@ -488,13 +488,16 @@ class CodeGen(object):
         code_lines = self._preprocessor_statements(prefix)
 
         for routine in routines:
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
             code_lines.extend(self._declare_arguments(routine))
             code_lines.extend(self._declare_locals(routine))
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._call_printer(routine))
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._get_routine_ending(routine))
 
         code_lines = self._indent_code(''.join(code_lines))
@@ -652,18 +655,22 @@ class CCodeGen(CodeGen):
             print >> f, ''.join(self._get_header())
         guard_name = "%s__%s__H" % (self.project.replace(" ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
-        if empty: print >> f
+        if empty:
+            print >> f
         print >> f, "#ifndef %s" % guard_name
         print >> f, "#define %s" % guard_name
-        if empty: print >> f
+        if empty:
+            print >> f
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_prototype(routine)
             print >> f, "%s;" % prototype
         # end if include guards
-        if empty: print >> f
+        if empty:
+            print >> f
         print >> f, "#endif"
-        if empty: print >> f
+        if empty:
+            print >> f
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -862,12 +869,14 @@ class FCodeGen(CodeGen):
         """
         if header:
             print >> f, ''.join(self._get_header())
-        if empty: print >> f
+        if empty:
+            print >> f
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_interface(routine)
             f.write(prototype)
-        if empty: print >> f
+        if empty:
+            print >> f
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump

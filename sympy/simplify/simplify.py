@@ -3180,8 +3180,10 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             # before leaving
             mpmath.mp.dps = orig
     try:
-        if re: re = nsimplify_real(re)
-        if im: im = nsimplify_real(im)
+        if re:
+            re = nsimplify_real(re)
+        if im:
+            im = nsimplify_real(im)
     except ValueError:
         if rational is None:
             return _real_to_rational(expr)

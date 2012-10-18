@@ -580,10 +580,14 @@ def evalf_pow(v, prec, options):
         if im and not re:
             z = mpf_pow_int(im, p, target_prec)
             case = p % 4
-            if case == 0: return z, None, target_prec, None
-            if case == 1: return None, z, None, target_prec
-            if case == 2: return mpf_neg(z), None, target_prec, None
-            if case == 3: return None, mpf_neg(z), None, target_prec
+            if case == 0:
+                return z, None, target_prec, None
+            if case == 1:
+                return None, z, None, target_prec
+            if case == 2:
+                return mpf_neg(z), None, target_prec, None
+            if case == 3:
+                return None, mpf_neg(z), None, target_prec
         # Zero raised to an integer power
         if not re:
             return None, None, None, None

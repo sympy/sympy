@@ -806,21 +806,27 @@ class Polygon(GeometryEntity):
         point2 = e1_connections[e1_ymax][1]
         angle1 = support_line.angle_between(Line(e1_ymax, point1))
         angle2 = support_line.angle_between(Line(e1_ymax, point2))
-        if angle1 < angle2: e1_next = point1
-        elif angle2 < angle1: e1_next = point2
+        if angle1 < angle2:
+            e1_next = point1
+        elif angle2 < angle1:
+            e1_next = point2
         elif Point.distance(e1_ymax, point1) > Point.distance(e1_ymax, point2):
             e1_next = point2
-        else: e1_next = point1
+        else:
+            e1_next = point1
 
         point1 = e2_connections[e2_ymin][0]
         point2 = e2_connections[e2_ymin][1]
         angle1 = support_line.angle_between(Line(e2_ymin, point1))
         angle2 = support_line.angle_between(Line(e2_ymin, point2))
-        if angle1 > angle2: e2_next = point1
-        elif angle2 > angle1: e2_next = point2
+        if angle1 > angle2:
+            e2_next = point1
+        elif angle2 > angle1:
+            e2_next = point2
         elif Point.distance(e2_ymin, point1) > Point.distance(e2_ymin, point2):
             e2_next = point2
-        else: e2_next = point1
+        else:
+            e2_next = point1
 
         '''
         Loop which determins the distance between anti-podal pairs and updates the
@@ -835,7 +841,8 @@ class Polygon(GeometryEntity):
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
 
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e1_connections[e1_next][0] != e1_current:
                     e1_current = e1_next
@@ -848,7 +855,8 @@ class Polygon(GeometryEntity):
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
 
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e2_connections[e2_next][0] != e2_current:
                     e2_current = e2_next
@@ -864,7 +872,8 @@ class Polygon(GeometryEntity):
                 min2 = e2_segment.distance(e1_next)
 
                 min_dist_current = min(min1, min2)
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e1_connections[e1_next][0] != e1_current:
                     e1_current = e1_next
@@ -879,7 +888,8 @@ class Polygon(GeometryEntity):
                 else:
                     e2_current = e2_next
                     e2_next = e2_connections[e2_next][1]
-            if e1_current == e1_ymax and e2_current == e2_ymin: break
+            if e1_current == e1_ymax and e2_current == e2_ymin:
+                break
         return min_dist
 
     def __eq__(self, o):
