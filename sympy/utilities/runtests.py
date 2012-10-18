@@ -1549,6 +1549,7 @@ class PyTestReporter(Reporter):
         global text, linelen
         text = "tests finished: %d passed, " % self._passed
         linelen = len(text)
+
         def add_text(mytext):
             global text, linelen
             """Break new text if too long."""

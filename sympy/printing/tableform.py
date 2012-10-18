@@ -156,6 +156,7 @@ class TableForm(object):
 
         allow = ('l', 'r', 'c')
         alignments = kwarg.get("alignments", "l")
+
         def _std_align(a):
             a = a.strip().lower()
             if len(a) > 1:
@@ -276,6 +277,7 @@ class TableForm(object):
             self._headings[1] = new_line
 
         format_str = []
+
         def _align(align, w):
             return '%%%s%ss' % (
                     ("-" if align == "l" else ""),

@@ -416,6 +416,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
+
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
@@ -531,6 +532,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
         list_segments = []
+
         def sample(param_p, param_q, p, q, depth):
             """ Samples recursively if three points are almost collinear.
             For depth < 6, points are added irrespective of whether they

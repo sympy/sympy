@@ -33,6 +33,7 @@ class MatrixExpr(Expr):
 
     def __neg__(self):
         return MatMul(S.NegativeOne, self)
+
     def __abs__(self):
         raise NotImplementedError
 
@@ -40,6 +41,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         return MatAdd(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -49,6 +51,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return MatAdd(self, -other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
@@ -58,6 +61,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return MatMul(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
@@ -69,14 +73,17 @@ class MatrixExpr(Expr):
         if other == -S.One:
             return Inverse(self)
         return MatPow(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise NotImplementedError("Matrix Power not defined")
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return MatMul(self, other**S.NegativeOne)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
@@ -279,6 +286,7 @@ class Identity(MatrixSymbol):
     """
 
     is_Identity = True
+
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
@@ -312,6 +320,7 @@ class ZeroMatrix(MatrixSymbol):
     0
     """
     is_ZeroMatrix = True
+
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
 

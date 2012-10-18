@@ -182,13 +182,17 @@ def test_hyperrep():
     # First test the base class works.
     from sympy import Piecewise, exp_polar
     a, b, c, d, z = symbols('a b c d z')
+
     class myrep(HyperRep):
         @classmethod
         def _expr_small(cls, x): return a
+
         @classmethod
         def _expr_small_minus(cls, x): return b
+
         @classmethod
         def _expr_big(cls, x, n): return c*n
+
         @classmethod
         def _expr_big_minus(cls, x, n): return d*n
     assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), (a, True))
@@ -221,6 +225,7 @@ def test_hyperrep():
         if abs(expr.subs(z, 1 + 1e-15).n() - expr.subs(z, 1 - 1e-15).n()) > 1e-10:
             return False
         # Finally check continuity of the big reps.
+
         def dosubs(func, a, b):
             rv = func.subs(z, exp_polar(a)*z).rewrite('nonrep')
             return rv.subs(z, exp_polar(b)*z).replace(exp_polar, exp)

@@ -422,6 +422,7 @@ class SATSolver(object):
         """Initialize the data structures needed for the VSIDS heuristic."""
         self.lit_heap = []
         self.lit_scores = {}
+
         def _nfloat(a):
             """Return negative, float value of a.
 

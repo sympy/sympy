@@ -91,11 +91,13 @@ class DummyNumber(object):
 
 class I5(DummyNumber):
     number = 5
+
     def __int__(self):
         return self.number
 
 class F1_1(DummyNumber):
     number = 1.1
+
     def __float__(self):
         return self.number
 

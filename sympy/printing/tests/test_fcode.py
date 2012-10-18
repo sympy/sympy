@@ -11,6 +11,7 @@ from sympy.utilities.pytest import raises
 
 def test_printmethod():
     x = symbols('x')
+
     class nint(Function):
         def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])

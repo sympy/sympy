@@ -195,8 +195,10 @@ class Dyadic(object):
 
     def _pretty(self, printer=None):
         e = self
+
         class Fake(object):
             baseline = 0
+
             def render(self, *args, **kwargs):
                 self = e
                 ar = self.args  # just to shorten things
@@ -803,6 +805,7 @@ class ReferenceFrame(object):
         for i, v in enumerate(amounts):
             if not isinstance(v, Vector):
                 amounts[i] = sympify(v)
+
         def _rot(axis, angle):
             """DCM for simple axis 1,2,or 3 rotations. """
             if axis == 1:
@@ -1269,8 +1272,10 @@ class Vector(object):
     def _pretty(self, printer=None):
         """Pretty Printing method. """
         e = self
+
         class Fake(object):
             baseline = 0
+
             def render(self, *args, **kwargs):
                 self = e
                 ar = self.args  # just to shorten things

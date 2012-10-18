@@ -114,6 +114,7 @@ def _randrange(seed=None):
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
+
         def give(a, b=None, seq=seed):
             if b is None:
                 a, b = 0, a
@@ -163,6 +164,7 @@ def _randint(seed=None):
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
+
         def give(a, b, seq=seed):
             a, b = as_int(a), as_int(b)
             w = b - a

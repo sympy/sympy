@@ -76,8 +76,10 @@ def test_creation():
 
     class conv(object):
         def convert(x, y=None): return x
+
     class dummy(object):
         container = conv()
+
         def submodule(*args): return None
     raises(TypeError, lambda: homomorphism(dummy(), G, matrix))
     raises(TypeError, lambda: homomorphism(F, dummy(), matrix))

@@ -1119,6 +1119,7 @@ class PermutationGroup(Basic):
                         else:
                             return True
                     tests[l] = test
+
             def prop(g):
                 return [rmul(g, gen) for gen in other.generators] ==\
                        [rmul(gen, g) for gen in other.generators]

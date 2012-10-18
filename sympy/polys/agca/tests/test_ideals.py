@@ -57,6 +57,7 @@ def test_exceptions():
 
 def test_nontriv_global():
     R = QQ[x, y, z]
+
     def contains(I, f):
         return R.ideal(*I).contains(f)
 
@@ -83,6 +84,7 @@ def test_nontriv_global():
 
 def test_nontriv_local():
     R = QQ.poly_ring(x, y, z, order=ilex)
+
     def contains(I, f):
         return R.ideal(*I).contains(f)
 

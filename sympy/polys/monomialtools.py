@@ -229,6 +229,7 @@ class InverseOrder(MonomialOrder):
 
     def key(self, monomial):
         from sympy.core.compatibility import iterable
+
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
@@ -339,6 +340,7 @@ def build_product_order(arg, gens):
     for expr in arg:
         name = expr[0]
         var = expr[1:]
+
         def makelambda(var):
             return _ItemGetter(gens2idx[g] for g in var)
         order.append((monomial_key(name), makelambda(var)))

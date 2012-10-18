@@ -10,6 +10,7 @@ class Higher(Expr):
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return self.result
+
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return self.result
@@ -17,6 +18,7 @@ class Higher(Expr):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         return self.result
+
     @call_highest_priority('__add__')
     def __radd__(self, other):
         return self.result
@@ -24,6 +26,7 @@ class Higher(Expr):
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return self.result
+
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return self.result
@@ -31,6 +34,7 @@ class Higher(Expr):
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
         return self.result
+
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         return self.result
@@ -38,6 +42,7 @@ class Higher(Expr):
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return self.result
+
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return self.result

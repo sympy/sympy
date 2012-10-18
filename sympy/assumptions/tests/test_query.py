@@ -1364,6 +1364,7 @@ def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
+
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):

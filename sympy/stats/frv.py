@@ -24,6 +24,7 @@ class FiniteDomain(RandomDomain):
     Represented using a FiniteSet.
     """
     is_Finite = True
+
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
         symbols = FiniteSet(sym for sym, val in elements)
@@ -59,9 +60,11 @@ class SingleFiniteDomain(FiniteDomain):
     @property
     def symbol(self):
         return tuple(self.symbols)[0]
+
     @property
     def elements(self):
         return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+
     @property
     def set(self):
         return self.args[1]
@@ -147,6 +150,7 @@ class FinitePSpace(PSpace):
     """
 
     is_Finite = True
+
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
                 for key, val in density.items())
@@ -258,6 +262,7 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @property
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
+
     @property
     @cacheit
     def _density(self):

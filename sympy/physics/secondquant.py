@@ -2900,6 +2900,7 @@ class PermutationOperator(Expr):
     P(ij)*f(i)*g(j) = f(i)*g(j) - f(j)*g(i)
     """
     is_commutative = True
+
     def __new__(cls, i, j):
         i, j = map(sympify, (i, j))
         if (i>j):

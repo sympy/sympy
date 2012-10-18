@@ -549,6 +549,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
+
     def solver(f, x):
         if method == "scipy":
             root = newton(f, x)

@@ -251,6 +251,7 @@ class Sum(Expr):
         if eval_integral:
             I = I.doit()
         s += I
+
         def fpoint(expr):
             if b is S.Infinity:
                 return expr.subs(i, a), 0

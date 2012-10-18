@@ -49,6 +49,7 @@ def timethis(name):
         global _do_timings
         if not name in _do_timings:
             return func
+
         def wrapper(*args, **kwargs):
             from time import time
             global _timestack

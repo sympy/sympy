@@ -41,8 +41,10 @@ class PlotCurve(PlotModeBase):
     def _on_calculate_cverts(self):
         if not self.verts or not self.color:
             return
+
         def set_work_len(n):
             self._calculating_cverts_len = float(n)
+
         def inc_work_pos():
             self._calculating_cverts_pos += 1.0
         set_work_len(1)

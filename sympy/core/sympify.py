@@ -10,6 +10,7 @@ class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
         self.base_exc = base_exc
+
     def __str__(self):
         if self.base_exc is None:
             return "SympifyError: %r" % (self.expr,)

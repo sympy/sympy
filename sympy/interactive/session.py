@@ -166,6 +166,7 @@ def enable_automatic_int_sympification(app):
         old_run_cell = app.shell.run_cell
     else:
         old_run_cell = app.run_cell
+
     def my_run_cell(cell, *args, **kwargs):
         try:
             # Check the cell for syntax errors.  This way, the syntax error

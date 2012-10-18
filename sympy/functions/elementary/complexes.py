@@ -778,6 +778,7 @@ class principal_branch(Function):
         if ub != barg and not ub.has(periodic_argument) \
            and not barg.has(periodic_argument):
             pl = polar_lift(x)
+
             def mr(expr):
                 if not isinstance(expr, Symbol):
                     return polar_lift(expr)

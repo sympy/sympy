@@ -822,6 +822,7 @@ class PrettyPrinter(Printer):
         pq = self._print(len(e.bq))
         pm = self._print(len(e.bm))
         pn = self._print(len(e.an))
+
         def adjust(p1, p2):
             diff = p1.width() - p2.width()
             if diff == 0:

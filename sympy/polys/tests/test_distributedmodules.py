@@ -126,6 +126,7 @@ def test_conversion():
 
 def test_nontrivial():
     gens = [x, y, z]
+
     def contains(I, f):
         S = [sdm_from_vector([g], lex, QQ, gens=gens) for g in I]
         G = sdm_groebner(S, sdm_nf_mora, lex, QQ)
@@ -156,6 +157,7 @@ def test_nontrivial():
 def test_local():
     igrlex = InverseOrder(grlex)
     gens = [x, y, z]
+
     def contains(I, f):
         S = [sdm_from_vector([g], igrlex, QQ, gens=gens) for g in I]
         G = sdm_groebner(S, sdm_nf_mora, igrlex, QQ)

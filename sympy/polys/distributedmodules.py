@@ -608,6 +608,7 @@ def sdm_groebner(G, NF, O, K, extended=False):
         Sugars.append(sugar)
 
         LMf = sdm_LM(f)
+
         def removethis(pair):
             i, j, s, t = pair
             if LMf[0] != t[0]:

@@ -584,6 +584,7 @@ def test_unrad():
         rv[0] = rv[0].expand()
         ans[0] = ans[0].expand()
         return rv[0] in [ans[0], -ans[0]] and rv[1:] == ans[1:]
+
     def s_check(rv, ans):
         # get the dummy
         rv = list(rv)

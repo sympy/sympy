@@ -34,6 +34,7 @@ class BlockMatrix(MatrixExpr):
     """
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
+
     def __new__(cls, M):
         if not isinstance(M, Matrix):
             M = Matrix(M)
@@ -196,6 +197,7 @@ class BlockMatrix(MatrixExpr):
                 if i!=j and not self._mat[i, j].is_ZeroMatrix:
                     return False
         return True
+
     @property
     def is_structurally_symmetric(self):
         return self.rowblocksizes == self.colblocksizes
@@ -213,6 +215,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     """
     is_BlockDiagMatrix = True
+
     def __new__(cls, *mats):
         data_matrix = eye(len(mats))
         for i, mat in enumerate(mats):

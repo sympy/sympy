@@ -458,6 +458,7 @@ class BaseScalarField(Expr):
 
     # XXX Workaround for limitations on the content of args
     free_symbols=set()
+
     def doit(self):
         return self
 
@@ -1104,9 +1105,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
+
     def iter_vfield(scalar_field, i):
         """Return `vector_field` called `i` times on `scalar_field`."""
         return reduce(lambda s, v: v(s), [vector_field, ]*i, scalar_field)
+
     def taylor_terms_per_coord(coord_function):
         """Return the series for one of the coordinates."""
         return [param**i*iter_vfield(coord_function, i)(start_point)/factorial(i)

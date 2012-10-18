@@ -712,6 +712,7 @@ class Union(Set, EvalfMixin):
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
+
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_Union:
@@ -906,6 +907,7 @@ class Intersection(Set):
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
+
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_Intersection:

@@ -1160,6 +1160,7 @@ def generate_bell(n):
     P = [i for i in xrange(n)]
     T = [0]
     cache = set()
+
     def gen(P, T, t):
         if t == (n - 1):
             cache.add(tuple(P))
@@ -1205,6 +1206,7 @@ def generate_involutions(n):
     P = range(n)  # the items of the permutation
     F = [0]  # the fixed points {is this right??}
     cache = set()
+
     def gen(P, F, t):
         if t == n:
             cache.add(tuple(P))
@@ -1277,6 +1279,7 @@ def unrestricted_necklace(n, k):
     [0, 2, 3, 2], [0, 3, 3, 3]]
     """
     a = [0] * n
+
     def gen(t, p):
         if (t > n - 1):
             if (n % p == 0):

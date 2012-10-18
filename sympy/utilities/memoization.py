@@ -5,6 +5,7 @@ def recurrence_memo(initial):
     See usage examples e.g. in the specfun/combinatorial module
     """
     cache = initial
+
     def decorator(f):
         def g(n):
             L = len(cache)
@@ -28,6 +29,7 @@ def assoc_recurrence_memo(base_seq):
     """
 
     cache = []
+
     def decorator(f):
         def g(n, m):
             L = len(cache)

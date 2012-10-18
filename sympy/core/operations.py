@@ -217,6 +217,7 @@ class AssocOp(Expr):
 
         c, nc = _ncsplit(self)
         cls = self.__class__
+
         def is_in(expr):
             if expr == self:
                 return True

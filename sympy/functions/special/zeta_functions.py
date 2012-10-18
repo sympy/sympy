@@ -184,8 +184,10 @@ class lerchphi(Function):
             return res
         else:
             return self
+
     def _eval_rewrite_as_zeta(self, z, s, a):
         return self._eval_rewrite_helper(z, s, a, zeta)
+
     def _eval_rewrite_as_polylog(self, z, s, a):
         return self._eval_rewrite_helper(z, s, a, polylog)
 

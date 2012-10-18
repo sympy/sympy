@@ -25,6 +25,7 @@ class IdentityFunction(Lambda):
     __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
+
     def __new__(cls):
         x = C.Dummy('x')
         #construct "by hand" to avoid infinite loop

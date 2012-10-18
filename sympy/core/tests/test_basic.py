@@ -88,6 +88,7 @@ def test_xreplace():
 def test_Singleton():
     global instanciated
     instanciated = 0
+
     class MySingleton(Basic):
         __metaclass__ = Singleton
 

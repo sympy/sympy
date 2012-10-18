@@ -48,9 +48,11 @@ def _create_lookup_table(table):
     p, q, a, b, c = map(wild, 'pqabc')
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
+
     def add(formula, an, ap, bm, bq, arg=t, fac=S(1), cond=True, hint=True):
         table.setdefault(_mytype(formula, z), []).append((formula,
                                      [(fac, meijerg(an, ap, bm, bq, arg))], cond, hint))
+
     def addi(formula, inst, cond, hint=True):
         table.setdefault(_mytype(formula, z), []).append((formula, inst, cond, hint))
 
@@ -62,8 +64,10 @@ def _create_lookup_table(table):
     # [P], Section 8.
 
     from sympy import unpolarify, Function, Not
+
     class IsNonPositiveInteger(Function):
         nargs = 1
+
         @classmethod
         def eval(cls, arg):
             arg = unpolarify(arg)
@@ -91,6 +95,7 @@ def _create_lookup_table(table):
 
     # 12
     def A1(r, sign, nu): return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
+
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
         add((sqrt(a**2 + t) + sgn*a)**b/(a**2+t)**r,
@@ -131,6 +136,7 @@ def _create_lookup_table(table):
         N = subs[n]
         return [((-1)**N*factorial(N),
                  meijerg([], [1]*(N + 1), [0]*(N + 1), [], t))]
+
     def make_log2(subs):
         N = subs[n]
         return [(factorial(N),
@@ -140,6 +146,7 @@ def _create_lookup_table(table):
     # TODO also it would be nice to derive them recursively ...
     addi(log(t)**n*Heaviside(1 - t), make_log1, True)
     addi(log(t)**n*Heaviside(t - 1), make_log2, True)
+
     def make_log3(subs):
         return make_log1(subs) + make_log2(subs)
     addi(log(t)**n, make_log3, True)
@@ -342,6 +349,7 @@ def _find_splitting_points(expr, x):
     """
     from sympy import Tuple
     p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
+
     def compute_innermost(expr, res):
         if isinstance(expr, Tuple):
             return
@@ -586,6 +594,7 @@ def _condsimp(cond):
                 change = True
                 break
     # final tweak
+
     def repl_eq(orig):
         if orig.lhs == 0:
             expr = orig.rhs
@@ -639,6 +648,7 @@ def _rewrite_saxena_1(fac, po, g, x):
     # We substitute t = x**b.
     C = fac/(abs(b)*a**((s+1)/b - 1))
     # Absorb a factor of (at)**((1 + s)/b - 1).
+
     def tr(l): return [a + (1 + s)/b - 1 for a in l]
     return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother),
                       a*x)
@@ -841,6 +851,7 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     # TODO should we try both?
     exp = (s + 1)/b - 1
     fac = fac/(abs(b) * a1**exp)
+
     def tr(l): return [a + exp for a in l]
     g1 = meijerg(tr(g1.an), tr(g1.aother), tr(g1.bm), tr(g1.bother), a1*x)
     g2 = meijerg(g2.an, g2.aother, g2.bm, g2.bother, a2*x)
@@ -1164,6 +1175,7 @@ def _int0oo(g1, g2, x):
     # See: [L, section 5.6.2, equation (1)]
     eta, _ = _get_coeff_exp(g1.argument, x)
     omega, _ = _get_coeff_exp(g2.argument, x)
+
     def neg(l): return [-x for x in l]
     a1 = neg(g1.bm) + list(g2.an)
     a2 = list(g2.aother) + neg(g1.bother)
@@ -1176,6 +1188,7 @@ def _rewrite_inversion(fac, po, g, x):
     """ Absorb ``po`` == x**s into g. """
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
+
     def tr(l): return [t + s/b for t in l]
     return (powdenest(fac/a**(s/b), polar=True),
             meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
@@ -1208,6 +1221,7 @@ def _check_antecedents_inversion(g, x):
         conds += [And(Ne(b, 0), Eq(im(c), 0), re(c) > 0, re(w) <= 0,
                       re(a) <= -1)]
         return Or(*conds)
+
     def statement(a, b, c, z):
         """ Provide a convergence statement for z**a * exp(b*z**c),
              c/f sphinx docs. """
@@ -1258,8 +1272,11 @@ def _check_antecedents_inversion(g, x):
         return And(*[statement(a - 1, 0, 0, z) for a in g.an])
 
     def E(z): return And(*[statement(a - 1, 0, z) for a in g.an])
+
     def H(z): return statement(theta, -sigma, 1/sigma, z)
+
     def Hp(z): return statement_half(theta, -sigma, 1/sigma, z, True)
+
     def Hm(z): return statement_half(theta, -sigma, 1/sigma, z, False)
 
     # [L], section 5.10
@@ -1383,6 +1400,7 @@ def _rewrite_single(f, x, recursive=True):
                                     inverse_mellin_transform, IntegralTransformError,
                                     MellinTransformStripError)
     from sympy import oo, nan, zoo, simplify, cancel
+
     def my_imt(F, s, x, strip):
         """ Calling simplify() all the time is slow and not helpful, since
             most of the time it only factors things in a way that has to be
@@ -1397,6 +1415,7 @@ def _rewrite_single(f, x, recursive=True):
     f = f_
     s = _dummy('s', 'rewrite-single', f)
     # to avoid infinite recursion, we have to force the two g functions case
+
     def my_integrator(f, x):
         from sympy import Integral, hyperexpand
         r = _meijerint_definite_4(f, x, only_double=True)
@@ -1535,6 +1554,7 @@ def _meijerint_indefinite_1(f, x):
         # (Note that this dummy will immediately go away again, so we
         #  can safely pass S(1) for ``expr``.)
         t = _dummy('t', 'meijerint-indefinite', S(1))
+
         def tr(p): return [a + rho + 1 for a in p]
         if any(b.is_integer and b <= 0 for b in tr(g.bm)):
             r = -meijerg(tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)

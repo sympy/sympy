@@ -541,6 +541,7 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_sqrt(self, arg):
         _EXPAND_INTS = False
+
         def migcdex(x):
             # recursive calcuation of gcd and linear combination
             # for a sequence of integers.
@@ -555,6 +556,7 @@ class cos(TrigonometricFunction):
             g = migcdex(x[1:])
             u, v, h = igcdex(x[0], g[-1])
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
+
         def ipartfrac(r, factors=None):
             if isinstance(r, int):
                 return r
@@ -591,6 +593,7 @@ class cos(TrigonometricFunction):
             # 65537 and 257 are the only other known Fermat primes
             # Please add if you would like them
         }
+
         def fermatCoords(n):
             assert isinstance(n, int)
             assert n > 0

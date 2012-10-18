@@ -43,6 +43,7 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
     }
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
@@ -271,6 +272,7 @@ class FCodePrinter(CodePrinter):
         # routine to find split point in a code line
         my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
         my_white = set(" \t()")
+
         def split_pos_code(line, endpos):
             if len(line) <= endpos:
                 return len(line)

@@ -312,6 +312,7 @@ def test_evalf_default():
 
 def test_issue2300():
     args = [x, y, S(2), S.Half]
+
     def ok(a):
         """Return True if the input args for diff are ok"""
         if not a: return False
@@ -339,8 +340,10 @@ def test_derivative_numerically():
 
 def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
+
     class myfunc(Function):
         nargs = 1
+
         def fdiff(self, idx):
             raise ArgumentIndexError
     mf = myfunc(x)

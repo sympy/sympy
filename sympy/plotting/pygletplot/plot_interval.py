@@ -56,6 +56,7 @@ class PlotInterval(object):
 
     def get_v_min(self):
         return self._v_min
+
     def set_v_min(self, v_min):
         if v_min is None:
             self._v_min = None
@@ -68,6 +69,7 @@ class PlotInterval(object):
 
     def get_v_max(self):
         return self._v_max
+
     def set_v_max(self, v_max):
         if v_max is None:
             self._v_max = None

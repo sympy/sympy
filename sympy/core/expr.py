@@ -115,8 +115,10 @@ class Expr(Basic, EvalfMixin):
 
     def __pos__(self):
         return self
+
     def __neg__(self):
         return Mul(S.NegativeOne, self)
+
     def __abs__(self):
         return C.Abs(self)
 
@@ -124,6 +126,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         return Add(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -133,6 +136,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return Add(self, -other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
@@ -142,6 +146,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return Mul(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
@@ -151,6 +156,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
         return Pow(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
@@ -160,6 +166,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return Mul(self, Pow(other, S.NegativeOne))
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
@@ -172,6 +179,7 @@ class Expr(Basic, EvalfMixin):
     @call_highest_priority('__rmod__')
     def __mod__(self, other):
         return Mod(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mod__')
     def __rmod__(self, other):
@@ -1425,6 +1433,7 @@ class Expr(Basic, EvalfMixin):
                 sym.add(d)
             else:
                 other.append(d)
+
         def has(e):
             """return the standard has() if there are no literal symbols, else
             check to see that symbol-deps are in the free symbols."""

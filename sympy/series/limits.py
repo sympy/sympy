@@ -169,6 +169,7 @@ def limit(e, z, z0, dir="+"):
         unknown_result = []
         finite = []
         zero = []
+
         def _sift(term):
             if z not in term.free_symbols:
                 if term.is_unbounded:

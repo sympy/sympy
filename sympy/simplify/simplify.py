@@ -2245,6 +2245,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 new_base = Mul(*(nonneg + neg))
                 # if there are positive parts they will just get separated again
                 # unless some change is made
+
                 def _terms(e):
                     # return the number of terms of this expression
                     # when multiplied out -- assuming no joining of terms
@@ -2681,12 +2682,14 @@ def combsimp(expr):
         # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
         # or S1 == S2 == emptyset)
         inv = {}
+
         def compute_ST(expr):
             from sympy import Function, Pow
             if expr in inv:
                 return inv[expr]
             return (expr.free_symbols, expr.atoms(Function).union(
                                        set(e.exp for e in expr.atoms(Pow))))
+
         def update_ST(expr):
             inv[expr] = compute_ST(expr)
         for expr in numer_gammas + denom_gammas + numer_others + denom_others:
@@ -3334,15 +3337,18 @@ def besselsimp(expr):
 
     def replacer(fro, to, factors):
         factors = set(factors)
+
         def repl(nu, z):
             if factors.intersection(Mul.make_args(z)):
                 return to(nu, z)
             return fro(nu, z)
         return repl
+
     def torewrite(fro, to):
         def tofunc(nu, z):
             return fro(nu, z).rewrite(to)
         return tofunc
+
     def tominus(fro):
         def tofunc(nu, z):
             return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
@@ -3359,6 +3365,7 @@ def besselsimp(expr):
     expr = expr.replace(besseli, replacer(besseli, tominus(besseli), minusfactors))
 
     z0 = Dummy('z')
+
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) != S(1)/2:

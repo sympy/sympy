@@ -54,6 +54,7 @@ def check(a, check_attr=True):
 
         if not check_attr:
             continue
+
         def c(a, b, d):
             for i in d:
                 if not hasattr(a, i) or i in excluded_attrs:

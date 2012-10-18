@@ -1701,6 +1701,7 @@ class Triangle(Polygon):
 
         s1_1, s1_2, s1_3 = [side.length for side in t1.sides]
         s2 = [side.length for side in t2.sides]
+
         def _are_similar(u1, u2, u3, v1, v2, v3):
             e1 = simplify(u1/v1)
             e2 = simplify(u2/v2)

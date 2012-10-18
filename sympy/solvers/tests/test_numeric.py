@@ -34,6 +34,7 @@ def test_nsolve():
     f3 = sqrt(x**2 + y**2)*z
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x, y, z), f.T, modules='mpmath')
+
     def getroot(x0):
         root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root), 1) <= 1.e-8

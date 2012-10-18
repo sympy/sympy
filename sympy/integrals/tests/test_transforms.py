@@ -317,6 +317,7 @@ def test_inverse_mellin_transform():
     assert IMT(factorial(a/b + s/b)/(a+ s), s, x, (-a, oo)) == x**a*exp(-x**b)
 
     from sympy import expand_mul
+
     def simp_pows(expr):
         return simplify(powsimp(expand_mul(expr, deep=False), force=True)).replace(exp_polar, exp)
 
@@ -527,7 +528,9 @@ def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig
     FT = fourier_transform
     IFT = inverse_fourier_transform
+
     def simp(x): return simplify(expand_trig(expand_complex(expand(x))))
+
     def sinc(x): return sin(pi*x)/(pi*x)
     k = symbols('k', real=True)
     f = Function("f")

@@ -2795,6 +2795,7 @@ def _undetermined_coefficients_match(expr, x):
     b = Wild('b', exclude=[x])
     expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
     retdict = {}
+
     def _test_term(expr, x):
         """
         Test if expr fits the proper form for undetermined coefficients.

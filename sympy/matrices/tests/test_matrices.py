@@ -720,6 +720,7 @@ def test_eigen():
     c=R(13, 2)
     d=(R(33, 8) + 3*b/8)
     e=(R(33, 8) - 3*b/8)
+
     def NS(e, n):
         return str(N(e, n))
     r = [
@@ -904,6 +905,7 @@ def test_issue882():
     class Index1(object):
         def __index__(self):
             return 1
+
     class Index2(object):
         def __index__(self):
             return 2
@@ -1967,6 +1969,7 @@ def test_cross():
     a = [1, 2, 3]
     b = [3, 4, 5]
     ans = Matrix([-2, 4, -2]).T
+
     def test(M):
         assert ans == M
         assert type(M) == cls

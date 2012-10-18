@@ -115,6 +115,7 @@ class Integers(Set):
 
 class Reals(Interval):
     __metaclass__ = Singleton
+
     def __new__(cls):
         return Interval.__new__(cls, -oo, oo)
 

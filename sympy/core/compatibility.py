@@ -103,6 +103,7 @@ try:
     callable = callable
 except NameError:
     import collections
+
     def callable(obj):
         return isinstance(obj, collections.Callable)
 
@@ -120,16 +121,22 @@ def cmp_to_key(mycmp):
     class K(object):
         def __init__(self, obj, *args):
             self.obj = obj
+
         def __lt__(self, other):
             return mycmp(self.obj, other.obj) < 0
+
         def __gt__(self, other):
             return mycmp(self.obj, other.obj) > 0
+
         def __eq__(self, other):
             return mycmp(self.obj, other.obj) == 0
+
         def __le__(self, other):
             return mycmp(self.obj, other.obj) <= 0
+
         def __ge__(self, other):
             return mycmp(self.obj, other.obj) >= 0
+
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
     return K
@@ -385,6 +392,7 @@ except ImportError:  # Python 2.5
         '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
         '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
         'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
+
     def bin(n):
         """Return the equivalent to Python 2.6's bin function.
 

@@ -127,18 +127,25 @@ def rubik(n):
     # 1-based reference to rows and columns in Matrix
     def getr(f, i):
         return faces[f].col(n - i)
+
     def getl(f, i):
         return faces[f].col(i - 1)
+
     def getu(f, i):
         return faces[f].row(i - 1)
+
     def getd(f, i):
         return faces[f].row(n - i)
+
     def setr(f, i, s):
         faces[f][:, n - i] = Matrix(n, 1, s)
+
     def setl(f, i, s):
         faces[f][:, i - 1] = Matrix(n, 1, s)
+
     def setu(f, i, s):
         faces[f][i - 1, :] = Matrix(1, n, s)
+
     def setd(f, i, s):
         faces[f][n - i, :] = Matrix(1, n, s)
 
@@ -151,6 +158,7 @@ def rubik(n):
                 for r in range(n - 1, -1, -1):
                     rv.append(face[r, c])
             faces[F] = Matrix(n, n, rv)
+
     def ccw(F):
         cw(F, 3)
 
@@ -168,6 +176,7 @@ def rubik(n):
             setl(R, i, list((getd(U, i))))
             setd(U, i, list(reversed(temp)))
             i -= 1
+
     def fccw(i):
         fcw(i, 3)
 
@@ -185,6 +194,7 @@ def rubik(n):
             cw(R)
             faces[D] = faces[R]
             faces[R] = t
+
     def FCCW():
         FCW(3)
 
@@ -198,6 +208,7 @@ def rubik(n):
             faces[R] = faces[B]
             faces[B] = faces[L]
             faces[L] = t
+
     def UCCW():
         UCW(3)
 

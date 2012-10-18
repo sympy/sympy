@@ -14,6 +14,7 @@ def test_rewrite_single():
         assert e is not None
         assert isinstance(e[0][0][2], meijerg)
         assert e[0][0][2].argument.as_coeff_mul(x) == (c, (m,))
+
     def tn(expr):
         assert _rewrite_single(meijerg([a], [b], [c], [d], expr), x) is None
 
@@ -70,6 +71,7 @@ def test_meijerint_indefinite_numerically():
 def test_inflate():
     subs = {a: randcplx()/10, b: randcplx()/10 + I, c: randcplx(),
             d: randcplx(), y: randcplx()/10}
+
     def t(a, b, arg, n):
         from sympy import Mul
         m1 = meijerg(a, b, arg)
@@ -249,6 +251,7 @@ def test_bessel():
 
 def test_inversion():
     from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
+
     def inv(f): return piecewise_fold(meijerint_inversion(f, s, t))
     assert inv(1/(s**2 + 1)) == sin(t)*Heaviside(t)
     assert inv(s/(s**2 + 1)) == cos(t)*Heaviside(t)
@@ -313,8 +316,10 @@ def test_probability():
     sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                                               bounded=True, positive=True)
     rate = Symbol('lambda', real=True, positive=True, bounded=True)
+
     def normal(x, mu, sigma):
         return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
+
     def exponential(x, rate):
         return rate*exp(-rate*x)
 

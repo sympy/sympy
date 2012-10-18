@@ -17,6 +17,7 @@ def test_count_ops_non_visual():
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols('Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
+
     def count(val):
         return count_ops(val, visual=True)
 

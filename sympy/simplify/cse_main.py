@@ -182,6 +182,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
     # Find all of the repeated subexpressions.
+
     def insert(subtree):
         '''This helper will insert the subtree into to_eliminate while
         maintaining the ordering by op count and will skip the insertion

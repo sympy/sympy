@@ -737,12 +737,14 @@ class LinearEntity(GeometryEntity):
             # because that requires an equality test that is fragile;
             # instead we employ some diagnostics to see if the intersection
             # is valid
+
             def inseg(self):
                 def _between(a, b, c):
                     return c >= a and c <= b or c <= a and c >= b
                 if _between(self.p1.x, self.p2.x, inter.x) and \
                    _between(self.p1.y, self.p2.y, inter.y):
                     return True
+
             def inray(self):
                 sray = Ray(self.p1, inter)
                 if sray.xdirection == self.xdirection and \

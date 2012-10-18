@@ -36,6 +36,7 @@ def bench_R5():
     def blowup(L, n):
         for i in range(n):
             L.append( (L[i] + L[i+1]) * L[i+2] )
+
     def uniq(x):
         v = list(set(x))
         v.sort()

@@ -393,6 +393,7 @@ def test_geometry():
 
 def test_no_autosimplify_into_Mul():
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
+
     def clean(s):
         return ''.join(str(s).split())
     assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1

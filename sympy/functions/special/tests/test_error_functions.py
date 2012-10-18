@@ -84,6 +84,7 @@ def mytd(expr1, expr2, x):
 def tn_branch(func, s=None):
     from sympy import I, pi, exp_polar
     from random import uniform
+
     def fn(x):
         if s is None:
             return func(x)

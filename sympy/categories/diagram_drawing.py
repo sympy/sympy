@@ -1056,6 +1056,7 @@ class DiagramGrid(object):
         grid[0, 0] = root
 
         placed_objects = set([root])
+
         def place_objects(pt, placed_objects):
             """
             Does depth-first search in the underlying graph of the

@@ -859,6 +859,7 @@ class Mul(AssocOp):
         """
         if lhs == rhs:
             return S.One
+
         def check(l, r):
             if l.is_Float and r.is_comparable:
                 # if both objects are added to 0 they will share the same "normalization"
@@ -1247,6 +1248,7 @@ class Mul(AssocOp):
         if co_xmul and co_xmul.is_Rational:
             n_old, d_old = co_old.as_numer_denom()
             n_self, d_self = co_self.as_numer_denom()
+
             def _multiplicity(p, n):
                 p = abs(p)
                 if p is S.One:

@@ -410,6 +410,7 @@ class meijerg(TupleParametersBase):
         if len(args) != 3:
             raise TypeError("args must eiter be as, as', bs, bs', z or " \
                             "as, bs, z")
+
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")

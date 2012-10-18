@@ -180,6 +180,7 @@ def _noconds_(default):
     """
     def make_wrapper(func):
         from sympy.core.decorators import wraps
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             noconds = kwargs.pop('noconds', default)
@@ -443,6 +444,7 @@ def _rewrite_gamma(f, s, a, b):
     # 5) Combine all the exponentials.
 
     a_, b_ = S([a, b])
+
     def left(c, is_numer):
         """
         Decide whether pole at c lies to the left of the fundamental strip.
@@ -524,6 +526,7 @@ def _rewrite_gamma(f, s, a, b):
     denom_gammas = []
     # exponentials will contain bases for exponentials of s
     exponentials = []
+
     def exception(fact):
         return IntegralTransformError("Inverse Mellin", f, "Unrecognised form '%s'." % fact)
     while args:
@@ -868,6 +871,7 @@ def _simplifyconds(expr, s, a):
         if ex.is_Pow and ex.base == s:
             return ex.exp
         return None
+
     def bigger(ex1, ex2):
         """ Return True only if |ex1| > |ex2|, False only if |ex1| < |ex2|.
             Else return None. """
@@ -886,6 +890,7 @@ def _simplifyconds(expr, s, a):
             return False
         if n < 0 and (abs(ex1) >= abs(a)**n) is True:
             return True
+
     def replie(x, y):
         """ simplify x < y """
         if not (x.is_positive or x.func is Abs) \
@@ -895,10 +900,12 @@ def _simplifyconds(expr, s, a):
         if r is not None:
             return not r
         return (x < y)
+
     def replue(x, y):
         if bigger(x, y) in (True, False):
             return True
         return Unequality(x, y)
+
     def repl(ex, *args):
         if isinstance(ex, bool):
             return ex
@@ -979,6 +986,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     if not conds2:
         conds2 = filter(lambda x: x[1] is not False, conds)
     conds = conds2
+
     def cnt(expr):
         if isinstance(expr, bool):
             return 0
@@ -1080,6 +1088,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     # 2) Use the inversion integral.
 
     t = Dummy('t', real=True)
+
     def pw_simp(*args):
         """ Simplify a piecewise expression from hyperexpand. """
         # XXX we break modularity here!
@@ -1116,6 +1125,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         return f.subs(t, t_), cond
 
     u = Dummy('u')
+
     def simp_heaviside(arg):
         a = arg.subs(exp(-t), u)
         if a.has(t):

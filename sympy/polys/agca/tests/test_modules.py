@@ -162,6 +162,7 @@ def test_SubModulePolyRing_local():
 def test_SubModulePolyRing_nontriv_global():
     R = QQ[x, y, z]
     F = R.free_module(1)
+
     def contains(I, f):
         return F.submodule(*[[g] for g in I]).contains([f])
 
@@ -189,6 +190,7 @@ def test_SubModulePolyRing_nontriv_global():
 def test_SubModulePolyRing_nontriv_local():
     R = QQ.poly_ring(x, y, z, order=ilex)
     F = R.free_module(1)
+
     def contains(I, f):
         return F.submodule(*[[g] for g in I]).contains([f])
 
