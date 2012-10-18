@@ -1542,7 +1542,8 @@ def inverse_sine_transform(F, k, x, **hints):
 
     >>> from sympy import inverse_sine_transform, exp, sqrt, gamma, pi
     >>> from sympy.abc import x, k, a
-    >>> inverse_sine_transform(2**((1-2*a)/2)*k**(a - 1)*gamma(-a/2 + 1)/gamma((a+1)/2), k, x)
+    >>> inverse_sine_transform(2**((1-2*a)/2)*k**(a - 1)*
+    ...     gamma(-a/2 + 1)/gamma((a+1)/2), k, x)
     x**(-a)
     >>> inverse_sine_transform(sqrt(2)*k*exp(-k**2/(4*a))/(4*sqrt(a)**3), k, x)
     x*exp(-a*x**2)

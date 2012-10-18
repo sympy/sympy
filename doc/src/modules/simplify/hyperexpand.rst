@@ -494,9 +494,11 @@ directly use SymPy!
 
    >>> from sympy import Symbol, sqrt, exp, I, pi, fresnelc, root, diff, expand
    >>> z = Symbol("z")
-   >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(2*root(z,4))
+   >>> B0 = sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/\
+   ...          (2*root(z,4))
    >>> z * diff(B0, z)
-   z*(cosh(2*sqrt(z))/(4*z) - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
+   z*(cosh(2*sqrt(z))/(4*z) -
+   sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))
    >>> expand(_)
    cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))
 
@@ -514,9 +516,11 @@ Formatting this result nicely we obtain
 
 Computing the second derivative we find
 
-   >>> from sympy import Symbol, cosh, sqrt, pi, exp, I, fresnelc, root, diff, expand
+   >>> from sympy import (Symbol, cosh, sqrt, pi, exp, I, fresnelc, root,
+   ...                    diff, expand)
    >>> z = Symbol("z")
-   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
+   >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*\
+   ...           fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
    >>> z * diff(B1prime, z)
    z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))
    >>> expand(_)

@@ -14,8 +14,11 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     >>> import warnings
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> warnings.simplefilter("always", SymPyDeprecationWarning)
-    >>> warnings.warn("Don't do this, it's deprecated", SymPyDeprecationWarning) #doctest:+SKIP
+    >>> warnings.simplefilter(
+    ...     "always", SymPyDeprecationWarning)
+    >>> warnings.warn(
+    ...     "Don't do this, it's deprecated",
+    ...     SymPyDeprecationWarning) #doctest:+SKIP
     __main__:1: SymPyDeprecationWarning: "Don't do this, it's deprecated"
 
     The recommended way to use this class is, however, is by calling

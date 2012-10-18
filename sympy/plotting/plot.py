@@ -1272,11 +1272,12 @@ def plot_parametric(*args, **kwargs):
 
     Multiple parametric plot with single range.
 
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))# doctest: +SKIP
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))  # doctest: +SKIP
 
     Multiple parametric plots.
 
-    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))# doctest: +SKIP
+    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
+    ...     (cos(u), u, (u, -5, 5)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1358,11 +1359,12 @@ def plot3d_parametric_line(*args, **kwargs):
 
     Single plot.
 
-    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))# doctest: +SKIP
+    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))  # doctest: +SKIP
 
     Multiple plots.
 
-    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
+    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
+    ...     (sin(u), u**2, u, (u, -5, 5)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1453,15 +1455,16 @@ def plot3d(*args, **kwargs):
 
     Single plot
 
-    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5)) # doctest: +SKIP
+    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
 
     Multiple plots with same range
 
-    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))# doctest: +SKIP
+    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
 
     Multiple plots with different ranges.
 
-    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
+    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
+    ...     (x*y, (x, -3, 3), (y, -3, 3)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1552,7 +1555,8 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     Single plot.
 
-    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
+    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+    ...     (u, -5, 5), (v, -5, 5))  # doctest: +SKIP
 
     See Also
     ========

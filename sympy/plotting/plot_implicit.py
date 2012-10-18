@@ -240,31 +240,36 @@ def plot_implicit(expr, *args, **kwargs):
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5)) #doctest: +SKIP
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))  # doctest: +SKIP
 
     With the range for the symbols
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3)) #doctest: +SKIP
+    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
+    ...         (x, -3, 3), (y, -3, 3))  # doctest: +SKIP
 
     With depth of recursion as argument.
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2) #doctest: +SKIP
+    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -4, 4), (y, -4, 4), depth = 2)  # doctest: +SKIP
 
     Using mesh grid and not using adaptive meshing.
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2), adaptive=False) #doctest: +SKIP
+    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -5, 5), (y, -2, 2), adaptive=False)  # doctest: +SKIP
 
     Using mesh grid with number of points as input.
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2), adaptive=False, points=400) #doctest: +SKIP
+    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -5, 5), (y, -2, 2),
+    ...         adaptive=False, points=400)  # doctest: +SKIP
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2) #doctest: +SKIP
+    >>> p6 = plot_implicit(y > x**2)  # doctest: +SKIP
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x)) #doctest: +SKIP
+    >>> p7 = plot_implicit(And(y > x, y > -x))  # doctest: +SKIP
     """
 
     assert isinstance(expr, Expr)

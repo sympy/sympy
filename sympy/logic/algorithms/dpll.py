@@ -242,7 +242,8 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol_int_repr
-    >>> find_pure_symbol_int_repr(set([1,2,3]), [set([1, -2]), set([-2, -3]), set([3, 1])])
+    >>> find_pure_symbol_int_repr(set([1,2,3]),
+    ...     [set([1, -2]), set([-2, -3]), set([3, 1])])
     (1, True)
 
     """
@@ -287,7 +288,8 @@ def find_unit_clause_int_repr(clauses, model):
     integer representation.
 
     >>> from sympy.logic.algorithms.dpll import find_unit_clause_int_repr
-    >>> find_unit_clause_int_repr([set([1, 2, 3]), set([2, -3]), set([1, -2])], {1: True})
+    >>> find_unit_clause_int_repr([set([1, 2, 3]),
+    ...     set([2, -3]), set([1, -2])], {1: True})
     (2, False)
 
     """
