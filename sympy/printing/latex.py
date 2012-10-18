@@ -1077,6 +1077,33 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
+    def _print_Heaviside(self, expr, exp=None):
+        tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
+        if exp:
+            tex = r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
+    def _print_KroneckerDelta(self, expr, exp=None):
+        i = self._print(expr.args[0])
+        j = self._print(expr.args[1])
+        if expr.args[0].is_Atom and expr.args[1].is_Atom:
+            tex = r'\delta_{%s %s}' % (i, j)
+        else:
+            tex = r'\delta_{%s, %s}' % (i, j)
+        if exp:
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+        return tex
+
+    def _print_LeviCivita(self, expr, exp=None):
+        indices = map(self._print, expr.args)
+        if all(map(lambda x: x.is_Atom, expr.args)):
+            tex = r'\varepsilon_{%s}' % " ".join(indices)
+        else:
+            tex = r'\varepsilon_{%s}' % ", ".join(indices)
+        if exp:
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+        return tex
+
     def _print_ProductSet(self, p):
         if len(p.sets) > 1 and not has_variety(p.sets):
             return self._print(p.sets[0]) + "^%d" % len(p.sets)
