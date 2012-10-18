@@ -517,7 +517,7 @@ def sift(seq, keyfunc):
     sift() returns a defaultdict() object, so any key that has no matches will
     give [].
 
-    >>> sift(x, lambda x: x.is_commutative)
+    >>> sift([x], lambda x: x.is_commutative)
     {True: [x]}
     >>> _[False]
     []
