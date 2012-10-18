@@ -48,7 +48,7 @@ class Sum(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative # limits already checked
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -175,7 +175,7 @@ class Sum(Expr):
 
         limit = limits.pop(-1)
 
-        if limits: # f is the argument to a Sum
+        if limits:  # f is the argument to a Sum
             f = Sum(f, *limits)
 
         if len(limit) == 3:
@@ -267,7 +267,7 @@ class Sum(Expr):
             g = g.diff(i, 2)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new): # XXX this should be the same as Integral's
+    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
         if any(old == v for v in self.variables):
             return self
 
@@ -422,7 +422,7 @@ def eval_sum_symbolic(f, limits):
             if sL: return R*sL
 
         try:
-            f = apart(f, i) # see if it becomes an Add
+            f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
             pass
 

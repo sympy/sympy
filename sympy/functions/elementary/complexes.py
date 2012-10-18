@@ -39,7 +39,7 @@ class re(Function):
     nargs = 1
 
     is_real = True
-    unbranched = True # implicitely works on the projection to C
+    unbranched = True  # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -128,7 +128,7 @@ class im(Function):
     nargs = 1
 
     is_real = True
-    unbranched = True # implicitely works on the projection to C
+    unbranched = True  # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -604,7 +604,7 @@ class polar_lift(Function):
     nargs = 1
 
     is_polar = True
-    is_comparable = False # Cannot be evalf'd.
+    is_comparable = False  # Cannot be evalf'd.
 
     @classmethod
     def eval(cls, arg):
@@ -764,7 +764,7 @@ class principal_branch(Function):
 
     nargs = 2
     is_polar = True
-    is_comparable = False # cannot always be evalf'd
+    is_comparable = False  # cannot always be evalf'd
 
     @classmethod
     def eval(self, x, period):
@@ -817,7 +817,7 @@ class principal_branch(Function):
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
-            return self # Cannot evalf for this argument.
+            return self  # Cannot evalf for this argument.
         return (abs(z)*exp(I*p))._eval_evalf(prec)
 
 # /cyclic/

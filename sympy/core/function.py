@@ -832,7 +832,7 @@ class Derivative(Expr):
         variable_count = []
         all_zero = True
         i = 0
-        while i < len(variables) - 1: # process up to final Integer
+        while i < len(variables) - 1:  # process up to final Integer
             v, count = variables[i: i+2]
             iwas = i
             if v._diff_wrt:
@@ -845,7 +845,7 @@ class Derivative(Expr):
                     count = 1
                     i += 1
 
-            if i == iwas: # didn't get an update because of bad input
+            if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                 Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
@@ -2037,13 +2037,13 @@ def count_ops(expr, visual=False):
                     if n < 0:
                         ops.append(NEG)
                     args.append(d)
-                    continue # won't be -Mul but could be Add
+                    continue  # won't be -Mul but could be Add
                 elif d is not S.One:
                     if not d.is_Integer:
                         args.append(d)
                     ops.append(DIV)
                     args.append(n)
-                    continue # could be -Mul
+                    continue  # could be -Mul
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
@@ -2057,14 +2057,14 @@ def count_ops(expr, visual=False):
                         args.append(ai)
                         if i > 0:
                             ops.append(ADD)
-                if negs == len(aargs): # -x - y = NEG + SUB
+                if negs == len(aargs):  # -x - y = NEG + SUB
                     ops.append(NEG)
-                elif _coeff_isneg(aargs[0]): # -x + y = SUB, but already recorded ADD
+                elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
                     ops.append(SUB - ADD)
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:
                 ops.append(DIV)
-                args.append(a.base) # won't be -Mul but could be Add
+                args.append(a.base)  # won't be -Mul but could be Add
                 continue
             if (a.is_Mul or
                 a.is_Pow or
@@ -2088,7 +2088,7 @@ def count_ops(expr, visual=False):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
         ops = []
-    else: # it's Basic not isinstance(expr, Expr):
+    else:  # it's Basic not isinstance(expr, Expr):
         assert isinstance(expr, Basic)
         ops = [count_ops(a, visual=visual) for a in expr.args]
 

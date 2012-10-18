@@ -79,7 +79,7 @@ def test_Permutation():
     raises(TypeError, lambda: p + Permutation(range(10)))
 
     assert (p - q.rank()).rank() == Permutation(0, 6, 3, 1, 2, 5, 4).rank()
-    assert p.rank() - q.rank() < 0 # for coverage: make sure mod is used
+    assert p.rank() - q.rank() < 0  # for coverage: make sure mod is used
     assert (q - p.rank()).rank() == Permutation(1, 4, 6, 2)(3, 5).rank()
 
     assert p*q == Permutation(_af_rmuln(*[list(w) for w in (q, p)]))
@@ -115,7 +115,7 @@ def test_Permutation():
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
-    _ = s.cyclic_form # needed to create a value for _cyclic_form
+    _ = s.cyclic_form  # needed to create a value for _cyclic_form
     assert len(s._cyclic_form) != s.size and s.parity() == 0
     assert not s.is_odd
     assert s.is_even
@@ -324,11 +324,11 @@ def test_args():
     assert Permutation(3).list(-1) == []
     assert Permutation(5)(1, 2).list(-1) == [0, 2, 1]
     assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
-    raises(TypeError, lambda: Permutation([1, 2], [0])) # enclosing brackets needed
-    raises(ValueError, lambda: Permutation([[1, 2], 0])) # enclosing brackets needed on 0
+    raises(TypeError, lambda: Permutation([1, 2], [0]))  # enclosing brackets needed
+    raises(ValueError, lambda: Permutation([[1, 2], 0]))  # enclosing brackets needed on 0
     raises(ValueError, lambda: Permutation([1, 1, 0]))
     raises(ValueError, lambda: Permutation([[1], [1, 2]]))
-    raises(ValueError, lambda: Permutation([4, 5], size=10)) # where are 0-3?
+    raises(ValueError, lambda: Permutation([4, 5], size=10))  # where are 0-3?
     # but this is ok because cycles imply that only those listed moved
     assert Permutation(4, 5) == Permutation([0, 1, 2, 3, 5, 4])
 

@@ -6,8 +6,8 @@ import sys
 # For example, you might set both to False before running the tests so that
 # warnings are not printed to the console, or set both to True for debugging.
 
-WARN_NOT_INSTALLED = None # Default is False
-WARN_OLD_VERSION = None # Default is True
+WARN_NOT_INSTALLED = None  # Default is False
+WARN_OLD_VERSION = None  # Default is True
 
 def __sympy_debug():
     # helper function from sympy/__init__.py

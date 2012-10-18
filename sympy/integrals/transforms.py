@@ -373,7 +373,7 @@ def _rewrite_sin((m, n), s, a, b):
     from sympy import expand_mul, pi, ceiling, gamma, re
     m = expand_mul(m/pi)
     n = expand_mul(n/pi)
-    r = ceiling(-m*a - n.as_real_imag()[0]) # Don't use re(n), does not expand
+    r = ceiling(-m*a - n.as_real_imag()[0])  # Don't use re(n), does not expand
     return gamma(m*s + n + r), gamma(1 - n - r - m*s), (-1)**r*pi
 
 class MellinTransformStripError(ValueError):
@@ -460,7 +460,7 @@ def _rewrite_gamma(f, s, a, b):
         if is_numer:
             return None
         if a_.free_symbols or b_.free_symbols or c.free_symbols:
-            return None # XXX
+            return None  # XXX
             #raise IntegralTransformError('Inverse Mellin', f,
             #                     'Could not determine position of singularity %s'
             #                     ' relative to fundamental strip' % c)

@@ -173,7 +173,7 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj + '1')
         raises(TypeError, lambda: obj - '1')
         if obj == 2:
-            if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+            if hasattr(int, '__index__'):  # Python 2.5+ (PEP 357)
                 assert obj * '1' == '11'
         else:
             raises(TypeError, lambda: obj * '1')
@@ -697,7 +697,7 @@ def test_has_tuple():
     assert not Tuple(f, g).has(x)
     assert Tuple(f, g).has(f)
     assert not Tuple(f, g).has(h)
-    assert Tuple(True).has(True) is True # .has(1) will also be True
+    assert Tuple(True).has(True) is True  # .has(1) will also be True
 
 def test_has_units():
     from sympy.physics.units import m, s
@@ -870,13 +870,13 @@ def test_extractions():
     assert (-(x+x*y)/y).could_extract_minus_sign() == True
     assert ((x+x*y)/(-y)).could_extract_minus_sign() == True
     assert ((x+x*y)/y).could_extract_minus_sign() == False
-    assert (x*(-x-x**3)).could_extract_minus_sign() == True # used to give inf recurs
-    assert ((-x-y)/(x+y)).could_extract_minus_sign() == True # is_Mul odd case
+    assert (x*(-x-x**3)).could_extract_minus_sign() == True  # used to give inf recurs
+    assert ((-x-y)/(x+y)).could_extract_minus_sign() == True  # is_Mul odd case
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
     assert ((-x-y)/(x-y)).could_extract_minus_sign() == False or\
-           ((-x-y)/(y-x)).could_extract_minus_sign() == False # is_Mul even case
+           ((-x-y)/(y-x)).could_extract_minus_sign() == False  # is_Mul even case
     assert ( x - y).could_extract_minus_sign() == False
     assert (-x + y).could_extract_minus_sign() == True
 
@@ -901,7 +901,7 @@ def test_coeff():
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
     assert (n1*n2).coeff(n2) == n1
-    assert (n1*n2 + x*n1).coeff(n1) == 1 # 1*n1*(n2+x)
+    assert (n1*n2 + x*n1).coeff(n1) == 1  # 1*n1*(n2+x)
     assert (n2*n1 + x*n1).coeff(n1) == n2 + x
     assert (n2*n1 + x*n1**2).coeff(n1) == n2
     assert (n1**x).coeff(n1) == 0
@@ -946,11 +946,11 @@ def test_coeff():
     assert (2 + n).coeff(x*m*n + y) == 0
     assert (2*x*n*m).coeff(3*n) == 0
     assert (n*m + m*n*m).coeff(n) == 1 + m
-    assert (n*m + m*n*m).coeff(n, right=True) == m # = (1 + m)*n*m
+    assert (n*m + m*n*m).coeff(n, right=True) == m  # = (1 + m)*n*m
     assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
-    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n # = n*m*(n + 1)
+    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1257,9 +1257,9 @@ def test_is_constant():
     assert checksol(x, x, f(x)) == False
 
     p = symbols('p', positive=True)
-    assert Pow(x, S(0), evaluate=False).is_constant() == True # == 1
-    assert Pow(S(0), x, evaluate=False).is_constant() == False # == 0 or 1
-    assert Pow(S(0), p, evaluate=False).is_constant() == True # == 1
+    assert Pow(x, S(0), evaluate=False).is_constant() == True  # == 1
+    assert Pow(S(0), x, evaluate=False).is_constant() == False  # == 0 or 1
+    assert Pow(S(0), p, evaluate=False).is_constant() == True  # == 1
     assert (2**x).is_constant() == False
     assert Pow(S(2), S(3), evaluate=False).is_constant() == True
 

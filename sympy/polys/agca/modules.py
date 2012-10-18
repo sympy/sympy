@@ -1100,7 +1100,7 @@ class SubModulePolyRing(SubModule):
         """Expression in terms of generators. See [SCA, 2.8.1]."""
         # NOTE: if gens is a standard basis, this can be done more efficiently
         M = self.ring.free_module(self.rank).submodule(*((e,) + self.gens))
-        S = M.syzygy_module(order="ilex", TOP=False) # We want decreasing order!
+        S = M.syzygy_module(order="ilex", TOP=False)  # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]

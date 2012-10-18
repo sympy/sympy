@@ -559,7 +559,7 @@ class BaseVectorField(Expr):
         # Remove the dummies
         result = d_result.subs(zip(d_funcs, base_scalars))
         result = result.subs(zip(coords, self._coord_sys.coord_functions()))
-        return result.doit() # XXX doit for the Subs instances
+        return result.doit()  # XXX doit for the Subs instances
 
 
 class Commutator(Expr):
@@ -735,7 +735,7 @@ class Differential(Expr):
                 ret += (-1)**i*t
                 for j in range(i+1, k):
                     c = Commutator(v[i], v[j])
-                    if c: # TODO this is ugly - the Commutator can be Zero and
+                    if c:  # TODO this is ugly - the Commutator can be Zero and
                           # this causes the next line to fail
                         t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
                         ret += (-1)**(i+j)*t
@@ -975,7 +975,7 @@ class BaseCovarDerivativeOp(Expr):
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(zip(to_subs, derivs))
 
-        return result #TODO .doit() # XXX doit for the Subs instances
+        return result  # TODO .doit() # XXX doit for the Subs instances
 
 
 class CovarDerivativeOp(Expr):
@@ -1256,7 +1256,7 @@ def contravariant_order(expr, _strict=False):
         return 1
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
-    else: # If it does not contain anything related to the diffgeom module and it is _strict
+    else:  # If it does not contain anything related to the diffgeom module and it is _strict
         return -1
 
 
@@ -1300,7 +1300,7 @@ def covariant_order(expr, _strict=False):
         return sum(covariant_order(a) for a in expr.args)
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
-    else: # If it does not contain anything related to the diffgeom module and it is _strict
+    else:  # If it does not contain anything related to the diffgeom module and it is _strict
         return -1
 
 

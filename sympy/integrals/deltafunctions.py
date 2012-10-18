@@ -59,7 +59,7 @@ def change_mul(node, x):
                 new_args.append(arg)
         else:
             new_args.append(change_mul(arg, x))
-    if not dirac: # there was no simple dirac
+    if not dirac:  # there was no simple dirac
         new_args = []
         for arg in sorted_args:
             if arg.func == DiracDelta:
@@ -68,7 +68,7 @@ def change_mul(node, x):
                 new_args.append(change_mul(arg, x))
         if new_args != sorted_args:
             nnode = node.__class__(*new_args).expand()
-        else: #if the node didn't change there is nothing to do
+        else:  # if the node didn't change there is nothing to do
             nnode = None
         return (None, nnode)
     return (dirac, node.func(*new_args))
@@ -132,7 +132,7 @@ def deltaintegrate(f, x):
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
         h = f.simplify(x)
-        if h == f:#can't simplify the expression
+        if h == f:  # can't simplify the expression
             #FIXME: the second term tells whether is DeltaDirac or Derivative
             #For integrating derivatives of DiracDelta we need the chain rule
             if f.is_simple(x):
@@ -140,16 +140,16 @@ def deltaintegrate(f, x):
                     return Heaviside(f.args[0])
                 else:
                     return (DiracDelta(f.args[0], f.args[1]-1)/ f.args[0].as_poly().LC())
-        else:#let's try to integrate the simplified expression
+        else:  # let's try to integrate the simplified expression
             fh = sympy.integrals.integrate(h, x)
             return fh
-    elif f.is_Mul: #g(x)=a*b*c*f(DiracDelta(h(x)))*d*e
+    elif f.is_Mul:  # g(x)=a*b*c*f(DiracDelta(h(x)))*d*e
         g = f.expand()
-        if f != g:#the expansion worked
+        if f != g:  # the expansion worked
             fh = sympy.integrals.integrate(g, x)
             if fh and not isinstance(fh, sympy.integrals.Integral):
                 return fh
-        else:#no expansion performed, try to extract a simple DiracDelta term
+        else:  # no expansion performed, try to extract a simple DiracDelta term
             dg, rest_mult = change_mul(f, x)
 
             if not dg:
@@ -158,7 +158,7 @@ def deltaintegrate(f, x):
                     return fh
             else:
                 dg = dg.simplify(x)
-                if dg.is_Mul: # Take out any extracted factors
+                if dg.is_Mul:  # Take out any extracted factors
                     dg, rest_mult_2 = change_mul(dg, x)
                     rest_mult = rest_mult*rest_mult_2
                 point = solve(dg.args[0], x)[0]

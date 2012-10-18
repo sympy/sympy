@@ -159,7 +159,7 @@ class AskBoundedHandler(CommonHandler):
 
         """
 
-        sign = -1 # sign of unknown or unbounded
+        sign = -1  # sign of unknown or unbounded
         result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
@@ -246,7 +246,7 @@ class AskBoundedHandler(CommonHandler):
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)
         exp_bounded = ask(Q.bounded(expr.exp), assumptions)
-        if base_bounded==None and exp_bounded==None: # Common Case
+        if base_bounded==None and exp_bounded==None:  # Common Case
             return None
         if base_bounded==False and ask(Q.nonzero(expr.exp), assumptions):
             return False

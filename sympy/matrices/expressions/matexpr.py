@@ -350,7 +350,7 @@ def matrixify(expr):
     if expr.__class__ not in class_dict:
         return expr
 
-    args = map(matrixify, expr.args) # Recursively call down the tree
+    args = map(matrixify, expr.args)  # Recursively call down the tree
 
     if not any(arg.is_Matrix for arg in args):
         return expr

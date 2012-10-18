@@ -116,12 +116,12 @@ class LagrangesMethod(object):
         """
 
         self._L = sympify(Lagrangian)
-        self.eom = None #initializing the eom Matrix
-        self._m_cd = Matrix([]) #Mass Matrix of differentiated coneqs
-        self._m_d = Matrix([]) #Mass Matrix of dynamic equations
-        self._f_cd = Matrix([]) #Forcing part of the diff coneqs
-        self._f_d = Matrix([]) #Forcing part of the dynamic equations
-        self.lam_coeffs = Matrix([]) #Initializing the coeffecients of lams
+        self.eom = None  # initializing the eom Matrix
+        self._m_cd = Matrix([])  # Mass Matrix of differentiated coneqs
+        self._m_d = Matrix([])  # Mass Matrix of dynamic equations
+        self._f_cd = Matrix([])  # Forcing part of the diff coneqs
+        self._f_d = Matrix([])  # Forcing part of the dynamic equations
+        self.lam_coeffs = Matrix([])  # Initializing the coeffecients of lams
 
         self.forcelist = forcelist
         self.inertial = frame

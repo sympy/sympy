@@ -217,7 +217,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat)) # = rat.floor()
+        w = sign(rat)*int(abs(rat))  # = rat.floor()
         r = self - other*w
         #w*other + r == self
         return Tuple(w, r)
@@ -258,7 +258,7 @@ class Number(AtomicExpr):
     def _eval_subs(self, old, new):
         if old == -self:
             return -new
-        return self # there is no other possibility
+        return self  # there is no other possibility
 
     @classmethod
     def class_key(cls):
@@ -740,7 +740,7 @@ class Float(Number):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
-        return int(mlib.to_int(self._mpf_)) # uses round_fast = round_down
+        return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):
         if isinstance(other, float):
@@ -1105,7 +1105,7 @@ class Rational(Number):
                         return S.NegativeOne**ne*Rational(self.q, -self.p)**ne
                 else:
                     return Rational(self.q, self.p)**ne
-            if expt is S.Infinity: # -oo already caught by test for negative
+            if expt is S.Infinity:  # -oo already caught by test for negative
                 if self.p > self.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
@@ -1598,8 +1598,8 @@ class Integer(Rational):
         # now process the dict of factors
         if self.is_negative:
             dict[-1] = 1
-        out_int = 1 # integer part
-        out_rad = 1 # extracted radicals
+        out_int = 1  # integer part
+        out_rad = 1  # extracted radicals
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
@@ -1712,7 +1712,7 @@ class Zero(IntegerConstant):
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
             return S.Infinity**terms
-        if coeff is not S.One: # there is a Number to discard
+        if coeff is not S.One:  # there is a Number to discard
             return self**terms
 
     def _eval_order(self, *symbols):
@@ -2348,7 +2348,7 @@ class Exp1(NumberSymbol):
 
     is_real = True
     is_positive = True
-    is_negative = False # XXX Forces is_negative/is_nonnegative
+    is_negative = False  # XXX Forces is_negative/is_nonnegative
     is_irrational = True
 
     __slots__ = []

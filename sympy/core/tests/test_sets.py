@@ -234,7 +234,7 @@ def test_measure():
     band = Interval(-oo, oo) * Interval(2, 4)
 
     assert square.measure == offsetsquare.measure == 100
-    assert (square + offsetsquare).measure == 175 # there is some overlap
+    assert (square + offsetsquare).measure == 175  # there is some overlap
     assert (square - offsetsquare).measure == 75
     assert (square * FiniteSet(1, 2, 3)).measure == 0
     assert (square.intersect(band)).measure == 20
@@ -414,7 +414,7 @@ def test_product_basic():
     assert not (Interval(-5, 5)**3).subset(Interval(-10, 10)**3)
     assert not (Interval(-10, 10)**2).subset(Interval(-5, 5)**3)
 
-    assert square.subset(Interval(.2, .5)*FiniteSet(.5)) # segment in square
+    assert square.subset(Interval(.2, .5)*FiniteSet(.5))  # segment in square
 
 def test_real():
     x = Symbol('x', real=True)

@@ -216,7 +216,7 @@ def test_mul():
     assert (-2*x**3/9).subs(-2*x, z) == z*x**2/9
     assert (-2*x**3/9).subs(2*x, z) == -z*x**2/9
     assert (2*(3*x/5/7)**2).subs(3*x/5, z) == 2*(S(1)/7)**2*z**2
-    assert (4*x).subs(-2*x, z) == 4*x # try keep subs literal
+    assert (4*x).subs(-2*x, z) == 4*x  # try keep subs literal
 
 def test_subs_simple():
     a = symbols('a', commutative=True)

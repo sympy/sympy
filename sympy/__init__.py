@@ -17,7 +17,7 @@ import sys
 if sys.version_info[0] == 3:
     try:
         HAS_2TO3 = long.__name__ == "int"
-    except NameError: # it tries to see long but long doesn't exist in Python 3
+    except NameError:  # it tries to see long but long doesn't exist in Python 3
         HAS_2TO3 = False
 else:
     HAS_2TO3 = long.__name__ == "int"
@@ -29,7 +29,7 @@ if sys.version_info[0] == 2:
     else:
         if sys.version_info[1] < 5:
             raise ImportError("Python Version 2.5 or above is required for SymPy.")
-else: # Python 3
+else:  # Python 3
     if not HAS_2TO3:
         raise ImportError("This is the Python 2 version of SymPy. To use SymPy "
     "with Python 3, please obtain a Python 3 version from http://sympy.org, "

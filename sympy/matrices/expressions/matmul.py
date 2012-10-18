@@ -40,15 +40,15 @@ class MatMul(MatrixExpr, Mul):
             return ZeroMatrix(*expr.shape)
 
         # Clear out Identities
-        nonmats = [M for M in expr.args if not M.is_Matrix] # scalars
-        mats = [M for M in expr.args if M.is_Matrix] # matrices
-        if any(M.is_Identity for M in mats): # Any identities around?
-            newmats = [M for M in mats if not M.is_Identity] # clear out
-            if len(newmats)==0: # Did we lose everything?
-                newmats = [Identity(expr.rows)] # put just one back in
+        nonmats = [M for M in expr.args if not M.is_Matrix]  # scalars
+        mats = [M for M in expr.args if M.is_Matrix]  # matrices
+        if any(M.is_Identity for M in mats):  # Any identities around?
+            newmats = [M for M in mats if not M.is_Identity]  # clear out
+            if len(newmats)==0:  # Did we lose everything?
+                newmats = [Identity(expr.rows)]  # put just one back in
 
-            if mats != newmats: # Removed some I's but not everything?
-                return MatMul(*(nonmats+newmats)) # Repeat with simpler expr
+            if mats != newmats:  # Removed some I's but not everything?
+                return MatMul(*(nonmats+newmats))  # Repeat with simpler expr
 
         return expr
 
@@ -59,7 +59,7 @@ class MatMul(MatrixExpr, Mul):
 
     def _entry(self, i, j):
         coeff, matmul = self.as_coeff_mmul()
-        if not matmul.is_Mul: # situation like 2*X, matmul is just X
+        if not matmul.is_Mul:  # situation like 2*X, matmul is just X
             return coeff * matmul[i, j]
 
         head, tail = matmul.args[0], matmul.args[1:]

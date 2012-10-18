@@ -39,7 +39,7 @@ class ColorGradient(object):
         c = self._interpolate_axis
         return c(0, r), c(1, g), c(2, b)
 
-default_color_schemes = {} # defined at the bottom of this file
+default_color_schemes = {}  # defined at the bottom of this file
 
 class ColorScheme(object):
 
@@ -218,7 +218,7 @@ class ColorScheme(object):
         except AssertionError, ae:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
         except Exception, ie:
-            pass # color function probably not valid at 0,0,0,0,0
+            pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:

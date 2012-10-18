@@ -174,7 +174,7 @@ def test_pow_im():
                 assert (b**e - b.n()**e.n()).n(2, chop=1e-10) == 0
 
     e = Rational(7, 3)
-    assert (2*x*I)**e == 4*2**Rational(1, 3)*(I*x)**e # same as Wolfram Alpha
+    assert (2*x*I)**e == 4*2**Rational(1, 3)*(I*x)**e  # same as Wolfram Alpha
     im = symbols('im', imaginary=True)
     assert (2*im*I)**e == 4*2**Rational(1, 3)*(I*im)**e
 
@@ -892,12 +892,12 @@ def test_Pow_is_real():
     assert (i**i).is_real is None
     assert (I**i).is_real is None
     assert ((-I)**i).is_real is None
-    assert (2**i).is_real is None # (2**(pi/log(2) * I)) is real, 2**I is not
+    assert (2**i).is_real is None  # (2**(pi/log(2) * I)) is real, 2**I is not
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
     assert (i**2).is_real
     assert (i**3).is_real is False
-    assert (i**x).is_real is None # could be (-I)**(2/3)
+    assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
@@ -919,16 +919,16 @@ def test_Pow_is_bounded():
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
 
-    assert (x**2).is_bounded == None # x could be oo
-    assert (x**x).is_bounded == None # ditto
-    assert (p**x).is_bounded == None # ditto
-    assert (n**x).is_bounded == None # ditto
+    assert (x**2).is_bounded == None  # x could be oo
+    assert (x**x).is_bounded == None  # ditto
+    assert (p**x).is_bounded == None  # ditto
+    assert (n**x).is_bounded == None  # ditto
     assert (1/S.Pi).is_bounded
     assert (sin(x)**2).is_bounded == True
     assert (sin(x)**x).is_bounded == None
     assert (sin(x)**exp(x)).is_bounded == None
-    assert (1/sin(x)).is_bounded == None # if zero, no, otherwise yes
-    assert (1/exp(x)).is_bounded == None # x could be -oo
+    assert (1/sin(x)).is_bounded == None  # if zero, no, otherwise yes
+    assert (1/exp(x)).is_bounded == None  # x could be -oo
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -1359,7 +1359,7 @@ def test_mul_flatten_oo():
     assert n*oo == -oo
     assert n*m*oo == oo
     assert p*oo == oo
-    assert x_im*oo != I*oo # i could be +/- 3*I -> +/-oo
+    assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
 
 def test_issue_2061_2988_2990_2991():
     #2988

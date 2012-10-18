@@ -119,7 +119,7 @@ def arr(num, t):
     [0, 1]
     """
     binary_array = [0]*t
-    b = list(bin(abs(num))[2:]) # strip 0b
+    b = list(bin(abs(num))[2:])  # strip 0b
     b = b[-t:]
     for i in range(-1, -min(len(b), t) - 1, -1):
         binary_array[i] = int(b[i])

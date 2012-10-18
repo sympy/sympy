@@ -40,11 +40,11 @@ class MatAdd(MatrixExpr, Add):
         # Clear out Identities
         # Any zeros around?
         if expr.is_Add and any(M.is_ZeroMatrix for M in expr.args):
-            newargs = [M for M in expr.args if not M.is_ZeroMatrix] # clear out
-            if len(newargs)==0: # Did we lose everything?
+            newargs = [M for M in expr.args if not M.is_ZeroMatrix]  # clear out
+            if len(newargs)==0:  # Did we lose everything?
                 return ZeroMatrix(*args[0].shape)
-            if expr.args != newargs: # Removed some 0's but not everything?
-                return MatAdd(*newargs) # Repeat with simpler expr
+            if expr.args != newargs:  # Removed some 0's but not everything?
+                return MatAdd(*newargs)  # Repeat with simpler expr
 
         return expr
 

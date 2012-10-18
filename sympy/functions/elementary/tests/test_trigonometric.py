@@ -91,7 +91,7 @@ def test_sin():
             assert e < 1e-12
 
 def test_sin_cos():
-    for d in [1, 2, 3, 4, 5, 6, 10, 12]: # list is not exhaustive...
+    for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
         for n in xrange(-2*d, d*2):
             x = n*pi/d
             assert sin(x + pi/2) == cos(x),  "fails for %d*pi/%d" % (n, d)
@@ -634,8 +634,8 @@ def _check_no_rewrite(func, arg):
 
 def test_evenodd_rewrite():
     x, y = symbols('x,y')
-    a = cos(2) #negative
-    b = sin(1) #positive
+    a = cos(2)  # negative
+    b = sin(1)  # positive
     even = [cos]
     odd = [sin, tan, cot, asin, atan, acot]
     with_minus = [-1, -2**1024 * E, -pi/105, -x*y, -x-y]
@@ -709,7 +709,7 @@ def test_issue_1321():
     assert tan(4*i*pi) == 0
     assert cot(4*i*pi) == zoo
 
-    assert cos(3*i*pi) == cos(pi*i) # +/-1
+    assert cos(3*i*pi) == cos(pi*i)  # +/-1
     assert sin(3*i*pi) == 0
     assert tan(3*i*pi) == 0
     assert cot(3*i*pi) == zoo
@@ -719,7 +719,7 @@ def test_issue_1321():
     assert tan(4.0*i*pi) == 0
     assert cot(4.0*i*pi) == zoo
 
-    assert cos(3.0*i*pi) == cos(pi*i) # +/-1
+    assert cos(3.0*i*pi) == cos(pi*i)  # +/-1
     assert sin(3.0*i*pi) == 0
     assert tan(3.0*i*pi) == 0
     assert cot(3.0*i*pi) == zoo

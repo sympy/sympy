@@ -342,7 +342,7 @@ class MinMaxBase(LatticeOp):
         yx = cls._rel_inversed(x, y)
         if isinstance(yx, bool):
             if yx:
-                return False # never occurs?
+                return False  # never occurs?
             return True
         return False
 

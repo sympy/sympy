@@ -147,7 +147,7 @@ def _mr_safe(n):
         return mr(n, [350, 3958281543])
         # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
     if n < 4759123141:
-        return mr(n, [2, 7, 61]) # ref [3]
+        return mr(n, [2, 7, 61])  # ref [3]
         # [2, 7, 61] stot = 3 clear == bases
     if n < 75792980677:
         return mr(n, [2, 379215, 457083754])

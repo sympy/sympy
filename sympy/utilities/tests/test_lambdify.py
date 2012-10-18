@@ -82,16 +82,16 @@ def test_math_lambda():
     f = lambdify(x, sin(x), "math")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    raises(ValueError, lambda: f(x)) # if this succeeds, it can't be a python math function
+    raises(ValueError, lambda: f(x))  # if this succeeds, it can't be a python math function
 
 @conserve_mpmath_dps
 def test_mpmath_lambda():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin(x), "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
+    prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
-    raises(TypeError, lambda: f(x)) # if this succeeds, it can't be a mpmath function
+    raises(TypeError, lambda: f(x))  # if this succeeds, it can't be a mpmath function
 
 @conserve_mpmath_dps
 @XFAIL
@@ -99,7 +99,7 @@ def test_number_precision():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin02, "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
+    prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
 
 #================== Test Translations =====================

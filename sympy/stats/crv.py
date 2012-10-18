@@ -103,7 +103,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     integrand *= DiracDelta(cond.lhs-cond.rhs)
                 else:
                     symbols = cond.free_symbols & set(self.symbols)
-                    if len(symbols)!=1: # Can't handle x > y
+                    if len(symbols)!=1:  # Can't handle x > y
                         raise NotImplementedError(
                             "Multivariate Inequalities not yet implemented")
                     # Can handle x > 0

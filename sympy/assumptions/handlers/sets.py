@@ -399,7 +399,7 @@ class AskComplexHandler(CommonHandler):
     def NegativeInfinity(expr, assumptions):
         return False
 
-    sin, cos, exp, re, im = [Abs]*5 # they are all complex functions
+    sin, cos, exp, re, im = [Abs]*5  # they are all complex functions
 
 class AskImaginaryHandler(CommonHandler):
     """

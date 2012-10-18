@@ -136,7 +136,7 @@ def minimal_polynomial(ex, x=None, **args):
             for result, _ in factors:
                 if result.subs(x, ex).evalf(chop=True) == 0:
                     break
-            else: # pragma: no cover
+            else:  # pragma: no cover
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
 
     if polys:
@@ -203,12 +203,12 @@ def primitive_element(extension, x=None, **args):
 
         for i, (h, y) in enumerate(zip(H, Y)):
             try:
-                H[i] = Poly(y - h, x, domain='QQ').all_coeffs() # XXX: composite=False
-            except CoercionFailed: # pragma: no cover
-                break # G is not a triangular set
+                H[i] = Poly(y - h, x, domain='QQ').all_coeffs()  # XXX: composite=False
+            except CoercionFailed:  # pragma: no cover
+                break  # G is not a triangular set
         else:
             break
-    else: # pragma: no cover
+    else:  # pragma: no cover
         raise RuntimeError("run out of coefficient configurations")
 
     _, g = g.clear_denoms()

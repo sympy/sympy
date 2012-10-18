@@ -203,7 +203,7 @@ def test_as_real_imag():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
-    assert (n - i).round() == 1 # doesn't hang
+    assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
     # only 1 digit is being requested for this situtation;
@@ -239,10 +239,10 @@ def test_Abs():
     n = Symbol('n', integer=True)
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
-    assert abs(x) == Abs(x) # Python built-in
+    assert abs(x) == Abs(x)  # Python built-in
     assert Abs(x)**3 == x**2*Abs(x)
     assert Abs(x)**4 == x**4
-    assert (Abs(x)**(3*n)).args == (Abs(x), 3*n) # leave symbolic odd unchanged
+    assert (Abs(x)**(3*n)).args == (Abs(x), 3*n)  # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 

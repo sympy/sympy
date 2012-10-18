@@ -204,8 +204,8 @@ def roots_quartic(f):
             else:
                 # with p !=0 then u below is not 0
                 root = sqrt(q**2/4 + p**3/27)
-                r = -q/2 + root # or -q/2 - root
-                u = r**TH # primary root of solve(x**3-r, x)
+                r = -q/2 + root  # or -q/2 - root
+                u = r**TH  # primary root of solve(x**3-r, x)
                 y = -5*e/6 + u - p/u/3
             w = sqrt(e + 2*y)
             arg1 = 3*e + 2*y
@@ -288,7 +288,7 @@ def roots_cyclotomic(f, factor=False):
 
         if f == g:
             break
-    else: # pragma: no cover
+    else:  # pragma: no cover
         raise RuntimeError("failed to find index of a cyclotomic polynomial")
 
     roots = []

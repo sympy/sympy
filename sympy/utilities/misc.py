@@ -240,7 +240,7 @@ def rawlines(s):
 
 import sys
 size = getattr(sys, "maxint", None)
-if size is None: #Python 3 doesn't have maxint
+if size is None:  # Python 3 doesn't have maxint
     size = sys.maxsize
 if size > 2**32:
     ARCH = "64-bit"

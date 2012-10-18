@@ -159,7 +159,7 @@ class Density(HermitianOperator):
 
         terms = []
         for (state, prob) in self.args:
-            state = state.expand() # needed to break up (a+b)*c
+            state = state.expand()  # needed to break up (a+b)*c
             if (isinstance(state, Add)):
                 for arg in product(state.args, repeat=2):
                     terms.append(prob *
@@ -239,7 +239,7 @@ def entropy(density):
 
     """
     if isinstance(density, Density):
-        density = represent(density) #represent in Matrix
+        density = represent(density)  # represent in Matrix
 
     if isinstance(density, scipy_sparse_matrix):
         density = to_numpy(density)

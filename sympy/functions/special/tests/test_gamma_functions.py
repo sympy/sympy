@@ -279,4 +279,4 @@ def test_polygamma_expansion():
 def test_beta_function():
     x, y = Symbol('x'), Symbol('y')
     assert beta(x, y) == gamma(x)*gamma(y)/gamma(x+y)
-    assert beta(x, y) == beta(y, x) # Symmetric
+    assert beta(x, y) == beta(y, x)  # Symmetric

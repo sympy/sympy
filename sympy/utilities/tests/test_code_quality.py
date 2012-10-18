@@ -96,7 +96,7 @@ def test_files():
                 test_this_file(fname, test_file)
 
     def test_this_file(fname, test_file):
-        line = None # to flag the case where there were no lines in file
+        line = None  # to flag the case where there were no lines in file
         for idx, line in enumerate(test_file):
             if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx+1)
@@ -243,7 +243,7 @@ def test_implicit_imports_regular_expression():
         "... import sympy.something.something",
         "... from sympy import something",
         "... from sympy.somewhere import something",
-        ">> from sympy import *", # To allow 'fake' docstrings
+        ">> from sympy import *",  # To allow 'fake' docstrings
         "# from sympy import *",
         "some text # from sympy import *",
     ]

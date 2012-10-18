@@ -665,17 +665,17 @@ def dup_count_real_roots(f, K, inf=None, sup=None):
 
     return count
 
-OO = 'OO' # Origin of (re, im) coordinate system
+OO = 'OO'  # Origin of (re, im) coordinate system
 
-Q1 = 'Q1' # Quadrant #1 (++): re > 0 and im > 0
-Q2 = 'Q2' # Quadrant #2 (-+): re < 0 and im > 0
-Q3 = 'Q3' # Quadrant #3 (--): re < 0 and im < 0
-Q4 = 'Q4' # Quadrant #4 (+-): re > 0 and im < 0
+Q1 = 'Q1'  # Quadrant #1 (++): re > 0 and im > 0
+Q2 = 'Q2'  # Quadrant #2 (-+): re < 0 and im > 0
+Q3 = 'Q3'  # Quadrant #3 (--): re < 0 and im < 0
+Q4 = 'Q4'  # Quadrant #4 (+-): re > 0 and im < 0
 
-A1 = 'A1' # Axis #1 (+0): re > 0 and im = 0
-A2 = 'A2' # Axis #2 (0+): re = 0 and im > 0
-A3 = 'A3' # Axis #3 (-0): re < 0 and im = 0
-A4 = 'A4' # Axis #4 (0-): re = 0 and im < 0
+A1 = 'A1'  # Axis #1 (+0): re > 0 and im = 0
+A2 = 'A2'  # Axis #2 (0+): re = 0 and im > 0
+A3 = 'A3'  # Axis #3 (-0): re < 0 and im = 0
+A4 = 'A4'  # Axis #4 (0-): re = 0 and im < 0
 
 _rules_simple = {
     # A -- CCW --> Q => +1/4 (CCW)

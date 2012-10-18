@@ -8,7 +8,7 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
-class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
+class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
     """Abstract domain for real numbers. """
 
     rep = 'RR'
@@ -23,7 +23,7 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
 
     def as_integer_ratio(self, a, **args):
         """Convert real number to a (numer, denom) pair. """
-        v, n = math.frexp(a) # XXX: hack, will work only for floats
+        v, n = math.frexp(a)  # XXX: hack, will work only for floats
 
         for i in xrange(300):
             if v != math.floor(v):

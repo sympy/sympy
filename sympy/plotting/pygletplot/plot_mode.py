@@ -47,12 +47,12 @@ class PlotMode(PlotObject):
         1: {1: {}, 2: {}},
         2: {1: {}, 2: {}},
         3: {1: {}, 2: {}},
-    } # [d][i][alias_str]: class
+    }  # [d][i][alias_str]: class
     _mode_default_map = {
         1: {},
         2: {},
         3: {},
-    } # [d][i]: class
+    }  # [d][i]: class
     _i_var_max, _d_var_max = 2, 3
 
     def __new__(cls, *args, **kwargs):

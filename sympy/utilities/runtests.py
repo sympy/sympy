@@ -21,7 +21,7 @@ import re
 import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
-import doctest as pdoctest # avoid clashing with our doctest() function
+import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
@@ -105,7 +105,7 @@ def get_sympy_dir():
     return sys_normcase(sympy_dir)
 
 def sys_normcase(f):
-    if sys_case_insensitive: # global defined after call to get_sympy_dir()
+    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
         return f.lower()
     return f
 
@@ -255,7 +255,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         # Examples
         print
         sys.path.append("examples")
-        from all import run_examples # examples/all.py
+        from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
 
@@ -521,25 +521,25 @@ def _doctest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "doc/src/modules/mpmath", # needs to be fixed upstream
-                    "sympy/mpmath", # needs to be fixed upstream
-                    "doc/src/modules/plotting.rst", # generates live plots
+                    "doc/src/modules/mpmath",  # needs to be fixed upstream
+                    "sympy/mpmath",  # needs to be fixed upstream
+                    "doc/src/modules/plotting.rst",  # generates live plots
                     # "sympy/plotting", # generates live plots
-                    "sympy/plotting/pygletplot", # generates live plots
+                    "sympy/plotting/pygletplot",  # generates live plots
                     "sympy/statistics",                # prints a deprecation
                     "doc/src/modules/statistics.rst",  # warning (this module
                                                        # is deprecated)
-                    "sympy/utilities/compilef.py", # needs tcc
-                    "sympy/utilities/autowrap.py", # needs installed compiler
-                    "sympy/galgebra/GA.py", # needs numpy
-                    "sympy/galgebra/latex_ex.py", # needs numpy
-                    "sympy/conftest.py", # needs py.test
-                    "sympy/utilities/benchmarking.py", # needs py.test
-                    "examples/advanced/autowrap_integrators.py", # needs numpy
-                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
-                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
-                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
-                    "examples/intermediate/sample.py", # needs numpy
+                    "sympy/utilities/compilef.py",  # needs tcc
+                    "sympy/utilities/autowrap.py",  # needs installed compiler
+                    "sympy/galgebra/GA.py",  # needs numpy
+                    "sympy/galgebra/latex_ex.py",  # needs numpy
+                    "sympy/conftest.py",  # needs py.test
+                    "sympy/utilities/benchmarking.py",  # needs py.test
+                    "examples/advanced/autowrap_integrators.py",  # needs numpy
+                    "examples/advanced/autowrap_ufuncify.py",  # needs numpy
+                    "examples/intermediate/mplot2d.py",  # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py",  # needs numpy and matplotlib
+                    "examples/intermediate/sample.py",  # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
@@ -638,8 +638,8 @@ def _doctest(*paths, **kwargs):
                     print
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id, # get at least the name out so it is know who is being tested
-            wid = r.terminal_width - len(file_id) - 1 #update width
+            print file_id,  # get at least the name out so it is know who is being tested
+            wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
             print ''.join([test_file, ' '*(wid-len(test_file)-len(report)), report])
@@ -902,7 +902,7 @@ class SymPyTests(object):
                     raise
             except Exception:
                 if timeout:
-                    signal.alarm(0) # Disable the alarm. It could not be handled before.
+                    signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -927,9 +927,9 @@ class SymPyTests(object):
             signal.alarm(0)
             raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)
-        signal.alarm(timeout) # Set an alarm with a given timeout
+        signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
-        signal.alarm(0) # Disable the alarm
+        signal.alarm(0)  # Disable the alarm
 
     def matches(self, x):
         """
@@ -992,7 +992,7 @@ class SymPyDocTests(object):
             # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
-            module = file[:-3] # remove ".py"
+            module = file[:-3]  # remove ".py"
         setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
@@ -1372,7 +1372,7 @@ class PyTestReporter(Reporter):
                     return self._default_width
 
             if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
-                return self._default_width # leave PIPEs alone
+                return self._default_width  # leave PIPEs alone
 
             try:
                 process = subprocess.Popen(['stty', '-a'],

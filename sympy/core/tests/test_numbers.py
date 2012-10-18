@@ -268,7 +268,7 @@ def test_Number_new():
     raises(ValueError, lambda: Number('cos'))
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
-    assert Number(a) is a # Check idempotence on Numbers
+    assert Number(a) is a  # Check idempotence on Numbers
 
 def test_Rational_cmp():
     n1 = Rational(1, 4)
@@ -584,8 +584,8 @@ def test_NaN():
     assert nan*S.One == nan
     assert nan + S.One == nan
     assert nan/S.One == nan
-    assert nan**0 == 1 # as per IEEE 754
-    assert 1**nan == 1 # as per IEEE 754
+    assert nan**0 == 1  # as per IEEE 754
+    assert 1**nan == 1  # as per IEEE 754
 
 def test_special_numbers():
     assert isinstance(S.NaN, Number) == True
@@ -706,7 +706,7 @@ def test_powers_Integer():
 
     # test that eval_power factors numbers bigger than limit (2**15)
     from sympy import nextprime
-    n = nextprime(2**15) # bigger than the current limit in factor_trial_division
+    n = nextprime(2**15)  # bigger than the current limit in factor_trial_division
     assert sqrt(n**2) == n
     assert sqrt(n**3) == n*sqrt(n)
     assert sqrt(4*n) == 2*sqrt(n)
@@ -1009,7 +1009,7 @@ def test_relational():
     assert (x == cos) is False
 
 def test_Integer_as_index():
-    if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+    if hasattr(int, '__index__'):  # Python 2.5+ (PEP 357)
         assert 'hello'[Integer(2):] == 'llo'
 
 def test_Rational_int():
@@ -1063,7 +1063,7 @@ def test_zoo():
         else:
             assert (zoo/i).is_Mul
 
-    assert (I*oo).is_Mul # allow directed infinity
+    assert (I*oo).is_Mul  # allow directed infinity
     assert zoo + zoo is S.NaN
     assert zoo * zoo is zoo
     assert zoo - zoo is S.NaN
@@ -1079,11 +1079,11 @@ def test_issue_1023():
     x = Symbol('x', nonpositive=True)
     assert (oo + x).is_Add
     x = Symbol('x', bounded=True)
-    assert (oo + x).is_Add # x could be imaginary
+    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', finite=True)
-    assert (oo + x).is_Add # x could be imaginary
+    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', infinitesimal=True)
-    assert (oo + x).is_Add # x could be imaginary
+    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
     x = Symbol('x', bounded=True, real=True)
@@ -1138,11 +1138,11 @@ def test_mpmath_issues():
     from sympy.mpmath.libmp.libmpf import _normalize
     import sympy.mpmath.libmp as mlib
     rnd = mlib.round_nearest
-    mpf = (0, 0L, -123, -1, 53, rnd) # nan
+    mpf = (0, 0L, -123, -1, 53, rnd)  # nan
     assert _normalize(mpf, 53) != (0, 0L, 0, 0)
-    mpf = (0, 0L, -456, -2, 53, rnd) # +inf
+    mpf = (0, 0L, -456, -2, 53, rnd)  # +inf
     assert _normalize(mpf, 53) != (0, 0L, 0, 0)
-    mpf = (1, 0L, -789, -3, 53, rnd) # -inf
+    mpf = (1, 0L, -789, -3, 53, rnd)  # -inf
     assert _normalize(mpf, 53) != (0, 0L, 0, 0)
 
     from sympy.mpmath.libmp.libmpf import fnan

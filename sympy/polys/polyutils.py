@@ -65,7 +65,7 @@ def _sort_gens(gens, **args):
 
     try:
         gens = sorted(gens, key=order_key)
-    except TypeError: # pragma: no cover
+    except TypeError:  # pragma: no cover
         pass
 
     return tuple(gens)

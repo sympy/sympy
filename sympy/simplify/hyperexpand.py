@@ -863,7 +863,7 @@ class FormulaCollection(object):
 
         # We don't have a concrete formula. Try to instantiate.
         if not sizes in self.symbolic_formulae:
-            return None # Too bad...
+            return None  # Too bad...
 
         possible = []
         for f in self.symbolic_formulae[sizes]:
@@ -1352,7 +1352,7 @@ class MeijerUnShiftD(Operator):
             m *= Poly(a - 1 - _x, _x)
         #print m
 
-        B = Dummy('B') # - this is the shift operator `D_I`
+        B = Dummy('B')  # - this is the shift operator `D_I`
         D = Poly(ai - 1 - B, B)
         n = Poly(1, B)
         for b in bm:

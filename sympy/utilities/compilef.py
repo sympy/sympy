@@ -88,7 +88,7 @@ from sympy.external import import_module
 numpy = import_module('numpy')
 
 libtccpath = './libtcc.so'
-dps = 17 # decimal places of float precision
+dps = 17  # decimal places of float precision
 # load libtcc TODO: better Windows support
 try:
     libtcc = ctypes.cdll.LoadLibrary(libtccpath)
@@ -112,14 +112,14 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     left = ''
     openbraces = 0
     for char in reversed(expr[:index]):
-        if char == ' ': # skip whitespaces but keep them
+        if char == ' ':  # skip whitespaces but keep them
             left = char + left
             continue
         elif char == ')':
             openbraces += 1
             left = char + left
         elif char == '(':
-            if not openbraces: # happens when operator is in braces
+            if not openbraces:  # happens when operator is in braces
                 break
             openbraces -= 1
             left = char + left
@@ -135,14 +135,14 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     right = ''
     openbraces = 0
     for char in expr[index+oplength:]:
-        if char == ' ': # skip whitespaces but keep them
+        if char == ' ':  # skip whitespaces but keep them
             right += char
             continue
         elif char == '(':
             openbraces += 1
             right += char
         elif char == ')':
-            if not openbraces: # happens when operator is in braces
+            if not openbraces:  # happens when operator is in braces
                 break
             openbraces -= 1
             right += char
@@ -247,12 +247,12 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
         fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount+1))
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
-    __run(libtcc.tcc_set_output_type(tccstate, 0)) # output to memory
+    __run(libtcc.tcc_set_output_type(tccstate, 0))  # output to memory
     ##print libtcc.tcc_add_library_path(tccstate, mathh) # could be dropped
-    __run(libtcc.tcc_add_library(tccstate, 'm')) # use math.h FIXME: Windows
+    __run(libtcc.tcc_add_library(tccstate, 'm'))  # use math.h FIXME: Windows
     # compile string
     __run(libtcc.tcc_compile_string(tccstate, code))
-    __run(libtcc.tcc_relocate(tccstate)) # fails if link error
+    __run(libtcc.tcc_relocate(tccstate))  # fails if link error
     # create C variable to get result
     symbol = ctypes.c_long()
     __run(libtcc.tcc_get_symbol(tccstate, ctypes.byref(symbol), fname))
@@ -330,15 +330,15 @@ def frange(*args, **kwargs):
     # TODO: do this better
     length = stop - start
     if length % step == 0:
-        length = length/step - 1 # exclude last one
+        length = length/step - 1  # exclude last one
     else:
         length = length//step
     if step > 0:
         if start < stop:
-            length += 1 # include first one
+            length += 1  # include first one
     else:
         if start > stop:
-            length += 1 # include first one
+            length += 1  # include first one
     if length < 0:
         length = 0
     assert length == int(length)
@@ -383,13 +383,13 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
     array will be overwritten! Make a copy before to avoid this.
     """
     # interpret arguments
-    if hasattr(array,  'ctypes'): # numpy array
+    if hasattr(array,  'ctypes'):  # numpy array
         pointer = array.ctypes.get_as_parameter()
         length = len(array)
-    elif isinstance(array,  ctypes.Array): # ctypes array
+    elif isinstance(array,  ctypes.Array):  # ctypes array
         pointer = ctypes.byref(array)
         length = len(array)
-    elif isinstance(array,  ctypes.c_void_p): # ctypes pointer FIXME
+    elif isinstance(array,  ctypes.c_void_p):  # ctypes pointer FIXME
         pointer = array
         assert isinstance(length,  int) and not length < 0
     else:

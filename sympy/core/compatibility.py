@@ -143,7 +143,7 @@ except AttributeError:
 
 try:
     from itertools import product
-except ImportError: # Python 2.5
+except ImportError:  # Python 2.5
     def product(*args, **kwds):
         """
         Cartesian product of input iterables.
@@ -178,7 +178,7 @@ except ImportError: # Python 2.5
 
 try:
     from itertools import permutations
-except ImportError: # Python 2.5
+except ImportError:  # Python 2.5
     def permutations(iterable, r=None):
         """
         Return successive r length permutations of elements in the iterable.
@@ -226,7 +226,7 @@ except ImportError: # Python 2.5
 
 try:
     from itertools import combinations, combinations_with_replacement
-except ImportError: # < python 2.6
+except ImportError:  # < python 2.6
     def combinations(iterable, r):
         """
         Return r length subsequences of elements from the input iterable.
@@ -342,7 +342,7 @@ def set_union(*sets):
 
 try:
     bin = bin
-except NameError: # Python 2.5
+except NameError:  # Python 2.5
     def bin(x):
         """
         bin(number) -> string
@@ -360,7 +360,7 @@ except NameError: # Python 2.5
 
 try:
     next = next
-except NameError: # Python 2.5
+except NameError:  # Python 2.5
     def next(*args):
         """
         next(iterator[, default])
@@ -380,7 +380,7 @@ except NameError: # Python 2.5
 
 try:
     from __builtin__ import bin
-except ImportError: # Python 2.5
+except ImportError:  # Python 2.5
     _hexDict = {
         '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
         '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',

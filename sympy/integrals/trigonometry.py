@@ -85,7 +85,7 @@ def trigintegrate(f, x):
             ff = u**n * (1-u**2)**((m-1)/2)
             uu = sin(a*x)
 
-        fi = integrate(ff, u) # XXX cyclic deps
+        fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         return fx / a
 

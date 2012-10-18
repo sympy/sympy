@@ -85,7 +85,7 @@ def _pi_coeff(arg, cycles=1):
     elif arg.is_Mul:
         cx = arg.coeff(S.Pi)
         if cx:
-            c, x = cx.as_coeff_Mul() # pi is not included as coeff
+            c, x = cx.as_coeff_Mul()  # pi is not included as coeff
             if c.is_Float:
                 # recast exact binary fractions to Rationals
                 f = abs(c) % 1
@@ -105,7 +105,7 @@ def _pi_coeff(arg, cycles=1):
                 if c2 == 1:
                     return x
                 elif not c2:
-                    if x.is_even is not None: # known parity
+                    if x.is_even is not None:  # known parity
                         return S.Zero
                     return 2*x
                 else:
@@ -300,7 +300,7 @@ class sin(TrigonometricFunction):
         from sympy import expand_mul
         arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO, implement more if deep stuff here
+        if arg.is_Add:  # TODO, implement more if deep stuff here
             # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
             sx = sin(x, evaluate=False)._eval_expand_trig()
@@ -310,7 +310,7 @@ class sin(TrigonometricFunction):
             return sx*cy + sy*cx
         else:
             n, x = arg.as_coeff_Mul(rational=True)
-            if n.is_Integer: # n will be positive because of .eval
+            if n.is_Integer:  # n will be positive because of .eval
                 # canonicalization
 
                 # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
@@ -611,7 +611,7 @@ class cos(TrigonometricFunction):
         if pi_coeff.q in cst_table_some:
             return C.chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q]).expand()
 
-        if 0 == pi_coeff.q % 2: # recursively remove powers of 2
+        if 0 == pi_coeff.q % 2:  # recursively remove powers of 2
             narg = (pi_coeff*2)*S.Pi
             nval = cos(narg)
             if None == nval:
@@ -656,7 +656,7 @@ class cos(TrigonometricFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         x = None
-        if arg.is_Add: # TODO: Do this more efficiently for more than two terms
+        if arg.is_Add:  # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
             sx = sin(x, evaluate=False)._eval_expand_trig()
             sy = sin(y, evaluate=False)._eval_expand_trig()
@@ -1514,7 +1514,7 @@ class acot(Function):
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
-            return S.Pi / 2 # FIX THIS
+            return S.Pi / 2  # FIX THIS
         elif n < 0 or n % 2 == 0:
             return S.Zero
         else:

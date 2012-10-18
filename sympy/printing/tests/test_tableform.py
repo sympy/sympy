@@ -158,7 +158,7 @@ def test_TableForm_latex():
         if i%2:
             return ('(%s)' if x < 0 else '%s') % x
         else:
-            pass # use default print
+            pass  # use default print
     s = latex(TableForm([[-1, 2], [-3, 4]],
             formats=[neg_in_paren]*2, headings=("automatic", "automatic")))
     assert s == (

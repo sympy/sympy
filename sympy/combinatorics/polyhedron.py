@@ -375,7 +375,7 @@ class Polyhedron(Basic):
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
-        obj._corners = tuple(corners) # in order given
+        obj._corners = tuple(corners)  # in order given
         obj._faces = FiniteSet(faces)
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
@@ -682,20 +682,20 @@ def _pgroup_calcs():
         return new_pgroup
 
     tetrahedron_faces = [
-        (0, 1, 2), (0, 2, 3), (0, 3, 1), # upper 3
-        (1, 2, 3), # bottom
+        (0, 1, 2), (0, 2, 3), (0, 3, 1),  # upper 3
+        (1, 2, 3),  # bottom
         ]
 
     # cw from top
     #
     _t_pgroup = [
-        Perm([[1, 2, 3], [0]]), # cw from top
-        Perm([[0, 1, 2], [3]]), # cw from front face
-        Perm([[0, 3, 2], [1]]), # cw from back right face
-        Perm([[0, 3, 1], [2]]), # cw from back left face
-        Perm([[0, 1], [2, 3]]), # through front left edge
-        Perm([[0, 2], [1, 3]]), # through front right edge
-        Perm([[0, 3], [1, 2]]), # through back edge
+        Perm([[1, 2, 3], [0]]),  # cw from top
+        Perm([[0, 1, 2], [3]]),  # cw from front face
+        Perm([[0, 3, 2], [1]]),  # cw from back right face
+        Perm([[0, 3, 1], [2]]),  # cw from back left face
+        Perm([[0, 1], [2, 3]]),  # through front left edge
+        Perm([[0, 2], [1, 3]]),  # through front right edge
+        Perm([[0, 3], [1, 2]]),  # through back edge
         ]
 
     tetrahedron = Polyhedron(
@@ -704,29 +704,29 @@ def _pgroup_calcs():
         _t_pgroup)
 
     cube_faces = [
-        (0, 1, 2, 3), # upper
-        (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4), # middle 4
-        (4, 5, 6, 7), # lower
+        (0, 1, 2, 3),  # upper
+        (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4),  # middle 4
+        (4, 5, 6, 7),  # lower
     ]
 
     # U, D, F, B, L, R = up, down, front, back, left, right
     _c_pgroup = [Perm(p) for p in
         [
-        [1, 2, 3, 0, 5, 6, 7, 4], # cw from top, U
-        [4, 0, 3, 7, 5, 1, 2, 6], # cw from F face
-        [4, 5, 1, 0, 7, 6, 2, 3], # cw from R face
+        [1, 2, 3, 0, 5, 6, 7, 4],  # cw from top, U
+        [4, 0, 3, 7, 5, 1, 2, 6],  # cw from F face
+        [4, 5, 1, 0, 7, 6, 2, 3],  # cw from R face
 
-        [1, 0, 4, 5, 2, 3, 7, 6], # cw through UF edge
-        [6, 2, 1, 5, 7, 3, 0, 4], # cw through UR edge
-        [6, 7, 3, 2, 5, 4, 0, 1], # cw through UB edge
-        [3, 7, 4, 0, 2, 6, 5, 1], # cw through UL edge
-        [4, 7, 6, 5, 0, 3, 2, 1], # cw through FL edge
-        [6, 5, 4, 7, 2, 1, 0, 3], # cw through FR edge
+        [1, 0, 4, 5, 2, 3, 7, 6],  # cw through UF edge
+        [6, 2, 1, 5, 7, 3, 0, 4],  # cw through UR edge
+        [6, 7, 3, 2, 5, 4, 0, 1],  # cw through UB edge
+        [3, 7, 4, 0, 2, 6, 5, 1],  # cw through UL edge
+        [4, 7, 6, 5, 0, 3, 2, 1],  # cw through FL edge
+        [6, 5, 4, 7, 2, 1, 0, 3],  # cw through FR edge
 
-        [0, 3, 7, 4, 1, 2, 6, 5], # cw through UFL vertex
-        [5, 1, 0, 4, 6, 2, 3, 7], # cw through UFR vertex
-        [5, 6, 2, 1, 4, 7, 3, 0], # cw through UBR vertex
-        [7, 4, 0, 3, 6, 5, 1, 2], # cw through UBL
+        [0, 3, 7, 4, 1, 2, 6, 5],  # cw through UFL vertex
+        [5, 1, 0, 4, 6, 2, 3, 7],  # cw through UFR vertex
+        [5, 6, 2, 1, 4, 7, 3, 0],  # cw through UBR vertex
+        [7, 4, 0, 3, 6, 5, 1, 2],  # cw through UBL
         ]]
 
     cube = Polyhedron(
@@ -735,8 +735,8 @@ def _pgroup_calcs():
         _c_pgroup)
 
     octahedron_faces = [
-        (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4), # top 4
-        (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5), # bottom 4
+        (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4),  # top 4
+        (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5),  # bottom 4
         ]
 
     octahedron = Polyhedron(
@@ -745,12 +745,12 @@ def _pgroup_calcs():
         _pgroup_of_double(cube, cube_faces, _c_pgroup))
 
     dodecahedron_faces = [
-         (0, 1, 2, 3, 4), # top
-         (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7), # upper 5
+         (0, 1, 2, 3, 4),  # top
+         (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7),  # upper 5
          (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
-         (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18, 12), # lower 5
+         (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18, 12),  # lower 5
          (8, 12, 18, 19, 13), (9, 13, 19, 15, 14),
-         (15, 16, 17, 18, 19) # bottom
+         (15, 16, 17, 18, 19)  # bottom
          ]
 
     def _string_to_perm(s):

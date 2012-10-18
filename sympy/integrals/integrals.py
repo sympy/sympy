@@ -138,7 +138,7 @@ class Integral(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative # limits already checked
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -325,9 +325,9 @@ class Integral(Expr):
         for xab in limits:
             if len(xab) == 1:
                 isyms.add(xab[0])
-                continue # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]: # XXX naive equality test
-                return True # integral collapsed
+                continue  # it may be removed later
+            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
+                return True  # integral collapsed
             if xab[0] in isyms:
                 # take it out of the symbols since it will be replace
                 # with whatever the limits of the integral are
@@ -660,7 +660,7 @@ class Integral(Expr):
         # There is no trivial answer, so continue
 
         undone_limits = []
-        ulj = set() # free symbols of any undone limits' upper and lower limits
+        ulj = set()  # free symbols of any undone limits' upper and lower limits
         for xab in self.limits:
             # compute uli, the free symbols in the
             # Upper and Lower limits of limit I
@@ -829,7 +829,7 @@ class Integral(Expr):
             a = b = None
             x = limit[0]
 
-        if limits: # f is the argument to an integral
+        if limits:  # f is the argument to an integral
             f = Integral(f, *tuple(limits))
 
         # assemble the pieces

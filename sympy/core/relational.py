@@ -151,7 +151,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 lhs.is_real and rhs.is_real)):
             diff = lhs - rhs
             know = diff.equals(0, failing_expression=True)
-            if know is True: # exclude failing expression case
+            if know is True:  # exclude failing expression case
                 Nlhs = S.Zero
             elif know is False:
                 from sympy import sign

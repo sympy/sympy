@@ -18,7 +18,7 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {} #See sympify docstring.
+converter = {}  # See sympify docstring.
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """

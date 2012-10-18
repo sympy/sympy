@@ -183,7 +183,7 @@ class QuotientRing(Ring):
         I = self.ring.ideal(a.data) + self.base_ideal
         try:
             return self(I.in_terms_of_generators(1)[0])
-        except ValueError: # 1 not in I
+        except ValueError:  # 1 not in I
             raise NotReversible('%s not a unit in %r' % (a, self))
 
     def is_zero(self, a):

@@ -353,7 +353,7 @@ class Line2DBaseSeries(BaseSeries):
                     return f(variables[0])
                 elif arity == 2:
                     return f(*variables[:2])
-                else: # only if the line is 3D (otherwise raises an error)
+                else:  # only if the line is 3D (otherwise raises an error)
                     return f(*variables)
         else:
             return c*np.ones(self.nb_of_points)
@@ -888,7 +888,7 @@ class MatplotlibBackend(BaseBackend):
                 else:
                     collection.set_color(s.line_color)
             if s.is_3Dsurface and s.surface_color:
-                if matplotlib.__version__ < "1.2.0": #TODO in the distant future remove this check
+                if matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
                 elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
@@ -908,7 +908,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
-        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0': #XXX in the distant future remove this check
+        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center

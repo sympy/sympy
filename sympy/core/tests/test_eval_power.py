@@ -43,12 +43,12 @@ def test_issue350():
     a = Symbol('a', real=True)
     b = Symbol('b', real=True)
     assert (a**2)**b == (abs(a)**b)**2
-    assert sqrt(1/a) != 1/sqrt(a) # e.g. for a = -1
+    assert sqrt(1/a) != 1/sqrt(a)  # e.g. for a = -1
     assert (a**3)**Rational(1, 3) != a
-    assert (x**a)**b != x**(a*b) # e.g. x = -1, a=2, b=1/2
+    assert (x**a)**b != x**(a*b)  # e.g. x = -1, a=2, b=1/2
     assert (x**.5)**b == x**(.5*b)
     assert (x**.5)**.5 == x**.25
-    assert (x**2.5)**.5 != x**1.25 # e.g. for x = 5*I
+    assert (x**2.5)**.5 != x**1.25  # e.g. for x = 5*I
 
     k = Symbol('k', integer=True)
     m = Symbol('m', integer=True)
@@ -149,7 +149,7 @@ def test_issue1263():
     x = Symbol('x')
     y = Symbol('y')
     assert ((1/(1 + x/3))**(-S.One)).as_numer_denom() == (3 + x, 3)
-    notp = Symbol('notp', positive=False) # not positive does not imply real
+    notp = Symbol('notp', positive=False)  # not positive does not imply real
     b = ((1 + x/notp)**-2)
     assert (b**(-y)).as_numer_denom() == (1, b**y)
     assert (b**(-S.One)).as_numer_denom() == ((notp + x)**2, notp**2)
@@ -232,7 +232,7 @@ def test_issue_3109():
     from sympy import root, Rational
     I = S.ImaginaryUnit
     assert sqrt(33**(9*I/10)) == -33**(9*I/20)
-    assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3) # != 2*I/3
+    assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
     assert sqrt(exp(3*I)) == exp(3*I/2)
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)

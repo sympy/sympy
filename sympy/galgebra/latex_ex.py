@@ -961,7 +961,7 @@ class LatexPrinter(Printer):
     def _print_Matrix(self, expr):
         lines = []
 
-        for line in range(expr.lines): # horrible, should be 'rows'
+        for line in range(expr.lines):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
         if self._inline:
@@ -1060,7 +1060,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
     line = i.next()
 
     while True:
-        if '$' in line: #Inline math expression(s)
+        if '$' in line:  # Inline math expression(s)
             if len(line) > 0:
                 line += '\\newline \n'
             body += line
@@ -1069,7 +1069,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
             except StopIteration:
                 break
 
-        elif '%' in line: #Raw LaTeX input
+        elif '%' in line:  # Raw LaTeX input
             """
             If % in line assume line is beginning of raw LaTeX input and stop
             post processing
@@ -1093,7 +1093,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 except StopIteration:
                     break
 
-        elif '#' in line: #Array input
+        elif '#' in line:  # Array input
             """
             If # in line assume line is beginning of array input and contains
             \begin{array} statement
@@ -1119,7 +1119,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 except StopIteration:
                     break
 
-        elif '@' in line: #Align input
+        elif '@' in line:  # Align input
             """
             If @ in line assume line is beginning of align input
             """
@@ -1151,9 +1151,9 @@ def xdvi(filename='tmplatex.tex', debug=False):
                     break
 
         else:
-            if '=' in line: #Single line equation
+            if '=' in line:  # Single line equation
                 line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
-            else: #Text with no math expression(s)unless \ or _ in line
+            else:  # Text with no math expression(s)unless \ or _ in line
                 if '\\' in line or '_' in line or '^' in line:
                     line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
                 else:
@@ -1183,9 +1183,9 @@ def xdvi(filename='tmplatex.tex', debug=False):
         xdvi_str = 'yap'
 
     if latex_str is not None and xdvi_str is not None:
-        if debug: #Display latex excution output for debugging purposes
+        if debug:  # Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
-        else: #Works for Linux don't know about Windows
+        else:  # Works for Linux don't know about Windows
             if sys.platform.startswith('linux'):
                 os.system(latex_str+' '+filename[:-4]+' > /dev/null')
             else:

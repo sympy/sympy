@@ -59,7 +59,7 @@ def fuzzy_and(*args):
                 ai = fuzzy_bool(ai)
                 if ai is False:
                     return False
-                if rv: # this will stop updating if a None is ever trapped
+                if rv:  # this will stop updating if a None is ever trapped
                     rv = ai
             return rv
     if not args:

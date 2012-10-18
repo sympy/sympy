@@ -161,7 +161,7 @@ class Dict(Basic):
         elements = frozenset(items)
         obj = Basic.__new__(cls, elements)
         obj.elements = elements
-        obj._dict = dict(items) # In case Tuple decides it wants to sympify
+        obj._dict = dict(items)  # In case Tuple decides it wants to sympify
         return obj
 
     def __getitem__(self, key):

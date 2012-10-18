@@ -41,4 +41,4 @@ class Transpose(MatrixExpr):
 
     def _eval_trace(self):
         from trace import Trace
-        return Trace(self.arg) # Trace(X.T) => Trace(X)
+        return Trace(self.arg)  # Trace(X.T) => Trace(X)

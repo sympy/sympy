@@ -118,7 +118,7 @@ class AssocOp(Expr):
         new_seq = []
         while seq:
             o = seq.pop()
-            if o.__class__ is cls: # classes must match exactly
+            if o.__class__ is cls:  # classes must match exactly
                 seq.extend(o.args)
             else:
                 new_seq.append(o)

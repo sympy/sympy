@@ -226,8 +226,8 @@ def rubik(n):
             return p
         g.append(Permutation(p))
 
-    g = [] # container for the group's permutations
-    I = range(6*n**2) # the identity permutation used for checking
+    g = []  # container for the group's permutations
+    I = range(6*n**2)  # the identity permutation used for checking
 
     # define permutations corresonding to cw rotations of the planes
     # up TO the last plane from that direction; by not including the
@@ -237,7 +237,7 @@ def rubik(n):
     for i in range(n-1):
         fcw(i)
         perm()
-        fccw(i) # restore
+        fccw(i)  # restore
     assert perm(1) == I
 
     # R slices

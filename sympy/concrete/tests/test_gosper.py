@@ -143,7 +143,7 @@ def test_gosper_sum_AeqB_part3():
     g3c = 2**m/m**2 - 2
     g3d = S(2)/3 + 4**(m + 1)*(m - 1)/(m + 2)/3
     # g3e -> no closed form
-    g3f = -(-S(1)/16 + 1/((m - 2)**2*(m + 1)**2)) # the AeqB key is wrong
+    g3f = -(-S(1)/16 + 1/((m - 2)**2*(m + 1)**2))  # the AeqB key is wrong
     g3g = -S(2)/9 + 2**(m + 1)/((m + 1)**2*(m + 3)**2)
 
     g = gosper_sum(f3a, (n, 1, m))

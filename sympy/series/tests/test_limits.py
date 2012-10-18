@@ -233,7 +233,7 @@ def test_issue2084():
         try:
             assert limit(eq, x, 0, dir=d) == res
         except AssertionError:
-            if 0: # change to 1 if you want to see the failing tests
+            if 0:  # change to 1 if you want to see the failing tests
                 print
                 print i, res, eq, d, limit(eq, x, 0, dir=d)
             else:
@@ -264,7 +264,7 @@ def test_issue1447():
         try:
             assert limit(eq, x, l, dir=d) == res
         except AssertionError:
-            if 0: # change to 1 if you want to see the failing tests
+            if 0:  # change to 1 if you want to see the failing tests
                 print
                 print i, res, eq, l, d, limit(eq, x, l, dir=d)
             else:

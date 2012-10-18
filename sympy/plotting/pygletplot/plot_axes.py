@@ -127,7 +127,7 @@ class PlotAxesBase(PlotObject):
         self.draw_axis(0, color[0])
 
     def draw_background(self, color):
-        pass # optional
+        pass  # optional
 
     def draw_axis(self, axis, color):
         raise NotImplementedError()

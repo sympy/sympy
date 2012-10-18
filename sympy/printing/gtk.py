@@ -10,7 +10,7 @@ def print_gtk(x, start_viewer=True):
     Needs libgtkmathview-bin"""
     from sympy.utilities.mathml import c2p
 
-    tmp = tempfile.mktemp() # create a temp file to store the result
+    tmp = tempfile.mktemp()  # create a temp file to store the result
     with open(tmp, 'wb') as file:
         file.write( c2p(mathml(x), simple=True) )
 

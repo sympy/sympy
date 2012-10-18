@@ -93,7 +93,7 @@ def test_cdf():
     assert P(X<1) == d(1)
     assert d(0) == S.Half
 
-    d = cdf(X, X>0) # given X>0
+    d = cdf(X, X>0)  # given X>0
     assert d(0) == 0
 
     Y = Exponential('y', 10)
@@ -117,7 +117,7 @@ def test_sample():
 
 def test_ContinuousRV():
     x = Symbol('x')
-    pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
+    pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
     X = ContinuousRV(x, pdf)
     Y = Normal('y', 0, 1)
@@ -276,7 +276,7 @@ def test_lognormal():
     assert density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
                                     /(2*sigma**2))/(2*_x*sqrt(pi)*sigma)))
 
-    X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
+    X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
 
 
@@ -426,13 +426,13 @@ def test_input_value_assertions():
 
     raises(ValueError, lambda: Normal('x', 3, 0))
     raises(ValueError, lambda: Normal('x', a, b))
-    Normal('X', a, p) # No error raised
+    Normal('X', a, p)  # No error raised
     raises(ValueError, lambda: Exponential('x', a))
-    Exponential('Ex', p) # No error raised
+    Exponential('Ex', p)  # No error raised
     for fn in [Pareto, Weibull, Beta, Gamma]:
         raises(ValueError, lambda: fn('x', a, p))
         raises(ValueError, lambda: fn('x', p, a))
-        fn('x', p, q) # No error raised
+        fn('x', p, q)  # No error raised
 
 @XFAIL
 def test_unevaluated():

@@ -284,9 +284,9 @@ class KanesMethod(object):
                 self._f_dnh = diffconeqs.subs(udotzero)
                 self._k_dnh = (diffconeqs - self._f_dnh).jacobian(udot)
 
-            o = len(u) # number of generalized speeds
-            m = len(udep) # number of motion constraints
-            p = o - m # number of independent speeds
+            o = len(u)  # number of generalized speeds
+            m = len(udep)  # number of motion constraints
+            p = o - m  # number of independent speeds
             # For a reminder, form of non-holonomic constraints is:
             # B u + C = 0
             B = self._k_nh[:m, :]
@@ -366,8 +366,8 @@ class KanesMethod(object):
         N = self._inertial
         self._forcelist = fl[:]
         u = self._u
-        o = len(u) # number of gen. speeds
-        b = len(fl) # number of forces
+        o = len(u)  # number of gen. speeds
+        b = len(fl)  # number of forces
 
         FR = zeros(o, 1)
 
@@ -390,7 +390,7 @@ class KanesMethod(object):
                 FR[i] -= partials[j][i] & f_list[j]
 
         # In case there are dependent speeds
-        m = len(self._udep) # number of dependent speeds
+        m = len(self._udep)  # number of dependent speeds
         if m != 0:
             p = o - m
             FRtilde = FR[:p, 0]
@@ -420,8 +420,8 @@ class KanesMethod(object):
         t = dynamicsymbols._t
         N = self._inertial
         self._bodylist = bl
-        u = self._u # all speeds
-        udep = self._udep # dependent speeds
+        u = self._u  # all speeds
+        udep = self._udep  # dependent speeds
         o = len(u)
         m = len(udep)
         p = o - m
@@ -641,15 +641,15 @@ class KanesMethod(object):
                 raise ValueError('Cannot have derivatives of specified '
                                  'quantities when linearizing forcing terms.')
 
-        o = len(self._u) # number of speeds
-        n = len(self._q) # number of coordinates
-        l = len(self._qdep) # number of configuration constraints
-        m = len(self._udep) # number of motion constraints
-        qi = Matrix(self._q[: n - l]) # independent coords
-        qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
-        ui = Matrix(self._u[: o - m]) # independent speeds
-        ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
-        qdot = Matrix(self._qdot) # time derivatives of coordinates
+        o = len(self._u)  # number of speeds
+        n = len(self._q)  # number of coordinates
+        l = len(self._qdep)  # number of configuration constraints
+        m = len(self._udep)  # number of motion constraints
+        qi = Matrix(self._q[: n - l])  # independent coords
+        qd = Matrix(self._q[n - l: n])  # dependent coords; could be empty
+        ui = Matrix(self._u[: o - m])  # independent speeds
+        ud = Matrix(self._u[o - m: o])  # dependent speeds; could be empty
+        qdot = Matrix(self._qdot)  # time derivatives of coordinates
 
         # with equations in the form MM udot = forcing, expand that to:
         # MM_full [q,u].T = forcing_full. This combines coordinates and

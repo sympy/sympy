@@ -464,7 +464,7 @@ class PrettyPrinter(Printer):
 
         prettyF = self._print(f)
 
-        if f.is_Add: # add parens
+        if f.is_Add:  # add parens
             prettyF = prettyForm(*prettyF.parens())
 
         H = prettyF.height() + 2
@@ -597,7 +597,7 @@ class PrettyPrinter(Printer):
             D = prettyForm(*D.below(D_row))
 
         if D is None:
-            D = prettyForm('') # Empty Matrix
+            D = prettyForm('')  # Empty Matrix
 
         return D
 
@@ -1017,8 +1017,8 @@ class PrettyPrinter(Printer):
         return prettyForm.__add__(*pforms)
 
     def _print_Mul(self, product):
-        a = [] # items in the numerator
-        b = [] # items that are in the denominator (if any)
+        a = []  # items in the numerator
+        b = []  # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
             args = product.as_ordered_factors()
@@ -1631,5 +1631,5 @@ def pager_print(expr, **settings):
     from pydoc import pager
     from locale import getpreferredencoding
     if 'num_columns' not in settings:
-        settings['num_columns'] = 500000 # disable line wrap
+        settings['num_columns'] = 500000  # disable line wrap
     pager(pretty(expr, **settings).encode(getpreferredencoding()))

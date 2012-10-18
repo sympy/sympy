@@ -852,7 +852,7 @@ def do_integral(expr, prec, options):
         re = result.real._mpf_
         if re == fzero:
             re, re_acc = scaled_zero(min(-prec, -max_real_term[0], -quadrature_error))
-            re = scaled_zero(re) # handled ok in evalf_integral
+            re = scaled_zero(re)  # handled ok in evalf_integral
         else:
             re_acc = -max(max_real_term[0] - fastlog(re) - prec, quadrature_error)
     else:
@@ -862,7 +862,7 @@ def do_integral(expr, prec, options):
         im = result.imag._mpf_
         if im == fzero:
             im, im_acc = scaled_zero(min(-prec, -max_imag_term[0], -quadrature_error))
-            im = scaled_zero(im) # handled ok in evalf_integral
+            im = scaled_zero(im)  # handled ok in evalf_integral
         else:
             im_acc = -max(max_imag_term[0] - fastlog(im) - prec, quadrature_error)
     else:
@@ -1015,7 +1015,7 @@ def evalf_sum(expr, prec, options):
         err = fastlog(evalf(abs(err), 20, options)[0])
         try:
             re, im, re_acc, im_acc = evalf(s, prec2, options)
-        except TypeError: # issue 3174
+        except TypeError:  # issue 3174
             # when should it try subs if they are in options?
             raise NotImplementedError
         if re_acc is None:
@@ -1123,7 +1123,7 @@ def evalf(x, prec, options):
     if options.get("verbose"):
         print "### input", x
         print "### output", to_str(r[0] or fzero, 50)
-        print "### raw", r#r[0], r[2]
+        print "### raw", r  # r[0], r[2]
         print
     chop = options.get('chop', False)
     if chop:

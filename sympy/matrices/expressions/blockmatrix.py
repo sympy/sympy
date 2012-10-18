@@ -303,7 +303,7 @@ def block_collapse(expr):
     for i in range(len(args)):
         arg = args[i]
         newarg = block_collapse(arg)
-        while(newarg != arg): # Repeat until no new changes
+        while(newarg != arg):  # Repeat until no new changes
             arg = newarg
             newarg = block_collapse(arg)
         args[i] = newarg

@@ -546,7 +546,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             try:
                 sol = dsolve(eq, func, hint=i, simplify=simplify, prep=prep,
                    classify=False, order=hints['order'], match=hints[i])
-            except NotImplementedError, detail: # except NotImplementedError as detail:
+            except NotImplementedError, detail:  # except NotImplementedError as detail:
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
@@ -562,14 +562,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
         retdict['order'] = sympify(hints['order'])
         retdict.update(failedhints)
         return retdict
-    elif hint not in allhints: # and hint not in ('default', 'ordered_hints'):
+    elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
     elif hint not in hints:
         raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
     elif hint.endswith('_Integral'):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint] # convert the string into a function
+        solvefunc = globals()['ode_' + hint]  # convert the string into a function
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
@@ -578,7 +578,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     else:
         # We still want to integrate (you can disable it separately with the hint)
         r = hints[hint]
-        r['simplify'] = False # Some hints can take advantage of this option
+        r['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     return rv
@@ -776,7 +776,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
         # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1: # See issue 1577
+        if r and r[c] != 0 and r[n] != 1:  # See issue 1577
             r['a'] = a
             r['b'] = b
             r['c'] = c
@@ -1273,7 +1273,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     if not s:
         return (True, s)
-    elif s is True: # The code above never was able to change s
+    elif s is True:  # The code above never was able to change s
         raise NotImplementedError("Unable to test if " + str(sol) + \
             " is a solution to " + str(ode) + ".")
     else:
@@ -1537,7 +1537,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                         con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
-        if expr.is_Mul: # check again that it's still a Mul
+        if expr.is_Mul:  # check again that it's still a Mul
             i, d = expr.as_independent(x, strict=True)
             newi = _take(i)
             if newi != i:
@@ -1604,7 +1604,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         if hasconst:
             newargs = [i for i in newargs if i.has(x)]
             if isPowExp:
-                newargs = newargs + [newconst] # Order matters in this case
+                newargs = newargs + [newconst]  # Order matters in this case
             else:
                 newargs = [newconst] + newargs
         if expr.is_Pow and len(newargs) == 1:
@@ -1733,7 +1733,7 @@ def _handle_Integral(expr, func, order, hint):
             if not i.has(x0) and not i.has(y0):
                 sol += i
         assert sol != 0
-        sol = Eq(sol.subs(y, f(x)), expr.rhs) # expr.rhs == C1
+        sol = Eq(sol.subs(y, f(x)), expr.rhs)  # expr.rhs == C1
         del exactvars
     elif hint == "1st_exact_Integral":
         # FIXME: We still need to back substitute y
@@ -1852,11 +1852,11 @@ def ode_1st_exact(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match # d+e*diff(f(x),x)
+    r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     x0 = Dummy('x0')
     y0 = Dummy('y0')
-    global exactvars # This is the only way to pass these dummy variables to
+    global exactvars  # This is the only way to pass these dummy variables to
     # _handle_Integral
     exactvars = {'y0': y0, 'x0': x0, 'y': r['y']}
     # If we ever get a Constant class, x0 and y0 should be constants, I think
@@ -1993,8 +1993,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u1 = Dummy('u1') # u1 == f(x)/x
-    r = match # d+e*diff(f(x),x)
+    u1 = Dummy('u1')  # u1 == f(x)/x
+    r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral((-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
@@ -2078,8 +2078,8 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    u2 = Dummy('u2') # u2 == x/f(x)
-    r = match # d+e*diff(f(x),x)
+    u2 = Dummy('u2')  # u2 == x/f(x)
+    r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral(simplify((-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x: u2, r['y']: 1})),
         (u2, None, x/f(x)))
@@ -2164,10 +2164,10 @@ def homogeneous_order(eq, *symbols):
         return None
 
     # make the replacement of x with x*t and see if t can be factored out
-    t = Dummy('t', positive=True) # It is sufficient that t > 0
+    t = Dummy('t', positive=True)  # It is sufficient that t > 0
     eqs = separatevars(eq.subs([(i, t*i) for i in symset]), [t], dict=True)[t]
     if eqs is S.One:
-        return S.Zero # there was no term with only t
+        return S.Zero  # there was no term with only t
     i, d = eqs.as_independent(t, as_Add=False)
     b, e = d.as_base_exp()
     if b == t:
@@ -2223,7 +2223,7 @@ def ode_1st_linear(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match # a*diff(f(x),x) + b*f(x) + c
+    r = match  # a*diff(f(x),x) + b*f(x) + c
     C1 = Symbol('C1')
     t = exp(C.Integral(r[r['b']]/r[r['a']], x))
     tt = C.Integral(t*(-r[r['c']]/r[r['a']]), x)
@@ -2304,7 +2304,7 @@ def ode_Bernoulli(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    r = match # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
+    r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
     C1 = Symbol('C1')
     t = exp((1-r[r['n']])*C.Integral(r[r['b']]/r[r['a']], x))
     tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']], x)
@@ -2348,7 +2348,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
 
     x = func.args[0]
     f = func.func
-    r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
+    r = match  # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
     a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
     C1 = Symbol('C1')
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
@@ -2412,7 +2412,7 @@ def ode_Liouville(eq, func, order, match):
     # http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
     x = func.args[0]
     f = func.func
-    r = match # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
+    r = match  # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
     y = r['y']
     C1 = Symbol('C1')
     C2 = Symbol('C2')
@@ -2694,7 +2694,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
         " solutions to the homogeneous equation nessesary to apply " + \
         "undetermined coefficients to " + str(eq) + " (number of terms != order)")
     usedsin = set([])
-    mult = 0 # The multiplicity of the root
+    mult = 0  # The multiplicity of the root
     getmult = True
     for i, reroot, imroot in collectterms:
         if getmult:
@@ -2793,7 +2793,7 @@ def _undetermined_coefficients_match(expr, x):
     from sympy import S
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
-    expr = powsimp(expr, combine='exp') # exp(x)*exp(2*x + 1) => exp(3*x + 1)
+    expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
     retdict = {}
     def _test_term(expr, x):
         """
@@ -2996,7 +2996,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     wr = wronskian(gensols, x)
 
     if r.get('simplify', True):
-        wr = simplify(wr) # We need much better simplification for some ODEs.
+        wr = simplify(wr)  # We need much better simplification for some ODEs.
         #                   See issue 1563, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
@@ -3079,7 +3079,7 @@ def ode_separable(eq, func, order, match):
     x = func.args[0]
     f = func.func
     C1 = Symbol('C1')
-    r = match # {'m1':m1, 'm2':m2, 'y':y}
+    r = match  # {'m1':m1, 'm2':m2, 'y':y}
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)

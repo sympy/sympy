@@ -174,7 +174,7 @@ class _JGraph(object):
         """
         vertex = self.vertex
         self.jgs += 1
-        jgslot = self.freejg.pop() # the last free generator place
+        jgslot = self.freejg.pop()  # the last free generator place
         self.jg[jgslot] = g
         nn = len(vertex[i].neighbor)
         vertex[i].neighbor.append(gi)
@@ -282,7 +282,7 @@ class _JGraph(object):
         self.jgs -= 1
         jgslot = vertex[i].perm[ vertex[i].index_neighbor[gi] ]
         self.jg[jgslot] = None
-        self.freejg.append(jgslot) # now we gained a free place
+        self.freejg.append(jgslot)  # now we gained a free place
 
         for i1, i2 in ((i, gi), (gi, i)):
             v = vertex[i1]
@@ -2101,10 +2101,10 @@ class PermutationGroup(Basic):
         >>> G3.is_transitive() or G3.is_transitive(strict=False)
         False
         """
-        if self._is_transitive: # strict or not, if True then True
+        if self._is_transitive:  # strict or not, if True then True
             return self._is_transitive
         if strict:
-            if self._is_transitive is not None: # we only store strict=True
+            if self._is_transitive is not None:  # we only store strict=True
                 return self._is_transitive
 
             ans = len(self.orbit(0)) == self.degree
@@ -2574,7 +2574,7 @@ class PermutationGroup(Basic):
         >>> G.orbits()
         [set([0, 2, 3, 4, 6]), set([1, 5])]
         """
-        seen = set() # elements that have already appeared in orbits
+        seen = set()  # elements that have already appeared in orbits
         orbs = []
         sorted_I = range(self._degree)
         I = set(sorted_I)
@@ -2988,7 +2988,7 @@ class PermutationGroup(Basic):
                     if gen(new) != new:
                         break
                 else:
-                    assert None # can this ever happen?
+                    assert None  # can this ever happen?
                 _base.append(new)
         # distribute generators according to basic stabilizers
         strong_gens_distr = _distribute_gens_by_base(_base, _gens)

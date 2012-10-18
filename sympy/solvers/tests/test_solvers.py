@@ -31,31 +31,31 @@ def guess_solve_strategy(eq, symbol):
 
 def test_guess_poly():
     # polynomial equations
-    assert guess_solve_strategy( S(4), x ) #== GS_POLY
-    assert guess_solve_strategy( x, x ) #== GS_POLY
-    assert guess_solve_strategy( x + a, x ) #== GS_POLY
-    assert guess_solve_strategy( 2*x, x ) #== GS_POLY
-    assert guess_solve_strategy( x + sqrt(2), x) #== GS_POLY
-    assert guess_solve_strategy( x + 2**Rational(1, 4), x) #== GS_POLY
-    assert guess_solve_strategy( x**2 + 1, x ) #== GS_POLY
-    assert guess_solve_strategy( x**2 - 1, x ) #== GS_POLY
-    assert guess_solve_strategy( x*y + y, x ) #== GS_POLY
-    assert guess_solve_strategy( x*exp(y) + y, x) #== GS_POLY
-    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), x) #== GS_POLY
+    assert guess_solve_strategy( S(4), x )  # == GS_POLY
+    assert guess_solve_strategy( x, x )  # == GS_POLY
+    assert guess_solve_strategy( x + a, x )  # == GS_POLY
+    assert guess_solve_strategy( 2*x, x )  # == GS_POLY
+    assert guess_solve_strategy( x + sqrt(2), x)  # == GS_POLY
+    assert guess_solve_strategy( x + 2**Rational(1, 4), x)  # == GS_POLY
+    assert guess_solve_strategy( x**2 + 1, x )  # == GS_POLY
+    assert guess_solve_strategy( x**2 - 1, x )  # == GS_POLY
+    assert guess_solve_strategy( x*y + y, x )  # == GS_POLY
+    assert guess_solve_strategy( x*exp(y) + y, x)  # == GS_POLY
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), x)  # == GS_POLY
 
 def test_guess_poly_cv():
     # polynomial equations via a change of variable
-    assert guess_solve_strategy( sqrt(x) + 1, x ) #== GS_POLY_CV_1
-    assert guess_solve_strategy( x**Rational(1, 3) + sqrt(x) + 1, x ) #== GS_POLY_CV_1
-    assert guess_solve_strategy( 4*x*(1 - sqrt(x)), x ) #== GS_POLY_CV_1
+    assert guess_solve_strategy( sqrt(x) + 1, x )  # == GS_POLY_CV_1
+    assert guess_solve_strategy( x**Rational(1, 3) + sqrt(x) + 1, x )  # == GS_POLY_CV_1
+    assert guess_solve_strategy( 4*x*(1 - sqrt(x)), x )  # == GS_POLY_CV_1
 
     # polynomial equation multiplying both sides by x**n
-    assert guess_solve_strategy( x + 1/x + y, x ) #== GS_POLY_CV_2
+    assert guess_solve_strategy( x + 1/x + y, x )  # == GS_POLY_CV_2
 
 def test_guess_rational_cv():
     # rational functions
-    assert guess_solve_strategy( (x+1)/(x**2 + 2), x) #== GS_RATIONAL
-    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y) #== GS_RATIONAL_CV_1
+    assert guess_solve_strategy( (x+1)/(x**2 + 2), x)  # == GS_RATIONAL
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y)  # == GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
     assert guess_solve_strategy( (sqrt(x) + 1)/(x**Rational(1, 3) + sqrt(x) + 1), x ) \
@@ -63,13 +63,13 @@ def test_guess_rational_cv():
 
 def test_guess_transcendental():
     #transcendental functions
-    assert guess_solve_strategy( exp(x) + 1, x ) #== GS_TRANSCENDENTAL
-    assert guess_solve_strategy( 2*cos(x)-y, x ) #== GS_TRANSCENDENTAL
-    assert guess_solve_strategy( exp(x) + exp(-x) - y, x ) #== GS_TRANSCENDENTAL
-    assert guess_solve_strategy(3**x-10, x) #== GS_TRANSCENDENTAL
-    assert guess_solve_strategy(-3**x+10, x) #== GS_TRANSCENDENTAL
+    assert guess_solve_strategy( exp(x) + 1, x )  # == GS_TRANSCENDENTAL
+    assert guess_solve_strategy( 2*cos(x)-y, x )  # == GS_TRANSCENDENTAL
+    assert guess_solve_strategy( exp(x) + exp(-x) - y, x )  # == GS_TRANSCENDENTAL
+    assert guess_solve_strategy(3**x-10, x)  # == GS_TRANSCENDENTAL
+    assert guess_solve_strategy(-3**x+10, x)  # == GS_TRANSCENDENTAL
 
-    assert guess_solve_strategy(a*x**b-y, x) #== GS_TRANSCENDENTAL
+    assert guess_solve_strategy(a*x**b-y, x)  # == GS_TRANSCENDENTAL
 
 def test_solve_args():
     #implicit symbol to solve for
@@ -435,7 +435,7 @@ def test_issue_2098():
     assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
     x = Symbol('x', positive=True)
     y = Symbol('y')
-    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == [] # not {x: -3, y: 1} b/c x is positive
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []  # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
@@ -953,7 +953,7 @@ def test_issue_2574():
 def test_exclude():
     R, C, Ri, Vout, V1, Vminus, Vplus, s = \
         symbols('R, C, Ri, Vout, V1, Vminus, Vplus, s')
-    Rf = symbols('Rf', positive=True) # to eliminate Rf = 0 soln
+    Rf = symbols('Rf', positive=True)  # to eliminate Rf = 0 soln
     eqs = [C*V1*s + Vplus*(-2*C*s - 1/R),
            Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
            C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,

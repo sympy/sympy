@@ -445,18 +445,18 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     5
     """
 
-    if not random_symbols(expr): # expr isn't random?
+    if not random_symbols(expr):  # expr isn't random?
         return expr
-    if numsamples: # Computing by monte carlo sampling?
+    if numsamples:  # Computing by monte carlo sampling?
         return sampling_E(expr, condition, numsamples=numsamples, **kwargs)
 
     # Create new expr and recompute E
-    if condition is not None: # If there is a condition
+    if condition is not None:  # If there is a condition
         return expectation(given(expr, condition, **kwargs), **kwargs)
 
     # A few known statements for efficiency
 
-    if expr.is_Add: # We know that E is Linear
+    if expr.is_Add:  # We know that E is Linear
         return Add(*[expectation(arg, **kwargs) for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
@@ -496,7 +496,7 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
     if numsamples:
         return sampling_P(condition, given_condition, numsamples=numsamples,
                 **kwargs)
-    if given_condition is not None: # If there is a condition
+    if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
@@ -530,7 +530,7 @@ def density(expr, condition=None, **kwargs):
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
-    if condition is not None: # If there is a condition
+    if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return density(given(expr, condition, **kwargs), **kwargs)
 
@@ -567,7 +567,7 @@ def cdf(expr, condition=None, **kwargs):
     >>> cdf(X)
     Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
     """
-    if condition is not None: # If there is a condition
+    if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return cdf(given(expr, condition, **kwargs), **kwargs)
 
@@ -597,7 +597,7 @@ def where(condition, given_condition=None, **kwargs):
     >>> where(And(D1<=D2 , D2<3))
     Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
     """
-    if given_condition is not None: # If there is a condition
+    if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)
 
@@ -669,7 +669,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
     try:
-        d = ps.sample() # a dictionary that maps RVs to values
+        d = ps.sample()  # a dictionary that maps RVs to values
         args = [d[rv] for rv in rvs]
         fn(*args)
         if condition:
@@ -680,14 +680,14 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     def return_generator():
         count = 0
         while count < numsamples:
-            d = ps.sample() # a dictionary that maps RVs to values
+            d = ps.sample()  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
-            if condition: # Check that these values satisfy the condition
+            if condition:  # Check that these values satisfy the condition
                 gd = given_fn(*args)
                 if not isinstance(gd, bool):
                     raise ValueError("Conditions must not contain free symbols")
-                if gd == False: # If the values don't satisfy then try again
+                if gd == False:  # If the values don't satisfy then try again
                     continue
 
             yield fn(*args)
@@ -708,14 +708,14 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     count = 0
 
     while count < numsamples:
-        d = ps.sample() # a dictionary that maps RVs to values
+        d = ps.sample()  # a dictionary that maps RVs to values
 
 
-        if condition: # Check that these values satisfy the condition
+        if condition:  # Check that these values satisfy the condition
             gd = condition.subs(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
-            if gd == False: # If the values don't satisfy then try again
+            if gd == False:  # If the values don't satisfy then try again
                 continue
 
         yield expr.subs(d)

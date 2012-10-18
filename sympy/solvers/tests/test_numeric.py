@@ -13,7 +13,7 @@ def test_nsolve():
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
     # Issue 1730
-    assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
+    assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
     x2 = Symbol('x2')
@@ -39,7 +39,7 @@ def test_nsolve():
         assert mnorm(F(*root), 1) <= 1.e-8
         return root
     assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
-    assert nsolve([Eq(f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1)) # just see that it works
+    assert nsolve([Eq(f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
     assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
         mpf('0.31883011387318591'))

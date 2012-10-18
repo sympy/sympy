@@ -62,7 +62,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     pre, post, repetend = match.groups()
 
                     zeros = '0'*len(post)
-                    post, repetends = [w.lstrip('0') for w in [post, repetend]] # or else interpreted as octal
+                    post, repetends = [w.lstrip('0') for w in [post, repetend]]  # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
@@ -159,7 +159,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         hit = kern in s
 
     code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
-    expr = eval(code, global_dict, local_dict) # take local objects in preference
+    expr = eval(code, global_dict, local_dict)  # take local objects in preference
 
     if not hit:
         return expr

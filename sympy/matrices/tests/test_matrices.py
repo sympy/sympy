@@ -421,7 +421,7 @@ def test_random():
     M = randMatrix(3, symmetric=True)
     S = M.copy()
     S.simplify()
-    assert S == M # doesn't fail when elements are Numbers, not int
+    assert S == M  # doesn't fail when elements are Numbers, not int
 
 def test_LUdecomp():
     testmat = Matrix([[0, 2, 5, 3],
@@ -879,7 +879,7 @@ def test_col_row_op():
     r1 = M.row(0)
     r1[0] = 42
     assert M[0, 0] == x + 1
-    r1 = M[0, :-1] # also testing negative slice
+    r1 = M[0, :-1]  # also testing negative slice
     r1[0] = 42
     assert M[0, 0] == x + 1
     c1 = M.col(0)
@@ -1643,8 +1643,7 @@ def test_matrix_norm():
                 assert ((alpha*M).norm(order) ==
                         abs(alpha) * M.norm(order))
             except NotImplementedError:
-                pass
-                # Some Norms fail on symbolic matrices due to Max issue
+                pass  # Some Norms fail on symbolic matrices due to Max issue
 
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
@@ -1662,7 +1661,7 @@ def test_matrix_norm():
         if order > 0:
             assert Matrix([0, 0, 0]).norm(order) == S(0)
         # Triangle inequality on all pairs
-        if order >= 1: # Triangle InEq holds only for these norms
+        if order >= 1:  # Triangle InEq holds only for these norms
             for v in L:
                 for w in L:
                     assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
@@ -1673,8 +1672,7 @@ def test_matrix_norm():
                     assert simplify(  (alpha*v).norm(order) -
                             (abs(alpha) * v.norm(order))  ) == 0
                 except NotImplementedError:
-                    pass
-                    # Some Norms fail on symbolics due to Max issue
+                    pass  # Some Norms fail on symbolics due to Max issue
 
 def test_singular_values():
     x = Symbol('x', real=True)
@@ -1763,7 +1761,7 @@ def test_zeros_eye():
     z = Matrix([[0, 0], [0, 0]])
     for cls in classes:
         m = cls.eye(2)
-        assert i == m # but m == i will fail if m is immutable
+        assert i == m  # but m == i will fail if m is immutable
         assert i == eye(2, cls=cls)
         assert type(m) == cls
         m = cls.zeros(2)

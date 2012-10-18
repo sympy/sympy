@@ -207,7 +207,7 @@ class Mul(AssocOp):
                 if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                elif coeff.is_Number: # it could be zoo
+                elif coeff.is_Number:  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
@@ -242,7 +242,7 @@ class Mul(AssocOp):
                     # the exponent is an integer
                     if e.is_Rational:
                         if e.is_Integer:
-                            coeff *= Pow(b, e) # it is an unevaluated power
+                            coeff *= Pow(b, e)  # it is an unevaluated power
                             continue
                         elif e.is_negative:    # also a sign of an unevaluated power
                             seq.append(Pow(b, e))
@@ -325,7 +325,7 @@ class Mul(AssocOp):
         # gather exponents of common bases...
         def _gather(c_powers):
             new_c_powers = []
-            common_b = {} # b:e
+            common_b = {}  # b:e
             for b, e in c_powers:
                 co = e.as_coeff_Mul()
                 common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
@@ -402,7 +402,7 @@ class Mul(AssocOp):
         # extract gcd of bases in num_rat
         # 2**(1/3)*6**(1/4) -> 2**(1/3+1/4)*3**(1/4)
         pnew = {}
-        i = 0 # steps through num_rat which may grow
+        i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
             grow = []
@@ -417,7 +417,7 @@ class Mul(AssocOp):
                         coeff *= Pow(g, e)
                     else:
                         if e.p > e.q:
-                            e_i, ep = divmod(e.p, e.q) # change e in place
+                            e_i, ep = divmod(e.p, e.q)  # change e in place
                             coeff *= Pow(g, e_i)
                             e = Rational(ep, e.q)
                         grow.append((g, e))
@@ -432,8 +432,8 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul: # sqrt(12) -> 2*sqrt(3)
-                        c, obj = obj.args # expecting only 2 args
+                    if obj.is_Mul:  # sqrt(12) -> 2*sqrt(3)
+                        c, obj = obj.args  # expecting only 2 args
                         coeff *= c
                         assert obj.is_Pow
                         bi, ei = obj.args
@@ -709,7 +709,7 @@ class Mul(AssocOp):
 
         terms = [Mul(a, b) for a in left for b in right]
         added = Add(*terms)
-        return Add.make_args(added) #it may have collapsed down to one term
+        return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
         from sympy import fraction, expand_mul
@@ -732,7 +732,7 @@ class Mul(AssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    sums.append(Basic(factor)) # Wrapper
+                    sums.append(Basic(factor))  # Wrapper
 
         if not rewrite:
             return expr
@@ -1299,7 +1299,7 @@ class Mul(AssocOp):
         else:
             ncdid = 0  # number of nc replacements we did
             take = len(old_nc)  # how much to look at each time
-            limit = cdid or S.Infinity # max number that we can take
+            limit = cdid or S.Infinity  # max number that we can take
             failed = []  # failed terms will need subs if other terms pass
             i = 0
             while limit and i + take <= len(nc):
@@ -1533,7 +1533,7 @@ def _keep_coeff(coeff, factors, clear=True):
             return coeff*factors
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne: # don't keep sign?
+    elif coeff is S.NegativeOne:  # don't keep sign?
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:

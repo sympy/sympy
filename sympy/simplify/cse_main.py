@@ -186,7 +186,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         '''This helper will insert the subtree into to_eliminate while
         maintaining the ordering by op count and will skip the insertion
         if subtree is already present.'''
-        ops_count = (subtree.count_ops(), subtree.is_Mul) # prefer non-Mul to Mul
+        ops_count = (subtree.count_ops(), subtree.is_Mul)  # prefer non-Mul to Mul
         index_to_insert = bisect.bisect(to_eliminate_ops_count, ops_count)
         # all i up to this index have op count <= the current op count
         # so check that subtree is not yet present from this index down
@@ -194,7 +194,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         for i in xrange(index_to_insert - 1, -1, -1):
             if to_eliminate_ops_count[i] == ops_count and \
                subtree == to_eliminate[i]:
-                return # already have it
+                return  # already have it
         to_eliminate_ops_count.insert(index_to_insert, ops_count)
         to_eliminate.insert(index_to_insert, subtree)
 

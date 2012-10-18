@@ -349,7 +349,7 @@ def test_simplify_ratio():
 
 def test_simplify_measure():
     measure1 = lambda expr: len(str(expr))
-    measure2 = lambda expr: -count_ops(expr) # Return the most complicated result
+    measure2 = lambda expr: -count_ops(expr)  # Return the most complicated result
     expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
     assert measure1(simplify(expr, measure=measure1)) <= measure1(expr)
     assert measure2(simplify(expr, measure=measure2)) <= measure2(expr)
@@ -455,8 +455,8 @@ def test_powsimp():
     assert powsimp((-1)**(2*x), force=True) == 1
 
     eq = x**(2*a/3)
-    assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
-    assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
+    assert powsimp(eq).exp == eq.exp == 2*a/3  # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
+    assert powsimp(2**(2*x)) == 4**x  # powdenest goes the other direction
 
     assert powsimp(exp(p/2)) == exp(p/2)
 
@@ -671,7 +671,7 @@ def test_separatevars():
     assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
     assert separatevars(x*y**2*sin(x) + x*sin(x)*sin(y)) == x*(sin(y) + y**2)*sin(x)
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
-    assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
+    assert separatevars((x*(y+1))**z).is_Pow  # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
     assert separatevars(y/pi*exp(-(z - x)/cos(n))) == y*exp(x/cos(n))*exp(-z/cos(n))/pi
     assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
@@ -869,14 +869,14 @@ def test_powdenest():
 
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
-    assert powdenest((exp(2*a/3))**(3*x)) # -X-> (exp(a/3))**(6*x)
+    assert powdenest((exp(2*a/3))**(3*x))  # -X-> (exp(a/3))**(6*x)
     assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
     i, j = symbols('i,j', integer=True)
     eq = p**(2*i)*q**(4*i)
     assert powdenest(eq) == (p*q**2)**(2*i)
-    assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
+    assert powdenest((x**x)**(i + j))  # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
     assert powdenest(exp(3*(log(a) + log(b)))) == a**3*b**3
@@ -1127,7 +1127,7 @@ def test_issue2834():
     from sympy import Polygon, RegularPolygon, denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
-    assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it
+    assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it
 
 def test_fraction_expand():
     eq = (x + y)*y/x

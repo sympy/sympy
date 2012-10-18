@@ -112,9 +112,9 @@ class Polygon(GeometryEntity):
             n = kwargs.pop('n')
             args = list(args)
             # return a virtual polygon with n sides
-            if len(args) == 2: # center, radius
+            if len(args) == 2:  # center, radius
                 args.append(n)
-            elif len(args) == 3: # center, radius, rotation
+            elif len(args) == 3:  # center, radius, rotation
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
@@ -127,7 +127,7 @@ class Polygon(GeometryEntity):
                 continue
             nodup.append(p)
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
-            nodup.pop() # last point was same as first
+            nodup.pop()  # last point was same as first
 
         # remove collinear points unless they are shared points
         got = set()
@@ -501,7 +501,7 @@ class Polygon(GeometryEntity):
         # move to p, checking that the result is numeric
         lit = []
         for v in self.vertices:
-            lit.append(v - p) # the difference is simplified
+            lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None
         self = Polygon(*lit)
@@ -1025,7 +1025,7 @@ class RegularPolygon(Polygon):
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
-            as_int(n) # let an error raise if necessary
+            as_int(n)  # let an error raise if necessary
             if n < 3:
                 raise GeometryError("n must be a >= 3, not %s" % n)
 
@@ -1467,7 +1467,7 @@ class RegularPolygon(Polygon):
 
         """
 
-        r = type(self)(*self.args) # need a copy or else changes are in-place
+        r = type(self)(*self.args)  # need a copy or else changes are in-place
         r._rot += angle
         return GeometryEntity.rotate(r, angle, pt)
 
@@ -1615,7 +1615,7 @@ class Triangle(Polygon):
                 continue
             nodup.append(p)
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
-            nodup.pop() # last point was same as first
+            nodup.pop()  # last point was same as first
 
         # remove collinear points
         i = -3

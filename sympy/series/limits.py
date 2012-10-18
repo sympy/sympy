@@ -81,7 +81,7 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Pow:
         b, ex = e.args
-        c = None # records sign of b if b is +/-z or has a bounded value
+        c = None  # records sign of b if b is +/-z or has a bounded value
         if b.is_Mul:
             c, b = b.as_two_terms()
             if c is S.NegativeOne and b == z:

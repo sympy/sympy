@@ -127,7 +127,7 @@ def test_dependent_finite():
     # finite random variables
     assert dependent(X, Y+X)
 
-    XX, YY = given(Tuple(X, Y), X+Y>5) # Create a dependency
+    XX, YY = given(Tuple(X, Y), X+Y>5)  # Create a dependency
     assert dependent(XX, YY)
 
 def test_normality():

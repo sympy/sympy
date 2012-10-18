@@ -95,7 +95,7 @@ def test_Dict():
     assert set(d.values()) == set((S(1), S(2), S(3)))
     assert d.get(5, 'default') == 'default'
     assert x in d and z in d and not 5 in d
-    assert d.has(x) and d.has(1) # SymPy Basic .has method
+    assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
     # input - a python dict
@@ -105,7 +105,7 @@ def test_Dict():
 
     raises(TypeError, lambda: Dict(((x, 1), (y, 2), (z, 3))))
     with raises(NotImplementedError):
-        d[5] = 6 # assert immutability
+        d[5] = 6  # assert immutability
 
     assert set(d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
     assert set(d) == set([x, y, z])
@@ -124,4 +124,4 @@ def issue_2689():
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
         assert sorted(pair) == sorted(reversed(pair))
-        assert set(o(*args)) # doesn't fail
+        assert set(o(*args))  # doesn't fail

@@ -331,7 +331,7 @@ class uppergamma(Function):
             if a is S.One:
                 return C.exp(-z)
             elif a is S.Half:
-                return sqrt(pi)*(1 - erf(sqrt(z))) # TODO could use erfc...
+                return sqrt(pi)*(1 - erf(sqrt(z)))  # TODO could use erfc...
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:

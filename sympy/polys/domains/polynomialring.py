@@ -111,7 +111,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Convert a `DMP` object to `dtype`. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep) # set the correct ring
+                return K1(a.rep)  # set the correct ring
             else:
                 return K1(a.convert(K1.dom).rep)
         else:

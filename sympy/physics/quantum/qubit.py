@@ -526,7 +526,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         if normalize:
             m = m.normalized()
 
-        size = max(m.shape) # Max of shape to account for bra or ket
+        size = max(m.shape)  # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
             if m[i] != 0.0:
@@ -683,8 +683,8 @@ def _get_possible_outcomes(m, bits):
 
     # This is filled with loads of dirty binary tricks...You have been warned
 
-    size = max(m.shape) # Max of shape to account for bra or ket
-    nqubits = int(math.log(size, 2)+.1) # Number of qubits possible
+    size = max(m.shape)  # Max of shape to account for bra or ket
+    nqubits = int(math.log(size, 2)+.1)  # Number of qubits possible
 
     # Make the output states and put in output_matrices, nothing in them now.
     # Each state will represent a possible outcome of the measurement
@@ -704,7 +704,7 @@ def _get_possible_outcomes(m, bits):
 
     # Make possible outcome states
     for i in range(2**nqubits):
-        trueness = 0 # This tells us to which output_matrix this value belongs
+        trueness = 0  # This tells us to which output_matrix this value belongs
         # Find trueness
         for j in range(len(bit_masks)):
             if i&bit_masks[j]:

@@ -155,10 +155,10 @@ class Dyadic(object):
         return self * -1
 
     def _latex(self, printer=None):
-        ar = self.args # just to shorten things
+        ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
-        ol = [] # output list, to be concatenated to a string
+        ol = []  # output list, to be concatenated to a string
         mlp = MechanicsLatexPrinter()
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
@@ -199,11 +199,11 @@ class Dyadic(object):
             baseline = 0
             def render(self, *args, **kwargs):
                 self = e
-                ar = self.args # just to shorten things
+                ar = self.args  # just to shorten things
                 mpp = MechanicsPrettyPrinter()
                 if len(ar) == 0:
                     return unicode(0)
-                ol = [] # output list, to be concatenated to a string
+                ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
@@ -299,10 +299,10 @@ class Dyadic(object):
 
     def __str__(self, printer=None):
         """Printing method. """
-        ar = self.args # just to shorten things
+        ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
-        ol = [] # output list, to be concatenated to a string
+        ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
@@ -820,7 +820,7 @@ class ReferenceFrame(object):
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
                            '131', '212', '232', '313', '323', '')
-        rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
+        rot_order = str(rot_order).upper()  # Now we need to make sure XYZ = 123
         rot_type = rot_type.upper()
         rot_order = [i.replace('X', '1') for i in rot_order]
         rot_order = [i.replace('Y', '2') for i in rot_order]
@@ -1234,10 +1234,10 @@ class Vector(object):
 
     def _latex(self, printer=None):
         """Latex Printing method. """
-        ar = self.args # just to shorten things
+        ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
-        ol = [] # output list, to be concatenated to a string
+        ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
@@ -1273,10 +1273,10 @@ class Vector(object):
             baseline = 0
             def render(self, *args, **kwargs):
                 self = e
-                ar = self.args # just to shorten things
+                ar = self.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
-                ol = [] # output list, to be concatenated to a string
+                ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
@@ -1351,10 +1351,10 @@ class Vector(object):
 
     def __str__(self, printer=None):
         """Printing method. """
-        ar = self.args # just to shorten things
+        ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
-        ol = [] # output list, to be concatenated to a string
+        ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
@@ -1434,7 +1434,7 @@ class Vector(object):
                     mat[1][1] * mat[2][0]))
 
         outvec = Vector([])
-        ar = other.args # For brevity
+        ar = other.args  # For brevity
         for i, v in enumerate(ar):
             tempx = v[1].x
             tempy = v[1].y

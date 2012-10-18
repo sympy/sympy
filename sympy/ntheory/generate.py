@@ -583,7 +583,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     # main phase: search successive powers of two
     power = lam = 1
-    tortoise, hare = x0, f(x0) # f(x0) is the element/node next to x0.
+    tortoise, hare = x0, f(x0)  # f(x0) is the element/node next to x0.
     i = 0
     while tortoise != hare and (not nmax or i < nmax):
         i += 1

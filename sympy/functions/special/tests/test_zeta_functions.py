@@ -98,7 +98,7 @@ def myexpand(func, target):
     expanded = expand_func(func)
     if target is not None:
         return expanded == target
-    if expanded == func: # it didn't expand
+    if expanded == func:  # it didn't expand
         return False
 
     # check to see that the expanded and original evaluate to the same value

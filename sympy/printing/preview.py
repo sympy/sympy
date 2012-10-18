@@ -206,7 +206,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         win.close()
     else:
         os.system("%s %s &> /dev/null &" % (viewer, src))
-        time.sleep(2) # wait for the viewer to read data
+        time.sleep(2)  # wait for the viewer to read data
 
     os.remove(src)
     os.chdir(cwd)

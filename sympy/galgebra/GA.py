@@ -1653,7 +1653,7 @@ class MV(object):
                 value = sympy.Symbol(value)
             self.mv[MV.n] = numpy.array([value], dtype=numpy.object)
         if mvtype == 'vector':
-            if isinstance(value, str): #Most general vector
+            if isinstance(value, str):  # Most general vector
                 symbol_str = ''
                 for ibase in MV.nrg:
                     if MV.coords == None:
@@ -1669,7 +1669,7 @@ class MV(object):
                 value = MV.pad_zeros(value, MV.nbasis[1])
                 self.mv[1] = numpy.array(value, dtype=numpy.object)
         if mvtype == 'grade2':
-            if isinstance(value, str): #Most general grade-2 multivector
+            if isinstance(value, str):  # Most general grade-2 multivector
                 if value != '':
                     symbol_str = ''
                     for base in MV.basis[2]:
@@ -1683,7 +1683,7 @@ class MV(object):
         if mvtype == 'grade':
             igrade = value[0]
             coefs = value[1]
-            if isinstance(coefs, str): #Most general pure grade multivector
+            if isinstance(coefs, str):  # Most general pure grade multivector
                 base_symbol = coefs
                 coefs = []
                 bases = MV.basis[igrade]
@@ -1701,7 +1701,7 @@ class MV(object):
             self.mv[value[0]] = numpy.array(MV.nbasis[value[0]]*[ZERO], dtype=numpy.object)
             self.mv[value[0]][value[1]] = ONE
         if mvtype == 'spinor':
-            if isinstance(value, str): #Most general spinor
+            if isinstance(value, str):  # Most general spinor
                 for grade in MV.n1rg:
                     if grade%2 == 0:
                         symbol_str = ''
@@ -1714,7 +1714,7 @@ class MV(object):
                         else:
                             self.mv[0] = numpy.array([sympy.Symbol(value)], dtype=numpy.object)
                 self.name = value+'bm'
-        if isinstance(value, str) and mvtype == '': #Most general multivector
+        if isinstance(value, str) and mvtype == '':  # Most general multivector
             if value != '':
                 for grade in MV.n1rg:
                     symbol_str = ''
@@ -2385,7 +2385,7 @@ class MV(object):
             recp = MV.brecp
         for (rbase, iD) in zip(recp, D):
             dD.add_in_place(rbase*iD)
-        if MV.curvilinear_flg: #Add Connection
+        if MV.curvilinear_flg:  # Add Connection
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]
@@ -2409,7 +2409,7 @@ class MV(object):
             recp = MV.brecp
         for (irbase, iD) in zip(recp, D):
             dD.add_in_place(irbase^iD)
-        if MV.curvilinear_flg: #Add Connection
+        if MV.curvilinear_flg:  # Add Connection
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]
@@ -2437,7 +2437,7 @@ class MV(object):
             recp = MV.brecp
         for (irbase, iD) in zip(recp, D):
             dD.add_in_place(irbase|iD)
-        if MV.curvilinear_flg: #Add Connection
+        if MV.curvilinear_flg:  # Add Connection
             igrade = 1
             while igrade <= MV.n:
                 coefs = self.mv[igrade]

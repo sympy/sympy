@@ -64,11 +64,11 @@ def test_integer_partition():
         for j in range(n):
             next.add(a)
             a = a.next_lex()
-            IntegerPartition(i, a.partition) # check it by giving i
+            IntegerPartition(i, a.partition)  # check it by giving i
         for j in range(n):
             prev.add(a)
             a = a.prev_lex()
-            IntegerPartition(i, a.partition) # check it by giving i
+            IntegerPartition(i, a.partition)  # check it by giving i
         assert next == ans
         assert prev == ans
 

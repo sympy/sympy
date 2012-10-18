@@ -376,7 +376,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         else:
             pattern = [parse_term(elem) for elem in pattern]
 
-            terms = terms[:] # need a copy
+            terms = terms[:]  # need a copy
             elems, common_expo, has_deriv = [], None, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
@@ -629,7 +629,7 @@ def _separatevars(expr, force):
     expr = expr.expand(mul=False, multinomial=False, force=force)
 
     _expr = expr
-    if expr.is_commutative: # factor fails for nc
+    if expr.is_commutative:  # factor fails for nc
         _expr, reps = posify(expr) if force else (expr, {})
         expr = factor(_expr).subs(reps)
 
@@ -642,7 +642,7 @@ def _separatevars(expr, force):
     for i in args[1:]:
         commonc &= i.args_cnc(cset=True, warn=False)[0]
     commonc = Mul(*commonc)
-    commonc = commonc.as_coeff_Mul()[1] # ignore constants
+    commonc = commonc.as_coeff_Mul()[1]  # ignore constants
     commonc_set = commonc.args_cnc(cset=True, warn=False)[0]
 
     # remove them
@@ -1005,7 +1005,7 @@ def _trigsimp(expr, deep=False):
                     continue
                 # simplify and finish:
                 expr = simp.subs(res)
-                break # process below
+                break  # process below
 
     if expr.is_Add:
         # The types of hyper functions we are looking for
@@ -1097,7 +1097,7 @@ def collect_sqrt(expr, evaluate=True):
     vars = list(vars)
     if not evaluate:
         vars.sort(key=default_sort_key)
-        vars.reverse() # since it will be reversed below
+        vars.reverse()  # since it will be reversed below
     vars.sort(key=count_ops)
     vars.reverse()
     d = collect_const(expr, *vars, **dict(first=False))
@@ -1993,7 +1993,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
         # check for base and inverted base pairs
         be = c_powers.items()
-        skip = set() # skip if we already saw them
+        skip = set()  # skip if we already saw them
         for b, e in be:
             if b in skip:
                 continue
@@ -2031,7 +2031,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 exp(x/2) -> (exp(a), 2), 1
 
             '''
-            if e is not None: # coming from c_powers or from below
+            if e is not None:  # coming from c_powers or from below
                 if e.is_Integer:
                     return (b, S.One), e
                 elif e.is_Rational:
@@ -2074,24 +2074,24 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
-        bases.sort(key=default_sort_key) # this makes tie-breaking canonical
-        bases.sort(key=measure, reverse=True) # handle longest first
+        bases.sort(key=default_sort_key)  # this makes tie-breaking canonical
+        bases.sort(key=measure, reverse=True)  # handle longest first
         for base in bases:
-            if base not in common_b: # it may have been removed already
+            if base not in common_b:  # it may have been removed already
                 continue
             b, exponent = base
-            last = False # True when no factor of base is a radical
-            qlcm = 1 # the lcm of the radical denominators
+            last = False  # True when no factor of base is a radical
+            qlcm = 1  # the lcm of the radical denominators
             while True:
                 bstart = b
                 qstart = qlcm
 
-                bb = [] # list of factors
-                ee = [] # (factor's exponent, current value of that exponent in common_b)
+                bb = []  # list of factors
+                ee = []  # (factor's exponent, current value of that exponent in common_b)
                 for bi in Mul.make_args(b):
                     bib, bie = bkey(bi)
                     if bib not in common_b or common_b[bib] < bie:
-                        ee = bb = [] # failed
+                        ee = bb = []  # failed
                         break
                     ee.append([bie, common_b[bib]])
                     bb.append(bib)
@@ -2115,9 +2115,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         # e.g. x**2*y*sqrt(x*sqrt(y)) the count of x*sqrt(y)
                         # will increase by 4 to give bkey (x*sqrt(y), 2, 5)
                         common_b[base] += min1*qstart*exponent
-                if (last # no more radicals in base
-                    or len(common_b) == 1 # nothing left to join with
-                    or all(k[1] == 1 for k in common_b) # no radicals left in common_b
+                if (last  # no more radicals in base
+                    or len(common_b) == 1  # nothing left to join with
+                    or all(k[1] == 1 for k in common_b)  # no radicals left in common_b
                         ):
                     break
                 # see what we can exponentiate base by to remove any radicals
@@ -2126,11 +2126,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 # by 6 and look for powers of x and y in the ratio of 2 to 3
                 qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
                 if qlcm == 1:
-                    break # we are done
+                    break  # we are done
                 b = bstart**qlcm
                 qlcm *= qstart
                 if all(ratq(bi) == 1 for bi in Mul.make_args(b)):
-                    last = True # we are going to be done after this next pass
+                    last = True  # we are going to be done after this next pass
             # this base no longer can find anything to join with and
             # since it was longer than any other we are done with it
             b, q = base
@@ -2150,7 +2150,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_powers.append((b, e))
         check = len(c_powers)
         c_powers = dict(c_powers)
-        assert len(c_powers) == check # there should have been no duplicates
+        assert len(c_powers) == check  # there should have been no duplicates
         # ==============================================================
 
         # rebuild the expression
@@ -2225,7 +2225,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     elif bi.is_nonnegative:
                         nonneg.append(bi)
                     elif bi.is_polar:
-                        nonneg.append(bi) # polar can be treated like non-negative
+                        nonneg.append(bi)  # polar can be treated like non-negative
                     else:
                         unk.append(bi)
                 if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
@@ -2599,7 +2599,7 @@ def combsimp(expr):
                         for k in range(int(u - ui)):
                             numer.append(con - k)
 
-                    con = n*(resid + ui) # for (2) and (3)
+                    con = n*(resid + ui)  # for (2) and (3)
 
                     # (2)
                     numer.append((2*S.Pi)**(S(n - 1)/2)*
@@ -2927,7 +2927,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     expr = signsimp(expr)
 
-    if not isinstance(expr, Basic): # XXX: temporary hack
+    if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
 
     if isinstance(expr, Atom):
@@ -2971,7 +2971,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         expr = expr2
     else:
         expr = shorter(expr2, expr1, expr)
-    if not isinstance(expr, Basic): # XXX: temporary hack
+    if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
 
     # hyperexpand automatically only works on hypergeometric terms

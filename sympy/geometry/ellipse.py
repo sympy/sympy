@@ -850,7 +850,7 @@ class Ellipse(GeometryEntity):
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10): # should be enough?
+        for i in range(10):  # should be enough?
             c = nsimplify(2*rng.random() - 1)
             s = sqrt(1 - c**2)
             p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
@@ -925,7 +925,7 @@ class Ellipse(GeometryEntity):
             is_good = True
             try:
                 is_good = (det > 0)
-            except NotImplementedError: #symbolic, allow
+            except NotImplementedError:  # symbolic, allow
                 is_good = True
 
             if is_good:

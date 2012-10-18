@@ -74,7 +74,7 @@ def test_halfcircle():
     assert not halfcircle.is_iterable
 
 def test_transformation_iterator_not_injetive():
-    L = Lambda(x, x - x%2) # produces 0, 2, 2, 4, 4, 6, 6, ...
+    L = Lambda(x, x - x%2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
     evens = TransformationSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here
@@ -133,7 +133,7 @@ def test_reals():
     assert -sqrt(2) in S.Reals
     assert (2, 5) not in S.Reals
 
-@XFAIL # this is because contains is now very strict
+@XFAIL  # this is because contains is now very strict
 def test_reals_fail():
     assert sqrt(-1) not in S.Reals
 

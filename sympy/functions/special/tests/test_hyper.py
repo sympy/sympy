@@ -144,7 +144,7 @@ def test_meijerg_derivative():
            + 2*meijerg([], [1, 1, 1], [0, 0, x, 0], [], z)
 
     y = randcplx()
-    a = 5 # mpmath chokes with non-real numbers, and Mod1 with floats
+    a = 5  # mpmath chokes with non-real numbers, and Mod1 with floats
     assert td(meijerg([x], [], [], [], y), x)
     assert td(meijerg([x**2], [], [], [], y), x)
     assert td(meijerg([], [x], [], [], y), x)
@@ -160,10 +160,10 @@ def test_meijerg_derivative():
 def test_meijerg_period():
     assert meijerg([], [1], [0], [], x).get_period() == 2*pi
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
-    assert meijerg([], [], [0], [], x).get_period() == 2*pi # exp(x)
-    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi # cos(sqrt(x))
-    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi # sin(sqrt(x))
-    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo # log(1 + x)
+    assert meijerg([], [], [0], [], x).get_period() == 2*pi  # exp(x)
+    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
+    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
+    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
 
 def test_hyper_unpolarify():
     from sympy import exp_polar

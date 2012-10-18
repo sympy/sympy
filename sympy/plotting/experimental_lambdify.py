@@ -120,8 +120,8 @@ class vectorized_lambdify(object):
                   or
                   (isinstance(e, ValueError)
                    and ('Invalid limits given:' in str(e)
-                        or 'negative dimensions are not allowed' in str(e) #XXX
-                        or 'sequence too large; must be smaller than 32' in str(e)))): #XXX
+                        or 'negative dimensions are not allowed' in str(e)  # XXX
+                        or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
                 # Almost all functions were translated to numpy, but some were
                 # left as sympy functions. They recieved an ndarray as an
                 # argument and failed.
@@ -598,7 +598,7 @@ class Lambdifier(object):
             # Either one of those can be used but not all at the same time.
             # The code considers the sin example as the right one.
             regexlist = [
-                    r'<class \'sympy[\w.]*?.([\w]*)\'>$', # the example Integral
+                    r'<class \'sympy[\w.]*?.([\w]*)\'>$',  # the example Integral
                     r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
                     ]
             for r in regexlist:

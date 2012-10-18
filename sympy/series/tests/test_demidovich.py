@@ -70,46 +70,46 @@ def test_Limits_simple_4c():
     assert limit(log(1+exp(x))/x, x, oo)==1  #267b
 
 def test_bounded():
-    assert limit(sin(x)/x, x, oo) == 0 #216b
-    assert limit(x*sin(1/x), x, 0) == 0 #227a
+    assert limit(sin(x)/x, x, oo) == 0  # 216b
+    assert limit(x*sin(1/x), x, 0) == 0  # 227a
 
 def test_f1a():
     h = Symbol("h")
     #issue 409:
-    assert limit((sin(2*x)/x)**(1+x), x, 0) == 2 #Primer 7
+    assert limit((sin(2*x)/x)**(1+x), x, 0) == 2  # Primer 7
 
 def test_f1a2():
     #issue 410:
-    assert limit(((x-1)/(x+1))**x, x, oo) == exp(-2) #Primer 9
+    assert limit(((x-1)/(x+1))**x, x, oo) == exp(-2)  # Primer 9
 
 def test_f1b():
     m = Symbol("m")
     n = Symbol("n")
     h = Symbol("h")
     a = Symbol("a")
-    assert limit(sin(x)/x, x, 2) == sin(2)/2 #216a
-    assert limit(sin(3*x)/x, x, 0) == 3 #217
-    assert limit(sin(5*x)/sin(2*x), x, 0) == Rational(5)/2 #218
-    assert limit(sin(pi*x)/sin(3*pi*x), x, 0) == Rational(1)/3 #219
-    assert limit(x*sin(pi/x), x, oo) == pi #220
-    assert limit((1-cos(x))/x**2, x, 0) == Rational(1, 2) #221
-    assert limit(x*sin(1/x), x, oo) == 1 #227b
-    assert limit((cos(m*x)-cos(n*x))/x**2, x, 0) == ((n**2-m**2)/2) #232
-    assert limit((tan(x)-sin(x))/x**3, x, 0) == Rational(1, 2) #233
-    assert limit((x-sin(2*x))/(x+sin(3*x)), x, 0) == -Rational(1, 4) #237
-    assert limit((1-sqrt(cos(x)))/x**2, x, 0) == Rational(1, 4) #239
-    assert limit((sqrt(1+sin(x))-sqrt(1-sin(x)))/x, x, 0) == 1 #240
+    assert limit(sin(x)/x, x, 2) == sin(2)/2  # 216a
+    assert limit(sin(3*x)/x, x, 0) == 3  # 217
+    assert limit(sin(5*x)/sin(2*x), x, 0) == Rational(5)/2  # 218
+    assert limit(sin(pi*x)/sin(3*pi*x), x, 0) == Rational(1)/3  # 219
+    assert limit(x*sin(pi/x), x, oo) == pi  # 220
+    assert limit((1-cos(x))/x**2, x, 0) == Rational(1, 2)  # 221
+    assert limit(x*sin(1/x), x, oo) == 1  # 227b
+    assert limit((cos(m*x)-cos(n*x))/x**2, x, 0) == ((n**2-m**2)/2)  # 232
+    assert limit((tan(x)-sin(x))/x**3, x, 0) == Rational(1, 2)  # 233
+    assert limit((x-sin(2*x))/(x+sin(3*x)), x, 0) == -Rational(1, 4)  # 237
+    assert limit((1-sqrt(cos(x)))/x**2, x, 0) == Rational(1, 4)  # 239
+    assert limit((sqrt(1+sin(x))-sqrt(1-sin(x)))/x, x, 0) == 1  # 240
 
-    assert limit((1+h/x)**x, x, oo) == exp(h) #Primer 9
-    assert limit((sin(x)-sin(a))/(x-a), x, a) == cos(a) #222, *176
-    assert limit((cos(x)-cos(a))/(x-a), x, a) == -sin(a) #223
-    assert limit((sin(x+h)-sin(x))/h, h, 0) == cos(x) #225
+    assert limit((1+h/x)**x, x, oo) == exp(h)  # Primer 9
+    assert limit((sin(x)-sin(a))/(x-a), x, a) == cos(a)  # 222, *176
+    assert limit((cos(x)-cos(a))/(x-a), x, a) == -sin(a)  # 223
+    assert limit((sin(x+h)-sin(x))/h, h, 0) == cos(x)  # 225
 
 def test_f2a():
-    assert limit(((x+1)/(2*x+1))**(x**2), x, oo) == 0 #Primer 8
+    assert limit(((x+1)/(2*x+1))**(x**2), x, oo) == 0  # Primer 8
 
 def test_f2():
-    assert limit((sqrt(cos(x))-root3(cos(x)))/(sin(x)**2), x, 0) == -Rational(1, 12) #*184
+    assert limit((sqrt(cos(x))-root3(cos(x)))/(sin(x)**2), x, 0) == -Rational(1, 12)  # *184
 
 def test_f3():
     a = Symbol('a')

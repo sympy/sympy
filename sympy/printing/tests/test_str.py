@@ -431,7 +431,7 @@ def test_Uniform():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2" # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 2461
 
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion

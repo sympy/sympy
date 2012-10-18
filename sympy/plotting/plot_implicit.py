@@ -53,7 +53,7 @@ class ImplicitSeries(BaseSeries):
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
         self.get_points = self.get_raster
-        self.has_equality = has_equality #If the expression has equality, i.e.
+        self.has_equality = has_equality  # If the expression has equality, i.e.
                                          #Eq, Greaterthan, LessThan.
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
@@ -264,7 +264,7 @@ def plot_implicit(expr, *args, **kwargs):
     """
 
     assert isinstance(expr, Expr)
-    has_equality = False #Represents whether the expression contains an Equality,
+    has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
 
     def arg_expand(bool_expr):

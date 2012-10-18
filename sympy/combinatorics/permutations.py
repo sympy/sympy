@@ -772,19 +772,19 @@ class Permutation(Basic):
         #f) (Cycle) = conversion to permutation
         #g) (Permutation) = adjust size or return copy
         ok = True
-        if not args: # a
+        if not args:  # a
             return Perm._af_new(range(size or 0))
-        elif len(args) > 1: # c
+        elif len(args) > 1:  # c
             return Perm._af_new(Cycle(*args).list(size))
         if len(args) == 1:
             a = args[0]
-            if isinstance(a, Perm): # g
+            if isinstance(a, Perm):  # g
                 if size is None or size == a.size:
                     return a
                 return Perm(a.array_form, size=size)
-            if isinstance(a, Cycle): # f
+            if isinstance(a, Cycle):  # f
                 return Perm._af_new(a.list(size))
-            if not is_sequence(a): # b
+            if not is_sequence(a):  # b
                 return Perm._af_new(range(a + 1))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
@@ -800,9 +800,9 @@ class Permutation(Basic):
         args = list(args[0])
 
         is_cycle = args and is_sequence(args[0])
-        if is_cycle: # e
+        if is_cycle:  # e
             args = [[int(i) for i in c] for c in args]
-        else: # d
+        else:  # d
             args = [int(i) for i in args]
 
         # if there are n elements present, 0, 1, ..., n-1 should be present
@@ -1240,7 +1240,7 @@ class Permutation(Basic):
             return pow(~self, -n)
         a = self.array_form
         if n == 1:
-            return Perm._af_new(a) # XXX is `return self` ok?
+            return Perm._af_new(a)  # XXX is `return self` ok?
         elif n == 2:
             b = [a[i] for i in a]
         elif n == 3:
@@ -2164,7 +2164,7 @@ class Permutation(Basic):
             if singletons:
                 rv[1] = singletons
             self._cycle_structure = rv
-        return dict(rv) # make a copy
+        return dict(rv)  # make a copy
 
     @property
     def cycles(self):

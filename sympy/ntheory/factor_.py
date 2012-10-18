@@ -39,7 +39,7 @@ def smoothness(n):
     """
 
     if n == 1:
-        return (1, 1) # not prime, but otherwise this causes headaches
+        return (1, 1)  # not prime, but otherwise this causes headaches
     facs = factorint(n)
     return max(facs), max([m**facs[m] for m in facs])
 
@@ -248,8 +248,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     if n < 3:
         return False
     logn = math.log(n, 2)
-    max_possible = int(logn) + 2 # only check values less than this
-    not_square = n % 10 in [2, 3, 7, 8] # squares cannot end in 2, 3, 7, 8
+    max_possible = int(logn) + 2  # only check values less than this
+    not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     if not candidates:
         candidates = primerange(2 + not_square, max_possible)
 
@@ -415,7 +415,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
                 break
             j += 1
             U = F(U)
-            V = F(F(V)) # V is 2x further along than U
+            V = F(F(V))  # V is 2x further along than U
             g = igcd(U - V, n)
             if g == 1:
                 continue
@@ -423,7 +423,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
                 break
             return int(g)
         V = prng.randint(0, n - 1)
-        a = prng.randint(1, n - 3) # for x**2 + a, a%n should not be 0 or -2
+        a = prng.randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
         F = None
     return None
 
@@ -1032,7 +1032,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 b, fermat = integer_nthroot(b2, 2)
                 if fermat:
                     break
-                b2 += 2*a + 1 # equiv to (a+1)**2 - n
+                b2 += 2*a + 1  # equiv to (a+1)**2 - n
                 a += 1
             if fermat:
                 if verbose:

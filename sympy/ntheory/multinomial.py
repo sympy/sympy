@@ -141,7 +141,7 @@ def multinomial_coefficients(m, n):
     t = [n] + [0] * (m - 1)
     r = {tuple(t): 1}
     if n:
-        j = 0 # j will be the leftmost nonzero position
+        j = 0  # j will be the leftmost nonzero position
     else:
         j = m
     # enumerate tuples in co-lex order
@@ -210,7 +210,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
         b = _tuple(ifilter(None, t1))
         yield (t1, mc[b])
         if n:
-            j = 0 # j will be the leftmost nonzero position
+            j = 0  # j will be the leftmost nonzero position
         else:
             j = m
         # enumerate tuples in co-lex order

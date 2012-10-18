@@ -377,7 +377,7 @@ def symbols(names, **args):
 
         if not seq and len(result) <= 1:
             if not result:
-                raise ValueError('missing symbol') # should never happen
+                raise ValueError('missing symbol')  # should never happen
             return result[0]
 
         return tuple(result)
@@ -440,6 +440,6 @@ def var(names, **args):
             else:
                 traverse(syms, frame)
     finally:
-        del frame # break cyclic dependencies as stated in inspect docs
+        del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms

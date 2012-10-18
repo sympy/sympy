@@ -90,7 +90,7 @@ class StateBase(QExpr):
     @property
     def operators(self):
         """Return the operator(s) that this state is an eigenstate of"""
-        from operatorset import state_to_operators #import internally to avoid circular import errors
+        from operatorset import state_to_operators  # import internally to avoid circular import errors
         return state_to_operators(self)
 
     def _enumerate_state(self, num_states, **options):

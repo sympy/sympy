@@ -998,71 +998,71 @@ def _check_antecedents(g1, g2, x):
 
     def pr(count):
         _debug('  case %s:' % count, conds[-1])
-    conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10, c12)] #1
+    conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10, c12)]  # 1
     pr(1)
     conds += [And(Eq(u, v), Eq(bstar, 0), cstar > 0, sigma > 0, re(rho) < 1,
-                  c1, c2, c3, c12)] #2
+                  c1, c2, c3, c12)]  # 2
     pr(2)
     conds += [And(Eq(p, q), Eq(cstar, 0), bstar > 0, omega > 0, re(mu) < 1,
-                  c1, c2, c3, c10)] #3
+                  c1, c2, c3, c10)]  # 3
     pr(3)
     conds += [And(Eq(p, q), Eq(u, v), Eq(bstar, 0), Eq(cstar, 0),
                   sigma > 0, omega > 0, re(mu) < 1, re(rho) < 1,
-                  Ne(sigma, omega), c1, c2, c3)] #4
+                  Ne(sigma, omega), c1, c2, c3)]  # 4
     pr(4)
     conds += [And(Eq(p, q), Eq(u, v), Eq(bstar, 0), Eq(cstar, 0),
                   sigma > 0, omega > 0, re(mu + rho) < 1,
-                  Ne(omega, sigma), c1, c2, c3)] #5
+                  Ne(omega, sigma), c1, c2, c3)]  # 5
     pr(5)
     conds += [And(p > q, s > 0, bstar > 0, cstar >= 0,
-                  c1, c2, c3, c5, c10, c13)] #6
+                  c1, c2, c3, c5, c10, c13)]  # 6
     pr(6)
     conds += [And(p < q, t > 0, bstar > 0, cstar >= 0,
-                  c1, c2, c3, c4, c10, c13)] #7
+                  c1, c2, c3, c4, c10, c13)]  # 7
     pr(7)
     conds += [And(u > v, m > 0, cstar > 0, bstar >= 0,
-                  c1, c2, c3, c7, c11, c12)] #8
+                  c1, c2, c3, c7, c11, c12)]  # 8
     pr(8)
     conds += [And(u < v, n > 0, cstar > 0, bstar >= 0,
-                  c1, c2, c3, c6, c11, c12)] #9
+                  c1, c2, c3, c6, c11, c12)]  # 9
     pr(9)
     conds += [And(p > q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma > 0,
-                  re(rho) < 1, c1, c2, c3, c5, c13)] #10
+                  re(rho) < 1, c1, c2, c3, c5, c13)]  # 10
     pr(10)
     conds += [And(p < q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma > 0,
-                  re(rho) < 1, c1, c2, c3, c4, c13)] #11
+                  re(rho) < 1, c1, c2, c3, c4, c13)]  # 11
     pr(11)
     conds += [And(Eq(p, q), u > v, bstar >= 0, Eq(cstar, 0), omega > 0,
-                  re(mu) < 1, c1, c2, c3, c7, c11)] #12
+                  re(mu) < 1, c1, c2, c3, c7, c11)]  # 12
     pr(12)
     conds += [And(Eq(p, q), u < v, bstar >= 0, Eq(cstar, 0), omega > 0,
-                  re(mu) < 1, c1, c2, c3, c6, c11)] #13
+                  re(mu) < 1, c1, c2, c3, c6, c11)]  # 13
     pr(13)
     conds += [And(p < q, u > v, bstar >= 0, cstar >= 0,
-                  c1, c2, c3, c4, c7, c11, c13)] #14
+                  c1, c2, c3, c4, c7, c11, c13)]  # 14
     pr(14)
     conds += [And(p > q, u < v, bstar >= 0, cstar >= 0,
-                  c1, c2, c3, c5, c6, c11, c13)] #15
+                  c1, c2, c3, c5, c6, c11, c13)]  # 15
     pr(15)
     conds += [And(p > q, u > v, bstar >= 0, cstar >= 0,
-                  c1, c2, c3, c5, c7, c8, c11, c13, c14)] #16
+                  c1, c2, c3, c5, c7, c8, c11, c13, c14)]  # 16
     pr(16)
     conds += [And(p < q, u < v, bstar >= 0, cstar >= 0,
-                  c1, c2, c3, c4, c6, c9, c11, c13, c14)] #17
+                  c1, c2, c3, c4, c6, c9, c11, c13, c14)]  # 17
     pr(17)
-    conds += [And(Eq(t, 0), s > 0, bstar > 0, phi > 0, c1, c2, c10)] #18
+    conds += [And(Eq(t, 0), s > 0, bstar > 0, phi > 0, c1, c2, c10)]  # 18
     pr(18)
-    conds += [And(Eq(s, 0), t > 0, bstar > 0, phi < 0, c1, c3, c10)] #19
+    conds += [And(Eq(s, 0), t > 0, bstar > 0, phi < 0, c1, c3, c10)]  # 19
     pr(19)
-    conds += [And(Eq(n, 0), m > 0, cstar > 0, phi < 0, c1, c2, c12)] #20
+    conds += [And(Eq(n, 0), m > 0, cstar > 0, phi < 0, c1, c2, c12)]  # 20
     pr(20)
-    conds += [And(Eq(m, 0), n > 0, cstar > 0, phi > 0, c1, c3, c12)] #21
+    conds += [And(Eq(m, 0), n > 0, cstar > 0, phi > 0, c1, c3, c12)]  # 21
     pr(21)
     conds += [And(Eq(s*t, 0), bstar > 0, cstar > 0,
-                  c1, c2, c3, c10, c12)] #22
+                  c1, c2, c3, c10, c12)]  # 22
     pr(22)
     conds += [And(Eq(m*n, 0), bstar > 0, cstar > 0,
-                  c1, c2, c3, c10, c12)] #23
+                  c1, c2, c3, c10, c12)]  # 23
     pr(23)
 
     # The following case is from [Luke1969]. As far as I can tell, it is *not*
@@ -1090,57 +1090,57 @@ def _check_antecedents(g1, g2, x):
 
     conds += [And(m + n > p, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0, cstar < 0,
                   abs(arg(omega)) < (m + n - p + 1)*pi,
-                  c1, c2, c10, c14, c15)] #24
+                  c1, c2, c10, c14, c15)]  # 24
     pr(24)
     conds += [And(m + n > q, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar < 0,
                   abs(arg(omega)) < (m + n - q + 1)*pi,
-                  c1, c3, c10, c14, c15)] #25
+                  c1, c3, c10, c14, c15)]  # 25
     pr(25)
     conds += [And(Eq(p, q - 1), Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
-                  c1, c2, c10, c14, c15)] #26
+                  c1, c2, c10, c14, c15)]  # 26
     pr(26)
     conds += [And(Eq(p, q + 1), Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
-                  c1, c3, c10, c14, c15)] #27
+                  c1, c3, c10, c14, c15)]  # 27
     pr(27)
     conds += [And(p < q - 1, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
                   abs(arg(omega)) < (m + n - p + 1)*pi,
-                  c1, c2, c10, c14, c15)] #28
+                  c1, c2, c10, c14, c15)]  # 28
     pr(28)
     conds += [And(p > q + 1, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar >= 0,
                   cstar*pi < abs(arg(omega)),
                   abs(arg(omega)) < (m + n - q + 1)*pi,
-                  c1, c3, c10, c14, c15)] #29
+                  c1, c3, c10, c14, c15)]  # 29
     pr(29)
     conds += [And(Eq(n, 0), Eq(phi, 0), s + t > 0, m > 0, cstar > 0, bstar < 0,
                   abs(arg(sigma)) < (s + t - u + 1)*pi,
-                  c1, c2, c12, c14, c15)] #30
+                  c1, c2, c12, c14, c15)]  # 30
     pr(30)
     conds += [And(Eq(m, 0), Eq(phi, 0), s + t > v, n > 0, cstar > 0, bstar < 0,
                   abs(arg(sigma)) < (s + t - v + 1)*pi,
-                  c1, c3, c12, c14, c15)] #31
+                  c1, c3, c12, c14, c15)]  # 31
     pr(31)
     conds += [And(Eq(n, 0), Eq(phi, 0), Eq(u, v - 1), m > 0, cstar > 0,
                   bstar >= 0, bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (bstar + 1)*pi,
-                  c1, c2, c12, c14, c15)] #32
+                  c1, c2, c12, c14, c15)]  # 32
     pr(32)
     conds += [And(Eq(m, 0), Eq(phi, 0), Eq(u, v + 1), n > 0, cstar > 0,
                   bstar >= 0, bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (bstar + 1)*pi,
-                  c1, c3, c12, c14, c15)] #33
+                  c1, c3, c12, c14, c15)]  # 33
     pr(33)
     conds += [And(Eq(n, 0), Eq(phi, 0), u < v - 1, m > 0, cstar > 0, bstar >= 0,
                   bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (s + t - u + 1)*pi,
-                  c1, c2, c12, c14, c15)] #34
+                  c1, c2, c12, c14, c15)]  # 34
     pr(34)
     conds += [And(Eq(m, 0), Eq(phi, 0), u > v + 1, n > 0, cstar > 0, bstar >= 0,
                   bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (s + t - v + 1)*pi,
-                  c1, c3, c12, c14, c15)] #35
+                  c1, c3, c12, c14, c15)]  # 35
     pr(35)
 
     return Or(*conds)
@@ -1851,7 +1851,7 @@ def meijerint_inversion(f, x, t):
     from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
     f_ = f
     t_ = t
-    t = Dummy('t', polar=True) # We don't want sqrt(t**2) = abs(t) etc
+    t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc
     f = f.subs(t_, t)
     c = Dummy('c')
     _debug('Laplace-inverting', f)

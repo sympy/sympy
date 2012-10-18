@@ -301,7 +301,7 @@ class Piecewise(Function):
                     elif cond2.gts.has(sym):
                         lower = Max(cond2.lts, lower)
             else:
-                lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+                lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts.has(sym):     # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
                 elif cond.gts.has(sym):   # part 1a: ... that can be expanded

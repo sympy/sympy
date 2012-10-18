@@ -51,7 +51,7 @@ class AppliedPredicate(Boolean):
     def __new__(cls, predicate, arg):
         return Boolean.__new__(cls, predicate, arg)
 
-    is_Atom = True # do not attempt to decompose this
+    is_Atom = True  # do not attempt to decompose this
 
     @property
     def arg(self):

@@ -161,7 +161,7 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        if len(self.args) == 0: # If there is no label specified, return the default
+        if len(self.args) == 0:  # If there is no label specified, return the default
             return self._eval_args(list(self.default_args()))
         else:
             return self.args

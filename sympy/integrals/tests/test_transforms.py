@@ -510,7 +510,7 @@ def test_inverse_laplace_transform():
       (t - a)**(b - 1)*Heaviside(t - a)/gamma(b)
 
     assert ILT(exp(-a*s)/sqrt(1 + s**2), s, t) == \
-        Heaviside(t - a)*besselj(0, a - t) # note: besselj(0, x) is even
+        Heaviside(t - a)*besselj(0, a - t)  # note: besselj(0, x) is even
 
     # XXX ILT turns these branch factor into trig functions ...
     assert simplify(ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2),

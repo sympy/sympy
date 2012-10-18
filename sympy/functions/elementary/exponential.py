@@ -157,7 +157,7 @@ class exp_polar(ExpBase):
     """
 
     is_polar = True
-    is_comparable = False # cannot be evalf'd
+    is_comparable = False  # cannot be evalf'd
 
     def _eval_Abs(self):
         from sympy import expand_mul
@@ -168,7 +168,7 @@ class exp_polar(ExpBase):
         from sympy import im, pi, re
         i = im(self.args[0])
         if i <= -pi or i > pi:
-            return self # cannot evalf for this argument
+            return self  # cannot evalf for this argument
         res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:
             # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
@@ -332,7 +332,7 @@ class exp(ExpBase):
     def _eval_subs(self, old, new):
         arg = self.args[0]
         o = old
-        if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
+        if old.is_Pow:  # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             o = exp(o.exp*log(o.base))
         if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
@@ -343,7 +343,7 @@ class exp(ExpBase):
                 return new**(a/b)
 
 
-            if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
+            if arg.is_Add:  # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = o.args[0]
                 new_l = []
@@ -544,7 +544,7 @@ class log(Function):
 
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms): # of log(1+x)
+    def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """
         Returns the next term in the Taylor series expansion of log(1+x).
         """
@@ -612,7 +612,7 @@ class log(Function):
         else:
             abs = C.Abs(self.args[0])
             arg = C.arg(self.args[0])
-        if hints.get('log', False): # Expand the log
+        if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
@@ -671,7 +671,7 @@ class log(Function):
             #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*logx # XXX true regardless of assumptions?
+                r = log(k) + l*logx  # XXX true regardless of assumptions?
                 return r
 
         # TODO new and probably slow

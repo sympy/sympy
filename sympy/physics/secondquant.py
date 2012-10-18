@@ -1843,7 +1843,7 @@ class NO(Expr):
             elif sign:
                 return coeff*cls(Mul(*newseq))
             else:
-                pass #since sign==0, no permutations was necessary
+                pass  # since sign==0, no permutations was necessary
 
             # if we couldn't do anything with Mul object, we just
             # mark it as normal ordered
@@ -2071,7 +2071,7 @@ class NO(Expr):
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
-        arg0 = self.args[0] # it's a Mul by definition of how it's created
+        arg0 = self.args[0]  # it's a Mul by definition of how it's created
         mul = arg0._new_rawargs(arg0.args[:i] + arg0.args[i + 1:])
         return NO(mul)
 
@@ -2581,7 +2581,7 @@ def _get_ordered_dummies(mul, verbose=False):
         # dummies for which the ordering cannot be determined
         if has_dups(all_masked):
             all_masked.sort()
-            return mask[d], tuple(all_masked) # positions are ambiguous
+            return mask[d], tuple(all_masked)  # positions are ambiguous
 
         # sort factors according to fully masked strings
         keydict = dict(zip(dumstruct, all_masked))
@@ -2710,7 +2710,7 @@ class _SymbolFactory(object):
         s = Symbol("%s%i" % (self._label, self._counterVar))
         self._counterVar += 1
         return s
-_symbol_factory = _SymbolFactory('_]"]_') # most certainly a unique label
+_symbol_factory = _SymbolFactory('_]"]_')  # most certainly a unique label
 
 
 @cacheit
@@ -2871,7 +2871,7 @@ def wicks(e, **kw_args):
             else:
                 result = e
 
-        else: # non-trivial
+        else:  # non-trivial
 
             if isinstance(string1[0], BosonicOperator):
                 raise NotImplementedError

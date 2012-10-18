@@ -40,8 +40,8 @@ def test_curve():
     assert c.parameter == s
     assert c.functions == (2*s, s**2)
     t = Symbol('t')
-    assert c.arbitrary_point() != Point(2*t, t**2) # the t returned as assumptions
-    t = Symbol('t', real=True) # now t has the same assumptions so the test passes
+    assert c.arbitrary_point() != Point(2*t, t**2)  # the t returned as assumptions
+    t = Symbol('t', real=True)  # now t has the same assumptions so the test passes
     assert c.arbitrary_point() == Point(2*t, t**2)
     assert c.arbitrary_point(z) == Point(2*z, z**2)
     assert c.arbitrary_point(c.parameter) == Point(2*s, s**2)
@@ -178,7 +178,7 @@ def test_line():
     assert l5.equation() == x
     assert l6.equation() == x - 2
     assert l7.equation() == y - 1
-    assert p1 in l1 # is p1 on the line l1?
+    assert p1 in l1  # is p1 on the line l1?
     assert p1 not in l3
     assert Line((-x, x), (-x+1, x-1)).coefficients == (1, 1, 0)
 
@@ -896,7 +896,7 @@ def test_encloses():
     s = Polygon(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1), Point(S.Half, S.Half))
     # the following will be True if the polygon isn't treated as closing on itself
     assert s.encloses(Point(0, S.Half)) is False
-    assert s.encloses(Point(S.Half, S.Half)) is False # it's a vertex
+    assert s.encloses(Point(S.Half, S.Half)) is False  # it's a vertex
     assert s.encloses(Point(Rational(3, 4), S.Half)) is True
 
 def test_free_symbols():

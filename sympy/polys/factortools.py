@@ -657,7 +657,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         C.append(c)
 
     if any(not j for j in J):
-        raise ExtraneousFactors # pragma: no cover
+        raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []
 
@@ -854,7 +854,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
                 c = dmp_ground_trunc(h, p, w, K)
 
     if dmp_expand(H, u, K) != f:
-        raise ExtraneousFactors # pragma: no cover
+        raise ExtraneousFactors  # pragma: no cover
     else:
         return H
 
@@ -943,7 +943,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
             rr = len(H)
 
             if r is not None:
-                if rr != r: # pragma: no cover
+                if rr != r:  # pragma: no cover
                     if rr < r:
                         configs, r = [], rr
                     else:
@@ -981,7 +981,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     try:
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
-    except ExtraneousFactors: # pragma: no cover
+    except ExtraneousFactors:  # pragma: no cover
         if query('EEZ_RESTART_IF_NEEDED'):
             return dmp_zz_wang(orig_f, u, K, mod+1)
         else:
@@ -1188,7 +1188,7 @@ def dup_factor_list(f, K0):
                 factors[i] = (dmp_eject(f, u, K), k)
 
             coeff = K.convert(coeff, K.dom)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
         if K0.has_Field:
@@ -1229,7 +1229,7 @@ def dmp_factor_list(f, u, K0):
 
     J, f = dmp_terms_gcd(f, u, K0)
 
-    if not K0.has_CharacteristicZero: # pragma: no cover
+    if not K0.has_CharacteristicZero:  # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
@@ -1263,7 +1263,7 @@ def dmp_factor_list(f, u, K0):
                 factors[i] = (dmp_eject(f, v, K), k)
 
             coeff = K.convert(coeff, K.dom)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
         if K0.has_Field:

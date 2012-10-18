@@ -389,7 +389,7 @@ def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
     assert _test_args(Integers())
 
-@XFAIL # This fails for the same reason Interval fails. Not all args are Basic
+@XFAIL  # This fails for the same reason Interval fails. Not all args are Basic
 def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
@@ -525,11 +525,11 @@ def test_sympy__stats__frv_types__HypergeometricPSpace():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)]))) # x can be 1 or 2
+    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, set([1, 2]))) # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, set([1, 2])))  # x can be 1 or 2
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain

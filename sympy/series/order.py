@@ -220,7 +220,7 @@ class Order(Expr):
             else:
                 common_symbols = expr.variables
             if not common_symbols:
-                if not (self.variables or expr.variables): # O(1),O(1)
+                if not (self.variables or expr.variables):  # O(1),O(1)
                     return True
                 return None
             r = None

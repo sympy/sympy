@@ -1228,7 +1228,7 @@ def test_positive():
     assert ask(Q.positive(x + exp(x)), Q.real(x)) == None
 
     #absolute value
-    assert ask(Q.positive(Abs(x))) == None # Abs(0) = 0
+    assert ask(Q.positive(Abs(x))) == None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) == True
 
 @XFAIL

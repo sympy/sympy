@@ -46,7 +46,7 @@ class Timer(timeit.Timer):
         stmt = timeit.reindent(stmt, 8)
         setup = timeit.reindent(setup, 4)
         src = timeit.template % {'stmt': stmt, 'setup': setup}
-        self.src = src # Save for traceback display
+        self.src = src  # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
         #exec code in globals(), ns      -- original timeit code

@@ -312,7 +312,7 @@ def mrv(e, x):
         s = SubsSet()
         return s, s[x]
     elif e.is_Mul or e.is_Add:
-        i, d = e.as_independent(x) # throw away x-independent terms
+        i, d = e.as_independent(x)  # throw away x-independent terms
         if d.func != e.func:
             s, expr = mrv(d, x)
             return s, e.func(i, expr)
@@ -461,7 +461,7 @@ def limitinf(e, x):
     e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
-        return e #e is a constant
+        return e  # e is a constant
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
@@ -472,8 +472,8 @@ def limitinf(e, x):
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
-        return S.Zero # e0>0: lim f = 0
-    elif sig == -1: #e0<0: lim f = +-oo (the sign depends on the sign of c0)
+        return S.Zero  # e0>0: lim f = 0
+    elif sig == -1:  # e0<0: lim f = +-oo (the sign depends on the sign of c0)
         if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
@@ -481,7 +481,7 @@ def limitinf(e, x):
         assert s != 0
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x) #e0=0: lim f = lim c0
+        return limitinf(c0, x)  # e0=0: lim f = lim c0
 
 def moveup2(s, x):
     r = SubsSet()
@@ -549,7 +549,7 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw) # this should not be necessary
+    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 def build_expression_tree(Omega, rewrites):
@@ -610,10 +610,10 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
+    g, _ = Omega[-1]  # g is going to be the "w" - the simplest one in the mrv set
     sig = sign(g.args[0], x)
     if sig == 1:
-        wsym = 1/wsym #if g goes to oo, substitute 1/w
+        wsym = 1/wsym  # if g goes to oo, substitute 1/w
     elif sig != -1:
         raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"

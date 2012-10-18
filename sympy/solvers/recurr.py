@@ -193,7 +193,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             C = [ c for c in C if (c not in solutions) ]
             result = y.subs(solutions)
         else:
-            return None # TBD
+            return None  # TBD
     else:
         A = r
         U = N+A+b+1

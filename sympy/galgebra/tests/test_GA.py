@@ -113,7 +113,7 @@ def test_geometry():
 
     A = F(e0, n, nbar)    # point a = (1,0,0)  A = F(a)
     B = F(e1, n, nbar)    # point b = (0,1,0)  B = F(b)
-    C = F(-1*e0, n, nbar) # point c = (-1,0,0) C = F(c)
+    C = F(-1*e0, n, nbar)  # point c = (-1,0,0) C = F(c)
     D = F(e2, n, nbar)    # point d = (0,0,1)  D = F(d)
     x0, x1, x2 = sympy.symbols('x0 x1 x2')
     X = F(MV([x0, x1, x2], 'vector'), n, nbar)

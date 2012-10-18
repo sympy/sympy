@@ -56,7 +56,7 @@ class LinearEntity(GeometryEntity):
         p2 = Point(p2)
         if p1 == p2:
             # Rolygon returns lower priority classes...should LinearEntity, too?
-            return p1 # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            return p1  # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -401,8 +401,8 @@ class LinearEntity(GeometryEntity):
 
         """
         d1, d2 = (self.p1 - self.p2).args
-        if d2 == 0: # If a horizontal line
-            if p.y == self.p1.y: # if p is on this linear entity
+        if d2 == 0:  # If a horizontal line
+            if p.y == self.p1.y:  # if p is on this linear entity
                 return Line(p, p + Point(0, 1))
             else:
                 p2 = Point(p.x, self.p1.y)
@@ -662,7 +662,7 @@ class LinearEntity(GeometryEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
             t = simplify(a1*b2 - a2*b1)
-            if t.equals(0) is not False: # assume they are parallel
+            if t.equals(0) is not False:  # assume they are parallel
                 if isinstance(self, Line):
                     if o.p1 in self:
                         return [o]
@@ -1384,7 +1384,7 @@ class Ray(LinearEntity):
         p = self.arbitrary_point(t)
         # get a t corresponding to length of 10
         want = 10
-        u = Segment(self.p1, p.subs(t, S.Half)).length # gives unit length
+        u = Segment(self.p1, p.subs(t, S.Half)).length  # gives unit length
         t_need = want/u
         return [t, 0, t_need/(1 + t_need)]
 

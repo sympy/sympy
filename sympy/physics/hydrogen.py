@@ -70,7 +70,7 @@ def R_nl(n, l, r, Z=1):
     # radial quantum number
     n_r = n - l - 1
     # rescaled "r"
-    a = 1/Z # Bohr radius
+    a = 1/Z  # Bohr radius
     r0 = 2 * r / (n * a)
     # normalization coefficient
     C = sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n+l)))

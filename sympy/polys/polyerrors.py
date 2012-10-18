@@ -11,7 +11,7 @@ class ExactQuotientFailed(BasePolynomialError):
     def __init__(self, f, g, dom=None):
         self.f, self.g, self.dom = f, g, dom
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         from sympy.printing.str import sstr
 
         if self.dom is None:
@@ -28,7 +28,7 @@ class OperationNotSupported(BasePolynomialError):
         self.poly = poly
         self.func = func
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
 class HeuristicGCDFailed(BasePolynomialError):
@@ -107,7 +107,7 @@ class PolificationFailed(PolynomialError):
         self.opt = opt
         self.seq = seq
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         if not self.seq:
             return "can't construct a polynomial from %s" % str(self.orig)
         else:

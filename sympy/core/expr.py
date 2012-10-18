@@ -86,7 +86,7 @@ class Expr(Basic, EvalfMixin):
                     return cls != Expr
 
         if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, C.Symbol):# XXX When you call a Symbol it is
+            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
                 return expr_to_call               # transformed into an UndefFunction
             else:
                 return expr_to_call(*on_args)
@@ -232,7 +232,7 @@ class Expr(Basic, EvalfMixin):
             return dif.is_nonnegative
         return C.GreaterThan(self, other)
 
-    @_sympifyit('other', False) # sympy >  other
+    @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
         dif = self - other
         if dif.is_nonpositive != dif.is_positive:
@@ -246,7 +246,7 @@ class Expr(Basic, EvalfMixin):
             return dif.is_positive
         return C.StrictGreaterThan(self, other)
 
-    @_sympifyit('other', False) # sympy >  other
+    @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
         dif = self - other
         if dif.is_negative != dif.is_nonnegative:
@@ -869,7 +869,7 @@ class Expr(Basic, EvalfMixin):
                 return S.One
             if o.is_Pow:
                 return o.args[1]
-            if o.is_Mul: # x**n*log(x)**n or x**n/log(x)**n
+            if o.is_Mul:  # x**n*log(x)**n or x**n/log(x)**n
                 for oi in o.args:
                     if oi.is_Symbol:
                         return S.One
@@ -1166,7 +1166,7 @@ class Expr(Basic, EvalfMixin):
                 return S.Zero
             elif co:
                 return Add(*co)
-        else: # both nc
+        else:  # both nc
             xargs, nx = x.args_cnc(cset=True)
             # find the parts that pass the commutative terms
             for a in args:
@@ -1421,7 +1421,7 @@ class Expr(Basic, EvalfMixin):
         sym = set()
         other = []
         for d in deps:
-            if isinstance(d, C.Symbol): # Symbol.is_Symbol is True
+            if isinstance(d, C.Symbol):  # Symbol.is_Symbol is True
                 sym.add(d)
             else:
                 other.append(d)
@@ -1452,10 +1452,10 @@ class Expr(Basic, EvalfMixin):
         d = sift(args, lambda x: has(x))
         depend = d[True]
         indep = d[False]
-        if func is Add: # all terms were treated as commutative
+        if func is Add:  # all terms were treated as commutative
             return (Add(*indep),
                     Add(*depend))
-        else: # handle noncommutative by stopping at first dependent term
+        else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
@@ -2307,18 +2307,18 @@ class Expr(Basic, EvalfMixin):
                 rep2 = x
                 rep2b = -x0
             s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
-            if n is None: # lseries...
+            if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
             # nseries...
             o = s.getO() or S.Zero
             s = s.removeO()
             if o and x0:
-                rep2b = 0 # when O() can handle x0 != 0 this can be removed
+                rep2b = 0  # when O() can handle x0 != 0 this can be removed
             return s.subs(x, rep2 + rep2b) + o
 
         # from here on it's x0=0 and dir='+' handling
 
-        if n != None: # nseries handling
+        if n != None:  # nseries handling
             s1 = self._eval_nseries(x, n=n, logx=None)
             o = s1.getO() or S.Zero
             if o:
@@ -2358,7 +2358,7 @@ class Expr(Basic, EvalfMixin):
             except NotImplementedError:
                 return s1 + o
 
-        else: # lseries handling
+        else:  # lseries handling
             def yield_lseries(s):
                 """Return terms of lseries one at a time."""
                 for si in s:
@@ -2461,7 +2461,7 @@ class Expr(Basic, EvalfMixin):
         """
         if x and not self.has(x):
             return self
-        if x is None or x0 or dir != '+':#{see XPOS above} or (x.is_positive == x.is_negative == None):
+        if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             assert logx == None
             return self.series(x, x0, n, dir)
         else:
@@ -2601,7 +2601,7 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols) # e.g. x, 2, y, z
+        new_symbols = map(sympify, symbols)  # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
         return Derivative(self, *new_symbols, **assumptions)
 
@@ -2868,8 +2868,8 @@ class Expr(Basic, EvalfMixin):
         allow = digits_needed = mag_first_dig + p
         if dps is not None and allow > dps:
             allow = dps
-        mag = Pow(10, p) # magnitude needed to bring digit p to units place
-        x += 1/(2*mag) # add the half for rounding
+        mag = Pow(10, p)  # magnitude needed to bring digit p to units place
+        x += 1/(2*mag)  # add the half for rounding
         i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
         rv = Integer(i10)//10
         q = 1

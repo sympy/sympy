@@ -112,7 +112,7 @@ def _randrange(seed=None):
     elif isinstance(seed, int):
         return random.Random(seed).randrange
     elif is_sequence(seed):
-        seed = list(seed) # make a copy
+        seed = list(seed)  # make a copy
         seed.reverse()
         def give(a, b=None, seq=seed):
             if b is None:
@@ -161,7 +161,7 @@ def _randint(seed=None):
     elif isinstance(seed, int):
         return random.Random(seed).randint
     elif is_sequence(seed):
-        seed = list(seed) # make a copy
+        seed = list(seed)  # make a copy
         seed.reverse()
         def give(a, b, seq=seed):
             a, b = as_int(a), as_int(b)

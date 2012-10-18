@@ -111,7 +111,7 @@ def operators_to_state(operators, **options):
         #ops = tuple(operators)
         ops = frozenset(operators)
 
-        if ops in op_mapping: #ops is a list of classes in this case
+        if ops in op_mapping:  # ops is a list of classes in this case
             #Try to get an object from default instances of the
             #operators...if this fails, return the class
             try:
@@ -207,7 +207,7 @@ def state_to_operators(state, **options):
     if not (isinstance(state, StateBase) or issubclass(state, StateBase)):
         raise NotImplementedError("Argument is not a state!")
 
-    if state in state_mapping: #state is a class
+    if state in state_mapping:  # state is a class
         state_inst = _make_default(state)
         try:
             ret = _get_ops(state_inst, \

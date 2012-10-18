@@ -44,10 +44,10 @@ def test_interval_pow():
     assert ((-3)**interval(1, 1) == interval(-3, -3)) == (True, True)
 
     a = interval(8, 64)**(2 / 3)
-    assert abs(a.start - 4) < 1e-10 #eps
+    assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
     a = interval(-8, 64)**(2 / 3)
-    assert abs(a.start - 4) < 1e-10 #eps
+    assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
 def test_exp():
     a = exp(interval(-np.inf, 0))

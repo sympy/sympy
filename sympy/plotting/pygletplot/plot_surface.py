@@ -26,7 +26,7 @@ class PlotSurface(PlotModeBase):
             column = list()
             for v in self.v_set:
                 try:
-                    _e = evaluate(u, v) # calculate vertex
+                    _e = evaluate(u, v)  # calculate vertex
                 except ZeroDivisionError:
                     _e = None
                 if _e is not None:  # update bounding box

@@ -278,5 +278,5 @@ def test_fidelity():
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unsupported data-type
-    x, y = 1, 2 #random values that is not a matrix
+    x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))

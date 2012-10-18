@@ -151,7 +151,7 @@ def checksol(f, symbol, sol=None, **flags):
                 continue
             if check is False:
                 return False
-            rv = None # don't return, wait to see if there's a False
+            rv = None  # don't return, wait to see if there's a False
         return rv
 
     if isinstance(f, Poly):
@@ -325,7 +325,7 @@ def check_assumptions(expr, **assumptions):
             continue
         elif test is not None:
             return False
-        result = None # Can't conclude, unless an other test fails.
+        result = None  # Can't conclude, unless an other test fails.
     return result
 
 
@@ -851,8 +851,8 @@ def solve(f, *symbols, **flags):
     if check and solution:
 
         warning = flags.get('warn', False)
-        got_None = [] # solutions for which one or more symbols gave None
-        no_False = [] # solutions for which no symbols gave False
+        got_None = []  # solutions for which one or more symbols gave None
+        no_False = []  # solutions for which no symbols gave False
         if type(solution) is list:
             if type(solution[0]) is tuple:
                 for sol in solution:
@@ -878,7 +878,7 @@ def solve(f, *symbols, **flags):
                         no_False.append(sol)
                         if a_None:
                             got_None.append(sol)
-            else: # list of expressions
+            else:  # list of expressions
                 for sol in solution:
                     test = check_assumptions(sol, **symbols[0].assumptions0)
                     if test is False:
@@ -911,7 +911,7 @@ def solve(f, *symbols, **flags):
             # TODO: check also variable assumptions for inequalities
 
         else:
-            raise TypeError('Unrecognized solution') # improve the checker
+            raise TypeError('Unrecognized solution')  # improve the checker
 
         solution = no_False
         if warning and got_None:
@@ -985,7 +985,7 @@ def _solve(f, *symbols, **flags):
                 if flags.get('simplify', True):
                     d = simplify(d)
                 return [{n: d}]
-            elif n and d: # otherwise there was no solution for s
+            elif n and d:  # otherwise there was no solution for s
                 failed.append(s)
         if not failed:
             return []
@@ -1050,9 +1050,9 @@ def _solve(f, *symbols, **flags):
                 sol = simplify(sol)
             return [sol]
 
-        result = False # no solution was obtained
-        msg = '' # there is no failure message
-        dens = denoms(f, symbols) # store these for checking later
+        result = False  # no solution was obtained
+        msg = ''  # there is no failure message
+        dens = denoms(f, symbols)  # store these for checking later
 
         # Poly is generally robust enough to convert anything to
         # a polynomial and tell us the different generators that it
@@ -1083,7 +1083,7 @@ def _solve(f, *symbols, **flags):
                 if not e.is_Mul:
                     return x, 1
                 c, ee = e.as_coeff_Mul()
-                if c.is_Rational and c is not S.One: # c could be a Float
+                if c.is_Rational and c is not S.One:  # c could be a Float
                     return b**ee, c.q
                 return x, 1
 
@@ -1110,7 +1110,7 @@ def _solve(f, *symbols, **flags):
 
                 funcs = [f for f in bases if f.is_Function]
                 if funcs:
-                    funcs.sort(key=count_ops) # put shallowest function first
+                    funcs.sort(key=count_ops)  # put shallowest function first
                     f1 = funcs[0]
                     t = Dummy('t')
                     # perform the substitution
@@ -1135,7 +1135,7 @@ def _solve(f, *symbols, **flags):
                 p = Dummy('p', positive=True)
                 cov = p**m
                 fnew = f_num.subs(base, cov)
-                poly = Poly(fnew, p) # we now have a single generator, p
+                poly = Poly(fnew, p)  # we now have a single generator, p
 
                 # for cubics and quartics, if the flag wasn't set, DON'T do it
                 # by default since the results are quite long. Perhaps one
@@ -1147,7 +1147,7 @@ def _solve(f, *symbols, **flags):
                 soln = roots(poly, cubics=True, quartics=True).keys()
                 if not soln:
                     soln = poly.all_roots()
-                    check = False # RootOf instances can not be checked
+                    check = False  # RootOf instances can not be checked
 
                 # We now know what the values of p are equal to. Now find out
                 # how they are related to the original x, e.g. if p**2 = cos(x)
@@ -1156,7 +1156,7 @@ def _solve(f, *symbols, **flags):
                 inversion = _solve(cov - base, symbol, **flags)
                 result = [i.subs(p, s) for i in inversion for s in soln]
 
-            else: # len(bases) == 1 and all(q == 1 for q in qs):
+            else:  # len(bases) == 1 and all(q == 1 for q in qs):
                 # e.g. case where gens are exp(x), exp(-x)
                 u = bases.pop()
                 t = Dummy('t')
@@ -1191,7 +1191,7 @@ def _solve(f, *symbols, **flags):
                 soln = roots(poly, cubics=True, quartics=True).keys()
                 if not soln:
                     soln = poly.all_roots()
-                    check = False # RootOf instances can not be checked
+                    check = False  # RootOf instances can not be checked
                 gen = poly.gen
                 if gen != symbol:
                     u = Dummy()
@@ -1338,8 +1338,8 @@ def _solve_system(exprs, symbols, **flags):
                 rv.sort(key=default_sort_key)
             return rv
 
-        solved_syms = set(solved_syms) # set of symbols we have solved for
-        legal = set(symbols) # what we are interested in
+        solved_syms = set(solved_syms)  # set of symbols we have solved for
+        legal = set(symbols)  # what we are interested in
         simplify_flag = flags.get('simplify', None)
         do_simplify = flags.get('simplify', True)
         # sort so equation with the fewest potential symbols is first;
@@ -1377,7 +1377,7 @@ def _solve_system(exprs, symbols, **flags):
                 if not ok_syms:
                     if r:
                         newresult.append(r)
-                    break # skip as it's independent of desired symbols
+                    break  # skip as it's independent of desired symbols
                 for s in ok_syms:
                     try:
                         soln = _solve(eq2, s, **flags)
@@ -1387,7 +1387,7 @@ def _solve_system(exprs, symbols, **flags):
                     # result in the new result list; use copy since the
                     # solution for s in being added in-place
                     if do_simplify:
-                        flags['simplify'] = False # for checksol's sake
+                        flags['simplify'] = False  # for checksol's sake
                     for sol in soln:
                         if check:
                             # check that it satisfies *other* equations
@@ -1562,9 +1562,9 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 
         if all_zero:
             return S.Zero, S.One
-    if n.is_Symbol: # there was no valid solution
+    if n.is_Symbol:  # there was no valid solution
         n = d = S.Zero
-    return n, d # should we cancel now?
+    return n, d  # should we cancel now?
 
 
 def solve_linear_system(system, *symbols, **flags):
@@ -1631,7 +1631,7 @@ def solve_linear_system(system, *symbols, **flags):
                     # is a constant and we assume that it does not simplify
                     # to zero XXX are there better ways to test this?
                     if not matrix[i, m].free_symbols:
-                        return None # no solution
+                        return None  # no solution
 
                     # zero row with non-zero rhs can only be accepted
                     # if there is another equivalent row, so look for
@@ -1777,7 +1777,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         # system using Gaussian elimination algorithm
         return solve(system, *coeffs, **flags)
     else:
-        return None # no solutions
+        return None  # no solutions
 
 
 def solve_linear_system_LU(matrix, syms):
@@ -2200,7 +2200,7 @@ def _invert(eq, *symbols, **kwargs):
                 inv = inverses[lhs.func]
             elif lhs.func is Abs:
                 inv = lambda w: w**2
-                lhs = Basic(lhs.args[0]**2) # get it ready to remove the args
+                lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
             else:
                 inv = lhs.inverse()
             rhs = inv(rhs)
@@ -2365,7 +2365,7 @@ def unrad(eq, *syms, **flags):
             # r0**2 - (r1+a)**2
             eq = t1 - (t2 + args**2 + 2*args*rterms[1])
 
-    elif len(bases) == 1: # change of variables may work
+    elif len(bases) == 1:  # change of variables may work
         ok = False
         covwas = len(cov)
         b = bases.pop()

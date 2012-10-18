@@ -68,7 +68,7 @@ def test_dagger():
     assert Dagger(B(n)) == Bd(n)
     assert Dagger(Bd(n)) == B(n)
     assert Dagger(B(0)+B(1)) == Bd(0) + Bd(1)
-    assert Dagger(n*m) == Dagger(n)*Dagger(m) # n, m commute
+    assert Dagger(n*m) == Dagger(n)*Dagger(m)  # n, m commute
     assert Dagger(B(n)*B(m)) == Bd(m)*Bd(n)
     assert Dagger(B(n)**10) == Dagger(B(n))**10
 
@@ -600,7 +600,7 @@ def test_equivalent_internal_lines_VT1T1():
     t = Function('t')
     dums = _get_ordered_dummies
 
-    exprs = [ # permute v.  Different dummy order. Not equivalent.
+    exprs = [  # permute v.  Different dummy order. Not equivalent.
             v(i, j, a, b)*t(a, i)*t(b, j),
             v(j, i, a, b)*t(a, i)*t(b, j),
             v(i, j, b, a)*t(a, i)*t(b, j),
@@ -609,7 +609,7 @@ def test_equivalent_internal_lines_VT1T1():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v.  Different dummy order. Equivalent
+    exprs = [  # permute v.  Different dummy order. Equivalent
             v(i, j, a, b)*t(a, i)*t(b, j),
             v(j, i, b, a)*t(a, i)*t(b, j),
             ]
@@ -617,7 +617,7 @@ def test_equivalent_internal_lines_VT1T1():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
-    exprs = [ # permute t.  Same dummy order, not equivalent.
+    exprs = [  # permute t.  Same dummy order, not equivalent.
             v(i, j, a, b)*t(a, i)*t(b, j),
             v(i, j, a, b)*t(b, i)*t(a, j),
             ]
@@ -625,7 +625,7 @@ def test_equivalent_internal_lines_VT1T1():
         assert dums(exprs[0]) == dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v and t.  Different dummy order, equivalent
+    exprs = [  # permute v and t.  Different dummy order, equivalent
             v(i, j, a, b)*t(a, i)*t(b, j),
             v(j, i, a, b)*t(a, j)*t(b, i),
             v(i, j, b, a)*t(b, i)*t(a, j),
@@ -754,7 +754,7 @@ def test_equivalent_internal_lines_VT2():
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v and t.  Relabelling of dummies should be equivalent.
+    exprs = [  # permute v and t.  Relabelling of dummies should be equivalent.
             v(i, j, a, b)*t(a, b, i, j),
             v(j, i, a, b)*t(a, b, j, i),
             v(i, j, b, a)*t(b, a, i, j),
@@ -979,7 +979,7 @@ def test_equivalent_internal_lines_VT1T1_AT():
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
 
 
-    exprs = [ # permute v.  Different dummy order. Not equivalent.
+    exprs = [  # permute v.  Different dummy order. Not equivalent.
             atv(i, j, a, b)*att(a, i)*att(b, j),
             atv(j, i, a, b)*att(a, i)*att(b, j),
             atv(i, j, b, a)*att(a, i)*att(b, j),
@@ -987,21 +987,21 @@ def test_equivalent_internal_lines_VT1T1_AT():
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v.  Different dummy order. Equivalent
+    exprs = [  # permute v.  Different dummy order. Equivalent
             atv(i, j, a, b)*att(a, i)*att(b, j),
             atv(j, i, b, a)*att(a, i)*att(b, j),
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
-    exprs = [ # permute t.  Same dummy order, not equivalent.
+    exprs = [  # permute t.  Same dummy order, not equivalent.
             atv(i, j, a, b)*att(a, i)*att(b, j),
             atv(i, j, a, b)*att(b, i)*att(a, j),
             ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v and t.  Different dummy order, equivalent
+    exprs = [  # permute v and t.  Different dummy order, equivalent
             atv(i, j, a, b)*att(a, i)*att(b, j),
             atv(j, i, a, b)*att(a, j)*att(b, i),
             atv(i, j, b, a)*att(b, i)*att(a, j),
@@ -1101,7 +1101,7 @@ def test_equivalent_internal_lines_VT2_AT():
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
-    exprs = [ # permute v and t.  Relabelling of dummies should be equivalent.
+    exprs = [  # permute v and t.  Relabelling of dummies should be equivalent.
             atv(i, j, a, b)*att(a, b, i, j),
             atv(j, i, a, b)*att(a, b, j, i),
             atv(i, j, b, a)*att(b, a, i, j),

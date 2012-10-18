@@ -218,7 +218,7 @@ def laguerre_poly(n, x=None, alpha=None, **args):
         raise ValueError("can't generate Laguerre polynomial of degree %s" % n)
 
     if alpha is not None:
-        K, alpha = construct_domain(alpha, field=True) # XXX: ground_field=True
+        K, alpha = construct_domain(alpha, field=True)  # XXX: ground_field=True
     else:
         K, alpha = QQ, QQ(0)
 

@@ -3,9 +3,9 @@ import random
 from operator import gt
 
 from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable # logical location
-from sympy.core.compatibility import as_int, quick_sort,\
-    product as cartes, combinations, combinations_with_replacement
+from sympy.core.compatibility import is_sequence, iterable  # logical location
+from sympy.core.compatibility import (as_int, quick_sort,
+         product as cartes, combinations, combinations_with_replacement)
 from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1202,8 +1202,8 @@ def generate_involutions(n):
     >>> len(generate_involutions(4))
     10
     """
-    P = range(n) # the items of the permutation
-    F = [0] # the fixed points {is this right??}
+    P = range(n)  # the items of the permutation
+    F = [0]  # the fixed points {is this right??}
     cache = set()
     def gen(P, F, t):
         if t == n:

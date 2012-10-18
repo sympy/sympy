@@ -200,7 +200,7 @@ def test_issue580():
     # definite integration of rational functions gives wrong answers
     assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
 
-def test_issue587(): # remove this when fresnel itegrals are implemented
+def test_issue587():  # remove this when fresnel itegrals are implemented
     from sympy import expand_func, fresnels
     assert expand_func(integrate(sin(x**2), x)) == \
            sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2

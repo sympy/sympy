@@ -80,7 +80,7 @@ class Basic(object):
     def __new__(cls, *args):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
-        obj._mhash = None # will be set by __hash__ method.
+        obj._mhash = None  # will be set by __hash__ method.
 
         obj._args = args  # all items in args must be Basic objects
         return obj
@@ -856,7 +856,7 @@ class Basic(object):
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
+        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             for old, new in sequence:

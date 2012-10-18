@@ -206,7 +206,7 @@ class Point(GeometryEntity):
         if len(points) == 0:
             return False
         if len(points) <= 2:
-            return True # two points always form a line
+            return True  # two points always form a line
         points = [Point(a) for a in points]
 
         # XXX Cross product is used now, but that only extends to three

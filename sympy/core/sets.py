@@ -339,7 +339,7 @@ class ProductSet(Set):
         try:
             if len(element) != len(self.args):
                 return False
-        except TypeError: # maybe element isn't an iterable
+        except TypeError:  # maybe element isn't an iterable
             return False
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
@@ -671,7 +671,7 @@ class Interval(Set, EvalfMixin):
             else:
                 right = Le(symbol, self.right)
         if self.is_left_unbounded and self.is_right_unbounded:
-            return True # XXX: Contained(symbol, Floats)
+            return True  # XXX: Contained(symbol, Floats)
         elif self.is_left_unbounded:
             return right
         elif self.is_right_unbounded:
@@ -718,7 +718,7 @@ class Union(Set, EvalfMixin):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if iterable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
@@ -912,7 +912,7 @@ class Intersection(Set):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if iterable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
@@ -1150,7 +1150,7 @@ class FiniteSet(Set, EvalfMixin):
         if len(args) == 0:
             return EmptySet()
 
-        args = frozenset(args) # remove duplicates
+        args = frozenset(args)  # remove duplicates
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
@@ -1222,10 +1222,10 @@ class FiniteSet(Set, EvalfMixin):
         # default_sort_key is not needed
         args = sorted(self.args)
 
-        intervals = [] # Build up a list of intervals between the elements
+        intervals = []  # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
         for a, b in zip(args[:-1], args[1:]):
-            intervals.append(Interval(a, b, True, True)) # open intervals
+            intervals.append(Interval(a, b, True, True))  # open intervals
         intervals.append(Interval(args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
 

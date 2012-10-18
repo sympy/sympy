@@ -296,7 +296,7 @@ class PygletPlot(object):
             if (not is_sequence(args)) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
-                return # no arguments given
+                return  # no arguments given
             kwargs = dict(bounds_callback=self.adjust_all_bounds)
             f = PlotMode(*args, **kwargs)
 

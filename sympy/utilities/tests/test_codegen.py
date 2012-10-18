@@ -378,7 +378,7 @@ def test_partial_loops_c():
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
-    i = Idx('i', (o, m - 5)) # Note: bounds are inclusive
+    i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
@@ -973,7 +973,7 @@ def test_partial_loops_f():
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
-    i = Idx('i', (o, m - 5)) # Note: bounds are inclusive
+    i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(

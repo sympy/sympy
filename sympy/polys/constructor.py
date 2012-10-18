@@ -108,12 +108,12 @@ def _construct_composite(coeffs, opt):
         denoms.append(denom)
 
     try:
-        polys, gens = parallel_dict_from_basic(numers + denoms) # XXX: sorting
+        polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
     except GeneratorsNeeded:
         return None
 
     if any(gen.is_number for gen in gens):
-        return None # generators are number-like so lets better use EX
+        return None  # generators are number-like so lets better use EX
 
     n = len(gens)
     k = len(polys)//2

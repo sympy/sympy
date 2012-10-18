@@ -59,7 +59,7 @@ def test_trace():
     assert Trace(eye(3)) == 3
     assert Trace(Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])) == 15
 
-    A / Trace(A) # Make sure this is possible
+    A / Trace(A)  # Make sure this is possible
 
     # Some easy simplifications
     assert Trace(Identity(5)) == 5
@@ -342,7 +342,7 @@ def test_MatrixSymbol():
     n, m, t = symbols('n,m,t')
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n, m)
-    raises(TypeError, lambda: MatrixSymbol('X', n, m)(t)) # issue 2756
+    raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
 
 def test_matrixify():
     n, m, l = symbols('n m l')

@@ -981,7 +981,7 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         lines = []
 
-        for line in range(expr.rows): # horrible, should be 'rows'
+        for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
         out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'

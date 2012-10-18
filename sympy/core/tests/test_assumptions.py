@@ -491,7 +491,7 @@ def test_hash_vs_typeinfo_2():
     x1= Symbol('x', even=True)
 
     assert x != x1
-    assert hash(x) != hash(x1) # This might fail with very low probability
+    assert hash(x) != hash(x1)  # This might fail with very low probability
 
 def test_hash_vs_eq():
     """catch: different hash for equal objects"""
@@ -572,7 +572,7 @@ def test_special_assumptions():
     e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
     assert (e < 0) is False
     assert (e > 0) is False
-    assert (e == 0) is False # it's not a literal 0
+    assert (e == 0) is False  # it's not a literal 0
     assert e.equals(0) is True
 
 def test_inconsistent():
