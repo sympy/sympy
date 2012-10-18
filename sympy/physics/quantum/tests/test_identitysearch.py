@@ -185,7 +185,7 @@ def test_generate_equivalent_ids_1():
     gate_ids = set([(x, y, z, h), (y, z, h, x),
                     (h, x, y, z), (h, z, y, x),
                     (z, y, x, h), (y, x, h, z),
-                    (z, h, x, y) ,(x, h, z, y)])
+                    (z, h, x, y),(x, h, z, y)])
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
     gate_seq = (x, y, x, y)

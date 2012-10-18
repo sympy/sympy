@@ -237,7 +237,7 @@ class Piecewise(Function):
                             """The evaluation of a Piecewise interval when both the lower
                             and the upper limit are symbolic is not yet implemented.""")
                     values.append(val)
-                if len(set(values)) == 1 :
+                if len(set(values)) == 1:
                     try:
                         c = c.subs(sym, rep)
                     except AttributeError:

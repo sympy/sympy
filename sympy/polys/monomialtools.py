@@ -257,12 +257,12 @@ igrlex = InverseOrder(grlex)
 igrevlex = InverseOrder(grevlex)
 
 _monomial_key = {
-    'lex'      : lex,
-    'grlex'    : grlex,
-    'grevlex'  : grevlex,
-    'ilex'     : ilex,
-    'igrlex'   : igrlex,
-    'igrevlex' : igrevlex
+    'lex': lex,
+    'grlex': grlex,
+    'grevlex': grevlex,
+    'ilex': ilex,
+    'igrlex': igrlex,
+    'igrevlex': igrevlex
 }
 
 def monomial_key(order=None):

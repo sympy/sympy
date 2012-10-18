@@ -89,9 +89,9 @@ def test_satisfiable():
 def test_pl_true():
     A, B, C = symbols('A,B,C')
     assert pl_true(True) == True
-    assert pl_true( A & B, {A : True, B : True}) == True
-    assert pl_true( A | B, {A : True}) == True
-    assert pl_true( A | B, {B : True}) == True
+    assert pl_true( A & B, {A: True, B: True}) == True
+    assert pl_true( A | B, {A: True}) == True
+    assert pl_true( A | B, {B: True}) == True
     assert pl_true( A | B, {A: None, B: True}) == True
     assert pl_true( A >> B, {A: False}) == True
     assert pl_true( A | B | ~C, {A: False, B: True, C: True}) == True

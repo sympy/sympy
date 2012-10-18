@@ -335,7 +335,7 @@ def test_args():
 def test_Cycle():
     assert Cycle(1, 2)(2,3) == Cycle(1, 3, 2)
     assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
-    assert Permutation(Cycle(1, 2)(2, 1, 0, 3)).cyclic_form , Cycle(0, 2, 1)
+    assert Permutation(Cycle(1, 2)(2, 1, 0, 3)).cyclic_form, Cycle(0, 2, 1)
     raises(ValueError, lambda: Cycle().list())
     assert Cycle(1,2).list() == [0, 2, 1]
     assert Cycle(1,2).list(4) == [0, 2, 1, 3]

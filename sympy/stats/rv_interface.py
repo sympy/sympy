@@ -87,7 +87,7 @@ def skewness(X, condition=None, **kwargs):
 
     mu = expectation(X, condition, **kwargs)
     sigma = std(X, condition, **kwargs)
-    return expectation( ((X-mu)/sigma) ** 3 , condition, **kwargs)
+    return expectation( ((X-mu)/sigma) ** 3, condition, **kwargs)
 
 P = probability
 E = expectation

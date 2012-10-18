@@ -165,8 +165,8 @@ def test_Subs():
     assert Subs(f(x), x, 0).free_symbols == set([])
     assert Subs(f(x, y), x, z).free_symbols == set([y, z])
 
-    assert Subs(f(x).diff(x), x, 0).doit() , Subs(f(x).diff(x), x, 0)
-    assert Subs(1 + f(x).diff(x), x, 0).doit() , 1 + Subs(f(x).diff(x), x, 0)
+    assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
+    assert Subs(1 + f(x).diff(x), x, 0).doit(), 1 + Subs(f(x).diff(x), x, 0)
     assert Subs(y*f(x, y).diff(x), (x, y), (0, 2)).doit() == \
             2*Subs(Derivative(f(x, 2), x), x, 0)
     assert Subs(y**2*f(x), x, 0).diff(y) == 2*y*f(0)
@@ -473,7 +473,7 @@ def test_unhandled():
     assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
 
 @XFAIL
-def test_issue_1612() :
+def test_issue_1612():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
 

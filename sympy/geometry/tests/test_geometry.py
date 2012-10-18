@@ -196,7 +196,7 @@ def test_line():
     l1_1 = Line(p1, p1_1)
     assert l1.perpendicular_line(p1) == l1_1
     assert Line.is_perpendicular(l1, l1_1)
-    assert Line.is_perpendicular(l1 , l2) == False
+    assert Line.is_perpendicular(l1, l2) == False
     p = l1.random_point()
     assert l1.perpendicular_segment(p) == p
 

@@ -75,9 +75,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
             candidates = {
-                "dvi" : [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps"  : [ "evince", "okular", "gsview", "gv" ],
-                "pdf" : [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
+                "ps": [ "evince", "okular", "gsview", "gv" ],
+                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
             }
 
             try:
@@ -131,9 +131,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
 
     if output != "dvi":
         command = {
-            "ps"  : "dvips -o %s.ps %s.dvi",
-            "pdf" : "dvipdf %s.dvi %s.pdf",
-            "png" : "dvipng -T tight -z 9 " + \
+            "ps": "dvips -o %s.ps %s.dvi",
+            "pdf": "dvipdf %s.dvi %s.pdf",
+            "png": "dvipng -T tight -z 9 " + \
                     "--truecolor -o %s.png %s.dvi",
         }
 

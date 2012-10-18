@@ -175,12 +175,12 @@ def test_Wild_properties():
     given_wildcards = [ S, R, Y, P, K, N ]
 
     goodmatch = {
-        S : (x,y,p,k,n),
-        R : (p,k,-k,n,-n,-3,3,pi,Rational(3,2)),
-        Y : (y,-3,3,pi,Rational(3,2),I ),
-        P : (p, n,3,pi, Rational(3,2)),
-        K : (k,-k,n,-n,-3,3),
-        N : (n,3)}
+        S: (x,y,p,k,n),
+        R: (p,k,-k,n,-n,-3,3,pi,Rational(3,2)),
+        Y: (y,-3,3,pi,Rational(3,2),I ),
+        P: (p, n,3,pi, Rational(3,2)),
+        K: (k,-k,n,-n,-3,3),
+        N: (n,3)}
 
     for A in given_wildcards:
         for pat in given_patterns:

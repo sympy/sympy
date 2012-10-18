@@ -1511,7 +1511,7 @@ class Vector(object):
         """Calls .doit() on each term in the Vector"""
         ov = S(0)
         for i, v in enumerate(self.args):
-            ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)) , v[1])])
+            ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)), v[1])])
         return ov
 
     def dt(self, otherframe):

@@ -646,9 +646,9 @@ class KanesMethod(object):
         l = len(self._qdep) # number of configuration constraints
         m = len(self._udep) # number of motion constraints
         qi = Matrix(self._q[: n - l]) # independent coords
-        qd = Matrix(self._q[n - l : n]) # dependent coords; could be empty
+        qd = Matrix(self._q[n - l: n]) # dependent coords; could be empty
         ui = Matrix(self._u[: o - m]) # independent speeds
-        ud = Matrix(self._u[o - m : o]) # dependent speeds; could be empty
+        ud = Matrix(self._u[o - m: o]) # dependent speeds; could be empty
         qdot = Matrix(self._qdot) # time derivatives of coordinates
 
         # with equations in the form MM udot = forcing, expand that to:

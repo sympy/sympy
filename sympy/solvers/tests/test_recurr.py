@@ -85,7 +85,7 @@ def test_rsolve():
     ]
 
     assert rsolve(f, y(n), [      0,      5 ]) == h
-    assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h
+    assert rsolve(f, y(n), {   0:0,   1:5 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
     assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
     assert rsolve(Eq(y(n), y(n-1) + y(n-2)), y(n), [0, 5]) == h
@@ -101,7 +101,7 @@ def test_rsolve():
     assert rsolve(f, y(n), {}) == g
 
     assert rsolve(f, y(n), [      0,      3 ]) == h
-    assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
+    assert rsolve(f, y(n), {   0:0,   1:3 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0

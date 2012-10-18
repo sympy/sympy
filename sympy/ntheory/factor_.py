@@ -1206,7 +1206,7 @@ def _divisors(n):
     def rec_gen(n = 0):
         if n == len(ps):
             yield 1
-        else :
+        else:
             pows = [1]
             for j in xrange(factordict[ps[n]]):
                 pows.append(pows[-1] * ps[n])
@@ -1214,7 +1214,7 @@ def _divisors(n):
                 for p in pows:
                     yield p * q
 
-    for p in rec_gen() :
+    for p in rec_gen():
         yield p
 
 def divisors(n, generator=False):

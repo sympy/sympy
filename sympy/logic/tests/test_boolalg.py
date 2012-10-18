@@ -28,7 +28,7 @@ def test_And():
     assert And(True,  A) == A
     assert And(False, A) == False
     assert And(True, True, True) == True
-    assert And(True, True , A) == A
+    assert And(True, True, A) == A
     assert And(True, False, A) == False
 
 def test_Or():
@@ -83,7 +83,7 @@ def test_Nand():
     assert Nand(True,  A) == ~A
     assert Nand(False, A) == True
     assert Nand(True, True, True) == False
-    assert Nand(True, True , A) == ~A
+    assert Nand(True, True, A) == ~A
     assert Nand(True, False, A) == True
 
 def test_Nor():
@@ -99,7 +99,7 @@ def test_Nor():
     assert Nor(True,  A) == False
     assert Nor(False, A) == ~A
     assert Nor(True, True, True) == False
-    assert Nor(True, True , A) == False
+    assert Nor(True, True, A) == False
     assert Nor(True, False, A) == False
 
 def test_Implies():

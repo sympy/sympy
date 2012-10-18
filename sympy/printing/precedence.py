@@ -19,12 +19,12 @@ PRECEDENCE = {
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
-    "Or" : PRECEDENCE["Or"],
-    "And" : PRECEDENCE["And"],
-    "Add" : PRECEDENCE["Add"],
-    "Pow" : PRECEDENCE["Pow"],
-    "Relational" : PRECEDENCE["Relational"],
-    "Sub" : PRECEDENCE["Add"],
+    "Or": PRECEDENCE["Or"],
+    "And": PRECEDENCE["And"],
+    "Add": PRECEDENCE["Add"],
+    "Pow": PRECEDENCE["Pow"],
+    "Relational": PRECEDENCE["Relational"],
+    "Sub": PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
     "factorial": PRECEDENCE["Pow"],
     "factorial2": PRECEDENCE["Pow"],
@@ -58,9 +58,9 @@ def precedence_Float(item):
     return PRECEDENCE["Atom"]
 
 PRECEDENCE_FUNCTIONS = {
-    "Integer" : precedence_Integer,
-    "Mul" : precedence_Mul,
-    "Rational" : precedence_Rational,
+    "Integer": precedence_Integer,
+    "Mul": precedence_Mul,
+    "Rational": precedence_Rational,
     "Float": precedence_Float,
 }
 

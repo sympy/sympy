@@ -156,7 +156,7 @@ def refine_exp(expr, assumptions):
                     return S.ImaginaryUnit
 
 handlers_dict = {
-    'Abs'        : refine_abs,
-    'Pow'        : refine_Pow,
-    'exp'        : refine_exp,
+    'Abs': refine_abs,
+    'Pow': refine_Pow,
+    'exp': refine_exp,
 }

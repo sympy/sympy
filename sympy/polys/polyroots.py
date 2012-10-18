@@ -583,7 +583,7 @@ def roots(f, *gens, **flags):
     if not k:
         zeros = {}
     else:
-        zeros = {S(0) : k}
+        zeros = {S(0): k}
 
     coeff, f = preprocess_roots(f)
 
@@ -625,10 +625,10 @@ def roots(f, *gens, **flags):
 
     if filter not in [None, 'C']:
         handlers = {
-            'Z' : lambda r: r.is_Integer,
-            'Q' : lambda r: r.is_Rational,
-            'R' : lambda r: r.is_real,
-            'I' : lambda r: r.is_imaginary,
+            'Z': lambda r: r.is_Integer,
+            'Q': lambda r: r.is_Rational,
+            'R': lambda r: r.is_real,
+            'I': lambda r: r.is_imaginary,
         }
 
         try:

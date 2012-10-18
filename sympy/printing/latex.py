@@ -56,10 +56,10 @@ class LatexPrinter(Printer):
                     "'equation' or 'equation*'")
 
         mul_symbol_table = {
-            None : r" ",
-            "ldot" : r" \,.\, ",
-            "dot" : r" \cdot ",
-            "times" : r" \times "
+            None: r" ",
+            "ldot": r" \,.\, ",
+            "dot": r" \cdot ",
+            "times": r" \times "
         }
 
         self._settings['mul_symbol_latex'] = \
@@ -954,12 +954,12 @@ class LatexPrinter(Printer):
             lt = "<"
 
         charmap = {
-            "==" : "=",
-            ">"  : gt,
-            "<"  : lt,
-            ">=" : r"\geq",
-            "<=" : r"\leq",
-            "!=" : r"\neq",
+            "==": "=",
+            ">": gt,
+            "<": lt,
+            ">=": r"\geq",
+            "<=": r"\leq",
+            "!=": r"\neq",
         }
 
         return "%s %s %s" % (self._print(expr.lhs),

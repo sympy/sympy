@@ -160,7 +160,7 @@ def test_subs_dict1():
     c2, c3, q1p, q2p, c1, s1, s2, s3 = symbols('c2 c3 q1p q2p c1 s1 s2 s3')
     test = (c2**2*q2p*c3 + c1**2*s2**2*q2p*c3 + s1**2*s2**2*q2p*c3
             - c1**2*q1p*c2*s3 - s1**2*q1p*c2*s3)
-    assert (test.subs({c1**2 : 1 - s1**2, c2**2 : 1 - s2**2, c3**3: 1 - s3**2})
+    assert (test.subs({c1**2: 1 - s1**2, c2**2: 1 - s2**2, c3**3: 1 - s3**2})
         == c3*q2p*(1 - s2**2) + c3*q2p*s2**2*(1 - s1**2)
             - c2*q1p*s3*(1 - s1**2) + c3*q2p*s1**2*s2**2 - c2*q1p*s3*s1**2)
 
@@ -453,7 +453,7 @@ def test_no_arith_subs_on_floats():
     assert (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
 
 @XFAIL
-def test_issue_2261() :
+def test_issue_2261():
     x = Symbol('x')
     assert (1/x).subs(x, 0) == 1/S(0)
 

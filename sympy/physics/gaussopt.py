@@ -253,7 +253,7 @@ class CurvedRefraction(RayTransferMatrix):
     [(n1 - n2)/(R*n2), n1/n2]
     """
     def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
+        R, n1, n2 = sympify((R, n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
 
 class FlatMirror(RayTransferMatrix):

@@ -1053,43 +1053,43 @@ evalf_table = None
 def _create_evalf_table():
     global evalf_table
     evalf_table = {
-        C.Symbol : evalf_symbol,
-        C.Dummy : evalf_symbol,
-        C.Float : lambda x, prec, options: (x._mpf_, None, prec, None),
-        C.Rational : lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
-        C.Integer : lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
-        C.Zero : lambda x, prec, options: (None, None, prec, None),
-        C.One : lambda x, prec, options: (fone, None, prec, None),
-        C.Half : lambda x, prec, options: (fhalf, None, prec, None),
-        C.Pi : lambda x, prec, options: (mpf_pi(prec), None, prec, None),
-        C.Exp1 : lambda x, prec, options: (mpf_e(prec), None, prec, None),
-        C.ImaginaryUnit : lambda x, prec, options: (None, fone, None, prec),
-        C.NegativeOne : lambda x, prec, options: (fnone, None, prec, None),
+        C.Symbol: evalf_symbol,
+        C.Dummy: evalf_symbol,
+        C.Float: lambda x, prec, options: (x._mpf_, None, prec, None),
+        C.Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
+        C.Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
+        C.Zero: lambda x, prec, options: (None, None, prec, None),
+        C.One: lambda x, prec, options: (fone, None, prec, None),
+        C.Half: lambda x, prec, options: (fhalf, None, prec, None),
+        C.Pi: lambda x, prec, options: (mpf_pi(prec), None, prec, None),
+        C.Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
+        C.ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
+        C.NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
 
-        C.exp : lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
+        C.exp: lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
         evaluate=False), prec, options),
 
-        C.cos : evalf_trig,
-        C.sin : evalf_trig,
+        C.cos: evalf_trig,
+        C.sin: evalf_trig,
 
-        C.Add : evalf_add,
-        C.Mul : evalf_mul,
-        C.Pow : evalf_pow,
+        C.Add: evalf_add,
+        C.Mul: evalf_mul,
+        C.Pow: evalf_pow,
 
-        C.log : evalf_log,
-        C.atan : evalf_atan,
-        C.Abs : evalf_abs,
+        C.log: evalf_log,
+        C.atan: evalf_atan,
+        C.Abs: evalf_abs,
 
-        C.re : evalf_re,
-        C.im : evalf_im,
-        C.floor : evalf_floor,
-        C.ceiling : evalf_ceiling,
+        C.re: evalf_re,
+        C.im: evalf_im,
+        C.floor: evalf_floor,
+        C.ceiling: evalf_ceiling,
 
-        C.Integral : evalf_integral,
-        C.Sum : evalf_sum,
-        C.Piecewise : evalf_piecewise,
+        C.Integral: evalf_integral,
+        C.Sum: evalf_sum,
+        C.Piecewise: evalf_piecewise,
 
-        C.bernoulli : evalf_bernoulli,
+        C.bernoulli: evalf_bernoulli,
     }
 
 def evalf(x, prec, options):

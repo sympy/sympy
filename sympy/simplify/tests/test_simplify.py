@@ -587,7 +587,7 @@ def test_collect_D():
 
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
     assert collect(a*D(fx, x) + b*D(fx, x), fx)   == (a + b)*D(fx, x)
-    assert collect(a*fxx     + b*fxx    , fx)   == (a + b)*D(fx, x)
+    assert collect(a*fxx     + b*fxx, fx)   == (a + b)*D(fx, x)
     # 1685
     assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
     assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) ==\
@@ -610,7 +610,7 @@ def test_collect_D_0():
 
     # collect does not distinguish nested derivatives, so it returns
     #                                           -- (a + b)*D(D(f, x), x)
-    assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
+    assert collect(a*fxx     + b*fxx, fxx)  == (a + b)*fxx
 
 def test_collect_Wild():
     """Collect with respect to functions with Wild argument"""

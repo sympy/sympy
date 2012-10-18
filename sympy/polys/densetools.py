@@ -987,7 +987,7 @@ def _dup_right_decompose(f, s, K):
     lc = dup_LC(f, K)
 
     f = dup_to_raw_dict(f)
-    g = { s : K.one }
+    g = { s: K.one }
 
     r = n // s
 

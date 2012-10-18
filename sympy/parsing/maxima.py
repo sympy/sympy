@@ -24,21 +24,21 @@ class MaximaHelpers:
         return 1/cos(expr)
 
 sub_dict = {
-        'pi' : re.compile('%pi'),
-        'E' : re.compile('%e'),
-        'I' : re.compile('%i'),
+        'pi': re.compile('%pi'),
+        'E': re.compile('%e'),
+        'I': re.compile('%i'),
         '**': re.compile('\^'),
         'oo': re.compile(r'\binf\b'),
         '-oo': re.compile(r'\bminf\b'),
-        "'-'" : re.compile(r'\bminus\b'),
-        'maxima_expand' : re.compile(r'\bexpand\b'),
-        'maxima_float'  : re.compile(r'\bfloat\b'),
-        'maxima_trigexpand' : re.compile(r'\btrigexpand'),
-        'maxima_sum' : re.compile(r'\bsum\b'),
-        'maxima_product' : re.compile(r'\bproduct\b'),
-        'cancel' : re.compile(r'\bratsimp\b'),
-        'maxima_csc' : re.compile(r'\bcsc\b'),
-        'maxima_sec' : re.compile(r'\bsec\b')
+        "'-'": re.compile(r'\bminus\b'),
+        'maxima_expand': re.compile(r'\bexpand\b'),
+        'maxima_float': re.compile(r'\bfloat\b'),
+        'maxima_trigexpand': re.compile(r'\btrigexpand'),
+        'maxima_sum': re.compile(r'\bsum\b'),
+        'maxima_product': re.compile(r'\bproduct\b'),
+        'cancel': re.compile(r'\bratsimp\b'),
+        'maxima_csc': re.compile(r'\bcsc\b'),
+        'maxima_sec': re.compile(r'\bsec\b')
 }
 
 var_name = re.compile('^\s*(\w+)\s*:')

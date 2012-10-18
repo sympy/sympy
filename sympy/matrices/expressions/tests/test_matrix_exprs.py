@@ -55,7 +55,7 @@ def test_trace():
     B = MatrixSymbol('B', n, n)
     assert isinstance(Trace(A), Trace)
     assert not isinstance(Trace(A), MatrixExpr)
-    raises(ShapeError, lambda : Trace(MatrixSymbol('B', 3, 4)))
+    raises(ShapeError, lambda: Trace(MatrixSymbol('B', 3, 4)))
     assert Trace(eye(3)) == 3
     assert Trace(Matrix(3,3,[1,2,3,4,5,6,7,8,9])) == 15
 
@@ -71,7 +71,7 @@ def test_trace():
     F = FunctionMatrix(3,3, Lambda((i,j), i+j))
     assert Trace(F).doit() == (0+0) + (1+1) + (2+2)
 
-    raises(TypeError, lambda : Trace(S.One))
+    raises(TypeError, lambda: Trace(S.One))
 
     assert Trace(A).arg is A
 

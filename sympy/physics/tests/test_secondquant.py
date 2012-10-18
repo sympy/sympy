@@ -767,8 +767,8 @@ def test_equivalent_internal_lines_VT2():
 def test_internal_external_VT2T2():
     ii, jj = symbols('i j',below_fermi=True)
     aa, bb = symbols('a b',above_fermi=True)
-    k, l = symbols('k l'  ,below_fermi=True, cls=Dummy)
-    c, d = symbols('c d'  ,above_fermi=True, cls=Dummy)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -805,8 +805,8 @@ def test_internal_external_VT2T2():
 def test_internal_external_pqrs():
     ii, jj = symbols('i j')
     aa, bb = symbols('a b')
-    k, l = symbols('k l'  , cls=Dummy)
-    c, d = symbols('c d'  , cls=Dummy)
+    k, l = symbols('k l', cls=Dummy)
+    c, d = symbols('c d', cls=Dummy)
 
     v = Function('v')
     t = Function('t')
@@ -1113,8 +1113,8 @@ def test_equivalent_internal_lines_VT2_AT():
 def test_internal_external_VT2T2_AT():
     ii, jj = symbols('i j',below_fermi=True)
     aa, bb = symbols('a b',above_fermi=True)
-    k, l = symbols('k l'  ,below_fermi=True, cls=Dummy)
-    c, d = symbols('c d'  ,above_fermi=True, cls=Dummy)
+    k, l = symbols('k l',below_fermi=True, cls=Dummy)
+    c, d = symbols('c d',above_fermi=True, cls=Dummy)
 
     exprs = [
             atv(k,l,c,d)*att(aa, c, ii, k)*att(bb, d, jj, l),
@@ -1144,8 +1144,8 @@ def test_internal_external_VT2T2_AT():
 def test_internal_external_pqrs_AT():
     ii, jj = symbols('i j')
     aa, bb = symbols('a b')
-    k, l = symbols('k l'  , cls=Dummy)
-    c, d = symbols('c d'  , cls=Dummy)
+    k, l = symbols('k l', cls=Dummy)
+    c, d = symbols('c d', cls=Dummy)
 
 
     exprs = [

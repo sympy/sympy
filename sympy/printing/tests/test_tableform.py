@@ -84,7 +84,7 @@ def test_TableForm():
     xxx | 1   100
      x  | 100   1''')
 
-    s = TableForm(d ,headings=(('xxx','x'),None))
+    s = TableForm(d,headings=(('xxx','x'),None))
     assert str(s) == (
         'xxx | 1   100\n'
         '  x | 100 1  '

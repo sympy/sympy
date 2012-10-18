@@ -153,17 +153,17 @@ def test_complex():
     a,b,c = map(Symbol, 'abc')
     x,y = map(Wild, 'xy')
 
-    assert (1+I).match(x+I) == {x : 1}
-    assert (a+I).match(x+I) == {x : a}
-    assert (2*I).match(x*I) == {x : 2}
-    assert (a*I).match(x*I) == {x : a}
-    assert (a*I).match(x*y) == {x : I, y : a}
-    assert (2*I).match(x*y) == {x : 2, y : I}
+    assert (1+I).match(x+I) == {x: 1}
+    assert (a+I).match(x+I) == {x: a}
+    assert (2*I).match(x*I) == {x: 2}
+    assert (a*I).match(x*I) == {x: a}
+    assert (a*I).match(x*y) == {x: I, y: a}
+    assert (2*I).match(x*y) == {x: 2, y: I}
 
     #Result is ambiguous, so we need to use Wild's exclude keyword
     x = Wild('x', exclude=[I])
     y = Wild('y', exclude=[I])
-    assert (a+b*I).match(x+y*I) == {x : a, y : b}
+    assert (a+b*I).match(x+y*I) == {x: a, y: b}
 
 def test_functions():
     from sympy.core.function import WildFunction
@@ -359,8 +359,8 @@ def test_match_wild_wild():
     q = Wild('q')
     r = Wild('r')
 
-    assert p.match(q+r)  in  [ {q: p, r: 0} , {q: 0, r: p} ]
-    assert p.match(q*r)  in  [ {q: p, r: 1} , {q: 1, r: p} ]
+    assert p.match(q+r)  in  [ {q: p, r: 0}, {q: 0, r: p} ]
+    assert p.match(q*r)  in  [ {q: p, r: 1}, {q: 1, r: p} ]
 
 
     p = Wild('p')

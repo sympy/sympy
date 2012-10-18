@@ -165,7 +165,7 @@ def test_differential_operator():
 
     # 2D polar Laplacian (th = theta)
     r, th = symbols('r th')
-    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r) , r) + \
+    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r), r) + \
                              1/(r**2)*Derivative(f(r, th), th, 2), f(r, th))
     w = Wavefunction(r**2*sin(th), r, (th, 0, pi))
     assert d.expr == \

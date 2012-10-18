@@ -165,8 +165,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
         return indep * f * x
 
     rewritables = {
-        (sin, cos, cot)     : tan,
-        (sinh, cosh, coth)  : tanh,
+        (sin, cos, cot): tan,
+        (sinh, cosh, coth): tanh,
     }
 
     if rewrite:

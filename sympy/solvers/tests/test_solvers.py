@@ -132,8 +132,8 @@ def test_solve_polynomial1():
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         {
-            x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
-            y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+            x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
+            y: (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
         }
 
     solution = {y: S.Zero, x: S.Zero}
@@ -282,7 +282,7 @@ def test_tsolve():
     # issue #1408
     assert solve(y-b/(1+a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
     # issue #1407
-    assert solve(y-a*x**b , x) == [(y/a)**(1/b)]
+    assert solve(y-a*x**b, x) == [(y/a)**(1/b)]
     # issue #1406
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue #1405
@@ -296,8 +296,8 @@ def test_solve_for_functions_derivatives():
 
     soln = solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y)
     assert soln == {
-        x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
-        y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+        x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
+        y: (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
         }
 
     assert solve(x - 1, x) == [1]
@@ -305,14 +305,14 @@ def test_solve_for_functions_derivatives():
 
     soln = solve([a11*x.diff(t) + a12*y.diff(t) - b1, a21*x.diff(t) +
             a22*y.diff(t) - b2], x.diff(t), y.diff(t))
-    assert soln == { y.diff(t) : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
-            x.diff(t) : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
+    assert soln == { y.diff(t): (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+            x.diff(t): (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
     assert solve(x.diff(t)-1, x.diff(t)) == [1]
     assert solve(3*x.diff(t)-2, x.diff(t)) == [Rational(2,3)]
 
     eqns = set((3*x - 1, 2*y-4))
-    assert solve(eqns, set((x,y))) == { x : Rational(1, 3), y: 2 }
+    assert solve(eqns, set((x,y))) == { x: Rational(1, 3), y: 2 }
     x = Symbol('x')
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
@@ -324,8 +324,8 @@ def test_solve_for_functions_derivatives():
 
     soln = solve([a11*x + a12*y.diff(t) - b1, a21*x +
             a22*y.diff(t) - b2], x, y.diff(t))
-    assert soln == { y.diff(t) : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
-            x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
+    assert soln == { y.diff(t): (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+            x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
 def test_issue626():
     f = Function('f')
@@ -567,7 +567,7 @@ def test_issue_2668():
         set([(-sqrt(-y - 4),), (sqrt(-y - 4),)])
 
 def test_polysys():
-    assert set(solve([x**2 + 2/y - 2 , x + y - 3], [x, y])) == \
+    assert set(solve([x**2 + 2/y - 2, x + y - 3], [x, y])) == \
         set([(S(1), S(2)), (1 + sqrt(5), 2 - sqrt(5)),
         (1 - sqrt(5), 2 + sqrt(5))])
     assert solve([x**2 + y - 2, x**2 + y]) == []

@@ -105,7 +105,7 @@ else {
     assert p == s
 
 def test_jscode_settings():
-    raises(TypeError, lambda : jscode(sin(x),method="garbage"))
+    raises(TypeError, lambda: jscode(sin(x),method="garbage"))
 
 def test_jscode_Indexed():
     from sympy.tensor import IndexedBase, Idx

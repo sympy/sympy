@@ -258,12 +258,12 @@ class Lambdifier(object):
         namespace.update({'sqrt': sqrt})
         # End workaround.
         if use_python_math:
-            namespace.update({'math' : __import__('math')})
+            namespace.update({'math': __import__('math')})
         if use_python_cmath:
-            namespace.update({'cmath' : __import__('cmath')})
+            namespace.update({'cmath': __import__('cmath')})
         if use_np:
             try:
-                namespace.update({'np' : __import__('numpy')})
+                namespace.update({'np': __import__('numpy')})
             except ImportError:
                 raise ImportError('experimental_lambdify failed to import numpy.')
         if use_interval:
@@ -294,7 +294,7 @@ class Lambdifier(object):
 
     # Strings that should be translated
     builtin_not_functions = {
-            'I' :'1j',
+            'I':'1j',
             'oo':'1e400',
             }
 
@@ -335,7 +335,7 @@ class Lambdifier(object):
     numpy_not_functions = {
             'pi':'np.pi',
             'oo':'np.inf',
-            'E' :'np.e',
+            'E':'np.e',
             }
 
     ###
@@ -364,7 +364,7 @@ class Lambdifier(object):
     # Strings that should be translated
     math_not_functions = {
             'pi':'math.pi',
-            'E' :'math.e',
+            'E':'math.e',
             }
 
     ###
@@ -390,7 +390,7 @@ class Lambdifier(object):
     # Strings that should be translated
     cmath_not_functions = {
             'pi':'cmath.pi',
-            'E' :'cmath.e',
+            'E':'cmath.e',
             }
     ###
     # intervalmath
@@ -400,7 +400,7 @@ class Lambdifier(object):
             'E':'cmath.e'
             }
     interval_functions_same = [
-       'sin' , 'cos', 'exp', 'tan', 'atan', 'log',
+       'sin', 'cos', 'exp', 'tan', 'atan', 'log',
        'sqrt','cosh', 'sinh', 'tanh', 'floor',
        'acos', 'asin', 'acosh', 'asinh', 'atanh',
        'Abs', 'And', 'Or'
@@ -615,7 +615,7 @@ class Lambdifier(object):
                     continue
                 else:
                     args_dict.update(cls.sympy_expression_namespace(a))
-            args_dict.update({funcname : expr.func})
+            args_dict.update({funcname: expr.func})
             return args_dict
 
     @staticmethod

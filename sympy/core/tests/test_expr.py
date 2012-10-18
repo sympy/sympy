@@ -816,7 +816,7 @@ def test_as_coeff_exponent():
     D = Derivative
     f = Function('f')
     fx  = D(f(x), x)
-    assert fx.as_coeff_exponent(f(x)) == (fx ,0)
+    assert fx.as_coeff_exponent(f(x)) == (fx,0)
 
 def test_extractions():
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2

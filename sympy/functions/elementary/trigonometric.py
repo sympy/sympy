@@ -250,7 +250,7 @@ class sin(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
+        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
@@ -439,8 +439,8 @@ class cos(TrigonometricFunction):
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
             cst_table_some = {
-                3 : S.Half,
-                5 : (sqrt(5) + 1)/4,
+                3: S.Half,
+                5: (sqrt(5) + 1)/4,
             }
             if pi_coeff.is_Rational:
                 q = pi_coeff.q
@@ -512,7 +512,7 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
+        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) + exp(-arg*I)) / 2
 
@@ -583,9 +583,9 @@ class cos(TrigonometricFunction):
             return None
 
         cst_table_some = {
-            3 : S.Half,
-            5 : (sqrt(5) + 1)/4,
-            17 : sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) + \
+            3: S.Half,
+            5: (sqrt(5) + 1)/4,
+            17: sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) + \
                 sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17)) \
                 *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32)
             # 65537 and 257 are the only other known Fermat primes
@@ -783,10 +783,10 @@ class tan(TrigonometricFunction):
                 return None
 
             cst_table = {
-                2 : S.ComplexInfinity,
-                3 : sqrt(3),
-                4 : S.One,
-                6 : 1 / sqrt(3),
+                2: S.ComplexInfinity,
+                3: sqrt(3),
+                4: S.One,
+                6: 1 / sqrt(3),
             }
 
             try:
@@ -883,7 +883,7 @@ class tan(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
+        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
@@ -967,10 +967,10 @@ class cot(TrigonometricFunction):
                 return None
 
             cst_table = {
-                2 : S.Zero,
-                3 : 1 / sqrt(3),
-                4 : S.One,
-                6 : sqrt(3)
+                2: S.Zero,
+                3: 1 / sqrt(3),
+                4: S.One,
+                6: sqrt(3)
             }
 
             try:
@@ -1060,7 +1060,7 @@ class cot(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction) :
+        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
@@ -1156,24 +1156,24 @@ class asin(Function):
 
         if arg.is_number:
             cst_table = {
-                sqrt(3)/2  : 3,
-                -sqrt(3)/2 : -3,
-                sqrt(2)/2  : 4,
-                -sqrt(2)/2 : -4,
-                1/sqrt(2)  : 4,
-                -1/sqrt(2) : -4,
-                sqrt((5-sqrt(5))/8) : 5,
-                -sqrt((5-sqrt(5))/8) : -5,
-                S.Half     : 6,
-                -S.Half    : -6,
-                sqrt(2-sqrt(2))/2 : 8,
-                -sqrt(2-sqrt(2))/2 : -8,
-                (sqrt(5)-1)/4 : 10,
-                (1-sqrt(5))/4 : -10,
-                (sqrt(3)-1)/sqrt(2**3) : 12,
-                (1-sqrt(3))/sqrt(2**3) : -12,
-                (sqrt(5)+1)/4 : S(10)/3,
-                -(sqrt(5)+1)/4 : -S(10)/3
+                sqrt(3)/2: 3,
+                -sqrt(3)/2: -3,
+                sqrt(2)/2: 4,
+                -sqrt(2)/2: -4,
+                1/sqrt(2): 4,
+                -1/sqrt(2): -4,
+                sqrt((5-sqrt(5))/8): 5,
+                -sqrt((5-sqrt(5))/8): -5,
+                S.Half: 6,
+                -S.Half: -6,
+                sqrt(2-sqrt(2))/2: 8,
+                -sqrt(2-sqrt(2))/2: -8,
+                (sqrt(5)-1)/4: 10,
+                (1-sqrt(5))/4: -10,
+                (sqrt(3)-1)/sqrt(2**3): 12,
+                (1-sqrt(3))/sqrt(2**3): -12,
+                (sqrt(5)+1)/4: S(10)/3,
+                -(sqrt(5)+1)/4: -S(10)/3
                 }
 
             if arg in cst_table:
@@ -1276,14 +1276,14 @@ class acos(Function):
 
         if arg.is_number:
             cst_table = {
-                S.Half     : S.Pi/3,
-                -S.Half    : 2*S.Pi/3,
-                sqrt(2)/2  : S.Pi/4,
-                -sqrt(2)/2 : 3*S.Pi/4,
-                1/sqrt(2)  : S.Pi/4,
-                -1/sqrt(2) : 3*S.Pi/4,
-                sqrt(3)/2  : S.Pi/6,
-                -sqrt(3)/2 : 5*S.Pi/6,
+                S.Half: S.Pi/3,
+                -S.Half: 2*S.Pi/3,
+                sqrt(2)/2: S.Pi/4,
+                -sqrt(2)/2: 3*S.Pi/4,
+                1/sqrt(2): S.Pi/4,
+                -1/sqrt(2): 3*S.Pi/4,
+                sqrt(3)/2: S.Pi/6,
+                -sqrt(3)/2: 5*S.Pi/6,
                 }
 
             if arg in cst_table:
@@ -1390,20 +1390,20 @@ class atan(Function):
 
         if arg.is_number:
             cst_table = {
-                sqrt(3)/3  : 6,
-                -sqrt(3)/3 : -6,
-                1/sqrt(3)  : 6,
-                -1/sqrt(3) : -6,
-                sqrt(3)    : 3,
-                -sqrt(3)   : -3,
-                (1+sqrt(2)) : S(8)/3,
-                -(1+sqrt(2)) : S(8)/3,
-                (sqrt(2)-1) : 8,
-                (1-sqrt(2)) : -8,
-                sqrt((5+2*sqrt(5))) : S(5)/2,
-                -sqrt((5+2*sqrt(5))) : -S(5)/2,
-                (2-sqrt(3)) : 12,
-                -(2-sqrt(3)) : -12
+                sqrt(3)/3: 6,
+                -sqrt(3)/3: -6,
+                1/sqrt(3): 6,
+                -1/sqrt(3): -6,
+                sqrt(3): 3,
+                -sqrt(3): -3,
+                (1+sqrt(2)): S(8)/3,
+                -(1+sqrt(2)): S(8)/3,
+                (sqrt(2)-1): 8,
+                (1-sqrt(2)): -8,
+                sqrt((5+2*sqrt(5))): S(5)/2,
+                -sqrt((5+2*sqrt(5))): -S(5)/2,
+                (2-sqrt(3)): 12,
+                -(2-sqrt(3)): -12
                 }
 
             if arg in cst_table:
@@ -1485,22 +1485,22 @@ class acot(Function):
 
         if arg.is_number:
             cst_table = {
-                sqrt(3)/3  : 3,
-                -sqrt(3)/3 : -3,
-                1/sqrt(3)  : 3,
-                -1/sqrt(3) : -3,
-                sqrt(3)    : 6,
-                -sqrt(3)   : -6,
-                (1+sqrt(2)) : 8,
-                -(1+sqrt(2)) : -8,
-                (1-sqrt(2)) : -S(8)/3,
-                (sqrt(2)-1) : S(8)/3,
-                sqrt(5+2*sqrt(5)) : 10,
-                -sqrt(5+2*sqrt(5)) : -10,
-                (2+sqrt(3)) : 12,
-                -(2+sqrt(3)) : -12,
-                (2-sqrt(3)) : S(12)/5,
-                -(2-sqrt(3)) : -S(12)/5,
+                sqrt(3)/3: 3,
+                -sqrt(3)/3: -3,
+                1/sqrt(3): 3,
+                -1/sqrt(3): -3,
+                sqrt(3): 6,
+                -sqrt(3): -6,
+                (1+sqrt(2)): 8,
+                -(1+sqrt(2)): -8,
+                (1-sqrt(2)): -S(8)/3,
+                (sqrt(2)-1): S(8)/3,
+                sqrt(5+2*sqrt(5)): 10,
+                -sqrt(5+2*sqrt(5)): -10,
+                (2+sqrt(3)): 12,
+                -(2+sqrt(3)): -12,
+                (2-sqrt(3)): S(12)/5,
+                -(2-sqrt(3)): -S(12)/5,
                 }
 
             if arg in cst_table:

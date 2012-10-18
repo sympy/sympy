@@ -984,8 +984,8 @@ class DefaultBackend(BaseBackend):
 
 
 plot_backends = {
-        'matplotlib' : MatplotlibBackend,
-        'text' : TextBackend,
+        'matplotlib': MatplotlibBackend,
+        'text': TextBackend,
         'default': DefaultBackend
         }
 
@@ -999,7 +999,7 @@ def centers_of_segments(array):
 
 def centers_of_faces(array):
     return np.average(np.dstack((array[:-1, :-1],
-                                 array[1: , :-1],
+                                 array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
                                  )), 2)

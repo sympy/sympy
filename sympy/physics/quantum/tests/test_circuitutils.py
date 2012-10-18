@@ -135,13 +135,13 @@ def test_convert_to_symbolic_indices():
     (x, y, z, h) = create_gate_sequence()
 
     i0 = Symbol('i0')
-    exp_map = {i0 : Integer(0)}
+    exp_map = {i0: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x,))
     assert actual == (X(i0),)
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
-    exp_map = {i0 : Integer(0)}
+    exp_map = {i0: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h))
     assert actual == expected
     assert exp_map == act_map
@@ -150,32 +150,32 @@ def test_convert_to_symbolic_indices():
     i1 = Symbol('i1')
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
-    exp_map = {i0 : Integer(1)}
+    exp_map = {i0: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0), X(i1), Y(i1), Z(i1), H(i1))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h,
                                          x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x1, y1,
                                          z1, h1, x, y, z, h))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1), H(i0), H(i1))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x, x1,
                                          y, y1, z, z1, h, h1))
     assert actual == expected
     assert act_map == exp_map
 
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, x, y1, y,
                                          z1, z, h1, h))
     assert actual == expected
@@ -189,7 +189,7 @@ def test_convert_to_symbolic_indices():
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1),
                 H(i0), H(i1), CNOT(i1, i0), CNOT(i0, i1),
                 CGate(i1, Z(i0)), CGate(i0, Z(i1)))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     args = (x, x1, y, y1, z, z1, h, h1, cnot_10, cnot_01,
             cgate_z_10, cgate_z_01)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
@@ -201,27 +201,27 @@ def test_convert_to_symbolic_indices():
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1),
                 H(i0), H(i1), CNOT(i0, i1), CNOT(i1, i0),
                 CGate(i0, Z(i1)), CGate(i1, Z(i0)))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h, cgate_z_01, h)
     expected = (CNOT(i0, i1), H(i1), CGate(i1, Z(i0)), H(i1))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_01, h1, cgate_z_10, h1)
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h1, cgate_z_01, h1)
     expected = (CNOT(i0, i1), H(i0), CGate(i1, Z(i0)), H(i0))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
@@ -232,12 +232,12 @@ def test_convert_to_symbolic_indices():
     args = (ccgate_z, ccgate_x)
 
     expected = (CGate(i0, CGate(i1, Z(i2))), CGate(i1, CGate(i2, X(i0))))
-    exp_map = {i0 : Integer(0), i1 : Integer(1), i2 : Integer(2)}
+    exp_map = {i0: Integer(0), i1: Integer(1), i2: Integer(2)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
-    ndx_map = {i0 : Integer(0)}
+    ndx_map = {i0: Integer(0)}
     index_gen = numbered_symbols(prefix='i', start=1)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args,
                                          qubit_map=ndx_map,
@@ -248,8 +248,8 @@ def test_convert_to_symbolic_indices():
 
     i3 = Symbol('i3')
     cgate_x0_c321 = CGate((3,2,1), X(0))
-    exp_map = {i0 : Integer(3), i1 : Integer(2),
-               i2 : Integer(1), i3 : Integer(0)}
+    exp_map = {i0: Integer(3), i1: Integer(2),
+               i2: Integer(1), i3: Integer(0)}
     expected = (CGate((i0, i1, i2), X(i3)),)
     args = (cgate_x0_c321,)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
@@ -266,7 +266,7 @@ def test_convert_to_real_indices():
     y_i0 = Y(i0)
     z_i0 = Z(i0)
 
-    qubit_map = {i0 : 0}
+    qubit_map = {i0: 0}
     args = (z_i0, y_i0, x_i0)
     expected = (z, y, x)
     actual = convert_to_real_indices(args, qubit_map)
@@ -281,7 +281,7 @@ def test_convert_to_real_indices():
     cnot_i0_i1 = CNOT(i0, i1)
     cgate_z_i1_i0 = CGate(i1, Z(i0))
 
-    qubit_map = {i0 : 0, i1 : 1}
+    qubit_map = {i0: 0, i1: 1}
     args = (cnot_i1_i0,)
     expected = (cnot_10,)
     actual = convert_to_real_indices(args, qubit_map)
@@ -297,7 +297,7 @@ def test_convert_to_real_indices():
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : 1, i1 : 0}
+    qubit_map = {i0: 1, i1: 0}
     args = (cgate_z_i1_i0,)
     expected = (cgate_z_01,)
     actual = convert_to_real_indices(args, qubit_map)
@@ -307,13 +307,13 @@ def test_convert_to_real_indices():
     ccgate_z = CGate(i0, CGate(i1, Z(i2)))
     ccgate_x = CGate(i1, CGate(i2, X(i0)))
 
-    qubit_map = {i0 : 0, i1 : 1, i2 : 2}
+    qubit_map = {i0: 0, i1: 1, i2: 2}
     args = (ccgate_z, ccgate_x)
     expected = (CGate(0, CGate(1, Z(2))), CGate(1, CGate(2, X(0))))
     actual = convert_to_real_indices(Mul(*args), qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : 1, i2 : 0, i1 : 2}
+    qubit_map = {i0: 1, i2: 0, i1: 2}
     args = (ccgate_x, ccgate_z)
     expected = (CGate(2, CGate(0, X(1))), CGate(1, CGate(2, Z(0))))
     actual = convert_to_real_indices(args, qubit_map)

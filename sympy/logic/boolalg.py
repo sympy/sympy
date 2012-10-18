@@ -526,7 +526,7 @@ def compile_rule(s):
     """
     import re
     from sympy.core import Symbol
-    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol' : Symbol})
+    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol': Symbol})
 
 
 def to_int_repr(clauses, symbols):

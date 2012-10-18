@@ -117,7 +117,7 @@ def test_multiple_expressions():
     assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
     assert cse([x + y, x + y + z]) == ([(x0, x + y)], [x0, z + x0])
     assert cse([x + y, x + z]) == ([], [x + y, x + z])
-    assert cse([x*y, z + x*y , x*y*z + 3]) == \
+    assert cse([x*y, z + x*y, x*y*z + 3]) == \
            ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]

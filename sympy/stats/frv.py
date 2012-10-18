@@ -246,7 +246,7 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     def fromdict(cls, name, density):
         symbol = Symbol(name)
         domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
-        density = dict((frozenset(((symbol, val),)) , prob)
+        density = dict((frozenset(((symbol, val),)), prob)
                 for val, prob in density.items())
         density = Dict(density)
         return FinitePSpace.__new__(cls, domain, density)

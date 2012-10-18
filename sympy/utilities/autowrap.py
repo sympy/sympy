@@ -309,7 +309,7 @@ class F2PyCodeWrapper(CodeWrapper):
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
-        command = ["f2py", "-m", self.module_name, "-c" , filename]
+        command = ["f2py", "-m", self.module_name, "-c", filename]
         return command
 
     def _prepare_files(self, routine):

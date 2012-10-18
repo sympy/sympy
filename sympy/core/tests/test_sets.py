@@ -131,7 +131,7 @@ def test_complement():
            Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
                  Interval(3, oo, True, True))
 
-    assert FiniteSet(0).complement == Union(Interval(-oo,0, True,True) ,
+    assert FiniteSet(0).complement == Union(Interval(-oo,0, True,True),
             Interval(0,oo, True, True))
 
     assert (FiniteSet(5) + Interval(S.NegativeInfinity, 0)).complement == \

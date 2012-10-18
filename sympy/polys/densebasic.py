@@ -988,7 +988,7 @@ def dmp_from_dict(f, u, K):
         if head in coeffs:
             coeffs[head][tail] = coeff
         else:
-            coeffs[head] = { tail : coeff }
+            coeffs[head] = { tail: coeff }
 
     n, v, h = max(coeffs.iterkeys()), u-1, []
 

@@ -171,7 +171,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = ((a + b + 2*k + 1) * C.RisingFactorial(b + k + 1, n-k) /
                   ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
-            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)) , (k,0,n-1))
+            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)), (k,0,n-1))
         elif argindex == 3:
             # Diff wrt b
             n, a, b, x = self.args
@@ -179,7 +179,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = (-1)**(n-k) * ((a + b + 2*k + 1) * C.RisingFactorial(a + k + 1, n-k) /
                   ((n - k) * C.RisingFactorial(a + b + k + 1, n-k)))
-            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)) , (k,0,n-1))
+            return C.Sum(f1 * (jacobi(n,a,b,x) + f2*jacobi(k,a,b,x)), (k,0,n-1))
         elif argindex == 4:
             # Diff wrt x
             n, a, b, x = self.args

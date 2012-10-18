@@ -1005,7 +1005,7 @@ def test_issue650():
         Matrix([[oo, -oo, oo],[oo, 0, oo]])
     assert Matrix([
         [(exp(x)-1)/x, 2*x + y*x, x**x ],
-        [1/x, abs(x) , abs(sin(x+1))]]).limit(x, 0) == \
+        [1/x, abs(x), abs(sin(x+1))]]).limit(x, 0) == \
         Matrix([[1, 0, 1],[oo, 0, sin(1)]])
     assert a.integrate(x) == Matrix([
         [Rational(1,3)*x**3, y*x**2/2],
@@ -1220,7 +1220,7 @@ def test_diagonal_symmetrical():
     m = Matrix(((5, 0, 0), (0, 6, 0)))
     assert m.is_diagonal()
 
-    m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
+    m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2, 2, 0, y, 0, 3])
     assert m.is_symmetric()
     assert not m.is_symmetric(simplify=False)
     assert m.expand().is_symmetric(simplify=False)
@@ -1484,14 +1484,14 @@ def test_getattr():
     assert getattr(A, 'diff')(x) == Matrix(((0,0,1),(0,0,0),(0,0,2*x)))
 
 def test_hessenberg():
-    A = Matrix([[3, 4, 1],[2, 4 ,5],[0, 1, 2]])
+    A = Matrix([[3, 4, 1],[2, 4,5],[0, 1, 2]])
     assert A.is_upper_hessenberg
     A = A.T
     assert A.is_lower_hessenberg
     A[0, -1] = 1
     assert A.is_lower_hessenberg is False
 
-    A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
+    A = Matrix([[3, 4, 1],[2, 4,5],[3, 1, 2]])
     assert not A.is_upper_hessenberg
 
 def test_cholesky():
@@ -1700,7 +1700,7 @@ def test_condition_number():
     assert A.condition_number() == 100
 
     A[1,1] = x
-    assert A.condition_number() == Max(10, Abs(x)) / Min(S(1)/10 , Abs(x))
+    assert A.condition_number() == Max(10, Abs(x)) / Min(S(1)/10, Abs(x))
 
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
@@ -1888,7 +1888,7 @@ def test_issue_860():
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 
 @XFAIL
-def test_issue_2865() :
+def test_issue_2865():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
 def test_is_Identity():
@@ -1923,7 +1923,7 @@ def test_dual():
 def test_anti_symmetric():
     assert Matrix([1, 2]).is_anti_symmetric() is False
     m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
-                      -(x + 1)**2 , 0, x*y,
+                      -(x + 1)**2, 0, x*y,
                       -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
     assert m.is_anti_symmetric(simplify=False) is False

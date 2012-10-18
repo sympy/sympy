@@ -1363,8 +1363,8 @@ def gf_irred_p_rabin(f, p, K):
     return h == x
 
 _irred_methods = {
-    'ben-or' : gf_irred_p_ben_or,
-    'rabin'  : gf_irred_p_rabin,
+    'ben-or': gf_irred_p_ben_or,
+    'rabin': gf_irred_p_rabin,
 }
 
 def gf_irreducible_p(f, p, K):
@@ -1965,9 +1965,9 @@ def gf_shoup(f, p, K):
     return _sort_factors(factors, multiple=False)
 
 _factor_methods = {
-    'berlekamp'  : gf_berlekamp,  # ``p`` : small
-    'zassenhaus' : gf_zassenhaus, # ``p`` : medium
-    'shoup'      : gf_shoup,      # ``p`` : large
+    'berlekamp': gf_berlekamp,  # ``p`` : small
+    'zassenhaus': gf_zassenhaus, # ``p`` : medium
+    'shoup': gf_shoup,      # ``p`` : large
 }
 
 def gf_factor_sqf(f, p, K, method=None):

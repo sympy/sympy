@@ -34,13 +34,13 @@ __all__ = [
 
 #frozenset is used so that the reverse mapping can be made
 #(regular sets are not hashable because they are mutable
-state_mapping = { JxKet : frozenset((J2Op, JxOp)),
-                  JyKet : frozenset((J2Op, JyOp)),
-                  JzKet : frozenset((J2Op, JzOp)),
-                  Ket : Operator,
-                  PositionKet3D : frozenset((XOp, YOp, ZOp)),
-                  PxKet : PxOp,
-                  XKet : XOp }
+state_mapping = { JxKet: frozenset((J2Op, JxOp)),
+                  JyKet: frozenset((J2Op, JyOp)),
+                  JzKet: frozenset((J2Op, JzOp)),
+                  Ket: Operator,
+                  PositionKet3D: frozenset((XOp, YOp, ZOp)),
+                  PxKet: PxOp,
+                  XKet: XOp }
 
 op_mapping = dict((v,k) for k,v in state_mapping.iteritems())
 

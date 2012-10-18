@@ -949,10 +949,10 @@ class LatexPrinter(Printer):
 
     def _print_Relational(self, expr):
         charmap = {
-            "==" : "=",
-            "<"  : "<",
-            "<=" : r"\leq",
-            "!=" : r"\neq",
+            "==": "=",
+            "<": "<",
+            "<=": r"\leq",
+            "!=": r"\neq",
         }
 
         return "%s %s %s" % (self._print(expr.lhs),

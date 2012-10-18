@@ -24,7 +24,7 @@ def plot_and_save(name):
     p = plot(x)
     p = plot(x*sin(x),x*cos(x))
     p.extend(p)
-    p[0].line_color = lambda a : a
+    p[0].line_color = lambda a: a
     p[1].line_color='b'
     p.title = 'Big title'
     p.xlabel = 'the x axis'
@@ -111,50 +111,50 @@ def plot_and_save(name):
     ###
 
     p = plot(sin(x))
-    p[0].line_color = lambda a : a
+    p[0].line_color = lambda a: a
     p.save(tmp_file('%s_colors_line_arity1.png' % name))
 
-    p[0].line_color = lambda a, b : b
+    p[0].line_color = lambda a, b: b
     p.save(tmp_file('%s_colors_line_arity2.png' % name))
 
     p = plot(x*sin(x), x*cos(x), (x, 0, 10))
-    p[0].line_color = lambda a : a
+    p[0].line_color = lambda a: a
     p.save(tmp_file('%s_colors_param_line_arity1.png' % name))
 
-    p[0].line_color = lambda a, b : a
+    p[0].line_color = lambda a, b: a
     p.save(tmp_file('%s_colors_param_line_arity2a.png' % name))
 
-    p[0].line_color = lambda a, b : b
+    p[0].line_color = lambda a, b: b
     p.save(tmp_file('%s_colors_param_line_arity2b.png' % name))
 
     p = plot3d_parametric_line(sin(x)+0.1*sin(x)*cos(7*x),
              cos(x)+0.1*cos(x)*cos(7*x),
              0.1*sin(7*x),
-             (x, 0 , 2*pi))
-    p[0].line_color = lambda a : sin(4*a)
+             (x, 0, 2*pi))
+    p[0].line_color = lambda a: sin(4*a)
     p.save(tmp_file('%s_colors_3d_line_arity1.png' % name))
-    p[0].line_color = lambda a, b : b
+    p[0].line_color = lambda a, b: b
     p.save(tmp_file('%s_colors_3d_line_arity2.png' % name))
-    p[0].line_color = lambda a, b, c : c
+    p[0].line_color = lambda a, b, c: c
     p.save(tmp_file('%s_colors_3d_line_arity3.png' % name))
 
     p = plot3d(sin(x)*y, (x, 0, 6*pi), (y, -5, 5))
-    p[0].surface_color = lambda a : a
+    p[0].surface_color = lambda a: a
     p.save(tmp_file('%s_colors_surface_arity1.png' % name))
-    p[0].surface_color = lambda a, b : b
+    p[0].surface_color = lambda a, b: b
     p.save(tmp_file('%s_colors_surface_arity2.png' % name))
-    p[0].surface_color = lambda a, b, c : c
+    p[0].surface_color = lambda a, b, c: c
     p.save(tmp_file('%s_colors_surface_arity3a.png' % name))
-    p[0].surface_color = lambda a, b, c : sqrt((a-3*pi)**2+b**2)
+    p[0].surface_color = lambda a, b, c: sqrt((a-3*pi)**2+b**2)
     p.save(tmp_file('%s_colors_surface_arity3b.png' % name))
 
     p = plot3d_parametric_surface(x * cos(4 * y), x * sin(4 * y), y,
              (x, -1, 1), (y, -1, 1))
-    p[0].surface_color = lambda a : a
+    p[0].surface_color = lambda a: a
     p.save(tmp_file('%s_colors_param_surf_arity1.png' % name))
-    p[0].surface_color = lambda a, b : a*b
+    p[0].surface_color = lambda a, b: a*b
     p.save(tmp_file('%s_colors_param_surf_arity2.png' % name))
-    p[0].surface_color = lambda a, b, c : sqrt(a**2+b**2+c**2)
+    p[0].surface_color = lambda a, b, c: sqrt(a**2+b**2+c**2)
     p.save(tmp_file('%s_colors_param_surf_arity3.png' % name))
 
     ###
