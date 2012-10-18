@@ -107,7 +107,6 @@ def test_hydrogen_energies_relat():
             if l > 0:
                 assert feq(E_nl_dirac(n, l, False, Z), E_nl(n, Z), 1e-3, 1e-3)
 
-
     # Test the exceptions:
     raises(ValueError, lambda: E_nl_dirac(0, 0))
     raises(ValueError, lambda: E_nl_dirac(1, -1))

@@ -332,7 +332,6 @@ class Number(AtomicExpr):
 
     __truediv__ = __div__
 
-
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' %
             (self.__class__.__name__))
@@ -1208,7 +1207,6 @@ class Rational(Number):
             return bool(self.p*other.q >= self.q*other.p)
         return Expr.__ge__(self, other)
 
-
     def __lt__(self, other):
         try:
             other = _sympify(other)
@@ -1356,14 +1354,11 @@ def int_trace(f):
 
             return f(cls, i)
 
-
     # also we want to hook our _intcache_printinfo into sys.atexit
     import atexit
     atexit.register(_intcache_printinfo)
 
     return Integer_tracer
-
-
 
 
 class Integer(Rational):
@@ -2404,7 +2399,6 @@ E = S.Exp1
 class Pi(NumberSymbol):
     __metaclass__ = Singleton
 
-
     is_real = True
     is_positive = True
     is_negative = False
@@ -2559,7 +2553,6 @@ class ImaginaryUnit(AtomicExpr):
         I**2 mod 4 -> -1
         I**3 mod 4 -> -I
         """
-
 
         if isinstance(expt, Number):
             if isinstance(expt, Integer):

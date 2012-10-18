@@ -312,7 +312,6 @@ def test_fresnel():
     assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4)* \
            meijerg(((), (1,)), ((S(1)/4,), (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
 
-
     from sympy.utilities.randtest import test_numerically
 
     test_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)

@@ -241,7 +241,6 @@ def test_new_relational():
     assert (x < 0) != Relational(x, 1, 'lt')
     assert (x < 0) != StrictLessThan(x, 1)
 
-
     # finally, some fuzz testing
     from random import randint
     for i in range(100):

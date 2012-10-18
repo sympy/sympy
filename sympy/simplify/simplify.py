@@ -2221,10 +2221,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if exp_c is not S.One and exp_t is not S.One:
                 c_powers[i] = [Pow(b, exp_c), exp_t]
 
-
         # Combine bases whenever they have the same exponent and
         # assumptions allow
-
         # first gather the potential bases under the common exponent
         c_exp = defaultdict(list)
         for b, e in c_powers:
@@ -3195,7 +3193,6 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     if rv != expr or rational is False:
         return rv
     return _real_to_rational(expr)
-
 
 
 def logcombine(expr, force=False):

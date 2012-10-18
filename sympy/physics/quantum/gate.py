@@ -281,7 +281,6 @@ class Gate(UnitaryOperator):
         raise NotImplementedError('plot_gate is not implemented.')
 
 
-
 class CGate(Gate):
     """A general unitary gate with control qubits.
 
@@ -678,7 +677,6 @@ class XGate(HermitianOperator, OneQubitGate):
 
     def _eval_anticommutator_ZGate(self, other, **hints):
         return Integer(0)
-
 
 
 class YGate(HermitianOperator, OneQubitGate):

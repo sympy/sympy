@@ -1556,7 +1556,6 @@ class MV(object):
                 product = None
         return(product)
 
-
     @staticmethod
     def addition(mv1, mv2):
         """

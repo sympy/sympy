@@ -275,7 +275,6 @@ class StrPrinter(Printer):
         return '*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
-
     def _print_NaN(self, expr):
         return 'nan'
 
@@ -401,7 +400,6 @@ class StrPrinter(Printer):
 
     def _print_ProductSet(self, p):
         return ' x '.join(self._print(set) for set in p.sets)
-
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:

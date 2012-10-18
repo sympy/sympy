@@ -97,11 +97,9 @@ class Expr(Basic, EvalfMixin):
         else:
             return expr_to_call
 
-
     # ***************
     # * Arithmetics *
     # ***************
-
     # Expr and its sublcasses use _op_priority to determine which object
     # passed to a binary special method (__mul__, etc.) will handle the
     # operation. In general, the 'call_highest_priority' decorator will choose
@@ -353,7 +351,6 @@ class Expr(Basic, EvalfMixin):
         if not hasattr(nmag, '_prec'):
             # e.g. exp_polar(2*I*pi) doesn't evaluate but is_number is True
             return None
-
 
         if nmag._prec == 1:
             # increase the precision up to the default maximum
@@ -840,7 +837,6 @@ class Expr(Basic, EvalfMixin):
             result.append((term, (coeff, tuple(monom), ncpart)))
 
         return result, gens
-
 
     def removeO(self):
         """Removes the additive O(..) symbol if there is one"""

@@ -1019,7 +1019,6 @@ def partitions(n, m=None, k=None):
                 del keys[-1], ms[i]
             room += 1
 
-
             # Break the remainder into pieces of size i-1.
             i -= 1
             q, r = divmod(reuse, i)

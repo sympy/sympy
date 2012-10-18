@@ -222,7 +222,6 @@ def test_multiset_partitions():
     assert len(list(multiset_partitions(A, 4))) == 10
     assert len(list(multiset_partitions(A, 3))) == 25
 
-
     assert list(multiset_partitions([1, 1, 1, 2, 2], 2)) == [[[1, 1, 1, 2], [2]],\
     [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]], [[1], [1, 1, 2, 2]], [[1, 2],\
     [1, 1, 2]], [[1, 1, 2, 2], [1]], [[1, 2, 2], [1, 1]]]

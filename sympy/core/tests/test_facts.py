@@ -233,9 +233,9 @@ def test_FactRules_deduce_multiple2():
     assert D({'real': T, 'zero': F}) == {'real': T, 'zero': F}
     assert D({'real': T, 'pos': F}) == {'real': T, 'pos': F}
 
-    assert D({'real': T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
-    assert D({'real': T, 'neg': F, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
-    assert D({'real': T, 'neg': F, 'zero': F}) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
+    assert D({'real': T,           'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
+    assert D({'real': T, 'neg': F,            'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}
+    assert D({'real': T, 'neg': F, 'zero': F          }) == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
     assert D({'neg': T, 'zero': F, 'pos': F}) == {'real': T, 'neg': T, 'zero': F, 'pos': F}
     assert D({'neg': F, 'zero': T, 'pos': F}) == {'real': T, 'neg': F, 'zero': T, 'pos': F}

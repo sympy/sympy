@@ -239,7 +239,6 @@ def fortranize_double_constants(code_string):
     return code_string
 
 
-
 def is_feasible(language, commands):
     # This test should always work, otherwise the compiler is not present.
     x = symbols('x')

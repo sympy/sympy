@@ -313,7 +313,6 @@ class interval(object):
         else:
             return NotImplemented
 
-
     def __div__(self, other):
         # Both None and False are handled
         if not self.is_valid:

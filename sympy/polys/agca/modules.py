@@ -1068,7 +1068,6 @@ class SubModulePolyRing(SubModule):
                  for x in gb],
                 [self.ring._sdm_to_vector(x, len(self.gens)) for x in gbe])
 
-
     def _contains(self, x):
         from sympy.polys.distributedmodules import sdm_zero, sdm_nf_mora
         return sdm_nf_mora(self.ring._vector_to_sdm(x, self.order),

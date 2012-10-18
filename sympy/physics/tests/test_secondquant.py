@@ -230,7 +230,6 @@ def test_commutation():
     e = simplify(apply_operators(c*BKet([n, m])))
     assert e == 0
 
-
     c = Commutator(F(m), Fd(m))
     assert c == +1 - 2*NO(Fd(m)*F(m))
     c = Commutator(Fd(m), F(m))
@@ -273,7 +272,6 @@ def test_create_f():
 
     assert Fd(i).apply_operator(FKet([i, j, k], 4)) == FKet([j, k], 4)
     assert Fd(a).apply_operator(FKet([i, b, k], 4)) == FKet([a, i, b, k], 4)
-
 
 
 def test_annihilate_f():
@@ -328,7 +326,6 @@ def test_wicks():
     str = Fd(p)*F(q)
     assert wicks(str) == NO(Fd(p)*F(q))
 
-
     str = F(p)*Fd(q)*F(r)*Fd(s)
     nstr= wicks(str)
     fasit = NO(
@@ -342,7 +339,6 @@ def test_wicks():
     assert (p*q*nstr).expand() == wicks(p*q*str)
     assert (nstr*p*q*2).expand() == wicks(str*p*q*2)
 
-
     # Testing CC equations particles and holes
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
@@ -354,7 +350,6 @@ def test_wicks():
     assert (wicks(F(a)*NO(F(i)*F(j)*F(k))*Fd(b)) ==
             NO(F(a)*F(i)*F(j)*F(k)*Fd(b)) -
             KroneckerDelta(a, b)*NO(F(i)*F(j)*F(k)))
-
 
     expr = wicks(Fd(i)*NO(Fd(j)*F(k))*F(l))
     assert (expr ==
@@ -394,7 +389,6 @@ def test_NO():
             NO(Fd(a)*F(q)) + NO(Fd(i)*F(q)))
     assert (NO(Fd(p)*F(q)).subs(F(q), F(a)+F(i)) ==
             NO(Fd(p)*F(a)) + NO(Fd(p)*F(i)))
-
 
     expr = NO(Fd(p)*F(q))._remove_brackets()
     assert wicks(expr) == NO(expr)
@@ -461,7 +455,6 @@ def test_contraction():
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p), Fd(q)))
     assert restr.is_only_above_fermi
-
 
 
 def test_Tensors():
@@ -974,7 +967,6 @@ def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
     k, l = symbols('k l', below_fermi=True, cls=Dummy)
     c, d = symbols('c d', above_fermi=True, cls=Dummy)
 
-
     # Coupled-Cluster T1 terms with V*T1*T1*T1
     # t^{a}_{k} t^{c}_{i} t^{d}_{l} v^{lk}_{dc}
     exprs = [
@@ -994,7 +986,6 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
     aa, bb = symbols('a b', above_fermi=True)
     k, l = symbols('k l', below_fermi=True, cls=Dummy)
     c, d = symbols('c d', above_fermi=True, cls=Dummy)
-
 
     # Coupled-Cluster T2 terms with V*T1*T1*T1*T1
     # non-equivalent substitutions (change of sign)
@@ -1020,7 +1011,6 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
 def test_equivalent_internal_lines_VT1T1_AT():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
-
 
     exprs = [  # permute v.  Different dummy order. Not equivalent.
             atv(i, j, a, b)*att(a, i)*att(b, j),
@@ -1062,7 +1052,6 @@ def test_equivalent_internal_lines_VT2conjT2_AT():
     h1, h2, h3, h4 = symbols('h1 h2 h3 h4', below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
-
 
     # atv(abcd)att(abij)att(ijcd)
     template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(i, j, p3, p4)
@@ -1106,7 +1095,6 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
     h1, h2, h3, h4 = symbols('h1 h2 h3 h4', below_fermi=True, cls=Dummy)
 
     from sympy.utilities.iterables import variations
-
 
     # atv(abcd)att(abij)att(cdij)
     template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(p3, p4, i, j)
@@ -1194,7 +1182,6 @@ def test_internal_external_pqrs_AT():
     aa, bb = symbols('a b')
     k, l = symbols('k l', cls=Dummy)
     c, d = symbols('c d', cls=Dummy)
-
 
     exprs = [
             atv(k, l, c, d)*att(aa, c, ii, k)*att(bb, d, jj, l),

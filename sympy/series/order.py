@@ -186,7 +186,6 @@ class Order(Expr):
     def getO(self):
         return self
 
-
     @cacheit
     def contains(self, expr):
         """

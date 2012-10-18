@@ -1030,7 +1030,6 @@ def _check_antecedents(g1, g2, x):
                     (c12, 12), (c13, 13), (c14, 14), (c15, 15)]:
         _debug('  c%s:' % i, cond)
 
-
     # We will return Or(*conds)
     conds = []
 

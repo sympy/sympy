@@ -470,7 +470,6 @@ def test_ellipse():
     assert c1.is_tangent(Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) == True
     assert c1.is_tangent(Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) == False
 
-
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
         [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
      Line(Point(0, 0), Point(S(33)/5, S(22)/5))]

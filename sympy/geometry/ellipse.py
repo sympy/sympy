@@ -289,7 +289,6 @@ class Ellipse(GeometryEntity):
             return self.hradius
         return rv
 
-
     @property
     def area(self):
         """The area of the ellipse.

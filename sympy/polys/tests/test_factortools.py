@@ -628,14 +628,12 @@ def test_dup_factor_list():
     assert dup_factor_list([RR(2.0), RR(4.0), RR(2.0)], RR) == \
         (RR(2.0), [([RR(1.0), RR(1.0)], 2)])
 
-
     f = [DMP([ZZ(4), ZZ(0)], ZZ), DMP([ZZ(4), ZZ(0), ZZ(0)], ZZ), DMP([], ZZ)]
 
     assert dup_factor_list(f, ZZ['y']) == \
         (DMP([ZZ(4)], ZZ), [([DMP([ZZ(1), ZZ(0)], ZZ)], 1),
                            ([DMP([ZZ(1)], ZZ), DMP([], ZZ)], 1),
                            ([DMP([ZZ(1)], ZZ), DMP([ZZ(1), ZZ(0)], ZZ)], 1)])
-
 
     f = [DMP([QQ(1, 2), QQ(0)], ZZ), DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ), DMP([], ZZ)]
 

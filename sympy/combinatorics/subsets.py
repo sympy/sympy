@@ -88,7 +88,6 @@ class Subset(Basic):
                         next_bin_list
         return Subset.subset_from_bitlist(self.superset, next_bin_list)
 
-
     def next_binary(self):
         """
         Generates the next binary ordered subset.

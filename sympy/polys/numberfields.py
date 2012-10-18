@@ -453,7 +453,6 @@ class AlgebraicNumber(Expr):
 
         return obj
 
-
     def __hash__(self):
         return super(AlgebraicNumber, self).__hash__()
 
@@ -524,7 +523,6 @@ def isolate(alg, eps=None, fast=False):
         return (alg, alg)
     elif not ask(Q.real(alg)):
         raise NotImplementedError("complex algebraic numbers are not supported")
-
 
     func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
 

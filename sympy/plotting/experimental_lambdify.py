@@ -278,15 +278,12 @@ class Lambdifier(object):
         exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
         self.lambda_func = namespace['MYNEWLAMBDA']
 
-
     ##############################################################################
     # Dicts for translating from sympy to other modules
     ##############################################################################
-
     ###
     # builtins
     ###
-
     # Functions with different names in builtins
     builtin_functions_different = {
             'Min': 'min',

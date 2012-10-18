@@ -370,7 +370,6 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     if len(terms) == 0:
         return S.Zero, S.Zero, S.One
 
-
     if len(terms) == 1:
         cont = terms[0].coeff
         numer = terms[0].numer.as_expr()

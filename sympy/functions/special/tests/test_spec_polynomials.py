@@ -50,7 +50,6 @@ def test_gegenbauer():
     assert gegenbauer(2, a, x) == -a + x**2*(2*a**2 + 2*a)
     assert gegenbauer(3, a, x) == x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
 
-
     assert gegenbauer(-1, a, x) == 0
     assert gegenbauer(n, S(1)/2, x) == legendre(n, x)
     assert gegenbauer(n, 1, x) == chebyshevu(n, x)

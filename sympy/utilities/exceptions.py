@@ -128,7 +128,6 @@ class SymPyDeprecationWarning(DeprecationWarning):
                 "http://code.google.com/p/sympy/issues/detail?id=%d for more "
                 "info. ") % issue
 
-
         if value:
             if not isinstance(value, str):
                 value = "(%s)" % repr(value)

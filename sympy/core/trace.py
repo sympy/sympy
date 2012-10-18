@@ -121,7 +121,6 @@ class Tr(Expr):
             raise ValueError("Arguments to Tr should be of form"
                              "(expr[, [indices]])")
 
-
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(expr.trace):
@@ -173,7 +172,6 @@ class Tr(Expr):
         #TODO : This function to be reviewed
         # and implementation improved.
         return True
-
 
     #TODO: Review if the permute method is needed
     # and if it needs to return a new instance

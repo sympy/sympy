@@ -31,7 +31,6 @@ class Q:
     is_true = Predicate('is_true')
 
 
-
 def _extract_facts(expr, symbol):
     """
     Helper for ask().
@@ -138,7 +137,6 @@ def ask_full_inference(proposition, assumptions):
     if not satisfiable(And(known_facts_cnf, assumptions, Not(proposition))):
         return True
     return None
-
 
 
 def register_handler(key, handler):

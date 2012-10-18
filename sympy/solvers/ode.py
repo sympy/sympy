@@ -522,7 +522,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
                             hint: kwargs['match'],
                             'order': kwargs['order']})
 
-
     if hints['order'] == 0:
         raise ValueError(str(eq) + " is not a differential equation in " + str(func))
 
@@ -872,7 +871,6 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 matching_hints["Liouville"] = r
                 matching_hints["Liouville_Integral"] = r
 
-
     if order > 0:
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
@@ -895,13 +893,11 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
-
     # Order keys based on allhints.
     retlist = []
     for i in allhints:
         if i in matching_hints:
             retlist.append(i)
-
 
     if dict:
         # Dictionaries are ordered arbitrarily, so we need to make note of which
@@ -2910,8 +2906,6 @@ def _undetermined_coefficients_match(expr, x):
                     tmpset.add(term)
             exprs = tmpset
         return exprs
-
-
 
     retdict['test'] = _test_term(expr, x)
     if retdict['test']:

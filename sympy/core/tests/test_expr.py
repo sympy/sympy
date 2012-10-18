@@ -270,7 +270,6 @@ def test_atoms():
     assert sorted((I*pi).atoms(NumberSymbol, I)) == \
            sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
 
-
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
     assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
         [1 + x*(2 + y)+exp(3 + z), 2 + y, 3 + z])

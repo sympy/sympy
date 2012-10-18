@@ -1111,7 +1111,6 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real == True
 
 
-
 def test_Add_is_comparable():
     assert (x+y).is_comparable == False
     assert (x+1).is_comparable == False

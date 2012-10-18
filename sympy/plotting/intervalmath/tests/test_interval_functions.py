@@ -95,7 +95,6 @@ def test_log10():
     assert a.end == np.log10(2)
 
 
-
 def test_atan():
     a = atan(interval(0, 1))
     assert a.start == np.arctan(0)
@@ -286,7 +285,6 @@ def test_asin():
 
     a = asin(1.5)
     assert a.is_valid == False
-
 
 
 def test_acos():

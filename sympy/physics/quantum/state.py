@@ -321,7 +321,6 @@ class State(StateBase):
     pass
 
 
-
 class Ket(State, KetBase):
     """A general time-independent Ket in quantum mechanics.
 

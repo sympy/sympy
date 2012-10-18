@@ -1217,7 +1217,6 @@ def _solve(f, *symbols, **flags):
         # False so the simplification doesn't happen again in checksol()
         flags['simplify'] = False
 
-
     if check:
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it

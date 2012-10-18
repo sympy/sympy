@@ -556,7 +556,6 @@ class KanesMethod(object):
         if (self._k_kqdot == None):
             raise ValueError('Supply kinematic differential equations, please.')
 
-
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
         if self._uaux != []:

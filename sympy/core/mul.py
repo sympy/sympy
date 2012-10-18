@@ -166,8 +166,6 @@ class Mul(AssocOp):
 
         order_symbols = None
 
-
-
         # --- PART 1 ---
         #
         # "collect powers and coeff":
@@ -179,7 +177,6 @@ class Mul(AssocOp):
         # o pnum_rat
         #
         # NOTE: this is optimized for all-objects-are-commutative case
-
         for o in seq:
             # O(x)
             if o.is_Order:
@@ -509,7 +506,6 @@ class Mul(AssocOp):
         if coeff is not S.One:
             c_part.insert(0, coeff)
 
-
         # we are done
         if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
@@ -517,7 +513,6 @@ class Mul(AssocOp):
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         return c_part, nc_part, order_symbols
-
 
     def _eval_power(b, e):
 
@@ -604,7 +599,6 @@ class Mul(AssocOp):
     @classmethod
     def class_key(cls):
         return 3, 0, cls.__name__
-
 
     def _eval_evalf(self, prec):
         c, m = self.as_coeff_Mul()
@@ -852,7 +846,6 @@ class Mul(AssocOp):
                 return None
         return d
 
-
     @staticmethod
     def _combine_inverse(lhs, rhs):
         """
@@ -977,7 +970,6 @@ class Mul(AssocOp):
 
         return (im_count % 2 == 1)
 
-
     def _eval_is_hermitian(self):
         nc_count = 0
         im_count = 0
@@ -1031,7 +1023,6 @@ class Mul(AssocOp):
             return False
 
         return (im_count % 2 == 1)
-
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1417,7 +1408,6 @@ class Mul(AssocOp):
         from sympy import powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
-
 
     def _eval_as_leading_term(self, x):
         return Mul(*[t.as_leading_term(x) for t in self.args])

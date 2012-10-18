@@ -370,7 +370,6 @@ def test_random_insert():
     cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
 
-
     choices = [(x, x)]
     circuit = (y, y)
     loc, choice = 0, 0

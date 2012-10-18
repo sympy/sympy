@@ -54,14 +54,12 @@ class Timer(timeit.Timer):
         self.inner = ns["inner"]
 
 
-
 class Function(py.__.test.item.Function):
 
     def __init__(self, *args, **kw):
         super(Function, self).__init__(*args, **kw)
         self.benchtime = None
         self.benchtitle = None
-
 
     def execute(self, target, *args):
         # get func source without first 'def func(...):' line
@@ -73,7 +71,6 @@ class Function(py.__.test.item.Function):
             self.benchtitle = target.func_doc
         else:
             self.benchtitle = src.splitlines()[0].strip()
-
 
         # XXX we ignore args
         timer = Timer(src, globals=target.func_globals)
@@ -101,7 +98,6 @@ class Function(py.__.test.item.Function):
                     number = int(_ceil(number))
                     break
 
-
             self.benchtime = min(timer.repeat(repeat, number)) / number
 
         # 'bench_<smth>'
@@ -121,7 +117,6 @@ class BenchSession(TerminalSession):
 
         self.out.write('\n')
         self.print_bench_results()
-
 
     def print_bench_results(self):
         self.out.write('==============================\n')
@@ -191,7 +186,6 @@ class BenchSession(TerminalSession):
             else:
                 n = ' '.join((m, e))
 
-
             # let's put the number into the right place
             txt = ''
             for i in range(len(units)):
@@ -201,7 +195,6 @@ class BenchSession(TerminalSession):
                     txt += ' '*(wm[i]+we[i]+1)
 
             s[1] = '%s %s' % (txt, u)
-
 
         # align all columns besides the last one
         for i in range(2):

@@ -298,7 +298,6 @@ class PrettyPrinter(Printer):
 
             arg = prettyForm(*arg.right(' d', prettyArg))
 
-
         # \int \int \int ...
         firstterm = True
         s = None
@@ -319,7 +318,6 @@ class PrettyPrinter(Printer):
             pform = prettyForm(vint)
             #pform.baseline = pform.height()//2  # vcenter
             pform.baseline = arg.baseline + (H-h)//2    # covering the whole argument
-
 
             if len(lim) > 1:
                 # Create pretty forms for endpoints, if definite integral.
@@ -529,7 +527,6 @@ class PrettyPrinter(Printer):
         Lim = prettyForm(*Lim.below(LimArg))
         Lim = prettyForm(*Lim.right(E))
 
-
         return Lim
 
     def _print_matrix_contents(self, e):
@@ -551,7 +548,6 @@ class PrettyPrinter(Printer):
 
         for j in range(M.cols):
             maxw[j] = max([Ms[i, j].width() for i in range(M.rows)] or [0])
-
 
         # drawing result
         D = None
@@ -850,7 +846,6 @@ class PrettyPrinter(Printer):
         D = prettyForm(*F.right(' ', D))
 
         return D
-
 
     def _print_ExpBase(self, e):
         # TODO should exp_polar be printed differently?

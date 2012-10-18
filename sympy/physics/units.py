@@ -234,11 +234,9 @@ mg = milligram = milligrams = milli * g
 ug = microgram = micrograms = micro * g
 
 
-
 #----------------------------------------------------------------------------
 # Physical constants
 #
-
 c = speed_of_light = 299792458 * m/s
 G = gravitational_constant = Rational('6.67428') * ten**-11 * m**3 / kg / s**2
 u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2

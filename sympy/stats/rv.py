@@ -732,7 +732,6 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     while count < numsamples:
         d = ps.sample()  # a dictionary that maps RVs to values
 
-
         if condition:  # Check that these values satisfy the condition
             gd = condition.subs(d)
             if not isinstance(gd, bool):

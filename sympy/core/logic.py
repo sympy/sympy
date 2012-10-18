@@ -94,7 +94,6 @@ class Logic(object):
     def __hash__(self):
         return hash( (type(self).__name__,) + tuple(self.args) )
 
-
     def __eq__(a, b):
         if not isinstance(b, type(a)):
             return False
@@ -111,7 +110,6 @@ class Logic(object):
         if cls.__cmp__(other) == -1:
             return True
         return False
-
 
     def __cmp__(a, b):
         if type(a) is not type(b):
@@ -194,7 +192,6 @@ class AndOr_Base(Logic):
 
         return Logic.__new__(cls, *sorted(args, key=hash))
 
-
     @classmethod
     def flatten(cls, args):
         # quick-n-dirty flattening for And and Or
@@ -222,7 +219,6 @@ class And(AndOr_Base):
     def _eval_propagate_not(self):
         # !(a&b&c ...) == !a | !b | !c ...
         return Or( *[Not(a) for a in self.args] )
-
 
     # (a|b|...) & c == (a&c) | (b&c) | ...
     def expand(self):

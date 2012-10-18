@@ -347,7 +347,6 @@ def block_collapse(expr):
                 nonblocks.pop(i)
                 block = block._blockadd(block_id)
 
-
         return MatAdd(*(nonblocks+[block]))
 
     if expr.is_Mul:

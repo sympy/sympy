@@ -76,7 +76,6 @@ def test_apply_represent_equality():
     for i in range(int(random.random()*6)):
         circuit = gates[int(random.random()*6)]*circuit
 
-
     mat = represent(circuit, nqubits=6)
     states = qapply(circuit)
     state_rep = matrix_to_qubit(mat)

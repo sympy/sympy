@@ -140,7 +140,6 @@ class CodePrinter(StrPrinter):
         self._not_supported.add(expr)
         return self.emptyPrinter(expr)
 
-
     # The following can not be simply translated into C or Fortran
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported

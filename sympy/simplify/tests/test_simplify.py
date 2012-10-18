@@ -1170,7 +1170,6 @@ def test_radsimp():
     assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
         sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
 
-
     # issue 3433
     assert radsimp(1/sqrt(x)) == 1/sqrt(x)
     # this is sign-trickery to keep the expression from reverting

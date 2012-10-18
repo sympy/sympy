@@ -535,7 +535,6 @@ class euler(Function):
             res = mp.eulernum(m, exact=True)
             return Integer(res)
 
-
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:
             k = C.Dummy("k", integer=True)
@@ -545,7 +544,6 @@ class euler(Function):
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n+1)))
 
             return Em
-
 
     def _eval_evalf(self, prec):
         m = self.args[0]

@@ -71,7 +71,6 @@ def timeit_Integer_ed_Rational():
     i3==r34
 
 
-
 def timeit_integer_nthroot():
     integer_nthroot(100, 2)
 

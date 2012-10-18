@@ -91,7 +91,6 @@ def test_kronecker_delta_secondquant():
     assert D(q, p).preferred_index == q
     assert D(q, p).killable_index == p
 
-
     EV = evaluate_deltas
     assert EV(D(a, q)*F(q)) == F(a)
     assert EV(D(i, q)*F(q)) == F(i)

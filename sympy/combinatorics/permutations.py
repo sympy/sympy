@@ -801,7 +801,6 @@ class Permutation(Basic):
             raise ValueError("Permutation argument must be a list of ints, "
                              "a list of lists, Permutation or Cycle.")
 
-
         # safe to assume args are valid; this also makes a copy
         # of the args
         args = list(args[0])

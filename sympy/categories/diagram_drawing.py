@@ -117,7 +117,6 @@ class _GrowableGrid(object):
     def height(self):
         return self._height
 
-
     def __getitem__(self, (i, j)):
         """
         Returns the element located at in the i-th line and j-th

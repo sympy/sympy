@@ -418,7 +418,6 @@ class ScreenShot:
         if self.invisibleMode:
             self._plot._window.close()
 
-
     def save(self, outfile=None, format='', size=(600, 500)):
         self.outfile = outfile
         self.format = format

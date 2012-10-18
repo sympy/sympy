@@ -66,7 +66,6 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
-
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -344,7 +343,6 @@ class uppergamma(Function):
                 if not a.is_Integer:
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
-
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
 
@@ -353,11 +351,9 @@ class uppergamma(Function):
         return expint(1 - s, x)*x**s
 
 
-
 ###############################################################################
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
-
 class polygamma(Function):
     """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
@@ -481,7 +477,6 @@ class polygamma(Function):
                     return lookup[z0] - Add(*[1/(z0 - 1 - k) for k in range(n)])
 
         # TODO n == 1 also can do some rational z
-
 
     def _eval_expand_func(self, **hints):
         n, z = self.args

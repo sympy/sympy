@@ -345,7 +345,6 @@ class exp(ExpBase):
             if expr_terms == expr_terms_:
                 return new**(a/b)
 
-
             if arg.is_Add:  # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = o.args[0]
@@ -692,7 +691,6 @@ class log(Function):
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
         return log(a) + b*logx + Add(*l) + C.Order(p**n, x)
-
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

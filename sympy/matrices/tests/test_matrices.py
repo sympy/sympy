@@ -198,13 +198,11 @@ def test_determinant():
     assert M.det(method="bareis") == -1
     assert M.det(method="berkowitz") == -1
 
-
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
     assert M.det(method="bareis") == 2*x*y-y
     assert M.det(method="berkowitz") == 2*x*y-y
-
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -212,7 +210,6 @@ def test_determinant():
 
     assert M.det(method="bareis") == 1
     assert M.det(method="berkowitz") == 1
-
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
@@ -222,7 +219,6 @@ def test_determinant():
     assert M.det(method="bareis") == -289
     assert M.det(method="berkowitz") == -289
 
-
     M = Matrix(( ( 1,  2,  3,  4),
                  ( 5,  6,  7,  8),
                  ( 9, 10, 11, 12),
@@ -230,8 +226,6 @@ def test_determinant():
 
     assert M.det(method="bareis") == 0
     assert M.det(method="berkowitz") == 0
-
-
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -242,7 +236,6 @@ def test_determinant():
     assert M.det(method="bareis") == 275
     assert M.det(method="berkowitz") == 275
 
-
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
                  (2, 1,  1, -1,  3),
@@ -251,7 +244,6 @@ def test_determinant():
 
     assert M.det(method="bareis") == -55
     assert M.det(method="berkowitz") == -55
-
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -262,7 +254,6 @@ def test_determinant():
     assert M.det(method="bareis") == 11664
     assert M.det(method="berkowitz") == 11664
 
-
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
                  (-2,  0,  7, 0, 2),
@@ -271,7 +262,6 @@ def test_determinant():
 
     assert M.det(method="bareis") == 123
     assert M.det(method="berkowitz") == 123
-
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),

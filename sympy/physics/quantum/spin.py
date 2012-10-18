@@ -156,7 +156,6 @@ class SpinOpBase(object):
         return self._represent_default_basis().trace()
 
 
-
 class JplusOp(SpinOpBase, Operator):
     """The J+ operator."""
 

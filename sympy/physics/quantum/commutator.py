@@ -16,7 +16,6 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 
-
 class Commutator(Expr):
     """The standard commutator, in an unevaluated state.
 

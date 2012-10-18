@@ -65,7 +65,6 @@ class TautologicalHandler(AskHandler):
         else:
             return None
 
-
     @staticmethod
     def Or(expr, assumptions):
         result = False

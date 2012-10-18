@@ -313,7 +313,6 @@ def dup_zz_zassenhaus(f, K):
                 T = T_S
                 sorted_T = [i for i in sorted_T if i not in S]
 
-
                 G = dup_primitive(G, K)[1]
                 f = dup_primitive(H, K)[1]
 

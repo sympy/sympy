@@ -376,7 +376,6 @@ class Basic(object):
 
         return self._hashable_content() == other._hashable_content()
 
-
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
 
@@ -1105,11 +1104,9 @@ class Basic(object):
         except AttributeError:
             return any(arg == pattern for arg in preorder_traversal(self))
 
-
     def _has_matcher(self):
         """Helper for .has()"""
         return self.__eq__
-
 
     def replace(self, query, value, map=False):
         """
@@ -1595,7 +1592,6 @@ class preorder_traversal(object):
             for item in node:
                 for subtree in self._preorder_traversal(item, key):
                     yield subtree
-
 
     def skip(self):
         """

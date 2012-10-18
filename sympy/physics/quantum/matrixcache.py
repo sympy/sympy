@@ -44,7 +44,6 @@ class MatrixCache(object):
         except ImportError:
             pass
 
-
     def get_matrix(self, name, format):
         """Get a cached matrix by name and format.
 

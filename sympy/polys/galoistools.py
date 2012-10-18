@@ -14,7 +14,6 @@ from sympy.utilities import cythonized
 from sympy.ntheory import factorint
 
 
-
 def gf_crt(U, M, K=None):
     """
     Chinese Remainder Theorem.

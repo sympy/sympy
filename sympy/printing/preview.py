@@ -114,7 +114,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
-
     tmp = tempfile.mktemp()
 
     with open(tmp + ".tex", "w") as tex:

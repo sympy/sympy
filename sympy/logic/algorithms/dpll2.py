@@ -133,7 +133,6 @@ class SATSolver(object):
             for lit in self.clauses[i]:
                 self.occurrence_count[lit] += 1
 
-
     def _find_model(self):
         """Main DPLL loop.
 
@@ -212,7 +211,6 @@ class SATSolver(object):
                 self._undo()
                 self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
-
 
     ########################
     #    Helper Methods    #
@@ -360,7 +358,6 @@ class SATSolver(object):
 
         # Pop the level off the stack
         self.levels.pop()
-
 
     #########################
     #      Propagation      #
@@ -546,11 +543,9 @@ class SATSolver(object):
         for lit in cls:
             self.lit_scores[lit] += 1
 
-
     ########################
     #   Clause Learning    #
     ########################
-
     def _simple_add_learned_clause(self, cls):
         """Add a new clause to the theory.
 

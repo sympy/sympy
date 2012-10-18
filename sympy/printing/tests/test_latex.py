@@ -692,7 +692,6 @@ def test_categories():
            "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
 
-
     # A linear diagram.
     A = Object("A")
     B = Object("B")

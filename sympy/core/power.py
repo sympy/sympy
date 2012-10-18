@@ -806,7 +806,6 @@ class Pow(Expr):
 
             return b0**ei
 
-
         if (b0 is S.Zero or b0.is_unbounded):
             if unbounded is not False:
                 return b0**e  # XXX what order

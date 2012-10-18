@@ -343,7 +343,6 @@ class FallingFactorial(CombinatorialFunction):
                     else:
                         return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
 
-
     def _eval_rewrite_as_gamma(self, x, k):
         return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
 

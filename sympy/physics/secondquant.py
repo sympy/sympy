@@ -218,7 +218,6 @@ class AntiSymmetricTensor(TensorSymbol):
         else:
             return (12, h)
 
-
     def _latex(self, printer):
         return "%s^{%s}_{%s}" %(
                 self.symbol,
@@ -511,7 +510,6 @@ class FermionicOperator(SqOperator):
         if ass.get("above_fermi"): return 1
         return 0
 
-
     @property
     def is_above_fermi(self):
         """
@@ -782,7 +780,6 @@ class CreateFermion(FermionicOperator, Creator):
             element = self.state
             return state.up(element)
 
-
         elif isinstance(state, Mul):
             c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
@@ -887,7 +884,6 @@ class CreateFermion(FermionicOperator, Creator):
 
 Fd = CreateFermion
 F = AnnihilateFermion
-
 
 
 class FockState(Expr):
@@ -1002,7 +998,6 @@ class FermionState(FockState):
         if cls._count_holes(occupations) > fermi_level:
             return S.Zero
 
-
         if sign%2:
             return S.NegativeOne*FockState.__new__(cls, occupations)
         else:
@@ -1101,8 +1096,6 @@ class FermionState(FockState):
                 particle = Dummy("a", above_fermi=True)
                 return KroneckerDelta(i, particle)*self._remove_orbit(i)
 
-
-
     @classmethod
     def _only_below_fermi(cls, i):
         """
@@ -1115,7 +1108,6 @@ class FermionState(FockState):
         if i.assumptions0.get('below_fermi'):
             return True
         return False
-
 
     @classmethod
     def _only_above_fermi(cls, i):
@@ -1130,7 +1122,6 @@ class FermionState(FockState):
         if i.assumptions0.get('above_fermi'):
             return True
         return not cls.fermi_level
-
 
     def _remove_orbit(self, i):
         """
@@ -1170,7 +1161,6 @@ class FermionState(FockState):
         return self._negate_holes(self.args[0])
 
 
-
 class FockStateKet(FockState):
     """
     Representation of a ket.
@@ -1185,7 +1175,6 @@ class FockStateBra(FockState):
     """
     lbracket = '<'
     rbracket = '|'
-
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
@@ -1710,7 +1699,6 @@ class Commutator(Function):
         if c_part:
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
-
         #
         # single second quantization operators
         #
@@ -1729,7 +1717,6 @@ class Commutator(Function):
         #
         if a > b:
             return S.NegativeOne*cls(b, a)
-
 
     def doit(self, **hints):
         """
@@ -1761,7 +1748,6 @@ class Commutator(Function):
 
         return (a*b - b*a).doit(**hints)
 
-
     def __repr__(self):
         return "Commutator(%s,%s)" %(self.args[0], self.args[1])
 
@@ -1771,7 +1757,6 @@ class Commutator(Function):
     def _latex(self, printer):
         return "\\left[%s,%s\\right]"%tuple([
             printer._print(arg) for arg in self.args])
-
 
 
 class NO(Expr):
@@ -1804,7 +1789,6 @@ class NO(Expr):
     nargs = 1
     is_commutative = False
 
-
     def __new__(cls, arg):
         """
         Use anticommutation to get canonical form of operators.
@@ -1834,7 +1818,6 @@ class NO(Expr):
                     return coeff
             else:
                 coeff = S.One
-
 
             # {ab{cd}} = {abcd}
             newseq = []
@@ -2299,9 +2282,7 @@ def evaluate_deltas(e):
     f(_i)*KroneckerDelta(_i, _p)
     """
 
-
     # We treat Deltas only in mul objects
-
     # for general function objects we don't evaluate KroneckerDeltas in arguments,
     # but here we hard code exceptions to this rule
     accepted_functions = (
@@ -2458,7 +2439,6 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
             l1.append(Dummy(sym, **assum))
         else:
             l1.append(d)
-
 
     expr = expr.expand()
     terms = Add.make_args(expr)
@@ -2797,7 +2777,6 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
                 else:
                     result.append(coeff*NO( Mul(*string1[:i])))
 
-
         if keep_only_fully_contracted:
             break   # next iteration over i leaves leftmost operator string1[0] uncontracted
 
@@ -2837,7 +2816,6 @@ def wicks(e, **kw_args):
 
     """
 
-
     if not e:
         return S.Zero
 
@@ -2848,7 +2826,6 @@ def wicks(e, **kw_args):
             'keep_only_fully_contracted': False
             }
     opts.update(kw_args)
-
 
     # check if we are already normally ordered
     if isinstance(e, NO):
@@ -2873,7 +2850,6 @@ def wicks(e, **kw_args):
         else:
             return Add(*[ wicks(term, **kw_args) for term in e.args])
 
-
     # For Mul-objects we can actually do something
     if isinstance(e, Mul):
 
@@ -2887,7 +2863,6 @@ def wicks(e, **kw_args):
             else:
                 string1.append(factor)
         n = len(string1)
-
 
         # catch trivial cases
         if n == 0:
@@ -2937,8 +2912,6 @@ class PermutationOperator(Expr):
             obj = Basic.__new__(cls, i, j)
         return obj
 
-
-
     def get_permuted(self, expr):
         """
         Returns -expr with permuted indices.
@@ -2964,7 +2937,6 @@ class PermutationOperator(Expr):
 
     def _latex(self, printer):
         return "P(%s%s)"%self.args
-
 
 
 def simplify_index_permutations(expr, permutation_operators):
@@ -3018,7 +2990,6 @@ def simplify_index_permutations(expr, permutation_operators):
             return a
         else:
             return b
-
 
     expr = expr.expand()
     if isinstance(expr, Add):

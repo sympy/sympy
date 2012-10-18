@@ -384,7 +384,6 @@ class PDF(ContinuousProbability):
         self._variance = None
         self._stddev = None
 
-
     def normalize(self):
         """
         Normalize the probability distribution function so that
@@ -417,7 +416,6 @@ class PDF(ContinuousProbability):
             #    self._stddev = sqrt(self._variance)
         else:
             return self
-
 
     def cdf(self, x):
         """
@@ -474,7 +472,6 @@ class PDF(ContinuousProbability):
     mean = property(_get_mean)
     variance = property(_get_variance)
     stddev = property(_get_stddev)
-
 
     def _random(s):
         raise NotImplementedError

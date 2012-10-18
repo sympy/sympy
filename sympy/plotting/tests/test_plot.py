@@ -52,7 +52,6 @@ def plot_and_save(name):
     p = plot((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
     p.save(tmp_file('%s_line_multiple_range.png' % name))
 
-
     #parametric 2d plots.
     #Single plot with default range.
     plot_parametric(sin(x), cos(x)).save(tmp_file())
@@ -176,13 +175,10 @@ def plot_and_save(name):
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum.png' % name))
 
-
     ###
     # Test expressions that can not be translated to np and generate complex
     # results.
     ###
-
-
     plot(sin(x)+I*cos(x)).save(tmp_file())
     plot(sqrt(sqrt(-x))).save(tmp_file())
     plot(LambertW(x)).save(tmp_file())

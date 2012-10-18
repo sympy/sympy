@@ -218,7 +218,6 @@ class ContinuousPSpace(PSpace):
             space = SingleContinuousPSpace(z, density(z))
             return space.probability(condition.__class__(space.value, 0))
 
-
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
         if not (len(rvs)==1 and rvs.issubset(self.values)):

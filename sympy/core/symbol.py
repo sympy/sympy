@@ -93,7 +93,6 @@ class Symbol(AtomicExpr, Boolean):
     def __getstate__(self):
         return {'_assumptions': self._assumptions}
 
-
     def _hashable_content(self):
         return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
 

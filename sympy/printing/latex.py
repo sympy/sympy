@@ -1188,7 +1188,6 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{%s} {\left(%s, %d\right)}" % (cls, expr, index)
 
-
     def _print_RootSum(self, expr):
         cls = expr.__class__.__name__
         args = [self._print(expr.expr)]

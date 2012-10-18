@@ -46,16 +46,13 @@ def test_doit():
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
 
-
     d = Density([(A+B)*C, 1.0])
     assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
                         1.0*A*C*Dagger(C)*Dagger(B) +
                         1.0*B*C*Dagger(C)*Dagger(A) +
                         1.0*B*C*Dagger(C)*Dagger(B))
 
-
     #  With TensorProducts as args
-
     # Density with simple tensor products as args
     t = TensorProduct(A, B, C)
     d = Density([t, 1.0])
@@ -75,7 +72,6 @@ def test_doit():
                         1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
                         1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
                         1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
-
 
     #Density operators with spin states
     tp1 = TensorProduct(JzKet(1, 1), JzKet(1, -1))
@@ -244,7 +240,6 @@ def test_fidelity():
     d2 = Density([updown, 0.75], [updown2, 0.25])
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3
     assert abs(fidelity(d2, d1) - fidelity(d1, d2)) < 1e-3
-
 
     #using qubits/density(pure states)
     state1 = Qubit('0')

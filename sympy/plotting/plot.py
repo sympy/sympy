@@ -392,7 +392,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
 
-
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
                 str(self.expr),

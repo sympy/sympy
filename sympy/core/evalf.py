@@ -426,7 +426,6 @@ def evalf_add(v, prec, options):
         im, _, im_acc, _ = evalf(c, prec, options)
         return re, im, re_acc, im_acc
 
-
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
 
     i = 0
@@ -653,14 +652,11 @@ def evalf_pow(v, prec, options):
         return mpf_pow(xre, yre, target_prec), None, target_prec, None
 
 
-
-
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                            Special functions                               #
 #                                                                            #
 #----------------------------------------------------------------------------#
-
 def evalf_trig(v, prec, options):
     """
     This function handles sin and cos of real arguments.

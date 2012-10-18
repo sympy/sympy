@@ -169,7 +169,6 @@ class Application(Basic):
             return new(*self.args)
 
 
-
 class Function(Application, Expr):
     """Base class for applied mathematical functions.
 
@@ -335,7 +334,6 @@ class Function(Application, Expr):
             i = 0 if nargs is None else 10000
 
         return 4, i, name
-
 
     @property
     def is_commutative(self):
@@ -2175,7 +2173,6 @@ def nfloat(expr, n=15, exponent=False):
         intex = lambda x: x.is_Pow and x.exp.is_Integer
         floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
         rv = expr.n(n).replace(intex, floex)
-
 
     funcs = [f for f in rv.atoms(Function)]
     funcs.sort(key=count_ops)

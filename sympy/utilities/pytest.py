@@ -132,7 +132,6 @@ if not USE_PYTEST:
     def skip(str):
         raise Skipped(str)
 
-
     def SKIP(reason):
         """Similar to :func:`skip`, but this is a decorator. """
         def wrapper(func):

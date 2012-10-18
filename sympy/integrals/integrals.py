@@ -1034,7 +1034,6 @@ class Integral(Expr):
                 if f.is_Add:
                     return self._eval_integral(f, x, meijerg)
 
-
             if h is not None:
                 parts.append(coeff * h)
             else:

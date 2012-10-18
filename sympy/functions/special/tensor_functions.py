@@ -168,7 +168,6 @@ class KroneckerDelta(Function):
            i.assumptions0.get("above_fermi"):
             return S.Zero
 
-
     @property
     def is_above_fermi(self):
         """
@@ -333,7 +332,6 @@ class KroneckerDelta(Function):
 
         # if both indices are general we are True, else false
         return self.is_below_fermi and self.is_above_fermi
-
 
     @property
     def preferred_index(self):

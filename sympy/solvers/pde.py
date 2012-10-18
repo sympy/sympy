@@ -49,7 +49,6 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     pde_separate_add, pde_separate_mul
     """
 
-
     do_add = False
     if strategy == 'add':
         do_add = True

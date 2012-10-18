@@ -72,7 +72,6 @@ def check_expression(expr, var_symbols):
     assert e_sage == sage.SR(e_sympy)
 
 
-
 def test_basics():
     check_expression("x", "x")
     check_expression("x**2", "x")

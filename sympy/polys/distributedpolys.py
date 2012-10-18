@@ -421,7 +421,6 @@ def sdp_div(f, G, u, O, K):
     return Q, r
 
 
-
 def sdp_rem(f, G, u, O, K):
     """Returns polynomial remainder in `K[X]`. """
     r = {}

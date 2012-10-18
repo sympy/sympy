@@ -1303,7 +1303,6 @@ class acos(Function):
             if arg in cst_table:
                 return cst_table[arg]
 
-
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1427,8 +1426,6 @@ class atan(Function):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * C.atanh(i_coeff)
-
-
 
     @staticmethod
     @cacheit

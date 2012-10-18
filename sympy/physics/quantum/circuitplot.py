@@ -202,7 +202,6 @@ else:
             self._axes.add_line(l1)
             self._axes.add_line(l2)
 
-
     def circuit_plot(c, nqubits, **kwargs):
         """Draw the circuit diagram for the circuit with nqubits.
 

@@ -138,20 +138,17 @@ class Add(AssocOp):
                 c = S.One
                 s = o
 
-
             # now we have:
             # o = c*s, where
             #
             # c is a Number
             # s is an expression with number factor extracted
-
             # let's collect terms with the same s, so e.g.
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
             else:
                 terms[s] = c
-
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
@@ -219,7 +216,6 @@ class Add(AssocOp):
                 if o.contains(coeff):
                     coeff = S.Zero
                     break
-
 
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better

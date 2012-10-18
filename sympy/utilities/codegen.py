@@ -88,7 +88,6 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 
 
-
 __all__ = [
     # description of routines
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
@@ -837,7 +836,6 @@ class FCodeGen(CodeGen):
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
-
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the interface to a header file.

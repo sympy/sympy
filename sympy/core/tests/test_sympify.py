@@ -273,7 +273,6 @@ def test_sympifyit():
 
     assert add(x, '1') == NotImplemented
 
-
     @_sympifyit('b')
     def add_raises(a, b):
         return a+b
