@@ -219,6 +219,9 @@ class sign(Function):
 
     nargs = 1
 
+    is_bounded = True
+    is_complex = True
+
     def doit(self):
         if self.args[0].is_nonzero:
             return self.args[0] / Abs(self.args[0])
@@ -263,8 +266,6 @@ class sign(Function):
                 * (S.ImaginaryUnit if is_imag else S.One) \
                 * cls(arg._new_rawargs(*unk))
 
-    is_bounded = True
-
     def _eval_Abs(self):
         if self.args[0].is_nonzero:
             return S.One
@@ -281,6 +282,12 @@ class sign(Function):
             from sympy.functions.special.delta_functions import DiracDelta
             return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
                 * DiracDelta(-S.ImaginaryUnit * self.args[0])
+
+    def _eval_is_imaginary(self):
+        return self.args[0].is_imaginary
+
+    def _eval_is_integer(self):
+        return self.args[0].is_real
 
     def _eval_is_zero(self):
         return self.args[0].is_zero

@@ -532,7 +532,7 @@ def test_as_independent():
     assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
     assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
     assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
-           (DiracDelta(x - n1), DiracDelta(y - n1)*DiracDelta(x - n2))
+           (DiracDelta(x - n1)*DiracDelta(x - n2), DiracDelta(y - n1))
 
     # issue 2685
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \

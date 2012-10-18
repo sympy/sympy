@@ -63,6 +63,9 @@ class LeviCivita(Function):
     Eijk
 
     """
+
+    is_integer = True
+
     @classmethod
     def eval(cls, *args):
         if all(isinstance(a, (int, Integer)) for a in args):
@@ -124,7 +127,7 @@ class KroneckerDelta(Function):
     """
 
     nargs = 2
-    is_commutative = True
+
     is_integer = True
 
     @classmethod
