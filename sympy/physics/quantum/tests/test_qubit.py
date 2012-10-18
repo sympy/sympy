@@ -68,7 +68,7 @@ def test_apply_represent_equality():
 
     circuit = Qubit(int(random.random()*2),int(random.random()*2),\
     int(random.random()*2),int(random.random()*2),int(random.random()*2),\
-    int(random.random()*2))
+        int(random.random()*2))
     for i in range(int(random.random()*6)):
         circuit = gates[int(random.random()*6)]*circuit
 
@@ -83,15 +83,15 @@ def test_apply_represent_equality():
 
 def test_matrix_to_qubits():
     assert matrix_to_qubit(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
-    == Qubit(0,0,0,0)
+        == Qubit(0,0,0,0)
     assert qubit_to_matrix(Qubit(0,0,0,0)) ==\
-    Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
     assert matrix_to_qubit(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) ==\
-    (2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0) + Qubit(0,1,1)\
+        (2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0) + Qubit(0,1,1)\
     + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1))).expand()
     assert qubit_to_matrix(2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0)\
     + Qubit(0,1,1) + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1)))\
-    == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
+        == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
 
 def test_measure_normalize():
     a,b = symbols('a b')
@@ -99,7 +99,7 @@ def test_measure_normalize():
     assert measure_partial(state, (0,), normalize=False) ==\
      [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'),b*b.conjugate())]
     assert measure_all(state, normalize=False) ==\
-    [(Qubit('110'), a*a.conjugate()),(Qubit('111'), b*b.conjugate())]
+        [(Qubit('110'), a*a.conjugate()),(Qubit('111'), b*b.conjugate())]
 
 def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)

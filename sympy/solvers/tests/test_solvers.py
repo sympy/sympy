@@ -132,8 +132,8 @@ def test_solve_polynomial1():
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         {
-        x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
-        y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+            x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
+            y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
         }
 
     solution = {y: S.Zero, x: S.Zero}
@@ -228,7 +228,7 @@ def test_tsolve():
                         log(y/2 - sqrt(y**2 - 4)/2),
                         log(y/2 + sqrt(y**2 - 4)/2),
                         ]), set([
-                        log(y - sqrt(y**2 - 4)) - log(2),
+                                log(y - sqrt(y**2 - 4)) - log(2),
                         log(y + sqrt(y**2 - 4)) - log(2)])]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
@@ -412,8 +412,8 @@ def test_issue_1694():
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
     assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) in \
             [
-            set([2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]),
-            set([log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7)]),
+                set([2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]),
+                set([log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7)]),
             ]
     assert set(solve(Poly(exp(x) + exp(-x) - 4))) == \
         set([log(-sqrt(3) + 2), log(sqrt(3) + 2)])
@@ -486,7 +486,7 @@ def test_issue_1572_1364_1368():
     assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [2*atanh(S.Half)/a]
     assert set(solve(3-(sinh(a*x) + cosh(a*x)**2), x)) == \
              set([
-             2*atanh(-1 + sqrt(2))/a,
+                 2*atanh(-1 + sqrt(2))/a,
              2*atanh(S(1)/2 + sqrt(5)/2)/a,
              2*atanh(-sqrt(2) - 1)/a,
              2*atanh(-sqrt(5)/2 + S(1)/2)/a
@@ -518,25 +518,25 @@ def test_issue_2033():
         (log(sqrt(-z**2 + sin(y))),)]))
     assert set(solve(eqs, x, y)) == \
         set([
-        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
+            (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
         (log(sqrt(-z**2 - sin(log(3)))), -log(3))])
     assert set(solve(eqs, y, z)) == \
         set([
-        (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+            (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), sqrt(-exp(2*x) - sin(log(3))))])
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
     assert solve(eqs, set=True) == ([x, y], set(
         [
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
-        (log(sqrt(-z - sin(log(3)))), -log(3))]))
+            (log(sqrt(-z - sin(log(3)))), -log(3))]))
     assert solve(eqs, x, z, set=True) == ([x], set(
         [
         (log(-sqrt(-z + sin(y))),),
-        (log(sqrt(-z + sin(y))),)]))
+            (log(sqrt(-z + sin(y))),)]))
     assert set(solve(eqs, x, y)) == set(
         [
-        (log(-sqrt(-z - sin(log(3)))), -log(3)),
-        (log(sqrt(-z - sin(log(3)))), -log(3))])
+            (log(-sqrt(-z - sin(log(3)))), -log(3)),
+            (log(sqrt(-z - sin(log(3)))), -log(3))])
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), set=True) == (
@@ -764,10 +764,10 @@ def test_issue_2015():
     syms = a, b, c, f, h, k, n
     eqs = [b + r/d - c/d,
     c*(1/d + 1/e + 1/g) - f/g - r/d,
-    f*(1/g + 1/i + 1/j) - c/g - h/i,
-    h*(1/i + 1/l + 1/m) - f/i - k/m,
-    k*(1/m + 1/o + 1/p) - h/m - n/p,
-    n*(1/p + 1/q) - k/p]
+        f*(1/g + 1/i + 1/j) - c/g - h/i,
+        h*(1/i + 1/l + 1/m) - f/i - k/m,
+        k*(1/m + 1/o + 1/p) - h/m - n/p,
+        n*(1/p + 1/q) - k/p]
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 def test_misc():
@@ -779,19 +779,19 @@ def test_issue_2750():
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
     e = (
-    I1 - I2 - I3,
-    I3 - I4 - I5,
-    I4 + I5 - I6,
-    -I1 + I2 + I6,
-    -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
-    -I4 + dQ4,
-    -I2 + dQ2,
-    2*I3 + 2*I5 + 3*I6 - Q2,
-    I4 - 2*I5 + 2*Q4 + dI4
+        I1 - I2 - I3,
+        I3 - I4 - I5,
+        I4 + I5 - I6,
+        -I1 + I2 + I6,
+        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+        -I4 + dQ4,
+        -I2 + dQ2,
+        2*I3 + 2*I5 + 3*I6 - Q2,
+        I4 - 2*I5 + 2*Q4 + dI4
     )
 
     ans = [{
-    dQ4: I3 - I5,
+           dQ4: I3 - I5,
     dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
     I4: I3 - I5,
     dQ2: I2,
@@ -809,24 +809,24 @@ def test_2750_matrix():
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
     e = (
-    I1 - I2 - I3,
-    I3 - I4 - I5,
-    I4 + I5 - I6,
-    -I1 + I2 + I6,
-    -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
-    -I4 + dQ4,
-    -I2 + dQ2,
-    2*I3 + 2*I5 + 3*I6 - Q2,
-    I4 - 2*I5 + 2*Q4 + dI4
+        I1 - I2 - I3,
+        I3 - I4 - I5,
+        I4 + I5 - I6,
+        -I1 + I2 + I6,
+        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+        -I4 + dQ4,
+        -I2 + dQ2,
+        2*I3 + 2*I5 + 3*I6 - Q2,
+        I4 - 2*I5 + 2*Q4 + dI4
     )
     assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
-    dI4: -I3 + 3*I5 - 2*Q4,
-    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
-    dQ2: I2,
-    I1: I2 + I3,
-    Q2: 2*I3 + 2*I5 + 3*I6,
-    dQ4: I3 - I5,
-    I4: I3 - I5}
+        dI4: -I3 + 3*I5 - 2*Q4,
+        dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+        dQ2: I2,
+        I1: I2 + I3,
+        Q2: 2*I3 + 2*I5 + 3*I6,
+        dQ4: I3 - I5,
+        I4: I3 - I5}
 
 def test_issue_2802():
     f, g, h = map(Function, 'fgh')
@@ -960,16 +960,16 @@ def test_exclude():
            -Vminus + Vplus]
     assert solve(eqs, exclude=s*C*R) == [
         {
-        Rf: Ri*(C*R*s + 1)**2/(C*R*s),
-        Vminus: Vplus,
-        V1: Vplus*(2*C*R*s + 1)/(C*R*s),
-        Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)}]
+            Rf: Ri*(C*R*s + 1)**2/(C*R*s),
+            Vminus: Vplus,
+            V1: Vplus*(2*C*R*s + 1)/(C*R*s),
+            Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)}]
     assert solve(eqs, exclude=[Vplus, s, C]) == [
         {
-        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
-        Vminus: Vplus,
-        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-        R: Vplus/(C*s*(V1 - 2*Vplus))}]
+            Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+            Vminus: Vplus,
+            Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+            R: Vplus/(C*s*(V1 - 2*Vplus))}]
 
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
@@ -977,8 +977,8 @@ def test_high_order_roots():
 
 def test_issue3429():
     eqs = [
-    327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
-    895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
+        327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
+        895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
     assert len(solve(eqs, y, x)) == len(solve(eqs, y, x, manual=True)) == 4
 
 def test_overdetermined():

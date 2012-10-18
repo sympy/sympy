@@ -695,11 +695,11 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     def __str__(self):
         return ('cartesian surface: %s for'
                 ' %s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_meshes(self):
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
@@ -735,13 +735,13 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def __str__(self):
         return ('parametric cartesian surface: (%s, %s, %s) for'
                 ' %s over %s and %s over %s') % (
-                str(self.expr_x),
-                str(self.expr_y),
-                str(self.expr_z),
-                str(self.var_u),
-                str((self.start_u, self.end_u)),
-                str(self.var_v),
-                str((self.start_v, self.end_v)))
+                    str(self.expr_x),
+                    str(self.expr_y),
+                    str(self.expr_z),
+                    str(self.var_u),
+                    str((self.start_u, self.end_u)),
+                    str(self.var_v),
+                    str((self.start_v, self.end_v)))
 
     def get_parameter_meshes(self):
         return np.meshgrid(np.linspace(self.start_u, self.end_u,
@@ -783,11 +783,11 @@ class ContourSeries(BaseSeries):
     def __str__(self):
         return ('contour: %s for '
                 '%s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_meshes(self):
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,

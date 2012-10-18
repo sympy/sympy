@@ -1346,7 +1346,7 @@ def _solve_system(exprs, symbols, **flags):
         # break ties with count_ops and default_sort_key
         failed = lazyDSU_sort(failed,
             keys=[
-            lambda x: len(_ok_syms(x)),
+                              lambda x: len(_ok_syms(x)),
             lambda x: x.count_ops(),
             default_sort_key],
             warn=False)
@@ -2125,14 +2125,14 @@ def _invert(eq, *symbols, **kwargs):
     dointpow = bool(kwargs.get('integer_power', False))
 
     inverses = {
-    asin: sin,
-    acos: cos,
-    atan: tan,
-    acot: cot,
-    asinh: sinh,
-    acosh: cosh,
-    atanh: tanh,
-    acoth: coth,
+        asin: sin,
+        acos: cos,
+        atan: tan,
+        acot: cot,
+        asinh: sinh,
+        acosh: cosh,
+        atanh: tanh,
+        acoth: coth,
     }
 
     lhs = eq

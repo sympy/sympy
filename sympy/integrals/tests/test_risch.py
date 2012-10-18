@@ -119,7 +119,7 @@ def test_heurisch_symbolic_coeffs():
 def test_heurisch_symbolic_coeffs_1130():
     assert heurisch(1/(x**2+y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 - \
     I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) / \
-    (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+        (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \

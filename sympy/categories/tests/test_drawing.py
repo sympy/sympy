@@ -635,19 +635,19 @@ def test_XypicDiagramDrawer_line():
     grid = DiagramGrid(d, layout="sequential")
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]^{f} & B \\ar[r]^{g} & C \\ar[r]^{h} & D \\ar[r]^{i} & E \n" \
-    "}\n"
+        "A \\ar[r]^{f} & B \\ar[r]^{g} & C \\ar[r]^{h} & D \\ar[r]^{i} & E \n" \
+        "}\n"
 
     # The same diagram, transposed.
     grid = DiagramGrid(d, layout="sequential", transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} \\\\\n" \
-    "B \\ar[d]^{g} \\\\\n" \
-    "C \\ar[d]^{h} \\\\\n" \
-    "D \\ar[d]^{i} \\\\\n" \
-    "E \n" \
-    "}\n"
+        "A \\ar[d]^{f} \\\\\n" \
+        "B \\ar[d]^{g} \\\\\n" \
+        "C \\ar[d]^{h} \\\\\n" \
+        "D \\ar[d]^{i} \\\\\n" \
+        "E \n" \
+        "}\n"
 
 def test_XypicDiagramDrawer_triangle():
     # A triangle diagram.
@@ -661,23 +661,23 @@ def test_XypicDiagramDrawer_triangle():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]_{g\\circ f} \\ar[r]^{f} & B \\ar[ld]^{g} \\\\\n" \
-    "C & \n" \
-    "}\n"
+        "A \\ar[d]_{g\\circ f} \\ar[r]^{f} & B \\ar[ld]^{g} \\\\\n" \
+        "C & \n" \
+        "}\n"
 
     # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
-    "B \\ar[ru]_{g} & \n" \
-    "}\n"
+        "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+        "B \\ar[ru]_{g} & \n" \
+        "}\n"
 
     # The same diagram, with a masked morphism.
     assert drawer.draw(d, grid, masked=[g]) == "\\xymatrix{\n" \
-    "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
-    "B & \n" \
-    "}\n"
+        "A \\ar[r]^{g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+        "B & \n" \
+        "}\n"
 
     # The same diagram with a formatter for "unique".
     def formatter(astr):
@@ -686,9 +686,9 @@ def test_XypicDiagramDrawer_triangle():
 
     drawer.arrow_formatters["unique"] = formatter
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar@{-->}[r]^{\\exists !g\\circ f} \\ar[d]_{f} & C \\\\\n" \
-    "B \\ar[ru]_{g} & \n" \
-    "}\n"
+        "A \\ar@{-->}[r]^{\\exists !g\\circ f} \\ar[d]_{f} & C \\\\\n" \
+        "B \\ar[ru]_{g} & \n" \
+        "}\n"
 
     # The same diagram with a default formatter.
     def default_formatter(astr):
@@ -696,9 +696,9 @@ def test_XypicDiagramDrawer_triangle():
 
     drawer.default_arrow_formatter = default_formatter
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar@{-->}[r]^(0.45){\\exists !g\\circ f} \\ar[d]_(0.45){f} & C \\\\\n" \
-    "B \\ar[ru]_(0.45){g} & \n" \
-    "}\n"
+        "A \\ar@{-->}[r]^(0.45){\\exists !g\\circ f} \\ar[d]_(0.45){f} & C \\\\\n" \
+        "B \\ar[ru]_(0.45){g} & \n" \
+        "}\n"
 
     # A triangle diagram with a lot of morphisms between the same
     # objects.
@@ -711,11 +711,11 @@ def test_XypicDiagramDrawer_triangle():
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid, masked=[f1*g1*g2*f2, g2*f2*f1*g1]) == \
-    "\\xymatrix{\n" \
-    "A \\ar[r]^{g_{2}\\circ f_{2}} \\ar[d]_{f} \\ar@/^3mm/[d]^{f_{2}} " \
-    "& C \\ar@/^3mm/[l]^{f_{1}\\circ g_{1}} \\ar@/^3mm/[ld]^{g_{1}} \\\\\n" \
-    "B \\ar@/^3mm/[u]^{f_{1}} \\ar[ru]_{g} \\ar@/^3mm/[ru]^{g_{2}} & \n" \
-    "}\n"
+        "\\xymatrix{\n" \
+        "A \\ar[r]^{g_{2}\\circ f_{2}} \\ar[d]_{f} \\ar@/^3mm/[d]^{f_{2}} " \
+        "& C \\ar@/^3mm/[l]^{f_{1}\\circ g_{1}} \\ar@/^3mm/[ld]^{g_{1}} \\\\\n" \
+        "B \\ar@/^3mm/[u]^{f_{1}} \\ar[ru]_{g} \\ar@/^3mm/[ru]^{g_{2}} & \n" \
+        "}\n"
 
 def test_XypicDiagramDrawer_cube():
     # A cube diagram.
@@ -750,26 +750,26 @@ def test_XypicDiagramDrawer_cube():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "& A_{5} \\ar[r]^{f_{5}} \\ar[ldd]_{f_{6}} & A_{6} \\ar[rdd]^{f_{7}} " \
-    "& \\\\\n" \
-    "& A_{1} \\ar[r]^{f_{1}} \\ar[d]^{f_{2}} \\ar[u]^{f_{9}} & A_{2} " \
-    "\\ar[d]^{f_{3}} \\ar[u]_{f_{10}} & \\\\\n" \
-    "A_{7} \\ar@/_3mm/[rrr]_{f_{8}} & A_{3} \\ar[r]^{f_{3}} \\ar[l]_{f_{11}} " \
-    "& A_{4} \\ar[r]^{f_{11}} & A_{8} \n" \
-    "}\n"
+        "& A_{5} \\ar[r]^{f_{5}} \\ar[ldd]_{f_{6}} & A_{6} \\ar[rdd]^{f_{7}} " \
+        "& \\\\\n" \
+        "& A_{1} \\ar[r]^{f_{1}} \\ar[d]^{f_{2}} \\ar[u]^{f_{9}} & A_{2} " \
+        "\\ar[d]^{f_{3}} \\ar[u]_{f_{10}} & \\\\\n" \
+        "A_{7} \\ar@/_3mm/[rrr]_{f_{8}} & A_{3} \\ar[r]^{f_{3}} \\ar[l]_{f_{11}} " \
+        "& A_{4} \\ar[r]^{f_{11}} & A_{8} \n" \
+        "}\n"
 
     # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "& & A_{7} \\ar@/^3mm/[ddd]^{f_{8}} \\\\\n" \
-    "A_{5} \\ar[d]_{f_{5}} \\ar[rru]^{f_{6}} & A_{1} \\ar[d]^{f_{1}} " \
-    "\\ar[r]^{f_{2}} \\ar[l]^{f_{9}} & A_{3} \\ar[d]_{f_{3}} " \
-    "\\ar[u]^{f_{11}} \\\\\n" \
-    "A_{6} \\ar[rrd]_{f_{7}} & A_{2} \\ar[r]^{f_{3}} \\ar[l]^{f_{10}} " \
-    "& A_{4} \\ar[d]_{f_{11}} \\\\\n" \
-    "& & A_{8} \n" \
-    "}\n"
+        "& & A_{7} \\ar@/^3mm/[ddd]^{f_{8}} \\\\\n" \
+        "A_{5} \\ar[d]_{f_{5}} \\ar[rru]^{f_{6}} & A_{1} \\ar[d]^{f_{1}} " \
+        "\\ar[r]^{f_{2}} \\ar[l]^{f_{9}} & A_{3} \\ar[d]_{f_{3}} " \
+        "\\ar[u]^{f_{11}} \\\\\n" \
+        "A_{6} \\ar[rrd]_{f_{7}} & A_{2} \\ar[r]^{f_{3}} \\ar[l]^{f_{10}} " \
+        "& A_{4} \\ar[d]_{f_{11}} \\\\\n" \
+        "& & A_{8} \n" \
+        "}\n"
 
 def test_XypicDiagramDrawer_curved_and_loops():
     # A simple diagram, with a curved arrow.
@@ -786,26 +786,26 @@ def test_XypicDiagramDrawer_curved_and_loops():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]_{f} & B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_3mm/[ll]_{h} \\\\\n" \
-    "& C & \n" \
-    "}\n"
+        "A \\ar[r]_{f} & B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_3mm/[ll]_{h} \\\\\n" \
+        "& C & \n" \
+        "}\n"
 
     # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} & \\\\\n" \
-    "B \\ar[r]^{g} & C \\\\\n" \
-    "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
-    "}\n"
+        "A \\ar[d]^{f} & \\\\\n" \
+        "B \\ar[r]^{g} & C \\\\\n" \
+        "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
+        "}\n"
 
     # The same diagram, larger and rotated.
     assert drawer.draw(d, grid, diagram_format="@+1cm@dr") == \
-    "\\xymatrix@+1cm@dr{\n" \
-    "A \\ar[d]^{f} & \\\\\n" \
-    "B \\ar[r]^{g} & C \\\\\n" \
-    "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
-    "}\n"
+        "\\xymatrix@+1cm@dr{\n" \
+        "A \\ar[d]^{f} & \\\\\n" \
+        "B \\ar[r]^{g} & C \\\\\n" \
+        "D \\ar[u]_{k} \\ar@/^3mm/[uu]^{h} & \n" \
+        "}\n"
 
     # A simple diagram with three curved arrows.
     h1 = NamedMorphism(D, A, "h1")
@@ -815,19 +815,19 @@ def test_XypicDiagramDrawer_curved_and_loops():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} & B \\ar[d]^{g} & D \\ar[l]^{k} " \
-    "\\ar@/_7mm/[ll]_{h} \\ar@/_11mm/[ll]_{h_{1}} \\\\\n" \
-    "& C & \n" \
-    "}\n"
+        "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} & B \\ar[d]^{g} & D \\ar[l]^{k} " \
+        "\\ar@/_7mm/[ll]_{h} \\ar@/_11mm/[ll]_{h_{1}} \\\\\n" \
+        "& C & \n" \
+        "}\n"
 
     # The same diagram, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} & \\\\\n" \
-    "B \\ar[r]^{g} & C \\\\\n" \
-    "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} & \n" \
-    "}\n"
+        "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} & \\\\\n" \
+        "B \\ar[r]^{g} & C \\\\\n" \
+        "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} & \n" \
+        "}\n"
 
     # The same diagram, with "loop" morphisms.
     l_A = NamedMorphism(A, A, "l_A")
@@ -837,21 +837,21 @@ def test_XypicDiagramDrawer_curved_and_loops():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} \\ar@(u,l)[]^{l_{A}} " \
-    "& B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_7mm/[ll]_{h} " \
-    "\\ar@/_11mm/[ll]_{h_{1}} \\ar@(r,u)[]^{l_{D}} \\\\\n" \
-    "& C \\ar@(l,d)[]^{l_{C}} & \n" \
-    "}\n"
+        "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} \\ar@(u,l)[]^{l_{A}} " \
+        "& B \\ar[d]^{g} & D \\ar[l]^{k} \\ar@/_7mm/[ll]_{h} " \
+        "\\ar@/_11mm/[ll]_{h_{1}} \\ar@(r,u)[]^{l_{D}} \\\\\n" \
+        "& C \\ar@(l,d)[]^{l_{C}} & \n" \
+        "}\n"
 
     # The same diagram with "loop" morphisms, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]^{l_{A}} & \\\\\n" \
-    "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\\\\n" \
-    "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
-    "\\ar@(l,d)[]^{l_{D}} & \n" \
-    "}\n"
+        "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]^{l_{A}} & \\\\\n" \
+        "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\\\\n" \
+        "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
+        "\\ar@(l,d)[]^{l_{D}} & \n" \
+        "}\n"
 
     # The same diagram with two "loop" morphisms per object.
     l_A_ = NamedMorphism(A, A, "n_A")
@@ -861,23 +861,23 @@ def test_XypicDiagramDrawer_curved_and_loops():
     grid = DiagramGrid(d)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} \\ar@(u,l)[]^{l_{A}} " \
-    "\\ar@/^3mm/@(l,d)[]^{n_{A}} & B \\ar[d]^{g} & D \\ar[l]^{k} " \
-    "\\ar@/_7mm/[ll]_{h} \\ar@/_11mm/[ll]_{h_{1}} \\ar@(r,u)[]^{l_{D}} " \
-    "\\ar@/^3mm/@(d,r)[]^{n_{D}} \\\\\n" \
-    "& C \\ar@(l,d)[]^{l_{C}} \\ar@/^3mm/@(d,r)[]^{n_{C}} & \n" \
-    "}\n"
+        "A \\ar[r]_{f} \\ar@/^3mm/[rr]^{h_{2}} \\ar@(u,l)[]^{l_{A}} " \
+        "\\ar@/^3mm/@(l,d)[]^{n_{A}} & B \\ar[d]^{g} & D \\ar[l]^{k} " \
+        "\\ar@/_7mm/[ll]_{h} \\ar@/_11mm/[ll]_{h_{1}} \\ar@(r,u)[]^{l_{D}} " \
+        "\\ar@/^3mm/@(d,r)[]^{n_{D}} \\\\\n" \
+        "& C \\ar@(l,d)[]^{l_{C}} \\ar@/^3mm/@(d,r)[]^{n_{C}} & \n" \
+        "}\n"
 
     # The same diagram with two "loop" morphisms per object, transposed.
     grid = DiagramGrid(d, transpose=True)
     drawer = XypicDiagramDrawer()
     assert drawer.draw(d, grid) == "\\xymatrix{\n" \
-    "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]^{l_{A}} " \
-    "\\ar@/^3mm/@(u,l)[]^{n_{A}} & \\\\\n" \
-    "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\ar@/^3mm/@(d,r)[]^{n_{C}} \\\\\n" \
-    "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
-    "\\ar@(l,d)[]^{l_{D}} \\ar@/^3mm/@(d,r)[]^{n_{D}} & \n" \
-    "}\n"
+        "A \\ar[d]^{f} \\ar@/_3mm/[dd]_{h_{2}} \\ar@(r,u)[]^{l_{A}} " \
+        "\\ar@/^3mm/@(u,l)[]^{n_{A}} & \\\\\n" \
+        "B \\ar[r]^{g} & C \\ar@(r,u)[]^{l_{C}} \\ar@/^3mm/@(d,r)[]^{n_{C}} \\\\\n" \
+        "D \\ar[u]_{k} \\ar@/^7mm/[uu]^{h} \\ar@/^11mm/[uu]^{h_{1}} " \
+        "\\ar@(l,d)[]^{l_{D}} \\ar@/^3mm/@(d,r)[]^{n_{D}} & \n" \
+        "}\n"
 
 def test_xypic_draw_diagram():
     # A linear diagram.

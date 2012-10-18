@@ -704,9 +704,9 @@ def _pgroup_calcs():
         _t_pgroup)
 
     cube_faces = [
-    (0, 1, 2, 3), # upper
-    (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4), # middle 4
-    (4, 5, 6, 7), # lower
+        (0, 1, 2, 3), # upper
+        (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (0, 3, 7, 4), # middle 4
+        (4, 5, 6, 7), # lower
     ]
 
     # U, D, F, B, L, R = up, down, front, back, left, right
@@ -801,7 +801,7 @@ def _pgroup_calcs():
         range(12),
         icosahedron_faces,
         _pgroup_of_double(
-        dodecahedron, dodecahedron_faces, _dodeca_pgroup))
+            dodecahedron, dodecahedron_faces, _dodeca_pgroup))
 
     return (tetrahedron, cube, octahedron, dodecahedron, icosahedron,
         tetrahedron_faces, cube_faces, octahedron_faces,

@@ -264,9 +264,9 @@ def test_transform():
     assert Integral(x, x).transform(x, a*y).doit() == Integral(y*a**2, y).doit()
     _3 = S(3)
     assert Integral(x, (x, 0, -_3)).transform(x, 1/y).doit() == \
-    Integral(-1/x**3, (x, -oo, -1/_3)).doit()
+        Integral(-1/x**3, (x, -oo, -1/_3)).doit()
     assert Integral(x, (x, 0, _3)).transform(x, 1/y) == \
-    Integral(y**(-3), (y, 1/_3, oo))
+        Integral(y**(-3), (y, 1/_3, oo))
 
 def test_issue953():
     f = S(1)/2*asin(x) + x*sqrt(1 - x**2)/2
@@ -729,8 +729,8 @@ def test_issue_1116() :
 
 def test_issue_1301():
     assert integrate((x**n)*log(x), x) == \
-    n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
-    x*x**n/(n**2 + 2*n + 1)
+        n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
+        x*x**n/(n**2 + 2*n + 1)
 
 def test_issue_3154():
     # Note: this used to raise NotImplementedError

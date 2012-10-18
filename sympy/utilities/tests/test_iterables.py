@@ -28,8 +28,8 @@ def test_postorder_traversal():
 
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
         key=default_sort_key)) == [
-        2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
-        Integral(x**2, Tuple(x, 0, 1))
+            2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
+            Integral(x**2, Tuple(x, 0, 1))
     ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
@@ -218,7 +218,7 @@ def test_multiset_partitions():
 
     assert list(multiset_partitions([1,2,3,4], 2)) == [[[1, 2, 3], [4]], [[1, 3], \
     [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 4], [3]], \
-    [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+        [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
 
     assert list(multiset_partitions([1,2,2], 2)) == [[[1, 2], [2]],
                                                      [[1], [2, 2]]]
@@ -237,7 +237,7 @@ def test_partitions():
     {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}]
 
     assert [p.copy() for p in partitions(S(3), 2)] == \
-    [{3: 1}, {1: 1, 2: 1}]
+        [{3: 1}, {1: 1, 2: 1}]
 
     raises(ValueError, lambda: list(partitions(3, 0)))
 
@@ -330,7 +330,7 @@ def test_quick_sort():
 
 def test_lazyDSU_sort():
     seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], (
-    lambda x: len(x),
+                 lambda x: len(x),
     lambda x: sum(x))]
     assert lazyDSU_sort(seq, keys, warn=False) == \
         [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
@@ -349,18 +349,18 @@ def test_runs():
 def test_reshape():
     seq = range(1, 9)
     assert reshape(seq, [4]) == \
-    [[1, 2, 3, 4], [5, 6, 7, 8]]
+        [[1, 2, 3, 4], [5, 6, 7, 8]]
     assert reshape(seq, (4,)) == \
-    [(1, 2, 3, 4), (5, 6, 7, 8)]
+        [(1, 2, 3, 4), (5, 6, 7, 8)]
     assert reshape(seq, (2, 2)) == \
-    [(1, 2, 3, 4), (5, 6, 7, 8)]
+        [(1, 2, 3, 4), (5, 6, 7, 8)]
     assert reshape(seq, (2, [2])) == \
-    [(1, 2, [3, 4]), (5, 6, [7, 8])]
+        [(1, 2, [3, 4]), (5, 6, [7, 8])]
     assert reshape(seq, ((2,), [2])) == \
-    [((1, 2), [3, 4]), ((5, 6), [7, 8])]
+        [((1, 2), [3, 4]), ((5, 6), [7, 8])]
     assert reshape(seq, (1, [2], 1)) == \
-    [(1, [2, 3], 4), (5, [6, 7], 8)]
+        [(1, [2, 3], 4), (5, [6, 7], 8)]
     assert reshape(tuple(seq), ([[1], 1, (2,)],)) == \
-    (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
+        (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
-    (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+        (([1], 2, (3, 4)), ([5], 6, (7, 8)))

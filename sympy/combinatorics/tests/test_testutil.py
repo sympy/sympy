@@ -1,8 +1,8 @@
 from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup,\
-CyclicGroup
+    CyclicGroup
 from sympy.combinatorics.testutil import _verify_bsgs, _cmp_perm_lists,\
-_naive_list_centralizer, _verify_centralizer,\
-_verify_normal_closure
+    _naive_list_centralizer, _verify_centralizer,\
+    _verify_normal_closure
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 from random import shuffle

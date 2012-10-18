@@ -176,11 +176,11 @@ def test_determinant():
 
     for M in [Matrix(), Matrix([[1]])]:
         assert (
-        M.det() ==
-        M.det_bareis() ==
-        M.berkowitz_det() ==
-        M.det_LU_decomposition() ==
-        1)
+            M.det() ==
+            M.det_bareis() ==
+            M.berkowitz_det() ==
+            M.det_LU_decomposition() ==
+            1)
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
@@ -538,13 +538,13 @@ def test_inverse():
     # test that immutability is not a problem
     cls = ImmutableMatrix
     m = cls([
-    [48, 49, 31],
+            [48, 49, 31],
     [ 9, 71, 94],
     [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU'.split())
     cls = ImmutableSparseMatrix
     m = cls([
-    [48, 49, 31],
+            [48, 49, 31],
     [ 9, 71, 94],
     [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
@@ -743,8 +743,8 @@ def test_eigen():
 
     assert M.eigenvects() == (
         [
-        ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]),
-        ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
+            ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]),
+            ( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
         ])
 
     M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -757,9 +757,9 @@ def test_eigen():
         (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))],   [1]])]),
         (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
     assert M.eigenvects(simplify=False) == [
-    (Rational(5, 8) + sqrt(73)/8, 1,
+        (Rational(5, 8) + sqrt(73)/8, 1,
         [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])]),
-    (-sqrt(73)/8 + Rational(5, 8), 1,
+        (-sqrt(73)/8 + Rational(5, 8), 1,
         [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
     ]
 
@@ -1725,7 +1725,7 @@ def test_equality():
 
 def test_col_join():
     assert eye(3).col_join(Matrix([[7,7,7]])) == \
-    Matrix([[1,0,0],
+        Matrix([[1,0,0],
             [0,1,0],
             [0,0,1],
             [7,7,7]])
@@ -1814,8 +1814,8 @@ def test_GramSchmidt():
         [Matrix(2, 1, [1, 2]), Matrix(2, 1, [R(2)/5, R(-1)/5])]
     # from wikipedia
     assert GramSchmidt([Matrix([3, 1]),Matrix([2,2])], True) == [
-    Matrix([3*sqrt(10)/10, sqrt(10)/10]),
-    Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
+        Matrix([3*sqrt(10)/10, sqrt(10)/10]),
+        Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
 
 def test_casoratian():
     assert casoratian([1, 2, 3, 4], 1) == 0
@@ -1869,7 +1869,7 @@ def test_invertible_check():
     # ... but sometimes it won't, so that is an insufficient test of
     # whether something is invertible.
     m = Matrix([
-    [-1, -1,  0],
+               [-1, -1,  0],
     [ x,  1,  1],
     [ 1,  x, -1],])
     assert len(m.rref()[1]) == m.rows
@@ -1906,13 +1906,13 @@ def test_dot():
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols('B_x B_y B_z E_x E_y E_z',real=True)
     F =  Matrix((
-    (0,E_x,E_y,E_z),
+                (0,E_x,E_y,E_z),
     (-E_x,0,B_z,-B_y),
     (-E_y,-B_z,0,B_x),
     (-E_z,B_y,-B_x,0)
     ))
     Fd = Matrix( (
-    (0,-B_x,-B_y,-B_z),
+                 (0,-B_x,-B_y,-B_z),
     (B_x,0,E_z,-E_y),
     (B_y,-E_z,0,E_x),
     (B_z,E_y,-E_x,0)) )
@@ -1953,16 +1953,16 @@ def test_issue2222():
 
 def test_issue2221():
     assert Matrix.hstack(eye(2), 2*eye(2)) == Matrix([
-    [1, 0, 2, 0],
+                                                     [1, 0, 2, 0],
     [0, 1, 0, 2]])
     assert Matrix.vstack(eye(2), 2*eye(2)) == Matrix([
-    [1, 0],
+                                                     [1, 0],
     [0, 1],
     [2, 0],
     [0, 2]])
     cls = SparseMatrix
     assert cls.hstack(cls(eye(2)), cls(2*eye(2))) == Matrix([
-    [1, 0, 2, 0],
+                                                            [1, 0, 2, 0],
     [0, 1, 0, 2]])
 
 def test_cross():

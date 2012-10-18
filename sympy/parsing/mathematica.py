@@ -9,25 +9,25 @@ def parse (s):
 
     #Begin rules
     rules = (
-    (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z", #Function call
+        (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z", #Function call
         lambda m: translateFunction(m.group(1)) + "(" + parse(m.group(2)) + ")" ),
 
-    (r"\((.+)\)\((.+)\)", #Parenthesized implied multiplication
+        (r"\((.+)\)\((.+)\)", #Parenthesized implied multiplication
         lambda m: "(" + parse(m.group(1)) + ")*(" + parse(m.group(2)) + ")" ),
 
-    (r"\A\((.+)\)\Z", #Parenthesized expression
+        (r"\A\((.+)\)\Z", #Parenthesized expression
         lambda m: "(" + parse(m.group(1)) + ")" ),
 
-    (r"\A(.*[\w\.])\((.+)\)\Z", #Implied multiplication - a(b)
+        (r"\A(.*[\w\.])\((.+)\)\Z", #Implied multiplication - a(b)
         lambda m: parse(m.group(1)) + "*(" + parse(m.group(2)) + ")" ),
 
-    (r"\A\((.+)\)([\w\.].*)\Z", #Implied multiplication - (a)b
+        (r"\A\((.+)\)([\w\.].*)\Z", #Implied multiplication - (a)b
         lambda m: "(" + parse(m.group(1)) + ")*" + parse(m.group(2)) ),
 
-    (r"\A([\d\.]+)([a-zA-Z].*)\Z", #Implied multiplicatin - 2a
+        (r"\A([\d\.]+)([a-zA-Z].*)\Z", #Implied multiplicatin - 2a
         lambda m: parse(m.group(1)) + "*" + parse(m.group(2)) ),
 
-    (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z", #Infix operator
+        (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z", #Infix operator
         lambda m: parse(m.group(1)) + translateOperator(m.group(2)) + parse(m.group(3)) ))
     #End rules
 

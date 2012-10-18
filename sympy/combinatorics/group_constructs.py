@@ -49,7 +49,7 @@ def DirectProduct(*groups):
         for j in xrange(current_gen, current_gen + gens_count[i]):
             gen = ((groups[i].generators)[j - current_gen]).array_form
             array_gens[j][current_deg:current_deg + degrees[i]] =\
-            [ x + current_deg for x in gen]
+                [ x + current_deg for x in gen]
         current_gen += gens_count[i]
         current_deg += degrees[i]
     perm_gens = uniq([_af_new(list(a)) for a in array_gens])

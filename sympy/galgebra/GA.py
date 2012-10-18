@@ -2201,7 +2201,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.collect(self.mv[igrade][ibase],lst)
+                            sympy.collect(self.mv[igrade][ibase],lst)
         return
 
     def sqrfree(self,lst):
@@ -2214,7 +2214,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.sqrfree(self.mv[igrade][ibase],lst)
+                            sympy.sqrfree(self.mv[igrade][ibase],lst)
         return
 
     def flatten(self):
@@ -2265,7 +2265,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.simplify(self.mv[igrade][ibase])
+                            sympy.simplify(self.mv[igrade][ibase])
         return
 
     def trigsimp(self):
@@ -2279,7 +2279,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.trigsimp(self.mv[igrade][ibase],deep=True, recursive=True)
+                            sympy.trigsimp(self.mv[igrade][ibase],deep=True, recursive=True)
         return
 
     def cancel(self):
@@ -2292,7 +2292,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.cancel(self.mv[igrade][ibase])
+                            sympy.cancel(self.mv[igrade][ibase])
         return
 
     def expand(self):
@@ -2305,7 +2305,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        self.mv[igrade][ibase].expand()
+                            self.mv[igrade][ibase].expand()
         return
 
     def is_pure(self):

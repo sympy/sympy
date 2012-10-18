@@ -867,9 +867,9 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(
         exp(2*x)*sin(x)*(x**2 + x + 1), x
         ) == {
-        'test': True, 'trialset': set([exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
+            'test': True, 'trialset': set([exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
         cos(x)*exp(2*x), x**2*cos(x)*exp(2*x), x*cos(x)*exp(2*x),
-        x*exp(2*x)*sin(x)])}
+                x*exp(2*x)*sin(x)])}
     assert _undetermined_coefficients_match(1/sin(x), x) == {'test': False}
     assert _undetermined_coefficients_match(log(x), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x) == \
@@ -889,9 +889,9 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(
         x**2*sin(x)*exp(x) + x*sin(x) + x, x
         ) == {
-        'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
+            'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
-        x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
+                x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
         'trialset': set([x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)]),
         'test': True,
@@ -947,12 +947,12 @@ def test_undetermined_coefficients_match():
         {'test': True, 'trialset': set([exp(x)])}
     # converted from sin(x)**2
     assert _undetermined_coefficients_match(S(1)/2 - cos(2*x)/2, x) == \
-    {'test': True, 'trialset': set([S(1), cos(2*x), sin(2*x)])}
+        {'test': True, 'trialset': set([S(1), cos(2*x), sin(2*x)])}
     # converted from exp(2*x)*sin(x)**2
     assert _undetermined_coefficients_match(
         exp(2*x)*(S(1)/2 + cos(2*x)/2), x
         ) == {
-        'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
+            'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
         exp(2*x)])}
     assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x) == \
         {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
@@ -1206,7 +1206,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
     assert dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
         2*x - exp(I*x), f(x), hint + "_Integral", simplify=False) != \
-    dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
+        dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
         2*x - exp(I*x), f(x), hint + "_Integral", simplify=True)
 
 def test_Liouville_ODE():
@@ -1283,7 +1283,7 @@ def test_1686():
 def test_1726():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
-    {'default': None, 'order': 0}
+        {'default': None, 'order': 0}
     # See also issue 694, test Z13.
     raises(ValueError, lambda: dsolve(f(x).diff(x), f(y)))
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \

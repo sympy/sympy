@@ -847,7 +847,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
-                and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
+                    and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
     if order == 2:
@@ -1132,7 +1132,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     if isinstance(sol, AppliedUndef) and len(sol.args) == 1:
         if isinstance(func, AppliedUndef) and len(func.args) == 1:
             msg = "If you really do want sol to be just %s, use Eq(%s, 0) " % \
-            (sol, sol) + "instead."
+                (sol, sol) + "instead."
         else:
             msg = ""
         SymPyDeprecationWarning(msg, feature="The order of the "
@@ -1533,7 +1533,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     for o in other:
                         b, e = o.as_base_exp()
                         if b.is_Add and \
-                        all(a.args_cnc(cset=True, warn=False)[0] & \
+                            all(a.args_cnc(cset=True, warn=False)[0] & \
                         con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
@@ -1686,7 +1686,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
-        not expr.has(*constantsymbols):
+            not expr.has(*constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr

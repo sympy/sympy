@@ -1232,7 +1232,7 @@ class Permutation(Basic):
         """
         if type(n) == Perm:
             raise NotImplementedError(
-            'p**p is not defined; do you mean p^p (conjugate)?')
+                'p**p is not defined; do you mean p^p (conjugate)?')
         n = int(n)
         if n == 0:
             return Perm._af_new(range(self.size))
@@ -1493,7 +1493,7 @@ class Permutation(Basic):
                             i = Permutation(i.list(), size=self.size)
                         else:
                             i = Permutation(
-                            i.array_form, size=self.size)
+                                i.array_form, size=self.size)
                         i = i.array_form
                         return [i[j] for j in self.array_form]
                     except:

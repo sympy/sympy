@@ -591,16 +591,16 @@ def test_collect_D():
     # 1685
     assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
     assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) ==\
-    (x*f(x) + f(x))*D(f(x), x) + f(x)
+        (x*f(x) + f(x))*D(f(x), x) + f(x)
     assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x), exact=True) ==\
-    (x*f(x) + f(x))*D(f(x), x) + f(x)
+        (x*f(x) + f(x))*D(f(x), x) + f(x)
     assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x), exact=True) ==\
-    (1/f(x) + x/f(x))*D(f(x), x) + 1/f(x)
+        (1/f(x) + x/f(x))*D(f(x), x) + 1/f(x)
 
 @XFAIL
 def collect_issues():
     assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x)) !=\
-    (1 + x*D(f(x), x) + D(f(x), x))/f(x)
+        (1 + x*D(f(x), x) + D(f(x), x))/f(x)
 
 def test_collect_D_0():
     D = Derivative
@@ -1010,21 +1010,21 @@ def test_as_content_primitive():
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
     assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() ==\
-    (18, x*(x + 1)**3)
+        (18, x*(x + 1)**3)
     assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() ==\
-    (2, x + 3*y*(y + 1) + 1)
+        (2, x + 3*y*(y + 1) + 1)
     assert ((2 + 6*x)**2).as_content_primitive() ==\
-    (4, (3*x + 1)**2)
+        (4, (3*x + 1)**2)
     assert ((2 + 6*x)**(2*y)).as_content_primitive() ==\
-    (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
+        (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
     assert (5 + 10*x + 2*y*(3+3*y)).as_content_primitive() ==\
-    (1, 10*x + 6*y*(y + 1) + 5)
+        (1, 10*x + 6*y*(y + 1) + 5)
     assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() ==\
-    (11, x*(y + 1))
+        (11, x*(y + 1))
     assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() ==\
-    (121, x**2*(y + 1)**2)
+        (121, x**2*(y + 1)**2)
     assert (y**2).as_content_primitive() ==\
-    (1, y**2)
+        (1, y**2)
     assert (S.Infinity).as_content_primitive() == (1, oo)
     eq = x**(2+y)
     assert (eq).as_content_primitive() == (1, eq)

@@ -139,7 +139,7 @@ class MatrixExpr(Expr):
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
                 raise NotImplementedError(
-                "Slicing is not implemented for %s" % self.__class__.__name__)
+                    "Slicing is not implemented for %s" % self.__class__.__name__)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
@@ -395,7 +395,7 @@ def linear_factors(expr, *syms):
                         factor = ZeroMatrix(expr.rows, sym.rows)
                         if not sym.cols == expr.cols:
                             raise ShapeError(
-                            "%s not compatible as factor of %s"%(sym, expr))
+                                "%s not compatible as factor of %s"%(sym, expr))
                     else:
                         factor = Identity(sym.rows)*factor
                 total_factor += factor

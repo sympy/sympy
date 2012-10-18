@@ -62,11 +62,11 @@ class ImplicitSeries(BaseSeries):
     def __str__(self):
         return ('Implicit equation: %s for '
                 '%s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_raster(self):
         func = experimental_lambdify((self.var_x, self.var_y), self.expr,

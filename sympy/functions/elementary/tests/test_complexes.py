@@ -190,7 +190,7 @@ def test_as_real_imag():
     # issue 3162
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
-    ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2), \
+        ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2), \
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
     # issue 754

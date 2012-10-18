@@ -223,7 +223,7 @@ def test_gamma():
     assert density(X) == Lambda(_x,
                                 _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
     assert cdf(X, meijerg=True) == Lambda(_z, Piecewise(
-    (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), _z >= 0), (0, True)))
+                                          (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), _z >= 0), (0, True)))
     assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 

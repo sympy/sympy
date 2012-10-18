@@ -50,5 +50,5 @@ def test_graycode():
     assert get_subset_from_bitstring(['a','b','c','d'], '0011') == ['c', 'd']
     assert get_subset_from_bitstring('abcd','1001') == ['a', 'd']
     assert list(graycode_subsets(['a','b','c'])) == \
-    [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
+        [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
     ['a', 'c'], ['a']]

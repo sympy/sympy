@@ -200,18 +200,18 @@ def test_jscode_loops_multiple_contractions():
     l = Idx('l', p)
 
     s = (
-'for (var i=0; i<m; i++){\n'
-'   y[i] = 0;\n'
-'}\n'
-'for (var i=0; i<m; i++){\n'
-'   for (var j=0; j<n; j++){\n'
-'      for (var k=0; k<o; k++){\n'
-'         for (var l=0; l<p; l++){\n'
-'            y[i] = y[i] + b[j*o*p + k*p + l]*a[i*n*o*p + j*o*p + k*p + l];\n'
-'         }\n'
-'      }\n'
-'   }\n'
-'}'
+        'for (var i=0; i<m; i++){\n'
+        '   y[i] = 0;\n'
+        '}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      for (var k=0; k<o; k++){\n'
+        '         for (var l=0; l<p; l++){\n'
+        '            y[i] = y[i] + b[j*o*p + k*p + l]*a[i*n*o*p + j*o*p + k*p + l];\n'
+        '         }\n'
+        '      }\n'
+        '   }\n'
+        '}'
             )
     c = jscode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
@@ -230,18 +230,18 @@ def test_jscode_loops_addfactor():
     l = Idx('l', p)
 
     s = (
-'for (var i=0; i<m; i++){\n'
-'   y[i] = 0;\n'
-'}\n'
-'for (var i=0; i<m; i++){\n'
-'   for (var j=0; j<n; j++){\n'
-'      for (var k=0; k<o; k++){\n'
-'         for (var l=0; l<p; l++){\n'
-'            y[i] = (a[i*n*o*p + j*o*p + k*p + l] + b[i*n*o*p + j*o*p + k*p + l])*c[j*o*p + k*p + l] + y[i];\n'
-'         }\n'
-'      }\n'
-'   }\n'
-'}'
+        'for (var i=0; i<m; i++){\n'
+        '   y[i] = 0;\n'
+        '}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      for (var k=0; k<o; k++){\n'
+        '         for (var l=0; l<p; l++){\n'
+        '            y[i] = (a[i*n*o*p + j*o*p + k*p + l] + b[i*n*o*p + j*o*p + k*p + l])*c[j*o*p + k*p + l] + y[i];\n'
+        '         }\n'
+        '      }\n'
+        '   }\n'
+        '}'
             )
     c = jscode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
@@ -259,32 +259,32 @@ def test_jscode_loops_multiple_terms():
     k = Idx('k', o)
 
     s0 = (
-'for (var i=0; i<m; i++){\n'
-'   y[i] = 0;\n'
-'}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   y[i] = 0;\n'
+        '}\n'
     )
     s1 = (
-'for (var i=0; i<m; i++){\n'
-'   for (var j=0; j<n; j++){\n'
-'      for (var k=0; k<o; k++){\n'
-'         y[i] = b[j]*b[k]*c[i*n*o + j*o + k] + y[i];\n'
-'      }\n'
-'   }\n'
-'}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      for (var k=0; k<o; k++){\n'
+        '         y[i] = b[j]*b[k]*c[i*n*o + j*o + k] + y[i];\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
     )
     s2 = (
-'for (var i=0; i<m; i++){\n'
-'   for (var k=0; k<o; k++){\n'
-'      y[i] = b[k]*a[i*o + k] + y[i];\n'
-'   }\n'
-'}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var k=0; k<o; k++){\n'
+        '      y[i] = b[k]*a[i*o + k] + y[i];\n'
+        '   }\n'
+        '}\n'
     )
     s3 = (
-'for (var i=0; i<m; i++){\n'
-'   for (var j=0; j<n; j++){\n'
-'      y[i] = b[j]*a[i*n + j] + y[i];\n'
-'   }\n'
-'}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      y[i] = b[j]*a[i*n + j] + y[i];\n'
+        '   }\n'
+        '}\n'
             )
     c = jscode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or

@@ -312,11 +312,11 @@ def test_wicks():
     str = F(p)*Fd(q)*F(r)*Fd(s)
     nstr= wicks(str)
     fasit = NO(
-    KroneckerDelta(p, q)*KroneckerDelta(r, s)
-    + KroneckerDelta(p, q)*AnnihilateFermion(r)*CreateFermion(s)
-    + KroneckerDelta(r, s)*AnnihilateFermion(p)*CreateFermion(q)
-    - KroneckerDelta(p, s)*AnnihilateFermion(r)*CreateFermion(q)
-    - AnnihilateFermion(p)*AnnihilateFermion(r)*CreateFermion(q)*CreateFermion(s))
+        KroneckerDelta(p, q)*KroneckerDelta(r, s)
+        + KroneckerDelta(p, q)*AnnihilateFermion(r)*CreateFermion(s)
+        + KroneckerDelta(r, s)*AnnihilateFermion(p)*CreateFermion(q)
+        - KroneckerDelta(p, s)*AnnihilateFermion(r)*CreateFermion(q)
+        - AnnihilateFermion(p)*AnnihilateFermion(r)*CreateFermion(q)*CreateFermion(s))
     assert nstr == fasit
 
     assert (p*q*nstr).expand() == wicks(p*q*str)

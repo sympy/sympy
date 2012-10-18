@@ -65,15 +65,15 @@ def test_cgate():
     # Test multiple control bit functionality
     ToffoliGate = CGate((1,2), XGate(0))
     assert represent(ToffoliGate, nqubits=3) == \
-    Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],\
+        Matrix([[1,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,0,1,0,0,0,0,0],\
     [0,0,0,1,0,0,0,0],[0,0,0,0,1,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1],\
     [0,0,0,0,0,0,1,0]])
 
     ToffoliGate = CGate((3,0), XGate(1))
     assert qapply(ToffoliGate*Qubit('1001')) == \
-    matrix_to_qubit(represent(ToffoliGate*Qubit('1001'), nqubits=4))
+        matrix_to_qubit(represent(ToffoliGate*Qubit('1001'), nqubits=4))
     assert qapply(ToffoliGate*Qubit('0000')) == \
-    matrix_to_qubit(represent(ToffoliGate*Qubit('0000'), nqubits=4))
+        matrix_to_qubit(represent(ToffoliGate*Qubit('0000'), nqubits=4))
 
     CYGate = CGate(1, YGate(0))
     CYGate_matrix = Matrix(((1,0,0,0),(0,1,0,0),(0,0,0,-I),(0,0,I,0)))
@@ -144,7 +144,7 @@ def test_represent_ygate():
     circuit = YGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
     assert answer[0] == 0 and answer[1] == I and \
-    answer[2] == 0 and answer[3] == 0
+        answer[2] == 0 and answer[3] == 0
 
 
 def test_represent_zgate():

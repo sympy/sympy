@@ -3300,7 +3300,7 @@ def _logcombine(expr, force=False):
 
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
-        _logcombine(expr.args[1], force)
+            _logcombine(expr.args[1], force)
 
     return expr
 

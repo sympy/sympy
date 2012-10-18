@@ -1,10 +1,10 @@
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
-AlternatingGroup
+    AlternatingGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.util import _check_cycles_alt_sym, _strip,\
-_distribute_gens_by_base, _strong_gens_from_distr,\
-_orbits_transversals_from_bsgs, _handle_precomputed_bsgs, _base_ordering,\
-_remove_gens
+    _distribute_gens_by_base, _strong_gens_from_distr,\
+    _orbits_transversals_from_bsgs, _handle_precomputed_bsgs, _base_ordering,\
+    _remove_gens
 from sympy.combinatorics.testutil import _verify_bsgs
 
 def test_check_cycles_alt_sym():

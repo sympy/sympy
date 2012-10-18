@@ -199,7 +199,7 @@ def test_Permutation():
     for i in range(5):
         for j in range(i+1, 5):
             assert a[i].commutes_with(a[j]) == \
-            (rmul(a[i], a[j]) == rmul(a[j], a[i]))
+                (rmul(a[i], a[j]) == rmul(a[j], a[i]))
             if a[i].commutes_with(a[j]):
                 assert a[i].commutator(a[j]) == iden
                 assert a[j].commutator(a[i]) == iden

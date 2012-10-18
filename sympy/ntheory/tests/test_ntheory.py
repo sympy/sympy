@@ -452,7 +452,7 @@ def test_multinomial_coefficients():
     assert dict(multinomial_coefficients_iterator(3, 3)) == mc
     it = multinomial_coefficients_iterator(7, 2)
     assert [it.next() for i in range(4)] == \
-    [((2, 0, 0, 0, 0, 0, 0), 1), ((1, 1, 0, 0, 0, 0, 0), 2),
+        [((2, 0, 0, 0, 0, 0, 0), 1), ((1, 1, 0, 0, 0, 0, 0), 2),
       ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
 def test_issue1257():

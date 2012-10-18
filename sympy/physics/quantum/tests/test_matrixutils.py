@@ -84,7 +84,7 @@ def test_matrix_tensor_product():
     args = [Matrix(random_matrix1.tolist()),Matrix(random_matrix2.tolist())]
     sympy_product = matrix_tensor_product(*args)
     assert not (sympy_product - Matrix(numpy_product.tolist())).tolist() > \
-    (ones(sympy_product.rows, sympy_product.cols)*epsilon).tolist()
+        (ones(sympy_product.rows, sympy_product.cols)*epsilon).tolist()
 
     #test for three matrix kronecker
     sympy_product = matrix_tensor_product(l1,vec,l2)

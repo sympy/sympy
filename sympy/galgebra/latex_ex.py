@@ -995,7 +995,7 @@ class LatexPrinter(Printer):
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
-            self._print(expr.args[1]), self._print(expr.args[0]))
+                self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
 def LaTeX(expr, inline=True):

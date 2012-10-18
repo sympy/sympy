@@ -583,7 +583,7 @@ class Float(Number):
                     return Float._new(num, prec)
                 else:
                     _mpf_ = mpmath.mpf(
-                    S.NegativeOne**num[0]*num[1]*2**num[2])._mpf_
+                        S.NegativeOne**num[0]*num[1]*2**num[2])._mpf_
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:

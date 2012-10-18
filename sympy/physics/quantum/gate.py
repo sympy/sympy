@@ -1133,7 +1133,7 @@ def gate_simp(circuit):
                 # Put an Phasegate in place of any TGate**2.
                 newargs = newargs + (PhaseGate(circuit_args[i].base.args[0])**\
                 Integer(circuit_args[i].exp/2), circuit_args[i].base**\
-                (circuit_args[i].exp % 2))
+                    (circuit_args[i].exp % 2))
 
                 # Append the last elements.
                 newargs = newargs + circuit_args[i+1:]

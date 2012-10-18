@@ -51,7 +51,7 @@ def test_issue_2824():
     # and is tested internally by the use of args_cnc through the quantum
     # module, but the following is a test from the issue that used to raise.
     assert TensorProduct(1, Qubit('1')*Qubit('1').dual) == \
-    TensorProduct(1, OuterProduct(Qubit(1), QubitBra(1)))
+        TensorProduct(1, OuterProduct(Qubit(1), QubitBra(1)))
 
 def test_eval_trace():
     # This test includes tests with dependencies between TensorProducts
