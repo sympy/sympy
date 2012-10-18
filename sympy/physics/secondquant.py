@@ -2439,15 +2439,18 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
         if assum.get("above_fermi"):
             if new_indices:
-                sym = _a(a); a +=1
+                sym = _a(a)
+                a +=1
             l1 = aboves
         elif assum.get("below_fermi"):
             if new_indices:
-                sym = _i(i); i +=1
+                sym = _i(i)
+                i +=1
             l1 = belows
         else:
             if new_indices:
-                sym = _p(p); p +=1
+                sym = _p(p)
+                p +=1
             l1 = generals
 
         if new_indices:

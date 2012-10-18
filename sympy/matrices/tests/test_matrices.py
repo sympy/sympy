@@ -1765,9 +1765,9 @@ def test_singular_values():
 
 def test_condition_number():
     x = Symbol('x', real=True)
-    A = eye(3);
-    A[0, 0] = 10;
-    A[2, 2] = S(1)/10;
+    A = eye(3)
+    A[0, 0] = 10
+    A[2, 2] = S(1)/10
     assert A.condition_number() == 100
 
     A[1, 1] = x

@@ -2472,7 +2472,7 @@ def test_couple_4_states_numerical():
         JzKetCoupled(2, -2, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (1, 3, S(3)/2), (1, 4, 2)) )
     # j1=S(1)/2, S(1)/2, S(1)/2, 1
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(1, 1))) == \
-        JzKetCoupled(S(5)/2, S(5)/2, (S(1)/2, S(1)/2, S(1)/2, 1), ((1, 2, 1), (1, 3, S(3)/2), (1, 4, S(5)/2)) );
+        JzKetCoupled(S(5)/2, S(5)/2, (S(1)/2, S(1)/2, S(1)/2, 1), ((1, 2, 1), (1, 3, S(3)/2), (1, 4, S(5)/2)) )
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(1, 0))) == \
         sqrt(15)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(1)/2, 1), ((1, 2, 1), (1, 3, S(3)/2), (1, 4, S(3)/2)) )/5 + \
         sqrt(10)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(1)/2, 1), ((1, 2, 1), (1, 3, S(3)/2), (1, 4, S(5)/2)) )/5

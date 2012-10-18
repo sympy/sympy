@@ -50,23 +50,23 @@ def test_apply_beta_to_alpha_route():
 
     # x -> a        &(a,b) -> x     --  x -> a
     A = {'x': set(['a'])}
-    B = [ (And('a','b'), 'x') ]
-    assert APPLY(A, B) == {'x': (set(['a']), []),    'a':Q(0), 'b':Q(0)}
+    B = [ (And('a', 'b'), 'x') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    'a': Q(0), 'b': Q(0)}
 
     # x -> a        &(a,!x) -> b    --  x -> a
     A = {'x': set(['a'])}
-    B = [ (And('a',Not('x')), 'b') ]
-    assert APPLY(A, B) == {'x': (set(['a']), []),    Not('x'):Q(0), 'a':Q(0)}
+    B = [ (And('a', Not('x')), 'b') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    Not('x'): Q(0), 'a': Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c
-    A = {'x': set(['a','b'])}
-    B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (set(['a','b','c']), []),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a', 'b'])}
+    B = [ (And('a', 'b'), 'c') ]
+    assert APPLY(A, B) == {'x': (set(['a', 'b', 'c']), []),    'a': Q(0), 'b': Q(0)}
 
     # x -> a        &(a,b) -> y     --  x -> a [#0]
     A = {'x': set(['a'])}
-    B = [ (And('a','b'), 'y') ]
-    assert APPLY(A, B) == {'x': (set(['a']), [0]),    'a':Q(0), 'b':Q(0)}
+    B = [ (And('a', 'b'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a']), [0]),    'a': Q(0), 'b': Q(0)}
 
     # x -> a b c    &(a,b) -> c     --  x -> a b c
     A = {'x': set(['a', 'b', 'c'])}
@@ -74,9 +74,9 @@ def test_apply_beta_to_alpha_route():
     assert APPLY(A, B) == {'x': (set(['a', 'b', 'c']), []),    'a': Q(0), 'b': Q(0)}
 
     # x -> a b      &(a,b,c) -> y   --  x -> a b [#0]
-    A = {'x': set(['a','b'])}
-    B = [ (And('a','b','c'), 'y') ]
-    assert APPLY(A, B) == {'x': (set(['a','b']), [0]),    'a':Q(0), 'b':Q(0), 'c':Q(0)}
+    A = {'x': set(['a', 'b'])}
+    B = [ (And('a', 'b', 'c'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a', 'b']), [0]),    'a': Q(0), 'b': Q(0), 'c': Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c d
     # c -> d                            c -> d
