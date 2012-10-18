@@ -1,6 +1,8 @@
 from sympy.logic.utilities import load_file
 from sympy.logic import satisfiable
-import time, os, sys
+import time
+import os
+import sys
 
 input_path = os.getcwd() + '/' + '/'.join(sys.argv[0].split('/')[:-1])
 

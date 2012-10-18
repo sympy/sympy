@@ -3,7 +3,8 @@
 
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
-import sys, sympy
+import sys
+import sympy
 
 if __name__ == '__main__':
 

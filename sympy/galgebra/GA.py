@@ -13,7 +13,8 @@ The relevant references for this module are:
     3. SymPy Tutorial, http://docs.sympy.org/
 """
 import sys
-import numpy, sympy
+import numpy
+import sympy
 import re as regrep
 import sympy.galgebra.latex_ex
 from sympy.core.decorators import deprecated

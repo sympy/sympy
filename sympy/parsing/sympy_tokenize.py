@@ -26,7 +26,8 @@ __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = \
     'GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger'
 
-import string, re
+import string
+import re
 from token import *
 
 import token

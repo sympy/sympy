@@ -1,7 +1,8 @@
 """Simple tools for timing functions execution, when IPython is not
    available. """
 
-import timeit, math
+import timeit
+import math
 
 _scales = [1e0, 1e3, 1e6, 1e9]
 _units = [u's', u'ms', u'\u03bcs', u'ns']

@@ -6,7 +6,9 @@ import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import os, types, StringIO
+import os
+import types
+import StringIO
 
 from sympy.core import S, C, Basic, Symbol
 from sympy.core.function import _coeff_isneg

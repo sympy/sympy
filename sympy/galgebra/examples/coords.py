@@ -4,7 +4,9 @@
 import sys
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
-import sympy, numpy, time
+import sympy
+import numpy
+import time
 
 if __name__ == '__main__':
     metric = '1 0 0,'+\

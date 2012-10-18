@@ -7,7 +7,8 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-import math, sympy
+import math
+import sympy
 
 MutableDenseMatrix = Matrix
 

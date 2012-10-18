@@ -5,7 +5,8 @@ from sympy import latex
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
-    import __builtin__, sys
+    import __builtin__
+    import sys
 
     def _displayhook(arg):
         """Python's pretty-printer display hook.

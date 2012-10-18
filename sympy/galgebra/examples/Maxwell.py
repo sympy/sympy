@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import sys, sympy
+import sys
+import sympy
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
 
