@@ -1092,7 +1092,7 @@ def collect_sqrt(expr, evaluate=True):
     for a in Add.make_args(expr):
         for m in a.args_cnc()[0]:
             if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or \
-                m is S.ImaginaryUnit):
+                                m is S.ImaginaryUnit):
                 vars.add(m)
     vars = list(vars)
     if not evaluate:
@@ -1589,7 +1589,7 @@ def _unpolarify(eq, exponents_only, pause=False):
             eq.is_Relational and (
                 eq.rel_op in ('==', '!=') and 0 in eq.args or
                 eq.rel_op not in ('==', '!='))
-            ):
+        ):
             return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
         if eq.func is polar_lift:
             return _unpolarify(eq.args[0], exponents_only)
@@ -1982,7 +1982,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     b1, e1 = nc_part[-1].as_base_exp()
                     b2, e2 = term.as_base_exp()
                     if (b1 == b2 and
-                        e1.is_commutative and e2.is_commutative):
+                            e1.is_commutative and e2.is_commutative):
                         nc_part[-1] = Pow(b1, Add(e1, e2))
                         continue
                 nc_part.append(term)
@@ -2118,7 +2118,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if (last # no more radicals in base
                     or len(common_b) == 1 # nothing left to join with
                     or all(k[1] == 1 for k in common_b) # no radicals left in common_b
-                    ):
+                        ):
                     break
                 # see what we can exponentiate base by to remove any radicals
                 # so we know what to search for

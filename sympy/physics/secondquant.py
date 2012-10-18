@@ -1289,7 +1289,7 @@ def _apply_Mul(m):
                         return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             elif isinstance(next_to_last, Pow):
                 if isinstance(next_to_last.base, SqOperator) and \
-                    next_to_last.exp.is_Integer:
+                        next_to_last.exp.is_Integer:
                     if next_to_last.base.is_symbolic:
                         return m
                     else:

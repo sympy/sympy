@@ -43,7 +43,7 @@ class Dyadic(object):
             added = 0
             for i, v in enumerate(self.args):
                 if ((str(inlist[0][1]) == str(self.args[i][1])) and
-                    (str(inlist[0][2]) == str(self.args[i][2]))):
+                        (str(inlist[0][2]) == str(self.args[i][2]))):
                     self.args[i] = (self.args[i][0] +
                         inlist[0][0], inlist[0][1], inlist[0][2])
                     inlist.remove(inlist[0])
@@ -56,7 +56,7 @@ class Dyadic(object):
         # This code is to remove empty parts from the list
         while i < len(self.args):
             if ((self.args[i][0] == 0) | (self.args[i][1] == 0) |
-                (self.args[i][2] == 0)):
+                    (self.args[i][2] == 0)):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
@@ -1633,7 +1633,7 @@ class MechanicsStrPrinter(StrPrinter):
     def _print_Derivative(self, e):
         t = dynamicsymbols._t
         if (bool(sum([i == t for i in e.variables])) &
-            isinstance(type(e.args[0]), UndefinedFunction)):
+                isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
             for i, v in enumerate(e.variables):
                 ol += dynamicsymbols._str

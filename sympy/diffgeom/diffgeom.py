@@ -598,7 +598,7 @@ class Commutator(Expr):
     #"""
     def __new__(cls, v1, v2):
         if (covariant_order(v1) or contravariant_order(v1) != 1
-            or covariant_order(v2) or contravariant_order(v2) != 1):
+                or covariant_order(v2) or contravariant_order(v2) != 1):
             raise ValueError('Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()

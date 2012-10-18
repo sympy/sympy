@@ -820,7 +820,7 @@ class Permutation(Basic):
         temp = set(temp)
 
         if not is_cycle and \
-            any(i not in temp for i in range(len(temp))):
+                any(i not in temp for i in range(len(temp))):
             raise ValueError("Integers 0 through %s must be present." %
                              max(temp))
 

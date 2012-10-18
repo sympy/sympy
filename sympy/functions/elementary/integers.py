@@ -45,7 +45,7 @@ class RoundFunction(Function):
         if npart and (
             not spart or
             npart.is_real and spart.is_imaginary or
-            npart.is_imaginary and spart.is_real):
+                npart.is_imaginary and spart.is_real):
             try:
                 re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
                 ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit

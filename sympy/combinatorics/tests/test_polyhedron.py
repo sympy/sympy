@@ -79,5 +79,5 @@ def test_polyhedron():
         (tetrahedron, square, octahedron, dodecahedron, icosahedron),
         (4,           8,      6,          20,          12),
         (3,           4,      4,          5,            5),
-        (12,          24,     24,         60,           60)):
+            (12,          24,     24,         60,           60)):
         check(h, size, rpt, target)

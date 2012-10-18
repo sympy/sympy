@@ -121,7 +121,7 @@ def isgeneratorfunction(object):
     """
     CO_GENERATOR = 0x20
     if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-        object.func_code.co_flags & CO_GENERATOR:
+            object.func_code.co_flags & CO_GENERATOR:
         return True
     return False
 
@@ -136,7 +136,7 @@ def setup_pprint():
 
 def run_in_subprocess_with_hash_randomization(function, function_args=(),
     function_kwargs={}, command=sys.executable,
-    module='sympy.utilities.runtests', force=False):
+        module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -217,7 +217,7 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
             os.environ["PYTHONHASHSEED"] = hash_seed
 
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-    doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
+                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
     """
     Run all tests.
 
@@ -264,9 +264,9 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
-                stderr=dev_null) == 0:
+                               stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                    "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -1322,7 +1322,7 @@ class PyTestReporter(Reporter):
     """
 
     def __init__(self, verbose=False, tb="short", colors=True,
-        force_colors=False):
+                 force_colors=False):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -1413,7 +1413,7 @@ class PyTestReporter(Reporter):
         return width
 
     def write(self, text, color="", align="left", width=None,
-        force_colors=False):
+              force_colors=False):
         """
         Prints a text on the screen.
 
@@ -1464,7 +1464,7 @@ class PyTestReporter(Reporter):
             self.write(" "*(width-self._write_pos-len(text)))
 
         if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
-            sys.stdout.isatty():
+                sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so

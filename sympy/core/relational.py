@@ -148,7 +148,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 raise ValueError(msg % repr(rop))
         if (lhs.is_number and rhs.is_number and
            (rop_cls in (Equality, Unequality) or
-            lhs.is_real and rhs.is_real)):
+                lhs.is_real and rhs.is_real)):
             diff = lhs - rhs
             know = diff.equals(0, failing_expression=True)
             if know is True: # exclude failing expression case

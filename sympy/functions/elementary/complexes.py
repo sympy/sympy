@@ -254,7 +254,7 @@ class sign(Function):
                 elif ai.is_imaginary and ai2.is_positive:
                     is_imag = not is_imag
                 elif ai.is_negative is None or \
-                    (ai.is_imaginary is None or ai2.is_positive is None):
+                        (ai.is_imaginary is None or ai2.is_positive is None):
                     unk.append(ai)
             if c is S.One and len(unk) == len(args):
                 return None
@@ -290,7 +290,7 @@ class sign(Function):
             self.args[0].is_nonzero and
             other.is_integer and
             other.is_even
-            ):
+        ):
             return S.One
 
     def _sage_(self):

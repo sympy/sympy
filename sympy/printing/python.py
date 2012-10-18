@@ -59,7 +59,7 @@ def python(expr, **settings):
             while True:
                 newsymbolname += "_"
                 if (newsymbolname not in printer.symbols and
-                    newsymbolname not in printer.functions):
+                        newsymbolname not in printer.functions):
                     renamings[sympy.Symbol(symbolname)] = sympy.Symbol(newsymbolname)
                     break
         result += newsymbolname + ' = Symbol(\'' + symbolname + '\')\n'
@@ -71,7 +71,7 @@ def python(expr, **settings):
             while True:
                 newfunctionname += "_"
                 if (newfunctionname not in printer.symbols and
-                    newfunctionname not in printer.functions):
+                        newfunctionname not in printer.functions):
                     renamings[sympy.Function(functionname)] = sympy.Function(newfunctionname)
                     break
         result += newfunctionname + ' = Function(\'' + functionname + '\')\n'

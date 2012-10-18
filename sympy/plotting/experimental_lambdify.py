@@ -611,7 +611,7 @@ class Lambdifier(object):
             for a in expr.args:
                 if (isinstance(a, Symbol) or
                     isinstance(a, NumberSymbol) or
-                    a in [I, zoo, oo]):
+                        a in [I, zoo, oo]):
                     continue
                 else:
                     args_dict.update(cls.sympy_expression_namespace(a))

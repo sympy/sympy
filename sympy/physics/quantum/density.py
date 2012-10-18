@@ -183,7 +183,7 @@ class Density(HermitianOperator):
         # Muls of Tensor Products should be expanded
         # before this function is called
         if (isinstance(nc_part1[0], TensorProduct) and
-            len(nc_part1) == 1 and len(nc_part2) == 1):
+                len(nc_part1) == 1 and len(nc_part2) == 1):
             op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
         else:
             op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
@@ -299,7 +299,7 @@ def fidelity(state1, state2):
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
     if (not isinstance(state1, Matrix) or
-        not isinstance(state2, Matrix)):
+            not isinstance(state2, Matrix)):
         raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))

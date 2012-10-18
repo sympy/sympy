@@ -751,7 +751,7 @@ def solve(f, *symbols, **flags):
                 p.is_Add or p.is_Mul or
                 p.is_Pow and not implicit or
                 p.is_Function and not isinstance(p, AppliedUndef) and
-                not implicit):
+                  not implicit):
                 continue
             elif not p in seen:
                 seen.add(p)

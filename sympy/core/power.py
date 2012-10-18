@@ -118,12 +118,12 @@ class Pow(Expr):
             b_nneg = True
         smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
-            e.is_real is False and smallarg is False):
+                e.is_real is False and smallarg is False):
             return -Pow(b, e*other)
         if (other.is_integer or
             e.is_real and (b_nneg or abs(e) < 1) or
             e.is_real is False and smallarg is True or
-            b.is_polar):
+                b.is_polar):
             return Pow(b, e*other)
 
     def _eval_is_even(self):

@@ -529,7 +529,7 @@ def _denester(nested, av0, h, max_depth_level):
     if av0[1] is None:
         return None, None
     if (av0[0] is None and
-        all(n.is_Number for n in nested)): # no arguments are nested
+            all(n.is_Number for n in nested)): # no arguments are nested
         for f in subsets(len(nested)): # test subset 'f' of nested
             p = _mexpand(Mul(*[nested[i] for i in range(len(f)) if f[i]]))
             if f.count(1) > 1 and f[-1]:

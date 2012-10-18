@@ -134,7 +134,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
             # HT(h) and HT(g) disjoint: mh*mg == LCMhg
             if monomial_mul(mh, mg) == LCMhg or (
                 not any(lcm_divides(ipx) for ipx in C) and
-                not any(lcm_divides(pr[1]) for pr in D)):
+                    not any(lcm_divides(pr[1]) for pr in D)):
                 D.add((ih, ig))
 
         E = set()
@@ -161,7 +161,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
             # if HT(h) does not divide lcm(HT(g1), HT(g2))
             if not monomial_div(LCM12, mh) or \
                 monomial_lcm(mg1, mh) == LCM12 or \
-                monomial_lcm(mg2, mh) == LCM12:
+                    monomial_lcm(mg2, mh) == LCM12:
                 B_new.add((ig1, ig2))
 
         B_new |= E

@@ -9,7 +9,7 @@ def _is_scalar(e):
         if (e.is_Integer or e.is_Float or
             e.is_Rational or e.is_Number or
             (e.is_Symbol and e.is_commutative)
-            ):
+                ):
             return True
 
     return False
@@ -137,7 +137,7 @@ class Tr(Expr):
                 return Mul(*c_part)*obj if len(c_part)>0 else obj
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
-                _is_scalar(expr.args[1])):
+                    _is_scalar(expr.args[1])):
                 return expr
             else:
                 return Expr.__new__(cls, expr, indices)

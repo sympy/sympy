@@ -935,7 +935,7 @@ class Expr(Basic, EvalfMixin):
         if c and (
             c[0].is_Number and
             c[0].is_negative and
-            c[0] != S.NegativeOne):
+                c[0] != S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -1438,7 +1438,7 @@ class Expr(Basic, EvalfMixin):
         else:
             want = Mul
         if (want is not func or
-            func is not Add and func is not Mul):
+                func is not Add and func is not Mul):
             if has(self):
                 return (want.identity, self)
             else:
@@ -1874,7 +1874,7 @@ class Expr(Basic, EvalfMixin):
             diff = co - c
             # XXX should we match types? i.e should 3 - .1 succeed?
             if (co > 0 and diff > 0 and diff < co or
-                co < 0 and diff < 0 and diff > co):
+                    co < 0 and diff < 0 and diff > co):
                 return diff
             return None
 

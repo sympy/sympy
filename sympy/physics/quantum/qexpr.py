@@ -394,7 +394,7 @@ class QExpr(Expr):
         elif format == 'numpy' and not isinstance(result, numpy_ndarray):
             return to_numpy(result)
         elif format == 'scipy.sparse' and\
-            not isinstance(result, scipy_sparse_matrix):
+                not isinstance(result, scipy_sparse_matrix):
             return to_scipy_sparse(result)
 
         return result

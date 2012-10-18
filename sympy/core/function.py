@@ -2070,7 +2070,7 @@ def count_ops(expr, visual=False):
                 a.is_Pow or
                 a.is_Function or
                 isinstance(a, Derivative) or
-                isinstance(a, C.Integral)):
+                    isinstance(a, C.Integral)):
 
                 o = C.Symbol(a.func.__name__.upper())
                 # count the args

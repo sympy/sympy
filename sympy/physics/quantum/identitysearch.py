@@ -818,11 +818,11 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
             # the evaluated matrix will actually be an integer
             if (is_scalar_matrix(new_circuit, nqubits, id_only) and
                 not is_degenerate(ids, new_circuit) and
-                not circuit_reducible):
+                    not circuit_reducible):
                 ids.add(GateIdentity(*new_circuit))
 
             elif (len(new_circuit) < max_depth and
-                not circuit_reducible):
+                  not circuit_reducible):
                 queue.append(new_circuit)
 
     return ids

@@ -382,7 +382,7 @@ def generate_tokens(readline):
                         break
                 elif initial in single_quoted or \
                     token[:2] in single_quoted or \
-                    token[:3] in single_quoted:
+                        token[:3] in single_quoted:
                     if token[-1] == '\n':                  # continued string
                         endprog = (endprogs[initial] or endprogs[token[1]] or
                                    endprogs[token[2]])

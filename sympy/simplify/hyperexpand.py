@@ -373,7 +373,7 @@ def add_meijerg_formulae(formulae):
         if (Mod((x - x1).simplify(), 1) != 0 or
             Mod((x - x2).simplify(), 1) != 0 or
             Mod((x - y).simplify(), 1) != S(1)/2 or
-            x > x1 or x > x2):
+                x > x1 or x > x2):
             return
 
         return {a: x}, IndexQuadruple([x], [], [x - S(1)/2 + t for t in sig], [])
@@ -2174,7 +2174,7 @@ def devise_plan_meijer(fro, to, z):
         for idx, (a, b) in enumerate(zip(f, t)):
             if (
                 (a - b).is_integer and (b - a)/diff > 0 and
-                all(a != x for x in counter)):
+                    all(a != x for x in counter)):
                 sh = shifter(idx)
                 f[idx] += diff
                 return sh
@@ -2429,7 +2429,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
     if m.delta > 0 or \
        (m.delta == 0 and len(m.ap) == len(m.bq) and \
-        (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
+            (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
         # The condition delta > 0 means that the convergence region is
         # connected. Any expression we find can be continued analytically
         # to the entire convergence region.

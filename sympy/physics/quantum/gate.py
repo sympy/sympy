@@ -1104,7 +1104,7 @@ def gate_simp(circuit):
         if isinstance(circuit_args[i], Pow):
             if isinstance(circuit_args[i].base,
                 (HadamardGate, XGate, YGate, ZGate))\
-                and isinstance(circuit_args[i].exp, Number):
+                    and isinstance(circuit_args[i].exp, Number):
                 # Build a new circuit taking replacing the
                 # H,X,Y,Z squared with one.
                 newargs = (circuit_args[:i] +\

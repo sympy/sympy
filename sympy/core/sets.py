@@ -598,7 +598,7 @@ class Interval(Set, EvalfMixin):
 
         # If I have open end points and these endpoints are contained in other
         if ((self.left_open  and other.contains(self.start) is True) or
-            (self.right_open and other.contains(self.end)   is True)):
+                (self.right_open and other.contains(self.end)   is True)):
             # Fill in my end points and return
             open_left  = self.left_open  and self.start not in other
             open_right = self.right_open and self.end   not in other

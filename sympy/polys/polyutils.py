@@ -304,7 +304,7 @@ def _dict_from_expr(expr, opt):
         # TODO: Integrate this into expand() itself
         while any(_is_expandable_pow(i) or i.is_Mul and
             any(_is_expandable_pow(j) for j in i.args) for i in
-            Add.make_args(expr)):
+                Add.make_args(expr)):
 
             expr = expand_multinomial(expr)
         while any(i.is_Mul and any(j.is_Add for j in i.args) for i in Add.make_args(expr)):

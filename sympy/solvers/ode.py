@@ -847,7 +847,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
-                    and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
+                        and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
     if order == 2:
@@ -1158,7 +1158,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     if order == 'auto':
         order = ode_order(ode, func)
     if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
-        (sol.rhs == func and not sol.lhs.has(func)):
+            (sol.rhs == func and not sol.lhs.has(func)):
         try:
             solved = solve(sol, func)
             if not solved:
@@ -1367,7 +1367,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     # First, see if they are already solved
     if sol.lhs == func and not sol.rhs.has(func) or\
-        sol.rhs == func and not sol.lhs.has(func):
+            sol.rhs == func and not sol.lhs.has(func):
         return -2
     # We are not so lucky, try solving manually
     if trysolving:
@@ -1395,7 +1395,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
 @vectorize(0)
 def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
-    symbolname='C'):
+                 symbolname='C'):
     """
     Simplifies an expression with arbitrary constants in it.
 
@@ -1686,7 +1686,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
-            not expr.has(*constantsymbols):
+                not expr.has(*constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr
@@ -2143,7 +2143,7 @@ def homogeneous_order(eq, *symbols):
     if (eq.is_Number or
         eq.is_NumberSymbol or
         eq.is_number
-        ):
+            ):
         return S.Zero
 
     # Replace all functions with dummy variables
@@ -2822,7 +2822,7 @@ def _undetermined_coefficients_match(expr, x):
             else:
                 return False
         elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
-            expr.exp >= 0:
+                expr.exp >= 0:
             return True
         elif expr.is_Pow and expr.base.is_number:
             if expr.exp.match(a*x + b):

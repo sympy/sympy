@@ -349,13 +349,13 @@ class TensorProductHilbertSpace(HilbertSpace):
             if prev_arg != None:
                 if isinstance(new_arg, TensorPowerHilbertSpace) and\
                     isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                    new_arg.base == prev_arg.base:
+                        new_arg.base == prev_arg.base:
                     prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
                 elif isinstance(new_arg, TensorPowerHilbertSpace) and\
-                    new_arg.base == prev_arg:
+                        new_arg.base == prev_arg:
                     prev_arg = prev_arg**(new_arg.exp+1)
                 elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                    new_arg == prev_arg.base:
+                        new_arg == prev_arg.base:
                     prev_arg = new_arg**(prev_arg.exp+1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2

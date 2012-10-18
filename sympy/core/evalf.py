@@ -989,7 +989,7 @@ def evalf_sum(expr, prec, options):
     func = expr.function
     limits = expr.limits
     if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
-        len(limits[0]) != 3:
+            len(limits[0]) != 3:
         raise NotImplementedError
     prec2 = prec+10
     try:

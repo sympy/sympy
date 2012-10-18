@@ -756,7 +756,7 @@ def _factorint_small(factors, n, limit, fail_max):
     return done(n, d)
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-    verbose=False, visual=None):
+              verbose=False, visual=None):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
