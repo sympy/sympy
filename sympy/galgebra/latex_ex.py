@@ -207,7 +207,7 @@ class LatexPrinter(Printer):
         """
         Generate LaTeX strings for multivector bases
         """
-        if type(sympy.galgebra.GA.MV.basislabel_lst) == types.IntType:
+        if isinstance(sympy.galgebra.GA.MV.basislabel_lst, types.IntType):
             sys.stderr.write('MV.setup() must be executed before LatexPrinter.format()!\n')
             sys.exit(1)
         LatexPrinter.latexbasis_lst = [['']]
@@ -856,8 +856,8 @@ class LatexPrinter(Printer):
         line_lst = []
         first_flg = True
         for grade in expr.mv:
-            if type(grade) != types.IntType:
-                if type(grade) != types.IntType:
+            if not isinstance(grade, types.IntType):
+                if not isinstance(grade, types.IntType):
                     ibase = 0
                     for base in grade:
                         if base != 0:
@@ -908,8 +908,8 @@ class LatexPrinter(Printer):
         line_lst = []
         first_flg = True
         for grade in expr.mv:
-            if type(grade) is not None:
-                if type(grade) is not None:
+            if not isinstance(grade, None):
+                if not isinstance(grade, None):
                     ibase = 0
                     for base in grade:
                         if base != 0:
