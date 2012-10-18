@@ -857,25 +857,24 @@ class LatexPrinter(Printer):
         first_flg = True
         for grade in expr.mv:
             if not isinstance(grade, types.IntType):
-                if not isinstance(grade, types.IntType):
-                    ibase = 0
-                    for base in grade:
-                        if base != 0:
-                            tmp = Symbol('XYZW')
-                            base_str = str(base*tmp)
-                            if base_str[0] != '-':
-                                base_str = '+'+base_str
-                            base_str = base_str.replace('- ', '-')
-                            if base_str[1:5] == 'XYZW':
-                                base_str = base_str.replace('XYZW', '')
-                            else:
-                                base_str = base_str.replace('XYZW', '1')
-                            MV_str += base_str+\
-                                      LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
-                            if LatexPrinter.fmt_dict['mv'] == 3:
-                                line_lst.append(MV_str)
-                                MV_str = ''
-                        ibase += 1
+                ibase = 0
+                for base in grade:
+                    if base != 0:
+                        tmp = Symbol('XYZW')
+                        base_str = str(base*tmp)
+                        if base_str[0] != '-':
+                            base_str = '+'+base_str
+                        base_str = base_str.replace('- ', '-')
+                        if base_str[1:5] == 'XYZW':
+                            base_str = base_str.replace('XYZW', '')
+                        else:
+                            base_str = base_str.replace('XYZW', '1')
+                        MV_str += base_str+\
+                                  LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
+                        if LatexPrinter.fmt_dict['mv'] == 3:
+                            line_lst.append(MV_str)
+                            MV_str = ''
+                    ibase += 1
                 if LatexPrinter.fmt_dict['mv'] == 2:
                     if MV_str != '':
                         line_lst.append(MV_str)
@@ -909,25 +908,24 @@ class LatexPrinter(Printer):
         first_flg = True
         for grade in expr.mv:
             if not isinstance(grade, None):
-                if not isinstance(grade, None):
-                    ibase = 0
-                    for base in grade:
-                        if base != 0:
-                            tmp = Symbol('XYZW')
-                            base_str = str(base*tmp)
-                            if base_str[0] != '-':
-                                base_str = '+'+base_str
-                            base_str = base_str.replace('- ', '-')
-                            if base_str[1:5] == 'XYZW':
-                                base_str = base_str.replace('XYZW', '')
-                            else:
-                                base_str = base_str.replace('XYZW', '1')
-                            MV_str += base_str+\
-                                      LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
-                            if LatexPrinter.fmt_dict['mv'] == 3:
-                                line_lst.append(MV_str)
-                                MV_str = ''
-                        ibase += 1
+                ibase = 0
+                for base in grade:
+                    if base != 0:
+                        tmp = Symbol('XYZW')
+                        base_str = str(base*tmp)
+                        if base_str[0] != '-':
+                            base_str = '+'+base_str
+                        base_str = base_str.replace('- ', '-')
+                        if base_str[1:5] == 'XYZW':
+                            base_str = base_str.replace('XYZW', '')
+                        else:
+                            base_str = base_str.replace('XYZW', '1')
+                        MV_str += base_str+\
+                                  LatexPrinter.build_base(igrade, ibase, expr.bladeflg)
+                        if LatexPrinter.fmt_dict['mv'] == 3:
+                            line_lst.append(MV_str)
+                            MV_str = ''
+                    ibase += 1
                 if LatexPrinter.fmt_dict['mv'] == 2:
                     if MV_str != '':
                         line_lst.append(MV_str)
