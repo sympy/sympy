@@ -462,7 +462,7 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
-def probability(condition, given_condition=None, numsamples=None,  **kwargs):
+def probability(condition, given_condition=None, numsamples=None, **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
@@ -503,16 +503,21 @@ def probability(condition, given_condition=None, numsamples=None,  **kwargs):
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).probability(condition, **kwargs)
 
-def density(expr, condition=None, **kwargs):
+def density(expr, condition=None, numsamples=None, **kwargs):
     """
-    Probability density of a random expression
+    Probability density of a random expression, optionally given a second condition
 
-    Optionally given a second condition
+    This density will take on different forms for different types of probability
+    spaces. Discrete variables produce Dicts. Continuous variables produce Lambdas.
 
-    This density will take on different forms for different types of
-    probability spaces.
-    Discrete variables produce Dicts.
-    Continuous variables produce Lambdas.
+    Parameters
+    ----------
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the density value
+    condition : Relational containing RandomSymbols
+        A conditional expression. density(X>1, X>0) is density of X>1 given X>0
+    numsamples : int
+        Enables sampling and approximates the density with this many samples
 
     Examples
     ========
@@ -530,6 +535,11 @@ def density(expr, condition=None, **kwargs):
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
+
+    if numsamples:
+        return sampling_density(expr, condition, numsamples=numsamples,
+                **kwargs)
+
     if condition is not None: # If there is a condition
         # Recompute on new conditional expr
         return density(given(expr, condition, **kwargs), **kwargs)
@@ -706,10 +716,8 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         ps = pspace(expr)
 
     count = 0
-
     while count < numsamples:
         d = ps.sample() # a dictionary that maps RVs to values
-
 
         if condition: # Check that these values satisfy the condition
             gd = condition.subs(d)
@@ -719,8 +727,8 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
                 continue
 
         yield expr.subs(d)
-
         count += 1
+
 def sampling_P(condition, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
@@ -730,6 +738,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_E
+    sampling_density
     """
 
     count_true = 0
@@ -762,6 +771,7 @@ def sampling_E(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_P
+    sampling_density
     """
 
     samples = sample_iter(condition, given_condition,
@@ -772,6 +782,24 @@ def sampling_E(condition, given_condition=None, numsamples=1,
         return result.evalf()
     else:
         return result
+
+def sampling_density(condition, given_condition=None, numsamples=1,
+                     **kwargs):
+    """
+    Sampling version of density
+
+    See Also
+    ========
+    density
+    sampling_P
+    sampling_E
+    """
+
+    results = {}
+    for result in sample_iter(condition, given_condition,
+                              numsamples=numsamples, **kwargs):
+        results[result] = results.get(result, 0) + 1
+    return results
 
 def dependent(a, b):
     """
