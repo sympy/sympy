@@ -70,7 +70,7 @@ class TautologicalHandler(AskHandler):
         result = False
         for arg in expr.args:
             p = ask(arg, assumptions=assumptions)
-            if p == True:
+            if p is True:
                 return True
             if p is None:
                 result = None
@@ -81,7 +81,7 @@ class TautologicalHandler(AskHandler):
         result = True
         for arg in expr.args:
             p = ask(arg, assumptions=assumptions)
-            if p == False:
+            if p is False:
                 return False
             if p is None:
                 result = None

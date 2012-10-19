@@ -96,7 +96,7 @@ def test_point():
     assert Point.is_collinear(p3)
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
-    assert Point.is_collinear(p3, p4, p1_1, p1_3) == False
+    assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
@@ -110,8 +110,8 @@ def test_point():
     assert Point.is_concyclic(p2_1)
     assert Point.is_concyclic(p2_1, p2_2)
     assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_4)
-    assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_5) == False
-    assert Point.is_concyclic(p4, p4 * 2, p4 * 3) == False
+    assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_5) is False
+    assert Point.is_concyclic(p4, p4 * 2, p4 * 3) is False
 
     assert p4.scale(2, 3) == Point(2, 3)
     assert p3.scale(2, 3) == p3
@@ -202,7 +202,7 @@ def test_line():
     l1_1 = Line(p1, p1_1)
     assert l1.perpendicular_line(p1) == l1_1
     assert Line.is_perpendicular(l1, l1_1)
-    assert Line.is_perpendicular(l1, l2) == False
+    assert Line.is_perpendicular(l1, l2) is False
     p = l1.random_point()
     assert l1.perpendicular_segment(p) == p
 
@@ -212,7 +212,7 @@ def test_line():
     assert l2.parallel_line(p1_1) == Line(p2_1, p1_1)
     assert l2_1.parallel_line(p1) == Line(p1, Point(0, 2))
     assert Line.is_parallel(l1, l2)
-    assert Line.is_parallel(l2, l3) == False
+    assert Line.is_parallel(l2, l3) is False
     assert Line.is_parallel(l2, l2.parallel_line(p1_1))
     assert Line.is_parallel(l2_1, l2_1.parallel_line(p1))
 
@@ -224,10 +224,10 @@ def test_line():
 
     # Concurrency
     l3_1 = Line(Point(5, x1), Point(-Rational(3, 5), x1))
-    assert Line.is_concurrent(l1) == False
+    assert Line.is_concurrent(l1) is False
     assert Line.is_concurrent(l1, l3)
     assert Line.is_concurrent(l1, l3, l3_1)
-    assert Line.is_concurrent(l1, l1_1, l3) == False
+    assert Line.is_concurrent(l1, l1_1, l3) is False
 
     # Projection
     assert l2.projection(p4) == p4
@@ -374,8 +374,8 @@ def test_line():
     assert hash(s1) == hash(s2)
     p11 = p10.scale(2, 2)
     assert s1.is_similar(Segment(p10, p11))
-    assert s1.is_similar(r1) == False
-    assert (r1 in s1) == False
+    assert s1.is_similar(r1) is False
+    assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
     assert s1.plot_interval() == [t, 0, 1]
     assert s1 in Line(p1, p10)
@@ -430,20 +430,20 @@ def test_ellipse():
     # Private Functions
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
     assert c1 in e1
-    assert (Line(p1, p2) in e1) == False
+    assert (Line(p1, p2) in e1) is False
     assert e1.__cmp__(e1) == 0
     assert e1.__cmp__(Point(0, 0)) > 0
 
     # Encloses
-    assert e1.encloses(Segment(Point(-0.5, -0.5), Point(0.5, 0.5))) == True
-    assert e1.encloses(Line(p1, p2)) == False
-    assert e1.encloses(Ray(p1, p2)) == False
-    assert e1.encloses(e1) == False
+    assert e1.encloses(Segment(Point(-0.5, -0.5), Point(0.5, 0.5))) is True
+    assert e1.encloses(Line(p1, p2)) is False
+    assert e1.encloses(Ray(p1, p2)) is False
+    assert e1.encloses(e1) is False
     assert e1.encloses(
-        Polygon(Point(-0.5, -0.5), Point(-0.5, 0.5), Point(0.5, 0.5))) == True
-    assert e1.encloses(RegularPolygon(p1, 0.5, 3)) == True
-    assert e1.encloses(RegularPolygon(p1, 5, 3)) == False
-    assert e1.encloses(RegularPolygon(p2, 5, 3)) == False
+        Polygon(Point(-0.5, -0.5), Point(-0.5, 0.5), Point(0.5, 0.5))) is True
+    assert e1.encloses(RegularPolygon(p1, 0.5, 3)) is True
+    assert e1.encloses(RegularPolygon(p1, 5, 3)) is False
+    assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
 
     # with generic symbols, the hradius is assumed to contain the major radius
     M = Symbol('M')
@@ -474,13 +474,13 @@ def test_ellipse():
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
-    assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) == False
-    assert c1.is_tangent(e1) == False
-    assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) == True
+    assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) is False
+    assert c1.is_tangent(e1) is False
+    assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) is True
     assert c1.is_tangent(
-        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) == True
+        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
     assert c1.is_tangent(
-        Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) == False
+        Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
 
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
         [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
@@ -656,8 +656,8 @@ def test_polygon():
     assert dict5[Point(0, 4)] == pi / 2
     assert p5.encloses_point(Point(x, y)) is None
     assert p5.encloses_point(Point(1, 3))
-    assert p5.encloses_point(Point(0, 0)) == False
-    assert p5.encloses_point(Point(4, 0)) == False
+    assert p5.encloses_point(Point(0, 0)) is False
+    assert p5.encloses_point(Point(4, 0)) is False
     p5.plot_interval('x') == [x, 0, 1]
     assert p5.distance(
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
@@ -700,7 +700,7 @@ def test_polygon():
     assert p1.is_convex()
     assert p1.rotation == 0
     assert p1.encloses_point(Point(0, 0))
-    assert p1.encloses_point(Point(11, 0)) == False
+    assert p1.encloses_point(Point(11, 0)) is False
     assert p2.encloses_point(Point(0, 4.9))
     p1.spin(pi/3)
     assert p1.rotation == pi/3
@@ -761,7 +761,7 @@ def test_polygon():
     assert Triangle(p2, p2*2, p2*3) == Segment(p2, p2*3)
     assert t1.area == Rational(25, 2)
     assert t1.is_right()
-    assert t2.is_right() == False
+    assert t2.is_right() is False
     assert t3.is_right()
     assert p1 in t1
     assert t1.sides[0] in t1
@@ -770,13 +770,13 @@ def test_polygon():
     assert t1.is_convex()
     assert feq(t1.angles[p1].evalf(), pi.evalf()/2)
 
-    assert t1.is_equilateral() == False
+    assert t1.is_equilateral() is False
     assert t2.is_equilateral()
-    assert t3.is_equilateral() == False
-    assert are_similar(t1, t2) == False
+    assert t3.is_equilateral() is False
+    assert are_similar(t1, t2) is False
     assert are_similar(t1, t3)
-    assert are_similar(t2, t3) == False
-    assert t1.is_similar(Point(0, 0)) == False
+    assert are_similar(t2, t3) is False
+    assert t1.is_similar(Point(0, 0)) is False
 
     # Bisectors
     bisectors = t1.bisectors()

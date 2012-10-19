@@ -153,7 +153,7 @@ def test_sign():
     assert sign(n*m*x) == sign(x)
 
     x = Symbol('x', imaginary=True)
-    assert sign(x).is_zero == False
+    assert sign(x).is_zero is False
     assert sign(x).diff(x) == 2*DiracDelta(-I*x)
     assert sign(x).doit() == x / Abs(x)
     assert conjugate(sign(x)) == -sign(x)
@@ -165,19 +165,19 @@ def test_sign():
     assert conjugate(sign(x)) == sign(x)
 
     x = Symbol('x', nonzero=True)
-    assert sign(x).is_zero == False
+    assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
     x = Symbol('x', positive=True)
-    assert sign(x).is_zero == False
+    assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
     x = 0
-    assert sign(x).is_zero == True
+    assert sign(x).is_zero is True
     assert sign(x).doit() == 0
     assert sign(Abs(x)) == 0
     assert Abs(sign(x)) == 0
@@ -293,19 +293,19 @@ def test_Abs_real():
 
 def test_Abs_properties():
     x = Symbol('x')
-    assert Abs(x).is_real == True
+    assert Abs(x).is_real is True
     assert Abs(x).is_positive is None
-    assert Abs(x).is_nonnegative == True
+    assert Abs(x).is_nonnegative is True
 
     w = Symbol('w', complex=True, zero=False)
-    assert Abs(w).is_real == True
-    assert Abs(w).is_positive == True
-    assert Abs(w).is_zero == False
+    assert Abs(w).is_real is True
+    assert Abs(w).is_positive is True
+    assert Abs(w).is_zero is False
 
     q = Symbol('q', positive=True)
-    assert Abs(q).is_real == True
-    assert Abs(q).is_positive == True
-    assert Abs(q).is_zero == False
+    assert Abs(q).is_real is True
+    assert Abs(q).is_positive is True
+    assert Abs(q).is_zero is False
 
 
 def test_abs():

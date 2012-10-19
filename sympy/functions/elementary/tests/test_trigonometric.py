@@ -80,10 +80,10 @@ def test_sin():
 
     assert sin(k*pi*I) == sinh(k*pi)*I
 
-    assert sin(r).is_real == True
+    assert sin(r).is_real is True
 
-    assert isinstance(sin( re(x) - im(y)), sin) == True
-    assert isinstance(sin(-re(x) + im(y)), sin) == False
+    assert isinstance(sin( re(x) - im(y)), sin) is True
+    assert isinstance(sin(-re(x) + im(y)), sin) is False
 
     for d in range(1, 22) + [60, 85]:
         for n in xrange(0, d*2 + 1):
@@ -257,7 +257,7 @@ def test_cos():
     assert cos(x*I) == cosh(x)
     assert cos(k*pi*I) == cosh(k*pi)
 
-    assert cos(r).is_real == True
+    assert cos(r).is_real is True
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
@@ -372,7 +372,7 @@ def test_tan():
 
     assert tan(k*pi*I) == tanh(k*pi)*I
 
-    assert tan(r).is_real == True
+    assert tan(r).is_real is True
 
     assert tan(10*pi/7) == tan(3*pi/7)
     assert tan(11*pi/7) == -tan(3*pi/7)
@@ -468,7 +468,7 @@ def test_cot():
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
-    assert cot(r).is_real == True
+    assert cot(r).is_real is True
 
     assert cot(10*pi/7) == cot(3*pi/7)
     assert cot(11*pi/7) == -cot(3*pi/7)
@@ -540,8 +540,8 @@ def test_asin():
 
     assert asin(x).diff(x) == 1/sqrt(1-x**2)
 
-    assert asin(0.2).is_real == True
-    assert asin(-2).is_real == False
+    assert asin(0.2).is_real is True
+    assert asin(-2).is_real is False
 
     assert asin(-2*I) == -I*asinh(2)
 
@@ -581,8 +581,8 @@ def test_acos():
 
     assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
-    assert acos(0.2).is_real == True
-    assert acos(-2).is_real == False
+    assert acos(0.2).is_real is True
+    assert acos(-2).is_real is False
 
 
 def test_acos_series():
@@ -619,7 +619,7 @@ def test_atan():
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1+x**2)
 
-    assert atan(r).is_real == True
+    assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
 
@@ -654,7 +654,7 @@ def test_acot():
     assert acot(-1/sqrt(3)) == -pi/3
     assert acot(x).diff(x) == -1/(1+x**2)
 
-    assert acot(r).is_real == True
+    assert acot(r).is_real is True
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)

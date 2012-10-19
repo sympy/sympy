@@ -141,8 +141,8 @@ def test_sympify_float():
 def test_sympify_bool():
     """Test that sympify accepts boolean values
     and that output leaves them unchanged"""
-    assert sympify(True) == True
-    assert sympify(False) == False
+    assert sympify(True) is True
+    assert sympify(False) is False
 
 
 def test_sympyify_iterables():
@@ -170,8 +170,8 @@ def test_sympify_text():
     assert sympify('some') == Symbol('some')
     assert sympify('core') == Symbol('core')
 
-    assert sympify('True') == True
-    assert sympify('False') == False
+    assert sympify('True') is True
+    assert sympify('False') is False
 
     assert sympify('Poly') == Poly
     assert sympify('sin') == sin

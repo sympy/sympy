@@ -139,8 +139,8 @@ def test_integrate_poly():
     qx = integrate(p, x)
     qy = integrate(p, y)
 
-    assert isinstance(qx, Poly) == True
-    assert isinstance(qy, Poly) == True
+    assert isinstance(qx, Poly) is True
+    assert isinstance(qy, Poly) is True
 
     assert qx.gens == (x, y)
     assert qy.gens == (x, y)
@@ -155,8 +155,8 @@ def test_integrate_poly_defined():
     Qx = integrate(p, (x, 0, 1))
     Qy = integrate(p, (y, 0, pi))
 
-    assert isinstance(Qx, Poly) == True
-    assert isinstance(Qy, Poly) == True
+    assert isinstance(Qx, Poly) is True
+    assert isinstance(Qy, Poly) is True
 
     assert Qx.gens == (y,)
     assert Qy.gens == (x,)
@@ -602,23 +602,23 @@ def issue_1785():
 def test_is_number():
     from sympy.abc import x, y, z
     from sympy import cos, sin
-    assert Integral(x).is_number == False
-    assert Integral(1, x).is_number == False
-    assert Integral(1, (x, 1)).is_number == True
-    assert Integral(1, (x, 1, 2)).is_number == True
-    assert Integral(1, (x, 1, y)).is_number == False
-    assert Integral(x, y).is_number == False
-    assert Integral(x, (y, 1, x)).is_number == False
-    assert Integral(x, (y, 1, 2)).is_number == False
-    assert Integral(x, (x, 1, 2)).is_number == True
-    assert Integral(x, (y, 1, 1)).is_number == True
-    assert Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number == True
-    assert Integral(x*y, (x, 1, 2), (y, 1, z)).is_number == False
-    assert Integral(x, (x, 1)).is_number == True
-    assert Integral(x, (x, 1, Integral(y, (y, 1, 2)))).is_number == True
+    assert Integral(x).is_number is False
+    assert Integral(1, x).is_number is False
+    assert Integral(1, (x, 1)).is_number is True
+    assert Integral(1, (x, 1, 2)).is_number is True
+    assert Integral(1, (x, 1, y)).is_number is False
+    assert Integral(x, y).is_number is False
+    assert Integral(x, (y, 1, x)).is_number is False
+    assert Integral(x, (y, 1, 2)).is_number is False
+    assert Integral(x, (x, 1, 2)).is_number is True
+    assert Integral(x, (y, 1, 1)).is_number is True
+    assert Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number is True
+    assert Integral(x*y, (x, 1, 2), (y, 1, z)).is_number is False
+    assert Integral(x, (x, 1)).is_number is True
+    assert Integral(x, (x, 1, Integral(y, (y, 1, 2)))).is_number is True
     # it is possible to get a false negative if the integrand is
     # actually an unsimplified zero, but this is true of is_number in general.
-    assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number == False
+    assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number is False
 
 
 def test_symbols():

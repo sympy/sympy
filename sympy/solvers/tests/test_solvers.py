@@ -1023,7 +1023,7 @@ def test_issue_2957():
 
 def test_issue_2574():
     eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
-    assert checksol(eq, x, 2) == True
+    assert checksol(eq, x, 2) is True
     assert checksol(eq, x, 2, numerical=False) is None
 
 

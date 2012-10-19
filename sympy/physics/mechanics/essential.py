@@ -1132,7 +1132,7 @@ class Vector(object):
                 out += ((v2[0].T)
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
-        if Vector.simp == True:
+        if Vector.simp is True:
             return trigsimp(sympify(out), recursive=True)
         else:
             return sympify(out)
@@ -1593,7 +1593,7 @@ class Vector(object):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
                 for i2, v2 in enumerate(temp):
-                    if Vector.simp == True:
+                    if Vector.simp is True:
                         temp[i2] = trigsimp(v2, recursive=True)
                     else:
                         temp[i2] = v2

@@ -21,17 +21,17 @@ def test_Options_clone():
 
     assert opt.gens == (x, y, z)
     assert opt.domain == ZZ
-    assert ('order' in opt) == False
+    assert ('order' in opt) is False
 
     new_opt = opt.clone({'gens': (x, y), 'order': 'lex'})
 
     assert opt.gens == (x, y, z)
     assert opt.domain == ZZ
-    assert ('order' in opt) == False
+    assert ('order' in opt) is False
 
     assert new_opt.gens == (x, y)
     assert new_opt.domain == ZZ
-    assert ('order' in new_opt) == True
+    assert ('order' in new_opt) is True
 
 
 def test_Expand_preprocess():

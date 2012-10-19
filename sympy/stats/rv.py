@@ -709,7 +709,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
                 if not isinstance(gd, bool):
                     raise ValueError(
                         "Conditions must not contain free symbols")
-                if gd == False:  # If the values don't satisfy then try again
+                if gd is False:  # If the values don't satisfy then try again
                     continue
 
             yield fn(*args)
@@ -737,7 +737,7 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
             gd = condition.subs(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
-            if gd == False:  # If the values don't satisfy then try again
+            if gd is False:  # If the values don't satisfy then try again
                 continue
 
         yield expr.subs(d)
@@ -766,7 +766,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
         if not isinstance(x, bool):
             raise ValueError("Conditions must not contain free symbols")
 
-        if x == True:
+        if x is True:
             count_true += 1
         else:
             count_false += 1

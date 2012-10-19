@@ -334,7 +334,7 @@ class Line2DBaseSeries(BaseSeries):
 
     def get_segments(self):
         points = self.get_points()
-        if self.steps == True:
+        if self.steps is True:
             x = np.array((points[0], points[0])).T.flatten()[1:]
             y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
@@ -466,7 +466,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             return list_segments
 
     def get_points(self):
-        if self.only_integers == True:
+        if self.only_integers is True:
             list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end)-int(self.start)+1)
         else:

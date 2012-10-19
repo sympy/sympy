@@ -22,9 +22,9 @@ def test_interval_pow():
     a = interval(-1, 1)**interval(0.5, 2)
     assert a.is_valid is None
     a = interval(-2, -1) ** interval(1, 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(-2, -1) ** (1 / 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(-1, 1)**(1 / 2)
     assert a.is_valid is None
     a = interval(-1, 1)**(1 / 3) == interval(-1, 1)
@@ -37,12 +37,12 @@ def test_interval_pow():
     assert a == (True, True)
 
     a = interval(1, 2, is_valid=False)**2
-    assert a.is_valid == False
+    assert a.is_valid is False
 
     a = (-3)**interval(1, 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = (-4)**interval(0.5, 0.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
     assert ((-3)**interval(1, 1) == interval(-3, -3)) == (True, True)
 
     a = interval(8, 64)**(2 / 3)
@@ -134,7 +134,7 @@ def test_sin():
     assert a.end == np.sin(np.pi / 4)
 
     a = sin(interval(1, 2, is_valid=False))
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_cos():
@@ -163,7 +163,7 @@ def test_cos():
     assert a.end == 1
 
     a = cos(interval(1, 2, is_valid=False))
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_tan():
@@ -284,7 +284,7 @@ def test_asin():
     assert a.end == np.arcsin(0.5)
 
     a = asin(1.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_acos():
@@ -308,7 +308,7 @@ def test_acos():
     assert a.end == np.arccos(0.5)
 
     a = acos(1.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_ceil():
@@ -368,7 +368,7 @@ def test_acosh():
     assert a.is_valid is False
 
     a = acosh(0.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
 
     a = acosh(2)
     assert a.start == np.arccosh(2)

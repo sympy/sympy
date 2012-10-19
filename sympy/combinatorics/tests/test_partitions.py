@@ -20,9 +20,9 @@ def test_partition():
     l.sort(key=lambda w: default_sort_key(w, order='rev-lex'))
     assert l == [c, a, b]
 
-    assert (a == b) == False
+    assert (a == b) is False
     assert a <= b
-    assert (a > b) == False
+    assert (a > b) is False
     assert a != b
 
     assert (a + 2).partition == [[1, 2], [3, 4]]
@@ -51,9 +51,9 @@ def test_integer_partition():
     assert a == c
     assert a.integer == d.integer
     assert a.conjugate == [3, 2, 2, 1]
-    assert (a == b) == False
+    assert (a == b) is False
     assert a <= b
-    assert (a > b) == False
+    assert (a > b) is False
     assert a != b
 
     for i in range(1, 11):

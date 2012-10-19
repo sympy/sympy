@@ -458,9 +458,9 @@ class StrPrinter(Printer):
             dps = 0
         else:
             dps = prec_to_dps(expr._prec)
-        if self._settings["full_prec"] == True:
+        if self._settings["full_prec"] is True:
             strip = False
-        elif self._settings["full_prec"] == False:
+        elif self._settings["full_prec"] is False:
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1

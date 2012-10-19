@@ -20,7 +20,7 @@ def test_mathml_core():
     nodes = mml_1.childNodes
     assert len(nodes) == 3
     assert nodes[0].nodeName == 'plus'
-    assert nodes[0].hasChildNodes() == False
+    assert nodes[0].hasChildNodes() is False
     assert nodes[0].nodeValue is None
     assert nodes[1].nodeName in ['cn', 'ci']
     if nodes[1].nodeName == 'cn':

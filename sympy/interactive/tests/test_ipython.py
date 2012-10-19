@@ -40,12 +40,12 @@ def test_automatic_symbols():
     # Check that built-in names aren't overridden
     app.run_cell("a = all == __builtin__.all", True)
     assert "all" not in app.user_ns
-    assert app.user_ns['a'] == True
+    assert app.user_ns['a'] is True
 
     # Check that sympy names aren't overridden
     app.run_cell("import sympy")
     app.run_cell("a = factorial == sympy.factorial", True)
-    assert app.user_ns['a'] == True
+    assert app.user_ns['a'] is True
 
 
 def test_int_to_Integer():

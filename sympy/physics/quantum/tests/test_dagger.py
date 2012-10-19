@@ -20,7 +20,7 @@ def test_scalars():
     assert Dagger(i) == i
 
     A = symbols('A', commutative=False)
-    assert Dagger(A).is_commutative == False
+    assert Dagger(A).is_commutative is False
 
 
 def test_matrix():

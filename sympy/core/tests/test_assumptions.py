@@ -7,61 +7,61 @@ from sympy.core.facts import InconsistentAssumptions
 
 def test_symbol_unset():
     x = Symbol('x', real=True, integer=True)
-    assert x.is_real == True
-    assert x.is_integer == True
-    assert x.is_imaginary == False
-    assert x.is_noninteger == False
+    assert x.is_real is True
+    assert x.is_integer is True
+    assert x.is_imaginary is False
+    assert x.is_noninteger is False
     assert x.is_number is False
 
 
 def test_zero():
     z = Integer(0)
-    assert z.is_commutative == True
-    assert z.is_integer == True
-    assert z.is_rational == True
-    assert z.is_real == True
-    assert z.is_complex == True
-    assert z.is_noninteger == False
-    assert z.is_irrational == False
-    assert z.is_imaginary == False
-    assert z.is_positive == False
-    assert z.is_negative == False
-    assert z.is_nonpositive == True
-    assert z.is_nonnegative == True
-    assert z.is_even == True
-    assert z.is_odd == False
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == False
-    assert z.is_infinitesimal == True
-    assert z.is_comparable == True
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is True
+    assert z.is_rational is True
+    assert z.is_real is True
+    assert z.is_complex is True
+    assert z.is_noninteger is False
+    assert z.is_irrational is False
+    assert z.is_imaginary is False
+    assert z.is_positive is False
+    assert z.is_negative is False
+    assert z.is_nonpositive is True
+    assert z.is_nonnegative is True
+    assert z.is_even is True
+    assert z.is_odd is False
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is False
+    assert z.is_infinitesimal is True
+    assert z.is_comparable is True
+    assert z.is_prime is False
+    assert z.is_composite is False
     assert z.is_number is True
 
 
 def test_one():
     z = Integer(1)
-    assert z.is_commutative == True
-    assert z.is_integer == True
-    assert z.is_rational == True
-    assert z.is_real == True
-    assert z.is_complex == True
-    assert z.is_noninteger == False
-    assert z.is_irrational == False
-    assert z.is_imaginary == False
-    assert z.is_positive == True
-    assert z.is_negative == False
-    assert z.is_nonpositive == False
-    assert z.is_nonnegative == True
-    assert z.is_even == False
-    assert z.is_odd == True
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == True
-    assert z.is_prime == False
+    assert z.is_commutative is True
+    assert z.is_integer is True
+    assert z.is_rational is True
+    assert z.is_real is True
+    assert z.is_complex is True
+    assert z.is_noninteger is False
+    assert z.is_irrational is False
+    assert z.is_imaginary is False
+    assert z.is_positive is True
+    assert z.is_negative is False
+    assert z.is_nonpositive is False
+    assert z.is_nonnegative is True
+    assert z.is_even is False
+    assert z.is_odd is True
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is True
+    assert z.is_prime is False
     assert z.is_number is True
 
 
@@ -72,52 +72,52 @@ def test_one_is_composite():
 
 def test_negativeone():
     z = Integer(-1)
-    assert z.is_commutative == True
-    assert z.is_integer == True
-    assert z.is_rational == True
-    assert z.is_real == True
-    assert z.is_complex == True
-    assert z.is_noninteger == False
-    assert z.is_irrational == False
-    assert z.is_imaginary == False
-    assert z.is_positive == False
-    assert z.is_negative == True
-    assert z.is_nonpositive == True
-    assert z.is_nonnegative == False
-    assert z.is_even == False
-    assert z.is_odd == True
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == True
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is True
+    assert z.is_rational is True
+    assert z.is_real is True
+    assert z.is_complex is True
+    assert z.is_noninteger is False
+    assert z.is_irrational is False
+    assert z.is_imaginary is False
+    assert z.is_positive is False
+    assert z.is_negative is True
+    assert z.is_nonpositive is True
+    assert z.is_nonnegative is False
+    assert z.is_even is False
+    assert z.is_odd is True
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is True
+    assert z.is_prime is False
+    assert z.is_composite is False
     assert z.is_number is True
 
 
 def test_infinity():
     oo = S.Infinity
 
-    assert oo.is_commutative == True
+    assert oo.is_commutative is True
     assert oo.is_integer is None
     assert oo.is_rational is None
-    assert oo.is_real == True
-    assert oo.is_complex == True
+    assert oo.is_real is True
+    assert oo.is_complex is True
     assert oo.is_noninteger is None
     assert oo.is_irrational is None
-    assert oo.is_imaginary == False
-    assert oo.is_positive == True
-    assert oo.is_negative == False
-    assert oo.is_nonpositive == False
-    assert oo.is_nonnegative == True
+    assert oo.is_imaginary is False
+    assert oo.is_positive is True
+    assert oo.is_negative is False
+    assert oo.is_nonpositive is False
+    assert oo.is_nonnegative is True
     assert oo.is_even is None
     assert oo.is_odd is None
-    assert oo.is_bounded == False
-    assert oo.is_unbounded == True
-    assert oo.is_finite == False
-    assert oo.is_infinitesimal == False
-    assert oo.is_comparable == True
+    assert oo.is_bounded is False
+    assert oo.is_unbounded is True
+    assert oo.is_finite is False
+    assert oo.is_infinitesimal is False
+    assert oo.is_comparable is True
     assert oo.is_prime is None
     assert oo.is_composite is None
     assert oo.is_number is True
@@ -126,34 +126,34 @@ def test_infinity():
 def test_neg_infinity():
     mm = S.NegativeInfinity
 
-    assert mm.is_commutative == True
+    assert mm.is_commutative is True
     assert mm.is_integer is None
     assert mm.is_rational is None
-    assert mm.is_real == True
-    assert mm.is_complex == True
+    assert mm.is_real is True
+    assert mm.is_complex is True
     assert mm.is_noninteger is None
     assert mm.is_irrational is None
-    assert mm.is_imaginary == False
-    assert mm.is_positive == False
-    assert mm.is_negative == True
-    assert mm.is_nonpositive == True
-    assert mm.is_nonnegative == False
+    assert mm.is_imaginary is False
+    assert mm.is_positive is False
+    assert mm.is_negative is True
+    assert mm.is_nonpositive is True
+    assert mm.is_nonnegative is False
     assert mm.is_even is None
     assert mm.is_odd is None
-    assert mm.is_bounded == False
-    assert mm.is_unbounded == True
-    assert mm.is_finite == False
-    assert mm.is_infinitesimal == False
-    assert mm.is_comparable == True
-    assert mm.is_prime == False
-    assert mm.is_composite == False
+    assert mm.is_bounded is False
+    assert mm.is_unbounded is True
+    assert mm.is_finite is False
+    assert mm.is_infinitesimal is False
+    assert mm.is_comparable is True
+    assert mm.is_prime is False
+    assert mm.is_composite is False
     assert mm.is_number is True
 
 
 def test_nan():
     nan = S.NaN
 
-    assert nan.is_commutative == True
+    assert nan.is_commutative is True
     assert nan.is_integer is None
     assert nan.is_rational is None
     assert nan.is_real is None
@@ -171,7 +171,7 @@ def test_nan():
     assert nan.is_unbounded is None
     assert nan.is_finite is None
     assert nan.is_infinitesimal is None
-    assert nan.is_comparable == False
+    assert nan.is_comparable is False
     assert nan.is_prime is None
     assert nan.is_composite is None
     assert nan.is_number is True
@@ -179,116 +179,116 @@ def test_nan():
 
 def test_pos_rational():
     r = Rational(3, 4)
-    assert r.is_commutative == True
-    assert r.is_integer == False
-    assert r.is_rational == True
-    assert r.is_real == True
-    assert r.is_complex == True
-    assert r.is_noninteger == True
-    assert r.is_irrational == False
-    assert r.is_imaginary == False
-    assert r.is_positive == True
-    assert r.is_negative == False
-    assert r.is_nonpositive == False
-    assert r.is_nonnegative == True
-    assert r.is_even == False
-    assert r.is_odd == False
-    assert r.is_bounded == True
-    assert r.is_unbounded == False
-    assert r.is_finite == True
-    assert r.is_infinitesimal == False
-    assert r.is_comparable == True
-    assert r.is_prime == False
-    assert r.is_composite == False
+    assert r.is_commutative is True
+    assert r.is_integer is False
+    assert r.is_rational is True
+    assert r.is_real is True
+    assert r.is_complex is True
+    assert r.is_noninteger is True
+    assert r.is_irrational is False
+    assert r.is_imaginary is False
+    assert r.is_positive is True
+    assert r.is_negative is False
+    assert r.is_nonpositive is False
+    assert r.is_nonnegative is True
+    assert r.is_even is False
+    assert r.is_odd is False
+    assert r.is_bounded is True
+    assert r.is_unbounded is False
+    assert r.is_finite is True
+    assert r.is_infinitesimal is False
+    assert r.is_comparable is True
+    assert r.is_prime is False
+    assert r.is_composite is False
 
     r = Rational(1, 4)
-    assert r.is_nonpositive == False
-    assert r.is_positive == True
-    assert r.is_negative == False
-    assert r.is_nonnegative == True
+    assert r.is_nonpositive is False
+    assert r.is_positive is True
+    assert r.is_negative is False
+    assert r.is_nonnegative is True
     r = Rational(5, 4)
-    assert r.is_negative == False
-    assert r.is_positive == True
-    assert r.is_nonpositive == False
-    assert r.is_nonnegative == True
+    assert r.is_negative is False
+    assert r.is_positive is True
+    assert r.is_nonpositive is False
+    assert r.is_nonnegative is True
     r = Rational(5, 3)
-    assert r.is_nonnegative == True
-    assert r.is_positive == True
-    assert r.is_negative == False
-    assert r.is_nonpositive == False
+    assert r.is_nonnegative is True
+    assert r.is_positive is True
+    assert r.is_negative is False
+    assert r.is_nonpositive is False
 
 
 def test_neg_rational():
     r = Rational(-3, 4)
-    assert r.is_positive == False
-    assert r.is_nonpositive == True
-    assert r.is_negative == True
-    assert r.is_nonnegative == False
+    assert r.is_positive is False
+    assert r.is_nonpositive is True
+    assert r.is_negative is True
+    assert r.is_nonnegative is False
     r = Rational(-1, 4)
-    assert r.is_nonpositive == True
-    assert r.is_positive == False
-    assert r.is_negative == True
-    assert r.is_nonnegative == False
+    assert r.is_nonpositive is True
+    assert r.is_positive is False
+    assert r.is_negative is True
+    assert r.is_nonnegative is False
     r = Rational(-5, 4)
-    assert r.is_negative == True
-    assert r.is_positive == False
-    assert r.is_nonpositive == True
-    assert r.is_nonnegative == False
+    assert r.is_negative is True
+    assert r.is_positive is False
+    assert r.is_nonpositive is True
+    assert r.is_nonnegative is False
     r = Rational(-5, 3)
-    assert r.is_nonnegative == False
-    assert r.is_positive == False
-    assert r.is_negative == True
-    assert r.is_nonpositive == True
+    assert r.is_nonnegative is False
+    assert r.is_positive is False
+    assert r.is_negative is True
+    assert r.is_nonpositive is True
 
 
 def test_pi():
     z = S.Pi
-    assert z.is_commutative == True
-    assert z.is_integer == False
-    assert z.is_rational == False
-    assert z.is_real == True
-    assert z.is_complex == True
-    assert z.is_noninteger == True
-    assert z.is_irrational == True
-    assert z.is_imaginary == False
-    assert z.is_positive == True
-    assert z.is_negative == False
-    assert z.is_nonpositive == False
-    assert z.is_nonnegative == True
-    assert z.is_even == False
-    assert z.is_odd == False
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == True
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is False
+    assert z.is_rational is False
+    assert z.is_real is True
+    assert z.is_complex is True
+    assert z.is_noninteger is True
+    assert z.is_irrational is True
+    assert z.is_imaginary is False
+    assert z.is_positive is True
+    assert z.is_negative is False
+    assert z.is_nonpositive is False
+    assert z.is_nonnegative is True
+    assert z.is_even is False
+    assert z.is_odd is False
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is True
+    assert z.is_prime is False
+    assert z.is_composite is False
 
 
 def test_E():
     z = S.Exp1
-    assert z.is_commutative == True
-    assert z.is_integer == False
-    assert z.is_rational == False
-    assert z.is_real == True
-    assert z.is_complex == True
-    assert z.is_noninteger == True
-    assert z.is_irrational == True
-    assert z.is_imaginary == False
-    assert z.is_positive == True
-    assert z.is_negative == False
-    assert z.is_nonpositive == False
-    assert z.is_nonnegative == True
-    assert z.is_even == False
-    assert z.is_odd == False
-    assert z.is_bounded == True
-    assert z.is_unbounded == False
-    assert z.is_finite == True
-    assert z.is_infinitesimal == False
-    assert z.is_comparable == True
-    assert z.is_prime == False
-    assert z.is_composite == False
+    assert z.is_commutative is True
+    assert z.is_integer is False
+    assert z.is_rational is False
+    assert z.is_real is True
+    assert z.is_complex is True
+    assert z.is_noninteger is True
+    assert z.is_irrational is True
+    assert z.is_imaginary is False
+    assert z.is_positive is True
+    assert z.is_negative is False
+    assert z.is_nonpositive is False
+    assert z.is_nonnegative is True
+    assert z.is_even is False
+    assert z.is_odd is False
+    assert z.is_bounded is True
+    assert z.is_unbounded is False
+    assert z.is_finite is True
+    assert z.is_infinitesimal is False
+    assert z.is_comparable is True
+    assert z.is_prime is False
+    assert z.is_composite is False
 
 
 def test_I():
@@ -320,53 +320,53 @@ def test_symbol_real():
     # issue 749
     a = Symbol('a', real=False)
 
-    assert a.is_real == False
-    assert a.is_integer == False
-    assert a.is_negative == False
-    assert a.is_positive == False
-    assert a.is_nonnegative == False
-    assert a.is_nonpositive == False
-    assert a.is_zero == False
+    assert a.is_real is False
+    assert a.is_integer is False
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
+    assert a.is_zero is False
 
 
 def test_symbol_zero():
     x = Symbol('x', zero=True)
-    assert x.is_positive == False
-    assert x.is_nonpositive == True
-    assert x.is_negative == False
-    assert x.is_nonnegative == True
-    assert x.is_zero == True
-    assert x.is_nonzero == False
+    assert x.is_positive is False
+    assert x.is_nonpositive is True
+    assert x.is_negative is False
+    assert x.is_nonnegative is True
+    assert x.is_zero is True
+    assert x.is_nonzero is False
 
 
 def test_symbol_positive():
     x = Symbol('x', positive=True)
-    assert x.is_positive == True
-    assert x.is_nonpositive == False
-    assert x.is_negative == False
-    assert x.is_nonnegative == True
-    assert x.is_zero == False
-    assert x.is_nonzero == True
+    assert x.is_positive is True
+    assert x.is_nonpositive is False
+    assert x.is_negative is False
+    assert x.is_nonnegative is True
+    assert x.is_zero is False
+    assert x.is_nonzero is True
 
 
 def test_neg_symbol_positive():
     x = -Symbol('x', positive=True)
-    assert x.is_positive == False
-    assert x.is_nonpositive == True
-    assert x.is_negative == True
-    assert x.is_nonnegative == False
+    assert x.is_positive is False
+    assert x.is_nonpositive is True
+    assert x.is_negative is True
+    assert x.is_nonnegative is False
 
 
 def test_neg_symbol_positive2():
     x = -Symbol('x', positive=True)
-    assert x.is_zero == False
-    assert x.is_nonzero == True
+    assert x.is_zero is False
+    assert x.is_nonzero is True
 
 
 def test_symbol_nonpositive():
     x = Symbol('x', nonpositive=True)
-    assert x.is_positive == False
-    assert x.is_nonpositive == True
+    assert x.is_positive is False
+    assert x.is_nonpositive is True
     assert x.is_negative is None
     assert x.is_nonnegative is None
     assert x.is_zero is None
@@ -377,8 +377,8 @@ def test_neg_symbol_nonpositive():
     x = -Symbol('x', nonpositive=True)
     assert x.is_positive is None
     assert x.is_nonpositive is None
-    assert x.is_negative == False
-    assert x.is_nonnegative == True
+    assert x.is_negative is False
+    assert x.is_nonnegative is True
     assert x.is_zero is None
     assert x.is_nonzero is None
 
@@ -406,15 +406,15 @@ def test_composite():
 
 def test_prime_symbol():
     x = Symbol('x', prime=True)
-    assert x.is_prime == True
-    assert x.is_integer == True
-    assert x.is_positive == True
-    assert x.is_negative == False
-    assert x.is_nonpositive == False
-    assert x.is_nonnegative == True
+    assert x.is_prime is True
+    assert x.is_integer is True
+    assert x.is_positive is True
+    assert x.is_negative is False
+    assert x.is_nonpositive is False
+    assert x.is_nonnegative is True
 
     x = Symbol('x', prime=False)
-    assert x.is_prime == False
+    assert x.is_prime is False
     assert x.is_integer is None
     assert x.is_positive is None
     assert x.is_negative is None
@@ -436,48 +436,48 @@ def test_symbol_noncommutative():
 
 def test_other_symbol():
     x = Symbol('x', integer=True)
-    assert x.is_integer == True
-    assert x.is_real == True
+    assert x.is_integer is True
+    assert x.is_real is True
 
     x = Symbol('x', integer=True, nonnegative=True)
-    assert x.is_integer == True
-    assert x.is_nonnegative == True
-    assert x.is_negative == False
+    assert x.is_integer is True
+    assert x.is_nonnegative is True
+    assert x.is_negative is False
     assert x.is_positive is None
 
     x = Symbol('x', integer=True, nonpositive=True)
-    assert x.is_integer == True
-    assert x.is_nonpositive == True
-    assert x.is_positive == False
+    assert x.is_integer is True
+    assert x.is_nonpositive is True
+    assert x.is_positive is False
     assert x.is_negative is None
 
     x = Symbol('x', odd=True)
-    assert x.is_odd == True
-    assert x.is_even == False
-    assert x.is_integer == True
+    assert x.is_odd is True
+    assert x.is_even is False
+    assert x.is_integer is True
 
     x = Symbol('x', odd=False)
-    assert x.is_odd == False
+    assert x.is_odd is False
     assert x.is_even is None
     assert x.is_integer is None
 
     x = Symbol('x', even=True)
-    assert x.is_even == True
-    assert x.is_odd == False
-    assert x.is_integer == True
+    assert x.is_even is True
+    assert x.is_odd is False
+    assert x.is_integer is True
 
     x = Symbol('x', even=False)
-    assert x.is_even == False
+    assert x.is_even is False
     assert x.is_odd is None
     assert x.is_integer is None
 
     x = Symbol('x', integer=True, nonnegative=True)
-    assert x.is_integer == True
-    assert x.is_nonnegative == True
+    assert x.is_integer is True
+    assert x.is_nonnegative is True
 
     x = Symbol('x', integer=True, nonpositive=True)
-    assert x.is_integer == True
-    assert x.is_nonpositive == True
+    assert x.is_integer is True
+    assert x.is_nonpositive is True
 
     with raises(AttributeError):
         x.is_real = False
@@ -528,7 +528,7 @@ def test_hash_vs_eq():
     ha = hash(a)  # it should be Add/Mul/... to trigger the bug
 
     a.is_positive   # this uses .evalf() and deduces it is positive
-    assert a.is_positive == True
+    assert a.is_positive is True
 
     # be sure that hash stayed the same
     assert ha == hash(a)

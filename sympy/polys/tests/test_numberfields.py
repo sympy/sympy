@@ -215,10 +215,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(sqrt(2))
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == pos_coeffs
     assert field_isomorphism(a, q, fast=True) == neg_coeffs
@@ -232,10 +232,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(-sqrt(2))
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == neg_coeffs
     assert field_isomorphism(a, q, fast=True) == pos_coeffs
@@ -252,10 +252,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(sqrt(3))
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == neg_coeffs
     assert field_isomorphism(a, q, fast=True) == neg_coeffs
@@ -269,10 +269,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(-sqrt(3))
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == pos_coeffs
     assert field_isomorphism(a, q, fast=True) == pos_coeffs
@@ -289,10 +289,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(3*sqrt(3)-8)
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == neg_coeffs
     assert field_isomorphism(a, q, fast=True) == neg_coeffs
@@ -311,10 +311,10 @@ def test_field_isomorphism():
     pos_5_coeffs = [ S(5)/2, S(0), -S(49)/2, S(1)]
     neg_1_coeffs = [-S(1)/2, S(0),  S(5)/2,  S(1)]
 
-    assert is_isomorphism_possible(a, p) == True
-    assert is_isomorphism_possible(a, q) == True
-    assert is_isomorphism_possible(a, r) == True
-    assert is_isomorphism_possible(a, s) == True
+    assert is_isomorphism_possible(a, p) is True
+    assert is_isomorphism_possible(a, q) is True
+    assert is_isomorphism_possible(a, r) is True
+    assert is_isomorphism_possible(a, s) is True
 
     assert field_isomorphism(a, p, fast=True) == pos_1_coeffs
     assert field_isomorphism(a, q, fast=True) == neg_5_coeffs
@@ -330,10 +330,10 @@ def test_field_isomorphism():
     b = AlgebraicNumber(sqrt(3))
     c = AlgebraicNumber(sqrt(7))
 
-    assert is_isomorphism_possible(a, b) == True
-    assert is_isomorphism_possible(b, a) == True
+    assert is_isomorphism_possible(a, b) is True
+    assert is_isomorphism_possible(b, a) is True
 
-    assert is_isomorphism_possible(c, p) == False
+    assert is_isomorphism_possible(c, p) is False
 
     assert field_isomorphism(sqrt(2), sqrt(3), fast=True) is None
     assert field_isomorphism(sqrt(3), sqrt(2), fast=True) is None
@@ -365,7 +365,7 @@ def test_AlgebraicNumber():
     assert a.alias is None
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == False
+    assert a.is_aliased is False
 
     assert a.coeffs() == [S(1), S(0)]
     assert a.native_coeffs() == [QQ(1), QQ(0)]
@@ -377,7 +377,7 @@ def test_AlgebraicNumber():
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == True
+    assert a.is_aliased is True
 
     a = AlgebraicNumber(root, gen=x, alias=Symbol('y'))
 
@@ -386,7 +386,7 @@ def test_AlgebraicNumber():
     assert a.alias == Symbol('y')
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == True
+    assert a.is_aliased is True
 
     assert AlgebraicNumber(sqrt(2), []).rep == DMP([], QQ)
 
@@ -406,7 +406,7 @@ def test_AlgebraicNumber():
     assert a.alias is None
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == False
+    assert a.is_aliased is False
 
     assert a.coeffs() == [S(1), S(2)]
     assert a.native_coeffs() == [QQ(1), QQ(2)]
@@ -418,7 +418,7 @@ def test_AlgebraicNumber():
     assert a.alias is None
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == False
+    assert a.is_aliased is False
 
     a = AlgebraicNumber((Poly(minpoly), root), [1, 2])
 
@@ -427,7 +427,7 @@ def test_AlgebraicNumber():
     assert a.alias is None
     assert a.minpoly == minpoly
 
-    assert a.is_aliased == False
+    assert a.is_aliased is False
 
     assert AlgebraicNumber( sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
     assert AlgebraicNumber(-sqrt(3)).rep == DMP([-QQ(1), QQ(0)], QQ)
@@ -448,7 +448,7 @@ def test_AlgebraicNumber():
 
     assert a != b and a != sqrt(2)+3
 
-    assert (a == x) == False and (a != x) == True
+    assert (a == x) is False and (a != x) == True
 
     a = AlgebraicNumber(sqrt(2), [1, 0])
     b = AlgebraicNumber(sqrt(2), [1, 0], alias=y)

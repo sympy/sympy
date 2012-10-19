@@ -81,7 +81,7 @@ def test_dpll():
 
 def test_dpll_satisfiable():
     A, B, C = symbols('A,B,C')
-    assert dpll_satisfiable( A & ~A ) == False
+    assert dpll_satisfiable( A & ~A ) is False
     assert dpll_satisfiable( A & ~B ) == {A: True, B: False}
     assert dpll_satisfiable(
         A | B ) in ({A: True}, {B: True}, {A: True, B: True})
@@ -97,26 +97,26 @@ def test_dpll_satisfiable():
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
-    assert satisfiable(A & (A >> B) & ~B) == False
+    assert satisfiable(A & (A >> B) & ~B) is False
 
 
 def test_pl_true():
     A, B, C = symbols('A,B,C')
-    assert pl_true(True) == True
-    assert pl_true( A & B, {A: True, B: True}) == True
-    assert pl_true( A | B, {A: True}) == True
-    assert pl_true( A | B, {B: True}) == True
-    assert pl_true( A | B, {A: None, B: True}) == True
-    assert pl_true( A >> B, {A: False}) == True
-    assert pl_true( A | B | ~C, {A: False, B: True, C: True}) == True
-    assert pl_true(Equivalent(A, B), {A: False, B: False}) == True
+    assert pl_true(True) is True
+    assert pl_true( A & B, {A: True, B: True}) is True
+    assert pl_true( A | B, {A: True}) is True
+    assert pl_true( A | B, {B: True}) is True
+    assert pl_true( A | B, {A: None, B: True}) is True
+    assert pl_true( A >> B, {A: False}) is True
+    assert pl_true( A | B | ~C, {A: False, B: True, C: True}) is True
+    assert pl_true(Equivalent(A, B), {A: False, B: False}) is True
 
     # test for false
-    assert pl_true(False) == False
-    assert pl_true( A & B, {A: False, B: False}) == False
-    assert pl_true( A & B, {A: False}) == False
-    assert pl_true( A & B, {B: False}) == False
-    assert pl_true( A | B, {A: False, B: False}) == False
+    assert pl_true(False) is False
+    assert pl_true( A & B, {A: False, B: False}) is False
+    assert pl_true( A & B, {A: False}) is False
+    assert pl_true( A & B, {B: False}) is False
+    assert pl_true( A | B, {A: False, B: False}) is False
 
     #test for None
     assert pl_true(B, {B: None}) is None
@@ -138,25 +138,25 @@ def test_PropKB():
     kb = PropKB()
     kb.tell(A >> B)
     kb.tell(B >> C)
-    assert kb.ask(A) == True
-    assert kb.ask(B) == True
-    assert kb.ask(C) == True
-    assert kb.ask(~A) == True
-    assert kb.ask(~B) == True
-    assert kb.ask(~C) == True
+    assert kb.ask(A) is True
+    assert kb.ask(B) is True
+    assert kb.ask(C) is True
+    assert kb.ask(~A) is True
+    assert kb.ask(~B) is True
+    assert kb.ask(~C) is True
     kb.tell(A)
-    assert kb.ask(A) == True
-    assert kb.ask(B) == True
-    assert kb.ask(C) == True
-    assert kb.ask(~C) == False
+    assert kb.ask(A) is True
+    assert kb.ask(B) is True
+    assert kb.ask(C) is True
+    assert kb.ask(~C) is False
     kb.retract(A)
-    assert kb.ask(~C) == True
+    assert kb.ask(~C) is True
 
     kb2 = PropKB(Equivalent(A, B))
-    assert kb2.ask(A) == True
-    assert kb2.ask(B) == True
+    assert kb2.ask(A) is True
+    assert kb2.ask(B) is True
     kb2.tell(A)
-    assert kb2.ask(A) == True
+    assert kb2.ask(A) is True
 
     kb3 = PropKB()
     kb3.tell(A)
@@ -166,4 +166,4 @@ def test_propKB_tolerant():
     """"tolerant to bad input"""
     kb = PropKB()
     A, B, C = symbols('A,B,C')
-    assert kb.ask(B) == False
+    assert kb.ask(B) is False

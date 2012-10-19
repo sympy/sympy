@@ -7,9 +7,9 @@ def test_SymmetricGroup():
     elements = list(G.generate())
     assert (G.generators[0]).size == 5
     assert len(elements) == 120
-    assert G.is_solvable == False
-    assert G.is_abelian == False
-    assert G.is_transitive() == True
+    assert G.is_solvable is False
+    assert G.is_abelian is False
+    assert G.is_transitive() is True
     H = SymmetricGroup(1)
     assert H.order() == 1
     L = SymmetricGroup(2)
@@ -21,7 +21,7 @@ def test_CyclicGroup():
     elements = list(G.generate())
     assert len(elements) == 10
     assert (G.derived_subgroup()).order() == 1
-    assert G.is_abelian == True
+    assert G.is_abelian is True
     H = CyclicGroup(1)
     assert H.order() == 1
     L = CyclicGroup(2)
@@ -32,13 +32,13 @@ def test_DihedralGroup():
     G = DihedralGroup(6)
     elements = list(G.generate())
     assert len(elements) == 12
-    assert G.is_transitive() == True
-    assert G.is_abelian == False
+    assert G.is_transitive() is True
+    assert G.is_abelian is False
     H = DihedralGroup(1)
     assert H.order() == 2
     L = DihedralGroup(2)
     assert L.order() == 4
-    assert L.is_abelian == True
+    assert L.is_abelian is True
 
 
 def test_AlternatingGroup():
@@ -55,4 +55,4 @@ def test_AlternatingGroup():
 def test_AbelianGroup():
     A = AbelianGroup(3, 3, 3)
     assert A.order() == 27
-    assert A.is_abelian == True
+    assert A.is_abelian is True

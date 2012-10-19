@@ -301,7 +301,7 @@ class LatexPrinter(Printer):
                 x = fmt.split('=')
                 LatexPrinter.fmt_dict[x[0]] = int(x[1])
 
-        if LatexPrinter.LaTeX_flg == False:
+        if LatexPrinter.LaTeX_flg is False:
             if sympy.galgebra.GA.MV.is_setup:
                 LatexPrinter.latex_bases()
             LatexPrinter.redirect()

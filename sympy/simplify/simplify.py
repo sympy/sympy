@@ -412,7 +412,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                             (t_sym == e_sym or t_sym is not None and
                             e_sym is not None and
                             t_sym.match(e_sym) is not None)):
-                        if exact == False:
+                        if exact is False:
                             # we don't have to be exact so find common exponent
                             # for both expression's term and pattern's element
                             expo = t_rat / e_rat
@@ -3312,7 +3312,7 @@ def _logcombine(expr, force=False):
                     or (force
                         and not all(getattr(t, 'is_nonpositive') for t in largs)
                         and not getattr(i.extract_multiplicatively(loglargs),
-                        'is_real')==False):
+                        'is_real') is False):
 
                     coeflogs += _logcombine(i, force)
                 else:
@@ -3340,7 +3340,7 @@ def _logcombine(expr, force=False):
                 and not coef[a].is_imaginary))\
             and (coef[a].func != log
                 or force
-                or (not getattr(coef[a], 'is_real')==False
+                or (not getattr(coef[a], 'is_real') is False
                     and getattr(x, 'is_positive'))):
 
             return log(coef[x]**coef[a])

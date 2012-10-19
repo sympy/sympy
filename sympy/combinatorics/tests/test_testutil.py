@@ -13,7 +13,7 @@ def test_cmp_perm_lists():
     els = list(S.generate_dimino())
     other = els[:]
     shuffle(other)
-    assert _cmp_perm_lists(els, other) == True
+    assert _cmp_perm_lists(els, other) is True
 
 
 def test_naive_list_centralizer():
@@ -29,9 +29,9 @@ def test_verify_bsgs():
     S.schreier_sims()
     base = S.base
     strong_gens = S.strong_gens
-    assert _verify_bsgs(S, base, strong_gens) == True
-    assert _verify_bsgs(S, base[:-1], strong_gens) == False
-    assert _verify_bsgs(S, base, S.generators) == False
+    assert _verify_bsgs(S, base, strong_gens) is True
+    assert _verify_bsgs(S, base[:-1], strong_gens) is False
+    assert _verify_bsgs(S, base, S.generators) is False
 
 
 def test_verify_centralizer():

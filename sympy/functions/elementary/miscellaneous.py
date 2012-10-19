@@ -276,7 +276,7 @@ class MinMaxBase(LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (arg.is_real == False) or (arg is S.ComplexInfinity):
+            if (arg.is_real is False) or (arg is S.ComplexInfinity):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:

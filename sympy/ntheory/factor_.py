@@ -132,7 +132,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     else:
         rv = n
 
-    if visual is False or (visual != True) and (type(n) in [int, Mul]):
+    if visual is False or (visual is not True) and (type(n) in [int, Mul]):
         return rv
     lines = []
     for dat in rv[1]:

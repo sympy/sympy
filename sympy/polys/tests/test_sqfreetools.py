@@ -36,25 +36,25 @@ from sympy.utilities.pytest import raises
 
 def test_dup_sqf():
     assert dup_sqf_part([], ZZ) == []
-    assert dup_sqf_p([], ZZ) == True
+    assert dup_sqf_p([], ZZ) is True
 
     assert dup_sqf_part([7], ZZ) == [1]
-    assert dup_sqf_p([7], ZZ) == True
+    assert dup_sqf_p([7], ZZ) is True
 
     assert dup_sqf_part([2, 2], ZZ) == [1, 1]
-    assert dup_sqf_p([2, 2], ZZ) == True
+    assert dup_sqf_p([2, 2], ZZ) is True
 
     assert dup_sqf_part([1, 0, 1, 1], ZZ) == [1, 0, 1, 1]
-    assert dup_sqf_p([1, 0, 1, 1], ZZ) == True
+    assert dup_sqf_p([1, 0, 1, 1], ZZ) is True
 
     assert dup_sqf_part([-1, 0, 1, 1], ZZ) == [1, 0, -1, -1]
-    assert dup_sqf_p([-1, 0, 1, 1], ZZ) == True
+    assert dup_sqf_p([-1, 0, 1, 1], ZZ) is True
 
     assert dup_sqf_part([2, 3, 0, 0], ZZ) == [2, 3, 0]
-    assert dup_sqf_p([2, 3, 0, 0], ZZ) == False
+    assert dup_sqf_p([2, 3, 0, 0], ZZ) is False
 
     assert dup_sqf_part([-2, 3, 0, 0], ZZ) == [2, -3, 0]
-    assert dup_sqf_p([-2, 3, 0, 0], ZZ) == False
+    assert dup_sqf_p([-2, 3, 0, 0], ZZ) is False
 
     assert dup_sqf_list([], ZZ) == (0, [])
     assert dup_sqf_list([1], ZZ) == (1, [])
@@ -93,8 +93,8 @@ def test_dup_sqf():
     assert dup_sqf_part(f, ZZ) == f
     assert dup_sqf_part(g, K) == [K(1), K(1)]
 
-    assert dup_sqf_p(f, ZZ) == True
-    assert dup_sqf_p(g, K) == False
+    assert dup_sqf_p(f, ZZ) is True
+    assert dup_sqf_p(g, K) is False
 
     A = [[1], [], [-3], [], [6]]
     D = [[1], [], [-5], [], [5], [], [4]]
@@ -112,25 +112,25 @@ def test_dup_sqf():
 
 def test_dmp_sqf():
     assert dmp_sqf_part([[]], 1, ZZ) == [[]]
-    assert dmp_sqf_p([[]], 1, ZZ) == True
+    assert dmp_sqf_p([[]], 1, ZZ) is True
 
     assert dmp_sqf_part([[7]], 1, ZZ) == [[1]]
-    assert dmp_sqf_p([[7]], 1, ZZ) == True
+    assert dmp_sqf_p([[7]], 1, ZZ) is True
 
-    assert dmp_sqf_p(f_0, 2, ZZ) == True
-    assert dmp_sqf_p(dmp_sqr(f_0, 2, ZZ), 2, ZZ) == False
-    assert dmp_sqf_p(f_1, 2, ZZ) == True
-    assert dmp_sqf_p(dmp_sqr(f_1, 2, ZZ), 2, ZZ) == False
-    assert dmp_sqf_p(f_2, 2, ZZ) == True
-    assert dmp_sqf_p(dmp_sqr(f_2, 2, ZZ), 2, ZZ) == False
-    assert dmp_sqf_p(f_3, 2, ZZ) == True
-    assert dmp_sqf_p(dmp_sqr(f_3, 2, ZZ), 2, ZZ) == False
-    assert dmp_sqf_p(f_5, 2, ZZ) == False
-    assert dmp_sqf_p(dmp_sqr(f_5, 2, ZZ), 2, ZZ) == False
+    assert dmp_sqf_p(f_0, 2, ZZ) is True
+    assert dmp_sqf_p(dmp_sqr(f_0, 2, ZZ), 2, ZZ) is False
+    assert dmp_sqf_p(f_1, 2, ZZ) is True
+    assert dmp_sqf_p(dmp_sqr(f_1, 2, ZZ), 2, ZZ) is False
+    assert dmp_sqf_p(f_2, 2, ZZ) is True
+    assert dmp_sqf_p(dmp_sqr(f_2, 2, ZZ), 2, ZZ) is False
+    assert dmp_sqf_p(f_3, 2, ZZ) is True
+    assert dmp_sqf_p(dmp_sqr(f_3, 2, ZZ), 2, ZZ) is False
+    assert dmp_sqf_p(f_5, 2, ZZ) is False
+    assert dmp_sqf_p(dmp_sqr(f_5, 2, ZZ), 2, ZZ) is False
 
-    assert dmp_sqf_p(f_4, 2, ZZ) == True
+    assert dmp_sqf_p(f_4, 2, ZZ) is True
     assert dmp_sqf_part(f_4, 2, ZZ) == dmp_neg(f_4, 2, ZZ)
-    assert dmp_sqf_p(f_6, 3, ZZ) == True
+    assert dmp_sqf_p(f_6, 3, ZZ) is True
     assert dmp_sqf_part(f_6, 3, ZZ) == f_6
 
     assert dmp_sqf_part(f_5, 2, ZZ) == [[[1]], [[1], [-1, 0]]]

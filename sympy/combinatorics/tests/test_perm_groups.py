@@ -339,10 +339,10 @@ def test_direct_product():
     assert G.order() == 64
     assert G.degree == 12
     assert len(G.orbits()) == 3
-    assert G.is_abelian == True
+    assert G.is_abelian is True
     H = D*C
     assert H.order() == 32
-    assert H.is_abelian == False
+    assert H.is_abelian is False
 
 
 def test_orbit_rep():
@@ -350,7 +350,7 @@ def test_orbit_rep():
     assert G.orbit_rep(1, 3) in [Permutation([2, 3, 4, 5, 0, 1]),
     Permutation([4, 3, 2, 1, 0, 5])]
     H = CyclicGroup(4)*G
-    assert H.orbit_rep(1, 5) == False
+    assert H.orbit_rep(1, 5) is False
 
 
 def test_schreier_vector():
@@ -381,7 +381,7 @@ def test_random_pr():
 
 def test_is_alt_sym():
     G = DihedralGroup(10)
-    assert G.is_alt_sym() == False
+    assert G.is_alt_sym() is False
     S = SymmetricGroup(10)
     N_eps = 10
     _random_prec = {'N_eps': N_eps,
@@ -395,7 +395,7 @@ def test_is_alt_sym():
         7: Permutation([[4], [0, 2, 9, 1, 3, 8, 6, 5, 7]]),
         8: Permutation([[1, 5, 6, 3], [0, 2, 7, 8, 4, 9]]),
         9: Permutation([[8], [6, 7], [2, 3, 4, 5], [0, 1, 9]])}
-    assert S.is_alt_sym(_random_prec=_random_prec) == True
+    assert S.is_alt_sym(_random_prec=_random_prec) is True
     A = AlternatingGroup(10)
     _random_prec = {'N_eps': N_eps,
         0: Permutation([[1, 6, 4, 2, 7, 8, 5, 9, 3], [0]]),
@@ -408,7 +408,7 @@ def test_is_alt_sym():
         7: Permutation([[1, 8, 4, 7, 2, 3], [0, 6, 9, 5]]),
         8: Permutation([[5, 8, 7], [3], [1, 4, 2, 6], [0, 9]]),
         9: Permutation([[4, 9, 6], [3, 8], [1, 2], [0, 5, 7]])}
-    assert A.is_alt_sym(_random_prec=_random_prec) == False
+    assert A.is_alt_sym(_random_prec=_random_prec) is False
 
 
 def test_minimal_block():
@@ -429,9 +429,9 @@ def test_max_div():
 
 def test_is_primitive():
     S = SymmetricGroup(5)
-    assert S.is_primitive() == True
+    assert S.is_primitive() is True
     C = CyclicGroup(7)
-    assert C.is_primitive() == True
+    assert C.is_primitive() is True
 
 
 def test_random_stab():
@@ -482,22 +482,22 @@ def test_baseswap():
     deterministic = S.baseswap(base, strong_gens, 1, randomized=False)
     randomized = S.baseswap(base, strong_gens, 1)
     assert deterministic[0] == [0, 2, 1]
-    assert _verify_bsgs(S, deterministic[0], deterministic[1]) == True
+    assert _verify_bsgs(S, deterministic[0], deterministic[1]) is True
     assert randomized[0] == [0, 2, 1]
-    assert _verify_bsgs(S, randomized[0], randomized[1]) == True
+    assert _verify_bsgs(S, randomized[0], randomized[1]) is True
 
 
 def test_schreier_sims_incremental():
     identity = Permutation([0, 1, 2, 3, 4])
     TrivialGroup = PermutationGroup([identity])
     base, strong_gens = TrivialGroup.schreier_sims_incremental(base=[0, 1, 2])
-    assert _verify_bsgs(TrivialGroup, base, strong_gens) == True
+    assert _verify_bsgs(TrivialGroup, base, strong_gens) is True
     S = SymmetricGroup(5)
     base, strong_gens = S.schreier_sims_incremental(base=[0, 1, 2])
-    assert _verify_bsgs(S, base, strong_gens) == True
+    assert _verify_bsgs(S, base, strong_gens) is True
     D = DihedralGroup(2)
     base, strong_gens = D.schreier_sims_incremental(base=[1])
-    assert _verify_bsgs(D, base, strong_gens) == True
+    assert _verify_bsgs(D, base, strong_gens) is True
     A = AlternatingGroup(7)
     gens = A.generators[:]
     gen0 = gens[0]
@@ -506,11 +506,11 @@ def test_schreier_sims_incremental():
     gen0 = rmul(gen0, gen1)
     gen1 = rmul(gen0, gen1)
     base, strong_gens = A.schreier_sims_incremental(base=[0, 1], gens=gens)
-    assert _verify_bsgs(A, base, strong_gens) == True
+    assert _verify_bsgs(A, base, strong_gens) is True
     C = CyclicGroup(11)
     gen = C.generators[0]
     base, strong_gens = C.schreier_sims_incremental(gens=[gen**3])
-    assert _verify_bsgs(C, base, strong_gens) == True
+    assert _verify_bsgs(C, base, strong_gens) is True
 
 
 def _subgroup_search(i, j, k):
@@ -543,8 +543,8 @@ def _subgroup_search(i, j, k):
         g = A.generators[0]
         comm_g = \
              A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
-        assert _verify_bsgs(comm_g, base, comm_g.generators) == True
-        assert [prop_comm_g(gen) == True for gen in comm_g.generators]
+        assert _verify_bsgs(comm_g, base, comm_g.generators) is True
+        assert [prop_comm_g(gen) is True for gen in comm_g.generators]
 
 
 def test_subgroup_search():
@@ -661,7 +661,7 @@ def test_is_nilpotent():
     Ab = AbelianGroup(5, 7, 10)
     assert Ab.is_nilpotent
     # A_5 is not solvable and thus not nilpotent
-    assert AlternatingGroup(5).is_nilpotent == False
+    assert AlternatingGroup(5).is_nilpotent is False
 
 
 def test_is_trivial():

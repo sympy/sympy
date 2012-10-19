@@ -250,7 +250,7 @@ class AskBoundedHandler(CommonHandler):
         exp_bounded = ask(Q.bounded(expr.exp), assumptions)
         if base_bounded is None and exp_bounded is None:  # Common Case
             return None
-        if base_bounded == False and ask(Q.nonzero(expr.exp), assumptions):
+        if base_bounded is False and ask(Q.nonzero(expr.exp), assumptions):
             return False
         if base_bounded and exp_bounded:
             return True
@@ -258,7 +258,7 @@ class AskBoundedHandler(CommonHandler):
             return True
         if abs(expr.base) >= 1 and ask(Q.negative(expr.exp), assumptions):
             return True
-        if abs(expr.base) >= 1 and exp_bounded == False:
+        if abs(expr.base) >= 1 and exp_bounded is False:
             return False
         return None
 

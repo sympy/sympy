@@ -159,15 +159,15 @@ def test_ibasic():
 
 
 def test_relational():
-    assert (pi < 3) == False
-    assert (pi <= 3) == False
-    assert (pi > 3) == True
-    assert (pi >= 3) == True
-    assert (-pi < 3) == True
-    assert (-pi <= 3) == True
-    assert (-pi > 3) == False
-    assert (-pi >= 3) == False
-    assert (x - 2 < x - 3) == False
+    assert (pi < 3) is False
+    assert (pi <= 3) is False
+    assert (pi > 3) is True
+    assert (pi >= 3) is True
+    assert (-pi < 3) is True
+    assert (-pi <= 3) is True
+    assert (-pi > 3) is False
+    assert (-pi >= 3) is False
+    assert (x - 2 < x - 3) is False
 
 
 def test_relational_noncommutative():
@@ -293,72 +293,72 @@ def test_atoms():
 def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
 
-    assert Rational(2).is_polynomial(x, y, z) == True
-    assert (S.Pi).is_polynomial(x, y, z) == True
+    assert Rational(2).is_polynomial(x, y, z) is True
+    assert (S.Pi).is_polynomial(x, y, z) is True
 
-    assert x.is_polynomial(x) == True
-    assert x.is_polynomial(y) == True
+    assert x.is_polynomial(x) is True
+    assert x.is_polynomial(y) is True
 
-    assert (x**2).is_polynomial(x) == True
-    assert (x**2).is_polynomial(y) == True
+    assert (x**2).is_polynomial(x) is True
+    assert (x**2).is_polynomial(y) is True
 
-    assert (x**(-2)).is_polynomial(x) == False
-    assert (x**(-2)).is_polynomial(y) == True
+    assert (x**(-2)).is_polynomial(x) is False
+    assert (x**(-2)).is_polynomial(y) is True
 
-    assert (2**x).is_polynomial(x) == False
-    assert (2**x).is_polynomial(y) == True
+    assert (2**x).is_polynomial(x) is False
+    assert (2**x).is_polynomial(y) is True
 
-    assert (x**k).is_polynomial(x) == False
-    assert (x**k).is_polynomial(k) == False
-    assert (x**x).is_polynomial(x) == False
-    assert (k**k).is_polynomial(k) == False
-    assert (k**x).is_polynomial(k) == False
+    assert (x**k).is_polynomial(x) is False
+    assert (x**k).is_polynomial(k) is False
+    assert (x**x).is_polynomial(x) is False
+    assert (k**k).is_polynomial(k) is False
+    assert (k**x).is_polynomial(k) is False
 
-    assert (x**(-k)).is_polynomial(x) == False
-    assert ((2*x)**k).is_polynomial(x) == False
+    assert (x**(-k)).is_polynomial(x) is False
+    assert ((2*x)**k).is_polynomial(x) is False
 
-    assert (x**2 + 3*x - 8).is_polynomial(x) == True
-    assert (x**2 + 3*x - 8).is_polynomial(y) == True
+    assert (x**2 + 3*x - 8).is_polynomial(x) is True
+    assert (x**2 + 3*x - 8).is_polynomial(y) is True
 
-    assert (x**2 + 3*x - 8).is_polynomial() == True
+    assert (x**2 + 3*x - 8).is_polynomial() is True
 
-    assert sqrt(x).is_polynomial(x) == False
-    assert (sqrt(x)**3).is_polynomial(x) == False
+    assert sqrt(x).is_polynomial(x) is False
+    assert (sqrt(x)**3).is_polynomial(x) is False
 
-    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True
-    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(y) == False
+    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) is True
+    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(y) is False
 
-    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial() == True
-    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial() == False
+    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial() is True
+    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial() is False
 
     assert (
-        (x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
+        (x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) is True
     assert (
-        (x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
+        (x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) is False
 
 
 def test_is_rational_function():
-    assert Integer(1).is_rational_function() == True
-    assert Integer(1).is_rational_function(x) == True
+    assert Integer(1).is_rational_function() is True
+    assert Integer(1).is_rational_function(x) is True
 
-    assert Rational(17, 54).is_rational_function() == True
-    assert Rational(17, 54).is_rational_function(x) == True
+    assert Rational(17, 54).is_rational_function() is True
+    assert Rational(17, 54).is_rational_function(x) is True
 
-    assert (12/x).is_rational_function() == True
-    assert (12/x).is_rational_function(x) == True
+    assert (12/x).is_rational_function() is True
+    assert (12/x).is_rational_function(x) is True
 
-    assert (x/y).is_rational_function() == True
-    assert (x/y).is_rational_function(x) == True
-    assert (x/y).is_rational_function(x, y) == True
+    assert (x/y).is_rational_function() is True
+    assert (x/y).is_rational_function(x) is True
+    assert (x/y).is_rational_function(x, y) is True
 
-    assert (x**2+1/x/y).is_rational_function() == True
-    assert (x**2+1/x/y).is_rational_function(x) == True
-    assert (x**2+1/x/y).is_rational_function(x, y) == True
+    assert (x**2+1/x/y).is_rational_function() is True
+    assert (x**2+1/x/y).is_rational_function(x) is True
+    assert (x**2+1/x/y).is_rational_function(x, y) is True
 
-    assert (sin(y)/x).is_rational_function() == False
-    assert (sin(y)/x).is_rational_function(y) == False
-    assert (sin(y)/x).is_rational_function(x) == True
-    assert (sin(y)/x).is_rational_function(x, y) == False
+    assert (sin(y)/x).is_rational_function() is False
+    assert (sin(y)/x).is_rational_function(y) is False
+    assert (sin(y)/x).is_rational_function(x) is True
+    assert (sin(y)/x).is_rational_function(x, y) is False
 
 
 def test_SAGE1():
@@ -405,10 +405,10 @@ def test_len():
 def test_doit():
     a = Integral(x**2, x)
 
-    assert isinstance(a.doit(), Integral) == False
+    assert isinstance(a.doit(), Integral) is False
 
-    assert isinstance(a.doit(integrals=True), Integral) == False
-    assert isinstance(a.doit(integrals=False), Integral) == True
+    assert isinstance(a.doit(integrals=True), Integral) is False
+    assert isinstance(a.doit(integrals=False), Integral) is True
 
     assert (2*Integral(x, x)).doit() == x**2
 
@@ -781,47 +781,47 @@ def test_as_poly_as_expr():
 
 
 def test_nonzero():
-    assert bool(S.Zero) == False
-    assert bool(S.One) == True
-    assert bool(x) == True
-    assert bool(x+y) == True
-    assert bool(x-x) == False
-    assert bool(x*y) == True
-    assert bool(x*1) == True
-    assert bool(x*0) == False
+    assert bool(S.Zero) is False
+    assert bool(S.One) is True
+    assert bool(x) is True
+    assert bool(x+y) is True
+    assert bool(x-x) is False
+    assert bool(x*y) is True
+    assert bool(x*1) is True
+    assert bool(x*0) is False
 
 
 def test_is_number():
-    assert Float(3.14).is_number == True
-    assert Integer(737).is_number == True
-    assert Rational(3, 2).is_number == True
-    assert Rational(8).is_number == True
-    assert x.is_number == False
-    assert (2*x).is_number == False
-    assert (x + y).is_number == False
-    assert log(2).is_number == True
-    assert log(x).is_number == False
-    assert (2 + log(2)).is_number == True
-    assert (8+log(2)).is_number == True
-    assert (2 + log(x)).is_number == False
-    assert (8+log(2)+x).is_number == False
-    assert (1+x**2/x-x).is_number == True
-    assert Tuple(Integer(1)).is_number == False
-    assert Add(2, x).is_number == False
-    assert Mul(3, 4).is_number == True
-    assert Pow(log(2), 2).is_number == True
-    assert oo.is_number == True
+    assert Float(3.14).is_number is True
+    assert Integer(737).is_number is True
+    assert Rational(3, 2).is_number is True
+    assert Rational(8).is_number is True
+    assert x.is_number is False
+    assert (2*x).is_number is False
+    assert (x + y).is_number is False
+    assert log(2).is_number is True
+    assert log(x).is_number is False
+    assert (2 + log(2)).is_number is True
+    assert (8+log(2)).is_number is True
+    assert (2 + log(x)).is_number is False
+    assert (8+log(2)+x).is_number is False
+    assert (1+x**2/x-x).is_number is True
+    assert Tuple(Integer(1)).is_number is False
+    assert Add(2, x).is_number is False
+    assert Mul(3, 4).is_number is True
+    assert Pow(log(2), 2).is_number is True
+    assert oo.is_number is True
     g = WildFunction('g')
-    assert g.is_number == False
-    assert (2*g).is_number == False
-    assert (x**2).subs(x, 3).is_number == True
+    assert g.is_number is False
+    assert (2*g).is_number is False
+    assert (x**2).subs(x, 3).is_number is True
 
     # test extensibility of .is_number
     # on subinstances of Basic
     class A(Basic):
         pass
     a = A()
-    assert a.is_number == False
+    assert a.is_number is False
 
 
 def test_as_coeff_add():
@@ -919,28 +919,28 @@ def test_extractions():
         (x + 2*y)*(y + 1) + 3
 
     n = Symbol("n", integer=True)
-    assert (Integer(-3)).could_extract_minus_sign() == True
+    assert (Integer(-3)).could_extract_minus_sign() is True
     assert (-n*x+x).could_extract_minus_sign(
         ) != (n*x-x).could_extract_minus_sign()
     assert (
         x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
-    assert (1-x-y).could_extract_minus_sign() == True
-    assert (1-x+y).could_extract_minus_sign() == False
-    assert ((-x-x*y)/y).could_extract_minus_sign() == True
-    assert (-(x+x*y)/y).could_extract_minus_sign() == True
-    assert ((x+x*y)/(-y)).could_extract_minus_sign() == True
-    assert ((x+x*y)/y).could_extract_minus_sign() == False
+    assert (1-x-y).could_extract_minus_sign() is True
+    assert (1-x+y).could_extract_minus_sign() is False
+    assert ((-x-x*y)/y).could_extract_minus_sign() is True
+    assert (-(x+x*y)/y).could_extract_minus_sign() is True
+    assert ((x+x*y)/(-y)).could_extract_minus_sign() is True
+    assert ((x+x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x-x**3)).could_extract_minus_sign(
-        ) == True  # used to give inf recurs
-    assert ((-x-y)/(x+y)).could_extract_minus_sign() == True  # is_Mul odd case
+        ) is True  # used to give inf recurs
+    assert ((-x-y)/(x+y)).could_extract_minus_sign() is True  # is_Mul odd case
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
-    assert ((-x-y)/(x-y)).could_extract_minus_sign() == False or\
+    assert ((-x-y)/(x-y)).could_extract_minus_sign() is False or\
            ((-x-y)/(y-x)).could_extract_minus_sign(
                ) == False  # is_Mul even case
-    assert ( x - y).could_extract_minus_sign() == False
-    assert (-x + y).could_extract_minus_sign() == True
+    assert ( x - y).could_extract_minus_sign() is False
+    assert (-x + y).could_extract_minus_sign() is True
 
 
 def test_coeff():
@@ -1334,28 +1334,28 @@ def test_issue_2744():
 
 def test_is_constant():
     from sympy.solvers.solvers import checksol
-    Sum(x, (x, 1, 10)).is_constant() == True
-    Sum(x, (x, 1, n)).is_constant() == False
-    Sum(x, (x, 1, n)).is_constant(y) == True
-    Sum(x, (x, 1, n)).is_constant(n) == False
-    Sum(x, (x, 1, n)).is_constant(x) == True
+    Sum(x, (x, 1, 10)).is_constant() is True
+    Sum(x, (x, 1, n)).is_constant() is False
+    Sum(x, (x, 1, n)).is_constant(y) is True
+    Sum(x, (x, 1, n)).is_constant(n) is False
+    Sum(x, (x, 1, n)).is_constant(x) is True
     eq = a*cos(x)**2 + a*sin(x)**2 - a
-    eq.is_constant() == True
+    eq.is_constant() is True
     assert eq.subs({x: pi, a: 2}) == eq.subs({x: pi, a: 3}) == 0
     assert x.is_constant() is False
     assert x.is_constant(y) is True
 
-    assert checksol(x, x, Sum(x, (x, 1, n))) == False
-    assert checksol(x, x, Sum(x, (x, 1, n))) == False
+    assert checksol(x, x, Sum(x, (x, 1, n))) is False
+    assert checksol(x, x, Sum(x, (x, 1, n))) is False
     f = Function('f')
-    assert checksol(x, x, f(x)) == False
+    assert checksol(x, x, f(x)) is False
 
     p = symbols('p', positive=True)
-    assert Pow(x, S(0), evaluate=False).is_constant() == True  # == 1
-    assert Pow(S(0), x, evaluate=False).is_constant() == False  # == 0 or 1
-    assert Pow(S(0), p, evaluate=False).is_constant() == True  # == 1
-    assert (2**x).is_constant() == False
-    assert Pow(S(2), S(3), evaluate=False).is_constant() == True
+    assert Pow(x, S(0), evaluate=False).is_constant() is True  # == 1
+    assert Pow(S(0), x, evaluate=False).is_constant() is False  # == 0 or 1
+    assert Pow(S(0), p, evaluate=False).is_constant() is True  # == 1
+    assert (2**x).is_constant() is False
+    assert Pow(S(2), S(3), evaluate=False).is_constant() is True
 
     z1, z2 = symbols('z1 z2', zero=True)
     assert (z1 + 2*z2).is_constant() is True

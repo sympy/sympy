@@ -175,7 +175,7 @@ def test_generate():
 
     raises(ValueError, lambda: primorial(0))
 
-    assert mr(1, [2]) == False
+    assert mr(1, [2]) is False
 
     func = lambda i: (i**2 + 1) % 51
     assert cycle_length(func, 4).next() == (6, 2)
@@ -376,20 +376,20 @@ def test_residue():
     assert n_order(17, 11) == n_order(6, 11)
     assert n_order(101, 119) == 6
 
-    assert is_primitive_root(2, 7) == False
-    assert is_primitive_root(3, 8) == False
-    assert is_primitive_root(11, 14) == False
+    assert is_primitive_root(2, 7) is False
+    assert is_primitive_root(3, 8) is False
+    assert is_primitive_root(11, 14) is False
     assert is_primitive_root(12, 17) == is_primitive_root(29, 17)
 
-    assert is_quad_residue(3, 7) == False
-    assert is_quad_residue(10, 13) == True
+    assert is_quad_residue(3, 7) is False
+    assert is_quad_residue(10, 13) is True
     assert is_quad_residue(12364, 139) == is_quad_residue(12364 % 139, 139)
-    assert is_quad_residue(207, 251) == True
-    assert is_quad_residue(0, 1) == True
-    assert is_quad_residue(1, 1) == True
-    assert is_quad_residue(0, 2) == is_quad_residue(1, 2) == True
-    assert is_quad_residue(1, 4) == True
-    assert is_quad_residue(2, 27) == False
+    assert is_quad_residue(207, 251) is True
+    assert is_quad_residue(0, 1) is True
+    assert is_quad_residue(1, 1) is True
+    assert is_quad_residue(0, 2) == is_quad_residue(1, 2) is True
+    assert is_quad_residue(1, 4) is True
+    assert is_quad_residue(2, 27) is False
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, lambda: is_quad_residue(1.1, 2))

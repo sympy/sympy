@@ -50,8 +50,8 @@ def test_DMP___eq__():
 
 
 def test_DMP___bool__():
-    assert bool(DMP([[]], ZZ)) == False
-    assert bool(DMP([[1]], ZZ)) == True
+    assert bool(DMP([[]], ZZ)) is False
+    assert bool(DMP([[1]], ZZ)) is True
 
 
 def test_DMP_to_dict():
@@ -65,23 +65,23 @@ def test_DMP_to_dict():
 
 
 def test_DMP_properties():
-    assert DMP([[]], ZZ).is_zero == True
-    assert DMP([[1]], ZZ).is_zero == False
+    assert DMP([[]], ZZ).is_zero is True
+    assert DMP([[1]], ZZ).is_zero is False
 
-    assert DMP([[1]], ZZ).is_one == True
-    assert DMP([[2]], ZZ).is_one == False
+    assert DMP([[1]], ZZ).is_one is True
+    assert DMP([[2]], ZZ).is_one is False
 
-    assert DMP([[1]], ZZ).is_ground == True
-    assert DMP([[1], [2], [1]], ZZ).is_ground == False
+    assert DMP([[1]], ZZ).is_ground is True
+    assert DMP([[1], [2], [1]], ZZ).is_ground is False
 
-    assert DMP([[1], [2, 0], [1, 0]], ZZ).is_sqf == True
-    assert DMP([[1], [2, 0], [1, 0, 0]], ZZ).is_sqf == False
+    assert DMP([[1], [2, 0], [1, 0]], ZZ).is_sqf is True
+    assert DMP([[1], [2, 0], [1, 0, 0]], ZZ).is_sqf is False
 
-    assert DMP([[1, 2], [3]], ZZ).is_monic == True
-    assert DMP([[2, 2], [3]], ZZ).is_monic == False
+    assert DMP([[1, 2], [3]], ZZ).is_monic is True
+    assert DMP([[2, 2], [3]], ZZ).is_monic is False
 
-    assert DMP([[1, 2], [3]], ZZ).is_primitive == True
-    assert DMP([[2, 4], [6]], ZZ).is_primitive == False
+    assert DMP([[1, 2], [3]], ZZ).is_primitive is True
+    assert DMP([[2, 4], [6]], ZZ).is_primitive is False
 
 
 def test_DMP_arithmetics():
@@ -360,18 +360,18 @@ def test_DMF__init__():
 
 
 def test_DMF__bool__():
-    assert bool(DMF([[]], ZZ)) == False
-    assert bool(DMF([[1]], ZZ)) == True
+    assert bool(DMF([[]], ZZ)) is False
+    assert bool(DMF([[1]], ZZ)) is True
 
 
 def test_DMF_properties():
-    assert DMF([[]], ZZ).is_zero == True
-    assert DMF([[]], ZZ).is_one == False
+    assert DMF([[]], ZZ).is_zero is True
+    assert DMF([[]], ZZ).is_one is False
 
-    assert DMF([[1]], ZZ).is_zero == False
-    assert DMF([[1]], ZZ).is_one == True
+    assert DMF([[1]], ZZ).is_zero is False
+    assert DMF([[1]], ZZ).is_one is True
 
-    assert DMF(([[1]], [[2]]), ZZ).is_one == False
+    assert DMF(([[1]], [[2]]), ZZ).is_one is False
 
 
 def test_DMF_arithmetics():
@@ -440,31 +440,31 @@ def test_ANP___eq__():
     a = ANP([QQ(1), QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)
     b = ANP([QQ(1), QQ(1)], [QQ(1), QQ(0), QQ(2)], QQ)
 
-    assert (a == a) == True
-    assert (a != a) == False
+    assert (a == a) is True
+    assert (a != a) is False
 
-    assert (a == b) == False
-    assert (a != b) == True
+    assert (a == b) is False
+    assert (a != b) is True
 
     b = ANP([QQ(1), QQ(2)], [QQ(1), QQ(0), QQ(1)], QQ)
 
-    assert (a == b) == False
-    assert (a != b) == True
+    assert (a == b) is False
+    assert (a != b) is True
 
 
 def test_ANP___bool__():
-    assert bool(ANP([], [QQ(1), QQ(0), QQ(1)], QQ)) == False
-    assert bool(ANP([QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)) == True
+    assert bool(ANP([], [QQ(1), QQ(0), QQ(1)], QQ)) is False
+    assert bool(ANP([QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)) is True
 
 
 def test_ANP_properties():
     mod = [QQ(1), QQ(0), QQ(1)]
 
-    assert ANP([QQ(0)], mod, QQ).is_zero == True
-    assert ANP([QQ(1)], mod, QQ).is_zero == False
+    assert ANP([QQ(0)], mod, QQ).is_zero is True
+    assert ANP([QQ(1)], mod, QQ).is_zero is False
 
-    assert ANP([QQ(1)], mod, QQ).is_one == True
-    assert ANP([QQ(2)], mod, QQ).is_one == False
+    assert ANP([QQ(1)], mod, QQ).is_one is True
+    assert ANP([QQ(2)], mod, QQ).is_one is False
 
 
 def test_ANP_arithmetics():

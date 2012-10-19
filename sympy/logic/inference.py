@@ -92,7 +92,7 @@ def pl_true(expr, model={}):
         result = False
         for arg in args:
             p = pl_true(arg, model)
-            if p == True:
+            if p is True:
                 return True
             if p is None:
                 result = None
@@ -101,7 +101,7 @@ def pl_true(expr, model={}):
         result = True
         for arg in args:
             p = pl_true(arg, model)
-            if p == False:
+            if p is False:
                 return False
             if p is None:
                 result = None

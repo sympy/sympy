@@ -249,156 +249,156 @@ def test_Domain__unify():
 
 
 def test_Domain__contains__():
-    assert (0 in EX) == True
-    assert (0 in ZZ) == True
-    assert (0 in QQ) == True
-    assert (0 in RR) == True
-    assert (0 in ALG) == True
-    assert (0 in ZZ[x, y]) == True
-    assert (0 in QQ[x, y]) == True
-    assert (0 in RR[x, y]) == True
+    assert (0 in EX) is True
+    assert (0 in ZZ) is True
+    assert (0 in QQ) is True
+    assert (0 in RR) is True
+    assert (0 in ALG) is True
+    assert (0 in ZZ[x, y]) is True
+    assert (0 in QQ[x, y]) is True
+    assert (0 in RR[x, y]) is True
 
-    assert (-7 in EX) == True
-    assert (-7 in ZZ) == True
-    assert (-7 in QQ) == True
-    assert (-7 in RR) == True
-    assert (-7 in ALG) == True
-    assert (-7 in ZZ[x, y]) == True
-    assert (-7 in QQ[x, y]) == True
-    assert (-7 in RR[x, y]) == True
+    assert (-7 in EX) is True
+    assert (-7 in ZZ) is True
+    assert (-7 in QQ) is True
+    assert (-7 in RR) is True
+    assert (-7 in ALG) is True
+    assert (-7 in ZZ[x, y]) is True
+    assert (-7 in QQ[x, y]) is True
+    assert (-7 in RR[x, y]) is True
 
-    assert (17 in EX) == True
-    assert (17 in ZZ) == True
-    assert (17 in QQ) == True
-    assert (17 in RR) == True
-    assert (17 in ALG) == True
-    assert (17 in ZZ[x, y]) == True
-    assert (17 in QQ[x, y]) == True
-    assert (17 in RR[x, y]) == True
+    assert (17 in EX) is True
+    assert (17 in ZZ) is True
+    assert (17 in QQ) is True
+    assert (17 in RR) is True
+    assert (17 in ALG) is True
+    assert (17 in ZZ[x, y]) is True
+    assert (17 in QQ[x, y]) is True
+    assert (17 in RR[x, y]) is True
 
-    assert (-S(1)/7 in EX) == True
-    assert (-S(1)/7 in ZZ) == False
-    assert (-S(1)/7 in QQ) == True
-    assert (-S(1)/7 in RR) == True
-    assert (-S(1)/7 in ALG) == True
-    assert (-S(1)/7 in ZZ[x, y]) == False
-    assert (-S(1)/7 in QQ[x, y]) == True
-    assert (-S(1)/7 in RR[x, y]) == True
+    assert (-S(1)/7 in EX) is True
+    assert (-S(1)/7 in ZZ) is False
+    assert (-S(1)/7 in QQ) is True
+    assert (-S(1)/7 in RR) is True
+    assert (-S(1)/7 in ALG) is True
+    assert (-S(1)/7 in ZZ[x, y]) is False
+    assert (-S(1)/7 in QQ[x, y]) is True
+    assert (-S(1)/7 in RR[x, y]) is True
 
-    assert (S(3)/5 in EX) == True
-    assert (S(3)/5 in ZZ) == False
-    assert (S(3)/5 in QQ) == True
-    assert (S(3)/5 in RR) == True
-    assert (S(3)/5 in ALG) == True
-    assert (S(3)/5 in ZZ[x, y]) == False
-    assert (S(3)/5 in QQ[x, y]) == True
-    assert (S(3)/5 in RR[x, y]) == True
+    assert (S(3)/5 in EX) is True
+    assert (S(3)/5 in ZZ) is False
+    assert (S(3)/5 in QQ) is True
+    assert (S(3)/5 in RR) is True
+    assert (S(3)/5 in ALG) is True
+    assert (S(3)/5 in ZZ[x, y]) is False
+    assert (S(3)/5 in QQ[x, y]) is True
+    assert (S(3)/5 in RR[x, y]) is True
 
-    assert (3.0 in EX) == True
-    assert (3.0 in ZZ) == True
-    assert (3.0 in QQ) == True
-    assert (3.0 in RR) == True
-    assert (3.0 in ALG) == True
-    assert (3.0 in ZZ[x, y]) == True
-    assert (3.0 in QQ[x, y]) == True
-    assert (3.0 in RR[x, y]) == True
+    assert (3.0 in EX) is True
+    assert (3.0 in ZZ) is True
+    assert (3.0 in QQ) is True
+    assert (3.0 in RR) is True
+    assert (3.0 in ALG) is True
+    assert (3.0 in ZZ[x, y]) is True
+    assert (3.0 in QQ[x, y]) is True
+    assert (3.0 in RR[x, y]) is True
 
-    assert (3.14 in EX) == True
-    assert (3.14 in ZZ) == False
-    assert (3.14 in QQ) == True
-    assert (3.14 in RR) == True
-    assert (3.14 in ALG) == True
-    assert (3.14 in ZZ[x, y]) == False
-    assert (3.14 in QQ[x, y]) == True
-    assert (3.14 in RR[x, y]) == True
+    assert (3.14 in EX) is True
+    assert (3.14 in ZZ) is False
+    assert (3.14 in QQ) is True
+    assert (3.14 in RR) is True
+    assert (3.14 in ALG) is True
+    assert (3.14 in ZZ[x, y]) is False
+    assert (3.14 in QQ[x, y]) is True
+    assert (3.14 in RR[x, y]) is True
 
-    assert (oo in EX) == True
-    assert (oo in ZZ) == False
-    assert (oo in QQ) == False
-    assert (oo in RR) == False
-    assert (oo in ALG) == False
-    assert (oo in ZZ[x, y]) == False
-    assert (oo in QQ[x, y]) == False
-    assert (oo in RR[x, y]) == False
+    assert (oo in EX) is True
+    assert (oo in ZZ) is False
+    assert (oo in QQ) is False
+    assert (oo in RR) is False
+    assert (oo in ALG) is False
+    assert (oo in ZZ[x, y]) is False
+    assert (oo in QQ[x, y]) is False
+    assert (oo in RR[x, y]) is False
 
-    assert (-oo in EX) == True
-    assert (-oo in ZZ) == False
-    assert (-oo in QQ) == False
-    assert (-oo in RR) == False
-    assert (-oo in ALG) == False
-    assert (-oo in ZZ[x, y]) == False
-    assert (-oo in QQ[x, y]) == False
-    assert (-oo in RR[x, y]) == False
+    assert (-oo in EX) is True
+    assert (-oo in ZZ) is False
+    assert (-oo in QQ) is False
+    assert (-oo in RR) is False
+    assert (-oo in ALG) is False
+    assert (-oo in ZZ[x, y]) is False
+    assert (-oo in QQ[x, y]) is False
+    assert (-oo in RR[x, y]) is False
 
-    assert (sqrt(7) in EX) == True
-    assert (sqrt(7) in ZZ) == False
-    assert (sqrt(7) in QQ) == False
-    assert (sqrt(7) in RR) == True
-    assert (sqrt(7) in ALG) == False
-    assert (sqrt(7) in ZZ[x, y]) == False
-    assert (sqrt(7) in QQ[x, y]) == False
-    assert (sqrt(7) in RR[x, y]) == True
+    assert (sqrt(7) in EX) is True
+    assert (sqrt(7) in ZZ) is False
+    assert (sqrt(7) in QQ) is False
+    assert (sqrt(7) in RR) is True
+    assert (sqrt(7) in ALG) is False
+    assert (sqrt(7) in ZZ[x, y]) is False
+    assert (sqrt(7) in QQ[x, y]) is False
+    assert (sqrt(7) in RR[x, y]) is True
 
-    assert (2*sqrt(3)+1 in EX) == True
-    assert (2*sqrt(3)+1 in ZZ) == False
-    assert (2*sqrt(3)+1 in QQ) == False
-    assert (2*sqrt(3)+1 in RR) == True
-    assert (2*sqrt(3)+1 in ALG) == True
-    assert (2*sqrt(3)+1 in ZZ[x, y]) == False
-    assert (2*sqrt(3)+1 in QQ[x, y]) == False
-    assert (2*sqrt(3)+1 in RR[x, y]) == True
+    assert (2*sqrt(3)+1 in EX) is True
+    assert (2*sqrt(3)+1 in ZZ) is False
+    assert (2*sqrt(3)+1 in QQ) is False
+    assert (2*sqrt(3)+1 in RR) is True
+    assert (2*sqrt(3)+1 in ALG) is True
+    assert (2*sqrt(3)+1 in ZZ[x, y]) is False
+    assert (2*sqrt(3)+1 in QQ[x, y]) is False
+    assert (2*sqrt(3)+1 in RR[x, y]) is True
 
-    assert (sin(1) in EX) == True
-    assert (sin(1) in ZZ) == False
-    assert (sin(1) in QQ) == False
-    assert (sin(1) in RR) == True
-    assert (sin(1) in ALG) == False
-    assert (sin(1) in ZZ[x, y]) == False
-    assert (sin(1) in QQ[x, y]) == False
-    assert (sin(1) in RR[x, y]) == True
+    assert (sin(1) in EX) is True
+    assert (sin(1) in ZZ) is False
+    assert (sin(1) in QQ) is False
+    assert (sin(1) in RR) is True
+    assert (sin(1) in ALG) is False
+    assert (sin(1) in ZZ[x, y]) is False
+    assert (sin(1) in QQ[x, y]) is False
+    assert (sin(1) in RR[x, y]) is True
 
-    assert (x**2 + 1 in EX) == True
-    assert (x**2 + 1 in ZZ) == False
-    assert (x**2 + 1 in QQ) == False
-    assert (x**2 + 1 in RR) == False
-    assert (x**2 + 1 in ALG) == False
-    assert (x**2 + 1 in ZZ[x]) == True
-    assert (x**2 + 1 in QQ[x]) == True
-    assert (x**2 + 1 in RR[x]) == True
-    assert (x**2 + 1 in ZZ[x, y]) == True
-    assert (x**2 + 1 in QQ[x, y]) == True
-    assert (x**2 + 1 in RR[x, y]) == True
+    assert (x**2 + 1 in EX) is True
+    assert (x**2 + 1 in ZZ) is False
+    assert (x**2 + 1 in QQ) is False
+    assert (x**2 + 1 in RR) is False
+    assert (x**2 + 1 in ALG) is False
+    assert (x**2 + 1 in ZZ[x]) is True
+    assert (x**2 + 1 in QQ[x]) is True
+    assert (x**2 + 1 in RR[x]) is True
+    assert (x**2 + 1 in ZZ[x, y]) is True
+    assert (x**2 + 1 in QQ[x, y]) is True
+    assert (x**2 + 1 in RR[x, y]) is True
 
-    assert (x**2 + y**2 in EX) == True
-    assert (x**2 + y**2 in ZZ) == False
-    assert (x**2 + y**2 in QQ) == False
-    assert (x**2 + y**2 in RR) == False
-    assert (x**2 + y**2 in ALG) == False
-    assert (x**2 + y**2 in ZZ[x]) == False
-    assert (x**2 + y**2 in QQ[x]) == False
-    assert (x**2 + y**2 in RR[x]) == False
-    assert (x**2 + y**2 in ZZ[x, y]) == True
-    assert (x**2 + y**2 in QQ[x, y]) == True
-    assert (x**2 + y**2 in RR[x, y]) == True
+    assert (x**2 + y**2 in EX) is True
+    assert (x**2 + y**2 in ZZ) is False
+    assert (x**2 + y**2 in QQ) is False
+    assert (x**2 + y**2 in RR) is False
+    assert (x**2 + y**2 in ALG) is False
+    assert (x**2 + y**2 in ZZ[x]) is False
+    assert (x**2 + y**2 in QQ[x]) is False
+    assert (x**2 + y**2 in RR[x]) is False
+    assert (x**2 + y**2 in ZZ[x, y]) is True
+    assert (x**2 + y**2 in QQ[x, y]) is True
+    assert (x**2 + y**2 in RR[x, y]) is True
 
-    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) == False
+    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
 def test_Domain_get_ring():
-    assert ZZ.has_assoc_Ring == True
-    assert QQ.has_assoc_Ring == True
-    assert ZZ[x].has_assoc_Ring == True
-    assert QQ[x].has_assoc_Ring == True
-    assert ZZ[x, y].has_assoc_Ring == True
-    assert QQ[x, y].has_assoc_Ring == True
-    assert ZZ.frac_field(x).has_assoc_Ring == True
-    assert QQ.frac_field(x).has_assoc_Ring == True
-    assert ZZ.frac_field(x, y).has_assoc_Ring == True
-    assert QQ.frac_field(x, y).has_assoc_Ring == True
+    assert ZZ.has_assoc_Ring is True
+    assert QQ.has_assoc_Ring is True
+    assert ZZ[x].has_assoc_Ring is True
+    assert QQ[x].has_assoc_Ring is True
+    assert ZZ[x, y].has_assoc_Ring is True
+    assert QQ[x, y].has_assoc_Ring is True
+    assert ZZ.frac_field(x).has_assoc_Ring is True
+    assert QQ.frac_field(x).has_assoc_Ring is True
+    assert ZZ.frac_field(x, y).has_assoc_Ring is True
+    assert QQ.frac_field(x, y).has_assoc_Ring is True
 
-    assert EX.has_assoc_Ring == False
-    assert RR.has_assoc_Ring == False
-    assert ALG.has_assoc_Ring == False
+    assert EX.has_assoc_Ring is False
+    assert RR.has_assoc_Ring is False
+    assert ALG.has_assoc_Ring is False
 
     assert ZZ.get_ring() == ZZ
     assert QQ.get_ring() == ZZ
@@ -418,15 +418,15 @@ def test_Domain_get_ring():
 
 
 def test_Domain_get_field():
-    assert EX.has_assoc_Field == True
-    assert ZZ.has_assoc_Field == True
-    assert QQ.has_assoc_Field == True
-    assert RR.has_assoc_Field == False
-    assert ALG.has_assoc_Field == True
-    assert ZZ[x].has_assoc_Field == True
-    assert QQ[x].has_assoc_Field == True
-    assert ZZ[x, y].has_assoc_Field == True
-    assert QQ[x, y].has_assoc_Field == True
+    assert EX.has_assoc_Field is True
+    assert ZZ.has_assoc_Field is True
+    assert QQ.has_assoc_Field is True
+    assert RR.has_assoc_Field is False
+    assert ALG.has_assoc_Field is True
+    assert ZZ[x].has_assoc_Field is True
+    assert QQ[x].has_assoc_Field is True
+    assert ZZ[x, y].has_assoc_Field is True
+    assert QQ[x, y].has_assoc_Field is True
 
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
@@ -495,17 +495,17 @@ def test_Domain_map():
 
 
 def test_Domain___eq__():
-    assert (ZZ[x, y] == ZZ[x, y]) == True
-    assert (QQ[x, y] == QQ[x, y]) == True
+    assert (ZZ[x, y] == ZZ[x, y]) is True
+    assert (QQ[x, y] == QQ[x, y]) is True
 
-    assert (ZZ[x, y] == QQ[x, y]) == False
-    assert (QQ[x, y] == ZZ[x, y]) == False
+    assert (ZZ[x, y] == QQ[x, y]) is False
+    assert (QQ[x, y] == ZZ[x, y]) is False
 
-    assert (ZZ.frac_field(x, y) == ZZ.frac_field(x, y)) == True
-    assert (QQ.frac_field(x, y) == QQ.frac_field(x, y)) == True
+    assert (ZZ.frac_field(x, y) == ZZ.frac_field(x, y)) is True
+    assert (QQ.frac_field(x, y) == QQ.frac_field(x, y)) is True
 
-    assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) == False
-    assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) == False
+    assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
+    assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
 
 
 def test_Domain__algebraic_field():
@@ -813,45 +813,45 @@ def test_ModularInteger():
     a = GF(4)**(-1)
     assert isinstance(a, GF) and a == 4
 
-    assert (GF(1) < GF(2)) == True
-    assert (GF(1) <= GF(2)) == True
-    assert (GF(1) > GF(2)) == False
-    assert (GF(1) >= GF(2)) == False
+    assert (GF(1) < GF(2)) is True
+    assert (GF(1) <= GF(2)) is True
+    assert (GF(1) > GF(2)) is False
+    assert (GF(1) >= GF(2)) is False
 
-    assert (GF(3) < GF(2)) == False
-    assert (GF(3) <= GF(2)) == False
-    assert (GF(3) > GF(2)) == True
-    assert (GF(3) >= GF(2)) == True
+    assert (GF(3) < GF(2)) is False
+    assert (GF(3) <= GF(2)) is False
+    assert (GF(3) > GF(2)) is True
+    assert (GF(3) >= GF(2)) is True
 
-    assert (GF(1) < GF(7)) == True
-    assert (GF(1) <= GF(7)) == True
-    assert (GF(1) > GF(7)) == False
-    assert (GF(1) >= GF(7)) == False
+    assert (GF(1) < GF(7)) is True
+    assert (GF(1) <= GF(7)) is True
+    assert (GF(1) > GF(7)) is False
+    assert (GF(1) >= GF(7)) is False
 
-    assert (GF(3) < GF(7)) == False
-    assert (GF(3) <= GF(7)) == False
-    assert (GF(3) > GF(7)) == True
-    assert (GF(3) >= GF(7)) == True
+    assert (GF(3) < GF(7)) is False
+    assert (GF(3) <= GF(7)) is False
+    assert (GF(3) > GF(7)) is True
+    assert (GF(3) >= GF(7)) is True
 
-    assert (GF(1) < 2) == True
-    assert (GF(1) <= 2) == True
-    assert (GF(1) > 2) == False
-    assert (GF(1) >= 2) == False
+    assert (GF(1) < 2) is True
+    assert (GF(1) <= 2) is True
+    assert (GF(1) > 2) is False
+    assert (GF(1) >= 2) is False
 
-    assert (GF(3) < 2) == False
-    assert (GF(3) <= 2) == False
-    assert (GF(3) > 2) == True
-    assert (GF(3) >= 2) == True
+    assert (GF(3) < 2) is False
+    assert (GF(3) <= 2) is False
+    assert (GF(3) > 2) is True
+    assert (GF(3) >= 2) is True
 
-    assert (GF(1) < 7) == True
-    assert (GF(1) <= 7) == True
-    assert (GF(1) > 7) == False
-    assert (GF(1) >= 7) == False
+    assert (GF(1) < 7) is True
+    assert (GF(1) <= 7) is True
+    assert (GF(1) > 7) is False
+    assert (GF(1) >= 7) is False
 
-    assert (GF(3) < 7) == False
-    assert (GF(3) <= 7) == False
-    assert (GF(3) > 7) == True
-    assert (GF(3) >= 7) == True
+    assert (GF(3) < 7) is False
+    assert (GF(3) <= 7) is False
+    assert (GF(3) > 7) is True
+    assert (GF(3) >= 7) is True
 
     raises(NotInvertible, lambda: GF(0)**(-1))
     raises(NotInvertible, lambda: GF(5)**(-1))

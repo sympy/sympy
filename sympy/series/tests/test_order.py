@@ -185,7 +185,7 @@ def test_issue369():
     Order(z)
 
     assert x.is_positive is None
-    assert y.is_positive == False
+    assert y.is_positive is False
     assert z.is_positive is None
 
     assert x.is_infinitesimal is None

@@ -1539,7 +1539,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             # in the base of a power, if all its terms have a constant
             # symbol in them, e.g. sqrt(2)*(C1 + C2*x) -> C1 + C2*x
             if expr.is_Mul:
-                d = sift(expr.args, lambda m: m.is_number == True)
+                d = sift(expr.args, lambda m: m.is_number is True)
                 num = d[True]
                 other = d[False]
                 con_set = set(constantsymbols)

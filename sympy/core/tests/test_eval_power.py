@@ -231,8 +231,8 @@ def test_issue_3001():
     assert x**1.0 == x
     assert x == x**1.0
     assert True != x**1.0
-    assert x**1.0 != True
-    assert x != True
+    assert x**1.0 is not True
+    assert x is not True
     assert x*y == (x*y)**1.0
     assert (x**1.0)**1.0 == x
     assert (x**1.0)**2.0 == x**2

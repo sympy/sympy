@@ -24,11 +24,11 @@ def test_DiracDelta():
     assert DiracDelta(x).diff(x) == DiracDelta(x, 1)
     assert DiracDelta(x, 1).diff(x) == DiracDelta(x, 2)
 
-    assert DiracDelta(x).is_simple(x) == True
-    assert DiracDelta(3*x).is_simple(x) == True
-    assert DiracDelta(x**2).is_simple(x) == False
-    assert DiracDelta(sqrt(x)).is_simple(x) == False
-    assert DiracDelta(x).is_simple(y) == False
+    assert DiracDelta(x).is_simple(x) is True
+    assert DiracDelta(3*x).is_simple(x) is True
+    assert DiracDelta(x**2).is_simple(x) is False
+    assert DiracDelta(sqrt(x)).is_simple(x) is False
+    assert DiracDelta(x).is_simple(y) is False
 
     assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
     assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)

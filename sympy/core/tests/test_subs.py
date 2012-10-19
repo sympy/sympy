@@ -154,8 +154,8 @@ def test_equality_subs2():
     f = Function('f')
     x = abc.x
     eq = Eq(f(x)**2, 16)
-    assert bool(eq.subs(f(x), 3)) == False
-    assert bool(eq.subs(f(x), 4)) == True
+    assert bool(eq.subs(f(x), 3)) is False
+    assert bool(eq.subs(f(x), 4)) is True
 
 
 def test_issue643():

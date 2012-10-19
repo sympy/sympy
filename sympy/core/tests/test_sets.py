@@ -11,9 +11,9 @@ from sympy.utilities.pytest import raises, XFAIL
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
-    assert Interval(0, oo).right_open == True
+    assert Interval(0, oo).right_open is True
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
-    assert Interval(-oo, 0).left_open == True
+    assert Interval(-oo, 0).left_open is True
 
     assert isinstance(Interval(1, 1), FiniteSet)
 
@@ -98,7 +98,7 @@ def test_union():
 
     raises(TypeError, lambda: Union(1, 2, 3))
 
-    assert X.is_iterable == False
+    assert X.is_iterable is False
 
 
 def test_difference():
@@ -201,7 +201,7 @@ def test_intersection():
     # challenging intervals
     x = Symbol('x', real=True)
     i = Intersection(Interval(0, 3), Interval(x, 6))
-    assert (5 in i) == False
+    assert (5 in i) is False
     raises(TypeError, lambda: 2 in i)
 
     # Singleton special cases
@@ -258,38 +258,38 @@ def test_measure():
 
 
 def test_subset():
-    assert Interval(0, 2).subset(Interval(0, 1)) == True
-    assert Interval(0, 2).subset(Interval(0, 3)) == False
+    assert Interval(0, 2).subset(Interval(0, 1)) is True
+    assert Interval(0, 2).subset(Interval(0, 3)) is False
 
     assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(1, 2))
-    assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(4, 5)) == False
+    assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(4, 5)) is False
     assert Interval(0, 2).subset(FiniteSet(1))
-    assert Interval(0, 2, True, True).subset(FiniteSet(1, 2)) == False
+    assert Interval(0, 2, True, True).subset(FiniteSet(1, 2)) is False
     assert (Interval(0, 2, False, True)+FiniteSet(2, 3)).subset(
             Interval(1, 2)+FiniteSet(3))
 
-    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) == True
+    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) is True
     assert Union(
-        Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) == False
+        Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) is False
 
-    assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) == True
-    assert FiniteSet(1, 2, 3).subset(S.EmptySet) == True
+    assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) is True
+    assert FiniteSet(1, 2, 3).subset(S.EmptySet) is True
 
-    assert S.EmptySet.subset(Interval(0, 1)) == False
-    assert S.EmptySet.subset(S.EmptySet) == True
+    assert S.EmptySet.subset(Interval(0, 1)) is False
+    assert S.EmptySet.subset(S.EmptySet) is True
 
     raises(ValueError, lambda: S.EmptySet.subset(1))
 
 
 def test_contains():
-    assert Interval(0, 2).contains(1) == True
-    assert Interval(0, 2).contains(3) == False
-    assert Interval(0, 2, True, False).contains(0) == False
-    assert Interval(0, 2, True, False).contains(2) == True
-    assert Interval(0, 2, False, True).contains(0) == True
-    assert Interval(0, 2, False, True).contains(2) == False
-    assert Interval(0, 2, True, True).contains(0) == False
-    assert Interval(0, 2, True, True).contains(2) == False
+    assert Interval(0, 2).contains(1) is True
+    assert Interval(0, 2).contains(3) is False
+    assert Interval(0, 2, True, False).contains(0) is False
+    assert Interval(0, 2, True, False).contains(2) is True
+    assert Interval(0, 2, False, True).contains(0) is True
+    assert Interval(0, 2, False, True).contains(2) is False
+    assert Interval(0, 2, True, True).contains(0) is False
+    assert Interval(0, 2, True, True).contains(2) is False
 
     assert FiniteSet(1, 2, 3).contains(2)
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x'))
@@ -299,11 +299,11 @@ def test_contains():
     assert all(item in fset for item in items)
     assert all(fset.contains(item) is True for item in items)
 
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) == True
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
-    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) == False
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) is True
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) is False
+    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is False
 
-    assert S.EmptySet.contains(1) == False
+    assert S.EmptySet.contains(1) is False
 
 
 def test_interval_symbolic():
@@ -340,15 +340,15 @@ def test_is_number():
 
 
 def test_Interval_is_left_unbounded():
-    assert Interval(3, 4).is_left_unbounded == False
-    assert Interval(-oo, 3).is_left_unbounded == True
-    assert Interval(Float("-inf"), 3).is_left_unbounded == True
+    assert Interval(3, 4).is_left_unbounded is False
+    assert Interval(-oo, 3).is_left_unbounded is True
+    assert Interval(Float("-inf"), 3).is_left_unbounded is True
 
 
 def test_Interval_is_right_unbounded():
-    assert Interval(3, 4).is_right_unbounded == False
-    assert Interval(3, oo).is_right_unbounded == True
-    assert Interval(3, Float("+inf")).is_right_unbounded == True
+    assert Interval(3, 4).is_right_unbounded is False
+    assert Interval(3, oo).is_right_unbounded is True
+    assert Interval(3, Float("+inf")).is_right_unbounded is True
 
 
 def test_Interval_as_relational():
@@ -369,7 +369,7 @@ def test_Interval_as_relational():
     assert Interval(-2, oo, left_open=False).as_relational(x) == Le(-2, x)
     assert Interval(-2, oo, left_open=True).as_relational(x) == Lt(-2, x)
 
-    assert Interval(-oo, oo).as_relational(x) == True
+    assert Interval(-oo, oo).as_relational(x) is True
 
 
 def test_Finite_as_relational():
@@ -396,7 +396,7 @@ def test_Intersection_as_relational():
 
 
 def test_EmptySet_as_relational():
-    assert S.EmptySet.as_relational(Symbol('x')) == False
+    assert S.EmptySet.as_relational(Symbol('x')) is False
 
 
 def test_finite_basic():
@@ -493,5 +493,5 @@ def test_supinf():
 def test_universalset():
     U = S.UniversalSet
     x = Symbol('x')
-    assert U.as_relational(x) == True
+    assert U.as_relational(x) is True
     assert U.union(Interval(2, 4)) == U

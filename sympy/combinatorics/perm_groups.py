@@ -2451,7 +2451,7 @@ class PermutationGroup(Basic):
             for b in orb:
                 for gen in gens:
                     temp = gen[b]
-                    if used[temp] == False:
+                    if used[temp] is False:
                         orb.append(temp)
                         used[temp] = True
             return set(orb)
@@ -2556,7 +2556,7 @@ class PermutationGroup(Basic):
         for pair in tr:
             for gen in gens:
                 temp = gen[pair[0]]
-                if used[temp] == False:
+                if used[temp] is False:
                     tr.append((temp, _af_rmul(gen, pair[1])))
                     used[temp] = True
         if pairs:
@@ -3037,7 +3037,7 @@ class PermutationGroup(Basic):
                             _base.append(moved)
                             base_len += 1
                             strong_gens_distr.append([])
-                        if y == False:
+                        if y is False:
                             # if a new strong generator is found, update the
                             # data structures and start over
                             for l in range(i + 1, j):
@@ -3051,11 +3051,11 @@ class PermutationGroup(Basic):
                             i = j - 1
                             # continue main loop using the flag
                             continue_i = True
-                    if continue_i == True:
+                    if continue_i is True:
                         break
-                if continue_i == True:
+                if continue_i is True:
                     break
-            if continue_i == True:
+            if continue_i is True:
                 continue
             i -= 1
         # build the strong generating set

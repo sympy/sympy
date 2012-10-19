@@ -47,7 +47,7 @@ def test_ket():
 
     assert k.label == (Symbol('0'),)
     assert k.hilbert_space == HilbertSpace()
-    assert k.is_commutative == False
+    assert k.is_commutative is False
 
     # Make sure this doesn't get converted to the number pi.
     k = Ket('pi')
@@ -56,7 +56,7 @@ def test_ket():
     k = Ket(x, y)
     assert k.label == (x, y)
     assert k.hilbert_space == HilbertSpace()
-    assert k.is_commutative == False
+    assert k.is_commutative is False
 
     assert k.dual_class() == Bra
     assert k.dual == Bra(x, y)
@@ -81,7 +81,7 @@ def test_bra():
 
     assert b.label == (Symbol('0'),)
     assert b.hilbert_space == HilbertSpace()
-    assert b.is_commutative == False
+    assert b.is_commutative is False
 
     # Make sure this doesn't get converted to the number pi.
     b = Bra('pi')
@@ -90,7 +90,7 @@ def test_bra():
     b = Bra(x, y)
     assert b.label == (x, y)
     assert b.hilbert_space == HilbertSpace()
-    assert b.is_commutative == False
+    assert b.is_commutative is False
 
     assert b.dual_class() == Ket
     assert b.dual == Ket(x, y)
@@ -169,7 +169,7 @@ def test_bra_ket_dagger():
     b = Bra('b')
     assert Dagger(k) == Bra('k')
     assert Dagger(b) == Ket('b')
-    assert Dagger(k).is_commutative == False
+    assert Dagger(k).is_commutative is False
 
     k2 = Ket('k2')
     e = 2*I*k + x*k2
@@ -184,7 +184,7 @@ def test_wavefunction():
     p = f.prob()
     lims = f.limits
 
-    assert f.is_normalized == False
+    assert f.is_normalized is False
     assert f.norm == oo
     assert f(10) == 100
     assert p(10) == 10000
@@ -199,7 +199,7 @@ def test_wavefunction():
 
     assert lims_g[x] == (0, 1)
     assert lims_g[y] == (0, 2)
-    assert g.is_normalized == False
+    assert g.is_normalized is False
     assert g.norm == sqrt(42)/3
     assert g(2, 4) == 0
     assert g(1, 1) == 2
@@ -208,7 +208,7 @@ def test_wavefunction():
     assert conjugate(g) == Dagger(g)
 
     h = Wavefunction(sqrt(5)*x**2, (x, 0, 1))
-    assert h.is_normalized == True
+    assert h.is_normalized is True
     assert h.normalize() == h
     assert conjugate(h) == Wavefunction(conjugate(h.expr), (x, 0, 1))
     assert conjugate(h) == Dagger(h)

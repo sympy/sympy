@@ -461,14 +461,14 @@ def test_LUdecomp():
       (1, 0, 0),
       (2, 3, 0),
     ))
-    assert mL.is_lower == True
-    assert mL.is_upper == False
+    assert mL.is_lower is True
+    assert mL.is_upper is False
     mU = Matrix((
       (1, 2, 3),
       (0, 4, 5),
     ))
-    assert mU.is_lower == False
-    assert mU.is_upper == True
+    assert mU.is_lower is False
+    assert mU.is_upper is True
 
     # test FF LUdecomp
     M = Matrix([[1, 3, 3],
@@ -971,33 +971,33 @@ def test_evalf():
 
 def test_is_symbolic():
     a = Matrix([[x, x], [x, x]])
-    assert a.is_symbolic() == True
+    assert a.is_symbolic() is True
     a = Matrix([[1, 2, 3, 4], [5, 6, 7, 8]])
-    assert a.is_symbolic() == False
+    assert a.is_symbolic() is False
     a = Matrix([[1, 2, 3, 4], [5, 6, x, 8]])
-    assert a.is_symbolic() == True
+    assert a.is_symbolic() is True
     a = Matrix([[1, x, 3]])
-    assert a.is_symbolic() == True
+    assert a.is_symbolic() is True
     a = Matrix([[1, 2, 3]])
-    assert a.is_symbolic() == False
+    assert a.is_symbolic() is False
     a = Matrix([[1], [x], [3]])
-    assert a.is_symbolic() == True
+    assert a.is_symbolic() is True
     a = Matrix([[1], [2], [3]])
-    assert a.is_symbolic() == False
+    assert a.is_symbolic() is False
 
 
 def test_is_upper():
     a = Matrix([[1, 2, 3]])
-    assert a.is_upper == True
+    assert a.is_upper is True
     a = Matrix([[1], [2], [3]])
-    assert a.is_upper == False
+    assert a.is_upper is False
 
 
 def test_is_lower():
     a = Matrix([[1, 2, 3]])
-    assert a.is_lower == False
+    assert a.is_lower is False
     a = Matrix([[1], [2], [3]])
-    assert a.is_lower == True
+    assert a.is_lower is True
 
 
 def test_is_nilpotent():

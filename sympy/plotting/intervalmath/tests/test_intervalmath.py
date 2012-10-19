@@ -49,15 +49,15 @@ def test_interval_add():
     compare = (1 + interval(0, float('inf')) == interval(1, float('inf')))
     assert compare == (True, True)
     a = 1 + interval(2, 5, is_valid=False)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = 1 + interval(2, 5, is_valid=None)
     assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + interval(3, 5, is_valid=None)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(3, 5) + interval(-1, 1, is_valid=None)
     assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + 1
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_interval_sub():
@@ -65,11 +65,11 @@ def test_interval_sub():
     assert (interval(1, 2) - 1 == interval(0, 1)) == (True, True)
     assert (1 - interval(1, 2) == interval(-1, 0)) == (True, True)
     a = 1 - interval(1, 2, is_valid=False)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(1, 4, is_valid=None) - 1
     assert a.is_valid is None
     a = interval(1, 3, is_valid=False) - interval(1, 3)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(1, 3, is_valid=None) - interval(1, 3)
     assert a.is_valid is None
 
@@ -149,7 +149,7 @@ def test_interval_div():
     div = 3 / interval(1, 2, is_valid=None)
     assert div == interval(-float('inf'), float('inf'), is_valid=None)
     a = interval(1, 2) / 0
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(0.5, 1) / interval(-1, 0)
     assert a.is_valid is None
     a = interval(0, 1) / interval(0, 1)
@@ -191,4 +191,4 @@ def test_interval_div():
     a = interval(-4, -0.5) / interval(-2, -0.5) == interval(0.25, 8.0)
     assert a == (True, True)
     a = interval(-5, 5, is_valid=False) / 2
-    assert a.is_valid == False
+    assert a.is_valid is False

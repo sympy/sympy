@@ -534,8 +534,8 @@ def test_Infinity():
     assert oo - nan == nan
     assert -oo - nan == nan
     assert S.Zero * oo == nan
-    assert oo.is_Rational == False
-    assert isinstance(oo, Rational) == False
+    assert oo.is_Rational is False
+    assert isinstance(oo, Rational) is False
 
     assert S.One/oo == 0
     assert -S.One/oo == 0
@@ -608,21 +608,21 @@ def test_NaN():
 
 
 def test_special_numbers():
-    assert isinstance(S.NaN, Number) == True
-    assert isinstance(S.Infinity, Number) == True
-    assert isinstance(S.NegativeInfinity, Number) == True
+    assert isinstance(S.NaN, Number) is True
+    assert isinstance(S.Infinity, Number) is True
+    assert isinstance(S.NegativeInfinity, Number) is True
 
-    assert S.NaN.is_number == True
-    assert S.Infinity.is_number == True
-    assert S.NegativeInfinity.is_number == True
+    assert S.NaN.is_number is True
+    assert S.Infinity.is_number is True
+    assert S.NegativeInfinity.is_number is True
 
-    assert isinstance(S.NaN, Rational) == False
-    assert isinstance(S.Infinity, Rational) == False
-    assert isinstance(S.NegativeInfinity, Rational) == False
+    assert isinstance(S.NaN, Rational) is False
+    assert isinstance(S.Infinity, Rational) is False
+    assert isinstance(S.NegativeInfinity, Rational) is False
 
-    assert S.NaN.is_rational != True
-    assert S.Infinity.is_rational != True
-    assert S.NegativeInfinity.is_rational != True
+    assert S.NaN.is_rational is not True
+    assert S.Infinity.is_rational is not True
+    assert S.NegativeInfinity.is_rational is not True
 
 
 def test_powers():

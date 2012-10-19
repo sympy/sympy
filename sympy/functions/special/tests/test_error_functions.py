@@ -31,8 +31,8 @@ def test_erf():
     assert erf(-x*y) == -erf(x*y)
     assert erf(-x - y) == -erf(x + y)
 
-    assert erf(I).is_real == False
-    assert erf(0).is_real == True
+    assert erf(I).is_real is False
+    assert erf(0).is_real is True
 
     assert conjugate(erf(z)) == erf(conjugate(z))
 

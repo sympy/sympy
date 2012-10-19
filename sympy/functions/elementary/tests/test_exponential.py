@@ -235,7 +235,7 @@ def test_log_assumptions():
     assert log(2-pi-pi*(1/pi-1)).is_zero
     assert log(p).is_zero is None
     assert log(n).is_zero is False
-    assert log(0.5).is_negative == True
+    assert log(0.5).is_negative is True
 
 
 def test_log_hashing():

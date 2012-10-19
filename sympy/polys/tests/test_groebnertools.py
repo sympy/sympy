@@ -445,12 +445,12 @@ def test_is_rewritable_or_comparable():
     B = [lbp(sig((0, 0, 0, 1), 2), [((0, 0, 2, 1), QQ(1, 1)), ((0, 0, 1, 2), QQ(76, 35)), ((0, 0, 0, 3), QQ(13, 7)), ((0, 2, 0, 0), QQ(2, 45)), ((0, 1, 1, 0), QQ(1, 5)), ((0, 1, 0, 1), QQ(5, 63)), ((0, 0, 2, 0), QQ(4, 45)), ((0, 0, 1, 1), QQ(-32, 105)), ((0, 0, 0, 2), QQ(-13, 21))], 6)]
 
     # rewritable:
-    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) is True
 
     p = lbp(sig((0, 1, 1, 0), 2), [], 7)
     B = [lbp(sig((0, 0, 0, 0), 3), [((0, 1, 1, 0), QQ(10, 3)), ((0, 1, 0, 1), QQ(4, 3)), ((0, 0, 2, 0), QQ(4, 1)), ((0, 0, 1, 1), QQ(22, 3)), ((0, 0, 0, 2), QQ(4, 1)), ((0, 1, 0, 0), QQ(-1, 3)), ((0, 0, 1, 0), QQ(-4, 3)), ((0, 0, 0, 1), QQ(-4, 3))], 3)]
     # comparable:
-    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) is True
 
 
 def test_f5_reduce():

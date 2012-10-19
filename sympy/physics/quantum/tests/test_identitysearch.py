@@ -261,48 +261,48 @@ def test_is_scalar_nonsparse_matrix():
 
     id_gate = (IdentityGate(1),)
     actual = is_scalar_nonsparse_matrix(id_gate, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     x0 = X(0)
     xx_circuit = (x0, x0)
     actual = is_scalar_nonsparse_matrix(xx_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     x1 = X(1)
     y1 = Y(1)
     xy_circuit = (x1, y1)
     actual = is_scalar_nonsparse_matrix(xy_circuit, numqubits, id_only)
-    assert actual == False
+    assert actual is False
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
     actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     cnot = CNOT(1, 0)
     cnot_circuit = (cnot, cnot)
     actual = is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     h = H(0)
     hh_circuit = (h, h)
     actual = is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     h1 = H(1)
     xhzh_circuit = (x1, h1, z1, h1)
     actual = is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
     id_only = True
     actual = is_scalar_nonsparse_matrix(xhzh_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
     actual = is_scalar_nonsparse_matrix(xyz_circuit, numqubits, id_only)
-    assert actual == False
+    assert actual is False
     actual = is_scalar_nonsparse_matrix(cnot_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
     actual = is_scalar_nonsparse_matrix(hh_circuit, numqubits, id_only)
-    assert actual == True
+    assert actual is True
 
 
 def test_is_scalar_sparse_matrix():
@@ -318,41 +318,41 @@ def test_is_scalar_sparse_matrix():
     id_only = False
 
     id_gate = (IdentityGate(1),)
-    assert is_scalar_sparse_matrix(id_gate, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(id_gate, numqubits, id_only) is True
 
     x0 = X(0)
     xx_circuit = (x0, x0)
-    assert is_scalar_sparse_matrix(xx_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xx_circuit, numqubits, id_only) is True
 
     x1 = X(1)
     y1 = Y(1)
     xy_circuit = (x1, y1)
-    assert is_scalar_sparse_matrix(xy_circuit, numqubits, id_only) == False
+    assert is_scalar_sparse_matrix(xy_circuit, numqubits, id_only) is False
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
-    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) is True
 
     cnot = CNOT(1, 0)
     cnot_circuit = (cnot, cnot)
-    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) is True
 
     h = H(0)
     hh_circuit = (h, h)
-    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) is True
 
     # NOTE:
     # The elements of the sparse matrix for the following circuit
     # is actually 1.0000000000000002+0.0j.
     h1 = H(1)
     xhzh_circuit = (x1, h1, z1, h1)
-    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) is True
 
     id_only = True
-    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) == True
-    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == False
-    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
-    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xhzh_circuit, numqubits, id_only) is True
+    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) is False
+    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) is True
+    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) is True
 
 
 def test_is_degenerate():
@@ -362,7 +362,7 @@ def test_is_degenerate():
     ids = set([gate_id])
 
     another_id = (z, y, x)
-    assert is_degenerate(ids, another_id) == True
+    assert is_degenerate(ids, another_id) is True
 
 
 def test_is_reducible():
@@ -370,19 +370,19 @@ def test_is_reducible():
     (x, y, z, h) = create_gate_sequence()
 
     circuit = (x, y, y)
-    assert is_reducible(circuit, nqubits, 1, 3) == True
+    assert is_reducible(circuit, nqubits, 1, 3) is True
 
     circuit = (x, y, x)
-    assert is_reducible(circuit, nqubits, 1, 3) == False
+    assert is_reducible(circuit, nqubits, 1, 3) is False
 
     circuit = (x, y, y, x)
-    assert is_reducible(circuit, nqubits, 0, 4) == True
+    assert is_reducible(circuit, nqubits, 0, 4) is True
 
     circuit = (x, y, y, x)
-    assert is_reducible(circuit, nqubits, 1, 3) == True
+    assert is_reducible(circuit, nqubits, 1, 3) is True
 
     circuit = (x, y, z, y, y)
-    assert is_reducible(circuit, nqubits, 1, 5) == True
+    assert is_reducible(circuit, nqubits, 1, 5) is True
 
 
 def test_bfs_identity_search():

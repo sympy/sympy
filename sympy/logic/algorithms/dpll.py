@@ -72,9 +72,9 @@ def dpll(clauses, symbols, model):
     unknown_clauses = []
     for c in clauses:
         val = pl_true(c, model)
-        if val == False:
+        if val is False:
             return False
-        if val != True:
+        if val is not True:
             unknown_clauses.append(c)
     if not unknown_clauses:
         return model

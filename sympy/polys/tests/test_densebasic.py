@@ -281,11 +281,11 @@ def test_dmp_ground_nth():
 
 
 def test_dmp_zero_p():
-    assert dmp_zero_p([], 0) == True
-    assert dmp_zero_p([[]], 1) == True
+    assert dmp_zero_p([], 0) is True
+    assert dmp_zero_p([[]], 1) is True
 
-    assert dmp_zero_p([[[]]], 2) == True
-    assert dmp_zero_p([[[1]]], 2) == False
+    assert dmp_zero_p([[[]]], 2) is True
+    assert dmp_zero_p([[[1]]], 2) is False
 
 
 def test_dmp_zero():
@@ -294,10 +294,10 @@ def test_dmp_zero():
 
 
 def test_dmp_one_p():
-    assert dmp_one_p([1], 0, ZZ) == True
-    assert dmp_one_p([[1]], 1, ZZ) == True
-    assert dmp_one_p([[[1]]], 2, ZZ) == True
-    assert dmp_one_p([[[12]]], 2, ZZ) == False
+    assert dmp_one_p([1], 0, ZZ) is True
+    assert dmp_one_p([[1]], 1, ZZ) is True
+    assert dmp_one_p([[[1]]], 2, ZZ) is True
+    assert dmp_one_p([[[12]]], 2, ZZ) is False
 
 
 def test_dmp_one():
@@ -306,23 +306,23 @@ def test_dmp_one():
 
 
 def test_dmp_ground_p():
-    assert dmp_ground_p([], 0, 0) == True
-    assert dmp_ground_p([[]], 0, 1) == True
-    assert dmp_ground_p([[]], 1, 1) == False
+    assert dmp_ground_p([], 0, 0) is True
+    assert dmp_ground_p([[]], 0, 1) is True
+    assert dmp_ground_p([[]], 1, 1) is False
 
-    assert dmp_ground_p([[ZZ(1)]], 1, 1) == True
-    assert dmp_ground_p([[[ZZ(2)]]], 2, 2) == True
+    assert dmp_ground_p([[ZZ(1)]], 1, 1) is True
+    assert dmp_ground_p([[[ZZ(2)]]], 2, 2) is True
 
-    assert dmp_ground_p([[[ZZ(2)]]], 3, 2) == False
-    assert dmp_ground_p([[[ZZ(3)], []]], 3, 2) == False
+    assert dmp_ground_p([[[ZZ(2)]]], 3, 2) is False
+    assert dmp_ground_p([[[ZZ(3)], []]], 3, 2) is False
 
-    assert dmp_ground_p([], None, 0) == True
-    assert dmp_ground_p([[]], None, 1) == True
+    assert dmp_ground_p([], None, 0) is True
+    assert dmp_ground_p([[]], None, 1) is True
 
-    assert dmp_ground_p([ZZ(1)], None, 0) == True
-    assert dmp_ground_p([[[ZZ(1)]]], None, 2) == True
+    assert dmp_ground_p([ZZ(1)], None, 0) is True
+    assert dmp_ground_p([[[ZZ(1)]]], None, 2) is True
 
-    assert dmp_ground_p([[[ZZ(3)], []]], None, 2) == False
+    assert dmp_ground_p([[[ZZ(3)], []]], None, 2) is False
 
 
 def test_dmp_ground():
@@ -355,15 +355,15 @@ def test_dmp_grounds():
 
 
 def test_dmp_negative_p():
-    assert dmp_negative_p([[[]]], 2, ZZ) == False
-    assert dmp_negative_p([[[1], [2]]], 2, ZZ) == False
-    assert dmp_negative_p([[[-1], [2]]], 2, ZZ) == True
+    assert dmp_negative_p([[[]]], 2, ZZ) is False
+    assert dmp_negative_p([[[1], [2]]], 2, ZZ) is False
+    assert dmp_negative_p([[[-1], [2]]], 2, ZZ) is True
 
 
 def test_dmp_positive_p():
-    assert dmp_positive_p([[[]]], 2, ZZ) == False
-    assert dmp_positive_p([[[1], [2]]], 2, ZZ) == True
-    assert dmp_positive_p([[[-1], [2]]], 2, ZZ) == False
+    assert dmp_positive_p([[[]]], 2, ZZ) is False
+    assert dmp_positive_p([[[1], [2]]], 2, ZZ) is True
+    assert dmp_positive_p([[[-1], [2]]], 2, ZZ) is False
 
 
 def test_dup_from_to_dict():

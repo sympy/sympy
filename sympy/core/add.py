@@ -425,7 +425,7 @@ class Add(AssocOp):
         'is_commutative')
 
     def _eval_is_odd(self):
-        l = [f for f in self.args if not (f.is_even==True)]
+        l = [f for f in self.args if not (f.is_even is True)]
         if not l:
             return False
         if l[0].is_odd:

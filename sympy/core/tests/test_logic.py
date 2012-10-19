@@ -47,8 +47,8 @@ def test_logic_cmp():
 
 
 def test_logic_onearg():
-    assert And() == True
-    assert Or() == False
+    assert And() is True
+    assert Or() is False
 
     assert And(T) == T
     assert And(F) == F

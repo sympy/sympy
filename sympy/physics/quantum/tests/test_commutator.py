@@ -11,7 +11,7 @@ A, B, C, D = symbols('A,B,C,D', commutative=False)
 
 def test_commutator():
     c = Comm(A, B)
-    assert c.is_commutative == False
+    assert c.is_commutative is False
     assert isinstance(c, Comm)
     assert c.subs(A, C) == Comm(C, B)
 

@@ -103,40 +103,40 @@ def test_dup_zz_irreducible_p():
     assert dup_zz_irreducible_p([3, 2, 6, 8, 7], ZZ) is None
     assert dup_zz_irreducible_p([3, 2, 6, 8, 4], ZZ) is None
 
-    assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
-    assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
+    assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) is True
+    assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) is True
 
 
 def test_dup_cyclotomic_p():
-    assert dup_cyclotomic_p(ZZ.map([1, -1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 1, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 0, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, -1, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1, 1, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 0, 1]), ZZ) == True
-    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 1, 0, 0, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, -1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, -1, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1, 1, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 0, 1]), ZZ) is True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 1, 0, 0, 1]), ZZ) is True
 
-    assert dup_cyclotomic_p(ZZ.map([]), ZZ) == False
-    assert dup_cyclotomic_p(ZZ.map([1]), ZZ) == False
-    assert dup_cyclotomic_p(ZZ.map([1, 0]), ZZ) == False
-    assert dup_cyclotomic_p(ZZ.map([1, 2]), ZZ) == False
-    assert dup_cyclotomic_p(ZZ.map([3, 1]), ZZ) == False
-    assert dup_cyclotomic_p(ZZ.map([1, 0, -1]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([]), ZZ) is False
+    assert dup_cyclotomic_p(ZZ.map([1]), ZZ) is False
+    assert dup_cyclotomic_p(ZZ.map([1, 0]), ZZ) is False
+    assert dup_cyclotomic_p(ZZ.map([1, 2]), ZZ) is False
+    assert dup_cyclotomic_p(ZZ.map([3, 1]), ZZ) is False
+    assert dup_cyclotomic_p(ZZ.map([1, 0, -1]), ZZ) is False
 
     f = ZZ.map([1, 0, 1, 0, 0, 0, -1, 0, 1, 0, -1, 0, 0, 0, 1, 0, 1])
-    assert dup_cyclotomic_p(f, ZZ) == False
+    assert dup_cyclotomic_p(f, ZZ) is False
 
     g = ZZ.map([1, 0, 1, 0, 0, 0, -1, 0, -1, 0, -1, 0, 0, 0, 1, 0, 1])
-    assert dup_cyclotomic_p(g, ZZ) == True
+    assert dup_cyclotomic_p(g, ZZ) is True
 
-    assert dup_cyclotomic_p([QQ(1), QQ(1), QQ(1)], QQ) == True
-    assert dup_cyclotomic_p([QQ(1, 2), QQ(1), QQ(1)], QQ) == False
+    assert dup_cyclotomic_p([QQ(1), QQ(1), QQ(1)], QQ) is True
+    assert dup_cyclotomic_p([QQ(1, 2), QQ(1), QQ(1)], QQ) is False
 
     K = ZZ['y']
 
-    assert dup_cyclotomic_p([K([ZZ(1)]), K([ZZ(1)]), K([ZZ(1)])], K) == False
+    assert dup_cyclotomic_p([K([ZZ(1)]), K([ZZ(1)]), K([ZZ(1)])], K) is False
 
 
 def test_dup_zz_cyclotomic_poly():
@@ -769,10 +769,10 @@ def test_dmp_factor_list():
 
 
 def test_dup_irreducible_p():
-    assert dup_irreducible_p([ZZ(1), ZZ(1), ZZ(1)], ZZ) == True
-    assert dup_irreducible_p([ZZ(1), ZZ(2), ZZ(1)], ZZ) == False
+    assert dup_irreducible_p([ZZ(1), ZZ(1), ZZ(1)], ZZ) is True
+    assert dup_irreducible_p([ZZ(1), ZZ(2), ZZ(1)], ZZ) is False
 
 
 def test_dmp_irreducible_p():
-    assert dmp_irreducible_p([[ZZ(1)], [ZZ(1)], [ZZ(1)]], 1, ZZ) == True
-    assert dmp_irreducible_p([[ZZ(1)], [ZZ(2)], [ZZ(1)]], 1, ZZ) == False
+    assert dmp_irreducible_p([[ZZ(1)], [ZZ(1)], [ZZ(1)]], 1, ZZ) is True
+    assert dmp_irreducible_p([[ZZ(1)], [ZZ(2)], [ZZ(1)]], 1, ZZ) is False

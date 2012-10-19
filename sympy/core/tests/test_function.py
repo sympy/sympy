@@ -213,25 +213,25 @@ def test_expand_function():
 
 
 def test_function_comparable():
-    assert sin(x).is_comparable == False
-    assert cos(x).is_comparable == False
+    assert sin(x).is_comparable is False
+    assert cos(x).is_comparable is False
 
-    assert sin(Float('0.1')).is_comparable == True
-    assert cos(Float('0.1')).is_comparable == True
+    assert sin(Float('0.1')).is_comparable is True
+    assert cos(Float('0.1')).is_comparable is True
 
-    assert sin(E).is_comparable == True
-    assert cos(E).is_comparable == True
+    assert sin(E).is_comparable is True
+    assert cos(E).is_comparable is True
 
-    assert sin(Rational(1, 3)).is_comparable == True
-    assert cos(Rational(1, 3)).is_comparable == True
+    assert sin(Rational(1, 3)).is_comparable is True
+    assert cos(Rational(1, 3)).is_comparable is True
 
 
 @XFAIL
 def test_function_comparable_infinities():
-    assert sin(oo).is_comparable == False
-    assert sin(-oo).is_comparable == False
-    assert sin(zoo).is_comparable == False
-    assert sin(nan).is_comparable == False
+    assert sin(oo).is_comparable is False
+    assert sin(-oo).is_comparable is False
+    assert sin(zoo).is_comparable is False
+    assert sin(nan).is_comparable is False
 
 
 def test_deriv1():
@@ -303,10 +303,10 @@ def test_extensibility_eval():
 
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
-    assert f(x).is_commutative == False
-    assert sin(x).is_commutative == False
-    assert exp(x).is_commutative == False
-    assert log(x).is_commutative == False
+    assert f(x).is_commutative is False
+    assert sin(x).is_commutative is False
+    assert exp(x).is_commutative is False
+    assert log(x).is_commutative is False
 
 
 def test_function__eval_nseries():
@@ -413,11 +413,11 @@ def test_deriv_wrt_function():
 
 
 def test_diff_wrt_value():
-    assert Expr()._diff_wrt == False
-    assert x._diff_wrt == True
-    assert f(x)._diff_wrt == True
-    assert Derivative(f(x), x)._diff_wrt == True
-    assert Derivative(x**2, x)._diff_wrt == False
+    assert Expr()._diff_wrt is False
+    assert x._diff_wrt is True
+    assert f(x)._diff_wrt is True
+    assert Derivative(f(x), x)._diff_wrt is True
+    assert Derivative(x**2, x)._diff_wrt is False
 
 
 def test_diff_wrt():

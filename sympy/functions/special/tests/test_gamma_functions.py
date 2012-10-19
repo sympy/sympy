@@ -61,8 +61,8 @@ def test_gamma():
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
 
-    assert gamma(3*exp_polar(I*pi)/4).is_nonnegative == False
-    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive == True
+    assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
+    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
 
 
 def test_gamma_series():

@@ -74,9 +74,9 @@ def test_reduce_poly_inequalities_real_relational():
     assert reduce_poly_inequalities(
         [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
     assert reduce_poly_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) == False
+        [[Lt(x**2, 0)]], x, relational=True) is False
     assert reduce_poly_inequalities(
-        [[Ge(x**2, 0)]], x, relational=True) == True
+        [[Ge(x**2, 0)]], x, relational=True) is True
     assert reduce_poly_inequalities(
         [[Gt(x**2, 0)]], x, relational=True) == Or(Lt(x, 0), Lt(0, x))
     assert reduce_poly_inequalities(
@@ -118,7 +118,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_poly_inequalities(
         [[Le(x**2, 0)]], x, relational=True) == And(Eq(re(x), 0), cond)
     assert reduce_poly_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) == False
+        [[Lt(x**2, 0)]], x, relational=True) is False
     assert reduce_poly_inequalities(
         [[Ge(x**2, 0)]], x, relational=True) == cond
     assert reduce_poly_inequalities([[Gt(x**2, 0)]], x, relational=True) == And(Or(Lt(re(x), 0), Lt(0, re(x))), cond)
@@ -156,7 +156,7 @@ def test_reduce_abs_inequalities():
 def test_reduce_inequalities_boolean():
     assert reduce_inequalities(
         [Eq(x**2, 0), True]) == And(Eq(re(x), 0), Eq(im(x), 0))
-    assert reduce_inequalities([Eq(x**2, 0), False]) == False
+    assert reduce_inequalities([Eq(x**2, 0), False]) is False
 
 
 def test_reduce_inequalities_assume():

@@ -446,7 +446,7 @@ class Function(Application, Expr):
                 supported.'''))
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
-        if any(t.is_bounded == False for t in args0):
+        if any(t.is_bounded is False for t in args0):
             from sympy import oo, zoo, nan
             # XXX could use t.as_leading_term(x) here but it's a little
             # slower

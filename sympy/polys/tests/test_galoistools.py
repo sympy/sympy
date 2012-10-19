@@ -433,35 +433,35 @@ def test_gf_trace_map():
 
 
 def test_gf_irreducible():
-    assert gf_irreducible_p(gf_irreducible(1, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(2, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(3, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(4, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(5, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(6, 11, ZZ), 11, ZZ) == True
-    assert gf_irreducible_p(gf_irreducible(7, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(1, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(2, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(3, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(4, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(5, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(6, 11, ZZ), 11, ZZ) is True
+    assert gf_irreducible_p(gf_irreducible(7, 11, ZZ), 11, ZZ) is True
 
 
 def test_gf_irreducible_p():
-    assert gf_irred_p_ben_or(ZZ.map([7]), 11, ZZ) == True
-    assert gf_irred_p_ben_or(ZZ.map([7, 3]), 11, ZZ) == True
-    assert gf_irred_p_ben_or(ZZ.map([7, 3, 1]), 11, ZZ) == False
+    assert gf_irred_p_ben_or(ZZ.map([7]), 11, ZZ) is True
+    assert gf_irred_p_ben_or(ZZ.map([7, 3]), 11, ZZ) is True
+    assert gf_irred_p_ben_or(ZZ.map([7, 3, 1]), 11, ZZ) is False
 
-    assert gf_irred_p_rabin(ZZ.map([7]), 11, ZZ) == True
-    assert gf_irred_p_rabin(ZZ.map([7, 3]), 11, ZZ) == True
-    assert gf_irred_p_rabin(ZZ.map([7, 3, 1]), 11, ZZ) == False
+    assert gf_irred_p_rabin(ZZ.map([7]), 11, ZZ) is True
+    assert gf_irred_p_rabin(ZZ.map([7, 3]), 11, ZZ) is True
+    assert gf_irred_p_rabin(ZZ.map([7, 3, 1]), 11, ZZ) is False
 
     config.setup('GF_IRRED_METHOD', 'ben-or')
 
-    assert gf_irreducible_p(ZZ.map([7]), 11, ZZ) == True
-    assert gf_irreducible_p(ZZ.map([7, 3]), 11, ZZ) == True
-    assert gf_irreducible_p(ZZ.map([7, 3, 1]), 11, ZZ) == False
+    assert gf_irreducible_p(ZZ.map([7]), 11, ZZ) is True
+    assert gf_irreducible_p(ZZ.map([7, 3]), 11, ZZ) is True
+    assert gf_irreducible_p(ZZ.map([7, 3, 1]), 11, ZZ) is False
 
     config.setup('GF_IRRED_METHOD', 'rabin')
 
-    assert gf_irreducible_p(ZZ.map([7]), 11, ZZ) == True
-    assert gf_irreducible_p(ZZ.map([7, 3]), 11, ZZ) == True
-    assert gf_irreducible_p(ZZ.map([7, 3, 1]), 11, ZZ) == False
+    assert gf_irreducible_p(ZZ.map([7]), 11, ZZ) is True
+    assert gf_irreducible_p(ZZ.map([7, 3]), 11, ZZ) is True
+    assert gf_irreducible_p(ZZ.map([7, 3, 1]), 11, ZZ) is False
 
     config.setup('GF_IRRED_METHOD', 'other')
     raises(KeyError, lambda: gf_irreducible_p([7], 11, ZZ))
@@ -472,15 +472,15 @@ def test_gf_irreducible_p():
 
     h = gf_mul(f, g, 17, ZZ)
 
-    assert gf_irred_p_ben_or(f, 17, ZZ) == True
-    assert gf_irred_p_ben_or(g, 17, ZZ) == True
+    assert gf_irred_p_ben_or(f, 17, ZZ) is True
+    assert gf_irred_p_ben_or(g, 17, ZZ) is True
 
-    assert gf_irred_p_ben_or(h, 17, ZZ) == False
+    assert gf_irred_p_ben_or(h, 17, ZZ) is False
 
-    assert gf_irred_p_rabin(f, 17, ZZ) == True
-    assert gf_irred_p_rabin(g, 17, ZZ) == True
+    assert gf_irred_p_rabin(f, 17, ZZ) is True
+    assert gf_irred_p_rabin(g, 17, ZZ) is True
 
-    assert gf_irred_p_rabin(h, 17, ZZ) == False
+    assert gf_irred_p_rabin(h, 17, ZZ) is False
 
 
 def test_gf_squarefree():
@@ -488,20 +488,20 @@ def test_gf_squarefree():
     assert gf_sqf_list([1], 11, ZZ) == (1, [])
     assert gf_sqf_list([1, 1], 11, ZZ) == (1, [([1, 1], 1)])
 
-    assert gf_sqf_p([], 11, ZZ) == True
-    assert gf_sqf_p([1], 11, ZZ) == True
-    assert gf_sqf_p([1, 1], 11, ZZ) == True
+    assert gf_sqf_p([], 11, ZZ) is True
+    assert gf_sqf_p([1], 11, ZZ) is True
+    assert gf_sqf_p([1, 1], 11, ZZ) is True
 
     f = gf_from_dict({11: 1, 0: 1}, 11, ZZ)
 
-    assert gf_sqf_p(f, 11, ZZ) == False
+    assert gf_sqf_p(f, 11, ZZ) is False
 
     assert gf_sqf_list(f, 11, ZZ) == \
        (1, [([1, 1], 11)])
 
     f = [1, 5, 8, 4]
 
-    assert gf_sqf_p(f, 11, ZZ) == False
+    assert gf_sqf_p(f, 11, ZZ) is False
 
     assert gf_sqf_list(f, 11, ZZ) == \
         (1, [([1, 1], 1),
@@ -771,7 +771,7 @@ def test_gf_factor():
     p = ZZ(nextprime(int((2**15 * pi).evalf())))
     f = gf_from_dict({15: 1, 1: 1, 0: 1}, p, ZZ)
 
-    assert gf_sqf_p(f, p, ZZ) == True
+    assert gf_sqf_p(f, p, ZZ) is True
 
     g = (1, [([1, 22730, 68144], 1),
              ([1, 81553, 77449, 86810, 4724], 1),
@@ -801,7 +801,7 @@ def test_gf_factor():
     p = ZZ(nextprime(int((2**4 * pi).evalf())))
     f = ZZ.map([1, 2, 5, 26, 41, 39, 38])
 
-    assert gf_sqf_p(f, p, ZZ) == True
+    assert gf_sqf_p(f, p, ZZ) is True
 
     g = (1, [([1, 44, 26], 1),
              ([1, 11, 25, 18, 30], 1)])

@@ -361,10 +361,10 @@ def test_piecewise_complex():
     assert conjugate(p2) == piecewise_fold(-p2)
     assert conjugate(p3) == p4
 
-    assert p1.is_imaginary == False
-    assert p1.is_real == True
-    assert p2.is_imaginary == True
-    assert p2.is_real == False
+    assert p1.is_imaginary is False
+    assert p1.is_real is True
+    assert p2.is_imaginary is True
+    assert p2.is_real is False
     assert p3.is_imaginary is None
     assert p3.is_real is None
 

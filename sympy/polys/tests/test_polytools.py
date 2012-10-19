@@ -497,69 +497,69 @@ def test_PurePoly_free_symbols():
 
 
 def test_Poly__eq__():
-    assert (Poly(x, x) == Poly(x, x)) == True
-    assert (Poly(x, x, domain=QQ) == Poly(x, x)) == True
-    assert (Poly(x, x) == Poly(x, x, domain=QQ)) == True
+    assert (Poly(x, x) == Poly(x, x)) is True
+    assert (Poly(x, x, domain=QQ) == Poly(x, x)) is True
+    assert (Poly(x, x) == Poly(x, x, domain=QQ)) is True
 
-    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) == True
-    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) == True
+    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) is True
+    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) is True
 
-    assert (Poly(x*y, x, y) == Poly(x, x)) == False
+    assert (Poly(x*y, x, y) == Poly(x, x)) is False
 
-    assert (Poly(x, x, y) == Poly(x, x)) == False
-    assert (Poly(x, x) == Poly(x, x, y)) == False
+    assert (Poly(x, x, y) == Poly(x, x)) is False
+    assert (Poly(x, x) == Poly(x, x, y)) is False
 
-    assert (Poly(x**2 + 1, x) == Poly(y**2 + 1, y)) == False
-    assert (Poly(y**2 + 1, y) == Poly(x**2 + 1, x)) == False
+    assert (Poly(x**2 + 1, x) == Poly(y**2 + 1, y)) is False
+    assert (Poly(y**2 + 1, y) == Poly(x**2 + 1, x)) is False
 
     f = Poly(x, x, domain=ZZ)
     g = Poly(x, x, domain=QQ)
 
-    assert f.eq(g) == True
-    assert f.ne(g) == False
+    assert f.eq(g) is True
+    assert f.ne(g) is False
 
-    assert f.eq(g, strict=True) == False
-    assert f.ne(g, strict=True) == True
+    assert f.eq(g, strict=True) is False
+    assert f.ne(g, strict=True) is True
 
 
 def test_PurePoly__eq__():
-    assert (PurePoly(x, x) == PurePoly(x, x)) == True
-    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) == True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) == True
+    assert (PurePoly(x, x) == PurePoly(x, x)) is True
+    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) is True
 
-    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) == True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) == True
+    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) is True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) is True
 
-    assert (PurePoly(x*y, x, y) == PurePoly(x, x)) == False
+    assert (PurePoly(x*y, x, y) == PurePoly(x, x)) is False
 
-    assert (PurePoly(x, x, y) == PurePoly(x, x)) == False
-    assert (PurePoly(x, x) == PurePoly(x, x, y)) == False
+    assert (PurePoly(x, x, y) == PurePoly(x, x)) is False
+    assert (PurePoly(x, x) == PurePoly(x, x, y)) is False
 
-    assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) == True
-    assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) == True
+    assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) is True
+    assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) is True
 
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(x, x, domain=QQ)
 
-    assert f.eq(g) == True
-    assert f.ne(g) == False
+    assert f.eq(g) is True
+    assert f.ne(g) is False
 
-    assert f.eq(g, strict=True) == False
-    assert f.ne(g, strict=True) == True
+    assert f.eq(g, strict=True) is False
+    assert f.ne(g, strict=True) is True
 
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(y, y, domain=QQ)
 
-    assert f.eq(g) == True
-    assert f.ne(g) == False
+    assert f.eq(g) is True
+    assert f.ne(g) is False
 
-    assert f.eq(g, strict=True) == False
-    assert f.ne(g, strict=True) == True
+    assert f.eq(g, strict=True) is False
+    assert f.ne(g, strict=True) is True
 
 
 def test_PurePoly_Poly():
-    assert isinstance(PurePoly(Poly(x**2 + 1)), PurePoly) == True
-    assert isinstance(Poly(PurePoly(x**2 + 1)), Poly) == True
+    assert isinstance(PurePoly(Poly(x**2 + 1)), PurePoly) is True
+    assert isinstance(Poly(PurePoly(x**2 + 1)), Poly) is True
 
 
 def test_Poly_get_domain():
@@ -727,88 +727,88 @@ def test_Poly_divmod():
 
 
 def test_Poly_eq_ne():
-    assert (Poly(x+y, x, y) == Poly(x+y, x, y)) == True
-    assert (Poly(x+y, x) == Poly(x+y, x, y)) == False
-    assert (Poly(x+y, x, y) == Poly(x+y, x)) == False
-    assert (Poly(x+y, x) == Poly(x+y, x)) == True
-    assert (Poly(x+y, y) == Poly(x+y, y)) == True
+    assert (Poly(x+y, x, y) == Poly(x+y, x, y)) is True
+    assert (Poly(x+y, x) == Poly(x+y, x, y)) is False
+    assert (Poly(x+y, x, y) == Poly(x+y, x)) is False
+    assert (Poly(x+y, x) == Poly(x+y, x)) is True
+    assert (Poly(x+y, y) == Poly(x+y, y)) is True
 
-    assert (Poly(x+y, x, y) == x+y) == True
-    assert (Poly(x+y, x) == x+y) == True
-    assert (Poly(x+y, x, y) == x+y) == True
-    assert (Poly(x+y, x) == x+y) == True
-    assert (Poly(x+y, y) == x+y) == True
+    assert (Poly(x+y, x, y) == x+y) is True
+    assert (Poly(x+y, x) == x+y) is True
+    assert (Poly(x+y, x, y) == x+y) is True
+    assert (Poly(x+y, x) == x+y) is True
+    assert (Poly(x+y, y) == x+y) is True
 
-    assert (Poly(x+y, x, y) != Poly(x+y, x, y)) == False
-    assert (Poly(x+y, x) != Poly(x+y, x, y)) == True
-    assert (Poly(x+y, x, y) != Poly(x+y, x)) == True
-    assert (Poly(x+y, x) != Poly(x+y, x)) == False
-    assert (Poly(x+y, y) != Poly(x+y, y)) == False
+    assert (Poly(x+y, x, y) != Poly(x+y, x, y)) is False
+    assert (Poly(x+y, x) != Poly(x+y, x, y)) is True
+    assert (Poly(x+y, x, y) != Poly(x+y, x)) is True
+    assert (Poly(x+y, x) != Poly(x+y, x)) is False
+    assert (Poly(x+y, y) != Poly(x+y, y)) is False
 
-    assert (Poly(x+y, x, y) != x+y) == False
-    assert (Poly(x+y, x) != x+y) == False
-    assert (Poly(x+y, x, y) != x+y) == False
-    assert (Poly(x+y, x) != x+y) == False
-    assert (Poly(x+y, y) != x+y) == False
+    assert (Poly(x+y, x, y) != x+y) is False
+    assert (Poly(x+y, x) != x+y) is False
+    assert (Poly(x+y, x, y) != x+y) is False
+    assert (Poly(x+y, x) != x+y) is False
+    assert (Poly(x+y, y) != x+y) is False
 
-    assert (Poly(x, x) == sin(x)) == False
-    assert (Poly(x, x) != sin(x)) == True
+    assert (Poly(x, x) == sin(x)) is False
+    assert (Poly(x, x) != sin(x)) is True
 
 
 def test_Poly_nonzero():
-    assert not bool(Poly(0, x)) == True
-    assert not bool(Poly(1, x)) == False
+    assert not bool(Poly(0, x)) is True
+    assert not bool(Poly(1, x)) is False
 
 
 def test_Poly_properties():
-    assert Poly(0, x).is_zero == True
-    assert Poly(1, x).is_zero == False
+    assert Poly(0, x).is_zero is True
+    assert Poly(1, x).is_zero is False
 
-    assert Poly(1, x).is_one == True
-    assert Poly(2, x).is_one == False
+    assert Poly(1, x).is_one is True
+    assert Poly(2, x).is_one is False
 
-    assert Poly(x-1, x).is_sqf == True
-    assert Poly((x-1)**2, x).is_sqf == False
+    assert Poly(x-1, x).is_sqf is True
+    assert Poly((x-1)**2, x).is_sqf is False
 
-    assert Poly(x-1, x).is_monic == True
-    assert Poly(2*x-1, x).is_monic == False
+    assert Poly(x-1, x).is_monic is True
+    assert Poly(2*x-1, x).is_monic is False
 
-    assert Poly(3*x+2, x).is_primitive == True
-    assert Poly(4*x+2, x).is_primitive == False
+    assert Poly(3*x+2, x).is_primitive is True
+    assert Poly(4*x+2, x).is_primitive is False
 
-    assert Poly(1, x).is_ground == True
-    assert Poly(x, x).is_ground == False
+    assert Poly(1, x).is_ground is True
+    assert Poly(x, x).is_ground is False
 
-    assert Poly(x+y+z+1).is_linear == True
-    assert Poly(x*y*z+1).is_linear == False
+    assert Poly(x+y+z+1).is_linear is True
+    assert Poly(x*y*z+1).is_linear is False
 
-    assert Poly(x*y+z+1).is_quadratic == True
-    assert Poly(x*y*z+1).is_quadratic == False
+    assert Poly(x*y+z+1).is_quadratic is True
+    assert Poly(x*y*z+1).is_quadratic is False
 
-    assert Poly(x*y).is_monomial == True
-    assert Poly(x*y+1).is_monomial == False
+    assert Poly(x*y).is_monomial is True
+    assert Poly(x*y+1).is_monomial is False
 
-    assert Poly(x**2 + x*y).is_homogeneous == True
-    assert Poly(x**3 + x*y).is_homogeneous == False
+    assert Poly(x**2 + x*y).is_homogeneous is True
+    assert Poly(x**3 + x*y).is_homogeneous is False
 
-    assert Poly(x).is_univariate == True
-    assert Poly(x*y).is_univariate == False
+    assert Poly(x).is_univariate is True
+    assert Poly(x*y).is_univariate is False
 
-    assert Poly(x*y).is_multivariate == True
-    assert Poly(x).is_multivariate == False
+    assert Poly(x*y).is_multivariate is True
+    assert Poly(x).is_multivariate is False
 
     assert Poly(
-        x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
+        x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic is False
     assert Poly(
-        x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
+        x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic is True
 
 
 def test_Poly_is_irreducible():
-    assert Poly(x**2 + x + 1).is_irreducible == True
-    assert Poly(x**2 + 2*x + 1).is_irreducible == False
+    assert Poly(x**2 + x + 1).is_irreducible is True
+    assert Poly(x**2 + 2*x + 1).is_irreducible is False
 
-    assert Poly(7*x + 3, modulus=11).is_irreducible == True
-    assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
+    assert Poly(7*x + 3, modulus=11).is_irreducible is True
+    assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible is False
 
 
 def test_Poly_subs():
@@ -867,8 +867,8 @@ def test_Poly_ltrim():
 
 
 def test_Poly_has_only_gens():
-    assert Poly(x*y + 1, x, y, z).has_only_gens(x, y) == True
-    assert Poly(x*y + z, x, y, z).has_only_gens(x, y) == False
+    assert Poly(x*y + 1, x, y, z).has_only_gens(x, y) is True
+    assert Poly(x*y + z, x, y, z).has_only_gens(x, y) is False
 
     raises(GeneratorsError, lambda: Poly(x*y**2 + y**2, x, y).has_only_gens(t))
 
@@ -2221,7 +2221,7 @@ def test_factor():
     i = Symbol('i', integer=True)
     r = Symbol('r', real=True)
 
-    assert factor(sqrt(x*y)).is_Pow == True
+    assert factor(sqrt(x*y)).is_Pow is True
 
     assert factor(sqrt(3*x**2 - 3)) == sqrt(3)*sqrt((x - 1)*(x + 1))
     assert factor(sqrt(3*x**2 + 3)) == sqrt(3)*sqrt(x**2 + 1)
@@ -2306,9 +2306,9 @@ def test_factor():
         [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
 
     assert not isinstance(
-        Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
+        Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) is True
     assert isinstance(
-        PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
+        PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) is True
 
     assert factor(sqrt(-x)) == sqrt(-x)
 
@@ -2795,8 +2795,8 @@ def test_reduced():
     assert reduced(f, G, auto=False)[1] != 0
     assert G.reduce(f, auto=False)[1] != 0
 
-    assert G.contains(f) == True
-    assert G.contains(f + 1) == False
+    assert G.contains(f) is True
+    assert G.contains(f + 1) is False
 
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, lambda: reduced(1, [1]))
@@ -2890,17 +2890,17 @@ def test_fglm():
 
 
 def test_is_zero_dimensional():
-    assert is_zero_dimensional([x, y], x, y) == True
-    assert is_zero_dimensional([x**3 + y**2], x, y) == False
+    assert is_zero_dimensional([x, y], x, y) is True
+    assert is_zero_dimensional([x**3 + y**2], x, y) is False
 
-    assert is_zero_dimensional([x, y, z], x, y, z) == True
-    assert is_zero_dimensional([x, y, z], x, y, z, t) == False
+    assert is_zero_dimensional([x, y, z], x, y, z) is True
+    assert is_zero_dimensional([x, y, z], x, y, z, t) is False
 
     F = [x*y - z, y*z - x, x*y - y]
-    assert is_zero_dimensional(F, x, y, z) == True
+    assert is_zero_dimensional(F, x, y, z) is True
 
     F = [x**2 - 2*x*z + 5, x*y**2 + y*z**3, 3*y**2 - 8*z**2]
-    assert is_zero_dimensional(F, x, y, z) == True
+    assert is_zero_dimensional(F, x, y, z) is True
 
 
 def test_GroebnerBasis():
@@ -2910,7 +2910,7 @@ def test_GroebnerBasis():
     H = [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     P = [ Poly(h, x, y) for h in H ]
 
-    assert isinstance(G, GroebnerBasis) == True
+    assert isinstance(G, GroebnerBasis) is True
 
     assert len(G) == 3
 

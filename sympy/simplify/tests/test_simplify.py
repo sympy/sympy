@@ -1376,7 +1376,7 @@ def test_issue_2998():
 
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
-    assert signsimp(Eq(e, 0)) == True
+    assert signsimp(Eq(e, 0)) is True
 
 
 def test_besselsimp():

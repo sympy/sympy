@@ -12,9 +12,9 @@ def test_check_cycles_alt_sym():
     perm1 = Permutation([[0, 1, 2, 3, 4, 5, 6], [7], [8], [9]])
     perm2 = Permutation([[0, 1, 2, 3, 4, 5], [6, 7, 8, 9]])
     perm3 = Permutation([[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
-    assert _check_cycles_alt_sym(perm1) == True
-    assert _check_cycles_alt_sym(perm2) == False
-    assert _check_cycles_alt_sym(perm3) == False
+    assert _check_cycles_alt_sym(perm1) is True
+    assert _check_cycles_alt_sym(perm2) is False
+    assert _check_cycles_alt_sym(perm3) is False
 
 
 def test_strip():
@@ -109,12 +109,12 @@ def test_remove_gens():
     S = SymmetricGroup(10)
     base, strong_gens = S.schreier_sims_incremental()
     new_gens = _remove_gens(base, strong_gens)
-    assert _verify_bsgs(S, base, new_gens) == True
+    assert _verify_bsgs(S, base, new_gens) is True
     A = AlternatingGroup(7)
     base, strong_gens = A.schreier_sims_incremental()
     new_gens = _remove_gens(base, strong_gens)
-    assert _verify_bsgs(A, base, new_gens) == True
+    assert _verify_bsgs(A, base, new_gens) is True
     D = DihedralGroup(2)
     base, strong_gens = D.schreier_sims_incremental()
     new_gens = _remove_gens(base, strong_gens)
-    assert _verify_bsgs(D, base, new_gens) == True
+    assert _verify_bsgs(D, base, new_gens) is True

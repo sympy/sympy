@@ -47,32 +47,32 @@ def test_kronecker_delta_secondquant():
     assert D(i, a) == 0
     assert D(i, t) == 0
 
-    assert D(i, j).is_above_fermi == False
-    assert D(a, b).is_above_fermi == True
-    assert D(p, q).is_above_fermi == True
-    assert D(i, q).is_above_fermi == False
-    assert D(q, i).is_above_fermi == False
-    assert D(q, v).is_above_fermi == False
-    assert D(a, q).is_above_fermi == True
+    assert D(i, j).is_above_fermi is False
+    assert D(a, b).is_above_fermi is True
+    assert D(p, q).is_above_fermi is True
+    assert D(i, q).is_above_fermi is False
+    assert D(q, i).is_above_fermi is False
+    assert D(q, v).is_above_fermi is False
+    assert D(a, q).is_above_fermi is True
 
-    assert D(i, j).is_below_fermi == True
-    assert D(a, b).is_below_fermi == False
-    assert D(p, q).is_below_fermi == True
-    assert D(p, j).is_below_fermi == True
-    assert D(q, b).is_below_fermi == False
+    assert D(i, j).is_below_fermi is True
+    assert D(a, b).is_below_fermi is False
+    assert D(p, q).is_below_fermi is True
+    assert D(p, j).is_below_fermi is True
+    assert D(q, b).is_below_fermi is False
 
-    assert D(i, j).is_only_above_fermi == False
-    assert D(a, b).is_only_above_fermi == True
-    assert D(p, q).is_only_above_fermi == False
-    assert D(i, q).is_only_above_fermi == False
-    assert D(q, i).is_only_above_fermi == False
-    assert D(a, q).is_only_above_fermi == True
+    assert D(i, j).is_only_above_fermi is False
+    assert D(a, b).is_only_above_fermi is True
+    assert D(p, q).is_only_above_fermi is False
+    assert D(i, q).is_only_above_fermi is False
+    assert D(q, i).is_only_above_fermi is False
+    assert D(a, q).is_only_above_fermi is True
 
-    assert D(i, j).is_only_below_fermi == True
-    assert D(a, b).is_only_below_fermi == False
-    assert D(p, q).is_only_below_fermi == False
-    assert D(p, j).is_only_below_fermi == True
-    assert D(q, b).is_only_below_fermi == False
+    assert D(i, j).is_only_below_fermi is True
+    assert D(a, b).is_only_below_fermi is False
+    assert D(p, q).is_only_below_fermi is False
+    assert D(p, j).is_only_below_fermi is True
+    assert D(q, b).is_only_below_fermi is False
 
     assert not D(i, q).indices_contain_equal_information
     assert not D(a, q).indices_contain_equal_information

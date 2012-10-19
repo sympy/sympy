@@ -48,8 +48,8 @@ def test_rel_subs():
     assert e.rhs == y
 
     e = Eq(x, 0)
-    assert e.subs(x, 0) == True
-    assert e.subs(x, 1) == False
+    assert e.subs(x, 0) is True
+    assert e.subs(x, 1) is False
 
 
 def test_wrappers():

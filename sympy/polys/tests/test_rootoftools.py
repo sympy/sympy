@@ -36,16 +36,16 @@ def test_RootOf___new__():
     assert RootOf(x**2 + 2*x + 3, -2) == -1 - I*sqrt(2)
 
     r = RootOf(x**2 + 2*x + 3, 0, radicals=False)
-    assert isinstance(r, RootOf) == True
+    assert isinstance(r, RootOf) is True
 
     r = RootOf(x**2 + 2*x + 3, 1, radicals=False)
-    assert isinstance(r, RootOf) == True
+    assert isinstance(r, RootOf) is True
 
     r = RootOf(x**2 + 2*x + 3, -1, radicals=False)
-    assert isinstance(r, RootOf) == True
+    assert isinstance(r, RootOf) is True
 
     r = RootOf(x**2 + 2*x + 3, -2, radicals=False)
-    assert isinstance(r, RootOf) == True
+    assert isinstance(r, RootOf) is True
 
     assert RootOf((x - 1)*(x + 1), 0, radicals=False) == -1
     assert RootOf((x - 1)*(x + 1), 1, radicals=False) == 1
@@ -97,7 +97,7 @@ def test_RootOf___new__():
     assert RootOf(y*x**3 + y*x + 2*y, x, 0) == -1
     raises(NotImplementedError, lambda: RootOf(x**3 + x + 2*y, x, 0))
 
-    assert RootOf(x**3 + x + 1, 0).is_commutative == True
+    assert RootOf(x**3 + x + 1, 0).is_commutative is True
 
 
 def test_RootOf_free_symbols():
@@ -105,29 +105,29 @@ def test_RootOf_free_symbols():
 
 
 def test_RootOf___eq__():
-    assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
-    assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 1)) == False
-    assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 1)) == True
-    assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 2)) == False
-    assert (RootOf(x**3 + x + 3, 2) == RootOf(x**3 + x + 3, 2)) == True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) is True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 1)) is False
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 1)) is True
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 2)) is False
+    assert (RootOf(x**3 + x + 3, 2) == RootOf(x**3 + x + 3, 2)) is True
 
-    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 0)) == True
-    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 1)) == False
-    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 1)) == True
-    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) == False
-    assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) == True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 0)) is True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 1)) is False
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 1)) is True
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) is False
+    assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) is True
 
 
 def test_RootOf_is_real():
-    assert RootOf(x**3 + x + 3, 0).is_real == True
-    assert RootOf(x**3 + x + 3, 1).is_real == False
-    assert RootOf(x**3 + x + 3, 2).is_real == False
+    assert RootOf(x**3 + x + 3, 0).is_real is True
+    assert RootOf(x**3 + x + 3, 1).is_real is False
+    assert RootOf(x**3 + x + 3, 2).is_real is False
 
 
 def test_RootOf_is_complex():
-    assert RootOf(x**3 + x + 3, 0).is_complex == False
-    assert RootOf(x**3 + x + 3, 1).is_complex == True
-    assert RootOf(x**3 + x + 3, 2).is_complex == True
+    assert RootOf(x**3 + x + 3, 0).is_complex is False
+    assert RootOf(x**3 + x + 3, 1).is_complex is True
+    assert RootOf(x**3 + x + 3, 2).is_complex is True
 
 
 def test_RootOf_subs():
@@ -185,7 +185,7 @@ def test_RootSum___new__():
     g = Lambda(r, log(r*x))
     s = RootSum(f, g)
 
-    assert isinstance(s, RootSum) == True
+    assert isinstance(s, RootSum) is True
 
     assert RootSum(f**2, g) == 2*RootSum(f, g)
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
@@ -199,7 +199,7 @@ def test_RootSum___new__():
     assert RootSum(f, exp) == RootSum(f, Lambda(x, exp(x)))
     assert RootSum(f, log) == RootSum(f, Lambda(x, log(x)))
 
-    assert isinstance(RootSum(f, auto=False), RootSum) == True
+    assert isinstance(RootSum(f, auto=False), RootSum) is True
 
     assert RootSum(f) == 0
     assert RootSum(f, Lambda(x, x)) == 0
@@ -208,7 +208,7 @@ def test_RootSum___new__():
     assert RootSum(f, Lambda(x, 1)) == 3
     assert RootSum(f, Lambda(x, 2)) == 6
 
-    assert RootSum(f, auto=False).is_commutative == True
+    assert RootSum(f, auto=False).is_commutative is True
 
     assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
     assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
@@ -238,22 +238,22 @@ def test_RootSum_free_symbols():
 def test_RootSum___eq__():
     f = Lambda(x, exp(x))
 
-    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 1, f)) == True
-    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 1, f)) == True
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 1, f)) is True
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 1, f)) is True
 
-    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
-    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) is False
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) is False
 
 
 def test_RootSum_doit():
     rs = RootSum(x**2 + 1, exp)
 
-    assert isinstance(rs, RootSum) == True
+    assert isinstance(rs, RootSum) is True
     assert rs.doit() == exp(-I) + exp(I)
 
     rs = RootSum(x**2 + a, exp, x)
 
-    assert isinstance(rs, RootSum) == True
+    assert isinstance(rs, RootSum) is True
     assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
 
 
@@ -261,9 +261,9 @@ def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
     assert rs.evalf(n=20, chop=True).epsilon_eq(
-        Float("1.0806046117362794348", 20), Float("1e-20")) == True
+        Float("1.0806046117362794348", 20), Float("1e-20")) is True
     assert rs.evalf(n=15, chop=True).epsilon_eq(
-        Float("1.08060461173628", 15), Float("1e-15")) == True
+        Float("1.08060461173628", 15), Float("1e-15")) is True
 
     rs = RootSum(x**2 + a, exp, x)
 

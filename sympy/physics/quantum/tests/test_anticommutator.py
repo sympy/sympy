@@ -12,7 +12,7 @@ A, B, C, D = symbols('A,B,C,D', commutative=False)
 def test_anticommutator():
     ac = AComm(A, B)
     assert isinstance(ac, AComm)
-    assert ac.is_commutative == False
+    assert ac.is_commutative is False
     assert ac.subs(A, C) == AComm(C, B)
 
 
