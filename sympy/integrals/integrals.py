@@ -781,6 +781,16 @@ class Integral(Expr):
             return self.func(*([function] + undone_limits))
         return function
 
+    def _eval_adjoint(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.adjoint(), *self.limits)
+        return None
+
+    def _eval_conjugate(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.conjugate(), *self.limits)
+        return None
+
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
         differentiating under the integral sign [1], using the Fundamental
@@ -1146,6 +1156,11 @@ class Integral(Expr):
         if not dummies.intersection(old_atoms):
             integrand = integrand.subs(old, new)
         return Integral(integrand, *limits)
+
+    def _eval_transpose(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.transpose(), *self.limits)
+        return None
 
     def as_sum(self, n, method="midpoint"):
         """
