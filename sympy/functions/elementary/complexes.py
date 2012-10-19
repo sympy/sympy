@@ -9,6 +9,7 @@ from sympy.core.relational import Eq
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
 
+
 class re(Function):
     """Returns real part of expression. This function performs only
        elementary analysis and so it will fail to decompose properly
@@ -39,7 +40,7 @@ class re(Function):
     nargs = 1
 
     is_real = True
-    unbranched = True # implicitely works on the projection to C
+    unbranched = True  # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -128,7 +129,7 @@ class im(Function):
     nargs = 1
 
     is_real = True
-    unbranched = True # implicitely works on the projection to C
+    unbranched = True  # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -254,7 +255,7 @@ class sign(Function):
                 elif ai.is_imaginary and ai2.is_positive:
                     is_imag = not is_imag
                 elif ai.is_negative is None or \
-                    (ai.is_imaginary is None or ai2.is_positive is None):
+                        (ai.is_imaginary is None or ai2.is_positive is None):
                     unk.append(ai)
             if c is S.One and len(unk) == len(args):
                 return None
@@ -290,12 +291,13 @@ class sign(Function):
             self.args[0].is_nonzero and
             other.is_integer and
             other.is_even
-            ):
+        ):
             return S.One
 
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
+
 
 class Abs(Function):
     """
@@ -438,6 +440,7 @@ class Abs(Function):
         else:
             return self
 
+
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
@@ -457,6 +460,7 @@ class arg(Function):
         x, y = re(self.args[0]), im(self.args[0])
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
+
 
 class conjugate(Function):
     """
@@ -502,6 +506,7 @@ class conjugate(Function):
     def _eval_transpose(self):
         return conjugate(transpose(self.args[0]))
 
+
 class transpose(Function):
     """
     Linear map transposition.
@@ -523,6 +528,7 @@ class transpose(Function):
 
     def _eval_transpose(self):
         return self.args[0]
+
 
 class adjoint(Function):
     """
@@ -572,6 +578,7 @@ class adjoint(Function):
 ############### HANDLING OF POLAR NUMBERS #####################################
 ###############################################################################
 
+
 class polar_lift(Function):
     """
     Lift argument to the riemann surface of the logarithm, using the
@@ -604,7 +611,7 @@ class polar_lift(Function):
     nargs = 1
 
     is_polar = True
-    is_comparable = False # Cannot be evalf'd.
+    is_comparable = False  # Cannot be evalf'd.
 
     @classmethod
     def eval(cls, arg):
@@ -640,6 +647,7 @@ class polar_lift(Function):
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
+
 
 class periodic_argument(Function):
     """
@@ -685,7 +693,8 @@ class periodic_argument(Function):
                 unbranched += a.exp.as_real_imag()[1]
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
-                unbranched += re*unbranched_argument(a.base) + im*log(abs(a.base))
+                unbranched += re*unbranched_argument(
+                    a.base) + im*log(abs(a.base))
             elif a.func is polar_lift:
                 unbranched += arg(a.args[0])
             else:
@@ -732,9 +741,11 @@ class periodic_argument(Function):
         ub = periodic_argument(z, oo)._eval_evalf(prec)
         return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
 
+
 def unbranched_argument(arg):
     from sympy import oo
     return periodic_argument(arg, oo)
+
 
 class principal_branch(Function):
     """
@@ -764,7 +775,7 @@ class principal_branch(Function):
 
     nargs = 2
     is_polar = True
-    is_comparable = False # cannot always be evalf'd
+    is_comparable = False  # cannot always be evalf'd
 
     @classmethod
     def eval(self, x, period):
@@ -778,6 +789,7 @@ class principal_branch(Function):
         if ub != barg and not ub.has(periodic_argument) \
            and not barg.has(periodic_argument):
             pl = polar_lift(x)
+
             def mr(expr):
                 if not isinstance(expr, Symbol):
                     return polar_lift(expr)
@@ -803,7 +815,7 @@ class principal_branch(Function):
         arg = periodic_argument(c, period)
         if arg.has(periodic_argument):
             return None
-        if arg.is_number and (unbranched_argument(c) != arg or \
+        if arg.is_number and (unbranched_argument(c) != arg or
                               (arg == 0 and m != () and c != 1)):
             if arg == 0:
                 return abs(c)*principal_branch(Mul(*m), period)
@@ -817,7 +829,7 @@ class principal_branch(Function):
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
-            return self # Cannot evalf for this argument.
+            return self  # Cannot evalf for this argument.
         return (abs(z)*exp(I*p))._eval_evalf(prec)
 
 # /cyclic/

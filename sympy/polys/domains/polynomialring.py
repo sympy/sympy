@@ -17,6 +17,8 @@ from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.core.compatibility import iterable
 
 # XXX why does this derive from CharacteristicZero???
+
+
 class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     """
     Base class for generalized polynomial rings.
@@ -27,8 +29,8 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     Do not instantiate.
     """
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     default_order = "grevlex"
 
@@ -39,16 +41,17 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one  = self.dtype.one(lev, dom, ring=self)
+        self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom  = dom
+        self.dom = dom
         self.gens = gens
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))
 
     def __str__(self):
         s_order = str(self.order)
-        orderstr = (" order=" + s_order) if s_order != self.default_order else ""
+        orderstr = (
+            " order=" + s_order) if s_order != self.default_order else ""
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + orderstr + ']'
 
     def __hash__(self):
@@ -57,7 +60,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return self.dtype(a, self.dom, len(self.gens)-1, ring=self)
+        return self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -111,7 +114,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Convert a `DMP` object to `dtype`. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep) # set the correct ring
+                return K1(a.rep)  # set the correct ring
             else:
                 return K1(a.convert(K1.dom).rep)
         else:
@@ -202,6 +205,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """
         return FreeModulePolyRing(self, rank)
 
+
 def _vector_to_sdm_helper(v, order):
     """Helper method for common code in Global and Local poly rings."""
     from sympy.polys.distributedmodules import sdm_from_dict
@@ -210,6 +214,7 @@ def _vector_to_sdm_helper(v, order):
         for key, value in e.to_dict().iteritems():
             d[(i,) + key] = value
     return sdm_from_dict(d, order)
+
 
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
@@ -286,6 +291,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         """
         return _vector_to_sdm_helper(v, order)
 
+
 class GeneralizedPolynomialRing(PolynomialRingBase):
     """A generalized polynomial ring, with objects DMF. """
 
@@ -293,12 +299,12 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        res = self.dtype(a, self.dom, len(self.gens)-1, ring=self)
+        res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
         # make sure res is actually in our ring
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):
             from sympy.printing.str import sstr
-            raise CoercionFailed("denominator %s not allowed in %s" \
+            raise CoercionFailed("denominator %s not allowed in %s"
                                   % (sstr(res), self))
         return res
 
@@ -346,13 +352,15 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         >>> f = R.convert((x + 2*y) / (1 + x))
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], ilex)
-        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1, 2, 1), 1/1)]
+        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1,
+          2, 1), 1/1)]
         """
         # NOTE this is quite inefficient...
         u = self.one.numer()
         for x in v:
             u *= x.denom()
         return _vector_to_sdm_helper([x.numer()*u/x.denom() for x in v], order)
+
 
 def PolynomialRing(dom, *gens, **opts):
     r"""

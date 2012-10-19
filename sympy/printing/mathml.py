@@ -95,7 +95,7 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
-        coeff, terms  = expr.as_coeff_mul()
+        coeff, terms = expr.as_coeff_mul()
         if coeff is S.One and len(terms) == 1:
             # XXX since the negative coefficient has been handled, I don't
             # thing a coeff of 1 can remain
@@ -145,7 +145,7 @@ class MathMLPrinter(Printer):
         for i in range(m.lines):
             x_r = self.dom.createElement('matrixrow')
             for j in range(m.cols):
-                x_r.appendChild(self._print(m[i,j]))
+                x_r.appendChild(self._print(m[i, j]))
             x.appendChild(x_r)
         return x
 
@@ -181,20 +181,20 @@ class MathMLPrinter(Printer):
         x.appendChild(self._print(e.args[0]))
         return x
 
-    def _print_ImaginaryUnit(self,e):
+    def _print_ImaginaryUnit(self, e):
         return self.dom.createElement('imaginaryi')
 
-    def _print_EulerGamma(self,e):
+    def _print_EulerGamma(self, e):
         return self.dom.createElement('eulergamma')
 
-    def _print_GoldenRatio(self,e):
+    def _print_GoldenRatio(self, e):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode(u"\u03c6"))
         return x
 
-    def _print_Exp1(self,e):
+    def _print_Exp1(self, e):
         return self.dom.createElement('exponentiale')
 
     def _print_Pi(self, e):
@@ -203,7 +203,7 @@ class MathMLPrinter(Printer):
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
 
-    def _print_Negative_Infinity(self,e):
+    def _print_Negative_Infinity(self, e):
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('minus'))
         x.appendChild(self.dom.createElement('infinity'))
@@ -421,7 +421,7 @@ class MathMLPrinter(Printer):
             # indent = current indentation
             # addindent = indentation to add to higher levels
             # newl = newline string
-            writer.write(indent+"<" + self.tagName)
+            writer.write(indent + "<" + self.tagName)
 
             attrs = self._get_attributes()
             a_names = attrs.keys()
@@ -434,21 +434,22 @@ class MathMLPrinter(Printer):
             if self.childNodes:
                 writer.write(">")
                 if (len(self.childNodes) == 1 and
-                    self.childNodes[0].nodeType == Node.TEXT_NODE):
+                        self.childNodes[0].nodeType == Node.TEXT_NODE):
                     self.childNodes[0].writexml(writer, '', '', '')
                 else:
                     writer.write(newl)
                     for node in self.childNodes:
-                        node.writexml(writer, indent+addindent, addindent, newl)
+                        node.writexml(
+                            writer, indent + addindent, addindent, newl)
                     writer.write(indent)
                 writer.write("</%s>%s" % (self.tagName, newl))
             else:
-                writer.write("/>%s"%(newl))
+                writer.write("/>%s" % (newl))
         self._Element_writexml_old = Element.writexml
         Element.writexml = writexml
 
         def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
         self._Text_writexml_old = Text.writexml
         Text.writexml = writexml
 
@@ -461,6 +462,7 @@ class MathMLPrinter(Printer):
 def mathml(expr, **settings):
     """Returns the MathML representation of expr"""
     return MathMLPrinter(settings).doprint(expr)
+
 
 def print_mathml(expr, **settings):
     """

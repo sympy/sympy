@@ -63,9 +63,11 @@ TERMINAL_EXAMPLES = [
     "intermediate.trees",
     "intermediate.vandermonde",
     "advanced.curvilinear_coordinates",
+    "advanced.dense_coding_example",
     "advanced.fem",
     "advanced.gibbs_phenomenon",
     "advanced.grover_example",
+    "advanced.hydrogen",
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
@@ -73,12 +75,12 @@ TERMINAL_EXAMPLES = [
 
 WINDOWED_EXAMPLES = [
     "beginner.plotting_nice_plot",
-    "intermediate.print_gtk",
     "intermediate.mplot2d",
     "intermediate.mplot3d",
+    "intermediate.print_gtk",
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
-    "advanced.plotting",
+    "advanced.pyglet_plotting",
     ]
 
 EXAMPLE_DIR = os.path.dirname(__file__)

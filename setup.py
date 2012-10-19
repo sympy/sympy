@@ -42,7 +42,7 @@ if sys.version_info[:2] < (2,5):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
+# for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -70,7 +70,6 @@ modules = [
     'sympy.mpmath.functions',
     'sympy.mpmath.libmp',
     'sympy.mpmath.matrices',
-    'sympy.mpmath.tests',
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
@@ -93,7 +92,7 @@ modules = [
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
-  ]
+]
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -209,6 +208,7 @@ tests = [
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.diffgeom.tests',
     'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
@@ -216,24 +216,29 @@ tests = [
     'sympy.galgebra.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
+    'sympy.interactive.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
-    'sympy.plotting.tests',
     'sympy.plotting.intervalmath.tests',
-    'sympy.polys.tests',
+    'sympy.plotting.pygletplot.tests',
+    'sympy.plotting.tests',
     'sympy.polys.agca.tests',
+    'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
     'sympy.series.tests',
+    'sympy.sets.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
+    'sympy.stats.tests',
     'sympy.tensor.tests',
     'sympy.utilities.tests',
     ]

@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr
 from sympy import Basic, sympify
 
+
 class FunctionMatrix(MatrixExpr):
     """
     Represents a Matrix using a function (Lambda)
@@ -36,4 +37,4 @@ class FunctionMatrix(MatrixExpr):
         return self.args[2]
 
     def _entry(self, i, j):
-        return self.lamda(i,j)
+        return self.lamda(i, j)

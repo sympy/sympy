@@ -24,12 +24,14 @@ __all__ = [
 # Main objects
 #-----------------------------------------------------------------------------
 
+
 class HilbertSpaceError(QuantumError):
     pass
 
 #-----------------------------------------------------------------------------
 # Main objects
 #-----------------------------------------------------------------------------
+
 
 class HilbertSpace(Basic):
     """An abstract Hilbert space for quantum mechanics.
@@ -145,16 +147,16 @@ class ComplexSpace(HilbertSpace):
     @classmethod
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
-            if not (dimension.is_Integer and dimension > 0 or dimension is oo\
+            if not (dimension.is_Integer and dimension > 0 or dimension is oo
             or dimension.is_Symbol):
                 raise TypeError('The dimension of a ComplexSpace can only'
-                                'be a positive integer, oo, or a Symbol: %r' \
+                                'be a positive integer, oo, or a Symbol: %r'
                                 % dimension)
         else:
             for dim in dimension.atoms():
                 if not (dim.is_Integer or dim is oo or dim.is_Symbol):
                     raise TypeError('The dimension of a ComplexSpace can only'
-                                    ' contain integers, oo, or a Symbol: %r' \
+                                    ' contain integers, oo, or a Symbol: %r'
                                     % dim)
 
     @property
@@ -202,7 +204,7 @@ class L2(HilbertSpace):
 
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
-            raise TypeError('L2 interval must be an Interval instance: %r'\
+            raise TypeError('L2 interval must be an Interval instance: %r'
             % interval)
         obj = Basic.__new__(cls, interval)
         return obj
@@ -346,23 +348,23 @@ class TensorProductHilbertSpace(HilbertSpace):
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
-            if prev_arg != None:
+            if prev_arg is not None:
                 if isinstance(new_arg, TensorPowerHilbertSpace) and\
-                isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                new_arg.base == prev_arg.base:
-                    prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
+                    isinstance(prev_arg, TensorPowerHilbertSpace) and\
+                        new_arg.base == prev_arg.base:
+                    prev_arg = new_arg.base**(new_arg.exp + prev_arg.exp)
                 elif isinstance(new_arg, TensorPowerHilbertSpace) and\
-                new_arg.base == prev_arg:
-                    prev_arg = prev_arg**(new_arg.exp+1)
+                        new_arg.base == prev_arg:
+                    prev_arg = prev_arg**(new_arg.exp + 1)
                 elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                new_arg == prev_arg.base:
-                    prev_arg = new_arg**(prev_arg.exp+1)
+                        new_arg == prev_arg.base:
+                    prev_arg = new_arg**(prev_arg.exp + 1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
                 else:
                     comb_args.append(prev_arg)
                     prev_arg = new_arg
-            elif prev_arg == None:
+            elif prev_arg is None:
                 prev_arg = new_arg
         comb_args.append(prev_arg)
         if recall:
@@ -378,7 +380,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x*y, arg_list)
+            return reduce(lambda x, y: x*y, arg_list)
 
     @property
     def spaces(self):
@@ -413,7 +415,7 @@ class TensorProductHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
+            if i != length - 1:
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
                 else:
@@ -429,7 +431,7 @@ class TensorProductHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\otimes '
         return s
 
@@ -498,7 +500,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x+y, arg_list)
+            return reduce(lambda x, y: x + y, arg_list)
 
     @property
     def spaces(self):
@@ -524,7 +526,7 @@ class DirectSumHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
+            if i != length - 1:
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
                 else:
@@ -540,7 +542,7 @@ class DirectSumHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\oplus '
         return s
 
@@ -627,11 +629,11 @@ class TensorPowerHilbertSpace(HilbertSpace):
             return self.base.dimension**self.exp
 
     def _sympyrepr(self, printer, *args):
-        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,\
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,
         *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "%s**%s" % (printer._print(self.base, *args),\
+        return "%s**%s" % (printer._print(self.base, *args),
         printer._print(self.exp, *args))
 
     def _pretty(self, printer, *args):

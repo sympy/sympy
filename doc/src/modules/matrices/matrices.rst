@@ -11,7 +11,7 @@ import and declare our first Matrix object:
 
     >>> from sympy.interactive.printing import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
-    >>> from sympy.matrices import *
+    >>> from sympy.matrices import Matrix, eye, zeros, ones, diag, GramSchmidt
     >>> M = Matrix([[1,0,0], [0,0,0]]); M
     [1  0  0]
     [       ]
@@ -31,25 +31,24 @@ import and declare our first Matrix object:
     [ ]
     [3]
 
-This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists and/or matrices. SymPy also supports more advanced
-methods of matrix creation including a single list of values and dimension
-inputs:
+In addition to creating a matrix from a list of appropriately-sized lists
+and/or matrices, SymPy also supports more advanced methods of matrix creation
+including a single list of values and dimension inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]
     [       ]
     [4  5  6]
 
-More interestingly (and usefully), we can use a 2-variable function (or lambda)
-to make one. Here we create an indicator function which is 1 on the diagonal
-and then use it to make the identity matrix:
+More interesting (and useful), is the ability to use a 2-variable function
+(or lambda) to create a matrix. Here we create an indicator function which
+is 1 on the diagonal and then use it to make the identity matrix:
 
     >>> def f(i,j):
     ...     if i == j:
-    ...             return 1
+    ...         return 1
     ...     else:
-    ...             return 0
+    ...         return 0
     ...
     >>> Matrix(4, 4, f)
     [1  0  0  0]
@@ -70,9 +69,10 @@ permutation entries:
     [          ]
     [1  0  1  0]
 
-There are also a couple of special constructors for quick matrix construction -
+There are also a couple of special constructors for quick matrix construction:
 ``eye`` is the identity matrix, ``zeros`` and ``ones`` for matrices of all
-zeros and ones, respectively:
+zeros and ones, respectively, and ``diag`` to put matrices or elements along
+the diagonal:
 
     >>> eye(4)
     [1  0  0  0]
@@ -98,6 +98,12 @@ zeros and ones, respectively:
     [1  1  1]
     >>> ones(1, 3)
     [1  1  1]
+    >>> diag(1, Matrix([[1, 2], [3, 4]]))
+    [1  0  0]
+    [       ]
+    [0  1  2]
+    [       ]
+    [0  3  4]
 
 
 Basic Manipulation
@@ -500,9 +506,14 @@ norm():
     >>> out2[2].norm()
     1
 
-So there is quite a bit more that can be done: eigenvalues, eigenvectors,
-nullspace calculation, cofactor expansion, and so on. From here one might
-want to look over the matrices.py file for all functionality.
+So there is quite a bit that can be done with the module including eigenvalues,
+eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
+here one might want to look over the matrices.py file for all functionality.
+
+MatrixBase Class Reference
+--------------------------
+.. autoclass:: MatrixBase
+   :members:
 
 Matrix Exceptions Reference
 ---------------------------

@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # Check the plot docstring
 
 from sympy import Symbol, exp, sin, cos

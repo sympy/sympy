@@ -46,10 +46,12 @@ def vandermonde(order, dim=1, syms='a b c d'):
     polynomials.
     """
     syms = syms.split()
-    if len(syms) < dim:
+    n = len(syms)
+    if n < dim:
         new_syms = []
-        for i in range(dim - len(syms)):
-            new_syms.append(syms[i%len(syms)] + str(i/len(syms)))
+        for i in range(dim - n):
+            j, rem = divmod(i, n)
+            new_syms.append(syms[rem] + str(j))
         syms.extend(new_syms)
     terms = []
     for i in range(order + 1):

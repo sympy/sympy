@@ -17,6 +17,7 @@ from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
 
+
 class FiniteDomain(RandomDomain):
     """
     A domain with discrete finite support
@@ -24,6 +25,7 @@ class FiniteDomain(RandomDomain):
     Represented using a FiniteSet.
     """
     is_Finite = True
+
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
         symbols = FiniteSet(sym for sym, val in elements)
@@ -46,6 +48,7 @@ class FiniteDomain(RandomDomain):
     def as_boolean(self):
         return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
 
+
 class SingleFiniteDomain(FiniteDomain):
     """
     A FiniteDomain over a single symbol/set
@@ -59,9 +62,11 @@ class SingleFiniteDomain(FiniteDomain):
     @property
     def symbol(self):
         return tuple(self.symbols)[0]
+
     @property
     def elements(self):
         return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+
     @property
     def set(self):
         return self.args[1]
@@ -72,6 +77,7 @@ class SingleFiniteDomain(FiniteDomain):
     def __contains__(self, other):
         sym, val = tuple(other)[0]
         return sym == self.symbol and val in self.set
+
 
 class ProductFiniteDomain(ProductDomain, FiniteDomain):
     """
@@ -88,6 +94,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
     def elements(self):
         return FiniteSet(iter(self))
 
+
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
     A FiniteDomain that has been restricted by a condition
@@ -102,8 +109,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         # where 'z' is a symbol that we don't know about
         # We will never be able to test this equality through iteration
         if not cond.free_symbols.issubset(domain.free_symbols):
-            raise ValueError('Condition "%s" contains foreign symbols \n%s.\n'%(
-                condition, tuple(cond.free_symbols-domain.free_symbols))+
+            raise ValueError('Condition "%s" contains foreign symbols \n%s.\n' %(
+                condition, tuple(cond.free_symbols - domain.free_symbols)) +
                 "Will be unable to iterate using this condition")
 
         return ConditionalDomain.__new__(cls, domain, condition)
@@ -114,7 +121,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
             return val
         elif val.is_Equality:
             return val.lhs == val.rhs
-        raise ValueError("Undeciable if %s"%str(val))
+        raise ValueError("Undeciable if %s" % str(val))
 
     def __contains__(self, other):
         return other in self.fulldomain and self._test(other)
@@ -139,6 +146,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 #=========  Probability Space  ===============
 #=============================================
 
+
 class FinitePSpace(PSpace):
     """
     A Finite Probability Space
@@ -147,6 +155,7 @@ class FinitePSpace(PSpace):
     """
 
     is_Finite = True
+
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
                 for key, val in density.items())
@@ -157,7 +166,7 @@ class FinitePSpace(PSpace):
         return obj
 
     def prob_of(self, elem):
-        return self._density.get(elem,0)
+        return self._density.get(elem, 0)
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
@@ -221,7 +230,7 @@ class FinitePSpace(PSpace):
         expr = Tuple(*self.values)
         cdf = self.sorted_cdf(expr, python_float=True)
 
-        x = random.uniform(0,1)
+        x = random.uniform(0, 1)
         # Find first occurence with cumulative probability less than x
         # This should be replaced with binary search
         for value, cum_prob in cdf:
@@ -230,6 +239,7 @@ class FinitePSpace(PSpace):
                 return dict(zip(expr, value))
 
         assert False, "We should never have gotten to this point"
+
 
 class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     """
@@ -246,10 +256,11 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     def fromdict(cls, name, density):
         symbol = Symbol(name)
         domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
-        density = dict((frozenset(((symbol, val),)) , prob)
+        density = dict((frozenset(((symbol, val),)), prob)
                 for val, prob in density.items())
         density = Dict(density)
         return FinitePSpace.__new__(cls, domain, density)
+
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     """
@@ -258,6 +269,7 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @property
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
+
     @property
     @cacheit
     def _density(self):

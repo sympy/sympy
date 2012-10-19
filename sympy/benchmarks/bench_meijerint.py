@@ -1,12 +1,12 @@
 # conceal the implicit import from the code quality tester
 exec "from sympy import *"
 
-LT=laplace_transform
-FT=fourier_transform
-MT=mellin_transform
-IFT=inverse_fourier_transform
-ILT=inverse_laplace_transform
-IMT=inverse_mellin_transform
+LT = laplace_transform
+FT = fourier_transform
+MT = mellin_transform
+IFT = inverse_fourier_transform
+ILT = inverse_laplace_transform
+IMT = inverse_mellin_transform
 
 from sympy.abc import x, s, a, b, c, d, t, y, z
 nu, beta, rho = symbols('nu beta rho')
@@ -19,29 +19,35 @@ mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
 sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                                           bounded=True, positive=True)
 rate = Symbol('lambda', real=True, positive=True, bounded=True)
+
+
 def normal(x, mu, sigma):
-    return 1/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/2/sigma**2)
+    return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
+
+
 def exponential(x, rate):
     return rate*exp(-rate*x)
 alpha, beta = symbols('alpha beta', positive=True)
-betadist = x**(alpha-1)*(1+x)**(-alpha - beta)*gamma(alpha+beta) \
+betadist = x**(alpha - 1)*(1 + x)**(-alpha - beta)*gamma(alpha + beta) \
           /gamma(alpha)/gamma(beta)
 kint = Symbol('k', integer=True, positive=True)
-chi = 2**(1-kint/2)*x**(kint-1)*exp(-x**2/2)/gamma(kint/2)
-chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2-1)*exp(-x/2)
-dagum = apos*p/x*(x/bpos)**(apos*p)/(1 + x**apos/bpos**apos)**(p+1)
+chi = 2**(1 - kint/2)*x**(kint - 1)*exp(-x**2/2)/gamma(kint/2)
+chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2 - 1)*exp(-x/2)
+dagum = apos*p/x*(x/bpos)**(apos*p)/(1 + x**apos/bpos**apos)**(p + 1)
 d1, d2 = symbols('d1 d2', positive=True)
-f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1+d2))/x \
+f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1 + d2))/x \
       /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
 nupos, sigmapos = symbols('nu sigma', positive=True)
-rice = x/sigmapos**2*exp(-(x**2+ nupos**2)/2/sigmapos**2)*besseli(0, x*nupos/sigmapos**2)
+rice = x/sigmapos**2*exp(-(x**2 + nupos**2)/2/sigmapos**2)*besseli(0, x* \
+                         nupos/sigmapos**2)
 mu = Symbol('mu', real=True)
-laplace = exp(-abs(x-mu)/bpos)/2/bpos
+laplace = exp(-abs(x - mu)/bpos)/2/bpos
 
 u = Symbol('u', polar=True)
 tpos = Symbol('t', positive=True)
 
 from sympy import Chi as cosint
+
 
 def E(expr):
     res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
@@ -129,21 +135,21 @@ bench = [
   'integrate(x*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
   'integrate(x**2*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
   'integrate(x**3*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True)',
-  'integrate(normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x*y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x*y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate((x+y+1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate((x+y+1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate((x+y-1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate((x+y-1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '                   (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(x**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(x**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '                (x, -oo, oo), (y, -oo, oo), meijerg=True)',
-  'integrate(y**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),' \
+  'integrate(y**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),'
   '          (x, -oo, oo), (y, -oo, oo), meijerg=True)',
   'integrate(exponential(x, rate), (x, 0, oo), meijerg=True)',
   'integrate(x*exponential(x, rate), (x, 0, oo), meijerg=True)',

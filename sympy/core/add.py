@@ -6,6 +6,7 @@ from numbers import ilcm, igcd
 
 from collections import defaultdict
 
+
 class Add(AssocOp):
 
     __slots__ = []
@@ -84,7 +85,8 @@ class Add(AssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
+                order_factors = [o] +[
+                    o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
             # 3 or NaN
@@ -137,13 +139,11 @@ class Add(AssocOp):
                 c = S.One
                 s = o
 
-
             # now we have:
             # o = c*s, where
             #
             # c is a Number
             # s is an expression with number factor extracted
-
             # let's collect terms with the same s, so e.g.
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
@@ -151,12 +151,11 @@ class Add(AssocOp):
             else:
                 terms[s] = c
 
-
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
-        for s,c in terms.items():
+        for s, c in terms.items():
             # 0*s
             if c is S.Zero:
                 continue
@@ -173,7 +172,7 @@ class Add(AssocOp):
 
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    newseq.append(Mul(c,s))
+                    newseq.append(Mul(c, s))
 
             noncommutative = noncommutative or not s.is_commutative
 
@@ -218,7 +217,6 @@ class Add(AssocOp):
                 if o.contains(coeff):
                     coeff = S.Zero
                     break
-
 
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
@@ -328,7 +326,7 @@ class Add(AssocOp):
     def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
         coeff, terms = self.as_coeff_add()
-        if len(terms)==1:
+        if len(terms) == 1:
             return terms[0].matches(expr - coeff, repl_dict)
         return
 
@@ -399,7 +397,7 @@ class Add(AssocOp):
 
         # assemble single numerator and denominator
         denoms, numers = [list(i) for i in zip(*nd.iteritems())]
-        n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+        n, d = Add(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
                    for i in xrange(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
@@ -411,16 +409,23 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
-    _eval_is_antihermitian = lambda self: self._eval_template_is_attr('is_antihermitian', when_multiple=None)
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
-    _eval_is_hermitian = lambda self: self._eval_template_is_attr('is_hermitian', when_multiple=None)
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
+    _eval_is_real = lambda self: self._eval_template_is_attr(
+        'is_real', when_multiple=None)
+    _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
+        'is_antihermitian', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr(
+        'is_bounded', when_multiple=None)
+    _eval_is_hermitian = lambda self: self._eval_template_is_attr(
+        'is_hermitian', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
+        'is_imaginary', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr(
+        'is_integer', when_multiple=None)
+    _eval_is_commutative = lambda self: self._eval_template_is_attr(
+        'is_commutative')
 
     def _eval_is_odd(self):
-        l = [f for f in self.args if not (f.is_even==True)]
+        l = [f for f in self.args if not (f.is_even is True)]
         if not l:
             return False
         if l[0].is_odd:
@@ -554,7 +559,8 @@ class Add(AssocOp):
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
-            args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
+            args_old, args_self = Add.make_args(
+                terms_old), Add.make_args(terms_self)
             if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
                 self_set = set(args_self)
                 old_set = set(args_old)
@@ -564,7 +570,8 @@ class Add(AssocOp):
                     return Add(new, coeff_self, -coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-                args_old = Add.make_args(-terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                args_old = Add.make_args(
+                    -terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
@@ -781,7 +788,8 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(radical=radical)) for a in self.args]).primitive()
+        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(
+            radical=radical)) for a in self.args]).primitive()
         if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args

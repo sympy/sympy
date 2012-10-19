@@ -109,8 +109,10 @@
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence
 
+
 class IndexException(Exception):
     pass
+
 
 class Indexed(Expr):
     """Represents a mathematical object with indices.
@@ -195,7 +197,7 @@ class Indexed(Expr):
         True
 
         """
-        return len(self.args)-1
+        return len(self.args) -1
 
     @property
     def shape(self):

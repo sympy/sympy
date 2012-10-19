@@ -50,6 +50,7 @@ def _qsympify_sequence(seq):
 
     return tuple(__qsympify_sequence_helper(seq))
 
+
 def __qsympify_sequence_helper(seq):
     """
        Helper function for _qsympify_sequence
@@ -161,7 +162,7 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        if len(self.args) == 0: # If there is no label specified, return the default
+        if len(self.args) == 0:  # If there is no label specified, return the default
             return self._eval_args(list(self.default_args()))
         else:
             return self.args
@@ -323,7 +324,8 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                                     for a in self.args ]
         else:
             args = self.args
 
@@ -377,7 +379,7 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        basis = options.pop('basis',None)
+        basis = options.pop('basis', None)
         if basis is None:
             result = self._represent_default_basis(**options)
         else:
@@ -394,16 +396,18 @@ class QExpr(Expr):
         elif format == 'numpy' and not isinstance(result, numpy_ndarray):
             return to_numpy(result)
         elif format == 'scipy.sparse' and\
-        not isinstance(result, scipy_sparse_matrix):
+                not isinstance(result, scipy_sparse_matrix):
             return to_scipy_sparse(result)
 
         return result
+
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
     c_part, nc_part = e.args_cnc()
     c_part = list(c_part)
     return c_part, nc_part
+
 
 def split_qexpr_parts(e):
     """Split an expression into Expr and noncommutative QExpr parts."""
@@ -427,6 +431,6 @@ def dispatch_method(self, basename, arg, **options):
         if result is not None:
             return result
     raise NotImplementedError(
-        "%s.%s can't handle: %r" % \
+        "%s.%s can't handle: %r" %
             (self.__class__.__name__, basename, arg)
     )

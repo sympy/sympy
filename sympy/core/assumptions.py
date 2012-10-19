@@ -108,6 +108,7 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
+
 class StdFactKB(FactKB):
     """A FactKB specialised for the built-in rules
 
@@ -127,6 +128,7 @@ def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
     return 'is_%s' % fact
 
+
 def make_property(fact):
     """Create the automagic property corresponding to a fact."""
 
@@ -140,6 +142,7 @@ def make_property(fact):
 
     getit.func_name = as_property(fact)
     return property(getit)
+
 
 def _ask(fact, obj):
     """
@@ -198,6 +201,7 @@ def _ask(fact, obj):
     # Note: the result has already been cached
     return None
 
+
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     __metaclass__ = BasicMeta
@@ -242,7 +246,7 @@ class ManagedProperties(BasicMeta):
             try:
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
-                continue        #not an assumption-aware class
+                continue  # not an assumption-aware class
         for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:

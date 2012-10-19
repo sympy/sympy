@@ -8,12 +8,13 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class PythonRationalField(RationalField):
     """Rational field based on Python rational number type. """
 
     dtype = PythonRationalType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'QQ_python'
 
     def __init__(self):

@@ -181,7 +181,8 @@ construction of the equations of motion in :mod:`mechanics`. ::
 
   >>> from sympy import *
   >>> from sympy.physics.mechanics import *
-  >>> print('Calculation of Linearized Bicycle \"A\" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate')
+  >>> print('Calculation of Linearized Bicycle \"A\" Matrix, '
+  ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
   Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
 
 
@@ -213,7 +214,8 @@ The below symbols should be fairly self-explanatory. ::
   >>> forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1')
   >>> forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11')
   >>> Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11')
-  >>> Iframe22, Iframe33, Iframe31, Ifork11 = symbols('Iframe22 Iframe33 Iframe31 Ifork11')
+  >>> Iframe22, Iframe33, Iframe31, Ifork11 = \
+  ...     symbols('Iframe22 Iframe33 Iframe31 Ifork11')
   >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
   >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
 
@@ -250,7 +252,8 @@ contact -> rear wheel's center of mass -> frame's center of mass + frame/fork co
   >>> Frame_mc = WR_mc.locatenew('Frame_mc', -framecg1 * Frame.x + framecg3 * Frame.z)
   >>> Fork_mc = Steer.locatenew('Fork_mc', -forkcg1 * Fork.x + forkcg3 * Fork.z)
   >>> WF_mc = Steer.locatenew('WF_mc', forklength * Fork.x + forkoffset * Fork.z)
-  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - Y.z).normalize())
+  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - \
+  ...                                             Y.z).normalize())
 
 Set the angular velocity of each frame:
 Angular accelerations end up being calculated automatically by differentiating
@@ -297,7 +300,8 @@ of the benchmark paper. Note that due to slightly different orientations, the
 products of inertia need to have their signs flipped; this is done later when
 entering the numerical value. ::
 
-  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0, Iframe31), Frame_mc)
+  >>> Frame_I = (inertia(TempFrame, Iframe11, Iframe22, Iframe33, 0, 0,
+  ...                                                   Iframe31), Frame_mc)
   >>> Fork_I = (inertia(TempFork, Ifork11, Ifork22, Ifork33, 0, 0, Ifork31), Fork_mc)
   >>> WR_I = (inertia(Frame, Iwr11, Iwr22, Iwr11), WR_mc)
   >>> WF_I = (inertia(Fork, Iwf11, Iwf22, Iwf11), WF_mc)
@@ -326,7 +330,9 @@ constraint forces the front wheel contact point to not move away from the
 ground frame, essentially replicating the holonomic constraint which does not
 allow the frame pitch to change in an invalid fashion. ::
 
-  >>> conlist_speed = [WF_cont.vel(N) & Y.x, WF_cont.vel(N) & Y.y, WF_cont.vel(N) & Y.z]
+  >>> conlist_speed = [WF_cont.vel(N) & Y.x,
+  ...                  WF_cont.vel(N) & Y.y,
+  ...                  WF_cont.vel(N) & Y.z]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -378,15 +384,22 @@ into the coordinate systems used in this model. ::
   >>> PaperFrameCgZ =  0.9
   >>> PaperForkCgX  =  0.9
   >>> PaperForkCgZ  =  0.7
-  >>> FrameLength   =  evalf.N(PaperWb*sin(HTA)-(rake-(PaperRadFront-PaperRadRear)*cos(HTA)))
-  >>> FrameCGNorm   =  evalf.N((PaperFrameCgZ - PaperRadRear-(PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
-  >>> FrameCGPar    =  evalf.N((PaperFrameCgX / sin(HTA) + (PaperFrameCgZ - PaperRadRear - PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)))
+  >>> FrameLength   =  evalf.N(PaperWb*sin(HTA) - (rake - \
+  ...                         (PaperRadFront - PaperRadRear)*cos(HTA)))
+  >>> FrameCGNorm   =  evalf.N((PaperFrameCgZ - PaperRadRear - \
+  ...                          (PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
+  >>> FrameCGPar    =  evalf.N((PaperFrameCgX / sin(HTA) + \
+  ...                          (PaperFrameCgZ - PaperRadRear - \
+  ...                           PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)))
   >>> tempa         =  evalf.N((PaperForkCgZ - PaperRadFront))
   >>> tempb         =  evalf.N((PaperWb-PaperForkCgX))
-  >>> tempc         =  evalf.N(sqrt(tempa**2+tempb**2))
-  >>> PaperForkL    =  evalf.N((PaperWb*cos(HTA)-(PaperRadFront-PaperRadRear)*sin(HTA)))
-  >>> ForkCGNorm    =  evalf.N(rake+(tempc * sin(pi/2-HTA-acos(tempa/tempc))))
-  >>> ForkCGPar     =  evalf.N(tempc * cos((pi/2-HTA)-acos(tempa/tempc))-PaperForkL)
+  >>> tempc         =  evalf.N(sqrt(tempa**2 + tempb**2))
+  >>> PaperForkL    =  evalf.N((PaperWb*cos(HTA) - \
+  ...                          (PaperRadFront - PaperRadRear)*sin(HTA)))
+  >>> ForkCGNorm    =  evalf.N(rake + (tempc * sin(pi/2 - \
+  ...                          HTA - acos(tempa/tempc))))
+  >>> ForkCGPar     =  evalf.N(tempc * cos((pi/2 - HTA) - \
+  ...                          acos(tempa/tempc)) - PaperForkL)
 
 Here is the final assembly of the numerical values. The symbol 'v' is the
 forward speed of the bicycle (a concept which only makes sense in the upright,
@@ -395,7 +408,44 @@ substituted in. Again the sign on the *product* of inertia values is flipped
 here, due to different orientations of coordinate systems. ::
 
   >>> v = Symbol('v')
-  >>> val_dict = {WFrad: PaperRadFront, WRrad: PaperRadRear, htangle: HTA, forkoffset: rake, forklength: PaperForkL, framelength: FrameLength, forkcg1: ForkCGPar, forkcg3: ForkCGNorm, framecg1: FrameCGNorm, framecg3: FrameCGPar, Iwr11: 0.0603, Iwr22: 0.12, Iwf11: 0.1405, Iwf22: 0.28, Ifork11: 0.05892, Ifork22: 0.06, Ifork33: 0.00708, Ifork31: 0.00756, Iframe11: 9.2, Iframe22: 11, Iframe33: 2.8, Iframe31: -2.4, mfork: 4, mframe: 85, mwf: 3, mwr: 2, g: 9.81, q1: 0, q2: 0, q4: 0, q5: 0, u1: 0, u2: 0, u3: v/PaperRadRear, u4: 0, u5: 0, u6: v/PaperRadFront}
+  >>> val_dict = {
+  ...       WFrad: PaperRadFront,
+  ...       WRrad: PaperRadRear,
+  ...       htangle: HTA,
+  ...       forkoffset: rake,
+  ...       forklength: PaperForkL,
+  ...       framelength: FrameLength,
+  ...       forkcg1: ForkCGPar,
+  ...       forkcg3: ForkCGNorm,
+  ...       framecg1: FrameCGNorm,
+  ...       framecg3: FrameCGPar,
+  ...       Iwr11: 0.0603,
+  ...       Iwr22: 0.12,
+  ...       Iwf11: 0.1405,
+  ...       Iwf22: 0.28,
+  ...       Ifork11: 0.05892,
+  ...       Ifork22: 0.06,
+  ...       Ifork33: 0.00708,
+  ...       Ifork31: 0.00756,
+  ...       Iframe11: 9.2,
+  ...       Iframe22: 11,
+  ...       Iframe33: 2.8,
+  ...       Iframe31: -2.4,
+  ...       mfork: 4,
+  ...       mframe: 85,
+  ...       mwf: 3,
+  ...       mwr: 2,
+  ...       g: 9.81,
+  ...       q1: 0,
+  ...       q2: 0,
+  ...       q4: 0,
+  ...       q5: 0,
+  ...       u1: 0,
+  ...       u2: 0,
+  ...       u3: v/PaperRadRear,
+  ...       u4: 0,
+  ...       u5: 0,
+  ...       u6: v/PaperRadFront}
   >>> kdd = KM.kindiffdict()
   >>> print('Before Linearization of the \"Forcing\" Term')
   Before Linearization of the "Forcing" Term
@@ -416,7 +466,8 @@ include both q's and u's, so the mass matrix must have this done as well.  This
 will likely be changed to be part of the linearized process, for future
 reference. ::
 
-  >>> MM_full = (KM._k_kqdot).row_join(zeros(4, 6)).col_join((zeros(6, 4)).row_join(KM.mass_matrix))
+  >>> MM_full = (KM._k_kqdot).row_join(zeros(4, 6)).col_join(
+  ...           (zeros(6, 4)).row_join(KM.mass_matrix))
   >>> print('Before Substitution of Numerical Values')
   Before Substitution of Numerical Values
 

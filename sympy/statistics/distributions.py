@@ -33,12 +33,12 @@ class Sample(tuple):
     def __new__(cls, sample):
         s = tuple.__new__(cls, sorted(sample))
         s.mean = mean = sum(s) / Integer(len(s))
-        s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
+        s.variance = sum([(x - mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
         if len(s) % 2:
             s.median = s[len(s)//2]
         else:
-            s.median = sum(s[len(s)//2-1:len(s)//2+1]) / Integer(2)
+            s.median = sum(s[len(s)//2 - 1:len(s)//2 + 1]) / Integer(2)
         return s
 
     def __repr__(self):
@@ -151,7 +151,7 @@ class Normal(ContinuousProbability):
 
         """
         x = sympify(x)
-        return 1/(s.sigma*sqrt(2*pi)) * exp(-(x-s.mu)**2 / (2*s.sigma**2))
+        return 1/(s.sigma*sqrt(2*pi)) * exp(-(x - s.mu)**2 / (2*s.sigma**2))
 
     def cdf(s, x):
         """
@@ -169,7 +169,7 @@ class Normal(ContinuousProbability):
 
         """
         x = sympify(x)
-        return (1+erf((x-s.mu)/(s.sigma*sqrt(2))))/2
+        return (1 + erf((x - s.mu)/(s.sigma*sqrt(2))))/2
 
     def _random(s):
         return random.gauss(float(s.mu), float(s.sigma))
@@ -213,7 +213,7 @@ class Normal(ContinuousProbability):
         y = erfinv(mpf(p))
         t = Float(str(mpf(float(s.sigma)) * mpf(2)**0.5 * y))
         mu = s.mu.evalf()
-        return (mu-t, mu+t)
+        return (mu - t, mu + t)
 
     @staticmethod
     def fit(sample):
@@ -247,10 +247,10 @@ class Uniform(ContinuousProbability):
         self.a = sympify(a)
         self.b = sympify(b)
 
-    mean = property(lambda s: (s.a+s.b)/2)
-    median = property(lambda s: (s.a+s.b)/2)
-    mode = property(lambda s: (s.a+s.b)/2)  # arbitrary
-    variance = property(lambda s: (s.b-s.a)**2 / 12)
+    mean = property(lambda s: (s.a + s.b)/2)
+    median = property(lambda s: (s.a + s.b)/2)
+    mode = property(lambda s: (s.a + s.b)/2)  # arbitrary
+    variance = property(lambda s: (s.b - s.a)**2 / 12)
     stddev = property(lambda s: sqrt(s.variance))
 
     def pdf(s, x):
@@ -273,7 +273,7 @@ class Uniform(ContinuousProbability):
                 "piecewise functions")
         if x < s.a or x > s.b:
             return Rational(0)
-        return 1/(s.b-s.a)
+        return 1/(s.b - s.a)
 
     def cdf(s, x):
         """
@@ -297,7 +297,7 @@ class Uniform(ContinuousProbability):
             return Rational(0)
         if x >= s.b:
             return Rational(1)
-        return (x-s.a)/(s.b-s.a)
+        return (x - s.a)/(s.b - s.a)
 
     def _random(s):
         return Float(random.uniform(float(s.a), float(s.b)))
@@ -317,7 +317,7 @@ class Uniform(ContinuousProbability):
         p = sympify(p)
         assert p <= 1
 
-        d = (s.b-s.a)*p / 2
+        d = (s.b - s.a)*p / 2
         return (s.mean - d, s.mean + d)
 
     @staticmethod
@@ -340,7 +340,8 @@ class Uniform(ContinuousProbability):
             sample = Sample(sample)
         m = sample.mean
         d = sqrt(12*sample.variance)/2
-        return Uniform(m-d, m+d)
+        return Uniform(m - d, m + d)
+
 
 class PDF(ContinuousProbability):
     """
@@ -383,7 +384,6 @@ class PDF(ContinuousProbability):
         self._variance = None
         self._stddev = None
 
-
     def normalize(self):
         """
         Normalize the probability distribution function so that
@@ -417,7 +417,6 @@ class PDF(ContinuousProbability):
         else:
             return self
 
-
     def cdf(self, x):
         """
         Return the cumulative density function as an expression in x
@@ -441,7 +440,8 @@ class PDF(ContinuousProbability):
             from sympy import integrate
             w = Dummy('w', real=True)
             self._cdf = integrate(self.pdf(w), w)
-            self._cdf = Lambda(w, self._cdf - self._cdf.subs(w, self.domain[0]))
+            self._cdf = Lambda(
+                w, self._cdf - self._cdf.subs(w, self.domain[0]))
             return self._cdf(x)
 
     def _get_mean(self):
@@ -450,7 +450,8 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate
             w = Dummy('w', real=True)
-            self._mean = integrate(self.pdf(w)*w,(w,self.domain[0],self.domain[1]))
+            self._mean = integrate(
+                self.pdf(w)*w, (w, self.domain[0], self.domain[1]))
             return self._mean
 
     def _get_variance(self):
@@ -459,7 +460,8 @@ class PDF(ContinuousProbability):
         else:
             from sympy import integrate, simplify
             w = Dummy('w', real=True)
-            self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
+            self._variance = integrate(self.pdf(
+                w)*w**2, (w, self.domain[0], self.domain[1])) - self.mean**2
             self._variance = simplify(self._variance)
             return self._variance
 
@@ -474,11 +476,10 @@ class PDF(ContinuousProbability):
     variance = property(_get_variance)
     stddev = property(_get_stddev)
 
-
     def _random(s):
         raise NotImplementedError
 
-    def transform(self,func,var):
+    def transform(self, func, var):
         """
         Return a probability distribution of random variable func(x)
         currently only some simple injective functions are supported
@@ -506,6 +507,6 @@ class PDF(ContinuousProbability):
             # this assignment holds only for x in domain
             # in general it would require implementing
             # piecewise defined functions in sympy
-            newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
+            newPdf += (self.pdf(var)/abs(funcdiff)).subs(var, x)
 
         return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))

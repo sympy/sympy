@@ -33,13 +33,14 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+__all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
            'annotated']
 
 
 _use_unicode = False
 
-def pretty_use_unicode(flag = None):
+
+def pretty_use_unicode(flag=None):
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode
     global warnings
@@ -56,6 +57,7 @@ def pretty_use_unicode(flag = None):
     _use_unicode = flag
     return use_unicode_prev
 
+
 def pretty_try_use_unicode():
     """See if unicode output is available and leverage it if possible"""
 
@@ -63,7 +65,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g,G in greek.itervalues():
+        for g, G in greek.itervalues():
             symbols.append(g)
             symbols.append(G)
 
@@ -98,8 +100,8 @@ def xstr(*args):
         return str(*args)
 
 # GREEK
-g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
-G   = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
+g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
+G = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
 greek_letters = [
     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
@@ -174,14 +176,14 @@ for s in '+-=()':
 
 
 # VERTICAL OBJECTS
-HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
-CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
-MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
-EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
-HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
-CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
-TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
-BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
+HUP = lambda symb: U('%s UPPER HOOK' % symb_2txt[symb])
+CUP = lambda symb: U('%s UPPER CORNER' % symb_2txt[symb])
+MID = lambda symb: U('%s MIDDLE PIECE' % symb_2txt[symb])
+EXT = lambda symb: U('%s EXTENSION' % symb_2txt[symb])
+HLO = lambda symb: U('%s LOWER HOOK' % symb_2txt[symb])
+CLO = lambda symb: U('%s LOWER CORNER' % symb_2txt[symb])
+TOP = lambda symb: U('%s TOP' % symb_2txt[symb])
+BOT = lambda symb: U('%s BOTTOM' % symb_2txt[symb])
 
 # {} '('  ->  (extension, start, end, middle) 1-character
 _xobj_unicode = {
@@ -257,6 +259,7 @@ _xobj_ascii = {
     '\\':   '\\',
 }
 
+
 def xobj(symb, length):
     """Construct spatial object of given length.
 
@@ -280,7 +283,7 @@ def xobj(symb, length):
     else:
         if isinstance(vinfo[0], tuple):     # (vlong), c1
             vlong = vinfo[0]
-            c1    = vinfo[1]
+            c1 = vinfo[1]
         else:                               # (vlong), c1
             vlong = vinfo
 
@@ -293,9 +296,12 @@ def xobj(symb, length):
         except IndexError:
             pass
 
-    if c1  is None:  c1  = ext
-    if top is None:  top = ext
-    if bot is None:  bot = ext
+    if c1 is None:
+        c1 = ext
+    if top is None:
+        top = ext
+    if bot is None:
+        bot = ext
     if mid is not None:
         if (length % 2) == 0:
             # even height, but we have to print it somehow anyway...
@@ -308,10 +314,9 @@ def xobj(symb, length):
     if length == 1:
         return c1
 
-
     res = []
-    next= (length-2)//2
-    nmid= (length-2) - next*2
+    next = (length - 2)//2
+    nmid = (length - 2) - next*2
 
     res += [top]
     res += [ext]*next
@@ -328,6 +333,7 @@ def vobj(symb, height):
        see: xobj
     """
     return '\n'.join( xobj(symb, height) )
+
 
 def hobj(symb, width):
     """Construct horizontal object of a given width
@@ -415,6 +421,7 @@ atoms_table = {
     'Intersection':     U('INTERSECTION')
 }
 
+
 def pretty_atom(atom_name, default=None):
     """return pretty representation of an atom"""
     if _use_unicode:
@@ -424,6 +431,7 @@ def pretty_atom(atom_name, default=None):
             return default
 
         raise KeyError('only unicode')  # send it default printer
+
 
 def pretty_symbol(symb_name):
     """return pretty representation of a symbol"""
@@ -454,7 +462,7 @@ def pretty_symbol(symb_name):
         for s in l:
             pretty = mapping.get(s)
             if pretty is None:
-                try: # match by separate characters
+                try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
                 except KeyError:
                     return None
@@ -468,7 +476,7 @@ def pretty_symbol(symb_name):
         pretty_subs = None
 
     # glue the results into one string
-    if pretty_subs is None: # nice formatting of sups/subs did not work
+    if pretty_subs is None:  # nice formatting of sups/subs did not work
         return symb_name
     else:
         sups_result = ' '.join(pretty_sups)

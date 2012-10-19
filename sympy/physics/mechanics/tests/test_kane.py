@@ -2,6 +2,7 @@ from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle)
 
+
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
     # It is described in more detail in the KanesMethod docstring.
@@ -23,7 +24,9 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+    assert KM.linearize(
+        ) == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.
@@ -59,6 +62,7 @@ def test_two_dof():
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
+
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -102,7 +106,8 @@ def test_rolling_disc():
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
+    R.set_ang_acc(
+        N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form
@@ -145,13 +150,14 @@ def test_rolling_disc():
     assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
 
+
 def test_aux():
     # Same as above, except we have 2 auxiliary speeds for the ground contact
     # point, which is known to be zero. In one case, we go through then
     # substitute the aux. speeds in at the end (they are zero, as well as their
     # derivative), in the other case, we use the built-in auxiliary speed part
     # of KanesMethod. The equations from each should be the same.
-    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     u4, u5, f1, f2 = dynamicsymbols('u4, u5, f1, f2')
     u4d, u5d = dynamicsymbols('u4, u5', 1)
@@ -182,17 +188,18 @@ def test_aux():
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
                      kd_eqs=kd)
     (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
-    fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
-    frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+    fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+    frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
                       u_auxiliary=[u4, u5])
     (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
-    fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
-    frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+    fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+    frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     assert fr.expand() == fr2.expand()
     assert frstar.expand() == frstar2.expand()
+
 
 def test_parallel_axis():
     # This is for a 2 dof inverted pendulum on a cart.
@@ -200,16 +207,16 @@ def test_parallel_axis():
     # pendulum is defined about the hinge, not about the center of mass.
 
     # Defining the constants and knowns of the system
-    gravity        = symbols('g')
-    k, ls          = symbols('k ls')
-    a, mA, mC      = symbols('a mA mC')
-    F              = dynamicsymbols('F')
-    Ix, Iy, Iz     = symbols('Ix Iy Iz')
+    gravity = symbols('g')
+    k, ls = symbols('k ls')
+    a, mA, mC = symbols('a mA mC')
+    F = dynamicsymbols('F')
+    Ix, Iy, Iz = symbols('Ix Iy Iz')
 
     # Declaring the Generalized coordinates and speeds
-    q1, q2   = dynamicsymbols('q1 q2')
+    q1, q2 = dynamicsymbols('q1 q2')
     q1d, q2d = dynamicsymbols('q1 q2', 1)
-    u1, u2   = dynamicsymbols('u1 u2')
+    u1, u2 = dynamicsymbols('u1 u2')
     u1d, u2d = dynamicsymbols('u1 u2', 1)
 
     # Creating reference frames
@@ -224,28 +231,28 @@ def test_parallel_axis():
 
     # Creating and Locating the positions of the cart, C, and the
     # center of mass of the pendulum, A
-    C  = O.locatenew('C',  q1 * N.x)
+    C = O.locatenew('C',  q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 
     # Defining velocities of the points
     O.set_vel(N, 0)
     C.set_vel(N, u1 * N.x)
     Ao.v2pt_theory(C, N, A)
-    Cart     = Particle('Cart', C, mC)
+    Cart = Particle('Cart', C, mC)
     Pendulum = RigidBody('Pendulum', Ao, A, mA, (inertia(A, Ix, Iy, Iz), C))
 
     # kinematical differential equations
 
-    kindiffs  = [q1d - u1, q2d - u2]
+    kindiffs = [q1d - u1, q2d - u2]
 
-    bodyList  = [Cart, Pendulum]
+    bodyList = [Cart, Pendulum]
 
     forceList = [(Ao, -N.y * gravity * mA),
-                 (C,  -N.y * gravity * mC),
-                 (C,  -N.x * k * (q1 - ls)),
+                 (C, -N.y * gravity * mC),
+                 (C, -N.x * k * (q1 - ls)),
                  (C,   N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
-    (fr,frstar) = km.kanes_equations(forceList, bodyList)
+    (fr, frstar) = km.kanes_equations(forceList, bodyList)
     mm = km.mass_matrix_full
     assert mm[3, 3] == Iz

@@ -1,6 +1,9 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
-from sympy.combinatorics.permutations import Permutation, _new_from_array_form
+from sympy.combinatorics.permutations import Permutation
+
+_af_new = Permutation._af_new
+
 
 def AbelianGroup(*cyclic_orders):
     """
@@ -15,10 +18,15 @@ def AbelianGroup(*cyclic_orders):
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import AbelianGroup
-    >>> AbelianGroup(3,4)
-    PermutationGroup([Permutation([1, 2, 0, 3, 4, 5, 6]),\
-    Permutation([0, 1, 2, 4, 5, 6, 3])])
+    >>> AbelianGroup(3, 4)
+    PermutationGroup([
+            Permutation(6)(0, 1, 2),
+            Permutation(3, 4, 5, 6)])
+    >>> _.is_group()
+    False
 
     See Also
     ========
@@ -38,6 +46,7 @@ def AbelianGroup(*cyclic_orders):
 
     return G
 
+
 def AlternatingGroup(n):
     """
     Generates the alternating group on ``n`` elements as a permutation group.
@@ -53,11 +62,13 @@ def AlternatingGroup(n):
 
     >>> from sympy.combinatorics.named_groups import AlternatingGroup
     >>> G = AlternatingGroup(4)
+    >>> G.is_group()
+    False
     >>> a = list(G.generate_dimino())
     >>> len(a)
     12
-    >>> [perm.is_even for perm in a]
-    [True, True, True, True, True, True, True, True, True, True, True, True]
+    >>> all(perm.is_even for perm in a)
+    True
 
     See Also
     ========
@@ -76,18 +87,22 @@ def AlternatingGroup(n):
 
     a = range(n)
     a[0], a[1], a[2] = a[1], a[2], a[0]
-    gen1 = _new_from_array_form(a)
+    gen1 = a
     if n % 2:
         a = range(1, n)
         a.append(0)
-        gen2 = _new_from_array_form(a)
+        gen2 = a
     else:
         a = range(2, n)
         a.append(1)
-        gen2 = _new_from_array_form([0] + a)
-    G = PermutationGroup([gen1, gen2])
+        a.insert(0, 0)
+        gen2 = a
+    gens = [gen1, gen2]
+    if gen1 == gen2:
+        gens = gens[:1]
+    G = PermutationGroup([_af_new(a) for a in gens], dups=False)
 
-    if n<4:
+    if n < 4:
         G._is_abelian = True
     else:
         G._is_abelian = False
@@ -95,6 +110,7 @@ def AlternatingGroup(n):
     G._is_transitive = True
     G._is_alt = True
     return G
+
 
 def CyclicGroup(n):
     """
@@ -109,6 +125,8 @@ def CyclicGroup(n):
 
     >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> G = CyclicGroup(6)
+    >>> G.is_group()
+    False
     >>> G.order()
     6
     >>> list(G.generate_schreier_sims(af=True))
@@ -123,7 +141,7 @@ def CyclicGroup(n):
     """
     a = range(1, n)
     a.append(0)
-    gen = _new_from_array_form(a)
+    gen = _af_new(a)
     G = PermutationGroup([gen])
 
     G._is_abelian = True
@@ -131,6 +149,7 @@ def CyclicGroup(n):
     G._is_transitive = True
     G._order = n
     return G
+
 
 def DihedralGroup(n):
     r"""
@@ -149,12 +168,14 @@ def DihedralGroup(n):
 
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(5)
+    >>> G.is_group()
+    False
     >>> a = list(G.generate_dimino())
     >>> [perm.cyclic_form for perm in a]
-    [[[4], [3], [2], [1], [0]], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],
-    [[0, 3, 1, 4, 2]], [[0, 4, 3, 2, 1]], [[2], [1, 3], [0, 4]],
-    [[2, 3], [1, 4], [0]], [[3], [2, 4], [0, 1]], [[3, 4], [1], [0, 2]],
-    [[4], [1, 2], [0, 3]]]
+    [[], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],
+    [[0, 3, 1, 4, 2]], [[0, 4, 3, 2, 1]], [[0, 4], [1, 3]],
+    [[1, 4], [2, 3]], [[0, 1], [2, 4]], [[0, 2], [3, 4]],
+    [[0, 3], [1, 2]]]
 
     See Also
     ========
@@ -176,10 +197,10 @@ def DihedralGroup(n):
 
     a = range(1, n)
     a.append(0)
-    gen1 = _new_from_array_form(a)
+    gen1 = _af_new(a)
     a = range(n)
     a.reverse()
-    gen2 = _new_from_array_form(a)
+    gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
 
     G._is_abelian = False
@@ -187,6 +208,7 @@ def DihedralGroup(n):
     G._is_transitive = True
     G._order = 2*n
     return G
+
 
 def SymmetricGroup(n):
     """
@@ -202,6 +224,8 @@ def SymmetricGroup(n):
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> G = SymmetricGroup(4)
+    >>> G.is_group()
+    False
     >>> G.order()
     24
     >>> list(G.generate_schreier_sims(af=True))
@@ -227,12 +251,12 @@ def SymmetricGroup(n):
     elif n == 2:
         G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(1,n)
+        a = range(1, n)
         a.append(0)
-        gen1 = _new_from_array_form(a)
+        gen1 = _af_new(a)
         a = range(n)
         a[0], a[1] = a[1], a[0]
-        gen2 = _new_from_array_form(a)
+        gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
 
     if n<3:
@@ -243,3 +267,14 @@ def SymmetricGroup(n):
     G._is_transitive = True
     G._is_sym = True
     return G
+
+
+def RubikGroup(n):
+    """Return a group of Rubik's cube generators.
+    >>> from sympy.combinatorics.named_groups import RubikGroup
+    >>> RubikGroup(2).is_group()
+    False
+    """
+    from sympy.combinatorics.generators import rubik
+    assert n > 1
+    return PermutationGroup(rubik(n))

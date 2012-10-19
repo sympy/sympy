@@ -4,7 +4,8 @@ from random import uniform
 import random
 
 from sympy import I, nsimplify, Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
+
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
     """
@@ -36,6 +37,7 @@ def comp(z1, z2, tol):
     else:
         return diff <= tol
 
+
 def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     Test numerically that f and g agree when evaluated in the argument z.
@@ -60,6 +62,7 @@ def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
+
 
 def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
@@ -86,6 +89,8 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     return comp(f1.n(), f2.n(), tol)
 
 import random
+
+
 def _randrange(seed=None):
     """Return a randrange generator. ``seed`` can be
         o None - return randomly seeded generator
@@ -112,13 +117,13 @@ def _randrange(seed=None):
     elif isinstance(seed, int):
         return random.Random(seed).randrange
     elif is_sequence(seed):
-        seed = list(seed) # make a copy
+        seed = list(seed)  # make a copy
         seed.reverse()
+
         def give(a, b=None, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
             if b is None:
                 a, b = 0, a
-            a, b = int_tested(a, b)
+            a, b = as_int(a), as_int(b)
             w = b - a
             if w < 1:
                 raise ValueError('_randrange got empty range')
@@ -135,6 +140,7 @@ def _randrange(seed=None):
         return give
     else:
         raise ValueError('_randrange got an unexpected seed')
+
 
 def _randint(seed=None):
     """Return a randint generator. ``seed`` can be
@@ -162,11 +168,11 @@ def _randint(seed=None):
     elif isinstance(seed, int):
         return random.Random(seed).randint
     elif is_sequence(seed):
-        seed = list(seed) # make a copy
+        seed = list(seed)  # make a copy
         seed.reverse()
+
         def give(a, b, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
-            a, b = int_tested(a, b)
+            a, b = as_int(a), as_int(b)
             w = b - a
             if w < 0:
                 raise ValueError('_randint got empty range')

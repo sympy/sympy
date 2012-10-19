@@ -1,7 +1,8 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
 from sympy.simplify.sqrtdenest import subsets
 
-r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2,3,5,6,7,10,15,29]]
+r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10,
+                                          15, 29]]
 
 
 def test_sqrtdenest():
@@ -44,13 +45,14 @@ def test_sqrtdenest2():
     assert sqrtdenest(e) == sqrt(-2*r10 - 2*r2 + 4*r5 + 14)
 
     # check that the result is not more complicated than the input
-    z= sqrt(-2*r29 + cos(2) + 2*sqrt(-10*r29 + 55) + 16)
+    z = sqrt(-2*r29 + cos(2) + 2*sqrt(-10*r29 + 55) + 16)
     assert sqrtdenest(z) == z
 
     assert sqrtdenest(sqrt(r6 + sqrt(15))) == sqrt(r6 + sqrt(15))
 
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*r29))
     assert sqrtdenest(z) == z
+
 
 def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
@@ -82,9 +84,11 @@ def test_sqrtdenest_rec():
     z = sqrt(2*r10 + 6*r2 + 4*r5 + 12 + 10*r15 + 30*r3)
     assert sqrtdenest(z) == z
 
+
 def test_issue3142():
     z = sqrt( -320 + 32*sqrt(5) + 64*r15)
     assert sqrtdenest(z) == z
+
 
 def test_sqrtdenest3():
     z = sqrt(13 - 2*r10 + 2*r2*sqrt(-2*r10 + 11))
@@ -104,6 +108,7 @@ def test_sqrtdenest3():
     r = sqrt(-2*r29 + 11)
     assert sqrtdenest(z) == sqrt(r2*r + r3*r + r10 + r15 + 5)
 
+
 def test_sqrtdenest4():
     # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
     z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
@@ -112,7 +117,7 @@ def test_sqrtdenest4():
     z1 = ((-r15*c - r3*c + c + r5*c - r6 - r2 + r10 + sqrt(30))/4).expand()
     assert sqrtdenest(z) == z1
 
-    z= sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
+    z = sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
     assert sqrtdenest(z) == r2 + sqrt(r2 + 2) + 2
 
     w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)
@@ -163,5 +168,7 @@ def test_subsets():
       [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
       [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
 
+
 def test_issue_2554():
-    assert sqrtdenest(sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))
+    assert sqrtdenest(
+        sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))

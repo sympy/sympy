@@ -8,6 +8,7 @@ from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
 from sympy.core.compatibility import product
 
+
 class Density(HermitianOperator):
     """Density operator for representing mixed states.
 
@@ -159,22 +160,22 @@ class Density(HermitianOperator):
 
         terms = []
         for (state, prob) in self.args:
-            state = state.expand() # needed to break up (a+b)*c
+            state = state.expand()  # needed to break up (a+b)*c
             if (isinstance(state, Add)):
                 for arg in product(state.args, repeat=2):
                     terms.append(prob *
                                  self._generate_outer_prod(arg[0], arg[1]))
             else:
                 terms.append(prob *
-                             self._generate_outer_prod(state,state))
+                             self._generate_outer_prod(state, state))
 
         return Add(*terms)
 
-    def _generate_outer_prod(self,arg1,arg2):
+    def _generate_outer_prod(self, arg1, arg2):
         c_part1, nc_part1 = arg1.args_cnc()
         c_part2, nc_part2 = arg2.args_cnc()
 
-        if ( len(nc_part1) == 0  or
+        if ( len(nc_part1) == 0 or
              len(nc_part2) == 0 ):
             raise ValueError('Atleast one-pair of'
                              ' Non-commutative instance required'
@@ -183,7 +184,7 @@ class Density(HermitianOperator):
         # Muls of Tensor Products should be expanded
         # before this function is called
         if (isinstance(nc_part1[0], TensorProduct) and
-            len(nc_part1) == 1 and len(nc_part2) == 1):
+                len(nc_part1) == 1 and len(nc_part2) == 1):
             op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
         else:
             op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
@@ -200,7 +201,7 @@ class Density(HermitianOperator):
         return prettyForm(u"\u03C1")
 
     def _eval_trace(self, **kwargs):
-        indices = kwargs.get('indices',[])
+        indices = kwargs.get('indices', [])
         return Tr(self.doit(), indices).doit()
 
     def entropy(self):
@@ -209,6 +210,7 @@ class Density(HermitianOperator):
         Refer to density.entropy() method  for examples.
         """
         return entropy(self)
+
 
 def entropy(density):
     """Compute the entropy of a matrix/density object.
@@ -239,7 +241,7 @@ def entropy(density):
 
     """
     if isinstance(density, Density):
-        density = represent(density) #represent in Matrix
+        density = represent(density)  # represent in Matrix
 
     if isinstance(density, scipy_sparse_matrix):
         density = to_numpy(density)
@@ -252,7 +254,8 @@ def entropy(density):
         eigvals = np.linalg.eigvals(density)
         return -np.sum(eigvals*np.log(eigvals))
     else:
-        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+        raise ValueError(
+            "numpy.ndarray, scipy.sparse or sympy matrix expected")
 
 
 def fidelity(state1, state2):
@@ -299,7 +302,7 @@ def fidelity(state1, state2):
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
     if (not isinstance(state1, Matrix) or
-        not isinstance(state2, Matrix)):
+            not isinstance(state2, Matrix)):
         raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))
@@ -308,5 +311,5 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the"
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 =  state1**Rational(1,2)
+    sqrt_state1 = state1**Rational(1, 2)
     return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()

@@ -15,6 +15,7 @@ A = N.orientnew('A', 'Axis', [q1, N.z])
 B = A.orientnew('B', 'Axis', [q2, A.x])
 C = B.orientnew('C', 'Axis', [q3, B.y])
 
+
 def test_dot():
     assert dot(A.x, A.x) == 1
     assert dot(A.x, A.y) == 0
@@ -30,6 +31,7 @@ def test_dot():
 
 # TODO: Add dot product tests from different frames
 
+
 def test_cross():
     assert cross(A.x, A.x) == 0
     assert cross(A.x, A.y) == A.z
@@ -43,13 +45,14 @@ def test_cross():
     assert cross(A.z, A.y) == -A.x
     assert cross(A.z, A.z) == 0
 
+
 def test_cross_different_frames():
     assert cross(N.x, A.x) == sin(q1)*A.z
     assert cross(N.x, A.y) == cos(q1)*A.z
-    assert cross(N.x, A.z) == -sin(q1)*A.x-cos(q1)*A.y
+    assert cross(N.x, A.z) == -sin(q1)*A.x - cos(q1)*A.y
     assert cross(N.y, A.x) == -cos(q1)*A.z
     assert cross(N.y, A.y) == sin(q1)*A.z
-    assert cross(N.y, A.z) == cos(q1)*A.x-sin(q1)*A.y
+    assert cross(N.y, A.z) == cos(q1)*A.x - sin(q1)*A.y
     assert cross(N.z, A.x) == A.y
     assert cross(N.z, A.y) == -A.x
     assert cross(N.z, A.z) == 0
@@ -65,6 +68,7 @@ def test_cross_different_frames():
     assert cross(C.x, A.x) == -sin(q3)*C.y
     assert cross(C.y, A.x) == sin(q3)*C.x - cos(q3)*C.z
     assert cross(C.z, A.x) == cos(q3)*C.y
+
 
 def test_express():
     assert express(A.x, C) == cos(q3)*C.x + sin(q3)*C.z
@@ -93,15 +97,15 @@ def test_express():
     assert express(N.x, A) == (cos(q1)*A.x - sin(q1)*A.y)
     assert express(N.y, A) == (sin(q1)*A.x + cos(q1)*A.y)
     assert express(N.z, A) == A.z
-    assert express(N.x, B) == (cos(q1)*B.x - sin(q1)*cos(q2)*B.y + \
+    assert express(N.x, B) == (cos(q1)*B.x - sin(q1)*cos(q2)*B.y +
             sin(q1)*sin(q2)*B.z)
-    assert express(N.y, B) == (sin(q1)*B.x + cos(q1)*cos(q2)*B.y - \
+    assert express(N.y, B) == (sin(q1)*B.x + cos(q1)*cos(q2)*B.y -
             sin(q2)*cos(q1)*B.z)
     assert express(N.z, B) == (sin(q2)*B.y + cos(q2)*B.z)
     assert express(N.x, C) == (
-            (cos(q1)*cos(q3)-sin(q1)*sin(q2)*sin(q3))*C.x -
+            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*C.x -
             sin(q1)*cos(q2)*C.y +
-            (sin(q3)*cos(q1)+sin(q1)*sin(q2)*cos(q3))*C.z)
+            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*C.z)
     assert express(N.y, C) == (
             (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*C.x +
             cos(q1)*cos(q2)*C.y +
@@ -140,14 +144,14 @@ def test_express():
     assert express(B.z, C) == (-sin(q3)*C.x + cos(q3)*C.z)
 
     assert express(C.x, N) == (
-            (cos(q1)*cos(q3)-sin(q1)*sin(q2)*sin(q3))*N.x +
-            (sin(q1)*cos(q3)+sin(q2)*sin(q3)*cos(q1))*N.y -
+            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*N.x +
+            (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*N.y -
                 sin(q3)*cos(q2)*N.z)
     assert express(C.y, N) == (
             -sin(q1)*cos(q2)*N.x + cos(q1)*cos(q2)*N.y + sin(q2)*N.z)
     assert express(C.z, N) == (
-            (sin(q3)*cos(q1)+sin(q1)*sin(q2)*cos(q3))*N.x +
-            (sin(q1)*sin(q3)-sin(q2)*cos(q1)*cos(q3))*N.y +
+            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*N.x +
+            (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*N.y +
             cos(q2)*cos(q3)*N.z)
     assert express(C.x, A) == (cos(q3)*A.x + sin(q2)*sin(q3)*A.y -
             sin(q3)*cos(q2)*A.z)
@@ -233,6 +237,7 @@ def test_express():
     assert C.x == express((cos(q3)*B.x - sin(q3)*B.z), C)
     assert C.z == express((sin(q3)*B.x + cos(q3)*B.z), C)
 
+
 def test_inertia():
     N = ReferenceFrame('N')
     ixx, iyy, izz = symbols('ixx iyy izz')
@@ -245,6 +250,7 @@ def test_inertia():
             (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
             N.y) + izz * (N.z | N.z))
 
+
 def test_kin_eqs():
     q0, q1, q2, q3 = dynamicsymbols('q0 q1 q2 q3')
     q0d, q1d, q2d, q3d = dynamicsymbols('q0 q1 q2 q3', 1)
@@ -254,6 +260,7 @@ def test_kin_eqs():
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
+
 
 def test_inertia_of_point_mass():
     r, s, t, m = symbols('r s t m')
@@ -283,8 +290,9 @@ def test_inertia_of_point_mass():
                  m * s * t * (N.z | N.y) +
                  m * (r**2 + s**2) * (N.z | N.z))
 
+
 def test_partial_velocity():
-    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
     u4, u5 = dynamicsymbols('u4, u5')
     r = symbols('r')
 
@@ -306,6 +314,7 @@ def test_partial_velocity():
             [0, 0, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [L.x, L.y, L.z, 0, 0]])
 
+
 def test_linear_momentum():
     N = ReferenceFrame('N')
     Ac = Point('Ac')
@@ -316,6 +325,7 @@ def test_linear_momentum():
     Pa = Particle('Pa', P, 1)
     Pa.point.set_vel(N, 10 * N.x)
     assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
+
 
 def test_angular_momentum_and_linear_momentum():
     m, M, l1 = symbols('m M l1')
@@ -332,8 +342,11 @@ def test_angular_momentum_and_linear_momentum():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    assert linear_momentum(
+        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
+    assert angular_momentum(
+        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+
 
 def test_kinetic_energy():
     m, M, l1 = symbols('m M l1')
@@ -352,6 +365,7 @@ def test_kinetic_energy():
     A = RigidBody('A', Ac, a, M, (I, Ac))
     assert 0 == kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
             + 2*l1**2*m*omega**2 + omega**2/2)
+
 
 def test_potential_energy():
     m, M, l1, g, h, H = symbols('m M l1 g h H')

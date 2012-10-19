@@ -36,14 +36,14 @@ np = import_module('numpy')
 
 # Backend specific imports - matplotlib
 matplotlib = import_module('matplotlib',
-    __import__kwargs={'fromlist':['pyplot', 'cm', 'collections']},
+    __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
     min_module_version='1.0.0', catch=(RuntimeError,))
 if matplotlib:
     plt = matplotlib.pyplot
     cm = matplotlib.cm
     LineCollection = matplotlib.collections.LineCollection
     mpl_toolkits = import_module('mpl_toolkits',
-            __import__kwargs={'fromlist':['mplot3d']})
+            __import__kwargs={'fromlist': ['mplot3d']})
     Axes3D = mpl_toolkits.mplot3d.Axes3D
     art3d = mpl_toolkits.mplot3d.art3d
     ListedColormap = matplotlib.colors.ListedColormap
@@ -54,15 +54,17 @@ from sympy.plotting.textplot import textplot
 # Global variable
 # Set to False when running tests / doctests so that the plots don't
 # show.
-_show=True
+_show = True
+
 
 def unset_show():
     global _show
-    _show=False
+    _show = False
 
 ##############################################################################
 # The public interface
 ##############################################################################
+
 
 class Plot(object):
     """The central class of the plotting module.
@@ -207,7 +209,7 @@ class Plot(object):
         return self._series[index]
 
     def __setitem__(self, index, *args):
-        if len(args)==1 and isinstance(args[0], BaseSeries):
+        if len(args) == 1 and isinstance(args[0], BaseSeries):
             self._series[index] = args
 
     def __delitem__(self, index):
@@ -332,7 +334,7 @@ class Line2DBaseSeries(BaseSeries):
 
     def get_segments(self):
         points = self.get_points()
-        if self.steps == True:
+        if self.steps is True:
             x = np.array((points[0], points[0])).T.flatten()[1:]
             y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
@@ -353,7 +355,7 @@ class Line2DBaseSeries(BaseSeries):
                     return f(variables[0])
                 elif arity == 2:
                     return f(*variables[:2])
-                else: # only if the line is 3D (otherwise raises an error)
+                else:  # only if the line is 3D (otherwise raises an error)
                     return f(*variables)
         else:
             return c*np.ones(self.nb_of_points)
@@ -390,7 +392,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
 
-
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
                 str(self.expr),
@@ -416,6 +417,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
+
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
@@ -464,9 +466,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             return list_segments
 
     def get_points(self):
-        if self.only_integers == True:
+        if self.only_integers is True:
             list_x = np.linspace(int(self.start), int(self.end),
-                    num=int(self.end)-int(self.start)+1)
+                    num=int(self.end) - int(self.start) + 1)
         else:
             list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
@@ -531,6 +533,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
         list_segments = []
+
         def sample(param_p, param_q, p, q, depth):
             """ Samples recursively if three points are almost collinear.
             For depth < 6, points are added irrespective of whether they
@@ -566,7 +569,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                         for x, y in zip(x_array, y_array)):
                     for i in len(y_array) - 1:
                         if ((x_array[i] is not None and y_array[i] is not None) or
-                                (x_array[i+1] is not None and y_array[i] is not None)):
+                                (x_array[i + 1] is not None and y_array[i] is not None)):
                             point_a = [x_array[i], y_array[i]]
                             point_b = [x_array[i + 1], y_array[i + 1]]
                             sample(param_array[i], param_array[i], point_a,
@@ -695,11 +698,11 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     def __str__(self):
         return ('cartesian surface: %s for'
                 ' %s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_meshes(self):
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
@@ -716,7 +719,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
+    def __init__(
+        self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
                     **kwargs):
         super(ParametricSurfaceSeries, self).__init__()
         self.expr_x = sympify(expr_x)
@@ -735,13 +739,13 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def __str__(self):
         return ('parametric cartesian surface: (%s, %s, %s) for'
                 ' %s over %s and %s over %s') % (
-                str(self.expr_x),
-                str(self.expr_y),
-                str(self.expr_z),
-                str(self.var_u),
-                str((self.start_u, self.end_u)),
-                str(self.var_v),
-                str((self.start_v, self.end_v)))
+                    str(self.expr_x),
+                    str(self.expr_y),
+                    str(self.expr_z),
+                    str(self.var_u),
+                    str((self.start_u, self.end_u)),
+                    str(self.var_v),
+                    str((self.start_v, self.end_v)))
 
     def get_parameter_meshes(self):
         return np.meshgrid(np.linspace(self.start_u, self.end_u,
@@ -783,11 +787,11 @@ class ContourSeries(BaseSeries):
     def __str__(self):
         return ('contour: %s for '
                 '%s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_meshes(self):
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
@@ -888,7 +892,7 @@ class MatplotlibBackend(BaseBackend):
                 else:
                     collection.set_color(s.line_color)
             if s.is_3Dsurface and s.surface_color:
-                if matplotlib.__version__ < "1.2.0": #TODO in the distant future remove this check
+                if matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
                 elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
@@ -902,13 +906,13 @@ class MatplotlibBackend(BaseBackend):
         # XXX The order of those is important.
         if parent.xscale and not isinstance(self.ax, Axes3D):
             self.ax.set_xscale(parent.xscale)
-        if parent.yscale and  not isinstance(self.ax, Axes3D):
+        if parent.yscale and not isinstance(self.ax, Axes3D):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
-        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0': #XXX in the distant future remove this check
+        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
@@ -964,9 +968,11 @@ class TextBackend(BaseBackend):
 
     def show(self):
         if len(self.parent._series) != 1:
-            raise ValueError('The TextBackend supports only one graph per Plot.')
+            raise ValueError(
+                'The TextBackend supports only one graph per Plot.')
         elif not isinstance(self.parent._series[0], LineOver1DRangeSeries):
-            raise ValueError('The TextBackend supports only expressions over a 1D range')
+            raise ValueError(
+                'The TextBackend supports only expressions over a 1D range')
         else:
             ser = self.parent._series[0]
             textplot(ser.expr, ser.start, ser.end)
@@ -984,8 +990,8 @@ class DefaultBackend(BaseBackend):
 
 
 plot_backends = {
-        'matplotlib' : MatplotlibBackend,
-        'text' : TextBackend,
+        'matplotlib': MatplotlibBackend,
+        'text': TextBackend,
         'default': DefaultBackend
         }
 
@@ -997,12 +1003,14 @@ plot_backends = {
 def centers_of_segments(array):
     return np.average(np.vstack((array[:-1], array[1:])), 0)
 
+
 def centers_of_faces(array):
     return np.average(np.dstack((array[:-1, :-1],
-                                 array[1: , :-1],
+                                 array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
                                  )), 2)
+
 
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
@@ -1013,6 +1021,7 @@ def flat(x, y, z, eps=1e-3):
     vector_b_norm = np.linalg.norm(vector_b)
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
+
 
 def _matplotlib_list(interval_list):
     """
@@ -1243,8 +1252,8 @@ def plot_parametric(*args, **kwargs):
 
     ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
 
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
+    ``axis_center``: tuple of two floats denoting the coordinates of the center
+    or {'center', 'auto'}
 
     ``xlim`` : tuple of two floats, denoting the x - axis limits.
 
@@ -1252,6 +1261,7 @@ def plot_parametric(*args, **kwargs):
 
     Examples
     ========
+
     >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot_parametric
     >>> u = symbols('u')
@@ -1262,11 +1272,12 @@ def plot_parametric(*args, **kwargs):
 
     Multiple parametric plot with single range.
 
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))# doctest: +SKIP
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))  # doctest: +SKIP
 
     Multiple parametric plots.
 
-    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)), (cos(u), u, (u, -5, 5)))# doctest: +SKIP
+    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
+    ...     (cos(u), u, (u, -5, 5)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1282,6 +1293,7 @@ def plot_parametric(*args, **kwargs):
     if show:
         plots.show()
     return plots
+
 
 def plot3d_parametric_line(*args, **kwargs):
     """
@@ -1347,11 +1359,12 @@ def plot3d_parametric_line(*args, **kwargs):
 
     Single plot.
 
-    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))# doctest: +SKIP
+    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))  # doctest: +SKIP
 
     Multiple plots.
 
-    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)), (sin(u), u**2, u, (u, -5, 5)))# doctest: +SKIP
+    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
+    ...     (sin(u), u**2, u, (u, -5, 5)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1368,6 +1381,7 @@ def plot3d_parametric_line(*args, **kwargs):
     if show:
         plots.show()
     return plots
+
 
 def plot3d(*args, **kwargs):
     """
@@ -1441,15 +1455,16 @@ def plot3d(*args, **kwargs):
 
     Single plot
 
-    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5)) # doctest: +SKIP
+    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
 
     Multiple plots with same range
 
-    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))# doctest: +SKIP
+    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
 
     Multiple plots with different ranges.
 
-    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x*y, (x, -3, 3), (y, -3, 3)))# doctest: +SKIP
+    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
+    ...     (x*y, (x, -3, 3), (y, -3, 3)))  # doctest: +SKIP
 
     See Also
     ========
@@ -1539,7 +1554,8 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     Single plot.
 
-    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v, (u, -5, 5), (v, -5, 5)) # doctest: +SKIP
+    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+    ...     (u, -5, 5), (v, -5, 5))  # doctest: +SKIP
 
     See Also
     ========
@@ -1556,6 +1572,7 @@ def plot3d_parametric_surface(*args, **kwargs):
     if show:
         plots.show()
     return plots
+
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
@@ -1621,7 +1638,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             raise ValueError("The number of free_symbols in the expression"
                                 "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
-            ranges = Tuple(*[range_expr for range_expr in args[i:i + nb_of_free_symbols]])
+            ranges = Tuple(*[range_expr for range_expr in args[
+                           i:i + nb_of_free_symbols]])
             plots = [expr + ranges for expr in exprs]
             return plots
         else:

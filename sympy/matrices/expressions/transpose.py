@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr
 from sympy import Basic
 
+
 class Transpose(MatrixExpr):
     """Matrix Transpose
 
@@ -19,6 +20,7 @@ class Transpose(MatrixExpr):
     B'*A'
     """
     is_Transpose = True
+
     def __new__(cls, mat):
         try:
             return mat.transpose()
@@ -41,4 +43,4 @@ class Transpose(MatrixExpr):
 
     def _eval_trace(self):
         from trace import Trace
-        return Trace(self.arg) # Trace(X.T) => Trace(X)
+        return Trace(self.arg)  # Trace(X.T) => Trace(X)

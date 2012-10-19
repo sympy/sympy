@@ -1,5 +1,9 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.permutations import _new_from_array_form
+from sympy.combinatorics.permutations import Permutation
+from sympy.utilities.iterables import uniq
+
+_af_new = Permutation._af_new
+
 
 def DirectProduct(*groups):
     """
@@ -45,9 +49,9 @@ def DirectProduct(*groups):
     for i in xrange(len(gens_count)):
         for j in xrange(current_gen, current_gen + gens_count[i]):
             gen = ((groups[i].generators)[j - current_gen]).array_form
-            array_gens[j][current_deg:current_deg + degrees[i]] =\
-            [ x + current_deg for x in gen]
+            array_gens[j][current_deg:current_deg + degrees[i]] = \
+                [ x + current_deg for x in gen]
         current_gen += gens_count[i]
         current_deg += degrees[i]
-    perm_gens = [_new_from_array_form(array) for array in array_gens]
-    return PermutationGroup(perm_gens)
+    perm_gens = uniq([_af_new(list(a)) for a in array_gens])
+    return PermutationGroup(perm_gens, dups=False)
