@@ -159,7 +159,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
 
     # keep autosimplification from joining Integer or
     # minus sign into a Mul; this modification doesn't
-    # prevent the 2-arg Mul from becoming and Add.
+    # prevent the 2-arg Mul from becoming an Add, however.
     hit = False
     if '(' in s:
         kern = '_kern'
@@ -175,7 +175,10 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
 
     if not hit:
         return expr
+    rep = {C.Symbol(kern): 1}
     try:
-        return expr.xreplace({C.Symbol(kern): 1})
+        return expr.xreplace(rep)
     except (TypeError, AttributeError):
+        if isinstance(expr, (list, tuple, set)):
+            return type(expr)([e.xreplace(rep) for e in expr])
         return expr
