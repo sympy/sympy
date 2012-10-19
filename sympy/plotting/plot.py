@@ -1195,8 +1195,7 @@ def plot_parametric(*args, **kwargs):
 
     Multiple plots with same range.
 
-    ``plot_parametric(
-        (expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
+    ``plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
@@ -1253,8 +1252,8 @@ def plot_parametric(*args, **kwargs):
 
     ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
 
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
+    ``axis_center``: tuple of two floats denoting the coordinates of the center
+    or {'center', 'auto'}
 
     ``xlim`` : tuple of two floats, denoting the x - axis limits.
 
@@ -1262,6 +1261,7 @@ def plot_parametric(*args, **kwargs):
 
     Examples
     ========
+
     >>> from sympy import symbols, cos, sin
     >>> from sympy.plotting import plot_parametric
     >>> u = symbols('u')
@@ -1492,8 +1492,7 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     Single plot.
 
-    ``plot3d_parametric_surface(
-        expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
+    ``plot3d_parametric_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
 
     If the ranges is not specified, then a default range of (-10, 10) is used.
 

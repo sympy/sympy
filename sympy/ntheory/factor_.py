@@ -87,7 +87,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     The table of the output logic is:
 
         ====== ====== ======= =======
-                       Visual
+        |              Visual
         ------ ----------------------
         Input  True   False   other
         ====== ====== ======= =======
