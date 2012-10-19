@@ -161,8 +161,8 @@ def _get_indices_Add(expr):
         return set(), {}
 
     if not all(map(lambda x: x == non_scalars[0], non_scalars[1:])):
-        raise IndexConformanceException("Indices are not consistent: %s"%expr)
-    if not reduce(lambda x, y: x!=y or y, syms):
+        raise IndexConformanceException("Indices are not consistent: %s" % expr)
+    if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]
     else:
         # FIXME: search for symmetries
@@ -263,7 +263,7 @@ def get_indices(expr):
         elif not expr.has(Indexed):
             return set(), {}
         raise NotImplementedError(
-                "FIXME: No specialized handling of type %s"%type(expr))
+                "FIXME: No specialized handling of type %s" % type(expr))
 
 
 def get_contraction_structure(expr):
@@ -437,4 +437,4 @@ def get_contraction_structure(expr):
     elif not expr.has(Indexed):
         return {None: set([expr])}
     raise NotImplementedError(
-            "FIXME: No specialized handling of type %s"%type(expr))
+            "FIXME: No specialized handling of type %s" % type(expr))

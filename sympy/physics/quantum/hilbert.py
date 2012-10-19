@@ -352,13 +352,13 @@ class TensorProductHilbertSpace(HilbertSpace):
                 if isinstance(new_arg, TensorPowerHilbertSpace) and\
                     isinstance(prev_arg, TensorPowerHilbertSpace) and\
                         new_arg.base == prev_arg.base:
-                    prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
+                    prev_arg = new_arg.base**(new_arg.exp + prev_arg.exp)
                 elif isinstance(new_arg, TensorPowerHilbertSpace) and\
                         new_arg.base == prev_arg:
-                    prev_arg = prev_arg**(new_arg.exp+1)
+                    prev_arg = prev_arg**(new_arg.exp + 1)
                 elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
                         new_arg == prev_arg.base:
-                    prev_arg = new_arg**(prev_arg.exp+1)
+                    prev_arg = new_arg**(prev_arg.exp + 1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
                 else:
@@ -415,7 +415,7 @@ class TensorProductHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
+            if i != length - 1:
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
                 else:
@@ -431,7 +431,7 @@ class TensorProductHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\otimes '
         return s
 
@@ -500,7 +500,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x, y: x+y, arg_list)
+            return reduce(lambda x, y: x + y, arg_list)
 
     @property
     def spaces(self):
@@ -526,7 +526,7 @@ class DirectSumHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
+            if i != length - 1:
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
                 else:
@@ -542,7 +542,7 @@ class DirectSumHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\oplus '
         return s
 

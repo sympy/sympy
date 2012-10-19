@@ -36,15 +36,15 @@ def dup_add_term(f, c, i, K):
         return f
 
     n = len(f)
-    m = n-i-1
+    m = n - i -1
 
-    if i == n-1:
-        return dup_strip([f[0]+c] + f[1:])
+    if i == n - 1:
+        return dup_strip([f[0] + c] + f[1:])
     else:
         if i >= n:
-            return [c] + [K.zero]*(i-n) + f
+            return [c] + [K.zero]*(i - n) + f
         else:
-            return f[:m] + [f[m]+c] + f[m+1:]
+            return f[:m] + [f[m] + c] + f[m + 1:]
 
 
 @cythonized("i,u,v,n,m")
@@ -68,21 +68,21 @@ def dmp_add_term(f, c, i, u, K):
     if not u:
         return dup_add_term(f, c, i, K)
 
-    v = u-1
+    v = u -1
 
     if dmp_zero_p(c, v):
         return f
 
     n = len(f)
-    m = n-i-1
+    m = n - i -1
 
-    if i == n-1:
+    if i == n - 1:
         return dmp_strip([dmp_add(f[0], c, v, K)] + f[1:], u)
     else:
         if i >= n:
-            return [c] + dmp_zeros(i-n, v, K) + f
+            return [c] + dmp_zeros(i - n, v, K) + f
         else:
-            return f[:m] + [dmp_add(f[m], c, v, K)] + f[m+1:]
+            return f[:m] + [dmp_add(f[m], c, v, K)] + f[m + 1:]
 
 
 @cythonized("i,n,m")
@@ -106,15 +106,15 @@ def dup_sub_term(f, c, i, K):
         return f
 
     n = len(f)
-    m = n-i-1
+    m = n - i -1
 
-    if i == n-1:
-        return dup_strip([f[0]-c] + f[1:])
+    if i == n - 1:
+        return dup_strip([f[0] - c] + f[1:])
     else:
         if i >= n:
-            return [-c] + [K.zero]*(i-n) + f
+            return [-c] + [K.zero]*(i - n) + f
         else:
-            return f[:m] + [f[m]-c] + f[m+1:]
+            return f[:m] + [f[m] - c] + f[m + 1:]
 
 
 @cythonized("i,u,v,n,m")
@@ -138,21 +138,21 @@ def dmp_sub_term(f, c, i, u, K):
     if not u:
         return dup_add_term(f, -c, i, K)
 
-    v = u-1
+    v = u -1
 
     if dmp_zero_p(c, v):
         return f
 
     n = len(f)
-    m = n-i-1
+    m = n - i -1
 
-    if i == n-1:
+    if i == n - 1:
         return dmp_strip([dmp_sub(f[0], c, v, K)] + f[1:], u)
     else:
         if i >= n:
-            return [dmp_neg(c, v, K)] + dmp_zeros(i-n, v, K) + f
+            return [dmp_neg(c, v, K)] + dmp_zeros(i - n, v, K) + f
         else:
-            return f[:m] + [dmp_sub(f[m], c, v, K)] + f[m+1:]
+            return f[:m] + [dmp_sub(f[m], c, v, K)] + f[m + 1:]
 
 
 @cythonized("i")
@@ -199,7 +199,7 @@ def dmp_mul_term(f, c, i, u, K):
     if not u:
         return dup_mul_term(f, c, i, K)
 
-    v = u-1
+    v = u -1
 
     if dmp_zero_p(f, u):
         return f
@@ -244,7 +244,7 @@ def dmp_add_ground(f, c, u, K):
     [[1], [2], [3], [8]]
 
     """
-    return dmp_add_term(f, dmp_ground(c, u-1), 0, u, K)
+    return dmp_add_term(f, dmp_ground(c, u - 1), 0, u, K)
 
 
 def dup_sub_ground(f, c, K):
@@ -282,7 +282,7 @@ def dmp_sub_ground(f, c, u, K):
     [[1], [2], [3], []]
 
     """
-    return dmp_sub_term(f, dmp_ground(c, u-1), 0, u, K)
+    return dmp_sub_term(f, dmp_ground(c, u - 1), 0, u, K)
 
 
 def dup_mul_ground(f, c, K):
@@ -327,7 +327,7 @@ def dmp_mul_ground(f, c, u, K):
     if not u:
         return dup_mul_ground(f, c, K)
 
-    v = u-1
+    v = u -1
 
     return [ dmp_mul_ground(cf, c, v, K) for cf in f ]
 
@@ -387,7 +387,7 @@ def dmp_quo_ground(f, c, u, K):
     if not u:
         return dup_quo_ground(f, c, K)
 
-    v = u-1
+    v = u -1
 
     return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
 
@@ -436,7 +436,7 @@ def dmp_exquo_ground(f, c, u, K):
     if not u:
         return dup_exquo_ground(f, c, K)
 
-    v = u-1
+    v = u -1
 
     return [ dmp_exquo_ground(cf, c, v, K) for cf in f ]
 
@@ -527,7 +527,7 @@ def dmp_abs(f, u, K):
     if not u:
         return dup_abs(f, K)
 
-    v = u-1
+    v = u -1
 
     return [ dmp_abs(cf, v, K) for cf in f ]
 
@@ -571,7 +571,7 @@ def dmp_neg(f, u, K):
     if not u:
         return dup_neg(f, K)
 
-    v = u-1
+    v = u -1
 
     return [ dmp_neg(cf, v, K) for cf in f ]
 
@@ -646,7 +646,7 @@ def dmp_add(f, g, u, K):
     if dg < 0:
         return f
 
-    v = u-1
+    v = u -1
 
     if df == dg:
         return dmp_strip([ dmp_add(a, b, v, K) for a, b in zip(f, g) ], u)
@@ -731,7 +731,7 @@ def dmp_sub(f, g, u, K):
     if dg < 0:
         return f
 
-    v = u-1
+    v = u -1
 
     if df == dg:
         return dmp_strip([ dmp_sub(a, b, v, K) for a, b in zip(f, g) ], u)
@@ -861,11 +861,11 @@ def dup_mul(f, g, K):
 
     h = []
 
-    for i in xrange(0, df+dg+1):
+    for i in xrange(0, df + dg + 1):
         coeff = K.zero
 
-        for j in xrange(max(0, i-dg), min(df, i)+1):
-            coeff += f[j]*g[i-j]
+        for j in xrange(max(0, i - dg), min(df, i) + 1):
+            coeff += f[j]*g[i - j]
 
         h.append(coeff)
 
@@ -906,13 +906,13 @@ def dmp_mul(f, g, u, K):
     if dg < 0:
         return g
 
-    h, v = [], u-1
+    h, v = [], u -1
 
-    for i in xrange(0, df+dg+1):
+    for i in xrange(0, df + dg + 1):
         coeff = dmp_zero(v)
 
-        for j in xrange(max(0, i-dg), min(df, i)+1):
-            coeff = dmp_add(coeff, dmp_mul(f[j], g[i-j], v, K), v, K)
+        for j in xrange(max(0, i - dg), min(df, i) + 1):
+            coeff = dmp_add(coeff, dmp_mul(f[j], g[i - j], v, K), v, K)
 
         h.append(coeff)
 
@@ -938,23 +938,23 @@ def dup_sqr(f, K):
     """
     df, h = dup_degree(f), []
 
-    for i in xrange(0, 2*df+1):
+    for i in xrange(0, 2*df + 1):
         c = K.zero
 
-        jmin = max(0, i-df)
+        jmin = max(0, i - df)
         jmax = min(i, df)
 
         n = jmax - jmin + 1
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax+1):
-            c += f[j]*f[i-j]
+        for j in xrange(jmin, jmax + 1):
+            c += f[j]*f[i - j]
 
         c += c
 
         if n & 1:
-            elem = f[jmax+1]
+            elem = f[jmax + 1]
             c += elem**2
 
         h.append(c)
@@ -987,25 +987,25 @@ def dmp_sqr(f, u, K):
     if df < 0:
         return f
 
-    h, v = [], u-1
+    h, v = [], u -1
 
-    for i in xrange(0, 2*df+1):
+    for i in xrange(0, 2*df + 1):
         c = dmp_zero(v)
 
-        jmin = max(0, i-df)
+        jmin = max(0, i - df)
         jmax = min(i, df)
 
         n = jmax - jmin + 1
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax+1):
-            c = dmp_add(c, dmp_mul(f[j], f[i-j], v, K), v, K)
+        for j in xrange(jmin, jmax + 1):
+            c = dmp_add(c, dmp_mul(f[j], f[i - j], v, K), v, K)
 
         c = dmp_mul_ground(c, K(2), v, K)
 
         if n & 1:
-            elem = dmp_sqr(f[jmax+1], v, K)
+            elem = dmp_sqr(f[jmax + 1], v, K)
             c = dmp_add(c, elem, v, K)
 
         h.append(c)
@@ -1132,7 +1132,7 @@ def dup_pdiv(f, g, K):
             break
 
         lc_r = dup_LC(r, K)
-        j, N = dr-dg, N-1
+        j, N = dr - dg, N -1
 
         Q = dup_mul_ground(q, lc_g, K)
         q = dup_add_term(Q, lc_r, j, K)
@@ -1187,7 +1187,7 @@ def dup_prem(f, g, K):
             break
 
         lc_r = dup_LC(r, K)
-        j, N = dr-dg, N-1
+        j, N = dr - dg, N -1
 
         R = dup_mul_ground(r, lc_g, K)
         G = dup_mul_term(g, lc_r, j, K)
@@ -1297,7 +1297,7 @@ def dmp_pdiv(f, g, u, K):
             break
 
         lc_r = dmp_LC(r, K)
-        j, N = dr-dg, N-1
+        j, N = dr - dg, N -1
 
         Q = dmp_mul_term(q, lc_g, 0, u, K)
         q = dmp_add_term(Q, lc_r, j, u, K)
@@ -1306,7 +1306,7 @@ def dmp_pdiv(f, g, u, K):
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
 
-    c = dmp_pow(lc_g, N, u-1, K)
+    c = dmp_pow(lc_g, N, u - 1, K)
 
     q = dmp_mul_term(q, c, 0, u, K)
     r = dmp_mul_term(r, c, 0, u, K)
@@ -1356,13 +1356,13 @@ def dmp_prem(f, g, u, K):
             break
 
         lc_r = dmp_LC(r, K)
-        j, N = dr-dg, N-1
+        j, N = dr - dg, N -1
 
         R = dmp_mul_term(r, lc_g, 0, u, K)
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
 
-    c = dmp_pow(lc_g, N, u-1, K)
+    c = dmp_pow(lc_g, N, u - 1, K)
 
     return dmp_mul_term(r, c, 0, u, K)
 
@@ -1506,7 +1506,7 @@ def dmp_rr_div(f, g, u, K):
     if df < dg:
         return q, r
 
-    lc_g, v = dmp_LC(g, K), u-1
+    lc_g, v = dmp_LC(g, K), u -1
 
     while True:
         dr = dmp_degree(r, u)
@@ -1615,7 +1615,7 @@ def dmp_ff_div(f, g, u, K):
     if df < dg:
         return q, r
 
-    lc_g, v = dmp_LC(g, K), u-1
+    lc_g, v = dmp_LC(g, K), u -1
 
     while True:
         dr = dmp_degree(r, u)
@@ -1912,7 +1912,7 @@ def dmp_max_norm(f, u, K):
     if not u:
         return dup_max_norm(f, K)
 
-    v = u-1
+    v = u -1
 
     return max([ dmp_max_norm(c, v, K) for c in f ])
 
@@ -1959,7 +1959,7 @@ def dmp_l1_norm(f, u, K):
     if not u:
         return dup_l1_norm(f, K)
 
-    v = u-1
+    v = u -1
 
     return sum([ dmp_l1_norm(c, v, K) for c in f ])
 

@@ -199,7 +199,7 @@ def test_Permutation():
     a = [Permutation.unrank_nonlex(4, i) for i in range(5)]
     iden = Permutation([0, 1, 2, 3])
     for i in range(5):
-        for j in range(i+1, 5):
+        for j in range(i + 1, 5):
             assert a[i].commutes_with(a[j]) == \
                 (rmul(a[i], a[j]) == rmul(a[j], a[i]))
             if a[i].commutes_with(a[j]):
@@ -306,7 +306,7 @@ def test_mul():
     h = range(n)
     for i in range(m):
         h = _af_rmul(h, a[i])
-        h2 = _af_rmuln(*a[:i+1])
+        h2 = _af_rmuln(*a[:i + 1])
         assert h == h2
 
 

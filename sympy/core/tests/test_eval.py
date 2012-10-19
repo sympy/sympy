@@ -7,13 +7,13 @@ def test_add_eval():
     b = Symbol("b")
     c = Rational(1)
     p = Rational(5)
-    assert a*b+c+p == a*b+6
-    assert c+a+p == a+6
-    assert c+a-p == a+(-4)
-    assert a+a == 2*a
-    assert a+p+a == 2*a+5
-    assert c+p == Rational(6)
-    assert b+a-b == a
+    assert a*b + c + p == a*b +6
+    assert c + a + p == a +6
+    assert c + a - p == a + (-4)
+    assert a + a == 2*a
+    assert a + p + a == 2*a +5
+    assert c + p == Rational(6)
+    assert b + a - b == a
 
 
 def test_addmul_eval():
@@ -21,10 +21,10 @@ def test_addmul_eval():
     b = Symbol("b")
     c = Rational(1)
     p = Rational(5)
-    assert c+a+b*c+a-p == 2*a+b+(-4)
-    assert a*2+p+a == a*2+5+a
-    assert a*2+p+a == 3*a+5
-    assert a*2+a == 3*a
+    assert c + a + b*c + a - p == 2*a + b + (-4)
+    assert a*2 + p + a == a*2 + 5 +a
+    assert a*2 + p + a == 3*a +5
+    assert a*2 + a == 3*a
 
 
 def test_pow_eval():
@@ -53,7 +53,7 @@ def test_pow_eval():
 
 @XFAIL
 def test_pow_eval_X1():
-    assert (-1)**Rational(1, 3) == Rational(1, 2)+Rational(1, 2)*I*sqrt(3)
+    assert (-1)**Rational(1, 3) == Rational(1, 2) + Rational(1, 2)*I*sqrt(3)
 
 
 def test_mulpow_eval():

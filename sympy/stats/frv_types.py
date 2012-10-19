@@ -111,7 +111,7 @@ class DiePSpace(DiscreteUniformPSpace):
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
     def __new__(cls, name, sides):
-        return DiscreteUniformPSpace.__new__(cls, name, range(1, sides+1))
+        return DiscreteUniformPSpace.__new__(cls, name, range(1, sides + 1))
 
 
 def Die(name, sides=6):
@@ -158,7 +158,7 @@ class BernoulliPSpace(SingleFinitePSpace):
 
     def __new__(cls, name,  p, succ, fail):
         succ, fail, p = map(sympify, (succ, fail, p))
-        density = {succ: p, fail: (1-p)}
+        density = {succ: p, fail: (1 - p)}
         return cls.fromdict(name, density)
 
 
@@ -251,8 +251,8 @@ class BinomialPSpace(SingleFinitePSpace):
 
     def __new__(cls, name, n, p, succ, fail):
         n, p, succ, fail = map(sympify, (n, p, succ, fail))
-        density = dict((k*succ + (n-k)*fail,
-                binomial(n, k) * p**k * (1-p)**(n-k)) for k in range(0, n+1))
+        density = dict((k*succ + (n - k)*fail,
+                binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
         return cls.fromdict(name, density)
 
 
@@ -297,8 +297,8 @@ class HypergeometricPSpace(SingleFinitePSpace):
 
     def __new__(cls, name, N, m, n):
         N, m, n = map(sympify, (N, m, n))
-        density = dict((k, binomial(m, k) * binomial(N-m, n-k) / binomial(N, n))
-                for k in range(max(0, n+m-N), min(m, n) + 1))
+        density = dict((k, binomial(m, k) * binomial(N - m, n - k) / binomial(N, n))
+                for k in range(max(0, n + m - N), min(m, n) + 1))
         return cls.fromdict(name, density)
 
 

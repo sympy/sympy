@@ -163,10 +163,10 @@ def test_functions():
 def test_issue924():
     sage.var("a x")
     log = sage.log
-    i = sympy.integrate(log(x)/a, (x, a, a+1))
+    i = sympy.integrate(log(x)/a, (x, a, a + 1))
     i2 = sympy.simplify(i)
     s = sage.SR(i2)
-    assert s == (a*log(1+a) - a*log(a) + log(1+a) - 1)/a
+    assert s == (a*log(1 + a) - a*log(a) + log(1 + a) - 1)/a
 
 # This string contains Sage doctests, that execute all the functions above.
 # When you add a new function, please add it here as well.

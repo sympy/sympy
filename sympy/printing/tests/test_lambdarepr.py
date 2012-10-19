@@ -8,7 +8,7 @@ x, y, z = symbols("x,y,z")
 
 def test_basic():
     assert lambdarepr(x*y) == "x*y"
-    assert lambdarepr(x+y) in ["y + x", "x + y"]
+    assert lambdarepr(x + y) in ["y + x", "x + y"]
     assert lambdarepr(x**y) == "x**y"
 
 

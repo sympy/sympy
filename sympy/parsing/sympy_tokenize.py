@@ -429,7 +429,7 @@ def generate_tokens(readline):
                     yield (OP, token, spos, epos, line)
             else:
                 yield (ERRORTOKEN, line[pos],
-                           (lnum, pos), (lnum, pos+1), line)
+                           (lnum, pos), (lnum, pos + 1), line)
                 pos = pos + 1
 
     for indent in indents[1:]:                 # pop remaining indent levels

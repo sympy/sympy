@@ -52,7 +52,7 @@ class ReprPrinter(Printer):
         return r
 
     def _print_FunctionClass(self, expr):
-        return 'Function(%r)'%(expr.__name__)
+        return 'Function(%r)' % (expr.__name__)
 
     def _print_Half(self, expr):
         return 'Rational(1, 2)'

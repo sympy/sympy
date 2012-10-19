@@ -203,9 +203,9 @@ class sin(TrigonometricFunction):
             if pi_coeff.is_Rational:
                 x = pi_coeff % 2
                 if x > 1:
-                    return -cls((x%1)*S.Pi)
+                    return -cls((x % 1)*S.Pi)
                 if 2*x > 1:
-                    return cls((1-x)*S.Pi)
+                    return cls((1 - x)*S.Pi)
                 narg = ((pi_coeff + C.Rational(3, 2)) % 2)*S.Pi
                 result = cos(narg)
                 if not isinstance(result, cos):
@@ -217,7 +217,7 @@ class sin(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                return sin(m)*cos(x)+cos(m)*sin(x)
+                return sin(m)*cos(x) + cos(m)*sin(x)
 
         if arg.func is asin:
             return arg.args[0]
@@ -248,7 +248,7 @@ class sin(TrigonometricFunction):
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
+                return -p * x**2 / (n*(n - 1))
             else:
                 return (-1)**(n//2) * x**(n)/C.factorial(n)
 
@@ -480,7 +480,7 @@ class cos(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                return cos(m)*cos(x)-sin(m)*sin(x)
+                return cos(m)*cos(x) - sin(m)*sin(x)
 
         if arg.func is acos:
             return arg.args[0]
@@ -511,7 +511,7 @@ class cos(TrigonometricFunction):
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
+                return -p * x**2 / (n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/C.factorial(n)
 
@@ -532,14 +532,14 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)**2
-        return (1-tan_half)/(1+tan_half)
+        return (1 - tan_half)/(1 + tan_half)
 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)*cos(arg)/sin(arg)
 
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(S.Half*arg)**2
-        return (cot_half-1)/(cot_half+1)
+        return (cot_half - 1)/(cot_half + 1)
 
     def _eval_rewrite_as_pow(self, arg):
         return self._eval_rewrite_as_sqrt(arg)
@@ -628,9 +628,9 @@ class cos(TrigonometricFunction):
             if not _EXPAND_INTS:
                 if (isinstance(nval, cos) or isinstance(-nval, cos)):
                     return None
-            x = (2*pi_coeff+1)/2
+            x = (2*pi_coeff + 1)/2
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
-            return sign_cos*sqrt( (1+nval)/2 )
+            return sign_cos*sqrt( (1 + nval)/2 )
 
         FC = fermatCoords(pi_coeff.q)
         if FC:
@@ -854,12 +854,12 @@ class tan(TrigonometricFunction):
         else:
             x = sympify(x)
 
-            a, b = ((n-1)//2), 2**(n+1)
+            a, b = ((n - 1)//2), 2**(n + 1)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
+            B = C.bernoulli(n + 1)
+            F = C.factorial(n + 1)
 
-            return (-1)**a * b*(b-1) * B/F * x**n
+            return (-1)**a * b*(b - 1) * B/F * x**n
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
@@ -897,7 +897,7 @@ class tan(TrigonometricFunction):
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
-        return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
+        return I*(neg_exp - pos_exp)/(neg_exp + pos_exp)
 
     def _eval_rewrite_as_sin(self, x):
         return 2*sin(x)**2/sin(2*x)
@@ -1041,10 +1041,10 @@ class cot(TrigonometricFunction):
         else:
             x = sympify(x)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
+            B = C.bernoulli(n + 1)
+            F = C.factorial(n + 1)
 
-            return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
+            return (-1)**((n + 1)//2) * 2**(n + 1) * B/F * x**n
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)/S.Pi
@@ -1075,7 +1075,7 @@ class cot(TrigonometricFunction):
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
-        return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
+        return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_Pow(self, arg):
         if arg.func is log:
@@ -1175,18 +1175,18 @@ class asin(Function):
                 -sqrt(2)/2: -4,
                 1/sqrt(2): 4,
                 -1/sqrt(2): -4,
-                sqrt((5-sqrt(5))/8): 5,
-                -sqrt((5-sqrt(5))/8): -5,
+                sqrt((5 - sqrt(5))/8): 5,
+                -sqrt((5 - sqrt(5))/8): -5,
                 S.Half: 6,
                 -S.Half: -6,
-                sqrt(2-sqrt(2))/2: 8,
-                -sqrt(2-sqrt(2))/2: -8,
-                (sqrt(5)-1)/4: 10,
-                (1-sqrt(5))/4: -10,
-                (sqrt(3)-1)/sqrt(2**3): 12,
-                (1-sqrt(3))/sqrt(2**3): -12,
-                (sqrt(5)+1)/4: S(10)/3,
-                -(sqrt(5)+1)/4: -S(10)/3
+                sqrt(2 - sqrt(2))/2: 8,
+                -sqrt(2 - sqrt(2))/2: -8,
+                (sqrt(5) - 1)/4: 10,
+                (1 - sqrt(5))/4: -10,
+                (sqrt(3) - 1)/sqrt(2**3): 12,
+                (1 - sqrt(3))/sqrt(2**3): -12,
+                (sqrt(5) + 1)/4: S(10)/3,
+                -(sqrt(5) + 1)/4: -S(10)/3
                 }
 
             if arg in cst_table:
@@ -1205,7 +1205,7 @@ class asin(Function):
             x = sympify(x)
             if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(n*(n-1)) * x**2
+                return p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
@@ -1227,10 +1227,10 @@ class asin(Function):
         return 2*atan(x/(1 + sqrt(1 - x**2)))
 
     def _eval_rewrite_as_log(self, x):
-        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1-x**2))
+        return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
 
     def _sage_(self):
         import sage.all as sage
@@ -1314,7 +1314,7 @@ class acos(Function):
             x = sympify(x)
             if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(n*(n-1)) * x**2
+                return p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
@@ -1330,7 +1330,7 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
 
     def _eval_rewrite_as_log(self, x):
         return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
@@ -1381,7 +1381,7 @@ class atan(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/(1+self.args[0]**2)
+            return 1/(1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1411,14 +1411,14 @@ class atan(Function):
                 -1/sqrt(3): -6,
                 sqrt(3): 3,
                 -sqrt(3): -3,
-                (1+sqrt(2)): S(8)/3,
-                -(1+sqrt(2)): S(8)/3,
-                (sqrt(2)-1): 8,
-                (1-sqrt(2)): -8,
-                sqrt((5+2*sqrt(5))): S(5)/2,
-                -sqrt((5+2*sqrt(5))): -S(5)/2,
-                (2-sqrt(3)): 12,
-                -(2-sqrt(3)): -12
+                (1 + sqrt(2)): S(8)/3,
+                -(1 + sqrt(2)): S(8)/3,
+                (sqrt(2) - 1): 8,
+                (1 - sqrt(2)): -8,
+                sqrt((5 + 2*sqrt(5))): S(5)/2,
+                -sqrt((5 + 2*sqrt(5))): -S(5)/2,
+                (2 - sqrt(3)): 12,
+                -(2 - sqrt(3)): -12
                 }
 
             if arg in cst_table:
@@ -1435,7 +1435,7 @@ class atan(Function):
             return S.Zero
         else:
             x = sympify(x)
-            return (-1)**((n-1)//2) * x**n / n
+            return (-1)**((n - 1)//2) * x**n / n
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -1475,7 +1475,7 @@ class acot(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -1 / (1+self.args[0]**2)
+            return -1 / (1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1506,16 +1506,16 @@ class acot(Function):
                 -1/sqrt(3): -3,
                 sqrt(3): 6,
                 -sqrt(3): -6,
-                (1+sqrt(2)): 8,
-                -(1+sqrt(2)): -8,
-                (1-sqrt(2)): -S(8)/3,
-                (sqrt(2)-1): S(8)/3,
-                sqrt(5+2*sqrt(5)): 10,
-                -sqrt(5+2*sqrt(5)): -10,
-                (2+sqrt(3)): 12,
-                -(2+sqrt(3)): -12,
-                (2-sqrt(3)): S(12)/5,
-                -(2-sqrt(3)): -S(12)/5,
+                (1 + sqrt(2)): 8,
+                -(1 + sqrt(2)): -8,
+                (1 - sqrt(2)): -S(8)/3,
+                (sqrt(2) - 1): S(8)/3,
+                sqrt(5 + 2*sqrt(5)): 10,
+                -sqrt(5 + 2*sqrt(5)): -10,
+                (2 + sqrt(3)): 12,
+                -(2 + sqrt(3)): -12,
+                (2 - sqrt(3)): S(12)/5,
+                -(2 - sqrt(3)): -S(12)/5,
                 }
 
             if arg in cst_table:
@@ -1534,7 +1534,7 @@ class acot(Function):
             return S.Zero
         else:
             x = sympify(x)
-            return (-1)**((n+1)//2) * x**n / n
+            return (-1)**((n + 1)//2) * x**n / n
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

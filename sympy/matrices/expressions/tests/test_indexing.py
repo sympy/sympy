@@ -18,12 +18,12 @@ y = MatrixSymbol('x', 2, 1)
 
 def test_symbolic_indexing():
     x12 = X[1, 2]
-    assert x12 == Symbol(X.name+"_12")
-    assert X[i, j] == Symbol(X.name+"_ij")
+    assert x12 == Symbol(X.name + "_12")
+    assert X[i, j] == Symbol(X.name + "_ij")
 
 
 def test_add_index():
-    assert (X+Y)[i, j] == X[i, j] + Y[i, j]
+    assert (X + Y)[i, j] == X[i, j] + Y[i, j]
 
 
 def test_mul_index():

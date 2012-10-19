@@ -360,13 +360,13 @@ class Piecewise(Function):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
                     newval = Min(*int_expr[n][:-1])
-                    if n > 0 and int_expr[n][0] == int_expr[n-1][1]:
-                        int_expr[n-1][1] = newval
+                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:
+                        int_expr[n - 1][1] = newval
                     int_expr[n][0] = newval
                 else:
                     newval = Max(*int_expr[n][:-1])
-                    if n < len(int_expr) - 1 and int_expr[n][1] == int_expr[n+1][0]:
-                        int_expr[n+1][0] = newval
+                    if n < len(int_expr) - 1 and int_expr[n][1] == int_expr[n + 1][0]:
+                        int_expr[n + 1][0] = newval
                     int_expr[n][1] = newval
 
         # Add holes to list of intervals if there is a default value,
@@ -493,7 +493,7 @@ def piecewise_fold(expr):
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
-        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n+1:])), c)
+        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
                         for e, c in new_args[n].args]
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))

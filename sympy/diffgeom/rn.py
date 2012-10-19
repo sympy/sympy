@@ -67,8 +67,8 @@ R3_c.connect_to(R3_r, [rho, psi, z],
                 inverse=False, fill_in_gaps=False)
 ## rectangular <-> spherical
 R3_r.connect_to(R3_s, [x, y, z],
-                      [sqrt(x**2+y**2+z**2), acos(z/ \
-                            sqrt(x**2+y**2+z**2)), atan2(y, x)],
+                      [sqrt(x**2 + y**2 + z**2), acos(z/ \
+                            sqrt(x**2 + y**2 + z**2)), atan2(y, x)],
                 inverse=False, fill_in_gaps=False)
 R3_s.connect_to(R3_r, [r, theta, phi],
                       [r*sin(theta)*cos(phi), r*sin(
@@ -76,7 +76,7 @@ R3_s.connect_to(R3_r, [r, theta, phi],
                 inverse=False, fill_in_gaps=False)
 ## cylindrical <-> spherical
 R3_c.connect_to(R3_s, [rho, psi, z],
-                      [sqrt(rho**2+z**2), acos(z/sqrt(rho**2+z**2)), psi],
+                      [sqrt(rho**2 + z**2), acos(z/sqrt(rho**2 + z**2)), psi],
                 inverse=False, fill_in_gaps=False)
 R3_s.connect_to(R3_c, [r, theta, phi],
                       [r*sin(theta), phi, r*cos(theta)],

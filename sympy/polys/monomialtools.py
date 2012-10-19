@@ -46,8 +46,8 @@ def monomials(variables, degree):
 
         monoms = monomials(tail, degree)
 
-        for i in range(1, degree+1):
-            monoms |= set([ x**i * m for m in monomials(tail, degree-i) ])
+        for i in range(1, degree + 1):
+            monoms |= set([ x**i * m for m in monomials(tail, degree - i) ])
 
         return monoms
 

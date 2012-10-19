@@ -87,8 +87,8 @@ else:
             )
             ax.set_axis_off()
             offset = 0.5*self.scale
-            ax.set_xlim(self._gate_grid[0]-offset, self._gate_grid[-1]+offset)
-            ax.set_ylim(self._wire_grid[0]-offset, self._wire_grid[-1]+offset)
+            ax.set_xlim(self._gate_grid[0] - offset, self._gate_grid[-1] + offset)
+            ax.set_ylim(self._wire_grid[0] - offset, self._wire_grid[-1] + offset)
             ax.set_aspect('equal')
             self._axes = ax
 
@@ -96,7 +96,7 @@ else:
             """Plot the wires of the circuit diagram."""
             xstart = self._gate_grid[0]
             xstop = self._gate_grid[-1]
-            xdata = (xstart-self.scale, xstop+self.scale)
+            xdata = (xstart - self.scale, xstop + self.scale)
             for i in range(self.nqubits):
                 ydata = (self._wire_grid[i], self._wire_grid[i])
                 line = Line2D(
@@ -177,7 +177,7 @@ else:
             )
             self._axes.add_patch(c)
             l = Line2D(
-                (x, x), (y-radius, y+radius),
+                (x, x), (y - radius, y + radius),
                 color='k',
                 lw=self.linewidth
             )
@@ -189,14 +189,14 @@ else:
             y = self._wire_grid[wire_idx]
             d = self.swap_delta
             l1 = Line2D(
-                (x-d, x+d),
-                (y-d, y+d),
+                (x - d, x + d),
+                (y - d, y + d),
                 color='k',
                 lw=self.linewidth
             )
             l2 = Line2D(
-                (x-d, x+d),
-                (y+d, y-d),
+                (x - d, x + d),
+                (y + d, y - d),
                 color='k',
                 lw=self.linewidth
             )

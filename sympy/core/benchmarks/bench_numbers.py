@@ -40,15 +40,15 @@ def timeit_neg_oo():
 
 
 def timeit_Integer_add_i1():
-    i3+1
+    i3 +1
 
 
 def timeit_Integer_add_ij():
-    i3+i4
+    i3 + i4
 
 
 def timeit_Integer_add_Rational():
-    i3+r34
+    i3 + r34
 
 
 def timeit_Integer_mul_i4():
@@ -84,8 +84,8 @@ def timeit_number_igcd_60_3600():
 
 
 def timeit_Rational_add_r1():
-    r34+1
+    r34 +1
 
 
 def timeit_Rational_add_rq():
-    r34+q45
+    r34 + q45

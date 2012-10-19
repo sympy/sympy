@@ -158,7 +158,7 @@ def test_TableForm_latex():
     )
 
     def neg_in_paren(x, i, j):
-        if i%2:
+        if i % 2:
             return ('(%s)' if x < 0 else '%s') % x
         else:
             pass  # use default print

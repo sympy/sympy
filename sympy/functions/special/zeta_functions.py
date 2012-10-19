@@ -151,7 +151,7 @@ class lerchphi(Function):
             m, n = S([a.p, a.q])
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
-            return add + mul*n**(s-1)*Add(
+            return add + mul*n**(s - 1)*Add(
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
                    / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
@@ -175,9 +175,9 @@ class lerchphi(Function):
     def fdiff(self, argindex=1):
         z, s, a = self.args
         if argindex == 3:
-            return -s*lerchphi(z, s+1, a)
+            return -s*lerchphi(z, s + 1, a)
         elif argindex == 1:
-            return (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
+            return (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
         else:
             raise ArgumentIndexError
 
@@ -279,7 +279,7 @@ class polylog(Function):
     def fdiff(self, argindex=1):
         s, z = self.args
         if argindex == 2:
-            return polylog(s-1, z)/z
+            return polylog(s - 1, z)/z
         raise ArgumentIndexError
 
     def _eval_rewrite_as_lerchphi(self, s, z):
@@ -440,17 +440,17 @@ class zeta(Function):
             elif z.is_Integer:
                 if a.is_Integer:
                     if z.is_negative:
-                        zeta = (-1)**z * C.bernoulli(-z+1)/(-z+1)
+                        zeta = (-1)**z * C.bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
                         B, F = C.bernoulli(z), C.factorial(z)
-                        zeta = 2**(z-1) * abs(B) * pi**z / F
+                        zeta = 2**(z - 1) * abs(B) * pi**z / F
                     else:
                         return
 
                     if a.is_negative:
                         return zeta + C.harmonic(abs(a), z)
                     else:
-                        return zeta - C.harmonic(a-1, z)
+                        return zeta - C.harmonic(a - 1, z)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -512,7 +512,7 @@ class dirichlet_eta(Function):
             return C.log(2)
         z = zeta(s)
         if not z.has(zeta):
-            return (1-2**(1-s))*z
+            return (1 - 2**(1 - s))*z
 
     def _eval_rewrite_as_zeta(self, s):
-        return (1-2**(1-s)) * zeta(s)
+        return (1 - 2**(1 - s)) * zeta(s)

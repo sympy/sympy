@@ -24,47 +24,47 @@ def test_Symbol():
     e = a*b
     assert e == a*b
     assert a*b*b == a*b**2
-    assert a*b*b+c == c+a*b**2
-    assert a*b*b-c == -c+a*b**2
+    assert a*b*b + c == c + a*b**2
+    assert a*b*b - c == -c + a*b**2
 
 
 def test_arit0():
     p = Rational(5)
     e = a*b
     assert e == a*b
-    e = a*b+b*a
+    e = a*b + b*a
     assert e == 2*a*b
-    e = a*b+b*a+a*b+p*b*a
+    e = a*b + b*a + a*b + p*b*a
     assert e == 8*a*b
-    e = a*b+b*a+a*b+p*b*a+a
-    assert e == a+8*a*b
-    e = a+a
+    e = a*b + b*a + a*b + p*b*a +a
+    assert e == a + 8*a*b
+    e = a +a
     assert e == 2*a
-    e = a+b+a
-    assert e == b+2*a
-    e = a+b*b+a+b*b
-    assert e == 2*a+2*b**2
-    e = a+Rational(2)+b*b+a+b*b+p
-    assert e == 7+2*a+2*b**2
-    e = (a+b*b+a+b*b)*p
-    assert e == 5*(2*a+2*b**2)
-    e = (a*b*c+c*b*a+b*a*c)*p
+    e = a + b +a
+    assert e == b + 2*a
+    e = a + b*b + a + b*b
+    assert e == 2*a + 2*b**2
+    e = a + Rational(2) + b*b + a + b*b +p
+    assert e == 7 + 2*a + 2*b**2
+    e = (a + b*b + a + b*b)*p
+    assert e == 5*(2*a + 2*b**2)
+    e = (a*b*c + c*b*a + b*a*c)*p
     assert e == 15*a*b*c
-    e = (a*b*c+c*b*a+b*a*c)*p-Rational(15)*a*b*c
+    e = (a*b*c + c*b*a + b*a*c)*p - Rational(15)*a*b*c
     assert e == Rational(0)
-    e = Rational(50)*(a-a)
+    e = Rational(50)*(a - a)
     assert e == Rational(0)
-    e = b*a-b-a*b+b
+    e = b*a - b - a*b +b
     assert e == Rational(0)
-    e = a*b+c**p
-    assert e == a*b+c**5
+    e = a*b + c**p
+    assert e == a*b + c**5
     e = a/b
     assert e == a*b**(-1)
     e = a*2*2
     assert e == 4*a
-    e = 2+a*2/2
-    assert e == 2+a
-    e = 2-a-2
+    e = 2 + a*2/2
+    assert e == 2 +a
+    e = 2 - a -2
     assert e == -a
     e = 2*a*2
     assert e == 4*a
@@ -72,19 +72,19 @@ def test_arit0():
     assert e == a**(-1)
     e = 2**a**2
     assert e == 2**(a**2)
-    e = -(1+a)
+    e = -(1 + a)
     assert e == -1 -a
-    e = Rational(1, 2)*(1+a)
+    e = Rational(1, 2)*(1 + a)
     assert e == Rational(1, 2) + a/2
 
 
 def test_div():
     e = a/b
     assert e == a*b**(-1)
-    e = a/b+c/2
-    assert e == a*b**(-1)+Rational(1)/2*c
-    e = (1-b)/(b-1)
-    assert e == (1+-b)*((-1)+b)**(-1)
+    e = a/b + c/2
+    assert e == a*b**(-1) + Rational(1)/2*c
+    e = (1 - b)/(b - 1)
+    assert e == (1 + -b)*((-1) + b)**(-1)
 
 
 def test_pow():
@@ -97,39 +97,39 @@ def test_pow():
     assert e == a**3
     e = a*a*a*a**Rational(6)
     assert e == a**9
-    e = a*a*a*a**Rational(6)-a**Rational(9)
+    e = a*a*a*a**Rational(6) - a**Rational(9)
     assert e == Rational(0)
-    e = a**(b-b)
+    e = a**(b - b)
     assert e == Rational(1)
-    e = (a-a)**b
+    e = (a - a)**b
     assert e == Rational(0)
-    e = (a+Rational(1)-a)**b
+    e = (a + Rational(1) - a)**b
     assert e == Rational(1)
 
-    e = (a+b+c)**n2
-    assert e == (a+b+c)**2
-    assert e.expand() == 2*b*c+2*a*c+2*a*b+a**2+c**2+b**2
+    e = (a + b + c)**n2
+    assert e == (a + b + c)**2
+    assert e.expand() == 2*b*c + 2*a*c + 2*a*b + a**2 + c**2 + b**2
 
-    e = (a+b)**n2
-    assert e == (a+b)**2
-    assert e.expand() == 2*a*b+a**2+b**2
+    e = (a + b)**n2
+    assert e == (a + b)**2
+    assert e.expand() == 2*a*b + a**2 + b**2
 
-    e = (a+b)**(n1/n2)
-    assert e == sqrt(a+b)
-    assert e.expand() == sqrt(a+b)
+    e = (a + b)**(n1/n2)
+    assert e == sqrt(a + b)
+    assert e.expand() == sqrt(a + b)
 
     n = n5**(n1/n2)
     assert n == sqrt(5)
-    e = n*a*b-n*b*a
+    e = n*a*b - n*b*a
     assert e == Rational(0)
-    e = n*a*b+n*b*a
+    e = n*a*b + n*b*a
     assert e == 2*a*b*sqrt(5)
     assert e.diff(a) == 2*b*sqrt(5)
     assert e.diff(a) == 2*b*sqrt(5)
     e = a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1, 2)))**Rational(1, 2)
+    assert sqrt(2*(1 + sqrt(2))) == (2*(1 + 2**Rational(1, 2)))**Rational(1, 2)
 
     x = Symbol('x')
     y = Symbol('y')
@@ -144,9 +144,9 @@ def test_pow():
 
     # expand_power_exp
     assert (x**(y**(
-        x+exp(x+y))+z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
+        x + exp(x + y)) + z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
     assert (
-        x**(y**(x+exp(x+y))+z)).expand() == x**z*x**(y**x*y**(exp(x)*exp(y)))
+        x**(y**(x + exp(x + y)) + z)).expand() == x**z*x**(y**x*y**(exp(x)*exp(y)))
 
     n = Symbol('k', even=False)
     k = Symbol('k', even=True)
@@ -208,36 +208,36 @@ def test_pow_im():
 
 def test_expand():
     p = Rational(5)
-    e = (a+b)*c
-    assert e == c*(a+b)
-    assert (e.expand()-a*c-b*c) == Rational(0)
-    e = (a+b)*(a+b)
-    assert e == (a+b)**2
-    assert e.expand() == 2*a*b+a**2+b**2
-    e = (a+b)*(a+b)**Rational(2)
-    assert e == (a+b)**3
-    assert e.expand() == 3*b*a**2+3*a*b**2+a**3+b**3
-    assert e.expand() == 3*b*a**2+3*a*b**2+a**3+b**3
-    e = (a+b)*(a+c)*(b+c)
-    assert e == (a+c)*(a+b)*(b+c)
-    assert e.expand() == 2*a*b*c+b*a**2+c*a**2+b*c**2+a*c**2+c*b**2+a*b**2
-    e = (a+Rational(1))**p
-    assert e == (1+a)**5
-    assert e.expand() == 1+5*a+10*a**2+10*a**3+5*a**4+a**5
-    e = (a+b+c)*(a+c+p)
-    assert e == (5+a+c)*(a+b+c)
-    assert e.expand() == 5*a+5*b+5*c+2*a*c+b*c+a*b+a**2+c**2
+    e = (a + b)*c
+    assert e == c*(a + b)
+    assert (e.expand() - a*c - b*c) == Rational(0)
+    e = (a + b)*(a + b)
+    assert e == (a + b)**2
+    assert e.expand() == 2*a*b + a**2 + b**2
+    e = (a + b)*(a + b)**Rational(2)
+    assert e == (a + b)**3
+    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
+    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
+    e = (a + b)*(a + c)*(b + c)
+    assert e == (a + c)*(a + b)*(b + c)
+    assert e.expand() == 2*a*b*c + b*a**2 + c*a**2 + b*c**2 + a*c**2 + c*b**2 + a*b**2
+    e = (a + Rational(1))**p
+    assert e == (1 + a)**5
+    assert e.expand() == 1 + 5*a + 10*a**2 + 10*a**3 + 5*a**4 + a**5
+    e = (a + b + c)*(a + c + p)
+    assert e == (5 + a + c)*(a + b + c)
+    assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
     x = Symbol("x")
-    s = exp(x*x)-1
+    s = exp(x*x) -1
     e = s.nseries(x, 0, 3)/x**2
-    assert e.expand() == 1+x**2/2+O(x**4)
+    assert e.expand() == 1 + x**2/2 + O(x**4)
 
-    e = (x*(y+z))**(x*(y+z))*(x+y)
+    e = (x*(y + z))**(x*(y + z))*(x + y)
     assert e.expand(power_exp=False, power_base=False) == x*(x*y + x* \
                     z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
     assert e.expand(power_exp=False, power_base=False, deep=False) == x* \
                     (x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
-    e = (x*(y+z))**z
+    e = (x*(y + z))**z
     assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + \
                     z)**z, (x*y + x*z)**z]
     assert ((2*y)**z).expand() == 2**z*y**z
@@ -257,14 +257,14 @@ def test_expand():
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
     # issue 2506 (2)
     assert (
-        cos(x+y)**2).expand(trig=True) in [(-sin(x)*sin(y) + cos(x)*cos(y))**2,
+        cos(x + y)**2).expand(trig=True) in [(-sin(x)*sin(y) + cos(x)*cos(y))**2,
       sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2]
 
     # Check that this isn't too slow
     x = Symbol('x')
     W = 1
     for i in range(1, 21):
-        W = W * (x-i)
+        W = W * (x - i)
     W = W.expand()
     assert W.has(-1672280820*x**15)
 
@@ -273,19 +273,19 @@ def test_power_expand():
     """Test for Pow.expand()"""
     a = Symbol('a')
     b = Symbol('b')
-    p = (a+b)**2
+    p = (a + b)**2
     assert p.expand() == a**2 + b**2 + 2*a*b
 
-    p = (1+2*(1+a))**2
+    p = (1 + 2*(1 + a))**2
     assert p.expand() == 9 + 4*(a**2) + 12*a
 
-    p = 2**(a+b)
+    p = 2**(a + b)
     assert p.expand() == 2**a*2**b
 
     A = Symbol('A', commutative=False)
     B = Symbol('B', commutative=False)
-    assert (2**(A+B)).expand() == 2**(A+B)
-    assert (A**(a+b)).expand() != A**(a+b)
+    assert (2**(A + B)).expand() == 2**(A + B)
+    assert (A**(a + b)).expand() != A**(a + b)
 
 
 def test_real_mul():
@@ -304,25 +304,25 @@ def test_ncmul():
     assert A*b*B*3*C != 3*b*B*A*C
     assert A*b*B*3*C == 3*A*B*C*b
 
-    assert A+B == B+A
-    assert (A+B)*C != C*(A+B)
+    assert A + B == B +A
+    assert (A + B)*C != C*(A + B)
 
-    assert C*(A+B)*C != C*C*(A+B)
+    assert C*(A + B)*C != C*C*(A + B)
 
-    assert (C*(A+B)).expand() == C*A+C*B
-    assert (C*(A+B)).expand() != A*C+B*C
+    assert (C*(A + B)).expand() == C*A + C*B
+    assert (C*(A + B)).expand() != A*C + B*C
 
     assert A*A == A**2
-    assert (A+B)*(A+B) == (A+B)**2
-    assert ((A+B)**2).expand() == A**2 + A*B + B*A +B**2
+    assert (A + B)*(A + B) == (A + B)**2
+    assert ((A + B)**2).expand() == A**2 + A*B + B*A +B**2
 
     assert A**-1 * A == 1
     assert A/A == 1
     assert A/(A**2) == 1/A
 
-    assert A/(1+A) == A/(1+A)
+    assert A/(1 + A) == A/(1 + A)
 
-    assert (A+B + 2*(A+B)) == 3*A + 3*B
+    assert (A + B + 2*(A + B)) == 3*A + 3*B
 
 
 def test_ncpow():
@@ -335,15 +335,15 @@ def test_ncpow():
 
     assert (x**2)*(y**2) != (y**2)*(x**2)
     assert (x**-2)*y != y*(x**2)
-    assert 2**x*2**y != 2**(x+y)
-    assert 2**x*2**y*2**z != 2**(x+y+z)
+    assert 2**x*2**y != 2**(x + y)
+    assert 2**x*2**y*2**z != 2**(x + y + z)
     assert 2**x*2**(2*x) == 2**(3*x)
     assert 2**x*2**(2*x)*2**x == 2**(4*x)
     assert exp(x)*exp(y) != exp(y)*exp(x)
     assert exp(x)*exp(y)*exp(z) != exp(y)*exp(x)*exp(z)
-    assert exp(x)*exp(y)*exp(z) != exp(x+y+z)
-    assert x**a*x**b != x**(a+b)
-    assert x**a*x**b*x**c != x**(a+b+c)
+    assert exp(x)*exp(y)*exp(z) != exp(x + y + z)
+    assert x**a*x**b != x**(a + b)
+    assert x**a*x**b*x**c != x**(a + b + c)
     assert x**3*x**4 == x**7
     assert x**3*x**4*x**2 == x**9
     assert x**a*x**(4*a) == x**(5*a)
@@ -390,10 +390,10 @@ def test_Add_Mul_is_integer():
     assert (k/3).is_integer is False
     assert (x*k*n).is_integer is None
 
-    assert (k+n).is_integer is True
-    assert (k+x).is_integer is None
-    assert (k+n*x).is_integer is None
-    assert (k+n/3).is_integer is False
+    assert (k + n).is_integer is True
+    assert (k + x).is_integer is None
+    assert (k + n*x).is_integer is None
+    assert (k + n/3).is_integer is False
 
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
@@ -409,8 +409,8 @@ def test_Add_Mul_is_bounded():
     assert (sin(x)*cos(x)).is_bounded is True
     assert (x*sin(x)*exp(x)).is_bounded is not True
 
-    assert (sin(x)-67).is_bounded is True
-    assert (sin(x)+exp(x)).is_bounded is not True
+    assert (sin(x) - 67).is_bounded is True
+    assert (sin(x) + exp(x)).is_bounded is not True
     assert (1 + x).is_bounded is False
     assert (1 + x**2 + (1 + x)*(1 - x)).is_bounded is None
     assert (sqrt(2)*(1 + x)).is_bounded is False
@@ -463,29 +463,29 @@ def test_Add_is_even_odd():
     n = Symbol('n', odd=True)
     m = Symbol('m', even=True)
 
-    assert (k+7).is_even is True
-    assert (k+7).is_odd is False
+    assert (k + 7).is_even is True
+    assert (k + 7).is_odd is False
 
-    assert (-k+7).is_even is True
-    assert (-k+7).is_odd is False
+    assert (-k + 7).is_even is True
+    assert (-k + 7).is_odd is False
 
-    assert (k-12).is_even is False
-    assert (k-12).is_odd is True
+    assert (k - 12).is_even is False
+    assert (k - 12).is_odd is True
 
-    assert (-k-12).is_even is False
-    assert (-k-12).is_odd is True
+    assert (-k - 12).is_even is False
+    assert (-k - 12).is_odd is True
 
-    assert (k+n).is_even is True
-    assert (k+n).is_odd is False
+    assert (k + n).is_even is True
+    assert (k + n).is_odd is False
 
-    assert (k+m).is_even is False
-    assert (k+m).is_odd is True
+    assert (k + m).is_even is False
+    assert (k + m).is_odd is True
 
-    assert (k+n+m).is_even is True
-    assert (k+n+m).is_odd is False
+    assert (k + n + m).is_even is True
+    assert (k + n + m).is_odd is False
 
-    assert (k+n+x+m).is_even is None
-    assert (k+n+x+m).is_odd is None
+    assert (k + n + x + m).is_even is None
+    assert (k + n + x + m).is_odd is None
 
 
 def test_Mul_is_negative_positive():
@@ -710,75 +710,75 @@ def test_Add_is_negative_positive():
     u = Symbol('u', nonnegative=True)
     v = Symbol('v', nonpositive=True)
 
-    assert (k-2).is_negative is True
-    assert (k+17).is_negative is None
-    assert (-k-5).is_negative is None
-    assert (-k+123).is_negative is False
+    assert (k - 2).is_negative is True
+    assert (k + 17).is_negative is None
+    assert (-k - 5).is_negative is None
+    assert (-k + 123).is_negative is False
 
-    assert (k-n).is_negative is True
-    assert (k+n).is_negative is None
-    assert (-k-n).is_negative is None
-    assert (-k+n).is_negative is False
+    assert (k - n).is_negative is True
+    assert (k + n).is_negative is None
+    assert (-k - n).is_negative is None
+    assert (-k + n).is_negative is False
 
-    assert (k-n-2).is_negative is True
-    assert (k+n+17).is_negative is None
-    assert (-k-n-5).is_negative is None
-    assert (-k+n+123).is_negative is False
+    assert (k - n - 2).is_negative is True
+    assert (k + n + 17).is_negative is None
+    assert (-k - n - 5).is_negative is None
+    assert (-k + n + 123).is_negative is False
 
-    assert (-2*k+123*n+17).is_negative is False
+    assert (-2*k + 123*n + 17).is_negative is False
 
-    assert (k+u).is_negative is None
-    assert (k+v).is_negative is True
-    assert (n+u).is_negative is False
-    assert (n+v).is_negative is None
+    assert (k + u).is_negative is None
+    assert (k + v).is_negative is True
+    assert (n + u).is_negative is False
+    assert (n + v).is_negative is None
 
-    assert (u-v).is_negative is False
-    assert (u+v).is_negative is None
-    assert (-u-v).is_negative is None
-    assert (-u+v).is_negative is None
+    assert (u - v).is_negative is False
+    assert (u + v).is_negative is None
+    assert (-u - v).is_negative is None
+    assert (-u + v).is_negative is None
 
-    assert (u-v+n+2).is_negative is False
-    assert (u+v+n+2).is_negative is None
-    assert (-u-v+n+2).is_negative is None
-    assert (-u+v+n+2).is_negative is None
+    assert (u - v + n + 2).is_negative is False
+    assert (u + v + n + 2).is_negative is None
+    assert (-u - v + n + 2).is_negative is None
+    assert (-u + v + n + 2).is_negative is None
 
-    assert (k+x).is_negative is None
-    assert (k+x-n).is_negative is None
+    assert (k + x).is_negative is None
+    assert (k + x - n).is_negative is None
 
-    assert (k-2).is_positive is False
-    assert (k+17).is_positive is None
-    assert (-k-5).is_positive is None
-    assert (-k+123).is_positive is True
+    assert (k - 2).is_positive is False
+    assert (k + 17).is_positive is None
+    assert (-k - 5).is_positive is None
+    assert (-k + 123).is_positive is True
 
-    assert (k-n).is_positive is False
-    assert (k+n).is_positive is None
-    assert (-k-n).is_positive is None
-    assert (-k+n).is_positive is True
+    assert (k - n).is_positive is False
+    assert (k + n).is_positive is None
+    assert (-k - n).is_positive is None
+    assert (-k + n).is_positive is True
 
-    assert (k-n-2).is_positive is False
-    assert (k+n+17).is_positive is None
-    assert (-k-n-5).is_positive is None
-    assert (-k+n+123).is_positive is True
+    assert (k - n - 2).is_positive is False
+    assert (k + n + 17).is_positive is None
+    assert (-k - n - 5).is_positive is None
+    assert (-k + n + 123).is_positive is True
 
-    assert (-2*k+123*n+17).is_positive is True
+    assert (-2*k + 123*n + 17).is_positive is True
 
-    assert (k+u).is_positive is None
-    assert (k+v).is_positive is False
-    assert (n+u).is_positive is True
-    assert (n+v).is_positive is None
+    assert (k + u).is_positive is None
+    assert (k + v).is_positive is False
+    assert (n + u).is_positive is True
+    assert (n + v).is_positive is None
 
-    assert (u-v).is_positive is None
-    assert (u+v).is_positive is None
-    assert (-u-v).is_positive is None
-    assert (-u+v).is_positive is False
+    assert (u - v).is_positive is None
+    assert (u + v).is_positive is None
+    assert (-u - v).is_positive is None
+    assert (-u + v).is_positive is False
 
-    assert (u-v-n-2).is_positive is None
-    assert (u+v-n-2).is_positive is None
-    assert (-u-v-n-2).is_positive is None
-    assert (-u+v-n-2).is_positive is False
+    assert (u - v - n - 2).is_positive is None
+    assert (u + v - n - 2).is_positive is None
+    assert (-u - v - n - 2).is_positive is None
+    assert (-u + v - n - 2).is_positive is False
 
-    assert (n+x).is_positive is None
-    assert (n+x-k).is_positive is None
+    assert (n + x).is_positive is None
+    assert (n + x - k).is_positive is None
 
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero is not False
 
@@ -791,75 +791,75 @@ def test_Add_is_nonpositive_nonnegative():
     u = Symbol('u', nonnegative=True)
     v = Symbol('v', nonpositive=True)
 
-    assert (u-2).is_nonpositive is None
-    assert (u+17).is_nonpositive is False
-    assert (-u-5).is_nonpositive is True
-    assert (-u+123).is_nonpositive is None
+    assert (u - 2).is_nonpositive is None
+    assert (u + 17).is_nonpositive is False
+    assert (-u - 5).is_nonpositive is True
+    assert (-u + 123).is_nonpositive is None
 
-    assert (u-v).is_nonpositive is None
-    assert (u+v).is_nonpositive is None
-    assert (-u-v).is_nonpositive is None
-    assert (-u+v).is_nonpositive is True
+    assert (u - v).is_nonpositive is None
+    assert (u + v).is_nonpositive is None
+    assert (-u - v).is_nonpositive is None
+    assert (-u + v).is_nonpositive is True
 
-    assert (u-v-2).is_nonpositive is None
-    assert (u+v+17).is_nonpositive is None
-    assert (-u-v-5).is_nonpositive is None
-    assert (-u+v-123).is_nonpositive is True
+    assert (u - v - 2).is_nonpositive is None
+    assert (u + v + 17).is_nonpositive is None
+    assert (-u - v - 5).is_nonpositive is None
+    assert (-u + v - 123).is_nonpositive is True
 
-    assert (-2*u+123*v-17).is_nonpositive is True
+    assert (-2*u + 123*v - 17).is_nonpositive is True
 
-    assert (k+u).is_nonpositive is None
-    assert (k+v).is_nonpositive is True
-    assert (n+u).is_nonpositive is False
-    assert (n+v).is_nonpositive is None
+    assert (k + u).is_nonpositive is None
+    assert (k + v).is_nonpositive is True
+    assert (n + u).is_nonpositive is False
+    assert (n + v).is_nonpositive is None
 
-    assert (k-n).is_nonpositive is True
-    assert (k+n).is_nonpositive is None
-    assert (-k-n).is_nonpositive is None
-    assert (-k+n).is_nonpositive is False
+    assert (k - n).is_nonpositive is True
+    assert (k + n).is_nonpositive is None
+    assert (-k - n).is_nonpositive is None
+    assert (-k + n).is_nonpositive is False
 
-    assert (k-n+u+2).is_nonpositive is None
-    assert (k+n+u+2).is_nonpositive is None
-    assert (-k-n+u+2).is_nonpositive is None
-    assert (-k+n+u+2).is_nonpositive is False
+    assert (k - n + u + 2).is_nonpositive is None
+    assert (k + n + u + 2).is_nonpositive is None
+    assert (-k - n + u + 2).is_nonpositive is None
+    assert (-k + n + u + 2).is_nonpositive is False
 
-    assert (u+x).is_nonpositive is None
-    assert (v-x-n).is_nonpositive is None
+    assert (u + x).is_nonpositive is None
+    assert (v - x - n).is_nonpositive is None
 
-    assert (u-2).is_nonnegative is None
-    assert (u+17).is_nonnegative is True
-    assert (-u-5).is_nonnegative is False
-    assert (-u+123).is_nonnegative is None
+    assert (u - 2).is_nonnegative is None
+    assert (u + 17).is_nonnegative is True
+    assert (-u - 5).is_nonnegative is False
+    assert (-u + 123).is_nonnegative is None
 
-    assert (u-v).is_nonnegative is True
-    assert (u+v).is_nonnegative is None
-    assert (-u-v).is_nonnegative is None
-    assert (-u+v).is_nonnegative is None
+    assert (u - v).is_nonnegative is True
+    assert (u + v).is_nonnegative is None
+    assert (-u - v).is_nonnegative is None
+    assert (-u + v).is_nonnegative is None
 
-    assert (u-v+2).is_nonnegative is True
-    assert (u+v+17).is_nonnegative is None
-    assert (-u-v-5).is_nonnegative is None
-    assert (-u+v-123).is_nonnegative is False
+    assert (u - v + 2).is_nonnegative is True
+    assert (u + v + 17).is_nonnegative is None
+    assert (-u - v - 5).is_nonnegative is None
+    assert (-u + v - 123).is_nonnegative is False
 
-    assert (2*u-123*v+17).is_nonnegative is True
+    assert (2*u - 123*v + 17).is_nonnegative is True
 
-    assert (k+u).is_nonnegative is None
-    assert (k+v).is_nonnegative is False
-    assert (n+u).is_nonnegative is True
-    assert (n+v).is_nonnegative is None
+    assert (k + u).is_nonnegative is None
+    assert (k + v).is_nonnegative is False
+    assert (n + u).is_nonnegative is True
+    assert (n + v).is_nonnegative is None
 
-    assert (k-n).is_nonnegative is False
-    assert (k+n).is_nonnegative is None
-    assert (-k-n).is_nonnegative is None
-    assert (-k+n).is_nonnegative is True
+    assert (k - n).is_nonnegative is False
+    assert (k + n).is_nonnegative is None
+    assert (-k - n).is_nonnegative is None
+    assert (-k + n).is_nonnegative is True
 
-    assert (k-n-u-2).is_nonnegative is False
-    assert (k+n-u-2).is_nonnegative is None
-    assert (-k-n-u-2).is_nonnegative is None
-    assert (-k+n-u-2).is_nonnegative is None
+    assert (k - n - u - 2).is_nonnegative is False
+    assert (k + n - u - 2).is_nonnegative is None
+    assert (-k - n - u - 2).is_nonnegative is None
+    assert (-k + n - u - 2).is_nonnegative is None
 
-    assert (u-x).is_nonnegative is None
-    assert (v+x+n).is_nonnegative is None
+    assert (u - x).is_nonnegative is None
+    assert (v + x + n).is_nonnegative is None
 
 
 def test_Pow_is_integer():
@@ -1118,8 +1118,8 @@ def test_Mul_is_imaginary_real():
 
 
 def test_Add_is_comparable():
-    assert (x+y).is_comparable is False
-    assert (x+1).is_comparable is False
+    assert (x + y).is_comparable is False
+    assert (x + 1).is_comparable is False
     assert (Rational(1, 3) - sqrt(8)).is_comparable is True
 
 
@@ -1151,8 +1151,8 @@ def test_Add_is_irrational():
     assert i.is_irrational is True
     assert i.is_rational is False
 
-    assert (i+1).is_irrational is True
-    assert (i+1).is_rational is False
+    assert (i + 1).is_irrational is True
+    assert (i + 1).is_rational is False
 
 
 @XFAIL
@@ -1243,11 +1243,11 @@ def test_make_args():
     assert Add.make_args(x*y*z) == (x*y*z,)
     assert Mul.make_args(x*y*z) == (x*y*z).args
 
-    assert Add.make_args(x+y+z) == (x+y+z).args
-    assert Mul.make_args(x+y+z) == (x+y+z,)
+    assert Add.make_args(x + y + z) == (x + y + z).args
+    assert Mul.make_args(x + y + z) == (x + y + z,)
 
-    assert Add.make_args((x+y)**z) == ((x+y)**z,)
-    assert Mul.make_args((x+y)**z) == ((x+y)**z,)
+    assert Add.make_args((x + y)**z) == ((x + y)**z,)
+    assert Mul.make_args((x + y)**z) == ((x + y)**z,)
 
 
 def test_issue2027():
@@ -1293,10 +1293,10 @@ def test_Add_as_content_primitive():
 
 def test_Mul_as_content_primitive():
     assert (2*x).as_content_primitive() == (2, x)
-    assert (x*(2+2*x)).as_content_primitive() == (2, x*(1 + x))
+    assert (x*(2 + 2*x)).as_content_primitive() == (2, x*(1 + x))
     assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x* \
             (1 + y)*(x + 1)**2)
-    assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive(
+    assert ((2 + 2*x)**2*(3 + 6*x) + S.Half).as_content_primitive(
         ) == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
 
 

@@ -37,7 +37,7 @@ def test_single_normal():
 @XFAIL
 def test_conditional_1d():
     X = Normal('x', 0, 1)
-    Y = given(X, X>=0)
+    Y = given(X, X >= 0)
 
     assert density(Y) == 2 * density(X)
 
@@ -49,12 +49,12 @@ def test_conditional_1d():
 
 def test_ContinuousDomain():
     X = Normal('x', 0, 1)
-    assert where(X**2<=1).set == Interval(-1, 1)
-    assert where(X**2<=1).symbol == X.symbol
-    where(And(X**2<=1, X>=0)).set == Interval(0, 1)
+    assert where(X**2 <= 1).set == Interval(-1, 1)
+    assert where(X**2 <= 1).symbol == X.symbol
+    where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     raises(ValueError, lambda: where(sin(X)>1))
 
-    Y = given(X, X>=0)
+    Y = given(X, X >= 0)
 
     assert Y.pspace.domain.set == Interval(0, oo)
 
@@ -62,14 +62,14 @@ def test_ContinuousDomain():
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
 
-    assert E(X+Y) == 0
-    assert variance(X+Y) == 2
-    assert variance(X+X) == 4
+    assert E(X + Y) == 0
+    assert variance(X + Y) == 2
+    assert variance(X + X) == 4
     assert covariance(X, Y) == 0
     assert covariance(2*X + Y, -X) == -2*variance(X)
 
-    assert E(X, Eq(X+Y, 0)) == 0
-    assert variance(X, Eq(X+Y, 0)) == S.Half
+    assert E(X, Eq(X + Y, 0)) == 0
+    assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
 def test_symbolic():
@@ -82,14 +82,14 @@ def test_symbolic():
     a, b, c = symbols('a b c', real=True, bounded=True)
 
     assert E(X) == mu1
-    assert E(X+Y) == mu1+mu2
-    assert E(a*X+b) == a*E(X)+b
+    assert E(X + Y) == mu1 + mu2
+    assert E(a*X + b) == a*E(X) +b
     assert variance(X) == s1**2
-    assert simplify(variance(X+a*Y+b)) == variance(X) + a**2*variance(Y)
+    assert simplify(variance(X + a*Y + b)) == variance(X) + a**2*variance(Y)
 
     assert E(Z) == 1/rate
-    assert E(a*Z+b) == a*E(Z)+b
-    assert E(X+a*Z+b) == mu1 + a/rate + b
+    assert E(a*Z + b) == a*E(Z) +b
+    assert E(X + a*Z + b) == mu1 + a/rate + b
 
 
 def test_cdf():
@@ -107,7 +107,7 @@ def test_cdf():
     assert d(-5) == 0
     assert P(Y > 3) == 1 - d(3)
 
-    raises(ValueError, lambda: cdf(X+Y))
+    raises(ValueError, lambda: cdf(X + Y))
 
     Z = Exponential('z', 1)
     f = cdf(Z)
@@ -161,7 +161,7 @@ def test_beta():
 
     dens = density(B)
     x = Symbol('x')
-    assert dens(x) == x**(a-1)*(1-x)**(b-1) / beta(a, b)
+    assert dens(x) == x**(a - 1)*(1 - x)**(b - 1) / beta(a, b)
 
     # This is too slow
     # assert E(B) == a / (a + b)
@@ -171,7 +171,7 @@ def test_beta():
     a, b = 1, 2
     B = Beta('x', a, b)
     assert E(B) == a / S(a + b)
-    assert variance(B) == (a*b) / S((a+b)**2 * (a+b+1))
+    assert variance(B) == (a*b) / S((a + b)**2 * (a + b + 1))
 
 
 def test_betaprime():
@@ -220,7 +220,7 @@ def test_exponential():
     assert P(X>1) == exp(-rate)
     assert P(X>10) == exp(-10*rate)
 
-    assert where(X<=1).set == Interval(0, 1)
+    assert where(X <= 1).set == Interval(0, 1)
 
 
 def test_gamma():
@@ -320,7 +320,7 @@ def test_pareto():
 
     dens = density(X)
     x = Symbol('x')
-    assert dens(x) == x**(-(alpha+1))*xm**(alpha)*(alpha)
+    assert dens(x) == x**(-(alpha + 1))*xm**(alpha)*(alpha)
 
     # These fail because SymPy can not deduce that 1/xm != 0
     # assert simplify(E(X)) == alpha*xm/(alpha-1)
@@ -332,8 +332,8 @@ def test_pareto_numeric():
     alpha = beta + 5
     X = Pareto('x', xm, alpha)
 
-    assert E(X) == alpha*xm/S(alpha-1)
-    assert variance(X) == xm**2*alpha / S(((alpha-1)**2*(alpha-2)))
+    assert E(X) == alpha*xm/S(alpha - 1)
+    assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
     # Skewness tests too slow. Try shortcutting function?
 
 
@@ -373,12 +373,12 @@ def test_triangular():
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)
     w = Symbol('w', positive=True, bounded=True)
-    X = Uniform('x', l, l+w)
+    X = Uniform('x', l, l + w)
 
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-    assert P(X<l) == 0 and P(X>l+w) == 0
+    assert P(X<l) == 0 and P(X>l + w) == 0
 
     # With numbers all is well
     X = Uniform('x', 3, 5)
@@ -463,7 +463,7 @@ def test_unevaluated():
     assert E(X, evaluate=False) == (
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
 
-    assert E(X+1, evaluate=False) == (
+    assert E(X + 1, evaluate=False) == (
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1)
 
     assert P(X>0, evaluate=False) == (

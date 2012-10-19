@@ -272,8 +272,8 @@ class LagrangesMethod(object):
         row2 = zeros(n, n).row_join(self.mass_matrix)
         if self.coneqs is not None:
             m = len(self.coneqs)
-            I = eye(n).row_join(zeros(n, n+m))
-            below_eye = zeros(n+m, n)
+            I = eye(n).row_join(zeros(n, n + m))
+            below_eye = zeros(n + m, n)
             A = (self.mass_matrix).col_join((self._m_cd).row_join(zeros(m, m)))
             below_I = below_eye.row_join(A)
             return I.col_join(below_I)

@@ -220,7 +220,7 @@ def test_benchmark_minpoly():
 def test_benchmark_coloring():
     skip('takes too much time')
 
-    V = range(1, 12+1)
+    V = range(1, 12 + 1)
     E = [(
         1, 2), (
             2, 3), (1, 4), (1, 6), (1, 12), (2, 5), (2, 7), (3, 8), (3, 10),
@@ -228,7 +228,7 @@ def test_benchmark_coloring():
          (11, 12), (5, 12), (5, 9), (6, 10), (7, 11), (8, 12), (3, 4)]
 
     V = [Symbol('x' + str(i)) for i in V]
-    E = [(V[i-1], V[j-1]) for i, j in E]
+    E = [(V[i - 1], V[j - 1]) for i, j in E]
 
     x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = V
 

@@ -66,7 +66,7 @@ def model_to_screen(x, y, z):
 
 
 def vec_subs(a, b):
-    return tuple(a[i]-b[i] for i in xrange(len(a)))
+    return tuple(a[i] - b[i] for i in xrange(len(a)))
 
 
 def billboard_matrix():
@@ -113,7 +113,7 @@ def interpolate(a_min, a_max, a_ratio):
 
 
 def rinterpolate(a_min, a_max, a_value):
-    a_range = a_max-a_min
+    a_range = a_max - a_min
     if a_range == 0:
         a_range = 1.0
     return (a_value - a_min) / float(a_range)
@@ -129,29 +129,29 @@ def scale_value(v, v_min, v_len):
 
 def scale_value_list(flist):
     v_min, v_max = min(flist), max(flist)
-    v_len = v_max-v_min
+    v_len = v_max - v_min
     return list(scale_value(f, v_min, v_len) for f in flist)
 
 
 def strided_range(r_min, r_max, stride, max_steps=50):
     o_min, o_max = r_min, r_max
-    if abs(r_min-r_max) < 0.001:
+    if abs(r_min - r_max) < 0.001:
         return []
     try:
-        xrange(int(r_min-r_max))
+        xrange(int(r_min - r_max))
     except TypeError:
         return []
     assert r_min < r_max
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
-    if abs(r_max_s-stride) < 0.001:
+    if abs(r_max_s - stride) < 0.001:
         r_max_s = 0.0
     r_min -= r_min_s
     r_max += r_max_s
-    r_steps = int((r_max-r_min)/stride)
+    r_steps = int((r_max - r_min)/stride)
     if max_steps and r_steps > max_steps:
         return strided_range(o_min, o_max, stride*2)
-    return [r_min] + list(r_min+e*stride for e in xrange(1, r_steps+1)) + [r_max]
+    return [r_min] + list(r_min + e*stride for e in xrange(1, r_steps + 1)) + [r_max]
 
 
 def parse_option_string(s):
@@ -175,7 +175,7 @@ def dot_product(v1, v2):
 
 
 def vec_sub(v1, v2):
-    return tuple(v1[i]-v2[i] for i in xrange(3))
+    return tuple(v1[i] - v2[i] for i in xrange(3))
 
 
 def vec_mag(v):

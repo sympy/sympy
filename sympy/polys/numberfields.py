@@ -292,10 +292,10 @@ def field_isomorphism_pslq(a, b):
         h = Poly(coeffs, f.gen, domain='QQ')
 
         if f.compose(h).rem(g).is_zero:
-            d, approx = len(coeffs)-1, 0
+            d, approx = len(coeffs) - 1, 0
 
             for i, coeff in enumerate(coeffs):
-                approx += coeff*B**(d-i)
+                approx += coeff*B**(d - i)
 
             if A*approx < 0:
                 return [ -c for c in coeffs ]
@@ -316,10 +316,10 @@ def field_isomorphism_factor(a, b):
     for f, _ in factors:
         if f.degree() == 1:
             coeffs = f.rep.TC().to_sympy_list()
-            d, terms = len(coeffs)-1, []
+            d, terms = len(coeffs) - 1, []
 
             for i, coeff in enumerate(coeffs):
-                terms.append(coeff*b.root**(d-i))
+                terms.append(coeff*b.root**(d - i))
 
             root = Add(*terms)
 
@@ -497,7 +497,7 @@ class AlgebraicNumber(Expr):
         if f.LC() == 1:
             return self
 
-        coeff = f.LC()**(f.degree()-1)
+        coeff = f.LC()**(f.degree() - 1)
         poly = f.compose(Poly(f.gen/f.LC()))
 
         minpoly = poly*coeff

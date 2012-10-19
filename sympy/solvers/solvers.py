@@ -1695,7 +1695,7 @@ def solve_linear_system(system, *symbols, **flags):
     if len(syms) == matrix.rows:
         # this system is Cramer equivalent so there is
         # exactly one solution to this system of equations
-        k, solutions = i-1, {}
+        k, solutions = i - 1, {}
 
         while k >= 0:
             content = matrix[k, m]
@@ -1827,7 +1827,7 @@ def _generate_patterns():
     the patterns global variable.
     """
 
-    tmp1 = _f ** (_h-(_c*_g/_b))
+    tmp1 = _f ** (_h - (_c*_g/_b))
     tmp2 = (-_e*tmp1/_a)**(1/_d)
     global _patterns
     _patterns = [
@@ -1835,22 +1835,22 @@ def _generate_patterns():
             LambertW(_b*_c/_a)/_b),
         (_a*_x*log(_b*_x) - _c,
             exp(LambertW(_b*_c/_a))/_b),
-        (_a*(_b*_x+_c)**_d + _e,
-            ((-(_e/_a))**(1/_d)-_c)/_b),
-        (_b+_c*exp(_d*_x+_e),
-            (log(-_b/_c)-_e)/_d),
-        (_a*_x+_b+_c*exp(_d*_x+_e),
-            -_b/_a-LambertW(_c*_d*exp(_e-_b*_d/_a)/_a)/_d),
-        (_b+_c*_f**(_d*_x+_e),
-            (log(-_b/_c)-_e*log(_f))/_d/log(_f)),
-        (_a*_x+_b+_c*_f**(_d*_x+_e),
-            -_b/_a-LambertW(_c*_d*_f**(_e-_b*_d/_a)*log(_f)/_a)/_d/log(_f)),
-        (_b+_c*log(_d*_x+_e),
-            (exp(-_b/_c)-_e)/_d),
-        (_a*_x+_b+_c*log(_d*_x+_e),
-            -_e/_d+_c/_a*LambertW(_a/_c/_d*exp(-_b/_c+_a*_e/_c/_d))),
-        (_a*(_b*_x+_c)**_d + _e*_f**(_g*_x+_h),
-            -_c/_b-_d*LambertW(-tmp2*_g*log(_f)/_b/_d)/_g/log(_f))
+        (_a*(_b*_x + _c)**_d + _e,
+            ((-(_e/_a))**(1/_d) - _c)/_b),
+        (_b + _c*exp(_d*_x + _e),
+            (log(-_b/_c) - _e)/_d),
+        (_a*_x + _b + _c*exp(_d*_x + _e),
+            -_b/_a - LambertW(_c*_d*exp(_e - _b*_d/_a)/_a)/_d),
+        (_b + _c*_f**(_d*_x + _e),
+            (log(-_b/_c) - _e*log(_f))/_d/log(_f)),
+        (_a*_x + _b + _c*_f**(_d*_x + _e),
+            -_b/_a - LambertW(_c*_d*_f**(_e - _b*_d/_a)*log(_f)/_a)/_d/log(_f)),
+        (_b + _c*log(_d*_x + _e),
+            (exp(-_b/_c) - _e)/_d),
+        (_a*_x + _b + _c*log(_d*_x + _e),
+            -_e/_d + _c/_a*LambertW(_a/_c/_d*exp(-_b/_c + _a*_e/_c/_d))),
+        (_a*(_b*_x + _c)**_d + _e*_f**(_g*_x + _h),
+            -_c/_b - _d*LambertW(-tmp2*_g*log(_f)/_b/_d)/_g/log(_f))
     ]
 
 
@@ -2191,7 +2191,7 @@ def _invert(eq, *symbols, **kwargs):
 
         #                    -1
         # f(x) = g  ->  x = f  (g)
-        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and \
+        elif lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1) and \
                                  (hasattr(lhs, 'inverse') or
                                   lhs.func in inverses or
                                   lhs.func is Abs):

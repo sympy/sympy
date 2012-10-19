@@ -58,7 +58,7 @@ def test_function_series3():
         nargs = 1
 
         def fdiff(self, argindex=1):
-            return 1-mytanh(self.args[0])**2
+            return 1 - mytanh(self.args[0])**2
 
         @classmethod
         def eval(cls, arg):

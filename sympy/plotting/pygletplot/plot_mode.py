@@ -171,7 +171,7 @@ class PlotMode(PlotObject):
             # which support the given d var count until we
             # reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_default_mode(i+1, d, i_vars)
+                return PlotMode._get_default_mode(i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a default mode "
                                   "for %i independent and %i "
@@ -192,7 +192,7 @@ class PlotMode(PlotObject):
             # which support the given d var count and alias
             # until we reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_aliased_mode(alias, i+1, d, i_vars)
+                return PlotMode._get_aliased_mode(alias, i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a %s mode "
                                   "for %i independent and %i "

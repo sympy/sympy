@@ -335,7 +335,7 @@ def gray_to_bin(bin_list):
     """
     b = [bin_list[0]]
     for i in xrange(1, len(bin_list)):
-        b += str(int(b[i-1] != bin_list[i]))
+        b += str(int(b[i - 1] != bin_list[i]))
     return ''.join(b)
 
 

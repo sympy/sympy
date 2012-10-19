@@ -22,7 +22,7 @@ def test_functional_diffgeom_ch2():
     f = Function('f')
 
     assert (R2_p.point_to_coords(R2_r.point([x0, y0])) ==
-                Matrix([sqrt(x0**2+y0**2), atan2(y0, x0)]))
+                Matrix([sqrt(x0**2 + y0**2), atan2(y0, x0)]))
     assert (R2_r.point_to_coords(R2_p.point([r0, theta0])) ==
                 Matrix([r0*cos(theta0), r0*sin(theta0)]))
 

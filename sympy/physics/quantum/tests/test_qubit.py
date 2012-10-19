@@ -27,7 +27,7 @@ def test_Qubit():
     assert qb.flip(4) == Qubit('10110')
     assert qb.dimension == 5
     for i in range(5):
-        assert qb[i] == array[4-i]
+        assert qb[i] == array[4 - i]
     assert len(qb) == 5
     qb = Qubit('110')
 

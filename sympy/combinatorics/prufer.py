@@ -260,7 +260,7 @@ class Prufer(Basic):
         e = set()
         nmin = runs[0][0]
         for r in runs:
-            for i in range(len(r)-1):
+            for i in range(len(r) - 1):
                 a, b = r[i: i + 2]
                 if b < a:
                     a, b = b, a

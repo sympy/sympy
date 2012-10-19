@@ -52,7 +52,7 @@ def test_localring():
     assert 1/(1 + x) in R
     assert Y in R
     assert X.ring == R
-    assert X*(Y**2+1)/(1 + X) == R.convert(x*(y**2 + 1)/(1 + x))
+    assert X*(Y**2 + 1)/(1 + X) == R.convert(x*(y**2 + 1)/(1 + x))
     assert X*y == X*Y
     raises(ExactQuotientFailed, lambda: X/Y)
     raises(ExactQuotientFailed, lambda: x/Y)
@@ -80,7 +80,7 @@ def test_conversion():
 
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
-    raises(CoercionFailed, lambda: G.convert(L.convert(1/(1+x)), L))
+    raises(CoercionFailed, lambda: G.convert(L.convert(1/(1 + x)), L))
 
 
 def test_units():

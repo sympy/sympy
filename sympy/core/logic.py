@@ -230,7 +230,7 @@ class And(AndOr_Base):
         for i in range(len(self.args)):
             arg = self.args[i]
             if isinstance(arg, Or):
-                arest = self.args[:i] + self.args[i+1:]
+                arest = self.args[:i] + self.args[i + 1:]
 
                 orterms = [And( *(arest + (a,)) ) for a in arg.args]
                 for j in range(len(orterms)):

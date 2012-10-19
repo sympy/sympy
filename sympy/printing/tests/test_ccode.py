@@ -138,9 +138,9 @@ def test_ccode_Indexed():
     x = IndexedBase('x')[Idx(j, n)]
     assert p._print_Indexed(x) == 'x[j]'
     A = IndexedBase('A')[Idx(i, m), Idx(j, n)]
-    assert p._print_Indexed(A) == 'A[%s]'% str(j + n*i)
+    assert p._print_Indexed(A) == 'A[%s]' % str(j + n*i)
     B = IndexedBase('B')[Idx(i, m), Idx(j, n), Idx(k, o)]
-    assert p._print_Indexed(B) == 'B[%s]'% str(k + i*n*o + j*o)
+    assert p._print_Indexed(B) == 'B[%s]' % str(k + i*n*o + j*o)
 
     assert p._not_c == set()
 

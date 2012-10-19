@@ -31,13 +31,13 @@ def test_python_basic():
             "x = Symbol('x')\ne = 1 + x + x**2",
             "x = Symbol('x')\ne = x + x**2 + 1",
             "x = Symbol('x')\ne = x**2 + x + 1", ]
-    assert python(1-x) in [
+    assert python(1 - x) in [
             "x = Symbol('x')\ne = 1 - x",
             "x = Symbol('x')\ne = -x + 1"]
-    assert python(1-2*x) in [
+    assert python(1 - 2*x) in [
             "x = Symbol('x')\ne = 1 - 2*x",
             "x = Symbol('x')\ne = -2*x + 1"]
-    assert python(1-Rational(3, 2)*y/x) in [
+    assert python(1 - Rational(3, 2)*y/x) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3/2*y/x",
             "y = Symbol('y')\nx = Symbol('x')\ne = -3/2*y/x + 1",
             "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3*y/(2*x)"]
@@ -45,19 +45,19 @@ def test_python_basic():
     # Multiplication
     assert python(x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = x/y"
     assert python(-x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = -x/y"
-    assert python((x+2)/y) in [
+    assert python((x + 2)/y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(2 + x)",
             "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(x + 2)",
             "x = Symbol('x')\ny = Symbol('y')\ne = 1/y*(2 + x)",
             "x = Symbol('x')\ny = Symbol('y')\ne = (2 + x)/y",
             "x = Symbol('x')\ny = Symbol('y')\ne = (x + 2)/y"]
-    assert python((1+x)*y) in [
+    assert python((1 + x)*y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)",
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)", ]
 
     # Check for proper placement of negative sign
-    assert python(-5*x/(x+10)) == "x = Symbol('x')\ne = -5*x/(x + 10)"
-    assert python(1 - Rational(3, 2)*(x+1)) in [
+    assert python(-5*x/(x + 10)) == "x = Symbol('x')\ne = -5*x/(x + 10)"
+    assert python(1 - Rational(3, 2)*(x + 1)) in [
             "x = Symbol('x')\ne = Rational(-3, 2)*x + Rational(-1, 2)",
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)",
             "x = Symbol('x')\ne = -3*x/2 + Rational(-1, 2)"
@@ -85,7 +85,7 @@ def test_python_relational():
     assert python(Le(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
     assert python(Gt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x > y"
     assert python(Lt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x < y"
-    assert python(Ne(x/(y+1), y**2)) in [
+    assert python(Ne(x/(y + 1), y**2)) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
 
@@ -100,24 +100,24 @@ def test_python_functions():
     assert python(2**Rational(1, 4)) == 'e = 2**Rational(1, 4)'
     assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
     assert python(
-        Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
+        Abs(x/(x**2 + 1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
             "x = Symbol('x')\ne = Abs(x/(x**2 + 1))"]
 
     # Univariate/Multivariate functions
     f = Function('f')
     assert python(f(x)) == "x = Symbol('x')\nf = Function('f')\ne = f(x)"
     assert python(f(x, y)) == "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x, y)"
-    assert python(f(x/(y+1), y)) in [
+    assert python(f(x/(y + 1), y)) in [
         "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x/(1 + y), y)",
         "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x/(y + 1), y)"]
 
     # Nesting of square roots
-    assert python(sqrt((sqrt(x+1))+1)) in [
+    assert python(sqrt((sqrt(x + 1)) + 1)) in [
             "x = Symbol('x')\ne = sqrt(1 + sqrt(1 + x))",
             "x = Symbol('x')\ne = sqrt(sqrt(x + 1) + 1)"]
 
     # Nesting of powers
-    assert python((((x+1)**Rational(1, 3))+1)**Rational(1, 3)) in [
+    assert python((((x + 1)**Rational(1, 3)) + 1)**Rational(1, 3)) in [
             "x = Symbol('x')\ne = (1 + (1 + x)**Rational(1, 3))**Rational(1, 3)",
             "x = Symbol('x')\ne = ((x + 1)**Rational(1, 3) + 1)**Rational(1, 3)"]
 
@@ -128,8 +128,8 @@ def test_python_functions():
 @XFAIL
 def test_python_functions_conjugates():
     a, b = map(Symbol, 'ab')
-    assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
-    assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
+    assert python( conjugate(a + b*I) ) == '_     _\na - I*b'
+    assert python( conjugate(exp(a + b*I)) ) == ' _     _\n a - I*b\ne       '
 
 
 def test_python_derivatives():

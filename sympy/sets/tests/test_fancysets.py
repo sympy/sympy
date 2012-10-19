@@ -79,7 +79,7 @@ def test_halfcircle():
 
 
 def test_transformation_iterator_not_injetive():
-    L = Lambda(x, x - x%2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
+    L = Lambda(x, x - x % 2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
     evens = TransformationSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here

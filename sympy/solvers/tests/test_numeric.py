@@ -14,7 +14,7 @@ def test_nsolve():
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
     # Issue 1730
-    assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0)  # doesn't fail
+    assert nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
     x2 = Symbol('x2')

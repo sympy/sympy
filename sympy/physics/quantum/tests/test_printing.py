@@ -351,7 +351,7 @@ L \
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
     sT(h4, "L2(Interval(Integer(0), oo, False, True))")
-    assert str(h1+h2) == 'H+C(2)'
+    assert str(h1 + h2) == 'H+C(2)'
     ascii_str = \
 """\
      2\n\
@@ -362,10 +362,10 @@ u"""\
      2\n\
 H ⊕ C \
 """
-    assert pretty(h1+h2) == ascii_str
-    assert upretty(h1+h2) == ucode_str
-    assert latex(h1+h2)
-    sT(h1+h2, "DirectSumHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
+    assert pretty(h1 + h2) == ascii_str
+    assert upretty(h1 + h2) == ucode_str
+    assert latex(h1 + h2)
+    sT(h1 + h2, "DirectSumHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
     assert str(h1*h2) == "H*C(2)"
     ascii_str = \
 """\
@@ -789,11 +789,11 @@ def test_tensorproduct():
 def test_big_expr():
     f = Function('f')
     x = symbols('x')
-    e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'), Pow(DifferentialOperator(Derivative(f(x), x), f(x)), 3))*TensorProduct(Jz**2, Operator('A')+Operator('B')))*(JzBra(1, 0)+JzBra(1, 1))*(JzKet(0, 0)+JzKet(1, -1))
-    e2 = Commutator(Jz**2, Operator('A')+Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')), Operator('E').inv()**2)*Dagger(Commutator(Jz, J2))
-    e3 = Wigner3j(1, 2, 3, 4, 5, 6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')), Operator('C')+Operator('D')), Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1, 1)), JzBra(1, 0)))*TensorProduct(JzKetCoupled(1, 1, (1, 1))+JzKetCoupled(1, 0, (1, 1)), JzKetCoupled(1, -1, (1, 1)))
-    e4 = (ComplexSpace(1)*ComplexSpace(2)+FockSpace()**2)*(L2(Interval(
-        0, oo))+HilbertSpace())
+    e1 = Dagger(AntiCommutator(Operator('A') + Operator('B'), Pow(DifferentialOperator(Derivative(f(x), x), f(x)), 3))*TensorProduct(Jz**2, Operator('A') + Operator('B')))*(JzBra(1, 0) + JzBra(1, 1))*(JzKet(0, 0) + JzKet(1, -1))
+    e2 = Commutator(Jz**2, Operator('A') + Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')), Operator('E').inv()**2)*Dagger(Commutator(Jz, J2))
+    e3 = Wigner3j(1, 2, 3, 4, 5, 6)*TensorProduct(Commutator(Operator('A') + Dagger(Operator('B')), Operator('C') + Operator('D')), Jz - J2)*Dagger(OuterProduct(Dagger(JzBra(1, 1)), JzBra(1, 0)))*TensorProduct(JzKetCoupled(1, 1, (1, 1)) + JzKetCoupled(1, 0, (1, 1)), JzKetCoupled(1, -1, (1, 1)))
+    e4 = (ComplexSpace(1)*ComplexSpace(2) + FockSpace()**2)*(L2(Interval(
+        0, oo)) + HilbertSpace())
     assert str(e1) == '(Jz**2)x(Dagger(A) + Dagger(B))*{Dagger(DifferentialOperator(Derivative(f(x), x),f(x)))**3,Dagger(A) + Dagger(B)}*(<1,0| + <1,1|)*(|0,0> + |1,-1>)'
     ascii_str = \
 """\

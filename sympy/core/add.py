@@ -85,7 +85,7 @@ class Add(AssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o]+[
+                order_factors = [o] +[
                     o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
@@ -397,7 +397,7 @@ class Add(AssocOp):
 
         # assemble single numerator and denominator
         denoms, numers = [list(i) for i in zip(*nd.iteritems())]
-        n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+        n, d = Add(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
                    for i in xrange(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)

@@ -19,7 +19,7 @@ def bench_R2():
             return 2*y
         if n == 0:
             return 1
-        return (2*y*hermite(n-1, y) - 2*(n-1)*hermite(n-2, y)).expand()
+        return (2*y*hermite(n - 1, y) - 2*(n - 1)*hermite(n - 2, y)).expand()
 
     #def phi(n, y):
     #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
@@ -30,8 +30,8 @@ def bench_R2():
 
 def bench_R3():
     "a = [bool(f==f) for _ in range(10)]"
-    f = x+y+z
-    a = [bool(f==f) for _ in range(10)]
+    f = x + y +z
+    a = [bool(f == f) for _ in range(10)]
 
 
 def bench_R4():
@@ -43,7 +43,7 @@ def bench_R5():
     "blowup(L, 8); L=uniq(L)"
     def blowup(L, n):
         for i in range(n):
-            L.append( (L[i] + L[i+1]) * L[i+2] )
+            L.append( (L[i] + L[i + 1]) * L[i + 2] )
 
     def uniq(x):
         v = list(set(x))
@@ -56,12 +56,12 @@ def bench_R5():
 
 def bench_R6():
     "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
-    s = sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
+    s = sum(simplify((x + sin(i))/x + (x - sin(i))/x) for i in xrange(100))
 
 
 def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"
-    f = x**24+34*x**12+45*x**3+9*x**18+34*x**10+32*x**21
+    f = x**24 + 34*x**12 + 45*x**3 + 9*x**18 + 34*x**10 + 32*x**21
     a = [f.subs(x, random()) for _ in xrange(10**4)]
 
 
@@ -92,8 +92,8 @@ def bench_R10():
     "v = [-pi,-pi+1/10..,pi]"
     def srange(min, max, step):
         v = [min]
-        while (max-v[-1]).evalf() > 0:
-            v.append(v[-1]+step)
+        while (max - v[-1]).evalf() > 0:
+            v.append(v[-1] + step)
         return v[:-1]
     v = srange(-pi, pi, sympify(1)/10)
 
@@ -106,8 +106,8 @@ def bench_R11():
 
 def bench_S1():
     "e=(x+y+z+1)**7;f=e*(e+1);f.expand()"
-    e = (x+y+z+1)**7
-    f = e*(e+1)
+    e = (x + y + z + 1)**7
+    f = e*(e + 1)
     f = f.expand()
 
 
@@ -130,5 +130,5 @@ if __name__ == '__main__':
     for b in benchmarks:
         t = clock()
         b()
-        t = clock()-t
+        t = clock() -t
         print "%s%65s: %f" % (b.__name__, b.__doc__, t)

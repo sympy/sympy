@@ -33,12 +33,12 @@ class Sample(tuple):
     def __new__(cls, sample):
         s = tuple.__new__(cls, sorted(sample))
         s.mean = mean = sum(s) / Integer(len(s))
-        s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
+        s.variance = sum([(x - mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
         if len(s) % 2:
             s.median = s[len(s)//2]
         else:
-            s.median = sum(s[len(s)//2-1:len(s)//2+1]) / Integer(2)
+            s.median = sum(s[len(s)//2 - 1:len(s)//2 + 1]) / Integer(2)
         return s
 
     def __repr__(self):
@@ -151,7 +151,7 @@ class Normal(ContinuousProbability):
 
         """
         x = sympify(x)
-        return 1/(s.sigma*sqrt(2*pi)) * exp(-(x-s.mu)**2 / (2*s.sigma**2))
+        return 1/(s.sigma*sqrt(2*pi)) * exp(-(x - s.mu)**2 / (2*s.sigma**2))
 
     def cdf(s, x):
         """
@@ -169,7 +169,7 @@ class Normal(ContinuousProbability):
 
         """
         x = sympify(x)
-        return (1+erf((x-s.mu)/(s.sigma*sqrt(2))))/2
+        return (1 + erf((x - s.mu)/(s.sigma*sqrt(2))))/2
 
     def _random(s):
         return random.gauss(float(s.mu), float(s.sigma))
@@ -213,7 +213,7 @@ class Normal(ContinuousProbability):
         y = erfinv(mpf(p))
         t = Float(str(mpf(float(s.sigma)) * mpf(2)**0.5 * y))
         mu = s.mu.evalf()
-        return (mu-t, mu+t)
+        return (mu - t, mu + t)
 
     @staticmethod
     def fit(sample):
@@ -247,10 +247,10 @@ class Uniform(ContinuousProbability):
         self.a = sympify(a)
         self.b = sympify(b)
 
-    mean = property(lambda s: (s.a+s.b)/2)
-    median = property(lambda s: (s.a+s.b)/2)
-    mode = property(lambda s: (s.a+s.b)/2)  # arbitrary
-    variance = property(lambda s: (s.b-s.a)**2 / 12)
+    mean = property(lambda s: (s.a + s.b)/2)
+    median = property(lambda s: (s.a + s.b)/2)
+    mode = property(lambda s: (s.a + s.b)/2)  # arbitrary
+    variance = property(lambda s: (s.b - s.a)**2 / 12)
     stddev = property(lambda s: sqrt(s.variance))
 
     def pdf(s, x):
@@ -273,7 +273,7 @@ class Uniform(ContinuousProbability):
                 "piecewise functions")
         if x < s.a or x > s.b:
             return Rational(0)
-        return 1/(s.b-s.a)
+        return 1/(s.b - s.a)
 
     def cdf(s, x):
         """
@@ -297,7 +297,7 @@ class Uniform(ContinuousProbability):
             return Rational(0)
         if x >= s.b:
             return Rational(1)
-        return (x-s.a)/(s.b-s.a)
+        return (x - s.a)/(s.b - s.a)
 
     def _random(s):
         return Float(random.uniform(float(s.a), float(s.b)))
@@ -317,7 +317,7 @@ class Uniform(ContinuousProbability):
         p = sympify(p)
         assert p <= 1
 
-        d = (s.b-s.a)*p / 2
+        d = (s.b - s.a)*p / 2
         return (s.mean - d, s.mean + d)
 
     @staticmethod
@@ -340,7 +340,7 @@ class Uniform(ContinuousProbability):
             sample = Sample(sample)
         m = sample.mean
         d = sqrt(12*sample.variance)/2
-        return Uniform(m-d, m+d)
+        return Uniform(m - d, m + d)
 
 
 class PDF(ContinuousProbability):

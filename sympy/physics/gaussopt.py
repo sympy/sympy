@@ -258,7 +258,7 @@ class CurvedRefraction(RayTransferMatrix):
     """
     def __new__(cls, R, n1, n2):
         R, n1, n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1 - n2)/R/n2, n1/n2)
 
 
 class FlatMirror(RayTransferMatrix):
@@ -526,7 +526,7 @@ class BeamParameter(Expr):
         >>> p.radius
         0.2809/pi**2 + 1
         """
-        return self.z*(1+(self.z/self.z_r)**2)
+        return self.z*(1 + (self.z/self.z_r)**2)
 
     @property
     def w(self):
@@ -546,7 +546,7 @@ class BeamParameter(Expr):
         >>> p.w
         0.001*sqrt(0.2809/pi**2 + 1)
         """
-        return self.w_0*sqrt(1+(self.z/self.z_r)**2)
+        return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
 
     @property
     def w_0(self):
@@ -689,7 +689,7 @@ def geometric_conj_ab(a, b):
     if abs(a) == oo or abs(b) == oo:
         return a if abs(b) == oo else b
     else:
-        return a*b/(a+b)
+        return a*b/(a + b)
 
 
 def geometric_conj_af(a, f):
@@ -758,9 +758,9 @@ def gaussian_conj(s_in, z_r_in, f):
     1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
     s_in, z_r_in, f = sympify((s_in, z_r_in, f))
-    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in-f)) + 1/f )
-    m = 1/sqrt((1-(s_in/f)**2) + (z_r_in/f)**2)
-    z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2)
+    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in - f)) + 1/f )
+    m = 1/sqrt((1 - (s_in/f)**2) + (z_r_in/f)**2)
+    z_r_out = z_r_in / ((1 - (s_in/f)**2) + (z_r_in/f)**2)
     return (s_out, z_r_out, m)
 
 

@@ -468,7 +468,7 @@ class jn(SphericalBesselBase):
     def _expand(self, **hints):
         n = self.order
         z = self.argument
-        return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
+        return fn(n, z) * sin(z) + (-1)**(n + 1) * fn(-n - 1, z) * cos(z)
 
 
 class yn(SphericalBesselBase):
@@ -513,8 +513,8 @@ class yn(SphericalBesselBase):
     def _expand(self, **hints):
         n = self.order
         z = self.argument
-        return (-1)**(n+1) * \
-               (fn(-n-1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
+        return (-1)**(n + 1) * \
+               (fn(-n - 1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
 
 
 def jn_zeros(n, k, method="sympy", dps=15):
@@ -568,12 +568,12 @@ def jn_zeros(n, k, method="sympy", dps=15):
         return root
 
     # we need to approximate the position of the first root:
-    root = n+pi
+    root = n + pi
     # determine the first root exactly:
     root = solver(f, root)
     roots = [root]
-    for i in range(k-1):
+    for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solver(f, root+pi)
+        root = solver(f, root + pi)
         roots.append(root)
     return roots

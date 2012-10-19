@@ -199,9 +199,9 @@ def _sympy_tensor_product(*matrices):
         for i in range(rows):
             start = matrix_expansion*mat[i*cols]
             # Go through each column joining each item
-            for j in range(cols-1):
+            for j in range(cols - 1):
                 start = start.row_join(
-                    matrix_expansion*mat[i*cols+j+1]
+                    matrix_expansion*mat[i*cols + j + 1]
                 )
             # If this is the first element, make it the start of the
             # new row.

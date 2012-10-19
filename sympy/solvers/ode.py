@@ -718,7 +718,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     y = Dummy('y')
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs-eq.rhs, func, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -821,7 +821,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
-        r = collect(reduced_eq, df, exact=True).match(d+e*df)
+        r = collect(reduced_eq, df, exact=True).match(d + e*df)
         if r:
             r['d'] = d
             r['e'] = e
@@ -848,11 +848,11 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 # u1=y/x and u2=x/y
                 u1 = Dummy('u1')
                 u2 = Dummy('u2')
-                if simplify((r[d]+u1*r[e]).subs({x: 1, y: u1})) != 0:
+                if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
                     matching_hints[
                         "1st_homogeneous_coeff_subs_dep_div_indep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
-                if simplify((r[e]+u2*r[d]).subs({x: u2, y: 1})) != 0:
+                if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
                     matching_hints[
                         "1st_homogeneous_coeff_subs_indep_div_dep"] = r
                     matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
@@ -1279,7 +1279,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                         lhs = ode_or_bool.lhs
                         rhs = ode_or_bool.rhs
                 # No sense in overworking simplify--just prove the numerator goes to zero
-                s = simplify(trigsimp((lhs-rhs).as_numer_denom()[0]))
+                s = simplify(trigsimp((lhs - rhs).as_numer_denom()[0]))
                 testnum += 1
         else:
             break
@@ -1694,7 +1694,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
         """
         constantsymbols = [Symbol(
-            symbolname+"%d" % t) for t in range(startnumber,
+            symbolname + "%d" % t) for t in range(startnumber,
         endnumber + 1)]
         global newstartnumber
 
@@ -1884,7 +1884,7 @@ def ode_1st_exact(eq, func, order, match):
     exactvars = {'y0': y0, 'x0': x0, 'y': r['y']}
     # If we ever get a Constant class, x0 and y0 should be constants, I think
     sol = C.Integral(r[r['e']].subs(
-        x, x0), (r['y'], y0, f(x)))+C.Integral(r[r['d']], (x, x0, x))
+        x, x0), (r['y'], y0, f(x))) + C.Integral(r[r['d']], (x, x0, x))
     return Eq(sol, C1)
 
 
@@ -2024,7 +2024,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
     int = C.Integral(
-        (-r[r['e']]/(r[r['d']]+u1*r[r['e']])).subs({x: 1, r['y']: u1}),
+        (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
     sol = logcombine(Eq(log(x), int + log(C1)), force=True)
     return sol
@@ -2112,7 +2112,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     C1 = Symbol('C1')
     int = C.Integral(
         simplify(
-            (-r[r['d']]/(r[r['e']]+u2*r[r['d']])).subs({x: u2, r['y']: 1})),
+            (-r[r['d']]/(r[r['e']] + u2*r[r['d']])).subs({x: u2, r['y']: 1})),
         (u2, None, x/f(x)))
     sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
     return sol
@@ -2341,9 +2341,9 @@ def ode_Bernoulli(eq, func, order, match):
     f = func.func
     r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
     C1 = Symbol('C1')
-    t = exp((1-r[r['n']])*C.Integral(r[r['b']]/r[r['a']], x))
-    tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']], x)
-    return Eq(f(x), ((tt + C1)/t)**(1/(1-r[r['n']])))
+    t = exp((1 - r[r['n']])*C.Integral(r[r['b']]/r[r['a']], x))
+    tt = (r[r['n']] - 1)*C.Integral(t*r[r['c']]/r[r['a']], x)
+    return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
 
 
 def ode_Riccati_special_minus2(eq, func, order, match):
@@ -2388,7 +2388,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
     C1 = Symbol('C1')
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
-    return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x)+C1))/(2*b2*x))
+    return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x) + C1))/(2*b2*x))
 
 
 def ode_Liouville(eq, func, order, match):
@@ -2489,7 +2489,7 @@ def _nth_linear_match(eq, func, order):
     """
     x = func.args[0]
     one_x = set([x])
-    terms = dict([(i, S.Zero) for i in range(-1, order+1)])
+    terms = dict([(i, S.Zero) for i in range(-1, order + 1)])
     for i in Add.make_args(eq):
         if not i.has(func):
             terms[-1] += i
@@ -3125,4 +3125,4 @@ def ode_separable(eq, func, order, match):
     r = match  # {'m1':m1, 'm2':m2, 'y':y}
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
-        r['m2'][x], x)+C1)
+        r['m2'][x], x) + C1)

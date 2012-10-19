@@ -99,7 +99,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         first_element = corrected_dense[0][0]
         # If the first element is a zero, then can't rescale matrix
         # and definitely not diagonal
-        if (first_element == 0.0+0.0j):
+        if (first_element == 0.0 + 0.0j):
             return False
 
         # The dimensions of the dense matrix should still
@@ -265,7 +265,7 @@ def lr_op(left, right):
     """
 
     if (len(left) > 0):
-        lr_gate = left[len(left)-1]
+        lr_gate = left[len(left) - 1]
         lr_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(lr_gate), lr_gate),
                                  _get_min_qubits(lr_gate),
@@ -273,7 +273,7 @@ def lr_op(left, right):
 
     if (len(left) > 0 and lr_gate_is_unitary):
         # Get the new left side w/o the rightmost gate
-        new_left = left[0:len(left)-1]
+        new_left = left[0:len(left) - 1]
         # Add the rightmost gate to the right position on the right side
         new_right = right + (Dagger(lr_gate),)
         # Return the new gate rule
@@ -371,7 +371,7 @@ def rr_op(left, right):
     """
 
     if (len(right) > 0):
-        rr_gate = right[len(right)-1]
+        rr_gate = right[len(right) - 1]
         rr_gate_is_unitary = is_scalar_matrix(
                                  (Dagger(rr_gate), rr_gate),
                                  _get_min_qubits(rr_gate),
@@ -379,7 +379,7 @@ def rr_op(left, right):
 
     if (len(right) > 0 and rr_gate_is_unitary):
         # Get the new right side w/o the rightmost gate
-        new_right = right[0:len(right)-1]
+        new_right = right[0:len(right) - 1]
         # Add the rightmost gate to the right position on the right side
         new_left = left + (Dagger(rr_gate),)
         # Return the new gate rule

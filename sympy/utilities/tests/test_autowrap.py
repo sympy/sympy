@@ -30,7 +30,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 
 def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CythonCodeWrapper(CCodeGen())
     source = get_string(code_gen.dump_pyx, [routine])

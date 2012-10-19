@@ -185,19 +185,19 @@ def test__dict_from_expr_if_gens():
     assert dict_from_expr(Integer(17)*x**7*y*z**12, gens=(
         x, y, z)) == ({(7, 1, 12): Integer(17)}, (x, y, z))
 
-    assert dict_from_expr(x+2*y+3*z, gens=(x,)) == \
-        ({(1,): Integer(1), (0,): 2*y+3*z}, (x,))
-    assert dict_from_expr(x+2*y+3*z, gens=(x, y)) == \
+    assert dict_from_expr(x + 2*y + 3*z, gens=(x,)) == \
+        ({(1,): Integer(1), (0,): 2*y + 3*z}, (x,))
+    assert dict_from_expr(x + 2*y + 3*z, gens=(x, y)) == \
         ({(1, 0): Integer(1), (0, 1): Integer(2), (0, 0): 3*z}, (x, y))
-    assert dict_from_expr(x+2*y+3*z, gens=(x, y, z)) == \
+    assert dict_from_expr(x + 2*y + 3*z, gens=(x, y, z)) == \
         ({(1, 0, 0): Integer(
             1), (0, 1, 0): Integer(2), (0, 0, 1): Integer(3)}, (x, y, z))
 
-    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x,)) == \
-        ({(1,): y+2*z, (0,): 3*y*z}, (x,))
-    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x, y)) == \
+    assert dict_from_expr(x*y + 2*x*z + 3*y*z, gens=(x,)) == \
+        ({(1,): y + 2*z, (0,): 3*y*z}, (x,))
+    assert dict_from_expr(x*y + 2*x*z + 3*y*z, gens=(x, y)) == \
         ({(1, 1): Integer(1), (1, 0): 2*z, (0, 1): 3*z}, (x, y))
-    assert dict_from_expr(x*y+2*x*z+3*y*z, gens=(x, y, z)) == \
+    assert dict_from_expr(x*y + 2*x*z + 3*y*z, gens=(x, y, z)) == \
         ({(1, 1, 0): Integer(
             1), (1, 0, 1): Integer(2), (0, 1, 1): Integer(3)}, (x, y, z))
 
@@ -215,7 +215,7 @@ def test__dict_from_expr_no_gens():
 
     assert dict_from_expr(x*y) == ({(1, 1): Integer(1)}, (x, y))
     assert dict_from_expr(
-        x+y) == ({(1, 0): Integer(1), (0, 1): Integer(1)}, (x, y))
+        x + y) == ({(1, 0): Integer(1), (0, 1): Integer(1)}, (x, y))
 
     assert dict_from_expr(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
     raises(GeneratorsNeeded, lambda: dict_from_expr(sqrt(2), greedy=False))
@@ -238,8 +238,8 @@ def test__dict_from_expr_no_gens():
 
 
 def test__parallel_dict_from_expr_if_gens():
-    assert parallel_dict_from_expr([x+2*y+3*z, Integer(7)], gens=(x,)) == \
-        ([{(1,): Integer(1), (0,): 2*y+3*z}, {(0,): Integer(7)}], (x,))
+    assert parallel_dict_from_expr([x + 2*y + 3*z, Integer(7)], gens=(x,)) == \
+        ([{(1,): Integer(1), (0,): 2*y + 3*z}, {(0,): Integer(7)}], (x,))
 
 
 def test__parallel_dict_from_expr_no_gens():

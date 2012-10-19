@@ -1258,7 +1258,7 @@ class Vector(object):
                     # also, we might wrap it in parentheses, for readability.
                     arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
-                        arg_str = "(%s)"%arg_str
+                        arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
                         arg_str = arg_str[1:]
                         str_start = ' - '
@@ -1300,7 +1300,7 @@ class Vector(object):
                             arg_str = (MechanicsPrettyPrinter().doprint(
                                 ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = u"(%s)"%arg_str
+                                arg_str = u"(%s)" % arg_str
                             if arg_str[0] == u"-":
                                 arg_str = arg_str[1:]
                                 str_start = u" - "
@@ -1377,7 +1377,7 @@ class Vector(object):
                     # also, we might wrap it in parentheses, for readability.
                     arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
-                        arg_str = "(%s)"%arg_str
+                        arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
                         arg_str = arg_str[1:]
                         str_start = ' - '
@@ -1653,8 +1653,8 @@ class MechanicsStrPrinter(StrPrinter):
     def _print_Function(self, e):
         t = dynamicsymbols._t
         if isinstance(type(e), UndefinedFunction):
-            return StrPrinter().doprint(e).replace("(%s)"%t, '')
-        return e.func.__name__ + "(%s)"%self.stringify(e.args, ", ")
+            return StrPrinter().doprint(e).replace("(%s)" % t, '')
+        return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
 
 
 class MechanicsLatexPrinter(LatexPrinter):

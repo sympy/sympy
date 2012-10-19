@@ -213,7 +213,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     # We use a fresh dummy, because assumptions on s might drop conditions on
     # convergence of the integral.
     s = _dummy('s', 'mellin-transform', f)
-    F = integrator(x**(s-1) * f, x)
+    F = integrator(x**(s - 1) * f, x)
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), (-oo, oo), True
@@ -266,7 +266,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
 
     conds = [process_conds(c) for c in disjuncts(cond)]
     conds = filter(lambda x: x[2] is not False, conds)
-    conds.sort(key=lambda x: (x[0]-x[1], count_ops(x[2])))
+    conds.sort(key=lambda x: (x[0] - x[1], count_ops(x[2])))
 
     if not conds:
         raise IntegralTransformError('Mellin', f, 'no convergence found')
@@ -292,7 +292,7 @@ class MellinTransform(IntegralTransform):
 
     def _as_integral(self, f, x, s):
         from sympy import Integral
-        return Integral(f*x**(s-1), (x, 0, oo))
+        return Integral(f*x**(s - 1), (x, 0, oo))
 
     def _collapse_extra(self, extra):
         from sympy import And, Max, Min

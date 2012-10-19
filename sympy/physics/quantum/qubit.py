@@ -100,7 +100,7 @@ class QubitState(State):
         return self.dimension
 
     def __getitem__(self, bit):
-        return self.qubit_values[int(self.dimension-bit-1)]
+        return self.qubit_values[int(self.dimension - bit - 1)]
 
     #-------------------------------------------------------------------------
     # Utility methods
@@ -110,7 +110,7 @@ class QubitState(State):
         """Flip the bit(s) given."""
         newargs = list(self.qubit_values)
         for i in bits:
-            bit = int(self.dimension-i-1)
+            bit = int(self.dimension - i - 1)
             if newargs[bit] == 1:
                 newargs[bit] = 0
             else:
@@ -218,7 +218,7 @@ class Qubit(QubitState, Ket):
 
         #trace out for each of index
         new_mat = self*bra
-        for i in xrange(len(sorted_idx)-1, -1, -1):
+        for i in xrange(len(sorted_idx) - 1, -1, -1):
             # start from tracing out from leftmost qubit
             new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
 
@@ -690,7 +690,7 @@ def _get_possible_outcomes(m, bits):
     # This is filled with loads of dirty binary tricks...You have been warned
 
     size = max(m.shape)  # Max of shape to account for bra or ket
-    nqubits = int(math.log(size, 2)+.1)  # Number of qubits possible
+    nqubits = int(math.log(size, 2) + .1)  # Number of qubits possible
 
     # Make the output states and put in output_matrices, nothing in them now.
     # Each state will represent a possible outcome of the measurement
@@ -714,7 +714,7 @@ def _get_possible_outcomes(m, bits):
         # Find trueness
         for j in range(len(bit_masks)):
             if i&bit_masks[j]:
-                trueness += j+1
+                trueness += j +1
         # Put the value in the correct output matrix
         output_matrices[trueness][i] = m[i]
     return output_matrices
@@ -757,7 +757,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             if total > random_number:
                 break
             result += 1
-        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2)+.1)))
+        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"

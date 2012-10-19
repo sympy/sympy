@@ -393,7 +393,7 @@ def rs_swap(a, b):
     """
     d = {}
     for rsa in a:
-        d[rsa] = [rsb for rsb in b if rsa.symbol==rsb.symbol][0]
+        d[rsa] = [rsb for rsb in b if rsa.symbol == rsb.symbol][0]
     return d
 
 

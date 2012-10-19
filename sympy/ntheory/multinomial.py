@@ -20,9 +20,9 @@ def binomial_coefficients(n):
     """
     d = {(0, n): 1, (n, 0): 1}
     a = 1
-    for k in xrange(1, n//2+1):
-        a = (a * (n-k+1))//k
-        d[k, n-k] = d[n-k, k] = a
+    for k in xrange(1, n//2 + 1):
+        a = (a * (n - k + 1))//k
+        d[k, n - k] = d[n - k, k] = a
     return d
 
 
@@ -42,11 +42,11 @@ def binomial_coefficients_list(n):
 
     binomial_coefficients, multinomial_coefficients
     """
-    d = [1] * (n+1)
+    d = [1] * (n + 1)
     a = 1
-    for k in xrange(1, n//2+1):
-        a = (a * (n-k+1))//k
-        d[k] = d[n-k] = a
+    for k in xrange(1, n//2 + 1):
+        a = (a * (n - k + 1))//k
+        d[k] = d[n - k] = a
     return d
 
 
@@ -85,7 +85,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
             return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
-    symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
+    symbols = [(0,)*i + (1,) + (0,)*(m - i - 1) for i in range(m)]
     s0 = symbols[0]
     p0 = [_tuple(aa - bb for aa, bb in _zip(s, s0)) for s in symbols]
     r = {_tuple(aa*n for aa in s0): 1}

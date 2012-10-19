@@ -8,7 +8,7 @@ from sympy.utilities.pytest import raises
 
 
 def test_solve_poly_system():
-    assert solve_poly_system([x-1], x) == [(S.One,)]
+    assert solve_poly_system([x - 1], x) == [(S.One,)]
 
     assert solve_poly_system([y - x, y - x - 1], x, y) is None
 
@@ -41,7 +41,7 @@ def test_solve_poly_system():
     assert solve_poly_system(
         [x + x*y - 3, y + x*y - 4], x, y) == [(-3, -2), (1, 2)]
 
-    raises(NotImplementedError, lambda: solve_poly_system([x**3-y**3], x, y))
+    raises(NotImplementedError, lambda: solve_poly_system([x**3 - y**3], x, y))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
 

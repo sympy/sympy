@@ -31,7 +31,7 @@ def test_printmethod():
 
 
 def test_Add():
-    sT(x+y, "Add(Symbol('x'), Symbol('y'))")
+    sT(x + y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 
@@ -76,12 +76,12 @@ def test_list():
 
 def test_Matrix():
     for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
-        sT(cls([[x**+1, 1], [y, x+y]]),
-           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
+        sT(cls([[x**+1, 1], [y, x + y]]),
+           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
-        sT(cls(), "%s([])"%name)
+        sT(cls(), "%s([])" % name)
 
-        sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
+        sT(cls([[x**+1, 1], [y, x + y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
 
 def test_Rational():

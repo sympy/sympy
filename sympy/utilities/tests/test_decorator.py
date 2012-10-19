@@ -12,14 +12,14 @@ def test_threaded():
         return 2*expr + sum(args)
 
     assert function(Matrix([[x, y], [1, x]]), 1, 2) == \
-        Matrix([[2*x+3, 2*y+3], [5, 2*x+3]])
+        Matrix([[2*x + 3, 2*y + 3], [5, 2*x + 3]])
 
-    assert function(Eq(x, y), 1, 2) == Eq(2*x+3, 2*y+3)
+    assert function(Eq(x, y), 1, 2) == Eq(2*x + 3, 2*y + 3)
 
-    assert function([x, y], 1, 2) == [2*x+3, 2*y+3]
-    assert function((x, y), 1, 2) == (2*x+3, 2*y+3)
+    assert function([x, y], 1, 2) == [2*x + 3, 2*y + 3]
+    assert function((x, y), 1, 2) == (2*x + 3, 2*y + 3)
 
-    assert function(set([x, y]), 1, 2) == set([2*x+3, 2*y+3])
+    assert function(set([x, y]), 1, 2) == set([2*x + 3, 2*y + 3])
 
     @threaded
     def function(expr, n):

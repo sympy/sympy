@@ -21,8 +21,8 @@ a, b, c = symbols('a,b,c')
 
 
 def test_IM_MM():
-    assert (MM+IM).__class__ is Matrix
-    assert (IM+MM).__class__ is Matrix
+    assert (MM + IM).__class__ is Matrix
+    assert (IM + MM).__class__ is Matrix
     assert (2*IM + MM).__class__ is Matrix
     assert MM.equals(IM)
 

@@ -493,7 +493,7 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
-                for i in range(n-1):
+                for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
                     e = e.diff(x)
@@ -511,7 +511,7 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n+2):
+        for i in xrange(n + 2):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -541,15 +541,15 @@ class Function(Application, Expr):
                 nargs = self.nargs[-1]
             else:
                 nargs = self.nargs
-            if not (1<=argindex<=nargs):
+            if not (1 <= argindex <= nargs):
                 raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex-1].is_Symbol:
+        if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
-                self.subs(self.args[argindex-1], arg_dummy),
-                arg_dummy), arg_dummy, self.args[argindex-1])
-        return Derivative(self, self.args[argindex-1], evaluate=False)
+                self.subs(self.args[argindex - 1], arg_dummy),
+                arg_dummy), arg_dummy, self.args[argindex - 1])
+        return Derivative(self, self.args[argindex - 1], evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -841,7 +841,7 @@ class Derivative(Expr):
         all_zero = True
         i = 0
         while i < len(variables) - 1:  # process up to final Integer
-            v, count = variables[i: i+2]
+            v, count = variables[i: i + 2]
             iwas = i
             if v._diff_wrt:
                 # We need to test the more specific case of count being an

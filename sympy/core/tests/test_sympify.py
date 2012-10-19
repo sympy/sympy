@@ -178,12 +178,12 @@ def test_sympify_text():
 
 
 def test_sympify_function():
-    assert sympify('factor(x**2-1, x)') == -(1-x)*(x+1)
+    assert sympify('factor(x**2-1, x)') == -(1 - x)*(x + 1)
     assert sympify('sin(pi/2)*cos(pi)') == -Integer(1)
 
 
 def test_sympify_poly():
-    p = Poly(x**2+x+1, x)
+    p = Poly(x**2 + x + 1, x)
 
     assert _sympify(p) is p
     assert sympify(p) is p
@@ -191,12 +191,12 @@ def test_sympify_poly():
 
 def test_sympify_factorial():
     assert sympify('x!') == factorial(x)
-    assert sympify('(x+1)!') == factorial(x+1)
+    assert sympify('(x+1)!') == factorial(x + 1)
     assert sympify('(1 + y*(x + 1))!') == factorial(1 + y*(x + 1))
     assert sympify('(1 + y*(x + 1)!)^2') == (1 + y*factorial(x + 1))**2
     assert sympify('y*x!') == y*factorial(x)
     assert sympify('x!!') == factorial2(x)
-    assert sympify('(x+1)!!') == factorial2(x+1)
+    assert sympify('(x+1)!!') == factorial2(x + 1)
     assert sympify('(1 + y*(x + 1))!!') == factorial2(1 + y*(x + 1))
     assert sympify('(1 + y*(x + 1)!!)^2') == (1 + y*factorial2(x + 1))**2
     assert sympify('y*x!!') == y*factorial2(x)
@@ -217,7 +217,7 @@ def test_sage():
     assert hasattr(sin(x), "_sage_")
     assert hasattr(cos(x), "_sage_")
     assert hasattr(x**2, "_sage_")
-    assert hasattr(x+y, "_sage_")
+    assert hasattr(x + y, "_sage_")
     assert hasattr(exp(x), "_sage_")
     assert hasattr(log(x), "_sage_")
 
@@ -232,7 +232,7 @@ def test_lambda():
     x = Symbol('x')
     assert sympify('lambda: 1') == Lambda((), 1)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
+    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
 
 
 def test_lambda_raises():
@@ -253,7 +253,7 @@ def test__sympify():
     assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
-    assert _sympify(1+1j) == 1.0 + I*1.0
+    assert _sympify(1 + 1j) == 1.0 + I*1.0
 
     class A:
         def _sympy_(self):
@@ -273,7 +273,7 @@ def test_sympifyit():
 
     @_sympifyit('b', NotImplemented)
     def add(a, b):
-        return a+b
+        return a +b
 
     assert add(x, 1) == x + 1
     assert add(x, 0.5) == x + Float('0.5')
@@ -283,7 +283,7 @@ def test_sympifyit():
 
     @_sympifyit('b')
     def add_raises(a, b):
-        return a+b
+        return a +b
 
     assert add_raises(x, 1) == x + 1
     assert add_raises(x, 0.5) == x + Float('0.5')
@@ -400,7 +400,7 @@ def test_S_sympify():
 
 
 def test_issue1689():
-    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Float(1.0))
+    assert srepr(S(1.0 + 0J)) == srepr(S(1.0)) == srepr(Float(1.0))
     assert srepr(Float(1)) != srepr(Float(1.0))
 
 

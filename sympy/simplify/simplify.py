@@ -292,7 +292,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                 var, order = deriv
 
                 while order > 0:
-                    term, order = Derivative(term, var), order-1
+                    term, order = Derivative(term, var), order -1
 
             if sym is None:
                 if rat is S.One:
@@ -325,7 +325,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                         'Improve MV Derivative support in collect')
 
             if s0 == sym:
-                expr, order = expr.expr, order+len(expr.variables)
+                expr, order = expr.expr, order + len(expr.variables)
             else:
                 break
 
@@ -2338,7 +2338,7 @@ def hypersimp(f, k):
     """
     f = sympify(f)
 
-    g = f.subs(k, k+1) / f
+    g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
     g = expand_func(g)
@@ -3277,7 +3277,7 @@ def _logcombine(expr, force=False):
         return expr
 
     if isinstance(expr, Equality):
-        retval = Equality(_logcombine(expr.lhs-expr.rhs, force),
+        retval = Equality(_logcombine(expr.lhs - expr.rhs, force),
         Integer(0))
         # If logcombine couldn't do much with the equality, try to make it like
         # it was.  Hopefully extract_additively won't become smart enough to
@@ -3299,7 +3299,7 @@ def _logcombine(expr, force=False):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False)==log,
+            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False) == log,
             i.args)):
                 largs = _getlogargs(i)
                 assert len(largs) != 0

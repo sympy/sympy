@@ -290,7 +290,7 @@ def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
-    for n in xrange(L, U+1):
+    for n in xrange(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
         if f == g:
@@ -301,7 +301,7 @@ def roots_cyclotomic(f, factor=False):
     roots = []
 
     if not factor:
-        for k in xrange(1, n+1):
+        for k in xrange(1, n + 1):
             if igcd(k, n) == 1:
                 roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
     else:
@@ -441,7 +441,7 @@ def preprocess_roots(poly):
             n = poly.degree()
 
             def func(k, coeff):
-                return coeff//basis**(n-k[0])
+                return coeff//basis**(n - k[0])
 
             poly = poly.termwise(func)
             coeff *= basis
@@ -511,10 +511,10 @@ def roots(f, *gens, **flags):
 
         x = Dummy('x')
 
-        poly, i = {}, len(f)-1
+        poly, i = {}, len(f) -1
 
         for coeff in f:
-            poly[i], i = sympify(coeff), i-1
+            poly[i], i = sympify(coeff), i -1
 
         f = Poly(poly, x, field=True)
     else:
@@ -702,7 +702,7 @@ def root_factors(f, *gens, **args):
         factors, N = [], 0
 
         for r, n in zeros.iteritems():
-            factors, N = factors + [Poly(x-r, x)]*n, N + n
+            factors, N = factors + [Poly(x - r, x)]*n, N + n
 
         if N < F.degree():
             G = reduce(lambda p, q: p*q, factors)

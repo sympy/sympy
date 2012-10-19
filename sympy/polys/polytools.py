@@ -103,7 +103,7 @@ class Poly(Expr):
         if not isinstance(rep, DMP):
             raise PolynomialError(
                 "invalid polynomial representation: %s" % rep)
-        elif rep.lev != len(gens)-1:
+        elif rep.lev != len(gens) - 1:
             raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
 
         obj = Basic.__new__(cls)
@@ -146,7 +146,7 @@ class Poly(Expr):
             raise GeneratorsNeeded(
                 "can't initialize from 'dict' without generators")
 
-        level = len(gens)-1
+        level = len(gens) -1
         domain = opt.domain
 
         if domain is None:
@@ -169,7 +169,7 @@ class Poly(Expr):
             raise MultivariatePolynomialError(
                 "'list' representation not supported")
 
-        level = len(gens)-1
+        level = len(gens) -1
         domain = opt.domain
 
         if domain is None:
@@ -365,7 +365,7 @@ class Poly(Expr):
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
 
-            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens)-1
+            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) -1
 
             if f.gens != gens:
                 f_monoms, f_coeffs = _dict_reorder(
@@ -395,7 +395,7 @@ class Poly(Expr):
 
         def per(rep, dom=dom, gens=gens, remove=None):
             if remove is not None:
-                gens = gens[:remove]+gens[remove+1:]
+                gens = gens[:remove] + gens[remove + 1:]
 
                 if not gens:
                     return dom.to_sympy(rep)
@@ -426,7 +426,7 @@ class Poly(Expr):
             gens = f.gens
 
         if remove is not None:
-            gens = gens[:remove]+gens[remove+1:]
+            gens = gens[:remove] + gens[remove + 1:]
 
             if not gens:
                 return f.rep.dom.to_sympy(rep)
@@ -574,7 +574,7 @@ class Poly(Expr):
 
         rep = dict(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens)))
 
-        return f.per(DMP(rep, f.rep.dom, len(gens)-1), gens=gens)
+        return f.per(DMP(rep, f.rep.dom, len(gens) - 1), gens=gens)
 
     def ltrim(f, gen):
         """
@@ -604,7 +604,7 @@ class Poly(Expr):
 
         gens = f.gens[j:]
 
-        return f.new(DMP.from_dict(terms, len(gens)-1, f.rep.dom), *gens)
+        return f.new(DMP.from_dict(terms, len(gens) - 1, f.rep.dom), *gens)
 
     def has_only_gens(f, *gens):
         """
@@ -1059,9 +1059,9 @@ class Poly(Expr):
         n, k = len(f.gens), len(gens)
 
         if f.gens[:k] == gens:
-            _gens, front = f.gens[n-k:], True
+            _gens, front = f.gens[n - k:], True
         elif f.gens[-k:] == gens:
-            _gens, front = f.gens[:n-k], False
+            _gens, front = f.gens[:n - k], False
         else:
             raise NotImplementedError(
                 "can only eject front or back generators")
@@ -3753,7 +3753,7 @@ class PurePoly(Poly):
 
         def per(rep, dom=dom, gens=gens, remove=None):
             if remove is not None:
-                gens = gens[:remove]+gens[remove+1:]
+                gens = gens[:remove] + gens[remove + 1:]
 
                 if not gens:
                     return dom.to_sympy(rep)
@@ -3801,7 +3801,7 @@ def _poly_from_expr(expr, opt):
     else:
         coeffs = map(domain.from_sympy, coeffs)
 
-    level = len(opt.gens)-1
+    level = len(opt.gens) -1
 
     poly = Poly.new(
         DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
@@ -3897,7 +3897,7 @@ def _parallel_poly_from_expr(exprs, opt):
         all_coeffs.append(coeffs_list[:k])
         coeffs_list = coeffs_list[k:]
 
-    polys, level = [], len(opt.gens)-1
+    polys, level = [], len(opt.gens) -1
 
     for monoms, coeffs in zip(all_monoms, all_coeffs):
         rep = DMP.from_monoms_coeffs(monoms, coeffs, level, domain)
@@ -5695,7 +5695,7 @@ def reduced(f, G, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, opt.order)
 
-    level = len(opt.gens)-1
+    level = len(opt.gens) -1
 
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 

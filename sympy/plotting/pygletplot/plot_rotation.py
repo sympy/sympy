@@ -13,7 +13,7 @@ def dot(a, b):
 
 
 def mag(a):
-    return _sqrt(a[0]**2+a[1]**2+a[2]**2)
+    return _sqrt(a[0]**2 + a[1]**2 + a[2]**2)
 
 
 def norm(a):
@@ -25,7 +25,7 @@ def get_sphere_mapping(x, y, width, height):
     x = min([max([x, 0]), width])
     y = min([max([y, 0]), height])
 
-    sr = _sqrt((width/2)**2+(height/2)**2)
+    sr = _sqrt((width/2)**2 + (height/2)**2)
     #sr *= 1.5
     sx = ((x - width / 2) / sr)
     sy = ((y - height / 2) / sr)
@@ -48,7 +48,7 @@ def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
 
     d = min(max([dot(v1, v2), -1]), 1)
 
-    if abs(d-1.0) < 0.000001:
+    if abs(d - 1.0) < 0.000001:
         return None
 
     raxis = norm( cross(v1, v2) )

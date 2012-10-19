@@ -41,8 +41,8 @@ def test_operator():
 
     assert A*B != B*A
 
-    assert (A*(B+C)).expand() == A*B + A*C
-    assert ((A+B)**2).expand() == A**2 + A*B + B*A + B**2
+    assert (A*(B + C)).expand() == A*B + A*C
+    assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
 
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
@@ -122,7 +122,7 @@ def test_operator_dagger():
     A = Operator('A')
     B = Operator('B')
     assert Dagger(A*B) == Dagger(B)*Dagger(A)
-    assert Dagger(A+B) == Dagger(A) + Dagger(B)
+    assert Dagger(A + B) == Dagger(A) + Dagger(B)
     assert Dagger(A**2) == Dagger(A)**2
 
 

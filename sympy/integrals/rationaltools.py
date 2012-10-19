@@ -143,8 +143,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n-i)) for i in xrange(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m-i)) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
@@ -288,7 +288,7 @@ def log_to_atan(f, g):
         return 2*atan(p.as_expr())
     else:
         s, t, h = g.gcdex(-f)
-        u = (f*s+g*t).quo(h)
+        u = (f*s + g*t).quo(h)
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)
@@ -326,8 +326,8 @@ def log_to_real(h, q, x, t):
     """
     u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t: u+I*v}).expand()
-    Q = q.as_expr().subs({t: u+I*v}).expand()
+    H = h.as_expr().subs({t: u + I*v}).expand()
+    Q = q.as_expr().subs({t: u + I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)

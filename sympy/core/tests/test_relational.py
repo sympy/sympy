@@ -53,26 +53,26 @@ def test_rel_subs():
 
 
 def test_wrappers():
-    e = x+x**2
+    e = x + x**2
 
     res = Relational(y, e, '==')
-    assert Rel(y, x+x**2, '==') == res
-    assert Eq(y, x+x**2) == res
+    assert Rel(y, x + x**2, '==') == res
+    assert Eq(y, x + x**2) == res
 
     res = Relational(y, e, '<')
-    assert Lt(y, x+x**2) == res
+    assert Lt(y, x + x**2) == res
 
     res = Relational(y, e, '<=')
-    assert Le(y, x+x**2) == res
+    assert Le(y, x + x**2) == res
 
     res = Relational(y, e, '>')
-    assert Gt(y, x+x**2) == res
+    assert Gt(y, x + x**2) == res
 
     res = Relational(y, e, '>=')
-    assert Ge(y, x+x**2) == res
+    assert Ge(y, x + x**2) == res
 
     res = Relational(y, e, '!=')
-    assert Ne(y, x+x**2) == res
+    assert Ne(y, x + x**2) == res
 
 
 def test_Eq():
@@ -136,9 +136,9 @@ def test_bool():
 
 def test_rich_cmp():
     assert (x<y) == Lt(x, y)
-    assert (x<=y) == Le(x, y)
+    assert (x <= y) == Le(x, y)
     assert (x>y) == Gt(x, y)
-    assert (x>=y) == Ge(x, y)
+    assert (x >= y) == Ge(x, y)
 
 
 def test_doit():

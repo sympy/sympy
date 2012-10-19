@@ -39,18 +39,18 @@ def test_Abs():
 
 
 def test_Add():
-    assert str(x+y) == "x + y"
-    assert str(x+1) == "x + 1"
-    assert str(x+x**2) == "x**2 + x"
-    assert str(5+x+y+x*y+x**2+y**2) == "x**2 + x*y + x + y**2 + y + 5"
-    assert str(1+x+x**2/2+x**3/3) == "x**3/3 + x**2/2 + x + 1"
-    assert str(2*x-7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
-    assert str(x-y) == "x - y"
-    assert str(2-x) == "-x + 2"
-    assert str(x-2) == "x - 2"
-    assert str(x-y-z-w) == "-w + x - y - z"
-    assert str(x-z*y**2*z*w) == "-w*y**2*z**2 + x"
-    assert str(x-1*y*x*y) == "-x*y**2 + x"
+    assert str(x + y) == "x + y"
+    assert str(x + 1) == "x + 1"
+    assert str(x + x**2) == "x**2 + x"
+    assert str(5 + x + y + x*y + x**2 + y**2) == "x**2 + x*y + x + y**2 + y + 5"
+    assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
+    assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
+    assert str(x - y) == "x - y"
+    assert str(2 - x) == "-x + 2"
+    assert str(x - 2) == "x - 2"
+    assert str(x - y - z - w) == "-w + x - y - z"
+    assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
+    assert str(x - 1*y*x*y) == "-x*y**2 + x"
     assert str(sin(x).series(x, 0, 15)) == "x - x**3/6 + x**5/120 - x**7/5040 + x**9/362880 - x**11/39916800 + x**13/6227020800 + O(x**15)"
 
 
@@ -70,13 +70,13 @@ def test_Derivative():
 
 
 def test_dict():
-    assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: x + 1}"
+    assert str({1: 1 + x}) == sstr({1: 1 + x}) == "{1: x + 1}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
 
 
 def test_Dict():
-    assert str(Dict({1: 1+x})) == sstr({1: 1+x}) == "{1: x + 1}"
+    assert str(Dict({1: 1 + x})) == sstr({1: 1 + x}) == "{1: x + 1}"
     assert str(Dict({1: x**2, 2: y*x})) in (
             "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr(Dict({1: x**2, 2: y*x})) == "{1: x**2, 2: x*y}"
@@ -84,7 +84,7 @@ def test_Dict():
 
 def test_Dummy():
     assert str(d) == "_d"
-    assert str(d+x) == "_d + x"
+    assert str(d + x) == "_d + x"
 
 
 def test_EulerGamma():
@@ -171,12 +171,12 @@ def test_Limit():
 
 def test_list():
     assert str([x]) == sstr([x]) == "[x]"
-    assert str([x**2, x*y+1]) == sstr([x**2, x*y+1]) == "[x**2, x*y + 1]"
-    assert str([x**2, [y+x]]) == sstr([x**2, [y+x]]) == "[x**2, [x + y]]"
+    assert str([x**2, x*y + 1]) == sstr([x**2, x*y + 1]) == "[x**2, x*y + 1]"
+    assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
 def test_Matrix():
-    M = Matrix([[x**+1, 1], [y, x+y]])
+    M = Matrix([[x**+1, 1], [y, x + y]])
     assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
     M = Matrix()
     assert str(M) == sstr(M) == "[]"
@@ -188,7 +188,7 @@ def test_Mul():
     assert str(x/y) == "x/y"
     assert str(y/x) == "y/x"
     assert str(x/y/z) == "x/(y*z)"
-    assert str((x+1)/(y+2)) == "(x + 1)/(y + 2)"
+    assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
 
@@ -216,7 +216,7 @@ def test_NegativeInfinity():
 
 
 def test_Normal():
-    assert str(Normal(x+y, z)) == "Normal(x + y, z)"
+    assert str(Normal(x + y, z)) == "Normal(x + y, z)"
 
 
 def test_Order():
@@ -328,10 +328,10 @@ def test_Pow():
     assert str(x**-1) == "1/x"
     assert str(x**-2) == "x**(-2)"
     assert str(x**2) == "x**2"
-    assert str((x+y)**-1) == "1/(x + y)"
-    assert str((x+y)**-2) == "(x + y)**(-2)"
-    assert str((x+y)**2) == "(x + y)**2"
-    assert str((x+y)**(1+x)) == "(x + y)**(x + 1)"
+    assert str((x + y)**-1) == "1/(x + y)"
+    assert str((x + y)**-2) == "(x + y)**(-2)"
+    assert str((x + y)**2) == "(x + y)**2"
+    assert str((x + y)**(1 + x)) == "(x + y)**(x + 1)"
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
@@ -360,14 +360,14 @@ def test_Rational():
     assert str(n1*n2) == "1/12"
     assert str(n3) == "1/2"
     assert str(n1*n3) == "1/8"
-    assert str(n1+n3) == "3/4"
-    assert str(n1+n2) == "7/12"
-    assert str(n1+n4) == "-1/4"
+    assert str(n1 + n3) == "3/4"
+    assert str(n1 + n2) == "7/12"
+    assert str(n1 + n4) == "-1/4"
     assert str(n4*n4) == "1/4"
-    assert str(n4+n2) == "-1/6"
-    assert str(n4+n5) == "-1/2"
+    assert str(n4 + n2) == "-1/6"
+    assert str(n4 + n5) == "-1/2"
     assert str(n4*n5) == "0"
-    assert str(n3+n4) == "0"
+    assert str(n3 + n4) == "0"
     assert str(n1**n7) == "1/64"
     assert str(n2**n7) == "1/27"
     assert str(n2**n8) == "27"
@@ -387,9 +387,9 @@ def test_Rational():
     assert str(sqrt(Rational(1, 36))) == "1/6"
 
     assert str((123**25) ** Rational(1, 25)) == "123"
-    assert str((123**25+1)**Rational(1, 25)) != "123"
-    assert str((123**25-1)**Rational(1, 25)) != "123"
-    assert str((123**25-1)**Rational(1, 25)) != "122"
+    assert str((123**25 + 1)**Rational(1, 25)) != "123"
+    assert str((123**25 - 1)**Rational(1, 25)) != "123"
+    assert str((123**25 - 1)**Rational(1, 25)) != "122"
 
     assert str(sqrt(Rational(81, 36))**3) == "27/8"
     assert str(1/sqrt(Rational(81, 36))**3) == "8/27"
@@ -400,20 +400,20 @@ def test_Rational():
 
 def test_Float():
     # NOTE prec is the whole number of decimal digits
-    assert str(Float('1.23', prec=1+2)) == '1.23'
-    assert str(Float('1.23456789', prec=1+8)) == '1.23456789'
+    assert str(Float('1.23', prec=1 + 2)) == '1.23'
+    assert str(Float('1.23456789', prec=1 + 8)) == '1.23456789'
     assert str(
-        Float('1.234567890123456789', prec=1+18)) == '1.234567890123456789'
-    assert str(pi.evalf(1+2)) == '3.14'
-    assert str(pi.evalf(1+14)) == '3.14159265358979'
-    assert str(pi.evalf(1+64)) == '3.1415926535897932384626433832795028841971693993751058209749445923'
+        Float('1.234567890123456789', prec=1 + 18)) == '1.234567890123456789'
+    assert str(pi.evalf(1 + 2)) == '3.14'
+    assert str(pi.evalf(1 + 14)) == '3.14159265358979'
+    assert str(pi.evalf(1 + 64)) == '3.1415926535897932384626433832795028841971693993751058209749445923'
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
 
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
-    assert str(Rel(x+y, y, "==")) == "x + y == y"
+    assert str(Rel(x + y, y, "==")) == "x + y == y"
 
 
 def test_RootOf():
@@ -462,7 +462,7 @@ def test_set():
 
 
 def test_SparseMatrix():
-    M = SparseMatrix([[x**+1, 1], [y, x+y]])
+    M = SparseMatrix([[x**+1, 1], [y, x + y]])
     assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
 
 
@@ -481,14 +481,14 @@ def test_Symbol():
 
 def test_tuple():
     assert str((x,)) == sstr((x,)) == "(x,)"
-    assert str((x+y, 1+x)) == sstr((x+y, 1+x)) == "(x + y, x + 1)"
-    assert str((x+y, (
-        1+x, x**2))) == sstr((x+y, (1+x, x**2))) == "(x + y, (x + 1, x**2))"
+    assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
+    assert str((x + y, (
+        1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
 def test_Uniform():
     assert str(Uniform(x, y)) == "Uniform(x, y)"
-    assert str(Uniform(x+y, y)) == "Uniform(x + y, y)"
+    assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
 
 
 def test_Unit():
@@ -504,7 +504,7 @@ def test_wild_str():
     assert str(3*w + 1) == '3*x_ + 1'
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
-    assert str(1/(1-w)) == '1/(-x_ + 1)'
+    assert str(1/(1 - w)) == '1/(-x_ + 1)'
 
 
 def test_zeta():
@@ -512,14 +512,14 @@ def test_zeta():
 
 
 def test_bug2():
-    e = x-y
+    e = x -y
     a = str(e)
     b = str(e)
     assert a == b
 
 
 def test_bug4():
-    e = -2*sqrt(x)-y/sqrt(x)/2
+    e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"

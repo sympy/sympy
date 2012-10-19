@@ -22,7 +22,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         # Create print methods for classes that should use StrPrinter instead
         # of ReprPrinter.
         for name in STRPRINT:
-            f_name = "_print_%s"%name
+            f_name = "_print_%s" % name
             f = getattr(StrPrinter, f_name)
             setattr(PythonPrinter, f_name, f)
 

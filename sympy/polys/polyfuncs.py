@@ -73,7 +73,7 @@ def symmetrize(F, *gens, **args):
     gens, dom = opt.gens, opt.domain
 
     for i in xrange(0, len(gens)):
-        poly = symmetric_poly(i+1, gens, polys=True)
+        poly = symmetric_poly(i + 1, gens, polys=True)
         polys.append((symbols.next(), poly.set_domain(dom)))
 
     indices = range(0, len(gens) - 1)
@@ -92,7 +92,7 @@ def symmetrize(F, *gens, **args):
             _height, _monom, _coeff = -1, None, None
 
             for i, (monom, coeff) in enumerate(f.terms()):
-                if all(monom[i] >= monom[i+1] for i in indices):
+                if all(monom[i] >= monom[i + 1] for i in indices):
                     height = max([ n*m for n, m in zip(weights, monom) ])
 
                     if height > _height:
@@ -223,7 +223,7 @@ def interpolate(data, x):
         if isinstance(data[0], tuple):
             X, Y = zip(*data)
         else:
-            X = range(1, n+1)
+            X = range(1, n + 1)
             Y = list(data)
 
     poly = interpolating_poly(n, x, X, Y)
@@ -279,7 +279,7 @@ def viete(f, roots=None, *gens, **args):
     result, sign = [], -1
 
     for i, coeff in enumerate(coeffs[1:]):
-        poly = symmetric_poly(i+1, roots)
+        poly = symmetric_poly(i + 1, roots)
         coeff = sign*(coeff/lc)
         result.append((poly, coeff))
         sign = -sign

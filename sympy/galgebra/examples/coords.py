@@ -9,8 +9,8 @@ import numpy
 import time
 
 if __name__ == '__main__':
-    metric = '1 0 0,'+\
-             '0 1 0,'+\
+    metric = '1 0 0,' +\
+             '0 1 0,' +\
              '0 0 1'
 
     gamma_x, gamma_y, gamma_z = GA.MV.setup(
@@ -18,8 +18,8 @@ if __name__ == '__main__':
     tex.Format()
 
     coords = r, theta, phi = sympy.symbols('r theta phi')
-    x = r*(sympy.cos(theta)*gamma_z+sympy.sin(theta)*
-        (sympy.cos(phi)*gamma_x+sympy.sin(phi)*gamma_y))
+    x = r*(sympy.cos(theta)*gamma_z + sympy.sin(theta)*
+        (sympy.cos(phi)*gamma_x + sympy.sin(phi)*gamma_y))
     x.set_name('x')
 
     GA.MV.rebase(x, coords, 'e', True)

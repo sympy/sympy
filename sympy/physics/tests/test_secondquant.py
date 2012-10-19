@@ -70,7 +70,7 @@ def test_dagger():
     assert Dagger(Bd(0)) == B(0)
     assert Dagger(B(n)) == Bd(n)
     assert Dagger(Bd(n)) == B(n)
-    assert Dagger(B(0)+B(1)) == Bd(0) + Bd(1)
+    assert Dagger(B(0) + B(1)) == Bd(0) + Bd(1)
     assert Dagger(n*m) == Dagger(n)*Dagger(m)  # n, m commute
     assert Dagger(B(n)*B(m)) == Bd(m)*Bd(n)
     assert Dagger(B(n)**10) == Dagger(B(n))**10
@@ -93,7 +93,7 @@ def test_create():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = Bd(0)
-    assert o.apply_operator(BKet([n])) == sqrt(n+1)*BKet([n+1])
+    assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
@@ -105,7 +105,7 @@ def test_annihilate():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = B(0)
-    assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n-1])
+    assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n - 1])
     o = B(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
@@ -123,8 +123,8 @@ def test_basic_state():
     for i in range(5):
         assert s[i] == i
     s = BosonState([n, m])
-    assert s.down(0) == BosonState([n-1, m])
-    assert s.up(0) == BosonState([n+1, m])
+    assert s.down(0) == BosonState([n - 1, m])
+    assert s.up(0) == BosonState([n + 1, m])
 
 
 @XFAIL
@@ -148,16 +148,16 @@ def Xtest_move2():
 def test_basic_apply():
     n = symbols("n")
     e = B(0)*BKet([n])
-    assert apply_operators(e) == sqrt(n)*BKet([n-1])
+    assert apply_operators(e) == sqrt(n)*BKet([n - 1])
     e = Bd(0)*BKet([n])
-    assert apply_operators(e) == sqrt(n+1)*BKet([n+1])
+    assert apply_operators(e) == sqrt(n + 1)*BKet([n + 1])
 
 
 def test_complex_apply():
     n, m = symbols("n,m")
     o = Bd(0)*B(0)*Bd(1)*B(0)
     e = apply_operators(o*BKet([n, m]))
-    answer = sqrt(n)*sqrt(m+1)*(-1+n)*BKet([-1+n, 1+m])
+    answer = sqrt(n)*sqrt(m + 1)*(-1 + n)*BKet([-1 + n, 1 + m])
     assert expand(e) == expand(answer)
 
 
@@ -186,7 +186,7 @@ def test_symbolic_matrix_elements():
     s2 = BKet([m])
     o = B(0)
     e = apply_operators(s1*o*s2)
-    assert e == sqrt(m)*KroneckerDelta(n, m-1)
+    assert e == sqrt(m)*KroneckerDelta(n, m - 1)
 
 
 def test_matrix_elements():
@@ -194,11 +194,11 @@ def test_matrix_elements():
     o = B(0)
     m = matrix_rep(o, b)
     for i in range(4):
-        assert m[i, i+1] == sqrt(i+1)
+        assert m[i, i + 1] == sqrt(i + 1)
     o = Bd(0)
     m = matrix_rep(o, b)
     for i in range(4):
-        assert m[i+1, i] == sqrt(i+1)
+        assert m[i + 1, i] == sqrt(i + 1)
 
 
 def test_sho():
@@ -302,7 +302,7 @@ def test_create_b():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = Bd(0)
-    assert o.apply_operator(BKet([n])) == sqrt(n+1)*BKet([n+1])
+    assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
     assert o.apply_operator(BKet([n])) == o*BKet([n])
 
@@ -355,14 +355,14 @@ def test_wicks():
     assert (expr ==
            -KroneckerDelta(i, k)*NO(Fd(j)*F(l)) -
             KroneckerDelta(j, l)*NO(Fd(i)*F(k)) -
-            KroneckerDelta(i, k)*KroneckerDelta(j, l)+
+            KroneckerDelta(i, k)*KroneckerDelta(j, l) +
             KroneckerDelta(i, l)*NO(Fd(j)*F(k)) +
             NO(Fd(i)*Fd(j)*F(k)*F(l)))
     expr = wicks(F(a)*NO(F(b)*Fd(c))*Fd(d))
     assert (expr ==
            -KroneckerDelta(a, c)*NO(F(b)*Fd(d)) -
             KroneckerDelta(b, d)*NO(F(a)*Fd(c)) -
-            KroneckerDelta(a, c)*KroneckerDelta(b, d)+
+            KroneckerDelta(a, c)*KroneckerDelta(b, d) +
             KroneckerDelta(a, d)*NO(F(b)*Fd(c)) +
             NO(F(a)*F(b)*Fd(c)*Fd(d)))
 
@@ -372,22 +372,22 @@ def test_NO():
     a, b, c, d = symbols('a b c d', above_fermi=True)
     p, q, r, s = symbols('p q r s', cls=Dummy)
 
-    assert (NO(Fd(p)*F(q) + Fd(a)*F(b))==
+    assert (NO(Fd(p)*F(q) + Fd(a)*F(b)) ==
        NO(Fd(p)*F(q)) + NO(Fd(a)*F(b)))
     assert (NO(Fd(i)*NO(F(j)*Fd(a))) ==
        NO(Fd(i)*F(j)*Fd(a)))
     assert NO(1) == 1
     assert NO(i) == i
-    assert (NO(Fd(a)*Fd(b)*(F(c)+F(d))) ==
+    assert (NO(Fd(a)*Fd(b)*(F(c) + F(d))) ==
                NO(Fd(a)*Fd(b)*F(c)) +
                NO(Fd(a)*Fd(b)*F(d)))
 
     assert NO(Fd(a)*F(b))._remove_brackets() == Fd(a)*F(b)
     assert NO(F(j)*Fd(i))._remove_brackets() == F(j)*Fd(i)
 
-    assert (NO(Fd(p)*F(q)).subs(Fd(p), Fd(a)+Fd(i)) ==
+    assert (NO(Fd(p)*F(q)).subs(Fd(p), Fd(a) + Fd(i)) ==
             NO(Fd(a)*F(q)) + NO(Fd(i)*F(q)))
-    assert (NO(Fd(p)*F(q)).subs(F(q), F(a)+F(i)) ==
+    assert (NO(Fd(p)*F(q)).subs(F(q), F(a) + F(i)) ==
             NO(Fd(p)*F(a)) + NO(Fd(p)*F(i)))
 
     expr = NO(Fd(p)*F(q))._remove_brackets()

@@ -11,11 +11,11 @@ mp = MathMLPrinter()
 
 
 def test_printmethod():
-    assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
+    assert mp.doprint(1 + x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
 
 
 def test_mathml_core():
-    mml_1 = mp._print(1+x)
+    mml_1 = mp._print(1 + x)
     assert mml_1.nodeName == 'apply'
     nodes = mml_1.childNodes
     assert len(nodes) == 3

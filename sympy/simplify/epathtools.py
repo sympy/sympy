@@ -99,7 +99,7 @@ class EPath(object):
 
                         span = slice(*span)
 
-                    selector = selector[i+1:]
+                    selector = selector[i + 1:]
 
                 if selector:
                     raise ValueError("trailing characters in selector")

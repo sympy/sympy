@@ -280,7 +280,7 @@ def interactive_traversal(expr):
         if n_args == 1:
             choices = '0'
         else:
-            choices = '0-%d' % (n_args-1)
+            choices = '0-%d' % (n_args - 1)
 
         try:
             choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
@@ -300,11 +300,11 @@ def interactive_traversal(expr):
             elif choice in ['d', '']:
                 result = expr
             elif choice == 'f':
-                result = _interactive_traversal(args[0], stage+1)
+                result = _interactive_traversal(args[0], stage + 1)
             elif choice == 'l':
-                result = _interactive_traversal(args[-1], stage+1)
+                result = _interactive_traversal(args[-1], stage + 1)
             elif choice == 'r':
-                result = _interactive_traversal(random.choice(args), stage+1)
+                result = _interactive_traversal(random.choice(args), stage + 1)
             else:
                 try:
                     choice = int(choice)
@@ -317,7 +317,7 @@ def interactive_traversal(expr):
                         cprint(BRED, "Choice must be in %s range\n" % choices)
                         result = _interactive_traversal(expr, stage)
                     else:
-                        result = _interactive_traversal(args[choice], stage+1)
+                        result = _interactive_traversal(args[choice], stage + 1)
 
         return result
 
@@ -638,7 +638,7 @@ def prefixes(seq):
     n = len(seq)
 
     for i in xrange(n):
-        yield seq[:i+1]
+        yield seq[:i + 1]
 
 
 def postfixes(seq):
@@ -657,7 +657,7 @@ def postfixes(seq):
     n = len(seq)
 
     for i in xrange(n):
-        yield seq[n-i-1:]
+        yield seq[n - i - 1:]
 
 
 def topological_sort(graph, key=None):
@@ -1195,11 +1195,11 @@ def generate_bell(n):
             cache.add(tuple(P))
         else:
             for i in T:
-                P[i], P[t+1] = P[t+1], P[i]
+                P[i], P[t + 1] = P[t + 1], P[i]
                 if tuple(P) not in cache:
                     cache.add(tuple(P))
                     gen(P, T, t + 1)
-                P[i], P[t+1] = P[t+1], P[i]
+                P[i], P[t + 1] = P[t + 1], P[i]
             T.append(t + 1)
             cache.add(tuple(P))
             gen(P, T, t + 1)

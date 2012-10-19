@@ -118,7 +118,7 @@ class ArcsinPSpace(SingleContinuousPSpace):
     def __new__(cls, name, a, b):
         a, b = sympify(a), sympify(b)
         x = Symbol(name)
-        pdf = 1/(pi*sqrt((x-a)*(b-x)))
+        pdf = 1/(pi*sqrt((x - a)*(b - x)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
         return obj
 
@@ -175,8 +175,8 @@ class BeniniPSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta, sigma):
         alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
         x = Symbol(name)
-        pdf = (exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)
-               *(alpha/x+2*beta*log(x/sigma)/x))
+        pdf = (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
+               *(alpha/x + 2*beta*log(x/sigma)/x))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf,
                                              set=Interval(sigma, oo))
         return obj
@@ -246,7 +246,7 @@ class BetaPSpace(SingleContinuousPSpace):
         _value_check(beta > 0, "Beta must be positive")
 
         x = Symbol(name)
-        pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
+        pdf = x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
         obj.alpha = alpha
@@ -320,7 +320,7 @@ class BetaPrimePSpace(SingleContinuousPSpace):
     def __new__(cls, name, alpha, beta):
         alpha, beta = sympify(alpha), sympify(beta)
         x = Symbol(name)
-        pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
+        pdf = x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
@@ -382,7 +382,7 @@ class CauchyPSpace(SingleContinuousPSpace):
     def __new__(cls, name, x0, gamma):
         x0, gamma = sympify(x0), sympify(gamma)
         x = Symbol(name)
-        pdf = 1/(pi*gamma*(1+((x-x0)/gamma)**2))
+        pdf = 1/(pi*gamma*(1 + ((x - x0)/gamma)**2))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
@@ -439,7 +439,7 @@ class ChiPSpace(SingleContinuousPSpace):
     def __new__(cls, name, k):
         k = sympify(k)
         x = Symbol(name)
-        pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
+        pdf = 2**(1 - k/2)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
@@ -495,7 +495,7 @@ class DagumPSpace(SingleContinuousPSpace):
     def __new__(cls, name, p, a, b):
         p, a, b = sympify(p), sympify(a), sympify(b)
         x = Symbol(name)
-        pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a+1)**(p+1)))
+        pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
@@ -647,7 +647,7 @@ class GammaPSpace(SingleContinuousPSpace):
         _value_check(theta > 0, "Theta must be positive")
 
         x = Symbol(name)
-        pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
+        pdf = x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.k = k
@@ -738,7 +738,7 @@ class LaplacePSpace(SingleContinuousPSpace):
     def __new__(cls, name, mu, b):
         mu, b = sympify(mu), sympify(b)
         x = Symbol(name)
-        pdf = 1/(2*b)*exp(-Abs(x-mu)/b)
+        pdf = 1/(2*b)*exp(-Abs(x - mu)/b)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
@@ -795,7 +795,7 @@ class LogisticPSpace(SingleContinuousPSpace):
         mu, s = sympify(mu), sympify(s)
 
         x = Symbol(name)
-        pdf = exp(-(x-mu)/s)/(s*(1+exp(-(x-mu)/s))**2)
+        pdf = exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
@@ -853,7 +853,7 @@ class LogNormalPSpace(SingleContinuousPSpace):
         mean, std = sympify(mean), sympify(std)
 
         x = Symbol(name)
-        pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
+        pdf = exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.mean = mean
@@ -996,7 +996,7 @@ class NakagamiPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mu, omega):
         mu, omega = sympify(mu), sympify(omega)
         x = Symbol(name)
-        pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
+        pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu - 1)*exp(-mu/omega*x**2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         return obj
 
@@ -1074,7 +1074,7 @@ class NormalPSpace(SingleContinuousPSpace):
         _value_check(std > 0, "Standard deviation must be positive")
 
         x = Symbol(name)
-        pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
+        pdf = exp(-(x - mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.mean = mean
@@ -1163,7 +1163,7 @@ class ParetoPSpace(SingleContinuousPSpace):
         _value_check(alpha > 0, "Alpha must be positive")
 
         x = Symbol(name)
-        pdf = alpha * xm**alpha / x**(alpha+1)
+        pdf = alpha * xm**alpha / x**(alpha + 1)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(xm, oo))
         obj.xm = xm
@@ -1289,7 +1289,7 @@ class StudentTPSpace(SingleContinuousPSpace):
     def __new__(cls, name, nu):
         nu = sympify(nu)
         x = Symbol(name)
-        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1+x**2/nu)**(-(nu+1)/2)
+        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
 
@@ -1358,9 +1358,9 @@ class TriangularPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (2*(x-a)/((b-a)*(c-a)), And(a<=x, x<c)),
-                (2/(b-a), Eq(x, c)),
-                (2*(b-x)/((b-a)*(b-c)), And(c<x, x<=b)),
+                (2*(x - a)/((b - a)*(c - a)), And(a <= x, x<c)),
+                (2/(b - a), Eq(x, c)),
+                (2*(b - x)/((b - a)*(b - c)), And(c<x, x <= b)),
                 (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
@@ -1433,7 +1433,7 @@ class UniformPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (S.One/(right-left), And(left <= x, x <= right)),
+                (S.One/(right - left), And(left <= x, x <= right)),
                 (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
@@ -1531,7 +1531,7 @@ class UniformSumPSpace(SingleContinuousPSpace):
         x = Symbol(name)
         k = Dummy("k")
         pdf = 1/factorial(
-            n-1)*Sum((-1)**k*binomial(n, k)*(x-k)**(n-1), (k, 0, floor(x)))
+            n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, n))
         return obj
@@ -1604,7 +1604,7 @@ class WeibullPSpace(SingleContinuousPSpace):
         _value_check(beta > 0, "Beta must be positive")
 
         x = Symbol(name)
-        pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
+        pdf = beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
         obj.alpha = alpha
@@ -1678,7 +1678,7 @@ class WignerSemicirclePSpace(SingleContinuousPSpace):
         R = sympify(R)
 
         x = Symbol(name)
-        pdf = 2/(pi*R**2)*sqrt(R**2-x**2)
+        pdf = 2/(pi*R**2)*sqrt(R**2 - x**2)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(-R, R))
         return obj

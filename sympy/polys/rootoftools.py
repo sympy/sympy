@@ -62,7 +62,7 @@ class RootOf(Expr):
 
         if index < -degree or index >= degree:
             raise IndexError("root index out of [%d, %d] range, got %d" %
-                             (-degree, degree-1, index))
+                             (-degree, degree - 1, index))
         elif index < 0:
             index += degree
 
@@ -186,9 +186,9 @@ class RootOf(Expr):
         cache = {}
 
         for i, (u, f, k) in enumerate(reals):
-            for j, (v, g, m) in enumerate(reals[i+1:]):
+            for j, (v, g, m) in enumerate(reals[i + 1:]):
                 u, v = u.refine_disjoint(v)
-                reals[i+j+1] = (v, g, m)
+                reals[i + j + 1] = (v, g, m)
 
             reals[i] = (u, f, k)
 
@@ -211,9 +211,9 @@ class RootOf(Expr):
         cache = {}
 
         for i, (u, f, k) in enumerate(complexes):
-            for j, (v, g, m) in enumerate(complexes[i+1:]):
+            for j, (v, g, m) in enumerate(complexes[i + 1:]):
                 u, v = u.refine_disjoint(v)
-                complexes[i+j+1] = (v, g, m)
+                complexes[i + j + 1] = (v, g, m)
 
             complexes[i] = (u, f, k)
 
@@ -285,7 +285,7 @@ class RootOf(Expr):
         else:
             complexes = cls._get_complexes(factors)
             complexes = cls._complexes_sorted(complexes)
-            return cls._complexes_index(complexes, index-reals_count)
+            return cls._complexes_index(complexes, index - reals_count)
 
     @classmethod
     def _real_roots(cls, poly):

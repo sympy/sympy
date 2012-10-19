@@ -129,7 +129,7 @@ class erf(Function):
             x = sympify(x)
             k = C.floor((n - 1)/S(2))
             if len(previous_terms) > 2:
-                return -previous_terms[-2] * x**2 * (n-2)/(n*k)
+                return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
                 return 2*(-1)**k * x**n/(n*C.factorial(k)*sqrt(S.Pi))
 
@@ -408,9 +408,9 @@ class expint(Function):
             if (nu > 0) is not True:
                 return
             return expint(nu, z) \
-               - 2*pi*I*n*(-1)**(nu-1)/factorial(nu-1)*unpolarify(z)**(nu - 1)
+               - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
         else:
-            return (exp(2*I*pi*nu*n) - 1)*z**(nu-1)*gamma(1 - nu) + expint(nu, z)
+            return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
     def fdiff(self, argindex):
         from sympy import meijerg
@@ -433,7 +433,7 @@ class expint(Function):
         elif nu.is_Integer and nu > 1:
             # DLMF, 8.19.7
             x = -unpolarify(z)
-            return x**(nu-1)/factorial(nu - 1)*E1(z).rewrite(Ei) + \
+            return x**(nu - 1)/factorial(nu - 1)*E1(z).rewrite(Ei) + \
                    exp(x)/factorial(nu - 1) * \
                    Add(*[factorial(nu - k - 2)*x**k for k in range(nu - 1)])
         else:
@@ -752,7 +752,7 @@ class Shi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         from sympy import exp_polar
         # XXX should we polarify z?
-        return (E1(z)-E1(exp_polar(I*pi)*z))/2 - I*pi/2
+        return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
 
 
 class Chi(TrigonometricIntegral):
@@ -915,9 +915,9 @@ class FresnelIntegral(Function):
         # http://functions.wolfram.com/06.33.19.0006.01
         x, y = self._as_real_imag(deep=deep, **hints)
         sq = -y**2/x**2
-        re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - \
-                self.func(x+x*sqrt(sq)))
+        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) - \
+                self.func(x + x*sqrt(sq)))
         return (re, im)
 
 
@@ -1151,17 +1151,17 @@ class _erfs(Function):
 
         z = self.args[0]
         l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-            4))**(-k)/C.factorial(k) * (1/z)**(2*k+1) for k in xrange(0, n) ]
-        o = C.Order(1/z**(2*n+1), x)
+            4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+        o = C.Order(1/z**(2*n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o
 
     def fdiff(self, argindex=1):
         if argindex == 1:
             z = self.args[0]
-            return -2/sqrt(S.Pi)+2*z*_erfs(z)
+            return -2/sqrt(S.Pi) + 2*z*_erfs(z)
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_intractable(self, z):
-        return (S.One-erf(z))*C.exp(z**2)
+        return (S.One - erf(z))*C.exp(z**2)

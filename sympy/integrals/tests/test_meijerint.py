@@ -92,7 +92,7 @@ def test_inflate():
 def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
-    assert simplify(integrate(exp(-(x-a)**2)*exp(-(x - b)**2), (x, 0, oo))) \
+    assert simplify(integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))) \
            == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*(a + b))) \
               *exp(-a**2 - b**2 + (a + b)**2/2)
     assert simplify(integrate
@@ -129,7 +129,7 @@ def test_meijerint():
            == b**(a + 1)/(a + 1)
 
     # This tests various conditions and expansions:
-    meijerint_definite((x+1)**3*exp(-x), x, 0, oo) == (16, True)
+    meijerint_definite((x + 1)**3*exp(-x), x, 0, oo) == (16, True)
 
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
@@ -151,9 +151,9 @@ def test_meijerint():
     # Test -oo to oo
     assert meijerint_definite(exp(-x**2), x, -oo, oo) == (sqrt(pi), True)
     assert meijerint_definite(exp(-abs(x)), x, -oo, oo) == (2, True)
-    assert meijerint_definite(exp(-(2*x-3)**2), x, -oo, oo) == \
+    assert meijerint_definite(exp(-(2*x - 3)**2), x, -oo, oo) == \
         (sqrt(pi)/2, True)
-    assert meijerint_definite(exp(-abs(2*x-3)), x, -oo, oo) == (1, True)
+    assert meijerint_definite(exp(-abs(2*x - 3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x - mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
 
@@ -162,7 +162,7 @@ def test_meijerint():
 
     # Test a bug
     def res(n):
-        return (1/(1+x**2)).diff(x, n).subs(x, 1)*(-1)**n
+        return (1/(1 + x**2)).diff(x, n).subs(x, 1)*(-1)**n
     for n in range(6):
         assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == \
          res(n)
@@ -177,7 +177,7 @@ def test_meijerint():
     a, b, s = symbols('a b s')
     from sympy import And, re
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
-                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s-1), x, 0, oo) == \
+                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo) == \
            (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
                /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
                  *gamma(a/2 + b/2 - s + 1)),
@@ -199,7 +199,7 @@ def test_meijerint():
 
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
-    assert meijerint_definite((2-x)**alpha*sin(alpha/x), x, 0, 2) == \
+    assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
            (sqrt(pi)*gamma(alpha + 1)
             *meijerg([S(1)/2, 0, S(1)/2], [1], [],
                      [-alpha/2, -alpha/2 - S(1)/2], 16/alpha**2), True)
@@ -221,9 +221,9 @@ def test_bessel():
 
     # TODO more orthogonality integrals
 
-    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
+    assert simplify(integrate(sin(z*x)*(x**2 - 1)**(-(y + S(1)/2)),
                               (x, 1, oo), meijerg=True, conds='none')
-                              *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
+                              *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2 - y))) == \
            besselj(y, z)
 
     # Werner Rosenheinrich
@@ -319,8 +319,8 @@ def test_branch_bug():
 
 def test_linear_subs():
     from sympy import besselj
-    assert integrate(sin(x-1), x, meijerg=True) == -cos(1 - x)
-    assert integrate(besselj(1, x-1), x, meijerg=True) == -besselj(0, 1 - x)
+    assert integrate(sin(x - 1), x, meijerg=True) == -cos(1 - x)
+    assert integrate(besselj(1, x - 1), x, meijerg=True) == -besselj(0, 1 - x)
 
 
 def test_probability():
@@ -391,7 +391,7 @@ def test_probability():
 
     # Beta' distribution
     alpha, beta = symbols('alpha beta', positive=True)
-    betadist = x**(alpha-1)*(1+x)**(-alpha - beta)*gamma(alpha + beta) \
+    betadist = x**(alpha - 1)*(1 + x)**(-alpha - beta)*gamma(alpha + beta) \
               /gamma(alpha)/gamma(beta)
     assert integrate(betadist, (x, 0, oo), meijerg=True) == 1
     i = integrate(x*betadist, (x, 0, oo), meijerg=True, conds='separate')
@@ -416,14 +416,14 @@ def test_probability():
 
     # Chi distribution
     k = Symbol('k', integer=True, positive=True)
-    chi = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
+    chi = 2**(1 - k/2)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
     assert powsimp(integrate(chi, (x, 0, oo), meijerg=True)) == 1
     assert simplify(integrate(x*chi, (x, 0, oo), meijerg=True)) == \
            sqrt(2)*gamma((k + 1)/2)/gamma(k/2)
     assert simplify(integrate(x**2*chi, (x, 0, oo), meijerg=True)) == k
 
     # Chi^2 distribution
-    chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2-1)*exp(-x/2)
+    chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2 - 1)*exp(-x/2)
     assert powsimp(integrate(chisquared, (x, 0, oo), meijerg=True)) == 1
     assert simplify(integrate(x*chisquared, (x, 0, oo), meijerg=True)) == k
     assert simplify(integrate(x**2*chisquared, (x, 0, oo), meijerg=True)) == \
@@ -434,7 +434,7 @@ def test_probability():
     # Dagum distribution
     a, b, p = symbols('a b p', positive=True)
     # XXX (x/b)**a does not work
-    dagum = a*p/x*(x/b)**(a*p)/(1 + x**a/b**a)**(p+1)
+    dagum = a*p/x*(x/b)**(a*p)/(1 + x**a/b**a)**(p + 1)
     assert simplify(integrate(dagum, (x, 0, oo), meijerg=True)) == 1
     # XXX conditions are a mess
     arg = x*dagum
@@ -445,7 +445,7 @@ def test_probability():
 
     # F-distribution
     d1, d2 = symbols('d1 d2', positive=True)
-    f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1+d2))/x \
+    f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1 + d2))/x \
           /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
     assert simplify(integrate(f, (x, 0, oo), meijerg=True)) == 1
     # TODO conditions are a mess
@@ -472,7 +472,7 @@ def test_probability():
     # higher moments oo
 
     # log-logistic
-    distn = (beta/alpha)*x**(beta-1)/alpha**(beta-1)\
+    distn = (beta/alpha)*x**(beta - 1)/alpha**(beta - 1)\
             /(1 + x**beta/alpha**beta)**2
     assert simplify(integrate(distn, (x, 0, oo))) == 1
     # NOTE the conditions are a mess, but correctly state beta > 1
@@ -485,7 +485,7 @@ def test_probability():
     # weibull
     k = Symbol('k', positive=True)
     n = Symbol('n', positive=True)
-    distn = k/lamda*(x/lamda)**(k-1)*exp(-(x/lamda)**k)
+    distn = k/lamda*(x/lamda)**(k - 1)*exp(-(x/lamda)**k)
     assert simplify(integrate(distn, (x, 0, oo))) == 1
     assert simplify(integrate(x**n*distn, (x, 0, oo))) == \
         lamda**n*gamma(1 + n/k)
@@ -493,7 +493,7 @@ def test_probability():
     # rice distribution
     from sympy import besseli
     nu, sigma = symbols('nu sigma', positive=True)
-    rice = x/sigma**2*exp(-(x**2+ nu**2)/2/sigma**2)*besseli(0, x*nu/sigma**2)
+    rice = x/sigma**2*exp(-(x**2 + nu**2)/2/sigma**2)*besseli(0, x*nu/sigma**2)
     assert integrate(rice, (x, 0, oo), meijerg=True) == 1
     # can someone verify higher moments?
 
@@ -605,7 +605,7 @@ def test_3023():
 
 
 def test_3153():
-    expr = 1/x/(a+b*x)**(S(1)/3)
+    expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
     assert not expr.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and

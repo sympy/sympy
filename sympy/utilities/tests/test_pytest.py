@@ -11,7 +11,7 @@ def test_expected_exception_is_silent():
 
 def test_lack_of_exception_triggers_AssertionError():
     try:
-        raises(Exception, lambda: 1+1)
+        raises(Exception, lambda: 1 + 1)
         assert False
     except AssertionError, e:
         assert str(e) == "DID NOT RAISE"
@@ -59,7 +59,7 @@ def test_expected_exception_is_silent():
 def test_lack_of_exception_triggers_AssertionError():
     try:
         with raises(Exception):
-            1+1
+            1 +1
         assert False
     except AssertionError, e:
         assert str(e) == "DID NOT RAISE"

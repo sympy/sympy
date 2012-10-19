@@ -421,7 +421,7 @@ class MathMLPrinter(Printer):
             # indent = current indentation
             # addindent = indentation to add to higher levels
             # newl = newline string
-            writer.write(indent+"<" + self.tagName)
+            writer.write(indent + "<" + self.tagName)
 
             attrs = self._get_attributes()
             a_names = attrs.keys()
@@ -440,16 +440,16 @@ class MathMLPrinter(Printer):
                     writer.write(newl)
                     for node in self.childNodes:
                         node.writexml(
-                            writer, indent+addindent, addindent, newl)
+                            writer, indent + addindent, addindent, newl)
                     writer.write(indent)
                 writer.write("</%s>%s" % (self.tagName, newl))
             else:
-                writer.write("/>%s"%(newl))
+                writer.write("/>%s" % (newl))
         self._Element_writexml_old = Element.writexml
         Element.writexml = writexml
 
         def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
         self._Text_writexml_old = Text.writexml
         Text.writexml = writexml
 

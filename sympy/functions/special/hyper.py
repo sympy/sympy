@@ -431,7 +431,7 @@ class meijerg(TupleParametersBase):
             a = list(self.an)
             a[0] -= 1
             G = meijerg(a, self.aother, self.bm, self.bother, self.argument)
-            return 1/self.argument * ((self.an[0]-1)*self + G)
+            return 1/self.argument * ((self.an[0] - 1)*self + G)
         elif len(self.bm) >= 1:
             b = list(self.bm)
             b[0] += 1
@@ -810,7 +810,7 @@ class HyperRep_log1(HyperRep):
 
     @classmethod
     def _expr_big(cls, x, n):
-        return log(x - 1) + (2*n-1)*pi*I
+        return log(x - 1) + (2*n - 1)*pi*I
 
     @classmethod
     def _expr_big_minus(cls, x, n):
@@ -855,7 +855,7 @@ class HyperRep_asin1(HyperRep):
 
     @classmethod
     def _expr_big_minus(cls, z, n):
-        return S(-1)**n*(asinh(sqrt(z))/sqrt(z)+n*pi*I/sqrt(z))
+        return S(-1)**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
 
 
 class HyperRep_asin2(HyperRep):

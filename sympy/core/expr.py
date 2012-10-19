@@ -270,7 +270,7 @@ class Expr(Basic, EvalfMixin):
             re, im = x._mpc_
             re = C.Float._new(re, prec)
             im = C.Float._new(im, prec)*S.ImaginaryUnit
-            return re+im
+            return re + im
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
 
@@ -1192,7 +1192,7 @@ class Expr(Basic, EvalfMixin):
                     if not right:
                         return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
                     else:
-                        return Mul(*co[0][1][ii+len(nx):])
+                        return Mul(*co[0][1][ii + len(nx):])
             beg = reduce(incommon, (n[1] for n in co))
             if beg:
                 ii = find(beg, nx, right)
@@ -1213,9 +1213,9 @@ class Expr(Basic, EvalfMixin):
                 ii = find(end, nx, right)
                 if ii is not None:
                     if not right:
-                        return Add(*[Mul(*(list(r) + n[:-len(end)+ii])) for r, n in co])
+                        return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
                     else:
-                        return Mul(*end[ii+len(nx):])
+                        return Mul(*end[ii + len(nx):])
             # look for single match
             hit = None
             for i, (r, n) in enumerate(co):
@@ -1231,7 +1231,7 @@ class Expr(Basic, EvalfMixin):
                     if not right:
                         return Mul(*(list(r) + n[:ii]))
                     else:
-                        return Mul(*n[ii+len(nx):])
+                        return Mul(*n[ii + len(nx):])
 
             return S.Zero
 

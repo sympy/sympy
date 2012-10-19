@@ -19,7 +19,7 @@ class MatAdd(MatrixExpr, Add):
 
         args = map(matrixify, args)
 
-        args = [arg for arg in args if arg!=0]
+        args = [arg for arg in args if arg != 0]
 
         if not all(arg.is_Matrix for arg in args):
             raise ValueError("Mix of Matrix and Scalar symbols")
@@ -28,7 +28,7 @@ class MatAdd(MatrixExpr, Add):
         A = args[0]
         for B in args[1:]:
             if A.shape != B.shape:
-                raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+                raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
         expr = Add.__new__(cls, *args)
         if expr == S.Zero:

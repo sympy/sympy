@@ -164,7 +164,7 @@ class CoordSystem(Basic):
         super(CoordSystem, self).__init__()
         self.name = name
         if not names:
-            names = ['%s_%d'%(name, i) for i in range(patch.dim)]
+            names = ['%s_%d' % (name, i) for i in range(patch.dim)]
         self._names = names
         self.patch = patch
         self._args = self.name, self.patch
@@ -226,7 +226,7 @@ class CoordSystem(Basic):
         # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
-            [t[0]-t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
         if isinstance(inv_to, dict):
             inv_to = [inv_to[fc] for fc in from_coords]
         else:
@@ -739,14 +739,14 @@ class Differential(Expr):
             v = vector_fields
             ret = 0
             for i in range(k):
-                t = v[i](f(*v[:i]+v[i+1:]))
+                t = v[i](f(*v[:i] + v[i + 1:]))
                 ret += (-1)**i*t
-                for j in range(i+1, k):
+                for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
                     if c:  # TODO this is ugly - the Commutator can be Zero and
                           # this causes the next line to fail
-                        t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
-                        ret += (-1)**(i+j)*t
+                        t = f(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
+                        ret += (-1)**(i + j)*t
             return ret
 
 
@@ -798,7 +798,7 @@ class TensorProduct(Expr):
     def __new__(cls, *args):
         if any(contravariant_order(a) for a in args):
             raise ValueError('A vector field was supplied as an argument to TensorProduct.')
-        scalar = Mul(*[m for m in args if covariant_order(m)==0])
+        scalar = Mul(*[m for m in args if covariant_order(m) == 0])
         forms = [m for m in args if covariant_order(m)]
         if forms:
             if len(forms) == 1:
@@ -825,10 +825,10 @@ class TensorProduct(Expr):
         tot_order = covariant_order(self)
         tot_args = len(v_fields)
         if tot_args != tot_order:
-            v_fields = list(v_fields) + [None]*(tot_order-tot_args)
+            v_fields = list(v_fields) + [None]*(tot_order - tot_args)
         orders = [covariant_order(f) for f in self._args]
-        indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
-        v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
+        indices = [sum(orders[:i + 1]) for i in range(len(orders) - 1)]
+        v_fields = [v_fields[i:j] for i, j in zip([0] + indices, indices + [None])]
         multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
         return TensorProduct(*multipliers)
 
@@ -916,7 +916,7 @@ class LieDerivative(Expr):
         v = self._v_field
         expr = self._expr
         lead_term = v(expr(*args))
-        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i+1:])
+        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i + 1:])
                      for i in range(len(args))])
         return lead_term - rest
 
@@ -1201,7 +1201,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
-    gammas = [Function('f_%d'%i)(param) for i in range(
+    gammas = [Function('f_%d' % i)(param) for i in range(
         start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()

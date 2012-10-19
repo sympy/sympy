@@ -124,7 +124,7 @@ def dup_sqf_norm(f, K):
         if dup_sqf_p(r, K.dom):
             break
         else:
-            f, s = dup_shift(f, -K.unit, K), s+1
+            f, s = dup_shift(f, -K.unit, K), s +1
 
     return s, f, r
 
@@ -162,19 +162,19 @@ def dmp_sqf_norm(f, u, K):
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
-    g = dmp_raise(K.mod.rep, u+1, 0, K.dom)
+    g = dmp_raise(K.mod.rep, u + 1, 0, K.dom)
     F = dmp_raise([K.one, -K.unit], u, 0, K)
 
     s = 0
 
     while True:
         h, _ = dmp_inject(f, u, K, front=True)
-        r = dmp_resultant(g, h, u+1, K.dom)
+        r = dmp_resultant(g, h, u + 1, K.dom)
 
         if dmp_sqf_p(r, u, K.dom):
             break
         else:
-            f, s = dmp_compose(f, F, u, K), s+1
+            f, s = dmp_compose(f, F, u, K), s +1
 
     return s, f, r
 

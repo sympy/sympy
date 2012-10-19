@@ -194,7 +194,7 @@ def test_wavefunction():
     assert conjugate(f) == Wavefunction(conjugate(f.expr), x)
     assert conjugate(f) == Dagger(f)
 
-    g = Wavefunction(x**2*y+y**2*x, (x, 0, 1), (y, 0, 2))
+    g = Wavefunction(x**2*y + y**2*x, (x, 0, 1), (y, 0, 2))
     lims_g = g.limits
 
     assert lims_g[x] == (0, 1)
@@ -215,7 +215,7 @@ def test_wavefunction():
 
     piab = Wavefunction(sin(n*pi*x/L), (x, 0, L))
     assert piab.norm == sqrt(L/2)
-    assert piab(L+1) == 0
+    assert piab(L + 1) == 0
     assert piab(0.5) == sin(0.5*n*pi/L)
     assert piab(0.5, n=1, L=1) == sin(0.5*pi)
     assert piab.normalize() == \

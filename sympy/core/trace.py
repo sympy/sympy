@@ -41,13 +41,13 @@ def _cycle_permute(l):
     # create sublist of items with first item as min_item and last_item
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
-    sublist = [[le[indices[i]:indices[i+1]]] for i in
-               xrange(len(indices)-1)]
+    sublist = [[le[indices[i]:indices[i + 1]]] for i in
+               xrange(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist
     idx = sublist.index(min(sublist))
-    ordered_l = le[indices[idx]:indices[idx]+len(l)]
+    ordered_l = le[indices[idx]:indices[idx] + len(l)]
 
     return ordered_l
 

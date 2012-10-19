@@ -182,7 +182,7 @@ except ImportError:  # Python 2.5
         pools = map(tuple, args) * kwds.get('repeat', 1)
         result = [[]]
         for pool in pools:
-            result = [x+[y] for x in result for y in pool]
+            result = [x + [y] for x in result for y in pool]
         for prod in result:
             yield tuple(prod)
 
@@ -218,13 +218,13 @@ except ImportError:  # Python 2.5
         if r > n:
             return
         indices = range(n)
-        cycles = range(n, n-r, -1)
+        cycles = range(n, n - r, -1)
         yield tuple(pool[i] for i in indices[:r])
         while n:
             for i in reversed(range(r)):
                 cycles[i] -= 1
                 if cycles[i] == 0:
-                    indices[i:] = indices[i+1:] + indices[i:i+1]
+                    indices[i:] = indices[i + 1:] + indices[i:i + 1]
                     cycles[i] = n - i
                 else:
                     j = cycles[i]
@@ -273,8 +273,8 @@ except ImportError:  # < python 2.6
             else:
                 return
             indices[i] += 1
-            for j in range(i+1, r):
-                indices[j] = indices[j-1] + 1
+            for j in range(i + 1, r):
+                indices[j] = indices[j - 1] + 1
             yield tuple(pool[i] for i in indices)
 
     def combinations_with_replacement(iterable, r):

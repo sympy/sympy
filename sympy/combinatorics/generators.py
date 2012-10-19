@@ -255,7 +255,7 @@ def rubik(n):
     # last plane, the orientation of the cube is maintained.
 
     # F slices
-    for i in range(n-1):
+    for i in range(n - 1):
         fcw(i)
         perm()
         fccw(i)  # restore
@@ -264,7 +264,7 @@ def rubik(n):
     # R slices
     # bring R to front
     UCW()
-    for i in range(n-1):
+    for i in range(n - 1):
         fcw(i)
         # put it back in place
         UCCW()
@@ -283,7 +283,7 @@ def rubik(n):
     FCW()
     UCCW()
     FCCW()
-    for i in range(n-1):
+    for i in range(n - 1):
         # turn strip
         fcw(i)
         # put bottom back on the bottom

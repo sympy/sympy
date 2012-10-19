@@ -104,7 +104,7 @@ def add_formulae(formulae):
          Matrix([HyperRep_power2(a, z),
                  HyperRep_power2(a + S(1)/2, z)/2]),
          Matrix([[1, 0]]),
-         Matrix([[(a-S.Half)*z/(1 - z), (S.Half - a)*z/(1 - z)],
+         Matrix([[(a - S.Half)*z/(1 - z), (S.Half - a)*z/(1 - z)],
                  [a/(1 - z), a*(z - 2)/(1 - z)]]))
     addb((1, 1), (2, ),
          Matrix([HyperRep_log1(z), 1]), Matrix([[-1/z, 0]]),
@@ -249,7 +249,7 @@ def add_formulae(formulae):
          Matrix([z**(S.Half - a)*besseli(a - S.Half, sqrt(z))**2,
                  z**(1 - a)*besseli(a - S.Half, sqrt(z))
                          *besseli(a - S(3)/2, sqrt(z)),
-                 z**(S(3)/2 - a)*besseli(a-S(3)/2, sqrt(z))**2]),
+                 z**(S(3)/2 - a)*besseli(a - S(3)/2, sqrt(z))**2]),
          Matrix([[-gamma(a + S.Half)**2/4**(S.Half - a),
                  2*gamma(a - S.Half)*gamma(a + S.Half)/4**(1 - a),
                  0]]),
@@ -261,7 +261,7 @@ def add_formulae(formulae):
                           + besseli(1 - b, sqrt(z))*besseli(b, sqrt(z))),
                  besseli(-b, sqrt(z))*besseli(b, sqrt(z))]),
          Matrix([[1, 0, 0]]),
-         Matrix([[b-1, S(1)/2, 0],
+         Matrix([[b - 1, S(1)/2, 0],
                  [z, 0, z],
                  [0, S(1)/2, -b]]))
     addb([S(1)/2], [S(3)/2, S(3)/2],
@@ -361,7 +361,7 @@ def add_meijerg_formulae(formulae):
         Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
                 gamma(1 - a)*z**(a + rho)]),
         Matrix([[1, 0]]),
-        Matrix([[rho+z, -1], [0, a+rho]]),
+        Matrix([[rho + z, -1], [0, a + rho]]),
         detect_uppergamma)
 
     def detect_3113(iq):
@@ -1102,13 +1102,13 @@ class UnShiftB(Operator):
         if bi == 0:
             raise ValueError('Cannot increment -1 lower index.')
 
-        m = Poly(_x*(bi-1), _x)
+        m = Poly(_x*(bi - 1), _x)
         for b in bq:
             m *= Poly(_x + b - 1, _x)
         #print m
 
         B = Dummy('B')
-        D = Poly((bi-1)*B - bi + 1, B)
+        D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
             n *= (D + a)
@@ -1122,10 +1122,10 @@ class UnShiftB(Operator):
         #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
-            B, _x/(bi-1) + 1), _x)
+            B, _x/(bi - 1) + 1), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower index #%s of %s, %s.>' % (self._i,
@@ -1220,7 +1220,7 @@ class MeijerUnShiftA(Operator):
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Decrement upper b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1272,7 +1272,7 @@ class MeijerUnShiftB(Operator):
             B, 1 - ai + _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment upper a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1328,7 +1328,7 @@ class MeijerUnShiftC(Operator):
         n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Decrement lower b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1382,7 +1382,7 @@ class MeijerUnShiftD(Operator):
             B, ai - 1 - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1891,7 +1891,7 @@ def try_lerchphi(nip):
     coeffs = {}
     z = Dummy('z')
     monomials.sort(key=lambda x: x[1])
-    mon = {0: 1/(1-z)}
+    mon = {0: 1/(1 - z)}
     if monomials:
         for k in range(monomials[-1][1]):
             mon[k + 1] = z*mon[k].diff(z)
@@ -1903,7 +1903,7 @@ def try_lerchphi(nip):
         l.sort(key=lambda x: x[1])
         for k in range(2, l[-1][1] + 1):
             deriv[lerchphi(z, k, a)] = [(-a, lerchphi(z, k, a)),
-                                        (1, lerchphi(z, k-1, a))]
+                                        (1, lerchphi(z, k - 1, a))]
         deriv[lerchphi(z, 1, a)] = [(-a, lerchphi(z, 1, a)),
                                     (1/(1 - z), S(1))]
     trans = {}
@@ -1957,7 +1957,7 @@ def build_hypergeometric_formula(nip):
             for r, d in enumerate(C*derivs[k]):
                 res[r] += c*d
         for k, c in enumerate(res):
-            M[n-1, k] = -c/derivs[n-1][0, n-1]/poly.all_coeffs()[0]
+            M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
         return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive
@@ -2106,7 +2106,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
     if f is None:
         debug('  Could not find an origin.',
-              'Will return answer in terms of '+
+              'Will return answer in terms of ' +
               'simpler hypergeometric functions.')
         f = build_hypergeometric_formula(nip)
 
@@ -2364,7 +2364,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 b_ = pbm[m][0]
                 ki = [bi - b_ for bi in pbm[m][1:]]
                 u = len(ki)
-                li = [ai - b_ for ai in pap[m][:u+1]]
+                li = [ai - b_ for ai in pap[m][:u + 1]]
                 bo = list(bm)
                 for b in pbm[m]:
                     bo.remove(b)
@@ -2497,7 +2497,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     r = Piecewise((slater1, cond1), (slater2, cond2),
                    (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
     if r.has(hyper) and not allow_hyper:
-        debug('  Could express using hypergeometric functions, '+
+        debug('  Could express using hypergeometric functions, ' +
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r

@@ -85,7 +85,7 @@ def dup_root_upper_bound(f, K):
 
         a, Q = K.log(-f[i], 2), []
 
-        for j in xrange(i+1, n):
+        for j in xrange(i + 1, n):
 
             if f[j] <= 0:
                 continue
@@ -103,7 +103,7 @@ def dup_root_upper_bound(f, K):
     if not P:
         return None
     else:
-        return 2.0**(max(P)+1)
+        return 2.0**(max(P) + 1)
 
 
 def dup_root_lower_bound(f, K):
@@ -165,7 +165,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
 
     f, g = dup_shift(f, K.one, K), f
 
-    a1, b1, c1, d1 = a, a+b, c, c+d
+    a1, b1, c1, d1 = a, a + b, c, c +d
 
     if not dup_eval(f, K.zero, K):
         return f, (b1, b1, d1, d1)
@@ -180,7 +180,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
         if not dup_eval(f, K.zero, K):
             f = dup_rshift(f, 1, K)
 
-        a, b, c, d = b, a+b, d, c+d
+        a, b, c, d = b, a + b, d, c +d
 
     return f, (a, b, c, d)
 
@@ -329,7 +329,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
 
             f1 = dup_shift(f, K.one, K)
 
-            a1, b1, c1, d1, r = a, a+b, c, c+d, 0
+            a1, b1, c1, d1, r = a, a + b, c, c + d, 0
 
             if not dup_TC(f1, K):
                 roots.append((f1, (b1, b1, d1, d1)))
@@ -338,7 +338,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
             k1 = dup_sign_variations(f1, K)
             k2 = k - k1 - r
 
-            a2, b2, c2, d2 = b, a+b, d, c+d
+            a2, b2, c2, d2 = b, a + b, d, c +d
 
             if k2 > 1:
                 f2 = dup_shift(dup_reverse(f), K.one, K)
@@ -624,26 +624,26 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
             I_neg.append((G, N, k, f))
 
     for i, (f, M, k, F) in enumerate(I_pos):
-        for j, (g, N, m, G) in enumerate(I_pos[i+1:]):
+        for j, (g, N, m, G) in enumerate(I_pos[i + 1:]):
             while not _disjoint_p(M, N, strict=strict):
                 f, M = dup_inner_refine_real_root(
                     f, M, K, steps=1, fast=fast, mobius=True)
                 g, N = dup_inner_refine_real_root(
                     g, N, K, steps=1, fast=fast, mobius=True)
 
-            I_pos[i+j+1] = (g, N, m, G)
+            I_pos[i + j + 1] = (g, N, m, G)
 
         I_pos[i] = (f, M, k, F)
 
     for i, (f, M, k, F) in enumerate(I_neg):
-        for j, (g, N, m, G) in enumerate(I_neg[i+1:]):
+        for j, (g, N, m, G) in enumerate(I_neg[i + 1:]):
             while not _disjoint_p(M, N, strict=strict):
                 f, M = dup_inner_refine_real_root(
                     f, M, K, steps=1, fast=fast, mobius=True)
                 g, N = dup_inner_refine_real_root(
                     g, N, K, steps=1, fast=fast, mobius=True)
 
-            I_neg[i+j+1] = (g, N, m, G)
+            I_neg[i + j + 1] = (g, N, m, G)
 
         I_neg[i] = (f, M, k, F)
 
@@ -962,7 +962,7 @@ def _intervals_to_quadrants(intervals, f1, f2, s, t, F):
             else:
                 (a, _), _, _ = intervals[1]
 
-                if dup_eval(f2, (s+a)/2, F) > 0:
+                if dup_eval(f2, (s + a)/2, F) > 0:
                     Q.extend([OO, A2])
                     f2_sgn = +1
                 else:
@@ -1004,7 +1004,7 @@ def _intervals_to_quadrants(intervals, f1, f2, s, t, F):
             else:
                 (a, _), _, _ = intervals[1]
 
-                if dup_eval(f1, (s+a)/2, F) > 0:
+                if dup_eval(f1, (s + a)/2, F) > 0:
                     Q.extend([OO, A1])
                     f1_sgn = +1
                 else:
@@ -1046,8 +1046,8 @@ def _intervals_to_quadrants(intervals, f1, f2, s, t, F):
         else:
             (a, _), _, _ = intervals[1]
 
-            re = dup_eval(f1, (s+a)/2, F)
-            im = dup_eval(f2, (s+a)/2, F)
+            re = dup_eval(f1, (s + a)/2, F)
+            im = dup_eval(f2, (s + a)/2, F)
 
         intervals = intervals[1:]
 
@@ -1148,7 +1148,7 @@ def _traverse_quadrants(Q_L1, Q_L2, Q_L3, Q_L4, exclude=None):
         q1, k = Q[0], 1
 
         while k < len(Q):
-            q2, k = Q[k], k+1
+            q2, k = Q[k], k +1
 
             if q2 != OO:
                 qq = (q1, q2)
@@ -1161,7 +1161,7 @@ def _traverse_quadrants(Q_L1, Q_L2, Q_L3, Q_L4, exclude=None):
                     raise NotImplementedError(
                         "2 element rule (inside): " + str(qq))
             else:
-                qq, k = (q1, q2, Q[k]), k+1
+                qq, k = (q1, q2, Q[k]), k +1
 
                 if qq in _rules_ambiguous:
                     rules.append((_rules_ambiguous[qq], edges[i]))

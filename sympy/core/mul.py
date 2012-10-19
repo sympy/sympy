@@ -754,7 +754,7 @@ class Mul(AssocOp):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
-            factors.append(Mul(*(terms[:i]+[t]+terms[i+1:])))
+            factors.append(Mul(*(terms[:i] + [t] + terms[i + 1:])))
         return Add(*factors)
 
     def _matches_simple(self, expr, repl_dict):

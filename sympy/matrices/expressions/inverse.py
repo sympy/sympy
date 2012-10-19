@@ -28,7 +28,7 @@ class Inverse(MatPow):
             return mat**(-1)
 
         if not mat.is_square:
-            raise ShapeError("Inverse of non-square matrix %s"%mat)
+            raise ShapeError("Inverse of non-square matrix %s" % mat)
 
         try:
             return mat._eval_inverse(**kwargs)

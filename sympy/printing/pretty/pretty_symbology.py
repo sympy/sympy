@@ -315,8 +315,8 @@ def xobj(symb, length):
         return c1
 
     res = []
-    next = (length-2)//2
-    nmid = (length-2) - next*2
+    next = (length - 2)//2
+    nmid = (length - 2) - next*2
 
     res += [top]
     res += [ext]*next

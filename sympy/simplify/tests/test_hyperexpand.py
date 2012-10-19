@@ -106,7 +106,7 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([-S.Half - 1, 1, 2], [S.Half, 3], z)) == \
              sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
            + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
-    assert hyperexpand(hyper([1+S.Half, 1, 1], [2, 2], z)) == \
+    assert hyperexpand(hyper([1 + S.Half, 1, 1], [2, 2], z)) == \
            -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
     # TODO hyperexpand(hyper([a], [2*a + 1], z))
     # TODO [S.Half, a], [S(3)/2, a+1]
@@ -350,7 +350,7 @@ def test_meijerg_expand():
            == sin(z)/sqrt(pi)
     assert hyperexpand(meijerg([[], []], [[0], [S(1)/2]], (z/2)**2)) \
            == cos(z)/sqrt(pi)
-    assert can_do_meijer([], [a], [a-1, a-S.Half], [])
+    assert can_do_meijer([], [a], [a - 1, a - S.Half], [])
     assert can_do_meijer([], [], [a/2], [-a/2], False)  # branches...
     assert can_do_meijer([a], [b], [a], [b, a - 1])
 
@@ -369,14 +369,14 @@ def test_meijerg_expand():
     assert can_do_meijer([], [S.Half], [a], [-a])
     assert can_do_meijer([], [], [a, b], [])
     assert can_do_meijer([], [], [a, b], [])
-    assert can_do_meijer([], [], [a, a+S.Half], [b, b+S.Half])
+    assert can_do_meijer([], [], [a, a + S.Half], [b, b + S.Half])
     assert can_do_meijer([], [], [a, -a], [0, S.Half], False)  # dito
-    assert can_do_meijer([], [], [a, a+S.Half, b, b+S.Half], [])
+    assert can_do_meijer([], [], [a, a + S.Half, b, b + S.Half], [])
     assert can_do_meijer([S.Half], [], [0], [a, -a])
     assert can_do_meijer([S.Half], [], [a], [0, -a], False)  # dito
     assert can_do_meijer([], [a - S.Half], [a, b], [a - S.Half], False)
-    assert can_do_meijer([], [a+S.Half], [a+b, a-b, a], [], False)
-    assert can_do_meijer([a+S.Half], [], [b, 2*a-b, a], [], False)
+    assert can_do_meijer([], [a + S.Half], [a + b, a - b, a], [], False)
+    assert can_do_meijer([a + S.Half], [], [b, 2*a - b, a], [], False)
 
     # This for example is actually zero.
     assert can_do_meijer([], [], [], [a, b])
@@ -389,7 +389,7 @@ def test_meijerg_expand():
 
     # Test that the simplest possible answer is returned:
     assert combsimp(
-        simplify(hyperexpand(meijerg([1], [1-a], [-a/2, -a/2 + S(1)/2],
+        simplify(hyperexpand(meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2],
                                                  [], 1/z)))) == \
            -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
@@ -405,9 +405,9 @@ def test_meijerg_lookup():
            z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
     assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
            exp(z)*uppergamma(0, z)
-    assert can_do_meijer([a], [], [b, a+1], [])
-    assert can_do_meijer([a], [], [b+2, a], [])
-    assert can_do_meijer([a], [], [b-2, a], [])
+    assert can_do_meijer([a], [], [b, a + 1], [])
+    assert can_do_meijer([a], [], [b + 2, a], [])
+    assert can_do_meijer([a], [], [b - 2, a], [])
 
     assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
            -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
@@ -551,14 +551,14 @@ def test_lerchphi():
            lerchphi(z, 3, a)
     assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) \
            == lerchphi(z, 10, a)
-    assert combsimp(hyperexpand(meijerg([0, 1-a], [], [0], [-a],
+    assert combsimp(hyperexpand(meijerg([0, 1 - a], [], [0], [-a],
                     exp_polar(-I*pi)*z))) == \
            lerchphi(z, 1, a)
-    assert combsimp(hyperexpand(meijerg([0, 1-a, 1-a], [], [0], [-a, -a],
+    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0], [-a, -a],
                     exp_polar(-I*pi)*z))) == \
            lerchphi(z, 2, a)
     assert combsimp(
-        hyperexpand(meijerg([0, 1-a, 1-a, 1-a], [], [0], [-a, -a, -a],
+        hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0], [-a, -a, -a],
                     exp_polar(-I*pi)*z))) == \
            lerchphi(z, 3, a)
 
@@ -653,13 +653,13 @@ def test_prudnikov_misc():
     assert can_do([a], [a + S.Half, 2*a])
     assert can_do([a], [a + S.Half, 2*a + 1])
     assert can_do([a], [a + S.Half, 2*a - 1])
-    assert can_do([S.Half], [b, 2-b])
-    assert can_do([S.Half], [b, 3-b])
+    assert can_do([S.Half], [b, 2 - b])
+    assert can_do([S.Half], [b, 3 - b])
     assert can_do([1], [2, b])
 
-    assert can_do([a, a+S.Half], [2*a, b, 2*a - b + 1])
-    assert can_do([a, a+S.Half], [S.Half, 2*a, 2*a + S.Half])
-    assert can_do([a], [a+1], lowerplane=True)  # lowergamma
+    assert can_do([a, a + S.Half], [2*a, b, 2*a - b + 1])
+    assert can_do([a, a + S.Half], [S.Half, 2*a, 2*a + S.Half])
+    assert can_do([a], [a + 1], lowerplane=True)  # lowergamma
 
 
 @slow
@@ -804,7 +804,7 @@ def test_prudnikov_8():
     # 7.12.2
     for a in [1, 2, 3]:
         for b in [1, 2, 3]:
-            for c in range(1, a+1):
+            for c in range(1, a + 1):
                 for d in [h, 1, 3*h, 2, 5*h, 3]:
                     assert can_do([a, b], [c, d])
         for b in [3*h, 5*h]:
@@ -861,8 +861,8 @@ def test_prudnikov_10():
 @slow
 def test_prudnikov_11():
     # 7.15
-    assert can_do([a, a+S.Half], [2*a, b, 2*a - b])
-    assert can_do([a, a+S.Half], [S(3)/2, 2*a, 2*a - S(1)/2])
+    assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
+    assert can_do([a, a + S.Half], [S(3)/2, 2*a, 2*a - S(1)/2])
 
     assert can_do([S(1)/4, S(3)/4], [S(1)/2, S(1)/2, 1])
     assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(1)/2, 2])
@@ -877,9 +877,9 @@ def test_prudnikov_12():
     # 7.16
     assert can_do(
         [], [a, a + S.Half, 2*a], False)  # branches only agree for some z!
-    assert can_do([], [a, a + S.Half, 2*a+1], False)  # dito
-    assert can_do([], [S.Half, a, a+S.Half])
-    assert can_do([], [S(3)/2, a, a+S.Half])
+    assert can_do([], [a, a + S.Half, 2*a + 1], False)  # dito
+    assert can_do([], [S.Half, a, a + S.Half])
+    assert can_do([], [S(3)/2, a, a + S.Half])
 
     assert can_do([], [S(1)/4, S(1)/2, S(3)/4])
     assert can_do([], [S(1)/2, S(1)/2, 1])
@@ -961,7 +961,7 @@ def test_prudnikov_fail_3F2():
     assert can_do([a, a + S(1)/3, a + S(2)/3], [S(4)/3, S(5)/3])
 
     # page 421
-    assert can_do([a, a + S(1)/3, a + S(2)/3], [3*a/2, (3*a+1)/2])
+    assert can_do([a, a + S(1)/3, a + S(2)/3], [3*a/2, (3*a + 1)/2])
 
     # pages 422 ...
     assert can_do([-S.Half, S.Half, S.Half], [1, 1])  # elliptic integrals
@@ -1006,7 +1006,7 @@ def test_prudnikov_fail_other():
     assert can_do([], [S(5)/3, S(4/3)])  # PFDD
 
     # XXX this does not *evaluate* right??
-    assert can_do([], [a, a + S.Half, 2*a-1])
+    assert can_do([], [a, a + S.Half, 2*a - 1])
 
 
 def test_bug():

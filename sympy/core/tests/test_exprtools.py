@@ -30,7 +30,7 @@ def test_Factors():
     assert a.div(
         b) == divmod(a, b) == (Factors({x: 5, z: 4}), Factors({y: 1, t: 10}))
     assert a.quo(b) == a/b == Factors({x: 5, z: 4})
-    assert a.rem(b) == a%b == Factors({y: 1, t: 10})
+    assert a.rem(b) == a % b == Factors({y: 1, t: 10})
 
     assert a.pow(3) == a**3 == Factors({x: 15, y: 9, z: 21})
     assert b.pow(3) == b**3 == Factors({y: 12, z: 9, t: 30})
@@ -206,7 +206,7 @@ def test_factor_nc():
     factor_nc_test(x*(1 + sin(s)))
     factor_nc_test((1 + n)**2)
 
-    factor_nc_test((x + n)*(x + m)*(x+y))
+    factor_nc_test((x + n)*(x + m)*(x + y))
     factor_nc_test(x*(n*m + 1))
     factor_nc_test(x*(n*m + x))
     factor_nc_test(x*(x*n*m + 1))
@@ -233,7 +233,7 @@ def test_factor_nc():
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
     # issue 3435
-    assert (2*n+2*m).factor() == 2*(n + m)
+    assert (2*n + 2*m).factor() == 2*(n + m)
 
 
 def test_issue_3261():

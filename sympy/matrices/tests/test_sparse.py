@@ -141,7 +141,7 @@ def test_sparse_matrix():
                     ( 8, -5) )).det() == -1
 
     assert SparseMatrix(( (x,   1),
-                    (y, 2*y) )).det() == 2*x*y-y
+                    (y, 2*y) )).det() == 2*x*y -y
 
     assert SparseMatrix(( (1, 1, 1),
                     (1, 2, 3),
@@ -186,7 +186,7 @@ def test_sparse_matrix():
     assert m0[:3, :3] == sparse_eye(3)
     assert m0[2:4, 0:2] == sparse_zeros(2)
 
-    m1 = SparseMatrix(3, 3, lambda i, j: i+j)
+    m1 = SparseMatrix(3, 3, lambda i, j: i + j)
     assert m1[0, :] == SparseMatrix(1, 3, (0, 1, 2))
     assert m1[1:3, 1] == SparseMatrix(2, 1, (2, 3))
 
@@ -228,7 +228,7 @@ def test_sparse_matrix():
     # test_reshape
     m0 = sparse_eye(3)
     assert m0.reshape(1, 9) == SparseMatrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
-    m1 = SparseMatrix(3, 4, lambda i, j: i+j)
+    m1 = SparseMatrix(3, 4, lambda i, j: i + j)
     assert m1.reshape(
         4, 3) == SparseMatrix([(0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)])
     assert m1.reshape(
@@ -247,7 +247,7 @@ def test_sparse_matrix():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-testmat == sparse_zeros(4)
+    assert (L*U).permuteBkwd(p) - testmat == sparse_zeros(4)
 
     testmat = SparseMatrix([[6, -2, 7, 4],
                       [0, 3, 6, 7],
@@ -256,7 +256,7 @@ def test_sparse_matrix():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-testmat == sparse_zeros(4)
+    assert (L*U).permuteBkwd(p) - testmat == sparse_zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
@@ -345,7 +345,7 @@ def test_sparse_matrix():
     y = Symbol('y')
     L = SparseMatrix(1, 2, [x**2*y, 2*y**2 + x*y])
     syms = [x, y]
-    assert L.jacobian(syms) == Matrix([[2*x*y, x**2], [y, 4*y+x]])
+    assert L.jacobian(syms) == Matrix([[2*x*y, x**2], [y, 4*y + x]])
 
     L = SparseMatrix(1, 2, [x, x**2*y**3])
     assert L.jacobian(syms) == SparseMatrix([[1, 0], [2*x*y**3, x**2*3*y**2]])

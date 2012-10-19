@@ -62,17 +62,17 @@ def test_perfect_power():
     assert perfect_power(137**(3*5*13) + 1) is False
     assert perfect_power(137**(3*5*13) - 1) is False
     assert perfect_power(103005006004**7) == (103005006004, 7)
-    assert perfect_power(103005006004**7+1) is False
-    assert perfect_power(103005006004**7-1) is False
+    assert perfect_power(103005006004**7 + 1) is False
+    assert perfect_power(103005006004**7 - 1) is False
     assert perfect_power(103005006004**12) == (103005006004, 12)
-    assert perfect_power(103005006004**12+1) is False
-    assert perfect_power(103005006004**12-1) is False
+    assert perfect_power(103005006004**12 + 1) is False
+    assert perfect_power(103005006004**12 - 1) is False
     assert perfect_power(2**10007) == (2, 10007)
-    assert perfect_power(2**10007+1) is False
-    assert perfect_power(2**10007-1) is False
+    assert perfect_power(2**10007 + 1) is False
+    assert perfect_power(2**10007 - 1) is False
     assert perfect_power((9**99 + 1)**60) == (9**99 + 1, 60)
-    assert perfect_power((9**99 + 1)**60+1) is False
-    assert perfect_power((9**99 + 1)**60-1) is False
+    assert perfect_power((9**99 + 1)**60 + 1) is False
+    assert perfect_power((9**99 + 1)**60 - 1) is False
     assert perfect_power((10**40000)**2, big=False) == (10**40000, 2)
     assert perfect_power(10**100000) == (10, 100000)
     assert perfect_power(10**100001) == (10, 100001)
@@ -163,8 +163,8 @@ def test_generate():
     s = Sieve()
     for i in range(30, 2350, 376):
         for j in range(2, 5096, 1139):
-            A = list(s.primerange(i, i+j))
-            B = list(primerange(i, i+j))
+            A = list(s.primerange(i, i + j))
+            B = list(primerange(i, i + j))
             assert A == B
     s = Sieve()
     assert s[10] == 29
@@ -195,8 +195,8 @@ def test_randprime():
     raises(ValueError, lambda: randprime(20, 22))
     for a in [100, 300, 500, 250000]:
         for b in [100, 300, 500, 250000]:
-            p = randprime(a, a+b)
-            assert a <= p < (a+b) and isprime(p)
+            p = randprime(a, a + b)
+            assert a <= p < (a + b) and isprime(p)
 
 
 def fac_multiplicity(n, p):
@@ -265,10 +265,10 @@ def test_factorint():
     assert factorint(12932983746293756928584532764589230) == \
         {2: 1, 5: 1, 73: 1, 727719592270351: 1, 63564265087747: 1, 383: 1}
     assert factorint(727719592270351) == {727719592270351: 1}
-    assert factorint(2**64+1, use_trial=False) == factorint(2**64+1)
+    assert factorint(2**64 + 1, use_trial=False) == factorint(2**64 + 1)
     for n in range(60000):
         assert multiproduct(factorint(n)) == n
-    assert pollard_rho(2**64+1, seed=1) == 274177
+    assert pollard_rho(2**64 + 1, seed=1) == 274177
     assert pollard_rho(19, seed=1) is None
     assert factorint(3, limit=2) == {3: 1}
     assert factorint(12345) == {3: 1, 5: 1, 823: 1}
@@ -286,7 +286,7 @@ def test_factorint():
     assert factorint(p1*p2*p3) == {p1: 1, p2: 1, p3: 1}
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
-    assert factorint(primorial(17)+1, use_pm1=0) == \
+    assert factorint(primorial(17) + 1, use_pm1=0) == \
            {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization

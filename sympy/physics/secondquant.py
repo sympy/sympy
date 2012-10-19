@@ -433,7 +433,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
             return Mul(self, state)
 
     def __repr__(self):
-        return "AnnihilateBoson(%s)"%self.state
+        return "AnnihilateBoson(%s)" % self.state
 
 
 class CreateBoson(BosonicOperator, Creator):
@@ -469,7 +469,7 @@ class CreateBoson(BosonicOperator, Creator):
             return Mul(self, state)
 
     def __repr__(self):
-        return "CreateBoson(%s)"%self.state
+        return "CreateBoson(%s)" % self.state
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -652,7 +652,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
             c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
-                return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
+                return Mul(*(c_part + [nc_part[0].down(element)] + nc_part[1:]))
             else:
                 return Mul(self, state)
 
@@ -751,10 +751,10 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return self.is_only_above_fermi
 
     def __repr__(self):
-        return "AnnihilateFermion(%s)"%self.state
+        return "AnnihilateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a_{%s}"%self.state.name
+        return "a_{%s}" % self.state.name
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -885,10 +885,10 @@ class CreateFermion(FermionicOperator, Creator):
         return self.is_only_below_fermi
 
     def __repr__(self):
-        return "CreateFermion(%s)"%self.state
+        return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a^\\dagger_{%s}"%self.state.name
+        return "a^\\dagger_{%s}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -958,7 +958,7 @@ class BosonState(FockState):
         """
         i = int(i)
         new_occs = list(self.args[0])
-        new_occs[i] = new_occs[i]+S.One
+        new_occs[i] = new_occs[i] + S.One
         return self.__class__(new_occs)
 
     def down(self, i):
@@ -980,7 +980,7 @@ class BosonState(FockState):
         if new_occs[i] == S.Zero:
             return S.Zero
         else:
-            new_occs[i] = new_occs[i]-S.One
+            new_occs[i] = new_occs[i] - S.One
             return self.__class__(new_occs)
 
 
@@ -1007,7 +1007,7 @@ class FermionState(FockState):
         if cls._count_holes(occupations) > fermi_level:
             return S.Zero
 
-        if sign%2:
+        if sign % 2:
             return S.NegativeOne*FockState.__new__(cls, occupations)
         else:
             return FockState.__new__(cls, occupations)
@@ -1139,7 +1139,7 @@ class FermionState(FockState):
         new_occs = list(self.args[0])
         pos = new_occs.index(i)
         del new_occs[pos]
-        if (pos)%2:
+        if (pos) % 2:
             return S.NegativeOne*self.__class__(new_occs, self.fermi_level)
         else:
             return self.__class__(new_occs, self.fermi_level)
@@ -1148,7 +1148,7 @@ class FermionState(FockState):
         """
         Adds particle/creates hole in orbit i. No input tests performed here.
         """
-        return self.__class__((i,)+self.args[0], self.fermi_level)
+        return self.__class__((i,) + self.args[0], self.fermi_level)
 
     @classmethod
     def _count_holes(cls, list):
@@ -1158,13 +1158,13 @@ class FermionState(FockState):
         return len([i for i in list if cls._only_below_fermi(i)])
 
     def _negate_holes(self, list):
-        return tuple([-i if i<=self.fermi_level else i for i in list])
+        return tuple([-i if i <= self.fermi_level else i for i in list])
 
     def __repr__(self):
         if self.fermi_level:
-            return "FockStateKet(%r, fermi_level=%s)"%(self.args[0], self.fermi_level)
+            return "FockStateKet(%r, fermi_level=%s)" % (self.args[0], self.fermi_level)
         else:
-            return "FockStateKet(%r)"%(self.args[0],)
+            return "FockStateKet(%r)" % (self.args[0],)
 
     def _labels(self):
         return self._negate_holes(self.args[0])
@@ -1318,7 +1318,7 @@ def _apply_Mul(m):
                         if result == 0:
                             return S.Zero
                         else:
-                            return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                            return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
                 else:
                     return m
             elif isinstance(next_to_last, FockStateBra):
@@ -1326,7 +1326,7 @@ def _apply_Mul(m):
                 if result == 0:
                     return S.Zero
                 else:
-                    return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                    return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             else:
                 return m
         else:
@@ -1724,7 +1724,7 @@ class Commutator(Function):
             else:
                 return S.Zero
         if isinstance(a, FermionicOperator) and isinstance(b, FermionicOperator):
-            return wicks(a*b)- wicks(b*a)
+            return wicks(a*b) - wicks(b*a)
 
         #
         # Canonical ordering of arguments
@@ -1769,7 +1769,7 @@ class Commutator(Function):
         return "[%s,%s]" %(self.args[0], self.args[1])
 
     def _latex(self, printer):
-        return "\\left[%s,%s\\right]"%tuple([
+        return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg) for arg in self.args])
 
 
@@ -1854,7 +1854,7 @@ class NO(Expr):
             except ViolationOfPauliPrinciple:
                 return S.Zero
 
-            if sign%2:
+            if sign % 2:
                 return (S.NegativeOne*coeff)*cls(Mul(*newseq))
             elif sign:
                 return coeff*cls(Mul(*newseq))
@@ -2035,7 +2035,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = xrange(len(ops)-1, -1, -1)
+        iter = xrange(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2092,10 +2092,10 @@ class NO(Expr):
         return NO(mul)
 
     def _latex(self, printer):
-        return "\\left\\{%s\\right\\}"%printer._print(self.args[0])
+        return "\\left\\{%s\\right\\}" % printer._print(self.args[0])
 
     def __repr__(self):
-        return "NO(%s)"%self.args[0]
+        return "NO(%s)" % self.args[0]
 
     def __str__(self):
         return ":%s:" % self.args[0]
@@ -2200,8 +2200,8 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
 
     verified = False
     sign = 0
-    rng = range(len(string1)-1)
-    rev = range(len(string1)-3, -1, -1)
+    rng = range(len(string1) - 1)
+    rev = range(len(string1) - 3, -1, -1)
 
     keys = list(map(key, string1))
     key_val = dict(zip(keys, string1))
@@ -2210,24 +2210,24 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
         verified = True
         for i in rng:
             left = keys[i]
-            right = keys[i+1]
+            right = keys[i + 1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left, right])
             if left > right:
                 verified = False
-                keys[i:i+2] = [right, left]
-                sign = sign+1
+                keys[i:i + 2] = [right, left]
+                sign = sign +1
         if verified:
             break
         for i in rev:
             left = keys[i]
-            right = keys[i+1]
+            right = keys[i + 1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left, right])
             if left > right:
                 verified = False
-                keys[i:i+2] = [right, left]
-                sign = sign+1
+                keys[i:i + 2] = [right, left]
+                sign = sign +1
     string1 = [ key_val[k] for k in keys ]
     return (string1, sign)
 
@@ -2415,19 +2415,19 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
             try:
                 return letters_below[number]
             except IndexError:
-                return 'i_'+str(number-len_below)
+                return 'i_' + str(number - len_below)
 
         def _a(number):
             try:
                 return letters_above[number]
             except IndexError:
-                return 'a_'+str(number-len_above)
+                return 'a_' + str(number - len_above)
 
         def _p(number):
             try:
                 return letters_general[number]
             except IndexError:
-                return 'p_'+str(number-len_general)
+                return 'p_' + str(number - len_general)
 
     aboves = []
     belows = []
@@ -2640,7 +2640,7 @@ def _get_ordered_dummies(mul, verbose=False):
                 # fallback to position in string representation
                 facpos = -1
                 while 1:
-                    facpos = masked_facs[fac].find(dum_repr[d], facpos+1)
+                    facpos = masked_facs[fac].find(dum_repr[d], facpos + 1)
                     if facpos == -1:
                         break
                     pos_val.append(facpos)
@@ -2763,15 +2763,15 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
     else:
         result = [NO(Mul(*string1))]
 
-    for i in range(len(string1)-1):
-        for j in range(i+1, len(string1)):
+    for i in range(len(string1) - 1):
+        for j in range(i + 1, len(string1)):
 
             c = contraction(string1[i], string1[j])
 
             if c:
                 # print "found contraction",c
 
-                sign = (j-i+1) %2
+                sign = (j - i + 1) %2
                 if sign:
                     coeff = S.NegativeOne*c
                 else:
@@ -2791,7 +2791,7 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
                 # and   string1[:i] <---> string1[j+1:].
                 #
                 # This leaves the case:
-                oplist = string1[i+1:j] + string1[j+1:]
+                oplist = string1[i + 1:j] + string1[j + 1:]
 
                 if oplist:
 
@@ -2963,7 +2963,7 @@ class PermutationOperator(Expr):
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)"%self.args
+        return "P(%s%s)" % self.args
 
 
 def simplify_index_permutations(expr, permutation_operators):

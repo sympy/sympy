@@ -227,7 +227,7 @@ def test_Integer_new():
     _test_rational_new(Integer)
 
     raises(ValueError, lambda: Integer("10.5"))
-    assert Integer(Rational('1.'+'9'*20)) == 1
+    assert Integer(Rational('1.' + '9'*20)) == 1
 
 
 def test_Rational_new():
@@ -298,8 +298,8 @@ def test_Rational_cmp():
     assert n6<n7
     assert n8<n7
     assert n7>n8
-    assert (n1+1)**n2 < 2
-    assert ((n1+n6)/n7) < 1
+    assert (n1 + 1)**n2 < 2
+    assert ((n1 + n6)/n7) < 1
 
     assert n4<n3
     assert n2<n3
@@ -313,7 +313,7 @@ def test_Rational_cmp():
 def test_Float():
     def eq(a, b):
         t = Float("1.0E-15")
-        return (-t < a-b < t)
+        return (-t < a - b < t)
 
     a = Float(2) ** Float(3)
     assert eq(a.evalf(), Float(8))
@@ -498,10 +498,10 @@ def test_Infinity():
     assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
     assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
     assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
-    assert oo + float(1) == Float('inf') and (oo+float(1)).is_Float
-    assert -oo + float(1) == Float('-inf') and (-oo+float(1)).is_Float
-    assert oo - float(1) == Float('inf') and (oo-float(1)).is_Float
-    assert -oo - float(1) == Float('-inf') and (-oo-float(1)).is_Float
+    assert oo + float(1) == Float('inf') and (oo + float(1)).is_Float
+    assert -oo + float(1) == Float('-inf') and (-oo + float(1)).is_Float
+    assert oo - float(1) == Float('inf') and (oo - float(1)).is_Float
+    assert -oo - float(1) == Float('-inf') and (-oo - float(1)).is_Float
     assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
     assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
     assert float(1)/oo == 0
@@ -557,12 +557,12 @@ def test_Infinity():
 def test_Infinity_2():
     x = Symbol('x')
     assert oo*x != oo
-    assert oo*(pi-1) == oo
-    assert oo*(1-pi) == -oo
+    assert oo*(pi - 1) == oo
+    assert oo*(1 - pi) == -oo
 
     assert (-oo)*x != -oo
-    assert (-oo)*(pi-1) == -oo
-    assert (-oo)*(1-pi) == oo
+    assert (-oo)*(pi - 1) == -oo
+    assert (-oo)*(1 - pi) == oo
 
 
 def test_Infinity_inequations():
@@ -633,8 +633,8 @@ def test_powers():
     assert integer_nthroot(2, 5) == (1, False)
     assert integer_nthroot(4, 2) == (2, True)
     assert integer_nthroot(123**25, 25) == (123, True)
-    assert integer_nthroot(123**25+1, 25) == (123, False)
-    assert integer_nthroot(123**25-1, 25) == (122, False)
+    assert integer_nthroot(123**25 + 1, 25) == (123, False)
+    assert integer_nthroot(123**25 - 1, 25) == (122, False)
     assert integer_nthroot(1, 1) == (1, True)
     assert integer_nthroot(0, 1) == (0, True)
     assert integer_nthroot(0, 3) == (0, True)
@@ -643,17 +643,17 @@ def test_powers():
     assert integer_nthroot(16, 2) == (4, True)
     assert integer_nthroot(26, 2) == (5, False)
     assert integer_nthroot(1234567**7, 7) == (1234567, True)
-    assert integer_nthroot(1234567**7+1, 7) == (1234567, False)
-    assert integer_nthroot(1234567**7-1, 7) == (1234566, False)
+    assert integer_nthroot(1234567**7 + 1, 7) == (1234567, False)
+    assert integer_nthroot(1234567**7 - 1, 7) == (1234566, False)
     b = 25**1000
     assert integer_nthroot(b, 1000) == (25, True)
-    assert integer_nthroot(b+1, 1000) == (25, False)
-    assert integer_nthroot(b-1, 1000) == (24, False)
+    assert integer_nthroot(b + 1, 1000) == (25, False)
+    assert integer_nthroot(b - 1, 1000) == (24, False)
     c = 10**400
     c2 = c**2
     assert integer_nthroot(c2, 2) == (c, True)
-    assert integer_nthroot(c2+1, 2) == (c, False)
-    assert integer_nthroot(c2-1, 2) == (c-1, False)
+    assert integer_nthroot(c2 + 1, 2) == (c, False)
+    assert integer_nthroot(c2 - 1, 2) == (c - 1, False)
     assert integer_nthroot(2, 10**10) == (1, False)
 
     p, r = integer_nthroot(int(factorial(10000)), 100)
@@ -718,8 +718,8 @@ def test_powers_Integer():
     assert sqrt((3 - sqrt(pi)) ** 2) == 3 - sqrt(pi)
 
     # check that it is fast for big numbers
-    assert (2**64+1) ** Rational(4, 3)
-    assert (2**64+1) ** Rational(17, 25)
+    assert (2**64 + 1) ** Rational(4, 3)
+    assert (2**64 + 1) ** Rational(17, 25)
 
     # negative rational power and negative base
     assert (
@@ -846,7 +846,7 @@ def test_real_bug():
 
 
 def test_bug_sqrt():
-    assert ((sqrt(Rational(2))+1)*(sqrt(Rational(2))-1)).expand() == 1
+    assert ((sqrt(Rational(2)) + 1)*(sqrt(Rational(2)) - 1)).expand() == 1
 
 
 def test_pi_Pi():
@@ -877,14 +877,14 @@ def test_issue593():
 
 def test_issue324():
     x = Symbol("x")
-    assert sqrt(x-1).as_base_exp() == (x - 1, S.Half)
-    assert sqrt(x-1) != I*sqrt(1-x)
+    assert sqrt(x - 1).as_base_exp() == (x - 1, S.Half)
+    assert sqrt(x - 1) != I*sqrt(1 - x)
 
 
 def test_issue350():
     x = Symbol("x", real=True)
     assert sqrt(x**2) == abs(x)
-    assert sqrt(x-1).subs(x, 5) == 2
+    assert sqrt(x - 1).subs(x, 5) == 2
 
 
 def test_Integer_factors():
@@ -1033,11 +1033,11 @@ def test_issue1512():
     assert abs(EulerGamma._evalf(50) - 0.577215664901533) < 1e-10
     assert abs(GoldenRatio._evalf(50) - 1.61803398874989) < 1e-10
     x = Symbol("x")
-    assert (pi+x).evalf() == pi.evalf()+x
-    assert (E+x).evalf() == E.evalf()+x
-    assert (Catalan+x).evalf() == Catalan.evalf()+x
-    assert (EulerGamma+x).evalf() == EulerGamma.evalf()+x
-    assert (GoldenRatio+x).evalf() == GoldenRatio.evalf()+x
+    assert (pi + x).evalf() == pi.evalf() +x
+    assert (E + x).evalf() == E.evalf() +x
+    assert (Catalan + x).evalf() == Catalan.evalf() +x
+    assert (EulerGamma + x).evalf() == EulerGamma.evalf() +x
+    assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() +x
 
 
 def test_conversion_to_mpmath():

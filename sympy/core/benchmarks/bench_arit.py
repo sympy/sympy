@@ -8,19 +8,19 @@ def timeit_neg():
 
 
 def timeit_Add_x1():
-    x+1
+    x +1
 
 
 def timeit_Add_1x():
-    1+x
+    1 +x
 
 
 def timeit_Add_x05():
-    x+0.5
+    x + 0.5
 
 
 def timeit_Add_xy():
-    x+y
+    x +y
 
 
 def timeit_Add_xyz():

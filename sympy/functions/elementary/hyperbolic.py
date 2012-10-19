@@ -74,15 +74,15 @@ class sinh(HyperbolicFunction):
 
             if arg.func == acosh:
                 x = arg.args[0]
-                return sqrt(x-1) * sqrt(x+1)
+                return sqrt(x - 1) * sqrt(x + 1)
 
             if arg.func == atanh:
                 x = arg.args[0]
-                return x/sqrt(1-x**2)
+                return x/sqrt(1 - x**2)
 
             if arg.func == acoth:
                 x = arg.args[0]
-                return 1/(sqrt(x-1) * sqrt(x+1))
+                return 1/(sqrt(x - 1) * sqrt(x + 1))
 
     @staticmethod
     @cacheit
@@ -97,7 +97,7 @@ class sinh(HyperbolicFunction):
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
-                return p * x**2 / (n*(n-1))
+                return p * x**2 / (n*(n - 1))
             else:
                 return x**(n) / C.factorial(n)
 
@@ -208,17 +208,17 @@ class cosh(HyperbolicFunction):
                     return cls(-arg)
 
             if arg.func == asinh:
-                return sqrt(1+arg.args[0]**2)
+                return sqrt(1 + arg.args[0]**2)
 
             if arg.func == acosh:
                 return arg.args[0]
 
             if arg.func == atanh:
-                return 1/sqrt(1-arg.args[0]**2)
+                return 1/sqrt(1 - arg.args[0]**2)
 
             if arg.func == acoth:
                 x = arg.args[0]
-                return x/(sqrt(x-1) * sqrt(x+1))
+                return x/(sqrt(x - 1) * sqrt(x + 1))
 
     @staticmethod
     @cacheit
@@ -230,7 +230,7 @@ class cosh(HyperbolicFunction):
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
-                return p * x**2 / (n*(n-1))
+                return p * x**2 / (n*(n - 1))
             else:
                 return x**(n)/C.factorial(n)
 
@@ -259,11 +259,11 @@ class cosh(HyperbolicFunction):
 
     def _eval_rewrite_as_tanh(self, arg):
         tanh_half = tanh(S.Half*arg)**2
-        return (1+tanh_half)/(1-tanh_half)
+        return (1 + tanh_half)/(1 - tanh_half)
 
     def _eval_rewrite_as_coth(self, arg):
         coth_half = coth(S.Half*arg)**2
-        return (coth_half+1)/(coth_half-1)
+        return (coth_half + 1)/(coth_half - 1)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -342,11 +342,11 @@ class tanh(HyperbolicFunction):
 
             if arg.func == asinh:
                 x = arg.args[0]
-                return x/sqrt(1+x**2)
+                return x/sqrt(1 + x**2)
 
             if arg.func == acosh:
                 x = arg.args[0]
-                return sqrt(x-1) * sqrt(x+1) / x
+                return sqrt(x - 1) * sqrt(x + 1) / x
 
             if arg.func == atanh:
                 return arg.args[0]
@@ -362,12 +362,12 @@ class tanh(HyperbolicFunction):
         else:
             x = sympify(x)
 
-            a = 2**(n+1)
+            a = 2**(n + 1)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
+            B = C.bernoulli(n + 1)
+            F = C.factorial(n + 1)
 
-            return a*(a-1) * B/F * x**n
+            return a*(a - 1) * B/F * x**n
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -388,7 +388,7 @@ class tanh(HyperbolicFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
-        return (pos_exp-neg_exp)/(pos_exp+neg_exp)
+        return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
         return S.ImaginaryUnit*sinh(arg)/sinh(S.Pi*S.ImaginaryUnit/2 - arg)
@@ -471,11 +471,11 @@ class coth(HyperbolicFunction):
 
             if arg.func == asinh:
                 x = arg.args[0]
-                return sqrt(1+x**2)/x
+                return sqrt(1 + x**2)/x
 
             if arg.func == acosh:
                 x = arg.args[0]
-                return x/(sqrt(x-1) * sqrt(x+1))
+                return x/(sqrt(x - 1) * sqrt(x + 1))
 
             if arg.func == atanh:
                 return 1/arg.args[0]
@@ -493,10 +493,10 @@ class coth(HyperbolicFunction):
         else:
             x = sympify(x)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
+            B = C.bernoulli(n + 1)
+            F = C.factorial(n + 1)
 
-            return 2**(n+1) * B/F * x**n
+            return 2**(n + 1) * B/F * x**n
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -517,7 +517,7 @@ class coth(HyperbolicFunction):
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
-        return (pos_exp+neg_exp)/(pos_exp-neg_exp)
+        return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
         return -S.ImaginaryUnit*sinh(S.Pi*S.ImaginaryUnit/2 - arg)/sinh(arg)
@@ -604,7 +604,7 @@ class asinh(Function):
             x = sympify(x)
             if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return -p * (n-2)**2/(n*(n-1)) * x**2
+                return -p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
@@ -663,8 +663,8 @@ class acosh(Function):
 
         if arg.is_number:
             cst_table = {
-                S.ImaginaryUnit: C.log(S.ImaginaryUnit*(1+sqrt(2))),
-                -S.ImaginaryUnit: C.log(-S.ImaginaryUnit*(1+sqrt(2))),
+                S.ImaginaryUnit: C.log(S.ImaginaryUnit*(1 + sqrt(2))),
+                -S.ImaginaryUnit: C.log(-S.ImaginaryUnit*(1 + sqrt(2))),
                 S.Half: S.Pi/3,
                 -S.Half: 2*S.Pi/3,
                 sqrt(2)/2: S.Pi/4,
@@ -673,16 +673,16 @@ class acosh(Function):
                 -1/sqrt(2): 3*S.Pi/4,
                 sqrt(3)/2: S.Pi/6,
                 -sqrt(3)/2: 5*S.Pi/6,
-                (sqrt(3)-1)/sqrt(2**3): 5*S.Pi/12,
-                -(sqrt(3)-1)/sqrt(2**3): 7*S.Pi/12,
-                sqrt(2+sqrt(2))/2: S.Pi/8,
-                -sqrt(2+sqrt(2))/2: 7*S.Pi/8,
-                sqrt(2-sqrt(2))/2: 3*S.Pi/8,
-                -sqrt(2-sqrt(2))/2: 5*S.Pi/8,
-                (1+sqrt(3))/(2*sqrt(2)): S.Pi/12,
-                -(1+sqrt(3))/(2*sqrt(2)): 11*S.Pi/12,
-                (sqrt(5)+1)/4: S.Pi/5,
-                -(sqrt(5)+1)/4: 4*S.Pi/5
+                (sqrt(3) - 1)/sqrt(2**3): 5*S.Pi/12,
+                -(sqrt(3) - 1)/sqrt(2**3): 7*S.Pi/12,
+                sqrt(2 + sqrt(2))/2: S.Pi/8,
+                -sqrt(2 + sqrt(2))/2: 7*S.Pi/8,
+                sqrt(2 - sqrt(2))/2: 3*S.Pi/8,
+                -sqrt(2 - sqrt(2))/2: 5*S.Pi/8,
+                (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
+                -(1 + sqrt(3))/(2*sqrt(2)): 11*S.Pi/12,
+                (sqrt(5) + 1)/4: S.Pi/5,
+                -(sqrt(5) + 1)/4: 4*S.Pi/5
             }
 
             if arg in cst_table:
@@ -714,7 +714,7 @@ class acosh(Function):
             x = sympify(x)
             if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(n*(n-1)) * x**2
+                return p * (n - 2)**2/(n*(n - 1)) * x**2
             else:
                 k = (n - 1) // 2
                 R = C.RisingFactorial(S.Half, k)
@@ -749,7 +749,7 @@ class atanh(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/(1-self.args[0]**2)
+            return 1/(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -816,7 +816,7 @@ class acoth(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/(1-self.args[0]**2)
+            return 1/(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 

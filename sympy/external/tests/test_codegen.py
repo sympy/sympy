@@ -182,7 +182,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         f_name = "main.c"
     else:
         raise NotImplemented(
-                "FIXME: filename extension unknown for language: %s"%language)
+                "FIXME: filename extension unknown for language: %s" % language)
 
     with open(f_name, "w") as f:
         f.write(
@@ -298,7 +298,7 @@ def test_basic_codegen():
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),
     ]
-    name_expr = [("test", (x+y)*z)]
+    name_expr = [("test", (x + y)*z)]
     for lang, commands in valid_lang_commands:
         run_test("basic_codegen", name_expr, numerical_tests, lang, commands)
 
@@ -358,8 +358,8 @@ def test_complicated_codegen():
     from sympy import sin, cos, tan, N
     x, y, z = symbols('x,y,z')
     name_expr = [
-        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
-        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+        ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
     numerical_tests = []
     for name, expr in name_expr:

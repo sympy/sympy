@@ -135,7 +135,7 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     # get right expression
     right = ''
     openbraces = 0
-    for char in expr[index+oplength:]:
+    for char in expr[index + oplength:]:
         if char == ' ':  # skip whitespaces but keep them
             right += char
             continue
@@ -251,7 +251,7 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
         fprototype = ctypes.CFUNCTYPE(*fprototype)
     else:
         assert argcount, 'need argcount if no prototype is specified'
-        fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount+1))
+        fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount + 1))
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
     __run(libtcc.tcc_set_output_type(tccstate, 0))  # output to memory
@@ -581,7 +581,7 @@ def benchmark():
     print
     print 'simple function:'
     y = Symbol('y')
-    f2 = sqrt(x*y)+x*5
+    f2 = sqrt(x*y) + x*5
     fbenchmark(f2, [x, y])
     times = 100000
     fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'

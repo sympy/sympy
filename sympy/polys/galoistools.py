@@ -145,7 +145,7 @@ def gf_degree(f):
     -1
 
     """
-    return len(f)-1
+    return len(f) -1
 
 
 def gf_LC(f, K):
@@ -315,11 +315,11 @@ def gf_to_dict(f, p, symmetric=True):
     """
     n, result = gf_degree(f), {}
 
-    for k in xrange(0, n+1):
+    for k in xrange(0, n + 1):
         if symmetric:
-            a = gf_int(f[n-k], p)
+            a = gf_int(f[n - k], p)
         else:
-            a = f[n-k]
+            a = f[n - k]
 
         if a:
             result[k] = a
@@ -567,13 +567,13 @@ def gf_mul(f, g, p, K):
     dg = gf_degree(g)
 
     dh = df + dg
-    h = [0]*(dh+1)
+    h = [0]*(dh + 1)
 
-    for i in xrange(0, dh+1):
+    for i in xrange(0, dh + 1):
         coeff = K.zero
 
-        for j in xrange(max(0, i-dg), min(i, df)+1):
-            coeff += f[j]*g[i-j]
+        for j in xrange(max(0, i - dg), min(i, df) + 1):
+            coeff += f[j]*g[i - j]
 
         h[i] = coeff % p
 
@@ -598,25 +598,25 @@ def gf_sqr(f, p, K):
     df = gf_degree(f)
 
     dh = 2*df
-    h = [0]*(dh+1)
+    h = [0]*(dh + 1)
 
-    for i in xrange(0, dh+1):
+    for i in xrange(0, dh + 1):
         coeff = K.zero
 
-        jmin = max(0, i-df)
+        jmin = max(0, i - df)
         jmax = min(i, df)
 
         n = jmax - jmin + 1
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax+1):
-            coeff += f[j]*f[i-j]
+        for j in xrange(jmin, jmax + 1):
+            coeff += f[j]*f[i - j]
 
         coeff += coeff
 
         if n & 1:
-            elem = f[jmax+1]
+            elem = f[jmax + 1]
             coeff += elem**2
 
         h[i] = coeff % p
@@ -724,20 +724,20 @@ def gf_div(f, g, p, K):
 
     inv = K.invert(g[0], p)
 
-    h, dq, dr = list(f), df-dg, dg-1
+    h, dq, dr = list(f), df - dg, dg -1
 
-    for i in xrange(0, df+1):
+    for i in xrange(0, df + 1):
         coeff = h[i]
 
-        for j in xrange(max(0, dg-i), min(df-i, dr)+1):
-            coeff -= h[i+j-dg] * g[dg-j]
+        for j in xrange(max(0, dg - i), min(df - i, dr) + 1):
+            coeff -= h[i + j - dg] * g[dg - j]
 
         if i <= dq:
             coeff *= inv
 
         h[i] = coeff % p
 
-    return h[:dq+1], gf_strip(h[dq+1:])
+    return h[:dq + 1], gf_strip(h[dq + 1:])
 
 
 def gf_rem(f, g, p, K):
@@ -784,17 +784,17 @@ def gf_quo(f, g, p, K):
 
     inv = K.invert(g[0], p)
 
-    h, dq, dr = f[:], df-dg, dg-1
+    h, dq, dr = f[:], df - dg, dg -1
 
-    for i in xrange(0, dq+1):
+    for i in xrange(0, dq + 1):
         coeff = h[i]
 
-        for j in xrange(max(0, dg-i), min(df-i, dr)+1):
-            coeff -= h[i+j-dg] * g[dg-j]
+        for j in xrange(max(0, dg - i), min(df - i, dr) + 1):
+            coeff -= h[i + j - dg] * g[dg - j]
 
         h[i] = (coeff * inv) % p
 
-    return h[:dq+1]
+    return h[:dq + 1]
 
 
 def gf_exquo(f, g, p, K):
@@ -1134,7 +1134,7 @@ def gf_diff(f, p, K):
         coeff %= p
 
         if coeff:
-            h[df-n] = coeff
+            h[df - n] = coeff
 
         n -= 1
 
@@ -1558,7 +1558,7 @@ def gf_sqf_list(f, p, K, all=False):
                 if gf_degree(H) > 0:
                     factors.append((H, i*n))
 
-                g, h, i = gf_quo(g, G, p, K), G, i+1
+                g, h, i = gf_quo(g, G, p, K), G, i +1
 
             if g == [K.one]:
                 sqf = True
@@ -1568,10 +1568,10 @@ def gf_sqf_list(f, p, K, all=False):
         if not sqf:
             d = gf_degree(f) // r
 
-            for i in xrange(0, d+1):
+            for i in xrange(0, d + 1):
                 f[i] = f[i*r]
 
-            f, n = f[:d+1], n*r
+            f, n = f[:d + 1], n*r
         else:
             break
 
@@ -1605,14 +1605,14 @@ def gf_Qmatrix(f, p, K):
     """
     n, r = gf_degree(f), int(p)
 
-    q = [K.one] + [K.zero]*(n-1)
-    Q = [list(q)] + [[]]*(n-1)
+    q = [K.one] + [K.zero]*(n - 1)
+    Q = [list(q)] + [[]]*(n - 1)
 
-    for i in xrange(1, (n-1)*r + 1):
+    for i in xrange(1, (n - 1)*r + 1):
         qq, c = [(-q[-1]*f[-1]) % p], q[-1]
 
         for j in xrange(1, n):
-            qq.append((q[j-1] - c*f[-j-1]) % p)
+            qq.append((q[j - 1] - c*f[-j - 1]) % p)
 
         if not (i % r):
             Q[i//r] = list(qq)
@@ -1820,18 +1820,18 @@ def gf_edf_zassenhaus(f, n, p, K):
     N = gf_degree(f) // n
 
     while len(factors) < N:
-        r = gf_random(2*n-1, p, K)
+        r = gf_random(2*n - 1, p, K)
 
         if p == 2:
             h = r
 
-            for i in xrange(0, 2**(n*N-1)):
+            for i in xrange(0, 2**(n*N - 1)):
                 r = gf_pow_mod(r, 2, f, p, K)
                 h = gf_add(h, r, p, K)
 
             g = gf_gcd(f, h, p, K)
         else:
-            h = gf_pow_mod(r, (q**n-1) // 2, f, p, K)
+            h = gf_pow_mod(r, (q**n - 1) // 2, f, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
@@ -1879,21 +1879,21 @@ def gf_ddf_shoup(f, p, K):
 
     h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
 
-    U = [[K.one, K.zero], h] + [K.zero]*(k-1)
+    U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
-    for i in xrange(2, k+1):
-        U[i] = gf_compose_mod(U[i-1], h, f, p, K)
+    for i in xrange(2, k + 1):
+        U[i] = gf_compose_mod(U[i - 1], h, f, p, K)
 
     h, U = U[k], U[:k]
-    V = [h] + [K.zero]*(k-1)
+    V = [h] + [K.zero]*(k - 1)
 
     for i in xrange(1, k):
-        V[i] = gf_compose_mod(V[i-1], h, f, p, K)
+        V[i] = gf_compose_mod(V[i - 1], h, f, p, K)
 
     factors = []
 
     for i, v in enumerate(V):
-        h, j = [K.one], k-1
+        h, j = [K.one], k -1
 
         for u in U:
             g = gf_sub(v, u, p, K)
@@ -1908,9 +1908,9 @@ def gf_ddf_shoup(f, p, K):
             F = gf_gcd(g, h, p, K)
 
             if F != [K.one]:
-                factors.append((F, k*(i+1)-j))
+                factors.append((F, k*(i + 1) - j))
 
-            g, j = gf_quo(g, F, p, K), j-1
+            g, j = gf_quo(g, F, p, K), j -1
 
     if f != [K.one]:
         factors.append((f, gf_degree(f)))
@@ -1956,10 +1956,10 @@ def gf_edf_shoup(f, n, p, K):
 
     factors, x = [f], [K.one, K.zero]
 
-    r = gf_random(N-1, p, K)
+    r = gf_random(N - 1, p, K)
 
     h = gf_pow_mod(x, q, f, p, K)
-    H = gf_trace_map(r, h, x, n-1, f, p, K)[1]
+    H = gf_trace_map(r, h, x, n - 1, f, p, K)[1]
 
     if p == 2:
         h1 = gf_gcd(f, H, p, K)
@@ -1968,7 +1968,7 @@ def gf_edf_shoup(f, n, p, K):
         factors = gf_edf_shoup(h1, n, p, K) \
                 + gf_edf_shoup(h2, n, p, K)
     else:
-        h = gf_pow_mod(H, (q-1)//2, f, p, K)
+        h = gf_pow_mod(H, (q - 1)//2, f, p, K)
 
         h1 = gf_gcd(f, h, p, K)
         h2 = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)

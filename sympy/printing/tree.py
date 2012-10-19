@@ -17,14 +17,14 @@ def pprint_nodes(subtrees):
     """
     def indent(s, type=1):
         x = s.split("\n")
-        r = "+-%s\n"%x[0]
+        r = "+-%s\n" % x[0]
         for a in x[1:]:
             if a == "":
                 continue
             if type == 1:
-                r += "| %s\n"%a
+                r += "| %s\n" %a
             else:
-                r += "  %s\n"%a
+                r += "  %s\n" %a
         return r
     if len(subtrees) == 0:
         return ""
@@ -59,7 +59,7 @@ def tree(node):
     subtrees = []
     for arg in node.args:
         subtrees.append(tree(arg))
-    s = print_node(node)+pprint_nodes(subtrees)
+    s = print_node(node) + pprint_nodes(subtrees)
     return s
 
 

@@ -95,10 +95,10 @@ def subsets(n):
         a = [[1, 0, 0], [0, 1, 0], [1, 1, 0],
              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
     else:
-        b = subsets(n-1)
-        a0 = [x+[0] for x in b]
-        a1 = [x+[1] for x in b]
-        a = a0 + [[0]*(n-1) + [1]] + a1
+        b = subsets(n - 1)
+        a0 = [x + [0] for x in b]
+        a1 = [x + [1] for x in b]
+        a = a0 + [[0]*(n - 1) + [1]] + a1
     return a
 
 

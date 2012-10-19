@@ -310,7 +310,7 @@ class DMP(PicklableWithSlots):
             if n < 0:
                 return [(0,)]
             else:
-                return [ (n-i,) for i, c in enumerate(f.rep) ]
+                return [ (n - i,) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
@@ -322,7 +322,7 @@ class DMP(PicklableWithSlots):
             if n < 0:
                 return [((0,), f.dom.zero)]
             else:
-                return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+                return [ ((n - i,), c) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 

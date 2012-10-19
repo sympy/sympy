@@ -87,7 +87,7 @@ def dup_trial_division(f, factors, K):
             q, r = dup_div(f, factor, K)
 
             if not r:
-                f, k = q, k+1
+                f, k = q, k +1
             else:
                 break
 
@@ -108,7 +108,7 @@ def dmp_trial_division(f, factors, u, K):
             q, r = dmp_div(f, factor, u, K)
 
             if dmp_zero_p(r, u):
-                f, k = q, k+1
+                f, k = q, k +1
             else:
                 break
 
@@ -123,7 +123,7 @@ def dup_zz_mignotte_bound(f, K):
     b = abs(dup_LC(f, K))
     n = dup_degree(f)
 
-    return K.sqrt(K(n+1))*2**n*a*b
+    return K.sqrt(K(n + 1))*2**n*a*b
 
 
 def dmp_zz_mignotte_bound(f, u, K):
@@ -132,7 +132,7 @@ def dmp_zz_mignotte_bound(f, u, K):
     b = abs(dmp_ground_LC(f, u, K))
     n = sum(dmp_degree_list(f, u))
 
-    return K.sqrt(K(n+1))*2**n*a*b
+    return K.sqrt(K(n + 1))*2**n*a*b
 
 
 def dup_zz_hensel_step(m, f, g, h, s, t, K):
@@ -234,7 +234,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     h = gf_from_int_poly(f_list[k], p)
 
-    for f_i in f_list[k+1:]:
+    for f_i in f_list[k + 1:]:
         h = gf_mul(h, gf_from_int_poly(f_i, p), p, K)
 
     s, t, _ = gf_gcdex(g, h, p, K)
@@ -244,7 +244,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     s = gf_to_int_poly(s, p)
     t = gf_to_int_poly(t, p)
 
-    for _ in range(1, d+1):
+    for _ in range(1, d + 1):
         (g, h, s, t), m = dup_zz_hensel_step(m, f, g, h, s, t, K), m**2
 
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
@@ -261,12 +261,12 @@ def dup_zz_zassenhaus(f, K):
 
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = int(abs(K.sqrt(K(n+1))*2**n*A*b))
-    C = int((n+1)**(2*n)*A**(2*n-1))
+    B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
+    C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
 
-    for p in xrange(3, bound+1):
+    for p in xrange(3, bound + 1):
         if not isprime(p) or b % p == 0:
             continue
 
@@ -388,7 +388,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     for i in xrange(n, -1, -2):
         g.insert(0, f[i])
 
-    for i in xrange(n-1, -1, -2):
+    for i in xrange(n - 1, -1, -2):
         h.insert(0, f[i])
 
     g = dup_sqr(dup_strip(g), K)
@@ -425,7 +425,7 @@ def dup_zz_cyclotomic_poly(n, K):
 
     for p, k in factorint(n).iteritems():
         h = dup_quo(dup_inflate(h, p, K), h, K)
-        h = dup_inflate(h, p**(k-1), K)
+        h = dup_inflate(h, p**(k - 1), K)
 
     return h
 
@@ -596,7 +596,7 @@ def dup_zz_factor(f, K):
             q, r = dup_div(f, h, K)
 
             if not r:
-                f, k = q, k+1
+                f, k = q, k +1
             else:
                 break
 
@@ -628,7 +628,7 @@ def dmp_zz_wang_non_divisors(E, cs, ct, K):
 @cythonized("u,v")
 def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     """Wang/EEZ: Test evaluation points for suitability. """
-    if not dmp_eval_tail(dmp_LC(f, K), A, u-1, K):
+    if not dmp_eval_tail(dmp_LC(f, K), A, u - 1, K):
         raise EvaluationFailed('no luck')
 
     g = dmp_eval_tail(f, A, u, K)
@@ -641,7 +641,7 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     if K.is_negative(dup_LC(h, K)):
         c, h = -c, dup_neg(h, K)
 
-    v = u-1
+    v = u -1
 
     E = [ dmp_eval_tail(t, A, v, K) for t, _ in T ]
     D = dmp_zz_wang_non_divisors(E, c, ct, K)
@@ -655,7 +655,7 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
 @cythonized("u,v,i,j,k")
 def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
     """Wang/EEZ: Compute correct leading coefficients. """
-    C, J, v = [], [0]*len(E), u-1
+    C, J, v = [], [0]*len(E), u -1
 
     for h in H:
         c = dmp_one(v, K)
@@ -665,7 +665,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
             k, e, (t, _) = 0, E[i], T[i]
 
             while not (d % e):
-                d, k = d//e, k+1
+                d, k = d//e, k +1
 
             if k != 0:
                 c, J[i] = dmp_mul(c, dmp_pow(t, k, v, K), v, K), 1
@@ -702,7 +702,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         CCC.append(dmp_mul_ground(c, cs, v, K))
         HHH.append(dmp_mul_ground(h, cs, 0, K))
 
-    f = dmp_mul_ground(f, cs**(len(H)-1), u, K)
+    f = dmp_mul_ground(f, cs**(len(H) - 1), u, K)
 
     return f, HHH, CCC
 
@@ -767,7 +767,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
             if not coeff:
                 continue
 
-            T = dup_zz_diophantine(F, n-i, p, K)
+            T = dup_zz_diophantine(F, n - i, p, K)
 
             for j, (s, t) in enumerate(zip(S, T)):
                 t = dup_mul_ground(t, coeff, K)
@@ -803,10 +803,10 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
                 break
 
             M = dmp_mul(M, m, u, K)
-            C = dmp_diff_eval_in(c, k+1, a, n, u, K)
+            C = dmp_diff_eval_in(c, k + 1, a, n, u, K)
 
             if not dmp_zero_p(C, v):
-                C = dmp_quo_ground(C, K.factorial(k+1), v, K)
+                C = dmp_quo_ground(C, K.factorial(k + 1), v, K)
                 T = dmp_zz_diophantine(G, C, A, d, p, v, K)
 
                 for i, t in enumerate(T):
@@ -828,24 +828,24 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
 @cythonized("u,v,d,dj,n,i,j,k,w")
 def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     """Wang/EEZ: Parallel Hensel lifting algorithm. """
-    S, n, v = [f], len(A), u-1
+    S, n, v = [f], len(A), u -1
 
     H = list(H)
 
     for i, a in enumerate(reversed(A[1:])):
-        s = dmp_eval_in(S[0], a, n-i, u-i, K)
-        S.insert(0, dmp_ground_trunc(s, p, v-i, K))
+        s = dmp_eval_in(S[0], a, n - i, u - i, K)
+        S.insert(0, dmp_ground_trunc(s, p, v - i, K))
 
     d = max(dmp_degree_list(f, u)[1:])
 
-    for j, s, a in zip(xrange(2, n+2), S, A):
-        G, w = list(H), j-1
+    for j, s, a in zip(xrange(2, n + 2), S, A):
+        G, w = list(H), j -1
 
-        I, J = A[:j-2], A[j-1:]
+        I, J = A[:j - 2], A[j - 1:]
 
         for i, (h, lc) in enumerate(zip(H, LC)):
-            lc = dmp_ground_trunc(dmp_eval_tail(lc, J, v, K), p, w-1, K)
-            H[i] = [lc] + dmp_raise(h[1:], 1, w-1, K)
+            lc = dmp_ground_trunc(dmp_eval_tail(lc, J, v, K), p, w - 1, K)
+            H[i] = [lc] + dmp_raise(h[1:], 1, w - 1, K)
 
         m = dmp_nest([K.one, -a], w, K)
         M = dmp_one(w, K)
@@ -859,14 +859,14 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
                 break
 
             M = dmp_mul(M, m, w, K)
-            C = dmp_diff_eval_in(c, k+1, a, w, w, K)
+            C = dmp_diff_eval_in(c, k + 1, a, w, w, K)
 
-            if not dmp_zero_p(C, w-1):
-                C = dmp_quo_ground(C, K.factorial(k+1), w-1, K)
-                T = dmp_zz_diophantine(G, C, I, d, p, w-1, K)
+            if not dmp_zero_p(C, w - 1):
+                C = dmp_quo_ground(C, K.factorial(k + 1), w - 1, K)
+                T = dmp_zz_diophantine(G, C, I, d, p, w - 1, K)
 
                 for i, (h, t) in enumerate(zip(H, T)):
-                    h = dmp_add_mul(h, dmp_raise(t, 1, w-1, K), M, w, K)
+                    h = dmp_add_mul(h, dmp_raise(t, 1, w - 1, K), M, w, K)
                     H[i] = dmp_ground_trunc(h, p, w, K)
 
                 h = dmp_sub(s, dmp_expand(H, w, K), w, K)
@@ -913,7 +913,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
     randint = _randint(seed)
 
-    ct, T = dmp_zz_factor(dmp_LC(f, K), u-1, K)
+    ct, T = dmp_zz_factor(dmp_LC(f, K), u - 1, K)
 
     b = dmp_zz_mignotte_bound(f, u, K)
     p = K(nextprime(b))
@@ -1003,7 +1003,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors:  # pragma: no cover
         if query('EEZ_RESTART_IF_NEEDED'):
-            return dmp_zz_wang(orig_f, u, K, mod+1)
+            return dmp_zz_wang(orig_f, u, K, mod + 1)
         else:
             raise ExtraneousFactors(
                 "we need to restart algorithm with better parameters")
@@ -1087,13 +1087,13 @@ def dmp_zz_factor(f, u, K):
                 q, r = dmp_div(f, h, u, K)
 
                 if dmp_zero_p(r, u):
-                    f, k = q, k+1
+                    f, k = q, k +1
                 else:
                     break
 
             factors.append((h, k))
 
-    for g, k in dmp_zz_factor(G, u-1, K)[1]:
+    for g, k in dmp_zz_factor(G, u - 1, K)[1]:
         factors.insert(0, ([g], k))
 
     return cont, _sort_factors(factors)
@@ -1314,7 +1314,7 @@ def dmp_factor_list(f, u, K0):
         if not j:
             continue
 
-        term = {(0,)*(u-i) + (1,) + (0,)*i: K0.one}
+        term = {(0,)*(u - i) + (1,) + (0,)*i: K0.one}
         factors.insert(0, (dmp_from_dict(term, u, K0), j))
 
     return coeff, _sort_factors(factors)

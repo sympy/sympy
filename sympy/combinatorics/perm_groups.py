@@ -1372,7 +1372,7 @@ class PermutationGroup(Basic):
         nb = len(base)
         assert nb == len(un)
         v = [0]*m
-        for i in range(nb-1, -1, -1):
+        for i in range(nb - 1, -1, -1):
             j = base[i]
             rank, c = divmod(rank, un[i])
             v[j] = c
@@ -1602,7 +1602,7 @@ class PermutationGroup(Basic):
                 A = N
                 N = []
                 for a in A:
-                    for g in gens[:i+1]:
+                    for g in gens[:i + 1]:
                         ag = _af_rmul(a, g)
                         if tuple(ag) not in set_element_list:
                             # produce G_i*g
@@ -1881,7 +1881,7 @@ class PermutationGroup(Basic):
         """
         if self._is_nilpotent is None:
             lcs = self.lower_central_series()
-            terminator = lcs[len(lcs)-1]
+            terminator = lcs[len(lcs) - 1]
             gens = terminator.generators
             degree = self.degree
             identity = _af_new(range(degree))
@@ -2281,12 +2281,12 @@ class PermutationGroup(Basic):
         # the block size must divide the degree of the group
         if k > self.max_div:
             return [0]*n
-        for i in range(k-1):
-            parents[points[i+1]] = points[0]
-            not_rep.append(points[i+1])
+        for i in range(k - 1):
+            parents[points[i + 1]] = points[0]
+            not_rep.append(points[i + 1])
         ranks[points[0]] = k
         i = 0
-        len_not_rep = k-1
+        len_not_rep = k -1
         while i < len_not_rep:
             temp = not_rep[i]
             i += 1
@@ -2895,7 +2895,7 @@ class PermutationGroup(Basic):
         i = len(JGr.gens) - 1
         while not JGr.gens[i]:
             i -= 1
-        JGr.gens = JGr.gens[:i+1]
+        JGr.gens = JGr.gens[:i + 1]
         self._base = base
         self._stabilizer_cosets_n = scn
         strong_gens = self.generators[:]
@@ -3547,7 +3547,7 @@ class PermutationGroup(Basic):
         nu = [None]*base_len
         # this corresponds to the element smaller than all points
         mu[l] = degree + 1
-        temp_index = len(basic_orbits[l])+1-len(res_basic_orbits_init_base[l])
+        temp_index = len(basic_orbits[l]) + 1 - len(res_basic_orbits_init_base[l])
         if temp_index >= len(basic_orbits[l]):
             # this corresponds to the element larger than all points
             nu[l] = base_ordering[degree]
@@ -3581,7 +3581,7 @@ class PermutationGroup(Basic):
                 orbit_reps[l + 1] = reps
                 # line 13: amend sorted orbits
                 l += 1
-                temp_orbit = [computed_words[l-1](point) for point
+                temp_orbit = [computed_words[l - 1](point) for point
                              in basic_orbits[l]]
                 temp_orbit.sort(key=lambda point: base_ordering[point])
                 sorted_orbits[l] = temp_orbit
@@ -3606,7 +3606,7 @@ class PermutationGroup(Basic):
                 gamma = temp_element(temp_point)
                 u[l] = transversals[l][gamma]
                 # update computed words
-                computed_words[l] = rmul(computed_words[l-1], u[l])
+                computed_words[l] = rmul(computed_words[l - 1], u[l])
             # lines 17 & 18: apply the tests to the group element found
             g = computed_words[l]
             temp_point = g(base[l])

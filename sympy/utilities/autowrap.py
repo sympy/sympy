@@ -312,9 +312,9 @@ setup(
     def _declare_arg(self, arg):
         t = arg.get_datatype('c')
         if arg.dimensions:
-            return "%s *%s"%(t, str(arg.name))
+            return "%s *%s" % (t, str(arg.name))
         else:
-            return "%s %s"%(t, str(arg.name))
+            return "%s %s" % (t, str(arg.name))
 
 
 class F2PyCodeWrapper(CodeWrapper):

@@ -162,7 +162,7 @@ class Routine(object):
                 out_arg = expr.lhs
                 expr = expr.rhs
                 if isinstance(out_arg, Indexed):
-                    dims = tuple([ (S.Zero, dim-1) for dim in out_arg.shape])
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
                     symbol = out_arg.base.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
@@ -404,7 +404,7 @@ class Result(ResultBase):
         if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
 
-        temp_var = Variable(Symbol('result_%s'%hash(expr)),
+        temp_var = Variable(Symbol('result_%s' % hash(expr)),
                 datatype=datatype, dimensions=None, precision=precision)
         ResultBase.__init__(self, expr, temp_var.name)
         self._temp_variable = temp_var
@@ -760,14 +760,14 @@ class FCodeGen(CodeGen):
             elif isinstance(arg, OutputArgument):
                 typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
-                raise CodeGenError("Unkown Argument type: %s"%type(arg))
+                raise CodeGenError("Unkown Argument type: %s" % type(arg))
 
             fprint = self._get_symbol
 
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s"%(
-                    fprint(dim[0]+1), fprint(dim[1]+1))
+                dimstr = ", ".join(["%s:%s" %(
+                    fprint(dim[0] + 1), fprint(dim[1] + 1))
                     for dim in arg.dimensions])
                 typeinfo += ", dimension(%s)" % dimstr
                 array_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
@@ -852,7 +852,7 @@ class FCodeGen(CodeGen):
             lowercase = set(map(lambda x: str(x).lower(), r.variables))
             orig_case = set(map(lambda x: str(x), r.variables))
             if len(lowercase) < len(orig_case):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s"%
+                raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension

@@ -10,7 +10,7 @@ f = Function('f')
 
 def test_components():
     assert components(x*y, x) == set([x])
-    assert components(1/(x+y), x) == set([x])
+    assert components(1/(x + y), x) == set([x])
     assert components(sin(x), x) == set([sin(x), x])
     assert components(sin(x)*sqrt(log(x)), x) == \
        set([log(x), sin(x), sqrt(log(x)), x])
@@ -36,7 +36,7 @@ def test_heurisch_polynomials():
 def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
     assert heurisch(1/(2 + x), x) == log(x + 2)
-    assert heurisch(1/(x+sin(y)), x) == log(x+sin(y))
+    assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
     # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
     # result in the first case. The difference is because sympy changes
@@ -71,7 +71,7 @@ def test_heurisch_exp():
 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
-    assert heurisch(pi*sin(x)+1, x) == x-pi*cos(x)
+    assert heurisch(pi*sin(x) + 1, x) == x - pi*cos(x)
 
     assert heurisch(cos(x), x) == sin(x)
     assert heurisch(tan(x), x) in [
@@ -91,7 +91,7 @@ def test_heurisch_trigonometric():
     assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - \
                     2*sin(x) + 2*x*cos(x))
 
-    assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16-x**2))*asin(x/4) \
+    assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
 
@@ -103,7 +103,7 @@ def test_heurisch_hyperbolic():
     assert heurisch(x*cosh(x), x) == x*sinh(x) - cosh(x)
 
     assert heurisch(
-        x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4+x**2)/4
+        x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4 + x**2)/4
 
 
 def test_heurisch_mixed():
@@ -126,22 +126,22 @@ def test_heurisch_special():
 
 
 def test_heurisch_symbolic_coeffs():
-    assert heurisch(1/(x+y), x) == log(x+y)
-    assert heurisch(1/(x+sqrt(2)), x) == log(x+sqrt(2))
-    assert simplify(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
+    assert heurisch(1/(x + y), x) == log(x + y)
+    assert heurisch(1/(x + sqrt(2)), x) == log(x + sqrt(2))
+    assert simplify(diff(heurisch(log(x + y + z), y), y)) == log(x + y + z)
 
 
 def test_heurisch_symbolic_coeffs_1130():
-    assert heurisch(1/(x**2+y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
+    assert heurisch(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
     I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
         (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
 
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \
-        x*sqrt(1+7*x**2)/2 + sqrt(7)*asinh(sqrt(7)*x)/14
+        x*sqrt(1 + 7*x**2)/2 + sqrt(7)*asinh(sqrt(7)*x)/14
     assert heurisch(sqrt(1 - 7*x**2), x, hints=[]) == \
-        x*sqrt(1-7*x**2)/2 + sqrt(7)*asin(sqrt(7)*x)/14
+        x*sqrt(1 - 7*x**2)/2 + sqrt(7)*asin(sqrt(7)*x)/14
 
     assert heurisch(1/sqrt(1 + 7*x**2), x, hints=[]) == \
         sqrt(7)*asinh(sqrt(7)*x)/7
@@ -182,7 +182,7 @@ def test_issue510():
 
 @XFAIL
 def test_pmint_rat():
-    f = (x**7-24*x**4-4*x**2+8*x-8) / (x**8+6*x**6+12*x**4+8*x**2)
+    f = (x**7 - 24*x**4 - 4*x**2 + 8*x - 8) / (x**8 + 6*x**6 + 12*x**4 + 8*x**2)
     g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4)) + log(x)
 
     assert heurisch(f, x) == g
@@ -190,8 +190,8 @@ def test_pmint_rat():
 
 @XFAIL
 def test_pmint_trig():
-    f = (x-tan(x)) / tan(x)**2 + tan(x)
-    g = (-x - tan(x)*x**2 / 2) / tan(x) + log(1+tan(x)**2) / 2
+    f = (x - tan(x)) / tan(x)**2 + tan(x)
+    g = (-x - tan(x)*x**2 / 2) / tan(x) + log(1 + tan(x)**2) / 2
 
     assert heurisch(f, x) == g
 
@@ -199,8 +199,8 @@ def test_pmint_trig():
 @slow
 @XFAIL
 def test_pmint_logexp():
-    f = (1+x+x*exp(x))*(x+log(x)+exp(x)-1)/(x+log(x)+exp(x))**2/x
-    g = 1/(x+log(x)+exp(x)) + log(x + log(x) + exp(x))
+    f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
+    g = 1/(x + log(x) + exp(x)) + log(x + log(x) + exp(x))
 
     assert heurisch(f, x) == g
 
@@ -208,8 +208,8 @@ def test_pmint_logexp():
 @slow
 @XFAIL
 def test_pmint_erf():
-    f = exp(-x**2)*erf(x)/(erf(x)**3-erf(x)**2-erf(x)+1)
-    g = sqrt(pi)/4 * (-1/(erf(x)-1) - log(erf(x)+1)/2 + log(erf(x)-1)/2)
+    f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)
+    g = sqrt(pi)/4 * (-1/(erf(x) - 1) - log(erf(x) + 1)/2 + log(erf(x) - 1)/2)
 
     assert heurisch(f, x) == g
 

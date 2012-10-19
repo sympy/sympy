@@ -306,7 +306,7 @@ class PrettyPrinter(Printer):
             x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
-            H = h+2
+            H = h +2
 
             # XXX hack!
             ascii_mode = not self._use_unicode
@@ -319,7 +319,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(vint)
             #pform.baseline = pform.height()//2  # vcenter
             pform.baseline = arg.baseline + (
-                H-h)//2    # covering the whole argument
+                H - h)//2    # covering the whole argument
 
             if len(lim) > 1:
                 # Create pretty forms for endpoints, if definite integral.
@@ -382,9 +382,9 @@ class PrettyPrinter(Printer):
         for lim in expr.limits:
             width = (func_height + 2) * 5 // 3 - 2
             sign_lines = []
-            sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
-            for i in range(func_height+1):
-                sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+            sign_lines.append(corner_chr + (horizontal_chr*width) + corner_chr)
+            for i in range(func_height + 1):
+                sign_lines.append(vertical_chr + (' '*width) + vertical_chr)
 
             pretty_sign = stringPict('')
             pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
@@ -406,7 +406,7 @@ class PrettyPrinter(Printer):
 
             height = pretty_sign.height()
             padding = stringPict('')
-            padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+            padding = prettyForm(*padding.stack(*[' ']*(height - 1)))
             pretty_sign = prettyForm(*pretty_sign.right(padding))
 
             pretty_func = prettyForm(*pretty_sign.right(pretty_func))
@@ -757,7 +757,7 @@ class PrettyPrinter(Printer):
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline=above + sz)
-        add = (sz+1)//2
+        add = (sz + 1)//2
 
         F = prettyForm(*F.left(self._print(len(e.ap))))
         F = prettyForm(*F.right(self._print(len(e.bq))))
@@ -1155,7 +1155,7 @@ class PrettyPrinter(Printer):
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:
             prod_char = u'\xd7'
-            return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+            return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
                 parenthesize=lambda set: set.is_Union or set.is_Intersection)
 
     def _print_FiniteSet(self, s):
@@ -1558,14 +1558,14 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(string))
 
     def _print_BaseVectorField(self, field):
-        s = U('PARTIAL DIFFERENTIAL')+'_'+field._coord_sys._names[field._index]
+        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys._names[field._index]
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return self._print(u'\u2146 '+pretty_symbol(string))
+            return self._print(u'\u2146 ' + pretty_symbol(string))
         else:
             pform = self._print(field)
             pform = prettyForm(*pform.parens())

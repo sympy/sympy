@@ -176,11 +176,11 @@ def test_gosper_sum_AeqB_part3():
     assert g is None
     g = gosper_sum(f3b, (n, 1, m))
     assert g is not None and simplify(g - g3b) == 0
-    g = gosper_sum(f3c, (n, 1, m-1))
+    g = gosper_sum(f3c, (n, 1, m - 1))
     assert g is not None and simplify(g - g3c) == 0
     g = gosper_sum(f3d, (n, 1, m))
     assert g is not None and simplify(g - g3d) == 0
-    g = gosper_sum(f3e, (n, 0, m-1))
+    g = gosper_sum(f3e, (n, 0, m - 1))
     assert g is None
     g = gosper_sum(f3f, (n, 4, m))
     assert g is not None and simplify(g - g3f) == 0

@@ -49,8 +49,8 @@ def test_gamma():
 
     assert gamma(x).diff(x) == gamma(x)*polygamma(0, x)
 
-    assert gamma(x - 1).expand(func=True) == gamma(x)/(x-1)
-    assert gamma(x + 2).expand(func=True, mul=False) == x*(x+1)*gamma(x)
+    assert gamma(x - 1).expand(func=True) == gamma(x)/(x - 1)
+    assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
         (x + Rational(1, 2))*gamma(x + Rational(1, 2))
@@ -86,7 +86,7 @@ def tn_branch(s, func):
 
 def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
-    assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
+    assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert lowergamma(x, y).diff(x) == \
            gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
@@ -125,7 +125,7 @@ def test_lowergamma():
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert uppergamma(4, 0) == 6
-    assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
+    assert uppergamma(x, y).diff(y) == -y**(x - 1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
     assert uppergamma(x, y).diff(x) == \
            uppergamma(x, y)*log(y) + meijerg([], [1, 1], [0, 0, x], [], y)
@@ -149,7 +149,7 @@ def test_uppergamma():
     assert uppergamma(3, exp_polar(4*pi*I)*x) == uppergamma(3, x)
     assert uppergamma(y, exp_polar(5*pi*I)*x) == \
            exp(4*I*pi*y)*uppergamma(y, x*exp_polar(pi*I)) + \
-               gamma(y)*(1-exp(4*pi*I*y))
+               gamma(y)*(1 - exp(4*pi*I*y))
     assert uppergamma(-2, exp_polar(5*pi*I)*x) == \
            uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 
@@ -266,11 +266,11 @@ def test_polygamma_expand_func():
 
 
 def test_loggamma():
-    s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x, n=4)
-    s2 = (-log(2*x)-1)/(2*x) - log(x/pi)/2 + (4-log(2*x))*x/24 + O(x**2)
+    s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
+    s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2)
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
-    s2 = (1/x-S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
+    s2 = (1/x - S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
          x/12 - x**3/360 + x**5/1260 + O(x**7)
     assert ((s1 - s2).expand(force=True)).removeO() == 0
 
@@ -296,5 +296,5 @@ def test_polygamma_expansion():
 
 def test_beta_function():
     x, y = Symbol('x'), Symbol('y')
-    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x+y)
+    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x + y)
     assert beta(x, y) == beta(y, x)  # Symmetric

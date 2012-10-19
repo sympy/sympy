@@ -106,7 +106,7 @@ def _check_cycles_alt_sym(perm):
                 j = af[j]
                 used.add(j)
             total_len += current_len
-            if current_len > n//2 and current_len < n-2 and isprime(current_len):
+            if current_len > n//2 and current_len < n - 2 and isprime(current_len):
                 return True
     return False
 

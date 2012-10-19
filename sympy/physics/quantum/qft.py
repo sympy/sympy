@@ -122,7 +122,7 @@ class Fourier(Gate):
 
         #Make a matrix that has the basic Fourier Transform Matrix
         arrayFT = [[omega**(
-            i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
+            i*j % size)/sqrt(size) for i in range(size)] for j in range(size)]
         matrixFT = Matrix(arrayFT)
 
         #Embed the FT Matrix in a higher space, if necessary
@@ -130,7 +130,7 @@ class Fourier(Gate):
             matrixFT = matrix_tensor_product(eye(2**self.label[0]), matrixFT)
         if self.min_qubits < nqubits:
             matrixFT = matrix_tensor_product(
-                matrixFT, eye(2**(nqubits-self.min_qubits)))
+                matrixFT, eye(2**(nqubits - self.min_qubits)))
 
         return matrixFT
 
@@ -145,7 +145,7 @@ class Fourier(Gate):
     @property
     def size(self):
         """Size is the size of the QFT matrix"""
-        return 2**(self.label[1]-self.label[0])
+        return 2**(self.label[1] - self.label[0])
 
     @property
     def omega(self):
@@ -165,10 +165,10 @@ class QFT(Fourier):
         circuit = 1
         for level in reversed(range(start, finish)):
             circuit = HadamardGate(level)*circuit
-            for i in range(level-start):
-                circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
-        for i in range((finish-start)//2):
-            circuit = SwapGate(i+start, finish-i-1)*circuit
+            for i in range(level - start):
+                circuit = CGate(level - i - 1, RkGate(level, i + 2))*circuit
+        for i in range((finish - start)//2):
+            circuit = SwapGate(i + start, finish - i - 1)*circuit
         return circuit
 
     def _apply_operator_Qubit(self, qubits, **options):
@@ -193,11 +193,11 @@ class IQFT(Fourier):
         start = self.args[0]
         finish = self.args[1]
         circuit = 1
-        for i in range((finish-start)//2):
-            circuit = SwapGate(i+start, finish-i-1)*circuit
+        for i in range((finish - start)//2):
+            circuit = SwapGate(i + start, finish - i - 1)*circuit
         for level in range(start, finish):
-            for i in reversed(range(level-start)):
-                circuit = CGate(level-i-1, RkGate(level, -i-2))*circuit
+            for i in reversed(range(level - start)):
+                circuit = CGate(level - i - 1, RkGate(level, -i - 2))*circuit
             circuit = HadamardGate(level)*circuit
         return circuit
 

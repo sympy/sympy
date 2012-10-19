@@ -49,10 +49,10 @@ def test_cross():
 def test_cross_different_frames():
     assert cross(N.x, A.x) == sin(q1)*A.z
     assert cross(N.x, A.y) == cos(q1)*A.z
-    assert cross(N.x, A.z) == -sin(q1)*A.x-cos(q1)*A.y
+    assert cross(N.x, A.z) == -sin(q1)*A.x - cos(q1)*A.y
     assert cross(N.y, A.x) == -cos(q1)*A.z
     assert cross(N.y, A.y) == sin(q1)*A.z
-    assert cross(N.y, A.z) == cos(q1)*A.x-sin(q1)*A.y
+    assert cross(N.y, A.z) == cos(q1)*A.x - sin(q1)*A.y
     assert cross(N.z, A.x) == A.y
     assert cross(N.z, A.y) == -A.x
     assert cross(N.z, A.z) == 0
@@ -103,9 +103,9 @@ def test_express():
             sin(q2)*cos(q1)*B.z)
     assert express(N.z, B) == (sin(q2)*B.y + cos(q2)*B.z)
     assert express(N.x, C) == (
-            (cos(q1)*cos(q3)-sin(q1)*sin(q2)*sin(q3))*C.x -
+            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*C.x -
             sin(q1)*cos(q2)*C.y +
-            (sin(q3)*cos(q1)+sin(q1)*sin(q2)*cos(q3))*C.z)
+            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*C.z)
     assert express(N.y, C) == (
             (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*C.x +
             cos(q1)*cos(q2)*C.y +
@@ -144,14 +144,14 @@ def test_express():
     assert express(B.z, C) == (-sin(q3)*C.x + cos(q3)*C.z)
 
     assert express(C.x, N) == (
-            (cos(q1)*cos(q3)-sin(q1)*sin(q2)*sin(q3))*N.x +
-            (sin(q1)*cos(q3)+sin(q2)*sin(q3)*cos(q1))*N.y -
+            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*N.x +
+            (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*N.y -
                 sin(q3)*cos(q2)*N.z)
     assert express(C.y, N) == (
             -sin(q1)*cos(q2)*N.x + cos(q1)*cos(q2)*N.y + sin(q2)*N.z)
     assert express(C.z, N) == (
-            (sin(q3)*cos(q1)+sin(q1)*sin(q2)*cos(q3))*N.x +
-            (sin(q1)*sin(q3)-sin(q2)*cos(q1)*cos(q3))*N.y +
+            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*N.x +
+            (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*N.y +
             cos(q2)*cos(q3)*N.z)
     assert express(C.x, A) == (cos(q3)*A.x + sin(q2)*sin(q3)*A.y -
             sin(q3)*cos(q2)*A.z)

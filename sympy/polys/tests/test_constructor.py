@@ -33,7 +33,7 @@ def test_construct_domain():
     assert construct_domain([7, S(1)/2, sqrt(2)], extension=True) == \
         (alg, [alg.convert(7), alg.convert(S(1)/2), alg.convert(sqrt(2))])
 
-    alg = QQ.algebraic_field(sqrt(2)+sqrt(3))
+    alg = QQ.algebraic_field(sqrt(2) + sqrt(3))
 
     assert construct_domain([7, sqrt(2), sqrt(3)], extension=True) == \
         (alg, [alg.convert(7), alg.convert(sqrt(2)), alg.convert(sqrt(3))])

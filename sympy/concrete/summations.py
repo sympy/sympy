@@ -243,7 +243,7 @@ class Sum(Expr):
         s = S.Zero
         if m:
             for k in range(m):
-                term = f.subs(i, a+k)
+                term = f.subs(i, a + k)
                 if (eps and term and abs(term.evalf(3)) < eps):
                     return s, abs(term)
                 s += term
@@ -261,9 +261,9 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in xrange(1, n+2):
+        for k in xrange(1, n + 2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
@@ -334,7 +334,7 @@ def telescopic_direct(L, R, n, limits):
     (i, a, b) = limits
     s = 0
     for m in xrange(n):
-        s += L.subs(i, a+m) + R.subs(i, b-m)
+        s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
 
 
@@ -416,7 +416,7 @@ def eval_sum_direct(expr, limits):
 def eval_sum_symbolic(f, limits):
     (i, a, b) = limits
     if not f.has(i):
-        return f*(b-a+1)
+        return f*(b - a + 1)
 
     # Linearity
     if f.is_Mul:
@@ -459,7 +459,7 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
-                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+                return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
                     return C.harmonic(b) - C.harmonic(a - 1)
@@ -471,7 +471,7 @@ def eval_sum_symbolic(f, limits):
     c2 = C.Wild('c2', exclude=[i])
     c3 = C.Wild('c3', exclude=[i])
 
-    e = f.match(c1**(c2*i+c3))
+    e = f.match(c1**(c2*i + c3))
 
     if e is not None:
         c1 = c1.subs(e)
@@ -479,7 +479,7 @@ def eval_sum_symbolic(f, limits):
         c3 = c3.subs(e)
 
         # TODO: more general limit handling
-        return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
+        return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
 
     if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):

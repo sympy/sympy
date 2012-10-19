@@ -387,7 +387,7 @@ class LatexPrinter(Printer):
         if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
-            tex = r"\i" + "i"*(len(expr.limits)-1) + "nt"
+            tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
             symbols = [r"\, d%s" % self._print(symbol[0])
                                                for symbol in expr.limits]
 
@@ -1005,9 +1005,9 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         if mat.is_Add or mat.is_Mul:
-            return r"\left(%s\right)^T"%self._print(mat)
+            return r"\left(%s\right)^T" % self._print(mat)
         else:
-            return "%s^T"%self._print(mat)
+            return "%s^T" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         return self._print_Add(expr)
@@ -1018,9 +1018,9 @@ class LatexPrinter(Printer):
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         if base.is_Add or base.is_Mul:
-            return r"\left(%s\right)^{%s}"%(self._print(base), self._print(exp))
+            return r"\left(%s\right)^{%s}" % (self._print(base), self._print(exp))
         else:
-            return "%s^{%s}"%(self._print(base), self._print(exp))
+            return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
         return r"\bold{0}"
@@ -1062,13 +1062,13 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+            return self._print(p.sets[0]) + "^%d" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+ self._print(d.as_boolean())
+            return 'Domain: ' + self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -1135,7 +1135,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{R}"
 
     def _print_TransformationSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}"%(
+        return r"\left\{%s\; |\; %s \in %s\right\}" %(
                 self._print(s.lamda.expr),
                 ', '.join([self._print(var) for var in s.lamda.variables]),
                 self._print(s.base_set))
@@ -1363,7 +1363,7 @@ class LatexPrinter(Printer):
             string = field._coord_sys._names[field._index]
             return r'\mathbb{d}%s' % self._print(Symbol(string))
         else:
-            return 'd(%s)'%self._print(field)
+            return 'd(%s)' % self._print(field)
             string = self._print(field)
             return r'\mathbb{d}\left(%s\right)' % string
 

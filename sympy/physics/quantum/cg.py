@@ -201,9 +201,9 @@ class CG(Wigner3j):
         top = prettyForm(*top.left(' '))
 
         if not pad == bot.width():
-            bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
+            bot = prettyForm(*bot.right(' ' * (pad - bot.width())))
         if not pad == top.width():
-            top = prettyForm(*top.right(' ' * (pad-top.width())))
+            top = prettyForm(*top.right(' ' * (pad - top.width())))
         s = stringPict('C' + ' '*pad)
         s = prettyForm(*s.below(bot))
         s = prettyForm(*s.above(top))
@@ -490,17 +490,17 @@ def _cg_simp_add(e):
     other_part.append(other)
     cg_part, other = _check_varsh_872_9(cg_part)
     other_part.append(other)
-    return Add(*cg_part)+Add(*other_part)
+    return Add(*cg_part) + Add(*other_part)
 
 
 def _check_varsh_871_1(term_list):
     # Sum( CG(a,alpha,b,0,a,alpha), (alpha, -a, a)) == KroneckerDelta(b,0)
     a, alpha, b, lt = map(Wild, ('a', 'alpha', 'b', 'lt'))
     expr = lt*CG(a, alpha, b, 0, a, alpha)
-    simp = (2*a+1)*KroneckerDelta(b, 0)
+    simp = (2*a + 1)*KroneckerDelta(b, 0)
     sign = lt/abs(lt)
-    build_expr = 2*a+1
-    index_expr = a+alpha
+    build_expr = 2*a +1
+    index_expr = a + alpha
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, lt), (a, b), build_expr, index_expr)
 
 
@@ -508,10 +508,10 @@ def _check_varsh_871_2(term_list):
     # Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a))
     a, alpha, c, lt = map(Wild, ('a', 'alpha', 'c', 'lt'))
     expr = lt*CG(a, alpha, a, -alpha, c, 0)
-    simp = sqrt(2*a+1)*KroneckerDelta(c, 0)
-    sign = (-1)**(a-alpha)*lt/abs(lt)
-    build_expr = 2*a+1
-    index_expr = a+alpha
+    simp = sqrt(2*a + 1)*KroneckerDelta(c, 0)
+    sign = (-1)**(a - alpha)*lt/abs(lt)
+    build_expr = 2*a +1
+    index_expr = a + alpha
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, c, lt), (a, c), build_expr, index_expr)
 
 
@@ -525,17 +525,17 @@ def _check_varsh_872_9(term_list):
     expr = lt*CG(a, alpha, b, beta, c, gamma)**2
     simp = 1
     sign = lt/abs(lt)
-    x = abs(a-b)
-    y = abs(alpha+beta)
-    build_expr = a+b+1-Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
-    index_expr = a+b-c
+    x = abs(a - b)
+    y = abs(alpha + beta)
+    build_expr = a + b + 1 - Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
+    index_expr = a + b -c
     term_list, other1 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
 
     # For symbolic alpha,beta
-    x = abs(a-b)
-    y = a+b
-    build_expr = (y+1-x)*(x+y+1)
-    index_expr = (c-x)*(x+c)+c+gamma
+    x = abs(a - b)
+    y = a +b
+    build_expr = (y + 1 - x)*(x + y + 1)
+    index_expr = (c - x)*(x + c) + c + gamma
     term_list, other2 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
 
     # Case alpha!=alphap or beta!=betap
@@ -544,20 +544,20 @@ def _check_varsh_872_9(term_list):
     expr = CG(a, alpha, b, beta, c, gamma)*CG(a, alphap, b, betap, c, gamma)
     simp = KroneckerDelta(alpha, alphap)*KroneckerDelta(beta, betap)
     sign = sympify(1)
-    x = abs(a-b)
-    y = abs(alpha+beta)
-    build_expr = a+b+1-Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
-    index_expr = a+b-c
+    x = abs(a - b)
+    y = abs(alpha + beta)
+    build_expr = a + b + 1 - Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
+    index_expr = a + b -c
     term_list, other3 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     # For symbolic alpha,alphap,beta,betap
-    x = abs(a-b)
-    y = a+b
-    build_expr = (y+1-x)*(x+y+1)
-    index_expr = (c-x)*(x+c)+c+gamma
+    x = abs(a - b)
+    y = a +b
+    build_expr = (y + 1 - x)*(x + y + 1)
+    index_expr = (c - x)*(x + c) + c + gamma
     term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
-    return term_list, other1+other2+other4
+    return term_list, other1 + other2 + other4
 
 
 def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, build_index_expr, index_expr):
@@ -614,7 +614,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
         sub_dep = [(x, sub_1[x]) for x in dep_variables]
         cg_index = [None] * build_index_expr.subs(sub_1)
         for j in range(i, len(term_list)):
-            sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables)-len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
+            sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables) - len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
             if sub_2 is None:
                 continue
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
@@ -628,7 +628,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             [ term_list.pop(i) for i in indicies ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
-                    term_list.append( (term[2]-min_lt*term[3]) * term[1] )
+                    term_list.append( (term[2] - min_lt*term[3]) * term[1] )
             other_part += min_lt * (sign*simp).subs(sub_1)
         else:
             i += 1
@@ -663,7 +663,7 @@ def _check_varsh_sum_871_1(e):
     b = Wild('b')
     match = e.match(Sum(CG(a, alpha, b, 0, a, alpha), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return ((2*a+1)*KroneckerDelta(b, 0)).subs(match)
+        return ((2*a + 1)*KroneckerDelta(b, 0)).subs(match)
     return e
 
 
@@ -672,9 +672,9 @@ def _check_varsh_sum_871_2(e):
     alpha = symbols('alpha')
     c = Wild('c')
     match = e.match(
-        Sum((-1)**(a-alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
+        Sum((-1)**(a - alpha)*CG(a, alpha, a, -alpha, c, 0), (alpha, -a, a)))
     if match is not None and len(match) == 2:
-        return (sqrt(2*a+1)*KroneckerDelta(c, 0)).subs(match)
+        return (sqrt(2*a + 1)*KroneckerDelta(c, 0)).subs(match)
     return e
 
 

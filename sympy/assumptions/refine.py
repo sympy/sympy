@@ -121,7 +121,7 @@ def refine_Pow(expr, assumptions):
                         odd_terms.add(t)
 
                 terms -= even_terms
-                if len(odd_terms)%2:
+                if len(odd_terms) % 2:
                     terms -= odd_terms
                     new_coeff = (coeff + S.One) % 2
                 else:

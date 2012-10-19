@@ -186,13 +186,13 @@ def complex_accuracy(result):
         return im_acc
     re_size = fastlog(re)
     im_size = fastlog(im)
-    absolute_error = max(re_size-re_acc, im_size-im_acc)
+    absolute_error = max(re_size - re_acc, im_size - im_acc)
     relative_error = absolute_error - max(re_size, im_size)
     return -relative_error
 
 
 def get_abs(expr, prec, options):
-    re, im, re_acc, im_acc = evalf(expr, prec+2, options)
+    re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
@@ -254,16 +254,16 @@ def chop_parts(value, prec):
     """
     re, im, re_acc, im_acc = value
     # Method 1: chop based on absolute value
-    if re and re not in _infs_nan and (fastlog(re) < -prec+4):
+    if re and re not in _infs_nan and (fastlog(re) < -prec + 4):
         re, re_acc = None, None
-    if im and im not in _infs_nan and (fastlog(im) < -prec+4):
+    if im and im not in _infs_nan and (fastlog(im) < -prec + 4):
         im, im_acc = None, None
     # Method 2: chop if inaccurate and relatively small
     if re and im:
         delta = fastlog(re) - fastlog(im)
-        if re_acc < 2 and (delta - re_acc <= -prec+4):
+        if re_acc < 2 and (delta - re_acc <= -prec + 4):
             re, re_acc = None, None
-        if im_acc < 2 and (delta - im_acc >= prec-4):
+        if im_acc < 2 and (delta - im_acc >= prec - 4):
             im, im_acc = None, None
     return re, im, re_acc, im_acc
 
@@ -291,11 +291,11 @@ def get_integer_part(expr, no, options, return_ints=False):
     # We now know the size, so we can calculate how much extra precision
     # (if any) is needed to get within the nearest integer
     if ire and iim:
-        gap = max(fastlog(ire)-ire_acc, fastlog(iim)-iim_acc)
+        gap = max(fastlog(ire) - ire_acc, fastlog(iim) - iim_acc)
     elif ire:
-        gap = fastlog(ire)-ire_acc
+        gap = fastlog(ire) - ire_acc
     elif iim:
-        gap = fastlog(iim)-iim_acc
+        gap = fastlog(iim) - iim_acc
     else:
         # ... or maybe the expression was exactly zero
         return None, None, None, None
@@ -304,7 +304,7 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     if gap >= -margin:
         ire, iim, ire_acc, iim_acc = \
-             evalf(expr, margin+assumed_size+gap, options)
+             evalf(expr, margin + assumed_size + gap, options)
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
@@ -574,7 +574,7 @@ def evalf_pow(v, prec, options):
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
         prec += int(math.log(abs(p), 2))
-        re, im, re_acc, im_acc = evalf(base, prec+5, options)
+        re, im, re_acc, im_acc = evalf(base, prec + 5, options)
         # Real to integer power
         if re and not im:
             return mpf_pow_int(re, p, target_prec), None, target_prec, None
@@ -600,7 +600,7 @@ def evalf_pow(v, prec, options):
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = evalf(base, prec+5, options)
+        xre, xim, _, _ = evalf(base, prec + 5, options)
         # General complex square root
         if xim:
             re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
@@ -635,7 +635,7 @@ def evalf_pow(v, prec, options):
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
-    xre, xim, _, _ = evalf(base, prec+5, options)
+    xre, xim, _, _ = evalf(base, prec + 5, options)
     # 0**y
     if not (xre or xim):
         return None, None, None, None
@@ -724,7 +724,7 @@ def evalf_trig(v, prec, options):
 
 def evalf_log(expr, prec, options):
     arg = expr.args[0]
-    workprec = prec+10
+    workprec = prec + 10
     xre, xim, xacc, _ = evalf(arg, workprec, options)
 
     if xim:
@@ -755,7 +755,7 @@ def evalf_log(expr, prec, options):
 
 def evalf_atan(v, prec, options):
     arg = v.args[0]
-    xre, xim, reacc, imacc = evalf(arg, prec+5, options)
+    xre, xim, reacc, imacc = evalf(arg, prec + 5, options)
     if xre is xim is None:
         return (None,)*4
     if xim:
@@ -831,9 +831,9 @@ def do_integral(expr, prec, options):
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
     try:
-        mp.prec = prec+5
-        xlow = as_mpmath(xlow, prec+15, options)
-        xhigh = as_mpmath(xhigh, prec+15, options)
+        mp.prec = prec +5
+        xlow = as_mpmath(xlow, prec + 15, options)
+        xhigh = as_mpmath(xhigh, prec + 15, options)
 
         # Integration is like summation, and we can phone home from
         # the integrand function to update accuracy summation style
@@ -862,13 +862,13 @@ def do_integral(expr, prec, options):
             A = C.Wild('A', exclude=[x])
             B = C.Wild('B', exclude=[x])
             D = C.Wild('D')
-            m = func.match(C.cos(A*x+B)*D)
+            m = func.match(C.cos(A*x + B)*D)
             if not m:
-                m = func.match(C.sin(A*x+B)*D)
+                m = func.match(C.sin(A*x + B)*D)
             if not m:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
-            period = as_mpmath(2*S.Pi/m[A], prec+15, options)
+            period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
             result = quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
@@ -957,7 +957,7 @@ def check_convergence(numer, denom, n):
         return rate, constant, 0
     pc = npol.all_coeffs()[1]
     qc = dpol.all_coeffs()[1]
-    return rate, constant, (qc-pc)/dpol.LC()
+    return rate, constant, (qc - pc)/dpol.LC()
 
 
 def hypsum(expr, n, start, prec):
@@ -970,7 +970,7 @@ def hypsum(expr, n, start, prec):
     from sympy import hypersimp, lambdify
 
     if start:
-        expr = expr.subs(n, n+start)
+        expr = expr.subs(n, n + start)
     hs = hypersimp(expr, n)
     if hs is None:
         raise NotImplementedError("a hypergeometric series is required")
@@ -991,8 +991,8 @@ def hypsum(expr, n, start, prec):
         s = term
         k = 1
         while abs(term) > 5:
-            term *= MPZ(func1(k-1))
-            term //= MPZ(func2(k-1))
+            term *= MPZ(func1(k - 1))
+            term //= MPZ(func2(k - 1))
             s += term
             k += 1
         return from_man_exp(s, -prec)
@@ -1012,8 +1012,8 @@ def hypsum(expr, n, start, prec):
         def summand(k, _term=[term]):
             if k:
                 k = int(k)
-                _term[0] *= MPZ(func1(k-1))
-                _term[0] //= MPZ(func2(k-1))
+                _term[0] *= MPZ(func1(k - 1))
+                _term[0] //= MPZ(func2(k - 1))
             return make_mpf(from_man_exp(_term[0], -prec2))
 
         orig = mp.prec
@@ -1031,7 +1031,7 @@ def evalf_sum(expr, prec, options):
     if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
             len(limits[0]) != 3:
         raise NotImplementedError
-    prec2 = prec+10
+    prec2 = prec + 10
     try:
         n, a, b = limits[0]
         if b != S.Infinity or a != int(a):
@@ -1238,7 +1238,7 @@ class EvalfMixin(object):
         if quad is not None:
             options['quad'] = quad
         try:
-            result = evalf(self, prec+4, options)
+            result = evalf(self, prec + 4, options)
         except NotImplementedError:
             # Fall back to the ordinary evalf
             v = self._eval_evalf(prec)

@@ -36,7 +36,7 @@ def dpll_satisfiable(expr):
         return result
     output = {}
     for key in result:
-        output.update({symbols[key-1]: result[key]})
+        output.update({symbols[key - 1]: result[key]})
     return output
 
 

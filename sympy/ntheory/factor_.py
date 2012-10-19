@@ -172,7 +172,7 @@ def trailing(n):
     t = 0
     p = 8
     while not n & 1:
-        while not n & ((1<<p)-1):
+        while not n & ((1<<p) - 1):
             n >>= p
             t += p
             p *= 2
@@ -1125,7 +1125,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                         if c:
                             # factor it and let _trial do the update
                             ps = factorint(c,
-                                            limit=limit-1,
+                                            limit=limit - 1,
                                             use_trial=use_trial,
                                             use_rho=use_rho,
                                             use_pm1=use_pm1,
@@ -1148,7 +1148,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                         if c:
                             # factor it and let _trial do the update
                             ps = factorint(c,
-                                            limit=limit-1,
+                                            limit=limit - 1,
                                             use_trial=use_trial,
                                             use_rho=use_rho,
                                             use_pm1=use_pm1,
@@ -1303,7 +1303,7 @@ def divisor_count(n, modulus=1):
             return 0
     if n == 0:
         return 0
-    return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])
+    return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
 def totient(n):
@@ -1327,5 +1327,5 @@ def totient(n):
     factors = factorint(n)
     t = 1
     for p, k in factors.iteritems():
-        t *= (p-1) * p**(k-1)
+        t *= (p - 1) * p**(k - 1)
     return t

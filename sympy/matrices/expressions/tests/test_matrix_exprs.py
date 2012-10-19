@@ -71,8 +71,8 @@ def test_trace():
     assert Trace(A.T) == Trace(A)
 
     i, j = symbols('i,j')
-    F = FunctionMatrix(3, 3, Lambda((i, j), i+j))
-    assert Trace(F).doit() == (0+0) + (1+1) + (2+2)
+    F = FunctionMatrix(3, 3, Lambda((i, j), i + j))
+    assert Trace(F).doit() == (0 + 0) + (1 + 1) + (2 + 2)
 
     raises(TypeError, lambda: Trace(S.One))
 
@@ -119,17 +119,17 @@ def test_BlockMatrix():
     B = MatrixSymbol('B', n, k)
     C = MatrixSymbol('C', l, m)
     D = MatrixSymbol('D', l, k)
-    M = MatrixSymbol('M', m+k, p)
-    N = MatrixSymbol('N', l+n, k+m)
+    M = MatrixSymbol('M', m + k, p)
+    N = MatrixSymbol('N', l + n, k + m)
     X = BlockMatrix(Matrix([[A, B], [C, D]]))
 
     # block_collapse does nothing on normal inputs
     E = MatrixSymbol('E', n, m)
-    assert block_collapse(A+2*E) == A+2*E
+    assert block_collapse(A + 2*E) == A + 2*E
     F = MatrixSymbol('F', m, m)
     assert block_collapse(E.T*A*F) == E.T*A*F
 
-    assert X.shape == (l+n, k+m)
+    assert X.shape == (l + n, k + m)
     assert (block_collapse(Transpose(X)) ==
             BlockMatrix(Matrix([[A.T, C.T], [B.T, D.T]])))
     assert Transpose(X).shape == X.shape[::-1]
@@ -138,17 +138,17 @@ def test_BlockMatrix():
     # Test that BlockMatrices and MatrixSymbols can still mix
     assert (X*M).is_Mul
     assert X._blockmul(M).is_Mul
-    assert (X*M).shape == (n+l, p)
-    assert (X+N).is_Add
+    assert (X*M).shape == (n + l, p)
+    assert (X + N).is_Add
     assert X._blockadd(N).is_Add
-    assert (X+N).shape == X.shape
+    assert (X + N).shape == X.shape
 
     E = MatrixSymbol('E', m, 1)
     F = MatrixSymbol('F', k, 1)
 
     Y = BlockMatrix(Matrix([[E], [F]]))
 
-    assert (X*Y).shape == (l+n, 1)
+    assert (X*Y).shape == (l + n, 1)
     assert block_collapse(X*Y).blocks[0, 0] == A*E + B*F
     assert block_collapse(X*Y).blocks[1, 0] == C*E + D*F
     assert (block_collapse(Transpose(block_collapse(Transpose(X*Y)))) ==
@@ -166,7 +166,7 @@ def test_BlockMatrix():
     Z = MatrixSymbol('Z', *A.shape)
 
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
-    assert block_collapse(Ab+Z) == BlockMatrix([[A+Z]])
+    assert block_collapse(Ab + Z) == BlockMatrix([[A + Z]])
 
 
 def test_BlockMatrix_Trace():
@@ -186,18 +186,18 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert block_collapse(X+Identity(m+n)) == BlockMatrix(
-        [[A+Identity(n), B], [C, D+Identity(m)]])
-    Q = X+Identity(m+n)
+    assert block_collapse(X + Identity(m + n)) == BlockMatrix(
+        [[A + Identity(n), B], [C, D + Identity(m)]])
+    Q = X + Identity(m + n)
     assert block_collapse(Inverse(Q)) == Inverse(block_collapse(Q))
 
-    assert (X + MatrixSymbol('Q', n+m, n+m)).is_Add
-    assert (X * MatrixSymbol('Q', n+m, n+m)).is_Mul
+    assert (X + MatrixSymbol('Q', n + m, n + m)).is_Add
+    assert (X * MatrixSymbol('Q', n + m, n + m)).is_Mul
 
     assert Y.I.blocks[0, 0] == A.I
     assert Inverse(X, expand=True) == BlockMatrix([
-        [(-B*D.I*C + A).I, -A.I*B*(D+-C*A.I*B).I],
-        [-(D-C*A.I*B).I*C*A.I, (D-C*A.I*B).I]])
+        [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
+        [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
     assert Inverse(X, expand=False).is_Inverse
     assert X.inverse().is_Inverse
@@ -213,29 +213,29 @@ def test_BlockDiagMatrix():
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', m, m)
     C = MatrixSymbol('C', l, l)
-    M = MatrixSymbol('M', n+m+l, n+m+l)
+    M = MatrixSymbol('M', n + m + l, n + m + l)
 
     X = BlockDiagMatrix(A, B, C)
     Y = BlockDiagMatrix(A, 2*B, 3*C)
 
     assert X.blocks[1, 1] == B
-    assert X.shape == (n+m+l, n+m+l)
-    assert all(X.blocks[i, j].is_ZeroMatrix if i!=j else X.blocks[i, j] in [A, B, C]
+    assert X.shape == (n + m + l, n + m + l)
+    assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
 
     assert block_collapse(X.I * X).is_Identity
 
     assert block_collapse(X*X) == BlockDiagMatrix(A*A, B*B, C*C)
 
-    assert block_collapse(X+X) == BlockDiagMatrix(2*A, 2*B, 2*C)
+    assert block_collapse(X + X) == BlockDiagMatrix(2*A, 2*B, 2*C)
 
     assert block_collapse(X*Y) == BlockDiagMatrix(A*A, 2*B*B, 3*C*C)
 
-    assert block_collapse(X+Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
+    assert block_collapse(X + Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
 
     # Ensure that BlockDiagMatrices can still interact with normal MatrixExprs
     assert (X*(2*M)).is_Mul
-    assert (X+(2*M)).is_Add
+    assert (X + (2*M)).is_Add
 
     assert (X._blockmul(M)).is_Mul
     assert (X._blockadd(M)).is_Add
@@ -246,10 +246,10 @@ def test_ZeroMatrix():
     A = MatrixSymbol('A', n, m)
     Z = ZeroMatrix(n, m)
 
-    assert A+Z == A
+    assert A + Z == A
     assert A*Z.T == ZeroMatrix(n, n)
     assert Z*A.T == ZeroMatrix(n, n)
-    assert A-A == ZeroMatrix(*A.shape)
+    assert A - A == ZeroMatrix(*A.shape)
 
     assert Transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
@@ -274,13 +274,13 @@ def test_MatAdd():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, m)
 
-    assert (A+B).shape == A.shape
+    assert (A + B).shape == A.shape
     assert MatAdd(A, -A, 2*B).is_Mul
 
     raises(ShapeError, lambda: A + B.T)
-    raises(ValueError, lambda: A+1)
-    raises(ValueError, lambda: 5+A)
-    raises(ValueError, lambda: 5-A)
+    raises(ValueError, lambda: A + 1)
+    raises(ValueError, lambda: 5 + A)
+    raises(ValueError, lambda: 5 - A)
 
     assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
     assert MatAdd(ZeroMatrix(n, m), S(0)) == ZeroMatrix(n, m)
@@ -348,7 +348,7 @@ def test_linear_factors():
     raises(ValueError, lambda: linear_factors(2*A*A, A))
     raises(ValueError, lambda: linear_factors(2*A*B, A, B))
     raises(ShapeError, lambda: linear_factors(2*A*B, D))
-    raises(ShapeError, lambda: linear_factors(2*A*B+C, D))
+    raises(ShapeError, lambda: linear_factors(2*A*B + C, D))
 
     assert linear_factors(A, A) == {A: Identity(n)}
 
@@ -364,7 +364,7 @@ def test_matrixify():
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
-    assert matrixify(n+m) == n+m
+    assert matrixify(n + m) == n +m
     assert matrixify(Mul(A, B)) == MatMul(A, B)
 
 

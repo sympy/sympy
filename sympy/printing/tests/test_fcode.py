@@ -87,14 +87,14 @@ def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"
     x = symbols('x')
     assert fcode(4*I) == "      cmplx(0,4)"
-    assert fcode(3+4*I) == "      cmplx(3,4)"
-    assert fcode(3+4*I+x) == "      cmplx(3,4) + x"
+    assert fcode(3 + 4*I) == "      cmplx(3,4)"
+    assert fcode(3 + 4*I + x) == "      cmplx(3,4) + x"
     assert fcode(I*x) == "      cmplx(0,1)*x"
-    assert fcode(3+4*I-x) == "      cmplx(3,4) - x"
+    assert fcode(3 + 4*I - x) == "      cmplx(3,4) - x"
     x = symbols('x', imaginary=True)
     assert fcode(5*x) == "      5*x"
     assert fcode(I*x) == "      cmplx(0,1)*x"
-    assert fcode(3+x) == "      x + 3"
+    assert fcode(3 + x) == "      x + 3"
 
 
 def test_implicit():
@@ -152,7 +152,7 @@ def test_assign_to():
 
 def test_line_wrapping():
     x, y = symbols('x,y')
-    assert fcode(((x+y)**10).expand(), assign_to="var") == (
+    assert fcode(((x + y)**10).expand(), assign_to="var") == (
         "      var = x**10 + 10*x**9*y + 45*x**8*y**2 + 120*x**7*y**3 + 210*x**6*\n"
         "     @ y**4 + 252*x**5*y**5 + 210*x**4*y**6 + 120*x**3*y**7 + 45*x**2*y\n"
         "     @ **8 + 10*x*y**9 + y**10"

@@ -44,7 +44,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
     p, elts = 2, [[x, -sqrt(2)],
                   [x,  sqrt(2)]]
 
-    for i in xrange(2, n+1):
+    for i in xrange(2, n + 1):
         p, _elts = nextprime(p), []
 
         neg_sqrt = -sqrt(p)
@@ -146,7 +146,7 @@ def interpolating_poly(n, x, X='x', Y='y'):
 @cythonized("n,i")
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
 
     y_0, y_1 = Y[0], Y[1]
 
@@ -174,7 +174,7 @@ def dmp_fateman_poly_F_1(n, K):
     for i in xrange(0, n):
         v = [dmp_one(i, K), dmp_zero(i), v]
 
-    m = n-1
+    m = n -1
 
     U = dmp_add_term(u, dmp_ground(K(1), m), 0, n, K)
     V = dmp_add_term(u, dmp_ground(K(2), m), 0, n, K)
@@ -195,7 +195,7 @@ def dmp_fateman_poly_F_1(n, K):
 @cythonized("n,i")
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
 
     y_0 = Y[0]
 
@@ -214,17 +214,17 @@ def dmp_fateman_poly_F_2(n, K):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
-    for i in xrange(0, n-1):
+    for i in xrange(0, n - 1):
         u = [dmp_one(i, K), u]
 
-    m = n-1
+    m = n -1
 
-    v = dmp_add_term(u, dmp_ground(K(2), m-1), 0, n, K)
+    v = dmp_add_term(u, dmp_ground(K(2), m - 1), 0, n, K)
 
     f = dmp_sqr([dmp_one(m, K), dmp_neg(v, m, K)], n, K)
     g = dmp_sqr([dmp_one(m, K), v], n, K)
 
-    v = dmp_add_term(u, dmp_one(m-1, K), 0, n, K)
+    v = dmp_add_term(u, dmp_one(m - 1, K), 0, n, K)
 
     h = dmp_sqr([dmp_one(m, K), v], n, K)
 
@@ -234,16 +234,16 @@ def dmp_fateman_poly_F_2(n, K):
 @cythonized("n,i")
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
 
     y_0 = Y[0]
 
-    u = Add(*[ y**(n+1) for y in Y[1:] ])
+    u = Add(*[ y**(n + 1) for y in Y[1:] ])
 
-    H = Poly((y_0**(n+1) + u + 1)**2, *Y)
+    H = Poly((y_0**(n + 1) + u + 1)**2, *Y)
 
-    F = Poly((y_0**(n+1) - u - 2)**2, *Y)
-    G = Poly((y_0**(n+1) + u + 2)**2, *Y)
+    F = Poly((y_0**(n + 1) - u - 2)**2, *Y)
+    G = Poly((y_0**(n + 1) + u + 2)**2, *Y)
 
     return H*F, H*G, H
 
@@ -251,20 +251,20 @@ def fateman_poly_F_3(n):
 @cythonized("n,i")
 def dmp_fateman_poly_F_3(n, K):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
-    u = dup_from_raw_dict({n+1: K.one}, K)
+    u = dup_from_raw_dict({n + 1: K.one}, K)
 
-    for i in xrange(0, n-1):
-        u = dmp_add_term([u], dmp_one(i, K), n+1, i+1, K)
+    for i in xrange(0, n - 1):
+        u = dmp_add_term([u], dmp_one(i, K), n + 1, i + 1, K)
 
-    v = dmp_add_term(u, dmp_ground(K(2), n-2), 0, n, K)
+    v = dmp_add_term(u, dmp_ground(K(2), n - 2), 0, n, K)
 
     f = dmp_sqr(
-        dmp_add_term([dmp_neg(v, n-1, K)], dmp_one(n-1, K), n+1, n, K), n, K)
-    g = dmp_sqr(dmp_add_term([v], dmp_one(n-1, K), n+1, n, K), n, K)
+        dmp_add_term([dmp_neg(v, n - 1, K)], dmp_one(n - 1, K), n + 1, n, K), n, K)
+    g = dmp_sqr(dmp_add_term([v], dmp_one(n - 1, K), n + 1, n, K), n, K)
 
-    v = dmp_add_term(u, dmp_one(n-2, K), 0, n-1, K)
+    v = dmp_add_term(u, dmp_one(n - 2, K), 0, n - 1, K)
 
-    h = dmp_sqr(dmp_add_term([v], dmp_one(n-1, K), n+1, n, K), n, K)
+    h = dmp_sqr(dmp_add_term([v], dmp_one(n - 1, K), n + 1, n, K), n, K)
 
     return dmp_mul(f, h, n, K), dmp_mul(g, h, n, K), h
 

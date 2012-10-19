@@ -73,11 +73,11 @@ def npartitions(n, verbose=False):
     if n <= 5:
         return [1, 1, 2, 3, 5, 7][n]
     # Estimate number of bits in p(n). This formula could be tidied
-    pbits = int((math.pi*(2*n/3.)**0.5-math.log(4*n))/math.log(10)+1)*\
+    pbits = int((math.pi*(2*n/3.)**0.5 - math.log(4*n))/math.log(10) + 1)*\
         math.log(10, 2)
     prec = p = int(pbits*1.1 + 100)
     s = fzero
-    M = max(6, int(0.24*n**0.5+4))
+    M = max(6, int(0.24*n**0.5 + 4))
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2, 3, p), p), mpf_pi(p), p)
     sqrt8 = mpf_sqrt(from_int(8), p)
     for q in xrange(1, M):

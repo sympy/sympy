@@ -193,7 +193,7 @@ class BenchSession(TerminalSession):
                 if i == un:
                     txt += n
                 else:
-                    txt += ' '*(wm[i]+we[i]+1)
+                    txt += ' '*(wm[i] + we[i] + 1)
 
             s[1] = '%s %s' % (txt, u)
 

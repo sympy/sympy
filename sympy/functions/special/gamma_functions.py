@@ -41,7 +41,7 @@ class gamma(Function):
                 return S.Infinity
             elif arg.is_Integer:
                 if arg.is_positive:
-                    return C.factorial(arg-1)
+                    return C.factorial(arg - 1)
                 else:
                     return S.ComplexInfinity
             elif arg.is_Rational:
@@ -154,7 +154,7 @@ class lowergamma(Function):
         from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return C.exp(-unpolarify(z))*z**(a-1)
+            return C.exp(-unpolarify(z))*z**(a - 1)
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
@@ -285,7 +285,7 @@ class uppergamma(Function):
         from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return -C.exp(-unpolarify(z))*z**(a-1)
+            return -C.exp(-unpolarify(z))*z**(a - 1)
         elif argindex == 1:
             a, z = self.args
             return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
@@ -371,7 +371,7 @@ class polygamma(Function):
     def fdiff(self, argindex=2):
         if argindex == 2:
             n, z = self.args[:2]
-            return polygamma(n+1, z)
+            return polygamma(n + 1, z)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -401,7 +401,7 @@ class polygamma(Function):
             if n < 2:
                 o = C.Order(1/z, x)
             else:
-                m = C.ceiling((n+1)//2)
+                m = C.ceiling((n + 1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = C.Order(1/z**(2*m), x)
@@ -414,9 +414,9 @@ class polygamma(Function):
             #    quite a long time!
             fac = gamma(N)
             e0 = fac + N*fac/(2*z)
-            m = C.ceiling((n+1)//2)
+            m = C.ceiling((n + 1)//2)
             for k in range(1, m):
-                fac = fac*(2*k+N-1)*(2*k+N-2) / ((2*k)*(2*k-1))
+                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
                 e0 += bernoulli(2*k)*fac/z**(2*k)
             o = C.Order(1/z**(2*m), x)
             if n == 0:
@@ -454,9 +454,9 @@ class polygamma(Function):
                             return S.ComplexInfinity
                         else:
                             if n is S.Zero:
-                                return -S.EulerGamma + C.harmonic(z-1, 1)
+                                return -S.EulerGamma + C.harmonic(z - 1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z)
+                                return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
 
         if n == 0 and z.is_Rational:
             # TODO actually *any* n/m can be done, but that is messy
@@ -502,13 +502,13 @@ class polygamma(Function):
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:
-                        return Add(*tail)/coeff**(n+1)
+                        return Add(*tail)/coeff**(n + 1)
                 z *= coeff
 
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
+        return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
 
 
 class loggamma(Function):
@@ -528,14 +528,14 @@ class loggamma(Function):
         if args0[0] != oo:
             return super(loggamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[0]
-        m = min(n, C.ceiling((n+S(1))/2))
-        r = log(z)*(z-S(1)/2) - z + log(2*pi)/2
-        l = [bernoulli(2*k) / (2*k*(2*k-1)*z**(2*k-1)) for k in range(1, m)]
+        m = min(n, C.ceiling((n + S(1))/2))
+        r = log(z)*(z - S(1)/2) - z + log(2*pi)/2
+        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
         o = None
         if m == 0:
             o = C.Order(1, x)
         else:
-            o = C.Order(1/z**(2*m-1), x)
+            o = C.Order(1/z**(2*m - 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
@@ -590,4 +590,4 @@ def beta(x, y):
     ``beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)``
 
     """
-    return gamma(x)*gamma(y) / gamma(x+y)
+    return gamma(x)*gamma(y) / gamma(x + y)

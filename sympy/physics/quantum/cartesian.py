@@ -165,7 +165,7 @@ class XKet(Ket):
         return _enumerate_continuous_1D(self, num_states, **options)
 
     def _eval_innerproduct_XBra(self, bra, **hints):
-        return DiracDelta(self.position-bra.position)
+        return DiracDelta(self.position - bra.position)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
@@ -277,7 +277,7 @@ class PxKet(Ket):
         return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
-        return DiracDelta(self.momentum-bra.momentum)
+        return DiracDelta(self.momentum - bra.momentum)
 
 
 class PxBra(Bra):

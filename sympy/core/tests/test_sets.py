@@ -90,8 +90,8 @@ def test_union():
     assert Interval(1, 3) + FiniteSet(2) == Interval(1, 3)
     assert Interval(
         1, 3, True, True) + FiniteSet(3) == Interval(1, 3, True, False)
-    X = Interval(1, 3)+FiniteSet(5)
-    Y = Interval(1, 2)+FiniteSet(3)
+    X = Interval(1, 3) + FiniteSet(5)
+    Y = Interval(1, 2) + FiniteSet(3)
     XandY = X.intersect(Y)
     assert 2 in X and 3 in X and 3 in XandY
     assert X.subset(XandY) and Y.subset(XandY)
@@ -147,7 +147,7 @@ def test_complement():
 
     assert FiniteSet(1, 2, 3).complement == Interval(S.NegativeInfinity, 1, True, True) + Interval(1, 2, True, True) + Interval(2, 3, True, True) + Interval(3, S.Infinity, True, True)
 
-    X = Interval(1, 3)+FiniteSet(5)
+    X = Interval(1, 3) + FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
 
     square = Interval(0, 1) * Interval(0, 1)
@@ -265,8 +265,8 @@ def test_subset():
     assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(4, 5)) is False
     assert Interval(0, 2).subset(FiniteSet(1))
     assert Interval(0, 2, True, True).subset(FiniteSet(1, 2)) is False
-    assert (Interval(0, 2, False, True)+FiniteSet(2, 3)).subset(
-            Interval(1, 2)+FiniteSet(3))
+    assert (Interval(0, 2, False, True) + FiniteSet(2, 3)).subset(
+            Interval(1, 2) + FiniteSet(3))
 
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) is True
     assert Union(
@@ -309,7 +309,7 @@ def test_contains():
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
-    assert e.contains(x) == And(0<=x, x<=1)
+    assert e.contains(x) == And(0 <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
     assert e.contains(x) == And(0<x, x<1)
@@ -440,8 +440,8 @@ def test_product_basic():
     inf, neginf = S.Infinity, S.NegativeInfinity
     assert square.complement == Union(
        Interval(0, 1) * (
-           Interval(neginf, 0, True, True)+Interval(1, inf, True, True)),
-       (Interval(neginf, 0, True, True)+Interval(1, inf, True, True)
+           Interval(neginf, 0, True, True) + Interval(1, inf, True, True)),
+       (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)
         )*Interval(0, 1),
        ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
                 * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
@@ -465,10 +465,10 @@ def test_real():
 
     assert all(s.is_real for s in [I, J, A, B, C])
     assert not D.is_real
-    assert all((a+b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
-    assert not any((a+D).is_real for a in [I, J, A, B, C, D])
+    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert not any((a + D).is_real for a in [I, J, A, B, C, D])
 
-    assert not (I+A+D).is_real
+    assert not (I + A + D).is_real
 
 
 def test_supinf():

@@ -51,7 +51,7 @@ def test_re():
 
     assert re(log(2*I)) == log(2)
 
-    assert re((2+I)**2).expand(complex=True) == 3
+    assert re((2 + I)**2).expand(complex=True) == 3
 
     assert re(conjugate(x)) == re(x)
     assert conjugate(re(x)) == re(x)
@@ -110,7 +110,7 @@ def test_im():
 
     assert im(log(2*I)) == pi/2
 
-    assert im((2+I)**2).expand(complex=True) == 4
+    assert im((2 + I)**2).expand(complex=True) == 4
 
     assert im(conjugate(x)) == -im(x)
     assert conjugate(im(x)) == im(x)
@@ -321,9 +321,9 @@ def test_arg():
     assert arg(-1) == pi
     assert arg(I) == pi/2
     assert arg(-I) == -pi/2
-    assert arg(1+I) == pi/4
-    assert arg(-1+I) == 3*pi/4
-    assert arg(1-I) == -pi/4
+    assert arg(1 + I) == pi/4
+    assert arg(-1 + I) == 3*pi/4
+    assert arg(1 - I) == -pi/4
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0
@@ -377,10 +377,10 @@ def test_derivatives_issue1658():
     assert im(f(x)).diff(x) == im(f(x).diff(x))
     assert re(f(y)).diff(y) == -I*im(f(y).diff(y))
     assert im(f(y)).diff(y) == -I*re(f(y).diff(y))
-    assert Abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
-    assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)
-    assert Abs(f(y)).diff(y).subs(f(y), 1+y).doit() == -y/sqrt(1 - y**2)
-    assert arg(f(y)).diff(y).subs(f(y), I+y**2).doit() == 2*y/(1 + y**4)
+    assert Abs(f(x)).diff(x).subs(f(x), 1 + I*x).doit() == x/sqrt(1 + x**2)
+    assert arg(f(x)).diff(x).subs(f(x), 1 + I*x**2).doit() == 2*x/(1 + x**4)
+    assert Abs(f(y)).diff(y).subs(f(y), 1 + y).doit() == -y/sqrt(1 - y**2)
+    assert arg(f(y)).diff(y).subs(f(y), I + y**2).doit() == 2*y/(1 + y**4)
 
 
 def test_periodic_argument():
@@ -391,10 +391,10 @@ def test_periodic_argument():
 
     assert unbranched_argument(2 + I) == periodic_argument(2 + I, oo)
     assert unbranched_argument(1 + x) == periodic_argument(1 + x, oo)
-    assert N_equals(unbranched_argument((1+I)**2), pi/2)
-    assert N_equals(unbranched_argument((1-I)**2), -pi/2)
-    assert N_equals(periodic_argument((1+I)**2, 3*pi), pi/2)
-    assert N_equals(periodic_argument((1-I)**2, 3*pi), -pi/2)
+    assert N_equals(unbranched_argument((1 + I)**2), pi/2)
+    assert N_equals(unbranched_argument((1 - I)**2), -pi/2)
+    assert N_equals(periodic_argument((1 + I)**2, 3*pi), pi/2)
+    assert N_equals(periodic_argument((1 - I)**2, 3*pi), -pi/2)
 
     assert unbranched_argument(principal_branch(x, pi)) \
            == periodic_argument(x, pi)

@@ -32,7 +32,7 @@ def test_single_arg():
 
 
 def test_list_args():
-    f = lambdify([x, y], x+y)
+    f = lambdify([x, y], x + y)
     assert f(1, 2) == 3
 
 
@@ -183,11 +183,11 @@ def test_trig():
     f = lambdify([x], [cos(x), sin(x)])
     d = f(pi)
     prec = 1e-11
-    assert -prec < d[0]+1 < prec
+    assert -prec < d[0] + 1 < prec
     assert -prec < d[1] < prec
     d = f(3.14159)
     prec = 1e-5
-    assert -prec < d[0]+1 < prec
+    assert -prec < d[0] + 1 < prec
     assert -prec < d[1] < prec
 
 #================== Test vectors ==========================
@@ -212,15 +212,15 @@ def test_vector_discontinuous():
 def test_trig_symbolic():
     f = lambdify([x], [cos(x), sin(x)])
     d = f(pi)
-    assert abs(d[0]+1) < 0.0001
-    assert abs(d[1]-0) < 0.0001
+    assert abs(d[0] + 1) < 0.0001
+    assert abs(d[1] - 0) < 0.0001
 
 
 def test_trig_float():
     f = lambdify([x], [cos(x), sin(x)])
     d = f(3.14159)
-    assert abs(d[0]+1) < 0.0001
-    assert abs(d[1]-0) < 0.0001
+    assert abs(d[0] + 1) < 0.0001
+    assert abs(d[1] - 0) < 0.0001
 
 
 def test_docs():
@@ -247,8 +247,8 @@ def test_sin():
 
 
 def test_matrix():
-    A = Matrix([[x, x*y], [sin(z)+4, x**z]])
-    sol = Matrix([[1, 2], [sin(3)+4, 1]])
+    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
+    sol = Matrix([[1, 2], [sin(3) + 4, 1]])
     f = lambdify((x, y, z), A, modules="sympy")
     assert f(1, 2, 3) == sol
     f = lambdify((x, y, z), (A, [A]), modules="sympy")

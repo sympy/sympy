@@ -22,26 +22,26 @@ rate = Symbol('lambda', real=True, positive=True, bounded=True)
 
 
 def normal(x, mu, sigma):
-    return 1/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/2/sigma**2)
+    return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
 
 
 def exponential(x, rate):
     return rate*exp(-rate*x)
 alpha, beta = symbols('alpha beta', positive=True)
-betadist = x**(alpha-1)*(1+x)**(-alpha - beta)*gamma(alpha+beta) \
+betadist = x**(alpha - 1)*(1 + x)**(-alpha - beta)*gamma(alpha + beta) \
           /gamma(alpha)/gamma(beta)
 kint = Symbol('k', integer=True, positive=True)
-chi = 2**(1-kint/2)*x**(kint-1)*exp(-x**2/2)/gamma(kint/2)
-chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2-1)*exp(-x/2)
-dagum = apos*p/x*(x/bpos)**(apos*p)/(1 + x**apos/bpos**apos)**(p+1)
+chi = 2**(1 - kint/2)*x**(kint - 1)*exp(-x**2/2)/gamma(kint/2)
+chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2 - 1)*exp(-x/2)
+dagum = apos*p/x*(x/bpos)**(apos*p)/(1 + x**apos/bpos**apos)**(p + 1)
 d1, d2 = symbols('d1 d2', positive=True)
-f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1+d2))/x \
+f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1 + d2))/x \
       /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
 nupos, sigmapos = symbols('nu sigma', positive=True)
-rice = x/sigmapos**2*exp(-(x**2+ nupos**2)/2/sigmapos**2)*besseli(0, x* \
+rice = x/sigmapos**2*exp(-(x**2 + nupos**2)/2/sigmapos**2)*besseli(0, x* \
                          nupos/sigmapos**2)
 mu = Symbol('mu', real=True)
-laplace = exp(-abs(x-mu)/bpos)/2/bpos
+laplace = exp(-abs(x - mu)/bpos)/2/bpos
 
 u = Symbol('u', polar=True)
 tpos = Symbol('t', positive=True)

@@ -34,4 +34,4 @@ def test_particle():
     p.set_potential_energy(m * g * h)
     assert p.potential_energy == m * g * h
     assert p.kinetic_energy(
-        N) == m2 * v1**2 / 2 + m2 * v2**2 / 2+ m2 * v3**2 / 2
+        N) == m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2

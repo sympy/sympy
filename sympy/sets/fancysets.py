@@ -219,7 +219,7 @@ class Range(Set):
         try:
             start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
         except ValueError:
-            raise ValueError("Inputs to Range must be Integer Valued\n"+
+            raise ValueError("Inputs to Range must be Integer Valued\n" +
                     "Use TransformationSets of Ranges for other cases")
         n = ceiling((stop - start)/step)
         if n <= 0:

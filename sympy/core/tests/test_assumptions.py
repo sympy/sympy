@@ -487,8 +487,8 @@ def test_issue726():
     """catch: hash instability"""
     x = Symbol("x")
     y = Symbol("y")
-    a1 = x+y
-    a2 = y+x
+    a1 = x +y
+    a2 = y +x
     a2.is_comparable
 
     h1 = hash(a1)
@@ -497,7 +497,7 @@ def test_issue726():
 
 
 def test_issue1723():
-    z = (-1)**Rational(1, 3)*(1-I*sqrt(3))
+    z = (-1)**Rational(1, 3)*(1 - I*sqrt(3))
     assert z.is_real in [True, None]
 
 
@@ -559,7 +559,7 @@ def test_special_is_rational():
     r = Symbol('r', rational=True)
     x = Symbol('x')
     assert sqrt(3).is_rational is False
-    assert (3+sqrt(3)).is_rational is False
+    assert (3 + sqrt(3)).is_rational is False
     assert (3*sqrt(3)).is_rational is False
     assert exp(3).is_rational is False
     assert exp(i).is_rational is False

@@ -22,7 +22,7 @@ def test_rational():
 
 
 def test_large_rational():
-    e = (Rational(123712**12-1, 7)+Rational(1, 7))**Rational(1, 3)
+    e = (Rational(123712**12 - 1, 7) + Rational(1, 7))**Rational(1, 3)
     assert e == 234232585392159195136 * (Rational(1, 7)**Rational(1, 3))
 
 
@@ -35,7 +35,7 @@ def test_negative_real():
 
 def test_expand():
     x = Symbol('x')
-    assert (2**(-1-x)).expand() == Rational(1, 2)*2**(-x)
+    assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
 
 def test_issue350():
@@ -71,7 +71,7 @@ def test_issue350():
 
 
 def test_issue767():
-    assert --sqrt(sqrt(5)-1) == sqrt(sqrt(5)-1)
+    assert --sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
 
 
 def test_negative_one():
@@ -98,8 +98,8 @@ def test_issue1263():
         return (num/den)**pow
     npos = 1
     nneg = -1
-    dpos = 2-sqrt(3)
-    dneg = 1-sqrt(3)
+    dpos = 2 - sqrt(3)
+    dneg = 1 - sqrt(3)
     assert dpos > 0 and dneg < 0 and npos > 0 and nneg < 0
     # pos or neg integer
     eq = eqn(npos, dpos, 2)
@@ -188,10 +188,10 @@ def test_Pow_signs():
     x = Symbol('x')
     y = Symbol('y')
     n = Symbol('n', even=True)
-    assert (3-y)**2 != (y-3)**2
-    assert (3-y)**n != (y-3)**n
-    assert (-3+y-x)**2 != (3-y+x)**2
-    assert (y-3)**3 != -(3-y)**3
+    assert (3 - y)**2 != (y - 3)**2
+    assert (3 - y)**n != (y - 3)**n
+    assert (-3 + y - x)**2 != (3 - y + x)**2
+    assert (y - 3)**3 != -(3 - y)**3
 
 
 def test_power_with_noncommutative_mul_as_base():

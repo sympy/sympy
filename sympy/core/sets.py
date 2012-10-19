@@ -243,7 +243,7 @@ class Set(Basic):
 
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
-            raise ValueError("%s: Exponent must be a positive Integer"%exp)
+            raise ValueError("%s: Exponent must be a positive Integer" % exp)
         return ProductSet([self]*exp)
 
     def __sub__(self, other):
@@ -586,7 +586,7 @@ class Interval(Set, EvalfMixin):
             end = Min(self.end, other.end)
             start = Max(self.start, other.start)
             if (end < start or
-               (end==start and (end not in self and end not in other))):
+               (end == start and (end not in self and end not in other))):
                 return None
             else:
                 start = Min(self.start, other.start)

@@ -66,11 +66,11 @@ class CMod(Gate):
         k = 0
         # Determine the value stored in high memory.
         for i in range(self.t):
-            k = k + n*qubits[self.t+i]
+            k = k + n*qubits[self.t + i]
             n = n*2
 
         # The value to go in low memory will be out.
-        out = int(self.a**k%self.N)
+        out = int(self.a**k % self.N)
 
         # Create array for new qbit-ket which will have high memory unaffected
         outarray = list(qubits.args[0][:self.t])
@@ -92,7 +92,7 @@ def shor(N):
     be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
     These values are returned.
     """
-    a = random.randrange(N-2)+2
+    a = random.randrange(N - 2) +2
     if igcd(N, a) != 1:
         print "got lucky with rand"
         return igcd(N, a)
@@ -100,10 +100,10 @@ def shor(N):
     print "N= ", N
     r = period_find(a, N)
     print "r= ", r
-    if r%2 == 1:
+    if r % 2 == 1:
         print "r is not even, begin again"
         shor(N)
-    answer = (igcd(a**(r/2)-1, N), igcd(a**(r/2)+1, N))
+    answer = (igcd(a**(r/2) - 1, N), igcd(a**(r/2) + 1, N))
     return answer
 
 
@@ -156,7 +156,7 @@ def continued_fraction(x, y):
     if temp*y == x:
         return [temp, ]
 
-    list = continued_fraction(y, x-temp*y)
+    list = continued_fraction(y, x - temp*y)
     list.insert(0, temp)
     return list
 
@@ -196,7 +196,7 @@ def period_find(a, N):
     circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
     print "QFT'd"
     for i in range(t):
-        circuit = measure_partial_oneshot(circuit, i+t)
+        circuit = measure_partial_oneshot(circuit, i + t)
         # circuit = measure(i+t)*circuit
     # circuit = qapply(circuit)
     print circuit
@@ -211,7 +211,7 @@ def period_find(a, N):
     n = 1
     answer = 0
     for i in range(len(register)/2):
-        answer += n*register[i+t]
+        answer += n*register[i + t]
         n = n<<1
     if answer == 0:
         raise OrderFindingException(

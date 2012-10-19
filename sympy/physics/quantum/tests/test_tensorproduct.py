@@ -13,7 +13,7 @@ from sympy.core.trace import Tr
 A, B, C = symbols('A,B,C', commutative=False)
 x = symbols('x')
 
-mat1 = Matrix([[1, 2*I], [1+I, 3]])
+mat1 = Matrix([[1, 2*I], [1 + I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
 
 
@@ -34,7 +34,7 @@ def test_tensor_product_abstract():
 
 
 def test_tensor_product_expand():
-    assert TP(A+B, B+C).expand(tensorproduct=True) == \
+    assert TP(A + B, B + C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
 
 
@@ -93,7 +93,7 @@ def test_eval_trace():
                         0.5*Tr(C*Dagger(C))*D*Dagger(D))
 
     #Density with mixed states
-    d = Density([t2+t3, 1.0])
+    d = Density([t2 + t3, 1.0])
     t = Tr(d)
     assert t.doit() == ( 1.0*Tr(A*Dagger(A))*Tr(B*Dagger(B)) +
                         1.0*Tr(A*Dagger(C))*Tr(B*Dagger(D)) +

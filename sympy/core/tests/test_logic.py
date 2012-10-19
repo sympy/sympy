@@ -37,8 +37,8 @@ def test_logic_cmp():
     l2 = And('a', Not('b'))
 
     assert hash(l1) == hash(l2)
-    assert (l1==l2) == T
-    assert (l1!=l2) == F
+    assert (l1 == l2) == T
+    assert (l1 != l2) == F
     assert cmp(l1, l2) == 0
 
     assert And('a', 'b', 'c') == And('b', 'a', 'c')

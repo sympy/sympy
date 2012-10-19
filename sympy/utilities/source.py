@@ -46,4 +46,4 @@ def get_mod_func(callback):
     dot = callback.rfind('.')
     if dot == -1:
         return callback, ''
-    return callback[:dot], callback[dot+1:]
+    return callback[:dot], callback[dot + 1:]

@@ -371,7 +371,7 @@ def symbols(names, **args):
             if match is not None:
                 start, end = match.groups()
 
-                for name in xrange(ord(start), ord(end)+1):
+                for name in xrange(ord(start), ord(end) + 1):
                     symbol = cls(chr(name), **args)
                     result.append(symbol)
 

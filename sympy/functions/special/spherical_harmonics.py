@@ -20,7 +20,7 @@ def Plmcos(l, m, th):
     P = Plm(l, m, _x).subs(_x, cos(th))
     # assume th in (0,pi) => sin(th) is nonnegative
     _sinth = Dummy("_sinth", nonnegative=True)
-    P = P.subs(1-cos(th)**2, _sinth**2).subs(_sinth, sin(th))
+    P = P.subs(1 - cos(th)**2, _sinth**2).subs(_sinth, sin(th))
     return P
 
 
@@ -43,7 +43,7 @@ def Ylm(l, m, theta, phi):
     """
     l, m, theta, phi = [sympify(x) for x in (l, m, theta, phi)]
     factorial = C.factorial
-    return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
+    return sqrt((2*l + 1)/(4*pi) * factorial(l - m)/factorial(l + m)) * \
             Plmcos(l, m, theta) * C.exp(I*m*phi)
 
 

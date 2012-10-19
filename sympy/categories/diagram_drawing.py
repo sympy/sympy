@@ -756,8 +756,8 @@ class DiagramGrid(object):
                 # Now check for free directions.  When checking for
                 # free directions, prefer the horizontal and vertical
                 # directions.
-                neighbours = [(i-1, j), (i, j+1), (i+1, j), (i, j-1),
-                              (i-1, j-1), (i-1, j+1), (i+1, j-1), (i+1, j+1)]
+                neighbours = [(i - 1, j), (i, j + 1), (i + 1, j), (i, j - 1),
+                              (i - 1, j - 1), (i - 1, j + 1), (i + 1, j - 1), (i + 1, j + 1)]
 
                 for pt in neighbours:
                     if DiagramGrid._empty_point(pt, grid):

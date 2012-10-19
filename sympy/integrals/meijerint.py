@@ -81,31 +81,31 @@ def _create_lookup_table(table):
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
                        factorial, log, erf, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
-    add(Heaviside(t - b)*(t - b)**(a-1), [a], [], [], [0], t/b,
-        gamma(a)*b**(a-1), And(b > 0))
-    add(Heaviside(b - t)*(b - t)**(a-1), [], [a], [0], [], t/b,
-        gamma(a)*b**(a-1), And(b > 0))
-    add(Heaviside(z - (b/p)**(1/q))*(t - b)**(a-1), [a], [], [], [0], t/b,
-        gamma(a)*b**(a-1), And(b > 0))
-    add(Heaviside((b/p)**(1/q) - z)*(b - t)**(a-1), [], [a], [0], [], t/b,
-        gamma(a)*b**(a-1), And(b > 0))
+    add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
+        gamma(a)*b**(a - 1), And(b > 0))
+    add(Heaviside(b - t)*(b - t)**(a - 1), [], [a], [0], [], t/b,
+        gamma(a)*b**(a - 1), And(b > 0))
+    add(Heaviside(z - (b/p)**(1/q))*(t - b)**(a - 1), [a], [], [], [0], t/b,
+        gamma(a)*b**(a - 1), And(b > 0))
+    add(Heaviside((b/p)**(1/q) - z)*(b - t)**(a - 1), [], [a], [0], [], t/b,
+        gamma(a)*b**(a - 1), And(b > 0))
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
         hint=Not(IsNonPositiveInteger(a)))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
         pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
-        b**(a-1)*sin(a*pi)/pi)
+        b**(a - 1)*sin(a*pi)/pi)
 
     # 12
     def A1(r, sign, nu):
-        return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
+        return pi**(-S(1)/2)*(-sign*nu/2)**(1 - 2*r)
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
-        add((sqrt(a**2 + t) + sgn*a)**b/(a**2+t)**r,
-            [(1 + b)/2, 1-2*r + b/2], [],
+        add((sqrt(a**2 + t) + sgn*a)**b/(a**2 + t)**r,
+            [(1 + b)/2, 1 - 2*r + b/2], [],
             [(b - sgn*b)/2], [(b + sgn*b)/2], t/a**2,
-            a**(b-2*r)*A1(r, sgn, b))
+            a**(b - 2*r)*A1(r, sgn, b))
     tmpadd(0, 1)
     tmpadd(0, -1)
     tmpadd(S(1)/2, 1)
@@ -212,7 +212,7 @@ def _create_lookup_table(table):
     #    [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
 
     # Section 8.4.20
-    add(bessely(a, t), [], [-(a+1)/2], [a/2, -a/2], [-(a+1)/2], t**2/4)
+    add(bessely(a, t), [], [-(a + 1)/2], [a/2, -a/2], [-(a + 1)/2], t**2/4)
 
     # TODO all of the following should be derivable
     #add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],
@@ -365,7 +365,7 @@ def _find_splitting_points(expr, x):
     def compute_innermost(expr, res):
         if isinstance(expr, Tuple):
             return
-        m = expr.match(p*x+q)
+        m = expr.match(p*x + q)
         if m and m[p] != 0:
             res.add(-m[q]/m[p])
             return
@@ -507,9 +507,9 @@ def _inflate_fox_h(g, a):
     # theorem.
     D, g = _inflate_g(g, q)
     z = g.argument
-    D /= (2*pi)**((1-p)/2)*p**(-S(1)/2)
+    D /= (2*pi)**((1 - p)/2)*p**(-S(1)/2)
     z /= p**p
-    bs = [(n+1)/p for n in range(p)]
+    bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
 _dummies = {}
@@ -596,7 +596,7 @@ def _condsimp(cond):
                 if not m:
                     continue
                 otherargs = map(
-                    lambda x: x.subs(m), fro.args[:num] + fro.args[num+1:])
+                    lambda x: x.subs(m), fro.args[:num] + fro.args[num + 1:])
                 otherlist = [n]
                 for arg2 in otherargs:
                     for k, arg3 in enumerate(cond.args):
@@ -677,7 +677,7 @@ def _rewrite_saxena_1(fac, po, g, x):
     a = _my_principal_branch(a, period)
 
     # We substitute t = x**b.
-    C = fac/(abs(b)*a**((s+1)/b - 1))
+    C = fac/(abs(b)*a**((s + 1)/b - 1))
     # Absorb a factor of (at)**((1 + s)/b - 1).
 
     def tr(l):
@@ -929,8 +929,8 @@ def _check_antecedents(g1, g2, x):
              + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
 
     def lambda_s0(c1, c2):
-        return c1*(q-p)*abs(omega)**(1/(q-p))*sin(psi) \
-             + c2*(v-u)*abs(sigma)**(1/(v-u))*sin(theta)
+        return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
+             + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
     lambda_s = Piecewise(
         ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
          And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
@@ -1339,7 +1339,7 @@ def _check_antecedents_inversion(g, x):
     # Theorem 2, statements (2) and (3)
     conds += [And(p + 1 <= m, m + 1 <= q, delta > 0, delta < pi/2, n == 0,
                   (m - p + 1)*pi - delta >= pi/2,
-                  Hp(z*exp(I*pi*(q-m))), Hm(z*exp(-I*pi*(q-m))))]
+                  Hp(z*exp(I*pi*(q - m))), Hm(z*exp(-I*pi*(q - m))))]
     # Theorem 2, statement (5)
     conds += [And(p < q, m == q, n == 0, delta > 0,
                   (sigma + epsilon)*pi - delta >= pi/2, H(z))]
@@ -1727,7 +1727,7 @@ def meijerint_definite(f, x, a, b):
             if res1 is None:
                 _debug('  But could not compute first integral.')
                 continue
-            res2 = _meijerint_definite_2(f.subs(x, c-x), x)
+            res2 = _meijerint_definite_2(f.subs(x, c - x), x)
             if res2 is None:
                 _debug('  But could not compute second integral.')
                 continue

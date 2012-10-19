@@ -22,7 +22,7 @@ for test in INPUT:
         end = time.time()
         results[test][alg] = end - start
         #print "Test %d in time %.2f seconds for algorithm %s." % (test, end - start, alg)
-        print end-start
+        print end - start
 
 print "problem," + ','.join(ALGORITHMS)
 

@@ -46,7 +46,7 @@ def test_evalf_powers():
 
 
 def test_evalf_rump():
-    a = 1335*y**6/4+x**2*(11*x**2*y**2-y**6-121*y**4-2)+11*y**8/2+x/(2*y)
+    a = 1335*y**6/4 + x**2*(11*x**2*y**2 - y**6 - 121*y**4 - 2) + 11*y**8/2 + x/(2*y)
     assert NS(a, 15, subs={x: 77617, y: 33096}) == '-0.827396059946821'
 
 
@@ -91,10 +91,10 @@ def test_evalf_exponentiation():
     assert NS(Pow(pi*I, Rational(
         1, 2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
     assert NS(pi**I) == '0.413292116101594 + 0.910598499212615*I'
-    assert NS(pi**(E+I/3)) == '20.8438653991931 + 8.36343473930031*I'
-    assert NS((pi+I/3)**(E+I/3)) == '17.2442906093590 + 13.6839376767037*I'
+    assert NS(pi**(E + I/3)) == '20.8438653991931 + 8.36343473930031*I'
+    assert NS((pi + I/3)**(E + I/3)) == '17.2442906093590 + 13.6839376767037*I'
     assert NS(exp(pi)) == '23.1406926327793'
-    assert NS(exp(pi+E*I)) == '-21.0981542849657 + 9.50576358282422*I'
+    assert NS(exp(pi + E*I)) == '-21.0981542849657 + 9.50576358282422*I'
     assert NS(pi**pi) == '36.4621596072079'
     assert NS((-pi)**pi) == '-32.9138577418939 - 15.6897116534332*I'
     assert NS((-pi)**(-pi)) == '-0.0247567717232697 + 0.0118013091280262*I'
@@ -115,10 +115,10 @@ def test_evalf_complex_cancellation():
     # 64471/10000000000 + 2231321613*I/2500000000
     # >>> 2231321613*4
     # 8925286452L
-    assert NS((A+B*I)*(C+D*I), 6) == '6.44710e-6 + 0.892529*I'
-    assert NS((A+B*I)*(C+D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
-    assert NS((A+B*I)*(
-        C+D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
+    assert NS((A + B*I)*(C + D*I), 6) == '6.44710e-6 + 0.892529*I'
+    assert NS((A + B*I)*(C + D*I), 10) == '6.447100000e-6 + 0.8925286452*I'
+    assert NS((A + B*I)*(
+        C + D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
 
 def test_evalf_logs():
@@ -144,7 +144,7 @@ def test_evalf_trig():
 
 def test_evalf_near_integers():
     # Binet's formula
-    f = lambda n: ((1+sqrt(5))**n)/(2**n * sqrt(5))
+    f = lambda n: ((1 + sqrt(5))**n)/(2**n * sqrt(5))
     assert NS(f(5000) - fibonacci(5000), 10, maxn=1500) == '5.156009964e-1046'
     # Some near-integer identities from
     # http://mathworld.wolfram.com/AlmostInteger.html
@@ -160,28 +160,28 @@ def test_evalf_ramanujan():
     A = 262537412640768744*exp(-pi*sqrt(163))
     B = 196884*exp(-2*pi*sqrt(163))
     C = 103378831900730205293632*exp(-3*pi*sqrt(163))
-    assert NS(1-A-B+C, 10) == '1.613679005e-59'
+    assert NS(1 - A - B + C, 10) == '1.613679005e-59'
 
 # Input that for various reasons have failed at some point
 
 
 def test_evalf_bugs():
-    assert NS(sin(1)+exp(-10**10), 10) == NS(sin(1), 10)
-    assert NS(exp(10**10)+sin(1), 10) == NS(exp(10**10), 10)
+    assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
+    assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
     assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(
         '(sin(x)-x)/x**3', 15, subs={x: '1/10**50'}) == '-0.166666666666667'
-    assert NS(sin(1)+Rational(
+    assert NS(sin(1) + Rational(
         1, 10**100)*I, 15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
-    assert NS((1+I)**2*I, 6) == '-2.00000'
+    assert NS((1 + I)**2*I, 6) == '-2.00000'
     d = {n: (
         -1)**Rational(6, 7), y: (-1)**Rational(4, 7), x: (-1)**Rational(2, 7)}
-    assert NS((x*(1+y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
-    assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
-    assert NS((1+I)**2*I, 15) == '-2.00000000000000'
+    assert NS((x*(1 + y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
+    assert NS(((-I - sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
+    assert NS((1 + I)**2*I, 15) == '-2.00000000000000'
     #1659 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
     #1659 (2/2): With the bug present, this still only fails if the
@@ -227,22 +227,22 @@ def test_evalf_trig_zero_detection():
 
 def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
-    raises(ValueError, lambda: Sum(n/(n**2+1), (n, 1, oo)).evalf())
+    raises(ValueError, lambda: Sum(n/(n**2 + 1), (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((-1)**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum(n**2, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum(2**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
-    raises(ValueError, lambda: Sum((2*n+3)/(3*n**2+4), (n, 0, oo)).evalf())
-    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4+1), (n, 0, oo)).evalf())
+    raises(ValueError, lambda: Sum((2*n + 3)/(3*n**2 + 4), (n, 0, oo)).evalf())
+    raises(ValueError, lambda: Sum((0.5*n**3)/(n**4 + 1), (n, 0, oo)).evalf())
 
 
 def test_evalf_py_methods():
-    assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
-    assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
+    assert abs(float(pi + 1) - 4.1415926535897932) < 1e-10
+    assert abs(complex(pi + 1) - 4.1415926535897932) < 1e-10
     assert abs(
-        complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
-    raises(TypeError, lambda: float(pi+x))
+        complex(pi + E*I) - (3.1415926535897931 + 2.7182818284590451j)) < 1e-10
+    raises(TypeError, lambda: float(pi + x))
 
 
 def test_evalf_power_subs_bugs():
@@ -252,7 +252,7 @@ def test_evalf_power_subs_bugs():
     assert (x**x).evalf(subs={x: 0}) == 1
     assert (3**x).evalf(subs={x: 0}) == 1
     assert exp(x).evalf(subs={x: 0}) == 1
-    assert ((2+I)**x).evalf(subs={x: 0}) == 1
+    assert ((2 + I)**x).evalf(subs={x: 0}) == 1
     assert (0**x).evalf(subs={x: 0}) == 1
 
 
@@ -295,7 +295,7 @@ def test_issue_2387_bug():
 def test_bugs():
     from sympy import polar_lift, re
 
-    assert abs(re((1+I)**2)) < 1e-15
+    assert abs(re((1 + I)**2)) < 1e-15
 
     # anything that evalf's to 0 will do in place of polar_lift
     assert abs(polar_lift(0)).n() == 0

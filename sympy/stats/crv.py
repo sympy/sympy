@@ -103,7 +103,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
             elif cond.is_Relational:
                 if cond.is_Equality:
                     # Add the appropriate Delta to the integrand
-                    integrand *= DiracDelta(cond.lhs-cond.rhs)
+                    integrand *= DiracDelta(cond.lhs - cond.rhs)
                 else:
                     symbols = cond.free_symbols & set(self.symbols)
                     if len(symbols) != 1:  # Can't handle x > y
@@ -125,7 +125,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                             limits[i] = (symbol, intvl.left, intvl.right)
             else:
                 raise TypeError(
-                        "Condition %s is not a relational or Boolean"%cond)
+                        "Condition %s is not a relational or Boolean" % cond)
 
         evaluate = kwargs.pop('evaluate', True)
         if evaluate:
@@ -222,7 +222,7 @@ class ContinuousPSpace(PSpace):
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
-        if not (len(rvs)==1 and rvs.issubset(self.values)):
+        if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
                     "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
@@ -269,7 +269,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(d(x)-z, x)
+            inverse_cdf = solve(d(x) - z, x)
         except NotImplementedError:
             inverse_cdf = None
         if not inverse_cdf or len(inverse_cdf) != 1:
@@ -300,7 +300,7 @@ def _reduce_inequalities(conditions, var, **kwargs):
     try:
         return reduce_poly_inequalities(conditions, var, **kwargs)
     except PolynomialError:
-        raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+        raise ValueError("Reduction of condition failed %s\n" % conditions[0])
 
 
 def reduce_poly_inequalities_wrap(condition, var):

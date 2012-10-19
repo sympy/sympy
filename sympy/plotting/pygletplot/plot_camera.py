@@ -73,11 +73,11 @@ class PlotCamera(object):
             # yep, this is pseudo ortho (don't tell anyone)
             gluPerspective(
                 0.3, float(self.window.width)/float(self.window.height),
-                           self.min_ortho_dist-0.01, self.max_ortho_dist+0.01)
+                           self.min_ortho_dist - 0.01, self.max_ortho_dist + 0.01)
         else:
             gluPerspective(
                 30.0, float(self.window.width)/float(self.window.height),
-                           self.min_dist-0.01, self.max_dist+0.01)
+                           self.min_dist - 0.01, self.max_dist + 0.01)
         glMatrixMode(GL_MODELVIEW)
 
     def _get_scale(self):
@@ -114,7 +114,7 @@ class PlotCamera(object):
             min_dist = self.min_dist
             max_dist = self.max_dist
 
-        new_dist = (self._dist-dist_d)
+        new_dist = (self._dist - dist_d)
         if (clicks < 0 and new_dist < max_dist) or new_dist > min_dist:
             self._dist = new_dist
 
@@ -123,7 +123,7 @@ class PlotCamera(object):
         glLoadIdentity()
         glTranslatef(0, 0, -self._dist)
         z = model_to_screen(0, 0, 0)[2]
-        d = vec_subs(screen_to_model(x, y, z), screen_to_model(x-dx, y-dy, z))
+        d = vec_subs(screen_to_model(x, y, z), screen_to_model(x - dx, y - dy, z))
         glPopMatrix()
         self._x += d[0]
         self._y += d[1]

@@ -327,7 +327,7 @@ class Prover(object):
 
             for bidx in range(len(b.args)):
                 barg = b.args[bidx]
-                brest = b.args[:bidx] + b.args[bidx+1:]
+                brest = b.args[:bidx] + b.args[bidx + 1:]
                 self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part

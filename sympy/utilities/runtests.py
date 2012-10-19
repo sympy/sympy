@@ -87,8 +87,8 @@ def convert_to_native_paths(lst):
         if sys.platform == "win32":
             pos = rv.find(':')
             if pos != -1:
-                if rv[pos+1] != '\\':
-                    rv = rv[:pos+1] + '\\' + rv[pos+1:]
+                if rv[pos + 1] != '\\':
+                    rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
         newlst.append(sys_normcase(rv))
     return newlst
 
@@ -659,7 +659,7 @@ def _doctest(*paths, **kwargs):
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
             print ''.join(
-                [test_file, ' '*(wid-len(test_file)-len(report)), report])
+                [test_file, ' '*(wid - len(test_file) - len(report)), report])
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
@@ -1004,7 +1004,7 @@ class SymPyDocTests(object):
 
         from StringIO import StringIO
 
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
 
@@ -1483,10 +1483,10 @@ class PyTestReporter(Reporter):
             width = self.terminal_width
 
         if align == "right":
-            if self._write_pos+len(text) > width:
+            if self._write_pos + len(text) > width:
                 # we don't fit on the current line, create a new line
                 self.write("\n")
-            self.write(" "*(width-self._write_pos-len(text)))
+            self.write(" "*(width - self._write_pos - len(text)))
 
         if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
                 sys.stdout.isatty():
@@ -1522,7 +1522,7 @@ class PyTestReporter(Reporter):
         if l == -1:
             self._write_pos += len(text)
         else:
-            self._write_pos = len(text)-l-1
+            self._write_pos = len(text) - l -1
         self._line_wrap = self._write_pos >= width
         self._write_pos %= width
 
@@ -1530,9 +1530,9 @@ class PyTestReporter(Reporter):
         width = self.terminal_width
         if text != "":
             text = " %s " % text
-        idx = (width-len(text)) // 2
-        t = delim*idx + text + delim*(width-idx-len(text))
-        self.write(t+"\n")
+        idx = (width - len(text)) // 2
+        t = delim*idx + text + delim*(width - idx - len(text))
+        self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
         t = traceback.extract_tb(tb)
@@ -1643,7 +1643,7 @@ class PyTestReporter(Reporter):
         return ok
 
     def entering_filename(self, filename, n):
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         self._active_file = rel_name
         self._active_file_error = False
         self.write(rel_name)
@@ -1662,7 +1662,7 @@ class PyTestReporter(Reporter):
     def entering_test(self, f):
         self._active_f = f
         if self._verbose:
-            self.write("\n"+f.__name__+" ")
+            self.write("\n" + f.__name__ + " ")
 
     def test_xfail(self):
         self._xfailed += 1
@@ -1720,7 +1720,7 @@ class PyTestReporter(Reporter):
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         self.write(rel_name)
         self.write("[?]   Failed to import", "Red")
         self.write(" ")

@@ -60,7 +60,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return self.dtype(a, self.dom, len(self.gens)-1, ring=self)
+        return self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -299,7 +299,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        res = self.dtype(a, self.dom, len(self.gens)-1, ring=self)
+        res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
         # make sure res is actually in our ring
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):

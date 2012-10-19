@@ -432,11 +432,11 @@ class exp(ExpBase):
 
     def _eval_rewrite_as_sin(self, arg):
         I = S.ImaginaryUnit
-        return C.sin(I*arg+S.Pi/2) - I*C.sin(I*arg)
+        return C.sin(I*arg + S.Pi/2) - I*C.sin(I*arg)
 
     def _eval_rewrite_as_cos(self, arg):
         I = S.ImaginaryUnit
-        return C.cos(I*arg) + I*C.cos(I*arg+S.Pi/2)
+        return C.cos(I*arg) + I*C.cos(I*arg + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage
@@ -560,8 +560,8 @@ class log(Function):
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
-                return powsimp((-n) * p * x / (n+1), deep=True, combine='exp')
-        return (1-2*(n%2)) * x**(n+1)/(n+1)
+                return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
+        return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
@@ -733,7 +733,7 @@ class LambertW(Function):
         """
         if argindex == 1:
             x = self.args[0]
-            return LambertW(x)/(x*(1+LambertW(x)))
+            return LambertW(x)/(x*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
 

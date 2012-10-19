@@ -27,14 +27,14 @@ class ColorGradient(object):
     def _find_interval(self, v):
         m = len(self.intervals)
         i = 0
-        while i < m-1 and self.intervals[i] <= v:
+        while i < m - 1 and self.intervals[i] <= v:
             i += 1
         return i
 
     def _interpolate_axis(self, axis, v):
         i = self._find_interval(v)
-        v = rinterpolate(self.intervals[i-1], self.intervals[i], v)
-        return interpolate(self.colors[i-1][axis], self.colors[i][axis], v)
+        v = rinterpolate(self.intervals[i - 1], self.intervals[i], v)
+        return interpolate(self.colors[i - 1][axis], self.colors[i][axis], v)
 
     def __call__(self, r, g, b):
         c = self._interpolate_axis
@@ -171,7 +171,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i'%(i)) for i in xrange(1, 6)]
+        vars = [Symbol('unbound%i' % (i)) for i in xrange(1, 6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]

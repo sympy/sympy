@@ -424,7 +424,7 @@ x  + 1 + x\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
-    expr = 1-x
+    expr = 1 -x
     ascii_str_1 = \
 """\
 1 - x\
@@ -444,7 +444,7 @@ u"""\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = 1-2*x
+    expr = 1 - 2*x
     ascii_str_1 = \
 """\
 1 - 2*x\
@@ -496,7 +496,7 @@ y \
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (x+2)/y
+    expr = (x + 2)/y
     ascii_str_1 = \
 """\
 2 + x\n\
@@ -524,7 +524,7 @@ x + 2\n\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = (1+x)*y
+    expr = (1 + x)*y
     ascii_str_1 = \
 """\
 y*(1 + x)\
@@ -553,7 +553,7 @@ y⋅(x + 1)\
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     # Test for correct placement of the negative sign
-    expr = -5*x/(x+10)
+    expr = -5*x/(x + 10)
     ascii_str_1 = \
 """\
  -5*x \n\
@@ -772,7 +772,7 @@ x ≥ y\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Ne(x/(y+1), y**2)
+    expr = Ne(x/(y + 1), y**2)
     ascii_str_1 = \
 """\
   x       2\n\
@@ -899,7 +899,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Abs(x/(x**2+1))
+    expr = Abs(x/(x**2 + 1))
     ascii_str_1 = \
 """\
 |  x   |\n\
@@ -984,7 +984,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = factorial(n+1)
+    expr = factorial(n + 1)
     ascii_str_1 = \
 """\
 (1 + n)!\
@@ -1042,7 +1042,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = factorial2(n+1)
+    expr = factorial2(n + 1)
     ascii_str_1 = \
 """\
 (1 + n)!!\
@@ -1145,7 +1145,7 @@ x\
     assert upretty(expr) == ucode_str
 
     f = Function('f')
-    expr = conjugate(f(x+1))
+    expr = conjugate(f(x + 1))
     ascii_str_1 = \
 """\
 ________\n\
@@ -1193,7 +1193,7 @@ f(x, y)\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = f(x/(y+1), y)
+    expr = f(x/(y + 1), y)
     ascii_str_1 = \
 """\
  /  x     \\\n\
@@ -1235,7 +1235,7 @@ sin (x)\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = conjugate(a+b*I)
+    expr = conjugate(a + b*I)
     ascii_str = \
 """\
 _     _\n\
@@ -1249,7 +1249,7 @@ a - ⅈ⋅b\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = conjugate(exp(a+b*I))
+    expr = conjugate(exp(a + b*I))
     ascii_str = \
 """\
  _     _\n\
@@ -1293,7 +1293,7 @@ f⎝f(x) + 1⎠\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = f(x/(y+1), y)
+    expr = f(x/(y + 1), y)
     ascii_str_1 = \
 """\
  /  x     \\\n\
@@ -1484,7 +1484,7 @@ x ___\n\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = sqrt(2+pi)
+    expr = sqrt(2 + pi)
     ascii_str = \
 """\
   ________\n\
@@ -1498,8 +1498,8 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (2+(
-        1+x**2)/(2+x))**Rational(1, 4)+(1+x**Rational(1, 1000))/sqrt(3+x**2)
+    expr = (2 +(
+        1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 1000))/sqrt(3 + x**2)
     ascii_str = \
 """\
      ____________              \n\
@@ -2109,7 +2109,7 @@ def test_pretty_matrix():
     unicode_str = "[]"
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str
-    expr = Matrix([[x**2+1, 1], [y, x+y]])
+    expr = Matrix([[x**2 + 1, 1], [y, x + y]])
     ascii_str_1 = \
 """\
 [     2       ]
@@ -2755,7 +2755,7 @@ def test_pretty_class():
 def test_pretty_no_wrap_line():
     huge_expr = 0
     for i in range(20):
-        huge_expr += i*sin(i+x)
+        huge_expr += i*sin(i + x)
     assert xpretty(huge_expr            ).find('\n') != -1
     assert xpretty(huge_expr, wrap_line=False).find('\n') == -1
 
@@ -2885,7 +2885,7 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (
-        k, x+n+x**2 + n**2 + (x/n)+(1/x), Integral(x**x, (x, -oo, oo))))
+        k, x + n + x**2 + n**2 + (x/n) + (1/x), Integral(x**x, (x, -oo, oo))))
     ascii_str = \
 """\
           oo                          \n\
@@ -2940,7 +2940,7 @@ k = n  + n + x  + x + ─ + ─          \n\
     assert upretty(expr) == ucode_str
 
     expr = Sum(k**(
-        Integral(x**n, (x, -oo, oo))), (k, 0, x+n+x**2 + n**2 + (x/n)+(1/x)))
+        Integral(x**n, (x, -oo, oo))), (k, 0, x + n + x**2 + n**2 + (x/n) + (1/x)))
     ascii_str = \
 """\
  2        2       1   x           \n\
@@ -3212,7 +3212,7 @@ ____  ____     \n\
 y = 1 x = 0    \
 """
     expr = Sum(1/(1 + 1/(
-        1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
+        1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1 + m), oo)) + 1/(1 + 1/k)
     ascii_str = \
 """\
                1                         \n\

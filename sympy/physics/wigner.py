@@ -674,7 +674,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
-                     _Factlist[2 * bigL+1]/ \
+                     _Factlist[2 * bigL + 1]/ \
                      (_Factlist[bigL - l_1] * \
                       _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
 

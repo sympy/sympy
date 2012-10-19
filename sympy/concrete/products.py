@@ -151,14 +151,14 @@ class Product(Expr):
             all_roots = roots(poly, multiple=True)
 
             for r in all_roots:
-                A *= C.RisingFactorial(a-r, n-a+1)
+                A *= C.RisingFactorial(a - r, n - a + 1)
                 Q *= n - r
 
             if len(all_roots) < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
                 B = Product(arg, (k, a, n)).doit()
 
-            return poly.LC()**(n-a+1) * A * B
+            return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
             p, q = term.as_numer_denom()

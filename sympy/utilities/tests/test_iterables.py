@@ -14,7 +14,7 @@ w, x, y, z = symbols('w,x,y,z')
 
 
 def test_postorder_traversal():
-    expr = z + w*(x+y)
+    expr = z + w*(x + y)
     expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
     assert list(postorder_traversal(expr, key=default_sort_key)) == expected
 
@@ -159,7 +159,7 @@ def test_numbered_symbols():
 
 
 def test_sift():
-    assert sift(range(5), lambda _: _%2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift(range(5), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
     assert sift(x + y, lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift(x*y, lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift(S.One, lambda _: _.has(x)) == {False: [1]}

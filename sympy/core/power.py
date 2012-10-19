@@ -55,9 +55,9 @@ def integer_nthroot(y, n):
         # Newton iteration
         xprev, x = -1, guess
         while 1:
-            t = x**(n-1)
+            t = x**(n - 1)
             #xprev, x = x, x - (t*x-y)//(n*t)
-            xprev, x = x, ((n-1)*x + y//t)//n
+            xprev, x = x, ((n - 1)*x + y//t)//n
             #print n, x-xprev, abs(x-xprev) < 2
             if abs(x - xprev) < 2:
                 break
@@ -476,9 +476,9 @@ class Pow(Expr):
 
                         while n:
                             if n & 1:
-                                c, d = a*c-b*d, b*c+a*d
+                                c, d = a*c - b*d, b*c + a*d
                                 n -= 1
-                            a, b = a*a-b*b, 2*a*b
+                            a, b = a*a - b*b, 2*a*b
                             n //= 2
 
                         I = S.ImaginaryUnit
@@ -513,7 +513,7 @@ class Pow(Expr):
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
                 else:
-                    multi = (base**(n-1))._eval_expand_multinomial()
+                    multi = (base**(n - 1))._eval_expand_multinomial()
                     if multi.is_Add:
                         return Add(*[f*g for f in base.args for g in multi.args])
                     else:

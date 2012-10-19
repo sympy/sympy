@@ -39,10 +39,10 @@ def test_basic1():
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
-    assert limit(1/(x-1), x, 1, dir="+") == oo
-    assert limit(1/(x-1), x, 1, dir="-") == -oo
-    assert limit(1/(5-x)**3, x, 5, dir="+") == -oo
-    assert limit(1/(5-x)**3, x, 5, dir="-") == oo
+    assert limit(1/(x - 1), x, 1, dir="+") == oo
+    assert limit(1/(x - 1), x, 1, dir="-") == -oo
+    assert limit(1/(5 - x)**3, x, 5, dir="+") == -oo
+    assert limit(1/(5 - x)**3, x, 5, dir="-") == oo
     assert limit(1/sin(x), x, pi, dir="+") == -oo
     assert limit(1/sin(x), x, pi, dir="-") == oo
     assert limit(1/cos(x), x, pi/2, dir="+") == -oo
@@ -70,7 +70,7 @@ def test_basic1():
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
-    assert limit((exp(x)-1)/x, x, 0) == 1
+    assert limit((exp(x) - 1)/x, x, 0) == 1
     assert limit(1 + 1/x, x, oo) == 1
     assert limit(-exp(1/x), x, oo) == -1
     assert limit(x + exp(-x), x, oo) == oo
@@ -86,14 +86,14 @@ def test_basic3():
 
 def test_basic4():
     assert limit(2*x + y*x, x, 0) == 0
-    assert limit(2*x + y*x, x, 1) == 2+y
+    assert limit(2*x + y*x, x, 1) == 2 +y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
-    assert integrate(1/(x**3+1), (x, 0, oo)) == 2*pi*sqrt(3)/9
+    assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
 
 
 def test_issue786():
-    assert limit(x*y + x*z, z, 2) == x*y+2*x
+    assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
 def test_Limit():
@@ -122,10 +122,10 @@ def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "-") == -1
     assert limit(floor(cos(x)), x, 0, "+") == 0
     assert limit(floor(cos(x)), x, 0, "-") == 0
-    assert limit(floor(5+sin(x)), x, 0, "+") == 5
-    assert limit(floor(5+sin(x)), x, 0, "-") == 4
-    assert limit(floor(5+cos(x)), x, 0, "+") == 5
-    assert limit(floor(5+cos(x)), x, 0, "-") == 5
+    assert limit(floor(5 + sin(x)), x, 0, "+") == 5
+    assert limit(floor(5 + sin(x)), x, 0, "-") == 4
+    assert limit(floor(5 + cos(x)), x, 0, "+") == 5
+    assert limit(floor(5 + cos(x)), x, 0, "-") == 5
 
 
 def test_ceiling():
@@ -149,29 +149,29 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
     assert limit(ceiling(cos(x)), x, 0, "+") == 1
     assert limit(ceiling(cos(x)), x, 0, "-") == 1
-    assert limit(ceiling(5+sin(x)), x, 0, "+") == 6
-    assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
-    assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
-    assert limit(ceiling(5+cos(x)), x, 0, "-") == 6
+    assert limit(ceiling(5 + sin(x)), x, 0, "+") == 6
+    assert limit(ceiling(5 + sin(x)), x, 0, "-") == 5
+    assert limit(ceiling(5 + cos(x)), x, 0, "+") == 6
+    assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
 
 
 def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
-    assert limit(atan(x) + sqrt(x+1) - sqrt(x), x, oo) == pi/2
+    assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
 
 
 def test_abs():
     assert limit(abs(x), x, 0) == 0
     assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
-    assert limit(abs(sin(x+1)), x, 0) == sin(1)
+    assert limit(abs(sin(x + 1)), x, 0) == sin(1)
 
 
 def test_heuristic():
     x = Symbol("x", real=True)
     assert heuristics(sin(1/x) + atan(x), x, 0, '+') == sin(oo)
-    assert limit(log(2+sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
+    assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 
 def test_issue772():
@@ -184,16 +184,16 @@ def test_issue772():
 def test_exponential():
     n = Symbol('n')
     x = Symbol('x', real=True)
-    assert limit((1+x/n)**n, n, oo) == exp(x)
-    assert limit((1+x/(2*n))**n, n, oo) == exp(x/2)
-    assert limit((1+x/(2*n+1))**n, n, oo) == exp(x/2)
-    assert limit(((x-1)/(x+1))**x, x, oo) == exp(-2)
+    assert limit((1 + x/n)**n, n, oo) == exp(x)
+    assert limit((1 + x/(2*n))**n, n, oo) == exp(x/2)
+    assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
+    assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
 
 
 @XFAIL
 def test_exponential2():
     n = Symbol('n')
-    assert limit((1+x/(n+sin(n)))**n, n, oo) == exp(x)
+    assert limit((1 + x/(n + sin(n)))**n, n, oo) == exp(x)
 
 
 def test_doit():
@@ -211,20 +211,20 @@ def test_doit2():
 
 
 def test_bug693a():
-    assert sin(sin(x+1)+1).limit(x, 0) == sin(sin(1)+1)
+    assert sin(sin(x + 1) + 1).limit(x, 0) == sin(sin(1) + 1)
 
 
 def test_issue693():
-    assert limit( (1-cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
-    assert limit(sin(sin(x+1)+1), x, 0) == sin(1 + sin(1))
-    assert limit(abs(sin(x+1)+1), x, 0) == 1 + sin(1)
+    assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
+    assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
+    assert limit(abs(sin(x + 1) + 1), x, 0) == 1 + sin(1)
 
 
 def test_issue991():
-    assert limit(1/(x+3), x, 2) == S(1)/5
-    assert limit(1/(x+pi), x, 2) == S(1)/(2+pi)
-    assert limit(log(x)/(x**2+3), x, 2) == log(2)/7
-    assert limit(log(x)/(x**2+pi), x, 2) == log(2)/(4+pi)
+    assert limit(1/(x + 3), x, 2) == S(1)/5
+    assert limit(1/(x + pi), x, 2) == S(1)/(2 + pi)
+    assert limit(log(x)/(x**2 + 3), x, 2) == log(2)/7
+    assert limit(log(x)/(x**2 + pi), x, 2) == log(2)/(4 + pi)
 
 
 def test_issue1448():
@@ -274,7 +274,7 @@ def test_issue2085():
 
 @XFAIL
 def test_issue2130():
-    assert limit((1+y)**(1/y) - S.Exp1, y, 0) == 0
+    assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
 
 
 def test_issue1447():
@@ -324,8 +324,8 @@ def test_newissue():
 def test_extended_real_line():
     assert limit(x - oo, x, oo) == -oo
     assert limit(oo - x, x, -oo) == oo
-    assert limit(x**2/(x-5) - oo, x, oo) == -oo
-    assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(x**2/(x - 5) - oo, x, oo) == -oo
+    assert limit(1/(x + sin(x)) - oo, x, 0) == -oo
     assert limit(oo/x, x, oo) == oo
 
 

@@ -163,8 +163,8 @@ class PlotAxesBase(PlotObject):
         o = self._p._origin
         glBegin(GL_LINES)
         glColor3f(*color)
-        glVertex3f(v[0][0]+o[0], v[0][1]+o[1], v[0][2]+o[2])
-        glVertex3f(v[1][0]+o[0], v[1][1]+o[1], v[1][2]+o[2])
+        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
         glEnd()
 
 
@@ -190,7 +190,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         d = d / vec_mag(axis_vector)
 
         # don't draw labels if we're looking down the axis
-        labels_visible = abs(d-1.0) > 0.02
+        labels_visible = abs(d - 1.0) > 0.02
 
         # draw the ticks and labels
         for tick in ticks:
@@ -213,8 +213,8 @@ class PlotAxesOrdinate(PlotAxesBase):
         axis_labels[0][axis] -= 0.3
         axis_labels[1][axis] += 0.3
         a_str = ['X', 'Y', 'Z'][axis]
-        self.draw_text("-"+a_str, axis_labels[0], color)
-        self.draw_text("+"+a_str, axis_labels[1], color)
+        self.draw_text("-" + a_str, axis_labels[0], color)
+        self.draw_text("+" + a_str, axis_labels[1], color)
 
     def draw_tick_line(self, axis, color, radius, tick, labels_visible):
         tick_axis = {0: 1, 1: 0, 2: 1}[axis]

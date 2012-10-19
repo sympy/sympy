@@ -53,7 +53,7 @@ def m_values(j):
         raise ValueError(
             'Only integer or half-integer values allowed for j, got: : %r' % j
         )
-    return size, [j-i for i in range(int(2*j+1))]
+    return size, [j - i for i in range(int(2*j + 1))]
 
 
 #-----------------------------------------------------------------------------
@@ -136,7 +136,7 @@ class SpinOpBase(object):
             arg = []
             arg.extend(tp.args[:n])
             arg.append(self._apply_operator(tp.args[n]))
-            arg.extend(tp.args[n+1:])
+            arg.extend(tp.args[n + 1:])
             result.append(tp.__class__(*arg))
         return Add(*result).expand()
 
@@ -172,7 +172,7 @@ class JplusOp(SpinOpBase, Operator):
         if m.is_Number and j.is_Number:
             if m >= j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKet(j, m+S.One)
+        return hbar*sqrt(j*(j + S.One) - m*(m + S.One))*JzKet(j, m + S.One)
 
     def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
@@ -182,11 +182,11 @@ class JplusOp(SpinOpBase, Operator):
         if m.is_Number and j.is_Number:
             if m >= j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m+S.One))*JzKetCoupled(j, m+S.One, jn, coupling)
+        return hbar*sqrt(j*(j + S.One) - m*(m + S.One))*JzKetCoupled(j, m + S.One, jn, coupling)
 
     def matrix_element(self, j, m, jp, mp):
-        result = hbar*sqrt(j*(j+S.One)-mp*(mp+S.One))
-        result *= KroneckerDelta(m, mp+1)
+        result = hbar*sqrt(j*(j + S.One) - mp*(mp + S.One))
+        result *= KroneckerDelta(m, mp + 1)
         result *= KroneckerDelta(j, jp)
         return result
 
@@ -213,7 +213,7 @@ class JminusOp(SpinOpBase, Operator):
         if m.is_Number and j.is_Number:
             if m <= -j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKet(j, m-S.One)
+        return hbar*sqrt(j*(j + S.One) - m*(m - S.One))*JzKet(j, m - S.One)
 
     def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
@@ -223,11 +223,11 @@ class JminusOp(SpinOpBase, Operator):
         if m.is_Number and j.is_Number:
             if m <= -j:
                 return S.Zero
-        return hbar*sqrt(j*(j+S.One)-m*(m-S.One))*JzKetCoupled(j, m-S.One, jn, coupling)
+        return hbar*sqrt(j*(j + S.One) - m*(m - S.One))*JzKetCoupled(j, m - S.One, jn, coupling)
 
     def matrix_element(self, j, m, jp, mp):
-        result = hbar*sqrt(j*(j+S.One)-mp*(mp-S.One))
-        result *= KroneckerDelta(m, mp-1)
+        result = hbar*sqrt(j*(j + S.One) - mp*(mp - S.One))
+        result *= KroneckerDelta(m, mp - 1)
         result *= KroneckerDelta(j, jp)
         return result
 
@@ -365,30 +365,30 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _apply_operator_JxKet(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def _apply_operator_JxKetCoupled(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def _apply_operator_JyKet(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def _apply_operator_JyKetCoupled(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def _apply_operator_JzKet(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def _apply_operator_JzKetCoupled(self, ket, **options):
         j = ket.j
-        return hbar**2*j*(j+1)*ket
+        return hbar**2*j*(j + 1)*ket
 
     def matrix_element(self, j, m, jp, mp):
-        result = (hbar**2)*j*(j+1)
+        result = (hbar**2)*j*(j + 1)
         result *= KroneckerDelta(m, mp)
         result *= KroneckerDelta(j, jp)
         return result
@@ -758,9 +758,9 @@ class WignerD(Expr):
         top = prettyForm(*top.left(' '))
         bot = prettyForm(*bot.left(' '))
         if pad > top.width():
-            top = prettyForm(*top.right(' ' * (pad-top.width())))
+            top = prettyForm(*top.right(' ' * (pad - top.width())))
         if pad > bot.width():
-            bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
+            bot = prettyForm(*bot.right(' ' * (pad - bot.width())))
         if self.alpha == 0 and self.gamma == 0:
             args = printer._print(self.beta)
             s = stringPict('d' + ' '*pad)
@@ -797,12 +797,12 @@ class WignerD(Expr):
         if beta == pi/2:
             # Varshalovich Equation (5), Section 4.16, page 113, setting
             # alpha=gamma=0.
-            for k in range(2*j+1):
-                if k > j+mp or k > j-m or k < mp-m:
+            for k in range(2*j + 1):
+                if k > j + mp or k > j - m or k < mp - m:
                     continue
-                r += (-S(1))**k * binomial(j+mp, k) * binomial(j-mp, k+m-mp)
-            r *= (-S(1))**(m-mp) / 2**j * sqrt(factorial(j+m) *
-                    factorial(j-m) / (factorial(j+mp) * factorial(j-mp)))
+                r += (-S(1))**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
+            r *= (-S(1))**(m - mp) / 2**j * sqrt(factorial(j + m) *
+                    factorial(j - m) / (factorial(j + mp) * factorial(j - mp)))
         else:
             # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
             # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
@@ -812,13 +812,13 @@ class WignerD(Expr):
             # except that we need to substitute -mp for mp.
             size, mvals = m_values(j)
             for mpp in mvals:
-                r += Rotation.d(j, m, mpp, pi/2).doit() * (cos(-mpp*beta)+I*sin(-mpp*beta)) * \
+                r += Rotation.d(j, m, mpp, pi/2).doit() * (cos(-mpp*beta) + I*sin(-mpp*beta)) * \
                     Rotation.d(j, mpp, -mp, pi/2).doit()
             # Empirical normalization factor so results match Varshalovich
             # Tables 4.3-4.12
             # Note that this exact normalization does not follow from the
             # above equations
-            r = r * I**(2*j-m-mp) * (-1)**(2*m)
+            r = r * I**(2*j - m - mp) * (-1)**(2*m)
             # Finally, simplify the whole expression
             r = simplify(r)
         r *= exp(-I*m*alpha)*exp(-I*mp*gamma)
@@ -859,7 +859,7 @@ class SpinState(State):
         if j.is_number and m.is_number:
             if abs(m) > j:
                 raise ValueError('Allowed values for m are -j <= m <= j, got j, m: %s, %s' % (j, m))
-            if int(j-m) != j-m:
+            if int(j - m) != j - m:
                 raise ValueError('Both j and m must be integer or half-integer, got j, m: %s, %s' % (j, m))
         return State.__new__(cls, j, m)
 
@@ -873,7 +873,7 @@ class SpinState(State):
 
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return ComplexSpace(2*label[0]+1)
+        return ComplexSpace(2*label[0] + 1)
 
     def _represent_base(self, **options):
         j = self.j
@@ -918,12 +918,12 @@ class SpinState(State):
                 if j == int(j):
                     start = j**2
                 else:
-                    start = (2*j-1)*(2*j+1)/4
+                    start = (2*j - 1)*(2*j + 1)/4
             else:
                 start = 0
             vect = represent(self, basis=basis, **options)
             result = Add(
-                *[vect[start+i] * evect(j, j-i, *args) for i in range(2*j+1)])
+                *[vect[start + i] * evect(j, j - i, *args) for i in range(2*j + 1)])
             if isinstance(self, CoupledSpinState) and options.get('coupled') is False:
                 return uncouple(result)
             return result
@@ -956,7 +956,7 @@ class SpinState(State):
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JxOp(None)[bra.j-bra.m]
+            result *= self._represent_JxOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
                 self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -965,7 +965,7 @@ class SpinState(State):
     def _eval_innerproduct_JyBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JyOp(None)[bra.j-bra.m]
+            result *= self._represent_JyOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
                 self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -974,7 +974,7 @@ class SpinState(State):
     def _eval_innerproduct_JzBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
         if bra.dual_class() is not self.__class__:
-            result *= self._represent_JzOp(None)[bra.j-bra.m]
+            result *= self._represent_JzOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
                 self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -1259,14 +1259,14 @@ class JzBra(SpinState, Bra):
 # This same method is also used by the uncouple method, and is separated from
 # the CoupledSpinState class to maintain consistency in defining coupling
 def _build_coupled(jcoupling, length):
-    n_list = [ [n+1] for n in range(length) ]
+    n_list = [ [n + 1] for n in range(length) ]
     coupled_jn = []
     coupled_n = []
     for n1, n2, j_new in jcoupling:
         coupled_jn.append(j_new)
-        coupled_n.append( (n_list[n1-1], n_list[n2-1]) )
-        n_sort = sorted(n_list[n1-1]+n_list[n2-1])
-        n_list[n_sort[0]-1] = n_sort
+        coupled_n.append( (n_list[n1 - 1], n_list[n2 - 1]) )
+        n_sort = sorted(n_list[n1 - 1] + n_list[n2 - 1])
+        n_list[n_sort[0] - 1] = n_sort
     return coupled_n, coupled_jn
 
 
@@ -1287,7 +1287,7 @@ class CoupledSpinState(SpinState):
             # Use specified coupling scheme
             jcoupling = jcoupling[0]
         else:
-            raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling)+3) )
+            raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling) + 3) )
         # Check arguments have correct form
         if not (isinstance(jn, list) or isinstance(jn, tuple) or isinstance(jn, Tuple)):
             raise TypeError('jn must be Tuple, list or tuple, got %s' %
@@ -1298,9 +1298,9 @@ class CoupledSpinState(SpinState):
         if not all(isinstance(term, list) or isinstance(term, tuple) or isinstance(term, Tuple) for term in jcoupling):
             raise TypeError(
                 'All elements of jcoupling must be list, tuple or Tuple')
-        if not len(jn)-1 == len(jcoupling):
+        if not len(jn) - 1 == len(jcoupling):
             raise ValueError('jcoupling must have length of %d, got %d' %
-                             (len(jn)-1, len(jcoupling)))
+                             (len(jn) - 1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
             raise ValueError('All elements of jcoupling must have length 3')
         # Build sympified args
@@ -1321,19 +1321,19 @@ class CoupledSpinState(SpinState):
         coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
         jvals = list(jn)
         for n, (n1, n2) in enumerate(coupled_n):
-            j1 = jvals[min(n1)-1]
-            j2 = jvals[min(n2)-1]
+            j1 = jvals[min(n1) - 1]
+            j2 = jvals[min(n2) - 1]
             j3 = coupled_jn[n]
             if sympify(j1).is_number and sympify(j2).is_number and sympify(j3).is_number:
-                if j1+j2 < j3:
+                if j1 + j2 < j3:
                     raise ValueError('All couplings must have j1+j2 >= j3, '
-                        'in coupling number %d got j1,j2,j3: %d,%d,%d' % (n+1, j1, j2, j3))
-                if abs(j1-j2) > j3:
+                        'in coupling number %d got j1,j2,j3: %d,%d,%d' % (n + 1, j1, j2, j3))
+                if abs(j1 - j2) > j3:
                     raise ValueError("All couplings must have |j1+j2| <= j3, "
-                        "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n+1, j1, j2, j3))
-                if int(j1+j2) == j1+j2:
+                        "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n + 1, j1, j2, j3))
+                if int(j1 + j2) == j1 + j2:
                     pass
-            jvals[min(n1+n2)-1] = j3
+            jvals[min(n1 + n2) - 1] = j3
         if len(jcoupling) > 0 and jcoupling[-1][2] != j:
             raise ValueError('Last j value coupled together must be the final j of the state')
         # Return state
@@ -1346,11 +1346,11 @@ class CoupledSpinState(SpinState):
         #    label.append('j%d=%s' % (i, ji) )
         for i, ji in enumerate(self.jn):
             label.append('j%d=%s' % (
-                i+1, printer._print(ji)
+                i + 1, printer._print(ji)
             ))
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (
-                ','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)
+                ','.join(str(i) for i in sorted(n1 + n2)), printer._print(jn)
             ))
         return ','.join(label)
 
@@ -1360,13 +1360,13 @@ class CoupledSpinState(SpinState):
         #for i, ji in enumerate(self.jn, start=1):
         #    n = '%d' % (i)
         for i, ji in enumerate(self.jn):
-            symb = 'j%d' % (i+1)
+            symb = 'j%d' % (i + 1)
             symb = pretty_symbol(symb)
             symb = prettyForm(symb + '=')
             item = prettyForm(*symb.right(printer._print(ji)))
             label.append(item)
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
-            n = ','.join(pretty_symbol("j%d" % i)[-1] for i in sorted(n1+n2))
+            n = ','.join(pretty_symbol("j%d" % i)[-1] for i in sorted(n1 + n2))
             symb = prettyForm('j' + n + '=')
             item = prettyForm(*symb.right(printer._print(jn)))
             label.append(item)
@@ -1380,9 +1380,9 @@ class CoupledSpinState(SpinState):
         #for i, ji in enumerate(self.jn, start=1):
         #    label.append('j_{%d}=%s' % (i, printer._print(ji)) )
         for i, ji in enumerate(self.jn):
-            label.append('j_{%d}=%s' % (i+1, printer._print(ji)) )
+            label.append('j_{%d}=%s' % (i + 1, printer._print(ji)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
-            n = ','.join(str(i) for i in sorted(n1+n2))
+            n = ','.join(str(i) for i in sorted(n1 + n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )
         return self._print_sequence(
             label, self._label_separator, printer, *args
@@ -1408,14 +1408,14 @@ class CoupledSpinState(SpinState):
     def _eval_hilbert_space(cls, label):
         j = Add(*label[2])
         if j.is_number:
-            return DirectSumHilbertSpace(*[ ComplexSpace(x) for x in range(int(2*j+1), 0, -2) ])
+            return DirectSumHilbertSpace(*[ ComplexSpace(x) for x in range(int(2*j + 1), 0, -2) ])
         else:
             # TODO: Need hilbert space fix, see issue 2633
             # Desired behavior:
             #ji = symbols('ji')
             #ret = Sum(ComplexSpace(2*ji + 1), (ji, 0, j))
             # Temporary fix:
-            return ComplexSpace(2*j+1)
+            return ComplexSpace(2*j + 1)
 
     def _represent_coupled_base(self, **options):
         evect = self.uncoupled_class()
@@ -1429,8 +1429,8 @@ class CoupledSpinState(SpinState):
         if self.j == int(self.j):
             start = self.j**2
         else:
-            start = (2*self.j-1)*(1+2*self.j)/4
-        result[start:start+2*self.j+1, 0] = evect(
+            start = (2*self.j - 1)*(1 + 2*self.j)/4
+        result[start:start + 2*self.j + 1, 0] = evect(
             self.j, self.m)._represent_base(**options)
         return result
 
@@ -1798,12 +1798,12 @@ def _couple(tp, jcoupling_list):
     if jcoupling_list is None:
         jcoupling_list = []
         for n in range(1, len(states)):
-            jcoupling_list.append( (1, n+1) )
+            jcoupling_list.append( (1, n + 1) )
 
     # Check jcoupling_list valid
-    if not len(jcoupling_list) == len(states)-1:
+    if not len(jcoupling_list) == len(states) - 1:
         raise TypeError('jcoupling_list must be length %d, got %d' %
-                        (len(states)-1, len(jcoupling_list)))
+                        (len(states) - 1, len(jcoupling_list)))
     if not all( len(coupling) == 2 for coupling in jcoupling_list):
         raise ValueError('Each coupling must define 2 spaces')
     if any([n1 == n2 for n1, n2 in jcoupling_list]):
@@ -1811,9 +1811,9 @@ def _couple(tp, jcoupling_list):
     if all([sympify(n1).is_number and sympify(n2).is_number for n1, n2 in jcoupling_list]):
         j_test = [0]*len(states)
         for n1, n2 in jcoupling_list:
-            if j_test[n1-1] == -1 or j_test[n2-1] == -1:
+            if j_test[n1 - 1] == -1 or j_test[n2 - 1] == -1:
                 raise ValueError('Spaces coupling j_n\'s are referenced by smallest n value')
-            j_test[max(n1, n2)-1] = -1
+            j_test[max(n1, n2) - 1] = -1
 
     # j values of states to be coupled together
     jn = [state.j for state in states]
@@ -1822,27 +1822,27 @@ def _couple(tp, jcoupling_list):
     # Create coupling_list, which defines all the couplings between all
     # the spaces from jcoupling_list
     coupling_list = []
-    n_list = [ [i+1] for i in range(len(states)) ]
+    n_list = [ [i + 1] for i in range(len(states)) ]
     for j_coupling in jcoupling_list:
         # Least n for all j_n which is coupled as first and second spaces
         n1, n2 = j_coupling
         # List of all n's coupled in first and second spaces
-        j1_n = list(n_list[n1-1])
-        j2_n = list(n_list[n2-1])
+        j1_n = list(n_list[n1 - 1])
+        j2_n = list(n_list[n2 - 1])
         coupling_list.append( (j1_n, j2_n) )
         # Set new j_n to be coupling of all j_n in both first and second spaces
-        n_list[ min(n1, n2) - 1 ] = sorted(j1_n+j2_n)
+        n_list[ min(n1, n2) - 1 ] = sorted(j1_n + j2_n)
 
     if all(state.j.is_number and state.m.is_number for state in states):
         # Numerical coupling
         # Iterate over difference between maximum possible j value of each coupling and the actual value
-        diff_max = [ Add( *[ jn[n-1]-mn[n-1] for n in coupling[0]+ \
+        diff_max = [ Add( *[ jn[n - 1] - mn[n - 1] for n in coupling[0] + \
                          coupling[1] ] ) for coupling in coupling_list ]
         result = []
-        for diff in range(diff_max[-1]+1):
+        for diff in range(diff_max[-1] + 1):
             # Determine available configurations
             n = len(coupling_list)
-            tot = binomial(diff+n-1, diff)
+            tot = binomial(diff + n - 1, diff)
 
             for config_num in range(tot):
                 diff_list = _confignum_to_difflist(config_num, diff, n)
@@ -1857,12 +1857,12 @@ def _couple(tp, jcoupling_list):
                 coupled_j = list(jn)
                 jcoupling = []
                 for (j1_n, j2_n), coupling_diff in zip(coupling_list, diff_list):
-                    j1 = coupled_j[ min(j1_n)-1 ]
-                    j2 = coupled_j[ min(j2_n)-1 ]
+                    j1 = coupled_j[ min(j1_n) - 1 ]
+                    j2 = coupled_j[ min(j2_n) - 1 ]
                     j3 = j1 + j2 - coupling_diff
-                    coupled_j[ min(j1_n+j2_n) - 1 ] = j3
-                    m1 = Add( *[ mn[x-1] for x in j1_n] )
-                    m2 = Add( *[ mn[x-1] for x in j2_n] )
+                    coupled_j[ min(j1_n + j2_n) - 1 ] = j3
+                    m1 = Add( *[ mn[x - 1] for x in j1_n] )
+                    m2 = Add( *[ mn[x - 1] for x in j2_n] )
                     m3 = m1 + m2
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
@@ -1884,20 +1884,20 @@ def _couple(tp, jcoupling_list):
         sum_terms = []
         coupled_j = list(jn)
         for j1_n, j2_n in coupling_list:
-            j1 = coupled_j[ min(j1_n)-1 ]
-            j2 = coupled_j[ min(j2_n)-1 ]
-            if len(j1_n+j2_n) == len(states):
+            j1 = coupled_j[ min(j1_n) - 1 ]
+            j2 = coupled_j[ min(j2_n) - 1 ]
+            if len(j1_n + j2_n) == len(states):
                 j3 = symbols('j')
             else:
-                j3_name = 'j' + ''.join(["%s" % n for n in j1_n+j2_n])
+                j3_name = 'j' + ''.join(["%s" % n for n in j1_n + j2_n])
                 j3 = symbols(j3_name)
-            coupled_j[ min(j1_n+j2_n) - 1 ] = j3
-            m1 = Add( *[ mn[x-1] for x in j1_n] )
-            m2 = Add( *[ mn[x-1] for x in j2_n] )
+            coupled_j[ min(j1_n + j2_n) - 1 ] = j3
+            m1 = Add( *[ mn[x - 1] for x in j1_n] )
+            m2 = Add( *[ mn[x - 1] for x in j2_n] )
             m3 = m1 + m2
             cg_terms.append( (j1, m1, j2, m2, j3, m3) )
             jcoupling.append( (min(j1_n), min(j2_n), j3) )
-            sum_terms.append((j3, m3, j1+j2))
+            sum_terms.append((j3, m3, j1 + j2))
         coeff = Mul( *[ CG(*term) for term in cg_terms] )
         state = coupled_evect(j3, m3, jn, jcoupling)
         return Sum(coeff*state, *sum_terms)
@@ -1993,10 +1993,10 @@ def _uncouple(state, jn, jcoupling_list):
             jcoupling_list = []
             for i in range(1, len(jn)):
                 jcoupling_list.append(
-                    (1, 1+i, Add(*[jn[j] for j in range(i+1)])) )
+                    (1, 1 + i, Add(*[jn[j] for j in range(i + 1)])) )
         if not (isinstance(jcoupling_list, list) or isinstance(jcoupling_list, tuple)):
             raise TypeError("jcoupling must be a list or tuple")
-        if not len(jcoupling_list) == len(jn)-1:
+        if not len(jcoupling_list) == len(jn) - 1:
             raise ValueError("Must specify 2 fewer coupling terms than the number of j values")
         coupled_n, coupled_jn = _build_coupled(jcoupling_list, len(jn))
         evect = state.__class__
@@ -2010,19 +2010,19 @@ def _uncouple(state, jn, jcoupling_list):
     # Create coupling, which defines all the couplings between all the spaces
     for j3, (n1, n2) in zip(coupled_jn, coupled_n):
         # j's which are coupled as first and second spaces
-        j1 = j_list[n1[0]-1]
-        j2 = j_list[n2[0]-1]
+        j1 = j_list[n1[0] - 1]
+        j2 = j_list[n2[0] - 1]
         # Build coupling list
         coupling_list.append( (n1, n2, j1, j2, j3) )
         # Set new value in j_list
-        j_list[min(n1+n2)-1] = j3
+        j_list[min(n1 + n2) - 1] = j3
 
     if j.is_number and m.is_number:
         diff_max = [ 2*x for x in jn ]
         diff = Add(*jn) - m
 
         n = len(jn)
-        tot = binomial(diff+n-1, diff)
+        tot = binomial(diff + n - 1, diff)
 
         result = []
         for config_num in range(tot):
@@ -2033,9 +2033,9 @@ def _uncouple(state, jn, jcoupling_list):
             cg_terms = []
             for coupling in coupling_list:
                 j1_n, j2_n, j1, j2, j3 = coupling
-                m1 = Add( *[ jn[x-1] - diff_list[x-1] for x in j1_n ] )
-                m2 = Add( *[ jn[x-1] - diff_list[x-1] for x in j2_n ] )
-                m3 = m1+m2
+                m1 = Add( *[ jn[x - 1] - diff_list[x - 1] for x in j1_n ] )
+                m2 = Add( *[ jn[x - 1] - diff_list[x - 1] for x in j2_n ] )
+                m3 = m1 + m2
                 cg_terms.append( (j1, m1, j2, m2, j3, m3) )
             coeff = Mul( *[ CG(*term).doit() for term in cg_terms ] )
             state = TensorProduct(
@@ -2044,13 +2044,13 @@ def _uncouple(state, jn, jcoupling_list):
         return Add(*result)
     else:
         # Symbolic coupling
-        m_str = "m1:%d" % (len(jn)+1)
+        m_str = "m1:%d" % (len(jn) + 1)
         mvals = symbols(m_str)
-        cg_terms = [(j1, Add(*[mvals[n-1] for n in j1_n]),
-                     j2, Add(*[mvals[n-1] for n in j2_n]),
-                     j3, Add(*[mvals[n-1] for n in j1_n+j2_n])) for j1_n, j2_n, j1, j2, j3 in coupling_list[:-1] ]
-        cg_terms.append(*[(j1, Add(*[mvals[n-1] for n in j1_n]),
-                           j2, Add(*[mvals[n-1] for n in j2_n]),
+        cg_terms = [(j1, Add(*[mvals[n - 1] for n in j1_n]),
+                     j2, Add(*[mvals[n - 1] for n in j2_n]),
+                     j3, Add(*[mvals[n - 1] for n in j1_n + j2_n])) for j1_n, j2_n, j1, j2, j3 in coupling_list[:-1] ]
+        cg_terms.append(*[(j1, Add(*[mvals[n - 1] for n in j1_n]),
+                           j2, Add(*[mvals[n - 1] for n in j2_n]),
                            j, m) for j1_n, j2_n, j1, j2, j3 in [coupling_list[-1]] ])
         cg_coeff = Mul(*[CG(*cg_term) for cg_term in cg_terms])
         sum_terms = [ (m, -j, j) for j, m in zip(jn, mvals) ]
@@ -2064,12 +2064,12 @@ def _confignum_to_difflist(config_num, diff, list_len):
     for n in range(list_len):
         prev_diff = diff
         # Number of spots after current one
-        rem_spots = list_len-n-1
+        rem_spots = list_len - n -1
         # Number of configurations of distributing diff among the remaining spots
-        rem_configs = binomial(diff+rem_spots-1, diff)
+        rem_configs = binomial(diff + rem_spots - 1, diff)
         while config_num >= rem_configs:
             config_num -= rem_configs
             diff -= 1
-            rem_configs = binomial(diff+rem_spots-1, diff)
-        diff_list.append(prev_diff-diff)
+            rem_configs = binomial(diff + rem_spots - 1, diff)
+        diff_list.append(prev_diff - diff)
     return diff_list

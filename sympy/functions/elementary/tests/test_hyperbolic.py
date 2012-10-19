@@ -105,8 +105,8 @@ def test_cosh():
     assert cosh(-pi*I/2) == 0
     assert cosh(pi*I/2) == 0
     assert cosh(-pi*I/2) == 0
-    assert cosh((-3*10**73+1)*pi*I/2) == 0
-    assert cosh((7*10**103+1)*pi*I/2) == 0
+    assert cosh((-3*10**73 + 1)*pi*I/2) == 0
+    assert cosh((7*10**103 + 1)*pi*I/2) == 0
 
     assert cosh(pi*I) == -1
     assert cosh(-pi*I) == -1
@@ -295,9 +295,9 @@ def test_asinh():
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan
     assert asinh( 0) == 0
-    assert asinh(+1) == log(sqrt(2)+1)
+    assert asinh(+1) == log(sqrt(2) + 1)
 
-    assert asinh(-1) == log(sqrt(2)-1)
+    assert asinh(-1) == log(sqrt(2) - 1)
     assert asinh(I) == pi*I/2
     assert asinh(-I) == -pi*I/2
     assert asinh(I/2) == pi*I/6
@@ -314,11 +314,11 @@ def test_asinh():
     assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
     assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
 
-    assert asinh(I*(sqrt(5)-1)/4) == pi*I/10
-    assert asinh(-I*(sqrt(5)-1)/4) == -pi*I/10
+    assert asinh(I*(sqrt(5) - 1)/4) == pi*I/10
+    assert asinh(-I*(sqrt(5) - 1)/4) == -pi*I/10
 
-    assert asinh(I*(sqrt(5)+1)/4) == 3*pi*I/10
-    assert asinh(-I*(sqrt(5)+1)/4) == -3*pi*I/10
+    assert asinh(I*(sqrt(5) + 1)/4) == 3*pi*I/10
+    assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
 
 
 def test_asinh_series():
@@ -342,22 +342,22 @@ def test_acosh():
 
     assert acosh(zoo) == oo
 
-    assert acosh(I) == log(I*(1+sqrt(2)))
-    assert acosh(-I) == log(-I*(1+sqrt(2)))
-    assert acosh((sqrt(3)-1)/(2*sqrt(2))) == 5*pi*I/12
-    assert acosh(-(sqrt(3)-1)/(2*sqrt(2))) == 7*pi*I/12
+    assert acosh(I) == log(I*(1 + sqrt(2)))
+    assert acosh(-I) == log(-I*(1 + sqrt(2)))
+    assert acosh((sqrt(3) - 1)/(2*sqrt(2))) == 5*pi*I/12
+    assert acosh(-(sqrt(3) - 1)/(2*sqrt(2))) == 7*pi*I/12
     assert acosh(sqrt(2)/2) == I*pi/4
     assert acosh(-sqrt(2)/2) == 3*I*pi/4
     assert acosh(sqrt(3)/2) == I*pi/6
     assert acosh(-sqrt(3)/2) == 5*I*pi/6
-    assert acosh(sqrt(2+sqrt(2))/2) == I*pi/8
-    assert acosh(-sqrt(2+sqrt(2))/2) == 7*I*pi/8
-    assert acosh(sqrt(2-sqrt(2))/2) == 3*I*pi/8
-    assert acosh(-sqrt(2-sqrt(2))/2) == 5*I*pi/8
-    assert acosh((1+sqrt(3))/(2*sqrt(2))) == I*pi/12
-    assert acosh(-(1+sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
-    assert acosh((sqrt(5)+1)/4) == I*pi/5
-    assert acosh(-(sqrt(5)+1)/4) == 4*I*pi/5
+    assert acosh(sqrt(2 + sqrt(2))/2) == I*pi/8
+    assert acosh(-sqrt(2 + sqrt(2))/2) == 7*I*pi/8
+    assert acosh(sqrt(2 - sqrt(2))/2) == 3*I*pi/8
+    assert acosh(-sqrt(2 - sqrt(2))/2) == 5*I*pi/8
+    assert acosh((1 + sqrt(3))/(2*sqrt(2))) == I*pi/12
+    assert acosh(-(1 + sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
+    assert acosh((sqrt(5) + 1)/4) == I*pi/5
+    assert acosh(-(sqrt(5) + 1)/4) == 4*I*pi/5
 
 
 def test_acosh_infinities():
@@ -403,14 +403,14 @@ def test_atanh():
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
     assert atanh(-I*sqrt(3)) == -I*pi/3
-    assert atanh(I*(1+sqrt(2))) == 3*pi*I/8
-    assert atanh(I*(sqrt(2)-1)) == pi*I/8
-    assert atanh(I*(1-sqrt(2))) == -pi*I/8
-    assert atanh(-I*(1+sqrt(2))) == -3*pi*I/8
-    assert atanh(I*sqrt(5+2*sqrt(5))) == 2*I*pi/5
-    assert atanh(-I*sqrt(5+2*sqrt(5))) == -2*I*pi/5
-    assert atanh(I*(2-sqrt(3))) == pi*I/12
-    assert atanh(I*(sqrt(3)-2)) == -pi*I/12
+    assert atanh(I*(1 + sqrt(2))) == 3*pi*I/8
+    assert atanh(I*(sqrt(2) - 1)) == pi*I/8
+    assert atanh(I*(1 - sqrt(2))) == -pi*I/8
+    assert atanh(-I*(1 + sqrt(2))) == -3*pi*I/8
+    assert atanh(I*sqrt(5 + 2*sqrt(5))) == 2*I*pi/5
+    assert atanh(-I*sqrt(5 + 2*sqrt(5))) == -2*I*pi/5
+    assert atanh(I*(2 - sqrt(3))) == pi*I/12
+    assert atanh(I*(sqrt(3) - 2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
 
@@ -454,16 +454,16 @@ def test_acoth():
     assert acoth(-I/sqrt(3)) == I*pi/3
     assert acoth(I*sqrt(3)) == -I*pi/6
     assert acoth(-I*sqrt(3)) == I*pi/6
-    assert acoth(I*(1+sqrt(2))) == -pi*I/8
-    assert acoth(-I*(sqrt(2)+1)) == pi*I/8
-    assert acoth(I*(1-sqrt(2))) == 3*pi*I/8
-    assert acoth(I*(sqrt(2)-1)) == -3*pi*I/8
-    assert acoth(I*sqrt(5+2*sqrt(5))) == -I*pi/10
-    assert acoth(-I*sqrt(5+2*sqrt(5))) == I*pi/10
-    assert acoth(I*(2+sqrt(3))) == -pi*I/12
-    assert acoth(-I*(2+sqrt(3))) == pi*I/12
-    assert acoth(I*(2-sqrt(3))) == -5*pi*I/12
-    assert acoth(I*(sqrt(3)-2)) == 5*pi*I/12
+    assert acoth(I*(1 + sqrt(2))) == -pi*I/8
+    assert acoth(-I*(sqrt(2) + 1)) == pi*I/8
+    assert acoth(I*(1 - sqrt(2))) == 3*pi*I/8
+    assert acoth(I*(sqrt(2) - 1)) == -3*pi*I/8
+    assert acoth(I*sqrt(5 + 2*sqrt(5))) == -I*pi/10
+    assert acoth(-I*sqrt(5 + 2*sqrt(5))) == I*pi/10
+    assert acoth(I*(2 + sqrt(3))) == -pi*I/12
+    assert acoth(-I*(2 + sqrt(3))) == pi*I/12
+    assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
+    assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
 
 
 def test_acoth_series():
@@ -495,9 +495,9 @@ def test_complex():
         assert cosh(z).expand(
             complex=True, deep=deep) == cosh(a)*cos(b) + I*sinh(a)*sin(b)
         assert tanh(z).expand(complex=True, deep=deep) == sinh(a)*cosh(
-            a)/(cos(b)**2+sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2+sinh(a)**2)
+            a)/(cos(b)**2 + sinh(a)**2) + I*sin(b)*cos(b)/(cos(b)**2 + sinh(a)**2)
         assert coth(z).expand(complex=True, deep=deep) == sinh(a)*cosh(
-            a)/(sin(b)**2+sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2+sinh(a)**2)
+            a)/(sin(b)**2 + sinh(a)**2) - I*sin(b)*cos(b)/(sin(b)**2 + sinh(a)**2)
 
 
 def test_complex_2899():
@@ -510,22 +510,22 @@ def test_complex_2899():
 def test_simplifications():
     x = Symbol('x')
     assert sinh(asinh(x)) == x
-    assert sinh(acosh(x)) == sqrt(x-1) * sqrt(x+1)
-    assert sinh(atanh(x)) == x/sqrt(1-x**2)
-    assert sinh(acoth(x)) == 1/(sqrt(x-1) * sqrt(x+1))
+    assert sinh(acosh(x)) == sqrt(x - 1) * sqrt(x + 1)
+    assert sinh(atanh(x)) == x/sqrt(1 - x**2)
+    assert sinh(acoth(x)) == 1/(sqrt(x - 1) * sqrt(x + 1))
 
-    assert cosh(asinh(x)) == sqrt(1+x**2)
+    assert cosh(asinh(x)) == sqrt(1 + x**2)
     assert cosh(acosh(x)) == x
-    assert cosh(atanh(x)) == 1/sqrt(1-x**2)
-    assert cosh(acoth(x)) == x/(sqrt(x-1) * sqrt(x+1))
+    assert cosh(atanh(x)) == 1/sqrt(1 - x**2)
+    assert cosh(acoth(x)) == x/(sqrt(x - 1) * sqrt(x + 1))
 
-    assert tanh(asinh(x)) == x/sqrt(1+x**2)
-    assert tanh(acosh(x)) == sqrt(x-1) * sqrt(x+1) / x
+    assert tanh(asinh(x)) == x/sqrt(1 + x**2)
+    assert tanh(acosh(x)) == sqrt(x - 1) * sqrt(x + 1) / x
     assert tanh(atanh(x)) == x
     assert tanh(acoth(x)) == 1/x
 
-    assert coth(asinh(x)) == sqrt(1+x**2)/x
-    assert coth(acosh(x)) == x/(sqrt(x-1) * sqrt(x+1))
+    assert coth(asinh(x)) == sqrt(1 + x**2)/x
+    assert coth(acosh(x)) == x/(sqrt(x - 1) * sqrt(x + 1))
     assert coth(atanh(x)) == 1/x
     assert coth(acoth(x)) == x
 
@@ -536,37 +536,37 @@ def test_issue1037():
 
 def test_sinh_rewrite():
     x = Symbol('x')
-    assert sinh(x).rewrite(exp) == (exp(x)-exp(-x))/2
-    assert sinh(x).rewrite(cosh) == -I*cosh(x+I*pi/2)
+    assert sinh(x).rewrite(exp) == (exp(x) - exp(-x))/2
+    assert sinh(x).rewrite(cosh) == -I*cosh(x + I*pi/2)
     tanh_half = tanh(S.Half*x)
-    assert sinh(x).rewrite(tanh) == 2*tanh_half/(1-tanh_half**2)
+    assert sinh(x).rewrite(tanh) == 2*tanh_half/(1 - tanh_half**2)
     coth_half = coth(S.Half*x)
-    assert sinh(x).rewrite(coth) == 2*coth_half/(coth_half**2-1)
+    assert sinh(x).rewrite(coth) == 2*coth_half/(coth_half**2 - 1)
 
 
 def test_cosh_rewrite():
     x = Symbol('x')
-    assert cosh(x).rewrite(exp) == (exp(x)+exp(-x))/2
-    assert cosh(x).rewrite(sinh) == -I*sinh(x+I*pi/2)
+    assert cosh(x).rewrite(exp) == (exp(x) + exp(-x))/2
+    assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2)
     tanh_half = tanh(S.Half*x)**2
-    assert cosh(x).rewrite(tanh) == (1+tanh_half)/(1-tanh_half)
+    assert cosh(x).rewrite(tanh) == (1 + tanh_half)/(1 - tanh_half)
     coth_half = coth(S.Half*x)**2
-    assert cosh(x).rewrite(coth) == (coth_half+1)/(coth_half-1)
+    assert cosh(x).rewrite(coth) == (coth_half + 1)/(coth_half - 1)
 
 
 def test_tanh_rewrite():
     x = Symbol('x')
-    assert tanh(x).rewrite(exp) == (exp(x)-exp(-x))/(exp(x)+exp(-x))
-    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2-x)
-    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2-x)/cosh(x)
+    assert tanh(x).rewrite(exp) == (exp(x) - exp(-x))/(exp(x) + exp(-x))
+    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x)
+    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x)/cosh(x)
     assert tanh(x).rewrite(coth) == 1/coth(x)
 
 
 def test_coth_rewrite():
     x = Symbol('x')
-    assert coth(x).rewrite(exp) == (exp(x)+exp(-x))/(exp(x)-exp(-x))
-    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2-x)/sinh(x)
-    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2-x)
+    assert coth(x).rewrite(exp) == (exp(x) + exp(-x))/(exp(x) - exp(-x))
+    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x)/sinh(x)
+    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x)
     assert coth(x).rewrite(tanh) == 1/tanh(x)
 
 

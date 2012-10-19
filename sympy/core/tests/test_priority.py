@@ -70,18 +70,18 @@ def test_add():
     x = Symbol('x')
     h = Higher()
     l = Lower()
-    assert l+h == h+l == 'high'
-    assert x+h == h+x == 'high'
-    assert l+x == x+l != 'low'
+    assert l + h == h + l == 'high'
+    assert x + h == h + x == 'high'
+    assert l + x == x + l != 'low'
 
 
 def test_sub():
     x = Symbol('x')
     h = Higher()
     l = Lower()
-    assert l-h == h-l == 'high'
-    assert x-h == h-x == 'high'
-    assert l-x == -(x-l) != 'low'
+    assert l - h == h - l == 'high'
+    assert x - h == h - x == 'high'
+    assert l - x == -(x - l) != 'low'
 
 
 def test_pow():

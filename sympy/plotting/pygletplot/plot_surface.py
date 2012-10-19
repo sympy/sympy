@@ -75,14 +75,14 @@ class PlotSurface(PlotModeBase):
             for u in xrange(1, len(self.u_set)):
                 glBegin(GL_QUAD_STRIP)
                 for v in xrange(len(self.v_set)):
-                    pa = self.verts[u-1][v]
+                    pa = self.verts[u - 1][v]
                     pb = self.verts[u][v]
                     if pa is None or pb is None:
                         glEnd()
                         glBegin(GL_QUAD_STRIP)
                         continue
                     if use_cverts:
-                        ca = self.cverts[u-1][v]
+                        ca = self.cverts[u - 1][v]
                         cb = self.cverts[u][v]
                         if ca is None:
                             ca = (0, 0, 0)

@@ -29,7 +29,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
 
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     raises(CodeGenArgumentListError, lambda: Routine("test", expr,
            argument_sequence=[z, x]))
     raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a,
@@ -82,7 +82,7 @@ def test_empty_c_header():
 
 def test_simple_c_code():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
@@ -129,7 +129,7 @@ def test_c_code_argument_order():
 
 def test_simple_c_header():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [routine])
@@ -144,8 +144,8 @@ def test_simple_c_header():
 
 def test_simple_c_codegen():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
-    result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
+    expr = (x + y)*z
+    result = codegen(("test", (x + y)*z), "C", "file", header=False, empty=False)
     expected = [
        ("file.c",
         "#include \"file.h\"\n"
@@ -164,8 +164,8 @@ def test_simple_c_codegen():
 
 def test_multiple_results_c():
     x, y, z = symbols('x,y,z')
-    expr1 = (x+y)*z
-    expr2 = (x-y)*z
+    expr1 = (x + y)*z
+    expr2 = (x - y)*z
     routine = Routine(
         "test",
         [expr1, expr2]
@@ -262,8 +262,8 @@ def test_complicated_codegen():
     from sympy import sin, cos, tan, N
     x, y, z = symbols('x,y,z')
     name_expr = [
-        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
-        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+        ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
     result = codegen(name_expr, "C", "file", header=False, empty=False)
     assert result[0][0] == "file.c"
@@ -480,7 +480,7 @@ def test_empty_f_header():
 
 def test_simple_f_code():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
@@ -531,7 +531,7 @@ def test_f_code_argument_order():
 
 def test_simple_f_header():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
@@ -550,9 +550,9 @@ def test_simple_f_header():
 
 def test_simple_f_codegen():
     x, y, z = symbols('x,y,z')
-    expr = (x+y)*z
+    expr = (x + y)*z
     result = codegen(
-        ("test", (x+y)*z), "F95", "file", header=False, empty=False)
+        ("test", (x + y)*z), "F95", "file", header=False, empty=False)
     expected = [
        ("file.f90",
         "REAL*8 function test(x, y, z)\n"
@@ -577,8 +577,8 @@ def test_simple_f_codegen():
 
 def test_multiple_results_f():
     x, y, z = symbols('x,y,z')
-    expr1 = (x+y)*z
-    expr2 = (x-y)*z
+    expr1 = (x + y)*z
+    expr2 = (x - y)*z
     routine = Routine(
         "test",
         [expr1, expr2]
@@ -818,8 +818,8 @@ def test_complicated_codegen_f95():
     from sympy import sin, cos, tan, N
     x, y, z = symbols('x,y,z')
     name_expr = [
-        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
-        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+        ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
     assert result[0][0] == "file.f90"
@@ -1041,7 +1041,7 @@ def test_partial_loops_f():
             ) % {
                     'rhs': 'A(i, j)*x(j)',
                     'iup': str(m - 4),
-                    'ilow': str(1+o),
+                    'ilow': str(1 + o),
                     'iup-ilow': str(m - 4 -o)
                     }
 
@@ -1074,7 +1074,7 @@ def test_inline_function():
     i = Idx('i', m)
     j = Idx('j', n)
     p = FCodeGen()
-    func = implemented_function('func', Lambda(n, n*(n+1)))
+    func = implemented_function('func', Lambda(n, n*(n + 1)))
     routine = Routine('test_inline', Eq(y[i], func(x[i])))
     code = get_string(p.dump_f95, [routine])
     expected = (

@@ -89,8 +89,8 @@ def test_derivatives():
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
     assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
     assert lerchphi(
-        z, s, a).diff(z) == (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
-    assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s+1, a)
+        z, s, a).diff(z) == (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
+    assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s + 1, a)
     assert polylog(s, z).diff(z) == polylog(s - 1, z)/z
 
     b = randcplx()
@@ -138,7 +138,7 @@ def test_lerchphi_expansion():
 
     # polylog reduction
     assert myexpand(lerchphi(z, s, S(1)/2),
-                    2**(s-1)*(polylog(s, sqrt(z))/sqrt(z)
+                    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z)
                               - polylog(s, polar_lift(-1)*sqrt(z))/sqrt(z)))
     assert myexpand(lerchphi(z, s, 2), -1/z + polylog(s, z)/z**2)
     assert myexpand(lerchphi(z, s, S(3)/2), None)
@@ -148,7 +148,7 @@ def test_lerchphi_expansion():
 
     # hurwitz zeta reduction
     assert myexpand(lerchphi(-1, s, a),
-                    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a+1)/2))
+                    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a + 1)/2))
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
     assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)

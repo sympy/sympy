@@ -36,7 +36,7 @@ def test_hyper():
 
     a1, a2, b1, b2, b3 = symbols('a1:3, b1:4')
     assert hyper((a1, a2), (b1, b2, b3), z).diff(z) == \
-             a1*a2/(b1*b2*b3) * hyper((a1+1, a2+1), (b1+1, b2+1, b3+1), z)
+             a1*a2/(b1*b2*b3) * hyper((a1 + 1, a2 + 1), (b1 + 1, b2 + 1, b3 + 1), z)
 
     # differentiation wrt parameters is not supported
     assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
@@ -127,7 +127,7 @@ def test_meijer():
 
     a1, a2, b1, b2, c1, c2, d1, d2 = symbols('a1:3, b1:3, c1:3, d1:3')
     assert meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z).diff(z) == \
-        (meijerg((a1-1, a2), (b1, b2), (c1, c2), (d1, d2), z)
+        (meijerg((a1 - 1, a2), (b1, b2), (c1, c2), (d1, d2), z)
          + (a1 - 1)*meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z))/z
 
     assert meijerg([z, z], [], [], [], z).diff(z) == \
@@ -270,7 +270,7 @@ def test_hyperrep():
              -2*z/(2*a + 1)*hyper([-a - S(1)/2, -a], [S(1)/2], z).diff(z), z)
     assert t(HyperRep_log2(z), -z/4*hyper([S(3)/2, 1, 1], [2, 2], z), z)
     assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S(1)/2], z), z)
-    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1-a, 1+a], [S(3)/2], z), z)
+    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
 
 
 def test_meijerg_eval():
@@ -278,7 +278,7 @@ def test_meijerg_eval():
     from sympy.abc import l
     a = randcplx()
     arg = x*exp_polar(k*pi*I)
-    expr1 = pi*meijerg([[], [(a+1)/2]], [[a/2], [-a/2, (a+ 1)/2]], arg**2/4)
+    expr1 = pi*meijerg([[], [(a + 1)/2]], [[a/2], [-a/2, (a + 1)/2]], arg**2/4)
     expr2 = besseli(a, arg)
 
     # Test that the two expressions agree for all arguments.

@@ -11,18 +11,18 @@ def test_rsolve_poly():
     assert rsolve_poly([-1, -1, 1], 0, n) == 0
     assert rsolve_poly([-1, -1, 1], 1, n) == -1
 
-    assert rsolve_poly([-1, n+1], n, n) == 1
+    assert rsolve_poly([-1, n + 1], n, n) == 1
     assert rsolve_poly([-1, 1], n, n) == C0 + (n**2 - n)/2
-    assert rsolve_poly([-n-1, n], 1, n) == C1*n - 1
-    assert rsolve_poly([-4*n-2, 1], 4*n+1, n) == -1
+    assert rsolve_poly([-n - 1, n], 1, n) == C1*n - 1
+    assert rsolve_poly([-4*n - 2, 1], 4*n + 1, n) == -1
 
     assert rsolve_poly([-1, 1], n**5 + n**3, n) == C0 - n**3 / 2 - \
                        n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
 
 
 def test_rsolve_ratio():
-    solution = rsolve_ratio([-2*n**3+n**2+2*n-1, 2*n**3+n**2-6*n,
-        -2*n**3-11*n**2-18*n-9, 2*n**3+13*n**2+22*n+8], 0, n)
+    solution = rsolve_ratio([-2*n**3 + n**2 + 2*n - 1, 2*n**3 + n**2 - 6*n,
+        -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8], 0, n)
 
     assert solution in [
                   C1*((-2*n + 3)/(n**2 - 1))/3,
@@ -39,42 +39,42 @@ def test_rsolve_hyper():
         C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
     ]
 
-    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [
+    assert rsolve_hyper([n**2 - 2, -2*n - 1, 1], 0, n) in [
         C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
         C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n),
     ]
 
-    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [
+    assert rsolve_hyper([n**2 - k, -2*n - 1, 1], 0, n) in [
         C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
         C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
     ]
 
     assert rsolve_hyper(
-        [2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C1*factorial(n) + C0*2**n
+        [2*n*(n + 1), -n**2 - 3*n + 2, n - 1], 0, n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper(
         [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
 
-    assert rsolve_hyper([-n-1, -1, 1], 0, n) == 0
+    assert rsolve_hyper([-n - 1, -1, 1], 0, n) == 0
 
     assert rsolve_hyper([-1, 1], n, n).expand() == C0 + n**2/2 - n/2
 
-    assert rsolve_hyper([-1, 1], 1+n, n).expand() == C0 + n**2/2 + n/2
+    assert rsolve_hyper([-1, 1], 1 + n, n).expand() == C0 + n**2/2 + n/2
 
-    assert rsolve_hyper([-1, 1], 3*(n+n**2), n).expand() == C0 + n**3 - n
+    assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
 
 
 def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
-    return sum(c[i]*f.subs(n, n+i) for i in range(len(c)))
+    return sum(c[i]*f.subs(n, n + i) for i in range(len(c)))
 
 
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
-    funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3* \
+    funcs = [ n, n + 1, n**2, n**3, n**4, n + n**2, 27*n + 52*n**2 - 3* \
         n**3 + 12*n**4 - 52*n**5 ]
-    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2- \
-        n+12, 1] ]
+    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2 - \
+        n + 12, 1] ]
     for p in funcs:
         # compute difference
         for c in coeffs:
@@ -86,7 +86,7 @@ def test_rsolve_bulk():
 
 
 def test_rsolve():
-    f = y(n+2) - y(n+1) - y(n)
+    f = y(n + 2) - y(n + 1) - y(n)
     h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
       - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
 
@@ -98,12 +98,12 @@ def test_rsolve():
     assert rsolve(f, y(n), [      0,      5 ]) == h
     assert rsolve(f, y(n), {   0: 0,   1: 5 }) == h
     assert rsolve(f, y(n), { y(0): 0, y(1): 5 }) == h
-    assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
-    assert rsolve(Eq(y(n), y(n-1) + y(n-2)), y(n), [0, 5]) == h
+    assert rsolve(y(n) - y(n - 1) - y(n - 2), y(n), [0, 5]) == h
+    assert rsolve(Eq(y(n), y(n - 1) + y(n - 2)), y(n), [0, 5]) == h
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
+    f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)
     g = C1*factorial(n) + C0*2**n
     h = -3*factorial(n) + 3*2**n
 

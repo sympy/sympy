@@ -21,7 +21,7 @@ half = Rational(1, 2)
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t = Float("1.0E-10")
-    return -t < a-b < t
+    return -t < a - b < t
 
 
 def test_curve():
@@ -77,7 +77,7 @@ def test_point():
     assert p1 not in p2
     assert p2.y == y2
     assert (p3 + p4) == p4
-    assert (p2 - p1) == Point(y1-x1, y2-x2)
+    assert (p2 - p1) == Point(y1 - x1, y2 - x2)
     assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
 
@@ -186,10 +186,10 @@ def test_line():
     assert l7.equation() == y - 1
     assert p1 in l1  # is p1 on the line l1?
     assert p1 not in l3
-    assert Line((-x, x), (-x+1, x-1)).coefficients == (1, 1, 0)
+    assert Line((-x, x), (-x + 1, x - 1)).coefficients == (1, 1, 0)
 
-    assert simplify(l1.equation()) in (x-y, y-x)
-    assert simplify(l3.equation()) in (x-x1, x1-x)
+    assert simplify(l1.equation()) in (x - y, y - x)
+    assert simplify(l3.equation()) in (x - x1, x1 - x)
 
     assert Line(p1, p2).scale(2, 1) == Line(p1, p9)
 
@@ -645,7 +645,7 @@ def test_polygon():
     assert p1 == p2
     assert len(p1.args) == 6
     assert len(p1.sides) == 6
-    assert p1.perimeter == 5+2*sqrt(10)+sqrt(29)+sqrt(8)
+    assert p1.perimeter == 5 + 2*sqrt(10) + sqrt(29) + sqrt(8)
     assert p1.area == 22
     assert not p1.is_convex()
     assert p3.is_convex()

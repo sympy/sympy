@@ -198,7 +198,7 @@ class PlotController(object):
             if self.is_2D():
                 self.camera.mouse_translate(x, y, dx, dy)
             else:
-                self.camera.spherical_rotate((x-dx, y-dy), (x, y),
+                self.camera.spherical_rotate((x - dx, y - dy), (x, y),
                                              self.get_mouse_sensitivity())
         if buttons & MIDDLE:
             self.camera.zoom_relative([1, -1][self.invert_mouse_zoom]*dy,

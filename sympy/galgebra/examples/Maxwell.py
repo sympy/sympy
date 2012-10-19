@@ -7,9 +7,9 @@ import sympy.galgebra.latex_ex as tex
 
 if __name__ == '__main__':
 
-    metric = '1  0  0  0,'+\
-             '0 -1  0  0,'+\
-             '0  0 -1  0,'+\
+    metric = '1  0  0  0,' +\
+             '0 -1  0  0,' +\
+             '0  0 -1  0,' +\
              '0  0  0 -1'
 
     vars = sympy.symbols('t x y z')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print 'B = Bvec gamma_0 =', B
     print '$E$ Electric Field Bi-Vector'
     print 'E = Evec gamma_0 =', E
-    F = E+I*B
+    F = E + I*B
     print '$E+IB$ Electo-Magnetic Field Bi-Vector'
     print 'F = E+IB =', F
     print '$J$ Four Current'
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     print 'All Maxwell Equations are'
     print '\\nabla F = J'
     print 'Div $E$ and Curl $H$ Equations'
-    print '<\\nabla F>_1 -J =', gradF.project(1)-J, ' = 0'
+    print '<\\nabla F>_1 -J =', gradF.project(1) - J, ' = 0'
     print 'Curl $E$ and Div $B$ equations'
     print '<\\nabla F>_3 =', gradF.project(3), ' = 0'
     tex.xdvi(filename='Maxwell.tex')

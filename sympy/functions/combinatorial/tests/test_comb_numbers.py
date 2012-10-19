@@ -22,8 +22,8 @@ def test_bernoulli():
     assert bernoulli(1000001) == 0
 
     assert bernoulli(0, x) == 1
-    assert bernoulli(1, x) == x-Rational(1, 2)
-    assert bernoulli(2, x) == x**2-x+Rational(1, 6)
+    assert bernoulli(1, x) == x - Rational(1, 2)
+    assert bernoulli(2, x) == x**2 - x + Rational(1, 6)
     assert bernoulli(3, x) == x**3 - (3*x**2)/2 + x/2
 
     # Should be fast; computed with mpmath
@@ -106,7 +106,7 @@ def test_euler():
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
-    assert euler(2*n+1).rewrite(Sum) == 0
+    assert euler(2*n + 1).rewrite(Sum) == 0
 
 
 @XFAIL

@@ -197,7 +197,7 @@ class Indexed(Expr):
         True
 
         """
-        return len(self.args)-1
+        return len(self.args) -1
 
     @property
     def shape(self):

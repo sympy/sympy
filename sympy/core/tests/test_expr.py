@@ -137,8 +137,8 @@ def test_basic():
         x = a
         x = +a
         x = -a
-        x = a+b
-        x = a-b
+        x = a +b
+        x = a -b
         x = a*b
         x = a/b
         x = a**b
@@ -193,25 +193,25 @@ def test_basic_nostr():
 
 
 def test_leadterm():
-    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3, 0)
+    assert (3 + 2*x**(log(3)/log(2) - 1)).leadterm(x) == (3, 0)
 
-    assert (1/x**2+1+x+x**2).leadterm(x)[1] == -2
-    assert (1/x+1+x+x**2).leadterm(x)[1] == -1
-    assert (x**2+1/x).leadterm(x)[1] == -1
-    assert (1+x**2).leadterm(x)[1] == 0
-    assert (x+1).leadterm(x)[1] == 0
-    assert (x+x**2).leadterm(x)[1] == 1
+    assert (1/x**2 + 1 + x + x**2).leadterm(x)[1] == -2
+    assert (1/x + 1 + x + x**2).leadterm(x)[1] == -1
+    assert (x**2 + 1/x).leadterm(x)[1] == -1
+    assert (1 + x**2).leadterm(x)[1] == 0
+    assert (x + 1).leadterm(x)[1] == 0
+    assert (x + x**2).leadterm(x)[1] == 1
     assert (x**2).leadterm(x)[1] == 2
 
 
 def test_as_leading_term():
-    assert (3+2*x**(log(3)/log(2)-1)).as_leading_term(x) == 3
-    assert (1/x**2+1+x+x**2).as_leading_term(x) == 1/x**2
-    assert (1/x+1+x+x**2).as_leading_term(x) == 1/x
-    assert (x**2+1/x).as_leading_term(x) == 1/x
-    assert (1+x**2).as_leading_term(x) == 1
-    assert (x+1).as_leading_term(x) == 1
-    assert (x+x**2).as_leading_term(x) == x
+    assert (3 + 2*x**(log(3)/log(2) - 1)).as_leading_term(x) == 3
+    assert (1/x**2 + 1 + x + x**2).as_leading_term(x) == 1/x**2
+    assert (1/x + 1 + x + x**2).as_leading_term(x) == 1/x
+    assert (x**2 + 1/x).as_leading_term(x) == 1/x
+    assert (1 + x**2).as_leading_term(x) == 1
+    assert (x + 1).as_leading_term(x) == 1
+    assert (x + x**2).as_leading_term(x) == x
     assert (x**2).as_leading_term(x) == x**2
     assert (x + oo).as_leading_term(x) == oo
 
@@ -222,7 +222,7 @@ def test_leadterm2():
 
 
 def test_leadterm3():
-    assert (y+z+x).leadterm(x) == (y+z, 0)
+    assert (y + z + x).leadterm(x) == (y + z, 0)
 
 
 def test_as_leading_term2():
@@ -231,8 +231,8 @@ def test_as_leading_term2():
 
 
 def test_as_leading_term3():
-    assert (2+pi+x).as_leading_term(x) == 2 + pi
-    assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
+    assert (2 + pi + x).as_leading_term(x) == 2 + pi
+    assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
 
 
 def test_as_leading_term_stub():
@@ -245,11 +245,11 @@ def test_as_leading_term_stub():
 
 def test_atoms():
     assert sorted(list(x.atoms())) == [x]
-    assert sorted(list((1+x).atoms())) == sorted([1, x])
+    assert sorted(list((1 + x).atoms())) == sorted([1, x])
 
-    assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
+    assert sorted(list((1 + 2*cos(x)).atoms(Symbol))) == [x]
     assert sorted(
-        list((1+2*cos(x)).atoms(Symbol, Number))) == sorted([1, 2, x])
+        list((1 + 2*cos(x)).atoms(Symbol, Number))) == sorted([1, 2, x])
 
     assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
 
@@ -272,8 +272,8 @@ def test_atoms():
            sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
-    assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
-        [1 + x*(2 + y)+exp(3 + z), 2 + y, 3 + z])
+    assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == set(
+        [1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
 
     # issue 3033
     f = Function('f')
@@ -351,9 +351,9 @@ def test_is_rational_function():
     assert (x/y).is_rational_function(x) is True
     assert (x/y).is_rational_function(x, y) is True
 
-    assert (x**2+1/x/y).is_rational_function() is True
-    assert (x**2+1/x/y).is_rational_function(x) is True
-    assert (x**2+1/x/y).is_rational_function(x, y) is True
+    assert (x**2 + 1/x/y).is_rational_function() is True
+    assert (x**2 + 1/x/y).is_rational_function(x) is True
+    assert (x**2 + 1/x/y).is_rational_function(x, y) is True
 
     assert (sin(y)/x).is_rational_function() is False
     assert (sin(y)/x).is_rational_function(y) is False
@@ -398,7 +398,7 @@ def test_SAGE3():
 def test_len():
     e = x*y
     assert len(e.args) == 2
-    e = x+y+z
+    e = x + y +z
     assert len(e.args) == 3
 
 
@@ -421,8 +421,8 @@ def test_attribute_error():
 
 def test_args():
     assert (x*y).args in ((x, y), (y, x))
-    assert (x+y).args in ((x, y), (y, x))
-    assert (x*y+1).args in ((x*y, 1), (1, x*y))
+    assert (x + y).args in ((x, y), (y, x))
+    assert (x*y + 1).args in ((x*y, 1), (1, x*y))
     assert sin(x*y).args == (x*y,)
     assert sin(x*y).args[0] == x*y
     assert (x**y).args == (x, y)
@@ -438,8 +438,8 @@ def test_iter_basic_args():
 def test_noncommutative_expand_issue658():
     A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
-    assert (A*(A+B)*B).expand() == A**2*B + A*B**2
-    assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
+    assert (A*(A + B)*B).expand() == A**2*B + A*B**2
+    assert (A*(A + B + C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
 
 def test_as_numer_denom():
@@ -460,8 +460,8 @@ def test_as_numer_denom():
     assert Rational(1, 2).as_numer_denom() == (1, 2)
     assert (1/y**2).as_numer_denom() == (1, y**2)
     assert (x/y**2).as_numer_denom() == (x, y**2)
-    assert ((x**2+1)/y).as_numer_denom() == (x**2+1, y)
-    assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
+    assert ((x**2 + 1)/y).as_numer_denom() == (x**2 + 1, y)
+    assert (x*(y + 1)/y**7).as_numer_denom() == (x*(y + 1), y**7)
     assert (x**-2).as_numer_denom() == (1, x**2)
     assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
         (6*a + 3*b + 2*c, 6*x)
@@ -491,10 +491,10 @@ def test_as_numer_denom():
 
 
 def test_as_independent():
-    assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
-    assert (2*x*sin(x)+y+x).as_independent(y) == (x + 2*x*sin(x), y)
+    assert (2*x*sin(x) + y + x).as_independent(x) == (y, x + 2*x*sin(x))
+    assert (2*x*sin(x) + y + x).as_independent(y) == (x + 2*x*sin(x), y)
 
-    assert (2*x*sin(x)+y+x).as_independent(x, y) == (0, y + x + 2*x*sin(x))
+    assert (2*x*sin(x) + y + x).as_independent(x, y) == (0, y + x + 2*x*sin(x))
 
     assert (x*sin(x)*cos(y)).as_independent(x) == (cos(y), x*sin(x))
     assert (x*sin(x)*cos(y)).as_independent(y) == (x*sin(x), cos(y))
@@ -516,8 +516,8 @@ def test_as_independent():
 
     assert (3*x).as_independent(x, as_Add=True) == (0, 3*x)
     assert (3*x).as_independent(x, as_Add=False) == (3, x)
-    assert (3+x).as_independent(x, as_Add=True) == (3, x)
-    assert (3+x).as_independent(x, as_Add=False) == (1, 3 + x)
+    assert (3 + x).as_independent(x, as_Add=True) == (3, x)
+    assert (3 + x).as_independent(x, as_Add=False) == (1, 3 + x)
 
     # issue 2380
     assert (3*x).as_independent(Symbol) == (3, x)
@@ -544,11 +544,11 @@ def test_call():
 
     # No effect as there are no callables
     assert sin(x)(1) == sin(x)
-    assert (1+sin(x))(1) == 1+sin(x)
+    assert (1 + sin(x))(1) == 1 + sin(x)
 
     # Effect in the pressence of callables
     l = Lambda(x, 2*x)
-    assert (l+x)(y) == 2*y+x
+    assert (l + x)(y) == 2*y +x
     assert (x**l)(2) == x**4
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')
@@ -784,8 +784,8 @@ def test_nonzero():
     assert bool(S.Zero) is False
     assert bool(S.One) is True
     assert bool(x) is True
-    assert bool(x+y) is True
-    assert bool(x-x) is False
+    assert bool(x + y) is True
+    assert bool(x - x) is False
     assert bool(x*y) is True
     assert bool(x*1) is True
     assert bool(x*0) is False
@@ -802,10 +802,10 @@ def test_is_number():
     assert log(2).is_number is True
     assert log(x).is_number is False
     assert (2 + log(2)).is_number is True
-    assert (8+log(2)).is_number is True
+    assert (8 + log(2)).is_number is True
     assert (2 + log(x)).is_number is False
-    assert (8+log(2)+x).is_number is False
-    assert (1+x**2/x-x).is_number is True
+    assert (8 + log(2) + x).is_number is False
+    assert (1 + x**2/x - x).is_number is True
     assert Tuple(Integer(1)).is_number is False
     assert Add(2, x).is_number is False
     assert Mul(3, 4).is_number is True
@@ -866,7 +866,7 @@ def test_as_coeff_exponent():
     assert (0*x**0).as_coeff_exponent(x) == (0, 0)
     assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
-    assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
+    assert (2*x**3 + pi*x**3).as_coeff_exponent(x) == (2 + pi, 3)
     assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
         (log(2)/(2 + pi), 0)
     # 1685
@@ -920,40 +920,40 @@ def test_extractions():
 
     n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() is True
-    assert (-n*x+x).could_extract_minus_sign(
-        ) != (n*x-x).could_extract_minus_sign()
+    assert (-n*x + x).could_extract_minus_sign(
+        ) != (n*x - x).could_extract_minus_sign()
     assert (
-        x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
-    assert (1-x-y).could_extract_minus_sign() is True
-    assert (1-x+y).could_extract_minus_sign() is False
-    assert ((-x-x*y)/y).could_extract_minus_sign() is True
-    assert (-(x+x*y)/y).could_extract_minus_sign() is True
-    assert ((x+x*y)/(-y)).could_extract_minus_sign() is True
-    assert ((x+x*y)/y).could_extract_minus_sign() is False
-    assert (x*(-x-x**3)).could_extract_minus_sign(
+        x - y).could_extract_minus_sign() != (-x + y).could_extract_minus_sign()
+    assert (1 - x - y).could_extract_minus_sign() is True
+    assert (1 - x + y).could_extract_minus_sign() is False
+    assert ((-x - x*y)/y).could_extract_minus_sign() is True
+    assert (-(x + x*y)/y).could_extract_minus_sign() is True
+    assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
+    assert ((x + x*y)/y).could_extract_minus_sign() is False
+    assert (x*(-x - x**3)).could_extract_minus_sign(
         ) is True  # used to give inf recurs
-    assert ((-x-y)/(x+y)).could_extract_minus_sign() is True  # is_Mul odd case
+    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True  # is_Mul odd case
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
-    assert ((-x-y)/(x-y)).could_extract_minus_sign() is False or\
-           ((-x-y)/(y-x)).could_extract_minus_sign(
+    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or\
+           ((-x - y)/(y - x)).could_extract_minus_sign(
                ) == False  # is_Mul even case
     assert ( x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
 
 
 def test_coeff():
-    assert (x+1).coeff(x+1) == 1
+    assert (x + 1).coeff(x + 1) == 1
     assert (3*x).coeff(0) == 0
-    assert (z*(1+x)*x**2).coeff(1+x) == z*x**2
-    assert (1+2*x*x**(1+x)).coeff(x*x**(1+x)) == 2
-    assert (1+2*x**(y+z)).coeff(x**(y+z)) == 2
-    assert (3+2*x+4*x**2).coeff(1) == 0
-    assert (3+2*x+4*x**2).coeff(-1) == 0
-    assert (3+2*x+4*x**2).coeff(x) == 2
-    assert (3+2*x+4*x**2).coeff(x**2) == 4
-    assert (3+2*x+4*x**2).coeff(x**3) == 0
+    assert (z*(1 + x)*x**2).coeff(1 + x) == z*x**2
+    assert (1 + 2*x*x**(1 + x)).coeff(x*x**(1 + x)) == 2
+    assert (1 + 2*x**(y + z)).coeff(x**(y + z)) == 2
+    assert (3 + 2*x + 4*x**2).coeff(1) == 0
+    assert (3 + 2*x + 4*x**2).coeff(-1) == 0
+    assert (3 + 2*x + 4*x**2).coeff(x) == 2
+    assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
+    assert (3 + 2*x + 4*x**2).coeff(x**3) == 0
 
     assert (-x/8 + x*y).coeff(x) == -S(1)/8 + y
     assert (-x/8 + x*y).coeff(-x) == S(1)/8
@@ -969,17 +969,17 @@ def test_coeff():
     assert (n2*n1 + x*n1**2).coeff(n1) == n2
     assert (n1**x).coeff(n1) == 0
     assert (n1*n2 + n2*n1).coeff(n1) == 0
-    assert (2*(n1+n2)*n2).coeff(n1+n2, right=1) == n2
-    assert (2*(n1+n2)*n2).coeff(n1+n2, right=0) == 2
+    assert (2*(n1 + n2)*n2).coeff(n1 + n2, right=1) == n2
+    assert (2*(n1 + n2)*n2).coeff(n1 + n2, right=0) == 2
 
     f = Function('f')
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
-    expr = z*(x+y)**2
-    expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
-    assert expr.coeff(z) == (x+y)**2
-    assert expr.coeff(x+y) == 0
-    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
+    expr = z*(x + y)**2
+    expr2 = z*(x + y)**2 + z*(2*x + 2*y)**2
+    assert expr.coeff(z) == (x + y)**2
+    assert expr.coeff(x + y) == 0
+    assert expr2.coeff(z) == (x + y)**2 + (2*x + 2*y)**2
 
     assert (x + y + 3*z).coeff(1) == x + y
     assert (-x + 2*y).coeff(-1) == x
@@ -1034,10 +1034,10 @@ def test_coeff2_0():
 
 
 def test_coeff_expand():
-    expr = z*(x+y)**2
-    expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
-    assert expr.coeff(z) == (x+y)**2
-    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
+    expr = z*(x + y)**2
+    expr2 = z*(x + y)**2 + z*(2*x + 2*y)**2
+    assert expr.coeff(z) == (x + y)**2
+    assert expr2.coeff(z) == (x + y)**2 + (2*x + 2*y)**2
 
 
 def test_integrate():
@@ -1048,8 +1048,8 @@ def test_integrate():
 def test_as_base_exp():
     assert x.as_base_exp() == (x, S.One)
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
-    assert (x+y+z).as_base_exp() == (x+y+z, S.One)
-    assert ((x+y)**z).as_base_exp() == (x+y, z)
+    assert (x + y + z).as_base_exp() == (x + y + z, S.One)
+    assert ((x + y)**z).as_base_exp() == (x + y, z)
 
 
 def test_issue1864():
@@ -1063,10 +1063,10 @@ def test_issue1864():
 
 def test_action_verbs():
     assert nsimplify(
-        (1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
+        (1/(exp(3*pi*x/5) + 1))) == (1/(exp(3*pi*x/5) + 1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
-    assert radsimp(1/(2+sqrt(2))) == (1/(2+sqrt(2))).radsimp()
+    assert radsimp(1/(2 + sqrt(2))) == (1/(2 + sqrt(2))).radsimp()
     assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z* \
                    y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
@@ -1075,11 +1075,11 @@ def test_action_verbs():
     #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == (a*x**2 + b* \
                    x**2 + a*x - b*x + c).collect(x)
-    assert apart(y/(y+2)/(y+1), y) == (y/(y+2)/(y+1)).apart(y)
-    assert combsimp(y/(x+2)/(x+1)) == (y/(x+2)/(x+1)).combsimp()
-    assert factor(x**2+5*x+6) == (x**2+5*x+6).factor()
+    assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
+    assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
+    assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
-    assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
+    assert cancel((x**2 + 5*x + 6)/(x + 2)) == ((x**2 + 5*x + 6)/(x + 2)).cancel()
 
 
 def test_as_powers_dict():
@@ -1099,13 +1099,13 @@ def test_as_coefficients_dict():
 
 def test_args_cnc():
     A = symbols('A', commutative=False)
-    assert (x+A).args_cnc() == \
+    assert (x + A).args_cnc() == \
         [[], [x + A]]
-    assert (x+a).args_cnc() == \
+    assert (x + a).args_cnc() == \
         [[a + x], []]
     assert (x*a).args_cnc() == \
         [[a, x], []]
-    assert (x*y*A*(A+1)).args_cnc(cset=True) == \
+    assert (x*y*A*(A + 1)).args_cnc(cset=True) == \
         [set([x, y]), [A, 1 + A]]
     assert Mul(x, x, evaluate=False).args_cnc(cset=True, warn=False) == \
         [set([x]), []]
@@ -1139,7 +1139,7 @@ def test_new_rawargs():
 def test_2127():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
-    assert Mul(x+y, evaluate=False).is_Add
+    assert Mul(x + y, evaluate=False).is_Add
 
 
 def test_free_symbols():
@@ -1449,7 +1449,7 @@ def test_round():
 
     assert S.Zero.round() == 0
 
-    a = (Add(1, Float('1.'+'9'*27, ''), evaluate=0))
+    a = (Add(1, Float('1.' + '9'*27, ''), evaluate=0))
     assert a.round(10) == Float('3.0000000000', '')
     assert a.round(25) == Float('3.0000000000000000000000000', '')
     assert a.round(26) == Float('3.00000000000000000000000000', '')
@@ -1476,7 +1476,7 @@ def test_round():
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
 
     # issue 3815
-    assert (I**(I+3)).round(3) == Float('-0.208', '')*I
+    assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
 
 def test_extract_branch_factor():

@@ -231,7 +231,7 @@ class AssocOp(Expr):
                         return True
                     elif len(nc) <= len(_nc):
                         for i in xrange(len(_nc) - len(nc)):
-                            if _nc[i:i+len(nc)] == nc:
+                            if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
         return is_in

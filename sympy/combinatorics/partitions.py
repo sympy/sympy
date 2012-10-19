@@ -665,7 +665,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m+1):
+    for i in xrange(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:

@@ -27,7 +27,7 @@ from sympy.printing.latex import accepted_latex_functions
 
 
 def debug(txt):
-    sys.stderr.write(txt+'\n')
+    sys.stderr.write(txt + '\n')
     return
 
 
@@ -66,7 +66,7 @@ def find_executable(executable, path=None):
 
 
 def len_cmp(str1, str2):
-    return(len(str2)-len(str1))
+    return(len(str2) - len(str1))
 
 
 def process_equals(xstr):
@@ -74,7 +74,7 @@ def process_equals(xstr):
     eq2 = xstr.rfind('=')
     if eq1 == eq2:
         return(xstr)
-    xstr = xstr[:eq1]+xstr[eq2:]
+    xstr = xstr[:eq1] + xstr[eq2:]
     return(xstr)
 
 
@@ -178,29 +178,29 @@ class LatexPrinter(Printer):
     accent_cnt = 0
     accent_dict = {}
 
-    preamble = '\\documentclass[10pt,letter,fleqn]{report}\n'+\
-               '\\pagestyle{empty}\n'+\
-               '\\usepackage[latin1]{inputenc}\n'+\
-               '\\usepackage[dvips,landscape,top=1cm,nohead,nofoot]{geometry}\n'+\
-               '\\usepackage{amsmath}\n'+\
-               '\\usepackage{bm}\n'+\
-               '\\usepackage{amsfonts}\n'+\
-               '\\usepackage{amssymb}\n'+\
-               '\\setlength{\\parindent}{0pt}\n'+\
-               '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n'+\
-               '\\newcommand{\\lp}{\\left (}\n'+\
-               '\\newcommand{\\rp}{\\right )}\n'+\
-               '\\newcommand{\\half}{\\frac{1}{2}}\n'+\
-               '\\newcommand{\\llt}{\\left <}\n'+\
-               '\\newcommand{\\rgt}{\\right >}\n'+\
-               '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n'+\
-               '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n'+\
-               '\\newcommand{\\lbrc}{\\left \\{}\n'+\
-               '\\newcommand{\\rbrc}{\\right \\}}\n'+\
-               '\\newcommand{\\W}{\\wedge}\n'+\
-               "\\newcommand{\\prm}[1]{{#1}'}\n"+\
-               '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n'+\
-               '\\newcommand{\\R}{\\dagger}\n'+\
+    preamble = '\\documentclass[10pt,letter,fleqn]{report}\n' +\
+               '\\pagestyle{empty}\n' +\
+               '\\usepackage[latin1]{inputenc}\n' +\
+               '\\usepackage[dvips,landscape,top=1cm,nohead,nofoot]{geometry}\n' +\
+               '\\usepackage{amsmath}\n' +\
+               '\\usepackage{bm}\n' +\
+               '\\usepackage{amsfonts}\n' +\
+               '\\usepackage{amssymb}\n' +\
+               '\\setlength{\\parindent}{0pt}\n' +\
+               '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n' +\
+               '\\newcommand{\\lp}{\\left (}\n' +\
+               '\\newcommand{\\rp}{\\right )}\n' +\
+               '\\newcommand{\\half}{\\frac{1}{2}}\n' +\
+               '\\newcommand{\\llt}{\\left <}\n' +\
+               '\\newcommand{\\rgt}{\\right >}\n' +\
+               '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n' +\
+               '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n' +\
+               '\\newcommand{\\lbrc}{\\left \\{}\n' +\
+               '\\newcommand{\\rbrc}{\\right \\}}\n' +\
+               '\\newcommand{\\W}{\\wedge}\n' +\
+               "\\newcommand{\\prm}[1]{{#1}'}\n" +\
+               '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n' +\
+               '\\newcommand{\\R}{\\dagger}\n' +\
                '\\begin{document}\n'
     postscript = '\\end{document}\n'
 
@@ -235,7 +235,7 @@ class LatexPrinter(Printer):
         base_str = ''
         for base in base_lst[:-1]:
             if bld_flg:
-                base_str += base+'\\W '
+                base_str += base + '\\W '
             else:
                 base_str += base
         base_str += base_lst[-1]
@@ -321,7 +321,7 @@ class LatexPrinter(Printer):
         for sym in LatexPrinter.greek_keys:
             isym = name_str.find(sym)
             if isym > -1:
-                keystr = '@'+str(LatexPrinter.greek_cnt)
+                keystr = '@' + str(LatexPrinter.greek_cnt)
                 LatexPrinter.greek_cnt += 1
                 LatexPrinter.greek_dict[keystr] = sym
                 name_str = name_str.replace(sym, keystr)
@@ -331,9 +331,9 @@ class LatexPrinter(Printer):
     def tokenize_accents(name_str):
         for sym in LatexPrinter.accent_keys:
             if name_str.find(sym) > -1:
-                keystr = '#'+str(LatexPrinter.accent_cnt)+'#'
+                keystr = '#' + str(LatexPrinter.accent_cnt) + '#'
                 LatexPrinter.accent_cnt += 1
-                LatexPrinter.accent_dict[keystr] = '\\'+sym
+                LatexPrinter.accent_dict[keystr] = '\\' + sym
                 name_str = name_str.replace(sym, keystr)
         return(name_str)
 
@@ -343,7 +343,7 @@ class LatexPrinter(Printer):
             return(name_str)
         for token in LatexPrinter.greek_dict.keys():
             name_str = name_str.replace(
-                token, '{\\'+LatexPrinter.greek_dict[token]+'}')
+                token, '{\\' + LatexPrinter.greek_dict[token] + '}')
         LatexPrinter.greek_cnt = 0
         LatexPrinter.greek_dict = {}
         return(name_str)
@@ -356,8 +356,8 @@ class LatexPrinter(Printer):
             return(name_str)
         for x in tmp_lst[1:]:
             if x != '':
-                name_str = '{}'+LatexPrinter.accent_dict[
-                    '#'+x+'#']+'{'+name_str+'}'
+                name_str = '{}' + LatexPrinter.accent_dict[
+                    '#' + x + '#'] + '{' + name_str + '}'
         LatexPrinter.accent_cnt = 0
         LatexPrinter.accent_dict = {}
         return(name_str)
@@ -374,12 +374,12 @@ class LatexPrinter(Printer):
             imode = 0
             for x in tmp_lst[1:]:
                 if x == '':
-                    imode = (imode+1)%2
+                    imode = (imode + 1) %2
                 else:
-                    subsup_str += LatexPrinter.mode[imode]+'{'+x+'}'
+                    subsup_str += LatexPrinter.mode[imode] + '{' + x + '}'
                     #subsup_str += LatexPrinter.mode[imode]+x+' '
-                    imode = (imode+1)%2
-        name_str = sym_str+subsup_str
+                    imode = (imode + 1) %2
+        name_str = sym_str + subsup_str
         name_str = LatexPrinter.replace_greek_tokens(name_str)
         return(name_str)
 
@@ -395,7 +395,7 @@ class LatexPrinter(Printer):
         else:
             if coef_str[0] != '-':
                 if coef_str[0] != '+':
-                    coef_str = '+'+coef_str
+                    coef_str = '+' + coef_str
         if coef_str in ('1', '+1', '-1'):
             if coef_str == '1':
                 coef_str = ''
@@ -833,14 +833,14 @@ class LatexPrinter(Printer):
         expr_str = ''
 
         if ndim == 1:
-            expr_str += '#\\left [ \\begin{array}{'+shape[0]*'c'+'}  \n'
+            expr_str += '#\\left [ \\begin{array}{' + shape[0]*'c' + '}  \n'
             for col in expr:
-                expr_str += self._print(col)+' & '
-            expr_str = expr_str[:-2]+'\n\\end{array}\\right ]#\n'
+                expr_str += self._print(col) + ' & '
+            expr_str = expr_str[:-2] + '\n\\end{array}\\right ]#\n'
             return(expr_str)
 
         if ndim == 2:
-            expr_str += '#\\left [ \\begin{array}{'+shape[1]*'c'+'}  \n'
+            expr_str += '#\\left [ \\begin{array}{' + shape[1]*'c' + '}  \n'
             for row in expr[:-1]:
                 for xij in row[:-1]:
                     expr_str += self._print(xij) + ' & '
@@ -852,12 +852,12 @@ class LatexPrinter(Printer):
             return(expr_str)
 
         if ndim == 3:
-            expr_str = '#\\left \\{ \\begin{array}{'+shape[0]*'c'+'} \n'
+            expr_str = '#\\left \\{ \\begin{array}{' + shape[0]*'c' + '} \n'
             for x in expr[:-1]:
                 xstr = self._print(x).replace('#', '')
                 expr_str += xstr + ' , & '
             xstr = self._print(expr[-1]).replace('#', '')
-            expr_str += xstr+'\n\\end{array} \\right \\}#\n'
+            expr_str += xstr + '\n\\end{array} \\right \\}#\n'
         return(expr_str)
 
     def _print_MV(self, expr):
@@ -873,13 +873,13 @@ class LatexPrinter(Printer):
                         tmp = Symbol('XYZW')
                         base_str = str(base*tmp)
                         if base_str[0] != '-':
-                            base_str = '+'+base_str
+                            base_str = '+' + base_str
                         base_str = base_str.replace('- ', '-')
                         if base_str[1:5] == 'XYZW':
                             base_str = base_str.replace('XYZW', '')
                         else:
                             base_str = base_str.replace('XYZW', '1')
-                        MV_str += base_str+\
+                        MV_str += base_str +\
                                   LatexPrinter.build_base(
                                       igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
@@ -902,14 +902,14 @@ class LatexPrinter(Printer):
             MV_str = line_lst[0]
             n_lines = 0
         if LatexPrinter.fmt_dict['mv'] >= 2:
-            MV_str = '@'+line_lst[0]+' \\\\ \n'
+            MV_str = '@' + line_lst[0] + ' \\\\ \n'
             for line in line_lst[1:-1]:
-                MV_str += '& '+line+' \\\\ \n'
-            MV_str += '& '+line_lst[-1]+'@\n'
+                MV_str += '& ' + line + ' \\\\ \n'
+            MV_str += '& ' + line_lst[-1] + '@\n'
         if MV_str == '':
             MV_str = '0'
         if expr.name != '':
-            MV_str = LatexPrinter.extended_symbol(expr.name)+' = '+MV_str
+            MV_str = LatexPrinter.extended_symbol(expr.name) + ' = ' + MV_str
         return(MV_str)
 
     def _print_OMV(self, expr):
@@ -925,13 +925,13 @@ class LatexPrinter(Printer):
                         tmp = Symbol('XYZW')
                         base_str = str(base*tmp)
                         if base_str[0] != '-':
-                            base_str = '+'+base_str
+                            base_str = '+' + base_str
                         base_str = base_str.replace('- ', '-')
                         if base_str[1:5] == 'XYZW':
                             base_str = base_str.replace('XYZW', '')
                         else:
                             base_str = base_str.replace('XYZW', '1')
-                        MV_str += base_str+\
+                        MV_str += base_str +\
                                   LatexPrinter.build_base(
                                       igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
@@ -954,14 +954,14 @@ class LatexPrinter(Printer):
             MV_str = line_lst[0]
             n_lines = 0
         if LatexPrinter.fmt_dict['mv'] >= 2:
-            MV_str = '@'+line_lst[0]+' \\\\ \n'
+            MV_str = '@' + line_lst[0] + ' \\\\ \n'
             for line in line_lst[1:-1]:
-                MV_str += '& '+line+' \\\\ \n'
-            MV_str += '& '+line_lst[-1]+'@\n'
+                MV_str += '& ' + line + ' \\\\ \n'
+            MV_str += '& ' + line_lst[-1] + '@\n'
         if MV_str == '':
             MV_str = '0'
         if expr.name != '':
-            MV_str = LatexPrinter.extended_symbol(expr.name)+' = '+MV_str
+            MV_str = LatexPrinter.extended_symbol(expr.name) + ' = ' + MV_str
         return(MV_str)
 
     def _print_Relational(self, expr):
@@ -1104,7 +1104,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                     post processing
                     """
                     raw_flg = False
-                    line = line.replace('%', '')+'\n'
+                    line = line.replace('%', '') + '\n'
                 else:
                     line += '\n'
                 line = process_equals(line)
@@ -1121,7 +1121,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
             """
             line = line.replace('#', '')
             array_flg = True
-            line = '\\begin{equation*}\n'+line
+            line = '\\begin{equation*}\n' + line
             while array_flg:
                 if '#' in line:
                     """
@@ -1147,7 +1147,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
             line = line.replace('@', '')
             line = line.replace('=', '& = ')
             eqnarray_flg = True
-            line = '\\begin{align*}\n'+line
+            line = '\\begin{align*}\n' + line
             line = process_equals(line)
             body += line
             try:
@@ -1163,7 +1163,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                     line = line.replace('@', '')
                     line += '\\end{align*}\n'
                 else:
-                    line+'\n'
+                    line + '\n'
                 line = process_equals(line)
                 body += line
                 try:
@@ -1173,10 +1173,10 @@ def xdvi(filename='tmplatex.tex', debug=False):
 
         else:
             if '=' in line:  # Single line equation
-                line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
+                line = '\\begin{equation*}\n' + line + '\n\\end{equation*}'
             else:  # Text with no math expression(s)unless \ or _ in line
                 if '\\' in line or '_' in line or '^' in line:
-                    line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
+                    line = '\\begin{equation*}\n' + line + '\n\\end{equation*}'
                 else:
                     if len(line) > 0:
                         line += '\\newline \n'
@@ -1186,7 +1186,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    body = LatexPrinter.preamble+body+LatexPrinter.postscript
+    body = LatexPrinter.preamble + body + LatexPrinter.postscript
 
     with open(filename, 'w') as latex_file:
         latex_file.write(body)
@@ -1205,13 +1205,13 @@ def xdvi(filename='tmplatex.tex', debug=False):
 
     if latex_str is not None and xdvi_str is not None:
         if debug:  # Display latex excution output for debugging purposes
-            os.system(latex_str+' '+filename[:-4])
+            os.system(latex_str + ' ' + filename[:-4])
         else:  # Works for Linux don't know about Windows
             if sys.platform.startswith('linux'):
-                os.system(latex_str+' '+filename[:-4]+' > /dev/null')
+                os.system(latex_str + ' ' + filename[:-4] + ' > /dev/null')
             else:
-                os.system(latex_str+' '+filename[:-4]+' > NUL')
-        os.system(xdvi_str+' '+filename[:-4]+' &')
+                os.system(latex_str + ' ' + filename[:-4] + ' > NUL')
+        os.system(xdvi_str + ' ' + filename[:-4] + ' &')
     LatexPrinter.LaTeX_flg = False
     return
 

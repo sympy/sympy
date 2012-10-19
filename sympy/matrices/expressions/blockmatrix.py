@@ -261,7 +261,7 @@ class BlockDiagMatrix(BlockMatrix):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[a + b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockadd(self, other)
 
@@ -320,7 +320,7 @@ def block_collapse(expr):
         expr = expr.__class__(*args)
 
     # Turn  -[X, Y] into [-X, -Y]
-    if (expr.is_Mul and len(expr.args)==2 and not expr.args[0].is_Matrix
+    if (expr.is_Mul and len(expr.args) == 2 and not expr.args[0].is_Matrix
             and expr.args[1].is_BlockMatrix):
         if expr.args[1].is_BlockDiagMatrix:
             return BlockDiagMatrix(
@@ -349,17 +349,17 @@ def block_collapse(expr):
                 nonblocks.pop(i)
                 block = block._blockadd(block_id)
 
-        return MatAdd(*(nonblocks+[block]))
+        return MatAdd(*(nonblocks + [block]))
 
     if expr.is_Mul:
         nonmatrices = [arg for arg in expr.args if not arg.is_Matrix]
         matrices = [arg for arg in expr.args if arg.is_Matrix]
         i = 0
-        while (i+1 < len(matrices)):
-            A, B = matrices[i:i+2]
+        while (i + 1 < len(matrices)):
+            A, B = matrices[i:i + 2]
             if A.is_BlockMatrix and B.is_BlockMatrix:
                 matrices[i] = A._blockmul(B)
-                matrices.pop(i+1)
+                matrices.pop(i + 1)
             else:
                 i += 1
         return MatMul(*(nonmatrices + matrices))

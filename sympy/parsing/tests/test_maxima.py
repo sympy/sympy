@@ -14,7 +14,7 @@ def test_parser():
 
 def test_injection():
     parse_maxima('c: x+1', globals=globals())
-    assert c == x+1
+    assert c == x +1
 
     parse_maxima('g: sqrt(81)', globals=globals())
     assert g == 9
@@ -22,7 +22,7 @@ def test_injection():
 
 def test_maxima_functions():
     assert parse_maxima('expand( (x+1)^2)') == x**2 + 2*x + 1
-    assert parse_maxima('factor( x**2 + 2*x + 1)') == (x+1)**2
+    assert parse_maxima('factor( x**2 + 2*x + 1)') == (x + 1)**2
     assert parse_maxima('trigsimp(2*cos(x)^2 + sin(x)^2)') == 2 - sin(x)**2
     assert parse_maxima('trigexpand(sin(2*x)+cos(2*x))') == (
         -1) + 2*cos(x)**2 + 2*cos(x)*sin(x)
@@ -40,6 +40,6 @@ def test_maxima_functions():
                 k=Symbol('k', integer=True)
                 )
             ) == factorial(n)
-    assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x-1
+    assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x -1
     assert Abs( parse_maxima(
         'float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)

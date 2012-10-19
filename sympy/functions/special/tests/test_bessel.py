@@ -22,12 +22,12 @@ def test_bessel_rand():
 
 
 def test_diff():
-    assert besselj(n, z).diff(z) == besselj(n-1, z)/2 - besselj(n+1, z)/2
-    assert bessely(n, z).diff(z) == bessely(n-1, z)/2 - bessely(n+1, z)/2
-    assert besseli(n, z).diff(z) == besseli(n-1, z)/2 + besseli(n+1, z)/2
-    assert besselk(n, z).diff(z) == -besselk(n-1, z)/2 - besselk(n+1, z)/2
-    assert hankel1(n, z).diff(z) == hankel1(n-1, z)/2 - hankel1(n+1, z)/2
-    assert hankel2(n, z).diff(z) == hankel2(n-1, z)/2 - hankel2(n+1, z)/2
+    assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
+    assert bessely(n, z).diff(z) == bessely(n - 1, z)/2 - bessely(n + 1, z)/2
+    assert besseli(n, z).diff(z) == besseli(n - 1, z)/2 + besseli(n + 1, z)/2
+    assert besselk(n, z).diff(z) == -besselk(n - 1, z)/2 - besselk(n + 1, z)/2
+    assert hankel1(n, z).diff(z) == hankel1(n - 1, z)/2 - hankel1(n + 1, z)/2
+    assert hankel2(n, z).diff(z) == hankel2(n - 1, z)/2 - hankel2(n + 1, z)/2
 
 
 def test_rewrite():
@@ -69,7 +69,7 @@ def test_jn():
     z = symbols("z")
     assert mjn(0, z) == sin(z)/z
     assert mjn(1, z) == sin(z)/z**2 - cos(z)/z
-    assert mjn(2, z) == (3/z**3-1/z)*sin(z) - (3/z**2) * cos(z)
+    assert mjn(2, z) == (3/z**3 - 1/z)*sin(z) - (3/z**2) * cos(z)
     assert mjn(3, z) == (15/z**4 - 6/z**2)*sin(z) + (1/z - 15/z**3)*cos(z)
     assert mjn(4, z) == (1/z + 105/z**5 - 45/z**3)*sin(z) + \
                 (-105/z**4 + 10/z**2)*cos(z)
@@ -84,8 +84,8 @@ def test_jn():
 def test_yn():
     z = symbols("z")
     assert myn(0, z) == -cos(z)/z
-    assert myn(1, z) == -cos(z)/z**2-sin(z)/z
-    assert myn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
+    assert myn(1, z) == -cos(z)/z**2 - sin(z)/z
+    assert myn(2, z) == -((3/z**3 - 1/z)*cos(z) + (3/z**2)*sin(z))
     assert expand_func(yn(n, z)) == yn(n, z)
 
 
@@ -96,7 +96,7 @@ def test_sympify_yn():
 
 def eq(a, b, tol=1e-6):
     for x, y in zip(a, b):
-        if not (abs(x-y) < tol):
+        if not (abs(x - y) < tol):
             return False
     return True
 

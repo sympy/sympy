@@ -136,7 +136,7 @@ class Gate(UnitaryOperator):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args)+1)
+        return ComplexSpace(2)**(max(args) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -154,7 +154,7 @@ class Gate(UnitaryOperator):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.targets)+1
+        return max(self.targets) +1
 
     @property
     def targets(self):
@@ -326,7 +326,7 @@ class CGate(Gate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**max(max(args[0])+1, args[1].min_qubits)
+        return ComplexSpace(2)**max(max(args[0]) + 1, args[1].min_qubits)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -339,12 +339,12 @@ class CGate(Gate):
         For controlled gate subclasses this includes both target and control
         qubits, so that, for examples the CNOT gate acts on 2 qubits.
         """
-        return len(self.targets)+len(self.controls)
+        return len(self.targets) + len(self.controls)
 
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(max(self.controls), max(self.targets))+1
+        return max(max(self.controls), max(self.targets)) +1
 
     @property
     def targets(self):
@@ -370,7 +370,7 @@ class CGate(Gate):
 
     def eval_controls(self, qubit):
         """Return True/False to indicate if the controls are satisfied."""
-        return all(qubit[bit]==self.control_value for bit in self.controls)
+        return all(qubit[bit] == self.control_value for bit in self.controls)
 
     def decompose(self, **options):
         """Decompose the controlled gate into CNOT and single qubits gates."""
@@ -491,7 +491,7 @@ class UGate(Gate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args[0])+1)
+        return ComplexSpace(2)**(max(args[0]) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -632,7 +632,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
         return I*sqrt(2)*YGate(self.targets[0])
 
     def _eval_commutator_YGate(self, other, **hints):
-        return I*sqrt(2)*(ZGate(self.targets[0])-XGate(self.targets[0]))
+        return I*sqrt(2)*(ZGate(self.targets[0]) - XGate(self.targets[0]))
 
     def _eval_commutator_ZGate(self, other, **hints):
         return -I*sqrt(2)*YGate(self.targets[0])
@@ -843,7 +843,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args)+1)
+        return ComplexSpace(2)**(max(args) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -852,7 +852,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.label)+1
+        return max(self.label) +1
 
     @property
     def targets(self):
@@ -975,8 +975,8 @@ class SwapGate(TwoQubitGate):
         result = None
         for i, j in ((op01, op10), (op10, op01), (op00, op00), (op11, op11)):
             product = nqubits*[eye2]
-            product[nqubits-min_target-1] = i
-            product[nqubits-max_target-1] = j
+            product[nqubits - min_target - 1] = i
+            product[nqubits - max_target - 1] = j
             new_result = matrix_tensor_product(*product)
             if result is None:
                 result = new_result
@@ -1045,8 +1045,8 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         bit = targets[0]
         # Fill product with [I1,Gate,I2] such that the unitaries,
         # I, cause the gate to be applied to the correct Qubit
-        if bit != nqubits-1:
-            product.append(matrix_eye(2**(nqubits-bit-1), format=format))
+        if bit != nqubits - 1:
+            product.append(matrix_eye(2**(nqubits - bit - 1), format=format))
         product.append(target_matrix)
         if bit != 0:
             product.append(matrix_eye(2**bit, format=format))
@@ -1061,8 +1061,8 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         for i in range(nqubits):
             product2.append(matrix_eye(2, format=format))
         for control in controls:
-            product2[nqubits-1-control] = op11
-        product2[nqubits-1-target] = target_matrix - eye2
+            product2[nqubits - 1 - control] = op11
+        product2[nqubits - 1 - target] = target_matrix - eye2
 
         return matrix_eye(2**nqubits, format=format) +\
                matrix_tensor_product(*product2)
@@ -1115,7 +1115,7 @@ def gate_simp(circuit):
                 # H,X,Y,Z squared with one.
                 newargs = (circuit_args[:i] +
                           (circuit_args[i].base**(circuit_args[i].exp % 2),) +
-                           circuit_args[i+1:])
+                           circuit_args[i + 1:])
                 # Recursively simplify the new circuit.
                 circuit = gate_simp(Mul(*newargs))
                 break
@@ -1128,7 +1128,7 @@ def gate_simp(circuit):
                 (Integer(circuit_args[i].exp/2)), circuit_args[i].base**
                 (circuit_args[i].exp % 2))
                 # Append the last elements.
-                newargs = newargs + circuit_args[i+1:]
+                newargs = newargs + circuit_args[i + 1:]
                 # Recursively simplify the new circuit.
                 circuit = gate_simp(Mul(*newargs))
                 break
@@ -1142,7 +1142,7 @@ def gate_simp(circuit):
                     (circuit_args[i].exp % 2))
 
                 # Append the last elements.
-                newargs = newargs + circuit_args[i+1:]
+                newargs = newargs + circuit_args[i + 1:]
                 # Recursively simplify the new circuit.
                 circuit = gate_simp(Mul(*newargs))
                 break
@@ -1173,28 +1173,28 @@ def gate_sort(circuit):
     while changes:
         changes = False
         circ_array = circuit.args
-        for i in xrange(len(circ_array)-1):
+        for i in xrange(len(circ_array) - 1):
             # Go through each element and switch ones that are in wrong order
             if isinstance(circ_array[i], (Gate, Pow)) and\
-               isinstance(circ_array[i+1], (Gate, Pow)):
+               isinstance(circ_array[i + 1], (Gate, Pow)):
                 # If we have a Pow object, look at only the base
                 first_base, first_exp = circ_array[i].as_base_exp()
-                second_base, second_exp = circ_array[i+1].as_base_exp()
+                second_base, second_exp = circ_array[i + 1].as_base_exp()
 
                 # Use sympy's hash based sorting. This is not mathematical
                 # sorting, but is rather based on comparing hashes of objects.
                 # See Basic.compare for details.
                 if first_base.compare(second_base) > 0:
                     if Commutator(first_base, second_base).doit() == 0:
-                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +
-                                   (circuit.args[i],) + circuit.args[i+2:])
+                        new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
+                                   (circuit.args[i],) + circuit.args[i + 2:])
                         circuit = Mul(*new_args)
                         circ_array = circuit.args
                         changes = True
                         break
                     if AntiCommutator(first_base, second_base).doit() == 0:
-                        new_args = (circuit.args[:i] + (circuit.args[i+1],) +
-                                   (circuit.args[i],) + circuit.args[i+2:])
+                        new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
+                                   (circuit.args[i],) + circuit.args[i + 2:])
                         sign = Integer(-1)**(first_exp*second_exp)
                         circuit = sign*Mul(*new_args)
                         circ_array = circuit.args

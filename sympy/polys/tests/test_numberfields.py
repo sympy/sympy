@@ -137,8 +137,8 @@ def test_field_isomorphism_pslq():
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(3))
     c = AlgebraicNumber(sqrt(7))
-    d = AlgebraicNumber(sqrt(2)+sqrt(3))
-    e = AlgebraicNumber(sqrt(2)+sqrt(3)+sqrt(7))
+    d = AlgebraicNumber(sqrt(2) + sqrt(3))
+    e = AlgebraicNumber(sqrt(2) + sqrt(3) + sqrt(7))
 
     assert field_isomorphism_pslq(a, a) == [1, 0]
     assert field_isomorphism_pslq(a, b) is None
@@ -174,7 +174,7 @@ def test_field_isomorphism_pslq():
     assert field_isomorphism_pslq(e, d) is None
     assert field_isomorphism_pslq(e, e) == [1, 0]
 
-    f = AlgebraicNumber(3*sqrt(2)+8*sqrt(7)-5)
+    f = AlgebraicNumber(3*sqrt(2) + 8*sqrt(7) - 5)
 
     assert field_isomorphism_pslq(
         f, e) == [Q(3, 80), 0, -Q(139, 80), 0, Q(347, 20), 0, -Q(761, 20), -5]
@@ -196,14 +196,14 @@ def test_field_isomorphism():
     assert field_isomorphism(-2*I*sqrt(3)/7, -5*I*sqrt(3)/3) == [ S(6)/35, 0]
 
     assert field_isomorphism(
-        2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
+        2*I*sqrt(3)/7 + 27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
     assert field_isomorphism(
-        -2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
+        -2*I*sqrt(3)/7 + 27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
 
     assert field_isomorphism(
-        2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [-S(6)/35, 27]
+        2*I*sqrt(3)/7 + 27, -5*I*sqrt(3)/3) == [-S(6)/35, 27]
     assert field_isomorphism(
-        -2*I*sqrt(3)/7+27, -5*I*sqrt(3)/3) == [ S(6)/35, 27]
+        -2*I*sqrt(3)/7 + 27, -5*I*sqrt(3)/3) == [ S(6)/35, 27]
 
     p = AlgebraicNumber( sqrt(2) + sqrt(3))
     q = AlgebraicNumber(-sqrt(2) + sqrt(3))
@@ -287,7 +287,7 @@ def test_field_isomorphism():
     pos_coeffs = [ S(3)/2, S(0), -S(33)/2, -S(8)]
     neg_coeffs = [-S(3)/2, S(0),  S(33)/2, -S(8)]
 
-    a = AlgebraicNumber(3*sqrt(3)-8)
+    a = AlgebraicNumber(3*sqrt(3) - 8)
 
     assert is_isomorphism_possible(a, p) is True
     assert is_isomorphism_possible(a, q) is True
@@ -304,7 +304,7 @@ def test_field_isomorphism():
     assert field_isomorphism(a, r, fast=False) == pos_coeffs
     assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
-    a = AlgebraicNumber(3*sqrt(2)+2*sqrt(3)+1)
+    a = AlgebraicNumber(3*sqrt(2) + 2*sqrt(3) + 1)
 
     pos_1_coeffs = [ S(1)/2, S(0), -S(5)/2,  S(1)]
     neg_5_coeffs = [-S(5)/2, S(0),  S(49)/2, S(1)]
@@ -345,12 +345,12 @@ def test_field_isomorphism():
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
     assert to_number_field(
-        [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2)+sqrt(3))
+        [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2) + sqrt(3))
 
-    a = AlgebraicNumber(sqrt(2)+sqrt(3), [S(1)/2, S(0), -S(9)/2, S(0)])
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, S(0), -S(9)/2, S(0)])
 
-    assert to_number_field(sqrt(2), sqrt(2)+sqrt(3)) == a
-    assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2)+sqrt(3))) == a
+    assert to_number_field(sqrt(2), sqrt(2) + sqrt(3)) == a
+    assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2) + sqrt(3))) == a
 
     raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))
 
@@ -446,7 +446,7 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 2])
     b = AlgebraicNumber(sqrt(2), [1, 3])
 
-    assert a != b and a != sqrt(2)+3
+    assert a != b and a != sqrt(2) +3
 
     assert (a == x) is False and (a != x) == True
 
@@ -466,15 +466,15 @@ def test_AlgebraicNumber():
 
     p = a.as_poly()
 
-    assert p == Poly(2*p.gen+3)
+    assert p == Poly(2*p.gen + 3)
 
-    assert a.as_poly(x) == Poly(2*x+3)
-    assert b.as_poly() == Poly(2*y+3)
+    assert a.as_poly(x) == Poly(2*x + 3)
+    assert b.as_poly() == Poly(2*y + 3)
 
-    assert a.as_expr() == 2*sqrt(2)+3
-    assert a.as_expr(x) == 2*x+3
-    assert b.as_expr() == 2*sqrt(2)+3
-    assert b.as_expr(x) == 2*x+3
+    assert a.as_expr() == 2*sqrt(2) +3
+    assert a.as_expr(x) == 2*x +3
+    assert b.as_expr() == 2*sqrt(2) +3
+    assert b.as_expr(x) == 2*x +3
 
     a = AlgebraicNumber(sqrt(2))
     b = to_number_field(sqrt(2))

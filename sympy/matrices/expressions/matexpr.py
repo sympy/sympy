@@ -275,7 +275,7 @@ class MatrixSymbol(MatrixExpr, Symbol):
         # If that isn't the case we'd really rather just make a symbol
         # They are simpler and look much nicer
         else:
-            return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
+            return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
 
 
 class Identity(MatrixSymbol):
@@ -411,7 +411,7 @@ def linear_factors(expr, *syms):
                         factor = ZeroMatrix(expr.rows, sym.rows)
                         if not sym.cols == expr.cols:
                             raise ShapeError(
-                                "%s not compatible as factor of %s"%(sym, expr))
+                                "%s not compatible as factor of %s" % (sym, expr))
                     else:
                         factor = Identity(sym.rows)*factor
                 total_factor += factor
@@ -430,7 +430,7 @@ def linear_factors(expr, *syms):
                 if factor.is_zero:
                     factor = ZeroMatrix(expr.rows, sym.rows)
                     if not sym.cols == expr.cols:
-                        raise ShapeError("%s not compatible as factor of %s"%
+                        raise ShapeError("%s not compatible as factor of %s" %
                                 (sym, expr))
                 else:
                     factor = Identity(sym.rows)*factor

@@ -479,16 +479,16 @@ def test_ANP_arithmetics():
 
     c = ANP([QQ(2), QQ(0), QQ(3)], mod, QQ)
 
-    assert a.add(b) == a+b == c
-    assert b.add(a) == b+a == c
+    assert a.add(b) == a + b == c
+    assert b.add(a) == b + a == c
 
     c = ANP([QQ(2), QQ(-2), QQ(-1)], mod, QQ)
 
-    assert a.sub(b) == a-b == c
+    assert a.sub(b) == a - b == c
 
     c = ANP([QQ(-2), QQ(2), QQ(1)], mod, QQ)
 
-    assert b.sub(a) == b-a == c
+    assert b.sub(a) == b - a == c
 
     c = ANP([QQ(3), QQ(-1), QQ(6)], mod, QQ)
 

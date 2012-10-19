@@ -34,7 +34,7 @@ def kmp_table(word):
     table.append(0)
 
     while pos < len(word):
-        if word[pos-1] == word[cnd]:
+        if word[pos - 1] == word[cnd]:
             cnd = cnd + 1
             table.append(cnd)
             pos = pos + 1

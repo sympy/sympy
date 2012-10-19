@@ -14,7 +14,7 @@ a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
 
 def test_roots_linear():
-    assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
+    assert roots_linear(Poly(2*x + 1, x)) == [-Rational(1, 2)]
 
 
 def test_roots_quadratic():
@@ -22,7 +22,7 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
     assert roots_quadratic(
-        Poly(2*x**2 + 4*x+3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
+        Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
@@ -35,9 +35,9 @@ def test_roots_quadratic():
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
-    assert roots_cubic(Poly(x**3-3*x**2+3*x-1, x)) == [1, 1, 1]
+    assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]
 
-    assert roots_cubic(Poly(x**3+1, x)) == \
+    assert roots_cubic(Poly(x**3 + 1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
 
 
@@ -128,11 +128,11 @@ def test_roots_cyclotomic():
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
-    assert roots_binomial(Poly(5*x+2, x)) == [-Rational(2, 5)]
+    assert roots_binomial(Poly(5*x + 2, x)) == [-Rational(2, 5)]
 
     A = 10**Rational(3, 4)/10
 
-    assert roots_binomial(Poly(5*x**4+2, x)) == \
+    assert roots_binomial(Poly(5*x**4 + 2, x)) == \
         [-A - A*I, -A + A*I, A - A*I, A + A*I]
 
     a1 = Symbol('a1', nonnegative=True)
@@ -146,13 +146,13 @@ def test_roots_binomial():
 
 
 def test_roots_rational():
-    assert roots_rational(Poly(x**2-1, x)) == [-S.One, S.One]
-    assert roots_rational(Poly(x**2-x, x)) == [S.Zero, S.One]
+    assert roots_rational(Poly(x**2 - 1, x)) == [-S.One, S.One]
+    assert roots_rational(Poly(x**2 - x, x)) == [S.Zero, S.One]
 
-    assert roots_rational(Poly(x**2-x/2, x)) == [S.Zero]
-    assert roots_rational(Poly(2*x**2-x, x)) == [S.Zero]
+    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero]
+    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero]
 
-    assert roots_rational(Poly(t*x**2-x, x)) == []
+    assert roots_rational(Poly(t*x**2 - x, x)) == []
 
 
 def test_roots_preprocessing():
@@ -216,34 +216,34 @@ def test_roots():
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
     assert roots(
-        ((x-2)*(x+3)*(x-4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
+        ((x - 2)*(x + 3)*(x - 4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
-    assert roots(2*x+1, x) == {-S.Half: 1}
-    assert roots((2*x+1)**2, x) == {-S.Half: 2}
-    assert roots((2*x+1)**5, x) == {-S.Half: 5}
-    assert roots((2*x+1)**10, x) == {-S.Half: 10}
+    assert roots(2*x + 1, x) == {-S.Half: 1}
+    assert roots((2*x + 1)**2, x) == {-S.Half: 2}
+    assert roots((2*x + 1)**5, x) == {-S.Half: 5}
+    assert roots((2*x + 1)**10, x) == {-S.Half: 10}
 
     assert roots(x**4 - 1, x) == {I: 1, S.One: 1, -S.One: 1, -I: 1}
     assert roots((x**4 - 1)**2, x) == {I: 2, S.One: 2, -S.One: 2, -I: 2}
 
-    assert roots(((2*x-3)**2).expand(), x) == { Rational(3, 2): 2}
-    assert roots(((2*x+3)**2).expand(), x) == {-Rational(3, 2): 2}
+    assert roots(((2*x - 3)**2).expand(), x) == { Rational(3, 2): 2}
+    assert roots(((2*x + 3)**2).expand(), x) == {-Rational(3, 2): 2}
 
-    assert roots(((2*x-3)**3).expand(), x) == { Rational(3, 2): 3}
-    assert roots(((2*x+3)**3).expand(), x) == {-Rational(3, 2): 3}
+    assert roots(((2*x - 3)**3).expand(), x) == { Rational(3, 2): 3}
+    assert roots(((2*x + 3)**3).expand(), x) == {-Rational(3, 2): 3}
 
-    assert roots(((2*x-3)**5).expand(), x) == { Rational(3, 2): 5}
-    assert roots(((2*x+3)**5).expand(), x) == {-Rational(3, 2): 5}
+    assert roots(((2*x - 3)**5).expand(), x) == { Rational(3, 2): 5}
+    assert roots(((2*x + 3)**5).expand(), x) == {-Rational(3, 2): 5}
 
-    assert roots(((a*x-b)**5).expand(), x) == { b/a: 5}
-    assert roots(((a*x+b)**5).expand(), x) == {-b/a: 5}
+    assert roots(((a*x - b)**5).expand(), x) == { b/a: 5}
+    assert roots(((a*x + b)**5).expand(), x) == {-b/a: 5}
 
-    assert roots(x**4-2*x**2+1, x) == {S.One: 2, -S.One: 2}
+    assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, -S.One: 2}
 
-    assert roots(x**6-4*x**4+4*x**3-x**2, x) == \
+    assert roots(x**6 - 4*x**4 + 4*x**3 - x**2, x) == \
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
-    assert roots(x**8-1, x) == {
+    assert roots(x**8 - 1, x) == {
          sqrt(2)/2 + I*sqrt(2)/2: 1,
          sqrt(2)/2 - I*sqrt(2)/2: 1,
         -sqrt(2)/2 + I*sqrt(2)/2: 1,
@@ -257,12 +257,12 @@ def test_roots():
     assert roots(f) == {S(0): 2, -S(
         2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
-    assert roots((a+b+c)*x - (a+b+c+d), x) == {(a+b+c+d)/(a+b+c): 1}
+    assert roots((a + b + c)*x - (a + b + c + d), x) == {(a + b + c + d)/(a + b + c): 1}
 
-    assert roots(x**3+x**2-x+1, x, cubics=False) == {}
-    assert roots(((x-2)*(
-        x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
-    assert roots(((x-2)*(x+3)*(x-4)*(x-5)).expand(), x, cubics=False) == \
+    assert roots(x**3 + x**2 - x + 1, x, cubics=False) == {}
+    assert roots(((x - 2)*(
+        x + 3)*(x - 4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
+    assert roots(((x - 2)*(x + 3)*(x - 4)*(x - 5)).expand(), x, cubics=False) == \
             {-S(3): 1, S(2): 1, S(4): 1, S(5): 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
@@ -277,13 +277,13 @@ def test_roots():
     V = -r1_2 + r1_2*I*3**r1_2
     W = (r19_27 + r1_9*33**r1_2)**r1_3
 
-    assert roots(x**3+x**2-x+1, x, cubics=True) == {
+    assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
         -r1_3 - U*W - r4_9*(U*W)**(-1): 1,
         -r1_3 - V*W - r4_9*(V*W)**(-1): 1,
         -r1_3 - W - r4_9*(  W)**(-1): 1,
     }
 
-    f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
+    f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
 
     r13_20, r1_20 = [ Rational(*r)
         for r in ((13, 20), (1, 20)) ]
@@ -318,15 +318,15 @@ def test_roots():
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=True) != {}
 
-    assert roots(x**4-1, x, filter='Z') == {S.One: 1, -S.One: 1}
-    assert roots(x**4-1, x, filter='I') == {I: 1, -I: 1}
+    assert roots(x**4 - 1, x, filter='Z') == {S.One: 1, -S.One: 1}
+    assert roots(x**4 - 1, x, filter='I') == {I: 1, -I: 1}
 
-    assert roots((x-1)*(x+1), x) == {S.One: 1, -S.One: 1}
+    assert roots((x - 1)*(x + 1), x) == {S.One: 1, -S.One: 1}
     assert roots(
-        (x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
+        (x - 1)*(x + 1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
-    assert roots(x**4-1, x, filter='Z', multiple=True) == [-S.One, S.One]
-    assert roots(x**4-1, x, filter='I', multiple=True) == [-I, I]
+    assert roots(x**4 - 1, x, filter='Z', multiple=True) == [-S.One, S.One]
+    assert roots(x**4 - 1, x, filter='I', multiple=True) == [-I, I]
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
@@ -360,15 +360,15 @@ def test_roots_slow():
     a, b, c, d, x = symbols("a,b,c,d,x")
 
     f1 = x**2*c + (a/b) + x*c*d - a
-    f2 = x**2*(a + b*(c-d)*a) + x*a*b*c/(b*d-d) + (a*d-c/d)
+    f2 = x**2*(a + b*(c - d)*a) + x*a*b*c/(b*d - d) + (a*d - c/d)
 
     assert roots(f1, x).values() == [1, 1]
     assert roots(f2, x).values() == [1, 1]
 
     (zz, yy, xx, zy, zx, yx, k) = symbols("zz,yy,xx,zy,zx,yx,k")
 
-    e1 = (zz-k)*(yy-k)*(xx-k) + zy*yx*zx + zx-zy-yx
-    e2 = (zz-k)*yx*yx + zx*(yy-k)*zx + zy*zy*(xx-k)
+    e1 = (zz - k)*(yy - k)*(xx - k) + zy*yx*zx + zx - zy - yx
+    e2 = (zz - k)*yx*yx + zx*(yy - k)*zx + zy*zy*(xx - k)
 
     assert roots(e1 - e2, k).values() == [1, 1, 1]
 

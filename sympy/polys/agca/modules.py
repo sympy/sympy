@@ -1090,7 +1090,7 @@ class SubModulePolyRing(SubModule):
         Rkr = self.ring.free_module(r + k)
         newgens = []
         for j, f in enumerate(self.gens):
-            m = [0]*(r+k)
+            m = [0]*(r + k)
             for i, v in enumerate(f):
                 m[i] = f[i]
             for i in range(k):
@@ -1150,8 +1150,8 @@ class SubModulePolyRing(SubModule):
         syz = self.ring.free_module(2*r).submodule(*(ci + di + ei))._syzygies()
         nonzero = [x for x in syz if any(y != self.ring.zero for y in x[:r])]
         res = self.container.submodule(*([-y for y in x[:r]] for x in nonzero))
-        reln1 = [x[r:r+len(fi)] for x in nonzero]
-        reln2 = [x[r+len(fi):] for x in nonzero]
+        reln1 = [x[r:r + len(fi)] for x in nonzero]
+        reln2 = [x[r + len(fi):] for x in nonzero]
         if relations:
             return res, reln1, reln2
         return res

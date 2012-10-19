@@ -126,7 +126,7 @@ class Sieve:
         i = self.search(a)[1]
         maxi = len(self._list) + 1
         while i < maxi:
-            p = self._list[i-1]
+            p = self._list[i - 1]
             if p < b:
                 yield p
                 i += 1

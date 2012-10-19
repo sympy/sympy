@@ -53,18 +53,18 @@ def _series(j, n):
     # Left sum from the bbp algorithm
     s = 0
     D = _dn(n)
-    for k in range(0, n+1):
-        r = 8*k+j
-        s = (s + (pow(16, n-k, r)<<4*(D))//r)
+    for k in range(0, n + 1):
+        r = 8*k +j
+        s = (s + (pow(16, n - k, r)<<4*(D))//r)
 
     # Right sum. should iterate to infinty, but now just iterates to the point where
     # one iterations change is beyond the resolution of the data type used
 
     t = 0
-    for k in range(n+1, n+15):
-        xp = int(16**(n-k) * (16**(D))  )
-        t = t + xp // (8*k+j)
-    total = s+t
+    for k in range(n + 1, n + 15):
+        xp = int(16**(n - k) * (16**(D))  )
+        t = t + xp // (8*k + j)
+    total = s +t
 
     return total
 
@@ -105,5 +105,5 @@ def _dn(n):
     if (n < 1000):
         f = 16
     else:
-        f = int((math.log10(n//1000))+18)
+        f = int((math.log10(n//1000)) + 18)
     return f

@@ -156,7 +156,7 @@ class PlotInterval(object):
         v_min to v_max.
         """
         d = (self.v_max - self.v_min) / self.v_steps
-        for i in xrange(self.v_steps+1):
+        for i in xrange(self.v_steps + 1):
             a = self.v_min + (d * Integer(i))
             yield a
 
@@ -169,7 +169,7 @@ class PlotInterval(object):
         d = (self.v_max - self.v_min) / self.v_steps
         a = self.v_min + (d * Integer(0))
         for i in xrange(self.v_steps):
-            b = self.v_min + (d * Integer(i+1))
+            b = self.v_min + (d * Integer(i + 1))
             yield a, b
             a = b
 

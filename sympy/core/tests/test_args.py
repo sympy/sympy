@@ -449,7 +449,7 @@ def test_sympy__core__sets__Union():
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
-    assert _test_args(Tr(a+b))
+    assert _test_args(Tr(a + b))
 
 
 def test_sympy__sets__fancysets__Naturals():
@@ -1653,7 +1653,7 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
     from sympy import Lambda, symbols
     i, j = symbols('i,j')
-    assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i-j) ))
+    assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
 
 def test_sympy__physics__gaussopt__BeamParameter():

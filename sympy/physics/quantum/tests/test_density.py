@@ -46,7 +46,7 @@ def test_doit():
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
 
-    d = Density([(A+B)*C, 1.0])
+    d = Density([(A + B)*C, 1.0])
     assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
                         1.0*A*C*Dagger(C)*Dagger(B) +
                         1.0*B*C*Dagger(C)*Dagger(A) +
@@ -68,7 +68,7 @@ def test_doit():
                         0.5 * TensorProduct(C*Dagger(C), D*Dagger(D)))
 
     #Density with mixed states
-    d = Density([t2+t3, 1.0])
+    d = Density([t2 + t3, 1.0])
     assert d.doit() == (1.0 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
                         1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
                         1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +

@@ -21,13 +21,13 @@ def test_rf_eval_apply():
 
     assert rf(x, 0) == 1
     assert rf(x, 1) == x
-    assert rf(x, 2) == x*(x+1)
-    assert rf(x, 3) == x*(x+1)*(x+2)
-    assert rf(x, 5) == x*(x+1)*(x+2)*(x+3)*(x+4)
+    assert rf(x, 2) == x*(x + 1)
+    assert rf(x, 3) == x*(x + 1)*(x + 2)
+    assert rf(x, 5) == x*(x + 1)*(x + 2)*(x + 3)*(x + 4)
 
-    assert rf(x, -1) == 1/(x-1)
-    assert rf(x, -2) == 1/((x-1)*(x-2))
-    assert rf(x, -3) == 1/((x-1)*(x-2)*(x-3))
+    assert rf(x, -1) == 1/(x - 1)
+    assert rf(x, -2) == 1/((x - 1)*(x - 2))
+    assert rf(x, -3) == 1/((x - 1)*(x - 2)*(x - 3))
 
     assert rf(1, 100) == factorial(100)
 
@@ -50,13 +50,13 @@ def test_ff_eval_apply():
 
     assert ff(x, 0) == 1
     assert ff(x, 1) == x
-    assert ff(x, 2) == x*(x-1)
-    assert ff(x, 3) == x*(x-1)*(x-2)
-    assert ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
+    assert ff(x, 2) == x*(x - 1)
+    assert ff(x, 3) == x*(x - 1)*(x - 2)
+    assert ff(x, 5) == x*(x - 1)*(x - 2)*(x - 3)*(x - 4)
 
-    assert ff(x, -1) == 1/(x+1)
-    assert ff(x, -2) == 1/((x+1)*(x+2))
-    assert ff(x, -3) == 1/((x+1)*(x+2)*(x+3))
+    assert ff(x, -1) == 1/(x + 1)
+    assert ff(x, -2) == 1/((x + 1)*(x + 2))
+    assert ff(x, -3) == 1/((x + 1)*(x + 2)*(x + 3))
 
     assert ff(100, 100) == factorial(100)
 
@@ -121,10 +121,10 @@ def test_binomial():
     assert binomial(n, 0) == 1
     assert binomial(n, 1) == n
     assert binomial(n, 2) == n*(n - 1)/2
-    assert binomial(n, n-2) == n*(n - 1)/2
-    assert binomial(n, n-1) == n
+    assert binomial(n, n - 2) == n*(n - 1)/2
+    assert binomial(n, n - 1) == n
     assert binomial(n, n) == 1
-    assert binomial(n, n+1) == 0
+    assert binomial(n, n + 1) == 0
     assert binomial(n, u) == 0
     assert binomial(n, v).func == binomial
     assert binomial(n, k).func == binomial

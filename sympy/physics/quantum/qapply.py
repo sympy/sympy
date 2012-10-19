@@ -125,7 +125,7 @@ def qapply_Mul(e, **options):
     # For a Pow with an integer exponent, apply one of them and reduce the
     # exponent by one.
     if isinstance(lhs, Pow) and lhs.exp.is_Integer:
-        args.append(lhs.base**(lhs.exp-1))
+        args.append(lhs.base**(lhs.exp - 1))
         lhs = lhs.base
 
     # Pull OuterProduct apart
@@ -174,7 +174,7 @@ def qapply_Mul(e, **options):
             # We had two args to begin with so args=[].
             return e
         else:
-            return qapply_Mul(e.func(*(args+[lhs])), **options)*rhs
+            return qapply_Mul(e.func(*(args + [lhs])), **options)*rhs
     elif isinstance(result, InnerProduct):
         return result*qapply_Mul(e.func(*args), **options)
     else:  # result is a scalar times a Mul, Add or TensorProduct

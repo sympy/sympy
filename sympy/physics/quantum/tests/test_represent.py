@@ -104,7 +104,7 @@ def test_format_sympy():
 def test_scalar_sympy():
     assert represent(Integer(1)) == Integer(1)
     assert represent(Float(1.0)) == Float(1.0)
-    assert represent(1.0+I) == 1.0+I
+    assert represent(1.0 + I) == 1.0 +I
 
 
 np = import_module('numpy', min_python_version=(2, 6))
@@ -129,7 +129,7 @@ def test_scalar_numpy():
 
     assert represent(Integer(1), format='numpy') == 1
     assert represent(Float(1.0), format='numpy') == 1.0
-    assert represent(1.0+I, format='numpy') == 1.0+1.0j
+    assert represent(1.0 + I, format='numpy') == 1.0 + 1.0j
 
 
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
@@ -145,7 +145,7 @@ def test_format_scipy_sparse():
         lhs = represent(test[0], basis=A, format='scipy.sparse')
         rhs = to_scipy_sparse(test[1])
         if isinstance(lhs, scipy_sparse_matrix):
-            assert np.linalg.norm((lhs-rhs).todense()) == 0.0
+            assert np.linalg.norm((lhs - rhs).todense()) == 0.0
         else:
             assert lhs == rhs
 
@@ -158,7 +158,7 @@ def test_scalar_scipy_sparse():
 
     assert represent(Integer(1), format='scipy.sparse') == 1
     assert represent(Float(1.0), format='scipy.sparse') == 1.0
-    assert represent(1.0+I, format='scipy.sparse') == 1.0+1.0j
+    assert represent(1.0 + I, format='scipy.sparse') == 1.0 + 1.0j
 
 x_ket = XKet('x')
 x_bra = XBra('x')

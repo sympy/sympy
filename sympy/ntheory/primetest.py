@@ -63,12 +63,12 @@ def _test(n, base):
     t = n >> s
     # do the Fermat test
     b = pow(base, t, n)
-    if b == 1 or b == n-1:
+    if b == 1 or b == n - 1:
         return True
     else:
         for j in xrange(1, s):
             b = (b**2) % n
-            if b == n-1:
+            if b == n - 1:
                 return True
     return False
 
@@ -254,7 +254,7 @@ def _mr_safe_helper(_s):
         factors = []
         tot = 0
         for b in bases:
-            tot += trailing(b-1)
+            tot += trailing(b - 1)
             f = factorint(b)
             factors.extend(f)
         factors = sorted(set(factors))

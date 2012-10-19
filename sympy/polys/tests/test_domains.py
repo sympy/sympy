@@ -339,14 +339,14 @@ def test_Domain__contains__():
     assert (sqrt(7) in QQ[x, y]) is False
     assert (sqrt(7) in RR[x, y]) is True
 
-    assert (2*sqrt(3)+1 in EX) is True
-    assert (2*sqrt(3)+1 in ZZ) is False
-    assert (2*sqrt(3)+1 in QQ) is False
-    assert (2*sqrt(3)+1 in RR) is True
-    assert (2*sqrt(3)+1 in ALG) is True
-    assert (2*sqrt(3)+1 in ZZ[x, y]) is False
-    assert (2*sqrt(3)+1 in QQ[x, y]) is False
-    assert (2*sqrt(3)+1 in RR[x, y]) is True
+    assert (2*sqrt(3) + 1 in EX) is True
+    assert (2*sqrt(3) + 1 in ZZ) is False
+    assert (2*sqrt(3) + 1 in QQ) is False
+    assert (2*sqrt(3) + 1 in RR) is True
+    assert (2*sqrt(3) + 1 in ALG) is True
+    assert (2*sqrt(3) + 1 in ZZ[x, y]) is False
+    assert (2*sqrt(3) + 1 in QQ[x, y]) is False
+    assert (2*sqrt(3) + 1 in RR[x, y]) is True
 
     assert (sin(1) in EX) is True
     assert (sin(1) in ZZ) is False

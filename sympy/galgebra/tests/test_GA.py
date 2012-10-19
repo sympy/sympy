@@ -22,7 +22,7 @@ def F(x, n, nbar):
     Conformal Mapping Function from 3D Euclidean space to 5D conformal space
     where the images of all maps are null vectors.
     """
-    Fx = HALF*((x*x)*n+2*x-nbar)
+    Fx = HALF*((x*x)*n + 2*x - nbar)
     #print 'F(x) =',Fx
     return(Fx)
 
@@ -60,17 +60,17 @@ def test_substitution():
     e_x, e_y, e_z = MV.setup('e_x e_y e_z', '1 0 0, 0 1 0, 0 0 1', offset=1)
     x, y, z = sympy.symbols('x y z')
 
-    X = x*e_x+y*e_y+z*e_z
+    X = x*e_x + y*e_y + z*e_z
     Y = X.subs([(x, 2), (y, 3), (z, 4)])
-    assert Y == 2*e_x+3*e_y+4*e_z
+    assert Y == 2*e_x + 3*e_y + 4*e_z
 
 
 def test_vector_extraction():
     """
     Show that conformal bivector encodes two points. See D&L Section 10.4.1
     """
-    metric = ' 0 -1 #,'+ \
-             '-1  0 #,'+ \
+    metric = ' 0 -1 #,' + \
+             '-1  0 #,' + \
              ' #  # #,'
 
     P1, P2, a = MV.setup('P1 P2 a', metric)
@@ -81,9 +81,9 @@ def test_vector_extraction():
     """
     B = P1^P2
     Bsq = B*B
-    ap = a-(a^B)*B
-    Ap = ap+ap*B
-    Am = ap-ap*B
+    ap = a - (a^B)*B
+    Ap = ap + ap*B
+    Am = ap - ap*B
     P1dota = sympy.Symbol('(P1.a)')
     P2dota = sympy.Symbol('(P2.a)')
     Ap_test = (-2*P2dota)*P1
@@ -106,14 +106,14 @@ def test_geometry():
     """
     Test conformal geometric description of circles, lines, spheres, and planes.
     """
-    metric = '1 0 0 0 0,'+ \
-             '0 1 0 0 0,'+ \
-             '0 0 1 0 0,'+ \
-             '0 0 0 0 2,'+ \
+    metric = '1 0 0 0 0,' + \
+             '0 1 0 0 0,' + \
+             '0 0 1 0 0,' + \
+             '0 0 0 0 2,' + \
              '0 0 0 2 0'
 
     e0, e1, e2, n, nbar = MV.setup('e0 e1 e2 n nbar', metric, debug=0)
-    e = n+nbar
+    e = n + nbar
     #conformal representation of points
 
     A = F(e0, n, nbar)    # point a = (1,0,0)  A = F(a)
@@ -129,28 +129,28 @@ def test_geometry():
     Plane = A^B^n^D^X
 
     #Circle through a, b, and c
-    Circle_test = -x2*(e0^e1^e2^n)+x2*(
-        e0^e1^e2^nbar)+HALF*(-1+x0**2+x1**2+x2**2)*(e0^e1^n^nbar)
-    diff = Circle-Circle_test
+    Circle_test = -x2*(e0^e1^e2^n) + x2*(
+        e0^e1^e2^nbar) + HALF*(-1 + x0**2 + x1**2 + x2**2)*(e0^e1^n^nbar)
+    diff = Circle - Circle_test
     diff.compact()
     assert diff == ZERO
 
     #Line through a and b
-    Line_test = -x2*(e0^e1^e2^n)+HALF*(-1+x0+x1)*(e0^e1^n^nbar)+(HALF*x2)*(e0^e2^n^nbar)+\
+    Line_test = -x2*(e0^e1^e2^n) + HALF*(-1 + x0 + x1)*(e0^e1^n^nbar) + (HALF*x2)*(e0^e2^n^nbar) +\
                 (-HALF*x2)*(e1^e2^n^nbar)
-    diff = Line-Line_test
+    diff = Line - Line_test
     diff.compact()
     assert diff == ZERO
 
     #Sphere through a, b, c, and d
-    Sphere_test = HALF*(1-x0**2-x1**2-x2**2)*(e0^e1^e2^n^nbar)
-    diff = Sphere-Sphere_test
+    Sphere_test = HALF*(1 - x0**2 - x1**2 - x2**2)*(e0^e1^e2^n^nbar)
+    diff = Sphere - Sphere_test
     diff.compact()
     assert diff == ZERO
 
     #Plane through a, b, and d
-    Plane_test = HALF*(1-x0-x1-x2)*(e0^e1^e2^n^nbar)
-    diff = Plane-Plane_test
+    Plane_test = HALF*(1 - x0 - x1 - x2)*(e0^e1^e2^n^nbar)
+    diff = Plane - Plane_test
     diff.compact()
     assert diff == ZERO
 
@@ -160,10 +160,10 @@ def test_extract_plane_and_line():
     Show that conformal trivector encodes planes and lines. See D&L section
     10.4.2
     """
-    metric = '# # # 0 0,'+ \
-             '# # # 0 0,'+ \
-             '# # # 0 0,'+ \
-             '0 0 0 0 2,'+ \
+    metric = '# # # 0 0,' + \
+             '# # # 0 0,' + \
+             '# # # 0 0,' + \
+             '0 0 0 0 2,' + \
              '0 0 0 2 0'
 
     p1, p2, p3, n, nbar = MV.setup('p1 p2 p3 n nbar', metric, debug=0)
@@ -176,16 +176,16 @@ def test_extract_plane_and_line():
     #Line through p1 and p2
     L = P1^P2^n
     delta = (L|n)|nbar
-    delta_test = 2*p1-2*p2
-    diff = delta-delta_test
+    delta_test = 2*p1 - 2*p2
+    diff = delta - delta_test
     diff.compact()
     assert diff == ZERO
 
     #Plane through p1, p2, and p3
     C = P1^P2^P3
     delta = ((C^n)|n)|nbar
-    delta_test = 2*(p1^p2)-2*(p1^p3)+2*(p2^p3)
-    diff = delta-delta_test
+    delta_test = 2*(p1^p2) - 2*(p1^p3) + 2*(p2^p3)
+    diff = delta - delta_test
     diff.compact()
     assert diff == ZERO
 
@@ -198,8 +198,8 @@ def test_reciprocal_frame():
 
     e_i.E_j = delta_ij*(e1^e2^e3)**2
     """
-    metric = '1 # #,'+ \
-             '# 1 #,'+ \
+    metric = '1 # #,' + \
+             '# 1 #,' + \
              '# # 1,'
 
     e1, e2, e3 = MV.setup('e1 e2 e3', metric)
@@ -247,7 +247,7 @@ def test_reciprocal_frame():
 def test_derivative():
     coords = x, y, z = sympy.symbols('x y z')
     e_x, e_y, e_z = MV.setup('e', '1 0 0, 0 1 0, 0 0 1', coords=coords)
-    X = x*e_x+y*e_y+z*e_z
+    X = x*e_x + y*e_y + z*e_z
     a = MV('a', 'vector')
 
     assert ((X|a).grad()) == a
@@ -263,7 +263,7 @@ def test_str():
     assert str(X) == 'x+x__0*e_1+x__1*e_2+x__2*e_3+x__01*e_1e_2+x__02*e_1e_3+x__12*e_2e_3+x__012*e_1e_2e_3'
     Y = MV('y', 'spinor')
     assert str(Y) == 'y+y__01*e_1e_2+y__02*e_1e_3+y__12*e_2e_3'
-    Z = X+Y
+    Z = X +Y
     assert str(Z) == 'x+y+x__0*e_1+x__1*e_2+x__2*e_3+(x__01+y__01)*e_1e_2+(x__02+y__02)*e_1e_3+(x__12+y__12)*e_2e_3+x__012*e_1e_2e_3'
     assert str(e_1|e_1) == '1'
 

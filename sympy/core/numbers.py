@@ -160,7 +160,7 @@ def igcdex(a, b):
 
     while b:
         (c, q) = (a % b, a // b)
-        (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
+        (a, b, r, s, x, y) = (b, c, x - q*r, y - q*s, r, s)
 
     return (x*x_sign, y*y_sign, a)
 
@@ -206,7 +206,7 @@ class Number(AtomicExpr):
             if isinstance(val, Number):
                 return val
             else:
-                raise ValueError('String "%s" does not denote a Number'%obj)
+                raise ValueError('String "%s" does not denote a Number' % obj)
             if isinstance(obj, Number):
                 return obj
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
@@ -1016,16 +1016,16 @@ class Rational(Number):
         n, d = self.p, self.q
         while True:
             a = n//d
-            q2 = q0+a*q1
+            q2 = q0 + a*q1
             if q2 > max_denominator:
                 break
-            p0, q0, p1, q1 = p1, q1, p0+a*p1, q2
-            n, d = d, n-a*d
+            p0, q0, p1, q1 = p1, q1, p0 + a*p1, q2
+            n, d = d, n - a*d
 
-        k = (max_denominator-q0)//q1
-        bound1 = Rational(p0+k*p1, q0+k*q1)
+        k = (max_denominator - q0)//q1
+        bound1 = Rational(p0 + k*p1, q0 + k*q1)
         bound2 = Rational(p1, q1)
-        if abs(bound2 - self) <= abs(bound1-self):
+        if abs(bound2 - self) <= abs(bound1 - self):
             return bound2
         else:
             return bound1
@@ -1133,7 +1133,7 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(expt.p*(expt.q-1), expt.q) / \
+                return Integer(self.q)**Rational(expt.p*(expt.q - 1), expt.q) / \
                        Integer(self.q)**Integer(expt.p)
 
         if self.is_negative and expt.is_even:
@@ -1319,7 +1319,7 @@ def _intcache_printinfo():
         print 'Integer cache statistic was not collected'
         return
 
-    miss_ratio = float(nmiss) / (nhit+nmiss)
+    miss_ratio = float(nmiss) / (nhit + nmiss)
 
     print
     print 'Integer cache statistic'
@@ -2444,7 +2444,7 @@ class GoldenRatio(NumberSymbol):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        rv = mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
+        rv = mlib.from_man_exp(phi_fixed(prec + 10), -prec - 10)
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
@@ -2477,8 +2477,8 @@ class EulerGamma(NumberSymbol):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        v = mlib.libhyper.euler_fixed(prec+10)
-        rv = mlib.from_man_exp(v, -prec-10)
+        v = mlib.libhyper.euler_fixed(prec + 10)
+        rv = mlib.from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
@@ -2507,8 +2507,8 @@ class Catalan(NumberSymbol):
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
-        v = mlib.catalan_fixed(prec+10)
-        rv = mlib.from_man_exp(v, -prec-10)
+        v = mlib.catalan_fixed(prec + 10)
+        rv = mlib.from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):

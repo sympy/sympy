@@ -38,7 +38,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of ``self`` domain from ``a``. """
-        return DMF(a, self.dom, len(self.gens)-1, ring=self)
+        return DMF(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """

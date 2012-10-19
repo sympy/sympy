@@ -38,10 +38,10 @@ def test_printmethod():
 
 
 def test_latex_basic():
-    assert latex(1+x) == "x + 1"
+    assert latex(1 + x) == "x + 1"
     assert latex(x**2) == "x^{2}"
-    assert latex(x**(1+x)) == "x^{x + 1}"
-    assert latex(x**3+x+1+x**2) == "x^{3} + x^{2} + x + 1"
+    assert latex(x**(1 + x)) == "x^{x + 1}"
+    assert latex(x**3 + x + 1 + x**2) == "x^{3} + x^{2} + x + 1"
 
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
@@ -273,7 +273,7 @@ def test_latex_brackets():
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
         r"\frac{\partial}{\partial x} x^{3}"
-    assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
+    assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
         r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
 
 
@@ -342,8 +342,8 @@ def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
-    assert latex(line**2) == r"%s^2"%latex(line)
-    assert latex(line * bigline * fset) == r"%s \times %s \times %s"%(
+    assert latex(line**2) == r"%s^2" % latex(line)
+    assert latex(line * bigline * fset) == r"%s \times %s \times %s" %(
             latex(line), latex(bigline), latex(fset))
 
 
@@ -382,11 +382,11 @@ def test_latex_limits():
 
 def test_issue469():
     beta = Symbol(r'\beta')
-    y = beta+x
+    y = beta +x
     assert latex(y) in [r'\beta + x', r'x + \beta']
 
     beta = Symbol(r'beta')
-    y = beta+x
+    y = beta +x
     assert latex(y) in [r'\beta + x', r'x + \beta']
 
 
@@ -413,7 +413,7 @@ def test_latex_rational():
     assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
     assert latex(-Rational(-1, 2)) == "\\frac{1}{2}"
     assert latex(-Rational(1, 2)*x) == "- \\frac{1}{2} x"
-    assert latex(-Rational(1, 2)*x+Rational(-2, 3)*y) in [
+    assert latex(-Rational(1, 2)*x + Rational(-2, 3)*y) in [
             "- \\frac{1}{2} x - \\frac{2}{3} y",
             "- \\frac{2}{3} y - \\frac{1}{2} x",
             ]
@@ -422,7 +422,7 @@ def test_latex_rational():
 def test_latex_inverse():
     #tests issue 1030
     assert latex(1/x) == "\\frac{1}{x}"
-    assert latex(1/(x+y)) in ["\\frac{1}{x + y}", "\\frac{1}{y + x}"]
+    assert latex(1/(x + y)) in ["\\frac{1}{x + y}", "\\frac{1}{y + x}"]
 
 
 def test_latex_DiracDelta():
@@ -433,7 +433,7 @@ def test_latex_DiracDelta():
 
 
 def test_mode():
-    expr = x+y
+    expr = x +y
     assert latex(expr) == 'x + y'
     assert latex(expr, mode='plain') == 'x + y'
     assert latex(expr, mode='inline') == '$x + y$'
@@ -455,7 +455,7 @@ def test_latex_Piecewise():
 
 
 def test_latex_Matrix():
-    M = Matrix([[1+x, y], [y, x-1]])
+    M = Matrix([[1 + x, y], [y, x - 1]])
     assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
                        '1\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
@@ -611,7 +611,7 @@ def test_matMul():
     assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
     assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
     assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert l._print_MatMul(-2*A*(A+2*B)) in [r'- 2 A \left(A + 2 B\right)',
+    assert l._print_MatMul(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
         r'- 2 A \left(2 B + A\right)']
 
 

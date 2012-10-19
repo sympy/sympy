@@ -255,7 +255,7 @@ def test_piecewise_fold():
     p = Piecewise((x, x < 1), (1, 1 <= x))
 
     assert piecewise_fold(x*p) == Piecewise((x**2, x < 1), (x, 1 <= x))
-    assert piecewise_fold(p+p) == Piecewise((2*x, x < 1), (2, 1 <= x))
+    assert piecewise_fold(p + p) == Piecewise((2*x, x < 1), (2, 1 <= x))
     assert piecewise_fold(Piecewise((1, x < 0), (2, True))
                           + Piecewise((10, x < 0), (-10, True))) == \
            Piecewise((11, x < 0), (-8, True))
@@ -271,11 +271,11 @@ def test_piecewise_fold():
 def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
-    p2 = piecewise_fold(expand((1-x)*p1))
+    p2 = piecewise_fold(expand((1 - x)*p1))
     assert p2 == Piecewise((1 - x, Interval(0, 1, False, True).contains(x)),
         (Piecewise((-x, Interval(0, 1, False, True).contains(x)), (0, True)), True))
 
-    p2 = expand(piecewise_fold((1-x)*p1))
+    p2 = expand(piecewise_fold((1 - x)*p1))
     assert p2 == Piecewise(
         (1 - x, Interval(0, 1, False, True).contains(x)), (0, True))
 
@@ -328,7 +328,7 @@ def test_piecewise_lambdify():
 def test_piecewise_series():
     from sympy import sin, cos, O
     p1 = Piecewise((sin(x), x<0), (cos(x), x>0))
-    p2 = Piecewise((x+O(x**2), x<0), (1+O(x**2), x>0))
+    p2 = Piecewise((x + O(x**2), x<0), (1 + O(x**2), x>0))
     assert p1.nseries(x, n=2) == p2
 
 

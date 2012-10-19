@@ -14,8 +14,8 @@ x, y = symbols("x,y")
 
 
 def test_Add():
-    assert precedence(x+y) == PRECEDENCE["Add"]
-    assert precedence(x*y+1) == PRECEDENCE["Add"]
+    assert precedence(x + y) == PRECEDENCE["Add"]
+    assert precedence(x*y + 1) == PRECEDENCE["Add"]
 
 
 def test_Function():
@@ -56,15 +56,15 @@ def test_Pow():
 
 
 def test_Product():
-    assert precedence(Product(x, (x, y, y+1))) == PRECEDENCE["Atom"]
+    assert precedence(Product(x, (x, y, y + 1))) == PRECEDENCE["Atom"]
 
 
 def test_Relational():
-    assert precedence(Rel(x+y, y, "<")) == PRECEDENCE["Relational"]
+    assert precedence(Rel(x + y, y, "<")) == PRECEDENCE["Relational"]
 
 
 def test_Sum():
-    assert precedence(Sum(x, (x, y, y+1))) == PRECEDENCE["Atom"]
+    assert precedence(Sum(x, (x, y, y + 1))) == PRECEDENCE["Atom"]
 
 
 def test_Symbol():
@@ -76,12 +76,12 @@ def test_And_Or():
     assert precedence(x&y) > precedence(x|y)
     assert precedence(~y) > precedence(x&y)
     # ... and with other operators (cfr. other programming languages)
-    assert precedence(x+y) > precedence(x|y)
-    assert precedence(x+y) > precedence(x&y)
+    assert precedence(x + y) > precedence(x|y)
+    assert precedence(x + y) > precedence(x&y)
     assert precedence(x*y) > precedence(x|y)
     assert precedence(x*y) > precedence(x&y)
     assert precedence(~y) > precedence(x*y)
-    assert precedence(~y) > precedence(x-y)
+    assert precedence(~y) > precedence(x - y)
     # double checks
     assert precedence(x&y) == PRECEDENCE["And"]
     assert precedence(x|y) == PRECEDENCE["Or"]

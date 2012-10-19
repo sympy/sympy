@@ -102,7 +102,7 @@ def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(S(2)**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(exp(C1), x, 1), 'C', 1, 1) == C1
     assert constant_renumber(
-        constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == C1*exp(x)
+        constantsimp(exp(C1 + x), x, 1), 'C', 1, 1) == C1*exp(x)
     assert constant_renumber(constantsimp(Pow(2, C1), x, 1), 'C', 1, 1) == C1
 
 
@@ -139,7 +139,7 @@ def test_constant_multiple():
 
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
-    assert constant_renumber(constantsimp(C1*exp(2*x)+exp(x)*(C2+C3), x, 3), 'C', 1, 3) == \
+    assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), x, 3), 'C', 1, 3) == \
         constant_renumber((C1*exp(x) + C2*exp(2*x)), 'C', 1, 2)
     assert constant_renumber(
         constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), x, 2),

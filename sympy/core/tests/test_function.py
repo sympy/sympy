@@ -100,7 +100,7 @@ def test_Lambda():
 
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2+1)
+    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
@@ -112,10 +112,10 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x+y).nargs == 2
+    assert Lambda((x, y), x + y).nargs == 2
 
     p = x, y, z, t
-    assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
+    assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
@@ -134,7 +134,7 @@ def test_Lambda_symbols():
 
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
-    raises(TypeError, lambda: Lambda((x, y), x+y)(x))
+    raises(TypeError, lambda: Lambda((x, y), x + y)(x))
 
 
 def test_Lambda_equality():
@@ -192,7 +192,7 @@ def test_Subs():
     e2 = Subs(z*f(y), y, 1)
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
-    assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
+    assert Subs(z*f(x + 1), x, 1) not in [ e1, e2 ]
     assert Derivative(
         f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
@@ -207,8 +207,8 @@ def test_Subs2():
 
 
 def test_expand_function():
-    assert expand(x+y) == x + y
-    assert expand(x+y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
+    assert expand(x + y) == x + y
+    assert expand(x + y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
     assert expand((x + y)**11, modulus=11) == x**11 + y**11
 
 
@@ -243,8 +243,8 @@ def test_deriv1():
         f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
             Tuple(2*x))
 
-    assert f(2+x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
-    assert f(2+3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
+    assert f(2 + x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
+    assert f(2 + 3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
             Tuple(3*x + 2))
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
@@ -278,17 +278,17 @@ def test_suppressed_evaluation():
 
 def test_function_evalf():
     def eq(a, b, eps):
-        return abs(a-b) < eps
+        return abs(a - b) < eps
     assert eq(sin(1).evalf(15), Float("0.841470984807897"), 1e-13)
     assert eq(
         sin(2).evalf(25), Float("0.9092974268256816953960199", 25), 1e-23)
-    assert eq(sin(1+I).evalf(
+    assert eq(sin(1 + I).evalf(
         15), Float("1.29845758141598") + Float("0.634963914784736")*I, 1e-13)
-    assert eq(exp(1+I).evalf(15), Float(
+    assert eq(exp(1 + I).evalf(15), Float(
         "1.46869393991588") + Float("2.28735528717884239")*I, 1e-13)
-    assert eq(exp(-0.5+1.5*I).evalf(15), Float(
+    assert eq(exp(-0.5 + 1.5*I).evalf(15), Float(
         "0.0429042815937374") + Float("0.605011292285002")*I, 1e-13)
-    assert eq(log(pi+sqrt(2)*I).evalf(
+    assert eq(log(pi + sqrt(2)*I).evalf(
         15), Float("1.23699044022052") + Float("0.422985442737893")*I, 1e-13)
     assert eq(cos(100).evalf(15), Float("0.86231887228768"), 1e-13)
 
@@ -313,14 +313,14 @@ def test_function__eval_nseries():
     n = Symbol('n')
 
     assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
-    assert sin(x+1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
-    assert sin(pi*(1-x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
-    assert acos(1-x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
-    assert polygamma(n, x+1)._eval_nseries(x, 2, None) == \
-                   polygamma(n, 1) + polygamma(n+1, 1)*x + O(x**2)
+    assert sin(x + 1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
+    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
+    assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
+                   polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1-x)._eval_nseries(x, 2, None))
-    raises(PoleError, lambda: acos(1+x)._eval_nseries(x, 2, None))
+    raises(PoleError, lambda: acos(1 - x)._eval_nseries(x, 2, None))
+    raises(PoleError, lambda: acos(1 + x)._eval_nseries(x, 2, None))
     assert loggamma(1/x)._eval_nseries(x, 0, None) \
            == log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
@@ -357,10 +357,10 @@ def test_issue2300():
         n_at = [i for i in range(len(a)) if not a[i].is_Symbol]
         # every symbol is followed by symbol or int
         # every number is followed by a symbol
-        return (all(a[i+1].is_Symbol or a[i+1].is_Integer
-            for i in s_at if i+1<len(a)) and
-            all(a[i+1].is_Symbol
-            for i in n_at if i+1<len(a)))
+        return (all(a[i + 1].is_Symbol or a[i + 1].is_Integer
+            for i in s_at if i + 1<len(a)) and
+            all(a[i + 1].is_Symbol
+            for i in n_at if i + 1<len(a)))
     eq = x**10*y**8
     for a in subsets(args):
         for v in variations(a, len(a)):
@@ -425,9 +425,9 @@ def test_diff_wrt():
     dfx = diff(f(x), x)
     ddfx = diff(f(x), x, x)
 
-    assert diff(sin(fx)+fx**2, fx) == cos(fx)+2*fx
-    assert diff(sin(dfx)+dfx**2, dfx) == cos(dfx)+2*dfx
-    assert diff(sin(ddfx)+ddfx**2, ddfx) == cos(ddfx)+2*ddfx
+    assert diff(sin(fx) + fx**2, fx) == cos(fx) + 2*fx
+    assert diff(sin(dfx) + dfx**2, dfx) == cos(dfx) + 2*dfx
+    assert diff(sin(ddfx) + ddfx**2, ddfx) == cos(ddfx) + 2*ddfx
     assert diff(fx**2, dfx) == 0
     assert diff(fx**2, ddfx) == 0
     assert diff(dfx**2, fx) == 0
@@ -462,7 +462,7 @@ def test_diff_wrt_func_subs():
 def test_diff_wrt_not_allowed():
     raises(ValueError, lambda: diff(sin(x**2), x**2))
     raises(ValueError, lambda: diff(exp(x*y), x*y))
-    raises(ValueError, lambda: diff(1+x, 1+x))
+    raises(ValueError, lambda: diff(1 + x, 1 + x))
 
 
 def test_klein_gordon_lagrangian():

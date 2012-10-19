@@ -40,9 +40,9 @@ def test_division():
 
 def test_sum():
     m = Matrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
-    assert m+m == Matrix([[2, 4, 6], [2*x, 2*y, 2*x], [4*y, -100, 2*z*x]])
+    assert m + m == Matrix([[2, 4, 6], [2*x, 2*y, 2*x], [4*y, -100, 2*z*x]])
     n = Matrix(1, 2, [1, 2])
-    raises(ShapeError, lambda: m+n)
+    raises(ShapeError, lambda: m + n)
 
 
 def test_addition():
@@ -201,8 +201,8 @@ def test_determinant():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="bareis") == 2*x*y-y
-    assert M.det(method="berkowitz") == 2*x*y-y
+    assert M.det(method="bareis") == 2*x*y -y
+    assert M.det(method="berkowitz") == 2*x*y -y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -284,7 +284,7 @@ def test_det_LU_decomposition():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="det_LU") == 2*x*y-y
+    assert M.det(method="det_LU") == 2*x*y -y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -349,7 +349,7 @@ def test_submatrix():
     assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
 
-    m1 = Matrix(3, 3, lambda i, j: i+j)
+    m1 = Matrix(3, 3, lambda i, j: i + j)
     assert m1[0, :] == Matrix(1, 3, (0, 1, 2))
     assert m1[1:3, 1] == Matrix(2, 1, (2, 3))
 
@@ -398,7 +398,7 @@ def test_extract():
 def test_reshape():
     m0 = eye(3)
     assert m0.reshape(1, 9) == Matrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
-    m1 = Matrix(3, 4, lambda i, j: i+j)
+    m1 = Matrix(3, 4, lambda i, j: i + j)
     assert m1.reshape(
         4, 3) == Matrix(((0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)))
     assert m1.reshape(2, 6) == Matrix(((0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)))
@@ -411,10 +411,10 @@ def test_applyfunc():
 
 
 def test_expand():
-    m0 = Matrix([[x*(x+y), 2], [((x+y)*y)*x, x*(y+x*(x+y))]])
+    m0 = Matrix([[x*(x + y), 2], [((x + y)*y)*x, x*(y + x*(x + y))]])
     # Test if expand() returns a matrix
     m1 = m0.expand()
-    assert m1 == Matrix([[x*y+x**2, 2], [x*y**2+y*x**2, x*y+y*x**2+x**3]])
+    assert m1 == Matrix([[x*y + x**2, 2], [x*y**2 + y*x**2, x*y + y*x**2 + x**3]])
 
     a = Symbol('a', real=True)
 
@@ -440,7 +440,7 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
+    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
 
     testmat = Matrix([[6, -2, 7, 4],
                       [0, 3, 6, 7],
@@ -449,13 +449,13 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
+    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
 
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p)-M == zeros(3)
+    assert (L*U).permuteBkwd(p) - M == zeros(3)
 
     mL = Matrix((
       (1, 0, 0),
@@ -586,7 +586,7 @@ def test_util():
 def test_jacobian_hessian():
     L = Matrix(1, 2, [x**2*y, 2*y**2 + x*y])
     syms = [x, y]
-    assert L.jacobian(syms) == Matrix([[2*x*y, x**2], [y, 4*y+x]])
+    assert L.jacobian(syms) == Matrix([[2*x*y, x**2], [y, 4*y + x]])
 
     L = Matrix(1, 2, [x, x**2*y**3])
     assert L.jacobian(syms) == Matrix([[1, 0], [2*x*y**3, x**2*3*y**2]])
@@ -704,8 +704,8 @@ def test_eigen():
 
     R = Rational
 
-    assert eye(3).charpoly(x) == Poly((x-1)**3, x)
-    assert eye(3).charpoly(y) == Poly((y-1)**3, y)
+    assert eye(3).charpoly(x) == Poly((x - 1)**3, x)
+    assert eye(3).charpoly(y) == Poly((y - 1)**3, y)
 
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
@@ -795,14 +795,14 @@ def test_eigen():
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
-    assert Matrix([[x, 2], [x+y, 4]]).subs([[x, -1], [y, -2]]) == \
+    assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
         Matrix([[-1, 2], [-3, 4]])
-    assert Matrix([[x, 2], [x+y, 4]]).subs([(x, -1), (y, -2)]) == \
+    assert Matrix([[x, 2], [x + y, 4]]).subs([(x, -1), (y, -2)]) == \
         Matrix([[-1, 2], [-3, 4]])
-    assert Matrix([[x, 2], [x+y, 4]]).subs({x: -1, y: -2}) == \
+    assert Matrix([[x, 2], [x + y, 4]]).subs({x: -1, y: -2}) == \
         Matrix([[-1, 2], [-3, 4]])
-    assert Matrix([x*y]).subs({x: y-1, y: x-1}, simultaneous=True) == \
-        Matrix([(x-1)*(y-1)])
+    assert Matrix([x*y]).subs({x: y - 1, y: x - 1}, simultaneous=True) == \
+        Matrix([(x - 1)*(y - 1)])
 
     for cls in classes:
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
@@ -896,15 +896,15 @@ def test_shape():
 def test_col_row_op():
     M = Matrix([[x, 0, 0],
                 [0, y, 0]])
-    M.row_op(1, lambda r, j: r+j+1)
+    M.row_op(1, lambda r, j: r + j + 1)
     assert M == Matrix([[x, 0, 0],
-                        [1, y+2, 3]])
-    M.col_op(0, lambda c, j: c+y**j)
-    assert M == Matrix([[x+1, 0, 0],
-                        [1+y, y+2, 3]])
+                        [1, y + 2, 3]])
+    M.col_op(0, lambda c, j: c + y**j)
+    assert M == Matrix([[x + 1, 0, 0],
+                        [1 + y, y + 2, 3]])
     # neither row nor slice give copies that allow the original matrix to
     # be changed
-    assert M.row(0) == Matrix([[x+1, 0, 0]])
+    assert M.row(0) == Matrix([[x + 1, 0, 0]])
     r1 = M.row(0)
     r1[0] = 42
     assert M[0, 0] == x + 1
@@ -1041,11 +1041,11 @@ def test_issue650():
     assert a.diff(x) == Matrix([[2*x, y], [sin(y), cos(y)]])
     assert Matrix([
         [x, -x, x**2],
-        [exp(x), 1/x-exp(-x), x+1/x]]).limit(x, oo) == \
+        [exp(x), 1/x - exp(-x), x + 1/x]]).limit(x, oo) == \
         Matrix([[oo, -oo, oo], [oo, 0, oo]])
     assert Matrix([
-        [(exp(x)-1)/x, 2*x + y*x, x**x ],
-        [1/x, abs(x), abs(sin(x+1))]]).limit(x, 0) == \
+        [(exp(x) - 1)/x, 2*x + y*x, x**x ],
+        [1/x, abs(x), abs(sin(x + 1))]]).limit(x, 0) == \
         Matrix([[1, 0, 1], [oo, 0, sin(1)]])
     assert a.integrate(x) == Matrix([
         [Rational(1, 3)*x**3, y*x**2/2],
@@ -1126,11 +1126,11 @@ def test_vech():
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
 
-    m = Matrix([[1, x*(x+y)], [y*x+x**2, 1]])
+    m = Matrix([[1, x*(x + y)], [y*x + x**2, 1]])
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == x*(x + y)
 
-    m = Matrix([[1, x*(x+y)], [y*x, 1]])
+    m = Matrix([[1, x*(x + y)], [y*x, 1]])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
     assert m_vech[0] == y*x
 
@@ -1512,7 +1512,7 @@ def test_errors():
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
     raises(ValueError,
         lambda: Matrix([[5, 10, 7], [0, -1, 2], [8,  3, 4]]
-        ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x)<=4))
+        ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
     raises(NotImplementedError, lambda: Matrix([[1, 0], [1, 1]])**(S(1)/2))
     raises(NotImplementedError,
         lambda: Matrix([[1, 2, 3], [4, 5, 6], [7,  8, 9]])**(0.5))
@@ -1542,18 +1542,18 @@ def test_integrate():
 
 
 def test_limit():
-    A = Matrix(((1, 4, sin(x)/x), (y, 2, 4), (10, 5, x**2+1)))
+    A = Matrix(((1, 4, sin(x)/x), (y, 2, 4), (10, 5, x**2 + 1)))
     assert A.limit(x, 0) == Matrix(((1, 4, 1), (y, 2, 4), (10, 5, 1)))
 
 
 def test_diff():
-    A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2+1)))
+    A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
     assert A.diff(x) == Matrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A.diff(y) == Matrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
 
 def test_getattr():
-    A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2+1)))
+    A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
     raises(AttributeError, lambda: A.nonexistantattribute)
     assert getattr(A, 'diff')(x) == Matrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
 
@@ -1714,7 +1714,7 @@ def test_matrix_norm():
         # Check Triangle Inequality for all Pairs of Matrices
         for X in L:
             for Y in L:
-                assert X.norm(order)+Y.norm(order) >= (X+Y).norm(order)
+                assert X.norm(order) + Y.norm(order) >= (X + Y).norm(order)
         # Scalar multiplication linearity
         for M in [A, B, C, D]:
             if order in [2, -2]:
@@ -1731,7 +1731,7 @@ def test_matrix_norm():
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
-    a = Matrix([1, 1-1*I, -3])
+    a = Matrix([1, 1 - 1*I, -3])
     b = Matrix([S(1)/2, 1*I, 1])
     c = Matrix([-1, -1, -1])
     d = Matrix([3, 2, I])
@@ -1747,7 +1747,7 @@ def test_matrix_norm():
         if order >= 1:  # Triangle InEq holds only for these norms
             for v in L:
                 for w in L:
-                    assert v.norm(order)+w.norm(order) >= (v+w).norm(order)
+                    assert v.norm(order) + w.norm(order) >= (v + w).norm(order)
         # Linear to scalar multiplication
         if order in [1, 2, -1, -2, S.Infinity, S.NegativeInfinity]:
             for vec in L:

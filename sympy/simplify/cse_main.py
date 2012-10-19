@@ -322,7 +322,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
             reduced_exprs[j] = update(expr)
             hit = hit or (old != reduced_exprs[j])
         # Make the substitution in all of the subsequent substitutions.
-        for j in range(i+1, len(to_eliminate)):
+        for j in range(i + 1, len(to_eliminate)):
             old = to_eliminate[j]
             to_eliminate[j] = update(to_eliminate[j])
             hit = hit or (old != to_eliminate[j])

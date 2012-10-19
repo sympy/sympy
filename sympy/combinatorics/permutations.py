@@ -1398,7 +1398,7 @@ class Permutation(Basic):
                 res.append(tuple(x))
             elif nx > 2:
                 first = x[0]
-                for y in x[nx-1:0:-1]:
+                for y in x[nx - 1:0:-1]:
                     res.append((first, y))
         return res
 
@@ -1549,7 +1549,7 @@ class Permutation(Basic):
         perm = self.array_form[:]
         n = len(perm)
         i = n - 2
-        while perm[i+1] < perm[i]:
+        while perm[i + 1] < perm[i]:
             i -= 1
         if i == -1:
             return None
@@ -1659,7 +1659,7 @@ class Permutation(Basic):
         r = self.rank_nonlex()
         if r == ifac(self.size) - 1:
             return None
-        return Perm.unrank_nonlex(self.size, r+1)
+        return Perm.unrank_nonlex(self.size, r + 1)
 
     def rank(self, i=None):
         """
@@ -1889,7 +1889,7 @@ class Permutation(Basic):
         descents, inversions, min, max
         """
         a = self.array_form
-        pos = [i for i in range(len(a)-1) if a[i] < a[i+1]]
+        pos = [i for i in range(len(a) - 1) if a[i] < a[i + 1]]
         return pos
 
     def descents(self):
@@ -1911,7 +1911,7 @@ class Permutation(Basic):
         ascents, inversions, min, max
         """
         a = self.array_form
-        pos = [i for i in range(len(a)-1) if a[i] > a[i+1]]
+        pos = [i for i in range(len(a) - 1) if a[i] > a[i + 1]]
         return pos
 
     def max(self):
@@ -2013,7 +2013,7 @@ class Permutation(Basic):
                     right = i + k * 2 - 1
                     if right >= n:
                         right = n -1
-                    inversions += _merge(arr, temp, i, i+k, right)
+                    inversions += _merge(arr, temp, i, i + k, right)
                     i = i + k * 2
                 k = k * 2
         return inversions
@@ -2208,7 +2208,7 @@ class Permutation(Basic):
         """
         a = self.array_form
 
-        return sum([j for j in range(len(a) - 1) if a[j] > a[j+1]])
+        return sum([j for j in range(len(a) - 1) if a[j] > a[j + 1]])
 
     def runs(self):
         """
@@ -2276,7 +2276,7 @@ class Permutation(Basic):
 
         for i in range(n - 1):
             val = 0
-            for j in range(i+1, n):
+            for j in range(i + 1, n):
                 if self_array_form[j] < self_array_form[i]:
                     val += 1
             inversion_vector[i] = val
@@ -2345,18 +2345,18 @@ class Permutation(Basic):
         r2 = 0
         n = ifac(size)
         pj = 1
-        for j in range(2, size+1):
+        for j in range(2, size + 1):
             pj *= j
             r1 = (rank * pj) // n
             k = r1 - j*r2
             if r2 % 2 == 0:
-                for i in range(j-1, j-k-1, -1):
-                    perm[i] = perm[i-1]
-                perm[j-k-1] = j-1
+                for i in range(j - 1, j - k - 1, -1):
+                    perm[i] = perm[i - 1]
+                perm[j - k - 1] = j -1
             else:
-                for i in range(j-1, k, -1):
-                    perm[i] = perm[i-1]
-                perm[k] = j-1
+                for i in range(j - 1, k, -1):
+                    perm[i] = perm[i - 1]
+                perm[k] = j -1
             r2 = r1
         return Perm._af_new(perm)
 
@@ -2389,24 +2389,24 @@ class Permutation(Basic):
         st = 0
         rho = pi[:]
         done = False
-        m = n-1
+        m = n -1
         while m > 0 and not done:
             d = rho.index(m)
             for i in range(d, m):
-                rho[i] = rho[i+1]
+                rho[i] = rho[i + 1]
             par = _af_parity(rho[:m])
             if par == 1:
                 if d == m:
                     m -= 1
                 else:
-                    pi[st+d], pi[st+d+1] = pi[st+d+1], pi[st+d]
+                    pi[st + d], pi[st + d + 1] = pi[st + d + 1], pi[st + d]
                     done = True
             else:
                 if d == 0:
                     m -= 1
                     st += 1
                 else:
-                    pi[st+d], pi[st+d-1] = pi[st+d-1], pi[st+d]
+                    pi[st + d], pi[st + d - 1] = pi[st + d - 1], pi[st + d]
                     done = True
         if m == 0:
             return None
@@ -2715,7 +2715,7 @@ class Permutation(Basic):
             rank -= d*psize
             perm_array[size - i - 1] = d
             for j in range(size - i, size):
-                if perm_array[j] > d-1:
+                if perm_array[j] > d - 1:
                     perm_array[j] += 1
             psize = new_psize
         return Perm._af_new(perm_array)

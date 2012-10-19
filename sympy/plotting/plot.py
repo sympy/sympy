@@ -468,7 +468,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def get_points(self):
         if self.only_integers is True:
             list_x = np.linspace(int(self.start), int(self.end),
-                    num=int(self.end)-int(self.start)+1)
+                    num=int(self.end) - int(self.start) + 1)
         else:
             list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
@@ -569,7 +569,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                         for x, y in zip(x_array, y_array)):
                     for i in len(y_array) - 1:
                         if ((x_array[i] is not None and y_array[i] is not None) or
-                                (x_array[i+1] is not None and y_array[i] is not None)):
+                                (x_array[i + 1] is not None and y_array[i] is not None)):
                             point_a = [x_array[i], y_array[i]]
                             point_b = [x_array[i + 1], y_array[i + 1]]
                             sample(param_array[i], param_array[i], point_a,

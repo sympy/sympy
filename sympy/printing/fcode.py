@@ -51,7 +51,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(assign_to, basestring):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("FCodePrinter cannot assign to object of type %s"%
+            raise TypeError("FCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
     def _rate_index_position(self, p):
@@ -98,7 +98,7 @@ class FCodePrinter(CodePrinter):
         for i in indices:
             # fortran arrays start at 1 and end at dimension
             var, start, stop = map(self._print,
-                    [i.label, i.lower+1, i.upper+1])
+                    [i.label, i.lower + 1, i.upper + 1])
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
@@ -118,7 +118,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args)-1 and c is True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
@@ -231,7 +231,7 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1.0/%s'%(self.parenthesize(expr.base, PREC))
+            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
@@ -252,7 +252,7 @@ class FCodePrinter(CodePrinter):
         printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
-            return "%sd%s" % (printed[:e], printed[e+1:])
+            return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
     def _print_Indexed(self, expr):
@@ -280,10 +280,10 @@ class FCodePrinter(CodePrinter):
                 return len(line)
             pos = endpos
             split = lambda pos: \
-                (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
-                (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
-                (line[pos] in my_white and line[pos-1] not in my_white) or \
-                (line[pos] not in my_white and line[pos-1] in my_white)
+                (line[pos] in my_alnum and line[pos - 1] not in my_alnum) or \
+                (line[pos] not in my_alnum and line[pos - 1] in my_alnum) or \
+                (line[pos] in my_white and line[pos - 1] not in my_white) or \
+                (line[pos] not in my_white and line[pos - 1] in my_white)
             while not split(pos):
                 pos -= 1
                 if pos == 0:

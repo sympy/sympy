@@ -28,7 +28,7 @@ def test_quantum_fourier():
         *HadamardGate(1)*CGate((0,), RkGate(1, -2))*HadamardGate(0)*SwapGate(0, 2)
 
     assert represent(QFT(0, 3), nqubits=3)\
-     == Matrix([[exp(2*pi*I/8)**(i*j%8)/sqrt(8) for i in range(8)] for j in range(8)])
+     == Matrix([[exp(2*pi*I/8)**(i*j % 8)/sqrt(8) for i in range(8)] for j in range(8)])
 
     assert QFT(0, 4).decompose()  # non-trivial decomposition
     assert qapply(QFT(0, 3).decompose()*Qubit(0, 0, 0)).expand() == \

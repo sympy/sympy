@@ -53,7 +53,7 @@ def change_mul(node, x):
 
     for arg in sorted_args:
         if arg.func == DiracDelta and arg.is_simple(x) \
-                and (len(arg.args) <= 1 or arg.args[1]==0):
+                and (len(arg.args) <= 1 or arg.args[1] == 0):
             if dirac is None:
                 dirac = arg
             else:
@@ -137,10 +137,10 @@ def deltaintegrate(f, x):
             #FIXME: the second term tells whether is DeltaDirac or Derivative
             #For integrating derivatives of DiracDelta we need the chain rule
             if f.is_simple(x):
-                if (len(f.args) <= 1 or f.args[1]==0):
+                if (len(f.args) <= 1 or f.args[1] == 0):
                     return Heaviside(f.args[0])
                 else:
-                    return (DiracDelta(f.args[0], f.args[1]-1)/ f.args[0].as_poly().LC())
+                    return (DiracDelta(f.args[0], f.args[1] - 1)/ f.args[0].as_poly().LC())
         else:  # let's try to integrate the simplified expression
             fh = sympy.integrals.integrate(h, x)
             return fh

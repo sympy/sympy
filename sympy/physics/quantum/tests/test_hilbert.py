@@ -95,9 +95,9 @@ def test_direct_sum():
     hs1 = ComplexSpace(2)
     hs2 = ComplexSpace(n)
 
-    h = hs1+hs2
+    h = hs1 + hs2
     assert isinstance(h, DirectSumHilbertSpace)
-    assert h.dimension == 2+n
+    assert h.dimension == 2 +n
     assert h.spaces == (hs1, hs2)
 
     f = FockSpace()
