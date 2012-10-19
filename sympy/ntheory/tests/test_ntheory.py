@@ -547,7 +547,7 @@ def test_visual_io():
     for th in [d, s, t, n, m]:
         assert sm(th, visual=False) == t
     assert [sm(th, visual=None) for th in [d, s, t, n, m]] == [s, d, s, t, t]
-    assert [sm(th, visual=0) for th in [d, s, t, n, m]] == [s, d, s, t, t]
+    assert [sm(th, visual=2) for th in [d, s, t, n, m]] == [s, d, s, t, t]
 
     # with factorint
     for th in [d, m, n]:

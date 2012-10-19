@@ -105,6 +105,12 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     """
     from sympy.utilities import flatten
 
+    # visual must be True, False or other (stored as None)
+    if visual in (1, 0):
+        visual = bool(visual)
+    elif visual not in (True, False):
+        visual = None
+
     if type(n) is str:
         if visual:
             return n
