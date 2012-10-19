@@ -1,6 +1,6 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
     compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
-from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE
+from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE , simplify_logic, POSform, SOPform
 from sympy.utilities.pytest import raises
 
 
@@ -134,6 +134,20 @@ def test_Equivalent():
     assert Equivalent(A, B, True) == A & B
     assert Equivalent(A, B, False) == ~A & ~B
 
+<<<<<<< HEAD
+=======
+def test_simplification():
+    """
+    Test working of simplification methods.
+    """
+    set1=[[0,0,1], [0,1,1], [1,0,0], [1,1,0]]
+    set2=[[0,0,0], [0,1,0], [1,0,1], [1,1,1]]
+    minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
+    dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
+    assert Equivalent(SOPform(['x','y','z'], set1)) == Equivalent(Not (SOPform(['x','y','z'], set2)))
+    assert Equivalent(SOPform(['w','x','y','z'], minterms, dontcares)) == Equivalent(POSform(['w','x','y','z'], minterms, dontcares))
+    assert Equivalent(simplify_logic('A & (B | C)')) == Equivalent(simplify_logic('(A & B) | (A & C)'))
+>>>>>>> Recreated logicadd branch,added changes
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values

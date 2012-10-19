@@ -574,3 +574,268 @@ def to_int_repr(clauses, symbols):
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
                                                             for c in clauses]
+
+
+def check_pair(minterm1, minterm2):
+    """
+    Checks if a pair of minterms differs by only one bit.If yes, returns
+    index. Otherwise, returns -1.
+    """
+    if abs(minterm1.count(1) - minterm2.count(1)) == 1:
+        i = 0
+        count = 0
+        index = 0
+        while i <= (len(minterm1) - 1):
+            if minterm1[i] != minterm2[i]:
+                index = i
+                count += 1
+            i += 1
+        if count == 1:
+            return index
+        else:
+            return -1
+    else:
+        return -1
+
+
+def convert_to_varsSOP(minterm, variables):
+    """
+    Converts a term in the expansion of a function from binary to it's
+    variable form (for SOP).
+    """
+    string = ""
+    i = 0
+    while i <= (len(minterm) - 1):
+        if minterm[i] == 0:
+            string = string + "~" + variables[i] + "&"
+        elif minterm[i] == 1:
+            string = string + (variables[i]) + "&"
+        i += 1
+    return string[:-1]
+
+
+def convert_to_varsPOS(maxterm, variables):
+    """
+    Converts a term in the expansion of a function from binary to it's
+    variable form (for POS).
+    """
+    string = "("
+    i = 0
+    while i <= (len(maxterm) - 1):
+        if maxterm[i] == 0:
+            string = string + variables[i] + '|'
+        elif maxterm[i] == 1:
+            string = string + "~" + variables[i] + '|'
+        i += 1
+    string = string[:-1]
+    return (string + ")")
+
+
+def simplified_pairs(terms):
+    """
+    Reduces a set of minterms, if possible, to a simplified set of minterms
+    with one less variable in the terms using QM method.
+    """
+    simplified_terms = []
+    i = 0
+    done_list = []
+    while i <= (len(terms) - 2):
+        k = 1
+        for x in terms[(i + 1):]:
+            index = check_pair(terms[i], x)
+            if index != -1:
+                done_list.append(i)
+                done_list.append(i + k)
+                temporary = terms[i][:index]
+                temporary.append(3)
+                temporary.extend(terms[i][(index + 1):])
+                if temporary not in simplified_terms:
+                    simplified_terms.append(temporary)
+            k += 1
+        i += 1
+    done_list = list(set(done_list))
+    i = 0
+    while i <= (len(terms) - 1):
+        if i not in done_list:
+            simplified_terms.append(terms[i])
+        i += 1
+    return simplified_terms
+
+
+def compare_term(minterm, term):
+    """
+    Compares if a binary term is satisfied by the given term. Used
+    for recognising prime implicants.
+    """
+    i = 0
+    flag = True
+    while (i <= (len(term) - 1)):
+        if term[i] != 3:
+            if term[i] != minterm[i]:
+                flag = False
+                break
+        i += 1
+    return flag
+
+
+def rem_redundancy(l1, terms, variables, mode):
+    """
+    After the truth table has been sufficiently simplified, uses the prime
+    implicant table method to recognise and eliminate redundant pairs,
+    and returns the relevant function in string form.
+    """
+    essential = []
+    for x in terms:
+        temporary = []
+        for y in l1:
+            if compare_term(x, y):
+                temporary.append(y)
+        if len(temporary) == 1:
+            if temporary[0] not in essential:
+                essential.append(temporary[0])
+    for x in terms:
+        flag = False
+        for y in essential:
+            if compare_term(x, y):
+                flag = True
+                break
+        if (Not(flag)):
+            for z in l1:
+                if compare_term(x, z):
+                    if z not in essential:
+                        essential.append(z)
+                    break
+    string = ""
+    if mode == 1:
+        for x in essential:
+            string = string + convert_to_varsSOP(x, variables) + '|'
+    else:
+        for x in essential:
+            string = string + convert_to_varsPOS(x, variables) + '&'
+    return string
+
+
+def SOPform(variables, minterms, dontcares=[]):
+    """
+    The SOPform function uses simplified_pairs and a redundant group-
+    eliminating algorithm to convert the list of all input combos that
+    generate '1'(the minterms) into the smallest Sum of Products form.
+
+    The return type from SOPform is an instance of Or.
+    The variables must be given as the first argument, in the form of
+    strings.
+    If there are any input combos whose outputs are insignificant, give
+    their list as the last argument. In such a case, the resulting
+    function is one of the multiple effective ones.
+
+    Examples
+    ========
+
+    >>> from sympy.logic import SOPform
+    >>> minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
+    >>> dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
+    >>> SOPform(['w','x','y','z'], minterms, dontcares)
+        Or(And(Not(w), z), And(y, z))
+
+    References
+    ==========
+
+    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+
+    """
+    if minterms == []:
+        return False
+    l1 = []
+    l2 = [1]
+    total = minterms + dontcares
+    while (l1 != l2):
+        l1 = simplified_pairs(total)
+        l2 = simplified_pairs(l1)
+        total = l1[:]
+    string = rem_redundancy(l1, minterms, variables, 1)
+    if string == '':
+        return True
+    return compile_rule(string[:-1])
+
+
+def POSform(variables, minterms, dontcares=[]):
+    """
+    The POSform function uses simplified_pairs and a redundant group-
+    eliminating algorithm to convert the list of all input combos that
+    generate '1'(the minterms) into the smallest Product of Sums form.
+
+    The return type from POSform is an instance of And.
+    The variables must be given as the first argument, in the form of
+    strings.
+    If there are any input combos whose outputs are insignificant, give
+    their list as the last argument. In such a case, the resulting
+    function is one of the multiple effective ones.
+
+    Examples
+    ========
+
+    >>> from sympy.logic import POSform
+    >>> minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
+    >>> dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
+    >>> POSform(['w','x','y','z'], minterms, dontcares)
+        And(Or(Not(w), y), z)
+
+    References
+    ==========
+
+    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+
+    """
+    from sympy.core.compatibility import bin
+    if minterms == []:
+        return False
+    t = [0] * len(variables)
+    maxterms = []
+    for x in range(2 ** len(variables)):
+        b = [int(y) for y in bin(x)[2:]]
+        t[-len(b):] = b
+        if (t not in minterms) and (t not in dontcares):
+            maxterms.append(t[:])
+    l1 = []
+    l2 = [1]
+    total = maxterms + dontcares
+    while (l1 != l2):
+        l1 = simplified_pairs(total)
+        l2 = simplified_pairs(l1)
+        total = l1[:]
+    string = rem_redundancy(l1, maxterms, variables, 2)
+    if string == '':
+        return True
+    return compile_rule(string[:-1])
+
+
+def simplify_logic(function):
+    """
+    This function simplifies a boolean function in string form to its
+    simplified version in SOP or POS form. The return type is a
+    Or object or And object in Sympy.
+
+    Examples
+    ========
+
+    >>> from sympy.logic import simplify_logic
+    >>> simplify_logic( '(~x & ~y & ~z) | ( ~x & ~y & z)')
+        And(Not(x), Not(y))
+
+    """
+    from sympy import Symbol
+    from sympy.core.compatibility import bin
+    function = compile_rule(function)
+    string_variables = [x.__getnewargs__()[0] for x in function.atoms(Symbol)]
+    variables = list(function.atoms(Symbol))
+    truthtable = []
+    t = [0] * len(variables)
+    for x in range(2 ** len(variables)):
+        b = [int(y) for y in bin(x)[2:]]
+        t[-len(b):] = b
+        if function.subs(zip(variables, [bool(i) for i in t])) is True:
+            truthtable.append(t[:])
+    if (len(truthtable) >= (2 ** (len(variables) - 1))):
+        return SOPform(string_variables, truthtable)
+    else:
+        return POSform(string_variables, truthtable)
