@@ -1532,7 +1532,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 if num:
                     for o in other:
                         b, e = o.as_base_exp()
-                        if b.is_Add and all(a.args_cnc(cset=True, warn=False)[0] & con_set for a in b.args):
+                        if b.is_Add and \
+                        all(a.args_cnc(cset=True, warn=False)[0] & \
+                        con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
         if expr.is_Mul: # check again that it's still a Mul

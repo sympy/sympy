@@ -12,7 +12,8 @@ from sympy.core.sympify import SympifyError
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.utilities import default_sort_key
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import has_variety
 
 import re
 
@@ -1056,7 +1057,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+        if len(p.sets) > 1 and not has_variety(p.sets):
             return self._print(p.sets[0]) + "^%d"%len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)

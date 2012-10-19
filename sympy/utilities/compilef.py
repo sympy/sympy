@@ -90,7 +90,10 @@ numpy = import_module('numpy')
 libtccpath = './libtcc.so'
 dps = 17 # decimal places of float precision
 # load libtcc TODO: better Windows support
-libtcc = ctypes.cdll.LoadLibrary(libtccpath)
+try:
+    libtcc = ctypes.cdll.LoadLibrary(libtccpath)
+except OSError:
+    libtcc = None
 if not libtcc:
     raise ImportError('Could not load libtcc')
 

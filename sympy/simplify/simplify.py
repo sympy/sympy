@@ -15,7 +15,8 @@ from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
-from sympy.utilities import flatten, default_sort_key
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import flatten, has_variety
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -2943,7 +2944,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     def shorter(*choices):
         '''Return the choice that has the fewest ops. In case of a tie,
         the expression listed first is selected.'''
-        if len(set(choices)) == 1:
+        if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
 

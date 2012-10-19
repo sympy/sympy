@@ -20,14 +20,13 @@ def test_naive_list_centralizer():
     S = SymmetricGroup(3)
     A = AlternatingGroup(3)
     assert _naive_list_centralizer(S, S) == [Permutation([0, 1, 2])]
-    assert PermutationGroup(_naive_list_centralizer(S, A)) == A
+    assert PermutationGroup(_naive_list_centralizer(S, A)).is_subgroup(A)
 
 def test_verify_bsgs():
     S = SymmetricGroup(5)
     S.schreier_sims()
     base = S.base
     strong_gens = S.strong_gens
-    gens = S.generators
     assert _verify_bsgs(S, base, strong_gens) == True
     assert _verify_bsgs(S, base[:-1], strong_gens) == False
     assert _verify_bsgs(S, base, S.generators) == False

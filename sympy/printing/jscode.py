@@ -108,7 +108,7 @@ class JavascriptCodePrinter(CodePrinter):
             if len(not_js) > 0:
                 frontlines.append("// Not Javascript:")
                 for expr in sorted(not_js, key=str):
-                    frontlines.append("// %s" % expr)
+                    frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("var %s = %s;" % (name, value))
             lines = frontlines + lines

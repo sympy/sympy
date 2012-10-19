@@ -1,5 +1,8 @@
-from sympy.ntheory import isprime, sieve
-from sympy.combinatorics.permutations import _new_from_array_form
+from sympy.ntheory import isprime
+from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
+
+rmul = Permutation.rmul
+_af_new = Permutation._af_new
 
 ############################################
 ###
@@ -133,17 +136,19 @@ def _distribute_gens_by_base(base, gens):
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> D = DihedralGroup(3)
     >>> D.schreier_sims()
     >>> D.strong_gens
-    [Permutation([1, 2, 0]), Permutation([2, 1, 0]), Permutation([0, 2, 1])]
+    [Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)]
     >>> D.base
     [0, 1]
     >>> _distribute_gens_by_base(D.base, D.strong_gens)
-    [[Permutation([1, 2, 0]), Permutation([2, 1, 0]), Permutation([0, 2, 1])],\
-    [Permutation([0, 2, 1])]]
+    [[Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)],
+     [Permutation(1, 2)]]
 
     See Also
     ========
@@ -168,7 +173,7 @@ def _distribute_gens_by_base(base, gens):
         for k in xrange(j + 1):
             stabs[k].append(gens[i])
     for i in range(max_stab_index + 1, base_len):
-        stabs[i].append(_new_from_array_form(range(degree)))
+        stabs[i].append(_af_new(range(degree)))
     return stabs
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
@@ -201,16 +206,18 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,\
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _handle_precomputed_bsgs
     >>> D = DihedralGroup(3)
     >>> D.schreier_sims()
     >>> _handle_precomputed_bsgs(D.base, D.strong_gens,
     ... basic_orbits=D.basic_orbits)
-    ([{0: Permutation([0, 1, 2]), 1: Permutation([1, 2, 0]),\
-    2: Permutation([2, 1, 0])}, {1: Permutation([0, 1, 2]),\
-    2: Permutation([0, 2, 1])}], [[0, 1, 2], [1, 2]], [[Permutation([1, 2, 0]),\
-    Permutation([2, 1, 0]), Permutation([0, 2, 1])], [Permutation([0, 2, 1])]])
+    ([{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},
+    {1: Permutation(2), 2: Permutation(1, 2)}],
+    [[0, 1, 2], [1, 2]], [[Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)],
+    [Permutation(1, 2)]])
 
     See Also
     ========
@@ -257,6 +264,8 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.util import _orbits_transversals_from_bsgs
     >>> from sympy.combinatorics.util import (_orbits_transversals_from_bsgs,
@@ -265,9 +274,9 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,\
     >>> S.schreier_sims()
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _orbits_transversals_from_bsgs(S.base, strong_gens_distr)
-    ([[0, 1, 2], [1, 2]], [{0: Permutation([0, 1, 2]),\
-    1: Permutation([1, 2, 0]), 2: Permutation([2, 0, 1])},\
-    {1: Permutation([0, 1, 2]), 2: Permutation([0, 2, 1])}])
+    ([[0, 1, 2], [1, 2]],
+    [{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2, 1)},
+    {1: Permutation(2), 2: Permutation(1, 2)}])
 
     See Also
     ========
@@ -340,11 +349,8 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     """
     from sympy.combinatorics.perm_groups import PermutationGroup
     base_len = len(base)
-    degree = strong_gens[0].size
-    identity = _new_from_array_form(range(degree))
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-    temp = strong_gens_distr[:]
     if basic_orbits is None:
         basic_orbits = []
         for i in range(base_len):
@@ -368,36 +374,40 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     res.remove(gen)
     return res
 
-def _strip(g, base, orbs, transversals):
+def _strip(g, base, orbits, transversals):
     """
     Attempt to decompose a permutation using a (possibly partial) BSGS
     structure.
 
     This is done by treating the sequence ``base`` as an actual base, and
-    the orbits ``orbs`` and transversals ``transversals`` as basic orbits and
+    the orbits ``orbits`` and transversals ``transversals`` as basic orbits and
     transversals relative to it.
+
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
     doesn't end with the identity element.
+
     The argument ``transversals`` is a list of dictionaries that provides
-    transversal elements for the orbits ``orbs``.
+    transversal elements for the orbits ``orbits``.
 
     Parameters
     ==========
 
     ``g`` - permutation to be decomposed
     ``base`` - sequence of points
-    ``orbs`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
+    ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
     under some subgroup of the pointwise stabilizer of `
     `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
     in this function since the only infromation we need is encoded in the orbits
     and transversals
     ``transversals`` - a list of orbit transversals associated with the orbits
-    ``orbs``.
+    ``orbits``.
 
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.util import _strip
@@ -405,7 +415,7 @@ def _strip(g, base, orbs, transversals):
     >>> S.schreier_sims()
     >>> g = Permutation([0, 2, 3, 1, 4])
     >>> _strip(g, S.base, S.basic_orbits, S.basic_transversals)
-    (Permutation([0, 1, 2, 3, 4]), 5)
+    (Permutation(4), 5)
 
     Notes
     =====
@@ -429,17 +439,17 @@ def _strip(g, base, orbs, transversals):
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """
-    h = g
+    h = g.array_form
     base_len = len(base)
     for i in range(base_len):
-        beta = h(base[i])
+        beta = h[base[i]]
         if beta == base[i]:
             continue
-        if beta not in orbs[i]:
-            return h, i + 1
-        u = transversals[i][beta]
-        h = ~u*h
-    return h, base_len + 1
+        if beta not in orbits[i]:
+            return _af_new(h), i + 1
+        u = transversals[i][beta].array_form
+        h = _af_rmul(_af_invert(u), h)
+    return _af_new(h), base_len + 1
 
 def _strong_gens_from_distr(strong_gens_distr):
     """
@@ -457,16 +467,18 @@ def _strong_gens_from_distr(strong_gens_distr):
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.util import (_strong_gens_from_distr,
     ... _distribute_gens_by_base)
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
     >>> S.strong_gens
-    [Permutation([1, 2, 0]), Permutation([1, 0, 2]), Permutation([0, 2, 1])]
+    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _strong_gens_from_distr(strong_gens_distr)
-    [Permutation([1, 2, 0]), Permutation([1, 0, 2]), Permutation([0, 2, 1])]
+    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]
 
     See Also
     ========

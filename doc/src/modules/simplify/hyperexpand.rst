@@ -604,7 +604,7 @@ Implemented Hypergeometric Formulae
 ***********************************
 
 A vital part of the algorithm is a relatively large table of hypergeometric
-function represantions. The following automatically generated list contains
+function representations. The following automatically generated list contains
 all the representations implemented in SymPy (of course many more are
 derived from them). These formulae are mostly taken from [Luke1969]_ and
 [Prudnikov1990]_. They are all tested numerically.

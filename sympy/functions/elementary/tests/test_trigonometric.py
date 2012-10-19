@@ -120,10 +120,12 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow)  == I*x**-I / 2 - I*x**I /2
 
 def test_sin_expansion():
-    # Note: these forumlas are not unique.  The ones here come from the
+    # Note: these formulas are not unique.  The ones here come from the
     # Chebyshev formulas.
-    x,y = symbols('x,y')
-    assert sin(x+y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
+    x, y = symbols('x y')
+    assert sin(x + y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
+    assert sin(x - y).expand(trig=True) == sin(x)*cos(y) - cos(x)*sin(y)
+    assert sin(y - x).expand(trig=True) == cos(x)*sin(y) - sin(x)*cos(y)
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
     assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
@@ -279,10 +281,13 @@ def test_cos_rewrite():
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
 
 def test_cos_expansion():
-    x,y = symbols('x,y')
-    assert cos(x+y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
-    assert cos(2*x).expand(trig=True) == 2*cos(x)**2-1
-    assert cos(3*x).expand(trig=True) == 4*cos(x)**3-3*cos(x)
+    x, y = symbols('x y')
+    assert cos(x + y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
+    assert cos(x - y).expand(trig=True) == cos(x)*cos(y) + sin(x)*sin(y)
+    assert cos(y - x).expand(trig=True) == cos(x)*cos(y) + sin(x)*sin(y)
+    assert cos(2*x).expand(trig=True) == 2*cos(x)**2 - 1
+    assert cos(3*x).expand(trig=True) == 4*cos(x)**3 - 3*cos(x)
+    assert cos(4*x).expand(trig=True) == 8*cos(x)**4 - 8*cos(x)**2 + 1
     assert cos(2).expand(trig=True) == 2*cos(1)**2 - 1
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 

@@ -1,6 +1,7 @@
 from sympy.core import S, C
 from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
+from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
@@ -254,6 +255,10 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(pform, f))
 
         return pform
+
+    def _print_Cycle(self, dc):
+        from sympy.combinatorics.permutations import Permutation
+        return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
@@ -1141,7 +1146,7 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        if len(set(p.sets)) == 1 and len(p.sets) > 1:
+        if len(p.sets) > 1 and not has_variety(p.sets):
             from sympy import Pow
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:

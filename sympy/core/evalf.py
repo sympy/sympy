@@ -2,7 +2,6 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
@@ -1179,6 +1178,14 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
+        # for sake of sage that doesn't like evalf(1)
+        if n == 1 and isinstance(self, C.Number):
+            from sympy.core.expr import _mag
+            rv = self.evalf(2, subs, maxn, chop, strict, quad, verbose)
+            m = _mag(rv)
+            rv = rv.round(1 - m)
+            return rv
+
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)

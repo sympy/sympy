@@ -1,6 +1,5 @@
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
-CyclicGroup, AlternatingGroup
-from sympy.combinatorics.perm_groups import PermutationGroup
+AlternatingGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.util import _check_cycles_alt_sym, _strip,\
 _distribute_gens_by_base, _strong_gens_from_distr,\
@@ -14,7 +13,7 @@ def test_check_cycles_alt_sym():
     perm3 = Permutation([[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
     assert _check_cycles_alt_sym(perm1) == True
     assert _check_cycles_alt_sym(perm2) == False
-    assert _check_cycles_alt_sym(perm2) == False
+    assert _check_cycles_alt_sym(perm3) == False
 
 def test_strip():
     D = DihedralGroup(5)

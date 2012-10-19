@@ -4,7 +4,7 @@ from random import uniform
 import random
 
 from sympy import I, nsimplify, Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
     """
@@ -115,10 +115,9 @@ def _randrange(seed=None):
         seed = list(seed) # make a copy
         seed.reverse()
         def give(a, b=None, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
             if b is None:
                 a, b = 0, a
-            a, b = int_tested(a, b)
+            a, b = as_int(a), as_int(b)
             w = b - a
             if w < 1:
                 raise ValueError('_randrange got empty range')
@@ -165,8 +164,7 @@ def _randint(seed=None):
         seed = list(seed) # make a copy
         seed.reverse()
         def give(a, b, seq=seed):
-            from sympy.ntheory.residue_ntheory import int_tested
-            a, b = int_tested(a, b)
+            a, b = as_int(a), as_int(b)
             w = b - a
             if w < 0:
                 raise ValueError('_randint got empty range')

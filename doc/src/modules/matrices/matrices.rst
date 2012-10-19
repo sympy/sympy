@@ -500,9 +500,20 @@ norm():
     >>> out2[2].norm()
     1
 
-So there is quite a bit more that can be done: eigenvalues, eigenvectors,
-nullspace calculation, cofactor expansion, and so on. From here one might
-want to look over the matrices.py file for all functionality.
+So there is quite a bit that can be done with the module including eigenvalues,
+eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
+here one might want to look over the matrices.py file for all functionality.
+
+Matrix Class Reference
+----------------------
+.. autoclass:: MatrixBase
+   :members:
+.. autoclass:: Matrix
+   :members:
+.. autoclass:: MutableMatrix
+   :members:
+.. autoclass:: SparseMatrix
+   :members:
 
 Matrix Exceptions Reference
 ---------------------------

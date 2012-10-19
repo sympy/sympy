@@ -526,6 +526,9 @@ def _doctest(*paths, **kwargs):
                     "doc/src/modules/plotting.rst", # generates live plots
                     # "sympy/plotting", # generates live plots
                     "sympy/plotting/pygletplot", # generates live plots
+                    "sympy/statistics",                # prints a deprecation
+                    "doc/src/modules/statistics.rst",  # warning (this module
+                                                       # is deprecated)
                     "sympy/utilities/compilef.py", # needs tcc
                     "sympy/utilities/autowrap.py", # needs installed compiler
                     "sympy/galgebra/GA.py", # needs numpy

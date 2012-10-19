@@ -5,6 +5,7 @@ from singleton import S, Singleton
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from cache import cacheit, clear_cache
+from sympy.core.compatibility import as_int
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
@@ -91,8 +92,7 @@ def igcd(a, b):
     try:
         return _gcdcache[(a,b)]
     except KeyError:
-        from sympy.ntheory.residue_ntheory import int_tested
-        a, b = int_tested(a, b)
+        a, b = as_int(a), as_int(b)
 
         if a and b:
             if b < 0:

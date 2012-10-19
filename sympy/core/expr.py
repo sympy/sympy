@@ -5,7 +5,7 @@ from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce
+from compatibility import reduce, as_int
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 from sympy.utilities.misc import default_sort_key
 
@@ -328,7 +328,15 @@ class Expr(Basic, EvalfMixin):
             a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free]))
-            nmag = abs(self.evalf(2, subs=reps))
+            try:
+                nmag = abs(self.evalf(2, subs=reps))
+            except TypeError:
+                # if an out of range value resulted in evalf problems
+                # then return None -- XXX is there a way to know how to
+                # select a good random number for a given expression?
+                # e.g. when calculating n! negative values for n should not
+                # be used
+                return None
         else:
             reps = {}
             nmag = abs(self.evalf(2))
@@ -1050,13 +1058,11 @@ class Expr(Basic, EvalfMixin):
         as_independent: a method to separate x dependent terms/factors from others
 
         """
-        from sympy.ntheory.residue_ntheory import int_tested
-
         x = sympify(x)
         if not isinstance(x, Basic):
             return S.Zero
 
-        n = int_tested(n)
+        n = as_int(n)
 
         if not x:
             return S.Zero
@@ -1444,8 +1450,8 @@ class Expr(Basic, EvalfMixin):
                 args, nc = self.args_cnc()
 
         d = sift(args, lambda x: has(x))
-        depend = d.pop(True, [])
-        indep = d.pop(False, [])
+        depend = d[True]
+        indep = d[False]
         if func is Add: # all terms were treated as commutative
             return (Add(*indep),
                     Add(*depend))
@@ -2858,17 +2864,7 @@ class Expr(Basic, EvalfMixin):
         precs = [f._prec for f in x.atoms(C.Float)]
         dps = prec_to_dps(max(precs)) if precs else None
 
-        xpos = abs(x.n())
-        if not xpos:
-            return S.Zero
-        try:
-            mag_first_dig = int(ceil(log10(xpos)))
-        except (ValueError, OverflowError):
-            mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
-        # check that we aren't off by 1
-        if (xpos/10**mag_first_dig) >= 1:
-            mag_first_dig += 1
-            assert .1 <= (xpos/10**mag_first_dig) < 1
+        mag_first_dig = _mag(x)
         allow = digits_needed = mag_first_dig + p
         if dps is not None and allow > dps:
             allow = dps
@@ -2913,6 +2909,34 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_nseries(self, x, n, logx):
         return self
+
+def _mag(x):
+    """Return integer ``i`` such that .1 <= x/10**i < 1
+
+    Examples
+    ========
+    >>> from sympy.core.expr import _mag
+    >>> from sympy import Float
+    >>> _mag(Float(.1))
+    0
+    >>> _mag(Float(.01))
+    -1
+    >>> _mag(Float(1234))
+    4
+    """
+    from math import log10, ceil, log
+    xpos = abs(x.n())
+    if not xpos:
+        return S.Zero
+    try:
+        mag_first_dig = int(ceil(log10(xpos)))
+    except (ValueError, OverflowError):
+        mag_first_dig = int(ceil(C.Float(mpf_log(xpos._mpf_, 53))/log(10)))
+    # check that we aren't off by 1
+    if (xpos/10**mag_first_dig) >= 1:
+        assert 1 <= (xpos/10**mag_first_dig) < 10
+        mag_first_dig += 1
+    return mag_first_dig
 
 from mul import Mul
 from add import Add

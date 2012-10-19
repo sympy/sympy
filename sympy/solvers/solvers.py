@@ -35,7 +35,7 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import lazyDSU_sort
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import default_sort_key, filldedent
 from sympy.mpmath import findroot
@@ -1344,12 +1344,12 @@ def _solve_system(exprs, symbols, **flags):
         do_simplify = flags.get('simplify', True)
         # sort so equation with the fewest potential symbols is first;
         # break ties with count_ops and default_sort_key
-        short = sift(failed, lambda x: len(_ok_syms(x)))
-        failed = []
-        for k in sorted(short, key=default_sort_key):
-            failed.extend(sorted(sorted(short[k],
-                key=lambda x: x.count_ops()),
-                key=default_sort_key))
+        failed = lazyDSU_sort(failed,
+            keys=[
+            lambda x: len(_ok_syms(x)),
+            lambda x: x.count_ops(),
+            default_sort_key],
+            warn=False)
         for eq in failed:
             newresult = []
             bad_results = []

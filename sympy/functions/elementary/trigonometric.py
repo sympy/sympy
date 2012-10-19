@@ -303,10 +303,10 @@ class sin(TrigonometricFunction):
         if arg.is_Add: # TODO, implement more if deep stuff here
             # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
-            sx = sin(x)._eval_expand_trig()
-            sy = sin(y)._eval_expand_trig()
-            cx = cos(x)._eval_expand_trig()
-            cy = cos(y)._eval_expand_trig()
+            sx = sin(x, evaluate=False)._eval_expand_trig()
+            sy = sin(y, evaluate=False)._eval_expand_trig()
+            cx = cos(x, evaluate=False)._eval_expand_trig()
+            cy = cos(y, evaluate=False)._eval_expand_trig()
             return sx*cy + sy*cx
         else:
             n, x = arg.as_coeff_Mul(rational=True)
@@ -658,10 +658,10 @@ class cos(TrigonometricFunction):
         x = None
         if arg.is_Add: # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
-            sx = sin(x)._eval_expand_trig()
-            sy = sin(y)._eval_expand_trig()
-            cx = cos(x)._eval_expand_trig()
-            cy = cos(y)._eval_expand_trig()
+            sx = sin(x, evaluate=False)._eval_expand_trig()
+            sy = sin(y, evaluate=False)._eval_expand_trig()
+            cx = cos(x, evaluate=False)._eval_expand_trig()
+            cy = cos(y, evaluate=False)._eval_expand_trig()
             return cx*cy - sx*sy
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)

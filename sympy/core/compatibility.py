@@ -1,7 +1,10 @@
 """
 Reimplementations of constructs introduced in later versions of Python than
-we support.
+we support. Also some functions that are needed SymPy-wide and are located
+here for easy import.
 """
+
+from collections import defaultdict
 
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
@@ -303,7 +306,10 @@ except ImportError: # < python 2.6
 def set_intersection(*sets):
     """Return the intersection of all the given sets.
 
-    As of Python 2.6 you can write set.intersection(*sets).
+    As of Python 2.6 you can write ``set.intersection(*sets)``.
+
+    Examples
+    ========
 
     >>> from sympy.core.compatibility import set_intersection
     >>> set_intersection(set([1, 2]), set([2, 3]))
@@ -321,7 +327,7 @@ def set_intersection(*sets):
 def set_union(*sets):
     """Return the union of all the given sets.
 
-    As of Python 2.6 you can write set.union(*sets).
+    As of Python 2.6 you can write ``set.union(*sets)``.
 
     >>> from sympy.core.compatibility import set_union
     >>> set_union(set([1, 2]), set([2, 3]))
@@ -405,3 +411,66 @@ except ImportError: # Python 2.5
             return '-%s' % bin(-n)
         return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
             ]).lstrip('0') or '0')
+
+def as_int(n):
+    """
+    Convert the argument to a builtin integer.
+
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value.
+
+    Examples
+    ========
+
+    >>> from sympy.core.compatibility import as_int
+    >>> from sympy import sqrt
+    >>> 3.0
+    3.0
+    >>> as_int(3.0) # convert to int and test for equality
+    3
+    >>> int(sqrt(10))
+    3
+    >>> as_int(sqrt(10))
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
+
+    """
+    result = int(n)
+    if result != n:
+        raise ValueError('%s is not an integer' % n)
+    return result
+
+def quick_sort(seq, quick=True):
+    """Sort by hash and break ties with default_sort_key (default)
+    or entirely by default_sort_key if ``quick`` is False.
+
+    When sorting for consistency between systems, ``quick`` should be
+    False; if sorting is just needed to give consistent orderings during
+    a given session ``quick`` can be True.
+
+    >>> from sympy.core.compatibility import quick_sort
+    >>> from sympy.abc import x
+
+    For PYTHONHASHSEED=3923375334 the x came first; for
+    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+
+    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    True
+    """
+    from sympy.utilities.iterables import default_sort_key
+
+    if not quick:
+        seq = list(seq)
+        seq.sort(key=default_sort_key)
+    else:
+        d = defaultdict(list)
+        for a in seq:
+            d[hash(a)].append(a)
+        seq = []
+        for k in sorted(d.keys()):
+          if len(d[k]) > 1:
+              seq.extend(sorted(d[k], key=default_sort_key))
+          else:
+              seq.extend(d[k])
+    return tuple(seq)

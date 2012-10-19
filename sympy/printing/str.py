@@ -290,6 +290,47 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)'%self.stringify(expr.args, ', ', 0)
 
+    def _print_Cycle(self, expr):
+        """We want it to print as Cycle in doctests for which a repr is required.
+
+        With __repr__ defined in Cycle, interactive output gives Cycle form but
+        during doctests, the dict's __repr__ form is used. Defining this _print
+        function solves that problem.
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2) # will print as a dict without this method
+        Cycle(1, 2)
+        """
+        return expr.__repr__()
+
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if Permutation.print_cyclic:
+            if not expr.size:
+                return 'Permutation()'
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' % s
+        else:
+            s = expr.support()
+            if not s:
+                if expr.size < 5:
+                    return 'Permutation(%s)' % str(expr.array_form)
+                return 'Permutation([], size=%s)' % expr.size
+            trim = str(expr.array_form[:s[-1] + 1]) + ', size=%s' % expr.size
+            use = full = str(expr.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
+
+    def _print_PermutationGroup(self, expr):
+        p = ['    %s' % str(a) for a in expr.args]
+        return 'PermutationGroup([\n%s])' % ',\n'.join(p)
+
     def _print_PDF(self, expr):
         return 'PDF(%s, (%s, %s, %s))' % \
             (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]), \

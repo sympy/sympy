@@ -279,18 +279,21 @@ def dup_zz_zassenhaus(f, K):
 
     g = dup_zz_hensel_lift(p, f, modular, l, K)
 
-    T = set(range(len(g)))
+    sorted_T = range(len(g))
+    T = set(sorted_T)
     factors, s = [], 1
 
     while 2*s <= len(T):
-        for S in subsets(T, s):
+        for S in subsets(sorted_T, s):
             G, H = [b], [b]
 
             S = set(S)
+            T_S = T - S
 
             for i in S:
                 G = dup_mul(G, g[i], K)
-            for i in T-S:
+
+            for i in T_S:
                 H = dup_mul(H, g[i], K)
 
             G = dup_trunc(G, p**l, K)
@@ -300,7 +303,9 @@ def dup_zz_zassenhaus(f, K):
             H_norm = dup_l1_norm(H, K)
 
             if G_norm*H_norm <= B:
-                T = T - S
+                T = T_S
+                sorted_T = [i for i in sorted_T if i not in S]
+
 
                 G = dup_primitive(G, K)[1]
                 f = dup_primitive(H, K)[1]
