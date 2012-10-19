@@ -244,7 +244,7 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
 
     @classmethod
     def fromdict(cls, name, density):
-        symbol = Symbol(name);
+        symbol = Symbol(name)
         domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
         density = dict((frozenset(((symbol, val),)) , prob)
                 for val, prob in density.items())
