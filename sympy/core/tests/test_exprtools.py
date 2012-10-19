@@ -8,11 +8,13 @@ from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 
+
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
     assert decompose_power(x**2) == (x, 2)
     assert decompose_power(x**(2*y)) == (x**y, 2)
     assert decompose_power(x**(2*y/3)) == (x**(y/3), 2)
+
 
 def test_Factors():
     assert Factors() == Factors({})
@@ -25,9 +27,10 @@ def test_Factors():
 
     assert a.mul(b) == a*b == Factors({x: 5, y: 7, z: 10, t: 10})
 
-    assert a.div(b) == divmod(a, b) == (Factors({x: 5, z: 4}), Factors({y: 1, t: 10}))
+    assert a.div(
+        b) == divmod(a, b) == (Factors({x: 5, z: 4}), Factors({y: 1, t: 10}))
     assert a.quo(b) == a/b == Factors({x: 5, z: 4})
-    assert a.rem(b) == a%b == Factors({y: 1, t: 10})
+    assert a.rem(b) == a % b == Factors({y: 1, t: 10})
 
     assert a.pow(3) == a**3 == Factors({x: 15, y: 9, z: 21})
     assert b.pow(3) == b**3 == Factors({y: 12, z: 9, t: 30})
@@ -40,6 +43,7 @@ def test_Factors():
 
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
+
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
     b = Term(2*x**3*y**5/t**3)
@@ -50,17 +54,22 @@ def test_Term():
     assert a.as_expr() == 4*x*y**2/z/t**3
     assert b.as_expr() == 2*x**3*y**5/t**3
 
-    assert a.inv() == Term(S(1)/4, Factors({z: 1, t: 3}), Factors({x: 1, y: 2}))
+    assert a.inv(
+        ) == Term(S(1)/4, Factors({z: 1, t: 3}), Factors({x: 1, y: 2}))
     assert b.inv() == Term(S(1)/2, Factors({t: 3}), Factors({x: 3, y: 5}))
 
-    assert a.mul(b) == a*b == Term(8, Factors({x: 4, y: 7}), Factors({z: 1, t: 6}))
+    assert a.mul(
+        b) == a*b == Term(8, Factors({x: 4, y: 7}), Factors({z: 1, t: 6}))
     assert a.quo(b) == a/b == Term(2, Factors({}), Factors({x: 2, y: 3, z: 1}))
 
-    assert a.pow(3) == a**3 == Term(64, Factors({x: 3, y: 6}), Factors({z: 3, t: 9}))
+    assert a.pow(
+        3) == a**3 == Term(64, Factors({x: 3, y: 6}), Factors({z: 3, t: 9}))
     assert b.pow(3) == b**3 == Term(8, Factors({x: 9, y: 15}), Factors({t: 9}))
 
-    assert a.pow(-3) == a**(-3) == Term(S(1)/64, Factors({z: 3, t: 9}), Factors({x: 3, y: 6}))
-    assert b.pow(-3) == b**(-3) == Term(S(1)/8, Factors({t: 9}), Factors({x: 9, y: 15}))
+    assert a.pow(-3) == a**(
+        -3) == Term(S(1)/64, Factors({z: 3, t: 9}), Factors({x: 3, y: 6}))
+    assert b.pow(-3) == b**(
+        -3) == Term(S(1)/8, Factors({t: 9}), Factors({x: 9, y: 15}))
 
     assert a.gcd(b) == Term(2, Factors({x: 1, y: 2}), Factors({t: 3}))
     assert a.lcm(b) == Term(4, Factors({x: 3, y: 5}), Factors({z: 1, t: 3}))
@@ -71,13 +80,17 @@ def test_Term():
     assert a.mul(b) == Term(8, Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
     assert Term((2*x + 2)**3) == Term(8, Factors({x + 1: 3}), Factors({}))
-    assert Term((2*x + 2)*(3*x + 6)**2) == Term(18, Factors({x + 1: 1, x + 2: 2}), Factors({}))
+    assert Term((2*x + 2)*(
+        3*x + 6)**2) == Term(18, Factors({x + 1: 1, x + 2: 2}), Factors({}))
+
 
 def test_gcd_terms():
-    f = 2*(x + 1)*(x + 4)/(5*x**2 + 5) + (2*x + 2)*(x + 5)/(x**2 + 1)/5 + (2*x + 2)*(x + 6)/(5*x**2 + 5)
+    f = 2*(x + 1)*(x + 4)/(5*x**2 + 5) + (2*x + 2)*(x + 5)/(x**2 + 1)/ \
+           5 + (2*x + 2)*(x + 6)/(5*x**2 + 5)
 
     assert _gcd_terms(f) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
-    assert _gcd_terms(Add.make_args(f)) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
+    assert _gcd_terms(
+        Add.make_args(f)) == ((S(6)/5)*((1 + x)/(1 + x**2)), 5 + x, 1)
 
     newf = (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
     assert gcd_terms(f) == newf
@@ -88,10 +101,10 @@ def test_gcd_terms():
     assert gcd_terms(set(args)) == newf
     # but a Basic sequence is treated as a container
     assert gcd_terms(Tuple(*args)) != newf
-    assert gcd_terms(Basic(Tuple(1,3*y + 3*x*y), Tuple(1, 3))) == \
+    assert gcd_terms(Basic(Tuple(1, 3*y + 3*x*y), Tuple(1, 3))) == \
         Basic((1, 3*y*(x + 1)), (1, 3))
     # but we shouldn't change keys of a dictionary or some may be lost
-    assert gcd_terms(Dict((x*(1 + y), 2),(x + x*y, y + x*y))) == \
+    assert gcd_terms(Dict((x*(1 + y), 2), (x + x*y, y + x*y))) == \
                     Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
 
     assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
@@ -118,6 +131,7 @@ def test_gcd_terms():
 
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
+
 
 def test_factor_terms():
     A = Symbol('A', commutative=False)
@@ -159,10 +173,12 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
+
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
     assert e.xreplace({}) == e
     assert e.xreplace({y: x}) == e
+
 
 def test_factor_nc():
     x, y = symbols('x,y')
@@ -190,7 +206,7 @@ def test_factor_nc():
     factor_nc_test(x*(1 + sin(s)))
     factor_nc_test((1 + n)**2)
 
-    factor_nc_test((x + n)*(x + m)*(x+y))
+    factor_nc_test((x + n)*(x + m)*(x + y))
     factor_nc_test(x*(n*m + 1))
     factor_nc_test(x*(n*m + x))
     factor_nc_test(x*(x*n*m + 1))
@@ -217,7 +233,8 @@ def test_factor_nc():
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
     # issue 3435
-    assert (2*n+2*m).factor() == 2*(n + m)
+    assert (2*n + 2*m).factor() == 2*(n + m)
+
 
 def test_issue_3261():
     a, b = symbols("a b")

@@ -21,6 +21,7 @@ _default_config = {
 
 _current_config = {}
 
+
 def setup(key, value=None):
     """Assign a value to (or reset) a configuration item. """
     if value is not None:
@@ -28,9 +29,11 @@ def setup(key, value=None):
     else:
         _current_config[key] = _default_config[key]
 
+
 def query(key):
     """Ask for a value of the given configuration item. """
     return _current_config.get(key, None)
+
 
 def configure():
     """Initialized configuration of polys module. """

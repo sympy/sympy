@@ -3,6 +3,7 @@ from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
 
+
 class Order(Expr):
     """ Represents the limiting behavior of some function
 
@@ -102,7 +103,8 @@ class Order(Expr):
         if symbols:
             symbols = map(sympify, symbols)
             if not all(isinstance(s, Symbol) for s in symbols):
-                raise NotImplementedError('Order at points other than 0 not supported.')
+                raise NotImplementedError(
+                    'Order at points other than 0 not supported.')
         else:
             symbols = list(expr.free_symbols)
 
@@ -120,7 +122,7 @@ class Order(Expr):
 
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
-                expr = Add(*[f.expr for (e,f) in lst])
+                expr = Add(*[f.expr for (e, f) in lst])
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
@@ -185,7 +187,6 @@ class Order(Expr):
     def getO(self):
         return self
 
-
     @cacheit
     def contains(self, expr):
         """
@@ -214,18 +215,19 @@ class Order(Expr):
             return False
         if expr.is_Order:
             if self.variables and expr.variables:
-                common_symbols = tuple([s for s in self.variables if s in expr.variables])
+                common_symbols = tuple(
+                    [s for s in self.variables if s in expr.variables])
             elif self.variables:
                 common_symbols = self.variables
             else:
                 common_symbols = expr.variables
             if not common_symbols:
-                if not (self.variables or expr.variables): # O(1),O(1)
+                if not (self.variables or expr.variables):  # O(1),O(1)
                     return True
                 return None
             r = None
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                l = limit(powsimp(self.expr/expr.expr, deep=True,
                 combine='exp'), s, 0) != 0
                 if r is None:
                     r = l
@@ -240,8 +242,8 @@ class Order(Expr):
         if old.is_Symbol and old in self.variables:
             i = list(self.variables).index(old)
             if isinstance(new, Symbol):
-                return Order(self.expr._subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
-            return Order(self.expr._subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
+                return Order(self.expr._subs(old, new), *(self.variables[:i] + (new,) + self.variables[i + 1:]))
+            return Order(self.expr._subs(old, new), *(self.variables[:i] + self.variables[i + 1:]))
         return Order(self.expr._subs(old, new), *self.variables)
 
     def _eval_conjugate(self):

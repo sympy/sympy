@@ -1,7 +1,7 @@
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -15,16 +15,6 @@ from sympy.utilities.misc import filldedent
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
-
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-#from sympy.core.compatibility import as_int
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 def _iszero(x):
@@ -718,7 +708,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         copyin_matrix
         """
         if not is_sequence(value):
-            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
+            raise TypeError(
+                "`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, Matrix(value))
 
     def row_op(self, i, f):
@@ -874,7 +865,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure)
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
+                                     measure=measure)
 
     def fill(self, value):
         """Fill the matrix with the scalar value.
@@ -1449,7 +1441,8 @@ def GramSchmidt(vlist, orthog=False):
         for j in range(i):
             tmp -= vlist[i].project(out[j])
         if not tmp.values():
-            raise ValueError("GramSchmidt: vector set not linearly independent")
+            raise ValueError(
+                "GramSchmidt: vector set not linearly independent")
         out.append(tmp)
     if orthog:
         for i in range(len(out)):
@@ -1578,7 +1571,8 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     else:
         prng = random.Random(seed)
     if symmetric and r != c:
-        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+        raise ValueError(
+            'For symmetric matrices, r must equal c, but %i != %i' % (r, c))
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
     else:

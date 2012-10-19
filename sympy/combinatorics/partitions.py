@@ -1,12 +1,11 @@
 from sympy.core import Basic, C, Dict, sympify
+from sympy.core.compatibility import as_int
 from sympy.matrices import zeros
-from sympy.functions import floor
 from sympy.utilities.misc import default_sort_key
-from sympy.utilities.iterables import has_dups, flatten
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.utilities.iterables import has_dups, flatten, group
 
-import random
 from collections import defaultdict
+
 
 class Partition(C.FiniteSet):
     """
@@ -119,7 +118,7 @@ class Partition(C.FiniteSet):
         >>> (a + 100).rank
         1
         """
-        other = int_tested(other)
+        other = as_int(other)
         offset = self.rank + other
         result = RGS_unrank((offset) %
                             RGS_enum(self.size),
@@ -195,7 +194,7 @@ class Partition(C.FiniteSet):
         >>> a.rank
         13
         """
-        if self._rank != None:
+        if self._rank is not None:
             return self._rank
         self._rank = RGS_rank(self.RGS)
         return self._rank
@@ -266,6 +265,7 @@ class Partition(C.FiniteSet):
             raise ValueError('some blocks of the partition were empty.')
         return Partition(partition)
 
+
 class IntegerPartition(Basic):
     """
     This class represents an integer partition.
@@ -320,8 +320,6 @@ class IntegerPartition(Basic):
         ValueError: The partition is not valid
 
         """
-        from sympy.ntheory.residue_ntheory import int_tested
-
         if integer is not None:
             integer, partition = partition, integer
         if isinstance(partition, (dict, Dict)):
@@ -329,17 +327,17 @@ class IntegerPartition(Basic):
             for k, v in sorted(partition.items(), reverse=True):
                 if not v:
                     continue
-                k, v = int_tested(k, v)
+                k, v = as_int(k), as_int(v)
                 _.extend([k]*v)
             partition = tuple(_)
         else:
-            partition = tuple(sorted(int_tested(partition), reverse=True))
+            partition = tuple(sorted(map(as_int, partition), reverse=True))
         sum_ok = False
         if integer is None:
             integer = sum(partition)
             sum_ok = True
         else:
-            integer = int_tested(integer)
+            integer = as_int(integer)
 
         if not sum_ok and sum(partition) != integer:
             raise ValueError("Partition did not add to %s" % integer)
@@ -451,14 +449,9 @@ class IntegerPartition(Basic):
         {1: 3, 2: 1, 3: 4}
         """
         if self._dict is None:
-            d = {}
-            self._keys = []
-            for i in self.partition:
-                if not i in d:
-                    d[i] = 0
-                    self._keys.append(i)
-                d[i] += 1
-            self._dict = d
+            groups = group(self.partition, multiple=False)
+            self._keys = [g[0] for g in groups]
+            self._dict = dict(groups)
         return self._dict
 
     @property
@@ -536,6 +529,7 @@ class IntegerPartition(Basic):
     def __str__(self):
         return str(list(self.partition))
 
+
 def random_integer_partition(n, seed=None):
     """
     Generates a random integer partition summing to ``n`` as a list
@@ -558,7 +552,7 @@ def random_integer_partition(n, seed=None):
     """
     from sympy.utilities.randtest import _randint
 
-    n = int_tested(n)
+    n = as_int(n)
     if n < 1:
         raise ValueError('n must be a positive integer')
 
@@ -573,6 +567,7 @@ def random_integer_partition(n, seed=None):
     partition.sort(reverse=True)
     partition = flatten([[k]*m for k, m in partition])
     return partition
+
 
 def RGS_generalized(m):
     """
@@ -603,6 +598,7 @@ def RGS_generalized(m):
             else:
                 d[i, j] = 0
     return d
+
 
 def RGS_enum(m):
     """
@@ -646,6 +642,7 @@ def RGS_enum(m):
         nrgf = b[m - 1]
     return nrgf
 
+
 def RGS_unrank(rank, m):
     """
     Gives the unranked restricted growth string for a given
@@ -668,7 +665,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m+1):
+    for i in xrange(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -679,6 +676,7 @@ def RGS_unrank(rank, m):
             L[i] = int(rank / v + 1)
             rank %= v
     return map(lambda x: x - 1, L[1:])
+
 
 def RGS_rank(rgs):
     """

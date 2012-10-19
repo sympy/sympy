@@ -8,6 +8,7 @@ from sympy.core import sympify
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
+
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """
 
@@ -52,16 +53,16 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.__class__(-f.ex)
 
         def __add__(f, g):
-            return f.simplify(f.ex+f.__class__(g).ex)
+            return f.simplify(f.ex + f.__class__(g).ex)
 
         def __radd__(f, g):
-            return f.simplify(f.__class__(g).ex+f.ex)
+            return f.simplify(f.__class__(g).ex + f.ex)
 
         def __sub__(f, g):
-            return f.simplify(f.ex-f.__class__(g).ex)
+            return f.simplify(f.ex - f.__class__(g).ex)
 
         def __rsub__(f, g):
-            return f.simplify(f.__class__(g).ex-f.ex)
+            return f.simplify(f.__class__(g).ex - f.ex)
 
         def __mul__(f, g):
             return f.simplify(f.ex*f.__class__(g).ex)
@@ -109,13 +110,13 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     dtype = Expression
 
-    zero  = Expression(0)
-    one   = Expression(1)
+    zero = Expression(0)
+    one = Expression(1)
 
-    rep   = 'EX'
+    rep = 'EX'
 
-    has_assoc_Ring         = False
-    has_assoc_Field        = True
+    has_assoc_Ring = False
+    has_assoc_Field = True
 
     def __init__(self):
         pass
@@ -174,7 +175,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        return self # XXX: EX is not a ring but we don't have much choice here.
+        return self  # XXX: EX is not a ring but we don't have much choice here.
 
     def get_field(self):
         """Returns a field associated with ``self``. """

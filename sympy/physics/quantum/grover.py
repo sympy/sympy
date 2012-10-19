@@ -25,6 +25,7 @@ __all__ = [
     'apply_grover'
 ]
 
+
 def superposition_basis(nqubits):
     """Creates an equal superposition of the computational basis.
 
@@ -52,6 +53,7 @@ def superposition_basis(nqubits):
 
     amp = 1/sqrt(2**nqubits)
     return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
+
 
 class OracleGate(Gate):
     """A black box gate.
@@ -168,6 +170,7 @@ class OracleGate(Gate):
             "Represent for the Oracle has not been implemented yet"
         )
 
+
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
 
@@ -228,6 +231,7 @@ class WGate(Gate):
         change_to_basis = (2/sqrt(2**self.nqubits))*basis_states
         return change_to_basis - qubits
 
+
 def grover_iteration(qstate, oracle):
     """Applies one application of the Oracle and W Gate, WV.
 
@@ -264,6 +268,7 @@ def grover_iteration(qstate, oracle):
     """
     wgate = WGate(oracle.nqubits)
     return wgate*oracle*qstate
+
 
 def apply_grover(oracle, nqubits, iterations=None):
     """Applies grover's algorithm.

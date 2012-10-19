@@ -22,6 +22,7 @@ from util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
+
 class PygletPlot(object):
     """
     Plot Examples
@@ -296,7 +297,7 @@ class PygletPlot(object):
             if (not is_sequence(args)) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
-                return # no arguments given
+                return  # no arguments given
             kwargs = dict(bounds_callback=self.adjust_all_bounds)
             f = PlotMode(*args, **kwargs)
 
@@ -416,7 +417,6 @@ class ScreenShot:
         self.screenshot_requested = False
         if self.invisibleMode:
             self._plot._window.close()
-
 
     def save(self, outfile=None, format='', size=(600, 500)):
         self.outfile = outfile

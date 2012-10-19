@@ -23,13 +23,10 @@ x, y, z = symbols('x,y,z')
 class ReferenceSimplex:
    def __init__(self, nsd):
        self.nsd = nsd
-       coords = []
        if nsd <= 3:
            coords = symbols('x,y,z')[:nsd]
        else:
-           coords = []
-           for d in range(0,nsd):
-               coords.append(Symbol("x_%d" % d))
+           coords = [Symbol("x_%d" % d) for d in range(nsd)]
        self.coords = coords
 
    def integrate(self,f):

@@ -12,6 +12,7 @@ from sympy.utilities.codegen import Routine, CCodeGen, CodeGenArgumentListError
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
 
+
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
@@ -26,9 +27,10 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     output.close()
     return source
 
+
 def test_cython_wrapper_scalar_function():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CythonCodeWrapper(CCodeGen())
     source = get_string(code_gen.dump_pyx, [routine])
@@ -40,9 +42,10 @@ def test_cython_wrapper_scalar_function():
     )
     assert source == expected
 
+
 def test_cython_wrapper_outarg():
     from sympy import Equality
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
 
     routine = Routine("test", Equality(z, x + y))
@@ -57,9 +60,10 @@ def test_cython_wrapper_outarg():
     )
     assert source == expected
 
+
 def test_cython_wrapper_inoutarg():
     from sympy import Equality
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(CCodeGen())
     routine = Routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
@@ -71,6 +75,7 @@ def test_cython_wrapper_inoutarg():
             '   return z\n'
     )
     assert source == expected
+
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
@@ -90,20 +95,24 @@ def test_autowrap_dummy():
     assert f.args == "x, y, z"
     assert f.returns == "z"
 
+
 def test_autowrap_args():
     x, y, z = symbols('x y z')
 
-    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y), backend='dummy', args=[x]))
+    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y),
+           backend='dummy', args=[x]))
     f = autowrap(Eq(z, x + y), backend='dummy', args=[y, x])
     assert f() == str(x + y)
     assert f.args == "y, x"
     assert f.returns == "z"
 
-    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y + z), backend='dummy', args=[x, y]))
+    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y + z),
+           backend='dummy', args=[x, y]))
     f = autowrap(Eq(z, x + y + z), backend='dummy', args=[y, x, z])
     assert f() == str(x + y + z)
     assert f.args == "y, x, z"
     assert f.returns == "z"
+
 
 def test_autowrap_store_files():
     x, y = symbols('x y')
@@ -115,10 +124,12 @@ def test_autowrap_store_files():
     finally:
         shutil.rmtree(tmp)
 
+
 def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')
     assert f._imp_() == str(x + y)
+
 
 def test_ufuncify():
     x, y = symbols('x y')

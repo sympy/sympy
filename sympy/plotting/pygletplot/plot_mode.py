@@ -5,6 +5,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 from sympy.core.compatibility import is_sequence
 
+
 class PlotMode(PlotObject):
     """
     Grandparent class for plotting
@@ -47,12 +48,12 @@ class PlotMode(PlotObject):
         1: {1: {}, 2: {}},
         2: {1: {}, 2: {}},
         3: {1: {}, 2: {}},
-    } # [d][i][alias_str]: class
+    }  # [d][i][alias_str]: class
     _mode_default_map = {
         1: {},
         2: {},
         3: {},
-    } # [d][i]: class
+    }  # [d][i]: class
     _i_var_max, _d_var_max = 2, 3
 
     def __new__(cls, *args, **kwargs):
@@ -170,7 +171,7 @@ class PlotMode(PlotObject):
             # which support the given d var count until we
             # reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_default_mode(i+1, d, i_vars)
+                return PlotMode._get_default_mode(i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a default mode "
                                   "for %i independent and %i "
@@ -191,7 +192,7 @@ class PlotMode(PlotObject):
             # which support the given d var count and alias
             # until we reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_aliased_mode(alias, i+1, d, i_vars)
+                return PlotMode._get_aliased_mode(alias, i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a %s mode "
                                   "for %i independent and %i "
@@ -383,6 +384,7 @@ class PlotMode(PlotObject):
                 nargs.append(a)
         nkwargs = dict(nkwargs, **kwargs)
         return nargs, nkwargs
+
 
 def var_count_error(is_independent, is_plotting):
     """

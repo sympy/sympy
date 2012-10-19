@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
 
+
 class MatrixExpr(Expr):
     """ Matrix Expression Class
     Matrix Expressions subclass SymPy Expr's so that
@@ -33,6 +34,7 @@ class MatrixExpr(Expr):
 
     def __neg__(self):
         return MatMul(S.NegativeOne, self)
+
     def __abs__(self):
         raise NotImplementedError
 
@@ -40,6 +42,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         return MatAdd(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -49,6 +52,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return MatAdd(self, -other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
@@ -58,6 +62,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return MatMul(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
@@ -69,14 +74,17 @@ class MatrixExpr(Expr):
         if other == -S.One:
             return Inverse(self)
         return MatPow(self, other)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise NotImplementedError("Matrix Power not defined")
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return MatMul(self, other**S.NegativeOne)
+
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
@@ -135,11 +143,11 @@ class MatrixExpr(Expr):
                 0 <= i < self.rows and 0 <= j < self.cols)
 
     def __getitem__(self, key):
-        if isinstance(key, tuple) and len(key)==2:
+        if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
                 raise NotImplementedError(
-                "Slicing is not implemented for %s" % self.__class__.__name__)
+                    "Slicing is not implemented for %s" % self.__class__.__name__)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
@@ -155,6 +163,7 @@ class MatrixExpr(Expr):
 
         Examples
         ========
+
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -167,9 +176,10 @@ class MatrixExpr(Expr):
         See Also
         ========
         as_mutable: returns mutable Matrix type
+
         """
         from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i,j]
+        return ImmutableMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -216,6 +226,7 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().equals(other)
 
+
 class MatrixSymbol(MatrixExpr, Symbol):
     """Symbolic representation of a Matrix object
 
@@ -260,14 +271,16 @@ class MatrixSymbol(MatrixExpr, Symbol):
         # MatMul _entry will pass us a Dummy and ask that we remember it
         # so that it can be summed over later. We'll use the function syntax
         if i.is_Dummy or j.is_Dummy:
-            return Symbol(self.name)(i,j)
+            return Symbol(self.name)(i, j)
         # If that isn't the case we'd really rather just make a symbol
         # They are simpler and look much nicer
         else:
-            return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
+            return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
+
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
+
     >>> from sympy.matrices import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
     >>> I = Identity(3)
@@ -276,6 +289,7 @@ class Identity(MatrixSymbol):
     """
 
     is_Identity = True
+
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
@@ -292,13 +306,15 @@ class Identity(MatrixSymbol):
         return self
 
     def _entry(self, i, j):
-        if i==j:
+        if i == j:
             return S.One
         else:
             return S.Zero
 
+
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
+
     >>> from sympy import MatrixSymbol, ZeroMatrix
     >>> A = MatrixSymbol('A', 3, 5)
     >>> Z = ZeroMatrix(3, 5)
@@ -308,6 +324,7 @@ class ZeroMatrix(MatrixSymbol):
     0
     """
     is_ZeroMatrix = True
+
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
 
@@ -323,8 +340,10 @@ class ZeroMatrix(MatrixSymbol):
     def _entry(self, i, j):
         return S.Zero
 
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
+
 
 def matrixify(expr):
     """
@@ -340,18 +359,19 @@ def matrixify(expr):
     Calling matrixify after calling these functions will reset classes back to
     their matrix equivalents
     """
-    class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
-            Pow:MatPow, MatPow:MatPow}
+    class_dict = {Mul: MatMul, Add: MatAdd, MatMul: MatMul, MatAdd: MatAdd,
+            Pow: MatPow, MatPow: MatPow}
 
     if expr.__class__ not in class_dict:
         return expr
 
-    args = map(matrixify, expr.args) # Recursively call down the tree
+    args = map(matrixify, expr.args)  # Recursively call down the tree
 
     if not any(arg.is_Matrix for arg in args):
         return expr
     else:
         return Basic.__new__(class_dict[expr.__class__], *args)
+
 
 def linear_factors(expr, *syms):
     """Reduce a Matrix Expression to a sum of linear factors
@@ -391,7 +411,7 @@ def linear_factors(expr, *syms):
                         factor = ZeroMatrix(expr.rows, sym.rows)
                         if not sym.cols == expr.cols:
                             raise ShapeError(
-                            "%s not compatible as factor of %s"%(sym, expr))
+                                "%s not compatible as factor of %s" % (sym, expr))
                     else:
                         factor = Identity(sym.rows)*factor
                 total_factor += factor
@@ -410,7 +430,7 @@ def linear_factors(expr, *syms):
                 if factor.is_zero:
                     factor = ZeroMatrix(expr.rows, sym.rows)
                     if not sym.cols == expr.cols:
-                        raise ShapeError("%s not compatible as factor of %s"%
+                        raise ShapeError("%s not compatible as factor of %s" %
                                 (sym, expr))
                 else:
                     factor = Identity(sym.rows)*factor

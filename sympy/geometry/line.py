@@ -19,8 +19,11 @@ from point import Point
 from util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
+
+
 class Undecidable(ValueError):
     pass
+
 
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)
@@ -56,7 +59,7 @@ class LinearEntity(GeometryEntity):
         p2 = Point(p2)
         if p1 == p2:
             # Rolygon returns lower priority classes...should LinearEntity, too?
-            return p1 # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            return p1  # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -401,8 +404,8 @@ class LinearEntity(GeometryEntity):
 
         """
         d1, d2 = (self.p1 - self.p2).args
-        if d2 == 0: # If a horizontal line
-            if p.y == self.p1.y: # if p is on this linear entity
+        if d2 == 0:  # If a horizontal line
+            if p.y == self.p1.y:  # if p is on this linear entity
                 return Line(p, p + Point(0, 1))
             else:
                 p2 = Point(p.x, self.p1.y)
@@ -611,7 +614,8 @@ class LinearEntity(GeometryEntity):
         if projected is None:
             n1 = self.__class__.__name__
             n2 = o.__class__.__name__
-            raise GeometryError("Do not know how to project %s onto %s" % (n2, n1))
+            raise GeometryError(
+                "Do not know how to project %s onto %s" % (n2, n1))
 
         return self.intersection(projected)[0]
 
@@ -662,7 +666,7 @@ class LinearEntity(GeometryEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
             t = simplify(a1*b2 - a2*b1)
-            if t.equals(0) is not False: # assume they are parallel
+            if t.equals(0) is not False:  # assume they are parallel
                 if isinstance(self, Line):
                     if o.p1 in self:
                         return [o]
@@ -737,12 +741,14 @@ class LinearEntity(GeometryEntity):
             # because that requires an equality test that is fragile;
             # instead we employ some diagnostics to see if the intersection
             # is valid
+
             def inseg(self):
                 def _between(a, b, c):
                     return c >= a and c <= b or c <= a and c >= b
                 if _between(self.p1.x, self.p2.x, inter.x) and \
                    _between(self.p1.y, self.p2.y, inter.y):
                     return True
+
             def inray(self):
                 sray = Ray(self.p1, inter)
                 if sray.xdirection == self.xdirection and \
@@ -860,7 +866,8 @@ class LinearEntity(GeometryEntity):
         if result is not None:
             return result
         else:
-            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))
+            raise Undecidable(
+                "can't decide whether '%s' contains '%s'" % (self, other))
 
     def contains(self, other):
         """Subclasses should implement this method and should return
@@ -1384,7 +1391,7 @@ class Ray(LinearEntity):
         p = self.arbitrary_point(t)
         # get a t corresponding to length of 10
         want = 10
-        u = Segment(self.p1, p.subs(t, S.Half)).length # gives unit length
+        u = Segment(self.p1, p.subs(t, S.Half)).length  # gives unit length
         t_need = want/u
         return [t, 0, t_need/(1 + t_need)]
 
@@ -1417,7 +1424,8 @@ class Ray(LinearEntity):
                     rv = o.y <= self.source.y
                 if isinstance(rv, bool):
                     return rv
-                raise Undecidable('Cannot determine if %s is in %s' % (o, self))
+                raise Undecidable(
+                    'Cannot determine if %s is in %s' % (o, self))
             else:
                 # Points are not collinear, so the rays are not parallel
                 # and hence it is impossible for self to contain o
@@ -1691,7 +1699,8 @@ class Segment(LinearEntity):
         elif t <= 0:
             distance = Point.distance(self.p1, pt)
         else:
-            distance = Point.distance(self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
+            distance = Point.distance(
+                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
         return distance
 
     def __eq__(self, other):

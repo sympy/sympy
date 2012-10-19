@@ -3,6 +3,7 @@
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
+
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 
@@ -130,8 +131,10 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
+
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
+
 
 class DMP(PicklableWithSlots):
     """Dense Multivariate Polynomials over `K`. """
@@ -307,7 +310,7 @@ class DMP(PicklableWithSlots):
             if n < 0:
                 return [(0,)]
             else:
-                return [ (n-i,) for i, c in enumerate(f.rep) ]
+                return [ (n - i,) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
@@ -319,7 +322,7 @@ class DMP(PicklableWithSlots):
             if n < 0:
                 return [((0,), f.dom.zero)]
             else:
-                return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+                return [ ((n - i,), c) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
@@ -748,14 +751,16 @@ class DMP(PicklableWithSlots):
                 else:
                     return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
-            raise PolynomialError("can't isolate roots of a multivariate polynomial")
+            raise PolynomialError(
+                "can't isolate roots of a multivariate polynomial")
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False):
         """Refine an isolating interval to the given precision. """
         if not f.lev:
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
         else:
-            raise PolynomialError("can't refine a root of a multivariate polynomial")
+            raise PolynomialError(
+                "can't refine a root of a multivariate polynomial")
 
     def count_real_roots(f, inf=None, sup=None):
         """Return the number of real roots of ``f`` in ``[inf, sup]``. """
@@ -983,9 +988,11 @@ class DMP(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
 
+
 def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
+
 
 class DMF(PicklableWithSlots):
     """Dense Multivariate Fractions over `K`. """
@@ -1426,9 +1433,11 @@ class DMF(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
+
 def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
                dup_normal(mod, dom), dom)
+
 
 class ANP(PicklableWithSlots):
     """Dense Algebraic Number Polynomials over a field. """

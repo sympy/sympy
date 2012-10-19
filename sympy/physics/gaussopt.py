@@ -30,6 +30,7 @@ from sympy.utilities.misc import filldedent
 # A, B, C, D matrices
 ###
 
+
 class RayTransferMatrix(Matrix):
     """
     Base class for a Ray Transfer Matrix.
@@ -104,9 +105,9 @@ class RayTransferMatrix(Matrix):
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
-            return BeamParameter(other.wavelen, \
-                                 together(re(q)), \
-                                 z_r = together(im(q)))
+            return BeamParameter(other.wavelen,
+                                 together(re(q)),
+                                 z_r=together(im(q)))
         else:
             return Matrix.__mul__(self, other)
 
@@ -170,6 +171,7 @@ class RayTransferMatrix(Matrix):
         """
         return self[1, 1]
 
+
 class FreeSpace(RayTransferMatrix):
     """
     Ray Transfer Matrix for free space.
@@ -196,6 +198,7 @@ class FreeSpace(RayTransferMatrix):
     """
     def __new__(cls, d):
         return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
+
 
 class FlatRefraction(RayTransferMatrix):
     """
@@ -226,6 +229,7 @@ class FlatRefraction(RayTransferMatrix):
         n1, n2 = sympify((n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
 
+
 class CurvedRefraction(RayTransferMatrix):
     """
     Ray Transfer Matrix for refraction on curved interface.
@@ -253,8 +257,9 @@ class CurvedRefraction(RayTransferMatrix):
     [(n1 - n2)/(R*n2), n1/n2]
     """
     def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+        R, n1, n2 = sympify((R, n1, n2))
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1 - n2)/R/n2, n1/n2)
+
 
 class FlatMirror(RayTransferMatrix):
     """
@@ -275,6 +280,7 @@ class FlatMirror(RayTransferMatrix):
     """
     def __new__(cls):
         return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
+
 
 class CurvedMirror(RayTransferMatrix):
     """
@@ -303,6 +309,7 @@ class CurvedMirror(RayTransferMatrix):
     def __new__(cls, R):
         R = sympify(R)
         return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
+
 
 class ThinLens(RayTransferMatrix):
     """
@@ -481,7 +488,7 @@ class BeamParameter(Expr):
         inst = Expr.__new__(cls, wavelen, z)
         inst.wavelen = wavelen
         inst.z = z
-        if len(kwargs) !=1:
+        if len(kwargs) != 1:
             raise ValueError('Constructor expects exactly one named argument.')
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
@@ -519,7 +526,7 @@ class BeamParameter(Expr):
         >>> p.radius
         0.2809/pi**2 + 1
         """
-        return self.z*(1+(self.z/self.z_r)**2)
+        return self.z*(1 + (self.z/self.z_r)**2)
 
     @property
     def w(self):
@@ -539,7 +546,7 @@ class BeamParameter(Expr):
         >>> p.w
         0.001*sqrt(0.2809/pi**2 + 1)
         """
-        return self.w_0*sqrt(1+(self.z/self.z_r)**2)
+        return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
 
     @property
     def w_0(self):
@@ -635,6 +642,7 @@ def waist2rayleigh(w, wavelen):
     w, wavelen = sympify((w, wavelen))
     return w**2*pi/wavelen
 
+
 def rayleigh2waist(z_r, wavelen):
     """Calculate the waist from the rayleigh range of a gaussian beam.
 
@@ -681,7 +689,8 @@ def geometric_conj_ab(a, b):
     if abs(a) == oo or abs(b) == oo:
         return a if abs(b) == oo else b
     else:
-        return a*b/(a+b)
+        return a*b/(a + b)
+
 
 def geometric_conj_af(a, f):
     """
@@ -711,6 +720,7 @@ def geometric_conj_af(a, f):
     return -geometric_conj_ab(a, -f)
 
 geometric_conj_bf = geometric_conj_af
+
 
 def gaussian_conj(s_in, z_r_in, f):
     """
@@ -748,10 +758,11 @@ def gaussian_conj(s_in, z_r_in, f):
     1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
     s_in, z_r_in, f = sympify((s_in, z_r_in, f))
-    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in-f)) + 1/f )
-    m = 1/sqrt((1-(s_in/f)**2) + (z_r_in/f)**2)
-    z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2)
+    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in - f)) + 1/f )
+    m = 1/sqrt((1 - (s_in/f)**2) + (z_r_in/f)**2)
+    z_r_out = z_r_in / ((1 - (s_in/f)**2) + (z_r_in/f)**2)
     return (s_out, z_r_out, m)
+
 
 def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     """
@@ -783,7 +794,8 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
-    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
+    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -
+              pi**2*w_i**4/(f**2*l**2)))/w_i**2
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2]
     f

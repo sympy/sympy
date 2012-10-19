@@ -3,6 +3,7 @@ from sympy.combinatorics.graycode import GrayCode
 
 from sympy.core.compatibility import bin, combinations
 
+
 class Subset(Basic):
     """
     Represents a basic subset object.
@@ -86,7 +87,6 @@ class Subset(Basic):
         next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
                         next_bin_list
         return Subset.subset_from_bitlist(self.superset, next_bin_list)
-
 
     def next_binary(self):
         """
@@ -226,7 +226,7 @@ class Subset(Basic):
         ========
         iterate_binary, unrank_binary
         """
-        if self._rank_binary == None:
+        if self._rank_binary is None:
             self._rank_binary = int("".join(
                 Subset.bitlist_from_subset(self.subset,
                                            self.superset)), 2)
@@ -248,7 +248,7 @@ class Subset(Basic):
         >>> a.rank_lexicographic
         43
         """
-        if self._rank_lex == None:
+        if self._rank_lex is None:
             def _ranklex(self, subset_index, i, n):
                 if subset_index == [] or i > n:
                     return 0
@@ -280,7 +280,7 @@ class Subset(Basic):
         ========
         iterate_graycode, unrank_gray
         """
-        if self._rank_graycode == None:
+        if self._rank_graycode is None:
             bits = Subset.bitlist_from_subset(self.subset, self.superset)
             self._rank_graycode = GrayCode(len(bits), start=bits).rank
         return self._rank_graycode
@@ -497,6 +497,7 @@ class Subset(Basic):
         else:
             return list()
         return [d[bi] for bi in b]
+
 
 def ksubsets(superset, k):
     """

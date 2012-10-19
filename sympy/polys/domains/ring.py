@@ -3,6 +3,7 @@
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
+
 class Ring(Domain):
     """Represents a ring domain. """
 

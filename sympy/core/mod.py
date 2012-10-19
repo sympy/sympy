@@ -2,6 +2,7 @@ from function import Function
 from sympy.core.numbers import Float
 from sympy.core.function import expand_mul
 
+
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
 

@@ -8,6 +8,7 @@ respective python bindings.
 from sympy.utilities.pkgdata import get_resource
 import xml.dom.minidom
 
+
 def add_mathml_headers(s):
     return """<math xmlns:mml="http://www.w3.org/1998/Math/MathML"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -39,6 +40,7 @@ def apply_xsl(mml, xsl):
     sourceDoc.freeDoc()
 
     return s
+
 
 def c2p(mml, simple=False):
     """Transforms a document in MathML content (like the one that sympy produces)

@@ -32,6 +32,7 @@ __all__ = [
 # Represent
 #-----------------------------------------------------------------------------
 
+
 def _sympy_to_scalar(e):
     """Convert from a sympy scalar to a Python scalar."""
     if isinstance(e, Expr):
@@ -182,7 +183,7 @@ def represent(expr, **options):
         B = represent(expr.args[1], **options)
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra,expr.ket), **options)
+        return represent(Mul(expr.bra, expr.ket), **options)
     elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
@@ -224,6 +225,7 @@ def represent(expr, **options):
     result = integrate_result(expr, result, **options)
 
     return result
+
 
 def rep_innerproduct(expr, **options):
     """
@@ -268,9 +270,10 @@ def rep_innerproduct(expr, **options):
 
     if isinstance(expr, BraBase):
         bra = expr
-        ket =  (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
+        ket = (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
     else:
-        bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
+        bra = (basis_kets[1].dual if basis_kets[0]
+               == expr else basis_kets[0].dual)
         ket = expr
 
     prod = InnerProduct(bra, ket)
@@ -278,6 +281,7 @@ def rep_innerproduct(expr, **options):
 
     format = options.get('format', 'sympy')
     return expr._format_represent(result, format)
+
 
 def rep_expectation(expr, **options):
     """
@@ -321,6 +325,7 @@ def rep_expectation(expr, **options):
 
     return qapply(bra*expr*ket)
 
+
 def integrate_result(orig_expr, result, **options):
     """
     Returns the result of integrating over any unities ``(|x><x|)`` in
@@ -357,7 +362,8 @@ def integrate_result(orig_expr, result, **options):
     >>> x, x_1, x_2 = symbols('x, x_1, x_2')
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
-    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2), unities=[1])
+    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2),
+    ...     unities=[1])
     x*DiracDelta(x - x_2)
 
     """
@@ -393,6 +399,7 @@ def integrate_result(orig_expr, result, **options):
             result = integrate(result, (coord, start, end))
 
     return result
+
 
 def get_basis(expr, **options):
     """
@@ -461,7 +468,7 @@ def get_basis(expr, **options):
             return (state_inst if state_inst is not None else None)
         else:
             return None
-    elif (isinstance(basis, Operator) or \
+    elif (isinstance(basis, Operator) or
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
         if state is None:
@@ -477,6 +484,7 @@ def get_basis(expr, **options):
     else:
         return None
 
+
 def _make_default(expr):
     try:
         expr = expr()
@@ -484,6 +492,7 @@ def _make_default(expr):
         return expr
 
     return expr
+
 
 def enumerate_states(*args, **options):
     """
