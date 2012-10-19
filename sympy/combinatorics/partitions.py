@@ -599,8 +599,7 @@ def RGS_generalized(m):
     for i in xrange(1, m + 1):
         for j in xrange(m):
             if j <= m - i:
-                d[i, j] = j * d[i - 1, j] \
-                          + d[i - 1, j + 1]
+                d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
                 d[i, j] = 0
     return d

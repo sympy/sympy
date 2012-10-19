@@ -83,7 +83,7 @@ class Symbol(AtomicExpr, Boolean):
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
-    __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
+    __xnew__ = staticmethod(__new_stage2__)                  # never cached (e.g. dummy)
     __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
 
     def __getnewargs__(self):

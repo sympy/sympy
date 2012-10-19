@@ -1231,22 +1231,17 @@ class Rational(Number):
     def __hash__(self):
         return super(Rational, self).__hash__()
 
-    def factors(self, limit=None, use_trial=True,
-                                  use_rho=False,
-                                  use_pm1=False,
-                                  verbose=False,
-                                  visual=False):
+    def factors(self, limit=None, use_trial=True, use_rho=False,
+                use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
         from sympy.ntheory import factorint
 
-        f = factorint(self.p, limit=limit,
-                              use_trial=use_trial,
-                              use_rho=use_rho,
-                              use_pm1=use_pm1,
-                              verbose=verbose).copy()
+        f = factorint(self.p, limit=limit, use_trial=use_trial,
+                      use_rho=use_rho, use_pm1=use_pm1,
+                      verbose=verbose).copy()
         f = defaultdict(int, f)
         for p, e in factorint(self.q, limit=limit,
                               use_trial=use_trial,
@@ -1750,11 +1745,8 @@ class One(IntegerConstant):
         return
 
     @staticmethod
-    def factors(limit=None, use_trial=True,
-                            use_rho=False,
-                            use_pm1=False,
-                            verbose=False,
-                            visual=False):
+    def factors(limit=None, use_trial=True, use_rho=False, use_pm1=False,
+                verbose=False, visual=False):
         if visual:
             return S.One
         return {1: 1}

@@ -2334,16 +2334,16 @@ def test_nroots():
     assert Poly(x**2 + 1, x).nroots() == [-1.0*I, 1.0*I]
 
     roots, error = Poly(x**2 - 1, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25
 
     roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25
 
     roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25
 
     roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == [-1.0*I, 1.0*I] and error < 1e25;
+    assert roots == [-1.0*I, 1.0*I] and error < 1e25
 
     assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
     assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
@@ -2383,7 +2383,7 @@ def test_nroots():
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 
     roots, error = nroots(x**2 - 1, error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25;
+    assert roots == [-1.0, 1.0] and error < 1e25
 
     assert nroots(x + I) == [-1.0*I]
     assert nroots(x + 2*I) == [-2.0*I]

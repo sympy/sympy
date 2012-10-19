@@ -820,10 +820,8 @@ class Pow(Expr):
                 lt = terms.as_leading_term(x)
 
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
-                return ((Pow(lt, e)*
-                         Pow((bs/lt).expand(), e).
-                         nseries(x, n=nuse, logx=logx)).expand() +
-                         order)
+                return ((Pow(lt, e) * Pow((bs/lt).expand(), e).nseries(
+                    x, n=nuse, logx=logx)).expand() + order)
 
             rv = bs**e
             if terms != bs:

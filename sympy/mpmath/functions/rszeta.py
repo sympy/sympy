@@ -445,8 +445,14 @@ def Rzeta_simul(ctx, s, der=0):
     ctx.prec = xwpd[1]+10
     xpsigma = 1-(2*xsigma)
     xd = {}
-    xd[0,0,-2]=0; xd[0,0,-1]=0; xd[0,0,0]=1; xd[0,0,1]=0
-    xd[0,-1,-2]=0; xd[0,-1,-1]=0; xd[0,-1,0]=1; xd[0,-1,1]=0
+    xd[0,0,-2]=0
+    xd[0,0,-1]=0
+    xd[0,0,0]=1
+    xd[0,0,1]=0
+    xd[0,-1,-2]=0
+    xd[0,-1,-1]=0
+    xd[0,-1,0]=1
+    xd[0,-1,1]=0
     for n in range(1,L):
         ctx.prec = xwpd[n]+10
         for k in range(0,3*n//2+1):
@@ -462,7 +468,9 @@ def Rzeta_simul(ctx, s, der=0):
                 for r in range(0,k):
                     add=xd[0,n,r]*(ctx.mpf('1.0')*ctx.fac(2*k-2*r)/ctx.fac(k-r))
                     xd[0,n,k] -= ((-1)**(k-r))*add
-        xd[0,n,-2]=0; xd[0,n,-1]=0; xd[0,n,3*n//2+1]=0
+        xd[0,n,-2]=0
+        xd[0,n,-1]=0
+        xd[0,n,3*n//2+1]=0
     for mu in range(-2,der+1):
         for n in range(-2,L):
             for k in range(-3,max(1,3*n//2+2)):
@@ -489,8 +497,14 @@ def Rzeta_simul(ctx, s, der=0):
     ctx.prec = ywpd[1]+10
     ypsigma = 1-(2*ysigma)
     yd = {}
-    yd[0,0,-2]=0; yd[0,0,-1]=0; yd[0,0,0]=1; yd[0,0,1]=0
-    yd[0,-1,-2]=0; yd[0,-1,-1]=0; yd[0,-1,0]=1; yd[0,-1,1]=0
+    yd[0,0,-2]=0
+    yd[0,0,-1]=0
+    yd[0,0,0]=1
+    yd[0,0,1]=0
+    yd[0,-1,-2]=0
+    yd[0,-1,-1]=0
+    yd[0,-1,0]=1
+    yd[0,-1,1]=0
     for n in range(1,L):
         ctx.prec = ywpd[n]+10
         for k in range(0,3*n//2+1):
@@ -506,7 +520,9 @@ def Rzeta_simul(ctx, s, der=0):
                 for r in range(0,k):
                     add=yd[0,n,r]*(ctx.mpf('1.0')*ctx.fac(2*k-2*r)/ctx.fac(k-r))
                     yd[0,n,k] -= ((-1)**(k-r))*add
-        yd[0,n,-2]=0; yd[0,n,-1]=0; yd[0,n,3*n//2+1]=0
+        yd[0,n,-2]=0
+        yd[0,n,-1]=0
+        yd[0,n,3*n//2+1]=0
 
     for mu in range(-2,der+1):
         for n in range(-2,L):
@@ -948,8 +964,14 @@ def Rzeta_set(ctx, s, derivatives=[0]):
     ctx.prec = wpd[1]+10
     psigma = 1-(2*sigma)
     d = {}
-    d[0,0,-2]=0; d[0,0,-1]=0; d[0,0,0]=1; d[0,0,1]=0
-    d[0,-1,-2]=0; d[0,-1,-1]=0; d[0,-1,0]=1; d[0,-1,1]=0
+    d[0,0,-2]=0
+    d[0,0,-1]=0
+    d[0,0,0]=1
+    d[0,0,1]=0
+    d[0,-1,-2]=0
+    d[0,-1,-1]=0
+    d[0,-1,0]=1
+    d[0,-1,1]=0
     for n in range(1,L):
         ctx.prec = wpd[n]+10
         for k in range(0,3*n//2+1):
@@ -965,7 +987,9 @@ def Rzeta_set(ctx, s, derivatives=[0]):
                 for r in range(0,k):
                     add = d[0,n,r]*(ctx.one*ctx.fac(2*k-2*r)/ctx.fac(k-r))
                     d[0,n,k] -= ((-1)**(k-r))*add
-        d[0,n,-2]=0; d[0,n,-1]=0; d[0,n,3*n//2+1]=0
+        d[0,n,-2]=0
+        d[0,n,-1]=0
+        d[0,n,3*n//2+1]=0
 
     for mu in range(-2,der+1):
         for n in range(-2,L):
@@ -1382,7 +1406,8 @@ def rs_zeta(ctx, s, derivative=0, **kwargs):
     if derivative > 4:
         raise NotImplementedError
     s = ctx.convert(s)
-    re = ctx._re(s); im = ctx._im(s)
+    re = ctx._re(s)
+    im = ctx._im(s)
     if im < 0:
         z = ctx.conj(ctx.rs_zeta(ctx.conj(s), derivative))
         return z
@@ -1395,7 +1420,8 @@ def rs_zeta(ctx, s, derivative=0, **kwargs):
 @defun
 def rs_z(ctx, w, derivative=0):
     w = ctx.convert(w)
-    re = ctx._re(w); im = ctx._im(w)
+    re = ctx._re(w)
+    im = ctx._im(w)
     if re < 0:
         return rs_z(ctx, -w, derivative)
     critical_line = (im == 0)

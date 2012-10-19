@@ -9,7 +9,9 @@ from sympy.utilities.misc import default_sort_key
 from sympy.utilities.pytest import raises
 
 
-b1 = Basic(); b2 = Basic(b1); b3 = Basic(b2)
+b1 = Basic()
+b2 = Basic(b1)
+b3 = Basic(b2)
 b21 = Basic(b2, b1)
 
 def test_structure():

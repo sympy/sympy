@@ -50,8 +50,7 @@ def fuzzy_and(*args):
             return True
         elif a is False or b is False:
             return False
-    elif (len(args) == 1 and iterable(args[0]) or
-        len(args) > 2):
+    elif (len(args) == 1 and iterable(args[0]) or len(args) > 2):
         if len(args) == 1:
             args = args[0]
         if args:

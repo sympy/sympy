@@ -1,22 +1,22 @@
 """Configuration utilities for polynomial manipulation algorithms. """
 
 _default_config = {
-    'USE_COLLINS_RESULTANT'     : False,
-    'USE_SIMPLIFY_GCD'          : True,
-    'USE_HEU_GCD'               : True,
+    'USE_COLLINS_RESULTANT':      False,
+    'USE_SIMPLIFY_GCD':           True,
+    'USE_HEU_GCD':                True,
 
-    'USE_IRREDUCIBLE_IN_FACTOR' : False,
-    'USE_CYCLOTOMIC_FACTOR'     : True,
+    'USE_IRREDUCIBLE_IN_FACTOR':  False,
+    'USE_CYCLOTOMIC_FACTOR':      True,
 
-    'EEZ_RESTART_IF_NEEDED'     : True,
-    'EEZ_NUMBER_OF_CONFIGS'     : 3,
-    'EEZ_NUMBER_OF_TRIES'       : 5,
-    'EEZ_MODULUS_STEP'          : 2,
+    'EEZ_RESTART_IF_NEEDED':      True,
+    'EEZ_NUMBER_OF_CONFIGS':      3,
+    'EEZ_NUMBER_OF_TRIES':        5,
+    'EEZ_MODULUS_STEP':           2,
 
-    'GF_IRRED_METHOD'           : 'rabin',
-    'GF_FACTOR_METHOD'          : 'zassenhaus',
+    'GF_IRRED_METHOD':            'rabin',
+    'GF_FACTOR_METHOD':           'zassenhaus',
 
-    'GB_METHOD'                 : 'buchberger',
+    'GB_METHOD':                  'buchberger',
 }
 
 _current_config = {}

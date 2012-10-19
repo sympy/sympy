@@ -1096,7 +1096,7 @@ class Permutation(Basic):
                     if right >= n:
                         right = n -1
                     inversions += _merge(arr, temp, i, i+k, right)
-                    i = i + k * 2;
+                    i = i + k * 2
                 k = k * 2
         return inversions
 

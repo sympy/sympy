@@ -57,8 +57,12 @@ def pat_matrix(m, dx, dy, dz):
     [-2,  4, -2]
     [-2, -2,  4]
     """
-    dxdy = -dx*dy ; dydz = -dy*dz ; dzdx = -dz*dx
-    dxdx =  dx**2 ; dydy =  dy**2 ; dzdz =  dz**2
+    dxdy = -dx*dy
+    dydz = -dy*dz
+    dzdx = -dz*dx
+    dxdx = dx**2
+    dydy = dy**2
+    dzdz = dz**2
     mat = ((dydy + dzdz, dxdy, dzdx),
            (dxdy, dxdx + dzdz, dydz),
            (dzdx, dydz, dydy + dxdx))
