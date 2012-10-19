@@ -4,7 +4,6 @@ Integer factorization
 import random
 import math
 
-from sympy.core import Mul
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot, Pow

@@ -191,7 +191,6 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
         - http://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
-        from sympy.core.numbers import igcdex
         a1, m1 = c1
         a2, m2 = c2
         a, b, c = m1, a2 - a1, m2

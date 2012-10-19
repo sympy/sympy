@@ -864,7 +864,6 @@ class LatexPrinter(Printer):
         igrade = 0
         MV_str = ''
         line_lst = []
-        first_flg = True
         for grade in expr.mv:
             if not isinstance(grade, types.IntType):
                 ibase = 0
@@ -916,7 +915,6 @@ class LatexPrinter(Printer):
         igrade = 0
         MV_str = ''
         line_lst = []
-        first_flg = True
         for grade in expr.mv:
             if not isinstance(grade, None):
                 ibase = 0
@@ -1075,8 +1073,6 @@ def xdvi(filename='tmplatex.tex', debug=False):
     array_flg = False
     eqnarray_flg = False
     raw_flg = False
-    nline = len(body_lst)
-    iline = 0
     i = iter(body_lst)
     line = i.next()
 
