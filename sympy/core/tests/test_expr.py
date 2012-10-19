@@ -938,7 +938,7 @@ def test_extractions():
     # so both are included.
     assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or\
            ((-x - y)/(y - x)).could_extract_minus_sign(
-               ) == False  # is_Mul even case
+               ) is False  # is_Mul even case
     assert ( x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
 

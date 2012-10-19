@@ -448,7 +448,7 @@ def test_AlgebraicNumber():
 
     assert a != b and a != sqrt(2) +3
 
-    assert (a == x) is False and (a != x) == True
+    assert (a == x) is False and (a != x) is True
 
     a = AlgebraicNumber(sqrt(2), [1, 0])
     b = AlgebraicNumber(sqrt(2), [1, 0], alias=y)
