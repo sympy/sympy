@@ -893,27 +893,31 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
         # Euler equation case (a_i * x**i for all i)
-        def is_monomial_of_degree(coeff,i):
-            assert i >= 0
+        def _test_term(coeff, order):
+            """
+            Linear Euler ODEs have the form  K*x**order*diff(y(x),x,order),
+            where K is independent of x and y(x), order>= 0.
+            So we need to check that for each term, coeff == K*x**order from
+            some K.  We have a few cases, since coeff may have several
+            different types.
+            """
+            assert order >= 0
             if coeff == 0:
                 return True
-            if i == 0:
-                if x in coeff.atoms():
+            if order == 0:
+                if x in coeff.free_symbols:
                     return False
-                if f(x) in coeff.atoms():
-                    return False
-                return True
-            if coeff.is_Pow:
-                return (coeff.base, coeff.exp) == (x, i)
+                return f(x) not in coeff.atoms()
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
-                return x**i in coeff.args
-                return True
-            if i == 1:
+                return x**order in coeff.args
+            elif coeff.is_Pow:
+                return coeff.as_base_exp() == (x, order)
+            elif order == 1:
                 return x == coeff
             return False
-        if r and not any( not is_monomial_of_degree(r[i],i) for i in r if i >= 0):
+        if r and not any(not _test_term(r[i], i) for i in r if i >= 0):
             if not r[-1]:
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
 
@@ -2489,6 +2493,86 @@ def _nth_linear_match(eq, func, order):
     return terms
 
 def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
+    r"""
+    Solves an nth order linear homogeneous variable-coefficient
+    Cauchy-Euler equidimensional ordinary differential equation.
+
+    This is an equation with form 0 = a0*f(x) + a1*x*f'(x) + a2*x**2*f"(x)...
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form f(x) = x**r, and deriving a characteristic
+    equation for r.  When there are repeated roots, we include
+    extra terms of the form Crk*ln(x)**k*x**r, where Cnk is an
+    arbitrary integration constant, r is a root of the characteristic
+    equation, and k ranges over the multiplicity of r.
+    For
+
+
+    TO DO.........
+
+    roots of the characteristic equation a_n*m**n + a_(n-1)*m**(n-1) +
+    ... + a1*m + a0 = 0.  The solution will then be the sum of
+    Cn*x**i*exp(r*x) terms, for each where Cn is an arbitrary constant,
+    r is a root of the characteristic equation and i is is one of each
+    from 0 to the multiplicity of the root - 1 (for example, a root 3 of
+    multiplicity 2 would create the terms C1*exp(3*x) + C2*x*exp(3*x)).
+    The exponential is usually expanded for complex roots using Euler's
+    equation exp(I*x) = cos(x) + I*sin(x).  Complex roots always come in
+    conjugate pars in polynomials with real coefficients, so the two
+    roots will be represented (after simplifying the constants) as
+    exp(a*x)*(C1*cos(b*x) + C2*sin(b*x)).
+
+    If SymPy cannot find exact roots to the characteristic equation, a
+    RootOf instance will be return in its stead.
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
+    ... hint='nth_linear_euler_eq_homogeneous')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    f(x) == x**2*(C1 + C2*x)
+
+    Note that because this method does not involve integration, there is
+    no 'nth_linear_euler_eq_homogeneous_Integral' hint.
+
+    The following is for internal use:
+
+    - returns = 'sol' returns the solution to the ODE.
+    - returns = 'list' returns a list of linearly independent
+      solutions, corresponding to the fundamental solution set, for use with
+      non homogeneous solution methods like variation of parameters and
+      undetermined coefficients.  Note that, though the solutions should be
+      linearly independent, this function does not explicitly check that.  You
+      can do "assert simplify(wronskian(sollist)) != 0" to check for linear
+      independence.  Also, "assert len(sollist) == order" will need to pass.
+    - returns = 'both', return a dictionary {'sol':solution to ODE,
+      'list': list of linearly independent solutions}.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = diff(f(x), x, 2)*x**2 - 4*diff(f(x), x)*x + 6*f(x)
+    >>> pprint(dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_homogeneous'))
+            2
+    f(x) = x *(C1 + C2*x)
+
+    References
+    ==========
+
+    - http://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
+    - C. Bender & S. Orszag, "Advanced Mathematical Methods for
+        Scientists and Engineers", Springer 1999, pp. 12
+    # indirect doctest
+
+    """
+    global collectterms
+    collectterms = []
+
     x = func.args[0]
     f = func.func
     r = match
@@ -2500,13 +2584,11 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if type(i) == str or i < 0:
-            pass
-        else:
+        if not isinstance(i,str) and i >= 0:
             chareq += (r[i]*diff(x**symbol,x,i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
+    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -2515,8 +2597,6 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     gsol = S(0)
     # We need keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
-    global collectterms
-    collectterms = []
     ln = log
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
@@ -2532,7 +2612,9 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
                 imroot = im(root)
                 gsol += ln(x)**i*(x**reroot)*(constants.next()*sin(abs(imroot)*ln(x)) \
                 + constants.next()*cos(imroot*ln(x)))
-                # This ordering is important
+                # Preserve ordering (multiplicity, real part, imaginary part)
+                # It will be assumed implicitly when constructing
+                # fundamental solution sets.
                 collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'sol':
         return Eq(f(x), gsol)
@@ -2545,10 +2627,12 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             if imroot == 0:
                 gensols.append(ln(x)**i*x**reroot)
             else:
-                if ln(x)**i*x**reroot*sin(abs(imroot)*ln(x)) in gensols:
-                    gensols.append(ln(x)**i*x**reroot*cos(imroot*ln(x)))
+                sin_form = ln(x)**i*x**reroot*sin(abs(imroot)*ln(x))
+                if sin_form in gensols:
+                    cos_form = ln(x)**i*x**reroot*cos(imroot*ln(x))
+                    gensols.append(cos_form)
                 else:
-                    gensols.append(ln(x)**i*x**reroot*sin(abs(imroot)*ln(x)))
+                    gensols.append(sin_form)
         if returns == 'list':
             return gensols
         else:
