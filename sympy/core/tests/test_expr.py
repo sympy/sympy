@@ -254,9 +254,7 @@ def test_atoms():
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
     assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
-                                                   [1 + x*(2 + y)+exp(3 + z),
-                                                    2 + y,
-                                                    3 + z])
+        [1 + x*(2 + y)+exp(3 + z), 2 + y, 3 + z])
 
     # issue 3033
     f = Function('f')
@@ -433,11 +431,11 @@ def test_as_numer_denom():
     assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
     assert (x**-2).as_numer_denom() == (1, x**2)
     assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
-            (6*a + 3*b + 2*c, 6*x)
+        (6*a + 3*b + 2*c, 6*x)
     assert (a/x + b/2/x + c/3/y).as_numer_denom() == \
-            (2*c*x + y*(6*a + 3*b), 6*x*y)
+        (2*c*x + y*(6*a + 3*b), 6*x*y)
     assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
-            (2*a + b + 4.0*c, 2*x)
+        (2*a + b + 4.0*c, 2*x)
     # this should take no more than a few seconds
     assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
                        ).as_numer_denom()[1]/x).n(4)) == 705
@@ -775,10 +773,10 @@ def test_as_coeff_add():
     assert S(2).as_coeff_add() == (2, ())
     assert S(3.0).as_coeff_add() == (0, (S(3.0),))
     assert S(-3.0).as_coeff_add() == (0, (S(-3.0),))
-    assert     x .as_coeff_add() == ( 0, (x,))
-    assert (-1+x).as_coeff_add() == (-1, (x,))
-    assert ( 2+x).as_coeff_add() == ( 2, (x,))
-    assert ( 1+x).as_coeff_add() == ( 1, (x,))
+    assert x.as_coeff_add() == (0, (x,))
+    assert (x - 1).as_coeff_add() == (-1, (x,))
+    assert (x + 1).as_coeff_add() == (1, (x,))
+    assert (x + 2).as_coeff_add() == (2, (x,))
     assert (x + y).as_coeff_add(y) == (x, (y,))
     assert (3*x).as_coeff_add(y) == (3*x, ())
     # don't do expansion
@@ -789,7 +787,7 @@ def test_as_coeff_mul():
     assert S(2).as_coeff_mul() == (2, ())
     assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
     assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
-    assert     x .as_coeff_mul() == ( 1, (x,))
+    assert x.as_coeff_mul() == (1, (x,))
     assert (-x).as_coeff_mul() == (-1, (x,))
     assert (2*x).as_coeff_mul() == (2, (x,))
     assert (x*y).as_coeff_mul(y) == (x, (y,))
@@ -813,7 +811,7 @@ def test_as_coeff_exponent():
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
     assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
     assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
-            (log(2)/(2+pi), 0)
+        (log(2)/(2 + pi), 0)
     # 1685
     D = Derivative
     f = Function('f')

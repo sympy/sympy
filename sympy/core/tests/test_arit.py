@@ -406,8 +406,8 @@ def test_Mul_is_even_odd():
     assert (3*x).is_odd == None
 
     assert (k/3).is_integer == False
-    assert (k/3).is_even    == False
-    assert (k/3).is_odd     == False
+    assert (k/3).is_even == False
+    assert (k/3).is_odd == False
 
     assert (2*n).is_even == True
     assert (2*n).is_odd == False
@@ -566,19 +566,19 @@ def test_Mul_is_negative_positive_2():
     d = Symbol('d', nonpositive=True)
 
     assert (a*b).is_nonnegative == True
-    assert (a*b).is_negative    == False
-    assert (a*b).is_zero        == None
-    assert (a*b).is_positive    == None
+    assert (a*b).is_negative == False
+    assert (a*b).is_zero == None
+    assert (a*b).is_positive == None
 
     assert (c*d).is_nonnegative == True
-    assert (c*d).is_negative    == False
-    assert (c*d).is_zero        == None
-    assert (c*d).is_positive    == None
+    assert (c*d).is_negative == False
+    assert (c*d).is_zero == None
+    assert (c*d).is_positive == None
 
     assert (a*c).is_nonpositive == True
-    assert (a*c).is_positive    == False
-    assert (a*c).is_zero        == None
-    assert (a*c).is_negative    == None
+    assert (a*c).is_positive == False
+    assert (a*c).is_zero == None
+    assert (a*c).is_negative == None
 
 
 def test_Mul_is_nonpositive_nonnegative():
@@ -878,13 +878,13 @@ def test_Pow_is_real():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True, positive=True)
 
-    assert (x**2).is_real   == True
-    assert (x**3).is_real   == True
-    assert (x**x).is_real   == None
-    assert (y**x).is_real   == True
+    assert (x**2).is_real == True
+    assert (x**3).is_real == True
+    assert (x**x).is_real == None
+    assert (y**x).is_real == True
 
-    assert (x**Rational(1,3)).is_real  == None
-    assert (y**Rational(1,3)).is_real  == True
+    assert (x**Rational(1, 3)).is_real == None
+    assert (y**Rational(1, 3)).is_real == True
 
     assert sqrt(-1 - sqrt(2)).is_real == False
 
@@ -1012,8 +1012,8 @@ def test_Pow_is_negative_positive():
     assert ((-k)**n).is_negative == False
     assert ((-k)**m).is_negative == True
 
-    assert (2**z).is_positive   == None
-    assert (2**z).is_negative   == None
+    assert (2**z).is_positive == None
+    assert (2**z).is_negative == None
 
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
@@ -1033,7 +1033,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
     assert (k**x).is_nonnegative == None    # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative == True
-    assert (l**x).is_positive    == True
+    assert (l**x).is_positive == True
     assert ((-k)**x).is_nonnegative == None
     assert ((-k)**n).is_nonnegative == True
     assert ((-k)**m).is_nonnegative == None
@@ -1058,37 +1058,37 @@ def test_Mul_is_imaginary_real():
     ii= Symbol('ii',imaginary=True)
     x = Symbol('x')
 
-    assert    I  .is_imaginary  == True
-    assert    I  .is_real       == False
-    assert  (-I) .is_imaginary  == True
-    assert  (-I) .is_real       == False
-    assert (3*I) .is_imaginary  == True
-    assert (3*I) .is_real       == False
-    assert (I*I) .is_imaginary  == False
-    assert (I*I) .is_real       == True
+    assert I.is_imaginary == True
+    assert I.is_real == False
+    assert (-I).is_imaginary == True
+    assert (-I).is_real == False
+    assert (3*I).is_imaginary == True
+    assert (3*I).is_real == False
+    assert (I*I).is_imaginary == False
+    assert (I*I).is_real == True
 
-    assert (r*i) .is_imaginary  == True
-    assert (r*i) .is_real       == False
+    assert (r*i).is_imaginary == True
+    assert (r*i).is_real == False
 
-    assert (x*i) .is_imaginary  == None
-    assert (x*i) .is_real       == None
+    assert (x*i).is_imaginary == None
+    assert (x*i).is_real == None
 
-    assert (i*ii).is_imaginary  == False
-    assert (i*ii).is_real       == True
+    assert (i*ii).is_imaginary == False
+    assert (i*ii).is_real == True
 
     assert (r*i*ii).is_imaginary == False
-    assert (r*i*ii).is_real      == True
+    assert (r*i*ii).is_real == True
 
 
 
 def test_Add_is_comparable():
-    assert (x+y).is_comparable  == False
-    assert (x+1).is_comparable  == False
+    assert (x+y).is_comparable == False
+    assert (x+1).is_comparable == False
     assert (Rational(1,3) - sqrt(8)).is_comparable == True
 
 def test_Mul_is_comparable():
-    assert (x*y).is_comparable  == False
-    assert (x*2).is_comparable  == False
+    assert (x*y).is_comparable == False
+    assert (x*2).is_comparable == False
     assert (sqrt(2)*Rational(1,3)).is_comparable == True
 
 
@@ -1100,22 +1100,22 @@ def test_Pow_is_comparable():
 
 def test_Add_is_positive_2():
     e = Rational(1,3) - sqrt(8)
-    assert e.is_positive    == False
-    assert e.is_negative    == True
+    assert e.is_positive == False
+    assert e.is_negative == True
 
     e = pi - 1
-    assert e.is_positive    == True
-    assert e.is_negative    == False
+    assert e.is_positive == True
+    assert e.is_negative == False
 
 
 def test_Add_is_irrational():
     i = Symbol('i', irrational=True)
 
-    assert i.is_irrational  == True
-    assert i.is_rational    == False
+    assert i.is_irrational == True
+    assert i.is_rational == False
 
-    assert (i+1).is_irrational  == True
-    assert (i+1).is_rational    == False
+    assert (i+1).is_irrational == True
+    assert (i+1).is_rational == False
 
 @XFAIL
 def test_issue432():
@@ -1163,22 +1163,22 @@ def test_suppressed_evaluation():
 
 def test_Add_as_coeff_mul():
     # Issue 2425.  These should all be (1, self)
-    assert (x + 1).as_coeff_mul()   == (1, (x + 1,) )
-    assert (x + 2).as_coeff_mul()   == (1, (x + 2,) )
-    assert (x + 3).as_coeff_mul()   == (1, (x + 3,) )
+    assert (x + 1).as_coeff_mul() == (1, (x + 1,))
+    assert (x + 2).as_coeff_mul() == (1, (x + 2,))
+    assert (x + 3).as_coeff_mul() == (1, (x + 3,))
 
-    assert (x - 1).as_coeff_mul()   == (1, (x - 1,) )
-    assert (x - 2).as_coeff_mul()   == (1, (x - 2,) )
-    assert (x - 3).as_coeff_mul()   == (1, (x - 3,) )
+    assert (x - 1).as_coeff_mul() == (1, (x - 1,))
+    assert (x - 2).as_coeff_mul() == (1, (x - 2,))
+    assert (x - 3).as_coeff_mul() == (1, (x - 3,))
 
     n = Symbol('n', integer=True)
-    assert (n + 1).as_coeff_mul()   == (1, (n + 1,) )
-    assert (n + 2).as_coeff_mul()   == (1, (n + 2,) )
-    assert (n + 3).as_coeff_mul()   == (1, (n + 3,) )
+    assert (n + 1).as_coeff_mul() == (1, (n + 1,))
+    assert (n + 2).as_coeff_mul() == (1, (n + 2,))
+    assert (n + 3).as_coeff_mul() == (1, (n + 3,))
 
-    assert (n - 1).as_coeff_mul()   == (1, (n - 1,) )
-    assert (n - 2).as_coeff_mul()   == (1, (n - 2,) )
-    assert (n - 3).as_coeff_mul()   == (1, (n - 3,) )
+    assert (n - 1).as_coeff_mul() == (1, (n - 1,))
+    assert (n - 2).as_coeff_mul() == (1, (n - 2,))
+    assert (n - 3).as_coeff_mul() == (1, (n - 3,))
 
 def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + y).as_coeff_mul() == (1, (exp(x + y),))

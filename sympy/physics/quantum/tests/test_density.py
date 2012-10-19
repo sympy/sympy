@@ -81,7 +81,7 @@ def test_doit():
     d = Density([tp1, 1])
 
     # full trace
-    t = Tr(d);
+    t = Tr(d)
     assert t.doit() == 1
 
     #Partial trace on density operators with spin states
@@ -95,7 +95,7 @@ def test_doit():
     d = Density([tp2, 1])
 
     #full trace
-    t = Tr(d);
+    t = Tr(d)
     assert t.doit() == 1
 
     #Partial trace on density operators with spin states

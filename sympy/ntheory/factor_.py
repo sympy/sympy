@@ -110,9 +110,8 @@ def smoothness_p(n, m=-1, power=0, visual=None):
             return n
         d = {}
         for li in n.splitlines():
-            k, v = [int(i) for i in li.split('has')[0]
-                                      .split('=')[1]
-                                      .split('**')]
+            k, v = [int(i) for i in
+                    li.split('has')[0].split('=')[1].split('**')]
             d[k] = v
         if visual is not True and visual is not False:
             return d

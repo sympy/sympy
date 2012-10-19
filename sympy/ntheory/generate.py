@@ -214,7 +214,7 @@ def prime(nth):
     """
     n = int_tested(nth)
     if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2");
+        raise ValueError("nth must be a positive integer; prime(1) == 2")
     return sieve[n]
 
 def primepi(n):

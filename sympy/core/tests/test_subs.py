@@ -110,8 +110,8 @@ def test_dict_ambigous():   # see #467
     assert g.subs(dg) == y**2
 
     # and this is how order can affect the result
-    assert f .subs(x, y) .subs(exp(x), y)  == y*exp(y)
-    assert f .subs(exp(x), y) .subs(x, y)  == y**2
+    assert f.subs(x, y).subs(exp(x), y) == y*exp(y)
+    assert f.subs(exp(x), y).subs(x, y) == y**2
 
     # length of args and count_ops are the same so
     # default_sort_key resolves ordering...if one

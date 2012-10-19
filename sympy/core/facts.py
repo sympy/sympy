@@ -266,7 +266,7 @@ class Prover(object):
     def split_alpha_beta(self):
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
-        rules_beta  = []    # &(...) -> b
+        rules_beta = []     # &(...) -> b
         for a,b in self.proved_rules:
             if isinstance(a, And):
                 rules_beta.append((a,b))
@@ -342,7 +342,7 @@ class Prover(object):
 
         else:
             # both `a` and `b` are atoms
-            self.proved_rules.append((a,b))     # a  -> b
+            self.proved_rules.append((a, b))             # a  -> b
             self.proved_rules.append((Not(b), Not(a)))   # !b -> !a
 
 ########################################
