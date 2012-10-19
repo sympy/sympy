@@ -117,7 +117,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
             'sympy.core.basic', 'Basic', _print_pretty
         )
         plaintext_formatter.for_type_by_name(
-            'sympy.matrices.matrices', 'MatrixBase', _print_pretty
+            'sympy.matrices.mutable', 'Matrix', _print_pretty
         )
 
         if render_latex:
