@@ -235,10 +235,10 @@ Financial and Infrastructure Support
   * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
   * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
   * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
-  * in 2011 for 9 studends (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+  * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
 
 * `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
-  various GSoC studends over the years:
+  various GSoC students over the years:
 
   * 3 GSoC 2007 students (Brian, Robert and Jason)
   * 1 GSoC 2008 student (Fredrik)
