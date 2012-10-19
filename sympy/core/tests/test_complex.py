@@ -37,16 +37,16 @@ def test_conjugate():
 
 
 def test_abs1():
-    a=Symbol("a", real=True)
-    b=Symbol("b", real=True)
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
     assert abs(a) == abs(a)
     assert abs(-a) == abs(a)
     assert abs(a+I*b) == sqrt(a**2+b**2)
 
 
 def test_abs2():
-    a=Symbol("a", real=False)
-    b=Symbol("b", real=False)
+    a = Symbol("a", real=False)
+    b = Symbol("b", real=False)
     assert abs(a) != a
     assert abs(-a) != a
     assert abs(a+I*b) != sqrt(a**2+b**2)

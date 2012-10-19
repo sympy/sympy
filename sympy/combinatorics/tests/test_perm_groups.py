@@ -541,7 +541,7 @@ def _subgroup_search(i, j, k):
             ).is_subgroup(fix5)
         base, strong_gens = A.schreier_sims_incremental()
         g = A.generators[0]
-        comm_g =\
+        comm_g = \
              A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) == True
         assert [prop_comm_g(gen) == True for gen in comm_g.generators]

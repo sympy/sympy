@@ -110,7 +110,7 @@ def tuple_wrapper(method):
 
     """
     def wrap_tuples(*args, **kw_args):
-        newargs=[]
+        newargs = []
         for arg in args:
             if type(arg) is tuple:
                 newargs.append(Tuple(*arg))
@@ -154,7 +154,7 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args)==1 and ((args[0].__class__ is dict) or
+        if len(args) == 1 and ((args[0].__class__ is dict) or
                              (args[0].__class__ is Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):

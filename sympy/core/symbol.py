@@ -327,7 +327,7 @@ def symbols(names, **args):
 
     if isinstance(names, basestring):
         names = names.strip()
-        as_seq= names.endswith(',')
+        as_seq = names.endswith(',')
         if as_seq:
             names = names[:-1].rstrip()
         if not names:

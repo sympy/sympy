@@ -65,7 +65,7 @@ def test_RandomSymbol():
     X = Normal('x', 0, 1)
     Y = Normal('x', 0, 2)
     assert X.symbol == Y.symbol
-    assert X!=Y
+    assert X != Y
 
     assert X.name == X.symbol.name
 

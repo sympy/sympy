@@ -290,8 +290,8 @@ def test_factorint():
            {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
-    a=nextprime(2**2**8)  # 78 digits
-    b=nextprime(a + 2**2**4)
+    a = nextprime(2**2**8)  # 78 digits
+    b = nextprime(a + 2**2**4)
     assert 'Fermat' in capture(lambda: factorint(a*b, verbose=1))
 
     raises(ValueError, lambda: pollard_rho(4))
@@ -302,25 +302,25 @@ def test_factorint():
     assert 'with primes' in capture(lambda: factorint(n, verbose=1))
     capture(lambda: factorint(nextprime(2**16)*1012, verbose=1))
 
-    n=nextprime(2**17)
+    n = nextprime(2**17)
     capture(lambda: factorint(n**3, verbose=1))  # perfect power termination
     capture(lambda: factorint(2*n, verbose=1))  # factoring complete msg
 
     # exceed 1st
-    n=nextprime(2**17)
-    n*=nextprime(n)
+    n = nextprime(2**17)
+    n *= nextprime(n)
     assert '1000' in capture(lambda: factorint(n, limit=1000, verbose=1))
-    n*=nextprime(n)
+    n *= nextprime(n)
     assert len(factorint(n)) == 3
     assert len(factorint(n, limit=p1)) == 3
-    n*=nextprime(2*n)
+    n *= nextprime(2*n)
     # exceed 2nd
     assert '2001' in capture(lambda: factorint(n, limit=2000, verbose=1))
     assert capture(
         lambda: factorint(n, limit=4000, verbose=1)).count('Pollard') == 2
     # non-prime pm1 result
-    n=nextprime(8069)
-    n*=nextprime(2*n)*nextprime(2*n, 2)
+    n = nextprime(8069)
+    n *= nextprime(2*n)*nextprime(2*n, 2)
     capture(lambda: factorint(n, verbose=1))  # non-prime pm1 result
     # factor fermat composite
     p1 = nextprime(2**17)

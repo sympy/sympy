@@ -36,7 +36,7 @@ def test_eval_args():
 def test_doit():
 
     x, y = symbols('x y')
-    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
+    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
     d = Density([XKet(), 0.5], [PxKet(), 0.5])
     assert (0.5*(PxKet()*Dagger(PxKet())) +
             0.5*(XKet()*Dagger(XKet()))) == d.doit()

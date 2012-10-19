@@ -38,7 +38,7 @@ def test_discreteuniform():
 
 def test_dice():
     # TODO: Make iid method!
-    X, Y, Z= Die('X', 6), Die('Y', 6), Die('Z', 6)
+    X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
     a, b = symbols('a b')
 
     assert E(X) == 3+S.Half
@@ -69,7 +69,7 @@ def test_dice():
 
     assert density(X+Y) == density(Y+Z) != density(X+X)
     d = density(2*X+Y**Z)
-    assert d[S(22)] == S.One/108 and d[S(4100)]==S.One/216 and S(3130) not in d
+    assert d[S(22)] == S.One/108 and d[S(4100)] == S.One/216 and S(3130) not in d
 
     assert pspace(X).domain.as_boolean() == Or(
             *[Eq(X.symbol, i) for i in [1, 2, 3, 4, 5, 6]])
@@ -85,7 +85,7 @@ def test_given():
 
 
 def test_domains():
-    X, Y= Die('x', 6), Die('y', 6)
+    X, Y = Die('x', 6), Die('y', 6)
     x, y = X.symbol, Y.symbol
     # Domains
     d = where(X>Y)
@@ -113,7 +113,7 @@ def test_domains():
 
 
 def test_dice_bayes():
-    X, Y, Z= Die('X', 6), Die('Y', 6), Die('Z', 6)
+    X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     BayesTest(X>3, X+Y<5)
     BayesTest(Eq(X-Y, Z), Z>Y)

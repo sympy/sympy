@@ -313,7 +313,7 @@ class PrettyPrinter(Printer):
             if ascii_mode:
                 H += 2
 
-            vint= vobj('int', H)
+            vint = vobj('int', H)
 
             # Construct the pretty form with the integral sign and the argument
             pform = prettyForm(vint)

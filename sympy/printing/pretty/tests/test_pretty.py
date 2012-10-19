@@ -3232,7 +3232,7 @@ y = 1 x = 0    \
 k = -----                                \n\
     m + 1                                \
 """
-    ucode_str =\
+    ucode_str = \
 u"""\
                1                         \n\
            1 + ─                         \n\
@@ -3712,7 +3712,7 @@ def test_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) ==u'Domain: 0 ≤ a ∧ 0 ≤ b'
+    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: 0 ≤ a ∧ 0 ≤ b'
 
 
 def test_PrettyPoly():

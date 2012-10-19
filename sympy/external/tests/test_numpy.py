@@ -243,9 +243,10 @@ def test_lambdify_matrix_multi_input():
 
 def test_lambdify_matrix_vec_input():
     X = sympy.DeferredVector('X')
-    M = Matrix([[X[0]**2, X[0]*X[1], X[0]*X[2]],
-                [X[1]*X[0], X[1]**2, X[1]*X[2]],
-                [X[2]*X[0], X[2]*X[1], X[2]**2]])
+    M = Matrix([
+        [X[0]**2, X[0]*X[1], X[0]*X[2]],
+        [X[1]*X[0], X[1]**2, X[1]*X[2]],
+        [X[2]*X[0], X[2]*X[1], X[2]**2]])
     f = lambdify(X, M, "numpy")
 
     Xh = array([1.0, 2.0, 3.0])

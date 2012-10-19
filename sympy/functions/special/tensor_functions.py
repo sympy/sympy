@@ -124,7 +124,7 @@ class KroneckerDelta(Function):
     """
 
     nargs = 2
-    is_commutative=True
+    is_commutative = True
     is_integer = True
 
     @classmethod

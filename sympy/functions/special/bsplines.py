@@ -88,7 +88,7 @@ def bspline_basis(d, knots, n, x, close=True):
     n_intervals = n_knots-1
     if n+d+1 > n_intervals:
         raise ValueError('n+d+1 must not exceed len(knots)-1')
-    if d==0:
+    if d == 0:
         result = Piecewise(
             (S.One, Interval(knots[n], knots[n+1], False,
              not close).contains(x)),

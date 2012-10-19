@@ -8,7 +8,7 @@ x = Symbol("x")
 
 
 def test_leadterm():
-    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3, 0)
+    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3, 0)
 
 
 def root3(x):
@@ -20,26 +20,26 @@ def root4(x):
 
 
 def test_Limits_simple_0():
-    assert limit((2**(x+1)+3**(x+1))/(2**x+3**x), x, oo)==3  # 175
+    assert limit((2**(x+1)+3**(x+1))/(2**x+3**x), x, oo) == 3  # 175
 
 
 def test_Limits_simple_1():
-    assert limit((x+1)*(x+2)*(x+3)/x**3, x, oo)==1  # 172
-    assert limit(sqrt(x+1)-sqrt(x), x, oo)==0  # 179
-    assert limit((2*x-3)*(3*x+5)*(4*x-6)/(3*x**3+x-1), x, oo)==8  # Primjer 1
-    assert limit(x/root3(x**3+10), x, oo)==1  # Primjer 2
-    assert limit((x+1)**2/(x**2+1), x, oo)==1  # 181
+    assert limit((x+1)*(x+2)*(x+3)/x**3, x, oo) == 1  # 172
+    assert limit(sqrt(x+1)-sqrt(x), x, oo) == 0  # 179
+    assert limit((2*x-3)*(3*x+5)*(4*x-6)/(3*x**3+x-1), x, oo) == 8  # Primjer 1
+    assert limit(x/root3(x**3+10), x, oo) == 1  # Primjer 2
+    assert limit((x+1)**2/(x**2+1), x, oo) == 1  # 181
 
 
 def test_Limits_simple_2():
-    assert limit(1000*x/(x**2-1), x, oo)==0  # 182
-    assert limit((x**2-5*x+1)/(3*x+7), x, oo)==oo  # 183
-    assert limit((2*x**2-x+3)/(x**3-8*x+5), x, oo)==0  # 184
-    assert limit((2*x**2-3*x-4)/sqrt(x**4+1), x, oo)==2  # 186
-    assert limit((2*x+3)/(x+root3(x)), x, oo)==2  # 187
-    assert limit(x**2/(10+x*sqrt(x)), x, oo)==oo  # 188
-    assert limit(root3(x**2+1)/(x+1), x, oo)==0  # 189
-    assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))), x, oo)==1  # 190
+    assert limit(1000*x/(x**2-1), x, oo) == 0  # 182
+    assert limit((x**2-5*x+1)/(3*x+7), x, oo) == oo  # 183
+    assert limit((2*x**2-x+3)/(x**3-8*x+5), x, oo) == 0  # 184
+    assert limit((2*x**2-3*x-4)/sqrt(x**4+1), x, oo) == 2  # 186
+    assert limit((2*x+3)/(x+root3(x)), x, oo) == 2  # 187
+    assert limit(x**2/(10+x*sqrt(x)), x, oo) == oo  # 188
+    assert limit(root3(x**2+1)/(x+1), x, oo) == 0  # 189
+    assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))), x, oo) == 1  # 190
 
 
 def test_Limits_simple_3a():
@@ -51,36 +51,36 @@ def test_Limits_simple_3a():
 
 def test_Limits_simple_3b():
     h = Symbol("h")
-    assert limit(((x+h)**3-x**3)/h, h, 0)==3*x**2  # 197
-    assert limit((1/(1-x)-3/(1-x**3)), x, 1)==-1  # 198
-    assert limit((sqrt(1+x)-1)/(root3(1+x)-1), x, 0)==Rational(3)/2  # Primer 4
-    assert limit((sqrt(x)-1)/(x-1), x, 1)==Rational(1)/2  # 199
-    assert limit((sqrt(x)-8)/(root3(x)-4), x, 64)==3  # 200
-    assert limit((root3(x)-1)/(root4(x)-1), x, 1)==Rational(4)/3  # 201
+    assert limit(((x+h)**3-x**3)/h, h, 0) == 3*x**2  # 197
+    assert limit((1/(1-x)-3/(1-x**3)), x, 1) == -1  # 198
+    assert limit((sqrt(1+x)-1)/(root3(1+x)-1), x, 0) == Rational(3)/2  # Primer 4
+    assert limit((sqrt(x)-1)/(x-1), x, 1) == Rational(1)/2  # 199
+    assert limit((sqrt(x)-8)/(root3(x)-4), x, 64) == 3  # 200
+    assert limit((root3(x)-1)/(root4(x)-1), x, 1) == Rational(4)/3  # 201
     assert limit(
-        (root3(x**2)-2*root3(x)+1)/(x-1)**2, x, 1)==Rational(1)/9  # 202
+        (root3(x**2)-2*root3(x)+1)/(x-1)**2, x, 1) == Rational(1)/9  # 202
 
 
 def test_Limits_simple_4a():
     a = Symbol('a')
-    assert limit((sqrt(x)-sqrt(a))/(x-a), x, a)==1/(2*sqrt(a))  # Primer 5
-    assert limit((sqrt(x)-1)/(root3(x)-1), x, 1)==Rational(3)/2  # 205
-    assert limit((sqrt(1+x)-sqrt(1-x))/x, x, 0)==1  # 207
-    assert limit(sqrt(x**2-5*x+6)-x, x, oo)==-Rational(5)/2  # 213
+    assert limit((sqrt(x)-sqrt(a))/(x-a), x, a) == 1/(2*sqrt(a))  # Primer 5
+    assert limit((sqrt(x)-1)/(root3(x)-1), x, 1) == Rational(3)/2  # 205
+    assert limit((sqrt(1+x)-sqrt(1-x))/x, x, 0) == 1  # 207
+    assert limit(sqrt(x**2-5*x+6)-x, x, oo) == -Rational(5)/2  # 213
 
 
 def test_limits_simple_4aa():
-    assert limit(x*(sqrt(x**2+1)-x), x, oo)==Rational(1)/2  # 214
+    assert limit(x*(sqrt(x**2+1)-x), x, oo) == Rational(1)/2  # 214
 
 
 def test_Limits_simple_4b():
     #issue 412
-    assert limit(x-root3(x**3-1), x, oo)==0  # 215
+    assert limit(x-root3(x**3-1), x, oo) == 0  # 215
 
 
 def test_Limits_simple_4c():
-    assert limit(log(1+exp(x))/x, x, -oo)==0  # 267a
-    assert limit(log(1+exp(x))/x, x, oo)==1  # 267b
+    assert limit(log(1+exp(x))/x, x, -oo) == 0  # 267a
+    assert limit(log(1+exp(x))/x, x, oo) == 1  # 267b
 
 
 def test_bounded():

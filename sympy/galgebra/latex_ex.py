@@ -788,18 +788,18 @@ class LatexPrinter(Printer):
         #convert trailing digits to subscript
             m = regrep.match('(^[a-zA-Z]+)([0-9]+)$', name_str)
             if m is not None:
-                name, sub=m.groups()
-                tex=self._print_Symbol(Symbol(name))
-                tex="%s_{%s}" %(tex, sub)
+                name, sub = m.groups()
+                tex = self._print_Symbol(Symbol(name))
+                tex = "%s_{%s}" %(tex, sub)
                 return tex
 
             # insert braces to expresions containing '_' or '^'
             m = regrep.match(
                 '(^[a-zA-Z0-9]+)([_\^]{1})([a-zA-Z0-9]+)$', name_str)
             if m is not None:
-                name, sep, rest=m.groups()
-                tex=self._print_Symbol(Symbol(name))
-                tex="%s%s{%s}" %(tex, sep, rest)
+                name, sep, rest = m.groups()
+                tex = self._print_Symbol(Symbol(name))
+                tex = "%s%s{%s}" %(tex, sep, rest)
                 return tex
 
             greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',

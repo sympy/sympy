@@ -444,9 +444,9 @@ def test_diff_wrt():
     assert diff(sin(fx), fx, x) == diff(sin(fx), x, fx)
 
     # Chain rule cases
-    assert f(g(x)).diff(x) ==\
+    assert f(g(x)).diff(x) == \
         Subs(Derivative(f(x), x), (x,), (g(x),))*Derivative(g(x), x)
-    assert diff(f(g(x), h(x)), x) ==\
+    assert diff(f(g(x), h(x)), x) == \
         Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) +\
         Subs(Derivative(f(g(x), y), y), (y,), (h(x),))*Derivative(h(x), x)
     assert f(
@@ -506,10 +506,10 @@ def test_sort_variable():
     assert vsort((h(x), g(x), f(x))) == [f(x), g(x), h(x)]
     assert vsort((z, y, x, h(x), g(x), f(x))) == [x, y, z, f(x), g(x), h(x)]
     assert vsort((x, f(x), y, f(y))) == [x, f(x), y, f(y)]
-    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) ==\
+    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) == \
         [x, y, f(x), g(x), z, h(x), x, y]
     assert vsort((z, y, f(x), x, f(x), g(x))) == [y, z, f(x), x, f(x), g(x)]
-    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) ==\
+    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) == \
         [y, z, f(x), x, f(x), g(x), x, y, z, z]
 
 

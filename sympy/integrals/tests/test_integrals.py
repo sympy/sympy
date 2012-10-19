@@ -55,7 +55,7 @@ def test_basics():
     assert diff(Integral(x, x), x) == x
     assert diff(Integral(t, (t, 0, x)), x) == x + Integral(0, (t, 0, x))
 
-    e=(t+1)**2
+    e = (t+1)**2
     assert diff(integrate(e, (t, 0, x)), x) == \
            diff(Integral(e, (t, 0, x)), x).doit().expand() == \
            ((1+x)**2).expand()
@@ -101,7 +101,7 @@ def test_integration():
     assert integrate(0, (t, 0, x)) == 0
     assert integrate(3, (t, 0, x)) == 3*x
     assert integrate(t, (t, 0, x)) == x**2/2
-    assert integrate(3*t, (t, 0, x))== 3*x**2/2
+    assert integrate(3*t, (t, 0, x)) == 3*x**2/2
     assert integrate(3*t**2, (t, 0, x)) == x**3
     assert integrate(1/t, (t, 1, x)) == log(x)
     assert integrate(-1/t**2, (t, 1, x)) == 1/x-1
@@ -111,9 +111,9 @@ def test_integration():
 
     b = Symbol("b")
     c = Symbol("c")
-    assert integrate(a*t, (t, 0, x))==a*x**2/2
-    assert integrate(a*t**4, (t, 0, x))==a*x**5/5
-    assert integrate(a*t**2+b*t+c, (t, 0, x))==a*x**3/3+b*x**2/2+c*x
+    assert integrate(a*t, (t, 0, x)) == a*x**2/2
+    assert integrate(a*t**4, (t, 0, x)) == a*x**5/5
+    assert integrate(a*t**2+b*t+c, (t, 0, x)) == a*x**3/3+b*x**2/2+c*x
 
 
 def test_multiple_integration():
@@ -243,8 +243,8 @@ def test_transcendental_functions():
 
 
 def test_issue641():
-    f=4*log(x)-2*log(x)**2
-    fid=diff(integrate(f, x), x)
+    f = 4*log(x)-2*log(x)**2
+    fid = diff(integrate(f, x), x)
     assert abs(f.subs(x, 42).evalf() - fid.subs(x, 42).evalf()) < 1e-10
 
 

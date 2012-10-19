@@ -347,7 +347,7 @@ class Pow(Expr):
                 #    So...if we have a 2 arg Mul and the first is a Number
                 #    that number is -1 and there is nothing more than can
                 #    be done without the force=True hint
-                nonneg= []
+                nonneg = []
             else:
                 # this is just like what is happening automatically, except
                 # that now we are doing it for an arbitrary exponent for which

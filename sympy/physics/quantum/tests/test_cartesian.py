@@ -21,7 +21,7 @@ def test_x():
     assert XKet(x).dual_class() == XBra
     assert XBra(x).dual_class() == XKet
     assert (Dagger(XKet(y))*XKet(x)).doit() == DiracDelta(x-y)
-    assert (PxBra(px)*XKet(x)).doit() ==\
+    assert (PxBra(px)*XKet(x)).doit() == \
         exp(-I*x*px/hbar)/sqrt(2*pi*hbar)
     assert represent(XKet(x)) == DiracDelta(x-x_1)
     assert represent(XBra(x)) == DiracDelta(-x + x_1)
@@ -49,7 +49,7 @@ def test_p():
     assert PxKet(px).dual_class() == PxBra
     assert PxBra(x).dual_class() == PxKet
     assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px-py)
-    assert (XBra(x)*PxKet(px)).doit() ==\
+    assert (XBra(x)*PxKet(px)).doit() == \
         exp(I*x*px/hbar)/sqrt(2*pi*hbar)
     assert represent(PxKet(px)) == DiracDelta(px-px_1)
 

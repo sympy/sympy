@@ -26,7 +26,7 @@ class ManagedWindow(Window):
         Do any OpenGL initialization calls in setup().
         """
         self.win_args = dict(self.default_win_args, **win_args)
-        self.Thread=Thread(target=self.__event_loop__)
+        self.Thread = Thread(target=self.__event_loop__)
         self.Thread.start()
 
     def __event_loop__(self, **win_args):

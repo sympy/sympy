@@ -3,8 +3,8 @@ from sympy import S, pi, oo
 
 i3 = Integer(3)
 i4 = Integer(4)
-r34= Rational(3, 4)
-q45= Rational(4, 5)
+r34 = Rational(3, 4)
+q45 = Rational(4, 5)
 
 
 def timeit_Integer_create():
@@ -64,11 +64,11 @@ def timeit_Integer_mul_Rational():
 
 
 def timeit_Integer_eq_i3():
-    i3==3
+    i3 == 3
 
 
 def timeit_Integer_ed_Rational():
-    i3==r34
+    i3 == r34
 
 
 def timeit_integer_nthroot():

@@ -210,7 +210,7 @@ class interval(object):
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
-            if self.start >=other:
+            if self.start >= other:
                 return (True, self.is_valid)
             elif self.end < other:
                 return (False, self.is_valid)
@@ -367,7 +367,7 @@ class interval(object):
             if other < 0:
                 return 1 / self.__pow__(abs(other))
             else:
-                if int(other)==other:
+                if int(other) == other:
                     return _pow_int(self, other)
                 else:
                     return _pow_float(self, other)

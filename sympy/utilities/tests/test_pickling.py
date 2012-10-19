@@ -51,7 +51,7 @@ def check(a, check_attr=True):
 
         d1 = dir(a)
         d2 = dir(b)
-        assert d1==d2
+        assert d1 == d2
 
         if not check_attr:
             continue

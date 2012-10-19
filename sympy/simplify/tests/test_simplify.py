@@ -641,17 +641,17 @@ def test_collect_D():
     assert collect(a*fxx + b*fxx, fx) == (a + b)*D(fx, x)
     # 1685
     assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
-    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) ==\
+    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) == \
         (x*f(x) + f(x))*D(f(x), x) + f(x)
-    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x), exact=True) ==\
+    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x), exact=True) == \
         (x*f(x) + f(x))*D(f(x), x) + f(x)
-    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x), exact=True) ==\
+    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x), exact=True) == \
         (1/f(x) + x/f(x))*D(f(x), x) + 1/f(x)
 
 
 @XFAIL
 def collect_issues():
-    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x)) !=\
+    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x)) != \
         (1 + x*D(f(x), x) + D(f(x), x))/f(x)
 
 
@@ -746,7 +746,7 @@ def test_separatevars():
         y/pi*exp(-(z - x)/cos(n))) == y*exp(x/cos(n))*exp(-z/cos(n))/pi
     assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
     # 1759
-    p=Symbol('p', positive=True)
+    p = Symbol('p', positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
     assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
     assert separatevars(
@@ -1088,7 +1088,7 @@ def test_combsimp():
 
 def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')
-    e=((D**3*a + b*aA**3)/Re).expand()
+    e = ((D**3*a + b*aA**3)/Re).expand()
     assert collect(e, [aA**3/Re, a]) == e
 
 
@@ -1125,21 +1125,21 @@ def test_as_content_primitive():
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
-    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() ==\
+    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() == \
         (18, x*(x + 1)**3)
-    assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() ==\
+    assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (2, x + 3*y*(y + 1) + 1)
-    assert ((2 + 6*x)**2).as_content_primitive() ==\
+    assert ((2 + 6*x)**2).as_content_primitive() == \
         (4, (3*x + 1)**2)
-    assert ((2 + 6*x)**(2*y)).as_content_primitive() ==\
+    assert ((2 + 6*x)**(2*y)).as_content_primitive() == \
         (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
-    assert (5 + 10*x + 2*y*(3+3*y)).as_content_primitive() ==\
+    assert (5 + 10*x + 2*y*(3+3*y)).as_content_primitive() == \
         (1, 10*x + 6*y*(y + 1) + 5)
-    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() ==\
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() == \
         (11, x*(y + 1))
-    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() ==\
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() == \
         (121, x**2*(y + 1)**2)
-    assert (y**2).as_content_primitive() ==\
+    assert (y**2).as_content_primitive() == \
         (1, y**2)
     assert (S.Infinity).as_content_primitive() == (1, oo)
     eq = x**(2+y)
@@ -1161,10 +1161,10 @@ def test_as_content_primitive():
 
 
 def test_radsimp():
-    r2=sqrt(2)
-    r3=sqrt(3)
-    r5=sqrt(5)
-    r7=sqrt(7)
+    r2 = sqrt(2)
+    r3 = sqrt(3)
+    r5 = sqrt(5)
+    r7 = sqrt(7)
     assert radsimp(1/r2) == \
         sqrt(2)/2
     assert radsimp(1/(1 + r2)) == \

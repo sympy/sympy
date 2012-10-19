@@ -406,7 +406,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                     # a derivative or not as this will require rebuilding
                     # the expression later
                     if t_ord is not None:
-                        has_deriv= True
+                        has_deriv = True
 
                     if (term.match(elem) is not None and
                             (t_sym == e_sym or t_sym is not None and
@@ -1778,7 +1778,7 @@ def _denest_pow(eq):
         return eq
 
     # the log(b) was a Mul so join any adds with logcombine
-    add= []
+    add = []
     other = []
     for a in glogb.args:
         if a.is_Add:
@@ -2254,9 +2254,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 new_base = Mul(*bases)
             else:
                 # see which ones can be joined
-                unk=[]
-                nonneg=[]
-                neg=[]
+                unk = []
+                nonneg = []
+                neg = []
                 for bi in bases:
                     if bi.is_negative:
                         neg.append(bi)

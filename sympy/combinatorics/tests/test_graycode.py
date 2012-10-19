@@ -3,7 +3,7 @@ from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
 
 
 def test_graycode():
-    g=GrayCode(2)
+    g = GrayCode(2)
     got = []
     for i in g.generate_gray():
         if i.startswith('0'):

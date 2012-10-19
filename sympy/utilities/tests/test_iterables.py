@@ -10,7 +10,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
 
-w, x, y, z= symbols('w,x,y,z')
+w, x, y, z = symbols('w,x,y,z')
 
 
 def test_postorder_traversal():

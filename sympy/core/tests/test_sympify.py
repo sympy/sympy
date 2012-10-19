@@ -112,7 +112,7 @@ def test_sympify2():
 
     a = A()
 
-    assert _sympify(a)== x**3
+    assert _sympify(a) == x**3
     assert sympify(a) == x**3
     assert a == x**3
 
@@ -142,7 +142,7 @@ def test_sympify_bool():
     """Test that sympify accepts boolean values
     and that output leaves them unchanged"""
     assert sympify(True) == True
-    assert sympify(False)== False
+    assert sympify(False) == False
 
 
 def test_sympyify_iterables():
@@ -161,7 +161,7 @@ def test_sympify4():
 
     a = A()
 
-    assert _sympify(a)**3== x**3
+    assert _sympify(a)**3 == x**3
     assert sympify(a)**3 == x**3
     assert a == x
 

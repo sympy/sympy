@@ -27,8 +27,8 @@ def test_RootOf___new__():
     assert RootOf(x - 1, 0) == 1
     assert RootOf(x - 1, -1) == 1
 
-    assert RootOf(x + 1, 0) ==-1
-    assert RootOf(x + 1, -1) ==-1
+    assert RootOf(x + 1, 0) == -1
+    assert RootOf(x + 1, -1) == -1
 
     assert RootOf(x**2 + 2*x + 3, 0) == -1 - I*sqrt(2)
     assert RootOf(x**2 + 2*x + 3, 1) == -1 + I*sqrt(2)
@@ -47,15 +47,15 @@ def test_RootOf___new__():
     r = RootOf(x**2 + 2*x + 3, -2, radicals=False)
     assert isinstance(r, RootOf) == True
 
-    assert RootOf((x - 1)*(x + 1), 0, radicals=False) ==-1
+    assert RootOf((x - 1)*(x + 1), 0, radicals=False) == -1
     assert RootOf((x - 1)*(x + 1), 1, radicals=False) == 1
     assert RootOf((x - 1)*(x + 1), -1, radicals=False) == 1
-    assert RootOf((x - 1)*(x + 1), -2, radicals=False) ==-1
+    assert RootOf((x - 1)*(x + 1), -2, radicals=False) == -1
 
-    assert RootOf((x - 1)*(x + 1), 0, radicals=True) ==-1
+    assert RootOf((x - 1)*(x + 1), 0, radicals=True) == -1
     assert RootOf((x - 1)*(x + 1), 1, radicals=True) == 1
     assert RootOf((x - 1)*(x + 1), -1, radicals=True) == 1
-    assert RootOf((x - 1)*(x + 1), -2, radicals=True) ==-1
+    assert RootOf((x - 1)*(x + 1), -2, radicals=True) == -1
 
     assert RootOf((x - 1)*(x**3 + x + 3), 0) == RootOf(x**3 + x + 3, 0)
     assert RootOf((x - 1)*(x**3 + x + 3), 1) == 1
@@ -66,7 +66,7 @@ def test_RootOf___new__():
     assert RootOf((x - 1)*(x**3 + x + 3), -3) == 1
     assert RootOf((x - 1)*(x**3 + x + 3), -4) == RootOf(x**3 + x + 3, 0)
 
-    assert RootOf(x**4 + 3*x**3, 0) ==-3
+    assert RootOf(x**4 + 3*x**3, 0) == -3
     assert RootOf(x**4 + 3*x**3, 1) == 0
     assert RootOf(x**4 + 3*x**3, 2) == 0
     assert RootOf(x**4 + 3*x**3, 3) == 0

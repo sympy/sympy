@@ -382,9 +382,9 @@ def test_Finite_as_relational():
 
 def test_Union_as_relational():
     x = Symbol('x')
-    assert (Interval(0, 1) + FiniteSet(2)).as_relational(x) ==\
+    assert (Interval(0, 1) + FiniteSet(2)).as_relational(x) == \
             Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
-    assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) ==\
+    assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
             And(Lt(0, x), Le(x, 1))
 
 
@@ -410,7 +410,7 @@ def test_finite_basic():
     assert AandB == FiniteSet(3)
 
     assert A.inf == 1 and A.sup == 3
-    assert AorB.inf == 1 and AorB.sup ==5
+    assert AorB.inf == 1 and AorB.sup == 5
     assert FiniteSet(x, 1, 5).sup == Max(x, 5)
     assert FiniteSet(x, 1, 5).inf == Min(x, 1)
 

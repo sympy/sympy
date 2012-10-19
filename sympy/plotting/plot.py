@@ -54,12 +54,12 @@ from sympy.plotting.textplot import textplot
 # Global variable
 # Set to False when running tests / doctests so that the plots don't
 # show.
-_show=True
+_show = True
 
 
 def unset_show():
     global _show
-    _show=False
+    _show = False
 
 ##############################################################################
 # The public interface
@@ -209,7 +209,7 @@ class Plot(object):
         return self._series[index]
 
     def __setitem__(self, index, *args):
-        if len(args)==1 and isinstance(args[0], BaseSeries):
+        if len(args) == 1 and isinstance(args[0], BaseSeries):
             self._series[index] = args
 
     def __delitem__(self, index):

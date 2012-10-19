@@ -1124,19 +1124,19 @@ def test_Poly__gen_to_level():
 
 
 def test_Poly_degree():
-    assert Poly(0, x).degree() ==-1
+    assert Poly(0, x).degree() == -1
     assert Poly(1, x).degree() == 0
     assert Poly(x, x).degree() == 1
 
-    assert Poly(0, x).degree(gen=0) ==-1
+    assert Poly(0, x).degree(gen=0) == -1
     assert Poly(1, x).degree(gen=0) == 0
     assert Poly(x, x).degree(gen=0) == 1
 
-    assert Poly(0, x).degree(gen=x) ==-1
+    assert Poly(0, x).degree(gen=x) == -1
     assert Poly(1, x).degree(gen=x) == 0
     assert Poly(x, x).degree(gen=x) == 1
 
-    assert Poly(0, x).degree(gen='x') ==-1
+    assert Poly(0, x).degree(gen='x') == -1
     assert Poly(1, x).degree(gen='x') == 0
     assert Poly(x, x).degree(gen='x') == 1
 

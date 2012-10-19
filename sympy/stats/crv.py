@@ -106,14 +106,14 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     integrand *= DiracDelta(cond.lhs-cond.rhs)
                 else:
                     symbols = cond.free_symbols & set(self.symbols)
-                    if len(symbols)!=1:  # Can't handle x > y
+                    if len(symbols) != 1:  # Can't handle x > y
                         raise NotImplementedError(
                             "Multivariate Inequalities not yet implemented")
                     # Can handle x > 0
                     symbol = symbols.pop()
                     # Find the limit with x, such as (x, -oo, oo)
                     for i, limit in enumerate(limits):
-                        if limit[0]==symbol:
+                        if limit[0] == symbol:
                             # Make condition into an Interval like [0, oo]
                             cintvl = reduce_poly_inequalities_wrap(
                                 cond, symbol)

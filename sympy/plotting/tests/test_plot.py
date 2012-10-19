@@ -27,7 +27,7 @@ def plot_and_save(name):
     p = plot(x*sin(x), x*cos(x))
     p.extend(p)
     p[0].line_color = lambda a: a
-    p[1].line_color='b'
+    p[1].line_color = 'b'
     p.title = 'Big title'
     p.xlabel = 'the x axis'
     p[1].label = 'straight line'

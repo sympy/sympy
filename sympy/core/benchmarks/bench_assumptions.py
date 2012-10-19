@@ -1,7 +1,7 @@
 from sympy.core import Symbol, Integer
 
 x = Symbol('x')
-i3= Integer(3)
+i3 = Integer(3)
 
 
 def timeit_x_is_integer():

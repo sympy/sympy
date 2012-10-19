@@ -340,7 +340,7 @@ class exp(ExpBase):
         if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
             a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_= o.args[0].as_coeff_mul()
+            b, expr_terms_ = o.args[0].as_coeff_mul()
 
             if expr_terms == expr_terms_:
                 return new**(a/b)

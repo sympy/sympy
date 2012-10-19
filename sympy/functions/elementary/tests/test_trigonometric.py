@@ -220,7 +220,7 @@ def test_cos():
 
     assert cos(pi) == -1
     assert cos(-pi) == -1
-    assert cos(2*pi)==1
+    assert cos(2*pi) == 1
     assert cos(5*pi) == -1
     assert cos(8*pi) == 1
 
@@ -918,7 +918,7 @@ def test_sin_cos_with_infinity():
 def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17, 3*5*17]:
         for t in [1, 8]:
-            n=t*p
+            n = t*p
             for i in xrange(1, (n + 1)//2 + 1):
                 if 1 == gcd(i, n):
                     x = i*pi/n

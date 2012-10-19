@@ -215,7 +215,7 @@ class Equality(Relational):
         return Eq(lhs, rhs)
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)==0
+        return self.lhs.compare(self.rhs) == 0
 
 
 class Unequality(Relational):
@@ -233,7 +233,7 @@ class Unequality(Relational):
         return Ne(lhs, rhs)
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)!=0
+        return self.lhs.compare(self.rhs) != 0
 
 
 class _Greater(Relational):

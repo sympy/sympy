@@ -45,7 +45,7 @@ def test_sqrtdenest2():
     assert sqrtdenest(e) == sqrt(-2*r10 - 2*r2 + 4*r5 + 14)
 
     # check that the result is not more complicated than the input
-    z= sqrt(-2*r29 + cos(2) + 2*sqrt(-10*r29 + 55) + 16)
+    z = sqrt(-2*r29 + cos(2) + 2*sqrt(-10*r29 + 55) + 16)
     assert sqrtdenest(z) == z
 
     assert sqrtdenest(sqrt(r6 + sqrt(15))) == sqrt(r6 + sqrt(15))
@@ -117,7 +117,7 @@ def test_sqrtdenest4():
     z1 = ((-r15*c - r3*c + c + r5*c - r6 - r2 + r10 + sqrt(30))/4).expand()
     assert sqrtdenest(z) == z1
 
-    z= sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
+    z = sqrt(2*r2*sqrt(r2 + 2) + 5*r2 + 4*sqrt(r2 + 2) + 8)
     assert sqrtdenest(z) == r2 + sqrt(r2 + 2) + 2
 
     w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)

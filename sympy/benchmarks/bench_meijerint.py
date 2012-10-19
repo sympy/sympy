@@ -1,12 +1,12 @@
 # conceal the implicit import from the code quality tester
 exec "from sympy import *"
 
-LT=laplace_transform
-FT=fourier_transform
-MT=mellin_transform
-IFT=inverse_fourier_transform
-ILT=inverse_laplace_transform
-IMT=inverse_mellin_transform
+LT = laplace_transform
+FT = fourier_transform
+MT = mellin_transform
+IFT = inverse_fourier_transform
+ILT = inverse_laplace_transform
+IMT = inverse_mellin_transform
 
 from sympy.abc import x, s, a, b, c, d, t, y, z
 nu, beta, rho = symbols('nu beta rho')

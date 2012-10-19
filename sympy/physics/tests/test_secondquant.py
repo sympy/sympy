@@ -244,7 +244,7 @@ def test_commutation():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
     a, b, c, d = symbols('a,b,c,d', above_fermi=True)
     p, q, r, s = symbols('p,q,r,s')
-    D=KroneckerDelta
+    D = KroneckerDelta
 
     assert C(Fd(a), F(i)) == -2*NO(F(i)*Fd(a))
     assert C(Fd(j), NO(Fd(a)*F(i))).doit(wicks=True) == -D(j, i)*Fd(a)
@@ -259,7 +259,7 @@ def test_create_f():
     assert o.atoms(Symbol) == set([j])
     o = Fd(1)
     assert o.apply_operator(FKet([n])) == FKet([1, n])
-    assert o.apply_operator(FKet([n])) ==-FKet([n, 1])
+    assert o.apply_operator(FKet([n])) == -FKet([n, 1])
     o = Fd(n)
     assert o.apply_operator(FKet([])) == FKet([n])
 
@@ -282,7 +282,7 @@ def test_annihilate_f():
     assert o.atoms(Symbol) == set([j])
     o = F(1)
     assert o.apply_operator(FKet([1, n])) == FKet([n])
-    assert o.apply_operator(FKet([n, 1])) ==-FKet([n])
+    assert o.apply_operator(FKet([n, 1])) == -FKet([n])
     o = F(n)
     assert o.apply_operator(FKet([n])) == FKet([])
 
@@ -327,7 +327,7 @@ def test_wicks():
     assert wicks(str) == NO(Fd(p)*F(q))
 
     str = F(p)*Fd(q)*F(r)*Fd(s)
-    nstr= wicks(str)
+    nstr = wicks(str)
     fasit = NO(
         KroneckerDelta(p, q)*KroneckerDelta(r, s)
         + KroneckerDelta(p, q)*AnnihilateFermion(r)*CreateFermion(s)
@@ -382,8 +382,8 @@ def test_NO():
                NO(Fd(a)*Fd(b)*F(c)) +
                NO(Fd(a)*Fd(b)*F(d)))
 
-    assert NO(Fd(a)*F(b))._remove_brackets()==Fd(a)*F(b)
-    assert NO(F(j)*Fd(i))._remove_brackets()==F(j)*Fd(i)
+    assert NO(Fd(a)*F(b))._remove_brackets() == Fd(a)*F(b)
+    assert NO(F(j)*Fd(i))._remove_brackets() == F(j)*Fd(i)
 
     assert (NO(Fd(p)*F(q)).subs(Fd(p), Fd(a)+Fd(i)) ==
             NO(Fd(a)*F(q)) + NO(Fd(i)*F(q)))
@@ -462,7 +462,7 @@ def test_Tensors():
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
     p, q, r, s = symbols('p q r s')
 
-    AT= AntiSymmetricTensor
+    AT = AntiSymmetricTensor
     assert AT('t', (a, b), (i, j)) == -AT('t', (b, a), (i, j))
     assert AT('t', (a, b), (i, j)) == AT('t', (b, a), (j, i))
     assert AT('t', (a, b), (i, j)) == -AT('t', (a, b), (j, i))
@@ -493,14 +493,14 @@ def test_fully_contracted():
     V = (AntiSymmetricTensor('v', (p, q), (r, s))*
             NO(Fd(p)*Fd(q)*F(s)*F(r)))/4
 
-    Fai=wicks(NO(Fd(i)*F(a))*Fock,
+    Fai = wicks(NO(Fd(i)*F(a))*Fock,
             keep_only_fully_contracted=True,
             simplify_kronecker_deltas=True)
     assert Fai == AntiSymmetricTensor('f', (a,), (i,))
-    Vabij=wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*V,
+    Vabij = wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*V,
             keep_only_fully_contracted=True,
             simplify_kronecker_deltas=True)
-    assert Vabij==AntiSymmetricTensor('v', (a, b), (i, j))
+    assert Vabij == AntiSymmetricTensor('v', (a, b), (i, j))
 
 
 def test_substitute_dummies_without_dummies():

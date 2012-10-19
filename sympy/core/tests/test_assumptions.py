@@ -505,8 +505,8 @@ def test_hash_vs_typeinfo():
     """seemingly different typeinfo, but in fact equal"""
 
     # the following two are semantically equal
-    x1= Symbol('x', even=True)
-    x2= Symbol('x', integer=True, odd=False)
+    x1 = Symbol('x', even=True)
+    x2 = Symbol('x', integer=True, odd=False)
 
     assert hash(x1) == hash(x2)
     assert x1 == x2
@@ -516,7 +516,7 @@ def test_hash_vs_typeinfo_2():
     """different typeinfo should mean !eq"""
     # the following two are semantically different
     x = Symbol('x')
-    x1= Symbol('x', even=True)
+    x1 = Symbol('x', even=True)
 
     assert x != x1
     assert hash(x) != hash(x1)  # This might fail with very low probability
@@ -525,7 +525,7 @@ def test_hash_vs_typeinfo_2():
 def test_hash_vs_eq():
     """catch: different hash for equal objects"""
     a = 1 + S.Pi    # important: do not fold it into a Number instance
-    ha= hash(a)  # it should be Add/Mul/... to trigger the bug
+    ha = hash(a)  # it should be Add/Mul/... to trigger the bug
 
     a.is_positive   # this uses .evalf() and deduces it is positive
     assert a.is_positive == True
@@ -535,10 +535,10 @@ def test_hash_vs_eq():
 
     # now b should be the same expression
     b = a.expand(trig=True)
-    hb= hash(b)
+    hb = hash(b)
 
     assert a == b
-    assert ha== hb
+    assert ha == hb
 
 
 def test_Add_is_pos_neg():

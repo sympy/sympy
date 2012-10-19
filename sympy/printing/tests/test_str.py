@@ -456,7 +456,7 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1, 2, 3]))== 'set([1, 2, 3])'
+    assert sstr(set([1, 2, 3])) == 'set([1, 2, 3])'
     assert sstr(
         set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
 
@@ -592,7 +592,7 @@ def test_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) =="Domain: And(0 <= a, 0 <= b)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b)"
 
 
 def test_FiniteSet():

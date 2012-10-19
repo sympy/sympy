@@ -401,9 +401,9 @@ class prettyForm(stringPict):
         if slashed:
             raise NotImplementedError("Can't do slashed fraction yet")
         num = self
-        if num.binding==prettyForm.DIV:
+        if num.binding == prettyForm.DIV:
             num = stringPict(*num.parens())
-        if den.binding==prettyForm.DIV:
+        if den.binding == prettyForm.DIV:
             den = stringPict(*den.parens())
 
         return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
@@ -481,7 +481,7 @@ class prettyForm(stringPict):
         if function in prettyForm.simpleFunctions:
             #simple function: use only space if possible
             assert len(
-                args)==1, "Simple function %s must have 1 argument"%function
+                args) == 1, "Simple function %s must have 1 argument"%function
             arg = args[0].__pretty__()
             if arg.binding <= prettyForm.DIV:
                 #optimization: no parentheses necessary

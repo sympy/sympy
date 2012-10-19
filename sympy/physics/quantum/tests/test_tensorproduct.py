@@ -18,9 +18,9 @@ mat2 = Matrix([[2*I, 3], [4*I, 2]])
 
 
 def test_tensor_product_dagger():
-    assert Dagger(TensorProduct(I*A, B)) ==\
+    assert Dagger(TensorProduct(I*A, B)) == \
            -I*TensorProduct(Dagger(A), Dagger(B))
-    assert Dagger(TensorProduct(mat1, mat2)) ==\
+    assert Dagger(TensorProduct(mat1, mat2)) == \
         TensorProduct(Dagger(mat1), Dagger(mat2))
 
 
@@ -34,14 +34,14 @@ def test_tensor_product_abstract():
 
 
 def test_tensor_product_expand():
-    assert TP(A+B, B+C).expand(tensorproduct=True) ==\
+    assert TP(A+B, B+C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
 
 
 def test_tensor_product_commutator():
-    assert TP(Comm(A, B), C).doit().expand(tensorproduct=True) ==\
+    assert TP(Comm(A, B), C).doit().expand(tensorproduct=True) == \
         TP(A*B, C) - TP(B*A, C)
-    assert Comm(TP(A, B), TP(B, C)).doit() ==\
+    assert Comm(TP(A, B), TP(B, C)).doit() == \
         TP(A, B)*TP(B, C) - TP(B, C)*TP(A, B)
 
 
@@ -62,7 +62,7 @@ def test_eval_trace():
     #and density operators. Since, the test is more to test the behavior of
     #TensorProducts it remains here
 
-    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
+    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
 
     # Density with simple tensor products as args
     t = TensorProduct(A, B)

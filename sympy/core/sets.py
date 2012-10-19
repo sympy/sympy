@@ -242,7 +242,7 @@ class Set(Basic):
         return ProductSet(self, other)
 
     def __pow__(self, exp):
-        if not sympify(exp).is_Integer and exp>=0:
+        if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer"%exp)
         return ProductSet([self]*exp)
 
@@ -319,7 +319,7 @@ class ProductSet(Set):
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
 
-        if EmptySet() in sets or len(sets)==0:
+        if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
         return Basic.__new__(cls, *sets, **assumptions)
@@ -729,7 +729,7 @@ class Union(Set, EvalfMixin):
         args = flatten(args)
 
         # Union of no sets is EmptySet
-        if len(args)==0:
+        if len(args) == 0:
             return S.EmptySet
 
         args = sorted(args, key=default_sort_key)
@@ -779,7 +779,7 @@ class Union(Set, EvalfMixin):
                     args = new_args
                     break
 
-        if len(args)==1:
+        if len(args) == 1:
             return args.pop()
         else:
             return Union(args, evaluate=False)
@@ -925,7 +925,7 @@ class Intersection(Set):
         args = flatten(args)
 
         # Intersection of no sets is everything
-        if len(args)==0:
+        if len(args) == 0:
             return S.UniversalSet
 
         args = sorted(args, key=default_sort_key)
@@ -1017,7 +1017,7 @@ class Intersection(Set):
                     args = new_args
                     break
 
-        if len(args)==1:
+        if len(args) == 1:
             return args.pop()
         else:
             return Intersection(args, evaluate=False)
@@ -1152,7 +1152,7 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
 
     def __new__(cls, *args):
-        if len(args)==1 and iterable(args[0]):
+        if len(args) == 1 and iterable(args[0]):
             args = args[0]
 
         args = map(sympify, args)

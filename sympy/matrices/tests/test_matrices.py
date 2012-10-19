@@ -46,7 +46,7 @@ def test_sum():
 
 
 def test_addition():
-    a=Matrix((
+    a = Matrix((
         (1, 2),
         (3, 1),
         ))
@@ -60,7 +60,7 @@ def test_addition():
 
 
 def test_multiplication():
-    a=Matrix((
+    a = Matrix((
         (1, 2),
         (3, 1),
         (0, 6),
@@ -71,22 +71,22 @@ def test_multiplication():
         (3, 0),
         ))
 
-    c= a*b
-    assert c[0, 0]==7
-    assert c[0, 1]==2
-    assert c[1, 0]==6
-    assert c[1, 1]==6
-    assert c[2, 0]==18
-    assert c[2, 1]==0
+    c = a*b
+    assert c[0, 0] == 7
+    assert c[0, 1] == 2
+    assert c[1, 0] == 6
+    assert c[1, 1] == 6
+    assert c[2, 0] == 18
+    assert c[2, 1] == 0
 
     h = matrix_multiply_elementwise(a, c)
     assert h == a.multiply_elementwise(c)
-    assert h[0, 0]==7
-    assert h[0, 1]==4
-    assert h[1, 0]==18
-    assert h[1, 1]==6
-    assert h[2, 0]==0
-    assert h[2, 1]==0
+    assert h[0, 0] == 7
+    assert h[0, 1] == 4
+    assert h[1, 0] == 18
+    assert h[1, 1] == 6
+    assert h[2, 0] == 0
+    assert h[2, 1] == 0
     raises(ShapeError, lambda: matrix_multiply_elementwise(a, b))
 
     c = b * Symbol("x")
@@ -736,11 +736,11 @@ def test_eigen():
         [(2, 2, [Matrix(2, 1, [-1, 1])])])
 
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    a=R(15, 2)
-    b=3*33**R(1, 2)
-    c=R(13, 2)
-    d=(R(33, 8) + 3*b/8)
-    e=(R(33, 8) - 3*b/8)
+    a = R(15, 2)
+    b = 3*33**R(1, 2)
+    c = R(13, 2)
+    d = (R(33, 8) + 3*b/8)
+    e = (R(33, 8) - 3*b/8)
 
     def NS(e, n):
         return str(N(e, n))
@@ -1682,10 +1682,10 @@ def test_matrix_norm():
     # Matrix Tests
     # Intuitive test
     A = Matrix([[1, 1], [1, 1]])
-    assert A.norm(2)==2
-    assert A.norm(-2)==0
-    assert A.norm('frobenius')==2
-    assert eye(10).norm(2)==eye(10).norm(-2)==1
+    assert A.norm(2) == 2
+    assert A.norm(-2) == 0
+    assert A.norm('frobenius') == 2
+    assert eye(10).norm(2) == eye(10).norm(-2) == 1
 
     # Test with Symbols and more complex entries
     A = Matrix([[3, y, y], [x, S(1)/2, -pi]])
@@ -1819,7 +1819,7 @@ def test_col_join():
 def test_row_insert():
     r4 = Matrix([[4, 4, 4]])
     for i in range(-4, 5):
-        l=[1, 0, 0]
+        l = [1, 0, 0]
         l.insert(i, 4)
         assert flatten(eye(3).row_insert(i, r4).col(0).tolist()) == l
 
@@ -1827,7 +1827,7 @@ def test_row_insert():
 def test_col_insert():
     c4 = Matrix([4, 4, 4])
     for i in range(-4, 5):
-        l=[0, 0, 0]
+        l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
 
@@ -1984,7 +1984,7 @@ def test_invertible_check():
 
 @XFAIL
 def test_issue_860():
-    x, y=symbols('x, y')
+    x, y = symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 

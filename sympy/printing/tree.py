@@ -19,9 +19,9 @@ def pprint_nodes(subtrees):
         x = s.split("\n")
         r = "+-%s\n"%x[0]
         for a in x[1:]:
-            if a=="":
+            if a == "":
                 continue
-            if type==1:
+            if type == 1:
                 r += "| %s\n"%a
             else:
                 r += "  %s\n"%a

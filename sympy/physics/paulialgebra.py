@@ -28,7 +28,7 @@ def delta(i, j):
     >>> delta(2, 3)
     0
     """
-    if i==j:
+    if i == j:
         return 1
     else:
         return 0
@@ -108,7 +108,7 @@ class Pauli(Symbol):
         if not i in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
         obj = Symbol.__new__(cls, "sigma%d"%i, commutative=False)
-        obj.i=i
+        obj.i = i
         return obj
 
     def __getnewargs__(self):
@@ -117,8 +117,8 @@ class Pauli(Symbol):
     # FIXME don't work for -I*Pauli(2)*Pauli(3)
     def __mul__(self, other):
         if isinstance(other, Pauli):
-            j=self.i
-            k=other.i
+            j = self.i
+            k = other.i
             return delta(j, k) \
                 +I*epsilon(j, k, 1)*Pauli(1) \
                 +I*epsilon(j, k, 2)*Pauli(2) \

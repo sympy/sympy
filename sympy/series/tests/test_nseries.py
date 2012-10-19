@@ -145,7 +145,7 @@ def test_series2x():
     assert (1/(1+x)).nseries(x, 0, 4) == 1-x+x**2-x**3+O(x**4, x)
     assert (x+3/(1+2*x)).nseries(x, 0, 4) == 3-5*x+12*x**2-24*x**3+O(x**4, x)
 
-    assert ((1/x+1)**3).nseries(x, 0, 3)== 1+x**(-3)+3*x**(-2)+3/x
+    assert ((1/x+1)**3).nseries(x, 0, 3) == 1+x**(-3)+3*x**(-2)+3/x
     assert (1/(1+1/x)).nseries(x, 0, 4) == x-x**2+x**3-O(x**4, x)
     assert (1/(1+1/x**2)).nseries(x, 0, 6) == x**2-x**4+O(x**6, x)
 
@@ -188,7 +188,7 @@ def test_generalexponent():
     e = (2/x+3/x**p)/(1/x+1/x**p)
     assert e.nseries(x, 0, 2) == 2 + sqrt(x) + O(x)
 
-    e=1+sqrt(x)
+    e = 1+sqrt(x)
     assert e.nseries(x, 0, 4) == 1+sqrt(x)
 
 # more complicated example
@@ -196,7 +196,7 @@ def test_generalexponent():
 
 def test_genexp_x():
     x = Symbol("x")
-    e=1/(1+sqrt(x))
+    e = 1/(1+sqrt(x))
     assert e.nseries(x, 0, 2) == \
                 1+x-sqrt(x)-sqrt(x)**3+O(x**2, x)
 
@@ -234,7 +234,7 @@ def test_seriesbug2d():
 def test_seriesbug2c():
     w = Symbol("w", real=True)
     #more complicated case, but sin(x)~x, so the result is the same as in (1)
-    e=(sin(2*w)/w)**(1+w)
+    e = (sin(2*w)/w)**(1+w)
     assert e.series(w, 0, 1) == 2 + O(w)
     assert e.series(w, 0, 3) == 2 + 2*w*log(2) + w**2*(-Rational(4, 3)
                     + log(2)**2) + O(w**3)
@@ -278,7 +278,7 @@ def test_sinsinbug():
 
 def test_issue159():
     x = Symbol("x")
-    a=x/(exp(x)-1)
+    a = x/(exp(x)-1)
     assert a.nseries(x, 0, 6) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
 
 

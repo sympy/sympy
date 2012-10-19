@@ -32,9 +32,9 @@ def test_pow():
 
     # powers of (-1)
     assert refine((-1)**(x+y), Q.even(x)) == (-1)**y
-    assert refine((-1)**(x+y+z), Q.odd(x) & Q.odd(z))==(-1)**y
-    assert refine((-1)**(x+y+1), Q.odd(x))==(-1)**y
-    assert refine((-1)**(x+y+2), Q.odd(x))==(-1)**(y+1)
+    assert refine((-1)**(x+y+z), Q.odd(x) & Q.odd(z)) == (-1)**y
+    assert refine((-1)**(x+y+1), Q.odd(x)) == (-1)**y
+    assert refine((-1)**(x+y+2), Q.odd(x)) == (-1)**(y+1)
     assert refine((-1)**(x+3)) == (-1)**(x+1)
 
 

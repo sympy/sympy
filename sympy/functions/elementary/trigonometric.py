@@ -635,12 +635,12 @@ class cos(TrigonometricFunction):
         FC = fermatCoords(pi_coeff.q)
         if FC:
             decomp = ipartfrac(pi_coeff, FC)
-            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
+            X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls.rewrite(sqrt)
         if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
-            X=[(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
+            X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
         return None
@@ -756,7 +756,7 @@ class tan(TrigonometricFunction):
     nargs = 1
 
     def fdiff(self, argindex=1):
-        if argindex==1:
+        if argindex == 1:
             return S.One + self**2
         else:
             raise ArgumentIndexError(self, argindex)

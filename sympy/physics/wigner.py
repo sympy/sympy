@@ -33,7 +33,7 @@ from sympy import Integer, pi, sqrt, sympify
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
-_Factlist=[1]
+_Factlist = [1]
 
 
 def _calc_factlist(nn):

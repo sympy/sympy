@@ -106,7 +106,7 @@ class vectorize:
 
             for n in mdargs:
                 if isinstance(n, int):
-                    if n>=arglength:
+                    if n >= arglength:
                         continue
                     entry = args[n]
                     is_arg = True

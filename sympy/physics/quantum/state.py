@@ -709,7 +709,7 @@ class Wavefunction(Function):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
-            ct+=1
+            ct += 1
 
         return super(Function, cls).__new__(cls, *new_args, **options)
 

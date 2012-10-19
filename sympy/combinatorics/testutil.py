@@ -56,7 +56,7 @@ def _naive_list_centralizer(self, other):
     if hasattr(other, 'generators'):
         elements = list(self.generate_dimino())
         gens = other.generators
-        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] ==\
+        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] == \
                                        [rmul(gen, x) for gen in gens]
         centralizer_list = []
         for element in elements:

@@ -14,10 +14,10 @@ def test_parser():
 
 def test_injection():
     parse_maxima('c: x+1', globals=globals())
-    assert c==x+1
+    assert c == x+1
 
     parse_maxima('g: sqrt(81)', globals=globals())
-    assert g==9
+    assert g == 9
 
 
 def test_maxima_functions():

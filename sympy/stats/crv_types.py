@@ -1530,7 +1530,7 @@ class UniformSumPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         k = Dummy("k")
-        pdf =1/factorial(
+        pdf = 1/factorial(
             n-1)*Sum((-1)**k*binomial(n, k)*(x-k)**(n-1), (k, 0, floor(x)))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, n))

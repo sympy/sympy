@@ -581,7 +581,7 @@ def test_bounded():
     assert ask(Q.bounded(a), Q.negative(x) & Q.bounded(
         x) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
     assert ask(Q.bounded(a), Q.negative(
-        x) & Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z))== False
+        x) & Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
     assert ask(Q.bounded(a), Q.negative(x) & Q.bounded(
         x) & Q.bounded(y) & Q.positive(z) & ~Q.bounded(z)) == False
     assert ask(Q.bounded(a), Q.negative(
@@ -648,9 +648,9 @@ def test_bounded():
     assert ask(
         Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == True
     assert ask(Q.bounded(
-        a), Q.bounded(x) & Q.bounded(y) & Q.positive(z) & Q.bounded(z))== True
+        a), Q.bounded(x) & Q.bounded(y) & Q.positive(z) & Q.bounded(z)) == True
     assert ask(Q.bounded(a), Q.bounded(
-        x) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z))== False
+        x) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
     assert ask(
         Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
     assert ask(Q.bounded(a), Q.bounded(
@@ -933,8 +933,8 @@ def test_bounded():
     assert ask(Q.bounded(Rational(1, 2) ** x), Q.negative(x)) is None
     assert ask(Q.bounded(S(2) ** x), Q.negative(x)) == True
     assert ask(Q.bounded(sqrt(x))) is None
-    assert ask(Q.bounded(2**x), ~Q.bounded(x))==False
-    assert ask(Q.bounded(x**2), ~Q.bounded(x))==False
+    assert ask(Q.bounded(2**x), ~Q.bounded(x)) == False
+    assert ask(Q.bounded(x**2), ~Q.bounded(x)) == False
 
     # sign function
     assert ask(Q.bounded(sign(x))) == True

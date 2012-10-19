@@ -176,7 +176,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]
-                    seen_static_extension=True
+                    seen_static_extension = True
 
     # attach beta-nodes which can be possibly triggered by an alpha-chain
     for bidx, (bcond, bimpl) in enumerate(beta_rules):
@@ -327,7 +327,7 @@ class Prover(object):
 
             for bidx in range(len(b.args)):
                 barg = b.args[bidx]
-                brest= b.args[:bidx] + b.args[bidx+1:]
+                brest = b.args[:bidx] + b.args[bidx+1:]
                 self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part

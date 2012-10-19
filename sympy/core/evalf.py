@@ -635,7 +635,7 @@ def evalf_pow(v, prec, options):
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
-    xre, xim, _, _= evalf(base, prec+5, options)
+    xre, xim, _, _ = evalf(base, prec+5, options)
     # 0**y
     if not (xre or xim):
         return None, None, None, None

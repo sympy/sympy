@@ -129,7 +129,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
-        if self.blockshape==(1, 1):
+        if self.blockshape == (1, 1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
@@ -194,9 +194,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self._mat[i, j].is_Identity:
+                if i == j and not self._mat[i, j].is_Identity:
                     return False
-                if i!=j and not self._mat[i, j].is_ZeroMatrix:
+                if i != j and not self._mat[i, j].is_ZeroMatrix:
                     return False
         return True
 
@@ -361,7 +361,7 @@ def block_collapse(expr):
                 matrices[i] = A._blockmul(B)
                 matrices.pop(i+1)
             else:
-                i+=1
+                i += 1
         return MatMul(*(nonmatrices + matrices))
 
     if expr.is_Pow:

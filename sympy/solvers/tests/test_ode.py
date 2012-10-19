@@ -1314,7 +1314,7 @@ def test_1686():
     '1st_linear_Integral',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # 1765
-    eq=(x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
+    eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
     assert classify_ode(eq, f(x)) == (
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',

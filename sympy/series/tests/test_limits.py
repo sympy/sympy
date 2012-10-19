@@ -88,7 +88,7 @@ def test_basic4():
     assert limit(2*x + y*x, x, 0) == 0
     assert limit(2*x + y*x, x, 1) == 2+y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
-    assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
+    assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
     assert integrate(1/(x**3+1), (x, 0, oo)) == 2*pi*sqrt(3)/9
 
 
@@ -253,7 +253,7 @@ def test_issue2084():
     assert len(tests) == len(results)
     for i, (args, res) in enumerate(zip(tests, results)):
         y, s, e, d = args
-        eq=y**(s*e)
+        eq = y**(s*e)
         try:
             assert limit(eq, x, 0, dir=d) == res
         except AssertionError:
@@ -286,8 +286,8 @@ def test_issue1447():
                oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
     assert len(tests) == len(results)
     for i, (args, res) in enumerate(zip(tests, results)):
-        f, l, d= args
-        eq=f(x)
+        f, l, d = args
+        eq = f(x)
         try:
             assert limit(eq, x, l, dir=d) == res
         except AssertionError:

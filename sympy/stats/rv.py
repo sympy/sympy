@@ -68,7 +68,7 @@ class SingleDomain(RandomDomain):
         return tuple(self.symbols)[0]
 
     def __contains__(self, other):
-        if len(other)!=1:
+        if len(other) != 1:
             return False
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
@@ -191,8 +191,8 @@ class RandomSymbol(Symbol):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    is_bounded=True
-    is_finite=True
+    is_bounded = True
+    is_finite = True
 
     def __new__(cls, *args):
         obj = Basic.__new__(cls)
@@ -766,7 +766,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
         if not isinstance(x, bool):
             raise ValueError("Conditions must not contain free symbols")
 
-        if x==True:
+        if x == True:
             count_true += 1
         else:
             count_false += 1

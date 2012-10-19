@@ -246,7 +246,7 @@ def test_tsolve():
     assert solve(exp(x)-3, x) == [log(3)]
     assert set(solve((a*x+b)*(exp(x)-3), x)) == set([-b/a, log(3)])
     assert solve(cos(x)-y, x) == [acos(y)]
-    assert solve(2*cos(x)-y, x)== [acos(y/2)]
+    assert solve(2*cos(x)-y, x) == [acos(y/2)]
     assert set(solve(Eq(cos(x), sin(x)), x)) == set([-3*pi/4, pi/4])
 
     assert set(solve(exp(x) + exp(-x) - y, x)) in [set([
@@ -372,7 +372,7 @@ def test_solve_linear():
     w = Wild('w')
     assert solve_linear(x, x) == (0, 1)
     assert solve_linear(x, y - 2*x) in [(x, y/3), (y, 3*x)]
-    assert solve_linear(x, y - 2*x, exclude=[x]) ==(y, 3*x)
+    assert solve_linear(x, y - 2*x, exclude=[x]) == (y, 3*x)
     assert solve_linear(3*x - y, 0) in [(x, y/3), (y, 3*x)]
     assert solve_linear(3*x - y, 0, [x]) == (x, y/3)
     assert solve_linear(3*x - y, 0, [y]) == (y, 3*x)
@@ -716,7 +716,7 @@ def test_unrad():
     >>> sqrt(x).subs(x, real_root(simplify(a))).n()
     0.49864610868139 + 1.44572604257047*I
     '''
-    eq=(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
     ra = S('''-1484/375 - 4*(-1/2 + sqrt(3)*I/2)*(-12459439/52734375 +
     114*sqrt(12657)/78125)**(1/3) - 172564/(140625*(-1/2 +
     sqrt(3)*I/2)*(-12459439/52734375 + 114*sqrt(12657)/78125)**(1/3))''')

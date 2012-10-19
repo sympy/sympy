@@ -112,8 +112,8 @@ def test_dict_ambigous():   # see #467
     f = x*exp(x)
     g = z*exp(z)
 
-    df= {x: y, exp(x): y}
-    dg= {z: y, exp(z): y}
+    df = {x: y, exp(x): y}
+    dg = {z: y, exp(z): y}
 
     assert f.subs(df) == y**2
     assert g.subs(dg) == y**2

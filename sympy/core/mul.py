@@ -280,7 +280,7 @@ class Mul(AssocOp):
                     # not an Add. This allow things like a**2*b**3 == a**5
                     # if a.is_commutative == False, but prohibits
                     # a**x*a**y and x**a*x**b from combining (x,y commute).
-                    if b1==b2 and (not new_exp.is_Add):
+                    if b1 == b2 and (not new_exp.is_Add):
                         o12 = b1 ** new_exp
 
                         # now o12 could be a commutative object
@@ -507,7 +507,7 @@ class Mul(AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
+        if len(c_part) == 2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]

@@ -460,7 +460,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols=set()
+    free_symbols = set()
 
     def doit(self):
         return self
@@ -725,7 +725,7 @@ class Differential(Expr):
                 for a in vector_fields):
             raise ValueError('The arguments supplied to Differential should be vector fields or Nones.')
         k = len(vector_fields)
-        if k==1:
+        if k == 1:
             if vector_fields[0]:
                 return vector_fields[0](self._form_field)
             return self

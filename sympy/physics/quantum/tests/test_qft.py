@@ -17,7 +17,7 @@ def test_RkGate():
     assert RkGate(3, 3) == TGate(3)
 
     assert represent(
-        RkGate(0, x), nqubits=1) ==Matrix([[1, 0], [0, exp(2*I*pi/2**x)]])
+        RkGate(0, x), nqubits=1) == Matrix([[1, 0], [0, exp(2*I*pi/2**x)]])
 
 
 def test_quantum_fourier():
@@ -31,7 +31,7 @@ def test_quantum_fourier():
      == Matrix([[exp(2*pi*I/8)**(i*j%8)/sqrt(8) for i in range(8)] for j in range(8)])
 
     assert QFT(0, 4).decompose()  # non-trivial decomposition
-    assert qapply(QFT(0, 3).decompose()*Qubit(0, 0, 0)).expand() ==\
+    assert qapply(QFT(0, 3).decompose()*Qubit(0, 0, 0)).expand() == \
         qapply(HadamardGate(
             0)*HadamardGate(1)*HadamardGate(2)*Qubit(0, 0, 0)).expand()
 

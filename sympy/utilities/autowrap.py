@@ -136,7 +136,7 @@ class CodeWrapper:
             mod = __import__(self.module_name)
         finally:
             sys.path.remove(workdir)
-            CodeWrapper._module_counter +=1
+            CodeWrapper._module_counter += 1
             os.chdir(oldwork)
             if not self.filepath:
                 shutil.rmtree(workdir)

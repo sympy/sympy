@@ -54,7 +54,7 @@ def test_UGate():
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):
-        assert u2Rep*qubit_to_matrix(IntQubit(i, 2)) ==\
+        assert u2Rep*qubit_to_matrix(IntQubit(i, 2)) == \
             qubit_to_matrix(qapply(u2*IntQubit(i, 2)))
 
 
@@ -90,13 +90,13 @@ def test_cgate():
     CZGate_matrix = Matrix(
         ((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, -1)))
     assert qapply(CZGate*Qubit('11')) == -Qubit('11')
-    assert matrix_to_qubit(represent(CZGate*Qubit('11'), nqubits=2)) ==\
+    assert matrix_to_qubit(represent(CZGate*Qubit('11'), nqubits=2)) == \
         -Qubit('11')
     # Test 2 qubit controlled-Z gate decompose method.
     assert represent(CZGate.decompose(), nqubits=2) == CZGate_matrix
 
     CPhaseGate = CGate(0, PhaseGate(1))
-    assert qapply(CPhaseGate*Qubit('11')) ==\
+    assert qapply(CPhaseGate*Qubit('11')) == \
         I*Qubit('11')
     assert matrix_to_qubit(represent(CPhaseGate*Qubit('11'), nqubits=2)) == \
         I*Qubit('11')
@@ -129,7 +129,7 @@ def test_UGate_CGate_combo():
     u2 = UGate((1,), uMat)
     u2Rep = represent(u2, nqubits=2)
     for i in range(4):
-        assert u2Rep*qubit_to_matrix(IntQubit(i, 2)) ==\
+        assert u2Rep*qubit_to_matrix(IntQubit(i, 2)) == \
             qubit_to_matrix(qapply(u2*IntQubit(i, 2)))
 
 
@@ -186,10 +186,10 @@ def test_compound_gates():
 def test_cnot_gate():
     """Test the CNOT gate."""
     circuit = CNotGate(1, 0)
-    assert represent(circuit, nqubits=2) ==\
+    assert represent(circuit, nqubits=2) == \
         Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
     circuit = circuit*Qubit('111')
-    assert matrix_to_qubit(represent(circuit, nqubits=3)) ==\
+    assert matrix_to_qubit(represent(circuit, nqubits=3)) == \
         qapply(circuit)
 
     circuit = CNotGate(1, 0)
@@ -249,7 +249,7 @@ def test_swap_gate():
     nqubits = 4
     for i in range(nqubits):
         for j in range(i):
-            assert represent(SwapGate(i, j), nqubits=nqubits) ==\
+            assert represent(SwapGate(i, j), nqubits=nqubits) == \
                 represent(SwapGate(i, j).decompose(), nqubits=nqubits)
 
 

@@ -78,7 +78,7 @@ def test_latex_basic():
     assert latex(x | y, symbol_names={x: "x_i", y: "y_i"}) == r"x_i \vee y_i"
     assert latex(x | y | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) == \
         r"x_i \vee y_i \vee z_i"
-    assert latex((x & y) | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) ==\
+    assert latex((x & y) | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) == \
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
@@ -312,7 +312,7 @@ def test_latex_sets():
 
 
 def test_latex_Range():
-    assert latex(Range(1, 51)) ==\
+    assert latex(Range(1, 51)) == \
             r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
@@ -396,7 +396,7 @@ def test_latex():
             "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
     assert latex((2*mu)**Rational(7, 2), mode='equation', itex=True) == \
             "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
-    assert latex([2/x, y]) =="\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}"
+    assert latex([2/x, y]) == "\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}"
 
 
 def test_latex_dict():
@@ -438,9 +438,9 @@ def test_mode():
     assert latex(expr, mode='plain') == 'x + y'
     assert latex(expr, mode='inline') == '$x + y$'
     assert latex(
-        expr, mode='equation*')== '\\begin{equation*}x + y\\end{equation*}'
+        expr, mode='equation*') == '\\begin{equation*}x + y\\end{equation*}'
     assert latex(
-        expr, mode='equation')== '\\begin{equation}x + y\\end{equation}'
+        expr, mode='equation') == '\\begin{equation}x + y\\end{equation}'
 
 
 def test_latex_Piecewise():
@@ -626,7 +626,7 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
+        pspace(Tuple(A, B)).domain) == "Domain: 0 \leq a \wedge 0 \leq b"
 
 
 def test_PrettyPoly():

@@ -191,7 +191,7 @@ class Number(AtomicExpr):
 
     def __new__(cls, *obj):
         if len(obj) == 1:
-            obj=obj[0]
+            obj = obj[0]
 
         if isinstance(obj, Number):
             return obj
@@ -1312,7 +1312,7 @@ _intcache = {}
 def _intcache_printinfo():
     ints = sorted(_intcache.keys())
     nhit = _intcache_hits
-    nmiss= _intcache_misses
+    nmiss = _intcache_misses
 
     if nhit == 0 and nmiss == 0:
         print
@@ -1591,7 +1591,7 @@ class Integer(Rational):
             # if it's a perfect root we've finished
             result = Integer(x**abs(expt.p))
             if self < 0:
-                result*= (-1)**expt
+                result *= (-1)**expt
             return result
 
         # The following is an algorithm where we collect perfect roots
@@ -2617,7 +2617,7 @@ converter[complex] = sympify_complex
 
 _intcache[0] = S.Zero
 _intcache[1] = S.One
-_intcache[-1]= S.NegativeOne
+_intcache[-1] = S.NegativeOne
 
 from power import Pow, integer_nthroot
 from mul import Mul

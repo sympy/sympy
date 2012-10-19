@@ -234,10 +234,10 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
     if transversals is None:
         if basic_orbits is None:
-            basic_orbits, transversals =\
+            basic_orbits, transversals = \
                 _orbits_transversals_from_bsgs(base, strong_gens_distr)
         else:
-            transversals =\
+            transversals = \
                 _orbits_transversals_from_bsgs(base, strong_gens_distr,
                                            transversals_only=True)
     else:

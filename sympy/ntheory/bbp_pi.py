@@ -86,7 +86,7 @@ def pi_hex_digits(n):
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
-    a= [4, 2, 1, 1]
+    a = [4, 2, 1, 1]
     j = [1, 4, 5, 6]
 
     #formulae
@@ -95,7 +95,7 @@ def pi_hex_digits(n):
          - a[2]*_series(j[2], n)
          - a[3]*_series(j[3], n)) & (16**(_dn(n)) -1)
 
-    s=("%014x" % x)
+    s = ("%014x" % x)
     #s is constrained between 0 and 14
     return s[:14]
 
@@ -103,7 +103,7 @@ def pi_hex_digits(n):
 def _dn(n):
     # controller for n dependence on precision
     if (n < 1000):
-        f=16
+        f = 16
     else:
         f = int((math.log10(n//1000))+18)
     return f

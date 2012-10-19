@@ -53,7 +53,7 @@ def test_own_namespace():
 
 def test_own_module():
     f = lambdify(x, sin(x), math)
-    assert f(0)==0.0
+    assert f(0) == 0.0
     f = lambdify(x, sympy.ceiling(x), math)
     raises(NameError, lambda: f(4.5))
 

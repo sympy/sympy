@@ -45,7 +45,7 @@ class MatMul(MatrixExpr, Mul):
         mats = [M for M in expr.args if M.is_Matrix]  # matrices
         if any(M.is_Identity for M in mats):  # Any identities around?
             newmats = [M for M in mats if not M.is_Identity]  # clear out
-            if len(newmats)==0:  # Did we lose everything?
+            if len(newmats) == 0:  # Did we lose everything?
                 newmats = [Identity(expr.rows)]  # put just one back in
 
             if mats != newmats:  # Removed some I's but not everything?

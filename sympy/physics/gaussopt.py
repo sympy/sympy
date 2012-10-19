@@ -488,7 +488,7 @@ class BeamParameter(Expr):
         inst = Expr.__new__(cls, wavelen, z)
         inst.wavelen = wavelen
         inst.z = z
-        if len(kwargs) !=1:
+        if len(kwargs) != 1:
             raise ValueError('Constructor expects exactly one named argument.')
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])

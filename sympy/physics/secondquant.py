@@ -977,7 +977,7 @@ class BosonState(FockState):
         """
         i = int(i)
         new_occs = list(self.args[0])
-        if new_occs[i]==S.Zero:
+        if new_occs[i] == S.Zero:
             return S.Zero
         else:
             new_occs[i] = new_occs[i]-S.One
@@ -989,7 +989,7 @@ class FermionState(FockState):
     Base class for FockStateFermion(Ket/Bra).
     """
 
-    fermi_level=0
+    fermi_level = 0
 
     def __new__(cls, occupations, fermi_level=0):
         occupations = map(sympify, occupations)
@@ -1113,7 +1113,7 @@ class FermionState(FockState):
         If nothing can be concluded we return a conservative False.
         """
         if i.is_number:
-            return i<= cls.fermi_level
+            return i <= cls.fermi_level
         if i.assumptions0.get('below_fermi'):
             return True
         return False
@@ -1955,7 +1955,7 @@ class NO(Expr):
         """
 
         # check if any creator is also an annihilator
-        subslist=[]
+        subslist = []
         for i in self.iter_q_creators():
             if self[i].is_q_annihilator:
                 assume = self[i].state.assumptions0
@@ -1965,10 +1965,10 @@ class NO(Expr):
 
                     # create indices with fermi restriction
                     assume.pop("above_fermi", None)
-                    assume["below_fermi"]=True
+                    assume["below_fermi"] = True
                     below = Dummy('i', **assume)
                     assume.pop("below_fermi", None)
-                    assume["above_fermi"]=True
+                    assume["above_fermi"] = True
                     above = Dummy('a', **assume)
 
                     cls = type(self[i])
@@ -2406,10 +2406,10 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     if new_indices:
         letters_above = pretty_indices.get('above', "")
         letters_below = pretty_indices.get('below', "")
-        letters_general= pretty_indices.get('general', "")
+        letters_general = pretty_indices.get('general', "")
         len_above = len(letters_above)
         len_below = len(letters_below)
-        len_general= len(letters_general)
+        len_general = len(letters_general)
 
         def _i(number):
             try:
@@ -2445,17 +2445,17 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         if assum.get("above_fermi"):
             if new_indices:
                 sym = _a(a)
-                a +=1
+                a += 1
             l1 = aboves
         elif assum.get("below_fermi"):
             if new_indices:
                 sym = _i(i)
-                i +=1
+                i += 1
             l1 = belows
         else:
             if new_indices:
                 sym = _p(p)
-                p +=1
+                p += 1
             l1 = generals
 
         if new_indices:
@@ -2846,7 +2846,7 @@ def wicks(e, **kw_args):
     if not e:
         return S.Zero
 
-    opts={
+    opts = {
             'simplify_kronecker_deltas': False,
             'expand': True,
             'simplify_dummies': False,
@@ -2893,8 +2893,8 @@ def wicks(e, **kw_args):
 
         # catch trivial cases
         if n == 0:
-            result= e
-        elif n==1:
+            result = e
+        elif n == 1:
             if opts['keep_only_fully_contracted']:
                 return S.Zero
             else:

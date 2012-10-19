@@ -21,56 +21,56 @@ c = Symbol("c")
 
 
 def test_Symbol():
-    e=a*b
-    assert e==a*b
-    assert a*b*b==a*b**2
-    assert a*b*b+c==c+a*b**2
-    assert a*b*b-c==-c+a*b**2
+    e = a*b
+    assert e == a*b
+    assert a*b*b == a*b**2
+    assert a*b*b+c == c+a*b**2
+    assert a*b*b-c == -c+a*b**2
 
 
 def test_arit0():
     p = Rational(5)
-    e=a*b
+    e = a*b
     assert e == a*b
-    e=a*b+b*a
+    e = a*b+b*a
     assert e == 2*a*b
-    e=a*b+b*a+a*b+p*b*a
+    e = a*b+b*a+a*b+p*b*a
     assert e == 8*a*b
-    e=a*b+b*a+a*b+p*b*a+a
+    e = a*b+b*a+a*b+p*b*a+a
     assert e == a+8*a*b
-    e=a+a
+    e = a+a
     assert e == 2*a
-    e=a+b+a
+    e = a+b+a
     assert e == b+2*a
-    e=a+b*b+a+b*b
+    e = a+b*b+a+b*b
     assert e == 2*a+2*b**2
-    e=a+Rational(2)+b*b+a+b*b+p
+    e = a+Rational(2)+b*b+a+b*b+p
     assert e == 7+2*a+2*b**2
-    e=(a+b*b+a+b*b)*p
+    e = (a+b*b+a+b*b)*p
     assert e == 5*(2*a+2*b**2)
-    e=(a*b*c+c*b*a+b*a*c)*p
+    e = (a*b*c+c*b*a+b*a*c)*p
     assert e == 15*a*b*c
-    e=(a*b*c+c*b*a+b*a*c)*p-Rational(15)*a*b*c
+    e = (a*b*c+c*b*a+b*a*c)*p-Rational(15)*a*b*c
     assert e == Rational(0)
     e = Rational(50)*(a-a)
     assert e == Rational(0)
-    e=b*a-b-a*b+b
+    e = b*a-b-a*b+b
     assert e == Rational(0)
-    e=a*b+c**p
+    e = a*b+c**p
     assert e == a*b+c**5
-    e=a/b
+    e = a/b
     assert e == a*b**(-1)
-    e=a*2*2
+    e = a*2*2
     assert e == 4*a
-    e=2+a*2/2
+    e = 2+a*2/2
     assert e == 2+a
-    e=2-a-2
+    e = 2-a-2
     assert e == -a
-    e=2*a*2
+    e = 2*a*2
     assert e == 4*a
-    e=2/a/2
+    e = 2/a/2
     assert e == a**(-1)
-    e=2**a**2
+    e = 2**a**2
     assert e == 2**(a**2)
     e = -(1+a)
     assert e == -1 -a
@@ -79,11 +79,11 @@ def test_arit0():
 
 
 def test_div():
-    e=a/b
+    e = a/b
     assert e == a*b**(-1)
-    e=a/b+c/2
+    e = a/b+c/2
     assert e == a*b**(-1)+Rational(1)/2*c
-    e=(1-b)/(b-1)
+    e = (1-b)/(b-1)
     assert e == (1+-b)*((-1)+b)**(-1)
 
 
@@ -91,42 +91,42 @@ def test_pow():
     n1 = Rational(1)
     n2 = Rational(2)
     n5 = Rational(5)
-    e=a*a
+    e = a*a
     assert e == a**2
-    e=a*a*a
+    e = a*a*a
     assert e == a**3
-    e=a*a*a*a**Rational(6)
+    e = a*a*a*a**Rational(6)
     assert e == a**9
-    e=a*a*a*a**Rational(6)-a**Rational(9)
+    e = a*a*a*a**Rational(6)-a**Rational(9)
     assert e == Rational(0)
-    e=a**(b-b)
+    e = a**(b-b)
     assert e == Rational(1)
-    e=(a-a)**b
+    e = (a-a)**b
     assert e == Rational(0)
-    e=(a+Rational(1)-a)**b
+    e = (a+Rational(1)-a)**b
     assert e == Rational(1)
 
-    e=(a+b+c)**n2
+    e = (a+b+c)**n2
     assert e == (a+b+c)**2
     assert e.expand() == 2*b*c+2*a*c+2*a*b+a**2+c**2+b**2
 
-    e=(a+b)**n2
+    e = (a+b)**n2
     assert e == (a+b)**2
     assert e.expand() == 2*a*b+a**2+b**2
 
-    e=(a+b)**(n1/n2)
+    e = (a+b)**(n1/n2)
     assert e == sqrt(a+b)
     assert e.expand() == sqrt(a+b)
 
-    n=n5**(n1/n2)
+    n = n5**(n1/n2)
     assert n == sqrt(5)
-    e=n*a*b-n*b*a
+    e = n*a*b-n*b*a
     assert e == Rational(0)
-    e=n*a*b+n*b*a
+    e = n*a*b+n*b*a
     assert e == 2*a*b*sqrt(5)
     assert e.diff(a) == 2*b*sqrt(5)
     assert e.diff(a) == 2*b*sqrt(5)
-    e=a/b**2
+    e = a/b**2
     assert e == a*b**(-2)
 
     assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1, 2)))**Rational(1, 2)
@@ -211,25 +211,25 @@ def test_expand():
     e = (a+b)*c
     assert e == c*(a+b)
     assert (e.expand()-a*c-b*c) == Rational(0)
-    e=(a+b)*(a+b)
+    e = (a+b)*(a+b)
     assert e == (a+b)**2
     assert e.expand() == 2*a*b+a**2+b**2
-    e=(a+b)*(a+b)**Rational(2)
+    e = (a+b)*(a+b)**Rational(2)
     assert e == (a+b)**3
     assert e.expand() == 3*b*a**2+3*a*b**2+a**3+b**3
     assert e.expand() == 3*b*a**2+3*a*b**2+a**3+b**3
-    e=(a+b)*(a+c)*(b+c)
+    e = (a+b)*(a+c)*(b+c)
     assert e == (a+c)*(a+b)*(b+c)
     assert e.expand() == 2*a*b*c+b*a**2+c*a**2+b*c**2+a*c**2+c*b**2+a*b**2
-    e=(a+Rational(1))**p
+    e = (a+Rational(1))**p
     assert e == (1+a)**5
     assert e.expand() == 1+5*a+10*a**2+10*a**3+5*a**4+a**5
-    e=(a+b+c)*(a+c+p)
+    e = (a+b+c)*(a+c+p)
     assert e == (5+a+c)*(a+b+c)
     assert e.expand() == 5*a+5*b+5*c+2*a*c+b*c+a*b+a**2+c**2
-    x=Symbol("x")
-    s=exp(x*x)-1
-    e=s.nseries(x, 0, 3)/x**2
+    x = Symbol("x")
+    s = exp(x*x)-1
+    e = s.nseries(x, 0, 3)/x**2
     assert e.expand() == 1+x**2/2+O(x**4)
 
     e = (x*(y+z))**(x*(y+z))*(x+y)
@@ -241,7 +241,7 @@ def test_expand():
     assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + \
                     z)**z, (x*y + x*z)**z]
     assert ((2*y)**z).expand() == 2**z*y**z
-    p=Symbol('p', positive=True)
+    p = Symbol('p', positive=True)
     assert sqrt(-x).expand().is_Pow
     assert sqrt(-x).expand(force=True) == I*sqrt(x)
     assert ((2*y*p)**z).expand() == 2**z*p**z*y**z
@@ -249,8 +249,8 @@ def test_expand():
     assert ((2*y*p*x)**z).expand(force=True) == 2**z*p**z*x**z*y**z
     assert ((2*y*p*-pi)**z).expand() == 2**z*pi**z*p**z*(-y)**z
     assert ((2*y*p*-pi*x)**z).expand() == 2**z*pi**z*p**z*(-x*y)**z
-    n=Symbol('n', negative=True)
-    m=Symbol('m', negative=True)
+    n = Symbol('n', negative=True)
+    m = Symbol('m', negative=True)
     assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
     # issue 2383
@@ -351,7 +351,7 @@ def test_ncpow():
 
 
 def test_powerbug():
-    x=Symbol("x")
+    x = Symbol("x")
     assert x**1 != (-x)**1
     assert x**2 == (-x)**2
     assert x**3 != (-x)**3
@@ -1092,7 +1092,7 @@ def test_Pow_is_nonpositive_nonnegative():
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
-    ii= Symbol('ii', imaginary=True)
+    ii = Symbol('ii', imaginary=True)
     x = Symbol('x')
 
     assert I.is_imaginary == True

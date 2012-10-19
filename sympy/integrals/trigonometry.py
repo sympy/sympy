@@ -266,7 +266,7 @@ def _sin_pow_integrate(n, x):
 
 def _cos_pow_integrate(n, x):
     if n > 0:
-        if n==1:
+        if n == 1:
             #Recursion break.
             return sin(x)
 

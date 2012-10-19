@@ -63,7 +63,7 @@ class StrPrinter(Printer):
             else:
                 l.extend([sign, t])
         sign = l.pop(0)
-        if sign=='+':
+        if sign == '+':
             sign = ""
         return sign + ' '.join(l)
 
@@ -538,7 +538,7 @@ class StrPrinter(Printer):
         return expr
 
     def _print_tuple(self, expr):
-        if len(expr)==1:
+        if len(expr) == 1:
             return "(%s,)"%self._print(expr[0])
         else:
             return "(%s)"%self.stringify(expr, ", ")

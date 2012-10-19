@@ -47,7 +47,7 @@ def test_sparse_matrix():
     assert a._smat == {(0, 0): 2, (1, 0): 5}
 
     # test_multiplication
-    a=SparseMatrix((
+    a = SparseMatrix((
         (1, 2),
         (3, 1),
         (0, 6),
@@ -58,13 +58,13 @@ def test_sparse_matrix():
         (3, 0),
         ))
 
-    c= a*b
-    assert c[0, 0]==7
-    assert c[0, 1]==2
-    assert c[1, 0]==6
-    assert c[1, 1]==6
-    assert c[2, 0]==18
-    assert c[2, 1]==0
+    c = a*b
+    assert c[0, 0] == 7
+    assert c[0, 1] == 2
+    assert c[1, 0] == 6
+    assert c[1, 1] == 6
+    assert c[2, 0] == 18
+    assert c[2, 1] == 0
 
     x = Symbol("x")
 

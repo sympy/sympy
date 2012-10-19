@@ -31,9 +31,9 @@ def test_Pauli():
     #this and the following test are testing both Pauli and Dirac matrices
     #and also that the general Matrix class works correctly in a real world
     #situation
-    sigma1=msigma(1)
-    sigma2=msigma(2)
-    sigma3=msigma(3)
+    sigma1 = msigma(1)
+    sigma2 = msigma(2)
+    sigma3 = msigma(3)
 
     assert sigma1 == sigma1
     assert sigma1 != sigma2
@@ -52,11 +52,11 @@ def test_Pauli():
 
 
 def test_Dirac():
-    gamma0=mgamma(0)
-    gamma1=mgamma(1)
-    gamma2=mgamma(2)
-    gamma3=mgamma(3)
-    gamma5=mgamma(5)
+    gamma0 = mgamma(0)
+    gamma1 = mgamma(1)
+    gamma2 = mgamma(2)
+    gamma3 = mgamma(3)
+    gamma5 = mgamma(5)
 
     # gamma*I -> I*gamma    (see #354)
     assert gamma5 == gamma0 * gamma1 * gamma2 * gamma3 * I

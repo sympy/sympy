@@ -59,7 +59,7 @@ def test_issue350():
     k = Symbol('k', integer=True)
     m = Symbol('m', integer=True)
     assert (x**k)**m == x**(k*m)
-    assert Number(5)**Rational(2, 3)==Number(25)**Rational(1, 3)
+    assert Number(5)**Rational(2, 3) == Number(25)**Rational(1, 3)
 
     assert (x**.5)**2 == x**1.0
     assert (x**2)**k == (x**k)**2 == x**(2*k)
@@ -71,7 +71,7 @@ def test_issue350():
 
 
 def test_issue767():
-    assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
+    assert --sqrt(sqrt(5)-1) == sqrt(sqrt(5)-1)
 
 
 def test_negative_one():
@@ -96,63 +96,63 @@ def test_issue1263():
 
     def eqn(num, den, pow):
         return (num/den)**pow
-    npos=1
-    nneg=-1
-    dpos=2-sqrt(3)
-    dneg=1-sqrt(3)
+    npos = 1
+    nneg = -1
+    dpos = 2-sqrt(3)
+    dneg = 1-sqrt(3)
     assert dpos > 0 and dneg < 0 and npos > 0 and nneg < 0
     # pos or neg integer
-    eq=eqn(npos, dpos, 2)
+    eq = eqn(npos, dpos, 2)
     assert eq.is_Pow and eq.as_numer_denom() == (1, dpos**2)
-    eq=eqn(npos, dneg, 2)
+    eq = eqn(npos, dneg, 2)
     assert eq.is_Pow and eq.as_numer_denom() == (1, dneg**2)
-    eq=eqn(nneg, dpos, 2)
+    eq = eqn(nneg, dpos, 2)
     assert eq.is_Pow and eq.as_numer_denom() == (1, dpos**2)
-    eq=eqn(nneg, dneg, 2)
+    eq = eqn(nneg, dneg, 2)
     assert eq.is_Pow and eq.as_numer_denom() == (1, dneg**2)
-    eq=eqn(npos, dpos, -2)
+    eq = eqn(npos, dpos, -2)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**2, 1)
-    eq=eqn(npos, dneg, -2)
+    eq = eqn(npos, dneg, -2)
     assert eq.is_Pow and eq.as_numer_denom() == (dneg**2, 1)
-    eq=eqn(nneg, dpos, -2)
+    eq = eqn(nneg, dpos, -2)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**2, 1)
-    eq=eqn(nneg, dneg, -2)
+    eq = eqn(nneg, dneg, -2)
     assert eq.is_Pow and eq.as_numer_denom() == (dneg**2, 1)
     # pos or neg rational
     pow = S.Half
-    eq=eqn(npos, dpos, pow)
+    eq = eqn(npos, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (npos**pow, dpos**pow)
-    eq=eqn(npos, dneg, pow)
+    eq = eqn(npos, dneg, pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-npos)**pow, (-dneg)**pow)
-    eq=eqn(nneg, dpos, pow)
+    eq = eqn(nneg, dpos, pow)
     assert not eq.is_Pow or eq.as_numer_denom() == (nneg**pow, dpos**pow)
-    eq=eqn(nneg, dneg, pow)
+    eq = eqn(nneg, dneg, pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-nneg)**pow, (-dneg)**pow)
-    eq=eqn(npos, dpos, -pow)
+    eq = eqn(npos, dpos, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**pow, npos**pow)
-    eq=eqn(npos, dneg, -pow)
+    eq = eqn(npos, dneg, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-npos)**pow)
-    eq=eqn(nneg, dpos, -pow)
+    eq = eqn(nneg, dpos, -pow)
     assert not eq.is_Pow or eq.as_numer_denom() == (dpos**pow, nneg**pow)
-    eq=eqn(nneg, dneg, -pow)
+    eq = eqn(nneg, dneg, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-nneg)**pow)
     # unknown exponent
     pow = 2*any
-    eq=eqn(npos, dpos, pow)
+    eq = eqn(npos, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (npos**pow, dpos**pow)
-    eq=eqn(npos, dneg, pow)
+    eq = eqn(npos, dneg, pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-npos)**pow, (-dneg)**pow)
-    eq=eqn(nneg, dpos, pow)
+    eq = eqn(nneg, dpos, pow)
     assert eq.is_Pow and eq.as_numer_denom() == (nneg**pow, dpos**pow)
-    eq=eqn(nneg, dneg, pow)
+    eq = eqn(nneg, dneg, pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-nneg)**pow, (-dneg)**pow)
-    eq=eqn(npos, dpos, -pow)
+    eq = eqn(npos, dpos, -pow)
     assert eq.as_numer_denom() == (dpos**pow, npos**pow)
-    eq=eqn(npos, dneg, -pow)
+    eq = eqn(npos, dneg, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-npos)**pow)
-    eq=eqn(nneg, dpos, -pow)
+    eq = eqn(nneg, dpos, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == (dpos**pow, nneg**pow)
-    eq=eqn(nneg, dneg, -pow)
+    eq = eqn(nneg, dneg, -pow)
     assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-nneg)**pow)
 
     x = Symbol('x')

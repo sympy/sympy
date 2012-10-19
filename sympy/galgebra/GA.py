@@ -166,7 +166,7 @@ def diagpq(p, q=0):
     rn = range(n)
     for i in rn:
         for j in rn:
-            if i ==j:
+            if i == j:
                 if i < p:
                     D.append('1 ')
                 else:
@@ -375,7 +375,7 @@ def normalize(elst, nname_lst):
     """
     i = 0
     mags = numpy.array(MV.n*[ZERO], dtype=numpy.object)
-    enlst= numpy.array(MV.n*[ZERO], dtype=numpy.object)
+    enlst = numpy.array(MV.n*[ZERO], dtype=numpy.object)
     for (e, nname) in zip(elst, nname_lst):
         emag = magnitude(e)
         emaginv = 1/emag
@@ -577,7 +577,7 @@ class MV(object):
                 else:
                     blst1_flg = 1
                 return(a1, blst1, blst1_flg, blst)
-            jstep +=1
+            jstep += 1
         return(1)
 
     @staticmethod
@@ -603,7 +603,7 @@ class MV(object):
             for i in range(len(blst_flg)):
                 if blst_flg[i]:
                     tmp = MV.reduce_basis_loop(blst_expand[i])
-                    if tmp ==1:
+                    if tmp == 1:
                         blst_flg[i] = 0
                     else:
                         if len(tmp) == 3:
@@ -660,7 +660,7 @@ class MV(object):
                 bases.pop(i)
                 n -= 1
             else:
-                i +=1
+                i += 1
         return
 
     @staticmethod
@@ -818,7 +818,7 @@ class MV(object):
             MV.coords = None
         else:
             MV.coords = tuple(coords)
-            rframe= True
+            rframe = True
         if type(basis) == str:
             basislst = basis.split()
             if len(basislst) == 1:
@@ -897,7 +897,7 @@ class MV(object):
         if isinstance(vars, str):
             Acoefs = vector_fct(fct_name, MV.coords)
         else:
-            Acoefs =numpy.array(MV.n*[ZERO], dtype=numpy.object)
+            Acoefs = numpy.array(MV.n*[ZERO], dtype=numpy.object)
             x = MV.coords
             if isinstance(vars, sympy.core.symbol.Symbol):
                 for icoef in MV.nrg:
@@ -1786,10 +1786,10 @@ class MV(object):
                         coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(
                             self.mv[0][0])
                         if vars is None and MV.coords is not None:
-                            self.mv[0]= numpy.array([sympy.Function(
+                            self.mv[0] = numpy.array([sympy.Function(
                                 coef)(*MV.coords)], dtype=numpy.object)
                         else:
-                            self.mv[0]= numpy.array([sympy.Function(
+                            self.mv[0] = numpy.array([sympy.Function(
                                 coef)(*vars)], dtype=numpy.object)
                     else:
                         for base in range(MV.nbasis[grade]):

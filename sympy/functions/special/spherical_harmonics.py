@@ -4,7 +4,7 @@ from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
 
 Pl = legendre
-Plm= assoc_legendre
+Plm = assoc_legendre
 
 _x = Dummy("x")
 
