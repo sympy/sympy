@@ -1,7 +1,8 @@
 """Implementaton of :class:`SymPyIntegerRing` class. """
 
 from sympy.polys.domains.integerring import IntegerRing
-from sympy.polys.domains.groundtypes import SymPyIntegerType
+from sympy.polys.domains.groundtypes import (SymPyIntegerType,
+    python_factorial, python_gcd, python_gcdex, python_lcm, python_sqrt)
 
 from sympy.polys.polyerrors import CoercionFailed
 
@@ -105,7 +106,7 @@ class SymPyIntegerRing(IntegerRing):
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
-        return SymPyIntegerType(python_gcdex(int(a), int(b)))
+        return map(SymPyIntegerType, python_gcdex(int(a), int(b)))
 
     def gcd(self, a, b):
         """Compute GCD of ``a`` and ``b``. """

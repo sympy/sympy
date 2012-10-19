@@ -33,7 +33,7 @@ def test_QuotientRing():
 
     assert R.convert(1)/x == -x + I
     assert -1 + I == x**2 + I
-    assert R.convert(1, ZZ) == 1 + I
+    assert R.convert(ZZ(1), ZZ) == 1 + I
     assert R.convert(R.convert(x), R) == R.convert(x)
 
     X = R.convert(x)

@@ -85,7 +85,7 @@ def test_dup_zz_hensel_lift():
     f3 = dup_from_raw_dict({1:1, 0: 2}, ZZ)
     f4 = dup_from_raw_dict({1:1, 0: 1}, ZZ)
 
-    ff_list = dup_zz_hensel_lift(5, f, [f1, f2, f3, f4], 4, ZZ)
+    ff_list = dup_zz_hensel_lift(ZZ(5), f, [f1, f2, f3, f4], 4, ZZ)
 
     assert dup_to_raw_dict(ff_list[0]) == {0: -1,   1: 1}
     assert dup_to_raw_dict(ff_list[1]) == {0: -182, 1: 1}
@@ -100,27 +100,27 @@ def test_dup_zz_irreducible_p():
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
 
 def test_dup_cyclotomic_p():
-    assert dup_cyclotomic_p([1,-1], ZZ) == True
-    assert dup_cyclotomic_p([1,1], ZZ) == True
-    assert dup_cyclotomic_p([1,1,1], ZZ) == True
-    assert dup_cyclotomic_p([1,0,1], ZZ) == True
-    assert dup_cyclotomic_p([1,1,1,1,1], ZZ) == True
-    assert dup_cyclotomic_p([1,-1,1], ZZ) == True
-    assert dup_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
-    assert dup_cyclotomic_p([1,0,0,0,1], ZZ) == True
-    assert dup_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, -1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, -1, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 1, 1, 1, 1, 1, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 0, 1]), ZZ) == True
+    assert dup_cyclotomic_p(ZZ.map([1, 0, 0, 1, 0, 0, 1]), ZZ) == True
 
-    assert dup_cyclotomic_p([], ZZ) == False
-    assert dup_cyclotomic_p([1], ZZ) == False
-    assert dup_cyclotomic_p([1, 0], ZZ) == False
-    assert dup_cyclotomic_p([1, 2], ZZ) == False
-    assert dup_cyclotomic_p([3, 1], ZZ) == False
-    assert dup_cyclotomic_p([1, 0, -1], ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([1]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([1, 0]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([1, 2]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([3, 1]), ZZ) == False
+    assert dup_cyclotomic_p(ZZ.map([1, 0, -1]), ZZ) == False
 
-    f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
+    f = ZZ.map([1, 0, 1, 0, 0, 0, -1, 0, 1, 0, -1, 0, 0, 0, 1, 0, 1])
     assert dup_cyclotomic_p(f, ZZ) == False
 
-    g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
+    g = ZZ.map([1, 0, 1, 0, 0, 0, -1, 0, -1, 0, -1, 0, 0, 0, 1, 0, 1])
     assert dup_cyclotomic_p(g, ZZ) == True
 
     assert dup_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
@@ -197,56 +197,56 @@ def test_dup_zz_factor():
     assert dup_zz_factor_sqf([2,4], ZZ) == \
         (2, [([1, 2], 1)])
 
-    f = [1,0,0,1,1]
+    f = ZZ.map([1, 0, 0, 1, 1])
 
     for i in xrange(0, 20):
         assert dup_zz_factor(f, ZZ) == (1, [(f, 1)])
 
-    assert dup_zz_factor([1,2,2], ZZ) == \
+    assert dup_zz_factor(ZZ.map([1, 2, 2]), ZZ) == \
         (1, [([1,2,2], 1)])
 
-    assert dup_zz_factor([18,12,2], ZZ) == \
+    assert dup_zz_factor(ZZ.map([18, 12, 2]), ZZ) == \
         (2, [([3, 1], 2)])
 
-    assert dup_zz_factor([-9,0,1], ZZ) == \
+    assert dup_zz_factor(ZZ.map([-9, 0, 1]), ZZ) == \
         (-1, [([3,-1], 1),
               ([3, 1], 1)])
 
-    assert dup_zz_factor_sqf([-9,0,1], ZZ) == \
+    assert dup_zz_factor_sqf(ZZ.map([-9, 0, 1]), ZZ) == \
         (-1, [[3,-1],
               [3, 1]])
 
-    assert dup_zz_factor([1,-6,11,-6], ZZ) == \
+    assert dup_zz_factor(ZZ.map([1, -6, 11, -6]), ZZ) == \
         (1, [([1,-3], 1),
              ([1,-2], 1),
              ([1,-1], 1)])
 
-    assert dup_zz_factor_sqf([1,-6,11,-6], ZZ) == \
+    assert dup_zz_factor_sqf(ZZ.map([1, -6, 11, -6]), ZZ) == \
         (1, [[1,-3],
              [1,-2],
              [1,-1]])
 
-    assert dup_zz_factor([3,10,13,10], ZZ) == \
+    assert dup_zz_factor(ZZ.map([3, 10, 13, 10]), ZZ) == \
         (1, [([1,2], 1),
              ([3,4,5], 1)])
 
-    assert dup_zz_factor_sqf([3,10,13,10], ZZ) == \
+    assert dup_zz_factor_sqf(ZZ.map([3, 10, 13, 10]), ZZ) == \
         (1, [[1,2],
              [3,4,5]])
 
-    assert dup_zz_factor([-1,0,0,0,1,0,0], ZZ) == \
+    assert dup_zz_factor(ZZ.map([-1, 0, 0, 0, 1, 0, 0]), ZZ) == \
         (-1, [([1,-1], 1),
               ([1, 1], 1),
               ([1, 0], 2),
               ([1, 0, 1], 1)])
 
-    f = [1080, 5184, 2099, 744, 2736, -648, 129, 0, -324]
+    f = ZZ.map([1080, 5184, 2099, 744, 2736, -648, 129, 0, -324])
 
     assert dup_zz_factor(f, ZZ) == \
         (1, [([5, 24, 9, 0, 12], 1),
              ([216, 0, 31, 0, -27], 1)])
 
-    f = [-29802322387695312500000000000000000000,
+    f = ZZ.map([-29802322387695312500000000000000000000,
           0, 0, 0, 0,
           2980232238769531250000000000000000,
           0, 0, 0, 0,
@@ -256,7 +256,7 @@ def test_dup_zz_factor():
           0, 0, 0, 0,
           -210106372833251953125,
           0, 0, 0, 0,
-          95367431640625]
+          95367431640625])
 
     assert dup_zz_factor(f, ZZ) == \
         (-95367431640625, [([5, -1], 1),
@@ -265,7 +265,7 @@ def test_dup_zz_factor():
                            ([10000, -3000, 400, -20, 1], 2),
                            ([10000,  2000, 400,  30, 1], 2)])
 
-    f = dup_from_raw_dict({10:1, 0:-1}, ZZ)
+    f = dup_from_raw_dict({10: ZZ(1), 0: ZZ(-1)}, ZZ)
 
     config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
@@ -281,7 +281,7 @@ def test_dup_zz_factor():
 
     config.setup('USE_CYCLOTOMIC_FACTOR')
 
-    f = dup_from_raw_dict({10:1, 0:1}, ZZ)
+    f = dup_from_raw_dict({10: ZZ(1), 0: ZZ(1)}, ZZ)
 
     config.setup('USE_CYCLOTOMIC_FACTOR', True)
     F_0 = dup_zz_factor(f, ZZ)
@@ -368,46 +368,46 @@ def test_issue_3256():
     assert dmp_zz_wang(f, u, K, seed=random_sequence) == [f]
 
 def test_dmp_zz_factor():
-    assert dmp_zz_factor([], 0, ZZ) == (0, [])
-    assert dmp_zz_factor([7], 0, ZZ) == (7, [])
-    assert dmp_zz_factor([-7], 0, ZZ) == (-7, [])
+    assert dmp_zz_factor(ZZ.map([]), 0, ZZ) == (0, [])
+    assert dmp_zz_factor(ZZ.map([7]), 0, ZZ) == (7, [])
+    assert dmp_zz_factor(ZZ.map([-7]), 0, ZZ) == (-7, [])
 
-    assert dmp_zz_factor([[]], 1, ZZ) == (0, [])
-    assert dmp_zz_factor([[7]], 1, ZZ) == (7, [])
-    assert dmp_zz_factor([[-7]], 1, ZZ) == (-7, [])
+    assert dmp_zz_factor(ZZ.map([[]]), 1, ZZ) == (0, [])
+    assert dmp_zz_factor(ZZ.map([[7]]), 1, ZZ) == (7, [])
+    assert dmp_zz_factor(ZZ.map([[-7]]), 1, ZZ) == (-7, [])
 
-    assert dmp_zz_factor([[1], []], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1], []]), 1, ZZ) == \
         (1, [([[1], []], 1)])
 
-    assert dmp_zz_factor([[4], []], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[4], []]), 1, ZZ) == \
         (4, [([[1], []], 1)])
 
-    assert dmp_zz_factor([[4], [2]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[4], [2]]), 1, ZZ) == \
         (2, [([[2], [1]], 1)])
 
-    assert dmp_zz_factor([[1, 0], [1]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1, 0], [1]]), 1, ZZ) == \
         (1, [([[1, 0], [1]], 1)])
 
-    assert dmp_zz_factor([[1,0,1]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1, 0, 1]]), 1, ZZ) == \
         (1, [([[1, 0, 1]], 1)])
 
-    assert dmp_zz_factor([[1,0,-1]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1, 0, -1]]), 1, ZZ) == \
         (1, [([[1,-1]], 1),
              ([[1, 1]], 1)])
 
-    assert dmp_zz_factor([[1, 6, 9], [], [-1]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1, 6, 9], [], [-1]]), 1, ZZ) == \
         (1, [([[1, 3], [-1]], 1), ([[1, 3], [1]], 1)])
 
-    assert dmp_zz_factor([1, 0, -9], 0, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([1, 0, -9]), 0, ZZ) == \
         (1, [([1, -3], 1), ([1, 3], 1)])
 
-    assert dmp_zz_factor([[1, 0, 0], [], [-9]], 1, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[1, 0, 0], [], [-9]]), 1, ZZ) == \
         (1, [([[1, 0], [-3]], 1), ([[1, 0], [3]], 1)])
 
-    assert dmp_zz_factor([[[1, 0, 0], [], []], [[]], [[-9]]], 2, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[[1, 0, 0], [], []], [[]], [[-9]]]), 2, ZZ) == \
         (1, [([[[1, 0], []], [[-3]]], 1), ([[[1, 0], []], [[3]]], 1)])
 
-    assert dmp_zz_factor([[[[1, 0, 0], [], []], [[]], [[]]], [[[]]], [[[-9]]]], 3, ZZ) == \
+    assert dmp_zz_factor(ZZ.map([[[[1, 0, 0], [], []], [[]], [[]]], [[[]]], [[[-9]]]]), 3, ZZ) == \
         (1, [([[[[1, 0], []], [[]]], [[[-3]]]], 1), ([[[[1, 0], []], [[]]], [[[3]]]], 1)])
 
     assert dmp_zz_factor(f_1, 2, ZZ) == \
