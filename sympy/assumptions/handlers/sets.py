@@ -125,6 +125,11 @@ class AskRationalHandler(CommonHandler):
     Mul = Add
 
     @staticmethod
+    def exp(expr, assumptions):
+        if ask(Q.algebraic(expr.exp), assumptions):
+            return False
+
+    @staticmethod
     def Pow(expr, assumptions):
         """
         Rational ** Integer      -> Rational
@@ -145,6 +150,10 @@ class AskRationalHandler(CommonHandler):
     def Float(expr, assumptions):
         # it's finite-precision
         return True
+
+    @staticmethod
+    def GoldenRatio(expr, assumptions):
+        return False
 
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
@@ -536,12 +545,27 @@ class AskAlgebraicHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.algebraic)
 
     @staticmethod
+    def exp(expr, assumptions):
+        if ask(Q.algebraic(expr.exp), assumptions):
+            return False
+
+    @staticmethod
     def Mul(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.algebraic)
 
     @staticmethod
     def Pow(expr, assumptions):
-        return expr.exp.is_Rational and ask(Q.algebraic(expr.base), assumptions)
+        if ask(Q.algebraic(expr.exp), assumptions) and ask(Q.algebraic(expr.base), assumptions):
+            if not ask(Q.rational(expr.exp), assumptions):
+                return False
+            else:
+                return True
+        elif ask(Q.algebraic(expr.base), assumptions) == False and ask(Q.rational(expr.exp), assumptions):
+            return False
+
+    @staticmethod
+    def Float(expr, assumptions):
+        return ask(Q.rational(expr))
 
     @staticmethod
     def Number(expr, assumptions):
@@ -554,6 +578,18 @@ class AskAlgebraicHandler(CommonHandler):
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
         return True
+
+    @staticmethod
+    def Exp1(expr, assumptions):
+        return False
+
+    @staticmethod
+    def GoldenRatio(expr, assumptions):
+        return True
+
+    @staticmethod
+    def Pi(sympy, assumptions):
+        return False
 
     @staticmethod
     def AlgebraicNumber(expr, assumptions):

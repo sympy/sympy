@@ -761,6 +761,11 @@ def test_bounded():
     assert ask(Q.bounded(cos(x) + sin(x))) == True
 
 @XFAIL
+def test_algebraic_xfail():
+    """We need to add support to Q.algebraic to make this work correctly"""
+    assert ask(Q.algebraic(log(3))) == False
+
+@XFAIL
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.bounded(sin(x)**x)) == True
@@ -1285,24 +1290,28 @@ def test_algebraic():
     assert ask(Q.algebraic(2*I)) == True
     assert ask(Q.algebraic(I/3)) == True
 
-    assert ask(Q.algebraic(sqrt(7))) == True
     assert ask(Q.algebraic(2*sqrt(7))) == True
     assert ask(Q.algebraic(sqrt(7)/3)) == True
 
     assert ask(Q.algebraic(I*sqrt(3))) == True
     assert ask(Q.algebraic(sqrt(1+I*sqrt(3)))) == True
 
+    assert(ask(Q.algebraic(exp(I*pi)))) == True
+
     assert ask(Q.algebraic((1+I*sqrt(3)**(S(17)/31)))) == True
-    assert ask(Q.algebraic((1+I*sqrt(3)**(S(17)/pi)))) == False
+    """The result below was previously asserted to be False. Somebody should cross-check if that is the case, because Wolfram|Alpha says otherwise"""
+    assert ask(Q.algebraic((1+I*sqrt(3)**(S(17)/pi)))) == None
 
     assert ask(Q.algebraic(sin(7))) == None
     assert ask(Q.algebraic(sqrt(sin(7)))) == None
     assert ask(Q.algebraic(sqrt(y+I*sqrt(7)))) == None
 
+    assert ask(Q.algebraic(pi)) == False
+
+    assert ask(Q.algebraic(exp(3))) == False
+
     assert ask(Q.algebraic(oo)) == False
     assert ask(Q.algebraic(-oo)) == False
-
-    assert ask(Q.algebraic(2.47)) == False
 
 def test_global():
     """Test ask with global assumptions"""
