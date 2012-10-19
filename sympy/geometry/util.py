@@ -186,8 +186,8 @@ def convex_hull(*args):
     [1] http://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
-    ( A.M. Andrew,
-     "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+    (A.M. Andrew,
+    "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
     http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
     See Also
