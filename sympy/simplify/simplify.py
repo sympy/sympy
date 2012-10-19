@@ -3087,17 +3087,15 @@ def _real_to_rational(expr):
         newr = nsimplify(r, rational=False)
         if not newr.is_Rational or \
            r.is_finite and not newr.is_finite:
-            newr = r
             if newr < 0:
-                s = -1
-                newr *= s
-            else:
-                s = 1
-            if newr == 0:
-                newr = Integer(0)
-            else:
+                newr = -r
                 d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
-                newr = s*Rational(str(newr/d))*d
+                newr = -Rational(str(newr/d))*d
+            elif newr > 0:
+                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
+                newr = Rational(str(r/d))*d
+            else:
+                newr = Integer(0)
         reps[r] = newr
     return p.subs(reps, simultaneous=True)
 
