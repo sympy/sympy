@@ -843,6 +843,9 @@ class Float(Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
 
+    def __nonzero__(self):
+        return mpmath.mpf(self._mpf_) != 0
+
     def __hash__(self):
         return super(Float, self).__hash__()
 
