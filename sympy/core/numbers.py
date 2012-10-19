@@ -540,7 +540,10 @@ class Float(Number):
             elif num.startswith('-.') and len(num) > 2:
                 num = '-0.' + num[2:]
         elif not num:
-            return C.Zero()
+            if isinstance(num, float):      # Float(0.0) should return a float
+                num = '0.0'
+            else:
+                return C.Zero()
         if prec == '':
             if isinstance(num, (int, long, Integer)):
                 # an int is unambiguous, but if someone enters
