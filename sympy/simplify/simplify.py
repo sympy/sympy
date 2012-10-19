@@ -3093,8 +3093,11 @@ def _real_to_rational(expr):
                 newr *= s
             else:
                 s = 1
-            d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
-            newr = s*Rational(str(newr/d))*d
+            if newr == 0:
+                newr = Integer(0)
+            else:
+                d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
+                newr = s*Rational(str(newr/d))*d
         reps[r] = newr
     return p.subs(reps, simultaneous=True)
 
