@@ -735,7 +735,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
     v = u - 1
 
-    B = K(2)*K.factorial(n+m)*A**m*B**n
+    B = K(2)*K.factorial(K(n+m))*A**m*B**n
     r, p, P = dmp_zero(v), K.one, K.one
 
     while P <= B:
@@ -1228,7 +1228,7 @@ def dup_zz_heu_gcd(f, g, K):
     f_norm = dup_max_norm(f, K)
     g_norm = dup_max_norm(g, K)
 
-    B = 2*min(f_norm, g_norm) + 29
+    B = K(2*min(f_norm, g_norm) + 29)
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dup_LC(f, K)),
@@ -1353,7 +1353,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     f_norm = dmp_max_norm(f, u, K)
     g_norm = dmp_max_norm(g, u, K)
 
-    B = 2*min(f_norm, g_norm) + 29
+    B = K(2*min(f_norm, g_norm) + 29)
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dmp_ground_LC(f, u, K)),
