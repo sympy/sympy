@@ -9,8 +9,8 @@ from sympy.printing.python import python
 from sympy.utilities.pytest import raises, XFAIL
 
 x, y = symbols('x,y')
-th  = Symbol('theta')
-ph  = Symbol('phi')
+th = Symbol('theta')
+ph = Symbol('phi')
 
 def test_python_basic():
     # Simple numbers/symbols

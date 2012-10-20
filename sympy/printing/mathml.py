@@ -95,7 +95,7 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
-        coeff, terms  = expr.as_coeff_mul()
+        coeff, terms = expr.as_coeff_mul()
         if coeff is S.One and len(terms) == 1:
             # XXX since the negative coefficient has been handled, I don't
             # thing a coeff of 1 can remain

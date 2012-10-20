@@ -98,8 +98,8 @@ def xstr(*args):
         return str(*args)
 
 # GREEK
-g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
-G   = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
+g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
+G = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
 greek_letters = [
     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
@@ -174,14 +174,14 @@ for s in '+-=()':
 
 
 # VERTICAL OBJECTS
-HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
-CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
-MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
-EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
-HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
-CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
-TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
-BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
+HUP = lambda symb: U('%s UPPER HOOK' % symb_2txt[symb])
+CUP = lambda symb: U('%s UPPER CORNER' % symb_2txt[symb])
+MID = lambda symb: U('%s MIDDLE PIECE' % symb_2txt[symb])
+EXT = lambda symb: U('%s EXTENSION' % symb_2txt[symb])
+HLO = lambda symb: U('%s LOWER HOOK' % symb_2txt[symb])
+CLO = lambda symb: U('%s LOWER CORNER' % symb_2txt[symb])
+TOP = lambda symb: U('%s TOP' % symb_2txt[symb])
+BOT = lambda symb: U('%s BOTTOM' % symb_2txt[symb])
 
 # {} '('  ->  (extension, start, end, middle) 1-character
 _xobj_unicode = {
@@ -281,7 +281,7 @@ def xobj(symb, length):
     else:
         if isinstance(vinfo[0], tuple):     # (vlong), c1
             vlong = vinfo[0]
-            c1    = vinfo[1]
+            c1 = vinfo[1]
         else:                               # (vlong), c1
             vlong = vinfo
 
@@ -294,7 +294,7 @@ def xobj(symb, length):
         except IndexError:
             pass
 
-    if c1  is None:  c1  = ext
+    if c1  is None:  c1 = ext
     if top is None:  top = ext
     if bot is None:  bot = ext
     if mid is not None:
@@ -347,7 +347,7 @@ root = {
 
 
 # RATIONAL
-VF  = lambda txt:   U('VULGAR FRACTION %s' % txt)
+VF = lambda txt:   U('VULGAR FRACTION %s' % txt)
 
 # (p,q) -> symbol
 frac = {
