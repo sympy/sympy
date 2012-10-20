@@ -38,8 +38,8 @@ class SymPyRationalField(RationalField):
         """
         return type(
             a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
-                           type(sympy_rat(2)), type(sympy_rat(1, 2)),
-                           type(sympy_rat(3, 2))]
+                   type(sympy_rat(2)), type(sympy_rat(1, 2)),
+                   type(sympy_rat(3, 2))]
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

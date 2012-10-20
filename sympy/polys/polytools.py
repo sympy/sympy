@@ -3085,7 +3085,7 @@ class Poly(Expr):
             return []
 
         coeffs = [ coeff.evalf(n=n).as_real_imag()
-                               for coeff in f.all_coeffs() ]
+                   for coeff in f.all_coeffs() ]
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n

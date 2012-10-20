@@ -38,12 +38,12 @@ def test_DMP___init__():
 
 def test_DMP___eq__():
     assert DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ) == \
-           DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
+        DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
 
     assert DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ) == \
-           DMP([[QQ(1), QQ(2)], [QQ(3)]], QQ)
+        DMP([[QQ(1), QQ(2)], [QQ(3)]], QQ)
     assert DMP([[QQ(1), QQ(2)], [QQ(3)]], QQ) == \
-           DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
+        DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
 
     assert DMP([[[ZZ(1)]]], ZZ) != DMP([[ZZ(1)]], ZZ)
     assert DMP([[ZZ(1)]], ZZ) != DMP([[[ZZ(1)]]], ZZ)
@@ -61,7 +61,7 @@ def test_DMP_to_dict():
         {(4, 0): 3, (2, 0): 2, (0, 0): 8}
     assert f.to_sympy_dict() == \
         {(4, 0): ZZ.to_sympy(3), (2, 0): ZZ.to_sympy(2), (0, 0):
-          ZZ.to_sympy(8)}
+         ZZ.to_sympy(8)}
 
 
 def test_DMP_properties():

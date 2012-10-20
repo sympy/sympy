@@ -783,7 +783,7 @@ class SubModule(Module):
         """
         if isinstance(other, SubModule):
             return self.container == other.container and \
-                   all(self.contains(x) for x in other.gens)
+                all(self.contains(x) for x in other.gens)
         if isinstance(other, (FreeModule, QuotientModule)):
             return self.container == other and self.is_full_module()
         return False
@@ -944,7 +944,7 @@ class SubQuotientModule(SubModule):
         # XXX it is important for some code below that the generators of base
         #     are in this particular order!
         self.base = self.container.base.submodule(
-                        *[x.data for x in self.gens], **opts).union(self.killed_module)
+            *[x.data for x in self.gens], **opts).union(self.killed_module)
 
     def _contains(self, elem):
         return self.base.contains(elem.data)
@@ -1049,12 +1049,12 @@ class SubModulePolyRing(SubModule):
         from sympy.polys.distributedmodules import sdm_groebner, sdm_nf_mora
         if self._gbe is None and extended:
             gb, gbe = sdm_groebner(
-               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
-               sdm_nf_mora, self.order, self.ring.dom, extended=True)
+                [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+                sdm_nf_mora, self.order, self.ring.dom, extended=True)
             self._gb, self._gbe = tuple(gb), tuple(gbe)
         if self._gb is None:
             self._gb = tuple(sdm_groebner(
-               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+                             [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
                sdm_nf_mora, self.order, self.ring.dom))
         if extended:
             return self._gb, self._gbe
@@ -1075,7 +1075,7 @@ class SubModulePolyRing(SubModule):
         from sympy.polys.distributedmodules import sdm_zero, sdm_nf_mora
         return sdm_nf_mora(self.ring._vector_to_sdm(x, self.order),
                            self._groebner(), self.order, self.ring.dom) == \
-               sdm_zero()
+            sdm_zero()
 
     def _syzygies(self):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
@@ -1132,9 +1132,9 @@ class SubModulePolyRing(SubModule):
         if NF is None:
             NF = sdm_nf_mora
         return self.container.convert(self.ring._sdm_to_vector(NF(
-                self.ring._vector_to_sdm(x, self.order), self._groebner(),
-                    self.order, self.ring.dom),
-                self.rank))
+            self.ring._vector_to_sdm(x, self.order), self._groebner(),
+            self.order, self.ring.dom),
+            self.rank))
 
     def _intersect(self, other, relations=False):
         # See: [SCA, section 2.8.2]
@@ -1220,7 +1220,7 @@ class SubModuleQuotientRing(SubModule):
 
     def _syzygies(self):
         return [tuple(self.ring.convert(y, self.quot.ring) for y in x)
-                    for x in self.quot._syzygies()]
+                for x in self.quot._syzygies()]
 
     def _in_terms_of_generators(self, elem):
         return [self.ring.convert(x, self.quot.ring) for x in
@@ -1302,7 +1302,7 @@ class QuotientModule(Module):
         """
         if isinstance(other, QuotientModule):
             return self.killed_module == other.killed_module and \
-                   self.base.is_submodule(other.base)
+                self.base.is_submodule(other.base)
         if isinstance(other, SubQuotientModule):
             return other.container == self
         return False

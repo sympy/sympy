@@ -113,7 +113,7 @@ def test_primitive_element():
     assert primitive_element(
         [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
-        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [- \
+        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-
          Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element(
@@ -211,7 +211,7 @@ def test_field_isomorphism():
     s = AlgebraicNumber(-sqrt(2) - sqrt(3))
 
     pos_coeffs = [ S(1)/2, S(0), -S(9)/2, S(0)]
-    neg_coeffs = [-S(1)/2, S(0),  S(9)/2, S(0)]
+    neg_coeffs = [-S(1)/2, S(0), S(9)/2, S(0)]
 
     a = AlgebraicNumber(sqrt(2))
 
@@ -248,7 +248,7 @@ def test_field_isomorphism():
     assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
     pos_coeffs = [ S(1)/2, S(0), -S(11)/2, S(0)]
-    neg_coeffs = [-S(1)/2, S(0),  S(11)/2, S(0)]
+    neg_coeffs = [-S(1)/2, S(0), S(11)/2, S(0)]
 
     a = AlgebraicNumber(sqrt(3))
 
@@ -285,7 +285,7 @@ def test_field_isomorphism():
     assert field_isomorphism(a, s, fast=False) == neg_coeffs
 
     pos_coeffs = [ S(3)/2, S(0), -S(33)/2, -S(8)]
-    neg_coeffs = [-S(3)/2, S(0),  S(33)/2, -S(8)]
+    neg_coeffs = [-S(3)/2, S(0), S(33)/2, -S(8)]
 
     a = AlgebraicNumber(3*sqrt(3) - 8)
 
@@ -306,10 +306,10 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(3*sqrt(2) + 2*sqrt(3) + 1)
 
-    pos_1_coeffs = [ S(1)/2, S(0), -S(5)/2,  S(1)]
-    neg_5_coeffs = [-S(5)/2, S(0),  S(49)/2, S(1)]
+    pos_1_coeffs = [ S(1)/2, S(0), -S(5)/2, S(1)]
+    neg_5_coeffs = [-S(5)/2, S(0), S(49)/2, S(1)]
     pos_5_coeffs = [ S(5)/2, S(0), -S(49)/2, S(1)]
-    neg_1_coeffs = [-S(1)/2, S(0),  S(5)/2,  S(1)]
+    neg_1_coeffs = [-S(1)/2, S(0), S(5)/2, S(1)]
 
     assert is_isomorphism_possible(a, p) is True
     assert is_isomorphism_possible(a, q) is True

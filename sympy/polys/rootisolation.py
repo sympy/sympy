@@ -237,7 +237,7 @@ def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, 
     a, b, c, d = _mobius_from_interval((s, t), K.get_field())
 
     f = dup_transform(f, dup_strip([a, b]),
-                         dup_strip([c, d]), K)
+                      dup_strip([c, d]), K)
 
     if dup_sign_variations(f, K) != 1:
         raise RefinementFailed(
@@ -279,7 +279,7 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=F
     if negative:
         return (-t, -s)
     else:
-        return ( s,  t)
+        return ( s, t)
 
 
 def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
@@ -673,10 +673,10 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
 
     if not basis:
         I_neg = [ ((-v, -u), k) for ((u, v), k, _) in I_neg ]
-        I_pos = [ (( u,  v), k) for ((u, v), k, _) in I_pos ]
+        I_pos = [ (( u, v), k) for ((u, v), k, _) in I_pos ]
     else:
         I_neg = [ ((-v, -u), k, f) for ((u, v), k, f) in I_neg ]
-        I_pos = [ (( u,  v), k, f) for ((u, v), k, f) in I_pos ]
+        I_pos = [ (( u, v), k, f) for ((u, v), k, f) in I_pos ]
 
     return I_neg, I_pos
 
@@ -901,19 +901,19 @@ _rules_ambiguous = {
 }
 
 _values = {
-     1: [(+1, 4)],
-     2: [(-1, 4)],
-     3: [(+1, 4)],
-     4: [(-1, 4)],
+    1: [(+1, 4)],
+    2: [(-1, 4)],
+    3: [(+1, 4)],
+    4: [(-1, 4)],
     -1: [(+9, 4), (+1, 4)],
     -2: [(+7, 4), (-1, 4)],
     -3: [(+9, 4), (+1, 4)],
     -4: [(+7, 4), (-1, 4)],
     +5: [(+1, 2)],
     -5: [(-1, 2)],
-     7: [(+1, 1), (-1, 1)],
-     8: [(+1, 1), (-1, 1)],
-     9: [(+1, 2), (-3, 2)],
+    7: [(+1, 1), (-1, 1)],
+    8: [(+1, 1), (-1, 1)],
+    9: [(+1, 2), (-3, 2)],
     10: [(+3, 2), (-1, 2)],
     11: [(+3, 4), (-5, 4)],
     12: [(+5, 4), (-3, 4)],
@@ -1337,14 +1337,14 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
                     I_L3_R.append(((b, a), indices, h))
 
     Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
-    Q_L2_L = _intervals_to_quadrants(I_L2_L, f1V,   f2V,   v, t, F)
+    Q_L2_L = _intervals_to_quadrants(I_L2_L, f1V, f2V, v, t, F)
     Q_L3_L = _intervals_to_quadrants(I_L3_L, f1L3F, f2L3F, x, u, F)
     Q_L4_L = Q_L4
 
     Q_L1_R = _intervals_to_quadrants(I_L1_R, f1L1F, f2L1F, x, s, F)
     Q_L2_R = Q_L2
     Q_L3_R = _intervals_to_quadrants(I_L3_R, f1L3F, f2L3F, s, x, F)
-    Q_L4_R = _intervals_to_quadrants(I_L4_R, f1V,   f2V,   t, v, F)
+    Q_L4_R = _intervals_to_quadrants(I_L4_R, f1V, f2V, t, v, F)
 
     T_L = _traverse_quadrants(Q_L1_L, Q_L2_L, Q_L3_L, Q_L4_L, exclude=True)
     T_R = _traverse_quadrants(Q_L1_R, Q_L2_R, Q_L3_R, Q_L4_R, exclude=True)
@@ -1448,10 +1448,10 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
     Q_L1_B = Q_L1
     Q_L2_B = _intervals_to_quadrants(I_L2_B, f1L2F, f2L2F, v, y, F)
-    Q_L3_B = _intervals_to_quadrants(I_L3_B, f1H,   f2H,   s, u, F)
+    Q_L3_B = _intervals_to_quadrants(I_L3_B, f1H, f2H, s, u, F)
     Q_L4_B = _intervals_to_quadrants(I_L4_B, f1L4F, f2L4F, y, v, F)
 
-    Q_L1_U = _intervals_to_quadrants(I_L1_U, f1H,   f2H,   u, s, F)
+    Q_L1_U = _intervals_to_quadrants(I_L1_U, f1H, f2H, u, s, F)
     Q_L2_U = _intervals_to_quadrants(I_L2_U, f1L2F, f2L2F, y, t, F)
     Q_L3_U = Q_L3
     Q_L4_U = _intervals_to_quadrants(I_L4_U, f1L4F, f2L4F, t, y, F)
@@ -1646,7 +1646,7 @@ def dup_isolate_all_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, bl
     return (
         dup_isolate_real_roots_sqf(
             f, K, eps=eps, inf=inf, sup=sup, fast=fast, blackbox=blackbox),
-            dup_isolate_complex_roots_sqf(f, K, eps=eps, inf=inf, sup=sup, blackbox=blackbox))
+        dup_isolate_complex_roots_sqf(f, K, eps=eps, inf=inf, sup=sup, blackbox=blackbox))
 
 
 def dup_isolate_all_roots(f, K, eps=None, inf=None, sup=None, fast=False):
@@ -1691,7 +1691,7 @@ class RealInterval(object):
             a, b, c, d = _mobius_from_interval((s, t), dom.get_field())
 
             f = dup_transform(f, dup_strip([a, b]),
-                                 dup_strip([c, d]), dom)
+                              dup_strip([c, d]), dom)
 
             self.mobius = a, b, c, d
         else:

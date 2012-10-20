@@ -966,8 +966,8 @@ class DMP(PicklableWithSlots):
 
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.lev == g.lev \
-                                          and f.dom == g.dom \
-                                          and f.rep == g.rep
+            and f.dom == g.dom \
+            and f.rep == g.rep
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -1289,7 +1289,7 @@ class DMF(PicklableWithSlots):
     def is_one(f):
         """Returns ``True`` if ``f`` is a unit fraction. """
         return dmp_one_p(f.num, f.lev, f.dom) and \
-               dmp_one_p(f.den, f.lev, f.dom)
+            dmp_one_p(f.den, f.lev, f.dom)
 
     def __neg__(f):
         return f.neg()

@@ -97,7 +97,7 @@ def test_sdp_pow():
         {(
             6, 2, 0): 1, (
                 4, 3, 0): -4, (2, 4, 0): 4, (3, 1, 1): -6, (3, 1, 0): 2,
-                      (1, 2, 1): 12, (1, 2, 0): -4, (0, 0, 2): 9, (0, 0, 1): -6, (0, 0, 0): 1}, grlex)
+         (1, 2, 1): 12, (1, 2, 0): -4, (0, 0, 2): 9, (0, 0, 1): -6, (0, 0, 0): 1}, grlex)
 
     assert sdp_pow(f, 2, 2, grlex, ZZ) == g
 
@@ -114,7 +114,7 @@ def test_sdp_div():
 
     assert sdp_div(f, [sdp_from_dict({(0, 1): 2}, grlex)], 1, grlex, ZZ) == \
         ([sdp_from_dict({(2, 0): 2, (1, 0): -1, (0, 0): -1}, grlex)],
-          sdp_from_dict({(1, 0): 4, (0, 0): 8}, grlex))
+         sdp_from_dict({(1, 0): 4, (0, 0): 8}, grlex))
 
     f = sdp_from_dict({(1, 0): 1, (0, 0): -1}, grlex)
     g = sdp_from_dict({(0, 1): 1, (0, 0): -1}, grlex)
@@ -176,7 +176,7 @@ def test_sdp_rem():
 
     assert sdp_rem(f, [sdp_from_dict({(0, 0): 2}, grlex)], 1, grlex, ZZ) == []
     assert sdp_rem(f, [sdp_from_dict({(0, 1): 2}, grlex)], 1, grlex, ZZ) == \
-          sdp_from_dict({(1, 0): 4, (0, 0): 8}, grlex)
+        sdp_from_dict({(1, 0): 4, (0, 0): 8}, grlex)
 
     f = sdp_from_dict({(1, 0): 1, (0, 0): -1}, grlex)
     g = sdp_from_dict({(0, 1): 1, (0, 0): -1}, grlex)
