@@ -965,59 +965,59 @@ def _trigsimp(expr, deep=False):
         (a*d*tanh(b)**c/sinh(b)**c, a*d/cosh(b)**c),
         (a*d*coth(b)**c/cosh(b)**c, a*d/sinh(b)**c),
         (a*d*coth(b)**c*tanh(b)**c, a*d),
-        )
+    )
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
-        (a*sin(b)**2,  a - a*cos(b)**2),
-        (a*tan(b)**2,  a*(1/cos(b))**2 - a),
-        (a*cot(b)**2,  a*(1/sin(b))**2 - a),
-        (a*sin(b + c),  a*(sin(b)*cos(c) + sin(c)*cos(b))),
-        (a*cos(b + c),  a*(cos(b)*cos(c) - sin(b)*sin(c))),
-        (a*tan(b + c),  a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
+        (a*sin(b)**2, a - a*cos(b)**2),
+        (a*tan(b)**2, a*(1/cos(b))**2 - a),
+        (a*cot(b)**2, a*(1/sin(b))**2 - a),
+        (a*sin(b + c), a*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*cos(b + c), a*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*tan(b + c), a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
 
         (a*sinh(b)**2, a*cosh(b)**2 - a),
         (a*tanh(b)**2, a - a*(1/cosh(b))**2),
         (a*coth(b)**2, a + a*(1/sinh(b))**2),
-        (a*sinh(b + c),  a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
-        (a*cosh(b + c),  a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
-        (a*tanh(b + c),  a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
+        (a*sinh(b + c), a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*cosh(b + c), a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*tanh(b + c), a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
 
         # same as above but with noncommutative prefactor
-        (a*d*sin(b)**2,  a*d - a*d*cos(b)**2),
-        (a*d*tan(b)**2,  a*d*(1/cos(b))**2 - a*d),
-        (a*d*cot(b)**2,  a*d*(1/sin(b))**2 - a*d),
-        (a*d*sin(b + c),  a*d*(sin(b)*cos(c) + sin(c)*cos(b))),
-        (a*d*cos(b + c),  a*d*(cos(b)*cos(c) - sin(b)*sin(c))),
-        (a*d*tan(b + c),  a*d*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
+        (a*d*sin(b)**2, a*d - a*d*cos(b)**2),
+        (a*d*tan(b)**2, a*d*(1/cos(b))**2 - a*d),
+        (a*d*cot(b)**2, a*d*(1/sin(b))**2 - a*d),
+        (a*d*sin(b + c), a*d*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*d*cos(b + c), a*d*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*d*tan(b + c), a*d*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
 
         (a*d*sinh(b)**2, a*d*cosh(b)**2 - a*d),
         (a*d*tanh(b)**2, a*d - a*d*(1/cosh(b))**2),
         (a*d*coth(b)**2, a*d + a*d*(1/sinh(b))**2),
-        (a*d*sinh(b + c),  a*d*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
-        (a*d*cosh(b + c),  a*d*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
-        (a*d*tanh(b + c),  a*d*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
-        )
+        (a*d*sinh(b + c), a*d*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*d*cosh(b + c), a*d*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*d*tanh(b + c), a*d*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
+    )
 
     # Reduce any lingering artefacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
     artifacts = (
-        (a - a*cos(b)**2 + c,        a*sin(b)**2 + c, cos),
+        (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
         (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
         (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin),
 
         (a - a*cosh(b)**2 + c, -a*sinh(b)**2 + c, cosh),
-        (a - a*(1/cosh(b))**2 + c,   a*tanh(b)**2 + c, cosh),
-        (a + a*(1/sinh(b))**2 + c,   a*coth(b)**2 + c, sinh),
+        (a - a*(1/cosh(b))**2 + c, a*tanh(b)**2 + c, cosh),
+        (a + a*(1/sinh(b))**2 + c, a*coth(b)**2 + c, sinh),
 
         # same as above but with noncommutative prefactor
-        (a*d - a*d*cos(b)**2 + c,        a*d*sin(b)**2 + c, cos),
+        (a*d - a*d*cos(b)**2 + c, a*d*sin(b)**2 + c, cos),
         (a*d - a*d*(1/cos(b))**2 + c, -a*d*tan(b)**2 + c, cos),
         (a*d - a*d*(1/sin(b))**2 + c, -a*d*cot(b)**2 + c, sin),
 
         (a*d - a*d*cosh(b)**2 + c, -a*d*sinh(b)**2 + c, cosh),
-        (a*d - a*d*(1/cosh(b))**2 + c,   a*d*tanh(b)**2 + c, cosh),
-        (a*d + a*d*(1/sinh(b))**2 + c,   a*d*coth(b)**2 + c, sinh),
-        )
+        (a*d - a*d*(1/cosh(b))**2 + c, a*d*tanh(b)**2 + c, cosh),
+        (a*d + a*d*(1/sinh(b))**2 + c, a*d*coth(b)**2 + c, sinh),
+    )
 
     if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
@@ -1137,7 +1137,7 @@ def collect_sqrt(expr, evaluate=True):
             c, nc = m.args_cnc()
             for ci in c:
                 if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
-                   ci is S.ImaginaryUnit:
+                        ci is S.ImaginaryUnit:
                     nrad += 1
                     break
         if hit or nrad:
@@ -1719,7 +1719,7 @@ def _denest_pow(eq):
         return Pow(polars[0][0], polars[0][1]*e)*powdenest(Mul(*nonpolars)**e)
     elif polars:
         return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
-               *powdenest(Mul(*nonpolars)**e)
+            *powdenest(Mul(*nonpolars)**e)
 
     # see if there is a positive, non-Mul base at the very bottom
     exponents = []
@@ -2181,7 +2181,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # identified as needing processing, so remove those, too
         for (b, q), e in common_b.items():
             if (b.is_Pow or b.func is exp) and \
-               q is not S.One and not b.exp.is_Rational:
+                    q is not S.One and not b.exp.is_Rational:
                 b, be = b.as_base_exp()
                 b = b**(be/q)
             else:
@@ -2198,7 +2198,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         if combine == 'exp':
             return Mul(newexpr, Mul(*nc_part))
         else:
-            return recurse(Mul(*nc_part), combine='base')*\
+            return recurse(Mul(*nc_part), combine='base') * \
                 recurse(newexpr, combine='base')
 
     elif combine == 'base':
@@ -2553,7 +2553,7 @@ def combsimp(expr):
         # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
         for gammas, numer, denom in [(
             numer_gammas, numer_others, denom_others),
-                                (denom_gammas, denom_others, numer_others)]:
+                (denom_gammas, denom_others, numer_others)]:
             new = []
             while gammas:
                 g1 = gammas.pop()
@@ -2732,7 +2732,7 @@ def combsimp(expr):
             if expr in inv:
                 return inv[expr]
             return (expr.free_symbols, expr.atoms(Function).union(
-                                       set(e.exp for e in expr.atoms(Pow))))
+                    set(e.exp for e in expr.atoms(Pow))))
 
         def update_ST(expr):
             inv[expr] = compute_ST(expr)
@@ -2741,7 +2741,7 @@ def combsimp(expr):
 
         for gammas, numer, denom in [(
             numer_gammas, numer_others, denom_others),
-                                  (denom_gammas, denom_others, numer_others)]:
+                (denom_gammas, denom_others, numer_others)]:
             new = []
             while gammas:
                 g = gammas.pop()
@@ -2785,8 +2785,8 @@ def combsimp(expr):
             gammas[:] = new
 
         return C.Mul(*[gamma(g) for g in numer_gammas]) \
-             / C.Mul(*[gamma(g) for g in denom_gammas]) \
-             * C.Mul(*numer_others) / C.Mul(*denom_others)
+            / C.Mul(*[gamma(g) for g in denom_gammas]) \
+            * C.Mul(*numer_others) / C.Mul(*denom_others)
 
     # (for some reason we cannot use Basic.replace in this case)
     expr = rule_gamma(expr)
@@ -3045,13 +3045,13 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         # get rid of hollow 2-arg Mul factorization
         from sympy.core.rules import Transform
         hollow_mul = Transform(
-          lambda x: Mul(*x.args),
-          lambda x:
-              x.is_Mul and
-              len(x.args) == 2 and
-              x.args[0].is_Number and
-              x.args[1].is_Add and
-              x.is_commutative)
+            lambda x: Mul(*x.args),
+            lambda x:
+            x.is_Mul and
+            len(x.args) == 2 and
+            x.args[0].is_Number and
+            x.args[1].is_Add and
+            x.is_commutative)
         expr = shorter(short.xreplace(hollow_mul), expr)
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
@@ -3085,8 +3085,7 @@ def _real_to_rational(expr):
     reps = {}
     for r in p.atoms(C.Float):
         newr = nsimplify(r, rational=False)
-        if not newr.is_Rational or \
-           r.is_finite and not newr.is_finite:
+        if not newr.is_Rational or r.is_finite and not newr.is_finite:
             if newr < 0:
                 newr = -r
                 d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
@@ -3308,8 +3307,8 @@ def _logcombine(expr, force=False):
                 for j in largs:
                     loglargs *= log(j)
 
-                if all(getattr(t, 'is_positive') for t in largs)\
-                    and getattr(i.extract_multiplicatively(loglargs), 'is_real', False)\
+                if all(getattr(t, 'is_positive') for t in largs) \
+                    and getattr(i.extract_multiplicatively(loglargs), 'is_real', False) \
                     or (force
                         and not all(getattr(t, 'is_nonpositive') for t in largs)
                         and not getattr(i.extract_multiplicatively(loglargs),
@@ -3332,13 +3331,13 @@ def _logcombine(expr, force=False):
         a = Wild('a')
         x = Wild('x')
         coef = expr.match(a*log(x))
-        if coef\
+        if coef \
             and (coef[a].is_real
                 or expr.is_Number
                 or expr.is_NumberSymbol
                 or type(coef[a]) in (int, float)
                 or (force
-                and not coef[a].is_imaginary))\
+                and not coef[a].is_imaginary)) \
             and (coef[a].func != log
                 or force
                 or (not getattr(coef[a], 'is_real') is False
@@ -3348,13 +3347,13 @@ def _logcombine(expr, force=False):
         else:
             return _logcombine(expr.args[0], force)*reduce(lambda x, y:
              _logcombine(x, force)*_logcombine(y, force),
-             expr.args[1:], S.One)
+                expr.args[1:], S.One)
 
     if expr.is_Function:
         return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
 
     if expr.is_Pow:
-        return _logcombine(expr.args[0], force)**\
+        return _logcombine(expr.args[0], force) ** \
             _logcombine(expr.args[1], force)
 
     return expr

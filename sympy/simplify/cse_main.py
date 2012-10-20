@@ -202,7 +202,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         # (if necessary) to zero.
         for i in xrange(index_to_insert - 1, -1, -1):
             if to_eliminate_ops_count[i] == ops_count and \
-               subtree == to_eliminate[i]:
+                    subtree == to_eliminate[i]:
                 return  # already have it
         to_eliminate_ops_count.insert(index_to_insert, ops_count)
         to_eliminate.insert(index_to_insert, subtree)

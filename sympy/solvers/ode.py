@@ -1379,7 +1379,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
-    if sol.lhs == func and not sol.rhs.has(func) or\
+    if sol.lhs == func and not sol.rhs.has(func) or \
             sol.rhs == func and not sol.lhs.has(func):
         return -2
     # We are not so lucky, try solving manually
@@ -1704,7 +1704,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                     expr.lhs, symbolname, startnumber, endnumber),
             _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
-        if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
+        if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and \
                 not expr.has(*constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be renumbered.
