@@ -294,7 +294,7 @@ def xobj(symb, length):
         except IndexError:
             pass
 
-    if c1  is None:  c1 = ext
+    if c1 is None:  c1 = ext
     if top is None:  top = ext
     if bot is None:  bot = ext
     if mid is not None:
