@@ -370,7 +370,7 @@ def telescopic(L, R, limits):
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
-                                   (L.subs(i, i + si) + R).expand().is_zero]
+               (L.subs(i, i + si) + R).expand().is_zero]
         if len(sol) != 1:
             return None
         s = sol[0]
