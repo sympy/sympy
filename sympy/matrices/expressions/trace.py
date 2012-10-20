@@ -15,6 +15,7 @@ class Trace(Expr):
     3
     """
     is_Trace = True
+
     def __new__(cls, mat):
         if not mat.is_Matrix:
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))

@@ -36,6 +36,7 @@ class BlockMatrix(MatrixExpr):
     """
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
+
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
         mat = ImmutableMatrix(*args)
@@ -200,6 +201,7 @@ class BlockMatrix(MatrixExpr):
                 if i!=j and not self.blocks[i, j].is_ZeroMatrix:
                     return False
         return True
+
     @property
     def is_structurally_symmetric(self):
         return self.rowblocksizes == self.colblocksizes
@@ -225,6 +227,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     """
     is_BlockDiagMatrix = True
+
     def __new__(cls, *mats):
         from sympy.matrices.immutable import ImmutableMatrix
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)

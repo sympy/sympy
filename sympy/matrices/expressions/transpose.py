@@ -19,6 +19,7 @@ class Transpose(MatrixExpr):
     B'*A'
     """
     is_Transpose = True
+
     def __new__(cls, mat):
         try:
             return mat.transpose()

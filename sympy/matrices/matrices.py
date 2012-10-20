@@ -3026,6 +3026,7 @@ class MatrixBase(object):
 
         """
         sub_blocks = []
+
         def recurse_sub_blocks(M):
             i = 1
             while i <= M.shape[0]:
