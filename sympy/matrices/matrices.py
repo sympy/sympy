@@ -868,7 +868,6 @@ class MatrixBase(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-
     def submatrix(self, keys):
         """
         Get a slice/submatrix of the matrix using the given slice.
@@ -977,7 +976,6 @@ class MatrixBase(object):
             clo = a2idx(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
-
 
     def key2ij(self, key):
         """Converts key into canonical form, converting integers or indexable
@@ -1216,7 +1214,6 @@ class MatrixBase(object):
             for i in range(j+1, n):
                 A[i, j] = A[i, j] * scale
         return A, p
-
 
     def LUdecompositionFF(self):
         """
@@ -2196,7 +2193,6 @@ class MatrixBase(object):
                         return False
             return True
 
-
     def is_diagonal(self):
         """
         Check if matrix is diagonal,
@@ -2386,7 +2382,6 @@ class MatrixBase(object):
         """
 
         return self.cofactorMatrix(method).T
-
 
     def inverse_LU(self, iszerofunc=_iszero):
         """

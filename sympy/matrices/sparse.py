@@ -471,7 +471,6 @@ class SparseMatrix(MatrixBase):
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
-
     @classmethod
     def zeros(cls, r, c=None):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;

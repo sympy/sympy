@@ -88,7 +88,6 @@ def test_sparse_matrix():
     A = SparseMatrix([[2, 1, 3], [4, 2, 4], [6, 12, 1]])
     assert (A**3)[:] == [290, 262, 251, 448, 440, 368, 702, 954, 433]
 
-
     # test_creation
     x = Symbol("x")
     a = SparseMatrix([[x, 0], [0, 0]])
@@ -386,7 +385,6 @@ def test_sparse_matrix():
     assert basis[1] == Matrix([0, 0, 1, 0, 0, 0, 0])
     assert basis[2] == Matrix([-2, 0, 0, -2, 1, 0, 0])
     assert basis[3] == Matrix([0, 0, 0, 0, 0, R(-1)/3, 1])
-
 
     # test eigen
     x = Symbol('x')
