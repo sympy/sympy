@@ -166,10 +166,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         offset = 25
 
         win = window.Window(
-            width = img.width + 2*offset,
-            height = img.height + 2*offset,
-            caption = "sympy",
-            resizable = False
+            width=img.width + 2*offset,
+            height=img.height + 2*offset,
+            caption="sympy",
+            resizable=False
         )
 
         win.set_vsync(False)
