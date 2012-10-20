@@ -57,7 +57,8 @@ class stringPict(object):
         #convert everything to stringPicts
         objects = []
         for arg in args:
-            if isinstance(arg, basestring): arg = stringPict(arg)
+            if isinstance(arg, basestring):
+                arg = stringPict(arg)
             objects.append(arg)
 
         #make a list of pictures, with equal height and baseline
@@ -380,7 +381,8 @@ class prettyForm(stringPict):
         Addition of negative numbers is simplified.
         """
         arg = self
-        if arg.binding > prettyForm.NEG: arg = stringPict(*arg.parens())
+        if arg.binding > prettyForm.NEG:
+            arg = stringPict(*arg.parens())
         result = [arg]
         for arg in others:
             #add parentheses for weak binders
@@ -395,10 +397,13 @@ class prettyForm(stringPict):
     def __div__(self, den, slashed=False):
         """Make a pretty division; stacked or slashed.
         """
-        if slashed: raise NotImplementedError("Can't do slashed fraction yet")
+        if slashed:
+            raise NotImplementedError("Can't do slashed fraction yet")
         num = self
-        if num.binding==prettyForm.DIV: num = stringPict(*num.parens())
-        if den.binding==prettyForm.DIV: den = stringPict(*den.parens())
+        if num.binding==prettyForm.DIV:
+            num = stringPict(*num.parens())
+        if den.binding==prettyForm.DIV:
+            den = stringPict(*den.parens())
 
         return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
             num,
@@ -413,12 +418,14 @@ class prettyForm(stringPict):
         Parentheses are needed around +, - and neg.
         """
         args = self
-        if args.binding > prettyForm.MUL: arg = stringPict(*args.parens())
+        if args.binding > prettyForm.MUL:
+            arg = stringPict(*args.parens())
         result = [args]
         for arg in others:
             result.append(xsym('*'))
             #add parentheses for weak binders
-            if arg.binding > prettyForm.MUL: arg = stringPict(*arg.parens())
+            if arg.binding > prettyForm.MUL:
+                arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
         for i in xrange(len_res):
@@ -444,8 +451,10 @@ class prettyForm(stringPict):
         """Make a pretty power.
         """
         a = self
-        if a.binding > prettyForm.FUNC: a = stringPict(*a.parens())
-        if b.binding == prettyForm.POW: b = stringPict(*b.parens())
+        if a.binding > prettyForm.FUNC:
+            a = stringPict(*a.parens())
+        if b.binding == prettyForm.POW:
+            b = stringPict(*b.parens())
 
         if a.binding == prettyForm.FUNC:
             #     2     <-- top

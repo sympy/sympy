@@ -297,9 +297,12 @@ def xobj(symb, length):
         except IndexError:
             pass
 
-    if c1 is None:  c1 = ext
-    if top is None:  top = ext
-    if bot is None:  bot = ext
+    if c1 is None:
+        c1 = ext
+    if top is None:
+        top = ext
+    if bot is None:
+        bot = ext
     if mid is not None:
         if (length % 2) == 0:
             # even height, but we have to print it somehow anyway...
