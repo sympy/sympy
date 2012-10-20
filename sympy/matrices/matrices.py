@@ -145,7 +145,7 @@ class MatrixBase(object):
 
         # Matrix(2, 2, [1, 2, 3, 4])
         elif len(args) == 3 and is_sequence(args[2]):
-            flat_list  = args[2]
+            flat_list = args[2]
             if len(flat_list) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
             flat_list = map(lambda i: sympify(i), flat_list)
@@ -961,7 +961,7 @@ class MatrixBase(object):
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
             rlo = a2idx(keys[0], self.rows)
-            rhi  = rlo + 1
+            rhi = rlo + 1
         if jslice:
             if not self.cols:
                 clo = chi = 0
