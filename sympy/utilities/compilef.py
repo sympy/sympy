@@ -335,7 +335,7 @@ def frange(*args, **kwargs):
     if len(args) == 4:
         step = args[3]
     assert start + step != start, \
-           'step is too small and would cause an infinite loop'
+        'step is too small and would cause an infinite loop'
     # determine length of resulting array
     # TODO: do this better
     length = stop - start
@@ -394,15 +394,15 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
     array will be overwritten! Make a copy before to avoid this.
     """
     # interpret arguments
-    if hasattr(array,  'ctypes'):  # numpy array
+    if hasattr(array, 'ctypes'):  # numpy array
         pointer = array.ctypes.get_as_parameter()
         length = len(array)
-    elif isinstance(array,  ctypes.Array):  # ctypes array
+    elif isinstance(array, ctypes.Array):  # ctypes array
         pointer = ctypes.byref(array)
         length = len(array)
-    elif isinstance(array,  ctypes.c_void_p):  # ctypes pointer FIXME
+    elif isinstance(array, ctypes.c_void_p):  # ctypes pointer FIXME
         pointer = array
-        assert isinstance(length,  int) and not length < 0
+        assert isinstance(length, int) and not length < 0
     else:
         raise ValueError('array type not recognized')
     # generate code
@@ -425,7 +425,7 @@ void evalonarray(double *array, int length)
 
 """ % genfcode(lambdastr, **kwargs)
     # compile an run on array
-    run = _compile(code,  fname='evalonarray',
+    run = _compile(code, fname='evalonarray',
                    fprototype=[None, ctypes.c_void_p, ctypes.c_int])
     run(pointer, length)
 
@@ -440,7 +440,7 @@ from math import exp as _exp, cos as _cos, sin as _sin
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
     assert cexpr(expr).replace(' ', '') == \
-           '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
+        '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
 
 
 def test_clambdify():
@@ -455,7 +455,7 @@ def test_clambdify():
     f2 = (x - y) / z * pi
     pf2 = lambdify((x, y, z), f2, 'math')
     cf2 = clambdify((x, y, z), f2)
-    assert round(pf2(1, 2, 3),  14) == round(cf2(1, 2, 3),  14)
+    assert round(pf2(1, 2, 3), 14) == round(cf2(1, 2, 3), 14)
     # FIXME: slight difference in precision
 
 
@@ -513,7 +513,7 @@ def test_evalonarray_ctypes():
 
 def test_evalonarray_numpy():
     a = numpy.arange(10, dtype=float)
-    evalonarray('lambda x: x + 1',  a)
+    evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
         assert float(i + 1) == j
 
@@ -575,8 +575,8 @@ def benchmark():
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
 ##        * ((x + pi)**5).expand()
     f1 = 2*_exp(x**2) + x**12*(-pi*_sin(x)**((-1) + pi)*_cos(x) + 2*_exp(2*x)) \
-         + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5
-         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
+        + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5
+        + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
     print
     print 'simple function:'

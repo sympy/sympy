@@ -37,10 +37,10 @@ def test_Routine_argument_order():
     r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
-            InputArgument, InputArgument, OutputArgument, InputArgument  ]
+        InputArgument, InputArgument, OutputArgument, InputArgument  ]
     r = Routine('test', Eq(z, expr), argument_sequence=[z, x, y])
     assert [ type(arg) for arg in r.arguments ] == [
-            InOutArgument, InputArgument, InputArgument ]
+        InOutArgument, InputArgument, InputArgument ]
 
     from sympy.tensor import IndexedBase, Idx
     A, B = map(IndexedBase, ['A', 'B'])
@@ -60,8 +60,8 @@ def test_empty_c_code_with_comment():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [], header=True)
     assert source[:82] == (
-            "/******************************************************************************\n *"
-            )
+        "/******************************************************************************\n *"
+    )
           #   "                    Code generated with sympy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             " *                                                                            *\n"
@@ -147,13 +147,13 @@ def test_simple_c_codegen():
     expr = (x + y)*z
     result = codegen(("test", (x + y)*z), "C", "file", header=False, empty=False)
     expected = [
-       ("file.c",
+        ("file.c",
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
         "   return z*(x + y);\n"
         "}\n"),
-       ("file.h",
+        ("file.h",
         "#ifndef PROJECT__FILE__H\n"
         "#define PROJECT__FILE__H\n"
         "double test(double x, double y, double z);\n"
@@ -333,23 +333,23 @@ def test_loops_c():
     j = Idx('j', n)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
-            '#include "file.h"\n'
-            '#include <math.h>\n'
-            'void matrix_vector(double *A, int m, int n, double *x, double *y) {\n'
-            '   for (int i=0; i<m; i++){\n'
-            '      y[i] = 0;\n'
-            '   }\n'
-            '   for (int i=0; i<m; i++){\n'
-            '      for (int j=0; j<n; j++){\n'
-            '         y[i] = y[i] + %(rhs)s;\n'
-            '      }\n'
-            '   }\n'
-            '}\n'
-            )
+        '#include "file.h"\n'
+        '#include <math.h>\n'
+        'void matrix_vector(double *A, int m, int n, double *x, double *y) {\n'
+        '   for (int i=0; i<m; i++){\n'
+        '      y[i] = 0;\n'
+        '   }\n'
+        '   for (int i=0; i<m; i++){\n'
+        '      for (int j=0; j<n; j++){\n'
+        '         y[i] = y[i] + %(rhs)s;\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
 
     assert (code == expected % {'rhs': 'A[i*n + j]*x[j]'} or
             code == expected % {'rhs': 'A[j + i*n]*x[j]'} or
@@ -361,7 +361,7 @@ def test_loops_c():
         '#define PROJECT__FILE__H\n'
         'void matrix_vector(double *A, int m, int n, double *x, double *y);\n'
         '#endif\n'
-            )
+    )
 
 
 def test_dummy_loops_c():
@@ -374,14 +374,14 @@ def test_dummy_loops_c():
     y = IndexedBase('y')
     i = Idx(i, m)
     expected = (
-            '#include "file.h"\n'
-            '#include <math.h>\n'
-            'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
-            '   for (int i_%(ino)i=0; i_%(ino)i<m_%(mno)i; i_%(ino)i++){\n'
-            '      y[i_%(ino)i] = x[i_%(ino)i];\n'
-            '   }\n'
-            '}\n'
-            ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
+        '#include "file.h"\n'
+        '#include <math.h>\n'
+        'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
+        '   for (int i_%(ino)i=0; i_%(ino)i<m_%(mno)i; i_%(ino)i++){\n'
+        '      y[i_%(ino)i] = x[i_%(ino)i];\n'
+        '   }\n'
+        '}\n'
+    ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
     r = Routine('test_dummies', Eq(y[i], x[i]))
     c = CCodeGen()
     code = get_string(c.dump_c, [r])
@@ -401,23 +401,23 @@ def test_partial_loops_c():
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "C", "file", header=False, empty=False)
 
     assert f1 == 'file.c'
     expected = (
-            '#include "file.h"\n'
-            '#include <math.h>\n'
-            'void matrix_vector(double *A, int m, int n, int o, int p, double *x, double *y) {\n'
-            '   for (int i=o; i<%(upperi)s; i++){\n'
-            '      y[i] = 0;\n'
-            '   }\n'
-            '   for (int i=o; i<%(upperi)s; i++){\n'
-            '      for (int j=0; j<n; j++){\n'
-            '         y[i] = y[i] + %(rhs)s;\n'
-            '      }\n'
-            '   }\n'
-            '}\n'
-            ) % {'upperi': m - 4, 'rhs': '%(rhs)s'}
+        '#include "file.h"\n'
+        '#include <math.h>\n'
+        'void matrix_vector(double *A, int m, int n, int o, int p, double *x, double *y) {\n'
+        '   for (int i=o; i<%(upperi)s; i++){\n'
+        '      y[i] = 0;\n'
+        '   }\n'
+        '   for (int i=o; i<%(upperi)s; i++){\n'
+        '      for (int j=0; j<n; j++){\n'
+        '         y[i] = y[i] + %(rhs)s;\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    ) % {'upperi': m - 4, 'rhs': '%(rhs)s'}
 
     assert (code == expected % {'rhs': 'A[i*p + j]*x[j]'} or
             code == expected % {'rhs': 'A[j + i*p]*x[j]'} or
@@ -429,7 +429,7 @@ def test_partial_loops_c():
         '#define PROJECT__FILE__H\n'
         'void matrix_vector(double *A, int m, int n, int o, int p, double *x, double *y);\n'
         '#endif\n'
-            )
+    )
 
 
 def test_output_arg_c():
@@ -460,8 +460,8 @@ def test_empty_f_code_with_header():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [], header=True)
     assert source[:82] == (
-            "!******************************************************************************\n!*"
-            )
+        "!******************************************************************************\n!*"
+    )
           #   "                    Code generated with sympy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             "!*                                                                            *\n"
@@ -485,13 +485,13 @@ def test_simple_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
-            "REAL*8 function test(x, y, z)\n"
-            "implicit none\n"
-            "REAL*8, intent(in) :: x\n"
-            "REAL*8, intent(in) :: y\n"
-            "REAL*8, intent(in) :: z\n"
-            "test = z*(x + y)\n"
-            "end function\n"
+        "REAL*8 function test(x, y, z)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(in) :: z\n"
+        "test = z*(x + y)\n"
+        "end function\n"
     )
     assert source == expected
 
@@ -501,12 +501,12 @@ def test_numbersymbol_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
-            "REAL*8 function test()\n"
-            "implicit none\n"
-            "REAL*8, parameter :: Catalan = 0.915965594177219d0\n"
-            "REAL*8, parameter :: pi = 3.14159265358979d0\n"
-            "test = pi**Catalan\n"
-            "end function\n"
+        "REAL*8 function test()\n"
+        "implicit none\n"
+        "REAL*8, parameter :: Catalan = 0.915965594177219d0\n"
+        "REAL*8, parameter :: pi = 3.14159265358979d0\n"
+        "test = pi**Catalan\n"
+        "end function\n"
     )
     assert source == expected
 
@@ -518,13 +518,13 @@ def test_f_code_argument_order():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
     expected = (
-            "REAL*8 function test(z, x, y)\n"
-            "implicit none\n"
-            "REAL*8, intent(in) :: z\n"
-            "REAL*8, intent(in) :: x\n"
-            "REAL*8, intent(in) :: y\n"
-            "test = x + y\n"
-            "end function\n"
+        "REAL*8 function test(z, x, y)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: z\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "test = x + y\n"
+        "end function\n"
     )
     assert source == expected
 
@@ -536,14 +536,14 @@ def test_simple_f_header():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
     expected = (
-            "interface\n"
-            "REAL*8 function test(x, y, z)\n"
-            "implicit none\n"
-            "REAL*8, intent(in) :: x\n"
-            "REAL*8, intent(in) :: y\n"
-            "REAL*8, intent(in) :: z\n"
-            "end function\n"
-            "end interface\n"
+        "interface\n"
+        "REAL*8 function test(x, y, z)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "REAL*8, intent(in) :: z\n"
+        "end function\n"
+        "end interface\n"
     )
     assert source == expected
 
@@ -554,7 +554,7 @@ def test_simple_f_codegen():
     result = codegen(
         ("test", (x + y)*z), "F95", "file", header=False, empty=False)
     expected = [
-       ("file.f90",
+        ("file.f90",
         "REAL*8 function test(x, y, z)\n"
         "implicit none\n"
         "REAL*8, intent(in) :: x\n"
@@ -562,7 +562,7 @@ def test_simple_f_codegen():
         "REAL*8, intent(in) :: z\n"
         "test = z*(x + y)\n"
         "end function\n"),
-       ("file.h",
+        ("file.h",
         "interface\n"
         "REAL*8 function test(x, y, z)\n"
         "implicit none\n"
@@ -597,173 +597,173 @@ def test_intrinsic_math_codegen():
             sin, sinh, sqrt, tan, tanh, N, Abs)
     x = symbols('x')
     name_expr = [
-            ("test_abs", Abs(x)),
-            ("test_acos", acos(x)),
-            ("test_asin", asin(x)),
-            ("test_atan", atan(x)),
-            # ("test_ceil", ceiling(x)),
-            ("test_cos", cos(x)),
-            ("test_cosh", cosh(x)),
-            # ("test_floor", floor(x)),
-            ("test_log", log(x)),
-            ("test_ln", ln(x)),
-            ("test_sin", sin(x)),
-            ("test_sinh", sinh(x)),
-            ("test_sqrt", sqrt(x)),
-            ("test_tan", tan(x)),
-            ("test_tanh", tanh(x)),
-            ]
+        ("test_abs", Abs(x)),
+        ("test_acos", acos(x)),
+        ("test_asin", asin(x)),
+        ("test_atan", atan(x)),
+        # ("test_ceil", ceiling(x)),
+        ("test_cos", cos(x)),
+        ("test_cosh", cosh(x)),
+        # ("test_floor", floor(x)),
+        ("test_log", log(x)),
+        ("test_ln", ln(x)),
+        ("test_sin", sin(x)),
+        ("test_sinh", sinh(x)),
+        ("test_sqrt", sqrt(x)),
+        ("test_tan", tan(x)),
+        ("test_tanh", tanh(x)),
+    ]
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
     assert result[0][0] == "file.f90"
     expected = (
-            'REAL*8 function test_abs(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_abs = Abs(x)\n'
-            'end function\n'
-            'REAL*8 function test_acos(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_acos = acos(x)\n'
-            'end function\n'
-            'REAL*8 function test_asin(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_asin = asin(x)\n'
-            'end function\n'
-            'REAL*8 function test_atan(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_atan = atan(x)\n'
-            'end function\n'
-            'REAL*8 function test_cos(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_cos = cos(x)\n'
-            'end function\n'
-            'REAL*8 function test_cosh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_cosh = cosh(x)\n'
-            'end function\n'
-            'REAL*8 function test_log(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_log = log(x)\n'
-            'end function\n'
-            'REAL*8 function test_ln(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_ln = log(x)\n'
-            'end function\n'
-            'REAL*8 function test_sin(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_sin = sin(x)\n'
-            'end function\n'
-            'REAL*8 function test_sinh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_sinh = sinh(x)\n'
-            'end function\n'
-            'REAL*8 function test_sqrt(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_sqrt = sqrt(x)\n'
-            'end function\n'
-            'REAL*8 function test_tan(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_tan = tan(x)\n'
-            'end function\n'
-            'REAL*8 function test_tanh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'test_tanh = tanh(x)\n'
-            'end function\n'
-        )
+        'REAL*8 function test_abs(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_abs = Abs(x)\n'
+        'end function\n'
+        'REAL*8 function test_acos(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_acos = acos(x)\n'
+        'end function\n'
+        'REAL*8 function test_asin(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_asin = asin(x)\n'
+        'end function\n'
+        'REAL*8 function test_atan(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_atan = atan(x)\n'
+        'end function\n'
+        'REAL*8 function test_cos(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_cos = cos(x)\n'
+        'end function\n'
+        'REAL*8 function test_cosh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_cosh = cosh(x)\n'
+        'end function\n'
+        'REAL*8 function test_log(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_log = log(x)\n'
+        'end function\n'
+        'REAL*8 function test_ln(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_ln = log(x)\n'
+        'end function\n'
+        'REAL*8 function test_sin(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_sin = sin(x)\n'
+        'end function\n'
+        'REAL*8 function test_sinh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_sinh = sinh(x)\n'
+        'end function\n'
+        'REAL*8 function test_sqrt(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_sqrt = sqrt(x)\n'
+        'end function\n'
+        'REAL*8 function test_tan(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_tan = tan(x)\n'
+        'end function\n'
+        'REAL*8 function test_tanh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'test_tanh = tanh(x)\n'
+        'end function\n'
+    )
     assert result[0][1] == expected
 
     assert result[1][0] == "file.h"
     expected = (
-            'interface\n'
-            'REAL*8 function test_abs(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_acos(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_asin(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_atan(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_cos(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_cosh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_log(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_ln(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_sin(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_sinh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_sqrt(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_tan(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_tanh(x)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'end function\n'
-            'end interface\n'
+        'interface\n'
+        'REAL*8 function test_abs(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_acos(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_asin(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_atan(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_cos(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_cosh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_log(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_ln(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_sin(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_sinh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_sqrt(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_tan(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_tanh(x)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'end function\n'
+        'end interface\n'
     )
     assert result[1][1] == expected
 
@@ -779,37 +779,37 @@ def test_intrinsic_math2_codegen():
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
     assert result[0][0] == "file.f90"
     expected = (
-            'REAL*8 function test_atan2(x, y)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'test_atan2 = atan2(x, y)\n'
-            'end function\n'
-            'REAL*8 function test_pow(x, y)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'test_pow = x**y\n'
-            'end function\n'
-            )
+        'REAL*8 function test_atan2(x, y)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'test_atan2 = atan2(x, y)\n'
+        'end function\n'
+        'REAL*8 function test_pow(x, y)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'test_pow = x**y\n'
+        'end function\n'
+    )
     assert result[0][1] == expected
 
     assert result[1][0] == "file.h"
     expected = (
-            'interface\n'
-            'REAL*8 function test_atan2(x, y)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test_pow(x, y)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'end function\n'
-            'end interface\n'
+        'interface\n'
+        'REAL*8 function test_atan2(x, y)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test_pow(x, y)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'end function\n'
+        'end interface\n'
     )
     assert result[1][1] == expected
 
@@ -824,54 +824,54 @@ def test_complicated_codegen_f95():
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
     assert result[0][0] == "file.f90"
     expected = (
-            'REAL*8 function test1(x, y, z)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'REAL*8, intent(in) :: z\n'
-            'test1 = sin(x)**7 + 7*sin(x)**6*cos(y) + 7*sin(x)**6*tan(z) + 21*sin(x) &\n'
-            '      **5*cos(y)**2 + 42*sin(x)**5*cos(y)*tan(z) + 21*sin(x)**5*tan(z) &\n'
-            '      **2 + 35*sin(x)**4*cos(y)**3 + 105*sin(x)**4*cos(y)**2*tan(z) + &\n'
-            '      105*sin(x)**4*cos(y)*tan(z)**2 + 35*sin(x)**4*tan(z)**3 + 35*sin( &\n'
-            '      x)**3*cos(y)**4 + 140*sin(x)**3*cos(y)**3*tan(z) + 210*sin(x)**3* &\n'
-            '      cos(y)**2*tan(z)**2 + 140*sin(x)**3*cos(y)*tan(z)**3 + 35*sin(x) &\n'
-            '      **3*tan(z)**4 + 21*sin(x)**2*cos(y)**5 + 105*sin(x)**2*cos(y)**4* &\n'
-            '      tan(z) + 210*sin(x)**2*cos(y)**3*tan(z)**2 + 210*sin(x)**2*cos(y) &\n'
-            '      **2*tan(z)**3 + 105*sin(x)**2*cos(y)*tan(z)**4 + 21*sin(x)**2*tan &\n'
-            '      (z)**5 + 7*sin(x)*cos(y)**6 + 42*sin(x)*cos(y)**5*tan(z) + 105* &\n'
-            '      sin(x)*cos(y)**4*tan(z)**2 + 140*sin(x)*cos(y)**3*tan(z)**3 + 105 &\n'
-            '      *sin(x)*cos(y)**2*tan(z)**4 + 42*sin(x)*cos(y)*tan(z)**5 + 7*sin( &\n'
-            '      x)*tan(z)**6 + cos(y)**7 + 7*cos(y)**6*tan(z) + 21*cos(y)**5*tan( &\n'
-            '      z)**2 + 35*cos(y)**4*tan(z)**3 + 35*cos(y)**3*tan(z)**4 + 21*cos( &\n'
-            '      y)**2*tan(z)**5 + 7*cos(y)*tan(z)**6 + tan(z)**7\n'
-            'end function\n'
-            'REAL*8 function test2(x, y, z)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'REAL*8, intent(in) :: z\n'
-            'test2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
-            'end function\n'
+        'REAL*8 function test1(x, y, z)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'REAL*8, intent(in) :: z\n'
+        'test1 = sin(x)**7 + 7*sin(x)**6*cos(y) + 7*sin(x)**6*tan(z) + 21*sin(x) &\n'
+        '      **5*cos(y)**2 + 42*sin(x)**5*cos(y)*tan(z) + 21*sin(x)**5*tan(z) &\n'
+        '      **2 + 35*sin(x)**4*cos(y)**3 + 105*sin(x)**4*cos(y)**2*tan(z) + &\n'
+        '      105*sin(x)**4*cos(y)*tan(z)**2 + 35*sin(x)**4*tan(z)**3 + 35*sin( &\n'
+        '      x)**3*cos(y)**4 + 140*sin(x)**3*cos(y)**3*tan(z) + 210*sin(x)**3* &\n'
+        '      cos(y)**2*tan(z)**2 + 140*sin(x)**3*cos(y)*tan(z)**3 + 35*sin(x) &\n'
+        '      **3*tan(z)**4 + 21*sin(x)**2*cos(y)**5 + 105*sin(x)**2*cos(y)**4* &\n'
+        '      tan(z) + 210*sin(x)**2*cos(y)**3*tan(z)**2 + 210*sin(x)**2*cos(y) &\n'
+        '      **2*tan(z)**3 + 105*sin(x)**2*cos(y)*tan(z)**4 + 21*sin(x)**2*tan &\n'
+        '      (z)**5 + 7*sin(x)*cos(y)**6 + 42*sin(x)*cos(y)**5*tan(z) + 105* &\n'
+        '      sin(x)*cos(y)**4*tan(z)**2 + 140*sin(x)*cos(y)**3*tan(z)**3 + 105 &\n'
+        '      *sin(x)*cos(y)**2*tan(z)**4 + 42*sin(x)*cos(y)*tan(z)**5 + 7*sin( &\n'
+        '      x)*tan(z)**6 + cos(y)**7 + 7*cos(y)**6*tan(z) + 21*cos(y)**5*tan( &\n'
+        '      z)**2 + 35*cos(y)**4*tan(z)**3 + 35*cos(y)**3*tan(z)**4 + 21*cos( &\n'
+        '      y)**2*tan(z)**5 + 7*cos(y)*tan(z)**6 + tan(z)**7\n'
+        'end function\n'
+        'REAL*8 function test2(x, y, z)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'REAL*8, intent(in) :: z\n'
+        'test2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))\n'
+        'end function\n'
     )
     assert result[0][1] == expected
     assert result[1][0] == "file.h"
     expected = (
-            'interface\n'
-            'REAL*8 function test1(x, y, z)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'REAL*8, intent(in) :: z\n'
-            'end function\n'
-            'end interface\n'
-            'interface\n'
-            'REAL*8 function test2(x, y, z)\n'
-            'implicit none\n'
-            'REAL*8, intent(in) :: x\n'
-            'REAL*8, intent(in) :: y\n'
-            'REAL*8, intent(in) :: z\n'
-            'end function\n'
-            'end interface\n'
+        'interface\n'
+        'REAL*8 function test1(x, y, z)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'REAL*8, intent(in) :: z\n'
+        'end function\n'
+        'end interface\n'
+        'interface\n'
+        'REAL*8 function test2(x, y, z)\n'
+        'implicit none\n'
+        'REAL*8, intent(in) :: x\n'
+        'REAL*8, intent(in) :: y\n'
+        'REAL*8, intent(in) :: z\n'
+        'end function\n'
+        'end interface\n'
     )
     assert result[1][1] == expected
 
@@ -886,44 +886,44 @@ def test_loops():
     j = Idx('j', n)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
     expected = (
-            'subroutine matrix_vector(A, m, n, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'INTEGER*4, intent(in) :: n\n'
-            'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
-            'REAL*8, intent(in), dimension(1:n) :: x\n'
-            'REAL*8, intent(out), dimension(1:m) :: y\n'
-            'INTEGER*4 :: i\n'
-            'INTEGER*4 :: j\n'
-            'do i = 1, m\n'
-            '   y(i) = 0\n'
-            'end do\n'
-            'do i = 1, m\n'
-            '   do j = 1, n\n'
-            '      y(i) = y(i) + %(rhs)s\n'
-            '   end do\n'
-            'end do\n'
-            'end subroutine\n'
-            ) % {'rhs': 'A(i, j)*x(j)'}
+        'subroutine matrix_vector(A, m, n, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'INTEGER*4, intent(in) :: n\n'
+        'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
+        'REAL*8, intent(in), dimension(1:n) :: x\n'
+        'REAL*8, intent(out), dimension(1:m) :: y\n'
+        'INTEGER*4 :: i\n'
+        'INTEGER*4 :: j\n'
+        'do i = 1, m\n'
+        '   y(i) = 0\n'
+        'end do\n'
+        'do i = 1, m\n'
+        '   do j = 1, n\n'
+        '      y(i) = y(i) + %(rhs)s\n'
+        '   end do\n'
+        'end do\n'
+        'end subroutine\n'
+    ) % {'rhs': 'A(i, j)*x(j)'}
 
     assert expected == code
     assert f2 == 'file.h'
     assert interface == (
-            'interface\n'
-            'subroutine matrix_vector(A, m, n, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'INTEGER*4, intent(in) :: n\n'
-            'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
-            'REAL*8, intent(in), dimension(1:n) :: x\n'
-            'REAL*8, intent(out), dimension(1:m) :: y\n'
-            'end subroutine\n'
-            'end interface\n'
-            )
+        'interface\n'
+        'subroutine matrix_vector(A, m, n, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'INTEGER*4, intent(in) :: n\n'
+        'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
+        'REAL*8, intent(in), dimension(1:n) :: x\n'
+        'REAL*8, intent(out), dimension(1:m) :: y\n'
+        'end subroutine\n'
+        'end interface\n'
+    )
 
 
 def test_dummy_loops_f95():
@@ -936,17 +936,17 @@ def test_dummy_loops_f95():
     y = IndexedBase('y')
     i = Idx(i, m)
     expected = (
-            'subroutine test_dummies(m_%(mcount)i, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m_%(mcount)i\n'
-            'REAL*8, intent(in), dimension(1:m_%(mcount)i) :: x\n'
-            'REAL*8, intent(out), dimension(1:m_%(mcount)i) :: y\n'
-            'INTEGER*4 :: i_%(icount)i\n'
-            'do i_%(icount)i = 1, m_%(mcount)i\n'
-            '   y(i_%(icount)i) = x(i_%(icount)i)\n'
-            'end do\n'
-            'end subroutine\n'
-            ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+        'subroutine test_dummies(m_%(mcount)i, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m_%(mcount)i\n'
+        'REAL*8, intent(in), dimension(1:m_%(mcount)i) :: x\n'
+        'REAL*8, intent(out), dimension(1:m_%(mcount)i) :: y\n'
+        'INTEGER*4 :: i_%(icount)i\n'
+        'do i_%(icount)i = 1, m_%(mcount)i\n'
+        '   y(i_%(icount)i) = x(i_%(icount)i)\n'
+        'end do\n'
+        'end subroutine\n'
+    ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     r = Routine('test_dummies', Eq(y[i], x[i]))
     c = FCodeGen()
     code = get_string(c.dump_f95, [r])
@@ -964,42 +964,42 @@ def test_loops_InOut():
     y = IndexedBase(y)[Idx(i, m)]
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y, y + A*x)), "F95", "file", header=False, empty=False)
 
     assert f1 == 'file.f90'
     expected = (
-            'subroutine matrix_vector(A, m, n, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'INTEGER*4, intent(in) :: n\n'
-            'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
-            'REAL*8, intent(in), dimension(1:n) :: x\n'
-            'REAL*8, intent(inout), dimension(1:m) :: y\n'
-            'INTEGER*4 :: i\n'
-            'INTEGER*4 :: j\n'
-            'do i = 1, m\n'
-            '   do j = 1, n\n'
-            '      y(i) = y(i) + %(rhs)s\n'
-            '   end do\n'
-            'end do\n'
-            'end subroutine\n'
-            )
+        'subroutine matrix_vector(A, m, n, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'INTEGER*4, intent(in) :: n\n'
+        'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
+        'REAL*8, intent(in), dimension(1:n) :: x\n'
+        'REAL*8, intent(inout), dimension(1:m) :: y\n'
+        'INTEGER*4 :: i\n'
+        'INTEGER*4 :: j\n'
+        'do i = 1, m\n'
+        '   do j = 1, n\n'
+        '      y(i) = y(i) + %(rhs)s\n'
+        '   end do\n'
+        'end do\n'
+        'end subroutine\n'
+    )
 
     assert (code == expected % {'rhs': 'A(i, j)*x(j)'} or
             code == expected % {'rhs': 'x(j)*A(i, j)'})
     assert f2 == 'file.h'
     assert interface == (
-            'interface\n'
-            'subroutine matrix_vector(A, m, n, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'INTEGER*4, intent(in) :: n\n'
-            'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
-            'REAL*8, intent(in), dimension(1:n) :: x\n'
-            'REAL*8, intent(inout), dimension(1:m) :: y\n'
-            'end subroutine\n'
-            'end interface\n'
-            )
+        'interface\n'
+        'subroutine matrix_vector(A, m, n, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'INTEGER*4, intent(in) :: n\n'
+        'REAL*8, intent(in), dimension(1:m, 1:n) :: A\n'
+        'REAL*8, intent(in), dimension(1:n) :: x\n'
+        'REAL*8, intent(inout), dimension(1:m) :: y\n'
+        'end subroutine\n'
+        'end interface\n'
+    )
 
 
 def test_partial_loops_f():
@@ -1015,35 +1015,35 @@ def test_partial_loops_f():
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
-            ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
+        ('matrix_vector', Eq(y[i], A[i, j]*x[j])), "F95", "file", header=False, empty=False)
 
     expected = (
-            'subroutine matrix_vector(A, m, n, o, p, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'INTEGER*4, intent(in) :: n\n'
-            'INTEGER*4, intent(in) :: o\n'
-            'INTEGER*4, intent(in) :: p\n'
-            'REAL*8, intent(in), dimension(1:m, 1:p) :: A\n'
-            'REAL*8, intent(in), dimension(1:n) :: x\n'
-            'REAL*8, intent(out), dimension(1:%(iup-ilow)s) :: y\n'
-            'INTEGER*4 :: i\n'
-            'INTEGER*4 :: j\n'
-            'do i = %(ilow)s, %(iup)s\n'
-            '   y(i) = 0\n'
-            'end do\n'
-            'do i = %(ilow)s, %(iup)s\n'
-            '   do j = 1, n\n'
-            '      y(i) = y(i) + %(rhs)s\n'
-            '   end do\n'
-            'end do\n'
-            'end subroutine\n'
-            ) % {
-                    'rhs': 'A(i, j)*x(j)',
-                    'iup': str(m - 4),
-                    'ilow': str(1 + o),
-                    'iup-ilow': str(m - 4 - o)
-                    }
+        'subroutine matrix_vector(A, m, n, o, p, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'INTEGER*4, intent(in) :: n\n'
+        'INTEGER*4, intent(in) :: o\n'
+        'INTEGER*4, intent(in) :: p\n'
+        'REAL*8, intent(in), dimension(1:m, 1:p) :: A\n'
+        'REAL*8, intent(in), dimension(1:n) :: x\n'
+        'REAL*8, intent(out), dimension(1:%(iup-ilow)s) :: y\n'
+        'INTEGER*4 :: i\n'
+        'INTEGER*4 :: j\n'
+        'do i = %(ilow)s, %(iup)s\n'
+        '   y(i) = 0\n'
+        'end do\n'
+        'do i = %(ilow)s, %(iup)s\n'
+        '   do j = 1, n\n'
+        '      y(i) = y(i) + %(rhs)s\n'
+        '   end do\n'
+        'end do\n'
+        'end subroutine\n'
+    ) % {
+        'rhs': 'A(i, j)*x(j)',
+        'iup': str(m - 4),
+        'ilow': str(1 + o),
+        'iup-ilow': str(m - 4 - o)
+    }
 
     assert expected == code
 
@@ -1078,17 +1078,17 @@ def test_inline_function():
     routine = Routine('test_inline', Eq(y[i], func(x[i])))
     code = get_string(p.dump_f95, [routine])
     expected = (
-            'subroutine test_inline(m, x, y)\n'
-            'implicit none\n'
-            'INTEGER*4, intent(in) :: m\n'
-            'REAL*8, intent(in), dimension(1:m) :: x\n'
-            'REAL*8, intent(out), dimension(1:m) :: y\n'
-            'INTEGER*4 :: i\n'
-            'do i = 1, m\n'
-            '   y(i) = (1 + x(i))*x(i)\n'
-            'end do\n'
-            'end subroutine\n'
-        )
+        'subroutine test_inline(m, x, y)\n'
+        'implicit none\n'
+        'INTEGER*4, intent(in) :: m\n'
+        'REAL*8, intent(in), dimension(1:m) :: x\n'
+        'REAL*8, intent(out), dimension(1:m) :: y\n'
+        'INTEGER*4 :: i\n'
+        'do i = 1, m\n'
+        '   y(i) = (1 + x(i))*x(i)\n'
+        'end do\n'
+        'end subroutine\n'
+    )
     assert code == expected
 
 
