@@ -46,7 +46,7 @@ def test_trigonometric():
 
 
 def test_powers():
-    x, y = symbols('x,y')
+    x, y = symbols('x y')
     assert sqrt(1 - sqrt(x)).subs(x, 4) == I
     assert (sqrt(1 - x**2)**3).subs(x, 2) == - 3*I*sqrt(3)
     assert (x**Rational(1, 3)).subs(x, 27) == 3
@@ -180,7 +180,7 @@ def test_subs_dict1():
 
 
 def test_mul():
-    x, y, z, a, b, c = symbols('x,y,z,a,b,c')
+    x, y, z, a, b, c = symbols('x y z a b c')
     A, B, C = symbols('A B C', commutative=0)
     assert (x*y*z).subs(z*x, y) == y**2
     assert (z*x).subs(1/x, z) == z*x
@@ -213,7 +213,7 @@ def test_mul():
     assert (x*A*B*A*exp(x*A*B)).subs(x*A, B) == B**2*A*exp(B*B)
     assert (x**2*A*B*A*exp(x*A*B)).subs(x*A, B) == B**3*exp(B**2)
     assert (x**3*A*exp(x*A*B)*A*exp(x*A*B)).subs(x*A, B) == \
-            x*B*exp(B**2)*B*exp(B**2)
+        x*B*exp(B**2)*B*exp(B**2)
     assert (x*A*B*C*A*B).subs(x*A*B, C) == C**2*A*B
     assert (-I*a*b).subs(a*b, 2) == -2*I
 
@@ -308,14 +308,14 @@ def test_subs_basic_funcs():
     assert (x**y).subs(y, L) == x**L
     assert ((a - c)/b).subs(b, K) == (a - c)/K
     assert (exp(x*y - z)).subs(x*y, L) == exp(L - z)
-    assert (a*exp(
-        x*y - w*z) + b*exp(x*y + w*z)).subs(z, 0) == a*exp(x*y) + b*exp(x*y)
+    assert (a*exp(x*y - w*z) + b*exp(x*y + w*z)).subs(z, 0) == \
+        a*exp(x*y) + b*exp(x*y)
     assert ((a - b)/(c*d - a*b)).subs(c*d - a*b, K) == (a - b)/K
     assert (w*exp(a*b - c)*x*y/4).subs(x*y, L) == w*exp(a*b - c)*L/4
 
 
 def test_subs_wild():
-    R, S, T, U = symbols('R,S,T,U', cls=Wild)
+    R, S, T, U = symbols('R S T U', cls=Wild)
 
     assert (R*S).subs(R*S, T) == T
     assert (S*R).subs(R*S, T) == T
@@ -330,15 +330,15 @@ def test_subs_wild():
 def test_subs_mixed():
     a, b, c, d, K = symbols('a b c d K', commutative=True)
     w, x, y, z, L = symbols('w x y z L', commutative=False)
-    R, S, T, U = symbols('R,S,T,U', cls=Wild)
+    R, S, T, U = symbols('R S T U', cls=Wild)
 
     assert (a*x*y).subs(x*y, L) == a*L
     assert (a*b*x*y*x).subs(x*y, L) == a*b*L*x
     assert (R*x*y*exp(x*y)).subs(x*y, L) == R*L*exp(L)
     assert (a*x*y*y*x - x*y*z*exp(a*b)).subs(x*y, L) == a*L*y*x - L*z*exp(a*b)
     e = c*y*x*y*x**(R*S - a*b) - T*(a*R*b*S)
-    assert e.subs(
-        x*y, L).subs(a*b, K).subs(R*S, U) == c*y*L*x**(U - K) - T*(U*K)
+    assert e.subs(x*y, L).subs(a*b, K).subs(R*S, U) == \
+        c*y*L*x**(U - K) - T*(U*K)
 
 
 def test_division():
@@ -360,7 +360,7 @@ def test_division():
 
 
 def test_add():
-    a, b, c, d, x, y, t = symbols('a,b,c,d,x,y,t')
+    a, b, c, d, x, y, t = symbols('a b c d x y t')
 
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
     assert (a**2 - c).subs(a**2 - c, d) == d
@@ -403,8 +403,8 @@ def test_functions_subs():
     assert (f(x)**2).subs(f, sin) == sin(x)**2
     assert (f(x, y)).subs(f, log) == log(x, y)
     assert (f(x, y)).subs(f, sin) == f(x, y)
-    assert (
-        sin(x) + atan2(x, y)).subs([[atan2, f], [sin, g]]) == f(x, y) + g(x)
+    assert (sin(x) + atan2(x, y)).subs([[atan2, f], [sin, g]]) == \
+        f(x, y) + g(x)
     assert (g(f(x + y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
 
 
@@ -430,7 +430,7 @@ def test_issue2185():
 
 
 def test_subs_iter():
-    x, y = symbols('x,y')
+    x, y = symbols('x y')
     assert x.subs(reversed([[x, y]])) == y
     it = iter([[x, y]])
     assert x.subs(it) == y
@@ -455,7 +455,7 @@ def test_subs_dict():
                (cos(2*x), b),
                (exp(x), e),
                (x, d),
-               ])
+    ])
     assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
@@ -472,7 +472,7 @@ def test_subs_dict():
 
 
 def test_no_arith_subs_on_floats():
-    a, x, y = symbols('a,x,y')
+    a, x, y = symbols('a x y')
 
     assert (x + 3).subs(x + 3, a) == a
     assert (x + 3).subs(x + 2, a) == a + 1
@@ -535,7 +535,7 @@ def test_issue_3059():
 
 def test_Function_subs():
     from sympy.abc import x, y
-    f, g, h, i = symbols('f,g,h,i', cls=Function)
+    f, g, h, i = symbols('f g h i', cls=Function)
     p = Piecewise((g(f(x, y)), x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h(f(x, y)), x < -1), (h(x), x <= 1))
     assert (f(y) + g(x)).subs({f: h, g: i}) == i(x) + h(y)
@@ -545,12 +545,12 @@ def test_simultaneous_subs():
     from sympy.abc import x, y
     reps = {x: 0, y: 0}
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(
-        reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
+    assert (x/y).subs(reps, simultaneous=True) == \
+        (y/x).subs(reps, simultaneous=True)
     reps = reps.items()
     assert (x/y).subs(reps) != (y/x).subs(reps)
-    assert (x/y).subs(
-        reps, simultaneous=True) == (y/x).subs(reps, simultaneous=True)
+    assert (x/y).subs(reps, simultaneous=True) == \
+        (y/x).subs(reps, simultaneous=True)
 
 
 def issue_3320_3322():
