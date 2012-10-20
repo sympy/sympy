@@ -48,9 +48,9 @@ class BlockMatrix(MatrixExpr):
         numrows = numcols = 0
         M = self.blocks
         for i in range(M.shape[0]):
-            numrows += M[i,0].shape[0]
+            numrows += M[i, 0].shape[0]
         for i in range(M.shape[1]):
-            numcols += M[0,i].shape[1]
+            numcols += M[0, i].shape[1]
         return (numrows, numcols)
 
     @property
@@ -63,11 +63,11 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def rowblocksizes(self):
-        return [self.blocks[i,0].rows for i in range(self.blockshape[0])]
+        return [self.blocks[i, 0].rows for i in range(self.blockshape[0])]
 
     @property
     def colblocksizes(self):
-        return [self.blocks[0,i].cols for i in range(self.blockshape[1])]
+        return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
     def structurally_equal(self, other):
         return (isinstance(other, BlockMatrix)
@@ -103,7 +103,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self.blocks[i,i])
+            return Add(*[Trace(self.blocks[i, i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError("Can't perform trace of irregular blockshape")
 
@@ -187,7 +187,7 @@ class BlockMatrix(MatrixExpr):
                 break
             else:
                 j -= numcols
-        return self.blocks[row_block, col_block][i,j]
+        return self.blocks[row_block, col_block][i, j]
 
     @property
     def is_Identity(self):
@@ -195,9 +195,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self.blocks[i,j].is_Identity:
+                if i==j and not self.blocks[i, j].is_Identity:
                     return False
-                if i!=j and not self.blocks[i,j].is_ZeroMatrix:
+                if i!=j and not self.blocks[i, j].is_ZeroMatrix:
                     return False
         return True
     @property
@@ -234,7 +234,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     @property
     def diag(self):
-        return [self.blocks[i,i] for i in range(self.blocks.rows)]
+        return [self.blocks[i, i] for i in range(self.blocks.rows)]
 
     def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
@@ -244,7 +244,7 @@ class BlockDiagMatrix(BlockMatrix):
                 other.is_BlockDiagMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag,other.diag)])
+            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockmul(self, other)
 
@@ -255,7 +255,7 @@ class BlockDiagMatrix(BlockMatrix):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag,other.diag)])
+            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockadd(self, other)
 
@@ -291,7 +291,7 @@ def block_collapse(expr):
 
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
-        return expr.blocks[0,0]
+        return expr.blocks[0, 0]
     return expr
 
 def bc_matadd(expr):
@@ -325,7 +325,7 @@ def bc_dist(expr):
     factor, mat = expr.as_coeff_mmul()
     if factor != 1 and unpack(mat).is_BlockMatrix:
         B = unpack(mat).blocks
-        return BlockMatrix([[factor * B[i,j] for j in range(B.cols)]
+        return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
                                              for i in range(B.rows)])
     return expr
 

@@ -166,7 +166,7 @@ class MatrixExpr(Basic):
         [0, 0, 1]
         """
         from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i,j]
+        return ImmutableMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -264,7 +264,7 @@ class MatrixSymbol(MatrixExpr):
         # MatMul _entry will pass us a Dummy and ask that we remember it
         # so that it can be summed over later. We'll use the function syntax
         if i.is_Dummy or j.is_Dummy:
-            return Symbol(self.name)(i,j)
+            return Symbol(self.name)(i, j)
         # If that isn't the case we'd really rather just make a symbol
         # They are simpler and look much nicer
         else:

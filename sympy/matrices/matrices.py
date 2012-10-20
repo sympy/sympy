@@ -3506,7 +3506,7 @@ class MatrixBase(object):
 
         newmat = self.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
-        newmat[:,:i] = self[:, :i]
+        newmat[:, :i] = self[:, :i]
         newmat[:, i:j] = mti
         newmat[:, j: ] = self[:, i:]
         return newmat

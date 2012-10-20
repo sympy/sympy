@@ -36,4 +36,4 @@ class Trace(Expr):
 
     def doit(self):
         from sympy import Add
-        return Add(*[self.arg[i,i] for i in range(self.arg.rows)])
+        return Add(*[self.arg[i, i] for i in range(self.arg.rows)])

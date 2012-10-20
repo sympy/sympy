@@ -46,7 +46,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         return self.args[2]
 
     def _entry(self, i, j):
-        return DenseMatrix.__getitem__(self, (i,j))
+        return DenseMatrix.__getitem__(self, (i, j))
 
     __getitem__ = DenseMatrix.__getitem__
 

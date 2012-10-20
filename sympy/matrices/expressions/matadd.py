@@ -39,7 +39,7 @@ class MatAdd(MatrixExpr):
         return self.args[0].shape
 
     def _entry(self, i, j):
-        return Add(*[arg._entry(i,j) for arg in self.args])
+        return Add(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
         from transpose import Transpose
@@ -58,7 +58,7 @@ def validate(*args):
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
+            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
