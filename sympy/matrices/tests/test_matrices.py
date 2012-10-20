@@ -1690,12 +1690,13 @@ def test_matrix_norm():
                 # Abs is causing tests to fail when Abs(alpha) is inside a Max
                 # or Min. The tests produce mathematically true statements that
                 # are too complex to be simplified well.
-                continue;
+                continue
             try:
                 assert ((alpha*M).norm(order) ==
                         abs(alpha) * M.norm(order))
             except NotImplementedError:
-                pass;  # Some Norms fail on symbolic matrices due to Max issue
+                pass
+                # Some Norms fail on symbolic matrices due to Max issue
 
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
@@ -1724,7 +1725,8 @@ def test_matrix_norm():
                     assert simplify(  (alpha*v).norm(order) -
                             (abs(alpha) * v.norm(order))  ) == 0
                 except NotImplementedError:
-                    pass;  # Some Norms fail on symbolics due to Max issue
+                    pass
+                    # Some Norms fail on symbolics due to Max issue
 
 
 def test_singular_values():
@@ -1733,8 +1735,10 @@ def test_singular_values():
     A = Matrix([[0, 1*I], [2, 0]])
     assert A.singular_values() == [2, 1]
 
-    A = eye(3); A[1, 1] = x; A[2, 2] = 5
-    vals = A.singular_values();
+    A = eye(3)
+    A[1, 1] = x
+    A[2, 2] = 5
+    vals = A.singular_values()
     assert 1 in vals and 5 in vals and abs(x) in vals
 
     A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
@@ -1744,9 +1748,9 @@ def test_singular_values():
 
 def test_condition_number():
     x = Symbol('x', real=True)
-    A = eye(3);
-    A[0, 0] = 10;
-    A[2, 2] = S(1)/10;
+    A = eye(3)
+    A[0, 0] = 10
+    A[2, 2] = S(1)/10
     assert A.condition_number() == 100
 
     A[1, 1] = x

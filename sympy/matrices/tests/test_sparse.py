@@ -113,7 +113,8 @@ def test_sparse_matrix():
                              [1, 0],
     [0, 0],
     [0, 1]])
-    S = SparseMatrix.eye(3); S[2, 1] = 2
+    S = SparseMatrix.eye(3)
+    S[2, 1] = 2
     S.col_swap(1, 0)
     assert S == SparseMatrix([
         [0, 1, 0],
