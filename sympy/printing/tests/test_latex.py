@@ -458,7 +458,7 @@ def test_latex_issue1477():
 def test_latex_pow_fraction():
     x = Symbol('x')
     # Testing exp
-    assert 'e^{-x}' in latex(exp(-x)/2).replace(' ', '') # Remove Whitespace
+    assert 'e^{-x}' in latex(exp(-x)/2).replace(' ', '')  # Remove Whitespace
 
     # Testing just e^{-x} in case future changes alter behavior of muls or fracs
     # In particular current output is \frac{1}{2}e^{- x} but perhaps this will

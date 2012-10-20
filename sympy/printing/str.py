@@ -231,8 +231,8 @@ class StrPrinter(Printer):
         else:
             sign = ""
 
-        a = [] # items in the numerator
-        b = [] # items that are in the denominator (if any)
+        a = []  # items in the numerator
+        b = []  # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()

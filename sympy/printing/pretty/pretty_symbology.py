@@ -455,7 +455,7 @@ def pretty_symbol(symb_name):
         for s in l:
             pretty = mapping.get(s)
             if pretty is None:
-                try: # match by separate characters
+                try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
                 except KeyError:
                     return None
@@ -469,7 +469,7 @@ def pretty_symbol(symb_name):
         pretty_subs = None
 
     # glue the results into one string
-    if pretty_subs is None: # nice formatting of sups/subs did not work
+    if pretty_subs is None:  # nice formatting of sups/subs did not work
         return symb_name
     else:
         sups_result = ' '.join(pretty_sups)

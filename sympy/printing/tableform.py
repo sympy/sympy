@@ -304,7 +304,7 @@ class TableForm(object):
                      l.center(_head_width))
                 d = [l] + d
             s.append(format_str % tuple(d))
-        return ''.join(s)[:-1] # don't include trailing newline
+        return ''.join(s)[:-1]  # don't include trailing newline
 
     def _latex(self, printer):
         """

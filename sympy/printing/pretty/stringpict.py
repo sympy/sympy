@@ -283,11 +283,11 @@ class stringPict(object):
         while i < self.width():
             svals.extend([ sval[i:i+ncols] for sval in self.picture ])
             if do_vspacers:
-                svals.append("") # a vertical spacer
+                svals.append("")  # a vertical spacer
             i += ncols
 
         if svals[-1] == '':
-            del svals[-1] #  Get rid of the last spacer
+            del svals[-1]  # Get rid of the last spacer
 
         return "\n".join(svals)
 
