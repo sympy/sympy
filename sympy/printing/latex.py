@@ -191,13 +191,14 @@ class LatexPrinter(Printer):
                 else:
                     args = expr.args
 
-                for term in args:
-                    pretty = self._print(term)
+                from sympy import Integral, Piecewise, Product, Sum
 
-                    if term.is_Add:
-                        term_tex = (r"\left(%s\right)" % pretty)
-                    else:
-                        term_tex = str(pretty)
+                for i, term in enumerate(args):
+                    term_tex = self._print(term)
+
+                    if term.is_Add or (i != len(args) - 1 and
+                            isinstance(term, (Integral, Piecewise, Product, Sum))):
+                        term_tex = r"\left(%s\right)" % term_tex
 
                     # between two digits, \times must always be used,
                     # to avoid confusion

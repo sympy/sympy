@@ -1043,16 +1043,20 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
+        from sympy import Integral, Piecewise, Product, Sum
+
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom
         for i in xrange(0, len(a)):
-            if a[i].is_Add and len(a) > 1:
+            if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
+                    isinstance(a[i], (Integral, Piecewise, Product, Sum))):
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
                 a[i] = self._print(a[i])
 
         for i in xrange(0, len(b)):
-            if b[i].is_Add and len(b) > 1:
+            if (b[i].is_Add and len(b) > 1) or (i != len(b) - 1 and
+                    isinstance(b[i], (Integral, Piecewise, Product, Sum))):
                 b[i] = prettyForm(*self._print(b[i]).parens())
             else:
                 b[i] = self._print(b[i])
