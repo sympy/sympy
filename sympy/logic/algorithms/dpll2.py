@@ -15,6 +15,7 @@ from sympy.core import Symbol
 from sympy import Predicate
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
 
+
 def dpll_satisfiable(expr):
     """
     Check satisfiability of a propositional sentence.
@@ -33,7 +34,7 @@ def dpll_satisfiable(expr):
 
     """
     symbols = list(expr.atoms(Symbol, Predicate))
-    symbols_int_repr = set(range(1, len(symbols) + 1))
+    symbols_int_repr = range(1, len(symbols) + 1)
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
 
@@ -57,8 +58,8 @@ class SATSolver(object):
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, heuristic = 'vsids', \
-                 clause_learning = 'none', INTERVAL = 500):
+    def __init__(self, clauses, variables, var_settings, heuristic='vsids',
+                 clause_learning='none', INTERVAL=500):
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
@@ -131,7 +132,6 @@ class SATSolver(object):
 
             for lit in self.clauses[i]:
                 self.occurrence_count[lit] += 1
-
 
     def _find_model(self):
         """Main DPLL loop.
@@ -209,9 +209,8 @@ class SATSolver(object):
                 # Try the opposite setting of the most recent decision
                 flip_lit = -self._current_level.decision
                 self._undo()
-                self.levels.append(Level(flip_lit, flipped = True))
+                self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
-
 
     ########################
     #    Helper Methods    #
@@ -360,7 +359,6 @@ class SATSolver(object):
         # Pop the level off the stack
         self.levels.pop()
 
-
     #########################
     #      Propagation      #
     #########################
@@ -422,6 +420,7 @@ class SATSolver(object):
         """Initialize the data structures needed for the VSIDS heuristic."""
         self.lit_heap = []
         self.lit_scores = {}
+
         def _nfloat(a):
             """Return negative, float value of a.
 
@@ -544,11 +543,9 @@ class SATSolver(object):
         for lit in cls:
             self.lit_scores[lit] += 1
 
-
     ########################
     #   Clause Learning    #
     ########################
-
     def _simple_add_learned_clause(self, cls):
         """Add a new clause to the theory.
 
@@ -605,13 +602,14 @@ class SATSolver(object):
         """Clean up learned clauses."""
         pass
 
+
 class Level(object):
     """
     Represents a single level in the DPLL algorithm, and contains
     enough information for a sound backtracking procedure.
     """
 
-    def __init__(self, decision, flipped = False):
+    def __init__(self, decision, flipped=False):
         self.decision = decision
         self.var_settings = set()
         self.flipped = flipped

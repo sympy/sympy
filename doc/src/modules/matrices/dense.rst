@@ -1,14 +1,10 @@
 Dense Matrices
 ==============
 
-.. module:: sympy.matrices.dense
-
-.. module:: sympy.matrices.immutable
-
 Matrix Class Reference
 ----------------------
 
-.. autoclass:: sympy.matrices.dense.MutableMatrix
+.. autoclass:: sympy.matrices.dense.MutableDenseMatrix
    :members:
 
 ImmutableMatrix Class Reference
@@ -16,3 +12,4 @@ ImmutableMatrix Class Reference
 
 .. autoclass:: sympy.matrices.immutable.ImmutableMatrix
    :members:
+   :noindex:

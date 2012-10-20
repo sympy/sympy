@@ -49,7 +49,8 @@ class CodePrinter(StrPrinter):
             # then terms with summations
             if isinstance(dummies, tuple):
                 indices = self._sort_optimized(dummies, expr)
-                openloop_d, closeloop_d = self._get_loop_opening_ending(indices)
+                openloop_d, closeloop_d = self._get_loop_opening_ending(
+                    indices)
 
                 for term in d[dummies]:
                     if term in d and not ([f.keys() for f in d[term]]
@@ -73,14 +74,16 @@ class CodePrinter(StrPrinter):
                         # syntax is currently undefined.  FIXME: What would be
                         # a good interpretation?
                         if assign_to is None:
-                            raise AssignmentError("need assignment variable for loops")
+                            raise AssignmentError(
+                                "need assignment variable for loops")
                         if term.has(assign_to):
                             raise(ValueError("FIXME: lhs present in rhs,\
                                 this is undefined in CCodePrinter"))
 
                         lines.extend(openloop)
                         lines.extend(openloop_d)
-                        text = "%s = %s" % (lhs_printed, CodePrinter.doprint(self, assign_to + term))
+                        text = "%s = %s" % (lhs_printed, CodePrinter.doprint(
+                            self, assign_to + term))
                         lines.append(self._get_statement(text))
                         lines.extend(closeloop_d)
                         lines.extend(closeloop)

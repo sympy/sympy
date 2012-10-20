@@ -48,11 +48,11 @@ class ReprPrinter(Printer):
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
-        r+= '(%s)' % ', '.join([self._print(a) for a in expr.args])
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
     def _print_FunctionClass(self, expr):
-        return 'Function(%r)'%(expr.__name__)
+        return 'Function(%r)' % (expr.__name__)
 
     def _print_Half(self, expr):
         return 'Rational(1, 2)'
@@ -131,7 +131,7 @@ class ReprPrinter(Printer):
         return repr(expr)
 
     def _print_tuple(self, expr):
-        if len(expr)==1:
+        if len(expr) == 1:
             return "(%s,)" % self._print(expr[0])
         else:
             return "(%s)" % self.reprify(expr, ", ")

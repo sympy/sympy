@@ -7,15 +7,17 @@ from sympy.utilities.randtest import (
         test_numerically as tn,
         test_derivative_numerically as td)
 
+
 def test_TupleParametersBase():
     # test that our implementation of the chain rule works
     p = hyper((), (), z**2)
     assert p.diff(z) == p*2*z
 
+
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
 
-    assert hyper((1, 2),(1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((1, 2), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
 
     h = hyper((1, 2), (3, 4, 5), z)
     assert h.ap == Tuple(1, 2)
@@ -28,12 +30,13 @@ def test_hyper():
     assert tn(z*hyper((1, 1), Tuple(2), -z), log(1 + z), z)
 
     # differentiation
-    h = hyper((randcplx(), randcplx(), randcplx()), (randcplx(), randcplx()), z)
+    h = hyper(
+        (randcplx(), randcplx(), randcplx()), (randcplx(), randcplx()), z)
     assert td(h, z)
 
     a1, a2, b1, b2, b3 = symbols('a1:3, b1:4')
     assert hyper((a1, a2), (b1, b2, b3), z).diff(z) == \
-             a1*a2/(b1*b2*b3) * hyper((a1+1, a2+1), (b1+1, b2+1, b3+1), z)
+             a1*a2/(b1*b2*b3) * hyper((a1 + 1, a2 + 1), (b1 + 1, b2 + 1, b3 + 1), z)
 
     # differentiation wrt parameters is not supported
     assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
@@ -42,6 +45,7 @@ def test_hyper():
     from sympy import polar_lift
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
            hyper([z], [k], polar_lift(x))
+
 
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
@@ -56,9 +60,10 @@ def test_expand_func():
     # hyperexpand wrapper for hyper:
     assert expand_func(hyper([], [], z)) == exp(z)
     assert expand_func(hyper([1, 2, 3], [], z)) == hyper([1, 2, 3], [], z)
-    assert expand_func(meijerg([[1,1],[]], [[1],[0]], z)) == log(z + 1)
-    assert expand_func(meijerg([[1,1],[]], [[],[]], z)) \
-           == meijerg([[1,1],[]], [[],[]], z)
+    assert expand_func(meijerg([[1, 1], []], [[1], [0]], z)) == log(z + 1)
+    assert expand_func(meijerg([[1, 1], []], [[], []], z)) \
+           == meijerg([[1, 1], []], [[], []], z)
+
 
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
@@ -104,7 +109,7 @@ def test_meijer():
     assert tn(meijerg(Tuple(), Tuple(), Tuple(0), Tuple(), -z), exp(z), z)
     assert tn(sqrt(pi)*meijerg(Tuple(), Tuple(),
                                Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
-    assert tn(meijerg(Tuple(1, 1),Tuple(), Tuple(1), Tuple(0), z),
+    assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
 
     # differentiation
@@ -122,7 +127,7 @@ def test_meijer():
 
     a1, a2, b1, b2, c1, c2, d1, d2 = symbols('a1:3, b1:3, c1:3, d1:3')
     assert meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z).diff(z) == \
-        (meijerg((a1-1, a2), (b1, b2), (c1, c2), (d1, d2), z) \
+        (meijerg((a1 - 1, a2), (b1, b2), (c1, c2), (d1, d2), z)
          + (a1 - 1)*meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z))/z
 
     assert meijerg([z, z], [], [], [], z).diff(z) == \
@@ -138,13 +143,14 @@ def test_meijer():
     assert meijerg([a], [b], [c], [d], z).integrand(s) == \
            z**s*gamma(c - s)*gamma(-a + s + 1)/(gamma(b - s)*gamma(-d + s + 1))
 
+
 def test_meijerg_derivative():
     assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \
            log(z)*meijerg([], [1, 1], [0, 0, x], [], z) \
            + 2*meijerg([], [1, 1, 1], [0, 0, x, 0], [], z)
 
     y = randcplx()
-    a = 5 # mpmath chokes with non-real numbers, and Mod1 with floats
+    a = 5  # mpmath chokes with non-real numbers, and Mod1 with floats
     assert td(meijerg([x], [], [], [], y), x)
     assert td(meijerg([x**2], [], [], [], y), x)
     assert td(meijerg([], [x], [], [], y), x)
@@ -157,13 +163,17 @@ def test_meijerg_derivative():
     b = S(3)/2
     assert td(meijerg([a + 2], [b], [b - 3, x], [a], y), x)
 
+
 def test_meijerg_period():
     assert meijerg([], [1], [0], [], x).get_period() == 2*pi
     assert meijerg([1], [], [], [0], x).get_period() == 2*pi
-    assert meijerg([], [], [0], [], x).get_period() == 2*pi # exp(x)
-    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi # cos(sqrt(x))
-    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi # sin(sqrt(x))
-    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo # log(1 + x)
+    assert meijerg([], [], [0], [], x).get_period() == 2*pi  # exp(x)
+    assert meijerg(
+        [], [], [0], [S(1)/2], x).get_period() == 2*pi  # cos(sqrt(x))
+    assert meijerg(
+        [], [], [S(1)/2], [0], x).get_period() == 4*pi  # sin(sqrt(x))
+    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo  # log(1 + x)
+
 
 def test_hyper_unpolarify():
     from sympy import exp_polar
@@ -174,6 +184,7 @@ def test_hyper_unpolarify():
     assert hyper([0], [0], a).argument == b
     assert hyper([0, 1], [0], a).argument == a
 
+
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
@@ -182,15 +193,23 @@ def test_hyperrep():
     # First test the base class works.
     from sympy import Piecewise, exp_polar
     a, b, c, d, z = symbols('a b c d z')
+
     class myrep(HyperRep):
         @classmethod
-        def _expr_small(cls, x): return a
+        def _expr_small(cls, x):
+            return a
+
         @classmethod
-        def _expr_small_minus(cls, x): return b
+        def _expr_small_minus(cls, x):
+            return b
+
         @classmethod
-        def _expr_big(cls, x, n): return c*n
+        def _expr_big(cls, x, n):
+            return c*n
+
         @classmethod
-        def _expr_big_minus(cls, x, n): return d*n
+        def _expr_big_minus(cls, x, n):
+            return d*n
     assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), (a, True))
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrep') == \
            Piecewise((0, abs(z) > 1), (b, True))
@@ -212,7 +231,9 @@ def test_hyperrep():
                   a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
             return False
         # Next check that the two small representations agree.
-        if not tn(func.rewrite('nonrepsmall').subs(z, exp_polar(I*pi)*z).replace(exp_polar, exp),
+        if not tn(
+            func.rewrite('nonrepsmall').subs(
+                z, exp_polar(I*pi)*z).replace(exp_polar, exp),
                   func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
                   z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
             return False
@@ -221,6 +242,7 @@ def test_hyperrep():
         if abs(expr.subs(z, 1 + 1e-15).n() - expr.subs(z, 1 - 1e-15).n()) > 1e-10:
             return False
         # Finally check continuity of the big reps.
+
         def dosubs(func, a, b):
             rv = func.subs(z, exp_polar(a)*z).rewrite('nonrep')
             return rv.subs(z, exp_polar(b)*z).replace(exp_polar, exp)
@@ -248,14 +270,15 @@ def test_hyperrep():
              -2*z/(2*a + 1)*hyper([-a - S(1)/2, -a], [S(1)/2], z).diff(z), z)
     assert t(HyperRep_log2(z), -z/4*hyper([S(3)/2, 1, 1], [2, 2], z), z)
     assert t(HyperRep_cosasin(a, z), hyper([-a, a], [S(1)/2], z), z)
-    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1-a, 1+a], [S(3)/2], z), z)
+    assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
+
 
 def test_meijerg_eval():
     from sympy import besseli, exp_polar
     from sympy.abc import l
     a = randcplx()
     arg = x*exp_polar(k*pi*I)
-    expr1 = pi*meijerg([[], [(a+1)/2]], [[a/2], [-a/2, (a+ 1)/2]], arg**2/4)
+    expr1 = pi*meijerg([[], [(a + 1)/2]], [[a/2], [-a/2, (a + 1)/2]], arg**2/4)
     expr2 = besseli(a, arg)
 
     # Test that the two expressions agree for all arguments.

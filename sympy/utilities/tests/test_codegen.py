@@ -11,6 +11,7 @@ from sympy.utilities.lambdify import implemented_function
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
+
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
@@ -25,11 +26,14 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     output.close()
     return source
 
+
 def test_Routine_argument_order():
     a, x, y, z = symbols('a x y z')
-    expr = (x+y)*z
-    raises(CodeGenArgumentListError, lambda: Routine("test", expr, argument_sequence=[z, x]))
-    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a, expr), argument_sequence=[z, x, y]))
+    expr = (x + y)*z
+    raises(CodeGenArgumentListError, lambda: Routine("test", expr,
+           argument_sequence=[z, x]))
+    raises(CodeGenArgumentListError, lambda: Routine("test", Eq(a,
+           expr), argument_sequence=[z, x, y]))
     r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
     assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
     assert [ type(arg) for arg in r.arguments ] == [
@@ -51,6 +55,7 @@ def test_empty_c_code():
     source = get_string(code_gen.dump_c, [])
     assert source == "#include \"file.h\"\n#include <math.h>\n"
 
+
 def test_empty_c_code_with_comment():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [], header=True)
@@ -68,14 +73,16 @@ def test_empty_c_code_with_comment():
             "#include <math.h>\n"
             )
 
+
 def test_empty_c_header():
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [])
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
+
 def test_simple_c_code():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_c, [routine])
@@ -87,6 +94,7 @@ def test_simple_c_code():
         "}\n"
     )
     assert source == expected
+
 
 def test_numbersymbol_c_code():
     routine = Routine("test", pi**Catalan)
@@ -102,8 +110,9 @@ def test_numbersymbol_c_code():
     )
     assert source == expected
 
+
 def test_c_code_argument_order():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
@@ -117,9 +126,10 @@ def test_c_code_argument_order():
     )
     assert source == expected
 
+
 def test_simple_c_header():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
     source = get_string(code_gen.dump_h, [routine])
@@ -131,10 +141,11 @@ def test_simple_c_header():
     )
     assert source == expected
 
+
 def test_simple_c_codegen():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
-    result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
+    result = codegen(("test", (x + y)*z), "C", "file", header=False, empty=False)
     expected = [
        ("file.c",
         "#include \"file.h\"\n"
@@ -150,19 +161,22 @@ def test_simple_c_codegen():
     ]
     assert result == expected
 
+
 def test_multiple_results_c():
-    x,y,z = symbols('x,y,z')
-    expr1 = (x+y)*z
-    expr2 = (x-y)*z
+    x, y, z = symbols('x,y,z')
+    expr1 = (x + y)*z
+    expr2 = (x - y)*z
     routine = Routine(
         "test",
-        [expr1,expr2]
+        [expr1, expr2]
     )
     code_gen = CCodeGen()
     raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
 
+
 def test_no_results_c():
     raises(ValueError, lambda: Routine("test", []))
+
 
 def test_ansi_math1_codegen():
     # not included: log10
@@ -219,12 +233,13 @@ def test_ansi_math1_codegen():
         'double test_tanh(double x);\n#endif\n'
     )
 
+
 def test_ansi_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
     x, y = symbols('x,y')
     name_expr = [
-        ("test_atan2", atan2(x,y)),
+        ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
     ]
     result = codegen(name_expr, "C", "file", header=False, empty=False)
@@ -242,12 +257,13 @@ def test_ansi_math2_codegen():
         '#endif\n'
     )
 
+
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     name_expr = [
-        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
-        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+        ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
     result = codegen(name_expr, "C", "file", header=False, empty=False)
     assert result[0][0] == "file.c"
@@ -305,10 +321,11 @@ def test_complicated_codegen():
         '#endif\n'
     )
 
+
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -346,6 +363,7 @@ def test_loops_c():
         '#endif\n'
             )
 
+
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
     # the following line could also be
@@ -369,16 +387,17 @@ def test_dummy_loops_c():
     code = get_string(c.dump_c, [r])
     assert code == expected
 
+
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m,o,p = symbols('n m o p', integer=True)
+    n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
-    i = Idx('i', (o, m - 5)) # Note: bounds are inclusive
+    i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
@@ -412,6 +431,7 @@ def test_partial_loops_c():
         '#endif\n'
             )
 
+
 def test_output_arg_c():
     from sympy import sin, cos, Equality
     x, y, z = symbols("x,y,z")
@@ -429,10 +449,12 @@ def test_output_arg_c():
     )
     assert result[0][1] == expected
 
+
 def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])
     assert source == ""
+
 
 def test_empty_f_code_with_header():
     code_gen = FCodeGen()
@@ -449,14 +471,16 @@ def test_empty_f_code_with_header():
             "!******************************************************************************\n"
             )
 
+
 def test_empty_f_header():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [])
     assert source == ""
 
+
 def test_simple_f_code():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [routine])
@@ -470,6 +494,7 @@ def test_simple_f_code():
             "end function\n"
     )
     assert source == expected
+
 
 def test_numbersymbol_f_code():
     routine = Routine("test", pi**Catalan)
@@ -485,8 +510,9 @@ def test_numbersymbol_f_code():
     )
     assert source == expected
 
+
 def test_f_code_argument_order():
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
@@ -502,9 +528,10 @@ def test_f_code_argument_order():
     )
     assert source == expected
 
+
 def test_simple_f_header():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_h, [routine])
@@ -520,10 +547,12 @@ def test_simple_f_header():
     )
     assert source == expected
 
+
 def test_simple_f_codegen():
-    x,y,z = symbols('x,y,z')
-    expr = (x+y)*z
-    result = codegen(("test", (x+y)*z), "F95", "file", header=False, empty=False)
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
+    result = codegen(
+        ("test", (x + y)*z), "F95", "file", header=False, empty=False)
     expected = [
        ("file.f90",
         "REAL*8 function test(x, y, z)\n"
@@ -545,19 +574,22 @@ def test_simple_f_codegen():
     ]
     assert result == expected
 
+
 def test_multiple_results_f():
-    x,y,z = symbols('x,y,z')
-    expr1 = (x+y)*z
-    expr2 = (x-y)*z
+    x, y, z = symbols('x,y,z')
+    expr1 = (x + y)*z
+    expr2 = (x - y)*z
     routine = Routine(
         "test",
-        [expr1,expr2]
+        [expr1, expr2]
     )
     code_gen = FCodeGen()
     raises(CodeGenError, lambda: get_string(code_gen.dump_h, [routine]))
 
+
 def test_no_results_f():
     raises(ValueError, lambda: Routine("test", []))
+
 
 def test_intrinsic_math_codegen():
     # not included: log10
@@ -653,7 +685,7 @@ def test_intrinsic_math_codegen():
     assert result[0][1] == expected
 
     assert result[1][0] == "file.h"
-    expected =  (
+    expected = (
             'interface\n'
             'REAL*8 function test_abs(x)\n'
             'implicit none\n'
@@ -735,12 +767,13 @@ def test_intrinsic_math_codegen():
     )
     assert result[1][1] == expected
 
+
 def test_intrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
     x, y = symbols('x,y')
     name_expr = [
-        ("test_atan2", atan2(x,y)),
+        ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
     ]
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
@@ -780,12 +813,13 @@ def test_intrinsic_math2_codegen():
     )
     assert result[1][1] == expected
 
+
 def test_complicated_codegen_f95():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
     name_expr = [
-        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
-        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+        ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),
     ]
     result = codegen(name_expr, "F95", "file", header=False, empty=False)
     assert result[0][0] == "file.f90"
@@ -841,6 +875,7 @@ def test_complicated_codegen_f95():
     )
     assert result[1][1] == expected
 
+
 def test_loops():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
@@ -890,6 +925,7 @@ def test_loops():
             'end interface\n'
             )
 
+
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
     # the following line could also be
@@ -916,12 +952,13 @@ def test_dummy_loops_f95():
     code = get_string(c.dump_f95, [r])
     assert code == expected
 
+
 def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
 
-    i,j,n,m = symbols('i,j,n,m', integer=True)
-    A,x,y = symbols('A,x,y')
+    i, j, n, m = symbols('i,j,n,m', integer=True)
+    A, x, y = symbols('A,x,y')
     A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
     x = IndexedBase(x)[Idx(j, n)]
     y = IndexedBase(y)[Idx(i, m)]
@@ -964,16 +1001,17 @@ def test_loops_InOut():
             'end interface\n'
             )
 
+
 def test_partial_loops_f():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m,o,p = symbols('n m o p', integer=True)
+    n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
     y = IndexedBase('y')
-    i = Idx('i', (o, m - 5)) # Note: bounds are inclusive
+    i = Idx('i', (o, m - 5))  # Note: bounds are inclusive
     j = Idx('j', n)          # dimension n corresponds to bounds (0, n - 1)
 
     (f1, code), (f2, interface) = codegen(
@@ -1003,11 +1041,12 @@ def test_partial_loops_f():
             ) % {
                     'rhs': 'A(i, j)*x(j)',
                     'iup': str(m - 4),
-                    'ilow': str(1+o),
+                    'ilow': str(1 + o),
                     'iup-ilow': str(m - 4 -o)
                     }
 
     assert expected == code
+
 
 def test_output_arg_f():
     from sympy import sin, cos, Equality
@@ -1026,15 +1065,16 @@ def test_output_arg_f():
         'end function\n'
     )
 
+
 def test_inline_function():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)
     j = Idx('j', n)
     p = FCodeGen()
-    func = implemented_function('func', Lambda(n, n*(n+1)))
+    func = implemented_function('func', Lambda(n, n*(n + 1)))
     routine = Routine('test_inline', Eq(y[i], func(x[i])))
     code = get_string(p.dump_f95, [routine])
     expected = (
@@ -1051,9 +1091,11 @@ def test_inline_function():
         )
     assert code == expected
 
+
 def test_check_case():
     x, X = symbols('x,X')
     raises(CodeGenError, lambda: codegen(('test', x*X), 'f95', 'prefix'))
+
 
 def test_check_case_false_positive():
     # The upper case/lower case exception should not be triggered by SymPy

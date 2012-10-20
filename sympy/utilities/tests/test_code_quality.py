@@ -36,20 +36,24 @@ message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 
 implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
-str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
-gen_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
+str_raise_re = re.compile(
+    r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
+gen_raise_re = re.compile(
+    r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
+
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
     including the whitespace of docstring code samples."""
-    n = len(s)-len(s.lstrip())
-    if not s[n:n+3] in ['...', '>>>']:
+    n = len(s) - len(s.lstrip())
+    if not s[n:n + 3] in ['...', '>>>']:
         check = s[:n]
     else:
-        smore = s[n+3:]
-        check = s[:n] + smore[:len(smore)-len(smore.lstrip())]
+        smore = s[n + 3:]
+        check = s[:n] + smore[:len(smore) - len(smore.lstrip())]
     return not (check.expandtabs() == check)
+
 
 def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
     """
@@ -61,6 +65,7 @@ def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"
         return
     for root, dirs, files in walk(base_path):
         check_files(glob(join(root, pattern)), file_check, exclusions)
+
 
 def check_files(files, file_check, exclusions=set()):
     """
@@ -75,6 +80,7 @@ def check_files(files, file_check, exclusions=set()):
         if filter(lambda ex: ex in fname, exclusions):
             continue
         file_check(fname)
+
 
 def test_files():
     """
@@ -96,33 +102,34 @@ def test_files():
                 test_this_file(fname, test_file)
 
     def test_this_file(fname, test_file):
-        line = None # to flag the case where there were no lines in file
+        line = None  # to flag the case where there were no lines in file
         for idx, line in enumerate(test_file):
             if line.endswith(" \n") or line.endswith("\t\n"):
-                assert False, message_space % (fname, idx+1)
+                assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
-                assert False, message_carriage % (fname, idx+1)
+                assert False, message_carriage % (fname, idx + 1)
             if tab_in_leading(line):
-                assert False, message_tabs % (fname, idx+1)
+                assert False, message_tabs % (fname, idx + 1)
             if str_raise_re.search(line):
-                assert False, message_str_raise % (fname, idx+1)
+                assert False, message_str_raise % (fname, idx + 1)
             if gen_raise_re.search(line):
-                assert False, message_gen_raise % (fname, idx+1)
+                assert False, message_gen_raise % (fname, idx + 1)
             if (implicit_test_re.search(line) and
-                not filter(lambda ex: ex in fname, import_exclude)):
-                assert False, message_implicit % (fname, idx+1)
+                    not filter(lambda ex: ex in fname, import_exclude)):
+                assert False, message_implicit % (fname, idx + 1)
 
             result = old_raise_re.search(line)
 
             if result is not None:
-                assert False, message_old_raise % (fname, idx+1, result.group(2))
+                assert False, message_old_raise % (
+                    fname, idx + 1, result.group(2))
 
         if line is not None:
             if line == '\n' and idx > 0:
-                assert False, message_multi_eof % (fname, idx+1)
+                assert False, message_multi_eof % (fname, idx + 1)
             elif not line.endswith('\n'):
                 # eof newline check
-                assert False, message_eof % (fname, idx+1)
+                assert False, message_eof % (fname, idx + 1)
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [
@@ -159,9 +166,11 @@ def test_files():
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
+
 def _with_space(c):
     # return c with a random amount of leading space
     return random.randint(0, 10)*' ' + c
+
 
 def test_raise_statement_regular_expression():
     candidates_ok = [
@@ -243,7 +252,7 @@ def test_implicit_imports_regular_expression():
         "... import sympy.something.something",
         "... from sympy import something",
         "... from sympy.somewhere import something",
-        ">> from sympy import *", # To allow 'fake' docstrings
+        ">> from sympy import *",  # To allow 'fake' docstrings
         "# from sympy import *",
         "some text # from sympy import *",
     ]

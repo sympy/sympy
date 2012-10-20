@@ -8,6 +8,7 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 from functools import wraps
 from sympify import SympifyError, sympify
 
+
 def deprecated(**decorator_kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -22,6 +23,7 @@ def deprecated(**decorator_kwargs):
             return func(*args, **kwargs)
         return new_func
     return deprecated_decorator
+
 
 def _sympifyit(arg, retval=None):
     """decorator to smartly _sympify function arguments
@@ -43,6 +45,7 @@ def _sympifyit(arg, retval=None):
         return __sympifyit(func, arg, retval)
 
     return deco
+
 
 def __sympifyit(func, arg, retval=None):
     """decorator to _sympify `arg` argument for function `func`

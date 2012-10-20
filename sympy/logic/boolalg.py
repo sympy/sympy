@@ -3,6 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
 
+
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -41,6 +42,7 @@ class BooleanFunction(Application, Boolean):
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
 
+
 class And(LatticeOp, BooleanFunction):
     """
     Logical AND function.
@@ -59,6 +61,7 @@ class And(LatticeOp, BooleanFunction):
     zero = False
     identity = True
 
+
 class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
@@ -68,6 +71,7 @@ class Or(LatticeOp, BooleanFunction):
     """
     zero = True
     identity = False
+
 
 class Xor(BooleanFunction):
     """
@@ -95,13 +99,15 @@ class Xor(BooleanFunction):
         >>> Xor(True, False, True, False)
         False
         """
-        if not args: return False
+        if not args:
+            return False
         args = list(args)
         A = args.pop()
         while args:
             B = args.pop()
             A = Or(And(A, Not(B)), And(Not(A), B))
         return A
+
 
 class Not(BooleanFunction):
     """
@@ -157,6 +163,7 @@ class Not(BooleanFunction):
         if arg.func is Not:
             return arg.args[0]
 
+
 class Nand(BooleanFunction):
     """
     Logical NAND function.
@@ -182,6 +189,7 @@ class Nand(BooleanFunction):
         False
         """
         return Not(And(*args))
+
 
 class Nor(BooleanFunction):
     """
@@ -212,6 +220,7 @@ class Nor(BooleanFunction):
         True
         """
         return Not(Or(*args))
+
 
 class Implies(BooleanFunction):
     """
@@ -249,6 +258,7 @@ class Implies(BooleanFunction):
             return Or(Not(A), B)
         else:
             return Basic.__new__(cls, *args)
+
 
 class Equivalent(BooleanFunction):
     """
@@ -289,6 +299,7 @@ class Equivalent(BooleanFunction):
             return Nor(*argset)
         return Basic.__new__(cls, *set(args))
 
+
 class ITE(BooleanFunction):
     """
     If then else clause.
@@ -317,9 +328,11 @@ class ITE(BooleanFunction):
         args = list(args)
         if len(args) == 3:
             return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
-        raise ValueError("ITE expects 3 arguments, but got %d: %s" % (len(args), str(args)))
+        raise ValueError("ITE expects 3 arguments, but got %d: %s" %
+                         (len(args), str(args)))
 
 ### end class definitions. Some useful methods
+
 
 def fuzzy_not(arg):
     """
@@ -342,6 +355,7 @@ def fuzzy_not(arg):
         return
     return not arg
 
+
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 
@@ -357,6 +371,7 @@ def conjuncts(expr):
     """
     return And.make_args(expr)
 
+
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
 
@@ -371,6 +386,7 @@ def disjuncts(expr):
 
     """
     return Or.make_args(expr)
+
 
 def distribute_and_over_or(expr):
     """
@@ -400,6 +416,7 @@ def distribute_and_over_or(expr):
     else:
         return expr
 
+
 def to_cnf(expr):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
@@ -421,6 +438,7 @@ def to_cnf(expr):
     expr = sympify(expr)
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
+
 
 def is_cnf(expr):
     """
@@ -478,6 +496,7 @@ def is_cnf(expr):
 
     return True
 
+
 def eliminate_implications(expr):
     """
     Change >>, <<, and Equivalent into &, |, and ~. That is, return an
@@ -496,7 +515,7 @@ def eliminate_implications(expr):
     """
     expr = sympify(expr)
     if expr.is_Atom:
-        return expr     ## (Atoms are unchanged.)
+        return expr  # (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
     if expr.func is Implies:
         a, b = args[0], args[-1]
@@ -506,6 +525,7 @@ def eliminate_implications(expr):
         return (a | Not(b)) & (b | Not(a))
     else:
         return expr.func(*args)
+
 
 def compile_rule(s):
     """
@@ -526,7 +546,7 @@ def compile_rule(s):
     """
     import re
     from sympy.core import Symbol
-    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol' : Symbol})
+    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol': Symbol})
 
 
 def to_int_repr(clauses, symbols):
@@ -552,5 +572,5 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols[arg]
 
-    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
+    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
                                                             for c in clauses]

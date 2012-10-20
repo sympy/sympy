@@ -77,7 +77,8 @@ subexpressions, collect them and evaluate them at once. This is implemented in t
     ⎛                ⎡  ________   ________⎤⎞
     ⎝[(x₀, sin(x))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
-    >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))), use_unicode=True)
+    >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))),
+    ...     use_unicode=True)
     ⎛                                                 ⎡  ________   ________⎤⎞
     ⎝[(x₀, cos(y)), (x₁, sin(x + 1)), (x₂, x₀ + x₁)], ⎣╲╱ x₂ + 4 ⋅╲╱ x₂ + 5 ⎦⎠
 

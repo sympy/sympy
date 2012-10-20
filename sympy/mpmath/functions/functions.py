@@ -365,9 +365,11 @@ def _lambertw_approx_hybrid(z, k):
             # Simple linear approximation
             return 0.2 + 0.3*z
         if (not imag_sign) and x > 0.0:
-            L1 = math.log(x); L2 = math.log(L1)
+            L1 = math.log(x)
+            L2 = math.log(L1)
         else:
-            L1 = cmath.log(z); L2 = cmath.log(L1)
+            L1 = cmath.log(z)
+            L2 = cmath.log(L1)
     elif k == -1:
         # return real type
         r = -0.367879441171442

@@ -22,7 +22,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         # Create print methods for classes that should use StrPrinter instead
         # of ReprPrinter.
         for name in STRPRINT:
-            f_name = "_print_%s"%name
+            f_name = "_print_%s" % name
             f = getattr(StrPrinter, f_name)
             setattr(PythonPrinter, f_name, f)
 
@@ -61,7 +61,8 @@ def python(expr, **settings):
                 newsymbolname += "_"
                 if (newsymbolname not in printer.symbols and
                         newsymbolname not in printer.functions):
-                    renamings[sympy.Symbol(symbolname)] = sympy.Symbol(newsymbolname)
+                    renamings[sympy.Symbol(
+                        symbolname)] = sympy.Symbol(newsymbolname)
                     break
         result += newsymbolname + ' = Symbol(\'' + symbolname + '\')\n'
 
@@ -73,7 +74,8 @@ def python(expr, **settings):
                 newfunctionname += "_"
                 if (newfunctionname not in printer.symbols and
                         newfunctionname not in printer.functions):
-                    renamings[sympy.Function(functionname)] = sympy.Function(newfunctionname)
+                    renamings[sympy.Function(
+                        functionname)] = sympy.Function(newfunctionname)
                     break
         result += newfunctionname + ' = Function(\'' + functionname + '\')\n'
 

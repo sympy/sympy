@@ -1,13 +1,19 @@
 from collections import defaultdict
 import random
+from operator import gt
 
 from sympy.core import Basic, C
+from sympy.core.compatibility import is_sequence, iterable  # logical location
+from sympy.core.compatibility import (as_int, quick_sort,
+         product as cartes, combinations, combinations_with_replacement)
+from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # this is the logical location of these functions
 from sympy.utilities.misc import default_sort_key
 from sympy.core.compatibility import (is_sequence, iterable,
     product as cartes, combinations, combinations_with_replacement)
+
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -51,7 +57,8 @@ def flatten(iterable, levels=None, cls=None):
         elif levels > 0:
             levels -= 1
         else:
-            raise ValueError("expected non-negative number of levels, got %s" % levels)
+            raise ValueError(
+                "expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
         reducible = lambda x: is_sequence(x, set)
@@ -70,6 +77,7 @@ def flatten(iterable, levels=None, cls=None):
 
     return result
 
+
 def unflatten(iter, n=2):
     """Group ``iter`` into tuples of length ``n``. Raise an error if
     the length of ``iter`` is not a multiple of ``n``.
@@ -77,6 +85,63 @@ def unflatten(iter, n=2):
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
     return zip(*(iter[i::n] for i in xrange(n)))
+
+
+def reshape(seq, how):
+    """Reshape the sequence according to the template in ``how``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities import reshape
+    >>> seq = range(1, 9)
+
+    >>> reshape(seq, [4]) # lists of 4
+    [[1, 2, 3, 4], [5, 6, 7, 8]]
+
+    >>> reshape(seq, (4,)) # tuples of 4
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+
+    >>> reshape(seq, (2, 2)) # tuples of 4
+    [(1, 2, 3, 4), (5, 6, 7, 8)]
+
+    >>> reshape(seq, (2, [2])) # (i, i, [i, i])
+    [(1, 2, [3, 4]), (5, 6, [7, 8])]
+
+    >>> reshape(seq, ((2,), [2])) # etc....
+    [((1, 2), [3, 4]), ((5, 6), [7, 8])]
+
+    >>> reshape(seq, (1, [2], 1))
+    [(1, [2, 3], 4), (5, [6, 7], 8)]
+
+    >>> reshape(tuple(seq), ([[1], 1, (2,)],))
+    (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
+
+    >>> reshape(tuple(seq), ([1], 1, (2,)))
+    (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+    """
+    m = sum(flatten(how))
+    n, rem = divmod(len(seq), m)
+    if m < 0 or rem:
+        raise ValueError('template must sum to positive number '
+        'that divides the length of the sequence')
+    i = 0
+    container = type(how)
+    rv = [None]*n
+    for k in range(len(rv)):
+        rv[k] = []
+        for hi in how:
+            if type(hi) is int:
+                rv[k].extend(seq[i: i + hi])
+                i += hi
+            else:
+                n = sum(flatten(hi))
+                fg = type(hi)
+                rv[k].append(fg(reshape(seq[i: i + n], hi))[0])
+                i += n
+        rv[k] = container(rv[k])
+    return type(seq)(rv)
+
 
 def group(container, multiple=True):
     """
@@ -112,6 +177,7 @@ def group(container, multiple=True):
         groups[i] = (current[0], len(current))
 
     return groups
+
 
 def postorder_traversal(node, key=None):
     """
@@ -164,6 +230,7 @@ def postorder_traversal(node, key=None):
                 yield subtree
     yield node
 
+
 def interactive_traversal(expr):
     """Traverse a tree asking a user which branch to choose. """
     from sympy.printing import pprint
@@ -213,7 +280,7 @@ def interactive_traversal(expr):
         if n_args == 1:
             choices = '0'
         else:
-            choices = '0-%d' % (n_args-1)
+            choices = '0-%d' % (n_args - 1)
 
         try:
             choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
@@ -222,7 +289,8 @@ def interactive_traversal(expr):
             print
         else:
             if choice == '?':
-                cprint(RED, "%s - select subexpression with the given index" % choices)
+                cprint(RED, "%s - select subexpression with the given index" %
+                       choices)
                 cprint(RED, "f - select the first subexpression")
                 cprint(RED, "l - select the last subexpression")
                 cprint(RED, "r - select a random subexpression")
@@ -232,31 +300,33 @@ def interactive_traversal(expr):
             elif choice in ['d', '']:
                 result = expr
             elif choice == 'f':
-                result = _interactive_traversal(args[0], stage+1)
+                result = _interactive_traversal(args[0], stage + 1)
             elif choice == 'l':
-                result = _interactive_traversal(args[-1], stage+1)
+                result = _interactive_traversal(args[-1], stage + 1)
             elif choice == 'r':
-                result = _interactive_traversal(random.choice(args), stage+1)
+                result = _interactive_traversal(random.choice(args), stage + 1)
             else:
                 try:
                     choice = int(choice)
                 except ValueError:
-                    cprint(BRED, "Choice must be a number in %s range\n" % choices)
+                    cprint(BRED,
+                           "Choice must be a number in %s range\n" % choices)
                     result = _interactive_traversal(expr, stage)
                 else:
                     if choice < 0 or choice >= n_args:
                         cprint(BRED, "Choice must be in %s range\n" % choices)
                         result = _interactive_traversal(expr, stage)
                     else:
-                        result = _interactive_traversal(args[choice], stage+1)
+                        result = _interactive_traversal(args[choice], stage + 1)
 
         return result
 
     return _interactive_traversal(expr, 0)
 
-def variations(seq, n=None, repetition=False):
-    """Returns a generator of the variations (size n) of the list `seq` (size N).
-    `repetition` controls whether items in seq can appear more than once;
+
+def variations(seq, n, repetition=False):
+    """Returns a generator of the n-sized variations of ``seq`` (size N).
+    ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
     ========
@@ -282,7 +352,10 @@ def variations(seq, n=None, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
+    See Also
+    ========
 
+    sympy.core.compatibility.permutations
     """
     from sympy.core.compatibility import permutations
 
@@ -299,6 +372,7 @@ def variations(seq, n=None, repetition=False):
             for i in xrange(len(seq)):
                 for cc in variations(seq, n - 1, True):
                     yield (seq[i],) + cc
+
 
 def subsets(seq, k=None, repetition=False):
     """Generates all k-subsets (combinations) from an n-element set, seq.
@@ -351,6 +425,7 @@ def subsets(seq, k=None, repetition=False):
             for i in combinations_with_replacement(seq, k):
                 yield i
 
+
 def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
@@ -391,6 +466,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         name = '%s%s' % (prefix, start)
         yield cls(name, *args, **assumptions)
         start += 1
+
 
 def capture(func):
     """Return the printed output of func().
@@ -452,15 +528,24 @@ def sift(seq, keyfunc):
     ...      lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
+    If you need to sort the sifted items it might be better to use
+    the lazyDSU_sort which can economically apply multiple sort keys
+    to a squence while sorting.
+
+    See Also
+    ========
+    lazyDSU_sort
     """
     m = defaultdict(list)
     for i in seq:
         m[keyfunc(i)].append(i)
     return m
 
+
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
     return [ value for _, value in zip(xrange(n), iter) ]
+
 
 def dict_merge(*dicts):
     """Merge dictionaries into a single dictionary. """
@@ -470,6 +555,7 @@ def dict_merge(*dicts):
         merged.update(dict)
 
     return merged
+
 
 def common_prefix(*seqs):
     """Return the subsequence that is a common start of sequences in ``seqs``.
@@ -495,6 +581,7 @@ def common_prefix(*seqs):
     else:
         i += 1
     return seqs[0][:i]
+
 
 def common_suffix(*seqs):
     """Return the subsequence that is a common ending of sequences in ``seqs``.
@@ -525,6 +612,7 @@ def common_suffix(*seqs):
     else:
         return seqs[0][i + 1:]
 
+
 def prefixes(seq):
     """
     Generate all prefixes of a sequence.
@@ -541,7 +629,8 @@ def prefixes(seq):
     n = len(seq)
 
     for i in xrange(n):
-        yield seq[:i+1]
+        yield seq[:i + 1]
+
 
 def postfixes(seq):
     """
@@ -559,7 +648,8 @@ def postfixes(seq):
     n = len(seq)
 
     for i in xrange(n):
-        yield seq[n-i-1:]
+        yield seq[n - i - 1:]
+
 
 def topological_sort(graph, key=None):
     r"""
@@ -670,6 +760,7 @@ def topological_sort(graph, key=None):
     else:
         return L
 
+
 def rotate_left(x, y):
     """
     Left rotates a list x by the number of steps specified
@@ -688,6 +779,7 @@ def rotate_left(x, y):
     y = y % len(x)
     return x[y:] + x[:y]
 
+
 def rotate_right(x, y):
     """
     Left rotates a list x by the number of steps specified
@@ -705,6 +797,7 @@ def rotate_right(x, y):
         return x
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
 
 def multiset_partitions(multiset, m):
     """
@@ -821,6 +914,7 @@ def multiset_partitions(multiset, m):
         a[n - m + j] = j - 1
     return f(m, n, 0, n, a)
 
+
 def partitions(n, m=None, k=None):
     """Generate all partitions of integer n (>= 0).
 
@@ -876,8 +970,6 @@ def partitions(n, m=None, k=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    from sympy.ntheory.residue_ntheory import int_tested
-
     if n < 0:
         raise ValueError("n must be >= 0")
     if m == 0:
@@ -892,7 +984,7 @@ def partitions(n, m=None, k=None):
     if m*k < n:
         return
 
-    n, m, k = int_tested(n, m, k)
+    n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
     ms = {k: q}
     keys = [k]  # ms.keys(), from largest to smallest
@@ -921,7 +1013,6 @@ def partitions(n, m=None, k=None):
                 del keys[-1], ms[i]
             room += 1
 
-
             # Break the remainder into pieces of size i-1.
             i -= 1
             q, r = divmod(reuse, i)
@@ -939,6 +1030,7 @@ def partitions(n, m=None, k=None):
             break
         room -= need
         yield ms
+
 
 def binary_partitions(n):
     """
@@ -993,6 +1085,7 @@ def binary_partitions(n):
                 x >>= 1
     yield [1]*n
 
+
 def has_dups(seq):
     """Return True if there are any duplicate elements in ``seq``.
 
@@ -1012,6 +1105,29 @@ def has_dups(seq):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
+
+
+def has_variety(seq):
+    """Return True if there are any different elements in ``seq``.
+
+    Examples
+    ========
+    >>> from sympy.utilities.iterables import has_variety
+    >>> from sympy import Dict, Set
+
+    >>> has_variety((1, 2, 1))
+    True
+    >>> has_variety((1, 1, 1))
+    False
+    """
+    for i, s in enumerate(seq):
+        if i == 0:
+            sentinel = s
+        else:
+            if s != sentinel:
+                return True
+    return False
+
 
 def uniq(seq):
     """
@@ -1042,6 +1158,7 @@ def uniq(seq):
         return Tuple(*tuple(result))
     return type(seq)(result)
 
+
 def generate_bell(n):
     """
     Generates the bell permutations.
@@ -1063,22 +1180,24 @@ def generate_bell(n):
     P = [i for i in xrange(n)]
     T = [0]
     cache = set()
+
     def gen(P, T, t):
         if t == (n - 1):
             cache.add(tuple(P))
         else:
             for i in T:
-                P[i], P[t+1] = P[t+1], P[i]
+                P[i], P[t + 1] = P[t + 1], P[i]
                 if tuple(P) not in cache:
                     cache.add(tuple(P))
                     gen(P, T, t + 1)
-                P[i], P[t+1] = P[t+1], P[i]
+                P[i], P[t + 1] = P[t + 1], P[i]
             T.append(t + 1)
             cache.add(tuple(P))
             gen(P, T, t + 1)
             T.remove(t + 1)
     gen(P, T, 0)
     return sorted(cache)
+
 
 def generate_involutions(n):
     """
@@ -1105,9 +1224,10 @@ def generate_involutions(n):
     >>> len(generate_involutions(4))
     10
     """
-    P = range(n) # the items of the permutation
-    F = [0] # the fixed points {is this right??}
+    P = range(n)  # the items of the permutation
+    F = [0]  # the fixed points {is this right??}
     cache = set()
+
     def gen(P, F, t):
         if t == n:
             cache.add(tuple(P))
@@ -1127,6 +1247,7 @@ def generate_involutions(n):
             F.pop()
     gen(P, F, 1)
     return sorted(cache)
+
 
 def generate_derangements(perm):
     """
@@ -1152,10 +1273,11 @@ def generate_derangements(perm):
     indices = range(len(perm))
     p = variations(indices, len(indices))
     for rv in \
-            uniq(tuple(perm[i] for i in idx) \
-                 for idx in p if all(perm[k] != \
+            uniq(tuple(perm[i] for i in idx)
+                 for idx in p if all(perm[k] !=
                                      perm[idx[k]] for k in xrange(len(perm)))):
         yield list(rv)
+
 
 def unrestricted_necklace(n, k):
     """
@@ -1180,6 +1302,7 @@ def unrestricted_necklace(n, k):
     [0, 2, 3, 2], [0, 3, 3, 3]]
     """
     a = [0] * n
+
     def gen(t, p):
         if (t > n - 1):
             if (n % p == 0):
@@ -1193,6 +1316,7 @@ def unrestricted_necklace(n, k):
                 for necklace in gen(t + 1, t):
                     yield necklace
     return gen(1, 1)
+
 
 def generate_oriented_forest(n):
     """
@@ -1234,3 +1358,148 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+
+def lazyDSU_sort(seq, keys, warn=False):
+    """Return sorted seq, breaking ties by applying keys only when needed.
+
+    If ``warn`` is True then an error will be raised if there were no
+    keys remaining to break ties.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import lazyDSU_sort, default_sort_key
+    >>> from sympy.abc import x, y
+
+    The count_ops is not sufficient to break ties in this list and the first
+    two items appear in their original order: Python sorting is stable.
+
+    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
+    ...    [lambda x: x.count_ops()], warn=False)
+    ...
+    [y + 2, x + 2, x**2 + y + 3]
+
+    The use of default_sort_key allows the tie to be broken (and warn can
+    be safely left False).
+
+    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
+    ...    [lambda x: x.count_ops(),
+    ...     default_sort_key])
+    ...
+    [x + 2, y + 2, x**2 + y + 3]
+
+    Here, sequences are sorted by length, then sum:
+
+    >>> seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], [
+    ...    lambda x: len(x),
+    ...    lambda x: sum(x)]]
+    ...
+    >>> lazyDSU_sort(seq, keys, warn=False)
+    [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
+
+    If ``warn`` is True, an error will be raised if there were not
+    enough keys to break ties:
+
+    >>> lazyDSU_sort(seq, keys, warn=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: not enough keys to break ties
+
+
+    Notes
+    =====
+
+    The decorated sort is one of the fastest ways to sort a sequence for
+    which special item comparison is desired: the sequence is decorated,
+    sorted on the basis of the decoration (e.g. making all letters lower
+    case) and then undecorated. If one wants to break ties for items that
+    have the same decorated value, a second key can be used. But if the
+    second key is expensive to compute then it is inefficient to decorate
+    all items with both keys: only those items having identical first key
+    values need to be decorated. This function applies keys successively
+    only when needed to break ties.
+    """
+    d = defaultdict(list)
+    keys = list(keys)
+    f = keys.pop(0)
+    for a in seq:
+        d[f(a)].append(a)
+    seq = []
+    for k in sorted(d.keys()):
+        if len(d[k]) > 1:
+            if keys:
+                d[k] = lazyDSU_sort(d[k], keys, warn)
+            elif warn:
+                raise ValueError('not enough keys to break ties')
+            seq.extend(d[k])
+        else:
+            seq.append(d[k][0])
+    return seq
+
+
+def minlex(seq, directed=True):
+    """Return a tuple where the smallest element appears first; if
+    ``directed`` is True (default) then the order is preserved, otherwise the
+    sequence will be reversed if that gives a lexically smaller ordering.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.polyhedron import minlex
+    >>> minlex((1, 2, 0))
+    (0, 1, 2)
+    >>> minlex((1, 0, 2))
+    (0, 2, 1)
+    >>> minlex((1, 0, 2), directed=False)
+    (0, 1, 2)
+    """
+    seq = list(seq)
+    small = min(seq)
+    i = seq.index(small)
+    if not directed:
+        n = len(seq)
+        p = (i + 1) % n
+        m = (i - 1) % n
+        if seq[p] > seq[m]:
+            seq = list(reversed(seq))
+            i = n - i - 1
+    if i:
+        seq = rotate_left(seq, i)
+    return tuple(seq)
+
+
+def runs(seq, op=gt):
+    """Group the sequence into lists in which successive elements
+    all compare the same with the comparison operator, ``op``:
+    op(seq[i + 1], seq[i]) is True from all elements in a run.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import runs
+    >>> from operator import ge
+    >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2])
+    [[0, 1, 2], [2], [1, 4], [3], [2], [2]]
+    >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2], op=ge)
+    [[0, 1, 2, 2], [1, 4], [3], [2, 2]]
+    """
+    cycles = []
+    seq = iter(seq)
+    try:
+        run = [seq.next()]
+    except StopIteration:
+        return []
+    while True:
+        try:
+            ei = seq.next()
+        except StopIteration:
+            break
+        if op(ei, run[-1]):
+            run.append(ei)
+            continue
+        else:
+            cycles.append(run)
+            run = [ei]
+    if run:
+        cycles.append(run)
+    return cycles

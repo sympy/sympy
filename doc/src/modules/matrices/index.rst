@@ -14,3 +14,5 @@ Contents:
    matrices.rst
    dense.rst
    sparse.rst
+   immutablematrices.rst
+   expressions.rst

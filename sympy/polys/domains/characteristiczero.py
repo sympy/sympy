@@ -2,6 +2,7 @@
 
 from sympy.polys.domains.domain import Domain
 
+
 class CharacteristicZero(Domain):
     """Domain that has infinite number of elements. """
 

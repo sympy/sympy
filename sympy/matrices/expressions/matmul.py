@@ -55,7 +55,7 @@ class MatMul(MatrixExpr):
             # Symbolic shape like (n, m)
             from sympy import Dummy, summation
             k = Dummy('k', integer=True)
-            return summation(coeff*X[i, k]*Y[k, j], (k, 0, X.cols-1))
+            return summation(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
 
     def as_coeff_matrices(self):
         scalars = [x for x in self.args if not x.is_Matrix]
@@ -93,10 +93,10 @@ class MatMul(MatrixExpr):
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
+    for i in range(len(matrices) - 1):
+        A, B = matrices[i:i + 2]
         if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 # Rules
 
@@ -122,7 +122,7 @@ def xxinv(mul):
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         if X.is_square and Y.is_square and X == Inverse(Y):
             I = Identity(X.rows)
-            return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+            return newmul(factor, *(matrices[:i] + [I] + matrices[i + 2:]))
     return mul
 
 
@@ -140,7 +140,7 @@ def remove_ids(mul):
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
     # Apply standard rm_id for MatMuls
-    result = rm_id(lambda x: x.is_Identity == True)(mmul)
+    result = rm_id(lambda x: x.is_Identity is True)(mmul)
     if result != mmul:
         return newmul(factor, *result.args)  # Recombine and return
     else:

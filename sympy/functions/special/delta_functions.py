@@ -6,6 +6,8 @@ from sympy.functions.elementary.complexes import im
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
 ###############################################################################
+
+
 class DiracDelta(Function):
     """
     The DiracDelta function and its derivatives.
@@ -38,7 +40,7 @@ class DiracDelta(Function):
 
     nargs = (1, 2)
 
-    def fdiff(self, argindex = 1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
             k = 0
@@ -97,15 +99,15 @@ class DiracDelta(Function):
         if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = roots(self.args[0], x, \
+            argroots = roots(self.args[0], x,
                                                      multiple=True)
             result = 0
             valid = True
             darg = diff(self.args[0], x)
             for r in argroots:
                 #should I care about multiplicities of roots?
-                if r.is_real and not darg.subs(x,r).is_zero:
-                    result = result + DiracDelta(x - r)/abs(darg.subs(x,r))
+                if r.is_real and not darg.subs(x, r).is_zero:
+                    result = result + DiracDelta(x - r)/abs(darg.subs(x, r))
                 else:
                     valid = False
                     break
@@ -115,7 +117,7 @@ class DiracDelta(Function):
             pass
         return self
 
-    def is_simple(self,x):
+    def is_simple(self, x):
         """is_simple(self, x)
 
            Tells whether the argument(args[0]) of DiracDelta is a linear
@@ -159,6 +161,7 @@ class DiracDelta(Function):
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
 ###############################################################################
+
 
 class Heaviside(Function):
     """Heaviside Piecewise function
@@ -207,7 +210,7 @@ class Heaviside(Function):
     """
     nargs = 1
 
-    def fdiff(self, argindex = 1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             # property number 1
             return DiracDelta(self.args[0])

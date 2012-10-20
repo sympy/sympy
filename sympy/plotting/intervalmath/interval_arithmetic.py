@@ -178,7 +178,7 @@ class interval(object):
                 valid = True
             if self.start == other.start and self.end == other.end:
                 return (False, valid)
-            if not self.__lt__(other)[0] == None:
+            if not self.__lt__(other)[0] is None:
                 return (True, valid)
             return (None, valid)
         else:
@@ -210,7 +210,7 @@ class interval(object):
 
     def __ge__(self, other):
         if isinstance(other, (int, float)):
-            if self.start >=other:
+            if self.start >= other:
                 return (True, self.is_valid)
             elif self.end < other:
                 return (False, self.is_valid)
@@ -313,7 +313,6 @@ class interval(object):
         else:
             return NotImplemented
 
-
     def __div__(self, other):
         # Both None and False are handled
         if not self.is_valid:
@@ -368,7 +367,7 @@ class interval(object):
             if other < 0:
                 return 1 / self.__pow__(abs(other))
             else:
-                if int(other)==other:
+                if int(other) == other:
                     return _pow_int(self, other)
                 else:
                     return _pow_float(self, other)
@@ -432,6 +431,7 @@ def _pow_float(inter, power):
             end = inter.end**power
 
         return interval(start, end, is_valid=inter.is_valid)
+
 
 def _pow_int(inter, power):
     """Evaluates an interval raised to an integer power"""

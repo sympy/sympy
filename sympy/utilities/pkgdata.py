@@ -21,6 +21,7 @@ import sys
 import os
 from cStringIO import StringIO
 
+
 def get_resource(identifier, pkgname=__name__):
     """
     Acquire a readable object for a given package name and identifier.

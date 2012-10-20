@@ -8,6 +8,7 @@ from time import sleep
 
 from sympy.core.compatibility import callable
 
+
 class PlotModeBase(PlotMode):
     """
     Intended parent class for plotting
@@ -141,7 +142,7 @@ class PlotModeBase(PlotMode):
 
         self._draw_lock = RLock()
 
-        self._calculating_verts  = Event()
+        self._calculating_verts = Event()
         self._calculating_cverts = Event()
         self._calculating_verts_pos = 0.0
         self._calculating_verts_len = 0.0
@@ -185,7 +186,7 @@ class PlotModeBase(PlotMode):
         assert callable(function)
         self._draw_wireframe.append(function)
         if len(self._draw_wireframe) > self._max_render_stack_size:
-            del self._draw_wireframe[1] # leave marker element
+            del self._draw_wireframe[1]  # leave marker element
 
     @synchronized
     def push_solid(self, function):
@@ -197,7 +198,7 @@ class PlotModeBase(PlotMode):
         assert callable(function)
         self._draw_solid.append(function)
         if len(self._draw_solid) > self._max_render_stack_size:
-            del self._draw_solid[1] # leave marker element
+            del self._draw_solid[1]  # leave marker element
 
     def _create_display_list(self, function):
         dl = glGenLists(1)
@@ -209,17 +210,17 @@ class PlotModeBase(PlotMode):
     def _render_stack_top(self, render_stack):
         top = render_stack[-1]
         if top == -1:
-            return -1 # nothing to display
+            return -1  # nothing to display
         elif callable(top):
             dl = self._create_display_list(top)
             render_stack[-1] = (dl, top)
-            return dl # display newly added list
+            return dl  # display newly added list
         elif len(top) == 2:
             if GL_TRUE == glIsList(top[0]):
-                return top[0] # display stored list
+                return top[0]  # display stored list
             dl = self._create_display_list(top[1])
             render_stack[-1] = (dl, top[1])
-            return dl # display regenerated list
+            return dl  # display regenerated list
 
     def _draw_solid_display_list(self, dl):
         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT)
@@ -283,7 +284,7 @@ class PlotModeBase(PlotMode):
         if self._calculating_verts.isSet():
             return
         while self._calculating_cverts.isSet():
-            sleep(0) # wait for previous calculation
+            sleep(0)  # wait for previous calculation
         self._calculating_cverts.set()
         try:
             self._on_calculate_cverts()

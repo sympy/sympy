@@ -6,11 +6,13 @@ from sympy.functions import sin, cos
 from math import sin as p_sin
 from math import cos as p_cos
 
+
 def float_vec3(f):
     def inner(*args):
         v = f(*args)
         return float(v[0]), float(v[1]), float(v[2])
     return inner
+
 
 class Cartesian2D(PlotCurve):
     i_vars, d_vars = 'x', 'y'
@@ -21,6 +23,7 @@ class Cartesian2D(PlotCurve):
     def _get_sympy_evaluator(self):
         fy = self.d_vars[0]
         x = self.t_interval.v
+
         @float_vec3
         def e(_x):
             return (_x, fy.subs(x, _x), 0.0)
@@ -30,6 +33,7 @@ class Cartesian2D(PlotCurve):
         fy = self.d_vars[0]
         x = self.t_interval.v
         return lambdify([x], [x, fy, 0.0])
+
 
 class Cartesian3D(PlotSurface):
     i_vars, d_vars = 'xy', 'z'
@@ -41,6 +45,7 @@ class Cartesian3D(PlotSurface):
         fz = self.d_vars[0]
         x = self.u_interval.v
         y = self.v_interval.v
+
         @float_vec3
         def e(_x, _y):
             return (_x, _y, fz.subs(x, _x).subs(y, _y))
@@ -52,6 +57,7 @@ class Cartesian3D(PlotSurface):
         y = self.v_interval.v
         return lambdify([x, y], [x, y, fz])
 
+
 class ParametricCurve2D(PlotCurve):
     i_vars, d_vars = 't', 'xy'
     intervals = [[0, 2*pi, 100]]
@@ -61,6 +67,7 @@ class ParametricCurve2D(PlotCurve):
     def _get_sympy_evaluator(self):
         fx, fy = self.d_vars
         t = self.t_interval.v
+
         @float_vec3
         def e(_t):
             return (fx.subs(t, _t), fy.subs(t, _t), 0.0)
@@ -71,6 +78,7 @@ class ParametricCurve2D(PlotCurve):
         t = self.t_interval.v
         return lambdify([t], [fx, fy, 0.0])
 
+
 class ParametricCurve3D(PlotCurve):
     i_vars, d_vars = 't', 'xyz'
     intervals = [[0, 2*pi, 100]]
@@ -80,6 +88,7 @@ class ParametricCurve3D(PlotCurve):
     def _get_sympy_evaluator(self):
         fx, fy, fz = self.d_vars
         t = self.t_interval.v
+
         @float_vec3
         def e(_t):
             return (fx.subs(t, _t), fy.subs(t, _t), fz.subs(t, _t))
@@ -89,6 +98,7 @@ class ParametricCurve3D(PlotCurve):
         fx, fy, fz = self.d_vars
         t = self.t_interval.v
         return lambdify([t], [fx, fy, fz])
+
 
 class ParametricSurface(PlotSurface):
     i_vars, d_vars = 'uv', 'xyz'
@@ -100,6 +110,7 @@ class ParametricSurface(PlotSurface):
         fx, fy, fz = self.d_vars
         u = self.u_interval.v
         v = self.v_interval.v
+
         @float_vec3
         def e(_u, _v):
             return (fx.subs(u, _u).subs(v, _v),
@@ -113,6 +124,7 @@ class ParametricSurface(PlotSurface):
         v = self.v_interval.v
         return lambdify([u, v], [fx, fy, fz])
 
+
 class Polar(PlotCurve):
     i_vars, d_vars = 't', 'r'
     intervals = [[0, 2*pi, 100]]
@@ -122,6 +134,7 @@ class Polar(PlotCurve):
     def _get_sympy_evaluator(self):
         fr = self.d_vars[0]
         t = self.t_interval.v
+
         def e(_t):
             _r = float(fr.subs(t, _t))
             return (_r*p_cos(_t), _r*p_sin(_t), 0.0)
@@ -133,6 +146,7 @@ class Polar(PlotCurve):
         fx, fy = fr*cos(t), fr*sin(t)
         return lambdify([t], [fx, fy, 0.0])
 
+
 class Cylindrical(PlotSurface):
     i_vars, d_vars = 'th', 'r'
     intervals = [[0, 2*pi, 40], [-1, 1, 20]]
@@ -141,8 +155,9 @@ class Cylindrical(PlotSurface):
 
     def _get_sympy_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        h  = self.v_interval.v
+        t = self.u_interval.v
+        h = self.v_interval.v
+
         def e(_t, _h):
             _r = float(fr.subs(t, _t).subs(h, _h))
             return (_r*p_cos(_t), _r*p_sin(_t), _h)
@@ -150,10 +165,11 @@ class Cylindrical(PlotSurface):
 
     def _get_lambda_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        h  = self.v_interval.v
+        t = self.u_interval.v
+        h = self.v_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
         return lambdify([t, h], [fx, fy, h])
+
 
 class Spherical(PlotSurface):
     i_vars, d_vars = 'tp', 'r'
@@ -163,8 +179,9 @@ class Spherical(PlotSurface):
 
     def _get_sympy_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        p  = self.v_interval.v
+        t = self.u_interval.v
+        p = self.v_interval.v
+
         def e(_t, _p):
             _r = float(fr.subs(t, _t).subs(p, _p))
             return (_r*p_cos(_t)*p_sin(_p),
@@ -174,8 +191,8 @@ class Spherical(PlotSurface):
 
     def _get_lambda_evaluator(self):
         fr = self.d_vars[0]
-        t  = self.u_interval.v
-        p  = self.v_interval.v
+        t = self.u_interval.v
+        p = self.v_interval.v
         fx = fr * cos(t) * sin(p)
         fy = fr * sin(t) * sin(p)
         fz = fr * cos(p)

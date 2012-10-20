@@ -31,7 +31,7 @@ def test_printmethod():
 
 
 def test_Add():
-    sT(x+y, "Add(Symbol('x'), Symbol('y'))")
+    sT(x + y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 
@@ -44,7 +44,8 @@ def test_Function():
 
 def test_Geometry():
     sT(Point(0, 0),  "Point(Integer(0), Integer(0))")
-    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
+    sT(Ellipse(Point(0, 0), 5, 1),
+       "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 
@@ -75,12 +76,13 @@ def test_list():
 
 def test_Matrix():
     for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
-        sT(cls([[x**+1, 1], [y, x+y]]),
-           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
+        sT(cls([[x**+1, 1], [y, x + y]]),
+           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
-        sT(cls(), "%s([])"%name)
+        sT(cls(), "%s([])" % name)
 
-        sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
+        sT(cls([[x**+1, 1], [y, x + y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
+
 
 
 def test_Rational():
@@ -91,8 +93,11 @@ def test_Rational():
 def test_Float():
     sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
     sT(Float('1.23456789', prec=9), "Float('1.23456788994', prec=9)")
-    sT(Float('1.234567890123456789', prec=19), "Float('1.234567890123456789013', prec=19)")
-    sT(Float('0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
+    sT(Float('1.234567890123456789', prec=19),
+       "Float('1.234567890123456789013', prec=19)")
+    sT(Float(
+        '0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
+
 
 
 def test_Symbol():

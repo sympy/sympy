@@ -10,12 +10,13 @@ from sympy import (
     Rational as sympy_rat,
 )
 
+
 class SymPyRationalField(RationalField):
     """Rational field based on SymPy Rational class. """
 
     dtype = SymPyRationalType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'QQ_sympy'
 
     def __init__(self):
@@ -35,7 +36,8 @@ class SymPyRationalField(RationalField):
         >>> QQ_sympy().of_type(2)
         False
         """
-        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
+        return type(
+            a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
                            type(sympy_rat(2)), type(sympy_rat(1, 2)),
                            type(sympy_rat(3, 2))]
 

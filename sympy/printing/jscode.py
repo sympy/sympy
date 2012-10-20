@@ -75,7 +75,7 @@ class JavascriptCodePrinter(CodePrinter):
         if isinstance(assign_to, basestring):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("JavascriptCodePrinter cannot assign to object of type %s"%
+            raise TypeError("JavascriptCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
         # keep a set of expressions that are not strictly translatable to Javascript
@@ -89,7 +89,7 @@ class JavascriptCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args)-1 and c == True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -106,7 +106,7 @@ class JavascriptCodePrinter(CodePrinter):
             if len(not_js) > 0:
                 frontlines.append("// Not Javascript:")
                 for expr in sorted(not_js, key=str):
-                    frontlines.append("// %s" % expr)
+                    frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("var %s = %s;" % (name, value))
             lines = frontlines + lines
@@ -137,11 +137,11 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1/%s'%(self.parenthesize(expr.base, PREC))
+            return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
         else:
-            return 'Math.pow(%s, %s)'%(self._print(expr.base),
+            return 'Math.pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
 
     def _print_Rational(self, expr):
@@ -177,7 +177,7 @@ class JavascriptCodePrinter(CodePrinter):
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond == True:
+        if expr.args[-1].cond is True:
             last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) {\n%s\n" %
@@ -198,7 +198,7 @@ class JavascriptCodePrinter(CodePrinter):
 
     def _print_Not(self, expr):
         PREC = precedence(expr)
-        return '!'+self.parenthesize(expr.args[0], PREC)
+        return '!' + self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -228,7 +228,8 @@ class JavascriptCodePrinter(CodePrinter):
         code = [ line.lstrip(' \t') for line in code ]
 
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token))) for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_token)))
+                         for line in code ]
 
         pretty = []
         level = 0

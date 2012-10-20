@@ -1,7 +1,11 @@
-from sympy import Symbol, sympify, Tuple, Integer
 from sympy.core.basic import Basic
-from sympy.core.singleton import S
+from sympy.core.containers import Tuple
 from sympy.core.decorators import _sympifyit, call_highest_priority
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.matrices import ShapeError
 
 
@@ -114,11 +118,17 @@ class MatrixExpr(Basic):
     def _eval_inverse(self):
         raise NotImplementedError()
 
+    def _entry(self, i, j):
+        raise NotImplementedError(
+            "Indexing not implemented for %s" % self.__class__.__name__)
+
     def adjoint(self):
-        return MatMul(*[arg.adjoint() for arg in self.args[::-1]])
+        raise NotImplementedError(
+            "adjoint not implemented for %s" % self.__class__.__name__)
 
     def conjugate(self):
-        return MatMul(*[arg.conjugate() for arg in self.args])
+        raise NotImplementedError(
+            "conjugate not implemented for %s" % self.__class__.__name__)
 
     def transpose(self):
         try:
@@ -126,16 +136,11 @@ class MatrixExpr(Basic):
         except (AttributeError, NotImplementedError):
             return Basic.__new__(Transpose, self)
 
-    C = property(conjugate, None, None, 'By-element conjugation.')
-
     T = property(transpose, None, None, 'Matrix transposition.')
 
     @property
     def I(self):
         return Inverse(self)
-
-    def _entry(self, i, j):
-        raise NotImplementedError("Indexing not implemented")
 
     def valid_index(self, i, j):
         def is_valid(idx):
@@ -144,10 +149,11 @@ class MatrixExpr(Basic):
                 0 <= i < self.rows and 0 <= j < self.cols)
 
     def __getitem__(self, key):
-        if isinstance(key, tuple) and len(key)==2:
+        if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError("Slicing is not implemented")
+                raise NotImplementedError(
+                    "Slicing is not implemented for %s" % self.__class__.__name__)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
@@ -161,9 +167,9 @@ class MatrixExpr(Basic):
 
         Returns an object of type ImmutableMatrix.
 
-        See Also
-        --------
-        as_mutable: returns mutable Matrix type
+        Examples
+        ========
+
         >>> from sympy import Identity
         >>> I = Identity(3)
         >>> I
@@ -172,6 +178,11 @@ class MatrixExpr(Basic):
         [1, 0, 0]
         [0, 1, 0]
         [0, 0, 1]
+
+        See Also
+        ========
+        as_mutable: returns mutable Matrix type
+
         """
         from sympy.matrices.immutable import ImmutableMatrix
         return ImmutableMatrix([[    self[i, j]
@@ -277,7 +288,8 @@ class MatrixSymbol(MatrixExpr):
         # If that isn't the case we'd really rather just make a symbol
         # They are simpler and look much nicer
         else:
-            return Symbol('%s_%s%s'%(self.name, str(i), str(j)))
+            return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
+
 
     @property
     def free_symbols(self):
@@ -286,6 +298,7 @@ class MatrixSymbol(MatrixExpr):
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
+
     >>> from sympy.matrices import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
     >>> I = Identity(3)
@@ -311,7 +324,7 @@ class Identity(MatrixSymbol):
         return self
 
     def _entry(self, i, j):
-        if i==j:
+        if i == j:
             return S.One
         else:
             return S.Zero
@@ -319,6 +332,7 @@ class Identity(MatrixSymbol):
 
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
+
     >>> from sympy import MatrixSymbol, ZeroMatrix
     >>> A = MatrixSymbol('A', 3, 5)
     >>> Z = ZeroMatrix(3, 5)

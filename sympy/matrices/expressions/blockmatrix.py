@@ -10,6 +10,7 @@ from sympy import Tuple, Basic, Add
 from sympy.rules import typed, canon, debug, do_one, unpack
 
 
+
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
 
@@ -107,7 +108,8 @@ class BlockMatrix(MatrixExpr):
         if self.rowblocksizes == self.colblocksizes:
             return Add(*[Trace(self.blocks[i, i])
                         for i in range(self.blockshape[0])])
-        raise NotImplementedError("Can't perform trace of irregular blockshape")
+        raise NotImplementedError(
+            "Can't perform trace of irregular blockshape")
 
     def transpose(self):
         """Return transpose of matrix.
@@ -132,7 +134,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
-        if self.blockshape==(1, 1):
+        if self.blockshape == (1, 1):
             mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
@@ -197,9 +199,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self.blocks[i, j].is_Identity:
+                if i == j and not self.blocks[i, j].is_Identity:
                     return False
-                if i!=j and not self.blocks[i, j].is_ZeroMatrix:
+                if i != j and not self.blocks[i, j].is_ZeroMatrix:
                     return False
         return True
 
@@ -260,7 +262,8 @@ class BlockDiagMatrix(BlockMatrix):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[
+                a + b for a, b in zip(self.diag, other.diag)])
         else:
             return BlockMatrix._blockadd(self, other)
 
@@ -268,7 +271,8 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, Matrix, ZeroMatrix, block_collapse
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, \
+                          Identity, Matrix, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
@@ -312,7 +316,7 @@ def bc_matadd(expr):
     for b in blocks[1:]:
         block = block._blockadd(b)
 
-    return MatAdd(*(nonblocks+[block]))
+    return MatAdd(*(nonblocks + [block]))
 
 
 def bc_block_plus_ident(expr):
@@ -343,13 +347,13 @@ def bc_dist(expr):
 def bc_matmul(expr):
     factor, matrices = expr.as_coeff_matrices()
     i = 0
-    while (i+1 < len(matrices)):
-        A, B = matrices[i:i+2]
+    while (i + 1 < len(matrices)):
+        A, B = matrices[i:i + 2]
         if A.is_BlockMatrix and B.is_BlockMatrix:
             matrices[i] = A._blockmul(B)
-            matrices.pop(i+1)
+            matrices.pop(i + 1)
         else:
-            i+=1
+            i += 1
     return MatMul(factor, *matrices)
 
 

@@ -7,12 +7,14 @@ from sympy.tensor.index_methods import IndexConformanceException
 # import test
 from sympy import get_contraction_structure, get_indices
 
+
 def test_trivial_indices():
     x, y = symbols('x y')
     assert get_indices(x) == (set([]), {})
     assert get_indices(x*y) == (set([]), {})
     assert get_indices(x + y) == (set([]), {})
     assert get_indices(x**y) == (set([]), {})
+
 
 def test_get_indices_Indexed():
     x = IndexedBase('x')
@@ -21,12 +23,14 @@ def test_get_indices_Indexed():
     assert get_indices(x[i, j]) == (set([i, j]), {})
     assert get_indices(x[j, i]) == (set([j, i]), {})
 
+
 def test_get_indices_Idx():
     f = Function('f')
     i, j = Idx('i'), Idx('j')
     assert get_indices(f(i)*j) == (set([i, j]), {})
     assert get_indices(f(j, i)) == (set([j, i]), {})
     assert get_indices(f(i)*i) == (set(), {})
+
 
 def test_get_indices_mul():
     x = IndexedBase('x')
@@ -35,11 +39,13 @@ def test_get_indices_mul():
     assert get_indices(x[j]*y[i]) == (set([i, j]), {})
     assert get_indices(x[i]*y[j]) == (set([i, j]), {})
 
+
 def test_get_indices_exceptions():
     x = IndexedBase('x')
     y = IndexedBase('y')
     i, j = Idx('i'), Idx('j')
     raises(IndexConformanceException, lambda: get_indices(x[i] + y[j]))
+
 
 def test_scalar_broadcast():
     x = IndexedBase('x')
@@ -47,29 +53,33 @@ def test_scalar_broadcast():
     i, j = Idx('i'), Idx('j')
     assert get_indices(x[i] + y[i, i]) == (set([i]), {})
 
+
 def test_get_indices_add():
     x = IndexedBase('x')
     y = IndexedBase('y')
     A = IndexedBase('A')
     i, j, k = Idx('i'), Idx('j'), Idx('k')
-    assert get_indices(x[i] + 2*y[i]) == (set([i,]), {})
-    assert get_indices(y[i] + 2*A[i, j]*x[j]) == (set([i,]), {})
-    assert get_indices(y[i] + 2*(x[i] + A[i, j]*x[j])) == (set([i,]), {})
-    assert get_indices(y[i] + x[i]*(A[j, j] + 1)) == (set([i,]), {})
-    assert get_indices(y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i,]), {})
+    assert get_indices(x[i] + 2*y[i]) == (set([i, ]), {})
+    assert get_indices(y[i] + 2*A[i, j]*x[j]) == (set([i, ]), {})
+    assert get_indices(y[i] + 2*(x[i] + A[i, j]*x[j])) == (set([i, ]), {})
+    assert get_indices(y[i] + x[i]*(A[j, j] + 1)) == (set([i, ]), {})
+    assert get_indices(
+        y[i] + x[i]*x[j]*(y[j] + A[j, k]*x[k])) == (set([i, ]), {})
+
 
 def test_get_indices_Pow():
     x = IndexedBase('x')
     y = IndexedBase('y')
     A = IndexedBase('A')
     i, j, k = Idx('i'), Idx('j'), Idx('k')
-    assert get_indices(Pow(x[i], y[j])) == (set([i,j]), {})
+    assert get_indices(Pow(x[i], y[j])) == (set([i, j]), {})
     assert get_indices(Pow(x[i, k], y[j, k])) == (set([i, j, k]), {})
     assert get_indices(Pow(A[i, k], y[k] + A[k, j]*x[j])) == (set([i, k]), {})
     assert get_indices(Pow(2, x[i])) == get_indices(exp(x[i]))
 
     # test of a design decision, this may change:
-    assert get_indices(Pow(x[i], 2)) == (set([i,]), {})
+    assert get_indices(Pow(x[i], 2)) == (set([i, ]), {})
+
 
 def test_get_contraction_structure_basic():
     x = IndexedBase('x')
@@ -78,8 +88,10 @@ def test_get_contraction_structure_basic():
     assert get_contraction_structure(x[i]*y[j]) == {None: set([x[i]*y[j]])}
     assert get_contraction_structure(x[i] + y[j]) == {None: set([x[i], y[j]])}
     assert get_contraction_structure(x[i]*y[i]) == {(i,): set([x[i]*y[i]])}
-    assert get_contraction_structure(1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
+    assert get_contraction_structure(
+        1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
     assert get_contraction_structure(x[i]**y[i]) == {None: set([x[i]**y[i]])}
+
 
 def test_get_contraction_structure_complex():
     x = IndexedBase('x')
@@ -93,6 +105,7 @@ def test_get_contraction_structure_complex():
     d2 = {None: set([x[k]]), (i,): set([expr1*A[k, i]]), expr1*A[k, i]: [d1]}
     assert get_contraction_structure(expr2) == d2
 
+
 def test_contraction_structure_simple_Pow():
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -105,6 +118,7 @@ def test_contraction_structure_simple_Pow():
                 {(j,): set([y[j, j]])}
                 ]
             }
+
 
 def test_contraction_structure_Mul_and_Pow():
     x = IndexedBase('x')
@@ -133,6 +147,7 @@ def test_contraction_structure_Mul_and_Pow():
             }
     assert result == expected
 
+
 def test_contraction_structure_Add_in_Pow():
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -145,8 +160,9 @@ def test_contraction_structure_Add_in_Pow():
                 {None: set([S.One]), (j,): set([y[j, j]])}
                 ]
             }
-    result =  get_contraction_structure(s_ii_jj_s)
+    result = get_contraction_structure(s_ii_jj_s)
     assert result == expected
+
 
 def test_contraction_structure_Pow_in_Pow():
     x = IndexedBase('x')
@@ -169,6 +185,7 @@ def test_contraction_structure_Pow_in_Pow():
             }
     assert get_contraction_structure(ii_jj_kk) == expected
 
+
 def test_ufunc_support():
     f = Function('f')
     g = Function('g')
@@ -185,6 +202,9 @@ def test_ufunc_support():
     assert get_indices(g(f(x[i]))) == (set([i]), {})
 
     assert get_contraction_structure(f(x[i])) == {None: set([f(x[i])])}
-    assert get_contraction_structure(f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
-    assert get_contraction_structure(f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
-    assert get_contraction_structure(f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}
+    assert get_contraction_structure(
+        f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
+    assert get_contraction_structure(
+        f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
+    assert get_contraction_structure(
+        f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}

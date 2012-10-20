@@ -12,7 +12,8 @@ from sympy.core.sympify import SympifyError
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.utilities import default_sort_key
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import has_variety
 
 import re
 
@@ -375,7 +376,8 @@ class LatexPrinter(Printer):
         latex_expr = self._print(expr)
         latex_old = (self._print(e) for e in old)
         latex_new = (self._print(e) for e in new)
-        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        latex_subs = r'\\ '.join(
+            e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
         return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
 
     def _print_Integral(self, expr):
@@ -385,8 +387,9 @@ class LatexPrinter(Printer):
         if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
-            tex = r"\i" + "i"*(len(expr.limits)-1) + "nt"
-            symbols = [r"\, d%s" % self._print(symbol[0]) for symbol in expr.limits]
+            tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
+            symbols = [r"\, d%s" % self._print(symbol[0])
+                                               for symbol in expr.limits]
 
         else:
             for lim in reversed(expr.limits):
@@ -463,7 +466,8 @@ class LatexPrinter(Printer):
                     name = r"\%s^{%s}" % (func, exp)
                 else:
                     # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
+                    name = r"\operatorname{%s}^{%s}" % (
+                        func.replace("_", r"\_"), exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
@@ -968,7 +972,7 @@ class LatexPrinter(Printer):
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                        for e, c in expr.args[:-1]]
-        if expr.args[-1].cond == True:
+        if expr.args[-1].cond is True:
             ecpairs.append(r"%s & \text{otherwise}" %
                                self._print(expr.args[-1].expr))
         else:
@@ -1001,9 +1005,9 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         if mat.is_Add or mat.is_Mul:
-            return r"\left(%s\right)^T"%self._print(mat)
+            return r"\left(%s\right)^T" % self._print(mat)
         else:
-            return "%s^T"%self._print(mat)
+            return "%s^T" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         # Stolen from print_Add
@@ -1030,9 +1034,9 @@ class LatexPrinter(Printer):
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         if base.is_Add or base.is_Mul:
-            return r"\left(%s\right)^{%s}"%(self._print(base), self._print(exp))
+            return r"\left(%s\right)^{%s}" % (self._print(base), self._print(exp))
         else:
-            return "%s^{%s}"%(self._print(base), self._print(exp))
+            return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
         return r"\bold{0}"
@@ -1073,14 +1077,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_ProductSet(self, p):
-        if len(set(p.sets)) == 1 and len(p.sets) > 1:
-            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        if len(p.sets) > 1 and not has_variety(p.sets):
+            return self._print(p.sets[0]) + "^%d" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+ self._print(d.as_boolean())
+            return 'Domain: ' + self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -1147,7 +1151,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{R}"
 
     def _print_TransformationSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}"%(
+        return r"\left\{%s\; |\; %s \in %s\right\}" %(
                 self._print(s.lamda.expr),
                 ', '.join([self._print(var) for var in s.lamda.variables]),
                 self._print(s.base_set))
@@ -1375,7 +1379,7 @@ class LatexPrinter(Printer):
             string = field._coord_sys._names[field._index]
             return r'\mathbb{d}%s' % self._print(Symbol(string))
         else:
-            return 'd(%s)'%self._print(field)
+            return 'd(%s)' % self._print(field)
             string = self._print(field)
             return r'\mathbb{d}\left(%s\right)' % string
 

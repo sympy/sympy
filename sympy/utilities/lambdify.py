@@ -26,66 +26,67 @@ SYMPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs":"fabs",
-    "ceiling":"ceil",
-    "E":"e",
-    "ln":"log",
+    "Abs": "fabs",
+    "ceiling": "ceil",
+    "E": "e",
+    "ln": "log",
 }
 
 MPMATH_TRANSLATIONS = {
-    "ceiling":"ceil",
-    "chebyshevt":"chebyt",
-    "chebyshevu":"chebyu",
-    "E":"e",
-    "I":"j",
-    "ln":"log",
+    "ceiling": "ceil",
+    "chebyshevt": "chebyt",
+    "chebyshevu": "chebyu",
+    "E": "e",
+    "I": "j",
+    "ln": "log",
     #"lowergamma":"lower_gamma",
-    "oo":"inf",
+    "oo": "inf",
     #"uppergamma":"upper_gamma",
-    "LambertW":"lambertw",
-    "Matrix":"matrix",
-    "MutableDenseMatrix":"matrix",
-    "conjugate":"conj",
-    "dirichlet_eta":"altzeta",
-    "Ei":"ei",
-    "Shi":"shi",
-    "Chi":"chi",
-    "Si":"si",
-    "Ci":"ci"
+    "LambertW": "lambertw",
+    "Matrix": "matrix",
+    "MutableDenseMatrix": "matrix",
+    "conjugate": "conj",
+    "dirichlet_eta": "altzeta",
+    "Ei": "ei",
+    "Shi": "shi",
+    "Chi": "chi",
+    "Si": "si",
+    "Ci": "ci"
 }
 
 NUMPY_TRANSLATIONS = {
-    "Abs":"abs",
-    "acos":"arccos",
-    "acosh":"arccosh",
-    "arg":"angle",
-    "asin":"arcsin",
-    "asinh":"arcsinh",
-    "atan":"arctan",
-    "atan2":"arctan2",
-    "atanh":"arctanh",
-    "ceiling":"ceil",
-    "E":"e",
-    "im":"imag",
-    "ln":"log",
-    "Matrix":"matrix",
-    "MutableDenseMatrix":"matrix",
-    "Max":"amax",
-    "Min":"amin",
-    "oo":"inf",
-    "re":"real",
+    "Abs": "abs",
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "arg": "angle",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atan2": "arctan2",
+    "atanh": "arctanh",
+    "ceiling": "ceil",
+    "E": "e",
+    "im": "imag",
+    "ln": "log",
+    "Matrix": "matrix",
+    "MutableDenseMatrix": "matrix",
+    "Max": "amax",
+    "Min": "amin",
+    "oo": "inf",
+    "re": "real",
 }
 
 # Available modules:
 MODULES = {
-    "math"   : (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
-    "mpmath" : (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
-    "numpy"  : (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
-    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  (
+    "math": (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
+    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "numpy": (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
+    "sympy": (SYMPY,  SYMPY_DEFAULT,  {},                  (
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
+
 
 def _import(module, reload="False"):
     """
@@ -97,9 +98,11 @@ def _import(module, reload="False"):
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[module]
+        namespace, namespace_default, translations, import_commands = MODULES[
+            module]
     except KeyError:
-        raise NameError("'%s' module can't be used for lambdification" % module)
+        raise NameError(
+            "'%s' module can't be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -124,11 +127,13 @@ def _import(module, reload="False"):
             except ImportError:
                 pass
 
-        raise ImportError("can't import '%s' with '%s' command" % (module, import_command))
+        raise ImportError(
+            "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = namespace[translation]
+
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
@@ -265,6 +270,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     lstr = lambdastr(args, expr, printer=printer)
     return eval(lstr, namespace)
 
+
 def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
@@ -278,6 +284,7 @@ def _get_namespace(m):
         return m.__dict__
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+
 
 def lambdastr(args, expr, printer=None):
     """
@@ -314,6 +321,7 @@ def lambdastr(args, expr, printer=None):
         args = str(args)
 
     return "lambda %s: (%s)" % (args, expr)
+
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
@@ -380,6 +388,7 @@ def _imp_namespace(expr, namespace=None):
         for arg in expr.args:
             _imp_namespace(arg, namespace)
     return namespace
+
 
 def implemented_function(symfunc, implementation):
     """ Add numerical ``implementation`` to function ``symfunc``.

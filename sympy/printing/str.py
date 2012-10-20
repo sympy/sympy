@@ -25,7 +25,7 @@ class StrPrinter(Printer):
 
     def parenthesize(self, item, level):
         if precedence(item) <= level:
-            return "(%s)"%self._print(item)
+            return "(%s)" % self._print(item)
         else:
             return self._print(item)
 
@@ -59,11 +59,11 @@ class StrPrinter(Printer):
             else:
                 sign = "+"
             if precedence(term) < PREC:
-                l.extend([sign, "(%s)"%t])
+                l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
         sign = l.pop(0)
-        if sign=='+':
+        if sign == '+':
             sign = ""
         return sign + ' '.join(l)
 
@@ -80,7 +80,7 @@ class StrPrinter(Printer):
 
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
-        return expr.__class__.__name__ + "(%s)"%", ".join(l)
+        return expr.__class__.__name__ + "(%s)" % ", ".join(l)
 
     def _print_BlockMatrix(self, B):
         if B.blocks.shape == (1, 1):
@@ -94,7 +94,7 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
+        return 'Derivative(%s)' % ", ".join(map(self._print, expr.args))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -104,14 +104,14 @@ class StrPrinter(Printer):
             item = "%s: %s" % (self._print(key), self._print(d[key]))
             items.append(item)
 
-        return "{%s}"%", ".join(items)
+        return "{%s}" % ", ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+self._print(d.as_boolean())
+            return 'Domain: ' + self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -143,7 +143,7 @@ class StrPrinter(Printer):
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
-        return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is special -- it's base is tuple
@@ -194,7 +194,7 @@ class StrPrinter(Printer):
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)
-        return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
+        return expr.func.__name__ + "(%s)" % ", ".join(self._print(arg) for arg in args)
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
@@ -204,7 +204,7 @@ class StrPrinter(Printer):
             return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
 
     def _print_list(self, expr):
-        return "[%s]"%self.stringify(expr, ", ")
+        return "[%s]" % self.stringify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
@@ -265,11 +265,11 @@ class StrPrinter(Printer):
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/"%a_str[0] + '*'.join(b_str)
+                return sign + "%s/" % a_str[0] + '*'.join(b_str)
             else:
-                return sign + '*'.join(a_str) + "/%s"%b_str[0]
+                return sign + '*'.join(a_str) + "/%s" % b_str[0]
         else:
-            return sign + '*'.join(a_str) + "/(%s)"%'*'.join(b_str)
+            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_MatMul(self, expr):
         return '*'.join([self.parenthesize(arg, precedence(expr))
@@ -286,13 +286,54 @@ class StrPrinter(Printer):
         return '-oo'
 
     def _print_Normal(self, expr):
-        return "Normal(%s, %s)"%(expr.mu, expr.sigma)
+        return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
         if len(expr.variables) <= 1:
-            return 'O(%s)'%self._print(expr.expr)
+            return 'O(%s)' % self._print(expr.expr)
         else:
-            return 'O(%s)'%self.stringify(expr.args, ', ', 0)
+            return 'O(%s)' % self.stringify(expr.args, ', ', 0)
+
+    def _print_Cycle(self, expr):
+        """We want it to print as Cycle in doctests for which a repr is required.
+
+        With __repr__ defined in Cycle, interactive output gives Cycle form but
+        during doctests, the dict's __repr__ form is used. Defining this _print
+        function solves that problem.
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2) # will print as a dict without this method
+        Cycle(1, 2)
+        """
+        return expr.__repr__()
+
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if Permutation.print_cyclic:
+            if not expr.size:
+                return 'Permutation()'
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' % s
+        else:
+            s = expr.support()
+            if not s:
+                if expr.size < 5:
+                    return 'Permutation(%s)' % str(expr.array_form)
+                return 'Permutation([], size=%s)' % expr.size
+            trim = str(expr.array_form[:s[-1] + 1]) + ', size=%s' % expr.size
+            use = full = str(expr.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
+
+    def _print_PermutationGroup(self, expr):
+        p = ['    %s' % str(a) for a in expr.args]
+        return 'PermutationGroup([\n%s])' % ',\n'.join(p)
 
     def _print_PDF(self, expr):
         return 'PDF(%s, (%s, %s, %s))' % \
@@ -394,7 +435,7 @@ class StrPrinter(Printer):
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s**%s'%(self.parenthesize(expr.base, PREC),
+        return '%s**%s' % (self.parenthesize(expr.base, PREC),
                          self.parenthesize(expr.exp, PREC))
 
     def _print_Integer(self, expr):
@@ -421,9 +462,9 @@ class StrPrinter(Printer):
             dps = 0
         else:
             dps = prec_to_dps(expr._prec)
-        if self._settings["full_prec"] == True:
+        if self._settings["full_prec"] is True:
             strip = False
-        elif self._settings["full_prec"] == False:
+        elif self._settings["full_prec"] is False:
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
@@ -435,7 +476,7 @@ class StrPrinter(Printer):
         return rv
 
     def _print_Relational(self, expr):
-        return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),
+        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
                            expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
@@ -453,7 +494,8 @@ class StrPrinter(Printer):
     def _print_GroebnerBasis(self, basis):
         cls = basis.__class__.__name__
 
-        exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
+        exprs = [ self._print_Add(arg, order=basis.order)
+                                  for arg in basis.exprs ]
         exprs = "[%s]" % ", ".join(exprs)
 
         gens = [ self._print(gen) for gen in basis.gens ]
@@ -465,7 +507,7 @@ class StrPrinter(Printer):
         return "%s(%s)" % (cls, ", ".join(args))
 
     def _print_Sample(self, expr):
-        return "Sample([%s])"%self.stringify(expr, ", ", 0)
+        return "Sample([%s])" % self.stringify(expr, ", ", 0)
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
@@ -501,10 +543,10 @@ class StrPrinter(Printer):
         return expr
 
     def _print_tuple(self, expr):
-        if len(expr)==1:
-            return "(%s,)"%self._print(expr[0])
+        if len(expr) == 1:
+            return "(%s,)" % self._print(expr[0])
         else:
-            return "(%s)"%self.stringify(expr, ", ")
+            return "(%s)" % self.stringify(expr, ", ")
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
@@ -513,7 +555,7 @@ class StrPrinter(Printer):
         return "%s'" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
-        return "Uniform(%s, %s)"%(expr.a, expr.b)
+        return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
         return ' U '.join(self._print(set) for set in expr.args)
@@ -566,14 +608,14 @@ class StrPrinter(Printer):
         return field._coord_sys._names[field._index]
 
     def _print_BaseVectorField(self, field):
-        return 'e_%s'%field._coord_sys._names[field._index]
+        return 'e_%s' % field._coord_sys._names[field._index]
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            return 'd%s'%field._coord_sys._names[field._index]
+            return 'd%s' % field._coord_sys._names[field._index]
         else:
-            return 'd(%s)'%self._print(field)
+            return 'd(%s)' % self._print(field)
 
     def _print_Tr(self, expr):
         #TODO : Handle indices

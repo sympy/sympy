@@ -1,6 +1,7 @@
 from itertools import ifilter
 from collections import defaultdict
 
+
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
@@ -9,19 +10,21 @@ def binomial_coefficients(n):
 
     >>> from sympy.ntheory import binomial_coefficients
     >>> binomial_coefficients(9)
-    {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84, (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
+    {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84,
+     (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
 
     See Also
     ========
 
     binomial_coefficients_list, multinomial_coefficients
     """
-    d = {(0, n):1, (n, 0):1}
+    d = {(0, n): 1, (n, 0): 1}
     a = 1
-    for k in xrange(1, n//2+1):
-        a = (a * (n-k+1))//k
-        d[k, n-k] = d[n-k, k] = a
+    for k in xrange(1, n//2 + 1):
+        a = (a * (n - k + 1))//k
+        d[k, n - k] = d[n - k, k] = a
     return d
+
 
 def binomial_coefficients_list(n):
     """ Return a list of binomial coefficients as rows of the Pascal's
@@ -39,12 +42,13 @@ def binomial_coefficients_list(n):
 
     binomial_coefficients, multinomial_coefficients
     """
-    d = [1] * (n+1)
+    d = [1] * (n + 1)
     a = 1
-    for k in xrange(1, n//2+1):
-        a = (a * (n-k+1))//k
-        d[k] = d[n-k] = a
+    for k in xrange(1, n//2 + 1):
+        a = (a * (n - k + 1))//k
+        d[k] = d[n - k] = a
     return d
+
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
@@ -81,7 +85,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
             return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
-    symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
+    symbols = [(0,)*i + (1,) + (0,)*(m - i - 1) for i in range(m)]
     s0 = symbols[0]
     p0 = [_tuple(aa - bb for aa, bb in _zip(s, s0)) for s in symbols]
     r = {_tuple(aa*n for aa in s0): 1}
@@ -103,6 +107,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
         l[k] = r1
         r.update(r1)
     return r
+
 
 def multinomial_coefficients(m, n):
     r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
@@ -141,7 +146,7 @@ def multinomial_coefficients(m, n):
     t = [n] + [0] * (m - 1)
     r = {tuple(t): 1}
     if n:
-        j = 0 # j will be the leftmost nonzero position
+        j = 0  # j will be the leftmost nonzero position
     else:
         j = m
     # enumerate tuples in co-lex order
@@ -171,6 +176,7 @@ def multinomial_coefficients(m, n):
         t[0] -= 1
         r[tuple(t)] = (v * tj) // (n - t[0])
     return r
+
 
 def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     """multinomial coefficient iterator
@@ -210,7 +216,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
         b = _tuple(ifilter(None, t1))
         yield (t1, mc[b])
         if n:
-            j = 0 # j will be the leftmost nonzero position
+            j = 0  # j will be the leftmost nonzero position
         else:
             j = m
         # enumerate tuples in co-lex order

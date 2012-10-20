@@ -7,13 +7,15 @@ from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises
 
+
 def test_build_order():
     R = QQ.poly_ring(x, y, order=(("lex", x), ("ilex", y)))
     assert R.order((1, 5)) == ((1,), (-5,))
 
+
 def test_globalring():
     Qxy = QQ.frac_field(x, y)
-    R   = QQ[x, y]
+    R = QQ[x, y]
     X = R.convert(x)
     Y = R.convert(y)
 
@@ -38,9 +40,10 @@ def test_globalring():
 
     assert R._sdm_to_vector(R._vector_to_sdm([X, Y], R.order), 2) == [X, Y]
 
+
 def test_localring():
     Qxy = QQ.frac_field(x, y)
-    R   = QQ.poly_ring(x, y, order="ilex")
+    R = QQ.poly_ring(x, y, order="ilex")
     X = R.convert(x)
     Y = R.convert(y)
 
@@ -49,7 +52,7 @@ def test_localring():
     assert 1/(1 + x) in R
     assert Y in R
     assert X.ring == R
-    assert X*(Y**2+1)/(1 + X) == R.convert(x*(y**2 + 1)/(1 + x))
+    assert X*(Y**2 + 1)/(1 + X) == R.convert(x*(y**2 + 1)/(1 + x))
     assert X*y == X*Y
     raises(ExactQuotientFailed, lambda: X/Y)
     raises(ExactQuotientFailed, lambda: x/Y)
@@ -65,9 +68,11 @@ def test_localring():
     raises(ExactQuotientFailed, lambda: X/Y)
     raises(NotReversible, lambda: X.invert())
 
-    assert R._sdm_to_vector(R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order),
+    assert R._sdm_to_vector(
+        R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order),
                                              2) == \
         [X*(1 + X*Y), Y*(1 + X)]
+
 
 def test_conversion():
     L = QQ.poly_ring(x, y, order="ilex")
@@ -75,7 +80,8 @@ def test_conversion():
 
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
-    raises(CoercionFailed, lambda: G.convert(L.convert(1/(1+x)), L))
+    raises(CoercionFailed, lambda: G.convert(L.convert(1/(1 + x)), L))
+
 
 def test_units():
     R = QQ[x]

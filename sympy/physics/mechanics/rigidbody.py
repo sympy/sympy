@@ -4,6 +4,7 @@ from sympy import sympify
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.essential import ReferenceFrame, Dyadic
 
+
 class RigidBody(object):
     """An idealized rigid body.
 

@@ -266,31 +266,31 @@ class MathMLPrinter(Printer):
         # translate name, supers and subs to unicode characters
         # taken from http://www.w3.org/2003/entities/2007doc/isogrk1.html
         unitr = {
-            'Alpha': u'\u0391', 'Beta': u'\u0392',
-            'Gamma': u'\u0393', 'Delta': u'\u0394',
-            'Epsilon': u'\u0395', 'Zeta': u'\u0396',
-            'Eta': u'\u0397', 'Theta': u'\u0398',
-            'Iota': u'\u0399', 'Kappa': u'\u039A',
-            'Lambda': u'\u039B', 'Mu': u'\u039C',
-            'Nu': u'\u039D', 'Xi': u'\u039E',
-            'Omicron': u'\u039F', 'Pi': u'\u03A0',
-            'Rho': u'\u03A1', 'Sigma': u'\u03A3',
-            'Tau': u'\u03A4', 'Upsilon': u'\u03A5',
-            'Phi': u'\u03A6', 'Chi': u'\u03A7',
-            'Psi': u'\u03A8', 'Omega': u'\u03A9',
-            'alpha': u'\u03B1', 'beta': u'\u03B2',
-            'gamma': u'\u03B3', 'delta': u'\u03B4',
-            'epsilon': u'\u03B5', 'zeta': u'\u03B6',
-            'eta': u'\u03B7', 'theta': u'\u03B8',
-            'iota': u'\u03B9', 'kappa': u'\u03BA',
-            'lambda': u'\u03BB', 'mu': u'\u03BC',
-            'nu': u'\u03BD', 'xi': u'\u03BE',
-            'omicron': u'\u03BF', 'pi': u'\u03C0',
-            'rho': u'\u03C1', 'varsigma': u'\u03C2',
-            'sigma': u'\u03C3', 'tau': u'\u03C4',
-            'upsilon': u'\u03C5', 'phi': u'\u03C6',
-            'chi': u'\u03C7', 'psi': u'\u03C8',
-            'omega': u'\u03C9',
+            'Alpha':    u'\u0391', 'Beta':      u'\u0392',
+            'Gamma':    u'\u0393', 'Delta':     u'\u0394',
+            'Epsilon':  u'\u0395', 'Zeta':      u'\u0396',
+            'Eta':      u'\u0397', 'Theta':     u'\u0398',
+            'Iota':     u'\u0399', 'Kappa':     u'\u039A',
+            'Lambda':   u'\u039B', 'Mu':        u'\u039C',
+            'Nu':       u'\u039D', 'Xi':        u'\u039E',
+            'Omicron':  u'\u039F', 'Pi':        u'\u03A0',
+            'Rho':      u'\u03A1', 'Sigma':     u'\u03A3',
+            'Tau':      u'\u03A4', 'Upsilon':   u'\u03A5',
+            'Phi':      u'\u03A6', 'Chi':       u'\u03A7',
+            'Psi':      u'\u03A8', 'Omega':     u'\u03A9',
+            'alpha':    u'\u03B1', 'beta':      u'\u03B2',
+            'gamma':    u'\u03B3', 'delta':     u'\u03B4',
+            'epsilon':  u'\u03B5', 'zeta':      u'\u03B6',
+            'eta':      u'\u03B7', 'theta':     u'\u03B8',
+            'iota':     u'\u03B9', 'kappa':     u'\u03BA',
+            'lambda':   u'\u03BB', 'mu':        u'\u03BC',
+            'nu':       u'\u03BD', 'xi':        u'\u03BE',
+            'omicron':  u'\u03BF', 'pi':        u'\u03C0',
+            'rho':      u'\u03C1', 'varsigma':  u'\u03C2',
+            'sigma':    u'\u03C3', 'tau':       u'\u03C4',
+            'upsilon':  u'\u03C5', 'phi':       u'\u03C6',
+            'chi':      u'\u03C7', 'psi':       u'\u03C8',
+            'omega':    u'\u03C9',
         }
 
         def translate(s):
@@ -421,7 +421,7 @@ class MathMLPrinter(Printer):
             # indent = current indentation
             # addindent = indentation to add to higher levels
             # newl = newline string
-            writer.write(indent+"<" + self.tagName)
+            writer.write(indent + "<" + self.tagName)
 
             attrs = self._get_attributes()
             a_names = attrs.keys()
@@ -439,16 +439,17 @@ class MathMLPrinter(Printer):
                 else:
                     writer.write(newl)
                     for node in self.childNodes:
-                        node.writexml(writer, indent+addindent, addindent, newl)
+                        node.writexml(
+                            writer, indent + addindent, addindent, newl)
                     writer.write(indent)
                 writer.write("</%s>%s" % (self.tagName, newl))
             else:
-                writer.write("/>%s"%(newl))
+                writer.write("/>%s" % (newl))
         self._Element_writexml_old = Element.writexml
         Element.writexml = writexml
 
         def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s"%(indent, self.data, newl))
+            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
         self._Text_writexml_old = Text.writexml
         Text.writexml = writexml
 
