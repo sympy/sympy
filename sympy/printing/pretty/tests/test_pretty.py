@@ -2723,7 +2723,8 @@ def test_pretty_prec():
 
 
 def test_pprint():
-    import StringIO, sys
+    import StringIO
+    import sys
     fd = StringIO.StringIO()
     sso = sys.stdout
     sys.stdout = fd
