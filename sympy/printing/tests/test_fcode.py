@@ -32,10 +32,10 @@ def test_fcode_Pow():
     assert fcode(x**-1.0) == '      1.0/x'
 
 def test_fcode_Rational():
-    assert fcode(Rational(3,7)) == "      3.0d0/7.0d0"
-    assert fcode(Rational(18,9)) == "      2"
-    assert fcode(Rational(3,-7)) == "      -3.0d0/7.0d0"
-    assert fcode(Rational(-3,-7)) == "      3.0d0/7.0d0"
+    assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"
+    assert fcode(Rational(18, 9)) == "      2"
+    assert fcode(Rational(3, -7)) == "      -3.0d0/7.0d0"
+    assert fcode(Rational(-3, -7)) == "      3.0d0/7.0d0"
 
 def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
@@ -56,13 +56,13 @@ def test_fcode_NumberSymbol():
     assert fcode(E) == '      parameter (E = 2.71828182845905d0)\n      E'
     assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989d0)\n      GoldenRatio'
     assert fcode(pi) == '      parameter (pi = 3.14159265358979d0)\n      pi'
-    assert fcode(pi,precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
-    assert fcode(Catalan,human=False) == (set([(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
-    assert fcode(EulerGamma,human=False) == (set([(EulerGamma, p._print(EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
-    assert fcode(E,human=False) == (set([(E, p._print(E.evalf(15)))]), set([]), '      E')
-    assert fcode(GoldenRatio,human=False) == (set([(GoldenRatio, p._print(GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
-    assert fcode(pi,human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
-    assert fcode(pi,precision=5,human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
+    assert fcode(pi, precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
+    assert fcode(Catalan, human=False) == (set([(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
+    assert fcode(EulerGamma, human=False) == (set([(EulerGamma, p._print(EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
+    assert fcode(E, human=False) == (set([(E, p._print(E.evalf(15)))]), set([]), '      E')
+    assert fcode(GoldenRatio, human=False) == (set([(GoldenRatio, p._print(GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
+    assert fcode(pi, human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
+    assert fcode(pi, precision=5, human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
 
 def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"
@@ -80,7 +80,7 @@ def test_fcode_complex():
 def test_implicit():
     x, y = symbols('x,y')
     assert fcode(sin(x)) == "      sin(x)"
-    assert fcode(atan2(x,y)) == "      atan2(x, y)"
+    assert fcode(atan2(x, y)) == "      atan2(x, y)"
     assert fcode(conjugate(x)) == "      conjg(x)"
 
 def test_not_fortran():
@@ -137,7 +137,7 @@ def test_line_wrapping():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x,x<1),(x**2,True)))
+    code = fcode(Piecewise((x, x<1), (x**2, True)))
     expected = (
         "      if (x < 1) then\n"
         "         x\n"
@@ -146,7 +146,7 @@ def test_fcode_Piecewise():
         "      end if"
     )
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var") == (
+    assert fcode(Piecewise((x, x<1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
         "         var = x\n"
         "      else\n"
@@ -171,9 +171,9 @@ def test_fcode_Piecewise():
         "     @ )/x**10 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
-    code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
+    code = fcode(Piecewise((a, x<0), (b, True)), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
+    assert fcode(Piecewise((x, x<1), (x**2, x>1), (sin(x), True))) == (
         "      if (x < 1) then\n"
         "         x\n"
         "      else if (x > 1) then\n"
@@ -182,7 +182,7 @@ def test_fcode_Piecewise():
         "         sin(x)\n"
         "      end if"
     )
-    assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),x>0))) == (
+    assert fcode(Piecewise((x, x<1), (x**2, x>1), (sin(x), x>0))) == (
         "      if (x < 1) then\n"
         "         x\n"
         "      else if (x > 1) then\n"
@@ -409,6 +409,6 @@ def test_indent():
             'end do \n'
             'end subroutine\n'
             )
-    p = FCodePrinter({'source_format':'free'})
+    p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected

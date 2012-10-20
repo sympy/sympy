@@ -44,13 +44,13 @@ def test_latex_basic():
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
 
     assert latex(sqrt(x)) == r"\sqrt{x}"
-    assert latex(x**Rational(1,3)) == r"\sqrt[3]{x}"
+    assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
-    assert latex(sqrt(x),itex=True) == r"\sqrt{x}"
-    assert latex(x**Rational(1,3),itex=True) == r"\root{3}{x}"
-    assert latex(sqrt(x)**3,itex=True) == r"x^{\frac{3}{2}}"
-    assert latex(x**Rational(3,4)) == r"x^{\frac{3}{4}}"
-    assert latex(x**Rational(3,4), fold_frac_powers=True) == "x^{3/4}"
+    assert latex(sqrt(x), itex=True) == r"\sqrt{x}"
+    assert latex(x**Rational(1, 3), itex=True) == r"\root{3}{x}"
+    assert latex(sqrt(x)**3, itex=True) == r"x^{\frac{3}{2}}"
+    assert latex(x**Rational(3, 4)) == r"x^{\frac{3}{4}}"
+    assert latex(x**Rational(3, 4), fold_frac_powers=True) == "x^{3/4}"
 
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
@@ -64,7 +64,7 @@ def test_latex_basic():
     assert latex(x | y) == r"x \vee y"
     assert latex(x | y | z) == r"x \vee y \vee z"
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
-    assert latex(Implies(x,y)) == r"x \Rightarrow y"
+    assert latex(Implies(x, y)) == r"x \Rightarrow y"
     assert latex(~(x >> ~y)) == r"\neg (x \Rightarrow \neg y)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
@@ -77,7 +77,7 @@ def test_latex_basic():
         r"x_i \vee y_i \vee z_i"
     assert latex((x & y) | z, symbol_names={x: "x_i", y: "y_i", z: "z_i"}) ==\
         r"z_i \vee \left(x_i \wedge y_i\right)"
-    assert latex(Implies(x,y), symbol_names={x: "x_i", y: "y_i"}) == \
+    assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
 
 def test_latex_Float():
@@ -212,9 +212,9 @@ def test_hyper_printing():
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
-                         (0,1), Tuple(1, 2, 3/pi),z)) == \
+                         (0, 1), Tuple(1, 2, 3/pi), z)) == \
              r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
-    assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
+    assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
              r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
                r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
@@ -259,12 +259,12 @@ def test_latex_subs():
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \log{\left (x \right )}\, dx"
-    assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\, dx"
-    assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\, dx"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
-    assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*') \
+    assert latex(Integral(x**2, (x, 0, 1))) == r"\int_{0}^{1} x^{2}\, dx"
+    assert latex(Integral(x**2, (x, 10, 20))) == r"\int_{10}^{20} x^{2}\, dx"
+    assert latex(Integral(y*x**2, (x, 0, 1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
+    assert latex(Integral(y*x**2, (x, 0, 1), y), mode='equation*') \
         == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\, dx\, dy\end{equation*}"
-    assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*', itex=True) \
+    assert latex(Integral(y*x**2, (x, 0, 1), y), mode='equation*', itex=True) \
         == r"$$\int\int_{0}^{1} x^{2} y\, dx\, dy$$"
     assert latex(Integral(x, (x, 0))) == r"\int^{0} x\, dx"
     assert latex(Integral(x*y, x, y)) == r"\iint x y\, dx\, dy"
@@ -307,7 +307,7 @@ def test_latex_union():
         r"\left\{1, 2\right\} \cup \left[3, 4\right]"
 
 def test_latex_productset():
-    line = Interval(0,1)
+    line = Interval(0, 1)
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^2"%latex(line)
@@ -352,10 +352,10 @@ def test_issue469():
     assert latex(y) in [r'\beta + x', r'x + \beta']
 
 def test_latex():
-    assert latex((2*tau)**Rational(7,2)) == "8 \\sqrt{2} \\tau^{\\frac{7}{2}}"
-    assert latex((2*mu)**Rational(7,2), mode='equation*') == \
+    assert latex((2*tau)**Rational(7, 2)) == "8 \\sqrt{2} \\tau^{\\frac{7}{2}}"
+    assert latex((2*mu)**Rational(7, 2), mode='equation*') == \
             "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
-    assert latex((2*mu)**Rational(7,2), mode='equation', itex=True) == \
+    assert latex((2*mu)**Rational(7, 2), mode='equation', itex=True) == \
             "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
     assert latex([2/x, y]) =="\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}"
 
@@ -368,12 +368,12 @@ def test_latex_dict():
 
 def test_latex_rational():
     #tests issue 874
-    assert latex(-Rational(1,2)) == "- \\frac{1}{2}"
-    assert latex(Rational(-1,2)) == "- \\frac{1}{2}"
-    assert latex(Rational(1,-2)) == "- \\frac{1}{2}"
-    assert latex(-Rational(-1,2)) == "\\frac{1}{2}"
-    assert latex(-Rational(1,2)*x) == "- \\frac{1}{2} x"
-    assert latex(-Rational(1,2)*x+Rational(-2,3)*y) in [
+    assert latex(-Rational(1, 2)) == "- \\frac{1}{2}"
+    assert latex(Rational(-1, 2)) == "- \\frac{1}{2}"
+    assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
+    assert latex(-Rational(-1, 2)) == "\\frac{1}{2}"
+    assert latex(-Rational(1, 2)*x) == "- \\frac{1}{2} x"
+    assert latex(-Rational(1, 2)*x+Rational(-2, 3)*y) in [
             "- \\frac{1}{2} x - \\frac{2}{3} y",
             "- \\frac{2}{3} y - \\frac{1}{2} x",
             ]
@@ -385,8 +385,8 @@ def test_latex_inverse():
 
 def test_latex_DiracDelta():
     assert latex(DiracDelta(x)) == "\\delta\\left(x\\right)"
-    assert latex(DiracDelta(x,0)) == "\\delta\\left(x\\right)"
-    assert latex(DiracDelta(x,5)) == "\\delta^{\\left( 5 \\right)}\\left( x \\right)"
+    assert latex(DiracDelta(x, 0)) == "\\delta\\left(x\\right)"
+    assert latex(DiracDelta(x, 5)) == "\\delta^{\\left( 5 \\right)}\\left( x \\right)"
 
 def test_mode():
     expr = x+y
@@ -397,7 +397,7 @@ def test_mode():
     assert latex(expr, mode='equation')== '\\begin{equation}x + y\\end{equation}'
 
 def test_latex_Piecewise():
-    p = Piecewise((x,x<1),(x**2,True))
+    p = Piecewise((x, x<1), (x**2, True))
     assert latex(p) == "\\begin{cases} x & \\text{for}\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"
     assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
@@ -407,7 +407,7 @@ def test_latex_Piecewise():
                        " \\text{for}\\: x \\geq 0 \\end{cases}"
 
 def test_latex_Matrix():
-    M = Matrix([[1+x, y],[y, x-1]])
+    M = Matrix([[1+x, y], [y, x-1]])
     assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
                        '1\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
@@ -516,10 +516,10 @@ def test_custom_symbol_names():
     x = Symbol('x')
     y = Symbol('y')
     assert latex(x) == "x"
-    assert latex(x, symbol_names={x:"x_i"}) == "x_i"
-    assert latex(x + y, symbol_names={x:"x_i"}) == "x_i + y"
-    assert latex(x**2, symbol_names={x:"x_i"}) == "x_i^{2}"
-    assert latex(x + y, symbol_names={x:"x_i", y:"y_j"}) == "x_i + y_j"
+    assert latex(x, symbol_names={x: "x_i"}) == "x_i"
+    assert latex(x + y, symbol_names={x: "x_i"}) == "x_i + y"
+    assert latex(x**2, symbol_names={x: "x_i"}) == "x_i^{2}"
+    assert latex(x + y, symbol_names={x: "x_i", y: "y_j"}) == "x_i + y_j"
 
 def test_matAdd():
     from sympy import MatrixSymbol
@@ -559,7 +559,7 @@ def test_latex_RandomDomain():
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert latex(pspace(Tuple(A,B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
+    assert latex(pspace(Tuple(A, B)).domain) =="Domain: 0 \leq a \wedge 0 \leq b"
 
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
@@ -577,10 +577,10 @@ def test_integral_transforms():
     b = Symbol("b")
 
     assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseMellinTransform(f(k), k, x, a,b)) == r"\mathcal{M}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(InverseMellinTransform(f(k), k, x, a, b)) == r"\mathcal{M}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
 
     assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseLaplaceTransform(f(k), k, x, (a,b))) == r"\mathcal{L}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))) == r"\mathcal{L}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
 
     assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
     assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
@@ -621,7 +621,7 @@ def test_categories():
     d = Diagram()
     assert latex(d) == "\emptyset"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet})
+    d = Diagram({f1: "unique", f2: S.EmptySet})
     assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
            "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
@@ -629,7 +629,7 @@ def test_categories():
            "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
            "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
 
-    d = Diagram({f1:"unique", f2:S.EmptySet}, {f2 * f1: "unique"})
+    d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
     assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
            "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
            "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \

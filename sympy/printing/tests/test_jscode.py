@@ -38,10 +38,10 @@ def test_jscode_constants_other():
     assert jscode(2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 def test_jscode_Rational():
-    assert jscode(Rational(3,7)) == "3/7"
-    assert jscode(Rational(18,9)) == "2"
-    assert jscode(Rational(3,-7)) == "-3/7"
-    assert jscode(Rational(-3,-7)) == "3/7"
+    assert jscode(Rational(3, 7)) == "3/7"
+    assert jscode(Rational(18, 9)) == "2"
+    assert jscode(Rational(3, -7)) == "-3/7"
+    assert jscode(Rational(-3, -7)) == "3/7"
 
 def test_jscode_Integer():
     assert jscode(Integer(67)) == "67"
@@ -92,7 +92,7 @@ else {
     assert p == s
 
 def test_jscode_Piecewise_deep():
-    p = jscode(2*Piecewise((x, x<1),(x**2, True)))
+    p = jscode(2*Piecewise((x, x<1), (x**2, True)))
     s = \
 """\
 2*if (x < 1) {
@@ -105,12 +105,12 @@ else {
     assert p == s
 
 def test_jscode_settings():
-    raises(TypeError, lambda: jscode(sin(x),method="garbage"))
+    raises(TypeError, lambda: jscode(sin(x), method="garbage"))
 
 def test_jscode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i,j,k,n,m,o = symbols('i j k n m o', integer=True)
+    i, j, k, n, m, o = symbols('i j k n m o', integer=True)
 
     p = JavascriptCodePrinter()
     p._not_c = set()
@@ -126,7 +126,7 @@ def test_jscode_Indexed():
 
 
 def test_jscode_loops_matrix_vector():
-    n,m = symbols('n m', integer=True)
+    n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
     y = IndexedBase('y')

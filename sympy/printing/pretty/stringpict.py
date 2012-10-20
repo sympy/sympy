@@ -202,7 +202,7 @@ class stringPict(object):
             self.baseline,
             self.height()-1-self.baseline)*2 + 1
         slash = '\n'.join(
-            ' '*(height-i-1)+xobj('/',1)+' '*i
+            ' '*(height-i-1)+xobj('/', 1)+' '*i
             for i in range(height)
             )
         return self.left(stringPict(slash, height//2))
@@ -224,7 +224,7 @@ class stringPict(object):
         slash = stringPict(slash, height-1)
         #left half of root symbol
         if height > 2:
-            downline = stringPict('\\ \n \\',1)
+            downline = stringPict('\\ \n \\', 1)
         else:
             downline = stringPict('\\')
         #put n on top, as low as possible

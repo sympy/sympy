@@ -3,7 +3,7 @@ from sympy.utilities.pytest import raises
 
 from sympy.printing.lambdarepr import lambdarepr
 
-x,y,z = symbols("x,y,z")
+x, y, z = symbols("x,y,z")
 
 def test_basic():
     assert lambdarepr(x*y) == "x*y"
@@ -11,7 +11,7 @@ def test_basic():
     assert lambdarepr(x**y) == "x**y"
 
 def test_matrix():
-    A = Matrix([[x,y],[y*x,z**2]])
+    A = Matrix([[x, y], [y*x, z**2]])
     assert lambdarepr(A) == "MutableDenseMatrix([[  x,    y],[x*y, z**2]])"
 
 def test_piecewise():
@@ -136,4 +136,4 @@ def test_piecewise():
         "(True) else None)))))))))))"
 
 def test_settings():
-    raises(TypeError, lambda: lambdarepr(sin(x),method="garbage"))
+    raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))

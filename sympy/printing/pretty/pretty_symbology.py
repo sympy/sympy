@@ -33,7 +33,7 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+__all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
            'annotated']
 
 
@@ -63,7 +63,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g,G in greek.itervalues():
+        for g, G in greek.itervalues():
             symbols.append(g)
             symbols.append(G)
 
@@ -351,21 +351,21 @@ VF = lambda txt:   U('VULGAR FRACTION %s' % txt)
 
 # (p,q) -> symbol
 frac = {
-    (1,2):   VF('ONE HALF'),
-    (1,3):   VF('ONE THIRD'),
-    (2,3):   VF('TWO THIRDS'),
-    (1,4):   VF('ONE QUARTER'),
-    (3,4):   VF('THREE QUARTERS'),
-    (1,5):   VF('ONE FIFTH'),
-    (2,5):   VF('TWO FIFTHS'),
-    (3,5):   VF('THREE FIFTHS'),
-    (4,5):   VF('FOUR FIFTHS'),
-    (1,6):   VF('ONE SIXTH'),
-    (5,6):   VF('FIVE SIXTHS'),
-    (1,8):   VF('ONE EIGHTH'),
-    (3,8):   VF('THREE EIGHTHS'),
-    (5,8):   VF('FIVE EIGHTHS'),
-    (7,8):   VF('SEVEN EIGHTHS'),
+    (1, 2):   VF('ONE HALF'),
+    (1, 3):   VF('ONE THIRD'),
+    (2, 3):   VF('TWO THIRDS'),
+    (1, 4):   VF('ONE QUARTER'),
+    (3, 4):   VF('THREE QUARTERS'),
+    (1, 5):   VF('ONE FIFTH'),
+    (2, 5):   VF('TWO FIFTHS'),
+    (3, 5):   VF('THREE FIFTHS'),
+    (4, 5):   VF('FOUR FIFTHS'),
+    (1, 6):   VF('ONE SIXTH'),
+    (5, 6):   VF('FIVE SIXTHS'),
+    (1, 8):   VF('ONE EIGHTH'),
+    (3, 8):   VF('THREE EIGHTHS'),
+    (5, 8):   VF('FIVE EIGHTHS'),
+    (7, 8):   VF('SEVEN EIGHTHS'),
 }
 
 

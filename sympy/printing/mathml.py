@@ -145,7 +145,7 @@ class MathMLPrinter(Printer):
         for i in range(m.lines):
             x_r = self.dom.createElement('matrixrow')
             for j in range(m.cols):
-                x_r.appendChild(self._print(m[i,j]))
+                x_r.appendChild(self._print(m[i, j]))
             x.appendChild(x_r)
         return x
 
@@ -181,20 +181,20 @@ class MathMLPrinter(Printer):
         x.appendChild(self._print(e.args[0]))
         return x
 
-    def _print_ImaginaryUnit(self,e):
+    def _print_ImaginaryUnit(self, e):
         return self.dom.createElement('imaginaryi')
 
-    def _print_EulerGamma(self,e):
+    def _print_EulerGamma(self, e):
         return self.dom.createElement('eulergamma')
 
-    def _print_GoldenRatio(self,e):
+    def _print_GoldenRatio(self, e):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode(u"\u03c6"))
         return x
 
-    def _print_Exp1(self,e):
+    def _print_Exp1(self, e):
         return self.dom.createElement('exponentiale')
 
     def _print_Pi(self, e):
@@ -203,7 +203,7 @@ class MathMLPrinter(Printer):
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
 
-    def _print_Negative_Infinity(self,e):
+    def _print_Negative_Infinity(self, e):
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('minus'))
         x.appendChild(self.dom.createElement('infinity'))

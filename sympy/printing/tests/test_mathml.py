@@ -41,7 +41,7 @@ def test_mathml_core():
     assert nodes[1].childNodes[0].nodeValue == '2'
     assert nodes[2].childNodes[0].nodeValue == 'x'
 
-    mml = mp._print(Float(1.0,2)*x)
+    mml = mp._print(Float(1.0, 2)*x)
     assert mml.nodeName == 'apply'
     nodes = mml.childNodes
     assert nodes[0].nodeName == 'times'
@@ -106,11 +106,11 @@ def test_mathml_add():
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
 
 def test_mathml_Rational():
-    mml_1 = mp._print(Rational(1,1))
+    mml_1 = mp._print(Rational(1, 1))
     """should just return a number"""
     assert mml_1.nodeName == 'cn'
 
-    mml_2 = mp._print(Rational(2,5))
+    mml_2 = mp._print(Rational(2, 5))
     assert mml_2.childNodes[0].nodeName == 'divide'
 
 def test_mathml_constants():
@@ -169,7 +169,7 @@ def test_mathml_trig():
     assert mml.childNodes[0].nodeName == 'arccosh'
 
 def test_mathml_relational():
-    mml_1 = mp._print(Eq(x,1))
+    mml_1 = mp._print(Eq(x, 1))
     assert mml_1.nodeName == 'apply'
     assert mml_1.childNodes[0].nodeName == 'eq'
     assert mml_1.childNodes[1].nodeName == 'ci'
@@ -177,7 +177,7 @@ def test_mathml_relational():
     assert mml_1.childNodes[2].nodeName == 'cn'
     assert mml_1.childNodes[2].childNodes[0].nodeValue == '1'
 
-    mml_2 = mp._print(Ne(1,x))
+    mml_2 = mp._print(Ne(1, x))
     assert mml_2.nodeName == 'apply'
     assert mml_2.childNodes[0].nodeName == 'neq'
     assert mml_2.childNodes[1].nodeName == 'cn'
@@ -185,7 +185,7 @@ def test_mathml_relational():
     assert mml_2.childNodes[2].nodeName == 'ci'
     assert mml_2.childNodes[2].childNodes[0].nodeValue == 'x'
 
-    mml_3 = mp._print(Ge(1,x))
+    mml_3 = mp._print(Ge(1, x))
     assert mml_3.nodeName == 'apply'
     assert mml_3.childNodes[0].nodeName == 'geq'
     assert mml_3.childNodes[1].nodeName == 'cn'
@@ -193,7 +193,7 @@ def test_mathml_relational():
     assert mml_3.childNodes[2].nodeName == 'ci'
     assert mml_3.childNodes[2].childNodes[0].nodeValue == 'x'
 
-    mml_4 = mp._print(Lt(1,x))
+    mml_4 = mp._print(Lt(1, x))
     assert mml_4.nodeName == 'apply'
     assert mml_4.childNodes[0].nodeName == 'lt'
     assert mml_4.childNodes[1].nodeName == 'cn'
