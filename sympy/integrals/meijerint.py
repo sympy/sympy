@@ -158,7 +158,7 @@ def _create_lookup_table(table):
          constant(log(a)) + [(S(1), meijerg([1, 1], [], [1], [0], t/a))],
          True)
     addi(log(abs(t - a)), constant(log(abs(a))) +
-           [(pi, meijerg([1, 1], [S(1)/2], [1], [0, S(1)/2], t/a))],
+         [(pi, meijerg([1, 1], [S(1)/2], [1], [0, S(1)/2], t/a))],
          True)
     # TODO log(x)/(x+a) and log(x)/(x-1) can also be done. should they
     #      be derivable?
@@ -181,7 +181,7 @@ def _create_lookup_table(table):
     # Section 8.4.13
     add(Shi(t), [S(1)/2], [], [0], [S(-1)/2, S(-1)/2], polar_lift(-1)*t**2/4,
         t*sqrt(pi)/4)
-    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, - \
+    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, -
         pi**S('3/2')/2)
 
     # generalized exponential integral
@@ -193,8 +193,8 @@ def _create_lookup_table(table):
     # TODO exp(-x)*erf(I*x) does not work
 
     # Fresnel Integrals
-    add(fresnels(t),  [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
-    add(fresnelc(t),  [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnelc(t), [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
@@ -562,7 +562,7 @@ def _condsimp(cond):
     """
     from sympy import (
         symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
-                       periodic_argument, oo, polar_lift)
+        periodic_argument, oo, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
@@ -570,17 +570,17 @@ def _condsimp(cond):
     change = True
     p, q, r = symbols('p q r', cls=Wild)
     rules = [
-      (Or(p < q, Eq(p, q)), p <= q),
-      # The next two obviously are instances of a general pattern, but it is
-      # easier to spell out the few cases we care about.
-      (And(abs(unbranched_argument(p)) <= pi,
+        (Or(p < q, Eq(p, q)), p <= q),
+        # The next two obviously are instances of a general pattern, but it is
+        # easier to spell out the few cases we care about.
+        (And(abs(unbranched_argument(p)) <= pi,
            abs(unbranched_argument(exp_polar(-2*pi*I)*p)) <= pi),
        Eq(unbranched_argument(exp_polar(-I*pi)*p), 0)),
-      (And(abs(unbranched_argument(p)) <= pi/2,
+        (And(abs(unbranched_argument(p)) <= pi/2,
            abs(unbranched_argument(exp_polar(-pi*I)*p)) <= pi/2),
        Eq(unbranched_argument(exp_polar(-I*pi/2)*p), 0)),
-      (Or(p <= q, And(p < q, r)), p <= q)
-            ]
+        (Or(p <= q, And(p < q, r)), p <= q)
+    ]
     while change:
         change = False
         for fro, to in rules:
@@ -606,11 +606,11 @@ def _condsimp(cond):
                             otherlist += [k]
                             break
                         if arg3.func is And and arg2.args[1] == r and \
-                           arg2.func is And and arg2.args[0] in arg3.args:
+                                arg2.func is And and arg2.args[0] in arg3.args:
                             otherlist += [k]
                             break
                         if arg3.func is And and arg2.args[0] == r and \
-                           arg2.func is And and arg2.args[1] in arg3.args:
+                                arg2.func is And and arg2.args[1] in arg3.args:
                             otherlist += [k]
                             break
                 if len(otherlist) != len(otherargs) + 1:
@@ -632,13 +632,13 @@ def _condsimp(cond):
         m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
             if expr.func is periodic_argument and not expr.args[0].is_polar \
-               and expr.args[1] == oo:
+                    and expr.args[1] == oo:
                 return (expr.args[0] > 0)
             return orig
         return (m[p] > 0)
     return cond.replace(
         lambda expr: expr.is_Relational and expr.rel_op == '==',
-                        repl_eq)
+        repl_eq)
 
 
 def _eval_cond(cond):
@@ -731,7 +731,7 @@ def _check_antecedents_1(g, x, helper=False):
 
     debug('Checking antecedents for 1 function:')
     debug('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s'
-           % (delta, eta, m, n, p, q))
+          % (delta, eta, m, n, p, q))
     debug('  ap = %s, %s' % (list(g.an), list(g.aother)))
     debug('  bq = %s, %s' % (list(g.bm), list(g.bother)))
     debug('  cond_3=%s, cond_3*=%s, cond_4=%s' % (cond_3, cond_3_star, cond_4))
@@ -759,7 +759,7 @@ def _check_antecedents_1(g, x, helper=False):
     if helper:
         extra = []
     case2 = [And(Eq(n, 0), p + 1 <= m, m <= q,
-                  abs(arg(eta)) < delta*pi, *extra)]
+                 abs(arg(eta)) < delta*pi, *extra)]
     conds += case2
     debug('  case 2:', case2)
 
@@ -926,11 +926,11 @@ def _check_antecedents(g1, g2, x):
     psi = (pi*(q - m - n) + abs(arg(omega)))/(q - p)
     theta = (pi*(v - s - t) + abs(arg(sigma)))/(v - u)
     lambda_c = (q - p)*abs(omega)**(1/(q - p))*cos(psi) \
-             + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
+        + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
 
     def lambda_s0(c1, c2):
         return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
-             + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
+            + c2*(v - u)*abs(sigma)**(1/(v - u))*sin(theta)
     lambda_s = Piecewise(
         ((lambda_s0(+1, +1)*lambda_s0(-1, -1)),
          And(Eq(arg(sigma), 0), Eq(arg(omega), 0))),
@@ -987,9 +987,9 @@ def _check_antecedents(g1, g2, x):
         tmp += [(u - v)*re(1 + d) - re(rho) > -S(3)/2]
     c7 = And(*tmp)
 
-    c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - \
+    c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
-    c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu - \
+    c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c10 = (abs(arg(sigma)) < bstar*pi)
     c11 = Eq(abs(arg(sigma)), bstar*pi)
@@ -1187,15 +1187,15 @@ def _check_antecedents(g1, g2, x):
     pr(33)
     conds += [And(
         Eq(n, 0), Eq(phi, 0), u < v - 1, m > 0, cstar > 0, bstar >= 0,
-                  bstar*pi < abs(arg(sigma)),
-                  abs(arg(sigma)) < (s + t - u + 1)*pi,
-                  c1, c2, c12, c14, c15)]  # 34
+        bstar*pi < abs(arg(sigma)),
+        abs(arg(sigma)) < (s + t - u + 1)*pi,
+        c1, c2, c12, c14, c15)]  # 34
     pr(34)
     conds += [And(
         Eq(m, 0), Eq(phi, 0), u > v + 1, n > 0, cstar > 0, bstar >= 0,
-                  bstar*pi < abs(arg(sigma)),
-                  abs(arg(sigma)) < (s + t - v + 1)*pi,
-                  c1, c3, c12, c14, c15)]  # 35
+        bstar*pi < abs(arg(sigma)),
+        abs(arg(sigma)) < (s + t - v + 1)*pi,
+        c1, c3, c12, c14, c15)]  # 35
     pr(35)
 
     return Or(*conds)
@@ -1291,7 +1291,7 @@ def _check_antecedents_inversion(g, x):
     theta = ((1 - sigma)/2 + Add(*g.bq) - Add(*g.ap))/sigma
     delta = g.delta
     _debug('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s' % (
-            m, n, p, q, tau, nu, rho, sigma))
+        m, n, p, q, tau, nu, rho, sigma))
     _debug('  epsilon=%s, theta=%s, delta=%s' % (epsilon, theta, delta))
 
     # First check if the computation is valid.
@@ -1467,7 +1467,7 @@ def _rewrite_single(f, x, recursive=True):
         except MellinTransformStripError:
             return inverse_mellin_transform(
                 simplify(cancel(expand(F))), s, x, strip,
-                                            as_meijerg=True, needeval=True)
+                as_meijerg=True, needeval=True)
     f = f_
     s = _dummy('s', 'rewrite-single', f)
     # to avoid infinite recursion, we have to force the two g functions case
@@ -1549,10 +1549,10 @@ def _rewrite2(f, x):
         return None
     l.sort(
         key=lambda p: (max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
-                          max(len(
-                              _functions(p[0], x)), len(_functions(p[1], x))),
-                          max(len(_find_splitting_points(p[0], x)),
-                              len(_find_splitting_points(p[1], x)))))
+                       max(len(
+                           _functions(p[0], x)), len(_functions(p[1], x))),
+                       max(len(_find_splitting_points(p[0], x)),
+                           len(_find_splitting_points(p[1], x)))))
     for recursive in [False, True]:
         for fac1, fac2 in l:
             g1 = _rewrite_single(fac1, x, recursive)
@@ -1909,7 +1909,7 @@ def _meijerint_definite_4(f, x, only_double=False):
             for C1, s1, f1 in g1:
                 for C2, s2, f2 in g2:
                     r = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2),
-                                                  f1, f2, x, full_pb)
+                                        f1, f2, x, full_pb)
                     if r is None:
                         _debug('Non-rational exponents.')
                         return

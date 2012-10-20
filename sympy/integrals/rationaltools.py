@@ -75,8 +75,7 @@ def ratint(f, x, **flags):
             else:
                 p, q = f
 
-                atoms = p.atoms() \
-                      | q.atoms()
+                atoms = p.atoms() | q.atoms()
 
             for elt in atoms - set([x]):
                 if not elt.is_real:
