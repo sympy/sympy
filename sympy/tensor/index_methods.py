@@ -263,7 +263,7 @@ def get_indices(expr):
         elif not expr.has(Indexed):
             return set(), {}
         raise NotImplementedError(
-                "FIXME: No specialized handling of type %s" % type(expr))
+            "FIXME: No specialized handling of type %s" % type(expr))
 
 
 def get_contraction_structure(expr):
@@ -437,4 +437,4 @@ def get_contraction_structure(expr):
     elif not expr.has(Indexed):
         return {None: set([expr])}
     raise NotImplementedError(
-            "FIXME: No specialized handling of type %s" % type(expr))
+        "FIXME: No specialized handling of type %s" % type(expr))

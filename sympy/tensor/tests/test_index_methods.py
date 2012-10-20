@@ -112,12 +112,12 @@ def test_contraction_structure_simple_Pow():
     i, j, k = Idx('i'), Idx('j'), Idx('k')
     ii_jj = x[i, i]**y[j, j]
     assert get_contraction_structure(ii_jj) == {
-            None: set([ii_jj]),
-            ii_jj: [
-                {(i,): set([x[i, i]])},
-                {(j,): set([y[j, j]])}
-                ]
-            }
+        None: set([ii_jj]),
+        ii_jj: [
+            {(i,): set([x[i, i]])},
+            {(j,): set([y[j, j]])}
+        ]
+    }
 
 
 def test_contraction_structure_Mul_and_Pow():
@@ -136,15 +136,15 @@ def test_contraction_structure_Mul_and_Pow():
     ij_exp_kki = x[i]*y[j]*exp(y[i]*y[k, k])
     result = get_contraction_structure(ij_exp_kki)
     expected = {
-            (i,): set([ij_exp_kki]),
-            ij_exp_kki: [{
-                None: set([exp(y[i]*y[k, k])]),
+        (i,): set([ij_exp_kki]),
+        ij_exp_kki: [{
+                     None: set([exp(y[i]*y[k, k])]),
                 exp(y[i]*y[k, k]): [{
                     None: set([y[i]*y[k, k]]),
                     y[i]*y[k, k]: [{(k,): set([y[k, k]])}]
-                    }]}
-                ]
-            }
+                }]}
+        ]
+    }
     assert result == expected
 
 
@@ -154,12 +154,12 @@ def test_contraction_structure_Add_in_Pow():
     i, j, k = Idx('i'), Idx('j'), Idx('k')
     s_ii_jj_s = (1 + x[i, i])**(1 + y[j, j])
     expected = {
-            None: set([s_ii_jj_s]),
-            s_ii_jj_s: [
-                {None: set([S.One]), (i,): set([x[i, i]])},
-                {None: set([S.One]), (j,): set([y[j, j]])}
-                ]
-            }
+        None: set([s_ii_jj_s]),
+        s_ii_jj_s: [
+            {None: set([S.One]), (i,): set([x[i, i]])},
+            {None: set([S.One]), (j,): set([y[j, j]])}
+        ]
+    }
     result = get_contraction_structure(s_ii_jj_s)
     assert result == expected
 
@@ -171,18 +171,18 @@ def test_contraction_structure_Pow_in_Pow():
     i, j, k = Idx('i'), Idx('j'), Idx('k')
     ii_jj_kk = x[i, i]**y[j, j]**z[k, k]
     expected = {
-            None: set([ii_jj_kk]),
-            ii_jj_kk: [
-                {(i,): set([x[i, i]])},
-                {
-                    None: set([y[j, j]**z[k, k]]),
-                    y[j, j]**z[k, k]: [
-                        {(j,): set([y[j, j]])},
-                        {(k,): set([z[k, k]])}
-                        ]
-                    }
+        None: set([ii_jj_kk]),
+        ii_jj_kk: [
+            {(i,): set([x[i, i]])},
+            {
+                None: set([y[j, j]**z[k, k]]),
+                y[j, j]**z[k, k]: [
+                    {(j,): set([y[j, j]])},
+                    {(k,): set([z[k, k]])}
                 ]
             }
+        ]
+    }
     assert get_contraction_structure(ii_jj_kk) == expected
 
 
