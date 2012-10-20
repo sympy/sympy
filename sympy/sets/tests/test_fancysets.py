@@ -113,7 +113,7 @@ def test_Range():
 def test_range_interval_intersection():
     # Intersection with intervals
     assert FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6))) == \
-            FiniteSet(2, 3, 4, 5, 6)
+        FiniteSet(2, 3, 4, 5, 6)
 
     # Open Intervals are removed
     assert (FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
@@ -125,9 +125,9 @@ def test_range_interval_intersection():
 
     # Going backwards
     assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6))) == \
-            FiniteSet(-5, -2, 1, 4)
+        FiniteSet(-5, -2, 1, 4)
     assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
-            FiniteSet(-2, 1, 4)
+        FiniteSet(-2, 1, 4)
 
 
 def test_fun():
