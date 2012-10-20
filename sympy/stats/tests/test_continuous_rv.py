@@ -309,8 +309,8 @@ def test_nakagami():
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert (simplify(variance(X, meijerg=True)) ==
-                            (omega*(gamma(mu)*gamma(mu + 1)
-                          - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
+            (omega*(gamma(mu)*gamma(mu + 1)
+                    - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
 
 
 def test_pareto():
@@ -364,10 +364,9 @@ def test_triangular():
     assert Density(X) == Lambda(_x,
              Piecewise(
                  ((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
-                       (2/(-a + b), _x == c),
-                       ((-2*_x + 2*b)/((-a + b)*(b - \
-                        c)), And(_x <= b, c < _x)),
-                       (0, True)))
+                 (2/(-a + b), _x == c),
+                 ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
+                 (0, True)))
 
 
 def test_uniform():
@@ -413,7 +412,7 @@ def test_weibull_numeric():
         X = Weibull('x', a, b)
         assert simplify(E(X)) == simplify(a * gamma(1 + 1/S(b)))
         assert simplify(variance(X)) == simplify(
-                a**2 * gamma(1 + 2/S(b)) - E(X)**2)
+            a**2 * gamma(1 + 2/S(b)) - E(X)**2)
         # Not testing Skew... it's slow with int/frac values > 3/2
 
 
@@ -461,16 +460,16 @@ def test_input_value_assertions():
 def test_unevaluated():
     X = Normal('x', 0, 1)
     assert E(X, evaluate=False) == (
-            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
+        Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)))
 
     assert E(X + 1, evaluate=False) == (
-            Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1)
+        Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1)
 
     assert P(X > 0, evaluate=False) == (
-            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)))
+        Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)))
 
     assert P(X > 0, X**2 < 1, evaluate=False) == (
-            Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
+        Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
                 (x, -1, 1))), (x, 0, 1)))
 

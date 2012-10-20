@@ -125,7 +125,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                             limits[i] = (symbol, intvl.left, intvl.right)
             else:
                 raise TypeError(
-                        "Condition %s is not a relational or Boolean" % cond)
+                    "Condition %s is not a relational or Boolean" % cond)
 
         evaluate = kwargs.pop('evaluate', True)
         if evaluate:
@@ -142,7 +142,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 self.condition, tuple(self.symbols)[0]))
         else:
             raise NotImplementedError(
-                    "Set of Conditional Domain not Implemented")
+                "Set of Conditional Domain not Implemented")
 
 
 class ContinuousPSpace(PSpace):
@@ -224,7 +224,7 @@ class ContinuousPSpace(PSpace):
         rvs = frozenset(random_symbols(condition))
         if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
-                    "Multiple continuous random variables not supported")
+                "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
         interval = reduce_poly_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
