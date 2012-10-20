@@ -14,6 +14,7 @@ TODO:
 
 from pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
 
+
 class stringPict(object):
     """An ASCII picture.
     The pictures are represented as a list of equal length strings.
@@ -349,6 +350,7 @@ class stringPict(object):
 
     def __len__(self):
         return len(self.s)
+
 
 class prettyForm(stringPict):
     """Extension of the stringPict class that knows about

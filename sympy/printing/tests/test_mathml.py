@@ -9,8 +9,10 @@ x = Symbol('x')
 y = Symbol('y')
 mp = MathMLPrinter()
 
+
 def test_printmethod():
     assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
+
 
 def test_mathml_core():
     mml_1 = mp._print(1+x)
@@ -48,6 +50,7 @@ def test_mathml_core():
     assert nodes[1].childNodes[0].nodeValue == '1.0'
     assert nodes[2].childNodes[0].nodeValue == 'x'
 
+
 def test_mathml_functions():
     mml_1 = mp._print(sin(x))
     assert mml_1.nodeName == 'apply'
@@ -60,6 +63,7 @@ def test_mathml_functions():
     assert mml_2.childNodes[1].nodeName == 'bvar'
     assert mml_2.childNodes[1].childNodes[0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
+
 def test_mathml_limits():
     # XXX No unevaluated limits
     lim_fun = sin(x)/x
@@ -68,6 +72,7 @@ def test_mathml_limits():
     assert mml_1.childNodes[1].nodeName == 'bvar'
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].toxml() == mp._print(lim_fun).toxml()
+
 
 def test_mathml_integrals():
     integrand = x
@@ -78,6 +83,7 @@ def test_mathml_integrals():
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
 
+
 def test_mathml_sums():
     summand = x
     mml_1 = mp._print(Sum(summand, (x, 1, 10)))
@@ -86,6 +92,7 @@ def test_mathml_sums():
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(summand).toxml()
+
 
 def test_mathml_tuples():
     mml_1 = mp._print([2])
@@ -99,11 +106,13 @@ def test_mathml_tuples():
     assert mml_2.childNodes[1].nodeName == 'cn'
     assert len(mml_2.childNodes) == 2
 
+
 def test_mathml_add():
     mml = mp._print(x**5 - x**4 + x)
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
+
 
 def test_mathml_Rational():
     mml_1 = mp._print(Rational(1, 1))
@@ -112,6 +121,7 @@ def test_mathml_Rational():
 
     mml_2 = mp._print(Rational(2, 5))
     assert mml_2.childNodes[0].nodeName == 'divide'
+
 
 def test_mathml_constants():
     mml = mp._print(I)
@@ -130,6 +140,7 @@ def test_mathml_constants():
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'
+
 
 def test_mathml_trig():
     mml = mp._print(sin(x))
@@ -168,6 +179,7 @@ def test_mathml_trig():
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
 
+
 def test_mathml_relational():
     mml_1 = mp._print(Eq(x, 1))
     assert mml_1.nodeName == 'apply'
@@ -200,6 +212,7 @@ def test_mathml_relational():
     assert mml_4.childNodes[1].childNodes[0].nodeValue == '1'
     assert mml_4.childNodes[2].nodeName == 'ci'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
+
 
 def test_symbol():
     mml = mp._print(Symbol("x"))
@@ -298,6 +311,7 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
 
+
 def test_mathml_greek():
     mml = mp._print(Symbol('alpha'))
     assert mml.nodeName == 'ci'
@@ -354,6 +368,7 @@ def test_mathml_greek():
     assert mp.doprint(Symbol('Psi')) == '<ci>&#936;</ci>'
     assert mp.doprint(Symbol('Omega')) == '<ci>&#937;</ci>'
 
+
 def test_mathml_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 
@@ -379,8 +394,10 @@ def test_mathml_order():
     assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'x'
     assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
 
+
 def test_settings():
     raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
+
 
 def test_toprettyxml_hooking():
     # test that the patch doesn't influence the behavior of the standard library

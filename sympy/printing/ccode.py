@@ -21,6 +21,7 @@ known_functions = {
         "Abs": [(lambda x: not x.is_integer, "fabs")],
         }
 
+
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -260,6 +261,7 @@ def ccode(expr, assign_to=None, **settings):
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)
+
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""

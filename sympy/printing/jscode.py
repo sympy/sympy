@@ -279,6 +279,7 @@ def jscode(expr, assign_to=None, **settings):
     """
     return JavascriptCodePrinter(settings).doprint(expr, assign_to)
 
+
 def print_jscode(expr, **settings):
     """Prints the Javascript representation of the given expression.
 

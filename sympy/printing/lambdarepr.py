@@ -1,11 +1,13 @@
 from str import StrPrinter
 from sympy.utilities import default_sort_key
 
+
 def _find_first_symbol(expr):
     for atom in expr.atoms():
         if atom.is_Symbol:
             return atom
     raise ValueError('expression must contain a Symbol: %r' % expr)
+
 
 class LambdaPrinter(StrPrinter):
     """
@@ -68,6 +70,7 @@ class LambdaPrinter(StrPrinter):
     def _print_Not(self, expr):
         result = ['(', 'not (', self._print(expr.args[0]), '))']
         return ''.join(result)
+
 
 def lambdarepr(expr, **settings):
     """

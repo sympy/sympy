@@ -11,16 +11,19 @@ from sympy import ccode
 x, y, z = symbols('x,y,z')
 g = Function('g')
 
+
 def test_printmethod():
     class fabs(Abs):
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
     assert ccode(fabs(x)) == "fabs(x)"
 
+
 def test_ccode_sqrt():
     assert ccode(sqrt(x)) == "sqrt(x)"
     assert ccode(x**0.5) == "sqrt(x)"
     assert ccode(sqrt(x)) == "sqrt(x)"
+
 
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x, 3)"
@@ -29,16 +32,19 @@ def test_ccode_Pow():
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
 
+
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
     assert ccode(pi) == "M_PI"
     assert ccode(oo) == "HUGE_VAL"
     assert ccode(-oo) == "-HUGE_VAL"
 
+
 def test_ccode_constants_other():
     assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert ccode(2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
     assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+
 
 def test_ccode_Rational():
     assert ccode(Rational(3, 7)) == "3.0/7.0"
@@ -46,12 +52,15 @@ def test_ccode_Rational():
     assert ccode(Rational(3, -7)) == "-3.0/7.0"
     assert ccode(Rational(-3, -7)) == "3.0/7.0"
 
+
 def test_ccode_Integer():
     assert ccode(Integer(67)) == "67"
     assert ccode(Integer(-1)) == "-1"
 
+
 def test_ccode_functions():
     assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+
 
 def test_ccode_inline_function():
     x = symbols('x')
@@ -68,9 +77,11 @@ def test_ccode_inline_function():
             "}"
             )
 
+
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
+
 
 def test_ccode_boolean():
     assert ccode(x & y) == "x && y"
@@ -80,6 +91,7 @@ def test_ccode_boolean():
     assert ccode(x | y | z) == "x || y || z"
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
+
 
 def test_ccode_Piecewise():
     p = ccode(Piecewise((x, x<1), (x**2, True)))
@@ -94,6 +106,7 @@ else {
 """
     assert p == s
 
+
 def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x<1), (x**2, True)))
     s = \
@@ -107,8 +120,10 @@ else {
 """
     assert p == s
 
+
 def test_ccode_settings():
     raises(TypeError, lambda: ccode(sin(x), method="garbage"))
+
 
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
@@ -149,6 +164,7 @@ def test_ccode_loops_matrix_vector():
     c = ccode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
+
 def test_dummy_loops():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
@@ -165,6 +181,7 @@ def test_dummy_loops():
         ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = ccode(x[i], assign_to=y[i])
     assert code == expected
+
 
 def test_ccode_loops_add():
     from sympy.tensor import IndexedBase, Idx
@@ -189,6 +206,7 @@ def test_ccode_loops_add():
             )
     c = ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
+
 
 def test_ccode_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
@@ -219,6 +237,7 @@ def test_ccode_loops_multiple_contractions():
     c = ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
+
 def test_ccode_loops_addfactor():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
@@ -248,6 +267,7 @@ def test_ccode_loops_addfactor():
             )
     c = ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
+
 
 def test_ccode_loops_multiple_terms():
     from sympy.tensor import IndexedBase, Idx

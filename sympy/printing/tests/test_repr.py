@@ -11,6 +11,7 @@ x, y = symbols('x,y')
 ENV = {}
 exec "from sympy import *" in ENV
 
+
 def sT(expr, string):
     """
     sT := sreprTest
@@ -21,26 +22,31 @@ def sT(expr, string):
     assert srepr(expr) == string
     assert eval(string, ENV) == expr
 
+
 def test_printmethod():
     class R(Abs):
         def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert srepr(R(x)) == "foo(Symbol('x'))"
 
+
 def test_Add():
     sT(x+y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
+
 
 def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
     # test unapplied Function
     sT(Function('f'), "Function('f')")
 
+
 def test_Geometry():
     sT(Point(0, 0),  "Point(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
+
 
 def test_Singletons():
     sT(S.Catalan, 'Catalan')
@@ -58,11 +64,14 @@ def test_Singletons():
     sT(S.Pi, 'pi')
     sT(S.Zero, 'Integer(0)')
 
+
 def test_Integer():
     sT(Integer(4), "Integer(4)")
 
+
 def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
+
 
 def test_Matrix():
     for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
@@ -73,9 +82,11 @@ def test_Matrix():
 
         sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
+
 def test_Rational():
     sT(Rational(1, 3), "Rational(1, 3)")
     sT(Rational(-1, 3), "Rational(-1, 3)")
+
 
 def test_Float():
     sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
@@ -83,19 +94,24 @@ def test_Float():
     sT(Float('1.234567890123456789', prec=19), "Float('1.234567890123456789013', prec=19)")
     sT(Float('0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
 
+
 def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
+
 
 def test_tuple():
     sT((x,), "(Symbol('x'),)")
     sT((x, y), "(Symbol('x'), Symbol('y'))")
 
+
 def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
+
 def test_settins():
     raises(TypeError, lambda: srepr(x, method="garbage"))
+
 
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")

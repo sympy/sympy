@@ -11,13 +11,16 @@ from sympy import jscode
 x, y, z = symbols('x,y,z')
 g = Function('g')
 
+
 def test_printmethod():
     assert jscode(Abs(x)) == "Math.abs(x)"
+
 
 def test_jscode_sqrt():
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
     assert jscode(x**0.5) == "Math.sqrt(x)"
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
+
 
 def test_jscode_Pow():
     assert jscode(x**3) == "Math.pow(x, 3)"
@@ -26,16 +29,19 @@ def test_jscode_Pow():
         "Math.pow(3.5*g(x), -x + Math.pow(y, x))/(Math.pow(x, 2) + y)"
     assert jscode(x**-1.0) == '1/x'
 
+
 def test_jscode_constants_mathh():
     assert jscode(exp(1)) == "Math.E"
     assert jscode(pi) == "Math.PI"
     assert jscode(oo) == "Number.POSITIVE_INFINITY"
     assert jscode(-oo) == "Number.NEGATIVE_INFINITY"
 
+
 def test_jscode_constants_other():
     assert jscode(2*GoldenRatio) == "var GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert jscode(2*Catalan) == "var Catalan = 0.915965594177219;\n2*Catalan"
     assert jscode(2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
+
 
 def test_jscode_Rational():
     assert jscode(Rational(3, 7)) == "3/7"
@@ -43,12 +49,15 @@ def test_jscode_Rational():
     assert jscode(Rational(3, -7)) == "-3/7"
     assert jscode(Rational(-3, -7)) == "3/7"
 
+
 def test_jscode_Integer():
     assert jscode(Integer(67)) == "67"
     assert jscode(Integer(-1)) == "-1"
 
+
 def test_jscode_functions():
     assert jscode(sin(x) ** cos(x)) == "Math.pow(Math.sin(x), Math.cos(x))"
+
 
 def test_jscode_inline_function():
     x = symbols('x')
@@ -65,9 +74,11 @@ def test_jscode_inline_function():
             "}"
             )
 
+
 def test_jscode_exceptions():
     assert jscode(ceiling(x)) == "Math.ceil(x)"
     assert jscode(Abs(x)) == "Math.abs(x)"
+
 
 def test_jscode_boolean():
     assert jscode(x & y) == "x && y"
@@ -77,6 +88,7 @@ def test_jscode_boolean():
     assert jscode(x | y | z) == "x || y || z"
     assert jscode((x & y) | z) == "z || x && y"
     assert jscode((x | y) & z) == "z && (x || y)"
+
 
 def test_jscode_Piecewise():
     p = jscode(Piecewise((x, x<1), (x**2, True)))
@@ -91,6 +103,7 @@ else {
 """
     assert p == s
 
+
 def test_jscode_Piecewise_deep():
     p = jscode(2*Piecewise((x, x<1), (x**2, True)))
     s = \
@@ -104,8 +117,10 @@ else {
 """
     assert p == s
 
+
 def test_jscode_settings():
     raises(TypeError, lambda: jscode(sin(x), method="garbage"))
+
 
 def test_jscode_Indexed():
     from sympy.tensor import IndexedBase, Idx
@@ -146,6 +161,7 @@ def test_jscode_loops_matrix_vector():
     c = jscode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
+
 def test_dummy_loops():
     # the following line could also be
     # [Dummy(s, integer=True) for s in 'im']
@@ -162,6 +178,7 @@ def test_dummy_loops():
         ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = jscode(x[i], assign_to=y[i])
     assert code == expected
+
 
 def test_jscode_loops_add():
     from sympy.tensor import IndexedBase, Idx
@@ -186,6 +203,7 @@ def test_jscode_loops_add():
             )
     c = jscode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
+
 
 def test_jscode_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
@@ -216,6 +234,7 @@ def test_jscode_loops_multiple_contractions():
     c = jscode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
+
 def test_jscode_loops_addfactor():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
@@ -245,6 +264,7 @@ def test_jscode_loops_addfactor():
             )
     c = jscode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
+
 
 def test_jscode_loops_multiple_terms():
     from sympy.tensor import IndexedBase, Idx

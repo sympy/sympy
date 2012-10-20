@@ -17,6 +17,7 @@ from sympy.utilities import default_sort_key
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
+
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
     printmethod = "_pretty"
@@ -1586,6 +1587,7 @@ def pretty(expr, **settings):
     finally:
         pretty_use_unicode(uflag)
 
+
 def pretty_print(expr, **settings):
     """Prints expr in pretty form.
 
@@ -1614,6 +1616,7 @@ def pretty_print(expr, **settings):
     print pretty(expr, **settings)
 
 pprint = pretty_print
+
 
 def pager_print(expr, **settings):
     """Prints expr using the pager, in pretty form.

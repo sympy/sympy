@@ -9,6 +9,7 @@ from str import StrPrinter
 STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
             "Pow", "Zero")
 
+
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
@@ -80,6 +81,7 @@ def python(expr, **settings):
         exprp = expr.subs(renamings)
     result += 'e = ' + printer._str(exprp)
     return result
+
 
 def print_python(expr, **settings):
     """Print output of python() function"""

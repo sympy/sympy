@@ -4,6 +4,7 @@ from sympy.printing.mathml import mathml
 import tempfile
 import os
 
+
 def print_gtk(x, start_viewer=True):
     """Print to Gtkmathview, a gtk widget capable of rendering MathML.
 

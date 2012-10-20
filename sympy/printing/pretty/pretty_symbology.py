@@ -39,6 +39,7 @@ __all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
 
 _use_unicode = False
 
+
 def pretty_use_unicode(flag=None):
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode
@@ -55,6 +56,7 @@ def pretty_use_unicode(flag=None):
     use_unicode_prev = _use_unicode
     _use_unicode = flag
     return use_unicode_prev
+
 
 def pretty_try_use_unicode():
     """See if unicode output is available and leverage it if possible"""
@@ -258,6 +260,7 @@ _xobj_ascii = {
     '\\':   '\\',
 }
 
+
 def xobj(symb, length):
     """Construct spatial object of given length.
 
@@ -329,6 +332,7 @@ def vobj(symb, height):
        see: xobj
     """
     return '\n'.join( xobj(symb, height) )
+
 
 def hobj(symb, width):
     """Construct horizontal object of a given width
@@ -416,6 +420,7 @@ atoms_table = {
     'Intersection':   U('INTERSECTION')
 }
 
+
 def pretty_atom(atom_name, default=None):
     """return pretty representation of an atom"""
     if _use_unicode:
@@ -425,6 +430,7 @@ def pretty_atom(atom_name, default=None):
             return default
 
         raise KeyError('only unicode')  # send it default printer
+
 
 def pretty_symbol(symb_name):
     """return pretty representation of a symbol"""

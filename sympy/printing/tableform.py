@@ -2,6 +2,7 @@ from sympy.core.containers import Tuple
 
 from types import FunctionType
 
+
 class TableForm(object):
     """
     Create a nice table representation of data.

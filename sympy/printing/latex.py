@@ -24,6 +24,7 @@ accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                     'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
                     'arg', 'zeta', 'psi']
 
+
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
@@ -1484,6 +1485,7 @@ def latex(expr, **settings):
     """
 
     return LatexPrinter(settings).doprint(expr)
+
 
 def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression."""
