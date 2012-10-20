@@ -250,9 +250,9 @@ def test_latex_brackets():
 
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x} x^{3}"
+        r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
 
 def test_latex_subs():
     assert latex(Subs(x*y, (x, y), (1, 2))) == r'\left. x y \right|_{\substack{ x=1\\ y=2 }}'
@@ -650,9 +650,9 @@ def test_categories():
     grid = DiagramGrid(d)
 
     assert latex(grid) == "\\begin{array}{cc}\n" \
-    "A & B \\\\\n"\
-    " & C \n" \
-    "\\end{array}\n"
+        "A & B \\\\\n"\
+        " & C \n" \
+        "\\end{array}\n"
 
 def test_Modules():
     from sympy.polys.domains import QQ

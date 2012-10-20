@@ -180,8 +180,8 @@ class TableForm(object):
             _head_align = 'r'
         if len(_alignments) != _w:
             raise ValueError(
-            'wrong number of alignments: expected %s but got %s' %
-            (_w, len(_alignments)))
+                'wrong number of alignments: expected %s but got %s' %
+                (_w, len(_alignments)))
 
         _column_formats = kwarg.get("formats", [None]*_w)
 
