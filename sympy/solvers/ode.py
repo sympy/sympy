@@ -238,15 +238,16 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # included in this list, but "_best" and "_Integral" hints should be included.
 allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
-"1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
-"1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
-"nth_linear_constant_coeff_undetermined_coefficients",
-"nth_linear_constant_coeff_variation_of_parameters",
-"Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
-"Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
-"1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-"nth_linear_constant_coeff_variation_of_parameters_Integral",
-"Liouville_Integral")
+    "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
+    "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
+    "nth_linear_constant_coeff_undetermined_coefficients",
+    "nth_linear_constant_coeff_variation_of_parameters",
+    "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
+    "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+    "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
+    "nth_linear_constant_coeff_variation_of_parameters_Integral",
+    "Liouville_Integral"
+)
 
 
 def preprocess(expr, func=None, hint='_Integral'):
@@ -312,10 +313,8 @@ def preprocess(expr, func=None, hint='_Integral'):
     fvars = set(func.args)
     if hint is None:
         return expr, func
-    reps = [(d, d.doit()) for d in derivs if
-                                not hint.endswith('_Integral') or
-                                d.has(func) or
-                                set(d.variables) & fvars]
+    reps = [(d, d.doit()) for d in derivs if not hint.endswith('_Integral') or
+            d.has(func) or set(d.variables) & fvars]
     eq = expr.subs(reps)
     return eq, func
 
@@ -573,8 +572,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     elif hint.endswith('_Integral'):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals(
-            )['ode_' + hint]  # convert the string into a function
+        # convert the string into a function
+        solvefunc = globals()['ode_' + hint]
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
@@ -1567,9 +1566,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 expr = Add(*[k*Add(*v) for k, v in terms.items()])
         # handle powers like exp(C0 + g(x)) -> C0*exp(g(x))
         pows = [p for p in expr.atoms(C.Function, C.Pow) if
-                  (p.is_Pow or p.func is exp) and
-                   p.exp.is_Add and
-                   p.exp.as_independent(x, strict=True)[1]]
+                (p.is_Pow or p.func is exp) and
+                p.exp.is_Add and
+                p.exp.as_independent(x, strict=True)[1]]
         if pows:
             reps = []
             for p in pows:
@@ -1702,7 +1701,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return Eq(
                 _constant_renumber(
                     expr.lhs, symbolname, startnumber, endnumber),
-            _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
+                _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and \
                 not expr.has(*constantsymbols):

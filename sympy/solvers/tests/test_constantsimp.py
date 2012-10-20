@@ -154,7 +154,7 @@ def test_ode_solutions():
         Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     assert constant_renumber(constantsimp(Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(x/C1) -
         cos(f(x)/x)*exp(-f(x)/x)/2, 0), x, 1), 'C', 1, 1) == \
-        Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)* \
+        Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*
            exp(-f(x)/x)/2, 0)
     u2 = Symbol('u2')
     _a = Symbol('_a')
@@ -169,4 +169,4 @@ def test_ode_solutions():
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here
-    assert constantsimp(Eq(C1, 3 + f(x)*x),  x, 1) == Eq(C1, f(x)*x)
+    assert constantsimp(Eq(C1, 3 + f(x)*x), x, 1) == Eq(C1, f(x)*x)
