@@ -907,7 +907,7 @@ def solve(f, *symbols, **flags):
             if warning and symbols[0].assumptions0:
                 print(filldedent("""
                     \tWarning: assumptions about variable '%s' are
-                    not handled currently.""" %symbols[0]))
+                    not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
 
         else:

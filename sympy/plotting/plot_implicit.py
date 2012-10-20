@@ -186,8 +186,8 @@ class ImplicitSeries(BaseSeries):
 
         func = vectorized_lambdify((self.var_x, self.var_y), expr)
         z_grid = func(x_grid, y_grid)
-        z_grid[np.ma.where(z_grid<0)] = -1
-        z_grid[np.ma.where(z_grid>0)] = 1
+        z_grid[np.ma.where(z_grid < 0)] = -1
+        z_grid[np.ma.where(z_grid > 0)] = 1
         if equal:
             return xarray, yarray, z_grid, 'contour'
         else:

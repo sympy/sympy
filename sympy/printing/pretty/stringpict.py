@@ -231,7 +231,7 @@ class stringPict(object):
         else:
             downline = stringPict('\\')
         #put n on top, as low as possible
-        if n is not None and n.width()>downline.width():
+        if n is not None and n.width() > downline.width():
             downline = downline.left(' '*(n.width() - downline.width()))
             downline = downline.above(n)
         #build root symbol
@@ -443,7 +443,7 @@ class prettyForm(stringPict):
         return prettyForm(binding=bin, *stringPict.next(*result))
 
     def __repr__(self):
-        return "prettyForm(%r,%d,%d)" %(
+        return "prettyForm(%r,%d,%d)" % (
             '\n'.join(self.picture),
             self.baseline,
             self.binding)

@@ -2286,7 +2286,7 @@ class PermutationGroup(Basic):
             not_rep.append(points[i + 1])
         ranks[points[0]] = k
         i = 0
-        len_not_rep = k -1
+        len_not_rep = k - 1
         while i < len_not_rep:
             temp = not_rep[i]
             i += 1

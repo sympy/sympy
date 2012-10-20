@@ -374,11 +374,11 @@ class LatexPrinter(Printer):
             imode = 0
             for x in tmp_lst[1:]:
                 if x == '':
-                    imode = (imode + 1) %2
+                    imode = (imode + 1) % 2
                 else:
                     subsup_str += LatexPrinter.mode[imode] + '{' + x + '}'
                     #subsup_str += LatexPrinter.mode[imode]+x+' '
-                    imode = (imode + 1) %2
+                    imode = (imode + 1) % 2
         name_str = sym_str + subsup_str
         name_str = LatexPrinter.replace_greek_tokens(name_str)
         return(name_str)
@@ -790,7 +790,7 @@ class LatexPrinter(Printer):
             if m is not None:
                 name, sub = m.groups()
                 tex = self._print_Symbol(Symbol(name))
-                tex = "%s_{%s}" %(tex, sub)
+                tex = "%s_{%s}" % (tex, sub)
                 return tex
 
             # insert braces to expresions containing '_' or '^'
@@ -799,7 +799,7 @@ class LatexPrinter(Printer):
             if m is not None:
                 name, sep, rest = m.groups()
                 tex = self._print_Symbol(Symbol(name))
-                tex = "%s%s{%s}" %(tex, sep, rest)
+                tex = "%s%s{%s}" % (tex, sep, rest)
                 return tex
 
             greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',

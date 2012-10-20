@@ -64,10 +64,10 @@ def dup_integrate(f, m, K):
     g = [K.zero]*m
 
     for i, c in enumerate(reversed(f)):
-        n = i +1
+        n = i + 1
 
         for j in xrange(1, m):
-            n *= i + j +1
+            n *= i + j + 1
 
         g.insert(0, K.quo(c, K(n)))
 
@@ -97,13 +97,13 @@ def dmp_integrate(f, m, u, K):
     if m <= 0 or dmp_zero_p(f, u):
         return f
 
-    g, v = dmp_zeros(m, u - 1, K), u -1
+    g, v = dmp_zeros(m, u - 1, K), u - 1
 
     for i, c in enumerate(reversed(f)):
-        n = i +1
+        n = i + 1
 
         for j in xrange(1, m):
-            n *= i + j +1
+            n *= i + j + 1
 
         g.insert(0, dmp_quo_ground(c, K(n), v, K))
 
@@ -116,7 +116,7 @@ def _rec_integrate_in(g, m, v, i, j, K):
     if i == j:
         return dmp_integrate(g, m, v, K)
 
-    w, i = v - 1, i +1
+    w, i = v - 1, i + 1
 
     return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
 
@@ -217,7 +217,7 @@ def dmp_diff(f, m, u, K):
     if n < m:
         return dmp_zero(u)
 
-    deriv, v = [], u -1
+    deriv, v = [], u - 1
 
     if m == 1:
         for coeff in f[:-m]:
@@ -242,7 +242,7 @@ def _rec_diff_in(g, m, v, i, j, K):
     if i == j:
         return dmp_diff(g, m, v, K)
 
-    w, i = v - 1, i +1
+    w, i = v - 1, i + 1
 
     return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
 
@@ -321,7 +321,7 @@ def dmp_eval(f, a, u, K):
     if not a:
         return dmp_TC(f, K)
 
-    result, v = dmp_LC(f, K), u -1
+    result, v = dmp_LC(f, K), u - 1
 
     for coeff in f[1:]:
         result = dmp_mul_ground(result, a, v, K)
@@ -336,7 +336,7 @@ def _rec_eval_in(g, a, v, i, j, K):
     if i == j:
         return dmp_eval(g, a, v, K)
 
-    v, i = v - 1, i +1
+    v, i = v - 1, i + 1
 
     return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
 
@@ -419,7 +419,7 @@ def _rec_diff_eval(g, m, a, v, i, j, K):
     if i == j:
         return dmp_eval(dmp_diff(g, m, v, K), a, v, K)
 
-    v, i = v - 1, i +1
+    v, i = v - 1, i + 1
 
     return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
 
@@ -524,7 +524,7 @@ def dmp_ground_trunc(f, p, u, K):
     if not u:
         return dup_trunc(f, p, K)
 
-    v = u -1
+    v = u - 1
 
     return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
 
@@ -1250,7 +1250,7 @@ def _rec_clear_denoms(g, v, K0, K1):
         for c in g:
             common = K1.lcm(common, K0.denom(c))
     else:
-        w = v -1
+        w = v - 1
 
         for c in g:
             common = K1.lcm(common, _rec_clear_denoms(c, w, K0, K1))

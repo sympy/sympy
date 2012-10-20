@@ -28,7 +28,7 @@ class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
 
         for i in xrange(300):
             if v != math.floor(v):
-                v, n = 2*v, n -1
+                v, n = 2*v, n - 1
             else:
                 break
 

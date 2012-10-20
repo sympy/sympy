@@ -27,7 +27,7 @@ def split_super_sub(text):
     supers = []
     subs = []
     while pos < len(text):
-        start = pos +1
+        start = pos + 1
         if text[pos:pos + 2] == "__":
             start += 1
         pos_hat = text.find("^", start)

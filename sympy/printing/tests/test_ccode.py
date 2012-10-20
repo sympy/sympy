@@ -69,7 +69,7 @@ def test_ccode_inline_function():
     assert ccode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "double const Catalan = %s;\n2*x/Catalan" %Catalan.n()
+        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -96,7 +96,7 @@ def test_ccode_boolean():
 
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x, x<1), (x**2, True)))
+    p = ccode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 if (x < 1) {
@@ -110,7 +110,7 @@ else {
 
 
 def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x, x<1), (x**2, True)))
+    p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 2*if (x < 1) {

@@ -14,7 +14,7 @@ def test_parser():
 
 def test_injection():
     parse_maxima('c: x+1', globals=globals())
-    assert c == x +1
+    assert c == x + 1
 
     parse_maxima('g: sqrt(81)', globals=globals())
     assert g == 9
@@ -33,13 +33,13 @@ def test_maxima_functions():
     assert parse_maxima('sum(k, k, 1, n)', name_dict=dict(
                 n=Symbol('n', integer=True),
                 k=Symbol('k', integer=True)
-                )) == (n**2 +n)/2
+                )) == (n**2 + n)/2
     assert parse_maxima('product(k, k, 1, n)',
             name_dict=dict(
                 n=Symbol('n', integer=True),
                 k=Symbol('k', integer=True)
                 )
             ) == factorial(n)
-    assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x -1
+    assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x - 1
     assert Abs( parse_maxima(
         'float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)

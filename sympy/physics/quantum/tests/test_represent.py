@@ -104,7 +104,7 @@ def test_format_sympy():
 def test_scalar_sympy():
     assert represent(Integer(1)) == Integer(1)
     assert represent(Float(1.0)) == Float(1.0)
-    assert represent(1.0 + I) == 1.0 +I
+    assert represent(1.0 + I) == 1.0 + I
 
 
 np = import_module('numpy', min_python_version=(2, 6))

@@ -463,7 +463,7 @@ class binomial(CombinatorialFunction):
                     result = n - k + 1
 
                     for i in xrange(2, k + 1):
-                        result *= n - k +i
+                        result *= n - k + i
                         result /= i
 
                     return result

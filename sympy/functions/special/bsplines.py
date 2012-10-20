@@ -85,7 +85,7 @@ def bspline_basis(d, knots, n, x, close=True):
     d = int(d)
     n = int(n)
     n_knots = len(knots)
-    n_intervals = n_knots -1
+    n_intervals = n_knots - 1
     if n + d + 1 > n_intervals:
         raise ValueError('n+d+1 must not exceed len(knots)-1')
     if d == 0:
@@ -146,5 +146,5 @@ def bspline_basis_set(d, knots, x):
 
     bsplines_basis
     """
-    n_splines = len(knots) - d -1
+    n_splines = len(knots) - d - 1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]

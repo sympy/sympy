@@ -351,10 +351,10 @@ def test_loops_c():
             '}\n'
             )
 
-    assert (code == expected %{'rhs': 'A[i*n + j]*x[j]'} or
-            code == expected %{'rhs': 'A[j + i*n]*x[j]'} or
-            code == expected %{'rhs': 'x[j]*A[i*n + j]'} or
-            code == expected %{'rhs': 'x[j]*A[j + i*n]'})
+    assert (code == expected % {'rhs': 'A[i*n + j]*x[j]'} or
+            code == expected % {'rhs': 'A[j + i*n]*x[j]'} or
+            code == expected % {'rhs': 'x[j]*A[i*n + j]'} or
+            code == expected % {'rhs': 'x[j]*A[j + i*n]'})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -419,10 +419,10 @@ def test_partial_loops_c():
             '}\n'
             ) % {'upperi': m - 4, 'rhs': '%(rhs)s'}
 
-    assert (code == expected %{'rhs': 'A[i*p + j]*x[j]'} or
-            code == expected %{'rhs': 'A[j + i*p]*x[j]'} or
-            code == expected %{'rhs': 'x[j]*A[i*p + j]'} or
-            code == expected %{'rhs': 'x[j]*A[j + i*p]'})
+    assert (code == expected % {'rhs': 'A[i*p + j]*x[j]'} or
+            code == expected % {'rhs': 'A[j + i*p]*x[j]'} or
+            code == expected % {'rhs': 'x[j]*A[i*p + j]'} or
+            code == expected % {'rhs': 'x[j]*A[j + i*p]'})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -1042,7 +1042,7 @@ def test_partial_loops_f():
                     'rhs': 'A(i, j)*x(j)',
                     'iup': str(m - 4),
                     'ilow': str(1 + o),
-                    'iup-ilow': str(m - 4 -o)
+                    'iup-ilow': str(m - 4 - o)
                     }
 
     assert expected == code

@@ -1151,7 +1151,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{R}"
 
     def _print_TransformationSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}" %(
+        return r"\left\{%s\; |\; %s \in %s\right\}" % (
                 self._print(s.lamda.expr),
                 ', '.join([self._print(var) for var in s.lamda.variables]),
                 self._print(s.base_set))

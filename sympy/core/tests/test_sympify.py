@@ -273,7 +273,7 @@ def test_sympifyit():
 
     @_sympifyit('b', NotImplemented)
     def add(a, b):
-        return a +b
+        return a + b
 
     assert add(x, 1) == x + 1
     assert add(x, 0.5) == x + Float('0.5')
@@ -283,7 +283,7 @@ def test_sympifyit():
 
     @_sympifyit('b')
     def add_raises(a, b):
-        return a +b
+        return a + b
 
     assert add_raises(x, 1) == x + 1
     assert add_raises(x, 0.5) == x + Float('0.5')

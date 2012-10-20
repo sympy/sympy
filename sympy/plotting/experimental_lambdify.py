@@ -283,7 +283,7 @@ class Lambdifier(object):
         # Construct the lambda
         if self.print_lambda:
             print newexpr
-        eval_str = 'lambda %s : ( %s )' %(argstr, newexpr)
+        eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
         self.lambda_func = namespace['MYNEWLAMBDA']
 
@@ -446,24 +446,24 @@ class Lambdifier(object):
         dict_fun = dict(self.builtin_functions_different)
         if self.use_np:
             for s in self.numpy_functions_same:
-                dict_fun[s] = 'np.' +s
+                dict_fun[s] = 'np.' + s
             for k, v in self.numpy_functions_different.iteritems():
-                dict_fun[k] = 'np.' +v
+                dict_fun[k] = 'np.' + v
         if self.use_python_math:
             for s in self.math_functions_same:
-                dict_fun[s] = 'math.' +s
+                dict_fun[s] = 'math.' + s
             for k, v in self.math_functions_different.iteritems():
-                dict_fun[k] = 'math.' +v
+                dict_fun[k] = 'math.' + v
         if self.use_python_cmath:
             for s in self.cmath_functions_same:
-                dict_fun[s] = 'cmath.' +s
+                dict_fun[s] = 'cmath.' + s
             for k, v in self.cmath_functions_different.iteritems():
-                dict_fun[k] = 'cmath.' +v
+                dict_fun[k] = 'cmath.' + v
         if self.use_interval:
             for s in self.interval_functions_same:
-                dict_fun[s] = 'imath.' +s
+                dict_fun[s] = 'imath.' + s
             for k, v in self.interval_functions_different.iteritems():
-                dict_fun[k] = 'imath.' +v
+                dict_fun[k] = 'imath.' + v
         return dict_fun
 
     ##############################################################################

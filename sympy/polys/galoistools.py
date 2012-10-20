@@ -145,7 +145,7 @@ def gf_degree(f):
     -1
 
     """
-    return len(f) -1
+    return len(f) - 1
 
 
 def gf_LC(f, K):
@@ -724,7 +724,7 @@ def gf_div(f, g, p, K):
 
     inv = K.invert(g[0], p)
 
-    h, dq, dr = list(f), df - dg, dg -1
+    h, dq, dr = list(f), df - dg, dg - 1
 
     for i in xrange(0, df + 1):
         coeff = h[i]
@@ -784,7 +784,7 @@ def gf_quo(f, g, p, K):
 
     inv = K.invert(g[0], p)
 
-    h, dq, dr = f[:], df - dg, dg -1
+    h, dq, dr = f[:], df - dg, dg - 1
 
     for i in xrange(0, dq + 1):
         coeff = h[i]
@@ -1558,7 +1558,7 @@ def gf_sqf_list(f, p, K, all=False):
                 if gf_degree(H) > 0:
                     factors.append((H, i*n))
 
-                g, h, i = gf_quo(g, G, p, K), G, i +1
+                g, h, i = gf_quo(g, G, p, K), G, i + 1
 
             if g == [K.one]:
                 sqf = True
@@ -1893,7 +1893,7 @@ def gf_ddf_shoup(f, p, K):
     factors = []
 
     for i, v in enumerate(V):
-        h, j = [K.one], k -1
+        h, j = [K.one], k - 1
 
         for u in U:
             g = gf_sub(v, u, p, K)
@@ -1910,7 +1910,7 @@ def gf_ddf_shoup(f, p, K):
             if F != [K.one]:
                 factors.append((F, k*(i + 1) - j))
 
-            g, j = gf_quo(g, F, p, K), j -1
+            g, j = gf_quo(g, F, p, K), j - 1
 
     if f != [K.one]:
         factors.append((f, gf_degree(f)))

@@ -55,7 +55,7 @@ class DiracDelta(Function):
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
-            a non-negative integer, %s given instead." %(k,))
+            a non-negative integer, %s given instead." % (k,))
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
@@ -96,7 +96,7 @@ class DiracDelta(Function):
         """
         from sympy.polys.polyroots import roots
 
-        if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):
+        if not self.args[0].has(x) or (len(self.args) > 1 and self.args[1] != 0 ):
             return self
         try:
             argroots = roots(self.args[0], x,

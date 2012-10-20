@@ -306,7 +306,7 @@ class PrettyPrinter(Printer):
             x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
-            H = h +2
+            H = h + 2
 
             # XXX hack!
             ascii_mode = not self._use_unicode
@@ -421,7 +421,7 @@ class PrettyPrinter(Printer):
 
         def asum(hrequired, lower, upper, use_ascii):
             def adjust(s, wid=None, how='<^>'):
-                if not wid or len(s)>wid:
+                if not wid or len(s) > wid:
                     return s
                 need = wid - len(s)
                 if how == '<^>' or how == "<" or how not in list('<^>'):

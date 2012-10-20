@@ -52,7 +52,7 @@ def test_ContinuousDomain():
     assert where(X**2 <= 1).set == Interval(-1, 1)
     assert where(X**2 <= 1).symbol == X.symbol
     where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
-    raises(ValueError, lambda: where(sin(X)>1))
+    raises(ValueError, lambda: where(sin(X) > 1))
 
     Y = given(X, X >= 0)
 
@@ -83,12 +83,12 @@ def test_symbolic():
 
     assert E(X) == mu1
     assert E(X + Y) == mu1 + mu2
-    assert E(a*X + b) == a*E(X) +b
+    assert E(a*X + b) == a*E(X) + b
     assert variance(X) == s1**2
     assert simplify(variance(X + a*Y + b)) == variance(X) + a**2*variance(Y)
 
     assert E(Z) == 1/rate
-    assert E(a*Z + b) == a*E(Z) +b
+    assert E(a*Z + b) == a*E(Z) + b
     assert E(X + a*Z + b) == mu1 + a/rate + b
 
 
@@ -96,10 +96,10 @@ def test_cdf():
     X = Normal('x', 0, 1)
 
     d = cdf(X)
-    assert P(X<1) == d(1)
+    assert P(X < 1) == d(1)
     assert d(0) == S.Half
 
-    d = cdf(X, X>0)  # given X>0
+    d = cdf(X, X > 0)  # given X>0
     assert d(0) == 0
 
     Y = Exponential('y', 10)
@@ -131,7 +131,7 @@ def test_ContinuousRV():
     Y = Normal('y', 0, 1)
 
     assert variance(X) == variance(Y)
-    assert P(X>0) == P(Y>0)
+    assert P(X > 0) == P(Y > 0)
 
 
 def test_arcsin():
@@ -216,9 +216,9 @@ def test_exponential():
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
-    assert P(X>0) == S(1)
-    assert P(X>1) == exp(-rate)
-    assert P(X>10) == exp(-10*rate)
+    assert P(X > 0) == S(1)
+    assert P(X > 1) == exp(-rate)
+    assert P(X > 10) == exp(-10*rate)
 
     assert where(X <= 1).set == Interval(0, 1)
 
@@ -378,12 +378,12 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-    assert P(X<l) == 0 and P(X>l + w) == 0
+    assert P(X < l) == 0 and P(X > l + w) == 0
 
     # With numbers all is well
     X = Uniform('x', 3, 5)
-    assert P(X<3) == 0 and P(X>5) == 0
-    assert P(X<4) == P(X>4) == S.Half
+    assert P(X < 3) == 0 and P(X > 5) == 0
+    assert P(X < 4) == P(X > 4) == S.Half
 
 
 @XFAIL
@@ -466,10 +466,10 @@ def test_unevaluated():
     assert E(X + 1, evaluate=False) == (
             Integral(sqrt(2)*x*exp(-x**2/2)/(2*sqrt(pi)), (x, -oo, oo)) + 1)
 
-    assert P(X>0, evaluate=False) == (
+    assert P(X > 0, evaluate=False) == (
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)), (x, 0, oo)))
 
-    assert P(X>0, X**2<1, evaluate=False) == (
+    assert P(X > 0, X**2 < 1, evaluate=False) == (
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)*
             Integral(sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)),
                 (x, -1, 1))), (x, 0, 1)))
@@ -477,4 +477,4 @@ def test_unevaluated():
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
-    assert type(P(T>33, evaluate=False)) == Integral
+    assert type(P(T > 33, evaluate=False)) == Integral

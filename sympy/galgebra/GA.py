@@ -146,7 +146,7 @@ def comb(N, P):
         if p:
             for i in range(n):
                 newcomb = comb + [i]
-                np = p -1
+                np = p - 1
                 rloop(i, np, combs, newcomb)
         else:
             combs.append(comb)
@@ -241,7 +241,7 @@ def reduce_base(k, base):
         else:
             return(-1, [base[0], k])
     ilo = 0
-    ihi = grade -1
+    ihi = grade - 1
     if k < base[0]:
         return(1, [k] + base)
     if k > base[ihi]:
@@ -427,7 +427,7 @@ class MV(object):
         MV.vsyms = sympy.symbols(MV.vbasis)
         MV.n = len(MV.vbasis)
         MV.nrg = range(MV.n)
-        MV.n1 = MV.n +1
+        MV.n1 = MV.n + 1
         MV.n1rg = range(MV.n1)
         MV.npow = 2**MV.n
         MV.index = range(MV.n)
@@ -555,11 +555,11 @@ class MV(object):
         if nblst <= 1:
             return(1)
         jstep = 1
-        while jstep <nblst:
-            istep = jstep -1
+        while jstep < nblst:
+            istep = jstep - 1
             if blst[istep] == blst[jstep]:
                 i = blst[istep]
-                if len(blst) >2:
+                if len(blst) > 2:
                     blst = blst[:istep] + blst[jstep + 1:]
                 else:
                     blst = []
@@ -641,10 +641,10 @@ class MV(object):
     @staticmethod
     def contract(coefs, bases):
         dualsort(coefs, bases)
-        n = len(bases) -1
+        n = len(bases) - 1
         i = 0
         while i < n:
-            j = i +1
+            j = i + 1
             if bases[i] == bases[j]:
                 coefs[i] += coefs[j]
                 bases.pop(j)
@@ -1437,7 +1437,7 @@ class MV(object):
                     MV.bladelabel[igrade].append(name)
                     lblade = MV.basis[igrade - 1].index(blade[:-1])
                     rblade = blade[-1]
-                    igrade1 = igrade -1
+                    igrade1 = igrade - 1
                     blade1 = MV.btable[igrade1][lblade]
                     vector2 = MV.btable[1][rblade]
                     b1Wv2 = MV.wedge(igrade1, blade1, vector2, name)
@@ -1477,7 +1477,7 @@ class MV(object):
                         invblade.mv[igrade] = +blade.mv[igrade]
                         invblade.bladeflg = 1
                     if igrade >= 4:
-                        jgrade = igrade -2
+                        jgrade = igrade - 2
                         while jgrade > 1:
                             for ibase in range(MV.nbasis[jgrade]):
                                 invblade.substitute_base(

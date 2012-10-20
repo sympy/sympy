@@ -312,7 +312,7 @@ def test_interval_symbolic():
     assert e.contains(x) == And(0 <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
-    assert e.contains(x) == And(0<x, x<1)
+    assert e.contains(x) == And(0 < x, x < 1)
 
 
 def test_union_contains():

@@ -344,7 +344,7 @@ def test_latex_productset():
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^2" % latex(line)
-    assert latex(line * bigline * fset) == r"%s \times %s \times %s" %(
+    assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
             latex(line), latex(bigline), latex(fset))
 
 
@@ -383,11 +383,11 @@ def test_latex_limits():
 
 def test_issue469():
     beta = Symbol(r'\beta')
-    y = beta +x
+    y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']
 
     beta = Symbol(r'beta')
-    y = beta +x
+    y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']
 
 
@@ -435,7 +435,7 @@ def test_latex_DiracDelta():
 
 
 def test_mode():
-    expr = x +y
+    expr = x + y
     assert latex(expr) == 'x + y'
     assert latex(expr, mode='plain') == 'x + y'
     assert latex(expr, mode='inline') == '$x + y$'
@@ -447,7 +447,7 @@ def test_mode():
 
 
 def test_latex_Piecewise():
-    p = Piecewise((x, x<1), (x**2, True))
+    p = Piecewise((x, x < 1), (x**2, True))
     assert latex(p) == "\\begin{cases} x & \\text{for}\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"
     assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
@@ -622,10 +622,10 @@ def test_matMul():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X>0)) == "Domain: 0 < x_{1}"
+    assert latex(where(X > 0)) == "Domain: 0 < x_{1}"
 
     D = Die('d1', 6)
-    assert latex(where(D>4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
+    assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)

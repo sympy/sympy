@@ -221,7 +221,7 @@ class AntiSymmetricTensor(TensorSymbol):
             return (12, h)
 
     def _latex(self, printer):
-        return "%s^{%s}_{%s}" %(
+        return "%s^{%s}_{%s}" % (
                 self.symbol,
                 "".join([ i.name for i in self.args[1]]),
                 "".join([ i.name for i in self.args[2]])
@@ -289,7 +289,7 @@ class AntiSymmetricTensor(TensorSymbol):
         return self.args[2]
 
     def __str__(self):
-        return "%s(%s,%s)" %self.args
+        return "%s(%s,%s)" % self.args
 
     def doit(self, **kw_args):
         """
@@ -993,7 +993,7 @@ class FermionState(FockState):
 
     def __new__(cls, occupations, fermi_level=0):
         occupations = map(sympify, occupations)
-        if len(occupations) >1:
+        if len(occupations) > 1:
             try:
                 (occupations, sign) = _sort_anticommuting_fermions(
                     occupations, key=hash)
@@ -1127,7 +1127,7 @@ class FermionState(FockState):
         If nothing can be concluded we return a conservative False.
         """
         if i.is_number:
-            return i> cls.fermi_level
+            return i > cls.fermi_level
         if i.assumptions0.get('above_fermi'):
             return True
         return not cls.fermi_level
@@ -1763,10 +1763,10 @@ class Commutator(Function):
         return (a*b - b*a).doit(**hints)
 
     def __repr__(self):
-        return "Commutator(%s,%s)" %(self.args[0], self.args[1])
+        return "Commutator(%s,%s)" % (self.args[0], self.args[1])
 
     def __str__(self):
-        return "[%s,%s]" %(self.args[0], self.args[1])
+        return "[%s,%s]" % (self.args[0], self.args[1])
 
     def _latex(self, printer):
         return "\\left[%s,%s\\right]" % tuple([
@@ -2216,7 +2216,7 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
             if left > right:
                 verified = False
                 keys[i:i + 2] = [right, left]
-                sign = sign +1
+                sign = sign + 1
         if verified:
             break
         for i in rev:
@@ -2227,7 +2227,7 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
             if left > right:
                 verified = False
                 keys[i:i + 2] = [right, left]
-                sign = sign +1
+                sign = sign + 1
     string1 = [ key_val[k] for k in keys ]
     return (string1, sign)
 
@@ -2324,11 +2324,11 @@ def evaluate_deltas(e):
             # to treat the resulting expression properly
             if indices[d.killable_index]:
                 e = e.subs(d.killable_index, d.preferred_index)
-                if len(deltas)>1:
+                if len(deltas) > 1:
                     return evaluate_deltas(e)
             elif indices[d.preferred_index] and d.indices_contain_equal_information:
                 e = e.subs(d.preferred_index, d.killable_index)
-                if len(deltas)>1:
+                if len(deltas) > 1:
                     return evaluate_deltas(e)
             else:
                 pass
@@ -2771,7 +2771,7 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
             if c:
                 # print "found contraction",c
 
-                sign = (j - i + 1) %2
+                sign = (j - i + 1) % 2
                 if sign:
                     coeff = S.NegativeOne*c
                 else:
@@ -2933,7 +2933,7 @@ class PermutationOperator(Expr):
 
     def __new__(cls, i, j):
         i, j = map(sympify, (i, j))
-        if (i>j):
+        if (i > j):
             obj = Basic.__new__(cls, j, i)
         else:
             obj = Basic.__new__(cls, i, j)

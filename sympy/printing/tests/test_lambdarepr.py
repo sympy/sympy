@@ -28,7 +28,7 @@ def test_piecewise():
     eval(h + l)
     assert l == "((x) if (True) else None)"
 
-    p = Piecewise((x, x<0))
+    p = Piecewise((x, x < 0))
     l = lambdarepr(p)
     eval(h + l)
     assert l == "((x) if (x < 0) else None)"

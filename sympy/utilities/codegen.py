@@ -766,7 +766,7 @@ class FCodeGen(CodeGen):
 
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s" %(
+                dimstr = ", ".join(["%s:%s" % (
                     fprint(dim[0] + 1), fprint(dim[1] + 1))
                     for dim in arg.dimensions])
                 typeinfo += ", dimension(%s)" % dimstr
