@@ -3180,7 +3180,7 @@ class MatrixBase(object):
         del self._is_symmetric
         del self._eigenvects
 
-    def jordan_form(self, calc_transformation = True):
+    def jordan_form(self, calc_transformation=True):
         """
         Return Jordan form J of current matrix.
 
@@ -3224,7 +3224,7 @@ class MatrixBase(object):
         J = diag(*Jcells)
         return (P, J)
 
-    def jordan_cells(self, calc_transformation = True):
+    def jordan_cells(self, calc_transformation=True):
         """
         Return a list of Jordan cells of current matrix.
         This list shape Jordan matrix J.
