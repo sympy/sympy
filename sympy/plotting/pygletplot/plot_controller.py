@@ -12,93 +12,93 @@ class PlotController(object):
     modified_key_sensitivity = 40.0
 
     keymap = {
-                key.LEFT: 'left',
-                key.A: 'left',
-                key.NUM_4: 'left',
+        key.LEFT: 'left',
+        key.A: 'left',
+        key.NUM_4: 'left',
 
-                key.RIGHT: 'right',
-                key.D: 'right',
-                key.NUM_6: 'right',
+        key.RIGHT: 'right',
+        key.D: 'right',
+        key.NUM_6: 'right',
 
-                key.UP: 'up',
-                key.W: 'up',
-                key.NUM_8: 'up',
+        key.UP: 'up',
+        key.W: 'up',
+        key.NUM_8: 'up',
 
-                key.DOWN: 'down',
-                key.S: 'down',
-                key.NUM_2: 'down',
+        key.DOWN: 'down',
+        key.S: 'down',
+        key.NUM_2: 'down',
 
-                key.Z: 'rotate_z_neg',
-                key.NUM_1: 'rotate_z_neg',
+        key.Z: 'rotate_z_neg',
+        key.NUM_1: 'rotate_z_neg',
 
-                key.C: 'rotate_z_pos',
-                key.NUM_3: 'rotate_z_pos',
+        key.C: 'rotate_z_pos',
+        key.NUM_3: 'rotate_z_pos',
 
-                key.Q: 'spin_left',
-                key.NUM_7: 'spin_left',
-                key.E: 'spin_right',
-                key.NUM_9: 'spin_right',
+        key.Q: 'spin_left',
+        key.NUM_7: 'spin_left',
+        key.E: 'spin_right',
+        key.NUM_9: 'spin_right',
 
-                key.X: 'reset_camera',
-                key.NUM_5: 'reset_camera',
+        key.X: 'reset_camera',
+        key.NUM_5: 'reset_camera',
 
-                key.NUM_ADD: 'zoom_in',
-                key.PAGEUP: 'zoom_in',
-                key.R: 'zoom_in',
+        key.NUM_ADD: 'zoom_in',
+        key.PAGEUP: 'zoom_in',
+        key.R: 'zoom_in',
 
-                key.NUM_SUBTRACT: 'zoom_out',
-                key.PAGEDOWN: 'zoom_out',
-                key.F: 'zoom_out',
+        key.NUM_SUBTRACT: 'zoom_out',
+        key.PAGEDOWN: 'zoom_out',
+        key.F: 'zoom_out',
 
-                key.RSHIFT: 'modify_sensitivity',
-                key.LSHIFT: 'modify_sensitivity',
+        key.RSHIFT: 'modify_sensitivity',
+        key.LSHIFT: 'modify_sensitivity',
 
-                key.F1: 'rot_preset_xy',
-                key.F2: 'rot_preset_xz',
-                key.F3: 'rot_preset_yz',
-                key.F4: 'rot_preset_perspective',
+        key.F1: 'rot_preset_xy',
+        key.F2: 'rot_preset_xz',
+        key.F3: 'rot_preset_yz',
+        key.F4: 'rot_preset_perspective',
 
-                key.F5: 'toggle_axes',
-                key.F6: 'toggle_axe_colors',
+        key.F5: 'toggle_axes',
+        key.F6: 'toggle_axe_colors',
 
-                key.F8: 'save_image'
-             }
+        key.F8: 'save_image'
+    }
 
     def __init__(self, window, **kwargs):
         self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
         self.window = window
         self.camera = window.camera
         self.action = {
-                # Rotation around the view Y (up) vector
-                'left': False,
-                'right': False,
-                # Rotation around the view X vector
-                'up': False,
-                'down': False,
-                # Rotation around the view Z vector
-                'spin_left': False,
-                'spin_right': False,
-                # Rotation around the model Z vector
-                'rotate_z_neg': False,
-                'rotate_z_pos': False,
-                # Reset to the default rotation
-                'reset_camera': False,
-                # Performs camera z-translation
-                'zoom_in': False,
-                'zoom_out': False,
-                # Use alternative sensitivity (speed)
-                'modify_sensitivity': False,
-                # Rotation presets
-                'rot_preset_xy': False,
-                'rot_preset_xz': False,
-                'rot_preset_yz': False,
-                'rot_preset_perspective': False,
-                # axes
-                'toggle_axes': False,
-                'toggle_axe_colors': False,
-                # screenshot
-                'save_image': False
-            }
+            # Rotation around the view Y (up) vector
+            'left': False,
+            'right': False,
+            # Rotation around the view X vector
+            'up': False,
+            'down': False,
+            # Rotation around the view Z vector
+            'spin_left': False,
+            'spin_right': False,
+            # Rotation around the model Z vector
+            'rotate_z_neg': False,
+            'rotate_z_pos': False,
+            # Reset to the default rotation
+            'reset_camera': False,
+            # Performs camera z-translation
+            'zoom_in': False,
+            'zoom_out': False,
+            # Use alternative sensitivity (speed)
+            'modify_sensitivity': False,
+            # Rotation presets
+            'rot_preset_xy': False,
+            'rot_preset_xz': False,
+            'rot_preset_yz': False,
+            'rot_preset_perspective': False,
+            # axes
+            'toggle_axes': False,
+            'toggle_axe_colors': False,
+            # screenshot
+            'save_image': False
+        }
 
     def update(self, dt):
         z = 0
