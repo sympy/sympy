@@ -154,6 +154,7 @@ def test_TableForm_latex():
         '3 & (sqrt(x)) & $\\sin{\\left (x^{2} \\right )}$ \\\\\n'
         '\\end{tabular}'
     )
+
     def neg_in_paren(x, i, j):
         if i%2:
             return ('(%s)' if x < 0 else '%s') % x

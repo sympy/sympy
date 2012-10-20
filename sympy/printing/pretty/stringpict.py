@@ -461,6 +461,7 @@ class prettyForm(stringPict):
         return prettyForm(binding=prettyForm.POW, *bot.above(top))
 
     simpleFunctions = ["sin", "cos", "tan"]
+
     @staticmethod
     def apply(function, *args):
         """Functions of one or more variables.

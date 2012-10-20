@@ -29,6 +29,7 @@ def test_printmethod():
         def _latex(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert latex(R(x)) == "foo(x)"
+
     class R(Abs):
         def _latex(self, printer):
             return "foo"

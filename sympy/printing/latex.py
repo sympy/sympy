@@ -1019,6 +1019,7 @@ class LatexPrinter(Printer):
 
     def _print_MatMul(self, expr):
         from sympy import Add, MatAdd
+
         def parens(x):
             if isinstance(x, (Add, MatAdd)):
                 return r"\left(%s\right)"%self._print(x)

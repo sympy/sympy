@@ -25,6 +25,7 @@ def test_printmethod():
         def _sympystr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert sstr(R(x)) == "foo(x)"
+
     class R(Abs):
         def _sympystr(self, printer):
             return "foo"
@@ -167,6 +168,7 @@ def test_Mul():
 
     class CustomClass1(Expr):
         is_commutative = True
+
     class CustomClass2(Expr):
         is_commutative = True
     cc1 = CustomClass1()
