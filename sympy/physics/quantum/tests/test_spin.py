@@ -653,7 +653,7 @@ def test_uncouple_3_coupled_states():
         expand(uncouple(couple( TensorProduct(JzKet(S(
             1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2)) )))
     assert TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2, S(-1)/ \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2, S(-1)/
                2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)) )))
     # j1=1/2, j2=1, j3=1/2
     assert TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(1, 1), JzKet(S(1)/2, S(1)/2)) == \
@@ -753,7 +753,7 @@ def test_uncouple_3_coupled_states():
         expand(uncouple(couple( TensorProduct(JzKet(S(1)/2, S(
             -1)/2), JzKet(1, -1), JzKet(S(1)/2, S(1)/2)), ((1, 3), (1, 2)) )))
     assert TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(1, -1), JzKet(S(1)/2, S(-1)/2)) == \
-        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2, S(-1)/ \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2, S(-1)/
                2), JzKet(1, -1), JzKet(S(1)/2, S(-1)/2)), ((1, 3), (1, 2)) )))
 
 
@@ -977,7 +977,7 @@ def test_uncouple_2_coupled_states_numerical():
         TensorProduct(JzKet(S(1)/2, -S(1)/2), JzKet(S(1)/2, -S(1)/2))
     # j1=1, j2=1/2
     assert uncouple(JzKetCoupled(S(1)/2, S(1)/2, (1, S(1)/2))) == \
-        -sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S(1)/2, S(1)/2))/3 +\
+        -sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S(1)/2, S(1)/2))/3 + \
         sqrt(6)*TensorProduct(JzKet(1, 1), JzKet(S(1)/2, -S(1)/2))/3
     assert uncouple(JzKetCoupled(S(1)/2, -S(1)/2, (1, S(1)/2))) == \
         sqrt(3)*TensorProduct(JzKet(1, 0), JzKet(S(1)/2, -S(1)/2))/3 - \
@@ -1909,10 +1909,10 @@ def test_couple_2_states_numerical():
             3)*JzKetCoupled(S(3)/2, S(1)/2, (1, S(1)/2))/3
     assert couple(TensorProduct(JzKet(1, 0), JzKet(S(1)/2, S(1)/2))) == \
         -sqrt(3)*JzKetCoupled(S(1)/2, S(1)/2, (1, S(1)/2))/3 + \
-              sqrt(6)*JzKetCoupled(S(3)/2, S(1)/2, (1, S(1)/2))/3
+        sqrt(6)*JzKetCoupled(S(3)/2, S(1)/2, (1, S(1)/2))/3
     assert couple(TensorProduct(JzKet(1, 0), JzKet(S(1)/2, -S(1)/2))) == \
         sqrt(3)*JzKetCoupled(S(1)/2, -S(1)/2, (1, S(1)/2))/3 + \
-             sqrt(6)*JzKetCoupled(S(3)/2, -S(1)/2, (1, S(1)/2))/3
+        sqrt(6)*JzKetCoupled(S(3)/2, -S(1)/2, (1, S(1)/2))/3
     assert couple(TensorProduct(JzKet(1, -1), JzKet(S(1)/2, S(1)/2))) == \
         -sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (1, S(
             1)/2))/3 + sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (1, S(1)/2))/3
@@ -1964,7 +1964,7 @@ def test_couple_2_states_numerical():
             3)/2, S(1)/2))/2 + sqrt(3)*JzKetCoupled(2, -1, (S(3)/2, S(1)/2))/2
     assert couple(TensorProduct(JzKet(S(3)/2, -S(3)/2), JzKet(S(1)/2, S(1)/2))) == \
         -sqrt(3)*JzKetCoupled(1, -1, (S(3)/2, S(1)/2))/2 + \
-              JzKetCoupled(2, -1, (S(3)/2, S(1)/2))/2
+        JzKetCoupled(2, -1, (S(3)/2, S(1)/2))/2
     assert couple(TensorProduct(JzKet(S(3)/2, -S(3)/2), JzKet(S(1)/2, -S(1)/2))) == \
         JzKetCoupled(2, -2, (S(3)/2, S(1)/2))
 
@@ -1977,12 +1977,12 @@ def test_couple_3_states_numerical():
             3)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (1, 3, S(3)/2)) )
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2))) == \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (1, 3, S(1)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (1, 3, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2))) == \
         sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (1, 3, S(1)/2)) )/2 - \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (1, 3, S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (1, 3, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2))) == \
         sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (1, 3, S(1)/2)) )/2 + \
@@ -1992,7 +1992,7 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2))) == \
         -sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (1, 3, S(1)/2)) )/2 - \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (1, 3, S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (1, 3, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2))) == \
         -sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (1, 3, S(1)/2)) )/2 + \
@@ -2318,7 +2318,7 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(3)/2, S(3)/2))) == \
         sqrt(2)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 0), (1, 3, S(3)/2)) )/2 - \
         sqrt(30)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 1), (1, 3, S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/ \
+        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/
              2), ((1, 2, 1), (1, 3, S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(3)/2, S(1)/2))) == \
         -sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 1), (1, 3, S(1)/2)) )/6 + \
@@ -2340,7 +2340,7 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(3)/2, S(3)/2))) == \
         -sqrt(2)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 0), (1, 3, S(3)/2)) )/2 - \
         sqrt(30)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 1), (1, 3, S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/ \
+        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/
              2), ((1, 2, 1), (1, 3, S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(3)/2, S(1)/2))) == \
         -sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 2, 1), (1, 3, S(1)/2)) )/6 - \
@@ -2384,11 +2384,11 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 3), (1, 2)) ) == \
         sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 0), (1, 2, S(1)/2)) )/2 - \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 3, 1), (1, 2, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 3, 1), (1, 2, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 3), (1, 2)) ) == \
         sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 0), (1, 2, S(1)/2)) )/2 + \
@@ -2398,7 +2398,7 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 3), (1, 2)) ) == \
         -sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 0), (1, 2, S(1)/2)) )/2 - \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/ \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2, S(1)/2, S(1)/
              2), ((1, 3, 1), (1, 2, S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 3), (1, 2)) ) == \
         -sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2, S(1)/2, S(1)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/3 + \
@@ -2732,7 +2732,7 @@ def test_couple_3_states_numerical():
             1)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 2), (1, 2, S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(3)/2, S(3)/2)), ((1, 3), (1, 2)) ) == \
         2*sqrt(5)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 2), (1, 2, S(3)/2)) )/5 + \
-        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/ \
+        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/
              2), ((1, 3, 2), (1, 2, S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(3)/2, S(1)/2)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/6 + \
@@ -2754,7 +2754,7 @@ def test_couple_3_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(3)/2, S(3)/2)), ((1, 3), (1, 2)) ) == \
         -sqrt(3)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 1), (1, 2, S(3)/2)) )/2 - \
         sqrt(5)*JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 2), (1, 2, S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/ \
+        sqrt(5)*JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2, S(1)/2, S(3)/
              2), ((1, 3, 2), (1, 2, S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(3)/2, S(1)/2)), ((1, 3), (1, 2)) ) == \
         sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2, S(1)/2, S(3)/2), ((1, 3, 1), (1, 2, S(1)/2)) )/6 - \
@@ -3072,7 +3072,7 @@ def test_couple_4_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/3 + \
         sqrt(2)*JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, 1, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
@@ -3084,14 +3084,14 @@ def test_couple_4_states_numerical():
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 + \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         -JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 + \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, -1, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
@@ -3108,14 +3108,14 @@ def test_couple_4_states_numerical():
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 - \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 0), (1, 3, 0)) )/2 - \
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/6 - \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 - \
         JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         -sqrt(2)*JzKetCoupled(1, -1, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 0), (3, 4, 1), (1, 3, 1)) )/2 + \
@@ -3125,7 +3125,7 @@ def test_couple_4_states_numerical():
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(3)*JzKetCoupled(0, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 0)) )/3 - \
         sqrt(2)*JzKetCoupled(1, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 1), (1, 3, 1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/ \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2, S(1)/2, S(1)/2, S(1)/
              2), ((1, 2, 1), (3, 4, 1), (1, 3, 2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(-1)/2), JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, S(-1)/2)), ((1, 2), (3, 4), (1, 3)) ) == \
         sqrt(2)*JzKetCoupled(1, -1, (S(1)/2, S(1)/2, S(1)/2, S(1)/2), ((1, 2, 1), (3, 4, 0), (1, 3, 1)) )/2 - \
@@ -3480,108 +3480,116 @@ def test_rotation_small_d():
 def test_rotation_d():
     # Symbolic tests
     # j = 1/2
-    assert Rotation.D(S(1)/2, S(1)/2, S(1)/2, alpha, beta, gamma).doit(
-        ) == cos(beta/2)*exp(-I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(1)/2, S(1)/2, -S(1)/2, alpha, beta, gamma).doit(
-        ) == -sin(beta/2)*exp(-I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S(1)/2, -S(1)/2, S(1)/2, alpha, beta, gamma).doit(
-        ) == sin(beta/2)*exp(I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(1)/2, -S(1)/2, -S(1)/2, alpha, beta, gamma).doit(
-        ) == cos(beta/2)*exp(I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(1)/2, S(1)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        cos(beta/2)*exp(-I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(1)/2, S(1)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        -sin(beta/2)*exp(-I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(1)/2, -S(1)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        sin(beta/2)*exp(I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(1)/2, -S(1)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        cos(beta/2)*exp(I*alpha/2)*exp(I*gamma/2)
     # j = 1
-    assert Rotation.D(1, 1, 1, alpha, beta, gamma).doit(
-        ) == (1 + cos(beta))/2*exp(-I*alpha)*exp(-I*gamma)
+    assert Rotation.D(1, 1, 1, alpha, beta, gamma).doit() == \
+        (1 + cos(beta))/2*exp(-I*alpha)*exp(-I*gamma)
     assert Rotation.D(1, 1, 0, alpha, beta, gamma).doit() == -sin(
         beta)/sqrt(2)*exp(-I*alpha)
-    assert Rotation.D(1, 1, -1, alpha, beta, gamma).doit(
-        ) == (1 - cos(beta))/2*exp(-I*alpha)*exp(I*gamma)
-    assert Rotation.D(
-        1, 0, 1, alpha, beta, gamma).doit() == sin(beta)/sqrt(2)*exp(-I*gamma)
+    assert Rotation.D(1, 1, -1, alpha, beta, gamma).doit() == \
+        (1 - cos(beta))/2*exp(-I*alpha)*exp(I*gamma)
+    assert Rotation.D(1, 0, 1, alpha, beta, gamma).doit() == \
+        sin(beta)/sqrt(2)*exp(-I*gamma)
     assert Rotation.D(1, 0, 0, alpha, beta, gamma).doit() == cos(beta)
-    assert Rotation.D(1, 0, -1, alpha, beta, gamma).doit() == -sin(
-        beta)/sqrt(2)*exp(I*gamma)
-    assert Rotation.D(1, -1, 1, alpha, beta, gamma).doit(
-        ) == (1 - cos(beta))/2*exp(I*alpha)*exp(-I*gamma)
-    assert Rotation.D(
-        1, -1, 0, alpha, beta, gamma).doit() == sin(beta)/sqrt(2)*exp(I*alpha)
-    assert Rotation.D(1, -1, -1, alpha, beta, gamma).doit(
-        ) == (1 + cos(beta))/2*exp(I*alpha)*exp(I*gamma)
+    assert Rotation.D(1, 0, -1, alpha, beta, gamma).doit() == \
+        -sin(beta)/sqrt(2)*exp(I*gamma)
+    assert Rotation.D(1, -1, 1, alpha, beta, gamma).doit() == \
+        (1 - cos(beta))/2*exp(I*alpha)*exp(-I*gamma)
+    assert Rotation.D(1, -1, 0, alpha, beta, gamma).doit() == \
+        sin(beta)/sqrt(2)*exp(I*alpha)
+    assert Rotation.D(1, -1, -1, alpha, beta, gamma).doit() == \
+        (1 + cos(beta))/2*exp(I*alpha)*exp(I*gamma)
     # j = 3/2
-    assert Rotation.D(S(3)/2, S(3)/2, S(3)/2, alpha, beta, gamma).doit() == (
-        3*cos(beta/2) + cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-3*I*gamma/2)
-    assert Rotation.D(S(3)/2, S(3)/2, S(1)/2, alpha, beta, gamma).doit() == sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(3)/2, S(3)/2, -S(1)/2, alpha, beta, gamma).doit() == sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S(3)/2, S(3)/2, -S(3)/2, alpha, beta, gamma).doit() == (
-        -3*sin(beta/2) + sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(3*I*gamma/2)
-    assert Rotation.D(S(3)/2, S(1)/2, S(3)/2, alpha, beta, gamma).doit() == sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(-I*alpha/2)*exp(-3*I*gamma/2)
-    assert Rotation.D(S(3)/2, S(1)/2, S(1)/2, alpha, beta, gamma).doit(
-        ) == (cos(beta/2) + 3*cos(3*beta/2))/4*exp(-I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(3)/2, S(1)/2, -S(1)/2, alpha, beta, gamma).doit(
-        ) == (sin(beta/2) - 3*sin(3*beta/2))/4*exp(-I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S(3)/2, S(1)/2, -S(3)/2, alpha, beta, gamma).doit() == sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(-I*alpha/2)*exp(3*I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(1)/2, S(3)/2, alpha, beta, gamma).doit() == sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(I*alpha/2)*exp(-3*I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(1)/2, S(1)/2, alpha, beta, gamma).doit(
-        ) == (-sin(beta/2) + 3*sin(3*beta/2))/4*exp(I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(1)/2, -S(1)/2, alpha, beta, gamma).doit(
-        ) == (cos(beta/2) + 3*cos(3*beta/2))/4*exp(I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(1)/2, -S(3)/2, alpha, beta, gamma).doit() == sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(I*alpha/2)*exp(3*I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(3)/2, S(3)/2, alpha, beta, gamma).doit() == (
-        3*sin(beta/2) - sin(3*beta/2))/4*exp(3*I*alpha/2)*exp(-3*I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(3)/2, S(1)/2, alpha, beta, gamma).doit() == sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(3*I*alpha/2)*exp(-I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(3)/2, -S(1)/2, alpha, beta, gamma).doit() == sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(3*I*alpha/2)*exp(I*gamma/2)
-    assert Rotation.D(S(3)/2, -S(3)/2, -S(3)/2, alpha, beta, gamma).doit(
-        ) == (3*cos(beta/2) + cos(3*beta/2))/4*exp(3*I*alpha/2)*exp(3*I*gamma/2)
+    assert Rotation.D(S(3)/2, S(3)/2, S(3)/2, alpha, beta, gamma).doit() == \
+        (3*cos(beta/2) + cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-3*I*gamma/2)
+    assert Rotation.D(S(3)/2, S(3)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(3)/2, S(3)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(3)/2, S(3)/2, -S(3)/2, alpha, beta, gamma).doit() == \
+        (-3*sin(beta/2) + sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(3*I*gamma/2)
+    assert Rotation.D(S(3)/2, S(1)/2, S(3)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(-I*alpha/2)*exp(-3*I*gamma/2)
+    assert Rotation.D(S(3)/2, S(1)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        (cos(beta/2) + 3*cos(3*beta/2))/4*exp(-I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(3)/2, S(1)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        (sin(beta/2) - 3*sin(3*beta/2))/4*exp(-I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(3)/2, S(1)/2, -S(3)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(-I*alpha/2)*exp(3*I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(1)/2, S(3)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(I*alpha/2)*exp(-3*I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(1)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        (-sin(beta/2) + 3*sin(3*beta/2))/4*exp(I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(1)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        (cos(beta/2) + 3*cos(3*beta/2))/4*exp(I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(1)/2, -S(3)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(I*alpha/2)*exp(3*I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(3)/2, S(3)/2, alpha, beta, gamma).doit() == \
+        (3*sin(beta/2) - sin(3*beta/2))/4*exp(3*I*alpha/2)*exp(-3*I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(3)/2, S(1)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(3*I*alpha/2)*exp(-I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(3)/2, -S(1)/2, alpha, beta, gamma).doit() == \
+        sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(3*I*alpha/2)*exp(I*gamma/2)
+    assert Rotation.D(S(3)/2, -S(3)/2, -S(3)/2, alpha, beta, gamma).doit() == \
+        (3*cos(beta/2) + cos(3*beta/2))/4*exp(3*I*alpha/2)*exp(3*I*gamma/2)
     # j = 2
-    assert Rotation.D(2, 2, 2, alpha, beta, gamma).doit(
-        ) == (3 + 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(-2*I*gamma)
-    assert Rotation.D(2, 2, 1, alpha, beta, gamma).doit(
-        ) == (-2*sin(beta) - sin(2*beta))/4*exp(-2*I*alpha)*exp(-I*gamma)
-    assert Rotation.D(2, 2, 0, alpha, beta, gamma).doit(
-        ) == sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*alpha)
-    assert Rotation.D(2, 2, -1, alpha, beta, gamma).doit(
-        ) == (-2*sin(beta) + sin(2*beta))/4*exp(-2*I*alpha)*exp(I*gamma)
-    assert Rotation.D(2, 2, -2, alpha, beta, gamma).doit(
-        ) == (3 - 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(2*I*gamma)
-    assert Rotation.D(2, 1, 2, alpha, beta, gamma).doit(
-        ) == (2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(-2*I*gamma)
-    assert Rotation.D(2, 1, 1, alpha, beta, gamma).doit(
-        ) == (cos(beta) + cos(2*beta))/2*exp(-I*alpha)*exp(-I*gamma)
+    assert Rotation.D(2, 2, 2, alpha, beta, gamma).doit() == \
+        (3 + 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(-2*I*gamma)
+    assert Rotation.D(2, 2, 1, alpha, beta, gamma).doit() == \
+        (-2*sin(beta) - sin(2*beta))/4*exp(-2*I*alpha)*exp(-I*gamma)
+    assert Rotation.D(2, 2, 0, alpha, beta, gamma).doit() == \
+        sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*alpha)
+    assert Rotation.D(2, 2, -1, alpha, beta, gamma).doit() == \
+        (-2*sin(beta) + sin(2*beta))/4*exp(-2*I*alpha)*exp(I*gamma)
+    assert Rotation.D(2, 2, -2, alpha, beta, gamma).doit() == \
+        (3 - 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(2*I*gamma)
+    assert Rotation.D(2, 1, 2, alpha, beta, gamma).doit() == \
+        (2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(-2*I*gamma)
+    assert Rotation.D(2, 1, 1, alpha, beta, gamma).doit() == \
+        (cos(beta) + cos(2*beta))/2*exp(-I*alpha)*exp(-I*gamma)
     assert Rotation.D(2, 1, 0, alpha, beta, gamma).doit() == -sqrt(6)* \
-                      sin(2*beta)/4*exp(-I*alpha)
-    assert Rotation.D(2, 1, -1, alpha, beta, gamma).doit(
-        ) == (cos(beta) - cos(2*beta))/2*exp(-I*alpha)*exp(I*gamma)
-    assert Rotation.D(2, 1, -2, alpha, beta, gamma).doit(
-        ) == (-2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(2*I*gamma)
-    assert Rotation.D(2, 0, 2, alpha, beta, gamma).doit(
-        ) == sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*gamma)
+        sin(2*beta)/4*exp(-I*alpha)
+    assert Rotation.D(2, 1, -1, alpha, beta, gamma).doit() == \
+        (cos(beta) - cos(2*beta))/2*exp(-I*alpha)*exp(I*gamma)
+    assert Rotation.D(2, 1, -2, alpha, beta, gamma).doit() == \
+        (-2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(2*I*gamma)
+    assert Rotation.D(2, 0, 2, alpha, beta, gamma).doit() == \
+        sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*gamma)
     assert Rotation.D(2, 0, 1, alpha, beta, gamma).doit() == sqrt(6)* \
-                      sin(2*beta)/4*exp(-I*gamma)
+        sin(2*beta)/4*exp(-I*gamma)
     assert Rotation.D(
         2, 0, 0, alpha, beta, gamma).doit() == (1 + 3*cos(2*beta))/4
     assert Rotation.D(2, 0, -1, alpha, beta, gamma).doit() == -sqrt(6)* \
-                      sin(2*beta)/4*exp(I*gamma)
-    assert Rotation.D(2, 0, -2, alpha, beta, gamma).doit(
-        ) == sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*gamma)
-    assert Rotation.D(2, -1, 2, alpha, beta, gamma).doit(
-        ) == (2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(-2*I*gamma)
-    assert Rotation.D(2, -1, 1, alpha, beta, gamma).doit(
-        ) == (cos(beta) - cos(2*beta))/2*exp(I*alpha)*exp(-I*gamma)
+        sin(2*beta)/4*exp(I*gamma)
+    assert Rotation.D(2, 0, -2, alpha, beta, gamma).doit() == \
+        sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*gamma)
+    assert Rotation.D(2, -1, 2, alpha, beta, gamma).doit() == \
+        (2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(-2*I*gamma)
+    assert Rotation.D(2, -1, 1, alpha, beta, gamma).doit() == \
+        (cos(beta) - cos(2*beta))/2*exp(I*alpha)*exp(-I*gamma)
     assert Rotation.D(2, -1, 0, alpha, beta, gamma).doit() == sqrt(6)* \
-                      sin(2*beta)/4*exp(I*alpha)
-    assert Rotation.D(2, -1, -1, alpha, beta, gamma).doit(
-        ) == (cos(beta) + cos(2*beta))/2*exp(I*alpha)*exp(I*gamma)
-    assert Rotation.D(2, -1, -2, alpha, beta, gamma).doit(
-        ) == (-2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(2*I*gamma)
-    assert Rotation.D(2, -2, 2, alpha, beta, gamma).doit(
-        ) == (3 - 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(-2*I*gamma)
-    assert Rotation.D(2, -2, 1, alpha, beta, gamma).doit(
-        ) == (2*sin(beta) - sin(2*beta))/4*exp(2*I*alpha)*exp(-I*gamma)
-    assert Rotation.D(2, -2, 0, alpha, beta, gamma).doit(
-        ) == sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*alpha)
-    assert Rotation.D(2, -2, -1, alpha, beta, gamma).doit(
-        ) == (2*sin(beta) + sin(2*beta))/4*exp(2*I*alpha)*exp(I*gamma)
-    assert Rotation.D(2, -2, -2, alpha, beta, gamma).doit(
-        ) == (3 + 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(2*I*gamma)
+        sin(2*beta)/4*exp(I*alpha)
+    assert Rotation.D(2, -1, -1, alpha, beta, gamma).doit() == \
+        (cos(beta) + cos(2*beta))/2*exp(I*alpha)*exp(I*gamma)
+    assert Rotation.D(2, -1, -2, alpha, beta, gamma).doit() == \
+        (-2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(2*I*gamma)
+    assert Rotation.D(2, -2, 2, alpha, beta, gamma).doit() == \
+        (3 - 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(-2*I*gamma)
+    assert Rotation.D(2, -2, 1, alpha, beta, gamma).doit() == \
+        (2*sin(beta) - sin(2*beta))/4*exp(2*I*alpha)*exp(-I*gamma)
+    assert Rotation.D(2, -2, 0, alpha, beta, gamma).doit() == \
+        sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*alpha)
+    assert Rotation.D(2, -2, -1, alpha, beta, gamma).doit() == \
+        (2*sin(beta) + sin(2*beta))/4*exp(2*I*alpha)*exp(I*gamma)
+    assert Rotation.D(2, -2, -2, alpha, beta, gamma).doit() == \
+        (3 + 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(2*I*gamma)
     # Numerical tests
     # j = 1/2
     assert Rotation.D(
@@ -3675,10 +3683,10 @@ def test_jplus():
     assert Jplus.rewrite('xyz') == Jx + I*Jy
     # Normal operators, normal states
     # Numerical
-    assert qapply(
-        Jplus*JxKet(1, 1)) == -hbar*sqrt(2)*JxKet(1, 0)/2 + hbar*JxKet(1, 1)
-    assert qapply(
-        Jplus*JyKet(1, 1)) == hbar*sqrt(2)*JyKet(1, 0)/2 + I*hbar*JyKet(1, 1)
+    assert qapply(Jplus*JxKet(1, 1)) == \
+        -hbar*sqrt(2)*JxKet(1, 0)/2 + hbar*JxKet(1, 1)
+    assert qapply(Jplus*JyKet(1, 1)) == \
+        hbar*sqrt(2)*JyKet(1, 0)/2 + I*hbar*JyKet(1, 1)
     assert qapply(Jplus*JzKet(1, 1)) == 0
     # Symbolic
     assert qapply(Jplus*JxKet(j, m)) == \
@@ -3693,10 +3701,10 @@ def test_jplus():
         hbar*sqrt(j**2 + j - m**2 - m)*JzKet(j, m + 1)
     # Normal operators, coupled states
     # Numerical
-    assert qapply(Jplus*JxKetCoupled(1, 1, (1, 1))) == -hbar*sqrt(
-        2)*JxKetCoupled(1, 0, (1, 1))/2 + hbar*JxKetCoupled(1, 1, (1, 1))
-    assert qapply(Jplus*JyKetCoupled(1, 1, (1, 1))) == hbar*sqrt(
-        2)*JyKetCoupled(1, 0, (1, 1))/2 + I*hbar*JyKetCoupled(1, 1, (1, 1))
+    assert qapply(Jplus*JxKetCoupled(1, 1, (1, 1))) == -hbar*sqrt(2) * \
+        JxKetCoupled(1, 0, (1, 1))/2 + hbar*JxKetCoupled(1, 1, (1, 1))
+    assert qapply(Jplus*JyKetCoupled(1, 1, (1, 1))) == hbar*sqrt(2) * \
+        JyKetCoupled(1, 0, (1, 1))/2 + I*hbar*JyKetCoupled(1, 1, (1, 1))
     assert qapply(Jplus*JzKet(1, 1)) == 0
     # Symbolic
     assert qapply(Jplus*JxKetCoupled(j, m, (j1, j2))) == \
@@ -3708,8 +3716,8 @@ def test_jplus():
     assert qapply(Jplus*JyKetCoupled(j, m, (j1, j2))) == \
         Sum(hbar * sqrt(j**2 + j - mi**2 - mi) * WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
         Sum(
-            WignerD(j, mi1, mi + 1, 3*pi/2, pi/2, pi/2) * \
-                    JyKetCoupled(j, mi1, (j1, j2)),
+            WignerD(j, mi1, mi + 1, 3*pi/2, pi/2, pi/2) *
+            JyKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jplus*JzKetCoupled(j, m, (j1, j2))) == \
         hbar*sqrt(j**2 + j - m**2 - m)*JzKetCoupled(j, m + 1, (j1, j2))
@@ -3762,10 +3770,10 @@ def test_jminus():
     assert Jminus.rewrite('xyz') == Jx - I*Jy
     # Normal operators, normal states
     # Numerical
-    assert qapply(
-        Jminus*JxKet(1, 1)) == hbar*sqrt(2)*JxKet(1, 0)/2 + hbar*JxKet(1, 1)
-    assert qapply(
-        Jminus*JyKet(1, 1)) == hbar*sqrt(2)*JyKet(1, 0)/2 - hbar*I*JyKet(1, 1)
+    assert qapply(Jminus*JxKet(1, 1)) == \
+        hbar*sqrt(2)*JxKet(1, 0)/2 + hbar*JxKet(1, 1)
+    assert qapply(Jminus*JyKet(1, 1)) == \
+        hbar*sqrt(2)*JyKet(1, 0)/2 - hbar*I*JyKet(1, 1)
     assert qapply(Jminus*JzKet(1, 1)) == sqrt(2)*hbar*JzKet(1, 0)
     # Symbolic
     assert qapply(Jminus*JxKet(j, m)) == \
@@ -3796,8 +3804,8 @@ def test_jminus():
     assert qapply(Jminus*JyKetCoupled(j, m, (j1, j2))) == \
         Sum(hbar*sqrt(j**2 + j - mi**2 + mi)*WignerD(j, mi, m, 3*pi/2, -pi/2, pi/2) *
         Sum(
-            WignerD(j, mi1, mi - 1, 3*pi/2, pi/2, pi/2)* \
-                    JyKetCoupled(j, mi1, (j1, j2)),
+            WignerD(j, mi1, mi - 1, 3*pi/2, pi/2, pi/2)*
+            JyKetCoupled(j, mi1, (j1, j2)),
         (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jminus*JzKetCoupled(j, m, (j1, j2))) == \
         hbar*sqrt(j**2 + j - m**2 + m)*JzKetCoupled(j, m - 1, (j1, j2))
@@ -3853,12 +3861,12 @@ def test_j2():
     assert qapply(J2*JyKet(1, 1)) == 2*hbar**2*JyKet(1, 1)
     assert qapply(J2*JzKet(1, 1)) == 2*hbar**2*JzKet(1, 1)
     # Symbolic
-    assert qapply(
-        J2*JxKet(j, m)) == hbar**2*j**2*JxKet(j, m) + hbar**2*j*JxKet(j, m)
-    assert qapply(
-        J2*JyKet(j, m)) == hbar**2*j**2*JyKet(j, m) + hbar**2*j*JyKet(j, m)
-    assert qapply(
-        J2*JzKet(j, m)) == hbar**2*j**2*JzKet(j, m) + hbar**2*j*JzKet(j, m)
+    assert qapply(J2*JxKet(j, m)) == \
+        hbar**2*j**2*JxKet(j, m) + hbar**2*j*JxKet(j, m)
+    assert qapply(J2*JyKet(j, m)) == \
+        hbar**2*j**2*JyKet(j, m) + hbar**2*j*JyKet(j, m)
+    assert qapply(J2*JzKet(j, m)) == \
+        hbar**2*j**2*JzKet(j, m) + hbar**2*j*JzKet(j, m)
     # Normal operators, coupled states
     # Numerical
     assert qapply(J2*JxKetCoupled(1, 1, (1, 1))) == \
@@ -3928,7 +3936,7 @@ def test_jx():
         Sum(hbar*mi*WignerD(j, mi, m, 0, 0, pi/2)*Sum(WignerD(j,
             mi1, mi, 3*pi/2, 0, 0)*JyKet(j, mi1), (mi1, -j, j)), (mi, -j, j))
     assert qapply(Jx*JzKet(j, m)) == \
-        hbar*sqrt(j**2 + j - m**2 - m)*JzKet(j, m + 1)/2 + hbar*sqrt(j**2 + \
+        hbar*sqrt(j**2 + j - m**2 - m)*JzKet(j, m + 1)/2 + hbar*sqrt(j**2 +
                   j - m**2 + m)*JzKet(j, m - 1)/2
     # Normal operators, coupled states
     # Numerical

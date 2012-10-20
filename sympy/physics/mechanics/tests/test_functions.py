@@ -73,9 +73,9 @@ def test_cross_different_frames():
 def test_express():
     assert express(A.x, C) == cos(q3)*C.x + sin(q3)*C.z
     assert express(A.y, C) == sin(q2)*sin(q3)*C.x + cos(q2)*C.y - \
-            sin(q2)*cos(q3)*C.z
+        sin(q2)*cos(q3)*C.z
     assert express(A.z, C) == -sin(q3)*cos(q2)*C.x + sin(q2)*C.y + \
-            cos(q2)*cos(q3)*C.z
+        cos(q2)*cos(q3)*C.z
     assert express(A.x, N) == cos(q1)*N.x + sin(q1)*N.y
     assert express(A.y, N) == -sin(q1)*N.x + cos(q1)*N.y
     assert express(A.z, N) == N.z
@@ -87,9 +87,9 @@ def test_express():
     assert express(A.z, B) == sin(q2)*B.y + cos(q2)*B.z
     assert express(A.x, C) == cos(q3)*C.x + sin(q3)*C.z
     assert express(A.y, C) == sin(q2)*sin(q3)*C.x + cos(q2)*C.y - \
-            sin(q2)*cos(q3)*C.z
+        sin(q2)*cos(q3)*C.z
     assert express(A.z, C) == -sin(q3)*cos(q2)*C.x + sin(q2)*C.y + \
-            cos(q2)*cos(q3)*C.z
+        cos(q2)*cos(q3)*C.z
     # Check to make sure UnitVectors get converted properly
     assert express(N.x, N) == N.x
     assert express(N.y, N) == N.y
@@ -103,13 +103,13 @@ def test_express():
             sin(q2)*cos(q1)*B.z)
     assert express(N.z, B) == (sin(q2)*B.y + cos(q2)*B.z)
     assert express(N.x, C) == (
-            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*C.x -
-            sin(q1)*cos(q2)*C.y +
-            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*C.z)
+        (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*C.x -
+        sin(q1)*cos(q2)*C.y +
+        (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*C.z)
     assert express(N.y, C) == (
-            (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*C.x +
-            cos(q1)*cos(q2)*C.y +
-            (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*C.z)
+        (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*C.x +
+        cos(q1)*cos(q2)*C.y +
+        (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*C.z)
     assert express(N.z, C) == (-sin(q3)*cos(q2)*C.x + sin(q2)*C.y +
             cos(q2)*cos(q3)*C.z)
 
@@ -144,15 +144,15 @@ def test_express():
     assert express(B.z, C) == (-sin(q3)*C.x + cos(q3)*C.z)
 
     assert express(C.x, N) == (
-            (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*N.x +
-            (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*N.y -
-                sin(q3)*cos(q2)*N.z)
+        (cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3))*N.x +
+        (sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1))*N.y -
+        sin(q3)*cos(q2)*N.z)
     assert express(C.y, N) == (
-            -sin(q1)*cos(q2)*N.x + cos(q1)*cos(q2)*N.y + sin(q2)*N.z)
+        -sin(q1)*cos(q2)*N.x + cos(q1)*cos(q2)*N.y + sin(q2)*N.z)
     assert express(C.z, N) == (
-            (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*N.x +
-            (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*N.y +
-            cos(q2)*cos(q3)*N.z)
+        (sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3))*N.x +
+        (sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3))*N.y +
+        cos(q2)*cos(q3)*N.z)
     assert express(C.x, A) == (cos(q3)*A.x + sin(q2)*sin(q3)*A.y -
             sin(q3)*cos(q2)*A.z)
     assert express(C.y, A) == (cos(q2)*A.y + sin(q2)*A.z)
@@ -247,7 +247,7 @@ def test_inertia():
     assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
     assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
             ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
-            (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
+        (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
             N.y) + izz * (N.z | N.z))
 
 

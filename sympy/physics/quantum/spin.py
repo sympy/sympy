@@ -412,7 +412,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _eval_rewrite_as_plusminus(self, *args):
         a = args[0]
-        return JzOp(a)**2 +\
+        return JzOp(a)**2 + \
             Rational(1, 2)*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
 
 
@@ -740,12 +740,12 @@ class WignerD(Expr):
                 (
                     printer._print(self.j), printer._print(
                         self.m), printer._print(self.mp),
-                printer._print(self.beta) )
+                    printer._print(self.beta) )
         return r'D^{%s}_{%s,%s}\left(%s,%s,%s\right)' % \
             (
                 printer._print(
                     self.j), printer._print(self.m), printer._print(self.mp),
-            printer._print(self.alpha), printer._print(self.beta), printer._print(self.gamma) )
+                printer._print(self.alpha), printer._print(self.beta), printer._print(self.gamma) )
 
     def _pretty(self, printer, *args):
         top = printer._print(self.j)
@@ -1836,7 +1836,7 @@ def _couple(tp, jcoupling_list):
     if all(state.j.is_number and state.m.is_number for state in states):
         # Numerical coupling
         # Iterate over difference between maximum possible j value of each coupling and the actual value
-        diff_max = [ Add( *[ jn[n - 1] - mn[n - 1] for n in coupling[0] + \
+        diff_max = [ Add( *[ jn[n - 1] - mn[n - 1] for n in coupling[0] +
                          coupling[1] ] ) for coupling in coupling_list ]
         result = []
         for diff in range(diff_max[-1] + 1):
