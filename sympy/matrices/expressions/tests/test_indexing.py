@@ -62,7 +62,7 @@ def test_block_index():
 
 def test_slicing():
     raises(NotImplementedError, lambda: W[3, :])
-    A.as_explicit()[0, :] # does not raise an error
+    A.as_explicit()[0, :]  # does not raise an error
 
 def test_errors():
     raises(IndexError, lambda: Identity(2)[1, 2, 3, 4, 5])

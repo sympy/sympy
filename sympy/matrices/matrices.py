@@ -16,7 +16,7 @@ from sympy.utilities.misc import default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 # uncomment the import of as_int and delete the function when merged with 0.7.2
-from sympy.core.compatibility import callable, reduce#, as_int
+from sympy.core.compatibility import callable, reduce  # , as_int
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
@@ -151,7 +151,7 @@ class MatrixBase(object):
             flat_list = map(lambda i: sympify(i), flat_list)
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"): #pragma: no cover
+        elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
             # NumPy array or matrix or some other object that implements
             # __array__. So let's first use this method to get a
             # numpy.array() and then make a python list out of it.
@@ -176,7 +176,7 @@ class MatrixBase(object):
             for row in args[0]:
                 if isinstance(row, MatrixBase):
                     in_mat.extend(row.tolist())
-                    if row.cols or row.rows: # only pay attention if it's not 0x0
+                    if row.cols or row.rows:  # only pay attention if it's not 0x0
                         ncol.add(row.cols)
                 else:
                     in_mat.append(row)
@@ -1008,7 +1008,7 @@ class MatrixBase(object):
 
     n = evalf
 
-    def subs(self, *args, **kwargs): # should mirror core.basic.subs
+    def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
 
         Examples
@@ -1203,7 +1203,7 @@ class MatrixBase(object):
                 # this result is based on iszerofunc's analysis of the possible pivots, so even though
                 # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
                 raise ValueError("No nonzero pivot found; inversion failed.")
-            if pivot != j: # row must be swapped
+            if pivot != j:  # row must be swapped
                 A.row_swap(pivot, j)
                 p.append([pivot, j])
             scale = 1 / A[j, j]
@@ -1648,16 +1648,16 @@ class MatrixBase(object):
         # Row or Column Vector Norms
         vals = self.values() or [0]
         if self.rows == 1 or self.cols == 1:
-            if ord == 2 or ord == None: # Common case sqrt(<x, x>)
+            if ord == 2 or ord == None:  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i)**2 for i in vals)))
 
-            elif ord == 1: # sum(abs(x))
+            elif ord == 1:  # sum(abs(x))
                 return Add(*(abs(i) for i in vals))
 
-            elif ord == S.Infinity: # max(abs(x))
+            elif ord == S.Infinity:  # max(abs(x))
                 return Max(*[abs(i) for i in vals])
 
-            elif ord == S.NegativeInfinity: # min(abs(x))
+            elif ord == S.NegativeInfinity:  # min(abs(x))
                 return Min(*[abs(i) for i in vals])
 
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
@@ -1669,7 +1669,7 @@ class MatrixBase(object):
 
         # Matrix Norms
         else:
-            if ord == 2: # Spectral Norm
+            if ord == 2:  # Spectral Norm
                 # Maximum singular value
                 return Max(*self.singular_values())
 
@@ -2298,7 +2298,7 @@ class MatrixBase(object):
         elif n == 2:
             det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
         else:
-            sign = 1 # track current sign in case of column swap
+            sign = 1  # track current sign in case of column swap
 
             for k in range(n-1):
                 # look for a pivot in the current column
@@ -2473,7 +2473,7 @@ class MatrixBase(object):
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-        pivot, r = 0, self.as_mutable() # pivot: index of next row to contain a pivot
+        pivot, r = 0, self.as_mutable()  # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
             if pivot == r.rows:
@@ -2528,7 +2528,7 @@ class MatrixBase(object):
                 basiskey[cur] = i
                 cur += 1
         for i in range(self.cols):
-            if i not in pivots: # free var, just set vector's ith place to 1
+            if i not in pivots:  # free var, just set vector's ith place to 1
                 basis[basiskey.index(i)][i, 0] = 1
             else:               # add negative of nonpivot entry to corr vector
                 for j in range(i+1, self.cols):
@@ -2731,7 +2731,7 @@ class MatrixBase(object):
                 self = self._new(self.rows, self.cols,
                     [nsimplify(v, rational=True) for v in self])
 
-        flags.pop('simplify', None) # pop unsupported flag
+        flags.pop('simplify', None)  # pop unsupported flag
         return self.berkowitz_eigenvals(**flags)
 
     def eigenvects(self, **flags):
@@ -2755,14 +2755,14 @@ class MatrixBase(object):
         primitive = bool(flags.get('simplify', False))
         chop = flags.pop('chop', False)
 
-        flags.pop('multiple', None) # remove this if it's there
+        flags.pop('multiple', None)  # remove this if it's there
 
         # roots doesn't like Floats, so replace them with Rationals
         float = False
         if any(v.has(Float) for v in self):
             float = True
             self = self._new(self.rows, self.cols, [nsimplify(v, rational=True) for v in self])
-            flags['rational'] = False # to tell eigenvals not to do this
+            flags['rational'] = False  # to tell eigenvals not to do this
 
         out, vlist = [], self.eigenvals(**flags)
         vlist = vlist.items()
@@ -2822,7 +2822,7 @@ class MatrixBase(object):
         # Expands result from eigenvals into a simple list
         vals = []
         for k, v in valmultpairs.items():
-            vals += [sqrt(k)]*v # dangerous! same k in several spots!
+            vals += [sqrt(k)]*v  # dangerous! same k in several spots!
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)
 

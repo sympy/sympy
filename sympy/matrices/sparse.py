@@ -237,7 +237,7 @@ class SparseMatrix(MatrixBase):
         """
         tran = self.zeros(self.cols, self.rows)
         for key, value in self._smat.iteritems():
-            key = key[1], key[0] # reverse
+            key = key[1], key[0]  # reverse
             tran._smat[key] = value
         return tran
 
@@ -614,7 +614,7 @@ class SparseMatrix(MatrixBase):
             if c <= r:
                 R[r].append(c)
 
-        inf = len(R) # nothing will be this large
+        inf = len(R)  # nothing will be this large
         parent = [inf] * self.rows
         virtual = [inf] * self.rows
         for r in range(self.rows):
@@ -653,7 +653,7 @@ class SparseMatrix(MatrixBase):
         """
 
         R, parent = self.liupc()
-        inf = len(R) # this acts as infinity
+        inf = len(R)  # this acts as infinity
         Lrow = copy.deepcopy(R)
         for k in range(self.rows):
             for j in R[k]:

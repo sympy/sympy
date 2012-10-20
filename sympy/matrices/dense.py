@@ -548,7 +548,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
-        self._mat = list(flat_list) # create a shallow copy
+        self._mat = list(flat_list)  # create a shallow copy
         return self
 
     def __new__(cls, *args, **kwargs):
@@ -838,7 +838,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 # list2numpy, matrix2numpy, symmarray, rot_axis[123]
 ###########
 
-def list2numpy(l): # pragma: no cover
+def list2numpy(l):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -852,7 +852,7 @@ def list2numpy(l): # pragma: no cover
         a[i] = s
     return a
 
-def matrix2numpy(m): # pragma: no cover
+def matrix2numpy(m):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also

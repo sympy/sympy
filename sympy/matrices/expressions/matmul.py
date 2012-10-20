@@ -38,7 +38,7 @@ class MatMul(MatrixExpr):
 
     def _entry(self, i, j):
         coeff, matmul = self.as_coeff_mmul()
-        if not matmul.is_MatMul: # situation like 2*X, matmul is just X
+        if not matmul.is_MatMul:  # situation like 2*X, matmul is just X
             return coeff * matmul[i, j]
 
         head, tail = matmul.args[0], matmul.args[1:]
@@ -137,7 +137,7 @@ def remove_ids(mul):
     # Apply standard rm_id for MatMuls
     result = rm_id(lambda x: x.is_Identity == True)(mmul)
     if result != mmul:
-        return newmul(factor, *result.args) # Recombine and return
+        return newmul(factor, *result.args)  # Recombine and return
     else:
         return mul
 
