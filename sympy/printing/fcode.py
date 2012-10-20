@@ -102,7 +102,6 @@ class FCodePrinter(CodePrinter):
             close_lines.append("end do")
         return open_lines, close_lines
 
-
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
         # find all number symbols
@@ -111,7 +110,6 @@ class FCodePrinter(CodePrinter):
         # keep a set of expressions that are not strictly translatable to
         # Fortran.
         self._not_supported = set()
-
 
         lines = []
         if isinstance(expr, Piecewise):

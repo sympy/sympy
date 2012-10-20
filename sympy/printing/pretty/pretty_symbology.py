@@ -312,7 +312,6 @@ def xobj(symb, length):
     if length == 1:
         return c1
 
-
     res = []
     next= (length-2)//2
     nmid= (length-2) - next*2

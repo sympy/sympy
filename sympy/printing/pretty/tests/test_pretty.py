@@ -959,7 +959,6 @@ n!\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-
     expr = factorial(2*n)
     ascii_str = \
 """\
@@ -3489,7 +3488,6 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-
     ucode_str = \
 u"""\
 ╭─╮ 1, 10 ⎛1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 │  ⎞\n\
@@ -3506,7 +3504,6 @@ u"""\
     expr = meijerg([1]*10, [1], [1], [1], z)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
 
     expr = meijerg([1, 2, ], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
 

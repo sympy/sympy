@@ -67,8 +67,6 @@ class JavascriptCodePrinter(CodePrinter):
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
-
-
     def doprint(self, expr, assign_to=None):
         """
         Actually format the expression as Javascript code.
@@ -242,7 +240,6 @@ class JavascriptCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
 
 
 def jscode(expr, assign_to=None, **settings):
