@@ -4,6 +4,7 @@ from sympy import sympify
 from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one)
 
+
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
 
@@ -89,6 +90,7 @@ class MatMul(MatrixExpr):
     def canonicalize(self):
         return canonicalize(self)
 
+
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
@@ -104,12 +106,14 @@ def newmul(*args):
         args = args[1:]
     return Basic.__new__(MatMul, *args)
 
+
 def any_zeros(mul):
     if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
                        for arg in mul.args]):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
+
 
 def xxinv(mul):
     """ Y * X * X.I -> Y """
@@ -120,6 +124,7 @@ def xxinv(mul):
             I = Identity(X.rows)
             return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
     return mul
+
 
 def remove_ids(mul):
     """ Remove Identities from a MatMul
@@ -140,6 +145,7 @@ def remove_ids(mul):
         return newmul(factor, *result.args)  # Recombine and return
     else:
         return mul
+
 
 def factor_in_front(mul):
     factor, matrices = mul.as_coeff_matrices()

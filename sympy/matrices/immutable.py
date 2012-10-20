@@ -4,6 +4,7 @@ from sparse import MutableSparseMatrix as SparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
 
+
 class ImmutableMatrix(MatrixExpr, DenseMatrix):
     """Create an immutable version of a matrix.
 
@@ -74,6 +75,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+
 
 class ImmutableSparseMatrix(Basic, SparseMatrix):
     """Create an immutable version of a sparse matrix.

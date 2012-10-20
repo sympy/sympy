@@ -12,6 +12,7 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
+
 def test_transpose():
     Sq = MatrixSymbol('Sq', n, n)
     assert Transpose(A).shape == (m, n)
@@ -25,6 +26,7 @@ def test_transpose():
     assert Transpose(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
 
     assert Transpose(Trace(Sq)) == Trace(Sq)
+
 
 def test_inverse():
     raises(ShapeError, lambda: Inverse(A))
@@ -45,6 +47,7 @@ def test_inverse():
 
     # We play nice with traditional explicit matrices
     assert Inverse(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 2], [3, 4]]).inv()
+
 
 def test_trace():
     A = MatrixSymbol('A', n, n)
@@ -71,10 +74,12 @@ def test_trace():
 
     assert Trace(A).arg is A
 
+
 def test_shape():
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
     raises(ShapeError, lambda: B*A)
+
 
 def test_matexpr():
     x = Symbol('x')
@@ -83,6 +88,7 @@ def test_matexpr():
     assert (x*A).__class__ == MatMul
     assert 2*A - A - A == ZeroMatrix(*A.shape)
     assert (A*B).shape == (n, l)
+
 
 def test_subs():
     A = MatrixSymbol('A', n, m)
@@ -148,10 +154,12 @@ def test_BlockMatrix():
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
     assert block_collapse(Ab+Z) == A+Z
 
+
 def test_BlockMatrix_Trace():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
     X = BlockMatrix([[A, B], [C, D]])
     assert Trace(X) == Trace(A) + Trace(D)
+
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
@@ -216,6 +224,7 @@ def test_BlockDiagMatrix():
     assert (X._blockmul(M)).is_MatMul
     assert (X._blockadd(M)).is_MatAdd
 
+
 def test_ZeroMatrix():
     A = MatrixSymbol('A', n, m)
     Z = ZeroMatrix(n, m)
@@ -228,6 +237,7 @@ def test_ZeroMatrix():
     assert Transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
 
+
 def test_Identity():
     A = MatrixSymbol('A', n, m)
     In = Identity(n)
@@ -239,6 +249,7 @@ def test_Identity():
     assert Transpose(In) == In
     assert Inverse(In) == In
     assert In.conjugate() == In
+
 
 def test_MatAdd():
     A = MatrixSymbol('A', n, m)
@@ -254,6 +265,7 @@ def test_MatAdd():
 
     assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
     # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
+
 
 def test_MatMul():
     A = MatrixSymbol('A', n, m)
@@ -278,6 +290,7 @@ def test_MatMul():
     B = MatrixSymbol('B', n, n)
     assert MatMul(Identity(n), (A + B)).is_MatAdd
 
+
 def test_MatPow():
     A = MatrixSymbol('A', n, n)
 
@@ -293,11 +306,13 @@ def test_MatPow():
     assert A**-1 == Inverse(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
+
 def test_MatrixSymbol():
     n, m, t = symbols('n,m,t')
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n, m)
     raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
+
 
 def test_dense_conversion():
     X = MatrixSymbol('X', 2, 2)
@@ -305,8 +320,10 @@ def test_dense_conversion():
     assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
     assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])
 
+
 def test_free_symbols():
     assert (C*D).free_symbols == set((C, D))
+
 
 def test_zero_matmul():
     assert isinstance(S.Zero * MatrixSymbol('X', 2, 2), MatrixExpr)

@@ -18,15 +18,18 @@ from sympy.matrices.matrices import (MatrixBase,
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int
 
+
 def as_int(i):
     ii = int(i)
     if i != ii:
         raise TypeError()
     return ii
 
+
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
+
 
 class DenseMatrix(MatrixBase):
 
@@ -838,6 +841,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 # list2numpy, matrix2numpy, symmarray, rot_axis[123]
 ###########
 
+
 def list2numpy(l):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
@@ -851,6 +855,7 @@ def list2numpy(l):  # pragma: no cover
     for i, s in enumerate(l):
         a[i] = s
     return a
+
 
 def matrix2numpy(m):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
@@ -866,6 +871,7 @@ def matrix2numpy(m):  # pragma: no cover
         for j in range(m.cols):
             a[i, j] = m[i, j]
     return a
+
 
 def symarray(prefix, shape):
     """Create a numpy ndarray of symbols (as an object array).
@@ -934,6 +940,7 @@ def symarray(prefix, shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
+
 def rot_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
     the 3-axis.
@@ -974,6 +981,7 @@ def rot_axis3(theta):
            (0, 0, 1))
     return Matrix(lil)
 
+
 def rot_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
     the 2-axis.
@@ -1013,6 +1021,7 @@ def rot_axis2(theta):
            (0, 1, 0),
            (st, 0, ct))
     return Matrix(lil)
+
 
 def rot_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
@@ -1057,6 +1066,8 @@ def rot_axis1(theta):
 ###############
 # Functions
 ###############
+
+
 def matrix_add(A, B):
     SymPyDeprecationWarning(
         feature="matrix_add(A, B)",
@@ -1065,6 +1076,7 @@ def matrix_add(A, B):
     ).warn()
     return A + B
 
+
 def matrix_multiply(A, B):
     SymPyDeprecationWarning(
         feature="matrix_multiply(A, B)",
@@ -1072,6 +1084,7 @@ def matrix_multiply(A, B):
         deprecated_since_version="0.7.2",
     ).warn()
     return A*B
+
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -1094,6 +1107,7 @@ def matrix_multiply_elementwise(A, B):
     shape = A.shape
     return classof(A, B)._new(shape[0], shape[1],
         lambda i, j: A[i, j] * B[i, j])
+
 
 def zeros(r, c=None, cls=None):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
@@ -1119,6 +1133,7 @@ def zeros(r, c=None, cls=None):
         c = r if c is None else c
     r, c = [int(i) for i in [r, c]]
     return cls.zeros(r, c)
+
 
 def ones(r, c=None):
     """Returns a matrix of ones with ``r`` rows and ``c`` columns;
@@ -1146,6 +1161,7 @@ def ones(r, c=None):
     c = as_int(c)
     return Matrix(r, c, [S.One]*r*c)
 
+
 def eye(n, cls=None):
     """Create square identity matrix n x n
 
@@ -1163,6 +1179,7 @@ def eye(n, cls=None):
     return cls._new([[S.One if row == col else S.Zero
                             for col in range(n)]
                             for row in range(n)])
+
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1282,6 +1299,7 @@ def diag(*values, **kwargs):
             i_col += 1
     return cls(res)
 
+
 def jordan_cell(eigenval, n):
     """
     Create matrix of Jordan cell kind:
@@ -1304,6 +1322,7 @@ def jordan_cell(eigenval, n):
         out[i, i + 1] = S.One
     out[n - 1, n - 1] = eigenval
     return out
+
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
@@ -1341,6 +1360,7 @@ def hessian(f, varlist):
             out[i, j] = out[j, i]
     return out
 
+
 def GramSchmidt(vlist, orthog=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
@@ -1360,6 +1380,7 @@ def GramSchmidt(vlist, orthog=False):
         for i in range(len(out)):
             out[i] = out[i].normalized()
     return out
+
 
 def wronskian(functions, var, method='bareis'):
     """
@@ -1392,6 +1413,7 @@ def wronskian(functions, var, method='bareis'):
         return 1
     W = Matrix(n, n, lambda i, j: functions[i].diff(var, j) )
     return W.det(method)
+
 
 def casoratian(seqs, n, zero=True):
     """Given linear difference operator L of order 'k' and homogeneous
@@ -1435,6 +1457,7 @@ def casoratian(seqs, n, zero=True):
     k = len(seqs)
 
     return Matrix(k, k, f).det()
+
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted

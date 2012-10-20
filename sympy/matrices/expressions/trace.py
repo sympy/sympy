@@ -1,6 +1,7 @@
 from sympy import Basic, Expr
 from matexpr import ShapeError
 
+
 class Trace(Expr):
     """Matrix Trace
 

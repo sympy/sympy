@@ -21,25 +21,31 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
+
 def as_int(i):
     ii = int(i)
     if i != ii:
         raise TypeError()
     return ii
 
+
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+
 class MatrixError(Exception):
     pass
+
 
 class ShapeError(ValueError, MatrixError):
     """Wrong matrix shape"""
     pass
 
+
 class NonSquareMatrixError(ShapeError):
     pass
+
 
 class DeferredVector(Symbol):
     """A vector whose components are deferred (e.g. for use with lambdify)
@@ -3543,6 +3549,7 @@ def classof(A, B):
             return A.__class__
     except: pass
     raise TypeError("Incompatible classes %s, %s"%(A.__class__, B.__class__))
+
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""

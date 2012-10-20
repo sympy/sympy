@@ -9,6 +9,7 @@ from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, Add
 from sympy.rules import typed, canon, debug, do_one, unpack
 
+
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
 
@@ -214,6 +215,7 @@ class BlockMatrix(MatrixExpr):
             return True
         return super(BlockMatrix, self).equals(other)
 
+
 class BlockDiagMatrix(BlockMatrix):
     """A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
 
@@ -262,6 +264,7 @@ class BlockDiagMatrix(BlockMatrix):
         else:
             return BlockMatrix._blockadd(self, other)
 
+
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
@@ -292,10 +295,12 @@ def block_collapse(expr):
     except AttributeError:
         return result
 
+
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
         return expr.blocks[0, 0]
     return expr
+
 
 def bc_matadd(expr):
     nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
@@ -308,6 +313,7 @@ def bc_matadd(expr):
         block = block._blockadd(b)
 
     return MatAdd(*(nonblocks+[block]))
+
 
 def bc_block_plus_ident(expr):
     idents = [arg for arg in expr.args if arg.is_Identity]
@@ -323,6 +329,7 @@ def bc_block_plus_ident(expr):
 
     return expr
 
+
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
@@ -331,6 +338,7 @@ def bc_dist(expr):
         return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
                                              for i in range(B.rows)])
     return expr
+
 
 def bc_matmul(expr):
     factor, matrices = expr.as_coeff_matrices()
@@ -343,6 +351,7 @@ def bc_matmul(expr):
         else:
             i+=1
     return MatMul(factor, *matrices)
+
 
 def bc_matpow(expr):
     if expr.exp.is_number and expr.exp.is_integer:

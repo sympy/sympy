@@ -13,11 +13,13 @@ from dense import Matrix
 # uncomment the import of as_int and delete the function when merged with 0.7.2
 #from sympy.core.compatibility import as_int
 
+
 def as_int(i):
     ii = int(i)
     if i != ii:
         raise TypeError()
     return ii
+
 
 class SparseMatrix(MatrixBase):
     """

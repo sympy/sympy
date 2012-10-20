@@ -3,6 +3,7 @@ from sympy import Add, Basic, sympify
 from sympy.rules import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
 
+
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
 
@@ -52,6 +53,7 @@ class MatAdd(MatrixExpr):
     def canonicalize(self):
         return canonicalize(self)
 
+
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
@@ -62,6 +64,8 @@ def validate(*args):
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
+
+
 def combine(cnt, mat):
     from matmul import MatMul
     if cnt == 1:

@@ -1,6 +1,7 @@
 from matexpr import ShapeError
 from matpow import MatPow
 
+
 class Inverse(MatPow):
     """Matrix Inverse
 

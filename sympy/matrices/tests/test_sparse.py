@@ -2,6 +2,7 @@ from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises, XFAIL
 
+
 def test_sparse_matrix():
     def sparse_eye(n):
         return SparseMatrix.eye(n)
@@ -418,19 +419,23 @@ def test_sparse_matrix():
 
     assert M.zeros(3, 5) == SparseMatrix(3, 5, {})
 
+
 def test_transpose():
     assert SparseMatrix(((1, 2), (3, 4))).transpose() == \
         SparseMatrix(((1, 3), (2, 4)))
 
+
 def test_trace():
     assert SparseMatrix(((1, 2), (3, 4))).trace() == 5
     assert SparseMatrix(((0, 0), (0, 4))).trace() == 4
+
 
 def test_CL_RL():
     assert SparseMatrix(((1, 2), (3, 4))).row_list() == \
         [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
     assert SparseMatrix(((1, 2), (3, 4))).col_list() == \
         [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
+
 
 def test_add():
     assert SparseMatrix(((1, 0), (0, 1))) + SparseMatrix(((0, 1), (1, 0))) == \
@@ -454,20 +459,24 @@ def test_errors():
     raises(ShapeError,
         lambda: SparseMatrix(1, 2, [1, 2]) + SparseMatrix(2, 1, [2, 1]))
 
+
 def test_len():
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
+
 
 @XFAIL
 def test_len_different_shapes():
     assert Matrix() == Matrix([[]])
     assert SparseMatrix() == SparseMatrix([[]])
 
+
 def test_sparse_zeros_sparse_eye():
     assert SparseMatrix.eye(3) == eye(3, cls=SparseMatrix)
     assert len(SparseMatrix.eye(3)._smat) == 3
     assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
     assert len(SparseMatrix.zeros(3)._smat) == 0
+
 
 def test_copyin():
     s = SparseMatrix(3, 3, {})
@@ -490,6 +499,7 @@ def test_copyin():
     assert s[:, 0] == SparseMatrix([1, 1, 1])
     s[0, 0] = SparseMatrix([1, 1, 1])
     assert s[:, 0] == SparseMatrix([1, 1, 1])
+
 
 def test_sparse_solve():
     from sympy.matrices import SparseMatrix
