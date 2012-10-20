@@ -168,9 +168,9 @@ class GrayCode(Basic):
         """
         bits = self.n
         start = None
-        if hints.has_key("start"):
+        if "start" in hints:
             start = hints["start"]
-        elif hints.has_key("rank"):
+        elif "rank" in hints:
             start = GrayCode.unrank(self.n, hints["rank"])
         if start is not None:
             self._current = start

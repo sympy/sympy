@@ -85,7 +85,7 @@ class Subset(Basic):
                                              x + y, bin_list), 2) + k)
                                  % 2**self.superset_size))[2:]
         next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
-                        next_bin_list
+            next_bin_list
         return Subset.subset_from_bitlist(self.superset, next_bin_list)
 
     def next_binary(self):
