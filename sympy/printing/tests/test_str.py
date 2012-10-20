@@ -2,9 +2,10 @@ from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet)
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    MatrixSymbol)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -251,7 +252,6 @@ def test_Rational():
     n3 = Rational(2,4)
     n4 = Rational(2,-4)
     n5 = Rational(0)
-    n6 = Rational(1)
     n7 = Rational(3)
     n8 = Rational(-3)
     assert str(n1*n2) == "1/12"
@@ -474,8 +474,8 @@ def test_PrettyPoly():
     assert sstr(R.convert(x + y)) == sstr(x + y)
 
 def test_categories():
-    from sympy.categories import (Object, Morphism, NamedMorphism,
-                                  IdentityMorphism, Category)
+    from sympy.categories import (Object, NamedMorphism,
+        IdentityMorphism, Category)
 
     A = Object("A")
     B = Object("B")
@@ -495,3 +495,11 @@ def test_Tr():
     A, B = symbols('A B', commutative=False)
     t = Tr(A*B)
     assert str(t) == 'Tr(A*B)'
+
+def test_issue3288():
+    assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
+
+def test_MatMul_MatAdd():
+    from sympy import MatrixSymbol
+    assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
+            "2*(X + Y)"

@@ -14,7 +14,7 @@ from sympy.mpmath.libmp import prec_to_dps
 
 from sympy.utilities import default_sort_key
 
-import re, warnings
+import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
@@ -995,7 +995,7 @@ class LatexPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_BlockMatrix(self, expr):
-        return self._print(expr.mat)
+        return self._print(expr.blocks)
 
     def _print_Transpose(self, expr):
         mat = expr.arg
@@ -1005,10 +1005,25 @@ class LatexPrinter(Printer):
             return "%s^T"%self._print(mat)
 
     def _print_MatAdd(self, expr):
-        return self._print_Add(expr)
+        # Stolen from print_Add
+        terms = list(expr.args)
+        tex = self._print(terms[0])
+
+        for term in terms[1:]:
+            if not _coeff_isneg(term):
+                tex += " +"
+
+            tex += " " + self._print(term)
+
+        return tex
 
     def _print_MatMul(self, expr):
-        return self._print_Mul(expr)
+        from sympy import Add, MatAdd
+        def parens(x):
+            if isinstance(x, (Add, MatAdd)):
+                return r"\left(%s\right)"%self._print(x)
+            return self._print(x)
+        return ' '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1266,8 +1281,6 @@ class LatexPrinter(Printer):
             morphism.domain, morphism.codomain, "id"))
 
     def _print_CompositeMorphism(self, morphism):
-        from sympy.categories import NamedMorphism
-
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
         component_names_list = [self._print(Symbol(component.name)) for \

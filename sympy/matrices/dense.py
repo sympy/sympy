@@ -1156,8 +1156,13 @@ def eye(n, cls=None):
     zeros
     ones
     """
+    if not cls:
+        from sympy.matrices import Matrix
+        cls = Matrix
     n = as_int(n)
-    return diag(*[S.One]*n, **dict(cls=cls))
+    return cls._new([[S.One if row == col else S.Zero
+                            for col in range(n)]
+                            for row in range(n)])
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.

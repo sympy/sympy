@@ -1,16 +1,18 @@
-from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate,
-    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, Product,
-    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg, polar_lift,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan, Min, Max, cot, coth,
-    re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi, gamma,
-    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
-    laguerre, assoc_laguerre, hermite, gegenbauer, jacobi,
-    Tuple, MellinTransform, InverseMellinTransform, LaplaceTransform,
-    InverseLaplaceTransform, FourierTransform, InverseFourierTransform,
-    SineTransform, InverseSineTransform, CosineTransform,
-    InverseCosineTransform, FiniteSet, TransformationSet, Range, Subs)
+from sympy import (
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, FallingFactorial, FiniteSet,
+    Float, FourierTransform, Function, Integral, Interval,
+    InverseCosineTransform, InverseFourierTransform,
+    InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
+    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
+    Order, Piecewise, Poly, Poly, Product, Range, Rational,
+    RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
+    Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
+    assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
+    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
+    exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
+    hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
+    meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
+    uppergamma, zeta)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -86,8 +88,8 @@ def test_latex_Float():
     assert latex(-1.0*oo) == r"- \infty"
 
 def test_latex_symbols():
-    Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
-    mass, volume = map(Symbol, ('mass', 'volume'))
+    Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
+    mass, volume = symbols('mass, volume')
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q21')) == r"q_{21}"
@@ -98,6 +100,7 @@ def test_latex_symbols():
 
 @XFAIL
 def test_latex_symbols_failing():
+    rho, mass, volume = symbols('rho, mass, volume')
     assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
     assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
     assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
@@ -205,7 +208,7 @@ def test_latex_functions():
 
 
 def test_hyper_printing():
-    from sympy import pi, Tuple
+    from sympy import pi
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
@@ -425,9 +428,6 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='dot') == "4 \\cdot x"
     assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
 
-def test_latex_Poly():
-    assert latex(Poly(x**2 + 2 * x, x)) == r"x^{2} + 2 x"
-
 def test_latex_issue1282():
     y = 4*4**log(2)
     assert latex(y) == '4 \\times 4^{\\log{\\left (2 \\right )}}'
@@ -487,6 +487,8 @@ def test_latex_Lambda():
         r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
 
 def test_latex_Poly():
+    assert latex(Poly(x**2 + 2 * x, x)) == \
+        r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
     assert latex(Poly(x/y, x)) == \
         r"\operatorname{Poly}{\left( \frac{x}{y}, x, domain=\mathbb{Z}\left(y\right) \right)}"
     assert latex(Poly(2.0*x + y)) == \
@@ -525,9 +527,9 @@ def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
-    assert l._print_MatAdd(C - 2*B) in ['- 2 B + C', 'C - 2 B']
+    assert l._print_MatAdd(C - 2*B) in ['-2 B + C', 'C -2 B']
     assert l._print_MatAdd(C + 2*B) in ['2 B + C', 'C + 2 B']
-    assert l._print_MatAdd(B - 2*C) in ['B - 2 C', '- 2 C + B']
+    assert l._print_MatAdd(B - 2*C) in ['B -2 C', '-2 C + B']
     assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
 
 def test_matMul():
@@ -539,13 +541,13 @@ def test_matMul():
     l = LatexPrinter()
     assert l._print_MatMul(2*A) == '2 A'
     assert l._print_MatMul(2*x*A) == '2 x A'
-    assert l._print_MatMul(-2*A) == '- 2 A'
-    assert l._print_MatMul(1.0*A) == '1.0 A'
+    assert l._print_MatMul(-2*A) == '-2 A'
+    assert l._print_MatMul(1.5*A) == '1.5 A'
     assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
     assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
     assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert l._print_MatMul(-2*A*(A+2*B)) in [r'- 2 A \left(A + 2 B\right)',
-        r'- 2 A \left(2 B + A\right)']
+    assert l._print_MatMul(-2*A*(A+2*B)) in [r'-2 A \left(A + 2 B\right)',
+        r'-2 A \left(2 B + A\right)']
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -596,9 +598,8 @@ def test_PolynomialRing():
             r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
 
 def test_categories():
-    from sympy.categories import (Object, Morphism, IdentityMorphism,
-                                  NamedMorphism, CompositeMorphism,
-                                  Category, Diagram, DiagramGrid)
+    from sympy.categories import (Object, IdentityMorphism,
+        NamedMorphism, Category, Diagram, DiagramGrid)
 
     A1 = Object("A1")
     A2 = Object("A2")

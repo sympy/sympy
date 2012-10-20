@@ -3,7 +3,7 @@
 All objects have a method that create a "stringPict",
 that can be used in the str method for pretty printing.
 
-Updates by Jason gedge (email <my last name> at cs mun ca)
+Updates by Jason Gedge (email <my last name> at cs mun ca)
     - terminal_string() method
     - minor fixes and changes (mostly to prettyForm)
 
@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from pretty_symbology import hobj, vobj, xsym, pretty_use_unicode
+from pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
 
 class stringPict(object):
     """An ASCII picture.
@@ -276,13 +276,13 @@ class stringPict(object):
         # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
         #                     |                      |                      |
         #                     | *d*f
-        do_vspacers = (self.height() > 1)
 
         i = 0
         svals = []
+        do_vspacers = (self.height() > 1)
         while i < self.width():
             svals.extend([ sval[i:i+ncols] for sval in self.picture ])
-            if (self.height() > 1):
+            if do_vspacers:
                 svals.append("") # a vertical spacer
             i += ncols
 

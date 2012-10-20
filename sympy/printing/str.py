@@ -3,7 +3,8 @@ A Printer for generating readable representation of most sympy classes.
 """
 
 from sympy.core import S, Rational, Pow, Basic, Mul
-from sympy.core.function import _coeff_isneg
+from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import Integer
 from printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -81,9 +82,9 @@ class StrPrinter(Printer):
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
 
     def _print_BlockMatrix(self, B):
-        if B._mat.shape == (1, 1):
-            self._print(B._mat[0,0])
-        return self._print(B._mat)
+        if B.blocks.shape == (1, 1):
+            self._print(B.blocks[0,0])
+        return self._print(B.blocks)
 
     def _print_Catalan(self, expr):
         return 'Catalan'
@@ -223,8 +224,9 @@ class StrPrinter(Printer):
 
         prec = precedence(expr)
 
-        if _coeff_isneg(expr):
-            expr = -expr
+        c, e = expr.as_coeff_Mul()
+        if c < 0:
+            expr = _keep_coeff(-c, e)
             sign = "-"
         else:
             sign = ""
@@ -272,6 +274,9 @@ class StrPrinter(Printer):
         return '*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
+    def _print_MatAdd(self, expr):
+        return ' + '.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args])
 
     def _print_NaN(self, expr):
         return 'nan'
@@ -487,6 +492,7 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name

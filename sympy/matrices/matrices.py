@@ -993,6 +993,10 @@ class MatrixBase(object):
         else:
             return divmod(a2idx(key, len(self)), self.cols)
 
+    def simplify(self):
+        from sympy.simplify import simplify
+        return self.applyfunc(simplify)
+
     def evalf(self, prec=None, **options):
         """
         Evaluate each element of the matrix as a float.
@@ -1789,10 +1793,9 @@ class MatrixBase(object):
     @classmethod
     def eye(cls, n):
         """Returns the identity matrix of size n."""
-        tmp = cls.zeros(n)
-        for i in range(tmp.rows):
-            tmp[i, i] = S.One
-        return tmp
+        return cls._new([[S.One if row == col else S.Zero
+                                for col in range(n)]
+                                for row in range(n)])
 
     @property
     def is_square(self):

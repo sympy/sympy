@@ -421,18 +421,12 @@ def capture(func):
         sys.stdout = stdout
     return file.getvalue()
 
-def sift(expr, keyfunc):
+def sift(seq, keyfunc):
     """
-    Sift the arguments of expr into a dictionary according to keyfunc.
-
-    INPUT: expr may be an expression or iterable; if it is an expr then
-    it is converted to a list of expr's args or [expr] if there are no args.
+    Sift the sequence, ``seq`` into a dictionary according to keyfunc.
 
     OUTPUT: each element in expr is stored in a list keyed to the value
     of keyfunc for the element.
-
-    Note that for a SymPy expression, the order of the elements in the lists
-    is dependent on the order in .args, which can be arbitrary.
 
     Examples
     ========
@@ -441,29 +435,28 @@ def sift(expr, keyfunc):
     >>> from sympy.abc import x, y
     >>> from sympy import sqrt, exp
 
-    >>> sift(range(5), lambda x: x%2)
+    >>> sift(range(5), lambda x: x % 2)
     {0: [0, 2, 4], 1: [1, 3]}
 
     sift() returns a defaultdict() object, so any key that has no matches will
     give [].
 
-    >>> sift(x, lambda x: x.is_commutative)
+    >>> sift([x], lambda x: x.is_commutative)
     {True: [x]}
     >>> _[False]
     []
 
     Sometimes you won't know how many keys you will get:
-    >>> sift(sqrt(x) + exp(x) + (y**x)**2,
-    ... lambda x: x.as_base_exp()[0])
+
+    >>> sift([sqrt(x), exp(x), (y**x)**2],
+    ...      lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
     """
-    d = defaultdict(list)
-    if hasattr(expr, 'args'):
-        expr = expr.args or [expr]
-    for e in expr:
-        d[keyfunc(e)].append(e)
-    return d
+    m = defaultdict(list)
+    for i in seq:
+        m[keyfunc(i)].append(i)
+    return m
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
