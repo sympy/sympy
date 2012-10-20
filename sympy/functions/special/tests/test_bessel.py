@@ -1,12 +1,12 @@
 from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
-                  bessely, besseli, besselk, hankel1, hankel2, expand_func, \
-                  latex, sqrt
+    bessely, besseli, besselk, hankel1, hankel2, expand_func, \
+    latex, sqrt
 from sympy.functions.special.bessel import fn
 from sympy.utilities.pytest import raises, skip
 from sympy.utilities.randtest import \
-        random_complex_number as randcplx, \
-        test_numerically as tn, \
-        test_derivative_numerically as td
+    random_complex_number as randcplx, \
+    test_numerically as tn, \
+    test_derivative_numerically as td
 from sympy.abc import z, n, k, x
 
 
@@ -35,9 +35,9 @@ def test_rewrite():
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
     assert besseli(n, z).rewrite(besselj) == \
-           exp(-I*n*pi/2)*besselj(n, polar_lift(I)*z)
+        exp(-I*n*pi/2)*besselj(n, polar_lift(I)*z)
     assert besselj(n, z).rewrite(besseli) == \
-           exp(I*n*pi/2)*besseli(n, polar_lift(-I)*z)
+        exp(I*n*pi/2)*besseli(n, polar_lift(-I)*z)
     nu = randcplx()
     assert tn(besselj(nu, z), besselj(nu, z).rewrite(besseli), z)
     assert tn(besseli(nu, z), besseli(nu, z).rewrite(besselj), z)
@@ -72,11 +72,11 @@ def test_jn():
     assert mjn(2, z) == (3/z**3 - 1/z)*sin(z) - (3/z**2) * cos(z)
     assert mjn(3, z) == (15/z**4 - 6/z**2)*sin(z) + (1/z - 15/z**3)*cos(z)
     assert mjn(4, z) == (1/z + 105/z**5 - 45/z**3)*sin(z) + \
-                (-105/z**4 + 10/z**2)*cos(z)
+        (-105/z**4 + 10/z**2)*cos(z)
     assert mjn(5, z) == (945/z**6 - 420/z**4 + 15/z**2)*sin(z) + \
-                (-1/z - 945/z**5 + 105/z**3)*cos(z)
+        (-1/z - 945/z**5 + 105/z**3)*cos(z)
     assert mjn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
-                (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
+        (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
 
     assert expand_func(jn(n, z)) == jn(n, z)
 

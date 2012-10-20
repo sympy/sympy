@@ -153,7 +153,7 @@ class lerchphi(Function):
             root = z**(1/n)
             return add + mul*n**(s - 1)*Add(
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
-                   / (unpolarify(zet)**k*root)**m for k in xrange(n)])
+                  / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
         if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
