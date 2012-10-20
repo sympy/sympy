@@ -132,6 +132,7 @@ def test_python_functions_conjugates():
     assert python( conjugate(exp(a + b*I)) ) == ' _     _\n a - I*b\ne       '
 
 
+
 def test_python_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)

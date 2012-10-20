@@ -12,6 +12,7 @@ def test_1():
     print_gtk(x**2 + sin(x)/4, start_viewer=False)
 
 
+
 def test_settings():
     from sympy.abc import x
     raises(TypeError, lambda: print_gtk(x, method="garbage"))

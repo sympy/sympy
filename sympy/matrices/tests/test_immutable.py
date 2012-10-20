@@ -36,6 +36,7 @@ def test_subs():
         ImmutableMatrix([[1 - y, (x - 1)*(y - 1)], [2 - x - y, (x - 1)**2]])
 
 
+
 def test_as_immutable():
     X = Matrix([[1, 2], [3, 4]])
     assert X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])

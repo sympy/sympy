@@ -339,7 +339,7 @@ class SparseMatrix(MatrixBase):
         Cdict = defaultdict(int)
         for k, j, Akj in A.row_list():
             for n, Bjn in Blist[j]:
-                temp = Akj*Bjn
+                temp = Akj * Bjn
                 Cdict[k, n] += temp
         rv = self.zeros(A.rows, B.cols)
         rv._smat = dict([(k, v) for k, v in Cdict.iteritems() if v])
@@ -623,8 +623,8 @@ class SparseMatrix(MatrixBase):
                 R[r].append(c)
 
         inf = len(R)  # nothing will be this large
-        parent = [inf]*self.rows
-        virtual = [inf]*self.rows
+        parent = [inf] * self.rows
+        virtual = [inf] * self.rows
         for r in range(self.rows):
             for c in R[r][:-1]:
                 while virtual[c] < r:

@@ -45,6 +45,7 @@ def test_sum():
     raises(ShapeError, lambda: m + n)
 
 
+
 def test_addition():
     a = Matrix((
         (1, 2),
@@ -414,7 +415,9 @@ def test_expand():
     m0 = Matrix([[x*(x + y), 2], [((x + y)*y)*x, x*(y + x*(x + y))]])
     # Test if expand() returns a matrix
     m1 = m0.expand()
-    assert m1 == Matrix([[x*y + x**2, 2], [x*y**2 + y*x**2, x*y + y*x**2 + x**3]])
+    assert m1 == Matrix([
+        [x*y + x**2, 2],
+        [x*y**2 + y*x**2, x*y + y*x**2 + x**3]])
 
     a = Symbol('a', real=True)
 
@@ -551,14 +554,14 @@ def test_inverse():
     cls = ImmutableMatrix
     m = cls([
             [48, 49, 31],
-    [ 9, 71, 94],
-    [59, 28, 65]])
+            [ 9, 71, 94],
+            [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU'.split())
     cls = ImmutableSparseMatrix
     m = cls([
             [48, 49, 31],
-    [ 9, 71, 94],
-    [59, 28, 65]])
+            [ 9, 71, 94],
+            [59, 28, 65]])
     assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
 
 
@@ -806,6 +809,7 @@ def test_subs():
 
     for cls in classes:
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).subs(1, 2)
+
 
 
 def test_simplify():
@@ -1191,6 +1195,7 @@ def test_diag():
         [0, 2, 0, 0],
         [0, 3, 0, 0],
         [0, 0, 4, 5]])
+
 
 
 def test_get_diag_blocks1():
@@ -1910,6 +1915,7 @@ def test_GramSchmidt():
     assert GramSchmidt([Matrix([3, 1]), Matrix([2, 2])], True) == [
         Matrix([3*sqrt(10)/10, sqrt(10)/10]),
         Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
+
 
 
 def test_casoratian():

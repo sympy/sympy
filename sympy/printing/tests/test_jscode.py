@@ -45,6 +45,7 @@ def test_jscode_constants_other():
         2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
+
 def test_jscode_Rational():
     assert jscode(Rational(3, 7)) == "3/7"
     assert jscode(Rational(18, 9)) == "2"

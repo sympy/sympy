@@ -14,6 +14,7 @@ def test_printmethod():
     assert mp.doprint(1 + x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
 
 
+
 def test_mathml_core():
     mml_1 = mp._print(1 + x)
     assert mml_1.nodeName == 'apply'
@@ -63,6 +64,7 @@ def test_mathml_functions():
     assert mml_2.childNodes[1].nodeName == 'bvar'
     assert mml_2.childNodes[1].childNodes[
         0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+
 
 
 def test_mathml_limits():

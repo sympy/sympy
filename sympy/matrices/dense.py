@@ -17,6 +17,7 @@ from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
 
 
+
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
@@ -1150,6 +1151,7 @@ def matrix_multiply_elementwise(A, B):
         lambda i, j: A[i, j]*B[i, j])
 
 
+
 def ones(r, c=None):
     """Returns a matrix of ones with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned.
@@ -1325,6 +1327,7 @@ def diag(*values, **kwargs):
             i_row += 1
             i_col += 1
     return cls._new(res)
+
 
 
 def jordan_cell(eigenval, n):

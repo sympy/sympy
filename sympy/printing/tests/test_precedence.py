@@ -18,6 +18,7 @@ def test_Add():
     assert precedence(x*y + 1) == PRECEDENCE["Add"]
 
 
+
 def test_Function():
     assert precedence(sin(x)) == PRECEDENCE["Atom"]
     assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]

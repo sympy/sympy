@@ -1,11 +1,15 @@
-from sympy import Expr, Symbol, Mul, Add, Pow, expand, sympify, Tuple, Integer
 from sympy.core.basic import Basic
-from sympy.core.singleton import S
+from sympy.core.containers import Tuple
 from sympy.core.decorators import _sympifyit, call_highest_priority
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.matrices import ShapeError
 
 
-class MatrixExpr(Expr):
+class MatrixExpr(Basic):
     """ Matrix Expression Class
     Matrix Expressions subclass SymPy Expr's so that
     MatAdd inherits from Add
@@ -27,6 +31,8 @@ class MatrixExpr(Expr):
     is_Transpose = False
     is_ZeroMatrix = False
     is_BlockMatrix = False
+    is_MatAdd = False
+    is_MatMul = False
 
     is_commutative = False
 
@@ -226,8 +232,14 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().equals(other)
 
+    def canonicalize(self):
+        return self
 
-class MatrixSymbol(MatrixExpr, Symbol):
+    def as_coeff_mmul(self):
+        return 1, Basic.__new__(MatMul, self)
+
+
+class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
     Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
@@ -239,9 +251,10 @@ class MatrixSymbol(MatrixExpr, Symbol):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    I + 2*A*B
+    2*A*B + I
     """
     is_commutative = False
+    is_Atom = True
 
     def __new__(cls, name, n, m):
         n, m = sympify(n), sympify(m)
@@ -276,6 +289,11 @@ class MatrixSymbol(MatrixExpr, Symbol):
         # They are simpler and look much nicer
         else:
             return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
+
+
+    @property
+    def free_symbols(self):
+        return set((self,))
 
 
 class Identity(MatrixSymbol):
@@ -343,103 +361,6 @@ class ZeroMatrix(MatrixSymbol):
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
-
-
-def matrixify(expr):
-    """
-    Recursively walks down an expression tree changing Expr's to MatExpr's
-    i.e. Add -> MatAdd
-         Mul -> MatMul
-
-    Only changes those Exprs which contain MatrixSymbols
-
-    This function is useful when traditional SymPy functions which use Mul and
-    Add are called on MatrixExpressions. Examples flatten, expand, simplify...
-
-    Calling matrixify after calling these functions will reset classes back to
-    their matrix equivalents
-    """
-    class_dict = {Mul: MatMul, Add: MatAdd, MatMul: MatMul, MatAdd: MatAdd,
-            Pow: MatPow, MatPow: MatPow}
-
-    if expr.__class__ not in class_dict:
-        return expr
-
-    args = map(matrixify, expr.args)  # Recursively call down the tree
-
-    if not any(arg.is_Matrix for arg in args):
-        return expr
-    else:
-        return Basic.__new__(class_dict[expr.__class__], *args)
-
-
-def linear_factors(expr, *syms):
-    """Reduce a Matrix Expression to a sum of linear factors
-
-    Given symbols and a matrix expression linear in those symbols return a
-    dict mapping symbol to the linear factor
-
-    >>> from sympy import MatrixSymbol, linear_factors, symbols
-    >>> n, m, l = symbols('n m l')
-    >>> A = MatrixSymbol('A', n, m)
-    >>> B = MatrixSymbol('B', m, l)
-    >>> C = MatrixSymbol('C', n, l)
-    >>> linear_factors(2*A*B + C, B, C)
-    {B: 2*A, C: I}
-    """
-
-    expr = matrixify(expand(expr))
-    d = {}
-    if expr.is_Matrix and expr.is_Symbol:
-        if expr in syms:
-            d[expr] = Identity(expr.rows)
-
-    if expr.is_Add:
-        for sym in syms:
-            total_factor = 0
-            for arg in expr.args:
-                factor = arg.coeff(sym)
-                if not factor:
-                    # .coeff fails when powers are in the expression
-                    if sym in arg.free_symbols:
-                        raise ValueError("Expression not linear in symbols")
-                    else:
-                        factor = 0
-                factor = sympify(factor)
-                if not factor.is_Matrix:
-                    if factor.is_zero:
-                        factor = ZeroMatrix(expr.rows, sym.rows)
-                        if not sym.cols == expr.cols:
-                            raise ShapeError(
-                                "%s not compatible as factor of %s" % (sym, expr))
-                    else:
-                        factor = Identity(sym.rows)*factor
-                total_factor += factor
-            d[sym] = total_factor
-    elif expr.is_Mul:
-        for sym in syms:
-            factor = expr.coeff(sym)
-            if not factor:
-                # .coeff fails when powers are in the expression
-                if sym in expr.free_symbols:
-                    raise ValueError("Expression not linear in symbols")
-                else:
-                    factor = 0
-            factor = sympify(factor)
-            if not factor.is_Matrix:
-                if factor.is_zero:
-                    factor = ZeroMatrix(expr.rows, sym.rows)
-                    if not sym.cols == expr.cols:
-                        raise ShapeError("%s not compatible as factor of %s" %
-                                (sym, expr))
-                else:
-                    factor = Identity(sym.rows)*factor
-            d[sym] = factor
-
-    if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):
-        raise ValueError("Expression not linear in symbols")
-
-    return d
 
 from matmul import MatMul
 from matadd import MatAdd

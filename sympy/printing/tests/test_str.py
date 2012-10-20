@@ -4,7 +4,8 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor)
+    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    MatrixSymbol)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -69,6 +70,7 @@ def test_Derivative():
         x**2/y, x, y, evaluate=False)) == "Derivative(x**2/y, x, y)"
 
 
+
 def test_dict():
     assert str({1: 1 + x}) == sstr({1: 1 + x}) == "{1: x + 1}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
@@ -85,6 +87,7 @@ def test_Dict():
 def test_Dummy():
     assert str(d) == "_d"
     assert str(d + x) == "_d + x"
+
 
 
 def test_EulerGamma():
@@ -169,10 +172,12 @@ def test_Limit():
         Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
 
+
 def test_list():
     assert str([x]) == sstr([x]) == "[x]"
     assert str([x**2, x*y + 1]) == sstr([x**2, x*y + 1]) == "[x**2, x*y + 1]"
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
+
 
 
 def test_Matrix():
@@ -217,6 +222,7 @@ def test_NegativeInfinity():
 
 def test_Normal():
     assert str(Normal(x + y, z)) == "Normal(x + y, z)"
+
 
 
 def test_Order():
@@ -324,6 +330,7 @@ def test_Poly():
                ) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
 
 
+
 def test_Pow():
     assert str(x**-1) == "1/x"
     assert str(x**-2) == "x**(-2)"
@@ -386,7 +393,7 @@ def test_Rational():
     assert str(sqrt(Rational(1, 4))) == "1/2"
     assert str(sqrt(Rational(1, 36))) == "1/6"
 
-    assert str((123**25) ** Rational(1, 25)) == "123"
+    assert str((123**25)**Rational(1, 25)) == "123"
     assert str((123**25 + 1)**Rational(1, 25)) != "123"
     assert str((123**25 - 1)**Rational(1, 25)) != "123"
     assert str((123**25 - 1)**Rational(1, 25)) != "122"
@@ -416,6 +423,7 @@ def test_Relational():
     assert str(Rel(x + y, y, "==")) == "x + y == y"
 
 
+
 def test_RootOf():
     assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
 
@@ -427,6 +435,7 @@ def test_RootSum():
         RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(
         z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+
 
 
 def test_GroebnerBasis():
@@ -486,9 +495,11 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
+
 def test_Uniform():
     assert str(Uniform(x, y)) == "Uniform(x, y)"
     assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
+
 
 
 def test_Unit():
@@ -635,3 +646,9 @@ def test_Tr():
 
 def test_issue3288():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
+
+
+def test_MatMul_MatAdd():
+    from sympy import MatrixSymbol
+    assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
+            "2*(X + Y)"

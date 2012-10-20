@@ -1498,8 +1498,8 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (2 + (
-        1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 1000))/sqrt(3 + x**2)
+    expr = ((2 + (1 + x**2)/(2 + x))**Rational(1, 4) +
+        (1 + x**Rational(1, 1000))/sqrt(3 + x**2))
     ascii_str = \
 """\
      ____________              \n\
@@ -2420,6 +2420,7 @@ def test_any_object_in_sequence():
         expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(
         expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+
 
 
 def test_pretty_sets():

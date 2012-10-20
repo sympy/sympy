@@ -980,6 +980,10 @@ class MatrixBase(object):
         else:
             return divmod(a2idx(key, len(self)), self.cols)
 
+    def simplify(self):
+        from sympy.simplify import simplify
+        return self.applyfunc(simplify)
+
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
         if prec is None:

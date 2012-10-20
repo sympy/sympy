@@ -38,6 +38,7 @@ def test_fcode_Pow():
                  human = True) == 'y = x**(-2.0d0)'  #2823
 
 
+
 def test_fcode_Rational():
     assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"
     assert fcode(Rational(18, 9)) == "      2"
@@ -97,6 +98,7 @@ def test_fcode_complex():
     assert fcode(3 + x) == "      x + 3"
 
 
+
 def test_implicit():
     x, y = symbols('x,y')
     assert fcode(sin(x)) == "      sin(x)"
@@ -124,6 +126,7 @@ def test_user_functions():
     n = symbols('n', integer=True)
     assert fcode(
         factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+
 
 
 def test_inline_function():
