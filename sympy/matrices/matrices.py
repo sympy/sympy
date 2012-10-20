@@ -893,7 +893,7 @@ class MatrixBase(object):
         outMat = [0]*outRows*outCols
         for i in range(outRows):
             outMat[i*outCols:(i+1)*outCols] = \
-            self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
+                self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
         return self._new(outRows, outCols, outMat)
 
     def extract(self, rowsList, colsList):
@@ -1041,7 +1041,7 @@ class MatrixBase(object):
         >>>
         """
         return self.applyfunc(lambda x: x.expand(
-        deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
+                              deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
         **hints))
 
     def simplify(self, ratio=1.7, measure=count_ops):
