@@ -66,7 +66,7 @@ def test_jscode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert jscode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" %Catalan.n()
+    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" % Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -93,7 +93,7 @@ def test_jscode_boolean():
 
 
 def test_jscode_Piecewise():
-    p = jscode(Piecewise((x, x<1), (x**2, True)))
+    p = jscode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 if (x < 1) {
@@ -107,7 +107,7 @@ else {
 
 
 def test_jscode_Piecewise_deep():
-    p = jscode(2*Piecewise((x, x<1), (x**2, True)))
+    p = jscode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 2*if (x < 1) {

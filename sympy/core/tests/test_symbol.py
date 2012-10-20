@@ -153,7 +153,7 @@ def test_ineq_unequal():
 
     left_e = e[:-1]
     for i, e1 in enumerate( left_e ):
-        for e2 in e[i +1:]:
+        for e2 in e[i + 1:]:
             assert e1 != e2
 
 

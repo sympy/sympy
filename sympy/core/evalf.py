@@ -831,7 +831,7 @@ def do_integral(expr, prec, options):
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
     try:
-        mp.prec = prec +5
+        mp.prec = prec + 5
         xlow = as_mpmath(xlow, prec + 15, options)
         xhigh = as_mpmath(xhigh, prec + 15, options)
 

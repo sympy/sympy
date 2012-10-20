@@ -45,25 +45,25 @@ def test_dice():
     assert variance(X) == S(35)/12
     assert E(X + Y) == 7
     assert E(X + X) == 7
-    assert E(a*X + b) == a*E(X) +b
+    assert E(a*X + b) == a*E(X) + b
     assert variance(X + Y) == variance(X) + variance(Y)
     assert variance(X + X) == 4 * variance(X)
     assert covariance(X, Y) == S.Zero
     assert covariance(X, X + Y) == variance(X)
     assert density(Eq(cos(X*S.Pi), 1))[True] == S.Half
 
-    assert P(X>3) == S.Half
+    assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
-    assert P(X>Y) == S(5)/12
+    assert P(X > Y) == S(5)/12
     assert P(Eq(X, Y)) == P(Eq(X, 1))
 
-    assert E(X, X>3) == 5
-    assert E(X, Y>3) == E(X)
+    assert E(X, X > 3) == 5
+    assert E(X, Y > 3) == E(X)
     assert E(X + Y, Eq(X, Y)) == E(2*X)
-    assert E(X + Y - Z, 2*X>Y + 1) == S(49)/12
+    assert E(X + Y - Z, 2*X > Y + 1) == S(49)/12
 
-    assert P(X>3, X>3) == S.One
-    assert P(X>Y, Eq(Y, 6)) == S.Zero
+    assert P(X > 3, X > 3) == S.One
+    assert P(X > Y, Eq(Y, 6)) == S.Zero
     assert P(Eq(X + Y, 12)) == S.One/36
     assert P(Eq(X + Y, 12), Eq(X, 6)) == S.One/6
 
@@ -74,7 +74,7 @@ def test_dice():
     assert pspace(X).domain.as_boolean() == Or(
             *[Eq(X.symbol, i) for i in [1, 2, 3, 4, 5, 6]])
 
-    assert where(X>3).set == FiniteSet(4, 5, 6)
+    assert where(X > 3).set == FiniteSet(4, 5, 6)
 
 
 def test_given():
@@ -88,9 +88,9 @@ def test_domains():
     X, Y = Die('x', 6), Die('y', 6)
     x, y = X.symbol, Y.symbol
     # Domains
-    d = where(X>Y)
+    d = where(X > Y)
     assert d.condition == (x > y)
-    d = where(And(X>Y, Y>3))
+    d = where(And(X > Y, Y > 3))
     assert d.as_boolean(
         ) == Or(And(Eq(x, 5), Eq(y, 4)), And(Eq(x, 6), Eq(y, 5)),
         And(Eq(x, 6), Eq(y, 4)))
@@ -100,24 +100,24 @@ def test_domains():
 
     Z = Die('x', 4)
 
-    raises(ValueError, lambda: P(X>Z))  # Two domains with same internal symbol
+    raises(ValueError, lambda: P(X > Z))  # Two domains with same internal symbol
 
     pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
-    assert where(X>3).set == FiniteSet(4, 5, 6)
+    assert where(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
             Dict({X.symbol: i}) for i in range(1, 7))
 
-    assert where(X>Y).dict == FiniteSet(Dict({X.symbol: i, Y.symbol: j})
-            for i in range(1, 7) for j in range(1, 7) if i>j)
+    assert where(X > Y).dict == FiniteSet(Dict({X.symbol: i, Y.symbol: j})
+            for i in range(1, 7) for j in range(1, 7) if i > j)
 
 
 def test_dice_bayes():
     X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
-    BayesTest(X>3, X + Y<5)
-    BayesTest(Eq(X - Y, Z), Z>Y)
-    BayesTest(X>3, X>2)
+    BayesTest(X > 3, X + Y < 5)
+    BayesTest(Eq(X - Y, Z), Z > Y)
+    BayesTest(X > 3, X > 2)
 
 
 def test_bernoulli():
@@ -126,13 +126,13 @@ def test_bernoulli():
 
     assert E(X) == a*p + b*(-p + 1)
     assert density(X)[a] == p
-    assert density(X)[b] == 1 -p
+    assert density(X)[b] == 1 - p
 
     X = Bernoulli('B', p, 1, 0)
 
     assert E(X) == p
     assert variance(X) == -p**2 + p
-    E(a*X + b) == a*E(X) +b
+    E(a*X + b) == a*E(X) + b
     variance(a*X + b) == a**2 * variance(X)
 
 
@@ -159,7 +159,7 @@ def test_coins():
 
     assert d.as_boolean() == Or(Eq(C.symbol, H), Eq(C.symbol, T))
 
-    raises(ValueError, lambda: P(C>D))  # Can't intelligently compare H to T
+    raises(ValueError, lambda: P(C > D))  # Can't intelligently compare H to T
 
 
 def test_binomial_numeric():

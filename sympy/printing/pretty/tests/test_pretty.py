@@ -424,7 +424,7 @@ x  + 1 + x\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
-    expr = 1 -x
+    expr = 1 - x
     ascii_str_1 = \
 """\
 1 - x\
@@ -1498,7 +1498,7 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (2 +(
+    expr = (2 + (
         1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 1000))/sqrt(3 + x**2)
     ascii_str = \
 """\
@@ -2165,7 +2165,7 @@ u"""\
 
 
 def test_pretty_piecewise():
-    expr = Piecewise((x, x<1), (x**2, True))
+    expr = Piecewise((x, x < 1), (x**2, True))
     ascii_str = \
 """\
 /x   for x < 1\n\
@@ -3705,10 +3705,10 @@ def test_expint():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X>0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X > 0)) == u"Domain: 0 < x₁"
 
     D = Die('d1', 6)
-    assert upretty(where(D>4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(where(D > 4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)

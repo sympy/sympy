@@ -137,7 +137,7 @@ def test_series2x():
     assert ((x + 1)**(-2)).nseries(x, 0, 4) == 1 - 2*x + 3*x**2 - 4*x**3 + O(x**4, x)
     assert ((x + 1)**(-1)).nseries(x, 0, 4) == 1 - x + x**2 - x**3 + O(x**4, x)
     assert ((x + 1)**0).nseries(x, 0, 3) == 1
-    assert ((x + 1)**1).nseries(x, 0, 3) == 1 +x
+    assert ((x + 1)**1).nseries(x, 0, 3) == 1 + x
     assert ((x + 1)**2).nseries(x, 0, 3) == 1 + 2*x + x**2
     assert ((x + 1)**3).nseries(
         x, 0, 3) == 1 + 3*x + 3*x**2 + x**3  # 1+3*x+3*x**2+O(x**3)
@@ -252,7 +252,7 @@ def test_expbug4():
 @XFAIL
 def test_expbug4_failing():
     x = Symbol("x", real=True)
-    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 +O(x**2, x)
+    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 + O(x**2, x)
     assert ((2 + O(x))**(1 + x)).nseries(x, 0, 2) == 2 + O(x**2, x)
 
 
@@ -378,7 +378,7 @@ def test_issue408():
 def test_issue540():
     x = Symbol("x")
     assert sin(cos(x)).nseries(x, n=5) == sin(
-        1) -x**2*cos(1)/2 - x**4*sin(1)/8 + x**4*cos(1)/24 + O(x**5)
+        1) - x**2*cos(1)/2 - x**4*sin(1)/8 + x**4*cos(1)/24 + O(x**5)
 
 
 def test_hyperbolic():
@@ -489,7 +489,7 @@ def test_abs():
     a = Symbol('a')
     assert abs(x).nseries(x, n=4) == x
     assert abs(-x).nseries(x, n=4) == x
-    assert abs(x + 1).nseries(x, n=4) == x +1
+    assert abs(x + 1).nseries(x, n=4) == x + 1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(x - a).nseries(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),

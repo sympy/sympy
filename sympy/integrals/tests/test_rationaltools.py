@@ -15,7 +15,7 @@ def test_ratint():
     assert ratint(2*x, x) == x**2
     assert ratint(-2*x, x) == -x**2
 
-    assert ratint(8*x**7 + 2*x + 1, x) == x**8 + x**2 +x
+    assert ratint(8*x**7 + 2*x + 1, x) == x**8 + x**2 + x
 
     f = S(1)
     g = x + 1
@@ -42,18 +42,18 @@ def test_ratint():
     assert ratint(f/g, x, real=False) == I*log(x + I)/2 - I*log(x - I)/2
 
     f = S(36)
-    g = x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x -2
+    g = x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2
 
     assert ratint(f/g, x) == \
         -4*log(x + 1) + 4*log(x - 2) + (12*x + 6)/(x**2 - 1)
 
-    f = x**4 - 3*x**2 +6
-    g = x**6 - 5*x**4 + 5*x**2 +4
+    f = x**4 - 3*x**2 + 6
+    g = x**6 - 5*x**4 + 5*x**2 + 4
 
     assert ratint(f/g, x) == \
         atan(x) + atan(x**3) + atan(x/2 - 3*x**S(3)/2 + S(1)/2*x**5)
 
-    f = x**7 - 24*x**4 - 4*x**2 + 8*x -8
+    f = x**7 - 24*x**4 - 4*x**2 + 8*x - 8
     g = x**8 + 6*x**6 + 12*x**4 + 8*x**2
 
     assert ratint(f/g, x) == \
@@ -63,8 +63,8 @@ def test_ratint():
         -(12 - 16*x + 6*x**2 - 14*x**3)/(4 + 4*x**2 + x**4) - \
         5*sqrt(2)*atan(x*sqrt(2)/2) + S(1)/2*x**2 - 3*log(2 + x**2)
 
-    f = x**5 - x**4 + 4*x**3 + x**2 - x +5
-    g = x**4 - 2*x**3 + 5*x**2 - 4*x +4
+    f = x**5 - x**4 + 4*x**3 + x**2 - x + 5
+    g = x**4 - 2*x**3 + 5*x**2 - 4*x + 4
 
     assert ratint(f/g, x) == \
         x + S(1)/2*x**2 + S(1)/2*log(2 - x + x**2) - (4*x - 9)/(14 - 7*x + 7*x**2) + \

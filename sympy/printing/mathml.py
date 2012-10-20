@@ -250,7 +250,7 @@ class MathMLPrinter(Printer):
             if len(items) > 1:
                 mrow = self.dom.createElement('mml:mrow')
                 for i, item in enumerate(items):
-                    if i>0:
+                    if i > 0:
                         mo = self.dom.createElement('mml:mo')
                         mo.appendChild(self.dom.createTextNode(" "))
                         mrow.appendChild(mo)

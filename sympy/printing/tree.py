@@ -22,9 +22,9 @@ def pprint_nodes(subtrees):
             if a == "":
                 continue
             if type == 1:
-                r += "| %s\n" %a
+                r += "| %s\n" % a
             else:
-                r += "  %s\n" %a
+                r += "  %s\n" % a
         return r
     if len(subtrees) == 0:
         return ""

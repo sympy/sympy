@@ -85,7 +85,7 @@ def parse_expr(s, local_dict):
         try:
             a = parse(s.strip(), mode="eval")
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))
         a = Transform(local_dict, global_dict).visit(a)
         e = compile(a, "<string>", "eval")
         return eval(e, global_dict, local_dict)
@@ -96,4 +96,4 @@ def parse_expr(s, local_dict):
         try:
             return SymPyParser(local_dict=local_dict).parse_expr(s)
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))

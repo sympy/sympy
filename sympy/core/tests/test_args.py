@@ -509,7 +509,7 @@ def test_sympy__stats__crv__ConditionalContinuousDomain():
     from sympy.stats.crv import (SingleContinuousDomain,
             ConditionalContinuousDomain)
     D = SingleContinuousDomain(x, Interval(-oo, oo))
-    assert _test_args(ConditionalContinuousDomain(D, x>0))
+    assert _test_args(ConditionalContinuousDomain(D, x > 0))
 
 
 def test_sympy__stats__crv__ContinuousPSpace():
@@ -550,7 +550,7 @@ def test_sympy__stats__rv__ConditionalDomain():
     from sympy.stats.rv import ConditionalDomain, RandomDomain
     from sympy.core.sets import FiniteSet
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
-    assert _test_args(ConditionalDomain(D, x>1))
+    assert _test_args(ConditionalDomain(D, x > 1))
 
 
 def test_sympy__stats__rv__PSpace():
@@ -642,7 +642,7 @@ def test_sympy__stats__frv__ProductFiniteDomain():
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
     xd = SingleFiniteDomain(x, set([1, 2]))
-    assert _test_args(ConditionalFiniteDomain(xd, x>1))
+    assert _test_args(ConditionalFiniteDomain(xd, x > 1))
 
 
 def test_sympy__stats__frv__FinitePSpace():

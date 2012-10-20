@@ -293,19 +293,19 @@ def test_Rational_cmp():
     n7 = Rational(3)
     n8 = Rational(-3)
 
-    assert n8<n5
-    assert n5<n6
-    assert n6<n7
-    assert n8<n7
-    assert n7>n8
+    assert n8 < n5
+    assert n5 < n6
+    assert n6 < n7
+    assert n8 < n7
+    assert n7 > n8
     assert (n1 + 1)**n2 < 2
     assert ((n1 + n6)/n7) < 1
 
-    assert n4<n3
-    assert n2<n3
-    assert n1<n2
-    assert n3>n1
-    assert not n3<n1
+    assert n4 < n3
+    assert n2 < n3
+    assert n1 < n2
+    assert n3 > n1
+    assert not n3 < n1
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
@@ -1033,11 +1033,11 @@ def test_issue1512():
     assert abs(EulerGamma._evalf(50) - 0.577215664901533) < 1e-10
     assert abs(GoldenRatio._evalf(50) - 1.61803398874989) < 1e-10
     x = Symbol("x")
-    assert (pi + x).evalf() == pi.evalf() +x
-    assert (E + x).evalf() == E.evalf() +x
-    assert (Catalan + x).evalf() == Catalan.evalf() +x
-    assert (EulerGamma + x).evalf() == EulerGamma.evalf() +x
-    assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() +x
+    assert (pi + x).evalf() == pi.evalf() + x
+    assert (E + x).evalf() == E.evalf() + x
+    assert (Catalan + x).evalf() == Catalan.evalf() + x
+    assert (EulerGamma + x).evalf() == EulerGamma.evalf() + x
+    assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() + x
 
 
 def test_conversion_to_mpmath():

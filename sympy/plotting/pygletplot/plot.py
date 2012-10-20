@@ -400,7 +400,7 @@ class ScreenShot:
         return 0
 
     def _execute_saving(self):
-        if self.flag <3:
+        if self.flag < 3:
             self.flag += 1
             return
 

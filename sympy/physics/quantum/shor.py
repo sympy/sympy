@@ -77,7 +77,7 @@ class CMod(Gate):
 
         # Place out in low memory
         for i in reversed(range(self.t)):
-            outarray.append((out>>i)&1)
+            outarray.append((out >> i)&1)
 
         return Qubit(*outarray)
 
@@ -92,7 +92,7 @@ def shor(N):
     be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
     These values are returned.
     """
-    a = random.randrange(N - 2) +2
+    a = random.randrange(N - 2) + 2
     if igcd(N, a) != 1:
         print "got lucky with rand"
         return igcd(N, a)
@@ -212,7 +212,7 @@ def period_find(a, N):
     answer = 0
     for i in range(len(register)/2):
         answer += n*register[i + t]
-        n = n<<1
+        n = n << 1
     if answer == 0:
         raise OrderFindingException(
             "Order finder returned 0. Happens with chance %f" % epsilon)

@@ -201,8 +201,8 @@ def test_determinant():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="bareis") == 2*x*y -y
-    assert M.det(method="berkowitz") == 2*x*y -y
+    assert M.det(method="bareis") == 2*x*y - y
+    assert M.det(method="berkowitz") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -284,7 +284,7 @@ def test_det_LU_decomposition():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="det_LU") == 2*x*y -y
+    assert M.det(method="det_LU") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),

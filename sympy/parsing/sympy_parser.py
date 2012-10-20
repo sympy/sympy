@@ -24,7 +24,7 @@ def _add_factorial_tokens(name, result):
 
     for index, token in enumerate(result[::-1]):
         toknum, tokval = token
-        i = length - index -1
+        i = length - index - 1
 
         if tokval == ')':
             diff += 1

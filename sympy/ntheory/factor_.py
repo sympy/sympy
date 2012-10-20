@@ -177,7 +177,7 @@ def trailing(n):
     t = 0
     p = 8
     while not n & 1:
-        while not n & ((1<<p) - 1):
+        while not n & ((1 << p) - 1):
             n >>= p
             t += p
             p *= 2

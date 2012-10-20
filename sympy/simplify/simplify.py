@@ -292,7 +292,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                 var, order = deriv
 
                 while order > 0:
-                    term, order = Derivative(term, var), order -1
+                    term, order = Derivative(term, var), order - 1
 
             if sym is None:
                 if rat is S.One:

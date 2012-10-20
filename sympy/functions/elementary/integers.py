@@ -122,7 +122,7 @@ class floor(RoundFunction):
             if direction.is_positive:
                 return r
             else:
-                return r -1
+                return r - 1
         else:
             return r
 

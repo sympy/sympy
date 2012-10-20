@@ -174,7 +174,7 @@ def dmp_fateman_poly_F_1(n, K):
     for i in xrange(0, n):
         v = [dmp_one(i, K), dmp_zero(i), v]
 
-    m = n -1
+    m = n - 1
 
     U = dmp_add_term(u, dmp_ground(K(1), m), 0, n, K)
     V = dmp_add_term(u, dmp_ground(K(2), m), 0, n, K)
@@ -217,7 +217,7 @@ def dmp_fateman_poly_F_2(n, K):
     for i in xrange(0, n - 1):
         u = [dmp_one(i, K), u]
 
-    m = n -1
+    m = n - 1
 
     v = dmp_add_term(u, dmp_ground(K(2), m - 1), 0, n, K)
 
