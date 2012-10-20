@@ -112,31 +112,31 @@ greek = dict([(l, (g(l), G(l))) for l in greek_letters])
 greek['lambda'] = greek['lamda']
 
 digit_2txt = {
-    '0' :   'ZERO',
-    '1' :   'ONE',
-    '2' :   'TWO',
-    '3' :   'THREE',
-    '4' :   'FOUR',
-    '5' :   'FIVE',
-    '6' :   'SIX',
-    '7' :   'SEVEN',
-    '8' :   'EIGHT',
-    '9' :   'NINE',
+    '0':   'ZERO',
+    '1':   'ONE',
+    '2':   'TWO',
+    '3':   'THREE',
+    '4':   'FOUR',
+    '5':   'FIVE',
+    '6':   'SIX',
+    '7':   'SEVEN',
+    '8':   'EIGHT',
+    '9':   'NINE',
 }
 
 symb_2txt = {
-    '+' :   'PLUS SIGN',
-    '-' :   'MINUS',
-    '=' :   'EQUALS SIGN',
-    '(' :   'LEFT PARENTHESIS',
-    ')' :   'RIGHT PARENTHESIS',
-    '[' :   'LEFT SQUARE BRACKET',
-    ']' :   'RIGHT SQUARE BRACKET',
-    '{' :   'LEFT CURLY BRACKET',
-    '}' :   'RIGHT CURLY BRACKET',
+    '+':   'PLUS SIGN',
+    '-':   'MINUS',
+    '=':   'EQUALS SIGN',
+    '(':   'LEFT PARENTHESIS',
+    ')':   'RIGHT PARENTHESIS',
+    '[':   'LEFT SQUARE BRACKET',
+    ']':   'RIGHT SQUARE BRACKET',
+    '{':   'LEFT CURLY BRACKET',
+    '}':   'RIGHT CURLY BRACKET',
 
     # non-std
-    '{}' :  'CURLY BRACKET',
+    '{}':  'CURLY BRACKET',
     'sum':  'SUMMATION',
     'int':  'INTEGRAL',
 }
@@ -188,13 +188,13 @@ _xobj_unicode = {
 
     # vertical symbols
     #          ext       top       bot        mid           c1
-    '(' :   (( EXT('('),  HUP('('), HLO('(') ),              '('),
-    ')' :   (( EXT(')'),  HUP(')'), HLO(')') ),              ')'),
-    '[' :   (( EXT('['),  CUP('['), CLO('[') ),              '['),
-    ']' :   (( EXT(']'),  CUP(']'), CLO(']') ),              ']'),
-    '{' :   (( EXT('{}'), HUP('{'), HLO('{'),  MID('{')  ),  '{'),
-    '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
-    '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
+    '(':   (( EXT('('),  HUP('('), HLO('(') ),              '('),
+    ')':   (( EXT(')'),  HUP(')'), HLO(')') ),              ')'),
+    '[':   (( EXT('['),  CUP('['), CLO('[') ),              '['),
+    ']':   (( EXT(']'),  CUP(']'), CLO(']') ),              ']'),
+    '{':   (( EXT('{}'), HUP('{'), HLO('{'),  MID('{')  ),  '{'),
+    '}':   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
+    '|':   U('BOX DRAWINGS LIGHT VERTICAL'),
 
     '<':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
              U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
@@ -204,10 +204,10 @@ _xobj_unicode = {
              U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
              U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
 
-    'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
-    'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
-    'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
-    'rceil'  : (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
+    'lfloor': (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
+    'rfloor': (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
+    'lceil': (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
+    'rceil': (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
 
     'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
     'sum':  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
@@ -215,46 +215,46 @@ _xobj_unicode = {
 
     # horizontal objects
     #'-' :  '-',
-    '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('LOW LINE'),
+    '-':   U('BOX DRAWINGS LIGHT HORIZONTAL'),
+    '_':   U('LOW LINE'),
     # We used to use this, but LOW LINE looks better for roots, as it's a
     # little lower (i.e., it lines up with the / perfectly.  But perhaps this
     # one would still be wanted for some cases?
     # '_' :   U('HORIZONTAL SCAN LINE-9'),
 
     # diagonal objects '\' & '/' ?
-    '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+    '/':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
     '\\':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
 }
 
 _xobj_ascii = {
     # vertical symbols
     #          ext  top   bot   mid         c1
-    '(' :   (( '|', '/',  '\\'  ),          '('),
-    ')' :   (( '|', '\\', '/'   ),          ')'),
+    '(':   (( '|', '/',  '\\'  ),          '('),
+    ')':   (( '|', '\\', '/'   ),          ')'),
 
 # XXX this looks ugly
 #   '[' :   (( '|', '-',  '-'   ),          '['),
 #   ']' :   (( '|', '-',  '-'   ),          ']'),
 # XXX not so ugly :(
-    '[' :   (( '[', '[',  '['   ),          '['),
-    ']' :   (( ']', ']',  ']'   ),          ']'),
+    '[':   (( '[', '[',  '['   ),          '['),
+    ']':   (( ']', ']',  ']'   ),          ']'),
 
-    '{' :   (( '|', '/',  '\\', '<' ),      '{'),
-    '}' :   (( '|', '\\', '/',  '>' ),      '}'),
-    '|' :   '|',
+    '{':   (( '|', '/',  '\\', '<' ),      '{'),
+    '}':   (( '|', '\\', '/',  '>' ),      '}'),
+    '|':   '|',
 
-    '<' :   (( '|', '/',  '\\'  ),          '<'),
-    '>' :   (( '|', '\\', '/'   ),          '>'),
+    '<':   (( '|', '/',  '\\'  ),          '<'),
+    '>':   (( '|', '\\', '/'   ),          '>'),
 
     'int':  ( ' | ', '  /', '/  ' ),
 
     # horizontal objects
-    '-' :   '-',
-    '_' :   '_',
+    '-':   '-',
+    '_':   '_',
 
     # diagonal objects '\' & '/' ?
-    '/' :   '/',
+    '/':   '/',
     '\\':   '\\',
 }
 
@@ -340,9 +340,9 @@ def hobj(symb, width):
 # RADICAL
 # n -> symbol
 root = {
-    2   :   U('SQUARE ROOT'),   # U('RADICAL SYMBOL BOTTOM')
-    3   :   U('CUBE ROOT'),
-    4   :   U('FOURTH ROOT'),
+    2:   U('SQUARE ROOT'),   # U('RADICAL SYMBOL BOTTOM')
+    3:   U('CUBE ROOT'),
+    4:   U('FOURTH ROOT'),
 }
 
 
@@ -351,39 +351,39 @@ VF  = lambda txt:   U('VULGAR FRACTION %s' % txt)
 
 # (p,q) -> symbol
 frac = {
-    (1,2)   :   VF('ONE HALF'),
-    (1,3)   :   VF('ONE THIRD'),
-    (2,3)   :   VF('TWO THIRDS'),
-    (1,4)   :   VF('ONE QUARTER'),
-    (3,4)   :   VF('THREE QUARTERS'),
-    (1,5)   :   VF('ONE FIFTH'),
-    (2,5)   :   VF('TWO FIFTHS'),
-    (3,5)   :   VF('THREE FIFTHS'),
-    (4,5)   :   VF('FOUR FIFTHS'),
-    (1,6)   :   VF('ONE SIXTH'),
-    (5,6)   :   VF('FIVE SIXTHS'),
-    (1,8)   :   VF('ONE EIGHTH'),
-    (3,8)   :   VF('THREE EIGHTHS'),
-    (5,8)   :   VF('FIVE EIGHTHS'),
-    (7,8)   :   VF('SEVEN EIGHTHS'),
+    (1,2):   VF('ONE HALF'),
+    (1,3):   VF('ONE THIRD'),
+    (2,3):   VF('TWO THIRDS'),
+    (1,4):   VF('ONE QUARTER'),
+    (3,4):   VF('THREE QUARTERS'),
+    (1,5):   VF('ONE FIFTH'),
+    (2,5):   VF('TWO FIFTHS'),
+    (3,5):   VF('THREE FIFTHS'),
+    (4,5):   VF('FOUR FIFTHS'),
+    (1,6):   VF('ONE SIXTH'),
+    (5,6):   VF('FIVE SIXTHS'),
+    (1,8):   VF('ONE EIGHTH'),
+    (3,8):   VF('THREE EIGHTHS'),
+    (5,8):   VF('FIVE EIGHTHS'),
+    (7,8):   VF('SEVEN EIGHTHS'),
 }
 
 
 # atom symbols
 _xsym = {
-    '=='    : ( '=',    '='),
-    '<'     : ( '<',    '<'),
-    '>'     : ( '>',    '>'),
-    '<='    : ('<=',    U('LESS-THAN OR EQUAL TO')),
-    '>='    : ('>=',    U('GREATER-THAN OR EQUAL TO')),
-    '!='    : ('!=',    U('NOT EQUAL TO')),
-    '*'     : ('*',     U('DOT OPERATOR')),
-    '-->'   : ('-->',   U('EM DASH') + U('EM DASH') +
+    '==': ( '=',    '='),
+    '<': ( '<',    '<'),
+    '>': ( '>',    '>'),
+    '<=': ('<=',    U('LESS-THAN OR EQUAL TO')),
+    '>=': ('>=',    U('GREATER-THAN OR EQUAL TO')),
+    '!=': ('!=',    U('NOT EQUAL TO')),
+    '*': ('*',     U('DOT OPERATOR')),
+    '-->': ('-->',   U('EM DASH') + U('EM DASH') +
                U('BLACK RIGHT-POINTING TRIANGLE')),
-    '==>'   : ('==>',   U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+    '==>': ('==>',   U('BOX DRAWINGS DOUBLE HORIZONTAL') +
                U('BOX DRAWINGS DOUBLE HORIZONTAL') +
                U('BLACK RIGHT-POINTING TRIANGLE')),
-    '.'     : ('*',     U('RING OPERATOR')),
+    '.': ('*',     U('RING OPERATOR')),
 }
 
 
@@ -401,19 +401,19 @@ def xsym(sym):
 
 atoms_table = {
     # class         how-to-display
-    'Exp1'              :   U('SCRIPT SMALL E'),
-    'Pi'                :   U('GREEK SMALL LETTER PI'),
-    'Infinity'          :   U('INFINITY'),
-    'NegativeInfinity'  :   U('INFINITY') and ('-'+U('INFINITY')),  # XXX what to do here
+    'Exp1':   U('SCRIPT SMALL E'),
+    'Pi':   U('GREEK SMALL LETTER PI'),
+    'Infinity':   U('INFINITY'),
+    'NegativeInfinity':   U('INFINITY') and ('-'+U('INFINITY')),  # XXX what to do here
     #'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
-    'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
-    'EmptySet'          :   U('EMPTY SET'),
-    'Naturals'          :   U('DOUBLE-STRUCK CAPITAL N'),
-    'Integers'          :   U('DOUBLE-STRUCK CAPITAL Z'),
-    'Reals'             :   U('DOUBLE-STRUCK CAPITAL R'),
-    'Union'             :   U('UNION'),
-    'Intersection'      :   U('INTERSECTION')
+    'ImaginaryUnit':   U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'EmptySet':   U('EMPTY SET'),
+    'Naturals':   U('DOUBLE-STRUCK CAPITAL N'),
+    'Integers':   U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals':   U('DOUBLE-STRUCK CAPITAL R'),
+    'Union':   U('UNION'),
+    'Intersection':   U('INTERSECTION')
 }
 
 def pretty_atom(atom_name, default=None):

@@ -410,7 +410,7 @@ def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
     assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
                        '1\\end{smallmatrix}\\right]'
-    settings = {'mat_str' : 'bmatrix'}
+    settings = {'mat_str': 'bmatrix'}
     assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &'\
            ' x -1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
