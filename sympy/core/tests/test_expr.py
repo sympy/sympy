@@ -137,8 +137,8 @@ def test_basic():
         x = a
         x = +a
         x = -a
-        x = a +b
-        x = a -b
+        x = a + b
+        x = a - b
         x = a*b
         x = a/b
         x = a**b
@@ -398,7 +398,7 @@ def test_SAGE3():
 def test_len():
     e = x*y
     assert len(e.args) == 2
-    e = x + y +z
+    e = x + y + z
     assert len(e.args) == 3
 
 
@@ -548,7 +548,7 @@ def test_call():
 
     # Effect in the pressence of callables
     l = Lambda(x, 2*x)
-    assert (l + x)(y) == 2*y +x
+    assert (l + x)(y) == 2*y + x
     assert (x**l)(2) == x**4
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')

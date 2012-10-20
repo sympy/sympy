@@ -499,7 +499,7 @@ def _check_varsh_871_1(term_list):
     expr = lt*CG(a, alpha, b, 0, a, alpha)
     simp = (2*a + 1)*KroneckerDelta(b, 0)
     sign = lt/abs(lt)
-    build_expr = 2*a +1
+    build_expr = 2*a + 1
     index_expr = a + alpha
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, lt), (a, b), build_expr, index_expr)
 
@@ -510,7 +510,7 @@ def _check_varsh_871_2(term_list):
     expr = lt*CG(a, alpha, a, -alpha, c, 0)
     simp = sqrt(2*a + 1)*KroneckerDelta(c, 0)
     sign = (-1)**(a - alpha)*lt/abs(lt)
-    build_expr = 2*a +1
+    build_expr = 2*a + 1
     index_expr = a + alpha
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, c, lt), (a, c), build_expr, index_expr)
 
@@ -527,13 +527,13 @@ def _check_varsh_872_9(term_list):
     sign = lt/abs(lt)
     x = abs(a - b)
     y = abs(alpha + beta)
-    build_expr = a + b + 1 - Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
-    index_expr = a + b -c
+    build_expr = a + b + 1 - Piecewise((x, x > y), (0, Eq(x, y)), (y, y > x))
+    index_expr = a + b - c
     term_list, other1 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
 
     # For symbolic alpha,beta
     x = abs(a - b)
-    y = a +b
+    y = a + b
     build_expr = (y + 1 - x)*(x + y + 1)
     index_expr = (c - x)*(x + c) + c + gamma
     term_list, other2 = _check_cg_simp(expr, simp, sign, lt, term_list, (a, alpha, b, beta, c, gamma, lt), (a, alpha, b, beta), build_expr, index_expr)
@@ -546,13 +546,13 @@ def _check_varsh_872_9(term_list):
     sign = sympify(1)
     x = abs(a - b)
     y = abs(alpha + beta)
-    build_expr = a + b + 1 - Piecewise((x, x>y), (0, Eq(x, y)), (y, y>x))
-    index_expr = a + b -c
+    build_expr = a + b + 1 - Piecewise((x, x > y), (0, Eq(x, y)), (y, y > x))
+    index_expr = a + b - c
     term_list, other3 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)
 
     # For symbolic alpha,alphap,beta,betap
     x = abs(a - b)
-    y = a +b
+    y = a + b
     build_expr = (y + 1 - x)*(x + y + 1)
     index_expr = (c - x)*(x + c) + c + gamma
     term_list, other4 = _check_cg_simp(expr, simp, sign, sympify(1), term_list, (a, alpha, alphap, b, beta, betap, c, gamma), (a, alpha, alphap, b, beta, betap), build_expr, index_expr)

@@ -358,9 +358,9 @@ def test_issue2300():
         # every symbol is followed by symbol or int
         # every number is followed by a symbol
         return (all(a[i + 1].is_Symbol or a[i + 1].is_Integer
-            for i in s_at if i + 1<len(a)) and
+            for i in s_at if i + 1 < len(a)) and
             all(a[i + 1].is_Symbol
-            for i in n_at if i + 1<len(a)))
+            for i in n_at if i + 1 < len(a)))
     eq = x**10*y**8
     for a in subsets(args):
         for v in variations(a, len(a)):

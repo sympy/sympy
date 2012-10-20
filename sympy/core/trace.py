@@ -136,7 +136,7 @@ class Tr(Expr):
                 obj = Expr.__new__(cls, Mul(*nc_part), indices )
                 #this check is needed to prevent cached instances
                 #being returned even if len(c_part)==0
-                return Mul(*c_part)*obj if len(c_part)>0 else obj
+                return Mul(*c_part)*obj if len(c_part) > 0 else obj
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
                     _is_scalar(expr.args[1])):

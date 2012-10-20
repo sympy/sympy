@@ -105,7 +105,7 @@ def test_trigsimp1():
     assert trigsimp(cos(x + y) + cos(x - y)) == 2*cos(x)*cos(y)
     assert trigsimp(cos(x + y) - cos(x - y)) == -2*sin(x)*sin(y)
     assert ratsimp(trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y)))) == \
-        -tan(y)/(tan(x)*tan(y) -1)
+        -tan(y)/(tan(x)*tan(y) - 1)
 
     assert trigsimp(sinh(x + y) + sinh(x - y)) == 2*sinh(x)*cosh(y)
     assert trigsimp(sinh(x + y) - sinh(x - y)) == 2*sinh(y)*cosh(x)

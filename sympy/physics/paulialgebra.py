@@ -120,9 +120,9 @@ class Pauli(Symbol):
             j = self.i
             k = other.i
             return delta(j, k) \
-                +I*epsilon(j, k, 1)*Pauli(1) \
-                +I*epsilon(j, k, 2)*Pauli(2) \
-                +I*epsilon(j, k, 3)*Pauli(3)
+                + I*epsilon(j, k, 1)*Pauli(1) \
+                + I*epsilon(j, k, 2)*Pauli(2) \
+                + I*epsilon(j, k, 3)*Pauli(3)
         return super(Pauli, self).__mul__(other)
 
     def _eval_power(b, e):

@@ -369,7 +369,7 @@ def dup_inner_subresultants(f, g, K):
         c = K.quo((-lc)**d, q)
         b = -lc * c**(m - k)
 
-        f, g, m, d = g, h, k, m -k
+        f, g, m, d = g, h, k, m - k
 
         B.append(b)
         D.append(d)
@@ -439,7 +439,7 @@ def dup_prs_resultant(f, g, K):
         if du % 2 and dv % 2:
             s = -s
 
-        lc, i = dup_LC(R[i], K), i +1
+        lc, i = dup_LC(R[i], K), i + 1
 
         p *= b**dv * lc**(du - dw)
         q *= lc**(dv*(1 + d))
@@ -542,7 +542,7 @@ def dmp_inner_subresultants(f, g, u, K):
         b = dmp_mul(dmp_neg(lc, v, K),
                     dmp_pow(c, m - k, v, K), v, K)
 
-        f, g, m, d = g, h, k, m -k
+        f, g, m, d = g, h, k, m - k
 
         B.append(b)
         D.append(d)
@@ -611,7 +611,7 @@ def dmp_prs_resultant(f, g, u, K):
     if dmp_one_p(R[-2], u, K):
         return (dmp_LC(R[-1], K), R)
 
-    s, i, v = 1, 1, u -1
+    s, i, v = 1, 1, u - 1
 
     p = dmp_one(v, K)
     q = dmp_one(v, K)
@@ -624,7 +624,7 @@ def dmp_prs_resultant(f, g, u, K):
         if du % 2 and dv % 2:
             s = -s
 
-        lc, i = dmp_LC(R[i], K), i +1
+        lc, i = dmp_LC(R[i], K), i + 1
 
         p = dmp_mul(dmp_mul(p, dmp_pow(b, dv, v, K), v, K),
                                dmp_pow(lc, du - dw, v, K), v, K)
@@ -901,7 +901,7 @@ def dmp_discriminant(f, u, K):
     if not u:
         return dup_discriminant(f, K)
 
-    d, v = dmp_degree(f, u), u -1
+    d, v = dmp_degree(f, u), u - 1
 
     if d <= 0:
         return dmp_zero(v)
@@ -1846,7 +1846,7 @@ def dmp_content(f, u, K):
     [2, 6]
 
     """
-    cont, v = dmp_LC(f, K), u -1
+    cont, v = dmp_LC(f, K), u - 1
 
     if dmp_zero_p(f, u):
         return cont
@@ -1880,7 +1880,7 @@ def dmp_primitive(f, u, K):
     ([2, 6], [[1], [2]])
 
     """
-    cont, v = dmp_content(f, u, K), u -1
+    cont, v = dmp_content(f, u, K), u - 1
 
     if dmp_zero_p(f, u) or dmp_one_p(cont, v, K):
         return cont, f

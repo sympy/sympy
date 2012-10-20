@@ -217,9 +217,9 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end
-    assert compiled, "failed to compile %s code with:\n%s" %(
+    assert compiled, "failed to compile %s code with:\n%s" % (
         language, "\n".join(commands))
-    assert executed, "failed to execute %s code from:\n%s" %(
+    assert executed, "failed to execute %s code from:\n%s" % (
         language, "\n".join(commands))
 
 

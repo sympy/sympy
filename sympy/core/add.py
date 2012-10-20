@@ -85,7 +85,7 @@ class Add(AssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o] +[
+                order_factors = [o] + [
                     o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 

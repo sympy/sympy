@@ -165,7 +165,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
 
     f, g = dup_shift(f, K.one, K), f
 
-    a1, b1, c1, d1 = a, a + b, c, c +d
+    a1, b1, c1, d1 = a, a + b, c, c + d
 
     if not dup_eval(f, K.zero, K):
         return f, (b1, b1, d1, d1)
@@ -180,7 +180,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
         if not dup_eval(f, K.zero, K):
             f = dup_rshift(f, 1, K)
 
-        a, b, c, d = b, a + b, d, c +d
+        a, b, c, d = b, a + b, d, c + d
 
     return f, (a, b, c, d)
 
@@ -338,7 +338,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
             k1 = dup_sign_variations(f1, K)
             k2 = k - k1 - r
 
-            a2, b2, c2, d2 = b, a + b, d, c +d
+            a2, b2, c2, d2 = b, a + b, d, c + d
 
             if k2 > 1:
                 f2 = dup_shift(dup_reverse(f), K.one, K)
@@ -1148,7 +1148,7 @@ def _traverse_quadrants(Q_L1, Q_L2, Q_L3, Q_L4, exclude=None):
         q1, k = Q[0], 1
 
         while k < len(Q):
-            q2, k = Q[k], k +1
+            q2, k = Q[k], k + 1
 
             if q2 != OO:
                 qq = (q1, q2)
@@ -1161,7 +1161,7 @@ def _traverse_quadrants(Q_L1, Q_L2, Q_L3, Q_L4, exclude=None):
                     raise NotImplementedError(
                         "2 element rule (inside): " + str(qq))
             else:
-                qq, k = (q1, q2, Q[k]), k +1
+                qq, k = (q1, q2, Q[k]), k + 1
 
                 if qq in _rules_ambiguous:
                     rules.append((_rules_ambiguous[qq], edges[i]))

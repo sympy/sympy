@@ -1358,9 +1358,9 @@ class TriangularPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (2*(x - a)/((b - a)*(c - a)), And(a <= x, x<c)),
+                (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
                 (2/(b - a), Eq(x, c)),
-                (2*(b - x)/((b - a)*(b - c)), And(c<x, x <= b)),
+                (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
                 (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)

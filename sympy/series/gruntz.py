@@ -160,9 +160,9 @@ def tree(subtrees):
             if a == "":
                 continue
             if type == 1:
-                r += "| %s\n" %a
+                r += "| %s\n" % a
             else:
-                r += "  %s\n" %a
+                r += "  %s\n" % a
         return r
     if len(subtrees) == 0:
         return ""
@@ -458,7 +458,7 @@ def sign(e, x):
         if e.exp.is_Integer:
             return s**e.exp
     elif e.func is log:
-        return sign(e.args[0] -1, x)
+        return sign(e.args[0] - 1, x)
 
     # if all else fails, do it the hard way
     c0, e0 = mrv_leadterm(e, x)

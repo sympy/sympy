@@ -347,7 +347,7 @@ class OuterProduct(Operator):
     def _latex(self, printer, *args):
         k = printer._print(self.ket, *args)
         b = printer._print(self.bra, *args)
-        return k +b
+        return k + b
 
     def _represent(self, **options):
         k = self.ket._represent(**options)

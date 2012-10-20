@@ -446,7 +446,7 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 2])
     b = AlgebraicNumber(sqrt(2), [1, 3])
 
-    assert a != b and a != sqrt(2) +3
+    assert a != b and a != sqrt(2) + 3
 
     assert (a == x) is False and (a != x) is True
 
@@ -471,10 +471,10 @@ def test_AlgebraicNumber():
     assert a.as_poly(x) == Poly(2*x + 3)
     assert b.as_poly() == Poly(2*y + 3)
 
-    assert a.as_expr() == 2*sqrt(2) +3
-    assert a.as_expr(x) == 2*x +3
-    assert b.as_expr() == 2*sqrt(2) +3
-    assert b.as_expr(x) == 2*x +3
+    assert a.as_expr() == 2*sqrt(2) + 3
+    assert a.as_expr(x) == 2*x + 3
+    assert b.as_expr() == 2*sqrt(2) + 3
+    assert b.as_expr(x) == 2*x + 3
 
     a = AlgebraicNumber(sqrt(2))
     b = to_number_field(sqrt(2))

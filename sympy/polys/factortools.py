@@ -87,7 +87,7 @@ def dup_trial_division(f, factors, K):
             q, r = dup_div(f, factor, K)
 
             if not r:
-                f, k = q, k +1
+                f, k = q, k + 1
             else:
                 break
 
@@ -108,7 +108,7 @@ def dmp_trial_division(f, factors, u, K):
             q, r = dmp_div(f, factor, u, K)
 
             if dmp_zero_p(r, u):
-                f, k = q, k +1
+                f, k = q, k + 1
             else:
                 break
 
@@ -596,7 +596,7 @@ def dup_zz_factor(f, K):
             q, r = dup_div(f, h, K)
 
             if not r:
-                f, k = q, k +1
+                f, k = q, k + 1
             else:
                 break
 
@@ -641,7 +641,7 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     if K.is_negative(dup_LC(h, K)):
         c, h = -c, dup_neg(h, K)
 
-    v = u -1
+    v = u - 1
 
     E = [ dmp_eval_tail(t, A, v, K) for t, _ in T ]
     D = dmp_zz_wang_non_divisors(E, c, ct, K)
@@ -655,7 +655,7 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
 @cythonized("u,v,i,j,k")
 def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
     """Wang/EEZ: Compute correct leading coefficients. """
-    C, J, v = [], [0]*len(E), u -1
+    C, J, v = [], [0]*len(E), u - 1
 
     for h in H:
         c = dmp_one(v, K)
@@ -665,7 +665,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
             k, e, (t, _) = 0, E[i], T[i]
 
             while not (d % e):
-                d, k = d//e, k +1
+                d, k = d//e, k + 1
 
             if k != 0:
                 c, J[i] = dmp_mul(c, dmp_pow(t, k, v, K), v, K), 1
@@ -828,7 +828,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
 @cythonized("u,v,d,dj,n,i,j,k,w")
 def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     """Wang/EEZ: Parallel Hensel lifting algorithm. """
-    S, n, v = [f], len(A), u -1
+    S, n, v = [f], len(A), u - 1
 
     H = list(H)
 
@@ -839,7 +839,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     d = max(dmp_degree_list(f, u)[1:])
 
     for j, s, a in zip(xrange(2, n + 2), S, A):
-        G, w = list(H), j -1
+        G, w = list(H), j - 1
 
         I, J = A[:j - 2], A[j - 1:]
 
@@ -1087,7 +1087,7 @@ def dmp_zz_factor(f, u, K):
                 q, r = dmp_div(f, h, u, K)
 
                 if dmp_zero_p(r, u):
-                    f, k = q, k +1
+                    f, k = q, k + 1
                 else:
                     break
 

@@ -4,7 +4,7 @@ from sympy import Symbol, Dummy, Rational, exp
 def test_equal():
     b = Symbol("b")
     a = Symbol("a")
-    e1 = a +b
+    e1 = a + b
     e2 = 2*a*b
     e3 = a**3*b**2
     e4 = a*b + b*a
@@ -26,12 +26,12 @@ def test_equal():
     assert not e1 == e2
     assert e1 != e2
 
-    e5 = Rational(3) + 2*x - x -x
+    e5 = Rational(3) + 2*x - x - x
     assert e5 == 3
     assert 3 == e5
     assert e5 != 4
     assert 4 != e5
-    assert e5 != 3 +x
+    assert e5 != 3 + x
     assert 3 + x != e5
 
 

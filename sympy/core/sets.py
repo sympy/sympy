@@ -1226,7 +1226,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         if not all(elem.is_number for elem in self):
             raise ValueError("%s: Complement not defined for symbolic inputs"
-                    %self)
+                    % self)
 
         # as there are only numbers involved, a straight sort is sufficient;
         # default_sort_key is not needed

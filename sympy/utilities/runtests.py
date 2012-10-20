@@ -1522,7 +1522,7 @@ class PyTestReporter(Reporter):
         if l == -1:
             self._write_pos += len(text)
         else:
-            self._write_pos = len(text) - l -1
+            self._write_pos = len(text) - l - 1
         self._line_wrap = self._write_pos >= width
         self._write_pos %= width
 

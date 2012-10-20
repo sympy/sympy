@@ -154,7 +154,7 @@ class Gate(UnitaryOperator):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.targets) +1
+        return max(self.targets) + 1
 
     @property
     def targets(self):
@@ -211,7 +211,7 @@ class Gate(UnitaryOperator):
         n = 1
         for target in targets:
             column_index += n*qubits[target]
-            n = n<<1
+            n = n << 1
         column = target_matrix[:, int(column_index)]
 
         # Now apply each column element to the qubit.
@@ -224,7 +224,7 @@ class Gate(UnitaryOperator):
             new_qubit = qubits.__class__(*qubits.args)
             # Flip the bits that need to be flipped.
             for bit in range(len(targets)):
-                if new_qubit[targets[bit]] != (index>>bit)&1:
+                if new_qubit[targets[bit]] != (index >> bit)&1:
                     new_qubit = new_qubit.flip(targets[bit])
             # The value in that row and column times the flipped-bit qubit
             # is the result for that part.
@@ -344,7 +344,7 @@ class CGate(Gate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(max(self.controls), max(self.targets)) +1
+        return max(max(self.controls), max(self.targets)) + 1
 
     @property
     def targets(self):
@@ -852,7 +852,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.label) +1
+        return max(self.label) + 1
 
     @property
     def targets(self):

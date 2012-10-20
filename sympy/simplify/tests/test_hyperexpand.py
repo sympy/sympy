@@ -523,7 +523,7 @@ def test_meijerg_confluence():
     assert t(meijerg(
         [], [3, 1], [0, 0], [], z), -z**2/4 + z - log(z)/2 - S(3)/4, 0)
     assert t(meijerg([], [3, 1], [-1, 0], [], z),
-             z**2/12 -z/2 + log(z)/2 + S(1)/4 + 1/(6*z), 0)
+             z**2/12 - z/2 + log(z)/2 + S(1)/4 + 1/(6*z), 0)
     assert t(meijerg([], [1, 1, 1, 1], [0, 0, 0, 0], [], z), -log(z)**3/6, 0)
     assert t(meijerg([1, 1], [], [], [0, 0], z), 0, -log(1/z))
     assert t(meijerg([1, 1], [2, 2], [1, 1], [0, 0], z),

@@ -15,9 +15,9 @@ def test_cg_simp_add():
     assert cg_simp(a + b) == 2
     assert cg_simp(c + d + e) == 3
     assert cg_simp(a + b + c + d + e) == 5
-    assert cg_simp(a + b + c) == 2 +c
-    assert cg_simp(2*a + b) == 2 +a
-    assert cg_simp(2*c + d + e) == 3 +c
+    assert cg_simp(a + b + c) == 2 + c
+    assert cg_simp(2*a + b) == 2 + a
+    assert cg_simp(2*c + d + e) == 3 + c
     assert cg_simp(5*a + 5*b) == 10
     assert cg_simp(5*c + 5*d + 5*e) == 15
     assert cg_simp(-a - b) == -2
@@ -32,9 +32,9 @@ def test_cg_simp_add():
     assert cg_simp(a + b) == 2*KroneckerDelta(j, 0)
     assert cg_simp(c + d + e) == 3*KroneckerDelta(j, 0)
     assert cg_simp(a + b + c + d + e) == 5*KroneckerDelta(j, 0)
-    assert cg_simp(a + b + c) == 2*KroneckerDelta(j, 0) +c
-    assert cg_simp(2*a + b) == 2*KroneckerDelta(j, 0) +a
-    assert cg_simp(2*c + d + e) == 3*KroneckerDelta(j, 0) +c
+    assert cg_simp(a + b + c) == 2*KroneckerDelta(j, 0) + c
+    assert cg_simp(2*a + b) == 2*KroneckerDelta(j, 0) + a
+    assert cg_simp(2*c + d + e) == 3*KroneckerDelta(j, 0) + c
     assert cg_simp(5*a + 5*b) == 10*KroneckerDelta(j, 0)
     assert cg_simp(5*c + 5*d + 5*e) == 15*KroneckerDelta(j, 0)
     assert cg_simp(-a - b) == -2*KroneckerDelta(j, 0)
@@ -50,9 +50,9 @@ def test_cg_simp_add():
     assert cg_simp(a - b) == sqrt(2)
     assert cg_simp(c - d + e) == sqrt(3)
     assert cg_simp(a - b + c - d + e) == sqrt(2) + sqrt(3)
-    assert cg_simp(a - b + c) == sqrt(2) +c
-    assert cg_simp(2*a - b) == sqrt(2) +a
-    assert cg_simp(2*c - d + e) == sqrt(3) +c
+    assert cg_simp(a - b + c) == sqrt(2) + c
+    assert cg_simp(2*a - b) == sqrt(2) + a
+    assert cg_simp(2*c - d + e) == sqrt(3) + c
     assert cg_simp(5*a - 5*b) == 5*sqrt(2)
     assert cg_simp(5*c - 5*d + 5*e) == 5*sqrt(3)
     assert cg_simp(-a + b) == -sqrt(2)
@@ -68,9 +68,9 @@ def test_cg_simp_add():
     assert cg_simp(c - d + e) == sqrt(3)*KroneckerDelta(j, 0)
     assert cg_simp(a - b + c - d + e) == sqrt(
         2)*KroneckerDelta(j, 0) + sqrt(3)*KroneckerDelta(j, 0)
-    assert cg_simp(a - b + c) == sqrt(2)*KroneckerDelta(j, 0) +c
-    assert cg_simp(2*a - b) == sqrt(2)*KroneckerDelta(j, 0) +a
-    assert cg_simp(2*c - d + e) == sqrt(3)*KroneckerDelta(j, 0) +c
+    assert cg_simp(a - b + c) == sqrt(2)*KroneckerDelta(j, 0) + c
+    assert cg_simp(2*a - b) == sqrt(2)*KroneckerDelta(j, 0) + a
+    assert cg_simp(2*c - d + e) == sqrt(3)*KroneckerDelta(j, 0) + c
     assert cg_simp(5*a - 5*b) == 5*sqrt(2)*KroneckerDelta(j, 0)
     assert cg_simp(5*c - 5*d + 5*e) == 5*sqrt(3)*KroneckerDelta(j, 0)
     assert cg_simp(-a + b) == -sqrt(2)*KroneckerDelta(j, 0)
@@ -100,7 +100,7 @@ def test_cg_simp_add():
     d = CG(S(1)/2, m1, S(1)/2, m2, 0, 0)**2
     assert cg_simp(a + b + c + d) == 1
     assert cg_simp(4*a + 4*b + 4*c + 4*d) == 4
-    assert cg_simp(3*a + 5*b + 3*c + 4*d) == 3 + 2*b +d
+    assert cg_simp(3*a + 5*b + 3*c + 4*d) == 3 + 2*b + d
     assert cg_simp(-a - b - c - d) == -1
     a = CG(1, m1, 1, m2, 2, 2)**2
     b = CG(1, m1, 1, m2, 2, 1)**2

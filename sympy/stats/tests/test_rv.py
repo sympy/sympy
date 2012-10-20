@@ -14,11 +14,11 @@ def test_where():
     assert where(Z**2 <= 1).set == Interval(-1, 1)
     assert where(
         Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
-    assert where(And(X>Y, Y>4)).as_boolean() == And(
+    assert where(And(X > Y, Y > 4)).as_boolean() == And(
             Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
-    assert len(where(X<3).set) == 2
-    assert 1 in where(X<3).set
+    assert len(where(X < 3).set) == 2
+    assert 1 in where(X < 3).set
 
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
@@ -56,7 +56,7 @@ def test_rs_swap():
     XX = Normal('x', 0, 2)
     YY = Normal('y', 0, 3)
 
-    expr = 2*X +Y
+    expr = 2*X + Y
     assert expr.subs(rs_swap((X, Y), (YY, XX))) == 2*XX + YY
 
 
@@ -74,7 +74,7 @@ def test_overlap():
     X = Normal('x', 0, 1)
     Y = Normal('x', 0, 2)
 
-    raises(ValueError, lambda: P(X>Y))
+    raises(ValueError, lambda: P(X > Y))
 
 
 def test_ProductPSpace():
@@ -98,24 +98,24 @@ def test_Sample():
     assert sample(X) in [1, 2, 3, 4, 5, 6]
     assert sample(X + Y).is_Float
 
-    P(X + Y>0, Y<0, numsamples=10).is_number
+    P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
     assert variance(X + Y, numsamples=10).is_number
 
-    raises(ValueError, lambda: P(Y>z, numsamples=5))
+    raises(ValueError, lambda: P(Y > z, numsamples=5))
 
     assert P(sin(Y) <= 1, numsamples=10) == 1
-    assert P(sin(Y) <= 1, cos(Y)<1, numsamples=10) == 1
+    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
 
     # Make sure this doesn't raise an error
-    E(Sum(1/z**Y, (z, 1, oo)), Y>2, numsamples=3)
+    E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
 
 
 def test_given():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
     A = given(X, True)
-    B = given(X, Y>2)
+    B = given(X, Y > 2)
 
     assert X == A == B
 
@@ -141,7 +141,7 @@ def test_dependent_finite():
     # finite random variables
     assert dependent(X, Y + X)
 
-    XX, YY = given(Tuple(X, Y), X + Y>5)  # Create a dependency
+    XX, YY = given(Tuple(X, Y), X + Y > 5)  # Create a dependency
     assert dependent(XX, YY)
 
 

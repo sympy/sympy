@@ -30,7 +30,7 @@ def bench_R2():
 
 def bench_R3():
     "a = [bool(f==f) for _ in range(10)]"
-    f = x + y +z
+    f = x + y + z
     a = [bool(f == f) for _ in range(10)]
 
 
@@ -130,5 +130,5 @@ if __name__ == '__main__':
     for b in benchmarks:
         t = clock()
         b()
-        t = clock() -t
+        t = clock() - t
         print "%s%65s: %f" % (b.__name__, b.__doc__, t)
