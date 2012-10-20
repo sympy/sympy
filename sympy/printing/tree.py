@@ -28,7 +28,7 @@ def pprint_nodes(subtrees):
         return r
     if len(subtrees)==0:
         return ""
-    f="";
+    f=""
     for a in subtrees[:-1]:
         f += indent(a)
     f += indent(subtrees[-1], 2)

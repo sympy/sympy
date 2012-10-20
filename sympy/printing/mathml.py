@@ -124,7 +124,7 @@ class MathMLPrinter(Printer):
                 x.appendChild(lastProcessed)
                 x.appendChild(self._print(-arg))
                 #invert expression since this is now minused
-                lastProcessed = x;
+                lastProcessed = x
                 if(arg == args[-1]):
                     plusNodes.append(lastProcessed)
             else:
