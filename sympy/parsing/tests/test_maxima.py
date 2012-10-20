@@ -24,22 +24,20 @@ def test_maxima_functions():
     assert parse_maxima('expand( (x+1)^2)') == x**2 + 2*x + 1
     assert parse_maxima('factor( x**2 + 2*x + 1)') == (x + 1)**2
     assert parse_maxima('trigsimp(2*cos(x)^2 + sin(x)^2)') == 2 - sin(x)**2
-    assert parse_maxima('trigexpand(sin(2*x)+cos(2*x))') == (
-        -1) + 2*cos(x)**2 + 2*cos(x)*sin(x)
+    assert parse_maxima('trigexpand(sin(2*x)+cos(2*x))') == \
+        -1 + 2*cos(x)**2 + 2*cos(x)*sin(x)
     assert parse_maxima('solve(x^2-4,x)') == [-2, 2]
     assert parse_maxima('limit((1+1/x)^x,x,inf)') == E
     assert parse_maxima('limit(sqrt(-x)/x,x,0,minus)') == -oo
     assert parse_maxima('diff(x^x, x)') == x**x*(1 + log(x))
     assert parse_maxima('sum(k, k, 1, n)', name_dict=dict(
-                n=Symbol('n', integer=True),
-                k=Symbol('k', integer=True)
-                )) == (n**2 + n)/2
-    assert parse_maxima('product(k, k, 1, n)',
-            name_dict=dict(
-                n=Symbol('n', integer=True),
-                k=Symbol('k', integer=True)
-                )
-            ) == factorial(n)
+        n=Symbol('n', integer=True),
+        k=Symbol('k', integer=True)
+    )) == (n**2 + n)/2
+    assert parse_maxima('product(k, k, 1, n)', name_dict=dict(
+        n=Symbol('n', integer=True),
+        k=Symbol('k', integer=True)
+    )) == factorial(n)
     assert parse_maxima('ratsimp((x^2-1)/(x+1))') == x - 1
     assert Abs( parse_maxima(
         'float(sec(%pi/3) + csc(%pi/3))') - 3.154700538379252) < 10**(-5)
