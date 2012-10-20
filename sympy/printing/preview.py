@@ -133,7 +133,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         command = {
             "ps": "dvips -o %s.ps %s.dvi",
             "pdf": "dvipdf %s.dvi %s.pdf",
-            "png": "dvipng -T tight -z 9 " + \
+            "png": "dvipng -T tight -z 9 " +
                     "--truecolor -o %s.png %s.dvi",
         }
 
