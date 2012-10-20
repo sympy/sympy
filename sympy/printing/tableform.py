@@ -281,8 +281,8 @@ class TableForm(object):
 
         def _align(align, w):
             return '%%%s%ss' % (
-                    ("-" if align == "l" else ""),
-                    str(w))
+                ("-" if align == "l" else ""),
+                str(w))
         format_str = [_align(align, w) for align, w in
                       zip(self._alignments, column_widths)]
         if self._headings[0]:

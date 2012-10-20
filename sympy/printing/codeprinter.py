@@ -59,7 +59,7 @@ class CodePrinter(StrPrinter):
                         # contractions, those must be computed first.
                         # (temporary variables?)
                         raise NotImplementedError(
-                                "FIXME: no support for contractions in factor yet")
+                            "FIXME: no support for contractions in factor yet")
                     else:
 
                         # We need the lhs expression as an accumulator for

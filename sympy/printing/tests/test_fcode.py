@@ -33,9 +33,9 @@ def test_fcode_Pow():
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
     assert fcode(x**-1.0) == '      1.0/x'
     assert fcode(x**-2.0,
-                 assign_to = 'y',
-                 source_format = 'free',
-                 human = True) == 'y = x**(-2.0d0)'  #2823
+                 assign_to='y',
+                 source_format='free',
+                 human=True) == 'y = x**(-2.0d0)'  # 2823
 
 
 def test_fcode_Rational():
@@ -132,17 +132,17 @@ def test_inline_function():
     assert fcode(g(x)) == "      2*x"
     g = implemented_function('g', Lambda(x, 2*pi/x))
     assert fcode(g(x)) == (
-            "      parameter (pi = 3.14159265358979d0)\n"
-            "      2*pi/x"
-            )
+        "      parameter (pi = 3.14159265358979d0)\n"
+        "      2*pi/x"
+    )
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
-            "      do i = 1, n\n"
-            "         A(i) = (1 + A(i))*(2 + A(i))*A(i)\n"
-            "      end do"
-            )
+        "      do i = 1, n\n"
+        "         A(i) = (1 + A(i))*(2 + A(i))*A(i)\n"
+        "      end do"
+    )
 
 
 def test_assign_to():
@@ -291,7 +291,7 @@ def test_wrap_fortran_keep_d0():
         '      this_variable_is_very_long_because_we_try_to_test_line_break   = 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break    = 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break = 10.0d0'
-        ]
+    ]
     expected = [
         '      this_variable_is_very_long_because_we_try_to_test_line_break=1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break =',
@@ -304,7 +304,7 @@ def test_wrap_fortran_keep_d0():
         '     @ 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break =',
         '     @ 10.0d0'
-        ]
+    ]
     assert printer._wrap_fortran(lines) == expected
 
 
@@ -346,15 +346,15 @@ def test_loops():
     j = Idx('j', n)
 
     expected = (
-            'do i = 1, m\n'
-            '   y(i) = 0\n'
-            'end do\n'
-            'do i = 1, m\n'
-            '   do j = 1, n\n'
-            '      y(i) = %(rhs)s\n'
-            '   end do\n'
-            'end do'
-            )
+        'do i = 1, m\n'
+        '   y(i) = 0\n'
+        'end do\n'
+        'do i = 1, m\n'
+        '   do j = 1, n\n'
+        '      y(i) = %(rhs)s\n'
+        '   end do\n'
+        'end do'
+    )
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
@@ -371,10 +371,10 @@ def test_dummy_loops():
     i = Idx(i, m)
 
     expected = (
-            'do i_%(icount)i = 1, m_%(mcount)i\n'
-            '   y(i_%(icount)i) = x(i_%(icount)i)\n'
-            'end do'
-            ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+        'do i_%(icount)i = 1, m_%(mcount)i\n'
+        '   y(i_%(icount)i) = x(i_%(icount)i)\n'
+        'end do'
+    ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
 
@@ -391,63 +391,63 @@ def test_derived_classes():
 
 def test_indent():
     codelines = (
-            'subroutine test(a)\n'
-            'integer :: a, i, j\n'
-            '\n'
-            'do\n'
-            'do \n'
-            'do j = 1, 5\n'
-            'if (a>b) then\n'
-            'if(b>0) then\n'
-            'a = 3\n'
-            'donot_indent_me = 2\n'
-            'do_not_indent_me_either = 2\n'
-            'ifIam_indented_something_went_wrong = 2\n'
-            'if_I_am_indented_something_went_wrong = 2\n'
-            'end should not be unindented here\n'
-            'end if\n'
-            'endif\n'
-            'end do\n'
-            'end do\n'
-            'enddo\n'
-            'end subroutine\n'
-            '\n'
-            'subroutine test2(a)\n'
-            'integer :: a\n'
-            'do\n'
-            'a = a + 1\n'
-            'end do \n'
-            'end subroutine\n'
-            )
+        'subroutine test(a)\n'
+        'integer :: a, i, j\n'
+        '\n'
+        'do\n'
+        'do \n'
+        'do j = 1, 5\n'
+        'if (a>b) then\n'
+        'if(b>0) then\n'
+        'a = 3\n'
+        'donot_indent_me = 2\n'
+        'do_not_indent_me_either = 2\n'
+        'ifIam_indented_something_went_wrong = 2\n'
+        'if_I_am_indented_something_went_wrong = 2\n'
+        'end should not be unindented here\n'
+        'end if\n'
+        'endif\n'
+        'end do\n'
+        'end do\n'
+        'enddo\n'
+        'end subroutine\n'
+        '\n'
+        'subroutine test2(a)\n'
+        'integer :: a\n'
+        'do\n'
+        'a = a + 1\n'
+        'end do \n'
+        'end subroutine\n'
+    )
     expected = (
-            'subroutine test(a)\n'
-            'integer :: a, i, j\n'
-            '\n'
-            'do\n'
-            '   do \n'
-            '      do j = 1, 5\n'
-            '         if (a>b) then\n'
-            '            if(b>0) then\n'
-            '               a = 3\n'
-            '               donot_indent_me = 2\n'
-            '               do_not_indent_me_either = 2\n'
-            '               ifIam_indented_something_went_wrong = 2\n'
-            '               if_I_am_indented_something_went_wrong = 2\n'
-            '               end should not be unindented here\n'
-            '            end if\n'
-            '         endif\n'
-            '      end do\n'
-            '   end do\n'
-            'enddo\n'
-            'end subroutine\n'
-            '\n'
-            'subroutine test2(a)\n'
-            'integer :: a\n'
-            'do\n'
-            '   a = a + 1\n'
-            'end do \n'
-            'end subroutine\n'
-            )
+        'subroutine test(a)\n'
+        'integer :: a, i, j\n'
+        '\n'
+        'do\n'
+        '   do \n'
+        '      do j = 1, 5\n'
+        '         if (a>b) then\n'
+        '            if(b>0) then\n'
+        '               a = 3\n'
+        '               donot_indent_me = 2\n'
+        '               do_not_indent_me_either = 2\n'
+        '               ifIam_indented_something_went_wrong = 2\n'
+        '               if_I_am_indented_something_went_wrong = 2\n'
+        '               end should not be unindented here\n'
+        '            end if\n'
+        '         endif\n'
+        '      end do\n'
+        '   end do\n'
+        'enddo\n'
+        'end subroutine\n'
+        '\n'
+        'subroutine test2(a)\n'
+        'integer :: a\n'
+        'do\n'
+        '   a = a + 1\n'
+        'end do \n'
+        'end subroutine\n'
+    )
     p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
