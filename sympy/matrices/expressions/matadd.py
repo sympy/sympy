@@ -19,7 +19,7 @@ class MatAdd(MatrixExpr):
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
+        check    = kwargs.get('check', True)
 
         # TODO: This is a kludge
         # We still use Matrix + 0 in a few places. This removes it

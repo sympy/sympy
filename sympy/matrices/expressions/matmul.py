@@ -20,7 +20,7 @@ class MatMul(MatrixExpr):
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
+        check    = kwargs.get('check', True)
 
         args = map(sympify, args)
         obj = Basic.__new__(cls, *args)

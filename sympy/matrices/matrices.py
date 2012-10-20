@@ -2353,7 +2353,7 @@ class MatrixBase(object):
             return S.One
 
         M, n = self.copy(), self.rows
-        p, prod = [] , 1
+        p, prod = [], 1
         l, u, p = M.LUdecomposition()
         if  len(p) % 2:
             prod = -1
@@ -3469,9 +3469,9 @@ class MatrixBase(object):
 
         newmat = self.zeros(self.rows + mti.rows, self.cols)
         i, j = pos, pos + mti.rows
-        newmat[:i  , :] = self[:i, :]
+        newmat[:i, :] = self[:i, :]
         newmat[i: j, :] = mti
-        newmat[j:  , :] = self[i:, :]
+        newmat[j:, :] = self[i:, :]
         return newmat
 
     def col_insert(self, pos, mti):
@@ -3506,7 +3506,7 @@ class MatrixBase(object):
 
         newmat = self.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
-        newmat[:,  :i] = self[:, :i]
+        newmat[:,:i] = self[:, :i]
         newmat[:, i:j] = mti
         newmat[:, j: ] = self[:, i:]
         return newmat

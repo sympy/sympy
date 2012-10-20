@@ -7,5 +7,5 @@ def test_funcmatrix():
     assert X[1,2] == -1
     assert X.shape == (3,3)
     assert X.rows == X.cols == 3
-    assert Matrix(X) == Matrix(3, 3, lambda i,j : i-j)
+    assert Matrix(X) == Matrix(3, 3, lambda i,j: i-j)
     assert isinstance(X*X+X, MatrixExpr)
