@@ -36,15 +36,15 @@ def test_arit0():
     assert e == 2*a*b
     e = a*b + b*a + a*b + p*b*a
     assert e == 8*a*b
-    e = a*b + b*a + a*b + p*b*a +a
+    e = a*b + b*a + a*b + p*b*a + a
     assert e == a + 8*a*b
-    e = a +a
+    e = a + a
     assert e == 2*a
-    e = a + b +a
+    e = a + b + a
     assert e == b + 2*a
     e = a + b*b + a + b*b
     assert e == 2*a + 2*b**2
-    e = a + Rational(2) + b*b + a + b*b +p
+    e = a + Rational(2) + b*b + a + b*b + p
     assert e == 7 + 2*a + 2*b**2
     e = (a + b*b + a + b*b)*p
     assert e == 5*(2*a + 2*b**2)
@@ -54,7 +54,7 @@ def test_arit0():
     assert e == Rational(0)
     e = Rational(50)*(a - a)
     assert e == Rational(0)
-    e = b*a - b - a*b +b
+    e = b*a - b - a*b + b
     assert e == Rational(0)
     e = a*b + c**p
     assert e == a*b + c**5
@@ -63,8 +63,8 @@ def test_arit0():
     e = a*2*2
     assert e == 4*a
     e = 2 + a*2/2
-    assert e == 2 +a
-    e = 2 - a -2
+    assert e == 2 + a
+    e = 2 - a - 2
     assert e == -a
     e = 2*a*2
     assert e == 4*a
@@ -73,7 +73,7 @@ def test_arit0():
     e = 2**a**2
     assert e == 2**(a**2)
     e = -(1 + a)
-    assert e == -1 -a
+    assert e == -1 - a
     e = Rational(1, 2)*(1 + a)
     assert e == Rational(1, 2) + a/2
 
@@ -228,7 +228,7 @@ def test_expand():
     assert e == (5 + a + c)*(a + b + c)
     assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
     x = Symbol("x")
-    s = exp(x*x) -1
+    s = exp(x*x) - 1
     e = s.nseries(x, 0, 3)/x**2
     assert e.expand() == 1 + x**2/2 + O(x**4)
 
@@ -304,7 +304,7 @@ def test_ncmul():
     assert A*b*B*3*C != 3*b*B*A*C
     assert A*b*B*3*C == 3*A*B*C*b
 
-    assert A + B == B +A
+    assert A + B == B + A
     assert (A + B)*C != C*(A + B)
 
     assert C*(A + B)*C != C*C*(A + B)
@@ -314,7 +314,7 @@ def test_ncmul():
 
     assert A*A == A**2
     assert (A + B)*(A + B) == (A + B)**2
-    assert ((A + B)**2).expand() == A**2 + A*B + B*A +B**2
+    assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
 
     assert A**-1 * A == 1
     assert A/A == 1

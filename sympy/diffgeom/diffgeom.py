@@ -899,7 +899,7 @@ class LieDerivative(Expr):
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
             raise ValueError('Lie derivatives are defined only wrt vector fields.'
                              ' The supplied argument was not a vector field.')
-        if expr_form_ord>0:
+        if expr_form_ord > 0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)

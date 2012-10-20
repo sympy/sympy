@@ -141,7 +141,7 @@ def test_sparse_matrix():
                     ( 8, -5) )).det() == -1
 
     assert SparseMatrix(( (x,   1),
-                    (y, 2*y) )).det() == 2*x*y -y
+                    (y, 2*y) )).det() == 2*x*y - y
 
     assert SparseMatrix(( (1, 1, 1),
                     (1, 2, 3),

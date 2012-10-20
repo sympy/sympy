@@ -158,7 +158,7 @@ def test_chebyshev():
 
     assert chebyshevt(0, x) == 1
     assert chebyshevt(1, x) == x
-    assert chebyshevt(2, x) == 2*x**2 -1
+    assert chebyshevt(2, x) == 2*x**2 - 1
     assert chebyshevt(3, x) == 4*x**3 - 3*x
 
     for n in range(1, 4):

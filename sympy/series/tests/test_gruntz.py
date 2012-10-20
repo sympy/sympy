@@ -65,7 +65,7 @@ def test_gruntz_evaluation():
                   / exp(exp(10*log(x)*log(log(x)))), x, oo) == oo
     # 8.15
     assert gruntz(exp(exp(S(5)/2*x**(-S(5)/7) + S(21)/8*x**(S(6)/11)
-                          +2*x**(-8) + S(54)/17*x**(S(49)/45) ))**8
+                          + 2*x**(-8) + S(54)/17*x**(S(49)/45) ))**8
                   / log(log(-log(S(4)/3*x**(-S(5)/14))))**(S(7)/6), x, oo) == oo
     # 8.16
     assert gruntz((exp(4*x*exp(-x)/(1/exp(x) + 1/exp(2*x**2/(x + 1)))) - exp(x))
@@ -366,7 +366,7 @@ def test_limit4():
 @XFAIL
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1 + exp(-x)))
-    expr = exp(h)*exp(-x/(1 + h))*exp(exp(-x + h))/h**2 - exp(x) +x
+    expr = exp(h)*exp(-x/(1 + h))*exp(exp(-x + h))/h**2 - exp(x) + x
     expected = set([1/h, exp(x), exp(x - h), exp(x/(1 + h))])
     # XXX Incorrect result
     assert mrv(expr, x).difference(expected) == set()

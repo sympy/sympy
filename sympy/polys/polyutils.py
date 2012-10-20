@@ -34,7 +34,7 @@ def _sort_gens(gens, **args):
         gens_order, wrt = {}, opt.wrt
 
         for i, gen in enumerate(opt.sort):
-            gens_order[gen] = i +1
+            gens_order[gen] = i + 1
 
     def order_key(gen):
         gen = str(gen)
@@ -88,7 +88,7 @@ def _unify_gens(f_gens, g_gens):
 
     for i, gen in enumerate(g_gens):
         if gen in common:
-            g_gens[i], k = common[k], k +1
+            g_gens[i], k = common[k], k + 1
 
     for gen in common:
         i = f_gens.index(gen)

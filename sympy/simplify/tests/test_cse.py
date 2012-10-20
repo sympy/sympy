@@ -26,7 +26,7 @@ def test_numbered_symbols():
 
 
 def opt1(expr):
-    return expr +y
+    return expr + y
 
 
 def opt2(expr):
@@ -34,22 +34,22 @@ def opt2(expr):
 
 
 def test_preprocess_for_cse():
-    assert cse_main.preprocess_for_cse(x, [(opt1, None)]) == x +y
+    assert cse_main.preprocess_for_cse(x, [(opt1, None)]) == x + y
     assert cse_main.preprocess_for_cse(x, [(None, opt1)]) == x
     assert cse_main.preprocess_for_cse(x, [(None, None)]) == x
-    assert cse_main.preprocess_for_cse(x, [(opt1, opt2)]) == x +y
+    assert cse_main.preprocess_for_cse(x, [(opt1, opt2)]) == x + y
     assert cse_main.preprocess_for_cse(
         x, [(opt1, None), (opt2, None)]) == (x + y)*z
 
 
 def test_postprocess_for_cse():
     assert cse_main.postprocess_for_cse(x, [(opt1, None)]) == x
-    assert cse_main.postprocess_for_cse(x, [(None, opt1)]) == x +y
+    assert cse_main.postprocess_for_cse(x, [(None, opt1)]) == x + y
     assert cse_main.postprocess_for_cse(x, [(None, None)]) == x
     assert cse_main.postprocess_for_cse(x, [(opt1, opt2)]) == x*z
     # Note the reverse order of application.
     assert cse_main.postprocess_for_cse(
-        x, [(None, opt1), (None, opt2)]) == x*z +y
+        x, [(None, opt1), (None, opt2)]) == x*z + y
 
 
 def test_cse_single():

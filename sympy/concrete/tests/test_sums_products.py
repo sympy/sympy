@@ -10,7 +10,7 @@ n = Symbol('n', integer=True)
 
 
 def test_arithmetic_sums():
-    assert summation(1, (n, a, b)) == b - a +1
+    assert summation(1, (n, a, b)) == b - a + 1
     assert Sum(S.NaN, (n, a, b)) is S.NaN
     assert Sum(x, (n, a, a)).doit() == x
     assert Sum(x, (x, a, a)).doit() == a

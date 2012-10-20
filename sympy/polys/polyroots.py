@@ -511,10 +511,10 @@ def roots(f, *gens, **flags):
 
         x = Dummy('x')
 
-        poly, i = {}, len(f) -1
+        poly, i = {}, len(f) - 1
 
         for coeff in f:
-            poly[i], i = sympify(coeff), i -1
+            poly[i], i = sympify(coeff), i - 1
 
         f = Poly(poly, x, field=True)
     else:

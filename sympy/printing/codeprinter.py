@@ -133,7 +133,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Dummy(self, expr):
         # dummies must be printed as unique symbols
-        return "%s_%i" %(expr.name, expr.dummy_index)  # Dummy
+        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol

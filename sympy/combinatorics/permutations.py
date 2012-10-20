@@ -2012,7 +2012,7 @@ class Permutation(Basic):
                 while i + k < n:
                     right = i + k * 2 - 1
                     if right >= n:
-                        right = n -1
+                        right = n - 1
                     inversions += _merge(arr, temp, i, i + k, right)
                     i = i + k * 2
                 k = k * 2
@@ -2352,11 +2352,11 @@ class Permutation(Basic):
             if r2 % 2 == 0:
                 for i in range(j - 1, j - k - 1, -1):
                     perm[i] = perm[i - 1]
-                perm[j - k - 1] = j -1
+                perm[j - k - 1] = j - 1
             else:
                 for i in range(j - 1, k, -1):
                     perm[i] = perm[i - 1]
-                perm[k] = j -1
+                perm[k] = j - 1
             r2 = r1
         return Perm._af_new(perm)
 
@@ -2389,7 +2389,7 @@ class Permutation(Basic):
         st = 0
         rho = pi[:]
         done = False
-        m = n -1
+        m = n - 1
         while m > 0 and not done:
             d = rho.index(m)
             for i in range(d, m):
@@ -2745,7 +2745,7 @@ def _merge(arr, temp, left, mid, right):
             temp[k] = arr[j]
             k += 1
             j += 1
-            inv_count += (mid -i)
+            inv_count += (mid - i)
     while i < mid:
         temp[k] = arr[i]
         k += 1

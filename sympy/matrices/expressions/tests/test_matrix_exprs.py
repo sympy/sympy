@@ -364,7 +364,7 @@ def test_matrixify():
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
-    assert matrixify(n + m) == n +m
+    assert matrixify(n + m) == n + m
     assert matrixify(Mul(A, B)) == MatMul(A, B)
 
 

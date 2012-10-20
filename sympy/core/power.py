@@ -876,7 +876,7 @@ class Pow(Expr):
 
     @cacheit
     def taylor_term(self, n, x, *previous_terms):  # of (1+x)**e
-        if n<0:
+        if n < 0:
             return S.Zero
         x = _sympify(x)
         return C.binomial(self.exp, n) * Pow(x, n)

@@ -4,9 +4,9 @@ from sympy.abc import x, y, z
 
 def test_Abs():
     assert refine(Abs(x), Q.positive(x)) == x
-    assert refine(1 + Abs(x), Q.positive(x)) == 1 +x
+    assert refine(1 + Abs(x), Q.positive(x)) == 1 + x
     assert refine(Abs(x), Q.negative(x)) == -x
-    assert refine(1 + Abs(x), Q.negative(x)) == 1 -x
+    assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
 
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2

@@ -259,7 +259,7 @@ def SymmetricGroup(n):
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
 
-    if n<3:
+    if n < 3:
         G._is_abelian = True
     else:
         G._is_abelian = False

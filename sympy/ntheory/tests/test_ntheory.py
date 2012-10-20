@@ -26,10 +26,10 @@ def test_trailing():
     assert trailing(7) == 0
     assert trailing(-7) == 0
     for i in range(100):
-        assert trailing((1<<i)) == i
-        assert trailing((1<<i) * 31337) == i
-    assert trailing((1<<1000001)) == 1000001
-    assert trailing((1<<273956)*7**37) == 273956
+        assert trailing((1 << i)) == i
+        assert trailing((1 << i) * 31337) == i
+    assert trailing((1 << 1000001)) == 1000001
+    assert trailing((1 << 273956)*7**37) == 273956
 
 
 def test_multiplicity():

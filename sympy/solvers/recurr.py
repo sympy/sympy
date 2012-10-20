@@ -119,7 +119,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     homogeneous = f.is_zero
 
-    r = len(coeffs) -1
+    r = len(coeffs) - 1
 
     coeffs = [ Poly(coeff, n) for coeff in coeffs ]
 
@@ -197,7 +197,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             return None  # TBD
     else:
         A = r
-        U = N + A + b +1
+        U = N + A + b + 1
 
         nni_roots = roots(polys[r], filter='Z',
             predicate=lambda r: r >= 0).keys()
@@ -391,7 +391,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
 
     coeffs = map(sympify, coeffs)
 
-    r = len(coeffs) -1
+    r = len(coeffs) - 1
 
     A, B = coeffs[r], coeffs[0]
     A = A.subs(n, n - r).expand()

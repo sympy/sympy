@@ -2064,7 +2064,7 @@ def _confignum_to_difflist(config_num, diff, list_len):
     for n in range(list_len):
         prev_diff = diff
         # Number of spots after current one
-        rem_spots = list_len - n -1
+        rem_spots = list_len - n - 1
         # Number of configurations of distributing diff among the remaining spots
         rem_configs = binomial(diff + rem_spots - 1, diff)
         while config_num >= rem_configs:

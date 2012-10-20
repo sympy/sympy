@@ -146,7 +146,7 @@ class Poly(Expr):
             raise GeneratorsNeeded(
                 "can't initialize from 'dict' without generators")
 
-        level = len(gens) -1
+        level = len(gens) - 1
         domain = opt.domain
 
         if domain is None:
@@ -169,7 +169,7 @@ class Poly(Expr):
             raise MultivariatePolynomialError(
                 "'list' representation not supported")
 
-        level = len(gens) -1
+        level = len(gens) - 1
         domain = opt.domain
 
         if domain is None:
@@ -365,7 +365,7 @@ class Poly(Expr):
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
 
-            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) -1
+            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) - 1
 
             if f.gens != gens:
                 f_monoms, f_coeffs = _dict_reorder(
@@ -3801,7 +3801,7 @@ def _poly_from_expr(expr, opt):
     else:
         coeffs = map(domain.from_sympy, coeffs)
 
-    level = len(opt.gens) -1
+    level = len(opt.gens) - 1
 
     poly = Poly.new(
         DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
@@ -3897,7 +3897,7 @@ def _parallel_poly_from_expr(exprs, opt):
         all_coeffs.append(coeffs_list[:k])
         coeffs_list = coeffs_list[k:]
 
-    polys, level = [], len(opt.gens) -1
+    polys, level = [], len(opt.gens) - 1
 
     for monoms, coeffs in zip(all_monoms, all_coeffs):
         rep = DMP.from_monoms_coeffs(monoms, coeffs, level, domain)
@@ -5695,7 +5695,7 @@ def reduced(f, G, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, opt.order)
 
-    level = len(opt.gens) -1
+    level = len(opt.gens) - 1
 
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 

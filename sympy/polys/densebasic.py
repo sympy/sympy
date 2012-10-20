@@ -190,7 +190,7 @@ def _rec_degree_in(g, v, i, j):
     if i == j:
         return dmp_degree(g, v)
 
-    v, i = v - 1, i +1
+    v, i = v - 1, i + 1
 
     return max([ _rec_degree_in(c, v, i, j) for c in g ])
 
@@ -228,7 +228,7 @@ def _rec_degree_list(g, v, i, degs):
     degs[i] = max(degs[i], dmp_degree(g, v))
 
     if v > 0:
-        v, i = v - 1, i +1
+        v, i = v - 1, i + 1
 
         for c in g:
             _rec_degree_list(c, v, i, degs)
@@ -304,7 +304,7 @@ def dmp_strip(f, u):
     if dmp_zero_p(f, u):
         return f
 
-    i, v = 0, u -1
+    i, v = 0, u - 1
 
     for c in f:
         if not dmp_zero_p(c, v):
@@ -343,7 +343,7 @@ def _rec_strip(g, v):
     if not v:
         return dup_strip(g)
 
-    w = v -1
+    w = v - 1
 
     return dmp_strip([ _rec_strip(c, w) for c in g ], v)
 
@@ -436,7 +436,7 @@ def dmp_copy(f, u):
     if not u:
         return list(f)
 
-    v = u -1
+    v = u - 1
 
     return [ dmp_copy(c, v) for c in f ]
 
@@ -523,7 +523,7 @@ def dmp_normal(f, u, K):
     if not u:
         return dup_normal(f, K)
 
-    v = u -1
+    v = u - 1
 
     return dmp_strip([ dmp_normal(c, v, K) for c in f ], u)
 
@@ -579,7 +579,7 @@ def dmp_convert(f, u, K0, K1):
     if K0 is not None and K0 == K1:
         return f
 
-    v = u -1
+    v = u - 1
 
     return dmp_strip([ dmp_convert(c, v, K0, K1) for c in f ], u)
 
@@ -621,7 +621,7 @@ def dmp_from_sympy(f, u, K):
     if not u:
         return dup_from_sympy(f, K)
 
-    v = u -1
+    v = u - 1
 
     return dmp_strip([ dmp_from_sympy(c, v, K) for c in f ], u)
 
@@ -705,7 +705,7 @@ def dmp_ground_nth(f, N, u, K):
         elif n >= len(f):
             return K.zero
         else:
-            f, v = f[dmp_degree(f, v) - n], v -1
+            f, v = f[dmp_degree(f, v) - n], v - 1
 
     return f
 
@@ -1250,11 +1250,11 @@ def dmp_raise(f, l, u, K):
         if not f:
             return dmp_zero(l)
 
-        k = l -1
+        k = l - 1
 
         return [ dmp_ground(c, k) for c in f ]
 
-    v = u -1
+    v = u - 1
 
     return [ dmp_raise(c, l, v, K) for c in f ]
 
@@ -1474,7 +1474,7 @@ def _rec_inflate(g, M, v, i, K):
     if M[i] <= 0:
         raise IndexError("all M[i] must be positive, got %s" % M[i])
 
-    w, j = v - 1, i +1
+    w, j = v - 1, i + 1
 
     g = [ _rec_inflate(c, M, w, j, K) for c in g ]
 
@@ -1751,7 +1751,7 @@ def _rec_list_terms(g, v, monom):
 
             terms.append((monom + (d - i,), c))
     else:
-        w = v -1
+        w = v - 1
 
         for i, c in enumerate(g):
             terms.extend(_rec_list_terms(c, w, monom + (d - i,)))
@@ -1842,7 +1842,7 @@ def dmp_apply_pairs(f, g, h, args, u, K):
     if not u:
         return dup_apply_pairs(f, g, h, args, K)
 
-    n, m, v = len(f), len(g), u -1
+    n, m, v = len(f), len(g), u - 1
 
     if n != m:
         if n > m:

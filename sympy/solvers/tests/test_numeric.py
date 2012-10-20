@@ -50,7 +50,7 @@ def test_nsolve():
 
 def test_issue_3309():
     x = Symbol('x')
-    assert nsolve(Piecewise((x, x<1), (x**2, True)), x, 2) == 0.0
+    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
 @XFAIL

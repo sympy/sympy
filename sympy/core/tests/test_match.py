@@ -24,18 +24,18 @@ def test_add():
     x, y, a, b, c = map(Symbol, 'xyabc')
     p, q, r = map(Wild, 'pqr')
 
-    e = a +b
+    e = a + b
     assert e.match(p + b) == {p: a}
     assert e.match(p + a) == {p: b}
 
-    e = 1 +b
+    e = 1 + b
     assert e.match(p + b) == {p: 1}
 
-    e = a + b +c
+    e = a + b + c
     assert e.match(a + p + c) == {p: b}
     assert e.match(b + p + c) == {p: a}
 
-    e = a + b + c +x
+    e = a + b + c + x
     assert e.match(a + p + x + c) == {p: b}
     assert e.match(b + p + c + x) == {p: a}
     assert e.match(b) is None
@@ -43,7 +43,7 @@ def test_add():
     assert e.match(a + p + c) == {p: b + x}
     assert e.match(b + p + c) == {p: a + x}
 
-    e = 4*x +5
+    e = 4*x + 5
     assert e.match(4*x + p) == {p: 5}
     assert e.match(3*x + p) == {p: x + 5}
     assert e.match(p*x + 5) == {p: 4}
@@ -88,10 +88,10 @@ def test_match_exclude():
     e = 1/(x + 1)
     assert e.match(p/(q*x + r)) == {p: 1, q: 1, r: 1}
 
-    e = 4*x +5
+    e = 4*x + 5
     assert e.match(p*x + q) == {p: 4, q: 5}
 
-    e = 4*x + 5*y +6
+    e = 4*x + 5*y + 6
     assert e.match(p*x + q*y + r) == {p: 4, q: 5, r: 6}
 
 
@@ -270,7 +270,7 @@ def test_match_bug2():
     x, y = map(Symbol, 'xy')
     p, q, r = map(Wild, 'pqr')
     res = (x + y).match(p + q + r)
-    assert (p + q + r).subs(res) == x +y
+    assert (p + q + r).subs(res) == x + y
 
 
 def test_match_bug3():
@@ -349,7 +349,7 @@ def test_exclude():
     e = 3*x**2 + y*x + a
     assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
 
-    e = x +1
+    e = x + 1
     assert e.match(x + p) is None
     assert e.match(p + 1) is None
     assert e.match(x + 1 + p) == {p: 0}

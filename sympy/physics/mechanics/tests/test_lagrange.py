@@ -20,7 +20,7 @@ def test_disc_on_an_incline_plane():
     # Next, we create the inertial reference frame 'N'. A reference frame 'A'
     # is attached to the inclined plane. Finally a frame is created which is attached to the disk.
     N = ReferenceFrame('N')
-    A = N.orientnew('A', 'Axis', [pi/2 -alpha, N.z])
+    A = N.orientnew('A', 'Axis', [pi/2 - alpha, N.z])
     B = A.orientnew('B', 'Axis', [-theta, A.z])
 
     # Creating the disc 'D'; we create the point that represents the mass
