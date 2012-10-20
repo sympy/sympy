@@ -445,6 +445,6 @@ def test_no_autosimplify_into_Mul():
     ss = S(s)
     assert ss != 1 and ss.simplify() == -1
 
-def test_issue_3341():
+def test_issue_3441():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
