@@ -413,12 +413,10 @@ class Float(Number):
     ========
 
     >>> from sympy import Float
-    >>> Float(3.5) # convert from Python float or int
+    >>> Float(3.5)
     3.50000000000000
-    >>> Float(3) # reverts to Integer
-    3
-    >>> Float(3, '') # forced to Float
-    3.
+    >>> Float(3)
+    3.00000000000000
 
     Floats can be created from a string representations of Python floats
     to force ints to Float or to enter high-precision (> 15 significant
@@ -439,6 +437,8 @@ class Float(Number):
     123456789.123456
     >>> Float('12e-3', '')
     0.012
+    >>> Float(3, '')
+    3.
 
     Notes
     =====
@@ -539,8 +539,12 @@ class Float(Number):
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
                 num = '-0.' + num[2:]
-        elif not num:
-            return C.Zero()
+        if isinstance(num, float) and num == 0:
+            num = '0'
+        elif isinstance(num, int):
+            if num == 0 and prec == '':
+                prec = 1
+            num = str(num)
         if prec == '':
             if isinstance(num, (int, long, Integer)):
                 # an int is unambiguous, but if someone enters
@@ -839,6 +843,9 @@ class Float(Number):
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
+
+    def __nonzero__(self):
+        return mpmath.mpf(self._mpf_) != 0
 
     def __hash__(self):
         return super(Float, self).__hash__()
