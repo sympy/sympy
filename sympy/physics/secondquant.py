@@ -194,7 +194,8 @@ class AntiSymmetricTensor(TensorSymbol):
         if (signu + signl) % 2:
             return -TensorSymbol.__new__(cls, symbol, upper, lower)
         else:
-            return  TensorSymbol.__new__(cls, symbol, upper, lower)
+
+            return TensorSymbol.__new__(cls, symbol, upper, lower)
 
     @classmethod
     def _sortkey(cls, index):

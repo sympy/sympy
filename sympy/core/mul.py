@@ -1267,7 +1267,7 @@ class Mul(AssocOp):
         elif len(old_c) > len(c):
             # more commutative terms
             ok = False
-        elif set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc)):
+        elif set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)):
             # unmatched non-commutative bases
             ok = False
         elif set(old_c).difference(set(c)):
