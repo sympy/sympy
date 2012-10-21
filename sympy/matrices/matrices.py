@@ -2299,7 +2299,7 @@ class MatrixBase(object):
         M, n = self.copy(), self.rows
         p, prod = [], 1
         l, u, p = M.LUdecomposition()
-        if  len(p) % 2:
+        if len(p) % 2:
             prod = -1
 
         for k in range(n):
