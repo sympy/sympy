@@ -117,9 +117,13 @@ def xxinv(mul):
     from sympy.matrices.expressions import Inverse
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
-        if X.is_square and Y.is_square and X == Inverse(Y):
-            I = Identity(X.rows)
-            return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+        try:
+            if X.is_square and Y.is_square and X == Inverse(Y):
+                I = Identity(X.rows)
+                return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+        except ValueError: # Y might not be invertible
+            pass
+
     return mul
 
 def remove_ids(mul):
