@@ -854,7 +854,8 @@ def test_nsimplify():
     assert nsimplify(pi/1e-7) == 10000000*pi
     assert not nsimplify(
         factor(-3.0*z**2*(z**2)**(-2.5) + 3*(z**2)**(-1.5))).atoms(Float)
-
+    e = x**0.0
+    assert e.is_Pow and nsimplify(x**0.0) == 1
 
 def test_extract_minus_sign():
     x = Symbol("x")
