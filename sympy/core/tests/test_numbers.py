@@ -388,6 +388,7 @@ def test_Float():
     assert Float('.0') == Float('0.0')
     assert Float('-.0') == Float('-0.0')
     assert Float(' .3e2') == Float('0.3e2')
+    assert Float(0.0) == Float('0.0')
 
 
 def test_Float_eval():
