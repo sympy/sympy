@@ -1481,3 +1481,10 @@ def test_round():
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
+
+
+def test_identity_removal():
+    assert Add.make_args(x + 0) == (x,)
+    assert Mul.make_args(x*1) == (x,)
+
+

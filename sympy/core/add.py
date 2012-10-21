@@ -39,7 +39,6 @@ class Add(AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
-            assert a
             if a.is_Rational:
                 if b.is_Mul:
                     # if it's an unevaluated 2-arg, expand it
