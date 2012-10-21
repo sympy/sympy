@@ -540,14 +540,11 @@ class Float(Number):
             elif num.startswith('-.') and len(num) > 2:
                 num = '-0.' + num[2:]
         if isinstance(num, float) and num == 0:
-            num = '0.'
+            num = '0'
         elif isinstance(num, int):
-            if num == 0:
-                num = '0'
-                if prec == '':
-                    prec = 1
-            else:
-                num = str(num)
+            if num == 0 and prec == '':
+                prec = 1
+            num = str(num)
         if prec == '':
             if isinstance(num, (int, long, Integer)):
                 # an int is unambiguous, but if someone enters
