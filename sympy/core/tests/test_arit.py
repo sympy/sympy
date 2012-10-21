@@ -290,8 +290,7 @@ def test_power_expand():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert Float(1) * pi * x == pi * x
-    assert len((Float(2) * pi * x).args) == 3
+    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
 
 
 def test_ncmul():

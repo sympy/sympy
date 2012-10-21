@@ -348,16 +348,8 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
-    assert Float(0) is S.Zero
-    assert Float(1) is S.One
-
-    assert Float(S.Zero) is S.Zero
-    assert Float(S.One) is S.One
-
     i = 12345678901234567890
-    assert _aresame(Float(12), Integer(12))
     assert _aresame(Float(12, ''), Float('12', ''))
-    assert _aresame(Float(i), Integer(i))
     assert _aresame(Float(Integer(i), ''), Float(i, ''))
     assert _aresame(Float(i, ''), Float(str(i), 20))
     assert not _aresame(Float(str(i)), Float(i, ''))
@@ -373,6 +365,7 @@ def test_Float():
     Float('123 456.123 456') == Float('123456.123456')
     Integer('123 456') == Integer('123456')
     Rational('123 456.123 456') == Rational('123456.123456')
+    assert Float(' .3e2') == Float('0.3e2')
 
     # allow auto precision detection
     assert Float('.1', '') == Float(.1, 1)
@@ -384,11 +377,17 @@ def test_Float():
     raises(ValueError, lambda: Float(12.3, ""))
     raises(ValueError, lambda: Float('.'))
     raises(ValueError, lambda: Float('-.'))
-    assert Float('-0') == Float('0.0')
-    assert Float('.0') == Float('0.0')
-    assert Float('-.0') == Float('-0.0')
-    assert Float(' .3e2') == Float('0.3e2')
-    assert Float(0.0) == Float('0.0')
+
+    zero = Float('0.0')
+    assert Float('-0') == zero
+    assert Float('.0') == zero
+    assert Float('-.0') == zero
+    assert Float('-0.0') == zero
+    assert Float(0.0) == zero
+    assert Float(0) == zero
+    assert Float(1) == Float(1.0)
+    assert Float(S.Zero) == zero
+    assert Float(S.One) == Float(1.0)
 
 
 def test_Float_eval():
