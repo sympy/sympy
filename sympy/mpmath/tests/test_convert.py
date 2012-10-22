@@ -1,6 +1,6 @@
 import random
 from sympy.mpmath import *
-from sympy.mpmath.libmpf import *
+from sympy.mpmath.libmp import *
 
 
 def test_basic_string():
@@ -35,16 +35,22 @@ def test_pretty():
     mp.pretty = True
     assert repr(mpf(2.5)) == '2.5'
     assert repr(mpc(2.5,3.5)) == '(2.5 + 3.5j)'
-    assert repr(mpi(2.5,3.5)) == '[2.5, 3.5]'
     mp.pretty = False
+    iv.pretty = True
+    assert repr(mpi(2.5,3.5)) == '[2.5, 3.5]'
+    iv.pretty = False
 
 def test_str_whitespace():
     assert mpf('1.26 ') == 1.26
 
 def test_unicode():
     mp.dps = 15
-    assert mpf(u'2.76') == 2.76
-    assert mpf(u'inf') == inf
+    try:
+        unicode = unicode
+    except NameError:
+        unicode = str
+    assert mpf(unicode('2.76')) == 2.76
+    assert mpf(unicode('inf')) == inf
 
 def test_str_format():
     assert to_str(from_float(0.1),15,strip_zeros=False) == '0.100000000000000'
@@ -73,7 +79,7 @@ def test_eval_repr_invariant():
     random.seed(123)
     for dps in [10, 15, 20, 50, 100]:
         mp.dps = dps
-        for i in xrange(1000):
+        for i in range(1000):
             a = mpf(random.random())**0.5 * 10**random.randint(-100, 100)
             assert eval(repr(a)) == a
     mp.dps = 15
@@ -118,10 +124,10 @@ def test_conversion_methods():
         pass
     class SomethingReal:
         def _mpmath_(self, prec, rounding):
-            return make_mpf(from_str('1.3', prec, rounding))
+            return mp.make_mpf(from_str('1.3', prec, rounding))
     class SomethingComplex:
         def _mpmath_(self, prec, rounding):
-            return make_mpc((from_str('1.3', prec, rounding), \
+            return mp.make_mpc((from_str('1.3', prec, rounding), \
                 from_str('1.7', prec, rounding)))
     x = mpf(3)
     z = mpc(3)
@@ -152,7 +158,9 @@ def test_conversion_methods():
     assert x.__ge__(a) is NotImplemented
     assert x.__eq__(a) is NotImplemented
     assert x.__ne__(a) is NotImplemented
-    assert x.__cmp__(a) is NotImplemented
+    # implementation detail
+    if hasattr(x, "__cmp__"):
+        assert x.__cmp__(a) is NotImplemented
     assert x.__sub__(a) is NotImplemented
     assert x.__rsub__(a) is NotImplemented
     assert x.__mul__(a) is NotImplemented

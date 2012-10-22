@@ -2,7 +2,7 @@ from __future__ import division
 
 #this module tests that sympy works with true division turned on
 
-from sympy import Rational, Symbol, Real
+from sympy import Rational, Symbol, Float
 
 def test_truediv():
     assert 1/2 != 0
@@ -13,7 +13,7 @@ def dotest(s):
     y = Symbol("y")
     l = [
     Rational(2),
-    Real("1.3"),
+    Float("1.3"),
     x,
     y,
     pow(x,y)*y,
@@ -23,6 +23,7 @@ def dotest(s):
     for x in l:
         for y in l:
             s(x,y)
+    return True
 
 def test_basic():
     def s(a,b):
@@ -34,7 +35,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
-    dotest(s)
+    assert dotest(s)
 
 def test_ibasic():
     def s(a,b):
@@ -46,4 +47,4 @@ def test_ibasic():
         x *= b
         x = a
         x /= b
-    dotest(s)
+    assert dotest(s)

@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-from timeit import default_timer as clock
 from random import random
-from sympy import Symbol, I, sqrt, Integer, factorial, pi, exp, pprint, \
-    simplify, trim, sin, sympify, factor
-
-x = Symbol("x")
-y = Symbol("y")
-z = Symbol("z")
+from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
+from sympy.abc import x, y, z
+from timeit import default_timer as clock
 
 def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"
@@ -16,9 +12,9 @@ def bench_R1():
 def bench_R2():
     "Hermite polynomial hermite(15, y)"
     def hermite(n, y):
-      if n == 1: return 2*y
-      if n == 0: return 1
-      return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
+        if n == 1: return 2*y
+        if n == 0: return 1
+        return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
 
     #def phi(n, y):
     #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
@@ -49,8 +45,8 @@ def bench_R5():
     L = uniq(L)
 
 def bench_R6():
-    "sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
-    s = sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
+    "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
+    s = sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
 
 def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"

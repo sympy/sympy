@@ -1,9 +1,8 @@
-from sympy import Symbol, Rational, exp
+from sympy import Symbol, Dummy, Rational, exp
 
 def test_equal():
     b = Symbol("b")
     a = Symbol("a")
-    c = Symbol("c")
     e1 = a+b
     e2 = 2*a*b
     e3 = a**3*b**2
@@ -68,3 +67,15 @@ def test_cmp_bug1258():
     assert (Symbol != 1)
     assert not (Symbol == 'x')
     assert (Symbol != 'x')
+
+def test_dummy_eq():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    u = Dummy('u')
+
+    assert (u**2 + 1).dummy_eq(x**2 + 1) == True
+    assert ((u**2 + 1) == (x**2 + 1)) == False
+
+    assert (u**2 + y).dummy_eq(x**2 + y, x) == True
+    assert (u**2 + y).dummy_eq(x**2 + y, y) == False

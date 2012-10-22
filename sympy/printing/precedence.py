@@ -1,12 +1,17 @@
 """A module providing information about the necessity of brackets"""
 
+from sympy.core.function import _coeff_isneg
+
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda":1,
     "Relational":20,
+    "Or":20,
+    "And":30,
     "Add":40,
     "Mul":50,
     "Pow":60,
+    "Not":100,
     "Atom":1000
 }
 
@@ -14,10 +19,16 @@ PRECEDENCE = {
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
+    "Or" : PRECEDENCE["Or"],
+    "And" : PRECEDENCE["And"],
     "Add" : PRECEDENCE["Add"],
     "Pow" : PRECEDENCE["Pow"],
     "Relational" : PRECEDENCE["Relational"],
     "Sub" : PRECEDENCE["Add"],
+    "Not": PRECEDENCE["Not"],
+    "factorial": PRECEDENCE["Pow"],
+    "factorial2": PRECEDENCE["Pow"],
+    "NegativeInfinity": PRECEDENCE["Add"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -27,8 +38,7 @@ PRECEDENCE_VALUES = {
 
 # Precedence functions
 def precedence_Mul(item):
-    coeff, rest = item.as_coeff_terms()
-    if coeff.is_negative:
+    if _coeff_isneg(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
@@ -42,10 +52,16 @@ def precedence_Integer(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
+def precedence_Float(item):
+    if item < 0:
+        return PRECEDENCE["Add"]
+    return PRECEDENCE["Atom"]
+
 PRECEDENCE_FUNCTIONS = {
     "Integer" : precedence_Integer,
     "Mul" : precedence_Mul,
     "Rational" : precedence_Rational,
+    "Float": precedence_Float,
 }
 
 
@@ -54,8 +70,12 @@ def precedence(item):
     Returns the precedence of a given object.
     """
     if hasattr(item, "precedence"):
-            return item.precedence
-    for i in item.__class__.__mro__:
+        return item.precedence
+    try:
+        mro = item.__class__.__mro__
+    except AttributeError:
+        return PRECEDENCE["Atom"]
+    for i in mro:
         n = i.__name__
         if n in PRECEDENCE_FUNCTIONS:
             return PRECEDENCE_FUNCTIONS[n](item)

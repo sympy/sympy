@@ -6,15 +6,18 @@ Usage:
 
 $ bin/coverage_report.py
 
-This will create a directory covhtml with the coverage reports.To restrict the analysis 
-to a directory, you just need to pass its name as
+This will create a directory covhtml with the coverage reports. To
+restrict the analysis to a directory, you just need to pass its name as
 argument. For example:
+
 
 $ bin/coverage_report.py sympy/logic
 
 runs only the tests in sympy/logic/ and reports only on the modules in
-sympy/logic/.  You can also get a report on the parts of the whole sympy code
-covered by the tests in sympy/logic/ by following up the previous command with
+sympy/logic/. You can also get a report on the parts of the whole sympy
+code covered by the tests in sympy/logic/ by following up the previous
+command with
+
 
 $ bin/coverage_report.py -c
 
@@ -25,7 +28,9 @@ from optparse import OptionParser
 try:
     import coverage
 except ImportError:
-    print "You need to install module coverage. See http://nedbatchelder.com/code/coverage/"
+    print ("You need to install module coverage.\n"
+    "See http://nedbatchelder.com/code/coverage/ or \n"
+    "https://launchpad.net/ubuntu/+source/python-coverage/")
     sys.exit(-1)
 
 REPORT_DIR = "covhtml"
@@ -52,19 +57,20 @@ def make_report(source_dir, report_dir, use_cache=False):
     sympy_top  = os.path.split(bin_dir)[0]      # ../
     sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
-       sys.path.insert(0, sympy_top)
+        sys.path.insert(0, sympy_top)
     os.chdir(sympy_top)
 
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")      #this should be "@decorated"
+    cov.exclude("def __mathml__")
     if use_cache:
         cov.load()
     else:
         cov.erase()
         cov.start()
         import sympy
-        sympy.test(source_dir)
+        sympy.test(source_dir, subprocess=False)
         #sympy.doctest()        #coverage doesn't play well with doctests
         cov.stop()
         cov.save()
@@ -93,3 +99,7 @@ if __name__ == '__main__':
         source_dir = 'sympy/'
 
     make_report(source_dir, **options.__dict__)
+
+    print "The generated coverage report is in covhtml directory."
+    print "Open %s in your web browser to view the report" % os.sep.join(
+        'sympy covhtml index.html'.split())

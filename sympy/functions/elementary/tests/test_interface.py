@@ -1,9 +1,7 @@
 # This test file tests the SymPy function interface, that people use to create
 # their own new functions. It should be as easy as possible.
-
 from sympy import Function, sympify, sin, cos, limit, tanh
 from sympy.abc import x
-from sympy.utilities.decorator import deprecated
 
 def test_function_series1():
     """Create our new "sin" function."""

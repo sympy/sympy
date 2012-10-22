@@ -1,56 +1,45 @@
 """rename this to test_assumptions.py when the old assumptions system is deleted"""
+from sympy.abc import x, y
+from sympy.assumptions import global_assumptions, Predicate
+from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
-from sympy.assumptions import Assume, global_assumptions
-from sympy.assumptions.assume import eliminate_assume
+from sympy.logic.boolalg import Or
 from sympy.printing import pretty
-
-def test_assume():
-    x = symbols('x')
-    assump = Assume(x, 'integer')
-    assert assump.expr == x
-    assert assump.key == 'integer'
-    assert assump.value == True
-
-def test_False():
-    """Test Assume object with False keys"""
-    x = symbols('x')
-    assump = Assume(x, 'integer', False)
-    assert assump.expr == x
-    assert assump.key == 'integer'
-    assert assump.value == False
 
 def test_equal():
     """Test for equality"""
-    x = symbols('x')
-    assert Assume(x, 'positive', True)  == Assume(x, 'positive', True)
-    assert Assume(x, 'positive', True)  != Assume(x, 'positive', False)
-    assert Assume(x, 'positive', False) == Assume(x, 'positive', False)
+    assert Q.positive(x)  == Q.positive(x)
+    assert Q.positive(x)  != ~Q.positive(x)
+    assert ~Q.positive(x) == ~Q.positive(x)
 
 def test_pretty():
-    x = symbols('x')
-    assert pretty(Assume(x, 'positive', True)) == "Assume(x, 'positive', True)"
+    assert pretty(Q.positive(x)) == "Q.positive(x)"
+    assert pretty(set([Q.positive, Q.integer])) == "set([Q.integer, Q.positive])"
 
-def test_eliminate_assumptions():
-    a, b, x, y = symbols('abxy')
-    assert eliminate_assume(Assume(x, 'a', True))  == a
-    assert eliminate_assume(Assume(x, 'a', True), symbol=x)  == a
-    assert eliminate_assume(Assume(x, 'a', True), symbol=y)  == None
-    assert eliminate_assume(Assume(x, 'a', False)) == ~a
-    assert eliminate_assume(Assume(x, 'a', False), symbol=y) == None
-    assert eliminate_assume(Assume(x, 'a', True) | Assume(x, 'b')) == a | b
-    assert eliminate_assume(Assume(x, 'a', True) | Assume(x, 'b', False)) == a | ~b
+def test_extract_facts():
+    a, b = symbols('a b', cls=Predicate)
+    assert _extract_facts(a(x), x)  == a
+    assert _extract_facts(a(x), y)  == None
+    assert _extract_facts(~a(x), x) == ~a
+    assert _extract_facts(~a(x), y) == None
+    assert _extract_facts(a(x) | b(x), x) == a | b
+    assert _extract_facts(a(x) | ~b(x), x) == a | ~b
 
 def test_global():
     """Test for global assumptions"""
-    x, y = symbols('x y')
-    global_assumptions.add(Assume(x>0))
-    assert Assume(x>0) in global_assumptions
-    global_assumptions.remove(Assume(x>0))
-    assert not Assume(x>0) in global_assumptions
+    global_assumptions.add(Q.is_true(x > 0))
+    assert Q.is_true(x > 0) in global_assumptions
+    global_assumptions.remove(Q.is_true(x > 0))
+    assert not Q.is_true(x > 0) in global_assumptions
     # same with multiple of assumptions
-    global_assumptions.add(Assume(x>0), Assume(y>0))
-    assert Assume(x>0) in global_assumptions
-    assert Assume(y>0) in global_assumptions
+    global_assumptions.add(Q.is_true(x > 0), Q.is_true(y > 0))
+    assert Q.is_true(x > 0) in global_assumptions
+    assert Q.is_true(y > 0) in global_assumptions
     global_assumptions.clear()
-    assert not Assume(x>0) in global_assumptions
-    assert not Assume(y>0) in global_assumptions
+    assert not Q.is_true(x > 0) in global_assumptions
+    assert not Q.is_true(y > 0) in global_assumptions
+
+def test_composite_predicates():
+    pred = Q.integer | ~Q.positive
+    assert type(pred(x)) is Or
+    assert pred(x) == Q.integer(x) | ~Q.positive(x)

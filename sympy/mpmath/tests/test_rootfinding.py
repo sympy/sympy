@@ -1,5 +1,8 @@
 from sympy.mpmath import *
-from sympy.mpmath.optimization import *
+from sympy.mpmath.calculus.optimization import Secant, Muller, Bisection, Illinois, \
+    Pegasus, Anderson, Ridder, ANewton, Newton, MNewton, MDNewton
+
+from sympy.utilities.pytest import XFAIL
 
 def test_findroot():
     # old tests, assuming secant
@@ -20,7 +23,14 @@ def test_findroot():
         assert abs(f(x)) < eps
     # test types
     f = lambda x: (x - 2)**2
+
     assert isinstance(findroot(f, 1, force_type=mpf, tol=1e-10), mpf)
+    assert isinstance(fp.findroot(f, 1, tol=1e-10), float)
+    assert isinstance(fp.findroot(f, 1+0j, tol=1e-10), complex)
+
+@XFAIL
+def test_findroot_bugs():
+    f = lambda x: (x - 2)**2
     assert isinstance(findroot(f, 1., force_type=None, tol=1e-10), float)
     assert isinstance(findroot(f, 1, force_type=complex, tol=1e-10), complex)
 
@@ -40,7 +50,7 @@ def test_muller():
     assert abs(f(x)) < eps
 
 def test_multiplicity():
-    for i in xrange(1, 5):
+    for i in range(1, 5):
         assert multiplicity(lambda x: (x - 1)**i, 1) == i
     assert multiplicity(lambda x: x**2, 1) == 0
 
@@ -48,7 +58,7 @@ def test_multidimensional():
     def f(*x):
         return [3*x[0]**2-2*x[1]**2-1, x[0]**2-2*x[0]+x[1]**2+2*x[1]-8]
     assert mnorm(jacobian(f, (1,-2)) - matrix([[6,8],[0,-2]]),1) < 1.e-7
-    for x, error in MDNewton(f, (1,-2), verbose=0,
+    for x, error in MDNewton(mp, f, (1,-2), verbose=0,
                              norm=lambda x: norm(x, inf)):
         pass
     assert norm(f(*x), 2) < 1e-14
@@ -66,6 +76,8 @@ def test_multidimensional():
 def test_trivial():
     assert findroot(lambda x: 0, 1) == 1
     assert findroot(lambda x: x, 0) == 0
-    #assert findroot(lambda x, y: x + y, (1, -1)) == (1, -1)
 
+@XFAIL
+def test_trivial_bugs():
+    assert findroot(lambda x, y: x + y, (1, -1)) == (1, -1)
 

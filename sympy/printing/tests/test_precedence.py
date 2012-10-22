@@ -1,7 +1,7 @@
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative
-from sympy.core.numbers import Integer, Rational, Real
+from sympy.core.numbers import Integer, Rational, Float, oo
 from sympy.core.relational import Rel
 from sympy.core.symbol import symbols
 from sympy.functions import sin
@@ -10,7 +10,7 @@ from sympy.series.order import Order
 
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-x, y = symbols("xy")
+x, y = symbols("x,y")
 
 def test_Add():
     assert precedence(x+y) == PRECEDENCE["Add"]
@@ -34,8 +34,10 @@ def test_Number():
     assert precedence(Integer(10)) == PRECEDENCE["Atom"]
     assert precedence(Rational(5,2)) == PRECEDENCE["Mul"]
     assert precedence(Rational(-5,2)) == PRECEDENCE["Add"]
-    assert precedence(Real(5)) == PRECEDENCE["Atom"]
-    assert precedence(Real(-5)) == PRECEDENCE["Add"]
+    assert precedence(Float(5)) == PRECEDENCE["Atom"]
+    assert precedence(Float(-5)) == PRECEDENCE["Add"]
+    assert precedence(oo) == PRECEDENCE["Atom"]
+    assert precedence(-oo) == PRECEDENCE["Add"]
 
 def test_Order():
     assert precedence(Order(x)) == PRECEDENCE["Atom"]
@@ -56,3 +58,19 @@ def test_Sum():
 
 def test_Symbol():
     assert precedence(x) == PRECEDENCE["Atom"]
+
+def test_And_Or():
+    # precendence relations between logical operators, ...
+    assert precedence(x&y) > precedence(x|y)
+    assert precedence(~y) > precedence(x&y)
+    # ... and with other operators (cfr. other programming languages)
+    assert precedence(x+y) > precedence(x|y)
+    assert precedence(x+y) > precedence(x&y)
+    assert precedence(x*y) > precedence(x|y)
+    assert precedence(x*y) > precedence(x&y)
+    assert precedence(~y) > precedence(x*y)
+    assert precedence(~y) > precedence(x-y)
+    # double checks
+    assert precedence(x&y) == PRECEDENCE["And"]
+    assert precedence(x|y) == PRECEDENCE["Or"]
+    assert precedence(~y) == PRECEDENCE["Not"]

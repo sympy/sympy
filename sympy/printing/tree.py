@@ -1,17 +1,18 @@
-from sympy.utilities.iterables import preorder_traversal
+
 
 def pprint_nodes(subtrees):
     """
     Prettyprints systems of nodes.
 
-    Example:
+    Examples
+    ========
 
-    >> print pprint_nodes(["a", "b1\nb2", "c"])
+    >>> from sympy.printing.tree import pprint_nodes
+    >>> print pprint_nodes(["a", "b1\\nb2", "c"])
     +-a
     +-b1
     | b2
     +-c
-    >>
 
     """
     def indent(s,type=1):
@@ -61,20 +62,22 @@ def print_tree(node):
     """
     Prints a tree representation of "node".
 
-    In [1]: print_tree(x**2)
+    Examples
+    ========
+
+    >>> from sympy.printing import print_tree
+    >>> from sympy.abc import x
+    >>> print_tree(x**2) # doctest: +SKIP
     Pow: x**2
     +-Symbol: x
     | comparable: False
-    | noncommutative: False
-    | commutative: True
     +-Integer: 2
       real: True
+      nonzero: True
       comparable: True
       commutative: True
       infinitesimal: False
-      nonzero: True
       unbounded: False
-      noncommutative: False
       noninteger: False
       zero: False
       complex: True
@@ -84,7 +87,7 @@ def print_tree(node):
       imaginary: False
       finite: True
       irrational: False
-
+    <BLANKLINE>
 
     See also: tree()
     """

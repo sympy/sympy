@@ -8,18 +8,18 @@ If you want to derive this by hand, follow the wiki page here:
 
 http://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
 
-Also read the above wiki and follow the references from there if something is
-not clear, like what the Ricci tensor is, etc.
+Also read the above wiki and follow the references from there if
+something is not clear, like what the Ricci tensor is, etc.
 
 """
 
-from sympy import exp, Symbol, sin, Rational, Derivative, dsolve, Function, \
-                  Matrix, Eq, pprint, Pow
+from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
+                  Matrix, Eq, pprint, Pow, classify_ode, solve)
 
 def grad(f,X):
     a=[]
     for x in X:
-        a.append( f.diff(x) )
+        a.append(f.diff(x))
     return a
 
 def d(m,x):
@@ -141,10 +141,10 @@ Gamma=G(g,X)
 Rmn=Ricci(Riemann(Gamma,X),X)
 
 def pprint_Gamma_udd(i,k,l):
-    pprint( Eq(Symbol('Gamma^%i_%i%i' % (i,k,l)), Gamma.udd(i,k,l))    )
+    pprint(Eq(Symbol('Gamma^%i_%i%i' % (i,k,l)), Gamma.udd(i,k,l)))
 
 def pprint_Rmn_dd(i,j):
-    pprint( Eq(Symbol('R_%i%i' % (i,j)), Rmn.dd(i,j))    )
+    pprint(Eq(Symbol('R_%i%i' % (i,j)), Rmn.dd(i,j)))
 
 
 # from Differential Equations example
@@ -152,26 +152,27 @@ def eq1():
     r = Symbol("r")
     e = Rmn.dd(0,0)
     e = e.subs(nu(r), -lam(r))
-    print dsolve(e, [lam(r)])
+    pprint(dsolve(e, lam(r)))
 
 def eq2():
     r = Symbol("r")
     e = Rmn.dd(1,1)
     C = Symbol("CC")
     e = e.subs(nu(r), -lam(r))
-    print dsolve(e, [lam(r)])
+    pprint(dsolve(e, lam(r)))
 
 def eq3():
     r = Symbol("r")
     e = Rmn.dd(2,2)
     e = e.subs(nu(r), -lam(r))
-    print dsolve(e, [lam(r)])
+    pprint(dsolve(e, lam(r)))
 
 def eq4():
     r = Symbol("r")
     e = Rmn.dd(3,3)
     e = e.subs(nu(r), -lam(r))
-    print dsolve(e, [lam(r)])
+    pprint(dsolve(e, lam(r)))
+    pprint(dsolve(e, lam(r), 'best'))
 
 
 
@@ -209,12 +210,13 @@ def main():
     #print curvature(Rmn)
     print "-"*40
     print "Solve Einstein's equations:"
-    e = e.subs(nu(r), -lam(r))
+    e = e.subs(nu(r), -lam(r)).doit()
     l =  dsolve(e, lam(r))
-    pprint( Eq(lam(r), l) )
-    metric = gdd.subs(lam(r), l).subs(nu(r),-l)#.combine()
+    pprint(l)
+    lamsol = solve(l, lam(r))[0]
+    metric = gdd.subs(lam(r), lamsol).subs(nu(r),-lamsol)#.combine()
     print "metric:"
-    pprint( metric )
+    pprint(metric)
 
 if __name__ == "__main__":
     main()

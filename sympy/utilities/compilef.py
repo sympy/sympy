@@ -15,49 +15,50 @@ Experimental module for compiling functions to machine code.
 Can also be used to generate C code from SymPy expressions.
 Depends on libtcc.
 
-This code is experimental. It may have severe bugs. Due to the use of C, it's
-able to crash your Python interpreter/debugger with obscure error messages.
+This code is experimental. It may have severe bugs. Due to the use of C,
+it's able to crash your Python interpreter/debugger with obscure error
+messages.
 
 64 bit floats (double) are used.
-
 
 Overview
 ========
 
-clambdify:   compile a function to machine code (only useful for big functions)
+clambdify:   compile a function to machine code (only useful for big
+             functions)
 frange:      evaluate a function on a range of numbers using machine code
 cexpr:       translate a Python expression to a C expression
 genfcode:    generate C code from a lambda string
 evanonarray: evaluate a function on an array using machine code
 
-
 Performance
 ===========
 
-Python functions using the math module are *quite* fast. For simple functions
-they are faster than functions compiled to machine code. So you should test
-to see whether lambdify is fast enough for you.
+Python functions using the math module are *quite* fast. For simple
+functions they are faster than functions compiled to machine code. So you
+should test to see whether lambdify is fast enough for you.
 
 Iterating is slow in Python (it's probably the biggest bottle neck).
 frange allows you to iterate using machine code. This can result in huge
 speedups. You might want to use NumPy: http://numpy.org/
-For simple functions it's faster, but for big ones frange can be several times
-more efficient.
+For simple functions it's faster, but for big ones frange can be several
+times more efficient.
 
 You should experiment to see which solution is best for your application.
 
-You can run the included benchmarks to see the real performance on your machine.
-
+You can run the included benchmarks to see the real performance on your
+machine.
 
 Configuration
 =============
 
-You will probably need to compile libtcc on your own. Get the sources of tcc:
+You will probably need to compile libtcc on your own. Get the sources of
+tcc:
 
 http://bellard.org/tcc/
 
-Currently it only works for a recent development version. So you might want to
-run the following commands (you have to use your own paths of course):
+Currently it only works for a recent development version. So you might want
+to run the following commands (you have to use your own paths of course):
 
 $ cvs -z3 -d:pserver:anonymous@cvs.savannah.nongnu.org:/sources/tinycc co tinycc
 $ cd tinycc
@@ -67,25 +68,24 @@ $ gcc -shared -Wl,-soname,libtcc.so -o libtcc.so libtcc.o
 $ cd sympy/utilities/
 $ ln -s tinycc/libtcc.so # or change libtccpath in compilef.py
 
-You might try to run libtcc_test. If something went wrong there will be bad low
-level Python errors probably crashing the interpreter. The error output will be
-printed to stdout or stderr, which might be different to your Python shell.
+You might try to run libtcc_test. If something went wrong there will be bad
+low level Python errors probably crashing the interpreter. The error output
+will be printed to stdout or stderr, which might be different to your Python
+shell.
 
 Make sure that this module knows the path to libtcc.
 
-If everything went right, all the tests will pass. Run this file to do so and
-to see the results of some benchmarks.
+If everything went right, all the tests will pass. Run this file to do so
+and to see the results of some benchmarks.
 
 """
 
-import os
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
-try:
-    import numpy
-except ImportError:
-    numpy = None
+from sympy.external import import_module
+
+numpy = import_module('numpy')
 
 libtccpath = './libtcc.so'
 dps = 17 # decimal places of float precision
@@ -390,7 +390,7 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
         pointer = array
         assert isinstance(length,  int) and not length < 0
     else:
-        raise ValueError,  'array type not recognized'
+        raise ValueError('array type not recognized')
     # generate code
     code = """
 # include <math.h>
@@ -420,7 +420,7 @@ void evalonarray(double *array, int length)
 #########
 
 from sympy import sqrt, pi, lambdify
-from math import exp, cos, sin
+from math import exp as _exp, cos as _cos, sin as _sin
 
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
@@ -443,7 +443,7 @@ def test_clambdify():
     # FIXME: slight difference in precision
 
 def test_frange():
-    fstr = 'lambda x: exp(x)*cos(x)**x'
+    fstr = 'lambda x: _exp(x)*_cos(x)**x'
     f = eval(fstr)
     a = frange(fstr, 30, 168, 3)
     args = range(30, 168, 3)
@@ -484,9 +484,9 @@ def test_frange():
 
 def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
-    evalonarray('lambda x: sin(x)', a)
+    evalonarray('lambda x: _sin(x)', a)
     for i, j in enumerate(a):
-        assert sin(i) == j
+        assert _sin(i) == j
 # TODO: test for ctypes pointers
 ##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
 ##    for i, j in enumerater(a):
@@ -527,12 +527,10 @@ def benchmark():
         print 'compile time (including sympy overhead): %f s' % (time() - start)
         pf = lambdify(var, f, 'math')
         psyf = None
-        try:
-            import psyco
+        psyco = import_module('psyco')
+        if psyco:
             psyf = lambdify(var, f, 'math')
             psyco.bind(psyf)
-        except ImportError:
-            pass
         code = '''for x in (i/1000. for i in range(1000)):
         f(%s)''' % ('x,'*len(var)).rstrip(',')
         t1 = Timer(code, 'from __main__ import cf as f')
@@ -549,14 +547,14 @@ def benchmark():
             print 'Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20))
 
     print 'big function:'
-    from sympy import diff, exp, sin, cos, pi, lambdify
+    from sympy import diff, _exp, _sin, _cos, pi, lambdify
     x = Symbol('x')
-##    f1 = diff(exp(x)**2 - sin(x)**pi, x) \
-##        * x**12-2*x**3+2*exp(x**2)-3*x**7+4*exp(123+x-x**5+2*x**4) \
+##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
+##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
 ##        * ((x + pi)**5).expand()
-    f1 = 2*exp(x**2) + x**12*(-pi*sin(x)**((-1) + pi)*cos(x) + 2*exp(2*x)) \
+    f1 = 2*_exp(x**2) + x**12*(-pi*_sin(x)**((-1) + pi)*_cos(x) + 2*_exp(2*x)) \
          + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5 \
-         + x**5)*exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
+         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
     print
     print 'simple function:'
@@ -564,7 +562,7 @@ def benchmark():
     f2 = sqrt(x*y)+x*5
     fbenchmark(f2, [x,y])
     times = 100000
-    fstr = 'exp(sin(exp(-x**2)) + sqrt(pi)*cos(x**5/(x**3-x**2+pi*x)))'
+    fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print
     print 'frange with f(x) ='
     print fstr
@@ -572,10 +570,9 @@ def benchmark():
     print 'in 3 runs including full compile time'
     t4 = Timer("frange('lambda x: %s', 0, %i)" % (fstr, times),
                'from __main__ import frange')
-    try:
-        import numpy
-    except ImportError:
-        numpy = None
+
+    numpy = import_module('numpy')
+
     print 'frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1))
     if numpy:
         t5 = Timer('x = arange(%i); result = %s' % (times, fstr),

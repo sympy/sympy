@@ -1,7 +1,10 @@
         print 'Example: non-euclidian distance calculation'
 
         metric = '0 # #,# 0 #,# # 1'
-        MV.setup('X Y e',metric)
+        X,Y,e = MV.setup('X Y e',metric)
+        XdotY = sympy.Symbol('(X.Y)')
+        Xdote = sympy.Symbol('(X.e)')
+        Ydote = sympy.Symbol('(Y.e)')
         MV.set_str_format(1)
         L = X^Y^e
         B = L*e
@@ -12,7 +15,7 @@
         print 'B*e*B.rev() =',BeBr
         print 'B^2 =',Bsq
         print 'L^2 =',(L*L)()
-        make_symbols('s c Binv M S C alpha')
+        s,c,Binv,M,S,C,alpha = symbols('s c Binv M S C alpha')
         Bhat = Binv*B # Normalize translation generator
         R = c+s*Bhat # Rotor R = exp(alpha*Bhat/2)
         print 's = sinh(alpha/2) and c = cosh(alpha/2)'
@@ -66,7 +69,7 @@
         print 'W =',W
         W = collect(W,[C,C**2],evaluate=False)
         print 'W =',W
-        
+
         a = W[C**2]
         b = W[C]
         c = W[ONE]
@@ -97,24 +100,24 @@ R = exp(alpha*B/(2*|B|)) = {c}1
 +{-(Y.e)*Binv*s}X^e
 +{(X.e)*Binv*s}Y^e
 
-R*X*R.rev() = {Binv*(2*(X.Y)*c*s - 2*(X.e)*(Y.e)*c*s) + Binv**2*((X.Y)**2*s**2 
+R*X*R.rev() = {Binv*(2*(X.Y)*c*s - 2*(X.e)*(Y.e)*c*s) + Binv**2*((X.Y)**2*s**2
                - 2*(X.Y)*(X.e)*(Y.e)*s**2) + c**2}X
              +{2*Binv*c*s*(X.e)**2}Y
              +{Binv**2*(-2*(X.e)*(X.Y)**2*s**2 + 4*(X.Y)*(Y.e)*(X.e)**2*s**2)
                - 2*(X.Y)*(X.e)*Binv*c*s}e
 
-(R*X*rev(R)).Y = {Binv*s*(-4*(X.Y)*(X.e)*(Y.e)*c + 2*c*(X.Y)**2) 
+(R*X*rev(R)).Y = {Binv*s*(-4*(X.Y)*(X.e)*(Y.e)*c + 2*c*(X.Y)**2)
                  + Binv**2*s**2*(-4*(X.e)*(Y.e)*(X.Y)**2 +
                  4*(X.Y)*(X.e)**2*(Y.e)**2 + (X.Y)**3) + (X.Y)*c**2}1
 
-(R*X*R.rev()).Y = S*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2) 
-                  + (X.Y)*Binv*C*(-2*(X.Y)*(X.e)*(Y.e) + 
-                  (X.Y)**2)**(1/2) + (X.e)*(Y.e)*Binv*(-2*(X.Y)*(X.e)*(Y.e) 
-                  + (X.Y)**2)**(1/2) - 
+(R*X*R.rev()).Y = S*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2)
+                  + (X.Y)*Binv*C*(-2*(X.Y)*(X.e)*(Y.e) +
+                  (X.Y)**2)**(1/2) + (X.e)*(Y.e)*Binv*(-2*(X.Y)*(X.e)*(Y.e)
+                  + (X.Y)**2)**(1/2) -
                   (X.e)*(Y.e)*Binv*C*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2)
 Wd = {1: (X.e)*(Y.e)*Binv*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2),
       S: (-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2),
-      C: (X.Y)*Binv*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2) - 
+      C: (X.Y)*Binv*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2) -
          (X.e)*(Y.e)*Binv*(-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2)}
 |B| = (-2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2)**(1/2)
 
@@ -122,10 +125,10 @@ Wd[ONE] = (X.e)*(Y.e)
 Wd[C] = (X.Y) - (X.e)*(Y.e)
 Wd[S] = 1/Binv
 
-W = 2*(X.Y)*(X.e)*(Y.e)*C + (X.Y)**2*C**2 + (X.e)**2*(Y.e)**2 
-    - (X.Y)**2*S**2 + (X.e)**2*(Y.e)**2*C**2 - 2*C*(X.e)**2*(Y.e)**2 
+W = 2*(X.Y)*(X.e)*(Y.e)*C + (X.Y)**2*C**2 + (X.e)**2*(Y.e)**2
+    - (X.Y)**2*S**2 + (X.e)**2*(Y.e)**2*C**2 - 2*C*(X.e)**2*(Y.e)**2
     - 2*(X.Y)*(X.e)*(Y.e)*C**2 + 2*(X.Y)*(X.e)*(Y.e)*S**2
-W = -2*(X.Y)*(X.e)*(Y.e) + 2*(X.Y)*(X.e)*(Y.e)*C + (X.Y)**2 
+W = -2*(X.Y)*(X.e)*(Y.e) + 2*(X.Y)*(X.e)*(Y.e)*C + (X.Y)**2
     + (X.e)**2*(Y.e)**2 + (X.e)**2*(Y.e)**2*C**2 -
      2*C*(X.e)**2*(Y.e)**2
 W = {1: -2*(X.Y)*(X.e)*(Y.e) + (X.Y)**2 + (X.e)**2*(Y.e)**2,

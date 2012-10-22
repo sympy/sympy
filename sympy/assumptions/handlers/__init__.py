@@ -20,16 +20,17 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def Symbol(expr, assumptions):
         """Objects are expected to be commutative unless otherwise stated"""
-        if assumptions is True: return True
-        for assump in conjuncts(assumptions):
-            if assump.expr == expr and assump.key == 'commutative':
-                return assump.value
+        assumps = conjuncts(assumptions)
+        if Q.commutative(expr) in assumps:
+            return True
+        elif ~Q.commutative(expr) in assumps:
+            return False
         return True
 
     @staticmethod
     def Basic(expr, assumptions):
         for arg in expr.args:
-            if not ask(arg, Q.commutative, assumptions):
+            if not ask(Q.commutative(arg), assumptions):
                 return False
         return True
 
@@ -41,3 +42,60 @@ class AskCommutativeHandler(CommonHandler):
     def NaN(expr, assumptions):
         return True
 
+class TautologicalHandler(AskHandler):
+    """Wrapper allowing to query the truth value of a boolean expression."""
+
+    @staticmethod
+    def bool(expr, assumptions):
+        return expr
+
+    @staticmethod
+    def AppliedPredicate(expr, assumptions):
+        return ask(expr, assumptions)
+
+    @staticmethod
+    def Not(expr, assumptions):
+        value = ask(expr.args[0], assumptions=assumptions)
+        if value in (True, False):
+            return not value
+        else:
+            return None
+
+
+    @staticmethod
+    def Or(expr, assumptions):
+        result = False
+        for arg in expr.args:
+            p = ask(arg, assumptions=assumptions)
+            if p == True:
+                return True
+            if p == None:
+                result = None
+        return result
+
+    @staticmethod
+    def And(expr, assumptions):
+        result = True
+        for arg in expr.args:
+            p = ask(arg, assumptions=assumptions)
+            if p == False:
+                return False
+            if p == None:
+                result = None
+        return result
+
+    @staticmethod
+    def Implies(expr, assumptions):
+        p, q = expr.args
+        return ask(~p | q, assumptions=assumptions)
+
+    @staticmethod
+    def Equivalent(expr, assumptions):
+        p, q = expr.args
+        pt = ask(p, assumptions=assumptions)
+        if pt == None:
+            return None
+        qt = ask(q, assumptions=assumptions)
+        if qt == None:
+            return None
+        return pt == qt

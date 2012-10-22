@@ -13,8 +13,8 @@ See:
  * http://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
-from sympy import var, sqrt, integrate, conjugate, seterr, abs, pprint, I, pi,\
-        sin, cos, sign, Plot, msolve, lambdify, Integral, S
+from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
+        sin, cos, sign, Plot, lambdify, Integral, S
 
 #seterr(True)
 
@@ -29,13 +29,16 @@ def l2_norm(f, lim):
 
     Example:
 
+    >>> from sympy import Symbol
+    >>> from gibbs_phenomenon import l2_norm
+    >>> x = Symbol('x', real=True)
     >>> l2_norm(1, (x, -1, 1))
-    2**(1/2)
+    sqrt(2)
     >>> l2_norm(x, (x, -1, 1))
-    1/3*6**(1/2)
+    sqrt(6)/3
 
     """
-    return sqrt(integrate(abs(f)**2, lim))
+    return sqrt(integrate(Abs(f)**2, lim))
 
 def l2_inner_product(a, b, lim):
     """
@@ -57,8 +60,13 @@ def l2_gram_schmidt(list, lim):
     Orthonormalizes the "list" of functions using the Gram-Schmidt process.
 
     Example:
+
+    >>> from sympy import Symbol
+    >>> from gibbs_phenomenon import l2_gram_schmidt
+
+    >>> x = Symbol('x', real=True)    # perform computations over reals to save time
     >>> l2_gram_schmidt([1, x, x**2], (x, -1, 1))
-    [1/2*2**(1/2), x*6**(1/2)/2, -3*10**(1/2)*(1/3 - x**2)/4]
+    [sqrt(2)/2, sqrt(6)*x/2, 3*sqrt(10)*(x**2 - 1/3)/4]
 
     """
     r = []

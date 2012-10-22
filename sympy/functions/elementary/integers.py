@@ -1,15 +1,15 @@
-
-from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import Lambda, Function
-
+from sympy.core.basic import C
+from sympy.core.singleton import S
+from sympy.core.function import Function
+from sympy.core import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
 class RoundFunction(Function):
+    """The base class for rounding functions."""
 
     nargs = 1
 
@@ -28,15 +28,12 @@ class RoundFunction(Function):
         ipart = npart = spart = S.Zero
 
         # Extract integral (or complex integral) terms
-        if arg.is_Add:
-            terms = arg.args
-        else:
-            terms = [arg]
+        terms = Add.make_args(arg)
 
         for t in terms:
             if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
                 ipart += t
-            elif t.atoms(C.Symbol):
+            elif t.has(C.Symbol):
                 spart += t
             else:
                 npart += t
@@ -45,9 +42,10 @@ class RoundFunction(Function):
             return ipart
 
         # Evaluate npart numerically if independent of spart
-        orthogonal = (npart.is_real and spart.is_imaginary) or \
-            (npart.is_imaginary and spart.is_real)
-        if npart and ((not spart) or orthogonal):
+        if npart and (
+            not spart or
+            npart.is_real and spart.is_imaginary or
+            npart.is_imaginary and spart.is_real):
             try:
                 re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
                 ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
@@ -59,7 +57,7 @@ class RoundFunction(Function):
         if not spart:
             return ipart
         elif spart.is_imaginary:
-            return ipart + cls(C.im(spart),evaluate=False)*S.ImaginaryUnit
+            return ipart + cls(C.im(spart), evaluate=False)*S.ImaginaryUnit
         else:
             return ipart + cls(spart, evaluate=False)
 
@@ -81,18 +79,22 @@ class floor(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
 
-        >>> from sympy import floor, E, I, Real, Rational
+        >>> from sympy import floor, E, I, Float, Rational
         >>> floor(17)
         17
         >>> floor(Rational(23, 10))
         2
         >>> floor(2*E)
         5
-        >>> floor(-Real(0.567))
+        >>> floor(-Float(0.567))
         -1
         >>> floor(-I/2)
         -I
 
+    See Also
+    ========
+
+    ceiling
     """
     _dir = -1
 
@@ -100,26 +102,26 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return C.Integer(arg.p // arg.q)
-            elif arg.is_Real:
+            elif arg.is_Float:
                 return C.Integer(int(arg.floor()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
-    def _eval_nseries(self, x, x0, n):
-        r = self.subs(x, x0)
+    def _eval_nseries(self, x, n, logx):
+        r = self.subs(x, 0)
         args = self.args[0]
-        if args.subs(x, x0) == r:
-            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+        args0 = args.subs(x, 0)
+        if args0 == r:
+            direction = (args - args0).leadterm(x)[0]
             if direction.is_positive:
                 return r
             else:
                 return r-1
         else:
             return r
-
 
 class ceiling(RoundFunction):
     """
@@ -130,18 +132,22 @@ class ceiling(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
 
-        >>> from sympy import ceiling, E, I, Real, Rational
+        >>> from sympy import ceiling, E, I, Float, Rational
         >>> ceiling(17)
         17
         >>> ceiling(Rational(23, 10))
         3
         >>> ceiling(2*E)
         6
-        >>> ceiling(-Real(0.567))
+        >>> ceiling(-Float(0.567))
         0
         >>> ceiling(I/2)
         I
 
+    See Also
+    ========
+
+    floor
     """
     _dir = 1
 
@@ -149,23 +155,23 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return -C.Integer(-arg.p // arg.q)
-            elif arg.is_Real:
+            elif arg.is_Float:
                 return C.Integer(int(arg.ceiling()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 
-    def _eval_nseries(self, x, x0, n):
-        r = self.subs(x, x0)
+    def _eval_nseries(self, x, n, logx):
+        r = self.subs(x, 0)
         args = self.args[0]
-        if args.subs(x,x0) == r:
-            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+        args0 = args.subs(x, 0)
+        if args0 == r:
+            direction = (args - args0).leadterm(x)[0]
             if direction.is_positive:
-                return r+1
+                return r + 1
             else:
                 return r
         else:
             return r
-

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """print_gtk example
 
 Demonstrates printing with gtkmathview using mathml

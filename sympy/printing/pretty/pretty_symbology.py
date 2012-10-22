@@ -1,4 +1,4 @@
-"""Symbolic primitives + unicode/ASCII abstraction  for pretty.py"""
+"""Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
 import sys
 warnings = ''
@@ -7,38 +7,15 @@ warnings = ''
 try:
     import unicodedata
 
-    # Python2.4 unicodedata misses some symbols, like subscript 'i', etc,
-    # and we still want SymPy to be fully functional under Python2.4
-    if sys.hexversion < 0x02050000:
-        unicodedata_missing = {
-            'GREEK SUBSCRIPT SMALL LETTER BETA' : u'\u1d66',
-            'GREEK SUBSCRIPT SMALL LETTER GAMMA': u'\u1d67',
-            'GREEK SUBSCRIPT SMALL LETTER RHO'  : u'\u1d68',
-            'GREEK SUBSCRIPT SMALL LETTER PHI'  : u'\u1d69',
-            'GREEK SUBSCRIPT SMALL LETTER CHI'  : u'\u1d6a',
-
-            'LATIN SUBSCRIPT SMALL LETTER A'    : u'\u2090',
-            'LATIN SUBSCRIPT SMALL LETTER E'    : u'\u2091',
-            'LATIN SUBSCRIPT SMALL LETTER I'    : u'\u1d62',
-            'LATIN SUBSCRIPT SMALL LETTER O'    : u'\u2092',
-            'LATIN SUBSCRIPT SMALL LETTER R'    : u'\u1d63',
-            'LATIN SUBSCRIPT SMALL LETTER U'    : u'\u1d64',
-            'LATIN SUBSCRIPT SMALL LETTER V'    : u'\u1d65',
-            'LATIN SUBSCRIPT SMALL LETTER X'    : u'\u2093',
-        }
-    else:
-        unicodedata_missing = {}
-
     def U(name):
         """unicode character by name or None if not found"""
         try:
             u = unicodedata.lookup(name)
         except KeyError:
-            u = unicodedata_missing.get(name)
+            u = None
 
-            if u is None:
-                global warnings
-                warnings += 'W: no \'%s\' in unocodedata\n' % name
+            global warnings
+            warnings += 'W: no \'%s\' in unocodedata\n' % name
 
         return u
 
@@ -47,7 +24,6 @@ except ImportError:
     U = lambda name: None
 
 from sympy.printing.conventions import split_super_sub
-import re
 
 
 # prefix conventions when constructing tables
@@ -57,7 +33,8 @@ import re
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol']
+__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+           'annotated']
 
 
 _use_unicode = False
@@ -120,21 +97,10 @@ def xstr(*args):
     else:
         return str(*args)
 
-# COMPATIBILITY TWEAKS
-def fixup_tables():
-    # python2.4 unicodedata lacks some definitions
-
-    for d in sub, sup:
-        for k in d.keys():
-            if d[k] is None:
-                del d[k]
-
-
 # GREEK
 g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
 G   = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
-# XXX lambda <-> lamda
 greek_letters = [
     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
     'iota', 'kappa', 'lamda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho',
@@ -142,7 +108,8 @@ greek_letters = [
 
 # {}  greek letter -> (g,G)
 greek = dict([(l, (g(l), G(l))) for l in greek_letters])
-
+# aliases
+greek['lambda'] = greek['lamda']
 
 digit_2txt = {
     '0' :   'ZERO',
@@ -194,8 +161,8 @@ for l in 'aeioruvx':
 for l in 'in':
     sup[l] = LSUP(l)
 
-for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-    sub[g] = GSUB(g)
+for gl in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+    sub[gl] = GSUB(gl)
 
 for d in [str(i) for i in range(10)]:
     sub[d] = DSUB(d)
@@ -229,19 +196,31 @@ _xobj_unicode = {
     '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
+    '<':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT')), '<'),
+
+    '>':   ((U('BOX DRAWINGS LIGHT VERTICAL'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+             U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), '>'),
+
     'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
     'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
     'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
     'rceil'  : (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
 
     'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-   #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
+    'sum':  (( U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'), '_', U('OVERLINE'), U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT')), U('N-ARY SUMMATION')),
 
 
     # horizontal objects
     #'-' :  '-',
     '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    '_' :   U('LOW LINE'),
+    # We used to use this, but LOW LINE looks better for roots, as it's a
+    # little lower (i.e., it lines up with the / perfectly.  But perhaps this
+    # one would still be wanted for some cases?
+    # '_' :   U('HORIZONTAL SCAN LINE-9'),
 
     # diagonal objects '\' & '/' ?
     '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
@@ -265,6 +244,9 @@ _xobj_ascii = {
     '}' :   (( '|', '\\', '/',  '>' ),      '}'),
     '|' :   '|',
 
+    '<' :   (( '|', '/',  '\\'  ),          '<'),
+    '>' :   (( '|', '\\', '/'   ),          '>'),
+
     'int':  ( ' | ', '  /', '/  ' ),
 
     # horizontal objects
@@ -275,7 +257,6 @@ _xobj_ascii = {
     '/' :   '/',
     '\\':   '\\',
 }
-
 
 def xobj(symb, length):
     """Construct spatial object of given length.
@@ -392,10 +373,17 @@ frac = {
 _xsym = {
     '=='    : ( '=',    '='),
     '<'     : ( '<',    '<'),
+    '>'     : ( '>',    '>'),
     '<='    : ('<=',    U('LESS-THAN OR EQUAL TO')),
     '>='    : ('>=',    U('GREATER-THAN OR EQUAL TO')),
     '!='    : ('!=',    U('NOT EQUAL TO')),
     '*'     : ('*',     U('DOT OPERATOR')),
+    '-->'   : ('-->',   U('EM DASH') + U('EM DASH') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '==>'   : ('==>',   U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BOX DRAWINGS DOUBLE HORIZONTAL') +
+               U('BLACK RIGHT-POINTING TRIANGLE')),
+    '.'     : ('*',     U('RING OPERATOR')),
 }
 
 
@@ -421,7 +409,11 @@ atoms_table = {
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
     'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet'          :   U('EMPTY SET'),
-    'Union'             :   U('UNION')
+    'Naturals'          :   U('DOUBLE-STRUCK CAPITAL N'),
+    'Integers'          :   U('DOUBLE-STRUCK CAPITAL Z'),
+    'Reals'             :   U('DOUBLE-STRUCK CAPITAL R'),
+    'Union'             :   U('UNION'),
+    'Intersection'      :   U('INTERSECTION')
 }
 
 def pretty_atom(atom_name, default=None):
@@ -478,21 +470,34 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None: # nice formatting of sups/subs did not work
-        if len(sups) > 0:
-            sups_result = '^' + '^'.join(sups)
-        else:
-            sups_result = ''
-        if len(subs) > 0:
-            subs_result = '_' + '_'.join(subs)
-        else:
-            subs_result = ''
+        return symb_name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
 
-
     return ''.join([name, sups_result, subs_result])
 
 
-# final fixup
-fixup_tables()
+def annotated(letter):
+    """
+    Return a stylised drawing of the letter ``letter``, together with
+    information on how to put annotations (super- and subscripts to the
+    left and to the right) on it.
+
+    See pretty.py functions _print_meijerg, _print_hyper on how to use this
+    information.
+    """
+    ucode_pics = {
+        'F': (2, 0, 2, 0, u'\u250c\u2500\n\u251c\u2500\n\u2575'),
+        'G': (3, 0, 3, 1,
+              u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+    }
+    ascii_pics = {
+        'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
+        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+    }
+
+    if _use_unicode:
+        return ucode_pics[letter]
+    else:
+        return ascii_pics[letter]

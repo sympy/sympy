@@ -1,13 +1,10 @@
 recursive-include data *
 recursive-include doc *
-recursive-include examples *
-
-recursive-include sympy/thirdparty/pyglet *
+prune doc/_build
+recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl
 
 include LICENSE
 include TODO
 include AUTHORS
-include bin/test
-include bin/py.bench

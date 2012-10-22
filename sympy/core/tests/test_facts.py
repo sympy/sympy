@@ -1,44 +1,43 @@
-from sympy.core.facts import deduce_alpha_implications, apply_beta_to_alpha_route, \
-        rules_2prereq, split_rules_tt_tf_ft_ff, FactRules
-from sympy.core.logic import And
+from sympy.core.facts import (deduce_alpha_implications,
+        apply_beta_to_alpha_route, rules_2prereq, FactRules, FactKB)
+from sympy.core.logic import And, Not
 from sympy.utilities.pytest import XFAIL, raises
 
 T = True
 F = False
 U = None
 
-
 def test_deduce_alpha_implications():
     def D(i):
         I = deduce_alpha_implications(i)
-        P = rules_2prereq(I)
+        P = rules_2prereq(dict(((k, True), set([(v, True) for v in S])) for k, S in I.items()))
         return I,P
 
     # transitivity
     I,P = D([('a','b'), ('b','c')])
-    assert I == {'a': ['b','c'], 'b': ['c']}
-    assert P == {'b': ['a'], 'c': ['a', 'b']}   # XXX a,b order unstable
+    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if the output does not contain repeated implications
     I,P = D([('a','b'), ('b','c'), ('b','c')])
-    assert I == {'a': ['b','c'], 'b': ['c']}
-    assert P == {'b': ['a'], 'c': ['a', 'b']}   # XXX a,b order unstable
+    assert I == {'a': set(['b','c']), 'b': set(['c'])}
+    assert P == {'b': set(['a']), 'c': set(['a', 'b'])}
 
     # see if it is tolerant to cycles
     assert D([('a','a'), ('a','a')]) == ({}, {})
-    assert D([('a','b'), ('b','a')]) == ({'a': ['b'], 'b': ['a']},  {'a': ['b'], 'b': ['a']})
+    assert D([('a','b'), ('b','a')]) == ({'a': set(['b']), 'b': set(['a'])},  {'a': set(['b']), 'b': set(['a'])})
 
     # see if it catches inconsistency
-    raises(ValueError, "D([('a','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','!a')])")
-    raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na','!a')])")
+    raises(ValueError, lambda: D([('a',Not('a'))]))
+    raises(ValueError, lambda: D([('a','b'), ('b',Not('a'))]))
+    raises(ValueError, lambda: D([('a','b'), ('b','c'), ('b','na'), ('na',Not('a'))]))
 
 
     # something related to real-world
     I,P = D([('rat','real'), ('int','rat')])
 
-    assert I == {'int': ['rat', 'real'],  'rat': ['real']}
-    assert P == {'rat': ['int'], 'real': ['int', 'rat']}    # XXX int,rat order unstable
+    assert I == {'int': set(['rat', 'real']),  'rat': set(['real'])}
+    assert P == {'rat': set(['int']), 'real': set(['int', 'rat'])}
 
 
 # TODO move me to appropriate place
@@ -47,145 +46,101 @@ def test_apply_beta_to_alpha_route():
 
     # indicates empty alpha-chain with attached beta-rule #bidx
     def Q(bidx):
-        return ([],[bidx])
+        return (set(), [bidx])
 
     # x -> a        &(a,b) -> x     --  x -> a
-    A = {'x': ['a']};       B = [ (And('a','b'), 'x') ]
-    assert APPLY(A, B) == {'x': (['a'], []),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a'])};       B = [ (And('a','b'), 'x') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a        &(a,!x) -> b    --  x -> a
-    A = {'x': ['a']};       B = [ (And('a','!x'), 'b') ]
-    assert APPLY(A, B) == {'x': (['a'], []),    '!x':Q(0), 'a':Q(0)}
+    A = {'x': set(['a'])};       B = [ (And('a',Not('x')), 'b') ]
+    assert APPLY(A, B) == {'x': (set(['a']), []),    Not('x'):Q(0), 'a':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c
-    A = {'x': ['a','b']};   B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c'], []),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a','b'])};   B = [ (And('a','b'), 'c') ]
+    assert APPLY(A, B) == {'x': (set(['a','b','c']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a        &(a,b) -> y     --  x -> a [#0]
-    A = {'x': ['a']};   B = [ (And('a','b'), 'y') ]
-    assert APPLY(A, B) == {'x': (['a'], [0]),    'a':Q(0), 'b':Q(0)}
+    A = {'x': set(['a'])};   B = [ (And('a','b'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a']), [0]),    'a':Q(0), 'b':Q(0)}
 
     # x -> a b c    &(a,b) -> c     --  x -> a b c
-    A = {'x': ['a','b','c']}
+    A = {'x': set(['a','b','c'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c'], []),    'a':Q(0), 'b':Q(0)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c']), []),    'a':Q(0), 'b':Q(0)}
 
     # x -> a b      &(a,b,c) -> y   --  x -> a b [#0]
-    A = {'x': ['a','b']};   B = [ (And('a','b','c'), 'y') ]
-    assert APPLY(A, B) == {'x': (['a','b'], [0]),    'a':Q(0), 'b':Q(0), 'c':Q(0)}
+    A = {'x': set(['a','b'])};   B = [ (And('a','b','c'), 'y') ]
+    assert APPLY(A, B) == {'x': (set(['a','b']), [0]),    'a':Q(0), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c d
     # c -> d                            c -> d
-    A = {'x': ['a','b'], 'c': ['d']}
+    A = {'x': set(['a','b']), 'c': set(['d'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A, B) == {'x': (['a','b','c','d'], []), 'c': (['d'], []),    'a':Q(0), 'b':Q(0)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c','d']), []), 'c': (set(['d']), []), 'a':Q(0), 'b':Q(0)}
 
     # x -> a b      &(a,b) -> c     --  x -> a b c d e
     # c -> d        &(c,d) -> e         c -> d e
-    A = {'x': ['a','b'], 'c': ['d']}
+    A = {'x': set(['a','b']), 'c': set(['d'])}
     B = [ (And('a','b'), 'c'), (And('c','d'), 'e') ]
-    assert APPLY(A, B) == {'x': (['a','b','c','d','e'], []), 'c': (['d','e'], []),    'a':Q(0), 'b':Q(0), 'd':Q(1)}
+    assert APPLY(A, B) == {'x': (set(['a','b','c','d','e']), []), 'c': (set(['d','e']), []), 'a':Q(0), 'b':Q(0), 'd':Q(1)}
 
     # x -> a b      &(a,y) -> z     --  x -> a b y z
     #               &(a,b) -> y
-    A = {'x': ['a','b']}
+    A = {'x': set(['a','b'])}
     B = [ (And('a','y'), 'z'),
           (And('a','b'), 'y') ]
-    assert APPLY(A,B)  == {'x': (['a','b','y','z'], []),    'a':([],[0,1]), 'y':Q(0), 'b':Q(1)}
+    assert APPLY(A,B)  == {'x': (set(['a','b','y','z']), []), 'a':(set(), [0,1]), 'y':Q(0), 'b':Q(1)}
 
     # x -> a b      &(a,!b) -> c    --  x -> a b
-    A = {'x': ['a', 'b']}
-    B = [ (And('a','!b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (['a', 'b'], []),    'a':Q(0), '!b':Q(0)}
+    A = {'x': set(['a', 'b'])}
+    B = [ (And('a', Not('b')), 'c') ]
+    assert APPLY(A,B)  == {'x': (set(['a', 'b']), []), 'a':Q(0), Not('b'):Q(0)}
 
     # !x -> !a !b   &(!a,b) -> c    --  !x -> !a !b
-    A = {'!x': ['!a', '!b']}
-    B = [ (And('!a','b'), 'c') ]
-    assert APPLY(A,B)  == {'!x': (['!a', '!b'], []),    '!a':Q(0), 'b':Q(0)}
+    A = {Not('x'): set([Not('a'), Not('b')])}
+    B = [ (And(Not('a'),'b'), 'c') ]
+    assert APPLY(A,B)  == {Not('x'): (set([Not('a'), Not('b')]), []), Not('a'):Q(0), 'b':Q(0)}
 
     # x -> a b      &(b,c) -> !a    --  x -> a b
-    A = {'x': ['a','b']}
-    B = [ (And('b','c'), '!a') ]
-    assert APPLY(A,B)  == {'x': (['a','b'], []),    'b':Q(0), 'c':Q(0)}
+    A = {'x': set(['a','b'])}
+    B = [ (And('b','c'), Not('a')) ]
+    assert APPLY(A,B)  == {'x': (set(['a','b']), []), 'b':Q(0), 'c':Q(0)}
 
     # x -> a b      &(a, b) -> c    --  x -> a b c p
     # c -> p a
-    A = {'x': ['a','b'], 'c': ['p','a']}
+    A = {'x': set(['a','b']), 'c': set(['p','a'])}
     B = [ (And('a','b'), 'c') ]
-    assert APPLY(A,B)  == {'x': (['a','b','c','p'], []), 'c': (['p','a'], []),    'a':Q(0), 'b':Q(0)}
-
-    # TODO more tests?
-
-
-def test_split_rules_tf():
-    S = split_rules_tt_tf_ft_ff
-
-    r = {'a': ['b', '!c', 'd'],
-         'b': ['e', '!f'] }
-
-    tt, tf, ft, ff = S(r)
-    assert tt == {'a': ['b', 'd'], 'b': ['e']}
-    assert tf == {'a': ['c'],      'b': ['f']}
-    assert ft == {}
-    assert ff == {'b': ['a'], 'd': ['a'], 'e': ['b']}
-
-    r = {'!a': ['b', '!c'],
-         'b' : ['e', '!f'] }
-
-    tt, tf, ft, ff = S(r)
-    assert tt == {'b': ['e'], 'c': ['a']    }
-    assert tf == {'b': ['f']    }
-    assert ft == {'b': ['a']    }   # XXX ok? maybe vice versa?
-    assert ff == {'e': ['b'], 'a': ['c']    }
+    assert APPLY(A,B)  == {'x': (set(['a','b','c','p']), []),
+                            'c': (set(['p','a']), []), 'a':Q(0), 'b':Q(0)}
 
 
 def test_FactRules_parse():
     f = FactRules('a -> b')
-#   assert f.negs       == {}
-    assert f.rel_tt     == {'a': ['b']}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'b': ['a']}
-    assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {'a': ['b'], 'b': ['a']}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {'a': ['b'], 'b': ['a']}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.rel_tt     == {'b': ['a']}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'a': ['b']}
-    assert f.rel_ft     == {}
-    assert f.prereq     == {'b': ['a'], 'a': ['b']}
+    assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {'nz': ['z'], 'z': ['nz']}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {'nz': ['z'], 'z': ['nz']}
-    assert f.prereq     == {'z': ['nz'], 'nz': ['z']}
-
-    # TODO add parsing with | and & ?
+    assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
 
 
 def test_FactRules_parse2():
-    raises(ValueError, "FactRules('a -> !a')")
-
+    raises(ValueError, lambda: FactRules('a -> !a'))
 
 def test_FactRules_deduce():
     f = FactRules(['a -> b', 'b -> c', 'b -> d', 'c -> e'])
-    D = f.deduce_all_facts
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'a': T})  == {'a': T, 'b': T, 'c': T, 'd': T, 'e': T}
     assert D({'b': T})  == {        'b': T, 'c': T, 'd': T, 'e': T}
@@ -204,7 +159,10 @@ def test_FactRules_deduce():
 def test_FactRules_deduce2():
     # pos/neg/zero, but the rules are not sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'pos -> !z'])
-    D = f.deduce_all_facts
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -215,7 +173,6 @@ def test_FactRules_deduce2():
 
     # pos/neg/zero. rules are sufficient to derive all relations
     f = FactRules(['pos -> !neg', 'neg -> !pos', 'pos -> !z', 'neg -> !z'])
-    D = f.deduce_all_facts
 
     assert D({'pos':T}) == {'pos': T, 'neg': F, 'z': F}
     assert D({'pos':F}) == {'pos': F                  }
@@ -227,10 +184,11 @@ def test_FactRules_deduce2():
 
 def test_FactRules_deduce_multiple():
     # deduction that involves _several_ starting points
-
-    # TODO add the same check for 'npos == real & !pos' ?
     f = FactRules(['real == pos | npos'])
-    D = f.deduce_all_facts
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'pos': F, 'npos': F}
@@ -247,9 +205,11 @@ def test_FactRules_deduce_multiple():
 
 
 def test_FactRules_deduce_multiple2():
-
     f = FactRules(['real == neg | zero | pos'])
-    D = f.deduce_all_facts
+    def D(facts):
+        kb = FactKB(f)
+        kb.deduce_all_facts(facts)
+        return kb
 
     assert D({'real': T})   == {'real': T}
     assert D({'real': F})   == {'real': F, 'neg': F, 'zero': F, 'pos': F}
@@ -279,14 +239,12 @@ def test_FactRules_deduce_base():
     f = FactRules(['real  == neg | zero | pos',
                    'neg   -> real & !zero & !pos',
                    'pos   -> real & !zero & !neg'])
-    D = f.deduce_all_facts
+    base = FactKB(f)
 
-    base = D({'real': T, 'neg': F})
+    base.deduce_all_facts({'real': T, 'neg': F})
     assert base == {'real': T, 'neg': F}
 
-    X = D({'zero': F}, base=base)
-
-    assert X is base    # base is modified inplace
+    base.deduce_all_facts({'zero': F})
     assert base == {'real': T, 'neg': F, 'zero': F, 'pos': T}
 
 
@@ -298,40 +256,7 @@ def test_FactRules_deduce_staticext():
                    'nneg  == real & !neg',
                    'npos  == real & !pos'])
 
-    assert 'npos' in f.rel_tt['neg']
-    assert 'nneg' in f.rel_tt['pos']
-    assert 'nneg' in f.rel_tt['zero']
-    assert 'npos' in f.rel_tt['zero']
-
-
-# NOTE: once upon a time there was an idea to intoruce copy-on-write (COW) mode
-# in deduce_all_facts, and also teach it to return list of newly derived knowledge.
-#
-# it turned out not to be better performance wise (or was i wrong ?), so this
-# mode was removed.
-#
-# However disabled test stays here just in case (maybe we'll return to this
-# idea some day)
-def X_test_FactRules_deduce_cow():
-    f = FactRules(['real  == neg | zero | pos',
-                   'neg   -> real & !zero & !pos',
-                   'pos   -> real & !zero & !neg'])
-    D = f.deduce_all_facts
-
-    base0 = D({'real': T, 'neg': F})
-    assert base0 == {'real': T, 'neg': F}
-
-    base = base0.copy()
-    X = D({'zero': F}, base=base, cow=False)
-
-    assert X is base    # base is modified inplace
-    assert base == {'real': T, 'neg': F, 'zero': F, 'pos': T}
-
-    base = base0.copy()
-    X, new_knowledge = D({'zero': F}, base=base, cow=True)
-
-    assert X is not base    # base should be copied
-    assert base == {'real': T, 'neg': F}
-
-    assert X == {'real': T, 'neg': F, 'zero': F, 'pos': T}
-    #assert set(new_knowledge) == set([ ('zero',F), ('pos',T) ])    # XXX disabled
+    assert ('npos', True) in f.full_implications[('neg', True)]
+    assert ('nneg', True) in f.full_implications[('pos', True)]
+    assert ('nneg', True) in f.full_implications[('zero', True)]
+    assert ('npos', True) in f.full_implications[('zero', True)]

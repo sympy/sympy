@@ -1,13 +1,11 @@
-from sympy.mpmath.libmpf import (fzero,
+from sympy.mpmath.libmp import (fzero,
     from_man_exp, from_int, from_rational,
-    fone, ftwo, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
-    mpf_add)
-from sympy.mpmath.libelefun import mpf_sqrt, mpf_pi, cosh_sinh, pi_fixed, \
-        mpf_cos
+    fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
+    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos)
 from sympy.core.numbers import igcd
 import math
 
-def A(n, j, prec):
+def _a(n, j, prec):
     """Compute the inner sum in the HRR formula."""
     if j == 1:
         return fone
@@ -31,7 +29,7 @@ def A(n, j, prec):
         s = mpf_add(s, mpf_cos(from_man_exp(g, -prec), prec), prec)
     return s
 
-def D(n, j, prec, sq23pi, sqrt8):
+def _d(n, j, prec, sq23pi, sqrt8):
     """
     Compute the sinh term in the outer sum of the HRR formula.
     The constants sqrt(2/3*pi) and sqrt(8) must be precomputed.
@@ -41,7 +39,7 @@ def D(n, j, prec, sq23pi, sqrt8):
     a = mpf_div(sq23pi, j, prec)
     b = mpf_sub(from_int(n), from_rational(1,24,prec), prec)
     c = mpf_sqrt(b, prec)
-    ch, sh = cosh_sinh(mpf_mul(a,c), prec)
+    ch, sh = mpf_cosh_sinh(mpf_mul(a,c), prec)
     D = mpf_div(mpf_sqrt(j,prec), mpf_mul(mpf_mul(sqrt8,b),pi), prec)
     E = mpf_sub(mpf_mul(a,ch), mpf_div(sh,c,prec), prec)
     return mpf_mul(D, E)
@@ -56,6 +54,13 @@ def npartitions(n, verbose=False):
 
     The correctness of this implementation has been tested for 10**n
     up to n = 8.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import npartitions
+    >>> npartitions(25)
+    1958
     """
     n = int(n)
     if n < 0: return 0
@@ -69,8 +74,8 @@ def npartitions(n, verbose=False):
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2,3,p), p), mpf_pi(p), p)
     sqrt8 = mpf_sqrt(from_int(8), p)
     for q in xrange(1, M):
-        a = A(n,q,p)
-        d = D(n,q,p, sq23pi, sqrt8)
+        a = _a(n,q,p)
+        d = _d(n,q,p, sq23pi, sqrt8)
         s = mpf_add(s, mpf_mul(a, d), prec)
         if verbose:
             print "step", q, "of", M, to_str(a, 10), to_str(d, 10)

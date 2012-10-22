@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import with_statement
+
 import os
 
 def strip_file(filename, write, report):
@@ -8,9 +10,12 @@ def strip_file(filename, write, report):
     # to re-add \n to a few right-stripped lines. The hit flag will keep us
     # from unecessarily re-writing files with no changes.
 
-    lines = open(filename).readlines()
+    # without "b" all lines appear as \n terminated
+    with open(filename, 'rb') as f:
+        lines = f.readlines()
     hit = False
     cr = False
+    extra = 0
     for index, line in enumerate(lines):
         if line.endswith(" \n"):
             if report:
@@ -34,10 +39,20 @@ def strip_file(filename, write, report):
         if write:
             hit = True
 
+    # correct multiple newlines at eof
+    while len(lines) > 1 and lines[-1] == "\n" and lines[-2].endswith("\n"):
+        if write:
+            hit = True
+        lines.pop()
+        extra += 1
+
+    if extra > 0 and report:
+        print "%s, %d extra newlines at eof" % (filename, extra)
+
     if write and hit:
-        f = open(filename, "w")
-        f.writelines(lines)
-        f.close()
+        # without "b" the lines may be written in sys-dep format
+        with open(filename, "wb") as f:
+            f.writelines(lines)
 
 def go(path, write, report):
     allowed_ext = [
@@ -63,7 +78,7 @@ def main():
     p.add_option("-v", "--verbose", action="store_true", dest="verbose",
                  help="Report all changes.")
     p.add_option("-r", "--recursive", action="store_true", dest="recursive",
-                 help="Report all changes.")
+                 help="Recursively correct all files in a directory.")
     options, args = p.parse_args()
     if options.dry:
         options.verbose = True

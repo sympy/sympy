@@ -27,6 +27,7 @@ def get_resource(identifier, pkgname=__name__):
     An IOError will be raised if the resource can not be found.
 
     For example::
+
         mydata = get_esource('mypkgdata.jpg').read()
 
     Note that the package name must be fully qualified, if given, such
@@ -52,4 +53,3 @@ def get_resource(identifier, pkgname=__name__):
         else:
             return StringIO(data)
     return file(os.path.normpath(path), 'rb')
-

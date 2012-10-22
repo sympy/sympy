@@ -19,6 +19,9 @@ def test_f3():
 def test_f4():
     assert not bool(dpll_satisfiable(load(f4)))
 
+def test_f5():
+    assert bool(dpll_satisfiable(load(f5)))
+
 f1 = """c  simple example
 c Resolution: SATISFIABLE
 c
@@ -211,4 +214,16 @@ p cnf 42 133
  30     29     28     27     26     25   0
  36     35     34     33     32     31   0
  42     41     40     39     38     37   0
+"""
+
+f5 = """c  simple example requiring variable selection
+c
+c NOTE: Satisfiable
+c
+p cnf 5 5
+1 2 3 0
+1 -2 3 0
+4 5 -3 0
+1 -4 -3 0
+-1 -5 0
 """

@@ -1,134 +1,304 @@
+"""Utility functions for geometrical entities.
+
+Contains
+========
+intersection
+convex_hull
+are_similar
+
+"""
+from sympy import Symbol, Function, solve
+
+def idiff(eq, y, x, dep=None):
+    """Return dy/dx assuming that y and any other variables given in dep
+    depend on x.
+
+    >>> from sympy.abc import x, y, a
+    >>> from sympy.geometry.util import idiff
+
+    >>> idiff(x**2 + y**2 - 4, y, x)
+    -x/y
+    >>> idiff(x + a + y, y, x)
+    -1
+    >>> idiff(x + a + y, y, x, [a])
+    -Derivative(a, x) - 1
+
+    See Also
+    ========
+
+    sympy.core.function.Derivative
+
+    """
+    if not dep:
+        dep = []
+    dep = set(dep)
+    dep.add(y)
+
+    f = dict([(s, Function(s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+    dydx = Function(y.name)(x).diff(x)
+    return solve(eq.subs(f).diff(x), dydx)[0].subs(
+        [(b, a) for a, b in f.iteritems()])
+
+def _symbol(s, matching_symbol=None):
+    """Return s if s is a Symbol, else return either a new Symbol (real=True)
+    with the same name s or the matching_symbol if s is a string and it matches
+    the name of the matching_symbol.
+
+    >>> from sympy import Symbol
+    >>> from sympy.geometry.util import _symbol
+    >>> x = Symbol('x')
+    >>> _symbol('y')
+    y
+    >>> _.is_real
+    True
+    >>> _symbol(x)
+    x
+    >>> _.is_real is None
+    True
+    >>> arb = Symbol('foo')
+    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
+    arb
+    >>> _symbol('foo', arb) # now it will
+    foo
+
+    NB: the symbol here may not be the same as a symbol with the same
+    name defined elsewhere as a result of different assumptions.
+
+    See Also
+    ========
+
+    sympy.core.symbol.Symbol
+
+    """
+    if isinstance(s, basestring):
+        if matching_symbol and matching_symbol.name == s:
+            return matching_symbol
+        return Symbol(s, real=True)
+    elif isinstance(s, Symbol):
+        return s
+    else:
+        raise ValueError('symbol must be string for symbol name or Symbol')
 
 def intersection(*entities):
-    """
-    Finds the intersection between a list GeometryEntity instances. Returns a
-    list of all the intersections, Will raise a NotImplementedError exception
-    if unable to calculate the intersection.
+    """The intersection of a collection of GeometryEntity instances.
 
-    Examples:
-    =========
-        >>> from sympy.geometry import Point, Line, Circle, intersection
-        >>> p1,p2,p3 = Point(0,0), Point(1,1), Point(-1, 5)
-        >>> l1, l2 = Line(p1, p2), Line(p3, p2)
-        >>> c = Circle(p2, 1)
-        >>> intersection(l1, p2)
-        [Point(1, 1)]
-        >>> intersection(l1, l2)
-        [Point(1, 1)]
-        >>> intersection(c, p2)
-        []
-        >>> intersection(c, Point(1, 0))
-        [Point(1, 0)]
-        >>> intersection(c, l2)
-        [Point(1 - 5**(1/2)/5, 1 + 2*5**(1/2)/5), Point(1 + 5**(1/2)/5, 1 - 2*5**(1/2)/5)]
+    Parameters
+    ==========
 
-    Notes:
+    entities : sequence of GeometryEntity
+
+    Returns
+    =======
+
+    intersection : list of GeometryEntity
+
+    Raises
     ======
-        - The intersection of any geometrical entity with itself should return
-          a list with one item: the entity in question.
-        - An intersection requires two or more entities. If only a single
-          entity is given then one will receive an empty intersection list.
-        - It is possible for intersection() to miss intersections that one
-          knows exists because the required quantities were not fully
-          simplified internally.
-        - Reals should be converted to Rationals, e.g. Rational(str(real_num))
-          or else failures due to floating point issues may result.
+
+    NotImplementedError
+        When unable to calculate intersection.
+
+    Notes
+    =====
+
+    The intersection of any geometrical entity with itself should return
+    a list with one item: the entity in question.
+    An intersection requires two or more entities. If only a single
+    entity is given then the function will return an empty list.
+    It is possible for `intersection` to miss intersections that one
+    knows exists because the required quantities were not fully
+    simplified internally.
+    Reals should be converted to Rationals, e.g. Rational(str(real_num))
+    or else failures due to floating point issues may result.
+
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity.intersection
+
+    Examples
+    ========
+
+    >>> from sympy.geometry import Point, Line, Circle, intersection
+    >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
+    >>> l1, l2 = Line(p1, p2), Line(p3, p2)
+    >>> c = Circle(p2, 1)
+    >>> intersection(l1, p2)
+    [Point(1, 1)]
+    >>> intersection(l1, l2)
+    [Point(1, 1)]
+    >>> intersection(c, p2)
+    []
+    >>> intersection(c, Point(1, 0))
+    [Point(1, 0)]
+    >>> intersection(c, l2)
+    [Point(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1), Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+
     """
     from entity import GeometryEntity
+    from point import Point
 
-    entities = GeometryEntity.extract_entities(entities, False)
-    if len(entities) <= 1: return []
+    if len(entities) <= 1:
+        return []
 
-    res = GeometryEntity.do_intersection(entities[0], entities[1])
+    for i, e in enumerate(entities):
+        if not isinstance(e, GeometryEntity):
+            try:
+                entities[i] = Point(e)
+            except NotImplementedError:
+                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+
+    res = entities[0].intersection(entities[1])
     for entity in entities[2:]:
         newres = []
         for x in res:
-            newres.extend( GeometryEntity.do_intersection(x, entity) )
+            newres.extend(x.intersection(entity))
         res = newres
     return res
 
 
 def convex_hull(*args):
-    """
-    Returns a Polygon representing the convex hull of a set of 2D points.
+    """The convex hull surrounding the Points contained in the list of entities.
 
-    Notes:
-    ======
-        This can only be performed on a set of non-symbolic points.
+    Parameters
+    ==========
 
-    Example:
+    args : a collection of Points, Segments and/or Polygons
+
+    Returns
+    =======
+
+    convex_hull : Polygon
+
+    Notes
+    =====
+
+    This can only be performed on a set of non-symbolic points.
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Graham_scan
+
+    [2] Andrew's Monotone Chain Algorithm
+    ( A.M. Andrew, "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+    http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
+
+    See Also
     ========
-        >>> from sympy.geometry import Point, convex_hull
-        >>> points = [ Point(x) for x in [(1,1), (1,2), (3,1), (-5,2), (15,4)] ]
-        >>> convex_hull(points)
-        Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
 
-    Description of method used:
-    ===========================
-        See http://en.wikipedia.org/wiki/Graham_scan.
+    sympy.geometry.point.Point, sympy.geometry.polygon.Polygon
+
+    Examples
+    ========
+
+    >>> from sympy.geometry import Point, convex_hull
+    >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
+    >>> convex_hull(*points)
+    Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
+
     """
+    from entity import GeometryEntity
     from point import Point
     from line import Segment
     from polygon import Polygon
 
-    def uniquify(a):
-        ret = {}
-        # not order preserving
-        map(ret.__setitem__, a, [])
-        return ret.keys()
+    p = set()
+    for e in args:
+        if not isinstance(e, GeometryEntity):
+            try:
+                e = Point(e)
+            except NotImplementedError:
+                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+        if isinstance(e, Point):
+            p.add(e)
+        elif isinstance(e, Segment):
+            p.update(e.points)
+        elif isinstance(e, Polygon):
+            p.update(e.vertices)
+        else:
+            raise NotImplementedError('Convex hull for %s not implemented.' % type(e))
 
-    p = args[0]
-    if isinstance(p, Point):
-        p = uniquify(args)
-
-    if len(p) is 1:
+    p = list(p)
+    if len(p) == 1:
         return p[0]
-    else:
-        if len(p) is 2:
-            return Segment(p[0],p[1])
+    elif len(p) == 2:
+        return Segment(p[0], p[1])
 
+    def _orientation(p, q, r):
+        '''Return positive if p-q-r are clockwise, neg if ccw, zero if
+        collinear.'''
+        return (q.y - p.y)*(r.x - p.x) - (q.x - p.x)*(r.y - p.y)
 
-
-    def orientation(p,q,r):
-        '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
-        return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
-
-
-    '''scan to find upper and lower convex hulls of a set of 2d points.'''
+    # scan to find upper and lower convex hulls of a set of 2d points.
     U = []
     L = []
-    #print "[graham] points:",Points
-    p.sort()
+    p.sort(key=lambda x: x.args)
     for p_i in p:
-        while len(U) > 1 and orientation(U[-2],U[-1],p_i) <= 0: U.pop()
-        while len(L) > 1 and orientation(L[-2],L[-1],p_i) >= 0: L.pop()
+        while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
+            U.pop()
+        while len(L) > 1 and _orientation(L[-2], L[-1], p_i) >= 0:
+            L.pop()
         U.append(p_i)
-        L.append(p_i)        #print "[graham] result:", U,L
+        L.append(p_i)
     U.reverse()
-    convexHull = tuple(L+U[1:-1])
+    convexHull = tuple(L + U[1:-1])
 
-    #convexHull = uniquify(convexHull)
-    #print "U:",U.reverse()
-    #print "L:",L
-    #print "ch(",len(convexHull),"):",convexHull
-    if len(convexHull) is 2:
-        return Segment(convexHull[0],convexHull[1])
-    return Polygon(convexHull)
-
-
-
+    if len(convexHull) == 2:
+        return Segment(convexHull[0], convexHull[1])
+    return Polygon(*convexHull)
 
 
 def are_similar(e1, e2):
-    """
-    Returns True if e1 and e2 are similar (one can be uniformly scaled to
-    the other) or False otherwise.
+    """Are two geometrical entities similar.
 
-    Notes:
+    Can one geometrical entity be uniformly scaled to the other?
+
+    Parameters
+    ==========
+
+    e1 : GeometryEntity
+    e2 : GeometryEntity
+
+    Returns
+    =======
+
+    are_similar : boolean
+
+    Raises
     ======
-        - If the two objects are equal then they are always similar.
+
+    GeometryError
+        When `e1` and `e2` cannot be compared.
+
+    Notes
+    =====
+
+    If the two objects are equal then they are similar.
+
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity.is_similar
+
+    Examples
+    ========
+
+    >>> from sympy import Point, Circle, Triangle, are_similar
+    >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
+    >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
+    >>> t2 = Triangle(Point(0, 0), Point(2, 0), Point(0, 2))
+    >>> t3 = Triangle(Point(0, 0), Point(3, 0), Point(0, 1))
+    >>> are_similar(t1, t2)
+    True
+    >>> are_similar(t1, t3)
+    False
+
     """
-    if e1 == e2: return True
+    from exceptions import GeometryError
+
+    if e1 == e2:
+        return True
     try:
         return e1.is_similar(e2)
     except AttributeError:
@@ -138,3 +308,76 @@ def are_similar(e1, e2):
             n1 = e1.__class__.__name__
             n2 = e2.__class__.__name__
             raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))
+
+def centroid(*args):
+    """Find the centroid (center of mass) of the collection containing only Points,
+    Segments or Polygons. The centroid is the weighted average of the individual centroid
+    where the weights are the lengths (of segments) or areas (of polygons).
+    Overlapping regions will add to the weight of that region.
+
+    If there are no objects (or a mixture of objects) then None is returned.
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point, sympy.geometry.line.Segment,
+    sympy.geometry.polygon.Polygon
+
+    Examples
+    ========
+
+    >>> from sympy import Point, Segment, Polygon
+    >>> from sympy.geometry.util import centroid
+    >>> p = Polygon((0, 0), (10, 0), (10, 10))
+    >>> q = p.translate(0, 20)
+    >>> p.centroid, q.centroid
+    (Point(20/3, 10/3), Point(20/3, 70/3))
+    >>> centroid(p, q)
+    Point(20/3, 40/3)
+    >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
+    >>> centroid(p, q)
+    Point(1, -sqrt(2) + 2)
+    >>> centroid(Point(0, 0), Point(2, 0))
+    Point(1, 0)
+
+    Stacking 3 polygons on top of each other effectively triples the
+    weight of that polygon:
+
+        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+        >>> centroid(p, q)
+        Point(3/2, 1/2)
+        >>> centroid(p, p, p, q) # centroid x-coord shifts left
+        Point(11/10, 1/2)
+
+    Stacking the squares vertically above and below p has the same
+    effect:
+
+        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+        Point(11/10, 1/2)
+
+    """
+
+    from sympy.geometry import Polygon, Segment, Point
+    if args:
+        if all(isinstance(g, Point) for g in args):
+            c = Point(0, 0)
+            for g in args:
+                c += g
+            return c/len(args)
+        elif all(isinstance(g, Segment) for g in args):
+            c = Point(0, 0)
+            L = 0
+            for g in args:
+                l = g.length
+                c += g.midpoint*l
+                L += l
+            return c/L
+        elif all(isinstance(g, Polygon) for g in args):
+            c = Point(0, 0)
+            A = 0
+            for g in args:
+                a = g.area
+                c += g.centroid*a
+                A += a
+            return c/A

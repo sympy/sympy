@@ -2,9 +2,14 @@
 
 from __future__ import division
 
-from sympy.mpmath.matrices import matrix, norm, mnorm, randmatrix, eye, zeros, diag
-from sympy.mpmath.linalg import * # TODO: absolute imports
-from sympy.mpmath.mptypes import *
+from sympy.mpmath import *
+
+# XXX: these shouldn't be visible(?)
+LU_decomp = mp.LU_decomp
+L_solve = mp.L_solve
+U_solve = mp.U_solve
+householder = mp.householder
+improve_solution = mp.improve_solution
 
 A1 = matrix([[3, 1, 6],
              [2, 1, 3],
@@ -109,13 +114,13 @@ def test_householder():
     def coeff(n):
         # similiar to Hilbert matrix
         A = []
-        for i in xrange(1, 13):
-            A.append([1. / (i + j - 1) for j in xrange(1, n + 1)])
+        for i in range(1, 13):
+            A.append([1. / (i + j - 1) for j in range(1, n + 1)])
         return matrix(A)
 
     residuals = []
     refres = []
-    for n in xrange(2, 7):
+    for n in range(2, 7):
         A = coeff(n)
         H, p, x, r = householder(extend(A, y))
         x = matrix(x)
@@ -142,6 +147,11 @@ def test_solve():
     assert norm(residual(A10, lu_solve(A10, b10), b10), 2) < 1.e-10
     assert norm(residual(A10, qr_solve(A10, b10)[0], b10), 2) < 1.e-10
 
+def test_solve_overdet_complex():
+    A = matrix([[1, 2j], [3, 4j], [5, 6]])
+    b = matrix([1 + j, 2, -j])
+    assert norm(residual(A, lu_solve(A, b), b)) < 1.0208
+
 def test_singular():
     mp.dps = 15
     A = [[5.6, 1.2], [7./15, .1]]
@@ -158,10 +168,9 @@ def test_singular():
         _assert_ZeroDivisionError(i)
 
 def test_cholesky():
-    A9.force_type = float
-    assert cholesky(A9) == matrix([[2, 0, 0], [1, 2, 0], [-1, -3/2, 3/2]])
-    x = cholesky_solve(A9, b9)
-    assert norm(residual(A9, x, b9), inf) == 0
+    assert fp.cholesky(fp.matrix(A9)) == fp.matrix([[2, 0, 0], [1, 2, 0], [-1, -3/2, 3/2]])
+    x = fp.cholesky_solve(A9, b9)
+    assert fp.norm(fp.residual(A9, x, b9), fp.inf) == 0
 
 def test_det():
     assert det(A1) == 1
@@ -185,10 +194,11 @@ def test_precision():
     assert mnorm(inverse(inverse(A)) - A, 1) < 1.e-45
 
 def test_interval_matrix():
-    a = matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']],
-               force_type=mpi)
-    b = matrix(['4','0.6','0.5'], force_type=mpi)
-    c = lu_solve(a, b)
+    mp.dps = 15
+    iv.dps = 15
+    a = iv.matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']])
+    b = iv.matrix(['4','0.6','0.5'])
+    c = iv.lu_solve(a, b)
     assert c[0].delta < 1e-13
     assert c[1].delta < 1e-13
     assert c[2].delta < 1e-13
@@ -213,20 +223,26 @@ def test_improve_solution():
 def test_exp_pade():
     for i in range(3):
         dps = 15
-        extra = 5
+        extra = 15
         mp.dps = dps + extra
         dm = 0
-        while not dm:
-            m = randmatrix(3)
+        N = 3
+        dg = range(1,N+1)
+        a = diag(dg)
+        expa = diag([exp(x) for x in dg])
+        # choose a random matrix not close to be singular
+        # to avoid adding too much extra precision in computing
+        # m**-1 * M * m
+        while abs(dm) < 0.01:
+            m = randmatrix(N)
             dm = det(m)
         m = m/dm
-        a = diag([1,2,3])
         a1 = m**-1 * a * m
+        e2 = m**-1 * expa * m
         mp.dps = dps
-        e1 = exp_pade(a1)
+        e1 = expm(a1, method='pade')
         mp.dps = dps + extra
-        e2 = m * a1 * m**-1
-        d = e2 - a
+        d = e2 - e1
         #print d
         mp.dps = dps
         assert norm(d, inf).ae(0)

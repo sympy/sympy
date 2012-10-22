@@ -1,5 +1,5 @@
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-        Real, I, sin, exp, log, factorial
+        Float, I, sin, exp, log, factorial
 
 from sympy.utilities.pytest import XFAIL
 
@@ -7,7 +7,7 @@ def test_floor():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert floor(nan) == nan
 
@@ -34,11 +34,11 @@ def test_floor():
     assert floor(Rational(7, 3)) == 2
     assert floor(-Rational(7, 3)) == -3
 
-    assert floor(Real(17.0)) == 17
-    assert floor(-Real(17.0)) == -17
+    assert floor(Float(17.0)) == 17
+    assert floor(-Float(17.0)) == -17
 
-    assert floor(Real(7.69)) == 7
-    assert floor(-Real(7.69)) == -8
+    assert floor(Float(7.69)) == 7
+    assert floor(-Float(7.69)) == -8
 
     assert floor(I) == I
     assert floor(-I) == -I
@@ -105,7 +105,7 @@ def test_ceiling():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
-    k, n = symbols('kn', integer=True)
+    k, n = symbols('k,n', integer=True)
 
     assert ceiling(nan) == nan
 
@@ -132,11 +132,11 @@ def test_ceiling():
     assert ceiling(Rational(7, 3)) == 3
     assert ceiling(-Rational(7, 3)) == -2
 
-    assert ceiling(Real(17.0)) == 17
-    assert ceiling(-Real(17.0)) == -17
+    assert ceiling(Float(17.0)) == 17
+    assert ceiling(-Float(17.0)) == -17
 
-    assert ceiling(Real(7.69)) == 8
-    assert ceiling(-Real(7.69)) == -7
+    assert ceiling(Float(7.69)) == 8
+    assert ceiling(-Float(7.69)) == -7
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
@@ -197,6 +197,17 @@ def test_ceiling():
 
     assert ceiling(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336801
+
+def test_series():
+    x,y = symbols('x,y')
+    assert floor(x).nseries(x, y, 100) == floor(y)
+    assert ceiling(x).nseries(x, y, 100) == ceiling(y)
+    assert floor(x).nseries(x, pi, 100) == 3
+    assert ceiling(x).nseries(x, pi, 100) == 4
+    assert floor(x).nseries(x, 0, 100) == 0
+    assert ceiling(x).nseries(x, 0, 100) == 1
+    assert floor(-x).nseries(x, 0, 100) == -1
+    assert ceiling(-x).nseries(x, 0, 100) == 0
 
 @XFAIL
 def test_issue_1050():

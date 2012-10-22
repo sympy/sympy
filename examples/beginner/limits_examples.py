@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+
 """Limits Example
 
 Demonstrates limits.
 """
 
-from sympy import exp,log,Symbol,Rational,sin,limit, sqrt,oo
+from sympy import exp, log, Symbol, Rational, sin, limit, sqrt, oo
 
 def sqrt3(x):
     return x**Rational(1, 3)

@@ -27,7 +27,7 @@ one of the arguments in their name are executed.
 
 """
 
-import sys, os
+import sys, os, traceback
 
 if "-psyco" in sys.argv:
     sys.argv.remove('-psyco')
@@ -68,13 +68,20 @@ def testit(importdir='', testdir=''):
         sys.path.insert(1, importdir)
     if testdir:
         sys.path.insert(1, testdir)
+    import os.path
+    import mpmath
+    print("mpmath imported from %s" % os.path.dirname(mpmath.__file__))
+    print("mpmath backend: %s" % mpmath.libmp.backend.BACKEND)
+    print("mpmath mp class: %s" % repr(mpmath.mp))
+    print("mpmath version: %s" % mpmath.__version__)
+    print("Python version: %s" % sys.version)
+    print("")
     if "-py" in sys.argv:
         sys.argv.remove('-py')
         import py
         py.test.cmdline.main()
     else:
         import glob
-        import os.path
         from timeit import default_timer as clock
         modules = []
         args = sys.argv[1:]
@@ -108,19 +115,28 @@ def testit(importdir='', testdir=''):
         modules.sort()
         tstart = clock()
         for priority, name, module in modules:
-            print name
+            print(name)
             for f in sorted(module.__dict__.keys()):
                 if f.startswith('test_'):
                     if coverage and ('numpy' in f):
                         continue
-                    print "   ", f[5:].ljust(25),
+                    sys.stdout.write("    " + f[5:].ljust(25) + " ")
                     t1 = clock()
-                    module.__dict__[f]()
+                    try:
+                        module.__dict__[f]()
+                    except:
+                        etype, evalue, trb = sys.exc_info()
+                        if etype in (KeyboardInterrupt, SystemExit):
+                            raise
+                        print("")
+                        print("TEST FAILED!")
+                        print("")
+                        traceback.print_exc()
                     t2 = clock()
-                    print "ok", "      ", ("%.7f" % (t2-t1)), "s"
+                    print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
         tend = clock()
-        print
-        print "finished tests in", ("%.2f" % (tend-tstart)), "seconds"
+        print("")
+        print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
         # clean sys.path
         if importdir:
             sys.path.remove(importdir)

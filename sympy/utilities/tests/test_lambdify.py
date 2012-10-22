@@ -1,23 +1,24 @@
-from sympy.utilities.pytest import XFAIL
-from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
-        Matrix, Lambda, exp, Integral, oo)
+from sympy.utilities.pytest import XFAIL, raises
+from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
+        Matrix, Lambda, exp, Integral, oo, I, Abs)
+from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
+from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import skip
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external import import_module
 import math, sympy
 
-# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
-mpmath.mp.dps = 50
-sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+MutableDenseMatrix = Matrix
 
-x,y,z = symbols('xyz')
+numpy = import_module('numpy', min_python_version=(2, 6))
+
+x,y,z = symbols('x,y,z')
 
 #================== Test different arguments ==============
 def test_no_args():
     f = lambdify([], 1)
-    try:
-        f(-1)
-        assert False
-    except TypeError:
-        pass
+    raises(TypeError, lambda: f(-1))
     assert f() == 1
 
 def test_single_arg():
@@ -33,11 +34,7 @@ def test_str_args():
     assert f(3,2,1) == (1,2,3)
     assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
     # make sure correct number of args required
-    try:
-        f(0)
-        assert False
-    except TypeError:
-        pass
+    raises(TypeError, lambda: f(0))
 
 def test_own_namespace():
     myfunc = lambda x:1
@@ -49,61 +46,58 @@ def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0)==0.0
     f = lambdify(x, sympy.ceiling(x), math)
-    try:
-        f(4.5)
-        assert False
-    except NameError:
-        pass
+    raises(NameError, lambda: f(4.5))
 
 def test_bad_args():
-    try:
-        # no vargs given
-        f = lambdify(1)
-        assert False
-    except TypeError:
-        pass
-    try:
-        # same with vector exprs
-        f = lambdify([1,2])
-        assert False
-    except TypeError:
-        pass
+    # no vargs given
+    raises(TypeError, lambda: lambdify(1))
+    # same with vector exprs
+    raises(TypeError, lambda: lambdify([1,2]))
+
+def test_atoms():
+    # Non-Symbol atoms should not be pulled out from the expression namespace
+    f = lambdify(x, pi + x, {"pi": 3.14})
+    assert f(0) == 3.14
+    f = lambdify(x, I + x, {"I": 1j})
+    assert f(1) == 1 + 1j
 
 #================== Test different modules ================
-def test_sympy_lambda():
-    f = lambdify(x, sin(x), "sympy")
-    assert f(x) is sin(x)
-    prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Real(str(sin02)) < prec
-    try:
-        # arctan is in numpy module and should not be available
-        f = lambdify(x, arctan(x), "sympy")
-        assert False
-    except NameError:
-        pass
 
+# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
+@conserve_mpmath_dps
+def test_sympy_lambda():
+    mpmath.mp.dps = 50
+    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+    f = lambdify(x, sin(x), "sympy")
+    assert f(x) == sin(x)
+    prec = 1e-15
+    assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+    # arctan is in numpy module and should not be available
+    raises(NameError, lambda: lambdify(x, arctan(x), "sympy"))
+
+@conserve_mpmath_dps
 def test_math_lambda():
+    mpmath.mp.dps = 50
+    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin(x), "math")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    try:
-        f(x) # if this succeeds, it can't be a python math function
-        assert False
-    except ValueError:
-        pass
+    raises(ValueError, lambda: f(x)) # if this succeeds, it can't be a python math function
 
+@conserve_mpmath_dps
 def test_mpmath_lambda():
+    mpmath.mp.dps = 50
+    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin(x), "mpmath")
     prec = 1e-49 # mpmath precision is around 50 decimal places
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
-    try:
-        f(x) # if this succeeds, it can't be a mpmath function
-        assert False
-    except TypeError:
-        pass
+    raises(TypeError, lambda: f(x)) # if this succeeds, it can't be a mpmath function
 
+@conserve_mpmath_dps
 @XFAIL
 def test_number_precision():
+    mpmath.mp.dps = 50
+    sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin02, "mpmath")
     prec = 1e-49 # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
@@ -115,14 +109,31 @@ def test_number_precision():
 def test_math_transl():
     from sympy.utilities.lambdify import MATH_TRANSLATIONS
     for sym, mat in MATH_TRANSLATIONS.iteritems():
-        assert sym in sympy.functions.__dict__
+        assert sym in sympy.__dict__
         assert mat in math.__dict__
 
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
     for sym, mat in MPMATH_TRANSLATIONS.iteritems():
-        assert sym in sympy.functions.__dict__ or sym == 'Matrix'
+        assert sym in sympy.__dict__ or sym == 'Matrix'
         assert mat in mpmath.__dict__
+
+def test_numpy_transl():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
+    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    for sym, nump in NUMPY_TRANSLATIONS.iteritems():
+        assert sym in sympy.__dict__
+        assert nump in numpy.__dict__
+
+def test_numpy_translation_abs():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
+    f = lambdify(x, Abs(x), "numpy")
+    assert f(-1) == 1
+    assert f(1) == 1
 
 #================== Test some functions ===================
 def test_exponentiation():
@@ -141,10 +152,6 @@ def test_sqrt():
     assert f(4) == 2.0
     assert abs(f(2) - 1.414) < 0.001
     assert f(6.25) == 2.5
-    try:
-        f(-1)
-        assert False
-    except ValueError: pass
 
 def test_trig():
     f = lambdify([x], [cos(x),sin(x)])
@@ -163,17 +170,11 @@ def test_vector_simple():
     assert f(3,2,1) == (1,2,3)
     assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
     # make sure correct number of args required
-    try:
-        f(0)
-        assert False
-    except TypeError: pass
+    raises(TypeError, lambda: f(0))
 
 def test_vector_discontinuous():
     f = lambdify(x, (-1/x, 1/x))
-    try:
-        f(0)
-        assert False
-    except ZeroDivisionError: pass
+    raises(ZeroDivisionError, lambda: f(0))
     assert f(1) == (-1.0, 1.0)
     assert f(2) == (-0.5, 0.5)
     assert f(-2) == (0.5, -0.5)
@@ -217,8 +218,126 @@ def test_matrix():
     assert f(1,2,3) == sol
     f = lambdify((x,y,z), (A, [A]), modules="sympy")
     assert f(1,2,3) == (sol,[sol])
+    J = Matrix((x, x + y)).jacobian((x, y))
+    v = Matrix((x, y))
+    sol = Matrix([[1, 0], [1, 1]])
+    assert lambdify(v, J, modules='sympy')(1, 2) == sol
+    assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
     assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
+
+#########Test Symbolic###########
+def test_sym_single_arg():
+    f = lambdify(x, x * y)
+    assert f(z) == z * y
+
+def test_sym_list_args():
+    f = lambdify([x,y], x + y + z)
+    assert f(1,2) == 3 + z
+
+def test_sym_integral():
+    f = Lambda(x, exp(-x**2))
+    l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
+    assert l(y).doit() == sqrt(pi)
+
+def test_namespace_order():
+    # lambdify had a bug, such that module dictionaries or cached module
+    # dictionaries would pull earlier namespaces into themselves.
+    # Because the module dictionaries form the namespace of the
+    # generated lambda, this meant that the behavior of a previously
+    # generated lambda function could change as a result of later calls
+    # to lambdify.
+    n1 = {'f': lambda x:'first f'}
+    n2 = {'f': lambda x:'second f',
+          'g': lambda x:'function g'}
+    f = sympy.Function('f')
+    g = sympy.Function('g')
+    if1 = lambdify(x, f(x), modules=(n1, "sympy"))
+    assert if1(1) == 'first f'
+    if2 = lambdify(x, g(x), modules=(n2, "sympy"))
+    # previously gave 'second f'
+    assert if1(1) == 'first f'
+
+def test_imps():
+    # Here we check if the default returned functions are anonymous - in
+    # the sense that we can have more than one function with the same name
+    f = implemented_function('f', lambda x: 2*x)
+    g = implemented_function('f', lambda x: math.sqrt(x))
+    l1 = lambdify(x, f(x))
+    l2 = lambdify(x, g(x))
+    assert str(f(x)) == str(g(x))
+    assert l1(3) == 6
+    assert l2(3) == math.sqrt(3)
+    # check that we can pass in a Function as input
+    func = sympy.Function('myfunc')
+    assert not hasattr(func, '_imp_')
+    my_f = implemented_function(func, lambda x: 2*x)
+    assert hasattr(func, '_imp_')
+    # Error for functions with same name and different implementation
+    f2 = implemented_function("f", lambda x: x + 101)
+    raises(ValueError, lambda: lambdify(x, f(f2(x))))
+
+def test_imps_wrong_args():
+    raises(ValueError, lambda: implemented_function(sin, lambda x:x))
+
+def test_lambdify_imps():
+    # Test lambdify with implemented functions
+    # first test basic (sympy) lambdify
+    f = sympy.cos
+    assert lambdify(x, f(x))(0) == 1
+    assert lambdify(x, 1 + f(x))(0) == 2
+    assert lambdify((x, y), y + f(x))(0, 1) == 2
+    # make an implemented function and test
+    f = implemented_function("f", lambda x: x + 100)
+    assert lambdify(x, f(x))(0) == 100
+    assert lambdify(x, 1 + f(x))(0) == 101
+    assert lambdify((x, y), y + f(x))(0, 1) == 101
+    # Can also handle tuples, lists, dicts as expressions
+    lam = lambdify(x, (f(x), x))
+    assert lam(3) == (103, 3)
+    lam = lambdify(x, [f(x), x])
+    assert lam(3) == [103, 3]
+    lam = lambdify(x, [f(x), (f(x), x)])
+    assert lam(3) == [103, (103, 3)]
+    lam = lambdify(x, {f(x): x})
+    assert lam(3) == {103: 3}
+    lam = lambdify(x, {f(x): x})
+    assert lam(3) == {103: 3}
+    lam = lambdify(x, {x: f(x)})
+    assert lam(3) == {3: 103}
+    # Check that imp preferred to other namespaces by default
+    d = {'f': lambda x: x + 99}
+    lam = lambdify(x, f(x), d)
+    assert lam(3) == 103
+    # Unless flag passed
+    lam = lambdify(x, f(x), d, use_imps=False)
+    assert lam(3) == 102
+
+#================== Test special printers ==========================
+def test_special_printers():
+    class IntervalPrinter(LambdaPrinter):
+        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+        def _print_Integer(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+
+        def _print_Rational(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+
+    def intervalrepr(expr):
+        return IntervalPrinter().doprint(expr)
+
+    expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
+
+    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
+    func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+
+    mpi = type(mpmath.mpi(1, 2))
+
+    assert isinstance(func0(), mpi)
+    assert isinstance(func1(), mpi)
+    assert isinstance(func2(), mpi)

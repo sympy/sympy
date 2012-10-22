@@ -1,6 +1,8 @@
 import math
 from sympy.mpmath import *
 
+from sympy.utilities.pytest import XFAIL
+
 def test_bessel():
     mp.dps = 15
     assert j0(1).ae(0.765197686557966551)
@@ -12,6 +14,7 @@ def test_bessel():
     assert j1(1000).ae(0.00472831190708952392)
     assert j1(-25).ae(0.125350249580289905)
     assert besselj(5,1).ae(0.000249757730211234431)
+    assert besselj(5+0j,1).ae(0.000249757730211234431)
     assert besselj(5,pi).ae(0.0521411843671184747)
     assert besselj(5,1000).ae(0.00502540694523318607)
     assert besselj(5,-25).ae(0.0660079953984229934)
@@ -70,6 +73,21 @@ def test_bessel():
     assert besselk(0,3+4j).ae(-0.007239051213570155013+0.026510418350267677215j)
     assert besselk(0,j).ae(-0.13863371520405399968-1.20196971531720649914j)
     assert (besselk(3, 10**10) * mpf(10)**4342944824).ae(1.1628981033356187851)
+
+def test_bessel_zeros():
+    mp.dps = 15
+    assert besseljzero(0,1).ae(2.40482555769577276869)
+    assert besseljzero(2,1).ae(5.1356223018406825563)
+    assert besseljzero(1,50).ae(157.86265540193029781)
+    assert besseljzero(10,1).ae(14.475500686554541220)
+    assert besseljzero(0.5,3).ae(9.4247779607693797153)
+    assert besseljzero(2,1,1).ae(3.0542369282271403228)
+    assert besselyzero(0,1).ae(0.89357696627916752158)
+    assert besselyzero(2,1).ae(3.3842417671495934727)
+    assert besselyzero(1,50).ae(156.29183520147840108)
+    assert besselyzero(10,1).ae(12.128927704415439387)
+    assert besselyzero(0.5,3).ae(7.8539816339744830962)
+    assert besselyzero(2,1,1).ae(5.0025829314460639452)
 
 def test_hankel():
     mp.dps = 15
@@ -315,7 +333,9 @@ def test_expint():
     assert expint(1,3j).ae(-0.11962978600800032763 + 0.27785620120457163717j)
     assert expint(1,3).ae(0.013048381094197037413)
     assert expint(1,-3).ae(-ei(3)-pi*j)
-    #assert expint(3) == expint(1,3)
+    # Not sure what the writer of this test was trying to do not xfailing or
+    # putting in its own test because it's probably just written incorrectly
+    # assert expint(3) == expint(1,3)
     assert expint(1,-20).ae(-25615652.66405658882 - 3.1415926535897932385j)
     assert expint(1000000,0).ae(1./999999)
     assert expint(0,2+3j).ae(-0.025019798357114678171 + 0.027980439405104419040j)
@@ -332,6 +352,95 @@ def test_trig_integrals():
     assert (ci(10**100)*10**100).ae('-0.372376123661276688262086695553')
     assert si(-3) == -si(3)
     assert ci(-3).ae(ci(3) + pi*j)
+    # Test complex structure
+    mp.dps = 15
+    assert mp.ci(50).ae(-0.0056283863241163054402)
+    assert mp.ci(50+2j).ae(-0.018378282946133067149+0.070352808023688336193j)
+    assert mp.ci(20j).ae(1.28078263320282943611e7+1.5707963267949j)
+    assert mp.ci(-2+20j).ae(-4.050116856873293505e6+1.207476188206989909e7j)
+    assert mp.ci(-50+2j).ae(-0.0183782829461330671+3.0712398455661049023j)
+    assert mp.ci(-50).ae(-0.0056283863241163054+3.1415926535897932385j)
+    assert mp.ci(-50-2j).ae(-0.0183782829461330671-3.0712398455661049023j)
+    assert mp.ci(-2-20j).ae(-4.050116856873293505e6-1.207476188206989909e7j)
+    assert mp.ci(-20j).ae(1.28078263320282943611e7-1.5707963267949j)
+    assert mp.ci(50-2j).ae(-0.018378282946133067149-0.070352808023688336193j)
+    assert mp.si(50).ae(1.5516170724859358947)
+    assert mp.si(50+2j).ae(1.497884414277228461-0.017515007378437448j)
+    assert mp.si(20j).ae(1.2807826332028294459e7j)
+    assert mp.si(-2+20j).ae(-1.20747603112735722103e7-4.050116856873293554e6j)
+    assert mp.si(-50+2j).ae(-1.497884414277228461-0.017515007378437448j)
+    assert mp.si(-50).ae(-1.5516170724859358947)
+    assert mp.si(-50-2j).ae(-1.497884414277228461+0.017515007378437448j)
+    assert mp.si(-2-20j).ae(-1.20747603112735722103e7+4.050116856873293554e6j)
+    assert mp.si(-20j).ae(-1.2807826332028294459e7j)
+    assert mp.si(50-2j).ae(1.497884414277228461+0.017515007378437448j)
+    assert mp.chi(50j).ae(-0.0056283863241163054+1.5707963267948966192j)
+    assert mp.chi(-2+50j).ae(-0.0183782829461330671+1.6411491348185849554j)
+    assert mp.chi(-20).ae(1.28078263320282943611e7+3.1415926535898j)
+    assert mp.chi(-20-2j).ae(-4.050116856873293505e6+1.20747571696809187053e7j)
+    assert mp.chi(-2-50j).ae(-0.0183782829461330671-1.6411491348185849554j)
+    assert mp.chi(-50j).ae(-0.0056283863241163054-1.5707963267948966192j)
+    assert mp.chi(2-50j).ae(-0.0183782829461330671-1.500443518771208283j)
+    assert mp.chi(20-2j).ae(-4.050116856873293505e6-1.20747603112735722951e7j)
+    assert mp.chi(20).ae(1.2807826332028294361e7)
+    assert mp.chi(2+50j).ae(-0.0183782829461330671+1.500443518771208283j)
+    assert mp.shi(50j).ae(1.5516170724859358947j)
+    assert mp.shi(-2+50j).ae(0.017515007378437448+1.497884414277228461j)
+    assert mp.shi(-20).ae(-1.2807826332028294459e7)
+    assert mp.shi(-20-2j).ae(4.050116856873293554e6-1.20747603112735722103e7j)
+    assert mp.shi(-2-50j).ae(0.017515007378437448-1.497884414277228461j)
+    assert mp.shi(-50j).ae(-1.5516170724859358947j)
+    assert mp.shi(2-50j).ae(-0.017515007378437448-1.497884414277228461j)
+    assert mp.shi(20-2j).ae(-4.050116856873293554e6-1.20747603112735722103e7j)
+    assert mp.shi(20).ae(1.2807826332028294459e7)
+    assert mp.shi(2+50j).ae(-0.017515007378437448+1.497884414277228461j)
+    def ae(x,y,tol=1e-12):
+        return abs(x-y) <= abs(y)*tol
+    assert fp.ci(fp.inf) == 0
+    assert ae(fp.ci(fp.ninf), fp.pi*1j)
+    assert ae(fp.si(fp.inf), fp.pi/2)
+    assert ae(fp.si(fp.ninf), -fp.pi/2)
+    assert fp.si(0) == 0
+    assert ae(fp.ci(50), -0.0056283863241163054402)
+    assert ae(fp.ci(50+2j), -0.018378282946133067149+0.070352808023688336193j)
+    assert ae(fp.ci(20j), 1.28078263320282943611e7+1.5707963267949j)
+    assert ae(fp.ci(-2+20j), -4.050116856873293505e6+1.207476188206989909e7j)
+    assert ae(fp.ci(-50+2j), -0.0183782829461330671+3.0712398455661049023j)
+    assert ae(fp.ci(-50), -0.0056283863241163054+3.1415926535897932385j)
+    assert ae(fp.ci(-50-2j), -0.0183782829461330671-3.0712398455661049023j)
+    assert ae(fp.ci(-2-20j), -4.050116856873293505e6-1.207476188206989909e7j)
+    assert ae(fp.ci(-20j), 1.28078263320282943611e7-1.5707963267949j)
+    assert ae(fp.ci(50-2j), -0.018378282946133067149-0.070352808023688336193j)
+    assert ae(fp.si(50), 1.5516170724859358947)
+    assert ae(fp.si(50+2j), 1.497884414277228461-0.017515007378437448j)
+    assert ae(fp.si(20j), 1.2807826332028294459e7j)
+    assert ae(fp.si(-2+20j), -1.20747603112735722103e7-4.050116856873293554e6j)
+    assert ae(fp.si(-50+2j), -1.497884414277228461-0.017515007378437448j)
+    assert ae(fp.si(-50), -1.5516170724859358947)
+    assert ae(fp.si(-50-2j), -1.497884414277228461+0.017515007378437448j)
+    assert ae(fp.si(-2-20j), -1.20747603112735722103e7+4.050116856873293554e6j)
+    assert ae(fp.si(-20j), -1.2807826332028294459e7j)
+    assert ae(fp.si(50-2j), 1.497884414277228461+0.017515007378437448j)
+    assert ae(fp.chi(50j), -0.0056283863241163054+1.5707963267948966192j)
+    assert ae(fp.chi(-2+50j), -0.0183782829461330671+1.6411491348185849554j)
+    assert ae(fp.chi(-20), 1.28078263320282943611e7+3.1415926535898j)
+    assert ae(fp.chi(-20-2j), -4.050116856873293505e6+1.20747571696809187053e7j)
+    assert ae(fp.chi(-2-50j), -0.0183782829461330671-1.6411491348185849554j)
+    assert ae(fp.chi(-50j), -0.0056283863241163054-1.5707963267948966192j)
+    assert ae(fp.chi(2-50j), -0.0183782829461330671-1.500443518771208283j)
+    assert ae(fp.chi(20-2j), -4.050116856873293505e6-1.20747603112735722951e7j)
+    assert ae(fp.chi(20), 1.2807826332028294361e7)
+    assert ae(fp.chi(2+50j), -0.0183782829461330671+1.500443518771208283j)
+    assert ae(fp.shi(50j), 1.5516170724859358947j)
+    assert ae(fp.shi(-2+50j), 0.017515007378437448+1.497884414277228461j)
+    assert ae(fp.shi(-20), -1.2807826332028294459e7)
+    assert ae(fp.shi(-20-2j), 4.050116856873293554e6-1.20747603112735722103e7j)
+    assert ae(fp.shi(-2-50j), 0.017515007378437448-1.497884414277228461j)
+    assert ae(fp.shi(-50j), -1.5516170724859358947j)
+    assert ae(fp.shi(2-50j), -0.017515007378437448-1.497884414277228461j)
+    assert ae(fp.shi(20-2j), -4.050116856873293554e6-1.20747603112735722103e7j)
+    assert ae(fp.shi(20), 1.2807826332028294459e7)
+    assert ae(fp.shi(2+50j), -0.017515007378437448+1.497884414277228461j)
 
 def test_airy():
     mp.dps = 15
@@ -374,6 +483,8 @@ def test_hyper_1f1():
     assert (hyp1f1(2,3,1e10j)*10**10).ae(-0.97501205020039745852 - 1.7462392454512132074j)
     # Shouldn't use asymptotic expansion
     assert hyp1f1(-2, 1, 10000).ae(49980001)
+    # Bug
+    assert hyp1f1(1j,fraction(1,3),0.415-69.739j).ae(25.857588206024346592 + 15.738060264515292063j)
 
 def test_hyper_2f1():
     mp.dps = 15
@@ -408,8 +519,10 @@ def test_hyper_2f1():
 def test_hyper_2f1_hard():
     mp.dps = 15
     # Singular cases
-    assert hyp2f1(2,-1,-1,3) == 7
-    assert hyp2f1(2,-2,-2,3) == 34
+    assert hyp2f1(2,-1,-1,3).ae(0.25)
+    assert hyp2f1(2,-2,-2,3).ae(0.25)
+    assert hyp2f1(2,-1,-1,3,eliminate=False) == 7
+    assert hyp2f1(2,-2,-2,3,eliminate=False) == 34
     assert hyp2f1(2,-2,-3,3) == 14
     assert hyp2f1(2,-3,-2,3) == inf
     assert hyp2f1(2,-1.5,-1.5,3) == 0.25
@@ -418,9 +531,9 @@ def test_hyper_2f1_hard():
     assert hyp2f1(0,0,0,0) == 1
     assert isnan(hyp2f1(1,1,0,0))
     assert hyp2f1(2,-1,-5, 0.25+0.25j).ae(1.1+0.1j)
-    assert hyp2f1(2,-5,-5, 0.25+0.25j).ae(163./128 + 125./128*j)
+    assert hyp2f1(2,-5,-5, 0.25+0.25j, eliminate=False).ae(163./128 + 125./128*j)
     assert hyp2f1(0.7235, -1, -5, 0.3).ae(1.04341)
-    assert hyp2f1(0.7235, -5, -5, 0.3).ae(1.2939225017815903812)
+    assert hyp2f1(0.7235, -5, -5, 0.3, eliminate=False).ae(1.2939225017815903812)
     assert hyp2f1(-1,-2,4,1) == 1.5
     assert hyp2f1(1,2,-3,1) == inf
     assert hyp2f1(-2,-2,1,1) == 6
@@ -428,7 +541,7 @@ def test_hyper_2f1_hard():
     assert hyp2f1(0,-6,-4,1) == 1
     assert hyp2f1(0,-3,-4,1) == 1
     assert hyp2f1(0,0,0,1) == 1
-    assert hyp2f1(1,0,0,1) == 1
+    assert hyp2f1(1,0,0,1,eliminate=False) == 1
     assert hyp2f1(1,1,0,1) == inf
     assert hyp2f1(1,-6,-4,1) == inf
     assert hyp2f1(-7.2,-0.5,-4.5,1) == 0
@@ -457,6 +570,23 @@ def test_hyper_2f1_hard():
     assert hyp2f1(1,1,2,3+4j).ae(0.14576709331407297807+0.48379185417980360773j)
     assert hyp2f1(1,1,2,4).ae(-0.27465307216702742285 - 0.78539816339744830962j)
     assert hyp2f1(1,1,2,-4).ae(0.40235947810852509365)
+    # Other:
+    # Cancellation with a large parameter involved (bug reported on sage-devel)
+    assert hyp2f1(112, (51,10), (-9,10), -0.99999).ae(-1.6241361047970862961e-24, abs_eps=0, rel_eps=eps*16)
+
+def test_hyper_3f2_etc():
+    assert hyper([1,2,3],[1.5,8],-1).ae(0.67108992351533333030)
+    assert hyper([1,2,3,4],[5,6,7], -1).ae(0.90232988035425506008)
+    assert hyper([1,2,3],[1.25,5], 1).ae(28.924181329701905701)
+    assert hyper([1,2,3,4],[5,6,7],5).ae(1.5192307344006649499-1.1529845225075537461j)
+    assert hyper([1,2,3,4,5],[6,7,8,9],-1).ae(0.96288759462882357253)
+    assert hyper([1,2,3,4,5],[6,7,8,9],1).ae(1.0428697385885855841)
+    assert hyper([1,2,3,4,5],[6,7,8,9],5).ae(1.33980653631074769423-0.07143405251029226699j)
+    assert hyper([1,2.79,3.08,4.37],[5.2,6.1,7.3],5).ae(1.0996321464692607231-1.7748052293979985001j)
+    assert hyper([1,1,1],[1,2],1) == inf
+    assert hyper([1,1,1],[2,(101,100)],1).ae(100.01621213528313220)
+    # slow -- covered by doctests
+    #assert hyper([1,1,1],[2,3],0.9999).ae(1.2897972005319693905)
 
 def test_hyper_u():
     mp.dps = 15
@@ -475,10 +605,7 @@ def test_hyper_u():
     assert hyperu(2,6,pi).ae(0.55804439825913399130)
     assert (hyperu((3,2),8,100+201j)*10**4).ae(-0.3797318333856738798 - 2.9974928453561707782j)
     assert (hyperu((5,2),(-1,2),-5000)*10**10).ae(-5.6681877926881664678j)
-    # XXX: fails because of undetected cancellation in low level series code
-    # Alternatively: could use asymptotic series here, if convergence test
-    # tweaked back to recognize this one
-    #assert (hyperu((5,2),(-1,2),-500)*10**7).ae(-1.82526906001593252847j)
+    assert (hyperu((5,2),(-1,2),-500)*10**7).ae(-1.82526906001593252847j)
 
 def test_hyper_2f0():
     mp.dps = 15
@@ -495,8 +622,8 @@ def test_hyper_2f0():
     # Important: cancellation check
     assert hyp2f0((1,6),(5,6),-0.02371708245126284498).ae(0.996785723120804309)
     # Should be exact; polynomial case
-    assert hyp2f0(-2,1,0.5+0.5j) == 0
-    assert hyp2f0(1,-2,0.5+0.5j) == 0
+    assert hyp2f0(-2,1,0.5+0.5j,zeroprec=200) == 0
+    assert hyp2f0(1,-2,0.5+0.5j,zeroprec=200) == 0
     # There used to be a bug in thresholds that made one of the following hang
     for d in [15, 50, 80]:
         mp.dps = d
@@ -564,7 +691,6 @@ def test_orthpoly():
     assert jacobi(1.5,5/6.,4,0).ae(-1.0851951434075508417)
     assert jacobi(-2, 1, 2, 4).ae(-0.16)
     assert jacobi(2, -1, 2.5, 4).ae(34.59375)
-    #assert jacobi(2, -1, 2, 4) == 28.5
     assert legendre(5, 7) == 129367
     assert legendre(0.5,0).ae(0.53935260118837935667)
     assert legendre(-1,-1) == 1
@@ -583,6 +709,10 @@ def test_orthpoly():
     assert legendre(4.5+1j,-1) == mpc(-inf,-inf)
     assert laguerre(4, -2, 3).ae(-1.125)
     assert laguerre(3, 1+j, 0.5).ae(0.2291666666666666667 + 2.5416666666666666667j)
+
+@XFAIL
+def test_orthpoly_bug():
+    assert jacobi(2, -1, 2, 4) == 28.5
 
 def test_hermite():
     mp.dps = 15
@@ -624,10 +754,13 @@ def test_gegenbauer():
     assert gegenbauer(-7, 0.5, 3).ae(8989)
     assert gegenbauer(1, -0.5, 3).ae(-3)
     assert gegenbauer(1, -1.5, 3).ae(-9)
-    assert gegenbauer(1, -0.5, 3).ae(-3)
     assert gegenbauer(-0.5, -0.5, 3).ae(-2.6383553159023906245)
     assert gegenbauer(2+3j, 1-j, 3+4j).ae(14.880536623203696780 + 20.022029711598032898j)
-    #assert gegenbauer(-2, -0.5, 3).ae(-12)
+
+@XFAIL
+def test_gegenbauer_unimplemented():
+    assert gegenbauer(1, -0.5, 3).ae(-3)
+    assert gegenbauer(-2, -0.5, 3).ae(-12)
 
 def test_legenp():
     mp.dps = 15
@@ -659,15 +792,15 @@ def test_legenq():
     assert isnan(f(3,2,-1,type=3))
     # Evaluation at 0
     assert f(0,1,0,type=2).ae(-1)
-    assert f(-2,2,0,type=2).ae(0)
+    assert f(-2,2,0,type=2,zeroprec=200).ae(0)
     assert f(1.5,3,0,type=2).ae(-2.2239343475841951023)
     assert f(0,1,0,type=3).ae(j)
-    assert f(-2,2,0,type=3).ae(0)
+    assert f(-2,2,0,type=3,zeroprec=200).ae(0)
     assert f(1.5,3,0,type=3).ae(2.2239343475841951022*(1-1j))
     # Standard case, degree 0
     assert f(0,0,-1.5).ae(-0.8047189562170501873 + 1.5707963267948966192j)
     assert f(0,0,-0.5).ae(-0.54930614433405484570)
-    assert f(0,0,0).ae(0)
+    assert f(0,0,0,zeroprec=200).ae(0)
     assert f(0,0,0.5).ae(0.54930614433405484570)
     assert f(0,0,1.5).ae(0.8047189562170501873 - 1.5707963267948966192j)
     assert f(0,0,-1.5,type=3).ae(-0.80471895621705018730)
@@ -684,7 +817,7 @@ def test_legenq():
     # Standard case, degree 2
     assert f(2,0,-1.5).ae(-0.0635669991240192885 + 4.5160394395353277803j)
     assert f(2,0,-0.5).ae(0.81866326804175685571)
-    assert f(2,0,0).ae(0)
+    assert f(2,0,0,zeroprec=200).ae(0)
     assert f(2,0,0.5).ae(-0.81866326804175685571)
     assert f(2,0,1.5).ae(0.0635669991240192885 - 4.5160394395353277803j)
     # Misc orders and degrees
@@ -743,6 +876,7 @@ def test_gammainc():
     assert gammainc(1,b=1).ae(0.6321205588285576784)
     assert gammainc(3,2,2) == 0
     assert gammainc(2,3+j,3-j).ae(-0.28135485191849314194j)
+    assert gammainc(4+0j,1).ae(5.8860710587430771455)
     # Regularized upper gamma
     assert isnan(gammainc(0, 0, regularized=True))
     assert gammainc(-1, 0, regularized=True) == inf
@@ -952,6 +1086,9 @@ def test_erf():
     assert erfc(inf) == 0
     assert isnan(erfc(nan))
     assert (erfc(10**4)*mpf(10)**43429453).ae('3.63998738656420')
+    assert erf(8+9j).ae(-1072004.2525062051158 + 364149.91954310255423j)
+    assert erfc(8+9j).ae(1072005.2525062051158 - 364149.91954310255423j)
+    assert erfc(-8-9j).ae(-1072003.2525062051158 + 364149.91954310255423j)
     mp.dps = 50
     # This one does not use the asymptotic series
     assert (erfc(10)*10**45).ae('2.0884875837625447570007862949577886115608181193212')
@@ -1047,6 +1184,147 @@ def test_lambertw():
     mp.dps = 50
     assert lambertw(pi).ae('1.073658194796149172092178407024821347547745350410314531')
     mp.dps = 15
+    # Former bug in generated branch
+    assert lambertw(-0.5+0.002j).ae(-0.78917138132659918344 + 0.76743539379990327749j)
+    assert lambertw(-0.5-0.002j).ae(-0.78917138132659918344 - 0.76743539379990327749j)
+    assert lambertw(-0.448+0.4j).ae(-0.11855133765652382241 + 0.66570534313583423116j)
+    assert lambertw(-0.448-0.4j).ae(-0.11855133765652382241 - 0.66570534313583423116j)
+    assert lambertw(-0.65475+0.0001j).ae(-0.61053421111385310898+1.0396534993944097723803j)
+    # Huge branch index
+    w = lambertw(1,10**20)
+    assert w.real.ae(-47.889578926290259164)
+    assert w.imag.ae(6.2831853071795864769e+20)
+
+def test_lambertw_hard():
+    def check(x,y):
+        y = convert(y)
+        type_ok = True
+        if isinstance(y, mpf):
+            type_ok = isinstance(x, mpf)
+        real_ok = abs(x.real-y.real) <= abs(y.real)*8*eps
+        imag_ok = abs(x.imag-y.imag) <= abs(y.imag)*8*eps
+        #print x, y, abs(x.real-y.real), abs(x.imag-y.imag)
+        return real_ok and imag_ok
+    # Evaluation near 0
+    mp.dps = 15
+    assert check(lambertw(1e-10), 9.999999999000000000e-11)
+    assert check(lambertw(-1e-10), -1.000000000100000000e-10)
+    assert check(lambertw(1e-10j), 9.999999999999999999733e-21 + 9.99999999999999999985e-11j)
+    assert check(lambertw(-1e-10j), 9.999999999999999999733e-21 - 9.99999999999999999985e-11j)
+    assert check(lambertw(1e-10,1), -26.303186778379041559 + 3.265093911703828397j)
+    assert check(lambertw(-1e-10,1), -26.326236166739163892 + 6.526183280686333315j)
+    assert check(lambertw(1e-10j,1), -26.312931726911421551 + 4.896366881798013421j)
+    assert check(lambertw(-1e-10j,1), -26.297238779529035066 + 1.632807161345576513j)
+    assert check(lambertw(1e-10,-1), -26.303186778379041559 - 3.265093911703828397j)
+    assert check(lambertw(-1e-10,-1), -26.295238819246925694)
+    assert check(lambertw(1e-10j,-1), -26.297238779529035028 - 1.6328071613455765135j)
+    assert check(lambertw(-1e-10j,-1), -26.312931726911421551 - 4.896366881798013421j)
+    # Test evaluation very close to the branch point -1/e
+    # on the -1, 0, and 1 branches
+    add = lambda x, y: fadd(x,y,exact=True)
+    sub = lambda x, y: fsub(x,y,exact=True)
+    addj = lambda x, y: fadd(x,fmul(y,1j,exact=True),exact=True)
+    subj = lambda x, y: fadd(x,fmul(y,-1j,exact=True),exact=True)
+    mp.dps = 1500
+    a = -1/e + 10*eps
+    d3 = mpf('1e-3')
+    d10 = mpf('1e-10')
+    d20 = mpf('1e-20')
+    d40 = mpf('1e-40')
+    d80 = mpf('1e-80')
+    d300 = mpf('1e-300')
+    d1000 = mpf('1e-1000')
+    mp.dps = 15
+    # ---- Branch 0 ----
+    # -1/e + eps
+    assert check(lambertw(add(a,d3)), -0.92802015005456704876)
+    assert check(lambertw(add(a,d10)), -0.99997668374140088071)
+    assert check(lambertw(add(a,d20)), -0.99999999976683560186)
+    assert lambertw(add(a,d40)) == -1
+    assert lambertw(add(a,d80)) == -1
+    assert lambertw(add(a,d300)) == -1
+    assert lambertw(add(a,d1000)) == -1
+    # -1/e - eps
+    assert check(lambertw(sub(a,d3)), -0.99819016149860989001+0.07367191188934638577j)
+    assert check(lambertw(sub(a,d10)), -0.9999999998187812114595992+0.0000233164398140346109194j)
+    assert check(lambertw(sub(a,d20)), -0.99999999999999999998187+2.331643981597124203344e-10j)
+    assert check(lambertw(sub(a,d40)), -1.0+2.33164398159712420336e-20j)
+    assert check(lambertw(sub(a,d80)), -1.0+2.33164398159712420336e-40j)
+    assert check(lambertw(sub(a,d300)), -1.0+2.33164398159712420336e-150j)
+    assert check(lambertw(sub(a,d1000)), mpc(-1,'2.33164398159712420336e-500'))
+    # -1/e + eps*j
+    assert check(lambertw(addj(a,d3)), -0.94790387486938526634+0.05036819639190132490j)
+    assert check(lambertw(addj(a,d10)), -0.9999835127872943680999899+0.0000164870314895821225256j)
+    assert check(lambertw(addj(a,d20)), -0.999999999835127872929987+1.64872127051890935830e-10j)
+    assert check(lambertw(addj(a,d40)), -0.9999999999999999999835+1.6487212707001281468305e-20j)
+    assert check(lambertw(addj(a,d80)), -1.0 + 1.64872127070012814684865e-40j)
+    assert check(lambertw(addj(a,d300)), -1.0 + 1.64872127070012814684865e-150j)
+    assert check(lambertw(addj(a,d1000)), mpc(-1.0,'1.64872127070012814684865e-500'))
+    # -1/e - eps*j
+    assert check(lambertw(subj(a,d3)), -0.94790387486938526634-0.05036819639190132490j)
+    assert check(lambertw(subj(a,d10)), -0.9999835127872943680999899-0.0000164870314895821225256j)
+    assert check(lambertw(subj(a,d20)), -0.999999999835127872929987-1.64872127051890935830e-10j)
+    assert check(lambertw(subj(a,d40)), -0.9999999999999999999835-1.6487212707001281468305e-20j)
+    assert check(lambertw(subj(a,d80)), -1.0 - 1.64872127070012814684865e-40j)
+    assert check(lambertw(subj(a,d300)), -1.0 - 1.64872127070012814684865e-150j)
+    assert check(lambertw(subj(a,d1000)), mpc(-1.0,'-1.64872127070012814684865e-500'))
+    # ---- Branch 1 ----
+    assert check(lambertw(addj(a,d3),1), -3.088501303219933378005990 + 7.458676867597474813950098j)
+    assert check(lambertw(addj(a,d80),1), -3.088843015613043855957087 + 7.461489285654254556906117j)
+    assert check(lambertw(addj(a,d300),1), -3.088843015613043855957087 + 7.461489285654254556906117j)
+    assert check(lambertw(addj(a,d1000),1), -3.088843015613043855957087 + 7.461489285654254556906117j)
+    assert check(lambertw(subj(a,d3),1), -1.0520914180450129534365906 + 0.0539925638125450525673175j)
+    assert check(lambertw(subj(a,d10),1), -1.0000164872127056318529390 + 0.000016487393927159250398333077j)
+    assert check(lambertw(subj(a,d20),1), -1.0000000001648721270700128 + 1.64872127088134693542628e-10j)
+    assert check(lambertw(subj(a,d40),1), -1.000000000000000000016487 + 1.64872127070012814686677e-20j)
+    assert check(lambertw(subj(a,d80),1), -1.0 + 1.64872127070012814684865e-40j)
+    assert check(lambertw(subj(a,d300),1), -1.0 + 1.64872127070012814684865e-150j)
+    assert check(lambertw(subj(a,d1000),1), mpc(-1.0, '1.64872127070012814684865e-500'))
+    # ---- Branch -1 ----
+    # -1/e + eps
+    assert check(lambertw(add(a,d3),-1), -1.075608941186624989414945)
+    assert check(lambertw(add(a,d10),-1), -1.000023316621036696460620)
+    assert check(lambertw(add(a,d20),-1), -1.000000000233164398177834)
+    assert lambertw(add(a,d40),-1) == -1
+    assert lambertw(add(a,d80),-1) == -1
+    assert lambertw(add(a,d300),-1) == -1
+    assert lambertw(add(a,d1000),-1) == -1
+    # -1/e - eps
+    assert check(lambertw(sub(a,d3),-1), -0.99819016149860989001-0.07367191188934638577j)
+    assert check(lambertw(sub(a,d10),-1), -0.9999999998187812114595992-0.0000233164398140346109194j)
+    assert check(lambertw(sub(a,d20),-1), -0.99999999999999999998187-2.331643981597124203344e-10j)
+    assert check(lambertw(sub(a,d40),-1), -1.0-2.33164398159712420336e-20j)
+    assert check(lambertw(sub(a,d80),-1), -1.0-2.33164398159712420336e-40j)
+    assert check(lambertw(sub(a,d300),-1), -1.0-2.33164398159712420336e-150j)
+    assert check(lambertw(sub(a,d1000),-1), mpc(-1,'-2.33164398159712420336e-500'))
+    # -1/e + eps*j
+    assert check(lambertw(addj(a,d3),-1), -1.0520914180450129534365906 - 0.0539925638125450525673175j)
+    assert check(lambertw(addj(a,d10),-1), -1.0000164872127056318529390 - 0.0000164873939271592503983j)
+    assert check(lambertw(addj(a,d20),-1), -1.0000000001648721270700 - 1.64872127088134693542628e-10j)
+    assert check(lambertw(addj(a,d40),-1), -1.00000000000000000001648 - 1.6487212707001281468667726e-20j)
+    assert check(lambertw(addj(a,d80),-1), -1.0 - 1.64872127070012814684865e-40j)
+    assert check(lambertw(addj(a,d300),-1), -1.0 - 1.64872127070012814684865e-150j)
+    assert check(lambertw(addj(a,d1000),-1), mpc(-1.0,'-1.64872127070012814684865e-500'))
+    # -1/e - eps*j
+    assert check(lambertw(subj(a,d3),-1), -3.088501303219933378005990-7.458676867597474813950098j)
+    assert check(lambertw(subj(a,d10),-1), -3.088843015579260686911033-7.461489285372968780020716j)
+    assert check(lambertw(subj(a,d20),-1), -3.088843015613043855953708-7.461489285654254556877988j)
+    assert check(lambertw(subj(a,d40),-1), -3.088843015613043855957087-7.461489285654254556906117j)
+    assert check(lambertw(subj(a,d80),-1), -3.088843015613043855957087 - 7.461489285654254556906117j)
+    assert check(lambertw(subj(a,d300),-1), -3.088843015613043855957087 - 7.461489285654254556906117j)
+    assert check(lambertw(subj(a,d1000),-1), -3.088843015613043855957087 - 7.461489285654254556906117j)
+    # One more case, testing higher precision
+    mp.dps = 500
+    x = -1/e + mpf('1e-13')
+    ans = "-0.99999926266961377166355784455394913638782494543377383"\
+    "744978844374498153493943725364881490261187530235150668593869563"\
+    "168276697689459394902153960200361935311512317183678882"
+    mp.dps = 15
+    assert lambertw(x).ae(ans)
+    mp.dps = 50
+    assert lambertw(x).ae(ans)
+    mp.dps = 150
+    assert lambertw(x).ae(ans)
 
 def test_meijerg():
     mp.dps = 15
@@ -1054,6 +1332,18 @@ def test_meijerg():
     assert meijerg([[],[1+j]],[[1],[1]], 3+4j).ae(271.46290321152464592 - 703.03330399954820169j)
     assert meijerg([[0.25],[1]],[[0.5],[2]],0) == 0
     assert meijerg([[0],[]],[[0,0,'1/3','2/3'], []], '2/27').ae(2.2019391389653314120)
+    # Verify 1/z series being used
+    assert meijerg([[-3],[-0.5]], [[-1],[-2.5]], -0.5).ae(-1.338096165935754898687431)
+    assert meijerg([[1-(-1)],[1-(-2.5)]], [[1-(-3)],[1-(-0.5)]], -2.0).ae(-1.338096165935754898687431)
+    assert meijerg([[-3],[-0.5]], [[-1],[-2.5]], -1).ae(-(pi+4)/(4*pi))
+    a = 2.5
+    b = 1.25
+    for z in [mpf(0.25), mpf(2)]:
+        x1 = hyp1f1(a,b,z)
+        x2 = gamma(b)/gamma(a)*meijerg([[1-a],[]],[[0],[1-b]],-z)
+        x3 = gamma(b)/gamma(a)*meijerg([[1-0],[1-(1-b)]],[[1-(1-a)],[]],-1/z)
+        assert x1.ae(x2)
+        assert x1.ae(x3)
 
 def test_appellf1():
     mp.dps = 15
@@ -1068,3 +1358,95 @@ def test_coulomb():
     # Test for a bug:
     mp.dps = 15
     assert coulombg(mpc(-5,0),2,3).ae(20.087729487721430394)
+
+def test_hyper_param_accuracy():
+    mp.dps = 15
+    As = [n+1e-10 for n in range(-5,-1)]
+    Bs = [n+1e-10 for n in range(-12,-5)]
+    assert hyper(As,Bs,10).ae(-381757055858.652671927)
+    assert legenp(0.5, 100, 0.25).ae(-2.4124576567211311755e+144)
+    assert (hyp1f1(1000,1,-100)*10**24).ae(5.2589445437370169113)
+    assert (hyp2f1(10, -900, 10.5, 0.99)*10**24).ae(1.9185370579660768203)
+    assert (hyp2f1(1000,1.5,-3.5,-1.5)*10**385).ae(-2.7367529051334000764)
+    assert hyp2f1(-5, 10, 3, 0.5, zeroprec=500) == 0
+    assert (hyp1f1(-10000, 1000, 100)*10**424).ae(-3.1046080515824859974)
+    assert (hyp2f1(1000,1.5,-3.5,-0.75,maxterms=100000)*10**231).ae(-4.0534790813913998643)
+    assert legenp(2, 3, 0.25) == 0
+    try:
+        hypercomb(lambda a: [([],[],[],[],[a],[-a],0.5)], [3])
+        assert 0
+    except ValueError:
+        pass
+    assert hypercomb(lambda a: [([],[],[],[],[a],[-a],0.5)], [3], infprec=200) == inf
+    assert meijerg([[],[]],[[0,0,0,0],[]],0.1).ae(1.5680822343832351418)
+    assert (besselk(400,400)*10**94).ae(1.4387057277018550583)
+    mp.dps = 5
+    (hyp1f1(-5000.5, 1500, 100)*10**185).ae(8.5185229673381935522)
+    (hyp1f1(-5000, 1500, 100)*10**185).ae(9.1501213424563944311)
+    mp.dps = 15
+    (hyp1f1(-5000.5, 1500, 100)*10**185).ae(8.5185229673381935522)
+    (hyp1f1(-5000, 1500, 100)*10**185).ae(9.1501213424563944311)
+    assert hyp0f1(fadd(-20,'1e-100',exact=True), 0.25).ae(1.85014429040102783e+49)
+    assert hyp0f1((-20*10**100+1, 10**100), 0.25).ae(1.85014429040102783e+49)
+
+def test_hypercomb_zero_pow():
+    # check that 0^0 = 1
+    assert hypercomb(lambda a: (([0],[a],[],[],[],[],0),), [0]) == 1
+    assert meijerg([[-1.5],[]],[[0],[-0.75]],0).ae(1.4464090846320771425)
+
+def test_spherharm():
+    mp.dps = 15
+    t = 0.5; r = 0.25
+    assert spherharm(0,0,t,r).ae(0.28209479177387814347)
+    assert spherharm(1,-1,t,r).ae(0.16048941205971996369 - 0.04097967481096344271j)
+    assert spherharm(1,0,t,r).ae(0.42878904414183579379)
+    assert spherharm(1,1,t,r).ae(-0.16048941205971996369 - 0.04097967481096344271j)
+    assert spherharm(2,-2,t,r).ae(0.077915886919031181734 - 0.042565643022253962264j)
+    assert spherharm(2,-1,t,r).ae(0.31493387233497459884 - 0.08041582001959297689j)
+    assert spherharm(2,0,t,r).ae(0.41330596756220761898)
+    assert spherharm(2,1,t,r).ae(-0.31493387233497459884 - 0.08041582001959297689j)
+    assert spherharm(2,2,t,r).ae(0.077915886919031181734 + 0.042565643022253962264j)
+    assert spherharm(3,-3,t,r).ae(0.033640236589690881646 - 0.031339125318637082197j)
+    assert spherharm(3,-2,t,r).ae(0.18091018743101461963 - 0.09883168583167010241j)
+    assert spherharm(3,-1,t,r).ae(0.42796713930907320351 - 0.10927795157064962317j)
+    assert spherharm(3,0,t,r).ae(0.27861659336351639787)
+    assert spherharm(3,1,t,r).ae(-0.42796713930907320351 - 0.10927795157064962317j)
+    assert spherharm(3,2,t,r).ae(0.18091018743101461963 + 0.09883168583167010241j)
+    assert spherharm(3,3,t,r).ae(-0.033640236589690881646 - 0.031339125318637082197j)
+    assert spherharm(0,-1,t,r) == 0
+    assert spherharm(0,-2,t,r) == 0
+    assert spherharm(0,1,t,r) == 0
+    assert spherharm(0,2,t,r) == 0
+    assert spherharm(1,2,t,r) == 0
+    assert spherharm(1,3,t,r) == 0
+    assert spherharm(1,-2,t,r) == 0
+    assert spherharm(1,-3,t,r) == 0
+    assert spherharm(2,3,t,r) == 0
+    assert spherharm(2,4,t,r) == 0
+    assert spherharm(2,-3,t,r) == 0
+    assert spherharm(2,-4,t,r) == 0
+    assert spherharm(3,4.5,0.5,0.25).ae(-22.831053442240790148 + 10.910526059510013757j)
+    assert spherharm(2+3j, 1-j, 1+j, 3+4j).ae(-2.6582752037810116935 - 1.0909214905642160211j)
+    assert spherharm(-6,2.5,t,r).ae(0.39383644983851448178 + 0.28414687085358299021j)
+    assert spherharm(-3.5, 3, 0.5, 0.25).ae(0.014516852987544698924 - 0.015582769591477628495j)
+    assert spherharm(-3, 3, 0.5, 0.25) == 0
+    assert spherharm(-6, 3, 0.5, 0.25).ae(-0.16544349818782275459 - 0.15412657723253924562j)
+    assert spherharm(-6, 1.5, 0.5, 0.25).ae(0.032208193499767402477 + 0.012678000924063664921j)
+    assert spherharm(3,0,0,1).ae(0.74635266518023078283)
+    assert spherharm(3,-2,0,1) == 0
+    assert spherharm(3,-2,1,1).ae(-0.16270707338254028971 - 0.35552144137546777097j)
+
+def test_qfunctions():
+    mp.dps = 15
+    assert qp(2,3,100).ae('2.7291482267247332183e2391')
+
+def test_issue199():
+    mp.prec = 150
+    x = ldexp(2476979795053773,-52)
+    assert betainc(206, 385, 0, 0.55, 1).ae('0.99999999999999999999996570910644857895771110649954')
+    mp.dps = 15
+    try:
+        u = hyp2f1(-5,5,0.5,0.5)
+        raise AssertionError("hyp2f1(-5,5,0.5,0.5) (failed zero detection)")
+    except (mp.NoConvergence, ValueError):
+        pass

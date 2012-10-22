@@ -3,6 +3,7 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from sympy.core.decorators import wraps
 
 def apply_on_element(f, args, kwargs, n):
     """
@@ -53,29 +54,25 @@ def structure_copy(structure):
         return structure.copy()
     return iter_copy(structure)
 
-
 class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
 
-    For example:
-        (1)
-            @vectorize(0)
-            def sin(x):
-                ....
+    For example::
 
-            >>sin([1, x, y])
-            [sin(1), sin(x), sin(y)]
+      (1) @vectorize(0)
+          def sin(x):
+              ....
 
-        (2)
-            @vectorize(0,1)
-            def diff(f(y), y)
-                ....
+          sin([1, x, y])
+          --> [sin(1), sin(x), sin(y)]
 
-            >>diff([f(x,y,z),g(x,y,z),h(x,y,z)], [x,y,z])
-            [[d/dx f, d/dy f, d/dz f],
-             [d/dx g, d/dy g, d/dz g],
-             [d/dx h, d/dy h, d/dz h]]
+      (2) @vectorize(0,1)
+          def diff(f(y), y)
+              ....
+
+          diff([f(x,y,z),g(x,y,z),h(x,y,z)], [x,y,z])
+          --> [[d/dx f, d/dy f, d/dz f], [d/dx g, d/dy g, d/dz g], [d/dx h, d/dy h, d/dz h]]
     """
     def __init__(self, *mdargs):
         """
@@ -93,6 +90,7 @@ class vectorize:
         Returns a wrapper for the one-dimensional function that can handle
         multidimensional arguments.
         """
+        @wraps(f)
         def wrapper(*args, **kwargs):
             # Get arguments that should be treated multidimensional
             if self.mdargs:
@@ -125,6 +123,4 @@ class vectorize:
                     result = apply_on_element(wrapper, args, kwargs, n)
                     return result
             return f(*args, **kwargs)
-        wrapper.__doc__ = f.__doc__
-        wrapper.__name__ = f.__name__
         return wrapper

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Pretty print example
 
 Demonstrates pretty printing.

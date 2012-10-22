@@ -1,5 +1,7 @@
-from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
-        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add
+from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
+    I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
+    var, Wild
+)
 from sympy.utilities.pytest import XFAIL
 
 
@@ -9,6 +11,7 @@ def test_symbol():
 
     e = x
     assert e.match(x) == {}
+    assert e.matches(x) == {}
     assert e.match(a) == {a: x}
 
     e = Rational(5)
@@ -110,17 +113,57 @@ def test_mul():
     e = exp(x)
     assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
 
+    e = I*Poly(x, x)
+    assert e.match(I*p) == {p: Poly(x, x)}
+
+def test_mul_noncommutative():
+    x, y = symbols('x y')
+    A, B = symbols('A B', commutative=False)
+    u, v = symbols('u v', cls=Wild)
+    w = Wild('w', commutative=False)
+
+    assert (u*v).matches(x) in ({v: x, u: 1}, {u: x, v: 1})
+    assert (u*v).matches(x*y) in ({v: y, u: x}, {u: y, v: x})
+    assert (u*v).matches(A) == None
+    assert (u*v).matches(A*B) == None
+    assert (u*v).matches(x*A) == None
+    assert (u*v).matches(x*y*A) == None
+    assert (u*v).matches(x*A*B) == None
+    assert (u*v).matches(x*y*A*B) == None
+
+    assert (v*w).matches(x) == None
+    assert (v*w).matches(x*y) == None
+    assert (v*w).matches(A) == {w: A, v: 1}
+    assert (v*w).matches(A*B) == {w: A*B, v: 1}
+    assert (v*w).matches(x*A) == {w: A, v: x}
+    assert (v*w).matches(x*y*A) == {w: A, v: x*y}
+    assert (v*w).matches(x*A*B) == {w: A*B, v: x}
+    assert (v*w).matches(x*y*A*B) == {w: A*B, v: x*y}
+
+    assert (v*w).matches(-x) == None
+    assert (v*w).matches(-x*y) == None
+    assert (v*w).matches(-A) == {w: A, v: -1}
+    assert (v*w).matches(-A*B) == {w: A*B, v: -1}
+    assert (v*w).matches(-x*A) == {w: A, v: -x}
+    assert (v*w).matches(-x*y*A) == {w: A, v: -x*y}
+    assert (v*w).matches(-x*A*B) == {w: A*B, v: -x}
+    assert (v*w).matches(-x*y*A*B) == {w: A*B, v: -x*y}
+
 def test_complex():
     a,b,c = map(Symbol, 'abc')
     x,y = map(Wild, 'xy')
 
-    (1+I).match(x+I) == {x : 1}
-    (a+I).match(x+I) == {x : a}
-    (a+b*I).match(x+y*I) == {x : a, y : b}
-    (2*I).match(x*I) == {x : 2}
-    (a*I).match(x*I) == {x : a}
-    (a*I).match(x*y) == {x : a, y : I}
-    (2*I).match(x*y) == {x : 2, y : I}
+    assert (1+I).match(x+I) == {x : 1}
+    assert (a+I).match(x+I) == {x : a}
+    assert (2*I).match(x*I) == {x : 2}
+    assert (a*I).match(x*I) == {x : a}
+    assert (a*I).match(x*y) == {x : I, y : a}
+    assert (2*I).match(x*y) == {x : 2, y : I}
+
+    #Result is ambiguous, so we need to use Wild's exclude keyword
+    x = Wild('x', exclude=[I])
+    y = Wild('y', exclude=[I])
+    assert (a+b*I).match(x+y*I) == {x : a, y : b}
 
 def test_functions():
     from sympy.core.function import WildFunction
@@ -162,7 +205,7 @@ def test_derivative1():
     assert fd.match(p) == {p: fd}
     assert (fd+1).match(p+1) == {p: fd}
     assert (fd).match(fd) == {}
-    assert (3*fd).match(p*fd) != None
+    assert (3*fd).match(p*fd) is not None
     p = Wild("p", exclude=[x])
     q = Wild("q", exclude=[x])
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
@@ -175,7 +218,7 @@ def test_derivative_bug1():
     pattern = a * Derivative(f(x), x, x) + b
     expr = Derivative(f(x), x)+x**2
     d1 = {b: x**2}
-    d2 = pattern.matches(expr, d1, evaluate=True)
+    d2 = pattern.xreplace(d1).matches(expr, d1)
     assert d2 == None
 
 def test_derivative2():
@@ -205,7 +248,7 @@ def test_match_deriv_bug1():
 
     e = diff(l(x), x)/x - diff(diff(n(x), x), x)/2 - \
         diff(n(x), x)**2/4 + diff(n(x), x)*diff(l(x), x)/4
-    e = e.subs(n(x), -l(x))
+    e = e.subs(n(x), -l(x)).doit()
     t = x*exp(-l(x))
     t2 = t.diff(x, x)/t
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
@@ -217,9 +260,9 @@ def test_match_bug2():
     assert (p+q+r).subs(res) == x+y
 
 def test_match_bug3():
-     x,a,b = map(Symbol, 'xab')
-     p = Wild('p')
-     assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
+    x,a,b = map(Symbol, 'xab')
+    p = Wild('p')
+    assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
 
 def test_match_bug4():
     x = Symbol('x')
@@ -270,6 +313,8 @@ def test_match_polynomial():
     pattern = a*x**3 + b*x**2 + c*x + d
     assert eq.match(pattern) == {a: 4, b: 3, c: 2, d: 1}
     assert (eq-3*x**2).match(pattern) == {a: 4, b: 0, c: 2, d: 1}
+    assert (x + sqrt(2) + 3).match(a + b*x + c*x**2) == \
+           {b: 1, a: sqrt(2) + 3, c: 0}
 
 def test_exclude():
     x,y,a = map(Symbol, 'xya')
@@ -296,9 +341,9 @@ def test_exclude():
 def test_floats():
     a,b = map(Wild, 'ab')
 
-    e = cos(0.12345)**2
+    e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)
-    assert r == {a: 1, b: Real(0.12345)}
+    assert r == {a: 1, b: Float(0.12345)}
 
 def test_Derivative_bug1():
     f = Function("f")
@@ -341,3 +386,83 @@ def test_combine_inverse():
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
 
+def test_issue_674():
+    z, phi, r = symbols('z phi r')
+    c, A, B, N = symbols('c A B N', cls=Wild)
+    l = Wild('l', exclude=(0,))
+
+    eq = z * sin(2*phi) * r**7
+    matcher = c * sin(phi*N)**l * r**A * log(r)**B
+
+    assert eq.match(matcher) == {c: z, l: 1, N: 2, A: 7, B: 0}
+    assert (-eq).match(matcher) == {c: -z, l: 1, N: 2, A: 7, B: 0}
+    assert (x*eq).match(matcher) == {c: x*z, l: 1, N: 2, A: 7, B: 0}
+    assert (-7*x*eq).match(matcher) == {c: -7*x*z, l: 1, N: 2, A: 7, B: 0}
+
+    matcher = c*sin(phi*N)**l * r**A
+
+    assert eq.match(matcher) == {c: z, l: 1, N: 2, A: 7}
+    assert (-eq).match(matcher) == {c: -z, l: 1, N: 2, A: 7}
+    assert (x*eq).match(matcher) == {c: x*z, l: 1, N: 2, A: 7}
+    assert (-7*x*eq).match(matcher) == {c: -7*x*z, l: 1, N: 2, A: 7}
+
+def test_issue_784():
+    from sympy.abc import gamma, mu, pi, x
+    f = (-gamma * (x - mu)**2 - log(gamma) + log(2*pi))/2
+    a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
+
+    assert f.match(a * log(gamma) + b * gamma + c) == \
+        {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
+    assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
+        {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
+
+def test_issue_1319():
+    x = symbols('x')
+    a, b, c = symbols('a b c', cls=Wild, exclude=(x,))
+    f, g = symbols('f g', cls=Function)
+
+    eq = diff(g(x)*f(x).diff(x), x)
+
+    assert eq.match(g(x).diff(x)*f(x).diff(x) + g(x)*f(x).diff(x, x) + c) == {c: 0}
+    assert eq.match(a*g(x).diff(x)*f(x).diff(x) + b*g(x)*f(x).diff(x, x) + c) == {a: 1, b: 1, c: 0}
+
+def test_issue_1601():
+    f = Function('f')
+    x = symbols('x')
+    a, b = symbols('a b', cls=Wild, exclude=(f(x),))
+
+    p = a*f(x) + b
+    eq1 = sin(x)
+    eq2 = f(x) + sin(x)
+    eq3 = f(x) + x + sin(x)
+    eq4 = x + sin(x)
+
+    assert eq1.match(p) == {a: 0, b: sin(x)}
+    assert eq2.match(p) == {a: 1, b: sin(x)}
+    assert eq3.match(p) == {a: 1, b: x + sin(x)}
+    assert eq4.match(p) == {a: 0, b: x + sin(x)}
+
+def test_issue_2069():
+    a, b, c = symbols('a b c', cls=Wild)
+    x = symbols('x')
+    f = Function('f')
+
+    assert x.match(a) == {a: x}
+    assert x.match(a*f(x)**c) == {a: x, c: 0}
+    assert x.match(a*b) == {a: 1, b: x}
+    assert x.match(a*b*f(x)**c) == {a: 1, b: x, c: 0}
+
+    assert (-x).match(a) == {a: -x}
+    assert (-x).match(a*f(x)**c) == {a: -x, c: 0}
+    assert (-x).match(a*b) == {a: -1, b: x}
+    assert (-x).match(a*b*f(x)**c) == {a: -1, b: x, c: 0}
+
+    assert (2*x).match(a) == {a: 2*x}
+    assert (2*x).match(a*f(x)**c) == {a: 2*x, c: 0}
+    assert (2*x).match(a*b) == {a: 2, b: x}
+    assert (2*x).match(a*b*f(x)**c) == {a: 2, b: x, c: 0}
+
+    assert (-2*x).match(a) == {a: -2*x}
+    assert (-2*x).match(a*f(x)**c) == {a: -2*x, c: 0}
+    assert (-2*x).match(a*b) == {a: -2, b: x}
+    assert (-2*x).match(a*b*f(x)**c) == {a: -2, b: x, c: 0}

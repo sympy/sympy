@@ -1,21 +1,19 @@
-"""Some utilities that may help.
+"""This module contains some general purpose utilities that are used across
+SymPy.
 """
-import sys
-
-from iterables import iff, make_list, flatten, subsets, numbered_symbols
-
-if sys.version_info[0] <= 2 and sys.version_info[1] < 5:
-    from iterables import any, all
-else:
-    any = any
-    all = all
+from iterables import (flatten, group, take, subsets,
+    variations, numbered_symbols, cartes, capture, dict_merge,
+    postorder_traversal, interactive_traversal,
+    prefixes, postfixes, sift, topological_sort, unflatten)
 
 from lambdify import lambdify
 from source import source
 
-from decorator import threaded, deprecated
+from decorator import threaded, xthreaded
 
 from runtests import test, doctest
 
-from pytest import raises
+from cythonutils import cythonized
+from timeutils import timed
 
+from misc import default_sort_key

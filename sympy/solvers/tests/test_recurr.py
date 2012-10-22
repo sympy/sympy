@@ -1,9 +1,10 @@
-from sympy import Function, symbols, S, sqrt, rf, factorial
-from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
+from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols
+from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
+from sympy.utilities.pytest import raises
 
 y = Function('y')
-n, k = symbols('nk', integer=True)
-C0, C1, C2 = symbols('C0', 'C1', 'C2')
+n, k = symbols('n,k', integer=True)
+C0, C1, C2 = symbols('C0,C1,C2')
 
 def test_rsolve_poly():
     assert rsolve_poly([-1, -1, 1], 0, n) == 0
@@ -21,22 +22,30 @@ def test_rsolve_ratio():
         -2*n**3-11*n**2-18*n-9, 2*n**3+13*n**2+22*n+8], 0, n)
 
     assert solution in [
-            (-3*C1 + 2*C1*n)/(-2 + 2*n**2),
-            ( 3*C1 - 2*C1*n)/( 2 - 2*n**2),
-            (-3*C2 + 2*C2*n)/(-2 + 2*n**2),
-            ( 3*C2 - 2*C2*n)/( 2 - 2*n**2),
-                         ]
+                  C1*((-2*n + 3)/(n**2 - 1))/3,
+        (S(1)/2)*(C1*(-3 + 2*n)/(-1 + n**2)),
+        (S(1)/2)*(C1*( 3 - 2*n)/( 1 - n**2)),
+        (S(1)/2)*(C2*(-3 + 2*n)/(-1 + n**2)),
+        (S(1)/2)*(C2*( 3 - 2*n)/( 1 - n**2)),
+    ]
 
 def test_rsolve_hyper():
-    assert rsolve_hyper([-1, -1, 1], 0, n) == C0*(S.Half + S.Half*sqrt(5))**n + C1*(S.Half - S.Half*sqrt(5))**n
+    assert rsolve_hyper([-1, -1, 1], 0, n) in [
+        C0*(S.Half - S.Half*sqrt(5))**n + C1*(S.Half + S.Half*sqrt(5))**n,
+        C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
+    ]
 
-    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
-                                                       C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n)]
+    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [
+        C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
+        C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n),
+    ]
 
-    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
-                                                       C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n)]
+    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [
+        C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
+        C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
+    ]
 
-    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C0*factorial(n) + C1*2**n
+    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper([n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
 
@@ -52,11 +61,6 @@ def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
     return sum(c[i]*f.subs(n, n+i) for i in range(len(c)))
 
-def rsolve_bulk_checker(solver, c, q, p):
-    """Used by test_rsolve_bulk."""
-    pp = solver(c, q, n)
-    assert pp == p
-
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
     funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5 ]
@@ -66,30 +70,84 @@ def test_rsolve_bulk():
         for c in coeffs:
             q = recurrence_term(c, p)
             if p.is_polynomial(n):
-                yield rsolve_bulk_checker, rsolve_poly, c, q, p
+                assert rsolve_poly(c, q, n) == p
             #if p.is_hypergeometric(n):
-            #    yield rsolve_bulk_checker, rsolve_hyper, c, q, p
+            #    assert rsolve_hyper(c, q, n) == p
 
 def test_rsolve():
     f = y(n+2) - y(n+1) - y(n)
-    g = C0*(S.Half + S.Half*sqrt(5))**n \
-      + C1*(S.Half - S.Half*sqrt(5))**n
     h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
       - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
 
-    assert rsolve(f, y(n)) == g
+    assert rsolve(f, y(n)) in [
+        C0*(S.Half - S.Half*sqrt(5))**n + C1*(S.Half + S.Half*sqrt(5))**n,
+        C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
+    ]
 
     assert rsolve(f, y(n), [      0,      5 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
+    assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
+    assert rsolve(Eq(y(n), y(n-1) + y(n-2)), y(n), [0, 5]) == h
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
     f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
-    g = C0*factorial(n) + C1*2**n
+    g = C1*factorial(n) + C0*2**n
     h = -3*factorial(n) + 3*2**n
 
     assert rsolve(f, y(n)) == g
+    assert rsolve(f, y(n), []) == g
+    assert rsolve(f, y(n), {}) == g
 
     assert rsolve(f, y(n), [      0,      3 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
 
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - y(n - 1) - 2
+
+    assert rsolve(f, y(n), {y(0): 0}) == 2*n
+    assert rsolve(f, y(n), {y(0): 1}) == 2*n + 1
+    assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == None
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = 3*y(n - 1) - y(n) - 1
+
+    assert rsolve(f, y(n), {y(0): 0}) ==  -3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 1}) ==   3**n/2 + S.Half
+    assert rsolve(f, y(n), {y(0): 2}) == 3*3**n/2 + S.Half
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - 1/n*y(n - 1)
+    assert rsolve(f, y(n)) == C0/factorial(n)
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = y(n) - 1/n*y(n - 1) - 1
+    assert rsolve(f, y(n)) == None
+
+    f = 2*y(n - 1) + (1 - n)*y(n)/n
+
+    assert rsolve(f, y(n), {y(1): 1}) == 2**(n - 1)*n
+    assert rsolve(f, y(n), {y(1): 2}) == 2**(n - 1)*n*2
+    assert rsolve(f, y(n), {y(1): 3}) == 2**(n - 1)*n*3
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+    f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
+
+    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
+    assert rsolve(f, y(n), {y(3): 6, y(4):-24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+
+    assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
+
+def test_rsolve_raises():
+    x = Function('x')
+    raises(ValueError, lambda: rsolve(y(n) - y(k + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - y(n + 1), x(n)))
+    raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
+    raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))

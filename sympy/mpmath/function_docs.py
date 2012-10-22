@@ -28,13 +28,13 @@ number when used. This means that exact mathematical identities
 involving `\pi` will generally not be preserved in floating-point
 arithmetic. In particular, multiples of :data:`pi` (except for
 the trivial case ``0*pi``) are *not* the exact roots of
-:func:`sin`, but differ roughly by the current epsilon::
+:func:`~mpmath.sin`, but differ roughly by the current epsilon::
 
     >>> mp.dps = 15
     >>> sin(pi)
     1.22464679914735e-16
 
-One solution is to use the :func:`sinpi` function instead::
+One solution is to use the :func:`~mpmath.sinpi` function instead::
 
     >>> sinpi(1)
     0.0
@@ -64,8 +64,8 @@ to radians::
 
 e = r"""
 The transcendental number `e` = 2.718281828... is the base of the
-natural logarithm (:func:`ln`) and of the exponential function
-(:func:`exp`).
+natural logarithm (:func:`~mpmath.ln`) and of the exponential function
+(:func:`~mpmath.exp`).
 
 Mpmath can be evaluate `e` to arbitrary precision::
 
@@ -122,7 +122,7 @@ number theory and special functions. It is defined as the limit
     \gamma = \lim_{n\to\infty} H_n - \log n
 
 where `H_n = 1 + \frac{1}{2} + \ldots + \frac{1}{n}` is a harmonic
-number (see :func:`harmonic`).
+number (see :func:`~mpmath.harmonic`).
 
 Evaluation of `\gamma` is supported at arbitrary precision::
 
@@ -167,7 +167,7 @@ special functions include the following (there are many others)::
 
 For generalizations of the identities `\gamma = -\Gamma'(1)`
 and `\gamma = \lim_{x\to1} \zeta(x)-1/(x-1)`, see
-:func:`psi` and :func:`stieltjes` respectively.
+:func:`~mpmath.psi` and :func:`~mpmath.stieltjes` respectively.
 """
 
 catalan = r"""
@@ -238,7 +238,7 @@ The computation of ``khinchin`` is based on an efficient
 implementation of the following series::
 
     >>> f = lambda n: (zeta(2*n)-1)/n*sum((-1)**(k+1)/mpf(k)
-    ...     for k in range(1,2*n))
+    ...     for k in range(1,2*int(n)))
     >>> exp(nsum(f, [1,inf])/log(2))
     2.6854520010653064453097148354817956938203822939945
 """
@@ -247,11 +247,11 @@ glaisher = r"""
 Glaisher's constant `A`, also known as the Glaisher-Kinkelin
 constant, is a number approximately equal to 1.282427129 that
 sometimes appears in formulas related to gamma and zeta functions.
-It is also related to the Barnes G-function (see :func:`barnesg`).
+It is also related to the Barnes G-function (see :func:`~mpmath.barnesg`).
 
 The constant is defined  as `A = \exp(1/12-\zeta'(-1))` where
 `\zeta'(s)` denotes the derivative of the Riemann zeta function
-(see :func:`zeta`).
+(see :func:`~mpmath.zeta`).
 
 Mpmath can evaluate Glaisher's constant to arbitrary precision:
 
@@ -306,7 +306,7 @@ include::
 
     >>> zeta(3)
     1.2020569031595942853997381615114499907649862923405
-    >>> -diff(trigamma, 1)/2
+    >>> -psi(2,1)/2
     1.2020569031595942853997381615114499907649862923405
     >>> 8*nsum(lambda k: 1/(2*k+1)**3, [0,inf])/7
     1.2020569031595942853997381615114499907649862923405
@@ -373,7 +373,7 @@ http://mathworld.wolfram.com/TwinPrimesConstant.html
 
 ln = r"""
 Computes the natural logarithm of `x`, `\ln x`.
-See :func:`log` for additional documentation."""
+See :func:`~mpmath.log` for additional documentation."""
 
 sqrt = r"""
 ``sqrt(x)`` gives the principal square root of `x`, `\sqrt x`.
@@ -409,14 +409,14 @@ Square root evaluation is fast at huge precision::
     >>> str(a)[-10:]
     '9329332814'
 
-:func:`sqrt` supports interval arguments::
+:func:`mpmath.iv.sqrt` supports interval arguments::
 
-    >>> mp.dps = 15
-    >>> sqrt(mpi(16, 100))
+    >>> iv.dps = 15; iv.pretty = True
+    >>> iv.sqrt([16,100])
     [4.0, 10.0]
-    >>> sqrt(mpi(2))
+    >>> iv.sqrt(2)
     [1.4142135623730949234, 1.4142135623730951455]
-    >>> sqrt(mpi(2)) ** 2
+    >>> iv.sqrt(2) ** 2
     [1.9999999999999995559, 2.0000000000000004441]
 
 """
@@ -480,11 +480,13 @@ Arguments can be arbitrarily large::
     >>> exp(-10000)
     1.135483865314736098540939e-4343
 
-Evaluation is supported for interval arguments::
+Evaluation is supported for interval arguments via
+:func:`mpmath.iv.exp`::
 
-    >>> exp(mpi(-inf,0))
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.exp([-inf,0])
     [0.0, 1.0]
-    >>> exp(mpi(0,1))
+    >>> iv.exp([0,1])
     [1.0, 2.71828182845904523536028749558]
 
 The exponential function can be evaluated efficiently to arbitrary
@@ -509,7 +511,7 @@ This recovers the coefficients (reciprocal factorials) in the
 Maclaurin series expansion of exp::
 
     >>> nprint(taylor(exp, 0, 5))
-    [1.0, 1.0, 0.5, 0.166667, 4.16667e-2, 8.33333e-3]
+    [1.0, 1.0, 0.5, 0.166667, 0.0416667, 0.00833333]
 
 The exponential function is its own derivative and antiderivative::
 
@@ -550,7 +552,7 @@ a global minimum at `x = 0`, having a Maclaurin series
 that starts::
 
     >>> nprint(chop(taylor(cosh, 0, 5)))
-    [1.0, 0.0, 0.5, 0.0, 4.16667e-2, 0.0]
+    [1.0, 0.0, 0.5, 0.0, 0.0416667, 0.0]
 
 Generalized to complex numbers, the hyperbolic cosine is
 equivalent to a cosine with the argument rotated
@@ -579,7 +581,7 @@ The hyperbolic sine is an odd function, with a Maclaurin
 series that starts::
 
     >>> nprint(chop(taylor(sinh, 0, 5)))
-    [0.0, 1.0, 0.0, 0.166667, 0.0, 8.33333e-3]
+    [0.0, 1.0, 0.0, 0.166667, 0.0, 0.00833333]
 
 Generalized to complex numbers, the hyperbolic sine is
 essentially a sine with a rotation `i` applied to
@@ -635,10 +637,14 @@ Computes the cosine of `x`, `\cos(x)`.
     >>> cos(inf)
     nan
     >>> nprint(chop(taylor(cos, 0, 6)))
-    [1.0, 0.0, -0.5, 0.0, 4.16667e-2, 0.0, -1.38889e-3]
-    >>> cos(mpi(0,1))
+    [1.0, 0.0, -0.5, 0.0, 0.0416667, 0.0, -0.00138889]
+
+Intervals are supported via :func:`mpmath.iv.cos`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.cos([0,1])
     [0.540302305868139717400936602301, 1.0]
-    >>> cos(mpi(0,2))
+    >>> iv.cos([0,2])
     [-0.41614683654714238699756823214, 1.0]
 """
 
@@ -656,10 +662,14 @@ Computes the sine of `x`, `\sin(x)`.
     >>> sin(inf)
     nan
     >>> nprint(chop(taylor(sin, 0, 6)))
-    [0.0, 1.0, 0.0, -0.166667, 0.0, 8.33333e-3, 0.0]
-    >>> sin(mpi(0,1))
+    [0.0, 1.0, 0.0, -0.166667, 0.0, 0.00833333, 0.0]
+
+Intervals are supported via :func:`mpmath.iv.sin`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.sin([0,1])
     [0.0, 0.841470984807896506652502331201]
-    >>> sin(mpi(0,2))
+    >>> iv.sin([0,2])
     [0.0, 1.0]
 """
 
@@ -681,9 +691,13 @@ cannot be represented exactly using floating-point arithmetic.
     nan
     >>> nprint(chop(taylor(tan, 0, 6)))
     [0.0, 1.0, 0.0, 0.333333, 0.0, 0.133333, 0.0]
-    >>> tan(mpi(0,1))
+
+Intervals are supported via :func:`mpmath.iv.tan`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.tan([0,1])
     [0.0, 1.55740772465490223050697482944]
-    >>> tan(mpi(0,2))  # Interval includes a singularity
+    >>> iv.tan([0,2])  # Interval includes a singularity
     [-inf, +inf]
 """
 
@@ -704,10 +718,14 @@ cannot be represented exactly using floating-point arithmetic.
     >>> sec(inf)
     nan
     >>> nprint(chop(taylor(sec, 0, 6)))
-    [1.0, 0.0, 0.5, 0.0, 0.208333, 0.0, 8.47222e-2]
-    >>> sec(mpi(0,1))
-    [1.0, 1.85081571768092561791175324143]
-    >>> sec(mpi(0,2))  # Interval includes a singularity
+    [1.0, 0.0, 0.5, 0.0, 0.208333, 0.0, 0.0847222]
+
+Intervals are supported via :func:`mpmath.iv.sec`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.sec([0,1])
+    [1.0, 1.85081571768092561791175326276]
+    >>> iv.sec([0,2])  # Interval includes a singularity
     [-inf, +inf]
 """
 
@@ -728,9 +746,13 @@ arithmetic.
     (0.09047320975320743980579048 + 0.04120098628857412646300981j)
     >>> csc(inf)
     nan
-    >>> csc(mpi(0,1))  # Interval includes a singularity
-    [1.18839510577812121626159945235, +inf]
-    >>> csc(mpi(0,2))
+
+Intervals are supported via :func:`mpmath.iv.csc`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.csc([0,1])  # Interval includes a singularity
+    [1.18839510577812121626159943988, +inf]
+    >>> iv.csc([0,2])
     [1.0, +inf]
 """
 
@@ -752,9 +774,13 @@ arithmetic.
     (-0.003739710376336956660117409 - 0.9967577965693583104609688j)
     >>> cot(inf)
     nan
-    >>> cot(mpi(0,1))  # Interval includes a singularity
-    [0.642092615934330703006419986575, +inf]
-    >>> cot(mpi(1,2))
+
+Intervals are supported via :func:`mpmath.iv.cot`::
+
+    >>> iv.dps = 25; iv.pretty = True
+    >>> iv.cot([0,1])  # Interval includes a singularity
+    [0.642092615934330703006419974862, +inf]
+    >>> iv.cot([1,2])
     [-inf, +inf]
 """
 
@@ -762,7 +788,7 @@ acos = r"""
 Computes the inverse cosine or arccosine of `x`, `\cos^{-1}(x)`.
 Since `-1 \le \cos(x) \le 1` for real `x`, the inverse
 cosine is real-valued only for `-1 \le x \le 1`. On this interval,
-:func:`acos` is defined to be a monotonically decreasing
+:func:`~mpmath.acos` is defined to be a monotonically decreasing
 function assuming values between `+\pi` and `0`.
 
 Basic values are::
@@ -776,15 +802,15 @@ Basic values are::
     >>> acos(1)
     0.0
     >>> nprint(chop(taylor(acos, 0, 6)))
-    [1.5708, -1.0, 0.0, -0.166667, 0.0, -7.5e-2, 0.0]
+    [1.5708, -1.0, 0.0, -0.166667, 0.0, -0.075, 0.0]
 
-:func:`acos` is defined so as to be a proper inverse function of
+:func:`~mpmath.acos` is defined so as to be a proper inverse function of
 `\cos(\theta)` for `0 \le \theta < \pi`.
 We have `\cos(\cos^{-1}(x)) = x` for all `x`, but
 `\cos^{-1}(\cos(x)) = x` only for `0 \le \Re[x] < \pi`::
 
     >>> for x in [1, 10, -1, 2+3j, 10+3j]:
-    ...     print cos(acos(x)), acos(cos(x))
+    ...     print("%s %s" % (cos(acos(x)), acos(cos(x))))
     ...
     1.0 1.0
     (10.0 + 0.0j) 2.566370614359172953850574
@@ -792,7 +818,7 @@ We have `\cos(\cos^{-1}(x)) = x` for all `x`, but
     (2.0 + 3.0j) (2.0 + 3.0j)
     (10.0 + 3.0j) (2.566370614359172953850574 - 3.0j)
 
-The inverse cosine has two branch points: `x = \pm 1`. :func:`acos`
+The inverse cosine has two branch points: `x = \pm 1`. :func:`~mpmath.acos`
 places the branch cuts along the line segments `(-\infty, -1)` and
 `(+1, +\infty)`. In general,
 
@@ -821,15 +847,15 @@ Basic values are::
     >>> asin(1)
     1.570796326794896619231322
     >>> nprint(chop(taylor(asin, 0, 6)))
-    [0.0, 1.0, 0.0, 0.166667, 0.0, 7.5e-2, 0.0]
+    [0.0, 1.0, 0.0, 0.166667, 0.0, 0.075, 0.0]
 
-:func:`asin` is defined so as to be a proper inverse function of
+:func:`~mpmath.asin` is defined so as to be a proper inverse function of
 `\sin(\theta)` for `-\pi/2 < \theta < \pi/2`.
 We have `\sin(\sin^{-1}(x)) = x` for all `x`, but
 `\sin^{-1}(\sin(x)) = x` only for `-\pi/2 < \Re[x] < \pi/2`::
 
     >>> for x in [1, 10, -1, 1+3j, -2+3j]:
-    ...     print chop(sin(asin(x))), asin(sin(x))
+    ...     print("%s %s" % (chop(sin(asin(x))), asin(sin(x))))
     ...
     1.0 1.0
     10.0 -0.5752220392306202846120698
@@ -837,7 +863,7 @@ We have `\sin(\sin^{-1}(x)) = x` for all `x`, but
     (1.0 + 3.0j) (1.0 + 3.0j)
     (-2.0 + 3.0j) (-1.141592653589793238462643 - 3.0j)
 
-The inverse sine has two branch points: `x = \pm 1`. :func:`asin`
+The inverse sine has two branch points: `x = \pm 1`. :func:`~mpmath.asin`
 places the branch cuts along the line segments `(-\infty, -1)` and
 `(+1, +\infty)`. In general,
 
@@ -856,8 +882,8 @@ This is a real-valued function for all real `x`, with range
 Basic values are::
 
     >>> from mpmath import *
-    >>> mp.dps = 25
-    >>> atan(-inf); mp.pretty = True
+    >>> mp.dps = 25; mp.pretty = True
+    >>> atan(-inf)
     -1.570796326794896619231322
     >>> atan(-1)
     -0.7853981633974483096156609
@@ -872,16 +898,16 @@ Basic values are::
 
 The inverse tangent is often used to compute angles. However,
 the atan2 function is often better for this as it preserves sign
-(see :func:`atan2`).
+(see :func:`~mpmath.atan2`).
 
-:func:`atan` is defined so as to be a proper inverse function of
+:func:`~mpmath.atan` is defined so as to be a proper inverse function of
 `\tan(\theta)` for `-\pi/2 < \theta < \pi/2`.
 We have `\tan(\tan^{-1}(x)) = x` for all `x`, but
 `\tan^{-1}(\tan(x)) = x` only for `-\pi/2 < \Re[x] < \pi/2`::
 
     >>> mp.dps = 25
     >>> for x in [1, 10, -1, 1+3j, -2+3j]:
-    ...     print tan(atan(x)), atan(tan(x))
+    ...     print("%s %s" % (tan(atan(x)), atan(tan(x))))
     ...
     1.0 1.0
     10.0 0.5752220392306202846120698
@@ -889,7 +915,7 @@ We have `\tan(\tan^{-1}(x)) = x` for all `x`, but
     (1.0 + 3.0j) (1.000000000000000000000001 + 3.0j)
     (-2.0 + 3.0j) (1.141592653589793238462644 + 3.0j)
 
-The inverse tangent has two branch points: `x = \pm i`. :func:`atan`
+The inverse tangent has two branch points: `x = \pm i`. :func:`~mpmath.atan`
 places the branch cuts along the line segments `(-i \infty, -i)` and
 `(+i, +i \infty)`. In general,
 
@@ -906,8 +932,43 @@ acot = r"""Computes the inverse cotangent of `x`,
 asec = r"""Computes the inverse secant of `x`,
 `\mathrm{sec}^{-1}(x) = \cos^{-1}(1/x)`."""
 
-acsc_ = r"""Computes the inverse cosecant of `x`,
+acsc = r"""Computes the inverse cosecant of `x`,
 `\mathrm{csc}^{-1}(x) = \sin^{-1}(1/x)`."""
+
+coth = r"""Computes the hyperbolic cotangent of `x`,
+`\mathrm{coth}(x) = \frac{\cosh(x)}{\sinh(x)}`.
+"""
+
+sech = r"""Computes the hyperbolic secant of `x`,
+`\mathrm{sech}(x) = \frac{1}{\cosh(x)}`.
+"""
+
+csch = r"""Computes the hyperbolic cosecant of `x`,
+`\mathrm{csch}(x) = \frac{1}{\sinh(x)}`.
+"""
+
+acosh = r"""Computes the inverse hyperbolic cosine of `x`,
+`\mathrm{cosh}^{-1}(x) = \log(x+\sqrt{x+1}\sqrt{x-1})`.
+"""
+
+asinh = r"""Computes the inverse hyperbolic sine of `x`,
+`\mathrm{sinh}^{-1}(x) = \log(x+\sqrt{1+x^2})`.
+"""
+
+atanh = r"""Computes the inverse hyperbolic tangent of `x`,
+`\mathrm{tanh}^{-1}(x) = \frac{1}{2}\left(\log(1+x)-\log(1-x)\right)`.
+"""
+
+acoth = r"""Computes the inverse hyperbolic cotangent of `x`,
+`\mathrm{coth}^{-1}(x) = \tanh^{-1}(1/x)`."""
+
+asech = r"""Computes the inverse hyperbolic secant of `x`,
+`\mathrm{sech}^{-1}(x) = \cosh^{-1}(1/x)`."""
+
+acsch = r"""Computes the inverse hyperbolic cosecant of `x`,
+`\mathrm{csch}^{-1}(x) = \sinh^{-1}(1/x)`."""
+
+
 
 sinpi = r"""
 Computes `\sin(\pi x)`, more accurately than the expression
@@ -943,7 +1004,7 @@ sinc = r"""
         1,         & \mbox{if } x = 0.
     \end{cases}
 
-See :func:`sincpi` for the normalized sinc function.
+See :func:`~mpmath.sincpi` for the normalized sinc function.
 
 Simple values and limits include::
 
@@ -985,11 +1046,47 @@ to unity over the entire real line::
     >>> quadosc(sincpi, [-inf, inf], period=2.0)
     1.0
 
-Like, :func:`sinpi`, :func:`sincpi` is evaluated accurately
+Like, :func:`~mpmath.sinpi`, :func:`~mpmath.sincpi` is evaluated accurately
 at its roots::
 
     >>> sincpi(10)
     0.0
+"""
+
+expj = r"""
+Convenience function for computing `e^{ix}`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> expj(0)
+    (1.0 + 0.0j)
+    >>> expj(-1)
+    (0.5403023058681397174009366 - 0.8414709848078965066525023j)
+    >>> expj(j)
+    (0.3678794411714423215955238 + 0.0j)
+    >>> expj(1+j)
+    (0.1987661103464129406288032 + 0.3095598756531121984439128j)
+"""
+
+expjpi = r"""
+Convenience function for computing `e^{i \pi x}`.
+Evaluation is accurate near zeros (see also :func:`~mpmath.cospi`,
+:func:`~mpmath.sinpi`)::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> expjpi(0)
+    (1.0 + 0.0j)
+    >>> expjpi(1)
+    (-1.0 + 0.0j)
+    >>> expjpi(0.5)
+    (0.0 + 1.0j)
+    >>> expjpi(-1)
+    (-1.0 + 0.0j)
+    >>> expjpi(j)
+    (0.04321391826377224977441774 + 0.0j)
+    >>> expjpi(1+j)
+    (-0.04321391826377224977441774 + 0.0j)
 """
 
 floor = r"""
@@ -1001,11 +1098,28 @@ the largest integer less than or equal to `x`::
     >>> floor(3.5)
     mpf('3.0')
 
-Note: :func:`floor` returns a floating-point number, not a
-Python ``int``. If `\lfloor x \rfloor` is too large to be
-represented exactly at the present working precision, the
-result will be rounded, not necessarily in the floor
-direction."""
+.. note ::
+
+    :func:`~mpmath.floor`, :func:`~mpmath.ceil` and :func:`~mpmath.nint` return a
+    floating-point number, not a Python ``int``. If `\lfloor x \rfloor` is
+    too large to be represented exactly at the present working precision,
+    the result will be rounded, not necessarily in the direction
+    implied by the mathematical definition of the function.
+
+To avoid rounding, use *prec=0*::
+
+    >>> mp.dps = 15
+    >>> print(int(floor(10**30+1)))
+    1000000000000000019884624838656
+    >>> print(int(floor(10**30+1, prec=0)))
+    1000000000000000000000000000001
+
+The floor function is defined for complex numbers and
+acts on the real and imaginary parts separately::
+
+    >>> floor(3.25+4.75j)
+    mpc(real='3.0', imag='4.0')
+"""
 
 ceil = r"""
 Computes the ceiling of `x`, `\lceil x \rceil`, defined as
@@ -1016,12 +1130,201 @@ the smallest integer greater than or equal to `x`::
     >>> ceil(3.5)
     mpf('4.0')
 
-Note: :func:`ceil` returns a floating-point number, not a
-Python ``int``. If `\lceil x \rceil` is too large to be
-represented exactly at the present working precision, the
-result will be rounded, not necessarily in the ceiling
-direction."""
+The ceiling function is defined for complex numbers and
+acts on the real and imaginary parts separately::
 
+    >>> ceil(3.25+4.75j)
+    mpc(real='4.0', imag='5.0')
+
+See notes about rounding for :func:`~mpmath.floor`.
+"""
+
+nint = r"""
+Evaluates the nearest integer function, `\mathrm{nint}(x)`.
+This gives the nearest integer to `x`; on a tie, it
+gives the nearest even integer::
+
+    >>> from mpmath import *
+    >>> mp.pretty = False
+    >>> nint(3.2)
+    mpf('3.0')
+    >>> nint(3.8)
+    mpf('4.0')
+    >>> nint(3.5)
+    mpf('4.0')
+    >>> nint(4.5)
+    mpf('4.0')
+
+The nearest integer function is defined for complex numbers and
+acts on the real and imaginary parts separately::
+
+    >>> nint(3.25+4.75j)
+    mpc(real='3.0', imag='5.0')
+
+See notes about rounding for :func:`~mpmath.floor`.
+"""
+
+frac = r"""
+Gives the fractional part of `x`, defined as
+`\mathrm{frac}(x) = x - \lfloor x \rfloor` (see :func:`~mpmath.floor`).
+In effect, this computes `x` modulo 1, or `x+n` where
+`n \in \mathbb{Z}` is such that `x+n \in [0,1)`::
+
+    >>> from mpmath import *
+    >>> mp.pretty = False
+    >>> frac(1.25)
+    mpf('0.25')
+    >>> frac(3)
+    mpf('0.0')
+    >>> frac(-1.25)
+    mpf('0.75')
+
+For a complex number, the fractional part function applies to
+the real and imaginary parts separately::
+
+    >>> frac(2.25+3.75j)
+    mpc(real='0.25', imag='0.75')
+
+Plotted, the fractional part function gives a sawtooth
+wave. The Fourier series coefficients have a simple
+form::
+
+    >>> mp.dps = 15
+    >>> nprint(fourier(lambda x: frac(x)-0.5, [0,1], 4))
+    ([0.0, 0.0, 0.0, 0.0, 0.0], [0.0, -0.31831, -0.159155, -0.106103, -0.0795775])
+    >>> nprint([-1/(pi*k) for k in range(1,5)])
+    [-0.31831, -0.159155, -0.106103, -0.0795775]
+
+.. note::
+
+    The fractional part is sometimes defined as a symmetric
+    function, i.e. returning `-\mathrm{frac}(-x)` if `x < 0`.
+    This convention is used, for instance, by Mathematica's
+    ``FractionalPart``.
+
+"""
+
+sign = r"""
+Returns the sign of `x`, defined as `\mathrm{sign}(x) = x / |x|`
+(with the special case `\mathrm{sign}(0) = 0`)::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = False
+    >>> sign(10)
+    mpf('1.0')
+    >>> sign(-10)
+    mpf('-1.0')
+    >>> sign(0)
+    mpf('0.0')
+
+Note that the sign function is also defined for complex numbers,
+for which it gives the projection onto the unit circle::
+
+    >>> mp.dps = 15; mp.pretty = True
+    >>> sign(1+j)
+    (0.707106781186547 + 0.707106781186547j)
+
+"""
+
+arg = r"""
+Computes the complex argument (phase) of `x`, defined as the
+signed angle between the positive real axis and `x` in the
+complex plane::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = True
+    >>> arg(3)
+    0.0
+    >>> arg(3+3j)
+    0.785398163397448
+    >>> arg(3j)
+    1.5707963267949
+    >>> arg(-3)
+    3.14159265358979
+    >>> arg(-3j)
+    -1.5707963267949
+
+The angle is defined to satisfy `-\pi < \arg(x) \le \pi` and
+with the sign convention that a nonnegative imaginary part
+results in a nonnegative argument.
+
+The value returned by :func:`~mpmath.arg` is an ``mpf`` instance.
+"""
+
+fabs = r"""
+Returns the absolute value of `x`, `|x|`. Unlike :func:`abs`,
+:func:`~mpmath.fabs` converts non-mpmath numbers (such as ``int``)
+into mpmath numbers::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = False
+    >>> fabs(3)
+    mpf('3.0')
+    >>> fabs(-3)
+    mpf('3.0')
+    >>> fabs(3+4j)
+    mpf('5.0')
+"""
+
+re = r"""
+Returns the real part of `x`, `\Re(x)`. Unlike ``x.real``,
+:func:`~mpmath.re` converts `x` to a mpmath number::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = False
+    >>> re(3)
+    mpf('3.0')
+    >>> re(-1+4j)
+    mpf('-1.0')
+"""
+
+im = r"""
+Returns the imaginary part of `x`, `\Im(x)`. Unlike ``x.imag``,
+:func:`~mpmath.im` converts `x` to a mpmath number::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = False
+    >>> im(3)
+    mpf('0.0')
+    >>> im(-1+4j)
+    mpf('4.0')
+"""
+
+conj = r"""
+Returns the complex conjugate of `x`, `\overline{x}`. Unlike
+``x.conjugate()``, :func:`~mpmath.im` converts `x` to a mpmath number::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = False
+    >>> conj(3)
+    mpf('3.0')
+    >>> conj(-1+4j)
+    mpc(real='-1.0', imag='-4.0')
+"""
+
+polar = r"""
+Returns the polar representation of the complex number `z`
+as a pair `(r, \phi)` such that `z = r e^{i \phi}`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = True
+    >>> polar(-2)
+    (2.0, 3.14159265358979)
+    >>> polar(3-4j)
+    (5.0, -0.927295218001612)
+"""
+
+rect = r"""
+Returns the complex number represented by polar
+coordinates `(r, \phi)`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 15; mp.pretty = True
+    >>> chop(rect(2, pi))
+    -2.0
+    >>> rect(sqrt(2), -pi/4)
+    (1.0 - 1.0j)
+"""
 
 expm1 = r"""
 Computes `e^x - 1`, accurately for small `x`.
@@ -1031,10 +1334,10 @@ potentially catastrophic cancellation::
 
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
-    >>> exp(1e-10)-1; print expm1(1e-10)
+    >>> exp(1e-10)-1; print(expm1(1e-10))
     1.00000008274037e-10
     1.00000000005e-10
-    >>> exp(1e-20)-1; print expm1(1e-20)
+    >>> exp(1e-20)-1; print(expm1(1e-20))
     0.0
     1.0e-20
     >>> 1/(exp(1e-20)-1)
@@ -1105,7 +1408,7 @@ To obtain all roots with a simple expression, use
 ``[root(z,n,k) for k in range(n)]``.
 
 An important special case, ``root(1, n, k)`` returns the `k`-th `n`-th root of
-unity, `\zeta_k = e^{2 \pi i k / n}`. Alternatively, :func:`unitroots`
+unity, `\zeta_k = e^{2 \pi i k / n}`. Alternatively, :func:`~mpmath.unitroots`
 provides a slightly more convenient way to obtain the roots of unity,
 including the option to compute only the primitive roots of unity.
 
@@ -1113,14 +1416,14 @@ Both `k` and `n` should be integers; `k` outside of ``range(n)`` will be
 reduced modulo `n`. If `n` is negative, `x^{-1/n} = 1/x^{1/n}` (or
 the equivalent reciprocal for a non-principal root with `k \ne 0`) is computed.
 
-:func:`root` is implemented to use Newton's method for small
+:func:`~mpmath.root` is implemented to use Newton's method for small
 `n`. At high precision, this makes `x^{1/n}` not much more
 expensive than the regular exponentiation, `x^n`. For very large
-`n`, :func:`nthroot` falls back to use the exponential function.
+`n`, :func:`~mpmath.nthroot` falls back to use the exponential function.
 
 **Examples**
 
-:func:`nthroot`/:func:`root` is faster and more accurate than raising to a
+:func:`~mpmath.nthroot`/:func:`~mpmath.root` is faster and more accurate than raising to a
 floating-point fraction::
 
     >>> from mpmath import *
@@ -1157,7 +1460,7 @@ Computing principal and non-principal square and cube roots::
 All the 7th roots of a complex number::
 
     >>> for r in [root(3+4j, 7, k) for k in range(7)]:
-    ...     print r, r**7
+    ...     print("%s %s" % (r, r**7))
     ...
     (1.24747270589553 + 0.166227124177353j) (3.0 + 4.0j)
     (0.647824911301003 + 1.07895435170559j) (3.0 + 4.0j)
@@ -1169,7 +1472,7 @@ All the 7th roots of a complex number::
 
 Cube roots of unity::
 
-    >>> for k in range(3): print root(1, 3, k)
+    >>> for k in range(3): print(root(1, 3, k))
     ...
     1.0
     (-0.5 + 0.866025403784439j)
@@ -1240,7 +1543,7 @@ Any primitive root `r` is a generator for this group, meaning that
 `r^0, r^1, \ldots, r^{n-1}` gives the whole set of unit roots (in
 some permuted order)::
 
-    >>> for r in unitroots(6): print r
+    >>> for r in unitroots(6): print(r)
     ...
     1.0
     (0.5 + 0.866025403784439j)
@@ -1249,7 +1552,7 @@ some permuted order)::
     (-0.5 - 0.866025403784439j)
     (0.5 - 0.866025403784439j)
     >>> r = unitroots(6, primitive=True)[1]
-    >>> for k in range(6): print chop(r**k)
+    >>> for k in range(6): print(chop(r**k))
     ...
     1.0
     (0.5 - 0.866025403784439j)
@@ -1268,8 +1571,8 @@ The number of primitive roots equals the Euler totient function `\phi(n)`::
 
 log = r"""
 Computes the base-`b` logarithm of `x`, `\log_b(x)`. If `b` is
-unspecified, :func:`log` computes the natural (base `e`) logarithm
-and is equivalent to :func:`ln`. In general, the base `b` logarithm
+unspecified, :func:`~mpmath.log` computes the natural (base `e`) logarithm
+and is equivalent to :func:`~mpmath.ln`. In general, the base `b` logarithm
 is defined in terms of the natural logarithm as
 `\log_b(x) = \ln(x)/\ln(b)`.
 
@@ -1317,7 +1620,7 @@ The Taylor series expansion of the natural logarithm around
     >>> nprint(taylor(log, 1, 7))
     [0.0, 1.0, -0.5, 0.333333, -0.25, 0.2, -0.166667, 0.142857]
 
-:func:`log` supports arbitrary precision evaluation::
+:func:`~mpmath.log` supports arbitrary precision evaluation::
 
     >>> mp.dps = 50
     >>> log(pi)
@@ -1329,35 +1632,23 @@ The Taylor series expansion of the natural logarithm around
     (1.609437912434100374600759 + 0.9272952180016122324285125j)
 """
 
-power = r"""
-Converts `x` and `y` to mpmath numbers and evaluates
-`x^y = \exp(y \log(x))`::
-
-    >>> from mpmath import *
-    >>> mp.dps = 30; mp.pretty = True
-    >>> power(2, 0.5)
-    1.41421356237309504880168872421
-
-This shows the leading few digits of a large Mersenne prime
-(performing the exact calculation ``2**43112609-1`` and
-displaying the result in Python would be very slow)::
-
-    >>> power(2, 43112609)-1
-    3.16470269330255923143453723949e+12978188
+log10 = r"""
+Computes the base-10 logarithm of `x`, `\log_{10}(x)`. ``log10(x)``
+is equivalent to ``log(x, 10)``.
 """
 
-modf = r"""
+fmod = r"""
 Converts `x` and `y` to mpmath numbers and returns `x \mod y`.
 For mpmath numbers, this is equivalent to ``x % y``.
 
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
-    >>> modf(100, pi)
+    >>> fmod(100, pi)
     2.61062773871641
 
-You can use :func:`modf` to compute fractional parts of numbers::
+You can use :func:`~mpmath.fmod` to compute fractional parts of numbers::
 
-    >>> modf(10.25, 1)
+    >>> fmod(10.25, 1)
     0.25
 
 """
@@ -1403,13 +1694,13 @@ following examples illustrate the difference::
     (-2.35619449019234, 0.785398163397448)
 
 The angle convention is the same as that used for the complex
-argument; see :func:`arg`.
+argument; see :func:`~mpmath.arg`.
 """
 
 fibonacci = r"""
 ``fibonacci(n)`` computes the `n`-th Fibonacci number, `F(n)`. The
 Fibonacci numbers are defined by the recurrence `F(n) = F(n-1) + F(n-2)`
-with the initial values `F(0) = 0`, `F(1) = 1`. :func:`fibonacci`
+with the initial values `F(0) = 0`, `F(1) = 1`. :func:`~mpmath.fibonacci`
 extends this definition to arbitrary real and complex arguments
 using the formula
 
@@ -1417,12 +1708,12 @@ using the formula
 
   F(z) = \frac{\phi^z - \cos(\pi z) \phi^{-z}}{\sqrt 5}
 
-where `\phi` is the golden ratio. :func:`fibonacci` also uses this
+where `\phi` is the golden ratio. :func:`~mpmath.fibonacci` also uses this
 continuous formula to compute `F(n)` for extremely large `n`, where
 calculating the exact integer would be wasteful.
 
-For convenience, :func:`fib` is available as an alias for
-:func:`fibonacci`.
+For convenience, :func:`~mpmath.fib` is available as an alias for
+:func:`~mpmath.fibonacci`.
 
 **Basic examples**
 
@@ -1431,19 +1722,36 @@ Some small Fibonacci numbers are::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for i in range(10):
-    ...     print fibonacci(i),
+    ...     print(fibonacci(i))
     ...
-    0.0 1.0 1.0 2.0 3.0 5.0 8.0 13.0 21.0 34.0
-
+    0.0
+    1.0
+    1.0
+    2.0
+    3.0
+    5.0
+    8.0
+    13.0
+    21.0
+    34.0
     >>> fibonacci(50)
     12586269025.0
 
 The recurrence for `F(n)` extends backwards to negative `n`::
 
     >>> for i in range(10):
-    ...     print fibonacci(-i),
+    ...     print(fibonacci(-i))
     ...
-    0.0 1.0 -1.0 2.0 -3.0 5.0 -8.0 13.0 -21.0 34.0
+    0.0
+    1.0
+    -1.0
+    2.0
+    -3.0
+    5.0
+    -8.0
+    13.0
+    -21.0
+    34.0
 
 Large Fibonacci numbers will be computed approximately unless
 the precision is set high enough::
@@ -1454,7 +1762,7 @@ the precision is set high enough::
     >>> fib(200)
     280571172992510140037611932413038677189525.0
 
-:func:`fibonacci` can compute approximate Fibonacci numbers
+:func:`~mpmath.fibonacci` can compute approximate Fibonacci numbers
 of stupendous size::
 
     >>> mp.dps = 15
@@ -1521,7 +1829,7 @@ Some related sums can be done in closed form::
     1.11803398874989
     >>> phi - 0.5
     1.11803398874989
-    >>> f = lambda k:(-1)**(k+1) / sum(fib(n)**2 for n in range(1,k+1))
+    >>> f = lambda k:(-1)**(k+1) / sum(fib(n)**2 for n in range(1,int(k+1)))
     >>> nsum(f, [1, inf])
     0.618033988749895
     >>> phi-1
@@ -1530,93 +1838,6 @@ Some related sums can be done in closed form::
 **References**
 
 1. http://mathworld.wolfram.com/FibonacciNumber.html
-"""
-
-zeta = r"""
-``zeta(s)`` computes the Riemann zeta function, `\zeta(s)`.
-The Riemann zeta function is defined for `\Re(s) > 1` by
-
-.. math ::
-
-  \zeta(s) = 1+\frac{1}{2^s}+\frac{1}{3^s}+\frac{1}{4^s}+\ldots
-
-and for `\Re(s) \le 1` by analytic continuation. It has a pole
-at `s = 1`.
-
-**Examples**
-
-Some exact values of the zeta function are::
-
-    >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> zeta(2)
-    1.64493406684823
-    >>> pi**2 / 6
-    1.64493406684823
-    >>> zeta(0)
-    -0.5
-    >>> zeta(-1)
-    -0.0833333333333333
-    >>> zeta(-2)
-    0.0
-
-:func:`zeta` supports arbitrary precision evaluation and
-complex arguments::
-
-    >>> mp.dps = 50
-    >>> zeta(pi)
-    1.1762417383825827588721504519380520911697389900217
-    >>> zeta(1+2j)  # doctest: +NORMALIZE_WHITESPACE
-    (0.5981655697623817367034568491742186771747764868876 -
-    0.35185474521784529049653859679690026505229177886045j)
-
-The Riemann zeta function has so-called nontrivial zeros on
-the critical line `s = 1/2 + it`::
-
-    >>> mp.dps = 15
-    >>> findroot(zeta, 0.5+14j)
-    (0.5 + 14.1347251417347j)
-    >>> findroot(zeta, 0.5+21j)
-    (0.5 + 21.0220396387716j)
-    >>> findroot(zeta, 0.5+25j)
-    (0.5 + 25.0108575801457j)
-
-For investigation of the zeta function zeros, the Riemann-Siegel
-Z-function is often more convenient than working with the Riemann
-zeta function directly (see :func:`siegelz`).
-
-For large positive `s`, `\zeta(s)` rapidly approaches 1::
-
-    >>> zeta(30)
-    1.00000000093133
-    >>> zeta(100)
-    1.0
-    >>> zeta(inf)
-    1.0
-
-The following series converges and in fact has a simple
-closed form value::
-
-    >>> nsum(lambda k: zeta(k)-1, [2, inf])
-    1.0
-
-**Algorithm**
-
-The primary algorithm is Borwein's algorithm for the Dirichlet
-eta function. Three separate implementations are used: for general
-real arguments, general complex arguments, and for integers. The
-reflection formula is applied to arguments in the negative
-half-plane. For very large real arguments, either direct
-summation or the Euler prime product is used.
-
-It should be noted that computation of `\zeta(s)` gets very slow
-when `s` is far away from the real axis.
-
-**References**
-
-1. http://mathworld.wolfram.com/RiemannZetaFunction.html
-
-2. http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P155.pdf
 """
 
 altzeta = r"""
@@ -1636,8 +1857,8 @@ function, having a finite value for all complex `s`. The special case
 
 The alternating zeta function may expressed using the Riemann zeta function
 as `\eta(s) = (1 - 2^{1-s}) \zeta(s)`. It can also be expressed
-in terms of the Hurwitz zeta function (:func:`hurwitz`), for example using
-:func:`dirichlet` (see documentation for that function).
+in terms of the Hurwitz zeta function, for example using
+:func:`~mpmath.dirichlet` (see documentation for that function).
 
 **Examples**
 
@@ -1655,7 +1876,7 @@ Some special values are::
     0.0
 
 An example of a sum that can be computed more accurately and
-efficiently via :func:`altzeta` than via numerical summation::
+efficiently via :func:`~mpmath.altzeta` than via numerical summation::
 
     >>> sum(-(-1)**n / n**2.5 for n in range(1, 100))
     0.86720495150398402
@@ -1703,7 +1924,7 @@ Basic values and limits::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for k in range(6):
-    ...     print k, fac(k)
+    ...     print("%s %s" % (k, fac(k)))
     ...
     0 1.0
     1 1.0
@@ -1725,7 +1946,7 @@ Stirling's formula::
     >>> sqrt(2*pi*x)*(x/e)**x
     2.32579597597705e+95657055186
 
-:func:`fac` supports evaluation for astronomically large values::
+:func:`~mpmath.fac` supports evaluation for astronomically large values::
 
     >>> fac(10**30)
     6.22311232304258e+29565705518096748172348871081098
@@ -1760,7 +1981,7 @@ Basic values and limits::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for k in range(1, 6):
-    ...     print k, gamma(k)
+    ...     print("%s %s" % (k, gamma(k)))
     ...
     1 1.0
     2 1.0
@@ -1789,7 +2010,7 @@ We can check the integral definition::
     >>> quad(lambda t: t**2.5*exp(-t), [0,inf])
     3.32335097044784
 
-:func:`gamma` supports arbitrary-precision evaluation and
+:func:`~mpmath.gamma` supports arbitrary-precision evaluation and
 complex arguments::
 
     >>> mp.dps = 50
@@ -1820,7 +2041,7 @@ function:
     \psi^{(m)}(z) = \left(\frac{d}{dz}\right)^{m+1} \log \Gamma(z)
 
 In particular, `\psi^{(0)}(z) = \Gamma'(z)/\Gamma(z)`. In the
-present implementation of :func:`psi`, the order `m` must be a
+present implementation of :func:`~mpmath.psi`, the order `m` must be a
 nonnegative integer, while the argument `z` may be an arbitrary
 complex number (with exception for the polygamma function's poles
 at `z = 0, -1, -2, \ldots`).
@@ -1900,6 +2121,10 @@ an entirely real-valued sum::
 
 """
 
+digamma = r"""
+Shortcut for ``psi(0,z)``.
+"""
+
 harmonic = r"""
 If `n` is an integer, ``harmonic(n)`` gives a floating-point
 approximation of the `n`-th harmonic number `H(n)`, defined as
@@ -1908,12 +2133,12 @@ approximation of the `n`-th harmonic number `H(n)`, defined as
 
     H(n) = 1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}
 
-The firrst few harmonic numbers are::
+The first few harmonic numbers are::
 
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(8):
-    ...     print n, harmonic(n)
+    ...     print("%s %s" % (n, harmonic(n)))
     ...
     0 0.0
     1 1.0
@@ -1929,7 +2154,7 @@ The infinite harmonic series `1 + 1/2 + 1/3 + \ldots` diverges::
     >>> harmonic(inf)
     +inf
 
-:func:`harmonic` is evaluated using the digamma function rather
+:func:`~mpmath.harmonic` is evaluated using the digamma function rather
 than by summing the harmonic series term by term. It can therefore
 be computed quickly for arbitrarily large `n`, and even for
 nonintegral arguments::
@@ -1941,7 +2166,7 @@ nonintegral arguments::
     >>> harmonic(3+4j)
     (2.24757548223494 + 0.850502209186044j)
 
-:func:`harmonic` supports arbitrary precision evaluation::
+:func:`~mpmath.harmonic` supports arbitrary precision evaluation::
 
     >>> mp.dps = 50
     >>> harmonic(11)
@@ -1958,7 +2183,7 @@ exceeds a given amount, say 100::
     >>> v
     15092688622113788323693563264538101449859496.864101
     >>> v = int(ceil(v))
-    >>> print v
+    >>> print(v)
     15092688622113788323693563264538101449859497
     >>> harmonic(v-1)
     99.999999999999999999999999999999999999999999942747
@@ -1972,7 +2197,7 @@ Computes the nth Bernoulli number, `B_n`, for any integer `n \ge 0`.
 
 The Bernoulli numbers are rational numbers, but this function
 returns a floating-point approximation. To obtain an exact
-fraction, use :func:`bernfrac` instead.
+fraction, use :func:`~mpmath.bernfrac` instead.
 
 **Examples**
 
@@ -1981,7 +2206,7 @@ Numerical values of the first few Bernoulli numbers::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(15):
-    ...     print n, bernoulli(n)
+    ...     print("%s %s" % (n, bernoulli(n)))
     ...
     0 1.0
     1 -0.5
@@ -2021,7 +2246,7 @@ at integer arguments::
 
 **Algorithm**
 
-For small `n` (`n < 3000`) :func:`bernoulli` uses a recurrence
+For small `n` (`n < 3000`) :func:`~mpmath.bernoulli` uses a recurrence
 formula due to Ramanujan. All results in this range are cached,
 so sequential computation of small Bernoulli numbers is
 guaranteed to be fast.
@@ -2072,10 +2297,10 @@ Some more values are::
 
 An alternative way to compute `\gamma_1`::
 
-    >>> diff(extradps(25)(lambda x: 1/(x-1) - zeta(x)), 1)
+    >>> diff(extradps(15)(lambda x: 1/(x-1) - zeta(x)), 1)
     -0.0728158454836767
 
-:func:`stieltjes` supports arbitrary precision evaluation::
+:func:`~mpmath.stieltjes` supports arbitrary precision evaluation::
 
     >>> mp.dps = 50
     >>> stieltjes(2)
@@ -2083,7 +2308,7 @@ An alternative way to compute `\gamma_1`::
 
 **Algorithm**
 
-:func:`stieltjes` numerically evaluates the integral in
+:func:`~mpmath.stieltjes` numerically evaluates the integral in
 the following representation due to Ainsworth, Howell and
 Coffey [1], [2]:
 
@@ -2121,11 +2346,11 @@ product / quotient of gamma functions:
     \frac{\Gamma(a_0) \Gamma(a_1) \cdots \Gamma(a_p)}
          {\Gamma(b_0) \Gamma(b_1) \cdots \Gamma(b_q)}
 
-Unlike direct calls to :func:`gamma`, :func:`gammaprod` considers
+Unlike direct calls to :func:`~mpmath.gamma`, :func:`~mpmath.gammaprod` considers
 the entire product as a limit and evaluates this limit properly if
 any of the numerator or denominator arguments are nonpositive
 integers such that poles of the gamma function are encountered.
-That is, :func:`gammaprod` evaluates
+That is, :func:`~mpmath.gammaprod` evaluates
 
 .. math ::
 
@@ -2141,10 +2366,10 @@ In particular:
   denominator, the limit is a rational number times the remaining,
   regular part of the product.
 
-* If there are more poles in the numerator, :func:`gammaprod`
+* If there are more poles in the numerator, :func:`~mpmath.gammaprod`
   returns ``+inf``.
 
-* If there are more poles in the denominator, :func:`gammaprod`
+* If there are more poles in the denominator, :func:`~mpmath.gammaprod`
   returns 0.
 
 **Examples**
@@ -2192,7 +2417,7 @@ number or a rational multiple of `\pi`::
     >>> 16*beta(2.5, 1.5)
     3.14159265358979
 
-Where appropriate, :func:`beta` evaluates limits. A pole
+Where appropriate, :func:`~mpmath.beta` evaluates limits. A pole
 of the beta function is taken to result in ``+inf``::
 
     >>> beta(-0.5, 0.5)
@@ -2206,7 +2431,7 @@ of the beta function is taken to result in ``+inf``::
     >>> beta(inf, 0)
     nan
 
-:func:`beta` supports complex numbers and arbitrary precision
+:func:`~mpmath.beta` supports complex numbers and arbitrary precision
 evaluation::
 
     >>> beta(1, 2+j)
@@ -2242,22 +2467,24 @@ incomplete beta function,
     I_{x_1}^{x_2}(a,b) = \int_{x_1}^{x_2} t^{a-1} (1-t)^{b-1} dt.
 
 When `x_1 = 0, x_2 = 1`, this reduces to the ordinary (complete)
-beta function `B(a,b)`; see :func:`beta`.
+beta function `B(a,b)`; see :func:`~mpmath.beta`.
 
-With the keyword argument ``regularized=True``, :func:`betainc`
+With the keyword argument ``regularized=True``, :func:`~mpmath.betainc`
 computes the regularized incomplete beta function
 `I_{x_1}^{x_2}(a,b) / B(a,b)`. This is the cumulative distribution of the
 beta distribution with parameters `a`, `b`.
 
-Note: implementations of the incomplete beta function in some other
-software uses a different argument order. For example, Mathematica uses the
-reversed argument order ``Beta[x1,x2,a,b]``. For the equivalent of SciPy's
-three-argument incomplete beta integral (implicitly with `x1 = 0`), use
-``betainc(a,b,0,x2,regularized=True)``.
+.. note :
+
+    Implementations of the incomplete beta function in some other
+    software uses a different argument order. For example, Mathematica uses the
+    reversed argument order ``Beta[x1,x2,a,b]``. For the equivalent of SciPy's
+    three-argument incomplete beta integral (implicitly with `x1 = 0`), use
+    ``betainc(a,b,0,x2,regularized=True)``.
 
 **Examples**
 
-Verifying that :func:`betainc` computes the integral in the
+Verifying that :func:`~mpmath.betainc` computes the integral in the
 definition::
 
     >>> from mpmath import *
@@ -2336,7 +2563,7 @@ select 1 item from the empty set::
     >>> binomial(0, 1)
     0.0
 
-:func:`binomial` supports large arguments::
+:func:`~mpmath.binomial` supports large arguments::
 
     >>> binomial(10**20, 10**20-5)
     8.33333333333333e+97
@@ -2347,9 +2574,9 @@ Nonintegral binomial coefficients find use in series
 expansions::
 
     >>> nprint(taylor(lambda x: (1+x)**0.25, 0, 4))
-    [1.0, 0.25, -9.375e-2, 5.46875e-2, -3.75977e-2]
+    [1.0, 0.25, -0.09375, 0.0546875, -0.0375977]
     >>> nprint([binomial(0.25, k) for k in range(5)])
-    [1.0, 0.25, -9.375e-2, 5.46875e-2, -3.75977e-2]
+    [1.0, 0.25, -0.09375, 0.0546875, -0.0375977]
 
 An integral representation::
 
@@ -2470,7 +2697,7 @@ not negative even integers)::
     ValueError: gamma function pole
 
 With the exception of the poles at negative even integers,
-:func:`fac2` supports evaluation for arbitrary complex arguments.
+:func:`~mpmath.fac2` supports evaluation for arbitrary complex arguments.
 The recurrence formula is valid generally::
 
     >>> fac2(pi+2j)
@@ -2523,19 +2750,19 @@ Evaluates the generalized hypergeometric function
     \sum_{n=0}^\infty \frac{(a_1)_n (a_2)_n \ldots (a_p)_n}
        {(b_1)_n(b_2)_n\ldots(b_q)_n} \frac{z^n}{n!}
 
-where `(x)_n` denotes the rising factorial (see :func:`rf`).
+where `(x)_n` denotes the rising factorial (see :func:`~mpmath.rf`).
 
 The parameters lists ``a_s`` and ``b_s`` may contain integers,
 real numbers, complex numbers, as well as exact fractions given in
-the form of tuples `(p, q)`. :func:`hyper` is optimized to handle
+the form of tuples `(p, q)`. :func:`~mpmath.hyper` is optimized to handle
 integers and fractions more efficiently than arbitrary
 floating-point parameters (since rational parameters are by
 far the most common).
 
 **Examples**
 
-Verifying that :func:`hyper` gives the sum in the definition, by
-comparison with :func:`nsum`::
+Verifying that :func:`~mpmath.hyper` gives the sum in the definition, by
+comparison with :func:`~mpmath.nsum`::
 
     >>> from mpmath import *
     >>> mp.dps = 25; mp.pretty = True
@@ -2561,7 +2788,7 @@ floats and complex numbers::
 
 The `\,_0F_0` and `\,_1F_0` series are just elementary functions::
 
-    >>> a, z = sqrt(2), pi
+    >>> a, z = sqrt(2), +pi
     >>> hyper([],[],z)
     23.14069263277926900572909
     >>> exp(z)
@@ -2585,29 +2812,79 @@ series terminates before the division by zero occurs)::
     >>> hyper([1,1,1,-3],[-2,5],1)
     Traceback (most recent call last):
       ...
-    ZeroDivisionError
+    ZeroDivisionError: pole in hypergeometric series
     >>> hyper([1,1,1,-1],[-2,5],1)
     1.1
 
-Generally, the radius of convergence of the hypergeometric series is either 0
-(if `p > q+1`), 1 (if `p = q+1`), or `\infty`. A divergent series will evaluate
-if an analytic continuation or regularization is implemented (see the list of
-:func:`hypXfX` functions); otherwise an exception is raised::
+Except for polynomial cases, the radius of convergence `R` of the hypergeometric
+series is either `R = \infty` (if `p \le q`), `R = 1` (if `p = q+1`), or
+`R = 0` (if `p > q+1`).
 
-    >>> hyper([1,1], [1], 2)           # divergent case of 2F1, implemented
-    -1.0
-    >>> hyper([1,1,1,1], [1,1,1], 0.5) # convergent case of 4F3
-    2.0
-    >>> hyper([1,1,1,1], [1,1,1], 2)   # divergent case of 4F3, not implemented
-    Traceback (most recent call last):
-      ...
-    NoConvergence
-    >>> hyper([1,1], [], 0.5)          # regularization of 2F0, implemented
+The analytic continuations of the functions with `p = q+1`, i.e. `\,_2F_1`,
+`\,_3F_2`,  `\,_4F_3`, etc, are all implemented and therefore these functions
+can be evaluated for `|z| \ge 1`. The shortcuts :func:`~mpmath.hyp2f1`, :func:`~mpmath.hyp3f2`
+are available to handle the most common cases (see their documentation),
+but functions of higher degree are also supported via :func:`~mpmath.hyper`::
+
+    >>> hyper([1,2,3,4], [5,6,7], 1)   # 4F3 at finite-valued branch point
+    1.141783505526870731311423
+    >>> hyper([4,5,6,7], [1,2,3], 1)   # 4F3 at pole
+    +inf
+    >>> hyper([1,2,3,4,5], [6,7,8,9], 10)    # 5F4
+    (1.543998916527972259717257 - 0.5876309929580408028816365j)
+    >>> hyper([1,2,3,4,5,6], [7,8,9,10,11], 1j)   # 6F5
+    (0.9996565821853579063502466 + 0.0129721075905630604445669j)
+
+Near `z = 1` with noninteger parameters::
+
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','41/8'], 1)
+    2.219433352235586121250027
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','5/4'], 1)
+    +inf
+    >>> eps1 = extradps(6)(lambda: 1 - mpf('1e-6'))()
+    >>> hyper(['1/3',1,'3/2',2], ['1/5','11/6','5/4'], eps1)
+    2923978034.412973409330956
+
+Please note that, as currently implemented, evaluation of `\,_pF_{p-1}`
+with `p \ge 3` may be slow or inaccurate when `|z-1|` is small,
+for some parameter values.
+
+When `p > q+1`, ``hyper`` computes the (iterated) Borel sum of the divergent
+series. For `\,_2F_0` the Borel sum has an analytic solution and can be
+computed efficiently (see :func:`~mpmath.hyp2f0`). For higher degrees, the functions
+is evaluated first by attempting to sum it directly as an asymptotic
+series (this only works for tiny `|z|`), and then by evaluating the Borel
+regularized sum using numerical integration. Except for
+special parameter combinations, this can be extremely slow.
+
+    >>> hyper([1,1], [], 0.5)          # regularization of 2F0
     (1.340965419580146562086448 + 0.8503366631752726568782447j)
-    >>> hyper([1,1,1,1], [1], 0.5)     # regularization of 4F1, not implemented
+    >>> hyper([1,1,1,1], [1], 0.5)     # regularization of 4F1
+    (1.108287213689475145830699 + 0.5327107430640678181200491j)
+
+With the following magnitude of argument, the asymptotic series for `\,_3F_1`
+gives only a few digits. Using Borel summation, ``hyper`` can produce
+a value with full accuracy::
+
+    >>> mp.dps = 15
+    >>> hyper([2,0.5,4], [5.25], '0.08', force_series=True)
     Traceback (most recent call last):
       ...
-    NoConvergence
+    NoConvergence: Hypergeometric series converges too slowly. Try increasing maxterms.
+    >>> hyper([2,0.5,4], [5.25], '0.08', asymp_tol=1e-4)
+    1.0725535790737
+    >>> hyper([2,0.5,4], [5.25], '0.08')
+    (1.07269542893559 + 5.54668863216891e-5j)
+    >>> hyper([2,0.5,4], [5.25], '-0.08', asymp_tol=1e-4)
+    0.946344925484879
+    >>> hyper([2,0.5,4], [5.25], '-0.08')
+    0.946312503737771
+    >>> mp.dps = 25
+    >>> hyper([2,0.5,4], [5.25], '-0.08')
+    0.9463125037377662296700858
+
+Note that with the positive `z` value, there is a complex part in the
+correct result, which falls below the tolerance of the asymptotic series.
 
 """
 
@@ -2623,7 +2900,7 @@ Computes a weighted combination of hypergeometric functions
     \ldots, b_{r,q}; z_r)\right].
 
 Typically the parameters are linear combinations of a small set of base
-parameters; :func:`hypercomb` permits computing a correct value in
+parameters; :func:`~mpmath.hypercomb` permits computing a correct value in
 the case that some of the `\alpha`, `\beta`, `b` turn out to be
 nonpositive integers, or if division by zero occurs for some `w^c`,
 assuming that there are opposing singularities that cancel out.
@@ -2667,10 +2944,10 @@ confluent limit function, defined as
     \,_0F_1(a,z) = \sum_{k=0}^{\infty} \frac{1}{(a)_k} \frac{z^k}{k!}.
 
 This function satisfies the differential equation `z f''(z) + a f'(z) = f(z)`,
-and is related to the Bessel function of the first kind (see :func:`besselj`).
+and is related to the Bessel function of the first kind (see :func:`~mpmath.besselj`).
 
 ``hyp0f1(a,z)`` is equivalent to ``hyper([],[a],z)``; see documentation for
-:func:`hyper` for more information.
+:func:`~mpmath.hyper` for more information.
 
 **Examples**
 
@@ -2720,12 +2997,12 @@ function gives one solution to the confluent (Kummer's) differential equation
 
     z f''(z) + (b-z) f'(z) - af(z) = 0.
 
-A second solution is given by the `U` function; see :func:`hyperu`.
+A second solution is given by the `U` function; see :func:`~mpmath.hyperu`.
 Solutions are also given in an alternate form by the Whittaker
-functions (:func:`whitm`, :func:`whitw`).
+functions (:func:`~mpmath.whitm`, :func:`~mpmath.whitw`).
 
 ``hyp1f1(a,b,z)`` is equivalent
-to ``hyper([a],[b],z)``; see documentation for :func:`hyper` for more
+to ``hyper([a],[b],z)``; see documentation for :func:`~mpmath.hyper` for more
 information.
 
 **Examples**
@@ -2935,12 +3212,88 @@ Verifying the hypergeometric differential equation::
 
 """
 
+hyp3f2 = r"""
+Gives the generalized hypergeometric function `\,_3F_2`, defined for `|z| < 1`
+as
+
+.. math ::
+
+    \,_3F_2(a_1,a_2,a_3,b_1,b_2,z) = \sum_{k=0}^{\infty}
+        \frac{(a_1)_k (a_2)_k (a_3)_k}{(b_1)_k (b_2)_k} \frac{z^k}{k!}.
+
+and for `|z| \ge 1` by analytic continuation. The analytic structure of this
+function is similar to that of `\,_2F_1`, generally with a singularity at
+`z = 1` and a branch cut on `(1, \infty)`.
+
+Evaluation is supported inside, on, and outside
+the circle of convergence `|z| = 1`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> hyp3f2(1,2,3,4,5,0.25)
+    1.083533123380934241548707
+    >>> hyp3f2(1,2+2j,3,4,5,-10+10j)
+    (0.1574651066006004632914361 - 0.03194209021885226400892963j)
+    >>> hyp3f2(1,2,3,4,5,-10)
+    0.3071141169208772603266489
+    >>> hyp3f2(1,2,3,4,5,10)
+    (-0.4857045320523947050581423 - 0.5988311440454888436888028j)
+    >>> hyp3f2(0.25,1,1,2,1.5,1)
+    1.157370995096772047567631
+    >>> (8-pi-2*ln2)/3
+    1.157370995096772047567631
+    >>> hyp3f2(1+j,0.5j,2,1,-2j,-1)
+    (1.74518490615029486475959 + 0.1454701525056682297614029j)
+    >>> hyp3f2(1+j,0.5j,2,1,-2j,sqrt(j))
+    (0.9829816481834277511138055 - 0.4059040020276937085081127j)
+    >>> hyp3f2(-3,2,1,-5,4,1)
+    1.41
+    >>> hyp3f2(-3,2,1,-5,4,2)
+    2.12
+
+Evaluation very close to the unit circle::
+
+    >>> hyp3f2(1,2,3,4,5,'1.0001')
+    (1.564877796743282766872279 - 3.76821518787438186031973e-11j)
+    >>> hyp3f2(1,2,3,4,5,'1+0.0001j')
+    (1.564747153061671573212831 + 0.0001305757570366084557648482j)
+    >>> hyp3f2(1,2,3,4,5,'0.9999')
+    1.564616644881686134983664
+    >>> hyp3f2(1,2,3,4,5,'-0.9999')
+    0.7823896253461678060196207
+
+.. note ::
+
+    Evaluation for `|z-1|` small can currently be inaccurate or slow
+    for some parameter combinations.
+
+For various parameter combinations, `\,_3F_2` admits representation in terms
+of hypergeometric functions of lower degree, or in terms of
+simpler functions::
+
+    >>> for a, b, z in [(1,2,-1), (2,0.5,1)]:
+    ...     hyp2f1(a,b,a+b+0.5,z)**2
+    ...     hyp3f2(2*a,a+b,2*b,a+b+0.5,2*a+2*b,z)
+    ...
+    0.4246104461966439006086308
+    0.4246104461966439006086308
+    7.111111111111111111111111
+    7.111111111111111111111111
+
+    >>> z = 2+3j
+    >>> hyp3f2(0.5,1,1.5,2,2,z)
+    (0.7621440939243342419729144 + 0.4249117735058037649915723j)
+    >>> 4*(pi-2*ellipe(z))/(pi*z)
+    (0.7621440939243342419729144 + 0.4249117735058037649915723j)
+
+"""
+
 hyperu = r"""
 Gives the Tricomi confluent hypergeometric function `U`, also known as
 the Kummer or confluent hypergeometric function of the second kind. This
 function gives a second linearly independent solution to the confluent
 hypergeometric differential equation (the first is provided by `\,_1F_1`  --
-see :func:`hyp1f1`).
+see :func:`~mpmath.hyp1f1`).
 
 **Examples**
 
@@ -2995,7 +3348,7 @@ series
 
 This series usually does not converge. For small enough `z`, it can be viewed
 as an asymptotic series that may be summed directly with an appropriate
-truncation. When this is not the case, :func:`hyp2f0` gives a regularized sum,
+truncation. When this is not the case, :func:`~mpmath.hyp2f0` gives a regularized sum,
 or equivalently, it uses a representation in terms of the
 hypergeometric U function [1]. The series also converges when either `a` or `b`
 is a nonpositive integer, as it then terminates into a polynomial
@@ -3066,7 +3419,7 @@ following special cases when one or both endpoints are fixed:
 
 * `\Gamma(z,0,\infty)` is the standard ("complete")
   gamma function, `\Gamma(z)` (available directly
-  as the mpmath function :func:`gamma`)
+  as the mpmath function :func:`~mpmath.gamma`)
 * `\Gamma(z,a,\infty)` is the "upper" incomplete gamma
   function, `\Gamma(z,a)`
 * `\Gamma(z,0,b)` is the "lower" incomplete gamma
@@ -3082,7 +3435,7 @@ gamma function, so one should be careful to get the correct
 definition.
 
 If also given the keyword argument ``regularized=True``,
-:func:`gammainc` computes the "regularized" incomplete gamma
+:func:`~mpmath.gammainc` computes the "regularized" incomplete gamma
 function
 
 .. math ::
@@ -3092,7 +3445,7 @@ function
 **Examples**
 
 We can compare with numerical quadrature to verify that
-:func:`gammainc` computes the integral in the definition::
+:func:`~mpmath.gammainc` computes the integral in the definition::
 
     >>> from mpmath import *
     >>> mp.dps = 25; mp.pretty = True
@@ -3216,7 +3569,7 @@ The error function is an odd function::
     >>> nprint(chop(taylor(erf, 0, 5)))
     [0.0, 1.12838, 0.0, -0.376126, 0.0, 0.112838]
 
-:func:`erf` implements arbitrary-precision evaluation and
+:func:`~mpmath.erf` implements arbitrary-precision evaluation and
 supports complex numbers::
 
     >>> mp.dps = 50
@@ -3242,11 +3595,11 @@ Evaluation is supported for large arguments::
 
 **Related functions**
 
-See also :func:`erfc`, which is more accurate for large `x`,
-and :func:`erfi` which gives the antiderivative of
+See also :func:`~mpmath.erfc`, which is more accurate for large `x`,
+and :func:`~mpmath.erfi` which gives the antiderivative of
 `\exp(t^2)`.
 
-The Fresnel integrals :func:`fresnels` and :func:`fresnelc`
+The Fresnel integrals :func:`~mpmath.fresnels` and :func:`~mpmath.fresnelc`
 are also related to the error function.
 """
 
@@ -3263,7 +3616,7 @@ computing the complementary error function as ``1-erf(x)``::
     >>> erfc(10)
     2.08848758376254e-45
 
-:func:`erfc` works accurately even for ludicrously large
+:func:`~mpmath.erfc` works accurately even for ludicrously large
 arguments::
 
     >>> erfc(10**10)
@@ -3368,15 +3721,15 @@ The domain is limited to the standard interval::
       ...
     ValueError: erfinv(x) is defined only for -1 <= x <= 1
 
-It is simple to check that :func:`erfinv` computes inverse values of
-:func:`erf` as promised::
+It is simple to check that :func:`~mpmath.erfinv` computes inverse values of
+:func:`~mpmath.erf` as promised::
 
     >>> erf(erfinv(0.75))
     0.75
     >>> erf(erfinv(-0.995))
     -0.995
 
-:func:`erfinv` supports arbitrary-precision evaluation::
+:func:`~mpmath.erfinv` supports arbitrary-precision evaluation::
 
     >>> mp.dps = 50
     >>> x = erf(2)
@@ -3419,7 +3772,7 @@ be verified using numerical integration::
     >>> quad(lambda x: npdf(x, 3, 2), [3, inf])
     0.5
 
-See also :func:`ncdf`, which gives the cumulative
+See also :func:`~mpmath.ncdf`, which gives the cumulative
 distribution.
 """
 
@@ -3428,7 +3781,7 @@ ncdf = r"""
 function of a normal distribution with mean value `\mu`
 and variance `\sigma^2`.
 
-See also :func:`npdf`, which gives the probability density.
+See also :func:`~mpmath.npdf`, which gives the probability density.
 
 Elementary properties include::
 
@@ -3456,7 +3809,7 @@ function having identical mu and sigma::
 """
 
 expint = r"""
-:func:`expint(n,z)` gives the generalized exponential integral
+:func:`~mpmath.expint(n,z)` gives the generalized exponential integral
 or En-function,
 
 .. math ::
@@ -3464,7 +3817,7 @@ or En-function,
     \mathrm{E}_n(z) = \int_1^{\infty} \frac{e^{-zt}}{t^n} dt,
 
 where `n` and `z` may both be complex numbers. The case with `n = 1` is
-also given by :func:`e1`.
+also given by :func:`~mpmath.e1`.
 
 **Examples**
 
@@ -3504,7 +3857,7 @@ Computes the exponential integral `\mathrm{E}_1(z)`, given by
 
     \mathrm{E}_1(z) = \int_z^{\infty} \frac{e^{-t}}{t} dt.
 
-This is equivalent to :func:`expint` with `n = 1`.
+This is equivalent to :func:`~mpmath.expint` with `n = 1`.
 
 **Examples**
 
@@ -3517,7 +3870,7 @@ Two ways to evaluate this function::
     >>> expint(1,6.25)
     0.0002704758872637179088496194
 
-The E1-function is essentially the same as the Ei-function (:func:`ei`)
+The E1-function is essentially the same as the Ei-function (:func:`~mpmath.ei`)
 with negated argument, except for an imaginary branch cut term::
 
     >>> e1(2.5)
@@ -3546,7 +3899,7 @@ For real `x`, the Ei-function behaves roughly like
 `\mathrm{Ei}(x) \approx \exp(x) + \log(|x|)`.
 
 The Ei-function is related to the more general family of exponential
-integral functions denoted by `E_n`, which are available as :func:`expint`.
+integral functions denoted by `E_n`, which are available as :func:`~mpmath.expint`.
 
 **Basic examples**
 
@@ -3571,7 +3924,7 @@ numerically as a reference::
     >>> quad(lambda t: exp(t)/t, [-inf, -4])
     -0.00377935240984891
 
-:func:`ei` supports complex arguments and arbitrary
+:func:`~mpmath.ei` supports complex arguments and arbitrary
 precision evaluation::
 
     >>> mp.dps = 50
@@ -3584,11 +3937,11 @@ precision evaluation::
 **Related functions**
 
 The exponential integral is closely related to the logarithmic
-integral. See :func:`li` for additional information.
+integral. See :func:`~mpmath.li` for additional information.
 
 The exponential integral is related to the hyperbolic
-and trigonometric integrals (see :func:`chi`, :func:`shi`,
-:func:`ci`, :func:`si`) similarly to how the ordinary
+and trigonometric integrals (see :func:`~mpmath.chi`, :func:`~mpmath.shi`,
+:func:`~mpmath.ci`, :func:`~mpmath.si`) similarly to how the ordinary
 exponential function is related to the hyperbolic and
 trigonometric functions::
 
@@ -3597,8 +3950,8 @@ trigonometric functions::
     9.93383257062542
     >>> chi(3) + shi(3)
     9.93383257062542
-    >>> ci(3j) - j*si(3j) - pi*j/2
-    (9.93383257062542 + 0.0j)
+    >>> chop(ci(3j) - j*si(3j) - pi*j/2)
+    9.93383257062542
 
 Beware that logarithmic corrections, as in the last example
 above, are required to obtain the correct branch in general.
@@ -3635,20 +3988,19 @@ Computes the logarithmic integral or li-function
 
 The logarithmic integral has a singularity at `x = 1`.
 
-Note that there is a second logarithmic integral, the Li
-function, defined by
+Alternatively, ``li(x, offset=True)`` computes the offset
+logarithmic integral (used in number theory)
 
 .. math ::
 
-    \mathrm{Li}(x) = \int_2^x \frac{1}{\log t} \, dt
+    \mathrm{Li}(x) = \int_2^x \frac{1}{\log t} \, dt.
 
-This "offset logarithmic integral" can be computed via
-:func:`li` using the simple identity
+These two functions are related via the simple identity
 `\mathrm{Li}(x) = \mathrm{li}(x) - \mathrm{li}(2)`.
 
 The logarithmic integral should also not be confused with
 the polylogarithm (also denoted by Li), which is implemented
-as :func:`polylog`.
+as :func:`~mpmath.polylog`.
 
 **Examples**
 
@@ -3668,6 +4020,14 @@ Some basic values and limits::
     1.45136923488338105028396848589
     >>> li(inf)
     +inf
+    >>> li(2, offset=True)
+    0.0
+    >>> li(1, offset=True)
+    -inf
+    >>> li(0, offset=True)
+    -1.04516378011749278484458888919
+    >>> li(10, offset=True)
+    5.12043572466980515267839286347
 
 The logarithmic integral can be evaluated for arbitrary
 complex arguments::
@@ -3693,12 +4053,13 @@ The logarithmic integral grows like `O(x/\log(x))`::
     4.3619719871407e+97
 
 The prime number theorem states that the number of primes less
-than `x` is asymptotic to `\mathrm{li}(x)`. For example,
-it is known that there are exactly 1,925,320,391,606,803,968,923
-prime numbers less than `10^{23}` [1]. The logarithmic integral
-provides a very accurate estimate::
+than `x` is asymptotic to `\mathrm{Li}(x)` (equivalently
+`\mathrm{li}(x)`). For example, it is known that there are
+exactly 1,925,320,391,606,803,968,923 prime numbers less than
+`10^{23}` [1]. The logarithmic integral provides a very
+accurate estimate::
 
-    >>> li(2) + li(10**23)
+    >>> li(10**23, offset=True)
     1.92532039161405e+21
 
 A definite integral is::
@@ -3744,7 +4105,7 @@ Some values and limits::
     (1.408292501520849518759125 - 2.983617742029605093121118j)
 
 The cosine integral behaves roughly like the sinc function
-(see :func:`sinc`) for large real `x`::
+(see :func:`~mpmath.sinc`) for large real `x`::
 
     >>> ci(10**10)
     -4.875060251748226537857298e-11
@@ -3759,6 +4120,11 @@ It has infinitely many roots on the positive real axis::
     0.6165054856207162337971104
     >>> findroot(ci, 2)
     3.384180422551186426397851
+
+Evaluation is supported for `z` anywhere in the complex plane::
+
+    >>> ci(10**6*(1+j))
+    (4.449410587611035724984376e+434287 + 9.75744874290013526417059e+434287j)
 
 We can evaluate the defining integral as a reference::
 
@@ -3786,7 +4152,7 @@ Computes the sine integral,
     \mathrm{Si}(x) = \int_0^x \frac{\sin t}{t}\,dt.
 
 The sine integral is thus the antiderivative of the sinc
-function (see :func:`sinc`).
+function (see :func:`~mpmath.sinc`).
 
 **Examples**
 
@@ -3816,6 +4182,11 @@ The sine integral approaches `\pi/2` for large real `x`::
     >>> pi/2
     1.570796326794896619231322
 
+Evaluation is supported for `z` anywhere in the complex plane::
+
+    >>> si(10**6*(1+j))
+    (-9.75744874290013526417059e+434287 + 4.449410587611035724984376e+434287j)
+
 We can evaluate the defining integral as a reference::
 
     >>> mp.dps = 15
@@ -3836,7 +4207,7 @@ sine integral::
 
 chi = r"""
 Computes the hyperbolic cosine integral, defined
-in analogy with the cosine integral (see :func:`ci`) as
+in analogy with the cosine integral (see :func:`~mpmath.ci`) as
 
 .. math ::
 
@@ -3858,11 +4229,16 @@ Some values and limits::
     >>> chi(2+3j)
     (-0.1683628683277204662429321 + 2.625115880451325002151688j)
 
+Evaluation is supported for `z` anywhere in the complex plane::
+
+    >>> chi(10**6*(1+j))
+    (4.449410587611035724984376e+434287 - 9.75744874290013526417059e+434287j)
+
 """
 
 shi = r"""
 Computes the hyperbolic sine integral, defined
-in analogy with the sine integral (see :func:`si`) as
+in analogy with the sine integral (see :func:`~mpmath.si`) as
 
 .. math ::
 
@@ -3882,6 +4258,11 @@ Some values and limits::
     +inf
     >>> shi(2+3j)
     (-0.1931890762719198291678095 + 2.645432555362369624818525j)
+
+Evaluation is supported for `z` anywhere in the complex plane::
+
+    >>> shi(10**6*(1+j))
+    (4.449410587611035724984376e+434287 - 9.75744874290013526417059e+434287j)
 
 """
 
@@ -3956,156 +4337,535 @@ Comparing with the definition::
 """
 
 airyai = r"""
-Computes the Airy function `\mathrm{Ai}(x)`, which is
-a solution of the Airy differential equation `y''-xy=0`.
-The Ai-function behaves roughly like a slowly decaying
-sine wave for `x < 0` and like a decreasing exponential for
-`x > 0`.
+Computes the Airy function `\operatorname{Ai}(z)`, which is
+the solution of the Airy differential equation `f''(z) - z f(z) = 0`
+with initial conditions
+
+.. math ::
+
+    \operatorname{Ai}(0) =
+        \frac{1}{3^{2/3}\Gamma\left(\frac{2}{3}\right)}
+
+    \operatorname{Ai}'(0) =
+        -\frac{1}{3^{1/3}\Gamma\left(\frac{1}{3}\right)}.
+
+Other common ways of defining the Ai-function include
+integrals such as
+
+.. math ::
+
+    \operatorname{Ai}(x) = \frac{1}{\pi}
+        \int_0^{\infty} \cos\left(\frac{1}{3}t^3+xt\right) dt
+        \qquad x \in \mathbb{R}
+
+    \operatorname{Ai}(z) = \frac{\sqrt{3}}{2\pi}
+        \int_0^{\infty}
+        \exp\left(-\frac{t^3}{3}-\frac{z^3}{3t^3}\right) dt.
+
+The Ai-function is an entire function with a turning point,
+behaving roughly like a slowly decaying sine wave for `z < 0` and
+like a rapidly decreasing exponential for `z > 0`.
+A second solution of the Airy differential equation
+is given by `\operatorname{Bi}(z)` (see :func:`~mpmath.airybi`).
+
+Optionally, with *derivative=alpha*, :func:`airyai` can compute the
+`\alpha`-th order fractional derivative with respect to `z`.
+For `\alpha = n = 1,2,3,\ldots` this gives the derivative
+`\operatorname{Ai}^{(n)}(z)`, and for `\alpha = -n = -1,-2,-3,\ldots`
+this gives the `n`-fold iterated integral
+
+.. math ::
+
+    f_0(z) = \operatorname{Ai}(z)
+
+    f_n(z) = \int_0^z f_{n-1}(t) dt.
+
+The Ai-function has infinitely many zeros, all located along the
+negative half of the real axis. They can be computed with
+:func:`~mpmath.airyaizero`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ai.py
+.. image :: /modules/mpmath/plots/ai.png
+.. literalinclude :: /modules/mpmath/plots/ai_c.py
+.. image :: /modules/mpmath/plots/ai_c.png
+
+**Basic examples**
 
 Limits and values include::
 
     >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> airyai(0), 1/(3**(2/3.)*gamma(2/3.))
-    (0.355028053887817, 0.355028053887817)
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airyai(0); 1/(power(3,'2/3')*gamma('2/3'))
+    0.3550280538878172392600632
+    0.3550280538878172392600632
     >>> airyai(1)
-    0.135292416312881
+    0.1352924163128814155241474
     >>> airyai(-1)
-    0.535560883292352
-    >>> airyai(inf)
+    0.5355608832923521187995166
+    >>> airyai(inf); airyai(-inf)
     0.0
-    >>> airyai(-inf)
     0.0
 
-Evaluation is supported for large arguments::
+Evaluation is supported for large magnitudes of the argument::
 
     >>> airyai(-100)
-    0.176753393239553
+    0.1767533932395528780908311
     >>> airyai(100)
-    2.63448215208818e-291
+    2.634482152088184489550553e-291
     >>> airyai(50+50j)
-    (-5.31790195707456e-68 - 1.16358800377071e-67j)
+    (-5.31790195707456404099817e-68 - 1.163588003770709748720107e-67j)
     >>> airyai(-50+50j)
-    (1.04124253736317e+158 + 3.3475255449236e+157j)
+    (1.041242537363167632587245e+158 + 3.347525544923600321838281e+157j)
 
 Huge arguments are also fine::
 
     >>> airyai(10**10)
-    1.16223597829874e-289529654602171
+    1.162235978298741779953693e-289529654602171
     >>> airyai(-10**10)
-    0.000173620644815282
-    >>> airyai(10**10*(1+j))
-    (5.71150868372136e-186339621747698 + 1.86724550696231e-186339621747697j)
+    0.0001736206448152818510510181
+    >>> w = airyai(10**10*(1+j))
+    >>> w.real
+    5.711508683721355528322567e-186339621747698
+    >>> w.imag
+    1.867245506962312577848166e-186339621747697
 
-The first negative root of the Ai function is::
+The first root of the Ai-function is::
 
     >>> findroot(airyai, -2)
-    -2.33810741045977
+    -2.338107410459767038489197
+    >>> airyaizero(1)
+    -2.338107410459767038489197
 
-We can verify the differential equation::
+**Properties and relations**
 
-    >>> for x in [-3.4, 0, 2.5, 1+2j]:
-    ...     print abs(diff(airyai, x, 2) - x*airyai(x)) < eps
+Verifying the Airy differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(airyai(z,2) - z*airyai(z))
     ...
-    True
-    True
-    True
-    True
+    0.0
+    0.0
+    0.0
+    0.0
 
-The Taylor series expansion around `x = 0` starts with
-the following coefficients (note that every third term
-is zero)::
+The first few terms of the Taylor series expansion around `z = 0`
+(every third term is zero)::
 
-    >>> nprint(chop(taylor(airyai, 0, 5)))
-    [0.355028, -0.258819, 0.0, 5.91713e-2, -2.15683e-2, 0.0]
+    >>> nprint(taylor(airyai, 0, 5))
+    [0.355028, -0.258819, 0.0, 0.0591713, -0.0215683, 0.0]
 
-The Airy functions are a special case of Bessel functions.
-For `x < 0`, we have::
+The Airy functions satisfy the Wronskian relation
+`\operatorname{Ai}(z) \operatorname{Bi}'(z) -
+\operatorname{Ai}'(z) \operatorname{Bi}(z) = 1/\pi`::
 
-    >>> x = 3
-    >>> airyai(-x)
-    -0.378814293677658
-    >>> p = 2*(x**1.5)/3
-    >>> sqrt(x)*(besselj(1/3.,p) + besselj(-1/3.,p))/3
-    -0.378814293677658
+    >>> z = -0.5
+    >>> airyai(z)*airybi(z,1) - airyai(z,1)*airybi(z)
+    0.3183098861837906715377675
+    >>> 1/pi
+    0.3183098861837906715377675
+
+The Airy functions can be expressed in terms of Bessel
+functions of order `\pm 1/3`. For `\Re[z] \le 0`, we have::
+
+    >>> z = -3
+    >>> airyai(z)
+    -0.3788142936776580743472439
+    >>> y = 2*power(-z,'3/2')/3
+    >>> (sqrt(-z) * (besselj('1/3',y) + besselj('-1/3',y)))/3
+    -0.3788142936776580743472439
+
+**Derivatives and integrals**
+
+Derivatives of the Ai-function (directly and using :func:`~mpmath.diff`)::
+
+    >>> airyai(-3,1); diff(airyai,-3)
+    0.3145837692165988136507873
+    0.3145837692165988136507873
+    >>> airyai(-3,2); diff(airyai,-3,2)
+    1.136442881032974223041732
+    1.136442881032974223041732
+    >>> airyai(1000,1); diff(airyai,1000)
+    -2.943133917910336090459748e-9156
+    -2.943133917910336090459748e-9156
+
+Several derivatives at `z = 0`::
+
+    >>> airyai(0,0); airyai(0,1); airyai(0,2)
+    0.3550280538878172392600632
+    -0.2588194037928067984051836
+    0.0
+    >>> airyai(0,3); airyai(0,4); airyai(0,5)
+    0.3550280538878172392600632
+    -0.5176388075856135968103671
+    0.0
+    >>> airyai(0,15); airyai(0,16); airyai(0,17)
+    1292.30211615165475090663
+    -3188.655054727379756351861
+    0.0
+
+The integral of the Ai-function::
+
+    >>> airyai(3,-1); quad(airyai, [0,3])
+    0.3299203760070217725002701
+    0.3299203760070217725002701
+    >>> airyai(-10,-1); quad(airyai, [0,-10])
+    -0.765698403134212917425148
+    -0.765698403134212917425148
+
+Integrals of high or fractional order::
+
+    >>> airyai(-2,0.5); differint(airyai,-2,0.5,0)
+    (0.0 + 0.2453596101351438273844725j)
+    (0.0 + 0.2453596101351438273844725j)
+    >>> airyai(-2,-4); differint(airyai,-2,-4,0)
+    0.2939176441636809580339365
+    0.2939176441636809580339365
+    >>> airyai(0,-1); airyai(0,-2); airyai(0,-3)
+    0.0
+    0.0
+    0.0
+
+Integrals of the Ai-function can be evaluated at limit points::
+
+    >>> airyai(-1000000,-1); airyai(-inf,-1)
+    -0.6666843728311539978751512
+    -0.6666666666666666666666667
+    >>> airyai(10,-1); airyai(+inf,-1)
+    0.3333333332991690159427932
+    0.3333333333333333333333333
+    >>> airyai(+inf,-2); airyai(+inf,-3)
+    +inf
+    +inf
+    >>> airyai(-1000000,-2); airyai(-inf,-2)
+    666666.4078472650651209742
+    +inf
+    >>> airyai(-1000000,-3); airyai(-inf,-3)
+    -333333074513.7520264995733
+    -inf
+
+**References**
+
+1. [DLMF]_ Chapter 9: Airy and Related Functions
+2. [WolframFunctions]_ section: Bessel-Type Functions
 
 """
 
 airybi = r"""
-Computes the Airy function `\mathrm{Bi}(x)`, which is
-a solution of the Airy differential equation `y''-xy=0`.
-The Bi-function behaves roughly like a slowly decaying
-sine wave for `x < 0` and like an increasing exponential
-for `x > 0`.
+Computes the Airy function `\operatorname{Bi}(z)`, which is
+the solution of the Airy differential equation `f''(z) - z f(z) = 0`
+with initial conditions
+
+.. math ::
+
+    \operatorname{Bi}(0) =
+        \frac{1}{3^{1/6}\Gamma\left(\frac{2}{3}\right)}
+
+    \operatorname{Bi}'(0) =
+        \frac{3^{1/6}}{\Gamma\left(\frac{1}{3}\right)}.
+
+Like the Ai-function (see :func:`~mpmath.airyai`), the Bi-function
+is oscillatory for `z < 0`, but it grows rather than decreases
+for `z > 0`.
+
+Optionally, as for :func:`~mpmath.airyai`, derivatives, integrals
+and fractional derivatives can be computed with the *derivative*
+parameter.
+
+The Bi-function has infinitely many zeros along the negative
+half-axis, as well as complex zeros, which can all be computed
+with :func:`~mpmath.airybizero`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/bi.py
+.. image :: /modules/mpmath/plots/bi.png
+.. literalinclude :: /modules/mpmath/plots/bi_c.py
+.. image :: /modules/mpmath/plots/bi_c.png
+
+**Basic examples**
 
 Limits and values include::
 
     >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> airybi(0), 1/(3**(1/6.)*gamma(2/3.))
-    (0.614926627446001, 0.614926627446001)
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airybi(0); 1/(power(3,'1/6')*gamma('2/3'))
+    0.6149266274460007351509224
+    0.6149266274460007351509224
     >>> airybi(1)
-    1.20742359495287
+    1.207423594952871259436379
     >>> airybi(-1)
-    0.103997389496945
-    >>> airybi(inf)
+    0.10399738949694461188869
+    >>> airybi(inf); airybi(-inf)
     +inf
-    >>> airybi(-inf)
     0.0
 
-Evaluation is supported for large arguments::
+Evaluation is supported for large magnitudes of the argument::
 
     >>> airybi(-100)
-    0.0242738876801601
+    0.02427388768016013160566747
     >>> airybi(100)
-    6.0412239966702e+288
+    6.041223996670201399005265e+288
     >>> airybi(50+50j)
-    (-5.32207626732144e+63 + 1.47845029116524e+65j)
+    (-5.322076267321435669290334e+63 + 1.478450291165243789749427e+65j)
     >>> airybi(-50+50j)
-    (-3.3475255449236e+157 + 1.04124253736317e+158j)
+    (-3.347525544923600321838281e+157 + 1.041242537363167632587245e+158j)
 
-Huge arguments are also fine::
+Huge arguments::
 
-    >>> mp.dps = 15
     >>> airybi(10**10)
-    1.36938578794354e+289529654602165
+    1.369385787943539818688433e+289529654602165
     >>> airybi(-10**10)
-    0.00177565614169293
-    >>> airybi(10**10*(1+j))
-    (-6.5599559310962e+186339621747689 - 6.82246272698136e+186339621747690j)
+    0.001775656141692932747610973
+    >>> w = airybi(10**10*(1+j))
+    >>> w.real
+    -6.559955931096196875845858e+186339621747689
+    >>> w.imag
+    -6.822462726981357180929024e+186339621747690
 
-The first negative root of the Bi function is::
+The first real root of the Bi-function is::
 
-    >>> findroot(airybi, -1)
-    -1.17371322270913
+    >>> findroot(airybi, -1); airybizero(1)
+    -1.17371322270912792491998
+    -1.17371322270912792491998
 
-We can verify the differential equation::
+**Properties and relations**
 
-    >>> for x in [-3.4, 0, 2.5, 1+2j]:
-    ...     print abs(diff(airybi, x, 2) - x*airybi(x)) < eps
+Verifying the Airy differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(airybi(z,2) - z*airybi(z))
     ...
-    True
-    True
-    True
-    True
+    0.0
+    0.0
+    0.0
+    0.0
 
-The Taylor series expansion around `x = 0` starts with
-the following coefficients (note that every third term
-is zero)::
+The first few terms of the Taylor series expansion around `z = 0`
+(every third term is zero)::
 
-    >>> nprint(chop(taylor(airybi, 0, 5)))
-    [0.614927, 0.448288, 0.0, 0.102488, 3.73574e-2, 0.0]
+    >>> nprint(taylor(airybi, 0, 5))
+    [0.614927, 0.448288, 0.0, 0.102488, 0.0373574, 0.0]
 
-The Airy functions are a special case of Bessel functions.
-For `x < 0`, we have::
+The Airy functions can be expressed in terms of Bessel
+functions of order `\pm 1/3`. For `\Re[z] \le 0`, we have::
 
-    >>> x = 3
-    >>> airybi(-x)
-    -0.198289626374927
-    >>> p = 2*(x**1.5)/3
-    >>> sqrt(x/3)*(besselj(-1/3.,p) - besselj(1/3.,p))
-    -0.198289626374926
+    >>> z = -3
+    >>> airybi(z)
+    -0.1982896263749265432206449
+    >>> p = 2*power(-z,'3/2')/3
+    >>> sqrt(-mpf(z)/3)*(besselj('-1/3',p) - besselj('1/3',p))
+    -0.1982896263749265432206449
+
+**Derivatives and integrals**
+
+Derivatives of the Bi-function (directly and using :func:`~mpmath.diff`)::
+
+    >>> airybi(-3,1); diff(airybi,-3)
+    -0.675611222685258537668032
+    -0.675611222685258537668032
+    >>> airybi(-3,2); diff(airybi,-3,2)
+    0.5948688791247796296619346
+    0.5948688791247796296619346
+    >>> airybi(1000,1); diff(airybi,1000)
+    1.710055114624614989262335e+9156
+    1.710055114624614989262335e+9156
+
+Several derivatives at `z = 0`::
+
+    >>> airybi(0,0); airybi(0,1); airybi(0,2)
+    0.6149266274460007351509224
+    0.4482883573538263579148237
+    0.0
+    >>> airybi(0,3); airybi(0,4); airybi(0,5)
+    0.6149266274460007351509224
+    0.8965767147076527158296474
+    0.0
+    >>> airybi(0,15); airybi(0,16); airybi(0,17)
+    2238.332923903442675949357
+    5522.912562599140729510628
+    0.0
+
+The integral of the Bi-function::
+
+    >>> airybi(3,-1); quad(airybi, [0,3])
+    10.06200303130620056316655
+    10.06200303130620056316655
+    >>> airybi(-10,-1); quad(airybi, [0,-10])
+    -0.01504042480614002045135483
+    -0.01504042480614002045135483
+
+Integrals of high or fractional order::
+
+    >>> airybi(-2,0.5); differint(airybi, -2, 0.5, 0)
+    (0.0 + 0.5019859055341699223453257j)
+    (0.0 + 0.5019859055341699223453257j)
+    >>> airybi(-2,-4); differint(airybi,-2,-4,0)
+    0.2809314599922447252139092
+    0.2809314599922447252139092
+    >>> airybi(0,-1); airybi(0,-2); airybi(0,-3)
+    0.0
+    0.0
+    0.0
+
+Integrals of the Bi-function can be evaluated at limit points::
+
+    >>> airybi(-1000000,-1); airybi(-inf,-1)
+    0.000002191261128063434047966873
+    0.0
+    >>> airybi(10,-1); airybi(+inf,-1)
+    147809803.1074067161675853
+    +inf
+    >>> airybi(+inf,-2); airybi(+inf,-3)
+    +inf
+    +inf
+    >>> airybi(-1000000,-2); airybi(-inf,-2)
+    0.4482883750599908479851085
+    0.4482883573538263579148237
+    >>> gamma('2/3')*power(3,'2/3')/(2*pi)
+    0.4482883573538263579148237
+    >>> airybi(-100000,-3); airybi(-inf,-3)
+    -44828.52827206932872493133
+    -inf
+    >>> airybi(-100000,-4); airybi(-inf,-4)
+    2241411040.437759489540248
+    +inf
+
 """
+
+airyaizero = r"""
+Gives the `k`-th zero of the Airy Ai-function,
+i.e. the `k`-th number `a_k` ordered by magnitude for which
+`\operatorname{Ai}(a_k) = 0`.
+
+Optionally, with *derivative=1*, the corresponding
+zero `a'_k` of the derivative function, i.e.
+`\operatorname{Ai}'(a'_k) = 0`, is computed.
+
+**Examples**
+
+Some values of `a_k`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airyaizero(1)
+    -2.338107410459767038489197
+    >>> airyaizero(2)
+    -4.087949444130970616636989
+    >>> airyaizero(3)
+    -5.520559828095551059129856
+    >>> airyaizero(1000)
+    -281.0315196125215528353364
+
+Some values of `a'_k`::
+
+    >>> airyaizero(1,1)
+    -1.018792971647471089017325
+    >>> airyaizero(2,1)
+    -3.248197582179836537875424
+    >>> airyaizero(3,1)
+    -4.820099211178735639400616
+    >>> airyaizero(1000,1)
+    -280.9378080358935070607097
+
+Verification::
+
+    >>> chop(airyai(airyaizero(1)))
+    0.0
+    >>> chop(airyai(airyaizero(1,1),1))
+    0.0
+
+"""
+
+airybizero = r"""
+With *complex=False*, gives the `k`-th real zero of the Airy Bi-function,
+i.e. the `k`-th number `b_k` ordered by magnitude for which
+`\operatorname{Bi}(b_k) = 0`.
+
+With *complex=True*, gives the `k`-th complex zero in the upper
+half plane `\beta_k`. Also the conjugate `\overline{\beta_k}`
+is a zero.
+
+Optionally, with *derivative=1*, the corresponding
+zero `b'_k` or `\beta'_k` of the derivative function, i.e.
+`\operatorname{Bi}'(b'_k) = 0` or `\operatorname{Bi}'(\beta'_k) = 0`,
+is computed.
+
+**Examples**
+
+Some values of `b_k`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> airybizero(1)
+    -1.17371322270912792491998
+    >>> airybizero(2)
+    -3.271093302836352715680228
+    >>> airybizero(3)
+    -4.830737841662015932667709
+    >>> airybizero(1000)
+    -280.9378112034152401578834
+
+Some values of `b_k`::
+
+    >>> airybizero(1,1)
+    -2.294439682614123246622459
+    >>> airybizero(2,1)
+    -4.073155089071828215552369
+    >>> airybizero(3,1)
+    -5.512395729663599496259593
+    >>> airybizero(1000,1)
+    -281.0315164471118527161362
+
+Some values of `\beta_k`::
+
+    >>> airybizero(1,complex=True)
+    (0.9775448867316206859469927 + 2.141290706038744575749139j)
+    >>> airybizero(2,complex=True)
+    (1.896775013895336346627217 + 3.627291764358919410440499j)
+    >>> airybizero(3,complex=True)
+    (2.633157739354946595708019 + 4.855468179979844983174628j)
+    >>> airybizero(1000,complex=True)
+    (140.4978560578493018899793 + 243.3907724215792121244867j)
+
+Some values of `\beta'_k`::
+
+    >>> airybizero(1,1,complex=True)
+    (0.2149470745374305676088329 + 1.100600143302797880647194j)
+    >>> airybizero(2,1,complex=True)
+    (1.458168309223507392028211 + 2.912249367458445419235083j)
+    >>> airybizero(3,1,complex=True)
+    (2.273760763013482299792362 + 4.254528549217097862167015j)
+    >>> airybizero(1000,1,complex=True)
+    (140.4509972835270559730423 + 243.3096175398562811896208j)
+
+Verification::
+
+    >>> chop(airybi(airybizero(1)))
+    0.0
+    >>> chop(airybi(airybizero(1,1),1))
+    0.0
+    >>> u = airybizero(1,complex=True)
+    >>> chop(airybi(u))
+    0.0
+    >>> chop(airybi(conj(u)))
+    0.0
+
+The complex zeros (in the upper and lower half-planes respectively)
+asymptotically approach the rays `z = R \exp(\pm i \pi /3)`::
+
+    >>> arg(airybizero(1,complex=True))
+    1.142532510286334022305364
+    >>> arg(airybizero(1000,complex=True))
+    1.047271114786212061583917
+    >>> arg(airybizero(1000000,complex=True))
+    1.047197624741816183341355
+    >>> pi/3
+    1.047197551196597746154214
+
+"""
+
 
 ellipk = r"""
 Evaluates the complete elliptic integral of the first kind,
@@ -4113,17 +4873,16 @@ Evaluates the complete elliptic integral of the first kind,
 
 .. math ::
 
-    K(m) = \int_0^{\pi/2} \frac{1}{\sqrt{1-m \sin^2 t}} dt.
+    K(m) = \int_0^{\pi/2} \frac{dt}{\sqrt{1-m \sin^2 t}} \, = \,
+    \frac{\pi}{2} \,_2F_1\left(\frac{1}{2}, \frac{1}{2}, 1, m\right).
 
 Note that the argument is the parameter `m = k^2`,
 not the modulus `k` which is sometimes used.
 
-Alternatively, in terms of a hypergeometric function,
-we have:
+**Plots**
 
-.. math ::
-
-    K(m) = \frac{\pi}{2} \,_2F_1(1/2, 1/2, 1, m)
+.. literalinclude :: /modules/mpmath/plots/ellipk.py
+.. image :: /modules/mpmath/plots/ellipk.png
 
 **Examples**
 
@@ -4163,67 +4922,6 @@ A definite integral::
 
     >>> quad(ellipk, [0, 1])
     2.0
-"""
-
-ellipe = r"""
-Evaluates the complete elliptic integral of the second kind,
-`E(m)`, defined by
-
-.. math ::
-
-    E(m) = \int_0^{\pi/2} \sqrt{1-m \sin^2 t} dt.
-
-Note that the argument is the parameter `m = k^2`,
-not the modulus `k` which is sometimes used.
-
-Alternatively, in terms of a hypergeometric function,
-we have:
-
-.. math ::
-
-    E(m) = \frac{\pi}{2} \,_2F_1(1/2, -1/2, 1, m)
-
-**Examples**
-
-Basic values and limits::
-
-    >>> from mpmath import *
-    >>> mp.dps = 25; mp.pretty = True
-    >>> ellipe(0)
-    1.570796326794896619231322
-    >>> ellipe(1)
-    1.0
-    >>> ellipe(-1)
-    1.910098894513856008952381
-    >>> ellipe(2)
-    (0.5990701173677961037199612 + 0.5990701173677961037199612j)
-    >>> ellipe(inf)
-    (0.0 + +infj)
-    >>> ellipe(-inf)
-    +inf
-
-Verifying the defining integral and hypergeometric
-representation::
-
-    >>> ellipe(0.5)
-    1.350643881047675502520175
-    >>> quad(lambda t: sqrt(1-0.5*sin(t)**2), [0, pi/2])
-    1.350643881047675502520175
-    >>> pi/2*hyp2f1(0.5,-0.5,1,0.5)
-    1.350643881047675502520175
-
-Evaluation is supported for arbitrary complex `m`::
-
-    >>> ellipe(0.5+0.25j)
-    (1.360868682163129682716687 - 0.1238733442561786843557315j)
-    >>> ellipe(3+4j)
-    (1.499553520933346954333612 - 1.577879007912758274533309j)
-
-A definite integral::
-
-    >>> quad(ellipe, [0,1])
-    1.333333333333333333333333
-
 """
 
 agm = r"""
@@ -4290,7 +4988,7 @@ numbers::
     (2.51055133276184 + 0.547394054060638j)
 
 The AGM iteration converges very quickly (each step doubles
-the number of correct digits), so :func:`agm` supports efficient
+the number of correct digits), so :func:`~mpmath.agm` supports efficient
 high-precision evaluation::
 
     >>> mp.dps = 10000
@@ -4369,9 +5067,9 @@ Evaluation at negative integer orders::
 
     >>> gegenbauer(-4, 2, 1.75)
     -1.0
-    >>> chop(gegenbauer(-4, 3, 1.75))
+    >>> gegenbauer(-4, 3, 1.75)
     0.0
-    >>> chop(gegenbauer(-4, 2j, 1.75))
+    >>> gegenbauer(-4, 2j, 1.75)
     0.0
     >>> gegenbauer(-7, 0.5, 3)
     8989.0
@@ -4400,8 +5098,8 @@ The Gegenbauer polynomials are orthogonal on `[-1, 1]` with respect
 to the weight `(1-z^2)^{a-\frac{1}{2}}`::
 
     >>> a, n, m = 2.5, 4, 5
-    >>> Cn = lambda z: gegenbauer(n, a, z)
-    >>> Cm = lambda z: gegenbauer(m, a, z)
+    >>> Cn = lambda z: gegenbauer(n, a, z, zeroprec=1000)
+    >>> Cm = lambda z: gegenbauer(m, a, z, zeroprec=1000)
     >>> chop(quad(lambda z: Cn(z)*Cm(z)*(1-z**2)*(a-0.5), [-1, 1]))
     0.0
 """
@@ -4420,6 +5118,11 @@ Laguerre polynomial, the sequence of which begins
 
 The Laguerre polynomials are orthogonal with respect to the weight
 `z^a e^{-z}` on `[0, \infty)`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/laguerre.py
+.. image :: /modules/mpmath/plots/laguerre.png
 
 **Examples**
 
@@ -4493,6 +5196,11 @@ for `\Re{z} > 0`, or generally
         \,_1F_1\left(\frac{1-n}{2}, \frac{3}{2}, z^2\right)
     \right).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hermite.py
+.. image :: /modules/mpmath/plots/hermite.png
+
 **Examples**
 
 Evaluation for arbitrary arguments::
@@ -4511,7 +5219,7 @@ Evaluation for arbitrary arguments::
     >>> hermite(-3, -10**8)
     1.675159751729877682920301e+4342944819032534
     >>> hermite(2+3j, -1+2j)
-    (-0.076521306029935133894219 - 0.1084662449961914580276007j)
+    (-0.07652130602993513389421901 - 0.1084662449961914580276007j)
 
 Coefficients of the first few Hermite polynomials are::
 
@@ -4590,7 +5298,7 @@ A special evaluation is `P_n^{(a,b)}(1) = {n+a \choose n}`::
 A Jacobi polynomial of degree `n` is equal to its
 Taylor polynomial of degree `n`. The explicit
 coefficients of Jacobi polynomials can therefore
-be recovered easily using :func:`taylor`::
+be recovered easily using :func:`~mpmath.taylor`::
 
     >>> for n in range(5):
     ...     nprint(taylor(lambda x: jacobi(n,1,2,x), 0, n))
@@ -4638,7 +5346,7 @@ equation
 
   (1-x^2) y'' + (b-a-(a+b+2)x) y' + n (n+a+b+1) y = 0.
 
-We can verify that :func:`jacobi` approximately satisfies
+We can verify that :func:`~mpmath.jacobi` approximately satisfies
 this equation::
 
     >>> from mpmath import *
@@ -4687,6 +5395,11 @@ A third definition is in terms of the hypergeometric function
 .. math ::
 
     P_n(x) = \,_2F_1\left(-n, n+1, 1, \frac{1-x}{2}\right)
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/legendre.py
+.. image :: /modules/mpmath/plots/legendre.png
 
 **Basic evaluation**
 
@@ -4766,7 +5479,7 @@ We can verify this numerically::
 legenp = r"""
 Calculates the (associated) Legendre function of the first kind of
 degree *n* and order *m*, `P_n^m(z)`. Taking `m = 0` gives the ordinary
-Legendre function of the second kind, `P_n(z)`. The parameters may be
+Legendre function of the first kind, `P_n(z)`. The parameters may be
 complex numbers.
 
 In terms of the Gauss hypergeometric function, the (associated) Legendre
@@ -4796,7 +5509,7 @@ The general solution of the (associated) Legendre differential equation
 
 is given by `C_1 P_n^m(z) + C_2 Q_n^m(z)` for arbitrary constants
 `C_1`, `C_2`, where `Q_n^m(z)` is a Legendre function of the
-second kind as implemented by :func:`legenq`.
+second kind as implemented by :func:`~mpmath.legenq`.
 
 **Examples**
 
@@ -4840,7 +5553,7 @@ complex numbers.
 
 The Legendre functions of the second kind give a second set of
 solutions to the (associated) Legendre differential equation.
-(See :func:`legenp`.)
+(See :func:`~mpmath.legenp`.)
 Unlike the Legendre functions of the first kind, they are not
 polynomials of `z` for integer `n`, `m` but rational or logarithmic
 functions with poles at `z = \pm 1`.
@@ -4909,6 +5622,11 @@ case of the Jacobi polynomials, and by extension of the
 hypergeometric function `\,_2F_1`. They can thus also be
 evaluated for nonintegral `n`.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/chebyt.py
+.. image :: /modules/mpmath/plots/chebyt.png
+
 **Basic evaluation**
 
 The coefficients of the `n`-th polynomial can be recovered
@@ -4953,6 +5671,11 @@ The Chebyshev polynomials of the second kind are a special
 case of the Jacobi polynomials, and by extension of the
 hypergeometric function `\,_2F_1`. They can thus also be
 evaluated for nonintegral `n`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/chebyu.py
+.. image :: /modules/mpmath/plots/chebyu.png
 
 **Basic evaluation**
 
@@ -5017,6 +5740,13 @@ With *derivative* = `m \ne 0`, the `m`-th derivative
     \frac{d^m}{dx^m} J_n(x)
 
 is computed.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besselj.py
+.. image :: /modules/mpmath/plots/besselj.png
+.. literalinclude :: /modules/mpmath/plots/besselj_c.py
+.. image :: /modules/mpmath/plots/besselj_c.png
 
 **Examples**
 
@@ -5105,7 +5835,7 @@ correspond to integration)::
 
 Differentiation with a noninteger order gives the fractional derivative
 in the sense of the Riemann-Liouville differintegral, as computed by
-:func:`differint`::
+:func:`~mpmath.differint`::
 
     >>> mp.dps = 15
     >>> besselj(1, 3.5, 0.75)
@@ -5130,6 +5860,13 @@ With *derivative* = `m \ne 0`, the `m`-th derivative
     \frac{d^m}{dx^m} I_n(x)
 
 is computed.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besseli.py
+.. image :: /modules/mpmath/plots/besseli.png
+.. literalinclude :: /modules/mpmath/plots/besseli_c.py
+.. image :: /modules/mpmath/plots/besseli_c.png
 
 **Examples**
 
@@ -5199,6 +5936,13 @@ limit. With *derivative* = `m \ne 0`, the `m`-th derivative
 
 is computed.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/bessely.py
+.. image :: /modules/mpmath/plots/bessely.png
+.. literalinclude :: /modules/mpmath/plots/bessely_c.py
+.. image :: /modules/mpmath/plots/bessely_c.png
+
 **Examples**
 
 Some values of `Y_n(x)`::
@@ -5255,6 +5999,13 @@ second kind,
 For `n` an integer, this formula should be understood as a
 limit.
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/besselk.py
+.. image :: /modules/mpmath/plots/besselk.png
+.. literalinclude :: /modules/mpmath/plots/besselk_c.py
+.. image :: /modules/mpmath/plots/besselk_c.png
+
 **Examples**
 
 Evaluation is supported for arbitrary complex arguments::
@@ -5288,7 +6039,7 @@ The point `x = 0` is a singularity (logarithmic if `n = 0`)::
     >>> besselk(1,0)
     +inf
     >>> for n in range(-4, 5):
-    ...     print besselk(n, '1e-1000')
+    ...     print(besselk(n, '1e-1000'))
     ...
     4.8e+4001
     8.0e+3000
@@ -5310,6 +6061,13 @@ which is the complex combination of Bessel functions given by
 
     H_n^{(1)}(x) = J_n(x) + i Y_n(x).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hankel1.py
+.. image :: /modules/mpmath/plots/hankel1.png
+.. literalinclude :: /modules/mpmath/plots/hankel1_c.py
+.. image :: /modules/mpmath/plots/hankel1_c.png
+
 **Examples**
 
 The Hankel function is generally complex-valued::
@@ -5330,6 +6088,13 @@ which is the complex combination of Bessel functions given by
 
     H_n^{(2)}(x) = J_n(x) - i Y_n(x).
 
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hankel2.py
+.. image :: /modules/mpmath/plots/hankel2.png
+.. literalinclude :: /modules/mpmath/plots/hankel2_c.py
+.. image :: /modules/mpmath/plots/hankel2_c.png
+
 **Examples**
 
 The Hankel function is generally complex-valued::
@@ -5348,9 +6113,9 @@ of `w \exp(w)`. In other words, the value of `W(z)` is such that
 `z = W(z) \exp(W(z))` for any complex number `z`.
 
 The Lambert W function is a multivalued function with infinitely
-many branches. Each branch gives a separate solution of the
-equation `w \exp(w)`. All branches are supported by
-:func:`lambertw`:
+many branches `W_k(z)`, indexed by `k \in \mathbb{Z}`. Each branch
+gives a different solution `w` of the equation `z = w \exp(w)`.
+All branches are supported by :func:`~mpmath.lambertw`:
 
 * ``lambertw(z)`` gives the principal solution (branch 0)
 
@@ -5361,26 +6126,38 @@ principal branch (`k = 0`) is real for real `z > -1/e`, and the
 `k = -1` branch is real for `-1/e < z < 0`. All branches except
 `k = 0` have a logarithmic singularity at `z = 0`.
 
+The definition, implementation and choice of branches
+is based on [Corless]_.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lambertw.py
+.. image :: /modules/mpmath/plots/lambertw.png
+.. literalinclude :: /modules/mpmath/plots/lambertw_c.py
+.. image :: /modules/mpmath/plots/lambertw_c.png
+
 **Basic examples**
 
 The Lambert W function is the inverse of `w \exp(w)`::
 
     >>> from mpmath import *
-    >>> mp.dps = 35; mp.pretty = True
+    >>> mp.dps = 25; mp.pretty = True
     >>> w = lambertw(1)
     >>> w
-    0.56714329040978387299996866221035555
+    0.5671432904097838729999687
     >>> w*exp(w)
     1.0
 
 Any branch gives a valid inverse::
 
     >>> w = lambertw(1, k=3)
-    >>> w    # doctest: +NORMALIZE_WHITESPACE
-    (-2.8535817554090378072068187234910812 +
-      17.113535539412145912607826671159289j)
-    >>> w*exp(w)
-    (1.0 + 3.5075477124212226194278700785075126e-36j)
+    >>> w
+    (-2.853581755409037807206819 + 17.11353553941214591260783j)
+    >>> w = lambertw(1, k=25)
+    >>> w
+    (-5.047020464221569709378686 + 155.4763860949415867162066j)
+    >>> chop(w*exp(w))
+    1.0
 
 **Applications to equation-solving**
 
@@ -5393,26 +6170,22 @@ tower `z^{z^{z^{\ldots}}}`::
     ...         return z
     ...     return z ** tower(z, n-1)
     ...
-    >>> tower(0.5, 100)
-    0.641185744504986
-    >>> mp.dps = 50
+    >>> tower(mpf(0.5), 100)
+    0.6411857445049859844862005
     >>> -lambertw(-log(0.5))/log(0.5)
-    0.6411857445049859844862004821148236665628209571911
+    0.6411857445049859844862005
 
 **Properties**
 
 The Lambert W function grows roughly like the natural logarithm
 for large arguments::
 
-    >>> mp.dps = 15
-    >>> lambertw(1000)
-    5.2496028524016
-    >>> log(1000)
-    6.90775527898214
-    >>> lambertw(10**100)
-    224.843106445119
-    >>> log(10**100)
-    230.258509299405
+    >>> lambertw(1000); log(1000)
+    5.249602852401596227126056
+    6.907755278982137052053974
+    >>> lambertw(10**100); log(10**100)
+    224.8431064451185015393731
+    230.2585092994045684017991
 
 The principal branch of the Lambert W function has a rational
 Taylor series expansion around `z = 0`::
@@ -5422,11 +6195,10 @@ Taylor series expansion around `z = 0`::
 
 Some special values and limits are::
 
-    >>> mp.dps = 15
     >>> lambertw(0)
     0.0
     >>> lambertw(1)
-    0.567143290409784
+    0.5671432904097838729999687
     >>> lambertw(e)
     1.0
     >>> lambertw(inf)
@@ -5435,52 +6207,41 @@ Some special values and limits are::
     -inf
     >>> lambertw(0, k=3)
     -inf
+    >>> lambertw(inf, k=2)
+    (+inf + 12.56637061435917295385057j)
     >>> lambertw(inf, k=3)
-    (+inf + 18.8495559215388j)
+    (+inf + 18.84955592153875943077586j)
+    >>> lambertw(-inf, k=3)
+    (+inf + 21.9911485751285526692385j)
 
 The `k = 0` and `k = -1` branches join at `z = -1/e` where
 `W(z) = -1` for both branches. Since `-1/e` can only be represented
-approximately with mpmath numbers, evaluating the Lambert W function
-at this point only gives `-1` approximately::
+approximately with binary floating-point numbers, evaluating the
+Lambert W function at this point only gives `-1` approximately::
 
-    >>> mp.dps = 25
     >>> lambertw(-1/e, 0)
-    -0.999999999999837133022867
+    -0.9999999999998371330228251
     >>> lambertw(-1/e, -1)
-    -1.00000000000016286697718
+    -1.000000000000162866977175
 
 If `-1/e` happens to round in the negative direction, there might be
 a small imaginary part::
 
     >>> mp.dps = 15
     >>> lambertw(-1/e)
-    (-1.0 + 8.22007971511612e-9j)
+    (-1.0 + 8.22007971483662e-9j)
+    >>> lambertw(-1/e+eps)
+    -0.999999966242188
 
-**Possible issues**
+**References**
 
-The evaluation can become inaccurate very close to the branch point
-at `-1/e`. In some corner cases, :func:`lambertw` might currently
-fail to converge, or can end up on the wrong branch.
-
-**Algorithm**
-
-Halley's iteration is used to invert `w \exp(w)`, using a first-order
-asymptotic approximation (`O(\log(w))` or `O(w)`) as the initial
-estimate.
-
-The definition, implementation and choice of branches is based
-on Corless et al, "On the Lambert W function", Adv. Comp. Math. 5
-(1996) 329-359, available online here:
-http://www.apmaths.uwo.ca/~djeffrey/Offprints/W-adv-cm.pdf
-
-TODO: use a series expansion when extremely close to the branch point
-at `-1/e` and make sure that the proper branch is chosen there
+1. [Corless]_
 """
 
 barnesg = r"""
 Evaluates the Barnes G-function, which generalizes the
-superfactorial (:func:`superfac`) and by extension also the
-hyperfactorial (:func:`hyperfac`) to the complex numbers
+superfactorial (:func:`~mpmath.superfac`) and by extension also the
+hyperfactorial (:func:`~mpmath.hyperfac`) to the complex numbers
 in an analogous way to how the gamma function generalizes
 the ordinary factorial.
 
@@ -5574,6 +6335,20 @@ precision::
     0.000000000021852360840356557241543036724799812371995850552234
     >>> q.imag
     -0.00000000000070035335320062304849020654215545839053210041457588
+    >>> mp.dps = 15
+    >>> barnesg(100)
+    3.10361006263698e+6626
+    >>> barnesg(-101)
+    0.0
+    >>> barnesg(-10.5)
+    5.94463017605008e+25
+    >>> barnesg(-10000.5)
+    -6.14322868174828e+167480422
+    >>> barnesg(1000j)
+    (5.21133054865546e-1173597 + 4.27461836811016e-1173597j)
+    >>> barnesg(-1000+1000j)
+    (2.43114569750291e+1026623 + 2.24851410674842e+1026623j)
+
 
 **References**
 
@@ -5593,7 +6368,7 @@ consecutive factorials
     \mathrm{sf}(n) = \prod_{k=1}^n k!
 
 For general complex `z`, `\mathrm{sf}(z)` is defined
-in terms of the Barnes G-function (see :func:`barnesg`).
+in terms of the Barnes G-function (see :func:`~mpmath.barnesg`).
 
 **Examples**
 
@@ -5602,7 +6377,7 @@ The first few superfactorials are (OEIS A000178)::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(10):
-    ...     print n, superfac(n)
+    ...     print("%s %s" % (n, superfac(n)))
     ...
     0 1.0
     1 1.0
@@ -5649,7 +6424,7 @@ Computes the hyperfactorial, defined for integers as the product
 
 The hyperfactorial satisfies the recurrence formula `H(z) = z^z H(z-1)`.
 It can be defined more generally in terms of the Barnes G-function (see
-:func:`barnesg`) and the gamma function by the formula
+:func:`~mpmath.barnesg`) and the gamma function by the formula
 
 .. math ::
 
@@ -5672,7 +6447,7 @@ The rapidly-growing sequence of hyperfactorials begins
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(10):
-    ...     print n, hyperfac(n)
+    ...     print("%s %s" % (n, hyperfac(n)))
     ...
     0 1.0
     1 1.0
@@ -5727,7 +6502,7 @@ definition::
     ...     quad(lambda t: loggamma(t+1), [0, z]))
     15.9842119922237
 
-:func:`hyperfac` supports arbitrary-precision evaluation::
+:func:`~mpmath.hyperfac` supports arbitrary-precision evaluation::
 
     >>> mp.dps = 50
     >>> hyperfac(10)
@@ -5742,27 +6517,141 @@ definition::
 
 """
 
+rgamma = r"""
+Computes the reciprocal of the gamma function, `1/\Gamma(z)`. This
+function evaluates to zero at the poles
+of the gamma function, `z = 0, -1, -2, \ldots`.
 
-loggamma = r"""
-Computes the log-gamma function. Unlike `\ln(\Gamma(z))`, which
-has infinitely many complex branch cuts, the log-gamma function
-only has a single branch cut along the negative half-axis.
-The functions are identical only on (and very close to) the positive
-half-axis; elsewhere they differ by `2 n \pi i` (the real parts
-agree)::
+**Examples**
+
+Basic examples::
 
     >>> from mpmath import *
-    >>> mp.dps = 15; mp.pretty = True
-    >>> loggamma(13.2), log(gamma(13.2))
-    (20.494004194566, 20.494004194566)
-    >>> loggamma(3+4j)
-    (-1.75662678460378 + 4.74266443803466j)
-    >>> log(gamma(3+4j))
-    (-1.75662678460378 - 1.54052086914493j)
+    >>> mp.dps = 25; mp.pretty = True
+    >>> rgamma(1)
+    1.0
+    >>> rgamma(4)
+    0.1666666666666666666666667
+    >>> rgamma(0); rgamma(-1)
+    0.0
+    0.0
+    >>> rgamma(1000)
+    2.485168143266784862783596e-2565
+    >>> rgamma(inf)
+    0.0
 
-Note: this is a placeholder implementation. It is slower than
-:func:`gamma`, and is in particular *not* faster than :func:`gamma`
-for large arguments.
+A definite integral that can be evaluated in terms of elementary
+integrals::
+
+    >>> quad(rgamma, [0,inf])
+    2.807770242028519365221501
+    >>> e + quad(lambda t: exp(-t)/(pi**2+log(t)**2), [0,inf])
+    2.807770242028519365221501
+"""
+
+loggamma = r"""
+Computes the principal branch of the log-gamma function,
+`\ln \Gamma(z)`. Unlike `\ln(\Gamma(z))`, which has infinitely many
+complex branch cuts, the principal log-gamma function only has a single
+branch cut along the negative half-axis. The principal branch
+continuously matches the asymptotic Stirling expansion
+
+.. math ::
+
+    \ln \Gamma(z) \sim \frac{\ln(2 \pi)}{2} +
+        \left(z-\frac{1}{2}\right) \ln(z) - z + O(z^{-1}).
+
+The real parts of both functions agree, but their imaginary
+parts generally differ by `2 n \pi` for some `n \in \mathbb{Z}`.
+They coincide for `z \in \mathbb{R}, z > 0`.
+
+Computationally, it is advantageous to use :func:`~mpmath.loggamma`
+instead of :func:`~mpmath.gamma` for extremely large arguments.
+
+**Examples**
+
+Comparing with `\ln(\Gamma(z))`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> loggamma('13.2'); log(gamma('13.2'))
+    20.49400419456603678498394
+    20.49400419456603678498394
+    >>> loggamma(3+4j)
+    (-1.756626784603784110530604 + 4.742664438034657928194889j)
+    >>> log(gamma(3+4j))
+    (-1.756626784603784110530604 - 1.540520869144928548730397j)
+    >>> log(gamma(3+4j)) + 2*pi*j
+    (-1.756626784603784110530604 + 4.742664438034657928194889j)
+
+Note the imaginary parts for negative arguments::
+
+    >>> loggamma(-0.5); loggamma(-1.5); loggamma(-2.5)
+    (1.265512123484645396488946 - 3.141592653589793238462643j)
+    (0.8600470153764810145109327 - 6.283185307179586476925287j)
+    (-0.05624371649767405067259453 - 9.42477796076937971538793j)
+
+Some special values::
+
+    >>> loggamma(1); loggamma(2)
+    0.0
+    0.0
+    >>> loggamma(3); +ln2
+    0.6931471805599453094172321
+    0.6931471805599453094172321
+    >>> loggamma(3.5); log(15*sqrt(pi)/8)
+    1.200973602347074224816022
+    1.200973602347074224816022
+    >>> loggamma(inf)
+    +inf
+
+Huge arguments are permitted::
+
+    >>> loggamma('1e30')
+    6.807755278982137052053974e+31
+    >>> loggamma('1e300')
+    6.897755278982137052053974e+302
+    >>> loggamma('1e3000')
+    6.906755278982137052053974e+3003
+    >>> loggamma('1e100000000000000000000')
+    2.302585092994045684007991e+100000000000000000020
+    >>> loggamma('1e30j')
+    (-1.570796326794896619231322e+30 + 6.807755278982137052053974e+31j)
+    >>> loggamma('1e300j')
+    (-1.570796326794896619231322e+300 + 6.897755278982137052053974e+302j)
+    >>> loggamma('1e3000j')
+    (-1.570796326794896619231322e+3000 + 6.906755278982137052053974e+3003j)
+
+The log-gamma function can be integrated analytically
+on any interval of unit length::
+
+    >>> z = 0
+    >>> quad(loggamma, [z,z+1]); log(2*pi)/2
+    0.9189385332046727417803297
+    0.9189385332046727417803297
+    >>> z = 3+4j
+    >>> quad(loggamma, [z,z+1]); (log(z)-1)*z + log(2*pi)/2
+    (-0.9619286014994750641314421 + 5.219637303741238195688575j)
+    (-0.9619286014994750641314421 + 5.219637303741238195688575j)
+
+The derivatives of the log-gamma function are given by the
+polygamma function (:func:`~mpmath.psi`)::
+
+    >>> diff(loggamma, -4+3j); psi(0, -4+3j)
+    (1.688493531222971393607153 + 2.554898911356806978892748j)
+    (1.688493531222971393607153 + 2.554898911356806978892748j)
+    >>> diff(loggamma, -4+3j, 2); psi(1, -4+3j)
+    (-0.1539414829219882371561038 - 0.1020485197430267719746479j)
+    (-0.1539414829219882371561038 - 0.1020485197430267719746479j)
+
+The log-gamma function satisfies an additive form of the
+recurrence relation for the ordinary gamma function::
+
+    >>> z = 2+3j
+    >>> loggamma(z); loggamma(z+1) - log(z)
+    (-2.092851753092733349564189 + 2.302396543466867626153708j)
+    (-2.092851753092733349564189 + 2.302396543466867626153708j)
+
 """
 
 siegeltheta = r"""
@@ -5777,7 +6666,7 @@ Computes the Riemann-Siegel theta function,
 
 The Riemann-Siegel theta function is important in
 providing the phase factor for the Z-function
-(see :func:`siegelz`). Evaluation is supported for real and
+(see :func:`~mpmath.siegelz`). Evaluation is supported for real and
 complex arguments::
 
     >>> from mpmath import *
@@ -5792,6 +6681,14 @@ complex arguments::
     -1.767547952812290388302216
     >>> siegeltheta(10+0.25j)
     (-3.068638039426838572528867 + 0.05804937947429712998395177j)
+
+Arbitrary derivatives may be computed with derivative = k
+
+    >>> siegeltheta(1234, derivative=2)
+    0.0004051864079114053109473741
+    >>> diff(siegeltheta, 1234, n=2)
+    0.0004051864079114053109473741
+
 
 The Riemann-Siegel theta function has odd symmetry around `t = 0`,
 two local extreme points and three real roots including 0 (located
@@ -5817,7 +6714,7 @@ for `\theta(t)`, to first order given by::
 grampoint = r"""
 Gives the `n`-th Gram point `g_n`, defined as the solution
 to the equation `\theta(g_n) = \pi n` where `\theta(t)`
-is the Riemann-Siegel theta function (:func:`siegeltheta`).
+is the Riemann-Siegel theta function (:func:`~mpmath.siegeltheta`).
 
 The first few Gram points are::
 
@@ -5845,10 +6742,10 @@ A large Gram point::
     3293531632.728335454561153
 
 Gram points are useful when studying the Z-function
-(:func:`siegelz`). See the documentation of that function
+(:func:`~mpmath.siegelz`). See the documentation of that function
 for additional examples.
 
-:func:`grampoint` can solve the defining equation for
+:func:`~mpmath.grampoint` can solve the defining equation for
 nonintegral `n`. There is a fixed point where `g(x) = x`::
 
     >>> findroot(lambda x: grampoint(x) - x, 10000)
@@ -5867,9 +6764,9 @@ Computes the Z-function, also known as the Riemann-Siegel Z function,
 
     Z(t) = e^{i \theta(t)} \zeta(1/2+it)
 
-where `\zeta(s)` is the Riemann zeta function (:func:`zeta`)
+where `\zeta(s)` is the Riemann zeta function (:func:`~mpmath.zeta`)
 and where `\theta(t)` denotes the Riemann-Siegel theta function
-(see :func:`siegeltheta`).
+(see :func:`~mpmath.siegeltheta`).
 
 Evaluation is supported for real and complex arguments::
 
@@ -5879,6 +6776,15 @@ Evaluation is supported for real and complex arguments::
     -0.7363054628673177346778998
     >>> siegelz(3+4j)
     (-0.1852895764366314976003936 - 0.2773099198055652246992479j)
+
+The first four derivatives are supported, using the
+optional *derivative* keyword argument::
+
+    >>> siegelz(1234567, derivative=3)
+    56.89689348495089294249178
+    >>> diff(siegelz, 1234567, n=3)
+    56.89689348495089294249178
+
 
 The Z-function has a Maclaurin expansion::
 
@@ -5909,7 +6815,7 @@ on sign changes::
     176.4414342977104188888926
 
 To locate roots, Gram points `g_n` which can be computed
-by :func:`grampoint` are useful. If `(-1)^n Z(g_n)` is
+by :func:`~mpmath.grampoint` are useful. If `(-1)^n Z(g_n)` is
 positive for two consecutive `n`, then `Z(t)` must have
 a zero between those points::
 
@@ -5926,40 +6832,9 @@ a zero between those points::
 
 """
 
-zetazero = r"""
-Returns the `n`-th nontrivial zero of the Riemann zeta function.
-The zero is computed using :func:`findroot`, using a table lookup
-for the initial point.
-
-The zeros are located on the critical line with real part 1/2::
-
-    >>> from mpmath import *
-    >>> mp.dps = 25; mp.pretty = True
-    >>> zetazero(1)
-    (0.5 + 14.13472514173469379045725j)
-    >>> zetazero(2)
-    (0.5 + 21.02203963877155499262848j)
-    >>> zetazero(20)
-    (0.5 + 77.14484006887480537268266j)
-
-Negative indices give the conjugate zeros (`n = 0` is undefined)::
-
-    >>> zetazero(-1)
-    (0.5 - 14.13472514173469379045725j)
-
-The default table only provides `n` up to 100. For larger `n` up to
-100,000,  :func:`zetazero` will automatically download a table
-(1.8 MB) from the website of Andrew Odlyzko [1]. This requires a
-fast connection to the internet. Alternatively, you can supply the
-url to a custom table. The table should be a file listing the
-imaginary parts as float literals, separated by line breaks.
-
-1. http://www.dtc.umn.edu/~odlyzko/zeta_tables/
-"""
-
 riemannr = r"""
 Evaluates the Riemann R function, a smooth approximation of the
-prime counting function `\pi(x)` (see :func:`primepi`). The Riemann
+prime counting function `\pi(x)` (see :func:`~mpmath.primepi`). The Riemann
 R function gives a fast numerical approximation useful e.g. to
 roughly estimate the number of primes in a given interval.
 
@@ -5981,7 +6856,7 @@ of the prime counting function. For example, it is wrong by at
 most 2 for `x < 1000`, and for `x = 10^9` differs from the exact
 value of `\pi(x)` by 79, or less than two parts in a million.
 It is about 10 times more accurate than the logarithmic integral
-estimate (see :func:`li`), which however is even faster to evaluate.
+estimate (see :func:`~mpmath.li`), which however is even faster to evaluate.
 It is orders of magnitude more accurate than the extremely
 fast `x/\log x` estimate.
 
@@ -5995,10 +6870,10 @@ integer::
     >>> mp.dps = 15; mp.pretty = True
     >>> primepi(50), riemannr(50)
     (15, 14.9757023241462)
-    >>> max(abs(primepi(n)-round(riemannr(n))) for n in range(100))
-    1.0
-    >>> max(abs(primepi(n)-round(riemannr(n))) for n in range(300))
-    2.0
+    >>> max(abs(primepi(n)-int(round(riemannr(n)))) for n in range(100))
+    1
+    >>> max(abs(primepi(n)-int(round(riemannr(n)))) for n in range(300))
+    2
 
 The Riemann R function can be evaluated for arguments far too large
 for exact determination of `\pi(x)` to be computationally
@@ -6020,16 +6895,16 @@ The fractional error is shown in parentheses::
     ...     n += 1
     ...     r, l = riemannr(10**n), li(10**n)
     ...     rerr, lerr = nstr((r-p)/p,3), nstr((l-p)/p,3)
-    ...     print "%i %i %s(%s) %s(%s)" % (n, p, r, rerr, l, lerr)
+    ...     print("%i %i %s(%s) %s(%s)" % (n, p, r, rerr, l, lerr))
     ...
-    1 4 4.56458314100509(1.41e-1) 6.1655995047873(5.41e-1)
-    2 25 25.6616332669242(2.65e-2) 30.1261415840796(2.05e-1)
-    3 168 168.359446281167(2.14e-3) 177.609657990152(5.72e-2)
-    4 1229 1226.93121834343(-1.68e-3) 1246.13721589939(1.39e-2)
-    5 9592 9587.43173884197(-4.76e-4) 9629.8090010508(3.94e-3)
-    6 78498 78527.3994291277(3.75e-4) 78627.5491594622(1.65e-3)
-    7 664579 664667.447564748(1.33e-4) 664918.405048569(5.11e-4)
-    8 5761455 5761551.86732017(1.68e-5) 5762209.37544803(1.31e-4)
+    1 4 4.56458314100509(0.141) 6.1655995047873(0.541)
+    2 25 25.6616332669242(0.0265) 30.1261415840796(0.205)
+    3 168 168.359446281167(0.00214) 177.609657990152(0.0572)
+    4 1229 1226.93121834343(-0.00168) 1246.13721589939(0.0139)
+    5 9592 9587.43173884197(-0.000476) 9629.8090010508(0.00394)
+    6 78498 78527.3994291277(0.000375) 78627.5491594622(0.00165)
+    7 664579 664667.447564748(0.000133) 664918.405048569(0.000511)
+    8 5761455 5761551.86732017(1.68e-5) 5762209.37544803(0.000131)
     9 50847534 50847455.4277214(-1.55e-6) 50849234.9570018(3.35e-5)
 
 The derivative of the Riemann R function gives the approximate
@@ -6059,8 +6934,8 @@ the number of primes less than or equal to `x`. The argument
 The prime counting function is very expensive to evaluate
 precisely for large `x`, and the present implementation is
 not optimized in any way. For numerical approximation of the
-prime counting function, it is better to use :func:`primepi2`
-or :func:`riemannr`.
+prime counting function, it is better to use :func:`~mpmath.primepi2`
+or :func:`~mpmath.riemannr`.
 
 Some values of the prime counting function::
 
@@ -6077,8 +6952,8 @@ Some values of the prime counting function::
 primepi2 = r"""
 Returns an interval (as an ``mpi`` instance) providing bounds
 for the value of the prime counting function `\pi(x)`. For small
-`x`, :func:`primepi2` returns an exact interval based on
-the output of :func:`primepi`. For `x > 2656`, a loose interval
+`x`, :func:`~mpmath.primepi2` returns an exact interval based on
+the output of :func:`~mpmath.primepi`. For `x > 2656`, a loose interval
 based on Schoenfeld's inequality
 
 .. math ::
@@ -6094,6 +6969,7 @@ Exact values of the prime counting function for small `x`::
 
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
+    >>> iv.dps = 15; iv.pretty = True
     >>> primepi2(10)
     [4.0, 4.0]
     >>> primepi2(100)
@@ -6110,20 +6986,20 @@ Loose intervals are generated for moderately large `x`:
 
 As `x` increases, the absolute error gets worse while the relative
 error improves. The exact value of `\pi(10^{23})` is
-1925320391606803968923, and :func:`primepi2` gives 9 significant
+1925320391606803968923, and :func:`~mpmath.primepi2` gives 9 significant
 digits::
 
     >>> p = primepi2(10**23)
     >>> p
     [1.9253203909477020467e+21, 1.925320392280406229e+21]
-    >>> p.delta / p.a
+    >>> mpf(p.delta) / mpf(p.a)
     6.9219865355293e-10
 
 A more precise, nonrigorous estimate for `\pi(x)` can be
-obtained using the Riemann R function (:func:`riemannr`).
-For large enough `x`, the value returned by :func:`primepi2`
+obtained using the Riemann R function (:func:`~mpmath.riemannr`).
+For large enough `x`, the value returned by :func:`~mpmath.primepi2`
 essentially amounts to a small perturbation of the value returned by
-:func:`riemannr`::
+:func:`~mpmath.riemannr`::
 
     >>> primepi2(10**100)
     [4.3619719871407024816e+97, 4.3619719871407032404e+97]
@@ -6133,7 +7009,7 @@ essentially amounts to a small perturbation of the value returned by
 
 primezeta = r"""
 Computes the prime zeta function, which is defined
-in analogy with the Riemann zeta function (:func:`zeta`)
+in analogy with the Riemann zeta function (:func:`~mpmath.zeta`)
 as
 
 .. math ::
@@ -6222,16 +7098,24 @@ The first few Bernoulli polynomials are::
     [-0.5, 1.0]
     [0.166667, -1.0, 1.0]
     [0.0, 0.5, -1.5, 1.0]
-    [-3.33333e-2, 0.0, 1.0, -2.0, 1.0]
+    [-0.0333333, 0.0, 1.0, -2.0, 1.0]
     [0.0, -0.166667, 0.0, 1.66667, -2.5, 1.0]
 
 At `z = 0`, the Bernoulli polynomial evaluates to a
-Bernoulli number (see :func:`bernoulli`)::
+Bernoulli number (see :func:`~mpmath.bernoulli`)::
 
     >>> bernpoly(12, 0), bernoulli(12)
     (-0.253113553113553, -0.253113553113553)
     >>> bernpoly(13, 0), bernoulli(13)
     (0.0, 0.0)
+
+Evaluation is accurate for large `n` and small `z`::
+
+    >>> mp.dps = 25
+    >>> bernpoly(100, 0.5)
+    2.838224957069370695926416e+78
+    >>> bernpoly(1000, 10.5)
+    5.318704469415522036482914e+1769
 
 """
 
@@ -6247,7 +7131,7 @@ the analytic continuation is implied.
 
 The polylogarithm should not be confused with the logarithmic
 integral (also denoted by Li or li), which is implemented
-as :func:`li`.
+as :func:`~mpmath.li`.
 
 **Examples**
 
@@ -6265,7 +7149,7 @@ A sample of polylogarithm evaluations is shown below::
     >>> polylog(3,0.5), 7*zeta(3)/8-pi**2*log(2)/12+log(2)**3/6
     (0.53721319360804, 0.53721319360804)
 
-:func:`polylog` can evaluate the analytic continuation of the
+:func:`~mpmath.polylog` can evaluate the analytic continuation of the
 polylogarithm when `s` is an integer::
 
     >>> polylog(2, 10)
@@ -6314,8 +7198,8 @@ Taylor series expansions around `z = 0` are::
     [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
     [0.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     [0.0, 1.0, 0.5, 0.333333, 0.25, 0.2]
-    [0.0, 1.0, 0.25, 0.111111, 6.25e-2, 4.0e-2]
-    [0.0, 1.0, 0.125, 3.7037e-2, 1.5625e-2, 8.0e-3]
+    [0.0, 1.0, 0.25, 0.111111, 0.0625, 0.04]
+    [0.0, 1.0, 0.125, 0.037037, 0.015625, 0.008]
 
 The series defining the polylogarithm is simultaneously
 a Taylor series and an L-series. For certain values of `z`, the
@@ -6367,22 +7251,22 @@ polynomial `B_n(x)`, the first few of which are
 
     B_3(x) = x^3+3x^2+x
 
-If `x = 1` or :func:`bell` is called with only one argument, it
+If `x = 1` or :func:`~mpmath.bell` is called with only one argument, it
 gives the `n`-th Bell number `B_n`, which is the number of
 partitions of a set with `n` elements. By setting the precision to
-at least `\log_{10} B_n` digits, :func:`bell` provides fast
+at least `\log_{10} B_n` digits, :func:`~mpmath.bell` provides fast
 calculation of exact Bell numbers.
 
-In general, :func:`bell` computes
+In general, :func:`~mpmath.bell` computes
 
 .. math ::
 
     B_n(x) = e^{-x} \left(\mathrm{sinc}(\pi n) + E_n(x)\right)
 
 where `E_n(x)` is the generalized exponential function implemented
-by :func:`polyexp`. This is an extension of Dobinski's formula [1],
+by :func:`~mpmath.polyexp`. This is an extension of Dobinski's formula [1],
 where the modification is the sinc term ensuring that `B_n(x)` is
-continuous in `n`; :func:`bell` can thus be evaluated,
+continuous in `n`; :func:`~mpmath.bell` can thus be evaluated,
 differentiated, etc for arbitrary complex arguments.
 
 **Examples**
@@ -6472,7 +7356,7 @@ logarithm; as a function of `s` (with `z` fixed), `E_s` is an L-series
 It is an entire function of both `s` and `z`.
 
 The polyexponential function provides a generalization of the
-Bell polynomials `B_n(x)` (see :func:`bell`) to noninteger orders `n`.
+Bell polynomials `B_n(x)` (see :func:`~mpmath.bell`) to noninteger orders `n`.
 In terms of the Bell polynomials,
 
 .. math ::
@@ -6524,7 +7408,7 @@ Evaluates the cyclotomic polynomial `\Phi_n(x)`, defined by
     \Phi_n(x) = \prod_{\zeta} (x - \zeta)
 
 where `\zeta` ranges over all primitive `n`-th roots of unity
-(see :func:`unitroots`). An equivalent representation, used
+(see :func:`~mpmath.unitroots`). An equivalent representation, used
 for computation, is
 
 .. math ::
@@ -6560,7 +7444,7 @@ using Taylor expansion::
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(9):
     ...     p = chop(taylor(lambda x: cyclotomic(n,x), 0, 10))
-    ...     print n,; nprint(p[:10+1-p[::-1].index(1)])
+    ...     print("%s %s" % (n, nstr(p[:10+1-p[::-1].index(1)])))
     ...
     0 [1.0]
     1 [-1.0, 1.0]
@@ -6594,13 +7478,13 @@ can be checked to agree with the list of primitive roots::
 
     >>> p = taylor(lambda x: cyclotomic(6,x), 0, 6)[:3]
     >>> for r in polyroots(p[::-1]):
-    ...     print r
+    ...     print(r)
     ...
     (0.5 - 0.8660254037844386467637232j)
     (0.5 + 0.8660254037844386467637232j)
     >>>
     >>> for r in unitroots(6, primitive=True):
-    ...     print r
+    ...     print(r)
     ...
     (0.5 + 0.8660254037844386467637232j)
     (0.5 - 0.8660254037844386467637232j)
@@ -6641,17 +7525,20 @@ given below should hopefully clear up any potential confusion.
 
 **Algorithm**
 
-The Meijer G-function is evaluated by rewriting it as a combination of `m`
-hypergeometric series each of degree `\,_pF_{q-1}`. Currently,
-evaluation will only work if `\,_pF_{q-1}` can be evaluated via
-:func:`hyper` for the given `z`, i.e. if either `z` is small enough
-for direct convergence or if the hypergeometric function in question is
-implemented with the appropriate analytic continuation / asymptotic
-expansion for large `z`.
+The Meijer G-function is evaluated as a combination of hypergeometric series.
+There are two versions of the function, which can be selected with
+the optional *series* argument.
 
-Keyword arguments are forwarded to :func:`hypercomb`. If :func:`meijerg`
-fails to return an accurate value, passing ``check_cancellation=True``
-may help.
+*series=1* uses a sum of `m` `\,_pF_{q-1}` functions of `z`
+
+*series=2* uses a sum of `n` `\,_qF_{p-1}` functions of `1/z`
+
+The default series is chosen based on the degree and `|z|` in order
+to be consistent with Mathematica's. This definition of the Meijer G-function
+has a discontinuity at `|z| = 1` for some orders, which can
+be avoided by explicitly specifying a series.
+
+Keyword arguments are forwarded to :func:`~mpmath.hypercomb`.
 
 **Examples**
 
@@ -6774,6 +7661,15 @@ be expanded as a messy combination of exponential integrals:
     ...     expint(2*b-2*a, -2*sqrt(-z))*expint(2*b-2*a, 2*sqrt(-z)))
     0.3323667133658557271898061
 
+In the following case, different series give different values::
+
+    >>> chop(meijerg([[1],[0.25]],[[3],[0.5]],-2))
+    -0.06417628097442437076207337
+    >>> meijerg([[1],[0.25]],[[3],[0.5]],-2,series=1)
+    0.1428699426155117511873047
+    >>> chop(meijerg([[1],[0.25]],[[3],[0.5]],-2,series=2))
+    -0.06417628097442437076207337
+
 **References**
 
 1. http://en.wikipedia.org/wiki/Meijer_G-function
@@ -6796,7 +7692,7 @@ Computes the Clausen sine function, defined formally by the series
 The special case `\mathrm{Cl}_2(z)` (i.e. ``clsin(2,z)``) is the classical
 "Clausen function". More generally, the Clausen function is defined for
 complex `s` and `z`, even when the series does not converge. The
-Clausen function is related to the polylogarithm (:func:`polylog`) as
+Clausen function is related to the polylogarithm (:func:`~mpmath.polylog`) as
 
 .. math ::
 
@@ -6806,7 +7702,7 @@ Clausen function is related to the polylogarithm (:func:`polylog`) as
     = \mathrm{Im}\left[\mathrm{Li}_s(e^{iz})\right] \quad (s, z \in \mathbb{R}),
 
 and this representation can be taken to provide the analytic continuation of the
-series. The complementary function :func:`clcos` gives the corresponding
+series. The complementary function :func:`~mpmath.clcos` gives the corresponding
 cosine sum.
 
 **Examples**
@@ -6894,6 +7790,13 @@ providing a finite sum for series such as
     >>> -cot(z/2)*csc(z/2)**2/4
     -0.1089406163841548817581392
 
+Call with ``pi=True`` to multiply `z` by `\pi` exactly::
+
+    >>> clsin(3, 3*pi)
+    -8.892316224968072424732898e-26
+    >>> clsin(3, 3, pi=True)
+    0.0
+
 Evaluation for complex `s`, `z` in a nonconvergent case::
 
     >>> s, z = -1-j, 1+2j
@@ -6912,7 +7815,7 @@ Computes the Clausen cosine function, defined formally by the series
     \mathrm{\widetilde{Cl}}_s(z) = \sum_{k=1}^{\infty} \frac{\cos(kz)}{k^s}.
 
 This function is complementary to the Clausen sine function
-:func:`clsin`. In terms of the polylogarithm,
+:func:`~mpmath.clsin`. In terms of the polylogarithm,
 
 .. math ::
 
@@ -7008,13 +7911,20 @@ function values)::
     -0.8671998890121841381913472
     -0.8671998890121841381913472
 
+Call with ``pi=True`` to multiply `z` by `\pi` exactly::
+
+    >>> clcos(-3, 2*pi)
+    2.997921055881167659267063e+102
+    >>> clcos(-3, 2, pi=True)
+    0.008333333333333333333333333
+
 Evaluation for complex `s`, `z` in a nonconvergent case::
 
     >>> s, z = -1-j, 1+2j
     >>> clcos(s, z)
     (0.9407430121562251476136807 + 0.715826296033590204557054j)
-    >>> extraprec(15)(nsum)(lambda k: cos(k*z)/k**s, [1,inf])
-    (0.9407430121562251476136807 + 0.7158262960335902045570541j)
+    >>> extraprec(20)(nsum)(lambda k: cos(k*z)/k**s, [1,inf])
+    (0.9407430121562251476136807 + 0.715826296033590204557054j)
 
 """
 
@@ -7027,7 +7937,7 @@ to the Whittaker differential equation
     \frac{d^2f}{dz^2} + \left(-\frac{1}{4}+\frac{k}{z}+
       \frac{(\frac{1}{4}-m^2)}{z^2}\right) f = 0.
 
-A second solution is given by :func:`whitw`.
+A second solution is given by :func:`~mpmath.whitw`.
 
 The Whittaker functions are defined in Abramowitz & Stegun, section 13.1.
 They are alternate forms of the confluent hypergeometric functions
@@ -7063,7 +7973,7 @@ Evaluation at zero::
     nan
     0.0
 
-We can verify that :func:`whitm` numerically satisfies the
+We can verify that :func:`~mpmath.whitm` numerically satisfies the
 differential equation for arbitrarily chosen values::
 
     >>> k = mpf(0.25)
@@ -7077,7 +7987,7 @@ differential equation for arbitrarily chosen values::
     0.0
     0.0
 
-An integral involving both :func:`whitm` and :func:`whitmw`,
+An integral involving both :func:`~mpmath.whitm` and :func:`~mpmath.whitw`,
 verifying evaluation along the real axis::
 
     >>> quad(lambda x: exp(-x)*whitm(3,2,x)*whitw(1,-2,x), [0,inf])
@@ -7089,7 +7999,7 @@ verifying evaluation along the real axis::
 
 whitw = r"""
 Evaluates the Whittaker function `W(k,m,z)`, which gives a second
-solution to the Whittaker differential equation. (See :func:`whitm`.)
+solution to the Whittaker differential equation. (See :func:`~mpmath.whitm`.)
 
 **Examples**
 
@@ -7119,7 +8029,7 @@ Evaluation at zero::
     nan
     +inf
 
-We can verify that :func:`whitw` numerically satisfies the
+We can verify that :func:`~mpmath.whitw` numerically satisfies the
 differential equation for arbitrarily chosen values::
 
     >>> k = mpf(0.25)
@@ -7143,7 +8053,12 @@ of the Bessel J function of a rotated argument
 
     J_n\left(x e^{3\pi i/4}\right) = \mathrm{ber}_n(x) + i \mathrm{bei}_n(x).
 
-The imaginary part is given by :func:`bei`.
+The imaginary part is given by :func:`~mpmath.bei`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ber.py
+.. image :: /modules/mpmath/plots/ber.png
 
 **Examples**
 
@@ -7172,7 +8087,7 @@ for complex arguments::
 bei = r"""
 Computes the Kelvin function bei, which for real arguments gives the
 imaginary part of the Bessel J function of a rotated argument.
-See :func:`ber`.
+See :func:`~mpmath.ber`.
 """
 
 ker = r"""
@@ -7183,7 +8098,12 @@ of the (rescaled) Bessel K function of a rotated argument
 
     e^{-\pi i/2} K_n\left(x e^{3\pi i/4}\right) = \mathrm{ker}_n(x) + i \mathrm{kei}_n(x).
 
-The imaginary part is given by :func:`kei`.
+The imaginary part is given by :func:`~mpmath.kei`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/ker.py
+.. image :: /modules/mpmath/plots/ker.png
 
 **Examples**
 
@@ -7212,7 +8132,7 @@ for complex arguments::
 kei = r"""
 Computes the Kelvin function kei, which for real arguments gives the
 imaginary part of the (rescaled) Bessel K function of a rotated argument.
-See :func:`ker`.
+See :func:`~mpmath.ker`.
 """
 
 struveh = r"""
@@ -7323,13 +8243,13 @@ Gives the Appell F1 hypergeometric function of two variables,
 
 .. math ::
 
-    F_1(a,b_1,b_2,c,z_1,z_2) = \sum_{m=0}^{\infty}
-        \sum_{n=0}^{\infty}
-        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{m! \,n! \,(c)_{m+n}} z_1^m z_2^n.
+    F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
 
-This series is only generally convergent when `|z_1| < 1` and `|z_2| < 1`,
-although :func:`appellf1` can evaluate the continuation
-in many cases.
+This series is only generally convergent when `|x| < 1` and `|y| < 1`,
+although :func:`~mpmath.appellf1` can evaluate an analytic continuation
+with respecto to either variable, and sometimes both.
 
 **Examples**
 
@@ -7349,7 +8269,7 @@ For some integer parameters, the F1 series reduces to a polynomial::
     >>> appellf1(-5,1,2,1,4,5)
     -20528.0
 
-The analytic continuation with respect to either `z_1` or `z_2`,
+The analytic continuation with respect to either `x` or `y`,
 and sometimes with respect to both, can be evaluated::
 
     >>> appellf1(2,3,4,5,100,0.5)
@@ -7370,6 +8290,24 @@ For certain arguments, F1 reduces to an ordinary hypergeometric function::
     >>> hyp2f1(1,3,4,1.5)
     (-1.717202506168937502740238 - 2.792526803190927323077905j)
 
+The F1 function satisfies a system of partial differential equations::
+
+    >>> a,b1,b2,c,x,y = map(mpf, [1,0.5,0.25,1.125,0.25,-0.25])
+    >>> F = lambda x,y: appellf1(a,b1,b2,c,x,y)
+    >>> chop(x*(1-x)*diff(F,(x,y),(2,0)) +
+    ...      y*(1-x)*diff(F,(x,y),(1,1)) +
+    ...      (c-(a+b1+1)*x)*diff(F,(x,y),(1,0)) -
+    ...      b1*y*diff(F,(x,y),(0,1)) -
+    ...      a*b1*F(x,y))
+    0.0
+    >>>
+    >>> chop(y*(1-y)*diff(F,(x,y),(0,2)) +
+    ...      x*(1-y)*diff(F,(x,y),(1,1)) +
+    ...      (c-(a+b2+1)*y)*diff(F,(x,y),(0,1)) -
+    ...      b2*x*diff(F,(x,y),(1,0)) -
+    ...      a*b2*F(x,y))
+    0.0
+
 The Appell F1 function allows for closed-form evaluation of various
 integrals, such as any integral of the form
 `\int x^r (x+a)^p (x+b)^q dx`::
@@ -7383,8 +8321,8 @@ integrals, such as any integral of the form
     ...         v *= (1+x/b)**(-q)
     ...         v *= appellf1(r+1,-p,-q,2+r,-x/a,-x/b)
     ...         return v
-    ...     print "Num. quad:", quad(f, [x1,x2])
-    ...     print "Appell F1:", F(x2)-F(x1)
+    ...     print("Num. quad: %s" % quad(f, [x1,x2]))
+    ...     print("Appell F1: %s" % (F(x2)-F(x1)))
     ...
     >>> integral('1/5','4/3','-2','3','1/2',0,1)
     Num. quad: 9.073335358785776206576981
@@ -7415,28 +8353,466 @@ Also incomplete elliptic integrals fall into this category [1]::
 
 **References**
 
-1. http://functions.wolfram.com/EllipticIntegrals/EllipticE2/26/01/
+1. [WolframFunctions]_ http://functions.wolfram.com/EllipticIntegrals/EllipticE2/26/01/
+2. [SrivastavaKarlsson]_
+3. [CabralRosetti]_
+4. [Vidunas]_
+5. [Slater]_
+
 """
 
-hurwitz = r"""
-Computes the Hurwitz zeta function
+angerj = r"""
+Gives the Anger function
+
+.. math ::
+
+    \mathbf{J}_{\nu}(z) = \frac{1}{\pi}
+        \int_0^{\pi} \cos(\nu t - z \sin t) dt
+
+which is an entire function of both the parameter `\nu` and
+the argument `z`. It solves the inhomogeneous Bessel differential
+equation
+
+.. math ::
+
+    f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
+        = \frac{(z-\nu)}{\pi z^2} \sin(\pi \nu).
+
+**Examples**
+
+Evaluation for real and complex parameter and argument::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> angerj(2,3)
+    0.4860912605858910769078311
+    >>> angerj(-3+4j, 2+5j)
+    (-5033.358320403384472395612 + 585.8011892476145118551756j)
+    >>> angerj(3.25, 1e6j)
+    (4.630743639715893346570743e+434290 - 1.117960409887505906848456e+434291j)
+    >>> angerj(-1.5, 1e6)
+    0.0002795719747073879393087011
+
+The Anger function coincides with the Bessel J-function when `\nu`
+is an integer::
+
+    >>> angerj(1,3); besselj(1,3)
+    0.3390589585259364589255146
+    0.3390589585259364589255146
+    >>> angerj(1.5,3); besselj(1.5,3)
+    0.4088969848691080859328847
+    0.4777182150870917715515015
+
+Verifying the differential equation::
+
+    >>> v,z = mpf(2.25), 0.75
+    >>> f = lambda z: angerj(v,z)
+    >>> diff(f,z,2) + diff(f,z)/z + (1-(v/z)**2)*f(z)
+    -0.6002108774380707130367995
+    >>> (z-v)/(pi*z**2) * sinpi(v)
+    -0.6002108774380707130367995
+
+Verifying the integral representation::
+
+    >>> angerj(v,z)
+    0.1145380759919333180900501
+    >>> quad(lambda t: cos(v*t-z*sin(t))/pi, [0,pi])
+    0.1145380759919333180900501
+
+**References**
+
+1. [DLMF]_ section 11.10: Anger-Weber Functions
+"""
+
+webere = r"""
+Gives the Weber function
+
+.. math ::
+
+    \mathbf{E}_{\nu}(z) = \frac{1}{\pi}
+        \int_0^{\pi} \sin(\nu t - z \sin t) dt
+
+which is an entire function of both the parameter `\nu` and
+the argument `z`. It solves the inhomogeneous Bessel differential
+equation
+
+.. math ::
+
+    f''(z) + \frac{1}{z}f'(z) + \left(1-\frac{\nu^2}{z^2}\right) f(z)
+        = -\frac{1}{\pi z^2} (z+\nu+(z-\nu)\cos(\pi \nu)).
+
+**Examples**
+
+Evaluation for real and complex parameter and argument::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> webere(2,3)
+    -0.1057668973099018425662646
+    >>> webere(-3+4j, 2+5j)
+    (-585.8081418209852019290498 - 5033.314488899926921597203j)
+    >>> webere(3.25, 1e6j)
+    (-1.117960409887505906848456e+434291 - 4.630743639715893346570743e+434290j)
+    >>> webere(3.25, 1e6)
+    -0.00002812518265894315604914453
+
+Up to addition of a rational function of `z`, the Weber function coincides
+with the Struve H-function when `\nu` is an integer::
+
+    >>> webere(1,3); 2/pi-struveh(1,3)
+    -0.3834897968188690177372881
+    -0.3834897968188690177372881
+    >>> webere(5,3); 26/(35*pi)-struveh(5,3)
+    0.2009680659308154011878075
+    0.2009680659308154011878075
+
+Verifying the differential equation::
+
+    >>> v,z = mpf(2.25), 0.75
+    >>> f = lambda z: webere(v,z)
+    >>> diff(f,z,2) + diff(f,z)/z + (1-(v/z)**2)*f(z)
+    -1.097441848875479535164627
+    >>> -(z+v+(z-v)*cospi(v))/(pi*z**2)
+    -1.097441848875479535164627
+
+Verifying the integral representation::
+
+    >>> webere(v,z)
+    0.1486507351534283744485421
+    >>> quad(lambda t: sin(v*t-z*sin(t))/pi, [0,pi])
+    0.1486507351534283744485421
+
+**References**
+
+1. [DLMF]_ section 11.10: Anger-Weber Functions
+"""
+
+lommels1 = r"""
+Gives the Lommel function `s_{\mu,\nu}` or `s^{(1)}_{\mu,\nu}`
+
+.. math ::
+
+    s_{\mu,\nu}(z) = \frac{z^{\mu+1}}{(\mu-\nu+1)(\mu+\nu+1)}
+        \,_1F_2\left(1; \frac{\mu-\nu+3}{2}, \frac{\mu+\nu+3}{2};
+        -\frac{z^2}{4} \right)
+
+which solves the inhomogeneous Bessel equation
+
+.. math ::
+
+    z^2 f''(z) + z f'(z) + (z^2-\nu^2) f(z) = z^{\mu+1}.
+
+A second solution is given by :func:`~mpmath.lommels2`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lommels1.py
+.. image :: /modules/mpmath/plots/lommels1.png
+
+**Examples**
+
+An integral representation::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> u,v,z = 0.25, 0.125, mpf(0.75)
+    >>> lommels1(u,v,z)
+    0.4276243877565150372999126
+    >>> (bessely(v,z)*quad(lambda t: t**u*besselj(v,t), [0,z]) - \
+    ...  besselj(v,z)*quad(lambda t: t**u*bessely(v,t), [0,z]))*(pi/2)
+    0.4276243877565150372999126
+
+A special value::
+
+    >>> lommels1(v,v,z)
+    0.5461221367746048054932553
+    >>> gamma(v+0.5)*sqrt(pi)*power(2,v-1)*struveh(v,z)
+    0.5461221367746048054932553
+
+Verifying the differential equation::
+
+    >>> f = lambda z: lommels1(u,v,z)
+    >>> z**2*diff(f,z,2) + z*diff(f,z) + (z**2-v**2)*f(z)
+    0.6979536443265746992059141
+    >>> z**(u+1)
+    0.6979536443265746992059141
+
+**References**
+
+1. [GradshteynRyzhik]_
+2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
+"""
+
+lommels2 = r"""
+Gives the second Lommel function `S_{\mu,\nu}` or `s^{(2)}_{\mu,\nu}`
+
+.. math ::
+
+    S_{\mu,\nu}(z) = s_{\mu,\nu}(z) + 2^{\mu-1}
+        \Gamma\left(\tfrac{1}{2}(\mu-\nu+1)\right)
+        \Gamma\left(\tfrac{1}{2}(\mu+\nu+1)\right) \times
+
+        \left[\sin(\tfrac{1}{2}(\mu-\nu)\pi) J_{\nu}(z) -
+              \cos(\tfrac{1}{2}(\mu-\nu)\pi) Y_{\nu}(z)
+        \right]
+
+which solves the same differential equation as
+:func:`~mpmath.lommels1`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/lommels2.py
+.. image :: /modules/mpmath/plots/lommels2.png
+
+**Examples**
+
+For large `|z|`, `S_{\mu,\nu} \sim z^{\mu-1}`::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> lommels2(10,2,30000)
+    1.968299831601008419949804e+40
+    >>> power(30000,9)
+    1.9683e+40
+
+A special value::
+
+    >>> u,v,z = 0.5, 0.125, mpf(0.75)
+    >>> lommels2(v,v,z)
+    0.9589683199624672099969765
+    >>> (struveh(v,z)-bessely(v,z))*power(2,v-1)*sqrt(pi)*gamma(v+0.5)
+    0.9589683199624672099969765
+
+Verifying the differential equation::
+
+    >>> f = lambda z: lommels2(u,v,z)
+    >>> z**2*diff(f,z,2) + z*diff(f,z) + (z**2-v**2)*f(z)
+    0.6495190528383289850727924
+    >>> z**(u+1)
+    0.6495190528383289850727924
+
+**References**
+
+1. [GradshteynRyzhik]_
+2. [Weisstein]_ http://mathworld.wolfram.com/LommelFunction.html
+"""
+
+appellf2 = r"""
+Gives the Appell F2 hypergeometric function of two variables
+
+.. math ::
+
+    F_2(a,b_1,b_2,c_1,c_2,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c_1)_m (c_2)_n}
+        \frac{x^m y^n}{m! n!}.
+
+The series is generally absolutely convergent for `|x| + |y| < 1`.
+
+**Examples**
+
+Evaluation for real and complex arguments::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> appellf2(1,2,3,4,5,0.25,0.125)
+    1.257417193533135344785602
+    >>> appellf2(1,-3,-4,2,3,2,3)
+    -42.8
+    >>> appellf2(0.5,0.25,-0.25,2,3,0.25j,0.25)
+    (0.9880539519421899867041719 + 0.01497616165031102661476978j)
+    >>> chop(appellf2(1,1+j,1-j,3j,-3j,0.25,0.25))
+    1.201311219287411337955192
+    >>> appellf2(1,1,1,4,6,0.125,16)
+    (-0.09455532250274744282125152 - 0.7647282253046207836769297j)
+
+A transformation formula::
+
+    >>> a,b1,b2,c1,c2,x,y = map(mpf, [1,2,0.5,0.25,1.625,-0.125,0.125])
+    >>> appellf2(a,b1,b2,c1,c2,x,y)
+    0.2299211717841180783309688
+    >>> (1-x)**(-a)*appellf2(a,c1-b1,b2,c1,c2,x/(x-1),y/(1-x))
+    0.2299211717841180783309688
+
+A system of partial differential equations satisfied by F2::
+
+    >>> a,b1,b2,c1,c2,x,y = map(mpf, [1,0.5,0.25,1.125,1.5,0.0625,-0.0625])
+    >>> F = lambda x,y: appellf2(a,b1,b2,c1,c2,x,y)
+    >>> chop(x*(1-x)*diff(F,(x,y),(2,0)) -
+    ...      x*y*diff(F,(x,y),(1,1)) +
+    ...      (c1-(a+b1+1)*x)*diff(F,(x,y),(1,0)) -
+    ...      b1*y*diff(F,(x,y),(0,1)) -
+    ...      a*b1*F(x,y))
+    0.0
+    >>> chop(y*(1-y)*diff(F,(x,y),(0,2)) -
+    ...      x*y*diff(F,(x,y),(1,1)) +
+    ...      (c2-(a+b2+1)*y)*diff(F,(x,y),(0,1)) -
+    ...      b2*x*diff(F,(x,y),(1,0)) -
+    ...      a*b2*F(x,y))
+    0.0
+
+**References**
+
+See references for :func:`~mpmath.appellf1`.
+"""
+
+appellf3 = r"""
+Gives the Appell F3 hypergeometric function of two variables
+
+.. math ::
+
+    F_3(a_1,a_2,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a_1)_m (a_2)_n (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
+
+The series is generally absolutely convergent for `|x| < 1, |y| < 1`.
+
+**Examples**
+
+Evaluation for various parameters and variables::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> appellf3(1,2,3,4,5,0.5,0.25)
+    2.221557778107438938158705
+    >>> appellf3(1,2,3,4,5,6,0); hyp2f1(1,3,5,6)
+    (-0.5189554589089861284537389 - 0.1454441043328607980769742j)
+    (-0.5189554589089861284537389 - 0.1454441043328607980769742j)
+    >>> appellf3(1,-2,-3,1,1,4,6)
+    -17.4
+    >>> appellf3(1,2,-3,1,1,4,6)
+    (17.7876136773677356641825 + 19.54768762233649126154534j)
+    >>> appellf3(1,2,-3,1,1,6,4)
+    (85.02054175067929402953645 + 148.4402528821177305173599j)
+    >>> chop(appellf3(1+j,2,1-j,2,3,0.25,0.25))
+    1.719992169545200286696007
+
+Many transformations and evaluations for special combinations
+of the parameters are possible, e.g.:
+
+    >>> a,b,c,x,y = map(mpf, [0.5,0.25,0.125,0.125,-0.125])
+    >>> appellf3(a,c-a,b,c-b,c,x,y)
+    1.093432340896087107444363
+    >>> (1-y)**(a+b-c)*hyp2f1(a,b,c,x+y-x*y)
+    1.093432340896087107444363
+    >>> x**2*appellf3(1,1,1,1,3,x,-x)
+    0.01568646277445385390945083
+    >>> polylog(2,x**2)
+    0.01568646277445385390945083
+    >>> a1,a2,b1,b2,c,x = map(mpf, [0.5,0.25,0.125,0.5,4.25,0.125])
+    >>> appellf3(a1,a2,b1,b2,c,x,1)
+    1.03947361709111140096947
+    >>> gammaprod([c,c-a2-b2],[c-a2,c-b2])*hyp3f2(a1,b1,c-a2-b2,c-a2,c-b2,x)
+    1.03947361709111140096947
+
+The Appell F3 function satisfies a pair of partial
+differential equations::
+
+    >>> a1,a2,b1,b2,c,x,y = map(mpf, [0.5,0.25,0.125,0.5,0.625,0.0625,-0.0625])
+    >>> F = lambda x,y: appellf3(a1,a2,b1,b2,c,x,y)
+    >>> chop(x*(1-x)*diff(F,(x,y),(2,0)) +
+    ...      y*diff(F,(x,y),(1,1)) +
+    ...     (c-(a1+b1+1)*x)*diff(F,(x,y),(1,0)) -
+    ...     a1*b1*F(x,y))
+    0.0
+    >>> chop(y*(1-y)*diff(F,(x,y),(0,2)) +
+    ...     x*diff(F,(x,y),(1,1)) +
+    ...     (c-(a2+b2+1)*y)*diff(F,(x,y),(0,1)) -
+    ...     a2*b2*F(x,y))
+    0.0
+
+**References**
+
+See references for :func:`~mpmath.appellf1`.
+"""
+
+appellf4 = r"""
+Gives the Appell F4 hypergeometric function of two variables
+
+.. math ::
+
+    F_4(a,b,c_1,c_2,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b)_{m+n}}{(c_1)_m (c_2)_n}
+        \frac{x^m y^n}{m! n!}.
+
+The series is generally absolutely convergent for
+`\sqrt{|x|} + \sqrt{|y|} < 1`.
+
+**Examples**
+
+Evaluation for various parameters and arguments::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> appellf4(1,1,2,2,0.25,0.125)
+    1.286182069079718313546608
+    >>> appellf4(-2,-3,4,5,4,5)
+    34.8
+    >>> appellf4(5,4,2,3,0.25j,-0.125j)
+    (-0.2585967215437846642163352 + 2.436102233553582711818743j)
+
+Reduction to `\,_2F_1` in a special case::
+
+    >>> a,b,c,x,y = map(mpf, [0.5,0.25,0.125,0.125,-0.125])
+    >>> appellf4(a,b,c,a+b-c+1,x*(1-y),y*(1-x))
+    1.129143488466850868248364
+    >>> hyp2f1(a,b,c,x)*hyp2f1(a,b,a+b-c+1,y)
+    1.129143488466850868248364
+
+A system of partial differential equations satisfied by F4::
+
+    >>> a,b,c1,c2,x,y = map(mpf, [1,0.5,0.25,1.125,0.0625,-0.0625])
+    >>> F = lambda x,y: appellf4(a,b,c1,c2,x,y)
+    >>> chop(x*(1-x)*diff(F,(x,y),(2,0)) -
+    ...      y**2*diff(F,(x,y),(0,2)) -
+    ...      2*x*y*diff(F,(x,y),(1,1)) +
+    ...      (c1-(a+b+1)*x)*diff(F,(x,y),(1,0)) -
+    ...      ((a+b+1)*y)*diff(F,(x,y),(0,1)) -
+    ...      a*b*F(x,y))
+    0.0
+    >>> chop(y*(1-y)*diff(F,(x,y),(0,2)) -
+    ...      x**2*diff(F,(x,y),(2,0)) -
+    ...      2*x*y*diff(F,(x,y),(1,1)) +
+    ...      (c2-(a+b+1)*y)*diff(F,(x,y),(0,1)) -
+    ...      ((a+b+1)*x)*diff(F,(x,y),(1,0)) -
+    ...      a*b*F(x,y))
+    0.0
+
+**References**
+
+See references for :func:`~mpmath.appellf1`.
+"""
+
+zeta = r"""
+Computes the Riemann zeta function
+
+.. math ::
+
+  \zeta(s) = 1+\frac{1}{2^s}+\frac{1}{3^s}+\frac{1}{4^s}+\ldots
+
+or, with `a \ne 1`, the more general Hurwitz zeta function
 
 .. math ::
 
     \zeta(s,a) = \sum_{k=0}^\infty \frac{1}{(a+k)^s}.
 
-With `a = 1`, this reduces to the ordinary Riemann zeta function.
-Optionally, ``hurwitz(s, a, n)`` computes
-the `n`-th derivative with respect to `s`,
+Optionally, ``zeta(s, a, n)`` computes the `n`-th derivative with
+respect to `s`,
 
 .. math ::
 
     \zeta^{(n)}(s,a) = (-1)^n \sum_{k=0}^\infty \frac{\log^n(a+k)}{(a+k)^s}.
 
-Although these series only converge for `\Re(s) > 1`, the Hurwitz
-zeta function is defined through analytic continuation for arbitrary
-complex `s \ne 1` (`s = 1` is a pole). The implementation uses Euler-Maclaurin
-summation along with reflection formulas in some cases when `\Re(s) < 0`.
+Although these series only converge for `\Re(s) > 1`, the Riemann and Hurwitz
+zeta functions are defined through analytic continuation for arbitrary
+complex `s \ne 1` (`s = 1` is a pole).
+
+The implementation uses three algorithms: the Borwein algorithm for
+the Riemann zeta function when `s` is close to the real line;
+the Riemann-Siegel formula for the Riemann zeta function when `s` is
+large imaginary, and Euler-Maclaurin summation in all other cases.
+The reflection formula for `\Re(s) < 0` is implemented in some cases.
+The algorithm can be chosen with ``method = 'borwein'``,
+``method='riemann-siegel'`` or ``method = 'euler-maclaurin'``.
 
 The parameter `a` is usually a rational number `a = p/q`, and may be specified
 as such by passing an integer tuple `(p, q)`. Evaluation is supported for
@@ -7445,60 +8821,118 @@ nonrational `a` or when computing derivatives.
 
 **Examples**
 
-Some basic evaluations:
+Some values of the Riemann zeta function::
 
     >>> from mpmath import *
     >>> mp.dps = 25; mp.pretty = True
-    >>> hurwitz(2, 3); -5./4 + pi**2/6
-    0.3949340668482264364724152
-    0.3949340668482264364724152
-    >>> hurwitz(2, (3,4)); pi**2 - 8*catalan
-    2.541879647671606498397663
-    2.541879647671606498397663
-
-For positive integer values of `s`, the Hurwitz zeta function can be evaluated
-using polygamma functions::
-
-    >>> hurwitz(4, (1,5)); psi(3, '1/5')/6
-    625.5408324774542966919938
-    625.5408324774542966919938
-
-Some Riemann zeta function values::
-
-    >>> hurwitz(2)
+    >>> zeta(2); pi**2 / 6
     1.644934066848226436472415
-    >>> 1-sum((hurwitz(k)-1)/k for k in range(2,85))
+    1.644934066848226436472415
+    >>> zeta(0)
+    -0.5
+    >>> zeta(-1)
+    -0.08333333333333333333333333
+    >>> zeta(-2)
+    0.0
+
+For large positive `s`, `\zeta(s)` rapidly approaches 1::
+
+    >>> zeta(50)
+    1.000000000000000888178421
+    >>> zeta(100)
+    1.0
+    >>> zeta(inf)
+    1.0
+    >>> 1-sum((zeta(k)-1)/k for k in range(2,85)); +euler
     0.5772156649015328606065121
-    >>> +euler
     0.5772156649015328606065121
-    >>> hurwitz(inf)
+    >>> nsum(lambda k: zeta(k)-1, [2, inf])
     1.0
 
-Evaluation on the critical line::
+Evaluation is supported for complex `s` and `a`:
 
-    >>> findroot(hurwitz, 0.5+14j)
+    >>> zeta(-3+4j)
+    (-0.03373057338827757067584698 + 0.2774499251557093745297677j)
+    >>> zeta(2+3j, -1+j)
+    (389.6841230140842816370741 + 295.2674610150305334025962j)
+
+The Riemann zeta function has so-called nontrivial zeros on
+the critical line `s = 1/2 + it`::
+
+    >>> findroot(zeta, 0.5+14j); zetazero(1)
     (0.5 + 14.13472514173469379045725j)
+    (0.5 + 14.13472514173469379045725j)
+    >>> findroot(zeta, 0.5+21j); zetazero(2)
+    (0.5 + 21.02203963877155499262848j)
+    (0.5 + 21.02203963877155499262848j)
+    >>> findroot(zeta, 0.5+25j); zetazero(3)
+    (0.5 + 25.01085758014568876321379j)
+    (0.5 + 25.01085758014568876321379j)
+    >>> chop(zeta(zetazero(10)))
+    0.0
 
-A derivative identity; evaluation for `s < 1`::
+Evaluation on and near the critical line is supported for large
+heights `t` by means of the Riemann-Siegel formula (currently
+for `a = 1`, `n \le 4`)::
 
-    >>> hurwitz(0, 3+4j, 1)
+    >>> zeta(0.5+100000j)
+    (1.073032014857753132114076 + 5.780848544363503984261041j)
+    >>> zeta(0.75+1000000j)
+    (0.9535316058375145020351559 + 0.9525945894834273060175651j)
+    >>> zeta(0.5+10000000j)
+    (11.45804061057709254500227 - 8.643437226836021723818215j)
+    >>> zeta(0.5+100000000j, derivative=1)
+    (51.12433106710194942681869 + 43.87221167872304520599418j)
+    >>> zeta(0.5+100000000j, derivative=2)
+    (-444.2760822795430400549229 - 896.3789978119185981665403j)
+    >>> zeta(0.5+100000000j, derivative=3)
+    (3230.72682687670422215339 + 14374.36950073615897616781j)
+    >>> zeta(0.5+100000000j, derivative=4)
+    (-11967.35573095046402130602 - 218945.7817789262839266148j)
+    >>> zeta(1+10000000j)    # off the line
+    (2.859846483332530337008882 + 0.491808047480981808903986j)
+    >>> zeta(1+10000000j, derivative=1)
+    (-4.333835494679647915673205 - 0.08405337962602933636096103j)
+    >>> zeta(1+10000000j, derivative=4)
+    (453.2764822702057701894278 - 581.963625832768189140995j)
+
+For investigation of the zeta function zeros, the Riemann-Siegel
+Z-function is often more convenient than working with the Riemann
+zeta function directly (see :func:`~mpmath.siegelz`).
+
+Some values of the Hurwitz zeta function::
+
+    >>> zeta(2, 3); -5./4 + pi**2/6
+    0.3949340668482264364724152
+    0.3949340668482264364724152
+    >>> zeta(2, (3,4)); pi**2 - 8*catalan
+    2.541879647671606498397663
+    2.541879647671606498397663
+
+For positive integer values of `s`, the Hurwitz zeta function is
+equivalent to a polygamma function (except for a normalizing factor)::
+
+    >>> zeta(4, (1,5)); psi(3, '1/5')/6
+    625.5408324774542966919938
+    625.5408324774542966919938
+
+Evaluation of derivatives::
+
+    >>> zeta(0, 3+4j, 1); loggamma(3+4j) - ln(2*pi)/2
     (-2.675565317808456852310934 + 4.742664438034657928194889j)
-    >>> loggamma(3+4j) - ln(2*pi)/2
     (-2.675565317808456852310934 + 4.742664438034657928194889j)
-
-A high order derivative::
-
-    >>> hurwitz(2, 1, 20)
+    >>> zeta(2, 1, 20)
     2432902008176640000.000242
-
-A fourth derivative at a complex value::
-
-    >>> hurwitz(3+4j, 5.5+2j, 4)
+    >>> zeta(3+4j, 5.5+2j, 4)
     (-0.140075548947797130681075 - 0.3109263360275413251313634j)
+    >>> zeta(0.5+100000j, 1, 4)
+    (-10407.16081931495861539236 + 13777.78669862804508537384j)
+    >>> zeta(-100+0.5j, (1,3), derivative=4)
+    (4.007180821099823942702249e+79 + 4.916117957092593868321778e+78j)
 
 Generating a Taylor series at `s = 2` using derivatives::
 
-    >>> for k in range(11): print hurwitz(2,1,k)/fac(k), "*", "(s-2)^%i" % k
+    >>> for k in range(11): print("%s * (s-2)^%i" % (zeta(2,1,k)/fac(k), k))
     ...
     1.644934066848226436472415 * (s-2)^0
     -0.9375482543158437537025741 * (s-2)^1
@@ -7514,41 +8948,37 @@ Generating a Taylor series at `s = 2` using derivatives::
 
 Evaluation at zero and for negative integer `s`::
 
-    >>> hurwitz(0); zeta(0)
-    -0.5
-    -0.5
-    >>> hurwitz(0, 10)
+    >>> zeta(0, 10)
     -9.5
-    >>> hurwitz(-1); zeta(-1)
-    -0.08333333333333333333333333
-    -0.08333333333333333333333333
-    >>> hurwitz(-2); zeta(-2)
-    0.0
-    0.0
-    >>> hurwitz(-2, (2,3)); mpf(1)/81
+    >>> zeta(-2, (2,3)); mpf(1)/81
     0.01234567901234567901234568
     0.01234567901234567901234568
-
-Evaluation for negative `s`, with rational and nonrational `a`::
-
-    >>> hurwitz(-3+4j, (5,4))
+    >>> zeta(-3+4j, (5,4))
     (0.2899236037682695182085988 + 0.06561206166091757973112783j)
-    >>> hurwitz(-3.25, 1/pi)
+    >>> zeta(-3.25, 1/pi)
     -0.0005117269627574430494396877
-    >>> hurwitz(-3.5, pi(dps=30), 1)
-    11.15636039044000329471003
-    >>> hurwitz(-100.5, (8,3))
+    >>> zeta(-3.5, pi, 1)
+    11.156360390440003294709
+    >>> zeta(-100.5, (8,3))
     -4.68162300487989766727122e+77
-    >>> hurwitz(-10.5, (-8,3))
+    >>> zeta(-10.5, (-8,3))
     (-0.01521913704446246609237979 + 29907.72510874248161608216j)
-    >>> hurwitz(-1000.5, (-8,3))
+    >>> zeta(-1000.5, (-8,3))
     (1.031911949062334538202567e+1770 + 1.519555750556794218804724e+426j)
-    >>> hurwitz(-1+j, 3+4j)
+    >>> zeta(-1+j, 3+4j)
     (-16.32988355630802510888631 - 22.17706465801374033261383j)
-    >>> hurwitz(-1+j, 3+4j, 2)
+    >>> zeta(-1+j, 3+4j, 2)
     (32.48985276392056641594055 - 51.11604466157397267043655j)
-    >>> diff(lambda s: hurwitz(s, 3+4j), -1+j, 2)
+    >>> diff(lambda s: zeta(s, 3+4j), -1+j, 2)
     (32.48985276392056641594055 - 51.11604466157397267043655j)
+
+**References**
+
+1. http://mathworld.wolfram.com/RiemannZetaFunction.html
+
+2. http://mathworld.wolfram.com/HurwitzZetaFunction.html
+
+3. http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P155.pdf
 
 """
 
@@ -7634,14 +9064,14 @@ Calculates the regular Coulomb wave function
     F_l(\eta,z) = C_l(\eta) z^{l+1} e^{-iz} \,_1F_1(l+1-i\eta, 2l+2, 2iz)
 
 where the normalization constant `C_l(\eta)` is as calculated by
-:func:`coulombc`. This function solves the differential equation
+:func:`~mpmath.coulombc`. This function solves the differential equation
 
 .. math ::
 
     f''(z) + \left(1-\frac{2\eta}{z}-\frac{l(l+1)}{z^2}\right) f(z) = 0.
 
 A second linearly independent solution is given by the irregular
-Coulomb wave function `G_l(\eta,z)` (see :func:`coulombg`)
+Coulomb wave function `G_l(\eta,z)` (see :func:`~mpmath.coulombg`)
 and thus the general solution is
 `f(z) = C_1 F_l(\eta,z) + C_2 G_l(\eta,z)` for arbitrary
 constants `C_1`, `C_2`.
@@ -7652,6 +9082,13 @@ then the radius and `l`, `\eta` are quantum numbers.
 The Coulomb wave functions with real parameters are defined
 in Abramowitz & Stegun, section 14. However, all parameters are permitted
 to be complex in this implementation (see references).
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/coulombf.py
+.. image :: /modules/mpmath/plots/coulombf.png
+.. literalinclude :: /modules/mpmath/plots/coulombf_c.py
+.. image :: /modules/mpmath/plots/coulombf_c.png
 
 **Examples**
 
@@ -7729,7 +9166,8 @@ the precision::
     >>> mp.dps = 10
     >>> eta = 2; z = 5
     >>> for l in [5, 4, 3, 2, 1, 0]:
-    ...     print l, coulombf(l,eta,z), diff(lambda z: coulombf(l,eta,z), z)
+    ...     print("%s %s %s" % (l, coulombf(l,eta,z),
+    ...         diff(lambda z: coulombf(l,eta,z), z)))
     ...
     5 0.09079533488 0.1042553261
     4 0.2148205331 0.2029591779
@@ -7758,7 +9196,14 @@ Calculates the irregular Coulomb wave function
 where `\chi = \sigma_l - \sigma_{-l-1} - (l+1/2) \pi`
 and `\sigma_l(\eta) = (\ln \Gamma(1+l+i\eta)-\ln \Gamma(1+l-i\eta))/(2i)`.
 
-See :func:`coulombf` for additional information.
+See :func:`~mpmath.coulombf` for additional information.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/coulombg.py
+.. image :: /modules/mpmath/plots/coulombg.png
+.. literalinclude :: /modules/mpmath/plots/coulombg_c.py
+.. image :: /modules/mpmath/plots/coulombg_c.png
 
 **Examples**
 
@@ -7783,7 +9228,8 @@ at twice the precision::
     >>> mp.dps = 10
     >>> eta = 2; z = 5
     >>> for l in [1, 2, 3, 4, 5]:
-    ...     print l, coulombg(l,eta,z), -diff(lambda z: coulombg(l,eta,z), z)
+    ...     print("%s %s %s" % (l, coulombg(l,eta,z),
+    ...         -diff(lambda z: coulombg(l,eta,z), z)))
     ...
     1 1.08148276 0.6028279961
     2 1.496877075 0.5661803178
@@ -7805,7 +9251,6 @@ Evaluation with a half-integer value for `l`::
 
     >>> coulombg(1.5, 1, 10)
     0.852320038297334
-
 """
 
 coulombc = r"""
@@ -7817,11 +9262,637 @@ Gives the normalizing Gamow constant for Coulomb wave functions,
         \ln \Gamma(1+l-i\eta)]/2 - \ln \Gamma(2l+2)\right),
 
 where the log gamma function with continuous imaginary part
-away from the negative half axis (see :func:`loggamma`) is implied.
+away from the negative half axis (see :func:`~mpmath.loggamma`) is implied.
 
 This function is used internally for the calculation of
 Coulomb wave functions, and automatically cached to make multiple
 evaluations with fixed `l`, `\eta` fast.
+"""
 
+ellipfun = r"""
+Computes any of the Jacobi elliptic functions, defined
+in terms of Jacobi theta functions as
+
+.. math ::
+
+    \mathrm{sn}(u,m) = \frac{\vartheta_3(0,q)}{\vartheta_2(0,q)}
+        \frac{\vartheta_1(t,q)}{\vartheta_4(t,q)}
+
+    \mathrm{cn}(u,m) = \frac{\vartheta_4(0,q)}{\vartheta_2(0,q)}
+        \frac{\vartheta_2(t,q)}{\vartheta_4(t,q)}
+
+    \mathrm{dn}(u,m) = \frac{\vartheta_4(0,q)}{\vartheta_3(0,q)}
+        \frac{\vartheta_3(t,q)}{\vartheta_4(t,q)},
+
+or more generally computes a ratio of two such functions. Here
+`t = u/\vartheta_3(0,q)^2`, and `q = q(m)` denotes the nome (see
+:func:`~mpmath.nome`). Optionally, you can specify the nome directly
+instead of `m` by passing ``q=<value>``, or you can directly
+specify the elliptic parameter `k` with ``k=<value>``.
+
+The first argument should be a two-character string specifying the
+function using any combination of ``'s'``, ``'c'``, ``'d'``, ``'n'``. These
+letters respectively denote the basic functions
+`\mathrm{sn}(u,m)`, `\mathrm{cn}(u,m)`, `\mathrm{dn}(u,m)`, and `1`.
+The identifier specifies the ratio of two such functions.
+For example, ``'ns'`` identifies the function
+
+.. math ::
+
+    \mathrm{ns}(u,m) = \frac{1}{\mathrm{sn}(u,m)}
+
+and ``'cd'`` identifies the function
+
+.. math ::
+
+    \mathrm{cd}(u,m) = \frac{\mathrm{cn}(u,m)}{\mathrm{dn}(u,m)}.
+
+If called with only the first argument, a function object
+evaluating the chosen function for given arguments is returned.
+
+**Examples**
+
+Basic evaluation::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> ellipfun('cd', 3.5, 0.5)
+    -0.9891101840595543931308394
+    >>> ellipfun('cd', 3.5, q=0.25)
+    0.07111979240214668158441418
+
+The sn-function is doubly periodic in the complex plane with periods
+`4 K(m)` and `2 i K(1-m)` (see :func:`~mpmath.ellipk`)::
+
+    >>> sn = ellipfun('sn')
+    >>> sn(2, 0.25)
+    0.9628981775982774425751399
+    >>> sn(2+4*ellipk(0.25), 0.25)
+    0.9628981775982774425751399
+    >>> chop(sn(2+2*j*ellipk(1-0.25), 0.25))
+    0.9628981775982774425751399
+
+The cn-function is doubly periodic with periods `4 K(m)` and `4 i K(1-m)`::
+
+    >>> cn = ellipfun('cn')
+    >>> cn(2, 0.25)
+    -0.2698649654510865792581416
+    >>> cn(2+4*ellipk(0.25), 0.25)
+    -0.2698649654510865792581416
+    >>> chop(cn(2+4*j*ellipk(1-0.25), 0.25))
+    -0.2698649654510865792581416
+
+The dn-function is doubly periodic with periods `2 K(m)` and `4 i K(1-m)`::
+
+    >>> dn = ellipfun('dn')
+    >>> dn(2, 0.25)
+    0.8764740583123262286931578
+    >>> dn(2+2*ellipk(0.25), 0.25)
+    0.8764740583123262286931578
+    >>> chop(dn(2+4*j*ellipk(1-0.25), 0.25))
+    0.8764740583123262286931578
+
+"""
+
+
+jtheta = r"""
+Computes the Jacobi theta function `\vartheta_n(z, q)`, where
+`n = 1, 2, 3, 4`, defined by the infinite series:
+
+.. math ::
+
+  \vartheta_1(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
+    (-1)^n q^{n^2+n\,} \sin((2n+1)z)
+
+  \vartheta_2(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
+    q^{n^{2\,} + n} \cos((2n+1)z)
+
+  \vartheta_3(z,q) = 1 + 2 \sum_{n=1}^{\infty}
+    q^{n^2\,} \cos(2 n z)
+
+  \vartheta_4(z,q) = 1 + 2 \sum_{n=1}^{\infty}
+    (-q)^{n^2\,} \cos(2 n z)
+
+The theta functions are functions of two variables:
+
+* `z` is the *argument*, an arbitrary real or complex number
+
+* `q` is the *nome*, which must be a real or complex number
+  in the unit disk (i.e. `|q| < 1`). For `|q| \ll 1`, the
+  series converge very quickly, so the Jacobi theta functions
+  can efficiently be evaluated to high precision.
+
+The compact notations `\vartheta_n(q) = \vartheta_n(0,q)`
+and `\vartheta_n = \vartheta_n(0,q)` are also frequently
+encountered. Finally, Jacobi theta functions are frequently
+considered as functions of the half-period ratio `\tau`
+and then usually denoted by `\vartheta_n(z|\tau)`.
+
+Optionally, ``jtheta(n, z, q, derivative=d)`` with `d > 0` computes
+a `d`-th derivative with respect to `z`.
+
+**Examples and basic properties**
+
+Considered as functions of `z`, the Jacobi theta functions may be
+viewed as generalizations of the ordinary trigonometric functions
+cos and sin. They are periodic functions::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> jtheta(1, 0.25, '0.2')
+    0.2945120798627300045053104
+    >>> jtheta(1, 0.25 + 2*pi, '0.2')
+    0.2945120798627300045053104
+
+Indeed, the series defining the theta functions are essentially
+trigonometric Fourier series. The coefficients can be retrieved
+using :func:`~mpmath.fourier`::
+
+    >>> mp.dps = 10
+    >>> nprint(fourier(lambda x: jtheta(2, x, 0.5), [-pi, pi], 4))
+    ([0.0, 1.68179, 0.0, 0.420448, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0])
+
+The Jacobi theta functions are also so-called quasiperiodic
+functions of `z` and `\tau`, meaning that for fixed `\tau`,
+`\vartheta_n(z, q)` and `\vartheta_n(z+\pi \tau, q)` are the same
+except for an exponential factor::
+
+    >>> mp.dps = 25
+    >>> tau = 3*j/10
+    >>> q = exp(pi*j*tau)
+    >>> z = 10
+    >>> jtheta(4, z+tau*pi, q)
+    (-0.682420280786034687520568 + 1.526683999721399103332021j)
+    >>> -exp(-2*j*z)/q * jtheta(4, z, q)
+    (-0.682420280786034687520568 + 1.526683999721399103332021j)
+
+The Jacobi theta functions satisfy a huge number of other
+functional equations, such as the following identity (valid for
+any `q`)::
+
+    >>> q = mpf(3)/10
+    >>> jtheta(3,0,q)**4
+    6.823744089352763305137427
+    >>> jtheta(2,0,q)**4 + jtheta(4,0,q)**4
+    6.823744089352763305137427
+
+Extensive listings of identities satisfied by the Jacobi theta
+functions can be found in standard reference works.
+
+The Jacobi theta functions are related to the gamma function
+for special arguments::
+
+    >>> jtheta(3, 0, exp(-pi))
+    1.086434811213308014575316
+    >>> pi**(1/4.) / gamma(3/4.)
+    1.086434811213308014575316
+
+:func:`~mpmath.jtheta` supports arbitrary precision evaluation and complex
+arguments::
+
+    >>> mp.dps = 50
+    >>> jtheta(4, sqrt(2), 0.5)
+    2.0549510717571539127004115835148878097035750653737
+    >>> mp.dps = 25
+    >>> jtheta(4, 1+2j, (1+j)/5)
+    (7.180331760146805926356634 - 1.634292858119162417301683j)
+
+Evaluation of derivatives::
+
+    >>> mp.dps = 25
+    >>> jtheta(1, 7, 0.25, 1); diff(lambda z: jtheta(1, z, 0.25), 7)
+    1.209857192844475388637236
+    1.209857192844475388637236
+    >>> jtheta(1, 7, 0.25, 2); diff(lambda z: jtheta(1, z, 0.25), 7, 2)
+    -0.2598718791650217206533052
+    -0.2598718791650217206533052
+    >>> jtheta(2, 7, 0.25, 1); diff(lambda z: jtheta(2, z, 0.25), 7)
+    -1.150231437070259644461474
+    -1.150231437070259644461474
+    >>> jtheta(2, 7, 0.25, 2); diff(lambda z: jtheta(2, z, 0.25), 7, 2)
+    -0.6226636990043777445898114
+    -0.6226636990043777445898114
+    >>> jtheta(3, 7, 0.25, 1); diff(lambda z: jtheta(3, z, 0.25), 7)
+    -0.9990312046096634316587882
+    -0.9990312046096634316587882
+    >>> jtheta(3, 7, 0.25, 2); diff(lambda z: jtheta(3, z, 0.25), 7, 2)
+    -0.1530388693066334936151174
+    -0.1530388693066334936151174
+    >>> jtheta(4, 7, 0.25, 1); diff(lambda z: jtheta(4, z, 0.25), 7)
+    0.9820995967262793943571139
+    0.9820995967262793943571139
+    >>> jtheta(4, 7, 0.25, 2); diff(lambda z: jtheta(4, z, 0.25), 7, 2)
+    0.3936902850291437081667755
+    0.3936902850291437081667755
+
+**Possible issues**
+
+For `|q| \ge 1` or `\Im(\tau) \le 0`, :func:`~mpmath.jtheta` raises
+``ValueError``. This exception is also raised for `|q|` extremely
+close to 1 (or equivalently `\tau` very close to 0), since the
+series would converge too slowly::
+
+    >>> jtheta(1, 10, 0.99999999 * exp(0.5*j))
+    Traceback (most recent call last):
+      ...
+    ValueError: abs(q) > THETA_Q_LIM = 1.000000
+
+"""
+
+eulernum = r"""
+Gives the `n`-th Euler number, defined as the `n`-th derivative of
+`\mathrm{sech}(t) = 1/\cosh(t)` evaluated at `t = 0`. Equivalently, the
+Euler numbers give the coefficients of the Taylor series
+
+.. math ::
+
+    \mathrm{sech}(t) = \sum_{n=0}^{\infty} \frac{E_n}{n!} t^n.
+
+The Euler numbers are closely related to Bernoulli numbers
+and Bernoulli polynomials. They can also be evaluated in terms of
+Euler polynomials (see :func:`~mpmath.eulerpoly`) as `E_n = 2^n E_n(1/2)`.
+
+**Examples**
+
+Computing the first few Euler numbers and verifying that they
+agree with the Taylor series::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> [eulernum(n) for n in range(11)]
+    [1.0, 0.0, -1.0, 0.0, 5.0, 0.0, -61.0, 0.0, 1385.0, 0.0, -50521.0]
+    >>> chop(diffs(sech, 0, 10))
+    [1.0, 0.0, -1.0, 0.0, 5.0, 0.0, -61.0, 0.0, 1385.0, 0.0, -50521.0]
+
+Euler numbers grow very rapidly. :func:`~mpmath.eulernum` efficiently
+computes numerical approximations for large indices::
+
+    >>> eulernum(50)
+    -6.053285248188621896314384e+54
+    >>> eulernum(1000)
+    3.887561841253070615257336e+2371
+    >>> eulernum(10**20)
+    4.346791453661149089338186e+1936958564106659551331
+
+Comparing with an asymptotic formula for the Euler numbers::
+
+    >>> n = 10**5
+    >>> (-1)**(n//2) * 8 * sqrt(n/(2*pi)) * (2*n/(pi*e))**n
+    3.69919063017432362805663e+436961
+    >>> eulernum(n)
+    3.699193712834466537941283e+436961
+
+Pass ``exact=True`` to obtain exact values of Euler numbers as integers::
+
+    >>> print(eulernum(50, exact=True))
+    -6053285248188621896314383785111649088103498225146815121
+    >>> print(eulernum(200, exact=True) % 10**10)
+    1925859625
+    >>> eulernum(1001, exact=True)
+    0
+"""
+
+eulerpoly = r"""
+Evaluates the Euler polynomial `E_n(z)`, defined by the generating function
+representation
+
+.. math ::
+
+    \frac{2e^{zt}}{e^t+1} = \sum_{n=0}^\infty E_n(z) \frac{t^n}{n!}.
+
+The Euler polynomials may also be represented in terms of
+Bernoulli polynomials (see :func:`~mpmath.bernpoly`) using various formulas, for
+example
+
+.. math ::
+
+    E_n(z) = \frac{2}{n+1} \left(
+        B_n(z)-2^{n+1}B_n\left(\frac{z}{2}\right)
+    \right).
+
+Special values include the Euler numbers `E_n = 2^n E_n(1/2)` (see
+:func:`~mpmath.eulernum`).
+
+**Examples**
+
+Computing the coefficients of the first few Euler polynomials::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> for n in range(6):
+    ...     chop(taylor(lambda z: eulerpoly(n,z), 0, n))
+    ...
+    [1.0]
+    [-0.5, 1.0]
+    [0.0, -1.0, 1.0]
+    [0.25, 0.0, -1.5, 1.0]
+    [0.0, 1.0, 0.0, -2.0, 1.0]
+    [-0.5, 0.0, 2.5, 0.0, -2.5, 1.0]
+
+Evaluation for arbitrary `z`::
+
+    >>> eulerpoly(2,3)
+    6.0
+    >>> eulerpoly(5,4)
+    423.5
+    >>> eulerpoly(35, 11111111112)
+    3.994957561486776072734601e+351
+    >>> eulerpoly(4, 10+20j)
+    (-47990.0 - 235980.0j)
+    >>> eulerpoly(2, '-3.5e-5')
+    0.000035001225
+    >>> eulerpoly(3, 0.5)
+    0.0
+    >>> eulerpoly(55, -10**80)
+    -1.0e+4400
+    >>> eulerpoly(5, -inf)
+    -inf
+    >>> eulerpoly(6, -inf)
+    +inf
+
+Computing Euler numbers::
+
+    >>> 2**26 * eulerpoly(26,0.5)
+    -4087072509293123892361.0
+    >>> eulernum(26)
+    -4087072509293123892361.0
+
+Evaluation is accurate for large `n` and small `z`::
+
+    >>> eulerpoly(100, 0.5)
+    2.29047999988194114177943e+108
+    >>> eulerpoly(1000, 10.5)
+    3.628120031122876847764566e+2070
+    >>> eulerpoly(10000, 10.5)
+    1.149364285543783412210773e+30688
+"""
+
+spherharm = r"""
+Evaluates the spherical harmonic `Y_l^m(\theta,\phi)`,
+
+.. math ::
+
+    Y_l^m(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi}\frac{(l-m)!}{(l+m)!}}
+        P_l^m(\cos \theta) e^{i m \phi}
+
+where `P_l^m` is an associated Legendre function (see :func:`~mpmath.legenp`).
+
+Here `\theta \in [0, \pi]` denotes the polar coordinate (ranging
+from the north pole to the south pole) and `\phi \in [0, 2 \pi]` denotes the
+azimuthal coordinate on a sphere. Care should be used since many different
+conventions for spherical coordinate variables are used.
+
+Usually spherical harmonics are considered for `l \in \mathbb{N}`,
+`m \in \mathbb{Z}`, `|m| \le l`. More generally, `l,m,\theta,\phi`
+are permitted to be complex numbers.
+
+.. note ::
+
+    :func:`~mpmath.spherharm` returns a complex number, even the value is
+    purely real.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/spherharm40.py
+
+`Y_{4,0}`:
+
+.. image :: /modules/mpmath/plots/spherharm40.png
+
+`Y_{4,1}`:
+
+.. image :: /modules/mpmath/plots/spherharm41.png
+
+`Y_{4,2}`:
+
+.. image :: /modules/mpmath/plots/spherharm42.png
+
+`Y_{4,3}`:
+
+.. image :: /modules/mpmath/plots/spherharm43.png
+
+`Y_{4,4}`:
+
+.. image :: /modules/mpmath/plots/spherharm44.png
+
+**Examples**
+
+Some low-order spherical harmonics with reference values::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> theta = pi/4
+    >>> phi = pi/3
+    >>> spherharm(0,0,theta,phi); 0.5*sqrt(1/pi)*expj(0)
+    (0.2820947917738781434740397 + 0.0j)
+    (0.2820947917738781434740397 + 0.0j)
+    >>> spherharm(1,-1,theta,phi); 0.5*sqrt(3/(2*pi))*expj(-phi)*sin(theta)
+    (0.1221506279757299803965962 - 0.2115710938304086076055298j)
+    (0.1221506279757299803965962 - 0.2115710938304086076055298j)
+    >>> spherharm(1,0,theta,phi); 0.5*sqrt(3/pi)*cos(theta)*expj(0)
+    (0.3454941494713354792652446 + 0.0j)
+    (0.3454941494713354792652446 + 0.0j)
+    >>> spherharm(1,1,theta,phi); -0.5*sqrt(3/(2*pi))*expj(phi)*sin(theta)
+    (-0.1221506279757299803965962 - 0.2115710938304086076055298j)
+    (-0.1221506279757299803965962 - 0.2115710938304086076055298j)
+
+With the normalization convention used, the spherical harmonics are orthonormal
+on the unit sphere::
+
+    >>> sphere = [0,pi], [0,2*pi]
+    >>> dS = lambda t,p: fp.sin(t)   # differential element
+    >>> Y1 = lambda t,p: fp.spherharm(l1,m1,t,p)
+    >>> Y2 = lambda t,p: fp.conj(fp.spherharm(l2,m2,t,p))
+    >>> l1 = l2 = 3; m1 = m2 = 2
+    >>> print(fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere))
+    (1+0j)
+    >>> m2 = 1    # m1 != m2
+    >>> print(fp.chop(fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere)))
+    0.0
+
+Evaluation is accurate for large orders::
+
+    >>> spherharm(1000,750,0.5,0.25)
+    (3.776445785304252879026585e-102 - 5.82441278771834794493484e-102j)
+
+Evaluation works with complex parameter values::
+
+    >>> spherharm(1+j, 2j, 2+3j, -0.5j)
+    (64.44922331113759992154992 + 1981.693919841408089681743j)
+"""
+
+scorergi = r"""
+Evaluates the Scorer function
+
+.. math ::
+
+    \operatorname{Gi}(z) =
+    \operatorname{Ai}(z) \int_0^z \operatorname{Bi}(t) dt +
+    \operatorname{Bi}(z) \int_z^{\infty} \operatorname{Ai}(t) dt
+
+which gives a particular solution to the inhomogeneous Airy
+differential equation `f''(z) - z f(z) = 1/\pi`. Another
+particular solution is given by the Scorer Hi-function
+(:func:`~mpmath.scorerhi`). The two functions are related as
+`\operatorname{Gi}(z) + \operatorname{Hi}(z) = \operatorname{Bi}(z)`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/gi.py
+.. image :: /modules/mpmath/plots/gi.png
+.. literalinclude :: /modules/mpmath/plots/gi_c.py
+.. image :: /modules/mpmath/plots/gi_c.png
+
+**Examples**
+
+Some values and limits::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> scorergi(0); 1/(power(3,'7/6')*gamma('2/3'))
+    0.2049755424820002450503075
+    0.2049755424820002450503075
+    >>> diff(scorergi, 0); 1/(power(3,'5/6')*gamma('1/3'))
+    0.1494294524512754526382746
+    0.1494294524512754526382746
+    >>> scorergi(+inf); scorergi(-inf)
+    0.0
+    0.0
+    >>> scorergi(1)
+    0.2352184398104379375986902
+    >>> scorergi(-1)
+    -0.1166722172960152826494198
+
+Evaluation for large arguments::
+
+    >>> scorergi(10)
+    0.03189600510067958798062034
+    >>> scorergi(100)
+    0.003183105228162961476590531
+    >>> scorergi(1000000)
+    0.0000003183098861837906721743873
+    >>> 1/(pi*1000000)
+    0.0000003183098861837906715377675
+    >>> scorergi(-1000)
+    -0.08358288400262780392338014
+    >>> scorergi(-100000)
+    0.02886866118619660226809581
+    >>> scorergi(50+10j)
+    (0.0061214102799778578790984 - 0.001224335676457532180747917j)
+    >>> scorergi(-50-10j)
+    (5.236047850352252236372551e+29 - 3.08254224233701381482228e+29j)
+    >>> scorergi(100000j)
+    (-8.806659285336231052679025e+6474077 + 8.684731303500835514850962e+6474077j)
+
+Verifying the connection between Gi and Hi::
+
+    >>> z = 0.25
+    >>> scorergi(z) + scorerhi(z)
+    0.7287469039362150078694543
+    >>> airybi(z)
+    0.7287469039362150078694543
+
+Verifying the differential equation::
+
+    >>> for z in [-3.4, 0, 2.5, 1+2j]:
+    ...     chop(diff(scorergi,z,2) - z*scorergi(z))
+    ...
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+    -0.3183098861837906715377675
+
+Verifying the integral representation::
+
+    >>> z = 0.5
+    >>> scorergi(z)
+    0.2447210432765581976910539
+    >>> Ai,Bi = airyai,airybi
+    >>> Bi(z)*(Ai(inf,-1)-Ai(z,-1)) + Ai(z)*(Bi(z,-1)-Bi(0,-1))
+    0.2447210432765581976910539
+
+**References**
+
+1. [DLMF]_ section 9.12: Scorer Functions
+
+"""
+
+scorerhi = r"""
+Evaluates the second Scorer function
+
+.. math ::
+
+    \operatorname{Hi}(z) =
+    \operatorname{Bi}(z) \int_{-\infty}^z \operatorname{Ai}(t) dt -
+    \operatorname{Ai}(z) \int_{-\infty}^z \operatorname{Bi}(t) dt
+
+which gives a particular solution to the inhomogeneous Airy
+differential equation `f''(z) - z f(z) = 1/\pi`. See also
+:func:`~mpmath.scorergi`.
+
+**Plots**
+
+.. literalinclude :: /modules/mpmath/plots/hi.py
+.. image :: /modules/mpmath/plots/hi.png
+.. literalinclude :: /modules/mpmath/plots/hi_c.py
+.. image :: /modules/mpmath/plots/hi_c.png
+
+**Examples**
+
+Some values and limits::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> scorerhi(0); 2/(power(3,'7/6')*gamma('2/3'))
+    0.4099510849640004901006149
+    0.4099510849640004901006149
+    >>> diff(scorerhi,0); 2/(power(3,'5/6')*gamma('1/3'))
+    0.2988589049025509052765491
+    0.2988589049025509052765491
+    >>> scorerhi(+inf); scorerhi(-inf)
+    +inf
+    0.0
+    >>> scorerhi(1)
+    0.9722051551424333218376886
+    >>> scorerhi(-1)
+    0.2206696067929598945381098
+
+Evaluation for large arguments::
+
+    >>> scorerhi(10)
+    455641153.5163291358991077
+    >>> scorerhi(100)
+    6.041223996670201399005265e+288
+    >>> scorerhi(1000000)
+    7.138269638197858094311122e+289529652
+    >>> scorerhi(-10)
+    0.0317685352825022727415011
+    >>> scorerhi(-100)
+    0.003183092495767499864680483
+    >>> scorerhi(100j)
+    (-6.366197716545672122983857e-9 + 0.003183098861710582761688475j)
+    >>> scorerhi(50+50j)
+    (-5.322076267321435669290334e+63 + 1.478450291165243789749427e+65j)
+    >>> scorerhi(-1000-1000j)
+    (0.0001591549432510502796565538 - 0.000159154943091895334973109j)
+
+Verifying the differential equation::
+
+    >>> for z in [-3.4, 0, 2, 1+2j]:
+    ...     chop(diff(scorerhi,z,2) - z*scorerhi(z))
+    ...
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+    0.3183098861837906715377675
+
+Verifying the integral representation::
+
+    >>> z = 0.5
+    >>> scorerhi(z)
+    0.6095559998265972956089949
+    >>> Ai,Bi = airyai,airybi
+    >>> Bi(z)*(Ai(z,-1)-Ai(-inf,-1)) - Ai(z)*(Bi(z,-1)-Bi(-inf,-1))
+    0.6095559998265972956089949
 
 """

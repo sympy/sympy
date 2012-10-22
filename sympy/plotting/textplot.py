@@ -6,15 +6,16 @@ def textplot(expr, a, b, W=55, H=18):
     should contain a single symbol, e.g. x or something else) over the
     interval [a, b].
 
-    Example: textplot(sin(t)*t, 0, 15)
+    Examples
+    ========
+
+    textplot(sin(t)*t, 0, 15)
     """
 
-    f = None
-    for x in expr.atoms():
-        if isinstance(x, Symbol):
-            f = lambdify([x], expr)
-            break
-    assert f is not None
+    free = expr.free_symbols
+    assert len(free) <= 1
+    x = free.pop() if free else Dummy()
+    f = lambdify([x], expr)
     a = float(a)
     b = float(b)
 
@@ -22,15 +23,20 @@ def textplot(expr, a, b, W=55, H=18):
     y = [0] * W
     for x in range(W):
         try:
-            y[x] = f(a + (b-a)/float(W)*x)
-        except:
+            y[x] = f(a+(b-a)/float(W)*x)
+        except TypeError:
             y[x] = 0
 
     # Normalize height to screen space
     ma = max(y)
     mi = min(y)
+    if ma == mi:
+        if ma:
+            mi, ma = sorted([0, 2*ma])
+        else:
+            mi, ma = -1, 1
     for x in range(W):
-        y[x] = int(float(H) * (y[x] - mi) / (ma - mi))
+        y[x] = int(float(H)*(y[x]-mi)/(ma-mi))
     margin = 7
     print
 
@@ -41,12 +47,17 @@ def textplot(expr, a, b, W=55, H=18):
                 s[x] = '.'
 
         # Print y values
-        if h == H-1:    prefix = ("%g" % ma).rjust(margin)[:margin]
-        elif h == H//2: prefix = ("%g" % ((mi+ma)/2)).rjust(margin)[:margin]
-        elif h == 0:    prefix = ("%g" % mi).rjust(margin)[:margin]
-        else:           prefix = " "*margin
+        if h == H-1:
+            prefix = ("%g" % ma).rjust(margin)[:margin]
+        elif h == H//2:
+            prefix = ("%g" % ((mi+ma)/2)).rjust(margin)[:margin]
+        elif h == 0:
+            prefix = ("%g" % mi).rjust(margin)[:margin]
+        else:
+            prefix = " "*margin
         s = "".join(s)
-        if h == H//2: s = s.replace(" ", "-")
+        if h == H//2:
+            s = s.replace(" ", "-")
         print prefix + " | " + s
 
     # Print x values

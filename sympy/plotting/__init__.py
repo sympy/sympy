@@ -1,17 +1,7 @@
-"""Plotting module that can plot 2D and 3D functions
-"""
-try:
-    try:
-        from ctypes import *
-    except:
-        raise ImportError("ctypes is required for plotting.\n'easy_install ctypes' or visit http://sourceforge.net/projects/ctypes/")
-
-    def Plot(*args, **kwargs):
-        import plot
-        return plot.Plot(*args, **kwargs)
-
-except Exception, e:
-    def Plot(*args, **kwargs):
-        raise e
-
+from plot import plot_backends
+from plot_implicit import plot_implicit
+from proxy_pyglet import Plot
 from textplot import textplot
+from pygletplot import PygletPlot
+from plot import (plot, plot_parametric, plot3d, plot3d_parametric_surface,
+                    plot3d_parametric_line)

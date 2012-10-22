@@ -14,6 +14,8 @@ should also inspect the /tmp/x that all the changes generated are actually
 correct.
 """
 
+from __future__ import with_statement
+
 from glob import glob
 import re
 import difflib
@@ -22,8 +24,9 @@ def get_files_mpmath():
     return glob("sympy/mpmath/tests/test_*.py")
 
 def fix_file(filename):
-    f = open(filename)
-    orig = f.read()
+    with open(filename) as f:
+        orig = f.read()
+
     # This converts stuff like "mpmath.dps -> sympy.mpmath.dps", but will leave
     # "sympy.mpmath.dps" untouched.
     s = re.sub("(?<!sympy\.)mpmath", "sympy.mpmath", orig)

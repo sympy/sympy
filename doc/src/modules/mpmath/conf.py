@@ -27,14 +27,14 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath']
 templates_path = []
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'mpmath'
-copyright = '2009, Fredrik Johansson'
+copyright = '2010, Fredrik Johansson'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

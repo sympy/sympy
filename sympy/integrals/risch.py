@@ -1,23 +1,25 @@
+from collections import defaultdict
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.function import Function
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, Atom, sympify
-from sympy.core.numbers import Integer, Rational
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.basic import C, sympify
+from sympy.core.numbers import Rational, I, pi
+from sympy.core.singleton import S
+from sympy.core.compatibility import permutations
 
-from sympy.functions import exp, sin , cos , tan , cot , asin
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh
-
+from sympy.functions import exp, sin, cos, tan, cot, asin, atan
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
 
-from sympy.polys import Poly, quo, gcd, lcm, root_factors, \
-    monomials, factor, PolynomialError
+from sympy.polys import quo, gcd, lcm, \
+    monomials, factor, cancel, PolynomialError
+from sympy.polys.polyroots import root_factors
 
-from sympy.utilities.iterables import make_list
+from sympy.core.compatibility import reduce
+from sympy.utilities.misc import default_sort_key
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -30,8 +32,12 @@ def components(f, x):
        >>> from sympy.integrals.risch import components
 
        >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+       set([x, sin(x), cos(x)])
 
+    See Also
+    ========
+
+    heurisch
     """
     result = set()
 
@@ -70,12 +76,12 @@ def _symbols(name, n):
         _symbols_cache[name] = lsyms
 
     while len(lsyms) < n:
-        lsyms.append( Symbol('%s%i' % (name, len(lsyms)), dummy=True) )
+        lsyms.append( Dummy('%s%i' % (name, len(lsyms))) )
 
     return lsyms[:n]
 
 
-def heurisch(f, x, **kwargs):
+def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
     """Compute indefinite integral using heuristic Risch algorithm.
 
        This is a heuristic approach to indefinite integration in finite
@@ -93,11 +99,10 @@ def heurisch(f, x, **kwargs):
        this algorithm can be made a full decision procedure.
 
        This is an internal integrator procedure. You should use toplevel
-       'integrate' function in most cases,  as this procedure needs some
+       '_integrate' function in most cases,  as this procedure needs some
        preprocessing steps and otherwise may fail.
 
-       Specification
-       ============
+       **Specification**
 
          heurisch(f, x, rewrite=False, hints=None)
 
@@ -120,7 +125,7 @@ def heurisch(f, x, **kwargs):
        >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
-       y*log(1 + tan(x)**2)/2
+       y*log(tan(x)**2 + 1)/2
 
        See Manuel Bronstein's "Poor Man's Integrator":
 
@@ -142,6 +147,12 @@ def heurisch(f, x, **kwargs):
            Algorithm (II), ACM Transactions on Mathematical
            Software 11 (1985), 356-362.
 
+    See Also
+    ========
+
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
+    components
     """
     f = sympify(f)
 
@@ -158,8 +169,6 @@ def heurisch(f, x, **kwargs):
         (sinh, cosh, coth)  : tanh,
     }
 
-    rewrite = kwargs.pop('rewrite', False)
-
     if rewrite:
         for candidates, rule in rewritables.iteritems():
             f = f.rewrite(candidates, rule)
@@ -172,12 +181,11 @@ def heurisch(f, x, **kwargs):
 
     terms = components(f, x)
 
-    hints = kwargs.get('hints', None)
-
     if hints is not None:
         if not hints:
             a = Wild('a', exclude=[x])
             b = Wild('b', exclude=[x])
+            c = Wild('c', exclude=[x])
 
             for g in set(terms):
                 if g.is_Function:
@@ -186,6 +194,25 @@ def heurisch(f, x, **kwargs):
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
+
+                        M = g.args[0].match(a*x**2 + b*x + c)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
+                            elif M[a].is_negative:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
+
+                        M = g.args[0].match(a*log(x)**2)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(-I*erf(I*(sqrt(M[a])*log(x)+1/(2*sqrt(M[a])))))
+                            if M[a].is_negative:
+                                terms.add(erf(sqrt(-M[a])*log(x)-1/(2*sqrt(-M[a]))))
+
                 elif g.is_Pow:
                     if g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
@@ -195,12 +222,23 @@ def heurisch(f, x, **kwargs):
                                 terms.add(asinh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
                                 terms.add(asin(sqrt(-M[a]/M[b])*x))
+
+                        M = g.base.match(a*x**2 - b)
+
+                        if M is not None and M[b].is_positive:
+                            if M[a].is_positive:
+                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                            elif M[a].is_negative:
+                                terms.add((-M[b]/2*sqrt(-M[a])*\
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2-M[b]))))
+
         else:
             terms |= set(hints)
 
     for g in set(terms):
-        terms |= components(Poly.cancel(g.diff(x)), x)
+        terms |= components(cancel(g.diff(x)), x)
 
+    # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
 
     mapping = dict(zip(terms, V))
@@ -210,49 +248,73 @@ def heurisch(f, x, **kwargs):
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
 
-    def substitute(expr):
+    if mappings is None:
+        # Pre-sort mapping in order of largest to smallest expressions (last is always x).
+        def _sort_key(arg):
+            return default_sort_key(arg[0].as_independent(x)[1])
+        mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
+        mappings = permutations(mapping)
+
+    def _substitute(expr):
         return expr.subs(mapping)
 
-    diffs = [ substitute(Poly.cancel(g.diff(x))) for g in terms ]
+    for mapping in mappings:
+        # TODO: optimize this by not generating permutations where mapping[-1] != x.
+        if mapping[-1][0] != x:
+            continue
 
-    denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    denom = reduce(lambda p, q: lcm(p, q, V), denoms)
+        mapping = list(mapping)
 
-    numers = [ Poly.cancel(denom * g, *V) for g in diffs ]
+        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
+        denoms = [ g.as_numer_denom()[1] for g in diffs ]
 
-    def derivation(h):
+        if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
+            denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+            break
+    else:
+        if not rewrite:
+            result = heurisch(f, x, rewrite=True, hints=hints)
+
+            if result is not None:
+                return indep*result
+
+        return None
+
+    numers = [ cancel(denom*g) for g in diffs ]
+
+    def _derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
-    def deflation(p):
+    def _deflation(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
-            if derivation(p) is not S.Zero:
-                c, q = p.as_poly(y).as_primitive()
-                return deflation(c)*gcd(q, q.diff(y))
+            if _derivation(p) is not S.Zero:
+                c, q = p.as_poly(y).primitive()
+                return _deflation(c)*gcd(q, q.diff(y)).as_expr()
         else:
             return p
 
-    def splitter(p):
+    def _splitter(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
-            if derivation(y) is not S.Zero:
-                c, q = p.as_poly(y).as_primitive()
+            if _derivation(y) is not S.Zero:
+                c, q = p.as_poly(y).primitive()
 
-                q = q.as_basic()
+                q = q.as_expr()
 
-                h = gcd(q, derivation(q), y)
+                h = gcd(q, _derivation(q), y)
                 s = quo(h, gcd(q, q.diff(y), y), y)
 
-                c_split = splitter(c)
+                c_split = _splitter(c)
 
-                if s.as_poly(y).degree == 0:
+                if s.as_poly(y).degree() == 0:
                     return (c_split[0], q * c_split[1])
 
-                q_split = splitter(Poly.cancel((q, s), *V))
+                q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
         else:
@@ -263,28 +325,33 @@ def heurisch(f, x, **kwargs):
     for term in terms:
         if term.is_Function:
             if term.func is tan:
-                special[1 + substitute(term)**2] = False
+                special[1 + _substitute(term)**2] = False
             elif term.func is tanh:
-                special[1 + substitute(term)] = False
-                special[1 - substitute(term)] = False
+                special[1 + _substitute(term)] = False
+                special[1 - _substitute(term)] = False
             elif term.func is C.LambertW:
-                special[substitute(term)] = True
+                special[_substitute(term)] = True
 
-    F = substitute(f)
+    F = _substitute(f)
 
     P, Q = F.as_numer_denom()
 
-    u_split = splitter(denom)
-    v_split = splitter(Q)
+    u_split = _splitter(denom)
+    v_split = _splitter(Q)
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
-    a, b, c = [ p.as_poly(*V).degree for p in [s, P, Q] ]
+    polified = [ p.as_poly(*V) for p in [s, P, Q] ]
 
-    poly_denom = s * v_split[0] * deflation(v_split[1])
+    if None in polified:
+        return None
 
-    def exponent(g):
+    a, b, c = [ p.total_degree() for p in polified ]
+
+    poly_denom = (s * v_split[0] * _deflation(v_split[1])).as_expr()
+
+    def _exponent(g):
         if g.is_Pow:
             if g.exp.is_Rational and g.exp.q != 1:
                 if g.exp.p > 0:
@@ -293,12 +360,12 @@ def heurisch(f, x, **kwargs):
                     return abs(g.exp.p + g.exp.q)
             else:
                 return 1
-        elif not g.is_Atom:
-            return max([ exponent(h) for h in g.args ])
+        elif not g.is_Atom and g.args:
+            return max([ _exponent(h) for h in g.args ])
         else:
             return 1
 
-    A, B = exponent(f), a + max(b, c)
+    A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
         monoms = monomials(V, A + B - 1)
@@ -315,16 +382,17 @@ def heurisch(f, x, **kwargs):
     for poly in polys:
         if poly.has(*V):
             try:
-                factorization = factor(poly, *V)
+                factorization = factor(poly, greedy=True)
             except PolynomialError:
                 factorization = poly
+            factorization = poly
 
             if factorization.is_Mul:
                 reducibles |= set(factorization.args)
             else:
                 reducibles.add(factorization)
 
-    def integrate(field=None):
+    def _integrate(field=None):
         irreducibles = set()
 
         for poly in reducibles:
@@ -334,7 +402,7 @@ def heurisch(f, x, **kwargs):
             else:
                 continue
 
-            irreducibles |= set(root_factors(poly, z, domain=field))
+            irreducibles |= set(root_factors(poly, z, filter=field))
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))
@@ -348,34 +416,27 @@ def heurisch(f, x, **kwargs):
 
         candidate = poly_part/poly_denom + Add(*log_part)
 
-        h = F - derivation(candidate) / denom
+        h = F - _derivation(candidate) / denom
 
-        numer = h.as_numer_denom()[0].expand()
+        numer = h.as_numer_denom()[0].expand(force=True)
 
-        equations = {}
+        equations = defaultdict(lambda: S.Zero)
 
-        for term in make_list(numer, Add):
+        for term in Add.make_args(numer):
             coeff, dependent = term.as_independent(*V)
-
-            if dependent in equations:
-                equations[dependent] += coeff
-            else:
-                equations[dependent] = coeff
+            equations[dependent] += coeff
 
         solution = solve(equations.values(), *coeffs)
 
-        if solution is not None:
-            return (solution, candidate, coeffs)
-        else:
-            return None
+        return (solution, candidate, coeffs) if solution else None
 
     if not (F.atoms(Symbol) - set(V)):
-        result = integrate('Q')
+        result = _integrate('Q')
 
         if result is None:
-            result = integrate()
+            result = _integrate()
     else:
-        result = integrate()
+        result = _integrate()
 
     if result is not None:
         (solution, candidate, coeffs) = result
@@ -387,18 +448,17 @@ def heurisch(f, x, **kwargs):
                 antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = antideriv.subs(rev_mapping)
-        antideriv = Poly.cancel(antideriv).expand()
+        antideriv = cancel(antideriv).expand(force=True)
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]
 
         return indep * antideriv
     else:
-        if not rewrite:
-            result = heurisch(f, x, rewrite=True, **kwargs)
+        if retries >= 0:
+            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries-1)
 
             if result is not None:
-                return indep * result
+                return indep*result
 
         return None
-

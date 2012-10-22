@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 """FEM library
 
-Demonstrates some simple finite element definitions, and computes a mass matrix
+Demonstrates some simple finite element definitions, and computes a mass
+matrix
 
 $ python fem.py
 [  1/60,     0, -1/360,     0, -1/90, -1/360]
@@ -13,16 +16,16 @@ $ python fem.py
 """
 
 from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
-        integrate, diff, pprint
+        integrate, diff, pprint, reduced
 
-x, y, z = symbols('x y z')
+x, y, z = symbols('x,y,z')
 
 class ReferenceSimplex:
    def __init__(self, nsd):
        self.nsd = nsd
        coords = []
        if nsd <= 3:
-           coords = symbols('xyz')[:nsd]
+           coords = symbols('x,y,z')[:nsd]
        else:
            coords = []
            for d in range(0,nsd):
@@ -129,8 +132,8 @@ def create_matrix(equations, coeffs):
        c = coeffs[j]
        for i in range(0, len(equations)):
            e = equations[i]
-           d, r = div(e, c, *coeffs)
-           A[i,j] = d
+           d, _ = reduced(e, [c])
+           A[i,j] = d[0]
    return A
 
 

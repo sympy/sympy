@@ -1,22 +1,15 @@
-from sympy.utilities.pytest import XFAIL
-from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, abs, \
-    Rational, Real, S, WildFunction
-from sympy.polys.polynomial import Poly
-from sympy.geometry import Point, Circle, Ellipse
+from sympy.utilities.pytest import raises
+from sympy import symbols, Function, Integer, Matrix, Abs, \
+    Rational, Float, S, WildFunction, ImmutableMatrix
+from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {}
 exec "from sympy import *" in ENV
-# These classes have to be added separately:
-ENV["Infinity"] = S.Infinity
-ENV["NegativeInfinity"] = S.NegativeInfinity
-ENV["NegativeOne"] = S.NegativeOne
-ENV["One"] = S.One
-ENV["Zero"] = S.Zero
 
 def sT(expr, string):
     """
@@ -29,17 +22,15 @@ def sT(expr, string):
     assert eval(string, ENV) == expr
 
 def test_printmethod():
-    class R(oo.__class__):
-        def _sympyrepr_(self, printer):
-            return "foo"
-    assert srepr(R()) == "foo"
-    class R(abs):
-        def _sympyrepr_(self, printer):
+    class R(Abs):
+        def _sympyrepr(self, printer):
             return "foo(%s)" % printer._print(self.args[0])
     assert srepr(R(x)) == "foo(Symbol('x'))"
 
 def test_Add():
     sT(x+y, "Add(Symbol('x'), Symbol('y'))")
+    assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
+    assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 
 def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
@@ -47,12 +38,25 @@ def test_Function():
     sT(Function('f'), "Function('f')")
 
 def test_Geometry():
-    sT(Point(0,0),  "Point(Zero, Zero)")
-    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Zero, Zero), Integer(5), One)")
+    sT(Point(0,0),  "Point(Integer(0), Integer(0))")
+    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
-def test_Infinity():
-    sT(oo, "Infinity")
+def test_Singletons():
+    sT(S.Catalan, 'Catalan')
+    sT(S.ComplexInfinity, 'zoo')
+    sT(S.EulerGamma, 'EulerGamma')
+    sT(S.Exp1, 'E')
+    sT(S.GoldenRatio, 'GoldenRatio')
+    sT(S.Half, 'Rational(1, 2)')
+    sT(S.ImaginaryUnit, 'I')
+    sT(S.Infinity, 'oo')
+    sT(S.NaN, 'nan')
+    sT(S.NegativeInfinity, '-oo')
+    sT(S.NegativeOne, 'Integer(-1)')
+    sT(S.One, 'Integer(1)')
+    sT(S.Pi, 'pi')
+    sT(S.Zero, 'Integer(0)')
 
 def test_Integer():
     sT(Integer(4), "Integer(4)")
@@ -61,34 +65,23 @@ def test_list():
     sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
 
 def test_Matrix():
-    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), One], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
+        sT(cls([[x**+1, 1], [y, x+y]]),
+           "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
-def test_NaN():
-    sT(nan, "nan")
+        sT(cls(), "%s([])"%name)
 
-def test_NegativeInfinity():
-    sT(-oo, "NegativeInfinity")
-
-def test_NegativeOne():
-    sT(-Integer(1), "NegativeOne")
-
-def test_One():
-    sT(S.One, "One")
-
-def test_Poly():
-    sT(Poly(7, x), "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')")
-    sT(Poly(2*x*y + 7, x, y), "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))], Symbol('x'), Symbol('y'), order='grlex')")
-    sT(Poly(2*x*y - 7, x, y, order='grevlex'), "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))], Symbol('x'), Symbol('y'), order='grevlex')")
+        sT(cls([[x**+1, 1], [y, x+y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])"%name)
 
 def test_Rational():
     sT(Rational(1,3), "Rational(1, 3)")
     sT(Rational(-1,3), "Rational(-1, 3)")
 
-def test_Real():
-    sT(Real('1.23', prec=3), "Real('1.22998', prec=3)")
-    sT(Real('1.23456789', prec=9), "Real('1.23456788994', prec=9)")
-    sT(Real('1.234567890123456789', prec=19), "Real('1.234567890123456789013', prec=19)")
-    sT(Real('0.60038617995049726', 15), "Real('0.60038617995049726', prec=15)")
+def test_Float():
+    sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
+    sT(Float('1.23456789', prec=9), "Float('1.23456788994', prec=9)")
+    sT(Float('1.234567890123456789', prec=19), "Float('1.234567890123456789013', prec=19)")
+    sT(Float('0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
 
 def test_Symbol():
     sT(x, "Symbol('x')")
@@ -101,6 +94,9 @@ def test_tuple():
 def test_WildFunction():
     sT(WildFunction('w'), "WildFunction('w')")
 
-def test_Zero():
-    sT(S.Zero, "Zero")
+def test_settins():
+    raises(TypeError, lambda: srepr(x, method="garbage"))
 
+def test_Mul():
+    sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
+    assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"

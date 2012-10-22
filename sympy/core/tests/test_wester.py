@@ -9,18 +9,19 @@ tested system.
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
-    normal, I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
+    I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, Symbol, floor, ceiling, solve, asinh, LambertW, N, apart,
+    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart,
     factorial2)
+
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.mpmath import mpi, mpc
 from sympy import mpmath
 
 R = Rational
-x,y,z = symbols('x','y','z')
-i,j,k,l,m,n = symbols('i', 'j', 'k', 'l', 'm', 'n', integer=True)
+x, y, z = symbols('x, y, z')
+i,j,k,l,m,n = symbols('i, j, k, l, m, n', integer=True)
 f = Function('f')
 g = Function('g')
 
@@ -194,7 +195,7 @@ def test_F1():
     assert rf(x, 3) == x*(1+x)*(2+x)
 
 def test_F2():
-    assert binomial(n, 3) == n*(1-n)*(2-n)/6
+    assert binomial(n, 3) == n*(n-1)*(n-2)/6
 
 @XFAIL
 def test_F3():
@@ -299,7 +300,7 @@ def test_H11():
 def test_H12():
     num = x**2 - 4
     den = x**2 + 4*x + 4
-    assert normal(num, den, x) == (x-2, x+2, 1)
+    assert simplify(num/den) == (x-2)/(x+2)
 
 @XFAIL
 def test_H13():
@@ -328,10 +329,10 @@ def test_H15():
     raise NotImplementedError("factor(x**3 + x**2 - 7) then expand it back to the original form")
 
 def test_H16():
-    assert factor(x**100 - 1) == (-(1 + x)*(1 + x**2)*(1 - x)*(1 + x + x**2
-        + x**3 + x**4)*(1 - x + x**2 - x**3 + x**4)*(1 + x**5 + x**10 + x**15
-            + x**20)*(1 - x**5 + x**10 - x**15 + x**20)*(1 - x**10 + x**20
-                - x**30 + x**40)*(1 - x**2 + x**4 - x**6 + x**8))
+    assert factor(x**100 - 1) == ((x - 1)*(x + 1)*(x**2 + 1)*(x**4 - x**3
+        + x**2 - x + 1)*(x**4 + x**3 + x**2 + x + 1)*(x**8 - x**6 + x**4
+        - x**2 + 1)*(x**20 - x**15 + x**10 - x**5 + 1)*(x**20 + x**15 + x**10
+        + x**5 + 1)*(x**40 - x**30 + x**20 - x**10 + 1))
 
 @XFAIL
 def test_H17():
@@ -459,9 +460,9 @@ def test_I9():
 def test_I10():
     assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) == nan
 
-@XFAIL
-def test_I11():
-    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
+#@XFAIL
+#def test_I11():
+#    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
 
 @XFAIL
 def test_I12():
@@ -510,11 +511,11 @@ def test_J9():
 
 @XFAIL
 def test_J10():
-    mu, nu = symbols('mu', 'nu', integer=True)
+    mu, nu = symbols('mu, nu', integer=True)
     assert assoc_legendre(nu, mu, 0) == 2**mu*sqrt(pi)/gamma((nu-mu)/2+1)/gamma((-nu-mu+1)/2)
 
 def test_J11():
-    assert assoc_legendre(3,1,x) == sqrt(1 - x**2)*(R(3,2) - R(15,2)*x**2)
+    assert simplify(assoc_legendre(3,1,x)) == simplify(-R(3,2)*sqrt(1-x**2)*(5*x**2 - 1))
 
 def test_J12():
     skip('takes too much time')
@@ -522,7 +523,7 @@ def test_J12():
 
 @XFAIL
 def test_J13():
-    a = Symbol("a", integer=True, negative=False)
+    a = symbols('a', integer=True, negative=False)
     assert chebyshevt(a, -1) == (-1)**a
 
 @XFAIL
@@ -549,7 +550,7 @@ def test_J18():
 # K. The Complex Domain
 
 def test_K1():
-    z1, z2 = symbols('z1', 'z2', complex=True)
+    z1, z2 = symbols('z1, z2', complex=True)
     assert re(z1+I*z2) == -im(z2) + re(z1)
     assert im(z1+I*z2) ==  im(z1) + re(z2)
 
@@ -558,14 +559,14 @@ def test_K2():
 
 @XFAIL
 def test_K3():
-    a, b = symbols('a', 'b', real=True)
+    a, b = symbols('a, b', real=True)
     assert simplify(abs(1/(a+I/a+I*b))) == 1/sqrt(a**2 + (I/a+b)**2)
 
 def test_K4():
     assert log(3+4*I).expand(complex=True) == log(5) + I*atan(R(4,3))
 
 def test_K5():
-    x, y = symbols('x', 'y', real=True)
+    x, y = symbols('x, y', real=True)
     assert tan(x+I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 +
     sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
 
@@ -577,24 +578,24 @@ def test_K6():
     assert sexpr != sqrt(y)
 
 def test_K7():
-    y = Symbol('y', negative=False)
+    y = symbols('y', real=True, negative=False)
     expr = sqrt(x*y*abs(z)**2)/(sqrt(x)*abs(z))
     sexpr = simplify(expr)
     assert sexpr == sqrt(y)
 
 def test_K8():
-    z = Symbol('z', complex=True)
+    z = symbols('z', complex=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0
-    z = Symbol('z', complex=True, negative=False)
+    z = symbols('z', complex=True, negative=False)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
 def test_K9():
-    z = Symbol('z', real=True, positive=True)
+    z = symbols('z', real=True, positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
 @XFAIL
 def test_K10():
-    z = Symbol('z', real=True, negative=True)
+    z = symbols('z', real=True, negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
 
 # This goes up to K25
@@ -660,25 +661,25 @@ def test_M5():
     assert solve(x**6-9*x**4-4*x**3+27*x**2-36*x-23,x) == [2**(1/3)+sqrt(3), 2**(1/3)-sqrt(3),+sqrt(3)-1/2**(2/3)+I*sqrt(3)/2**(2/3), +sqrt(3)-1/2**(2/3)-I*sqrt(3)/2**(2/3), -sqrt(3)-1/2**(2/3)+I*sqrt(3)/2**(2/3), -sqrt(3)-1/2**(2/3)-I*sqrt(3)/2**(2/3)]
 
 def test_M6():
-    assert solve(x**7-1,x) == [-I*sin(2*pi/7) + cos(2*pi/7), -cos(3*pi/7) - I*sin(3*pi/7), -cos(pi/7) + I*sin(pi/7), 1, -cos(3*pi/7) + I*sin(3*pi/7), -cos(pi/7) - I*sin(pi/7), I*sin(2*pi/7) + cos(2*pi/7)]
-    # The paper asks for exp terms, but sin's and cos's are acceptable to me
+    assert set(solve(x**7-1,x)) == set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0,7)])
+    # The paper asks for exp terms, but sin's and cos's may be acceptable
 
 def test_M7():
-    assert solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46,x) == \
-        [1 + sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2, \
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2, \
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2, \
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2, \
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2, \
-        1 - sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2, \
-        1 - sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2, \
-        1 + sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2]
+    assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+        226*x**2 - 140*x + 46,x)) == set(
+        [1 + sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2,
+        1 - sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2,
+        1 + sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2])
 
 def test_M8():
     z = symbols('z', complex = True)
-    assert solve(exp(2*x)+2*exp(x)+1-z,x) == \
-        [log(1 + z - 2*sqrt(z))/2, log(1 + z + 2*sqrt(z))/2]
+    assert set(solve(exp(2*x)+2*exp(x)+1-z,x)) == \
+        set([log(1 + z - 2*sqrt(z))/2, log(1 + z + 2*sqrt(z))/2])
     # This one could be simplified better (the 1/2 could be pulled into the log
     # as a sqrt, and the function inside the log can be factored as a square,
     # giving [log(sqrt(z) - 1), log(sqrt(z) + 1)]). Also, there should be an
@@ -733,4 +734,3 @@ def test_M19():
 def test_M20():
     assert solve(sqrt(x**2+1)-x+2,x) == []
     # This equation has no solutions
-

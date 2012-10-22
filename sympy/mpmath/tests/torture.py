@@ -50,26 +50,34 @@ if "-nogmpy" in sys.argv:
     sys.argv.remove('-nogmpy')
     os.environ['MPMATH_NOGMPY'] = 'Y'
 
-from sympy.mpmath import *
+filt = ''
+if not sys.argv[-1].endswith(".py"):
+    filt = sys.argv[-1]
 
-def test_asymp(f, maxdps=150, verbose=False):
+from mpmath import *
+from mpmath.libmp.backend import exec_
+
+def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
     dps = [5,15,25,50,90,150,500,1500,5000,10000]
     dps = [p for p in dps if p <= maxdps]
     def check(x,y,p,inpt):
         if abs(x-y)/abs(y) < workprec(20)(power)(10, -p+1):
             return
-        print
-        print "Error!"
-        print "Input:", inpt
-        print "dps =", p
-        print "Result 1:", x
-        print "Result 2:", y
-        print "Absolute error:", abs(x-y)
-        print "Relative error:", abs(x-y)/abs(y)
+        print()
+        print("Error!")
+        print("Input:", inpt)
+        print("dps =", p)
+        print("Result 1:", x)
+        print("Result 2:", y)
+        print("Absolute error:", abs(x-y))
+        print("Relative error:", abs(x-y)/abs(y))
         raise AssertionError
-    for n in range(-20,20):
+    exponents = range(-20,20)
+    if huge_range:
+        exponents += [-1000, -100, -50, 50, 100, 1000]
+    for n in exponents:
         if verbose:
-            print ".",
+            print(".", end=' ')
         mp.dps = 25
         xpos = mpf(10)**n / 1.1287
         xneg = -xpos
@@ -78,7 +86,7 @@ def test_asymp(f, maxdps=150, verbose=False):
         xcomplex2 = xpos*(-1+j)
         for i in range(len(dps)):
             if verbose:
-                print "Testing dps = %s" % dps[i]
+                print("Testing dps = %s" % dps[i])
             mp.dps = dps[i]
             new = f(xpos), f(xneg), f(ximag), f(xcomplex1), f(xcomplex2)
             if i != 0:
@@ -90,7 +98,7 @@ def test_asymp(f, maxdps=150, verbose=False):
                 check(prev[4], new[4], p, xcomplex2)
             prev = new
     if verbose:
-        print
+        print()
 
 a1, a2, a3, a4, a5 = 1.5, -2.25, 3.125, 4, 2
 
@@ -119,31 +127,33 @@ test_asymp(lambda z: +twinprime, maxdps=150)
 test_asymp(lambda z: stieltjes(2), maxdps=150)
 test_asymp(lambda z: +mertens, maxdps=150)
 test_asymp(lambda z: +apery, maxdps=5000)
-test_asymp(sqrt, maxdps=10000)
-test_asymp(cbrt, maxdps=5000)
-test_asymp(lambda z: root(z,4), maxdps=5000)
-test_asymp(lambda z: root(z,-5), maxdps=5000)
-test_asymp(exp, maxdps=5000)
+test_asymp(sqrt, maxdps=10000, huge_range=True)
+test_asymp(cbrt, maxdps=5000, huge_range=True)
+test_asymp(lambda z: root(z,4), maxdps=5000, huge_range=True)
+test_asymp(lambda z: root(z,-5), maxdps=5000, huge_range=True)
+test_asymp(exp, maxdps=5000, huge_range=True)
 test_asymp(expm1, maxdps=1500)
-test_asymp(ln, maxdps=5000)
+test_asymp(ln, maxdps=5000, huge_range=True)
 test_asymp(cosh, maxdps=5000)
 test_asymp(sinh, maxdps=5000)
 test_asymp(tanh, maxdps=1500)
-test_asymp(sin, maxdps=5000)
-test_asymp(cos, maxdps=5000)
+test_asymp(sin, maxdps=5000, huge_range=True)
+test_asymp(cos, maxdps=5000, huge_range=True)
 test_asymp(tan, maxdps=1500)
-test_asymp(agm, maxdps=1500)
+test_asymp(agm, maxdps=1500, huge_range=True)
 test_asymp(ellipk, maxdps=1500)
 test_asymp(ellipe, maxdps=1500)
-test_asymp(lambertw)
+test_asymp(lambertw, huge_range=True)
 test_asymp(lambda z: lambertw(z,-1))
 test_asymp(lambda z: lambertw(z,1))
 test_asymp(lambda z: lambertw(z,4))
 test_asymp(gamma)
-test_asymp(loggamma)
+test_asymp(loggamma)  # huge_range=True ?
 test_asymp(ei)
 test_asymp(e1)
-test_asymp(li)
+test_asymp(li, huge_range=True)
+test_asymp(ci)
+test_asymp(si)
 test_asymp(chi)
 test_asymp(shi)
 test_asymp(erf)
@@ -188,31 +198,33 @@ test_asymp(lambda z: jtheta(1, z, 0.5))
 test_asymp(lambda z: jtheta(2, z, 0.5))
 test_asymp(lambda z: jtheta(3, z, 0.5))
 test_asymp(lambda z: jtheta(4, z, 0.5))
-test_asymp(lambda z: djtheta(1, z, 0.5, 1))
-test_asymp(lambda z: djtheta(2, z, 0.5, 1))
-test_asymp(lambda z: djtheta(3, z, 0.5, 1))
-test_asymp(lambda z: djtheta(4, z, 0.5, 1))
+test_asymp(lambda z: jtheta(1, z, 0.5, 1))
+test_asymp(lambda z: jtheta(2, z, 0.5, 1))
+test_asymp(lambda z: jtheta(3, z, 0.5, 1))
+test_asymp(lambda z: jtheta(4, z, 0.5, 1))
+test_asymp(barnesg, maxdps=90)
 """
 
 def testit(line):
-    print line
-    t1 = clock()
-    exec line
-    t2 = clock()
-    elapsed = t2-t1
-    print "Time:", elapsed, "for", line, "(OK)"
+    if filt in line:
+        print(line)
+        t1 = clock()
+        exec_(line)
+        t2 = clock()
+        elapsed = t2-t1
+        print("Time:", elapsed, "for", line, "(OK)")
 
 if __name__ == '__main__':
     try:
         from multiprocessing import Pool
         mapf = Pool(None).map
-        print "Running tests with multiprocessing"
+        print("Running tests with multiprocessing")
     except ImportError:
-        print "Not using multiprocessing"
+        print("Not using multiprocessing")
         mapf = map
     t1 = clock()
     tasks = cases.splitlines()
     mapf(testit, tasks)
     t2 = clock()
-    print "Cumulative wall time:", t2-t1
+    print("Cumulative wall time:", t2-t1)
 

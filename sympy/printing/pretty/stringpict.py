@@ -3,7 +3,7 @@
 All objects have a method that create a "stringPict",
 that can be used in the str method for pretty printing.
 
-Updates by Jason gedge (email <my last name> at cs mun ca)
+Updates by Jason Gedge (email <my last name> at cs mun ca)
     - terminal_string() method
     - minor fixes and changes (mostly to prettyForm)
 
@@ -12,10 +12,10 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from pretty_symbology import hobj, vobj, xsym, pretty_use_unicode
+from pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
 
 class stringPict(object):
-    """A ASCII picture.
+    """An ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
     #special value for stringPict.below
@@ -31,9 +31,6 @@ class stringPict(object):
         self.baseline = baseline
         self.binding = None
 
-    def __len__(self):
-        return len(str(self))
-
     @staticmethod
     def equalLengths(lines):
         # empty lines
@@ -44,9 +41,11 @@ class stringPict(object):
         return [line.center(width) for line in lines]
 
     def height(self):
+        """The height of the picture in characters."""
         return len(self.picture)
 
     def width(self):
+        """The width of the picture in characters."""
         return len(self.picture[0])
 
     @staticmethod
@@ -81,9 +80,13 @@ class stringPict(object):
         return '\n'.join(result), newBaseline
 
     def right(self, *args):
-        """Put pictures next to this one.
+        r"""Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
+
+        Examples
+        ========
+
         >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
              1
@@ -139,18 +142,22 @@ class stringPict(object):
         return '\n'.join(newPicture), newBaseline
 
     def below(self, *args):
-         """Put pictures under this picture.
-         Returns string, baseline arguments for stringPict.
-         Baseline is baseline of top picture
-         >>> from sympy.printing.pretty.stringpict import stringPict
-         >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
-         x+3
-         ---
-          3
+        """Put pictures under this picture.
+        Returns string, baseline arguments for stringPict.
+        Baseline is baseline of top picture
 
-         """
-         s, baseline = stringPict.stack(self, *args)
-         return s, self.baseline
+        Examples
+        ========
+
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
+        x+3
+        ---
+         3
+
+        """
+        s, baseline = stringPict.stack(self, *args)
+        return s, self.baseline
 
     def above(self, *args):
         """Put pictures above this picture.
@@ -241,11 +248,16 @@ class stringPict(object):
            break the expression in a form that can be printed
            on the terminal without being broken up.
          """
-        if not kwargs["wrap_line"]:
+        if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 
-        # Attempt to get a terminal width
-        ncols = self.terminal_width()
+        if kwargs["num_columns"] is not None:
+            # Read the argument num_columns if it is not None
+            ncols = kwargs["num_columns"]
+        else:
+            # Attempt to get a terminal width
+            ncols = self.terminal_width()
+
         ncols -= 2
         if ncols <= 0:
             ncols = 78
@@ -264,13 +276,13 @@ class stringPict(object):
         # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
         #                     |                      |                      |
         #                     | *d*f
-        do_vspacers = (self.height() > 1)
 
         i = 0
         svals = []
+        do_vspacers = (self.height() > 1)
         while i < self.width():
             svals.extend([ sval[i:i+ncols] for sval in self.picture ])
-            if (self.height() > 1):
+            if do_vspacers:
                 svals.append("") # a vertical spacer
             i += ncols
 
@@ -285,6 +297,7 @@ class stringPict(object):
         ncols = 0
         try:
             import curses
+            import io
             try:
                 curses.setupterm()
                 ncols = curses.tigetnum('cols')
@@ -306,6 +319,8 @@ class stringPict(object):
                     ncols = right - left + 1
             except curses.error:
                 pass
+            except io.UnsupportedOperation:
+                pass
         except (ImportError, TypeError):
             pass
         return ncols
@@ -313,9 +328,12 @@ class stringPict(object):
     def __eq__(self, o):
         if isinstance(o, str):
             return '\n'.join(self.picture) == o
-        elif isinstace(o, stringPict):
+        elif isinstance(o, stringPict):
             return o.picture == self.picture
         return False
+
+    def __hash__(self):
+        return super(stringPict, self).__hash__()
 
     def __str__(self):
         return str.join('\n', self.picture)
@@ -335,14 +353,17 @@ class stringPict(object):
 class prettyForm(stringPict):
     """Extension of the stringPict class that knows about
     basic math applications, optimizing double minus signs.
-    "Binding" is interpreted as follows:
-    ATOM this is an atom: never needs to be parenthesized
-    FUNC this is a function application: parenthesize if added (?)
-    DIV  this is a division: make wider division if divided
-    POW  this is a power: only parenthesize if exponent
-    MUL  this is a multiplication: parenthesize if powered
-    ADD  this is an addition: parenthesize if multiplied or powered
-    NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
+
+    "Binding" is interpreted as follows::
+
+        ATOM this is an atom: never needs to be parenthesized
+        FUNC this is a function application: parenthesize if added (?)
+        DIV  this is a division: make wider division if divided
+        POW  this is a power: only parenthesize if exponent
+        MUL  this is a multiplication: parenthesize if powered
+        ADD  this is an addition: parenthesize if multiplied or powered
+        NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
+
     """
     ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
 

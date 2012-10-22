@@ -1,22 +1,19 @@
 from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi, asin, together
+    pi, asin, together, root
 
-"""
-(*) in problem number means that the number is relative to the book "Anti-demidovich,
-problemas resueltos, Ed. URSS"
+# Numbers listed with the tests refer to problem numbers in the book
+# "Anti-demidovich, problemas resueltos, Ed. URSS"
 
-"""
-
-x = Symbol("x", real=True, unbounded=True)
+x = Symbol("x")
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3,0)
 
-def sqrt3(x):
-    return x**Rational(1,3)
+def root3(x):
+    return root(x, 3)
 
-def sqrt4(x):
-    return x**Rational(1,4)
+def root4(x):
+    return root(x, 4)
 
 def test_Limits_simple_0():
     assert limit((2**(x+1)+3**(x+1))/(2**x+3**x),x,oo)==3  #175
@@ -25,7 +22,7 @@ def test_Limits_simple_1():
     assert limit((x+1)*(x+2)*(x+3)/x**3,x, oo)==1  #172
     assert limit(sqrt(x+1)-sqrt(x),x,oo)==0  #179
     assert limit((2*x-3)*(3*x+5)*(4*x-6)/(3*x**3+x-1),x,oo)==8  #Primjer 1
-    assert limit(x/sqrt3(x**3+10),x,oo)==1  #Primjer 2
+    assert limit(x/root3(x**3+10),x,oo)==1  #Primjer 2
     assert limit((x+1)**2/(x**2+1),x,oo)==1  #181
 
 def test_Limits_simple_2():
@@ -33,13 +30,13 @@ def test_Limits_simple_2():
     assert limit((x**2-5*x+1)/(3*x+7),x,oo)==oo  #183
     assert limit((2*x**2-x+3)/(x**3-8*x+5),x,oo)==0  #184
     assert limit((2*x**2-3*x-4)/sqrt(x**4+1),x,oo)==2  #186
-    assert limit((2*x+3)/(x+sqrt3(x)),x,oo)==2  #187
+    assert limit((2*x+3)/(x+root3(x)),x,oo)==2  #187
     assert limit(x**2/(10+x*sqrt(x)),x,oo)==oo  #188
-    assert limit(sqrt3(x**2+1)/(x+1),x,oo)==0  #189
+    assert limit(root3(x**2+1)/(x+1),x,oo)==0  #189
     assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))),x,oo)==1  #190
 
 def test_Limits_simple_3a():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     #issue 414
     assert together(limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)) == \
             (a-1)/(3*a**2)  #196
@@ -48,16 +45,16 @@ def test_Limits_simple_3b():
     h = Symbol("h")
     assert limit(((x+h)**3-x**3)/h,h,0)==3*x**2  #197
     assert limit((1/(1-x)-3/(1-x**3)),x,1)==-1  #198
-    assert limit((sqrt(1+x)-1)/(sqrt3(1+x)-1),x,0)==Rational(3)/2  #Primer 4
+    assert limit((sqrt(1+x)-1)/(root3(1+x)-1),x,0)==Rational(3)/2  #Primer 4
     assert limit((sqrt(x)-1)/(x-1),x,1)==Rational(1)/2  #199
-    assert limit((sqrt(x)-8)/(sqrt3(x)-4),x,64)==3  #200
-    assert limit((sqrt3(x)-1)/(sqrt4(x)-1),x,1)==Rational(4)/3  #201
-    assert limit((sqrt3(x**2)-2*sqrt3(x)+1)/(x-1)**2,x,1)==Rational(1)/9  #202
+    assert limit((sqrt(x)-8)/(root3(x)-4),x,64)==3  #200
+    assert limit((root3(x)-1)/(root4(x)-1),x,1)==Rational(4)/3  #201
+    assert limit((root3(x**2)-2*root3(x)+1)/(x-1)**2,x,1)==Rational(1)/9  #202
 
 def test_Limits_simple_4a():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     assert limit((sqrt(x)-sqrt(a))/(x-a),x,a)==1/(2*sqrt(a))  #Primer 5
-    assert limit((sqrt(x)-1)/(sqrt3(x)-1),x,1)==Rational(3)/2  #205
+    assert limit((sqrt(x)-1)/(root3(x)-1),x,1)==Rational(3)/2  #205
     assert limit((sqrt(1+x)-sqrt(1-x))/x,x,0)==1  #207
     assert limit(sqrt(x**2-5*x+6)-x,x,oo)==-Rational(5)/2  #213
 
@@ -66,7 +63,7 @@ def test_limits_simple_4aa():
 
 def test_Limits_simple_4b():
     #issue 412
-    assert limit(x-sqrt3(x**3-1),x,oo)==0  #215
+    assert limit(x-root3(x**3-1),x,oo)==0  #215
 
 def test_Limits_simple_4c():
     assert limit(log(1+exp(x))/x,x,-oo)==0  #267a
@@ -112,9 +109,9 @@ def test_f2a():
     assert limit(((x+1)/(2*x+1))**(x**2),x,oo) == 0 #Primer 8
 
 def test_f2():
-    assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
+    assert limit((sqrt(cos(x))-root3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
 def test_f3():
-    a = Symbol('a', real=True)
+    a = Symbol('a')
     #issue 405
     assert limit(asin(a*x)/x, x, 0) == a

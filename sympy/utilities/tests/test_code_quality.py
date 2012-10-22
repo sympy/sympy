@@ -1,17 +1,28 @@
+from __future__ import with_statement
+
 from os import walk, sep, chdir, pardir
-from os.path import split, join, abspath, exists
+from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
+import random
+import sys
 
-# System path separator (usually slash or backslash)
+# System path separator (usually slash or backslash) to be
+# used with excluded files, e.g.
+#     exclude = set([
+#                    "%(sep)smpmath%(sep)s" % sepd,
+#                   ])
 sepd = {"sep": sep}
 
-# Files having at least one of these in their path will be excluded
-# Example line:
-#    "%(sep)sprinting%(sep)spretty%(sep)s" % sepd,
-EXCLUDE = set([
-    "%(sep)sthirdparty%(sep)s" % sepd,
-])
+# path and sympy_path
+SYMPY_PATH = abspath(join(split(__file__)[0], pardir, pardir))  # go to sympy/
+assert exists(SYMPY_PATH)
+
+TOP_PATH = abspath(join(SYMPY_PATH, pardir))
+BIN_PATH = join(TOP_PATH, "bin")
+EXAMPLES_PATH = join(TOP_PATH, "examples")
+
+IS_PYTHON_3 = (sys.version_info[0] == 3)
 
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
@@ -20,99 +31,231 @@ message_tabs = "File contains tabs instead of spaces: %s, line %s."
 message_carriage = "File contains carriage returns at end of line: %s, line %s"
 message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
+message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
+message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 
-def get_whitespace(s):
-    """Returns all whitespace at the beginning of the line."""
-    for i in range(len(s)):
-        if not s[i].isspace():
-            return s[:i]
-    return ""
+implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
+str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
+gen_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
+old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 
-def check_directory_tree(base_path):
+def tab_in_leading(s):
+    """Returns True if there are tabs in the leading whitespace of a line,
+    including the whitespace of docstring code samples."""
+    n = len(s)-len(s.lstrip())
+    if not s[n:n+3] in ['...', '>>>']:
+        check = s[:n]
+    else:
+        smore = s[n+3:]
+        check = s[:n] + smore[:len(smore)-len(smore.lstrip())]
+    return not (check.expandtabs() == check)
+
+def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
     """
     Checks all files in the directory tree (with base_path as starting point)
-    for bad coding style.
+    with the file_check function provided, skipping files that contain
+    any of the strings in the set provided by exclusions.
     """
-    strRaise = re.compile(r'raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
-    genRaise = re.compile(r'raise(\s+Exception|\s*(\(\s*)+Exception)')
+    if not base_path:
+        return
     for root, dirs, files in walk(base_path):
-        for fname in glob(join(root, "*.py")):
-            if filter(lambda ex: ex in fname, EXCLUDE):
-                continue
-            file = open(fname, "r")
-            try:
-                for idx, line in enumerate(file):
-                    if line.endswith(" \n"):
-                        assert False, message_space % (fname, idx+1)
-                    if line.endswith("\r\n"):
-                        assert False, message_carriage % (fname, idx+1)
-                    w = get_whitespace(line)
-                    if w.expandtabs() != w:
-                        assert False, message_tabs % (fname, idx+1)
-                    if strRaise.search(line):
-                        assert False, message_str_raise % (fname, idx+1)
-                    if genRaise.search(line):
-                        assert False, message_gen_raise % (fname, idx+1)
-            finally:
-                # eof newline check
-                if not line.endswith('\n'):
-                    assert False, message_eof % (fname, idx+1)
-                file.close()
+        check_files(glob(join(root, pattern)), file_check, exclusions)
 
+def check_files(files, file_check, exclusions=set()):
+    """
+    Checks all files with the file_check function provided, skipping files
+    that contain any of the strings in the set provided by exclusions.
+    """
+    if not files:
+        return
+    for fname in files:
+        if not exists(fname) or not isfile(fname):
+            continue
+        if filter(lambda ex: ex in fname, exclusions):
+            continue
+        file_check(fname)
 
-def test_no_trailing_whitespace_and_no_tabs():
+def test_files():
     """
     This test tests all files in sympy and checks that:
       o no lines contains a trailing whitespace
-      o no line uses tabs instead of spaces as the indentation
-      o that the file ends with a newline
+      o no lines end with \r\n
+      o no line uses tabs instead of spaces
+      o that the file ends with a single newline
+      o there are no general or string exceptions
+      o there are no old style raise statements
     """
-    path = split(__file__)[0]
-    path = path + sep + pardir + sep + pardir # go to sympy/
-    sympy_path = abspath(path)
-    assert exists(sympy_path)
-    check_directory_tree(sympy_path)
-    examples_path = abspath(join(path + sep + pardir, "examples"))
-    # Remember that this test can be executed when examples are not installed
-    # (e.g. after "./setup.py install"), so don't raise an error if the
-    # examples are not found:
-    if exists(examples_path):
-        check_directory_tree(examples_path)
 
-def check_directory_tree_imports(p, exclude):
-    for root, dirs, files in walk(p):
-        for fname in glob(join(root, "*.py")):
-            if filter(lambda ex: ex in fname, exclude):
-                continue
-            file = open(fname, "r")
-            try:
-                for idx, line in enumerate(file):
-                    if re.match("^\s*(>>>)? from .* import .*\*",line):
-                        assert False, message_implicit % (fname, idx+1)
-            finally:
-                file.close()
+    def test(fname):
+        if IS_PYTHON_3:
+            with open(fname, "rt", encoding="utf8") as test_file:
+                test_this_file(fname, test_file)
+        else:
+            with open(fname, "rt") as test_file:
+                test_this_file(fname, test_file)
 
-def test_implicit_imports():
-    """
-    Tests that all files except __init__.py use explicit imports,
-    even in the docstrings.
-    """
-    path = split(abspath(__file__))[0]
-    path = path + sep + pardir + sep + pardir # go to sympy/
-    sympy_path = abspath(path)
-    examples_path = abspath(join(path + sep + pardir, "examples"))
+    def test_this_file(fname, test_file):
+        line = None # to flag the case where there were no lines in file
+        for idx, line in enumerate(test_file):
+            if line.endswith(" \n") or line.endswith("\t\n"):
+                assert False, message_space % (fname, idx+1)
+            if line.endswith("\r\n"):
+                assert False, message_carriage % (fname, idx+1)
+            if tab_in_leading(line):
+                assert False, message_tabs % (fname, idx+1)
+            if str_raise_re.search(line):
+                assert False, message_str_raise % (fname, idx+1)
+            if gen_raise_re.search(line):
+                assert False, message_gen_raise % (fname, idx+1)
+            if (implicit_test_re.search(line) and
+                not filter(lambda ex: ex in fname, import_exclude)):
+                assert False, message_implicit % (fname, idx+1)
+
+            result = old_raise_re.search(line)
+
+            if result is not None:
+                assert False, message_old_raise % (fname, idx+1, result.group(2))
+
+        if line is not None:
+            if line == '\n' and idx > 0:
+                assert False, message_multi_eof % (fname, idx+1)
+            elif not line.endswith('\n'):
+                # eof newline check
+                assert False, message_eof % (fname, idx+1)
+
+    # Files to test at top level
+    top_level_files = [join(TOP_PATH, file) for file in [
+        "build.py",
+        "setup.py",
+        "setupegg.py",
+    ]]
+    # Files to exclude from all tests
     exclude = set([
-        "%(sep)sthirdparty%(sep)s" % sepd,
-        "%(sep)s__init__.py" % sepd,
-        # these two should be fixed:
         "%(sep)smpmath%(sep)s" % sepd,
-        "%(sep)splotting%(sep)s" % sepd,
     ])
-    assert exists(sympy_path)
-    check_directory_tree_imports(sympy_path, exclude)
-    # Remember that this test can be executed when examples are not installed
-    # (e.g. after "./setup.py install"), so don't raise an error if the
-    # examples are not found:
-    if exists(examples_path):
-        check_directory_tree_imports(examples_path, exclude)
+    # Files to exclude from the implicit import test
+    import_exclude = set([
+        # glob imports are allowed in top-level __init__.py:
+        "%(sep)ssympy%(sep)s__init__.py" % sepd,
+        # these __init__.py should be fixed:
+        "%(sep)smechanics%(sep)s__init__.py" % sepd,
+        "%(sep)squantum%(sep)s__init__.py" % sepd,
+        # interactive sympy executes ``from sympy import *``:
+        "%(sep)sinteractive%(sep)ssession.py" % sepd,
+        # isympy executes ``from sympy import *``:
+        "%(sep)sbin%(sep)sisympy" % sepd,
+        # these two are import timing tests:
+        "%(sep)sbin%(sep)ssympy_time.py" % sepd,
+        "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
+        # Taken from Python stdlib:
+        "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
+        # these two should be fixed:
+        "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        "%(sep)splotting%(sep)stextplot.py" % sepd,
+    ])
+    check_files(top_level_files, test)
+    check_directory_tree(BIN_PATH, test, set(["~", ".pyc"]), "*")
+    check_directory_tree(SYMPY_PATH, test, exclude)
+    check_directory_tree(EXAMPLES_PATH, test, exclude)
+
+def _with_space(c):
+    # return c with a random amount of leading space
+    return random.randint(0, 10)*' ' + c
+
+def test_raise_statement_regular_expression():
+    candidates_ok = [
+        "some text # raise Exception, 'text'",
+        "raise ValueError('text') # raise Exception, 'text'",
+        "raise ValueError('text')",
+        "raise ValueError",
+        "raise ValueError('text')",
+        "raise ValueError('text') #,",
+        # Talking about an exception in a docstring
+        ''''"""This function will raise ValueError, except when it doesn't"""''',
+        "raise (ValueError('text')",
+    ]
+    str_candidates_fail = [
+        "raise 'exception'",
+        "raise 'Exception'",
+        'raise "exception"',
+        'raise "Exception"',
+        "raise 'ValueError'",
+    ]
+    gen_candidates_fail = [
+        "raise Exception('text') # raise Exception, 'text'",
+        "raise Exception('text')",
+        "raise Exception",
+        "raise Exception('text')",
+        "raise Exception('text') #,",
+        "raise Exception, 'text'",
+        "raise Exception, 'text' # raise Exception('text')",
+        "raise Exception, 'text' # raise Exception, 'text'",
+        ">>> raise Exception, 'text'",
+        ">>> raise Exception, 'text' # raise Exception('text')",
+        ">>> raise Exception, 'text' # raise Exception, 'text'",
+    ]
+    old_candidates_fail = [
+        "raise Exception, 'text'",
+        "raise Exception, 'text' # raise Exception('text')",
+        "raise Exception, 'text' # raise Exception, 'text'",
+        ">>> raise Exception, 'text'",
+        ">>> raise Exception, 'text' # raise Exception('text')",
+        ">>> raise Exception, 'text' # raise Exception, 'text'",
+        "raise ValueError, 'text'",
+        "raise ValueError, 'text' # raise Exception('text')",
+        "raise ValueError, 'text' # raise Exception, 'text'",
+        ">>> raise ValueError, 'text'",
+        ">>> raise ValueError, 'text' # raise Exception('text')",
+        ">>> raise ValueError, 'text' # raise Exception, 'text'",
+        "raise(ValueError,",
+        "raise (ValueError,",
+        "raise( ValueError,",
+        "raise ( ValueError,",
+        "raise(ValueError ,",
+        "raise (ValueError ,",
+        "raise( ValueError ,",
+        "raise ( ValueError ,",
+    ]
+
+    for c in candidates_ok:
+        assert str_raise_re.search(_with_space(c)) is None, c
+        assert gen_raise_re.search(_with_space(c)) is None, c
+        assert old_raise_re.search(_with_space(c)) is None, c
+    for c in str_candidates_fail:
+        assert str_raise_re.search(_with_space(c)) is not None, c
+    for c in gen_candidates_fail:
+        assert gen_raise_re.search(_with_space(c)) is not None, c
+    for c in old_candidates_fail:
+        assert old_raise_re.search(_with_space(c)) is not None, c
+
+
+def test_implicit_imports_regular_expression():
+    candidates_ok = [
+        "from sympy import something",
+        ">>> from sympy import something",
+        "from sympy.somewhere import something",
+        ">>> from sympy.somewhere import something",
+        "import sympy",
+        ">>> import sympy",
+        "import sympy.something.something",
+        "... import sympy",
+        "... import sympy.something.something",
+        "... from sympy import something",
+        "... from sympy.somewhere import something",
+        ">> from sympy import *", # To allow 'fake' docstrings
+        "# from sympy import *",
+        "some text # from sympy import *",
+    ]
+    candidates_fail = [
+        "from sympy import *",
+        ">>> from sympy import *",
+        "from sympy.somewhere import *",
+        ">>> from sympy.somewhere import *",
+        "... from sympy import *",
+        "... from sympy.somwhere import *",
+    ]
+    for c in candidates_ok:
+        assert implicit_test_re.search(_with_space(c)) is None, c
+    for c in candidates_fail:
+        assert implicit_test_re.search(_with_space(c)) is not None, c

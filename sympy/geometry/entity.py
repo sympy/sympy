@@ -1,3 +1,17 @@
+"""The definition of the base geometrical entity with attributes common to
+all derived geometrical entities.
+
+Contains
+========
+GeometryEntity
+
+"""
+
+from sympy.core.compatibility import cmp, is_sequence
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
+from sympy.functions import cos, sin
+from sympy.matrices import eye
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -13,100 +27,201 @@ ordering_of_classes = [
     "Curve"
 ]
 
-class GeometryEntity(tuple):
-    """The base class for any geometrical entity."""
+class GeometryEntity(Basic):
+    """The base class for all geometrical entities.
+
+    This class doesn't represent any particular geometric entity, it only
+    provides the implementation of some methods common to all subclasses.
+
+    """
 
     def __new__(cls, *args, **kwargs):
-        return tuple.__new__(cls, args)
+        return Basic.__new__(cls, *sympify(args))
+
+    def _sympy_(self):
+        return self
 
     def __getnewargs__(self):
-        return tuple(self)
-
-    @staticmethod
-    def do_intersection(e1, e2):
-        """
-        Determines the intersection between two geometrical entities. Returns
-        a list of all of the intersections.
-        """
-        try:
-            return e1.intersection(e2)
-        except Exception:
-            pass
-
-        try:
-            return e2.intersection(e1)
-        except NotImplementedError:
-            n1,n2 = type(e1).__name__, type(e2).__name__
-            raise NotImplementedError("Unable to determine intersection between '%s' and '%s'" % (n1, n2))
-
-    def is_similar(self, other):
-        """
-        Return True if self and other are similar. Two entities are similar
-        if a uniform scaling (enlarging or shrinking) of one of the entities
-        will allow one to obtain the other.
-
-        Notes:
-        ======
-            - This method is not intended to be used directly but rather
-              through the are_similar() method found in util.py.
-            - An entity is not required to implement this method.
-            - If two different types of entities can be similar, it is only
-              required that one of them be able to determine this.
-        """
-        raise NotImplementedError()
+        return tuple(self.args)
 
     def intersection(self, o):
         """
-        Returns a list of all of the intersections of this entity and another
-        entity.
+        Returns a list of all of the intersections of self with o.
 
-        Notes:
-        ======
-            - This method is not intended to be used directly but rather
-              through the intersection() method found in util.py.
-            - An entity is not required to implement this method.
-            - If two different types of entities can intersect, it is only
-              required that one of them be able to determine this.
+        Notes
+        =====
+
+        An entity is not required to implement this method.
+
+        If two different types of entities can intersect, the item with
+        higher index in ordering_of_classes should implement
+        intersections with anything having a lower index.
+
+        See Also
+        ========
+
+        sympy.geometry.util.intersection
+
         """
         raise NotImplementedError()
 
+    def rotate(self, angle, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
-    @staticmethod
-    def extract_entities(args, remove_duplicates=True):
-        """
-        Takes a set of arguments and extracts all of the GeometryEntity
-        instances (recursively). Returns a tuple of all of the instances
-        found.
+        The default pt is the origin, Point(0, 0)
 
-        Notes:
-        ======
-            - Duplicates of entities are removed if the remove_duplicates
-              argument is set to True, otherwise duplicates remain.
-              The default is True.
-            - Anything that is not a GeometryEntity instance is simply
-              ignored.
-            - Ordering of arguments is always maintained. If duplicates
-              are removed then the entry with the lowest index is kept.
+        See Also
+        ========
+
+        scale, translate
+
+        Examples
+        ========
+
+        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t # vertex on x axis
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        >>> t.rotate(pi/2) # vertex on y axis now
+        Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))
+
         """
-        ret = list()
-        for arg in args:
-            if isinstance(arg, GeometryEntity):
-                ret.append(arg)
-            elif isinstance(arg, (list, tuple, set)):
-                ret.extend(GeometryEntity.extract_entities(arg))
-        if remove_duplicates:
-            temp = set(ret)
-            ind, n = 0, len(ret)
-            for counter in xrange(0, n):
-                x = ret[ind]
-                if x in temp:
-                    temp.remove(x)
-                    ind += 1
-                else:
-                    del ret[ind]
-        return tuple(ret)
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.rotate(angle, pt))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def scale(self, x=1, y=1, pt=None):
+        """Scale the object by multiplying the x,y-coordinates by x and y.
+
+        If pt is given, the scaling is done relative to that point; the
+        object is shifted by -pt, scaled, and shifted by pt.
+
+        See Also
+        ========
+
+        rotate, translate
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        >>> t.scale(2)
+        Triangle(Point(2, 0), Point(-1, sqrt(3)/2), Point(-1, -sqrt(3)/2))
+        >>> t.scale(2,2)
+        Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
+
+        """
+        from sympy.geometry.point import Point
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        return type(self)(*[a.scale(x, y) for a in self.args]) # if this fails, override this class
+
+    def translate(self, x=0, y=0):
+        """Shift the object by adding to the x,y-coordinates the values x and y.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        >>> t.translate(2)
+        Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
+        >>> t.translate(2, 2)
+        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2), Point(3/2, -sqrt(3)/2 + 2))
+
+        """
+        newargs = []
+        for a in self.args:
+            if isinstance(a, GeometryEntity):
+                newargs.append(a.translate(x, y))
+            else:
+                newargs.append(a)
+        return type(self)(*newargs)
+
+    def encloses(self, o):
+        """
+        Return True if o is inside (not on or outside) the boundaries of self.
+
+        The object will be decomposed into Points and individual Entities need
+        only define an encloses_point method for their class.
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
+        >>> t2.encloses(t)
+        True
+        >>> t.encloses(t2)
+        False
+        """
+        from sympy.geometry.point import Point
+        from sympy.geometry.line import Segment, Ray, Line
+        from sympy.geometry.ellipse import Ellipse
+        from sympy.geometry.polygon import Polygon, RegularPolygon
+
+        if isinstance(o, Point):
+            return self.encloses_point(o)
+        elif isinstance(o, Segment):
+            return all(self.encloses_point(x) for x in o.points)
+        elif isinstance(o, Ray) or isinstance(o, Line):
+            return False
+        elif isinstance(o, Ellipse):
+            return self.encloses_point(o.center) and not self.intersection(o)
+        elif isinstance(o, Polygon):
+            if isinstance(o, RegularPolygon):
+                if not self.encloses_point(o.center):
+                    return False
+            return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
+
+    def is_similar(self, other):
+        """Is this geometrical entity similar to another geometrical entity?
+
+        Two entities are similar if a uniform scaling (enlarging or
+        shrinking) of one of the entities will allow one to obtain the other.
+
+        Notes
+        =====
+
+        This method is not intended to be used directly but rather
+        through the `are_similar` function found in util.py.
+        An entity is not required to implement this method.
+        If two different types of entities can be similar, it is only
+        required that one of them be able to determine this.
+
+        See Also
+        ========
+
+        scale
+
+        """
+        raise NotImplementedError()
 
     def __ne__(self, o):
+        """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
 
     def __radd__(self, a):
@@ -122,18 +237,22 @@ class GeometryEntity(tuple):
         return a.__div__(self)
 
     def __str__(self):
+        """String representation of a GeometryEntity."""
         from sympy.printing import sstr
-        return type(self).__name__ + sstr (tuple(self))
+        return type(self).__name__ + sstr(self.args)
 
     def __repr__(self):
-        from sympy.printing import srepr
-        return type(self).__name__ + srepr(tuple(self))
+        """String representation of a GeometryEntity that can be evaluated
+        by sympy."""
+        return type(self).__name__ + repr(self.args)
 
     def __cmp__(self, other):
+        """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
         c = cmp(n1, n2)
-        if not c: return 0
+        if not c:
+            return 0
 
         i1 = -1
         for cls in self.__class__.__mro__:
@@ -142,7 +261,8 @@ class GeometryEntity(tuple):
                 break
             except ValueError:
                 i1 = -1
-        if i1 == -1: return c
+        if i1 == -1:
+            return c
 
         i2 = -1
         for cls in other.__class__.__mro__:
@@ -151,6 +271,64 @@ class GeometryEntity(tuple):
                 break
             except ValueError:
                 i2 = -1
-        if i2 == -1: return c
+        if i2 == -1:
+            return c
 
         return cmp(i1, i2)
+
+    def __contains__(self, other):
+        """Subclasses should implement this method for anything more complex than equality."""
+        if type(self) == type(other):
+            return self == other
+        raise NotImplementedError()
+
+    def _eval_subs(self, old, new):
+        from sympy.geometry.point import Point
+        if is_sequence(old) or is_sequence(new):
+            old = Point(old)
+            new = Point(new)
+            return self._subs(old, new)
+
+def translate(x, y):
+    """Return the matrix to translate a 2-D point by x and y."""
+    rv = eye(3)
+    rv[2, 0] = x
+    rv[2, 1] = y
+    return rv
+
+def scale(x, y, pt=None):
+    """Return the matrix to multiply a 2-D point's coordinates by x and y.
+
+    If pt is given, the scaling is done relative to that point."""
+    rv = eye(3)
+    rv[0, 0] = x
+    rv[1, 1] = y
+    if pt:
+        from sympy.geometry.point import Point
+        pt = Point(pt)
+        tr1 = translate(*(-pt).args)
+        tr2 = translate(*pt.args)
+        return tr1*rv*tr2
+    return rv
+
+def rotate(th):
+    """Return the matrix to rotate a 2-D point about the origin by ``angle``.
+
+    The angle is measured in radians. To Point a point about a point other
+    then the origin, translate the Point, do the rotation, and
+    translate it back:
+
+    >>> from sympy.geometry.entity import rotate, translate
+    >>> from sympy import Point, pi
+    >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
+    >>> Point(1, 1).transform(rot_about_11)
+    Point(1, 1)
+    >>> Point(0, 0).transform(rot_about_11)
+    Point(2, 0)
+    """
+    s = sin(th)
+    rv = eye(3)*cos(th)
+    rv[0, 1] = s
+    rv[1, 0] = -s
+    rv[2, 2] = 1
+    return rv

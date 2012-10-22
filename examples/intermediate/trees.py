@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 """
-Calculates the Sloane's A000055 integer sequence, i.e. the "Number of trees with n unlabeled nodes."
+Calculates the Sloane's A000055 integer sequence, i.e. the "Number of
+trees with n unlabeled nodes."
 
-You can also google for "The On-Line Encyclopedia of Integer Sequences" and
-paste in the sequence returned by this script:
+You can also google for "The On-Line Encyclopedia of Integer Sequences"
+and paste in the sequence returned by this script:
 
 1, 1, 1, 1, 2, 3, 6, 11, 23, 47, 106
 
@@ -23,9 +24,9 @@ def A(x):
 def main():
     x=Symbol("x")
     s = Poly(A(x), x)
-    num = [s.coeff(n) for n in range(11)]
+    num = list(reversed(s.coeffs()))[:11]
 
-    print s.as_basic()
+    print s.as_expr()
     print num
 
 if __name__ == "__main__":

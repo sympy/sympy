@@ -1,5 +1,5 @@
 from sympy.mpmath import *
-from sympy.mpmath.libmpf import *
+from sympy.mpmath.libmp import *
 
 def test_trig_misc_hard():
     mp.prec = 53
@@ -138,5 +138,5 @@ def test_trig_near_n_pi():
 if __name__ == '__main__':
     for f in globals().keys():
         if f.startswith("test_"):
-            print f
+            print(f)
             globals()[f]()

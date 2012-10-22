@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Quantum field theory example
 
 * http://en.wikipedia.org/wiki/Quantum_field_theory
@@ -8,13 +9,14 @@ scattering amplitude of the process:
 
     electron + positron -> photon -> electron + positron
 
-in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim is to be
-able to do any kind of calculations in QED or standard model in SymPy, but
-that's a long journey.
+in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
+is to be able to do any kind of calculations in QED or standard model in
+SymPy, but that's a long journey.
+
 """
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \
-    ones, sqrt, pprint, simplify, trim, Eq, sympify
+    ones, sqrt, pprint, simplify, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 
@@ -38,26 +40,26 @@ def u(p,r):
     assert r in [1,2]
     p1,p2,p3 = p
     if r == 1:
-        ksi = Matrix([ [1],[0] ])
+        ksi = Matrix([[1],[0]])
     else:
-        ksi = Matrix([ [0],[1] ])
+        ksi = Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
-        a = zeros((2, 1))
-    return sqrt(E+m) * Matrix([ [ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]] ])
+        a = zeros(2, 1)
+    return sqrt(E+m) * Matrix([[ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]]])
 
 def v(p,r):
     """ p = (p1, p2, p3); r = 0,1 """
     assert r in [1,2]
     p1,p2,p3 = p
     if r == 1:
-        ksi = Matrix([ [1],[0] ])
+        ksi = Matrix([[1],[0]])
     else:
-        ksi = -Matrix([ [0],[1] ])
+        ksi = -Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
-        a = zeros((2,1))
-    return sqrt(E+m) * Matrix([ [a[0,0]], [a[1,0]], [ksi[0,0]], [ksi[1,0]] ])
+        a = zeros(2, 1)
+    return sqrt(E+m) * Matrix([[a[0,0]], [a[1,0]], [ksi[0,0]], [ksi[1,0]]])
 
 def pslash(p):
     p1,p2,p3 = p
@@ -108,7 +110,7 @@ def main():
     M = M[0]
     assert isinstance(M, Basic)
     #print M
-    #print trim(M)
+    #print simplify(M)
 
     d=Symbol("d", real=True) #d=E+m
 
