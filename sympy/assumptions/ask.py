@@ -29,7 +29,10 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
-
+    symmetric = Predicate('symmetric')
+    invertible = Predicate('invertible')
+    orthogonal = Predicate('orthogonal')
+    positive_definite= Predicate('positive_definite')
 
 def _extract_facts(expr, symbol):
     """
@@ -221,7 +224,11 @@ _handlers_dict = {
     'real':            ['sympy.assumptions.handlers.sets.AskRealHandler'],
     'odd':             ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
     'algebraic':       ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
-    'is_true':         ['sympy.assumptions.handlers.TautologicalHandler']
+    'is_true':         ['sympy.assumptions.handlers.TautologicalHandler'],
+    'symmetric':       ['sympy.assumptions.handlers.matrices.AskSymmetricHandler'],
+    'invertible':      ['sympy.assumptions.handlers.matrices.AskInvertibleHandler'],
+    'orthogonal':      ['sympy.assumptions.handlers.matrices.AskOrthogonalHandler'],
+    'positive_definite':       ['sympy.assumptions.handlers.matrices.AskPositiveDefiniteHandler']
 }
 for name, value in _handlers_dict.iteritems():
     register_handler(name, value[0])
@@ -245,7 +252,9 @@ known_facts = And(
     Equivalent(Q.rational, Q.real & ~Q.irrational),
     Equivalent(Q.real, Q.rational | Q.irrational),
     Implies(Q.nonzero, Q.real),
-    Equivalent(Q.nonzero, Q.positive | Q.negative)
+    Equivalent(Q.nonzero, Q.positive | Q.negative),
+    Implies(Q.orthogonal, Q.positive_definite),
+    Implies(Q.positive_definite, Q.invertible)
 )
 
 ################################################################################
@@ -253,44 +262,51 @@ known_facts = And(
 ################################################################################
 # -{ Known facts in CNF }-
 known_facts_cnf = And(
-    Or(Not(Q.integer), Q.even, Q.odd),
-    Or(Not(Q.extended_real), Q.real, Q.infinity),
-    Or(Not(Q.real), Q.irrational, Q.rational),
+    Or(Not(Q.negative), Q.nonzero),
+    Or(Not(Q.composite), Not(Q.prime)),
+    Or(Not(Q.prime), Q.positive),
+    Or(Not(Q.real), Q.extended_real),
+    Or(Not(Q.nonzero), Q.real),
+    Or(Not(Q.extended_real), Q.infinity, Q.real),
+    Or(Not(Q.irrational), Not(Q.rational)),
+    Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.even), Q.integer),
     Or(Not(Q.real), Q.complex),
-    Or(Not(Q.integer), Not(Q.positive), Q.prime, Q.composite),
+    Or(Not(Q.imaginary), Q.complex),
+    Or(Not(Q.positive), Q.nonzero),
+    Or(Not(Q.infinity), Q.extended_real),
+    Or(Not(Q.negative), Not(Q.positive)),
+    Or(Not(Q.real), Q.hermitian),
+    Or(Not(Q.orthogonal), Q.positive_definite),
+    Or(Not(Q.irrational), Q.real),
+    Or(Not(Q.prime), Q.integer),
+    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime),
+    Or(Not(Q.antihermitian), Not(Q.hermitian)),
+    Or(Not(Q.rational), Q.real),
+    Or(Not(Q.nonzero), Q.negative, Q.positive),
+    Or(Not(Q.odd), Q.integer),
+    Or(Not(Q.real), Q.irrational, Q.rational),
+    Or(Not(Q.integer), Q.even, Q.odd),
     Or(Not(Q.imaginary), Q.antihermitian),
     Or(Not(Q.integer), Q.rational),
-    Or(Not(Q.real), Q.hermitian),
-    Or(Not(Q.imaginary), Q.complex),
-    Or(Not(Q.even), Q.integer),
-    Or(Not(Q.positive), Q.nonzero),
-    Or(Not(Q.nonzero), Q.negative, Q.positive),
-    Or(Not(Q.prime), Q.positive),
-    Or(Not(Q.rational), Q.real),
-    Or(Not(Q.real), Not(Q.imaginary)),
-    Or(Not(Q.odd), Q.integer),
-    Or(Not(Q.real), Q.extended_real),
-    Or(Not(Q.composite), Not(Q.prime)),
-    Or(Not(Q.negative), Q.nonzero),
-    Or(Not(Q.positive), Not(Q.negative)),
-    Or(Not(Q.prime), Q.integer),
     Or(Not(Q.even), Not(Q.odd)),
-    Or(Not(Q.nonzero), Q.real),
-    Or(Not(Q.irrational), Q.real),
-    Or(Not(Q.rational), Not(Q.irrational)),
-    Or(Not(Q.infinity), Q.extended_real),
-    Or(Not(Q.antihermitian), Not(Q.hermitian))
+    Or(Not(Q.positive_definite), Q.invertible)
 )
 
 # -{ Known facts in compressed sets }-
 known_facts_dict = {
+    Q.symmetric: set([Q.symmetric]),
+    Q.invertible: set([Q.invertible]),
     Q.odd: set([Q.complex, Q.odd, Q.hermitian, Q.real, Q.rational, Q.extended_real, Q.integer]),
     Q.antihermitian: set([Q.antihermitian]),
     Q.infinitesimal: set([Q.infinitesimal]),
+    Q.even: set([Q.complex, Q.real, Q.hermitian, Q.even, Q.rational, Q.extended_real, Q.integer]),
     Q.hermitian: set([Q.hermitian]),
     Q.bounded: set([Q.bounded]),
-    Q.even: set([Q.complex, Q.real, Q.hermitian, Q.even, Q.rational, Q.extended_real, Q.integer]),
+    Q.positive_definite: set([Q.positive_definite]),
+    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real, Q.hermitian]),
     Q.algebraic: set([Q.algebraic]),
+    Q.orthogonal: set([Q.orthogonal]),
     Q.is_true: set([Q.is_true]),
     Q.real: set([Q.real, Q.complex, Q.extended_real, Q.hermitian]),
     Q.rational: set([Q.real, Q.rational, Q.complex, Q.extended_real, Q.hermitian]),
@@ -303,7 +319,6 @@ known_facts_dict = {
     Q.composite: set([Q.composite]),
     Q.prime: set([Q.complex, Q.positive, Q.real, Q.hermitian, Q.prime, Q.rational, Q.extended_real, Q.nonzero, Q.integer]),
     Q.negative: set([Q.complex, Q.nonzero, Q.hermitian, Q.real, Q.negative, Q.extended_real]),
-    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real, Q.hermitian]),
     Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real, Q.hermitian]),
     Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary])
 }
