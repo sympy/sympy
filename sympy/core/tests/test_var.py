@@ -6,7 +6,7 @@ from sympy.utilities.pytest import raises
 # make z1 with call-depth = 1
 
 
-def make_z1():
+def _make_z1():
     var("z1")
 
 # make z2 with call-depth = 2
@@ -16,7 +16,7 @@ def __make_z2():
     var("z2")
 
 
-def make_z2():
+def _make_z2():
     __make_z2()
 
 
@@ -41,11 +41,11 @@ def test_var():
 
     # see if var() really injects into global namespace
     raises(NameError, lambda: z1)
-    make_z1()
+    _make_z1()
     assert z1 == Symbol("z1")
 
     raises(NameError, lambda: z2)
-    make_z2()
+    _make_z2()
     assert z2 == Symbol("z2")
 
 
