@@ -2112,3 +2112,8 @@ def test_adjoint():
     ans = Matrix([[0, 1], [-I, 0]])
     for cls in classes:
         assert ans == cls(dat).adjoint()
+
+def test_simplify():
+    from sympy import simplify, sin, cos
+    assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
+                    ImmutableMatrix([[1]])
