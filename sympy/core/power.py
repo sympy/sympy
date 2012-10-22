@@ -692,11 +692,8 @@ class Pow(Expr):
         # special case number
         if expr.is_number:
             sb, se = self.as_base_exp()
-            if sb.is_Atom and se.is_Atom:  # protect from recursion
-                pos = expr.is_positive
-                if pos is not None:
-                    if (pos or se.is_Integer and expr):
-                        return sb.matches(expr**(1/se), repl_dict)
+            if sb.is_Symbol and se.is_Integer and expr:
+                return sb.matches(expr**(1/se), repl_dict)
 
         b, e = expr.as_base_exp()
 
