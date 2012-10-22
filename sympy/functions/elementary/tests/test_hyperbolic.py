@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
-        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-        Integer, O, exp
+    coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
+    Integer, O, exp
 
 from sympy.utilities.pytest import XFAIL
 
@@ -73,7 +73,7 @@ def test_sinh():
 def test_sinh_series():
     x = Symbol('x')
     assert sinh(x).series(x, 0, 10) == \
-                x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
+        x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
 
 
 def test_cosh():
@@ -144,7 +144,7 @@ def test_cosh():
 def test_cosh_series():
     x = Symbol('x')
     assert cosh(x).series(x, 0, 10) == \
-                1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
+        1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
 
 
 def test_tanh():
@@ -215,7 +215,7 @@ def test_tanh():
 def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
-                x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+        x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
 
 
 def test_coth():
@@ -286,7 +286,7 @@ def test_coth():
 def test_coth_series():
     x = Symbol('x')
     assert coth(x).series(x, 0, 8) == \
-                1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
+        1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
 
 
 def test_asinh():
@@ -324,7 +324,7 @@ def test_asinh():
 def test_asinh_series():
     x = Symbol('x')
     assert asinh(x).series(x, 0, 8) == \
-                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
+        x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
     t5 = asinh(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
@@ -370,7 +370,7 @@ def test_acosh_infinities():
 def test_acosh_series():
     x = Symbol('x')
     assert acosh(x).series(x, 0, 8) == \
-            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
+        -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
     t5 = acosh(x).taylor_term(5, x)
     assert t5 == - 3*I*x**5/40
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
@@ -417,7 +417,7 @@ def test_atanh():
 def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
-                x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+        x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
 
 
 def test_atanh_infinities():
@@ -469,7 +469,7 @@ def test_acoth():
 def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
-                I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+        I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
 
 
 def test_leading_term():

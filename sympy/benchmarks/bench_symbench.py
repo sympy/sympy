@@ -113,18 +113,18 @@ def bench_S1():
 
 if __name__ == '__main__':
     benchmarks = [
-            bench_R1,
-            bench_R2,
-            bench_R3,
-            bench_R5,
-            bench_R6,
-            bench_R7,
-            bench_R8,
-            #_bench_R9,
-            bench_R10,
-            bench_R11,
-            #bench_S1,
-            ]
+        bench_R1,
+        bench_R2,
+        bench_R3,
+        bench_R5,
+        bench_R6,
+        bench_R7,
+        bench_R8,
+        #_bench_R9,
+        bench_R10,
+        bench_R11,
+        #bench_S1,
+    ]
 
     report = []
     for b in benchmarks:

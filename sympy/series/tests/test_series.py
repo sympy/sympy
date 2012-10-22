@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-                  Function, log, sqrt, Symbol
+    Function, log, sqrt, Symbol
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 
@@ -44,7 +44,7 @@ def test_2124():
     # the following test is exact so no need for x -> x - 1 replacement
     assert abs(x).series(x, 1, dir='-') == x
     assert exp(x).series(x, 1, dir='-', n=3).removeO().subs(x, x - 1) == \
-           E + E*(x - 1) + E*(x - 1)**2/2
+        E + E*(x - 1) + E*(x - 1)**2/2
 
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
@@ -59,8 +59,8 @@ def test_2124():
 
     assert ((1/sin(x))**oo).series() == oo
     logx = Symbol('logx')
-    assert ((sin(x))**y).nseries(x, n=1, logx=logx) \
-           == exp(y*logx) + O(x*exp(y*logx), x)
+    assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
+        exp(y*logx) + O(x*exp(y*logx), x)
 
     raises(NotImplementedError, lambda: series(Function("f")(x)))
 
@@ -71,7 +71,7 @@ def test_2124():
     assert abs(-x).series(x, -oo, n=5, dir='-') == -x
 
     assert exp(x*log(x)).series(n=3) == \
-           1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
+        1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
     # XXX is this right? If not, fix "ngot > n" handling in expr.
     p = Symbol('p', positive=True)
     assert exp(sqrt(p)**3*log(p)).series(n=3) == \
@@ -93,10 +93,9 @@ def test_acceleration():
 
 
 def test_1484():
-    assert cos(1 + x + x**2).series(x, 0, 5) == cos(1) - x*sin(1) + x**2*(-sin(1) -
-                                          cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
-                                          x**4*(-11*cos(
-                                              1)/24 + sin(1)/2) + O(x**5)
+    assert cos(1 + x + x**2).series(x, 0, 5) == cos(1) - x*sin(1) + \
+        x**2*(-sin(1) - cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
+        x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
 
 
 def test_issue_3219():

@@ -44,6 +44,7 @@ gen_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 
+
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
     including the whitespace of docstring code samples."""
@@ -182,6 +183,7 @@ def _test_suite_defs(fname, test_file):
                     message_test_suite_def % \
                     (fname, '%s: %s' % (idx, li))
 
+
 def _with_space(c):
     # return c with a random amount of leading space
     return random.randint(0, 10)*' ' + c
@@ -283,6 +285,7 @@ def test_implicit_imports_regular_expression():
         assert implicit_test_re.search(_with_space(c)) is None, c
     for c in candidates_fail:
         assert implicit_test_re.search(_with_space(c)) is not None, c
+
 
 def test_test_suite_defs():
     candidates_ok = [

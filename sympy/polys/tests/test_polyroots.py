@@ -89,8 +89,8 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7) - I*sin(pi/7),
         -cos(pi/7) + I*sin(pi/7),
-         cos(2*pi/7) - I*sin(2*pi/7),
-         cos(2*pi/7) + I*sin(2*pi/7),
+        cos(2*pi/7) - I*sin(2*pi/7),
+        cos(2*pi/7) + I*sin(2*pi/7),
         -cos(3*pi/7) - I*sin(3*pi/7),
         -cos(3*pi/7) + I*sin(3*pi/7),
     ]
@@ -98,15 +98,15 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
         -sqrt(2)/2 - I*sqrt(2)/2,
         -sqrt(2)/2 + I*sqrt(2)/2,
-         sqrt(2)/2 - I*sqrt(2)/2,
-         sqrt(2)/2 + I*sqrt(2)/2,
+        sqrt(2)/2 - I*sqrt(2)/2,
+        sqrt(2)/2 + I*sqrt(2)/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(12, x, polys=True)) == [
         -sqrt(3)/2 - I/2,
         -sqrt(3)/2 + I/2,
-         sqrt(3)/2 - I/2,
-         sqrt(3)/2 + I/2,
+        sqrt(3)/2 - I/2,
+        sqrt(3)/2 + I/2,
     ]
 
     assert roots_cyclotomic(
@@ -119,8 +119,8 @@ def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
         [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5), -1 + (- \
-           1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
+        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5),
+         -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
         [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
@@ -194,21 +194,21 @@ def test_roots_preprocessing():
     E, F, J, L = symbols("E,F,J,L")
 
     f = -21601054687500000000*E**8*J**8/L**16 + \
-         508232812500000000*F*x*E**7*J**7/L**14 - \
-         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
-         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
-         27633173750*E**4*F**4*J**4*x**4/L**8 + \
-         14840215*E**3*F**5*J**3*x**5/L**6 + \
-         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
-         1153*E*J*F**7*x**7/(80*L**2) + \
-         633*F**8*x**8/160000
+        508232812500000000*F*x*E**7*J**7/L**14 - \
+        4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+        16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+        27633173750*E**4*F**4*J**4*x**4/L**8 + \
+        14840215*E**3*F**5*J**3*x**5/L**6 + \
+        54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+        1153*E*J*F**7*x**7/(80*L**2) + \
+        633*F**8*x**8/160000
 
     coeff, poly = preprocess_roots(Poly(f, x))
 
     assert coeff == 20*E*J/(F*L**2)
     assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
         809735812500*x**3 - 10673859375000*x**2 + 63529101562500* \
-            x - 135006591796875
+        x - 135006591796875
 
 
 def test_roots():
@@ -244,8 +244,8 @@ def test_roots():
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
     assert roots(x**8 - 1, x) == {
-         sqrt(2)/2 + I*sqrt(2)/2: 1,
-         sqrt(2)/2 - I*sqrt(2)/2: 1,
+        sqrt(2)/2 + I*sqrt(2)/2: 1,
+        sqrt(2)/2 - I*sqrt(2)/2: 1,
         -sqrt(2)/2 + I*sqrt(2)/2: 1,
         -sqrt(2)/2 - I*sqrt(2)/2: 1,
         S.One: 1, -S.One: 1, I: 1, -I: 1
@@ -263,12 +263,12 @@ def test_roots():
     assert roots(((x - 2)*(
         x + 3)*(x - 4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
     assert roots(((x - 2)*(x + 3)*(x - 4)*(x - 5)).expand(), x, cubics=False) == \
-            {-S(3): 1, S(2): 1, S(4): 1, S(5): 1}
+        {-S(3): 1, S(2): 1, S(4): 1, S(5): 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
-                {-2*I: 1, 2*I: 1, -S(2): 1}
+        {-2*I: 1, 2*I: 1, -S(2): 1}
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
-                {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
+        {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
     r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r)
         for r in ((1, 2), (1, 3), (1, 9), (4, 9), (19, 27)) ]
@@ -334,23 +334,23 @@ def test_roots():
     f = x**6 - x**5 + x**4 - x**3 + x**2 - x + 1
 
     assert roots(f) == {
-        -I*sin(pi/7) + cos(pi/7):   1,
+        -I*sin(pi/7) + cos(pi/7): 1,
         -I*sin(2*pi/7) - cos(2*pi/7): 1,
         -I*sin(3*pi/7) + cos(3*pi/7): 1,
-         I*sin(pi/7) + cos(pi/7):   1,
-         I*sin(2*pi/7) - cos(2*pi/7): 1,
-         I*sin(3*pi/7) + cos(3*pi/7): 1,
+        I*sin(pi/7) + cos(pi/7): 1,
+        I*sin(2*pi/7) - cos(2*pi/7): 1,
+        I*sin(3*pi/7) + cos(3*pi/7): 1,
     }
 
     g = ((x**2 + 1)*f**2).expand()
 
     assert roots(g) == {
-        -I*sin(pi/7) + cos(pi/7):   2,
+        -I*sin(pi/7) + cos(pi/7): 2,
         -I*sin(2*pi/7) - cos(2*pi/7): 2,
         -I*sin(3*pi/7) + cos(3*pi/7): 2,
-         I*sin(pi/7) + cos(pi/7):   2,
-         I*sin(2*pi/7) - cos(2*pi/7): 2,
-         I*sin(3*pi/7) + cos(3*pi/7): 2,
+        I*sin(pi/7) + cos(pi/7): 2,
+        I*sin(2*pi/7) - cos(2*pi/7): 2,
+        I*sin(3*pi/7) + cos(3*pi/7): 2,
         -I: 1, I: 1,
     }
 
@@ -381,7 +381,7 @@ def test_roots_slow():
 
 
 def test_roots_inexact():
-    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
+    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1, x) ])
     R2 = sorted([ r for r in roots(x**2 + x + 1.0, x) ])
 
     for r1, r2 in zip(R1, R2):
@@ -402,20 +402,20 @@ def test_roots_preprocessed():
     E, F, J, L = symbols("E,F,J,L")
 
     f = -21601054687500000000*E**8*J**8/L**16 + \
-         508232812500000000*F*x*E**7*J**7/L**14 - \
-         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
-         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
-         27633173750*E**4*F**4*J**4*x**4/L**8 + \
-         14840215*E**3*F**5*J**3*x**5/L**6 + \
-         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
-         1153*E*J*F**7*x**7/(80*L**2) + \
-         633*F**8*x**8/160000
+        508232812500000000*F*x*E**7*J**7/L**14 - \
+        4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+        16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+        27633173750*E**4*F**4*J**4*x**4/L**8 + \
+        14840215*E**3*F**5*J**3*x**5/L**6 + \
+        54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+        1153*E*J*F**7*x**7/(80*L**2) + \
+        633*F**8*x**8/160000
 
     assert roots(f, x) == {}
 
     R1 = roots(f.evalf(), x, multiple=True)
     R2 = [-1304.88375606366, 97.1168816800648, 186.946430171876, 245.526792947065,
-           503.441004174773, 791.549343830097, 1273.16678129348, 1850.10650616851]
+          503.441004174773, 791.549343830097, 1273.16678129348, 1850.10650616851]
 
     w = Wild('w')
     p = w*E*J/(F*L**2)
@@ -436,7 +436,7 @@ def test_roots_mixed():
 
     _re = [ Interval(a, b) for (a, b), _ in _re ]
     _im = [ Interval(re(a), re(b))*Interval(im(a), im(b)) for (a, b),
-                     _ in _im ]
+            _ in _im ]
 
     _intervals = _re + _im
     _sroots = [ r.evalf() for r in _sroots ]

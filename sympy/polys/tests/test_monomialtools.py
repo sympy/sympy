@@ -149,11 +149,11 @@ def test_build_product_order():
                                )((4, 5, 6, 7)) == ((9, (4, 5)), (13, (6, 7)))
 
     assert build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) == \
-               build_product_order(
-                   (("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
+        build_product_order(
+            (("grlex", x, y), ("grlex", z, t)), [x, y, z, t])
     assert (build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t]) !=
-               build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])) \
-           is False
+            build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])) \
+        is False
 
 
 def test_monomial_mul():

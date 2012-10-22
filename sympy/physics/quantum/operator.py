@@ -508,7 +508,7 @@ class DifferentialOperator(Operator):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
-          )
+        )
 
     def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)

@@ -60,7 +60,7 @@ def test_expressions_failing():
     n = Symbol('n', integer=True, positive=True)
     a = Symbol('a')
     assert residue(exp(z)/(z - pi*I/4*a)**n, z, I*pi*a) == \
-           exp(I*pi*a/4)/factorial(n - 1)
+        exp(I*pi*a/4)/factorial(n - 1)
     assert residue(1/(x**2 + a**2)**2, x, a*I) == -I/4/a**3
 
 
@@ -72,4 +72,4 @@ def test_NotImplemented():
 def test_bug():
     from sympy.abc import s, z
     assert residue(2**(z)*(s + z)*(1 - s - z)/z**2, z, 0) == \
-           1 + s*log(2) - s**2*log(2) - 2*s
+        1 + s*log(2) - s**2*log(2) - 2*s

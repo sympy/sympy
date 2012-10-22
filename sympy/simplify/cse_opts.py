@@ -20,7 +20,7 @@ def sub_pre(e):
     for a in e.atoms(Add):
         adds[a] = a.could_extract_minus_sign()
     e = e.subs([(a, Mul(-1, -a, evaluate=False)
-                    if adds[a] else a) for a in adds])
+                 if adds[a] else a) for a in adds])
     # now replace any persisting Adds, a, that can have -1 extracted with Neg(-a)
     if isinstance(e, Basic):
         reps = dict([(a, Neg(-a)) for a in e.atoms(Add)

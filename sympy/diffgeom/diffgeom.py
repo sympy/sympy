@@ -324,7 +324,7 @@ class CoordSystem(Basic):
 
     def _latex(self, printer, *args):
         return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
-                self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
+            self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 
 class Point(Basic):
@@ -548,7 +548,7 @@ class BaseVectorField(Expr):
         d_var = self._coord_sys._dummy
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(d_var) for i,
-                            b in enumerate(base_scalars)]
+                   b in enumerate(base_scalars)]
         d_result = scalar_field.subs(zip(base_scalars, d_funcs))
         d_result = d_result.diff(d_var)
 
@@ -615,7 +615,7 @@ class Commutator(Expr):
             if all(isinstance(v, BaseVectorField) for v in (v1, v2)):
                 return Zero()
             bases_1, bases_2 = [list(v.atoms(BaseVectorField))
-                                     for v in (v1, v2)]
+                                for v in (v1, v2)]
             coeffs_1 = [v1.expand().coeff(b) for b in bases_1]
             coeffs_2 = [v2.expand().coeff(b) for b in bases_2]
             res = 0
@@ -968,7 +968,7 @@ class BaseCovarDerivativeOp(Expr):
         # derivation and do the derivation
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i,
-                            b in enumerate(vectors)]
+                   b in enumerate(vectors)]
         d_result = field.subs(zip(vectors, d_funcs))
         d_result = wrt_vector(d_result)
 
@@ -980,7 +980,7 @@ class BaseCovarDerivativeOp(Expr):
         for v in vectors:
             d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
                        *v._coord_sys.base_vector(k))
-                           for k in range(v._coord_sys.dim)])
+                      for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(zip(to_subs, derivs))
@@ -1022,7 +1022,7 @@ class CovarDerivativeOp(Expr):
     def __call__(self, field):
         vectors = list(self._wrt.atoms(BaseVectorField))
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
-                        for v in vectors]
+                    for v in vectors]
         return self._wrt.subs(zip(vectors, base_ops))(field)
 
     def _latex(self, printer, *args):
@@ -1387,7 +1387,7 @@ def twoform_to_matrix(expr):
     vectors = coord_sys.base_vectors()
     expr = expr.expand()
     matrix_content = [[expr(v1, v2) for v1 in vectors]
-                                    for v2 in vectors]
+                      for v2 in vectors]
     return Matrix(matrix_content)
 
 
@@ -1415,12 +1415,12 @@ def metric_to_Christoffel_1st(expr):
             'The two-form representing the metric is not symmetric.')
     coord_sys = expr.atoms(CoordSystem).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a))
-                                       for d in coord_sys.base_vectors()]
+                      for d in coord_sys.base_vectors()]
     indices = range(coord_sys.dim)
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
-                     for j in indices]
-                     for i in indices]
+                    for j in indices]
+                   for i in indices]
     return list_to_tuple_rec(christoffel)
 
 
@@ -1458,8 +1458,8 @@ def metric_to_Christoffel_2nd(expr):
     # XXX end of workaround
     christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
                      for k in indices]
-                     for j in indices]
-                     for i in indices]
+                    for j in indices]
+                   for i in indices]
     return list_to_tuple_rec(christoffel)
 
 
@@ -1497,25 +1497,25 @@ def metric_to_Riemann_components(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = range(coord_sys.dim)
     deriv_ch = [[[[d(ch_2nd[i][j][k])
-                     for d in coord_sys.base_vectors()]
-                     for k in indices]
-                     for j in indices]
-                     for i in indices]
+                   for d in coord_sys.base_vectors()]
+                  for k in indices]
+                 for j in indices]
+                for i in indices]
     riemann_a = [[[[deriv_ch[rho][sig][nu][mu] - deriv_ch[rho][sig][mu][nu]
-                     for nu in indices]
-                     for mu in indices]
-                     for sig in indices]
+                    for nu in indices]
+                   for mu in indices]
+                  for sig in indices]
                      for rho in indices]
     riemann_b = [[[[Add(*[ch_2nd[rho][l][mu]*ch_2nd[l][sig][nu] - ch_2nd[rho][l][nu]*ch_2nd[l][sig][mu] for l in indices])
-                     for nu in indices]
-                     for mu in indices]
-                     for sig in indices]
-                     for rho in indices]
+                    for nu in indices]
+                   for mu in indices]
+                  for sig in indices]
+                 for rho in indices]
     riemann = [[[[riemann_a[rho][sig][mu][nu] + riemann_b[rho][sig][mu][nu]
-                     for nu in indices]
+                  for nu in indices]
                      for mu in indices]
-                     for sig in indices]
-                     for rho in indices]
+                for sig in indices]
+               for rho in indices]
     return list_to_tuple_rec(riemann)
 
 
@@ -1548,6 +1548,6 @@ def metric_to_Ricci_components(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = range(coord_sys.dim)
     ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
-                     for j in indices]
-                     for i in indices]
+              for j in indices]
+             for i in indices]
     return list_to_tuple_rec(ricci)

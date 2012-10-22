@@ -76,7 +76,7 @@ class HilbertSpace(Basic):
 
     def __pow__(self, other, mod=None):
         if mod is not None:
-            raise ValueError('The third argument to __pow__ is not supported\
+            raise ValueError('The third argument to __pow__ is not supported \
             for Hilbert spaces.')
         return TensorPowerHilbertSpace(self, other)
 
@@ -342,21 +342,21 @@ class TensorProductHilbertSpace(HilbertSpace):
             elif isinstance(arg, (HilbertSpace, TensorPowerHilbertSpace)):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be multiplied by\
+                raise TypeError('Hilbert spaces can only be multiplied by \
                 other Hilbert spaces: %r' % arg)
         #combine like arguments into direct powers
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
             if prev_arg is not None:
-                if isinstance(new_arg, TensorPowerHilbertSpace) and\
-                    isinstance(prev_arg, TensorPowerHilbertSpace) and\
+                if isinstance(new_arg, TensorPowerHilbertSpace) and \
+                    isinstance(prev_arg, TensorPowerHilbertSpace) and \
                         new_arg.base == prev_arg.base:
                     prev_arg = new_arg.base**(new_arg.exp + prev_arg.exp)
-                elif isinstance(new_arg, TensorPowerHilbertSpace) and\
+                elif isinstance(new_arg, TensorPowerHilbertSpace) and \
                         new_arg.base == prev_arg:
                     prev_arg = prev_arg**(new_arg.exp + 1)
-                elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
+                elif isinstance(prev_arg, TensorPowerHilbertSpace) and \
                         new_arg == prev_arg.base:
                     prev_arg = new_arg**(prev_arg.exp + 1)
                 elif new_arg == prev_arg:
@@ -487,7 +487,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             elif isinstance(arg, HilbertSpace):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be summed with other\
+                raise TypeError('Hilbert spaces can only be summed with other \
                 Hilbert spaces: %r' % arg)
         if recall:
             return DirectSumHilbertSpace(*new_args)
@@ -604,12 +604,12 @@ class TensorPowerHilbertSpace(HilbertSpace):
         #check (and allow) for hs**(x+42+y...) case
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
-                raise ValueError('Hilbert spaces can only be raised to\
+                raise ValueError('Hilbert spaces can only be raised to \
                 positive integers or Symbols: %r' % exp)
         else:
             for power in exp.atoms():
                 if not (power.is_Integer or power.is_Symbol):
-                    raise ValueError('Tensor powers can only contain integers\
+                    raise ValueError('Tensor powers can only contain integers \
                     or Symbols: %r' % power)
         return new_args
 

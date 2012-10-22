@@ -526,9 +526,9 @@ def sdp_lcm(f, g, u, O, K):
 
         lcm = K.lcm(fc, gc)
 
-    f_terms = tuple( ((1,) + m,  c) for m, c in f )
-    g_terms = tuple( ((0,) + m,  c) for m, c in g ) \
-            + tuple( ((1,) + m, -c) for m, c in g )
+    f_terms = tuple( ((1,) + m, c) for m, c in f )
+    g_terms = tuple( ((0,) + m, c) for m, c in g ) \
+        + tuple( ((1,) + m, -c) for m, c in g )
 
     F = sdp_sort(f_terms, lex)
     G = sdp_sort(g_terms, lex)

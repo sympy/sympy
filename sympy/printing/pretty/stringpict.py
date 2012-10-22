@@ -189,7 +189,7 @@ class stringPict(object):
         res = self
 
         if left:
-            lparen = stringPict(vobj(left,  h), baseline=b)
+            lparen = stringPict(vobj(left, h), baseline=b)
             res = stringPict(*lparen.right(self))
         if right:
             rparen = stringPict(vobj(right, h), baseline=b)
@@ -207,7 +207,7 @@ class stringPict(object):
         slash = '\n'.join(
             ' '*(height - i - 1) + xobj('/', 1) + ' '*i
             for i in range(height)
-            )
+        )
         return self.left(stringPict(slash, height//2))
 
     def root(self, n=None):
@@ -223,7 +223,7 @@ class stringPict(object):
         slash = '\n'.join(
             ' ' * (height - i - 1) + '/' + ' ' * i
             for i in range(height)
-            )
+        )
         slash = stringPict(slash, height - 1)
         #left half of root symbol
         if height > 2:

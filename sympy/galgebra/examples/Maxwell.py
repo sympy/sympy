@@ -7,9 +7,9 @@ import sympy.galgebra.latex_ex as tex
 
 if __name__ == '__main__':
 
-    metric = '1  0  0  0,' +\
-             '0 -1  0  0,' +\
-             '0  0 -1  0,' +\
+    metric = '1  0  0  0,' \
+             '0 -1  0  0,' \
+             '0  0 -1  0,' \
              '0  0  0 -1'
 
     vars = sympy.symbols('t x y z')

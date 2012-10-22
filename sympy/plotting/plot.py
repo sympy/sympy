@@ -202,7 +202,7 @@ class Plot(object):
 
     def __str__(self):
         series_strs = [('[%d]: ' % i) + str(s)
-                          for i, s in enumerate(self._series)]
+                       for i, s in enumerate(self._series)]
         return 'Plot object containing:\n' + '\n'.join(series_strs)
 
     def __getitem__(self, index):
@@ -394,9 +394,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
-                str(self.expr),
-                str(self.var),
-                str((self.start, self.end)))
+            str(self.expr), str(self.var), str((self.start, self.end)))
 
     def get_segments(self):
         """
@@ -497,10 +495,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     def __str__(self):
         return 'parametric cartesian line: (%s, %s) for %s over %s' % (
-                str(self.expr_x),
-                str(self.expr_y),
-                str(self.var),
-                str((self.start, self.end)))
+            str(self.expr_x), str(self.expr_y), str(self.var),
+            str((self.start, self.end)))
 
     def get_parameter_points(self):
         return np.linspace(self.start, self.end, num=self.nb_of_points)
@@ -573,7 +569,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                             point_a = [x_array[i], y_array[i]]
                             point_b = [x_array[i + 1], y_array[i + 1]]
                             sample(param_array[i], param_array[i], point_a,
-                                    point_b, depth + 1)
+                                   point_b, depth + 1)
 
             #Sample further if one of the end points in None( ie a complex
             #value) or the three points are not almost collinear.
@@ -627,11 +623,8 @@ class Parametric3DLineSeries(Line3DBaseSeries):
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
-                str(self.expr_x),
-                str(self.expr_y),
-                str(self.expr_z),
-                str(self.var),
-                str((self.start, self.end)))
+            str(self.expr_x), str(self.expr_y), str(self.expr_z),
+            str(self.var), str((self.start, self.end)))
 
     def get_parameter_points(self):
         return np.linspace(self.start, self.end, num=self.nb_of_points)
@@ -721,7 +714,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     def __init__(
         self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
-                    **kwargs):
+            **kwargs):
         super(ParametricSurfaceSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
@@ -990,10 +983,10 @@ class DefaultBackend(BaseBackend):
 
 
 plot_backends = {
-        'matplotlib': MatplotlibBackend,
-        'text': TextBackend,
-        'default': DefaultBackend
-        }
+    'matplotlib': MatplotlibBackend,
+    'text': TextBackend,
+    'default': DefaultBackend
+}
 
 
 ##############################################################################
@@ -1035,9 +1028,9 @@ def _matplotlib_list(interval_list):
             intervalx = intervals[0]
             intervaly = intervals[1]
             xlist.extend([intervalx.start, intervalx.start,
-                            intervalx.end, intervalx.end, None])
+                          intervalx.end, intervalx.end, None])
             ylist.extend([intervaly.start, intervaly.end,
-                            intervaly.end, intervaly.start, None])
+                          intervaly.end, intervaly.start, None])
     else:
         #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
         xlist.extend([None, None, None, None])
@@ -1616,8 +1609,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         return plots
 
     if isinstance(args[0], Expr) or (isinstance(args[0], Tuple) and
-                                        len(args[0]) == expr_len and
-                                        expr_len != 3):
+                                     len(args[0]) == expr_len and
+                                     expr_len != 3):
         # Cannot handle expressions with number of expression = 3. It is
         # not possible to differentiate between expressions and ranges.
         #Series of plots with same range
@@ -1636,7 +1629,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         if len(free_symbols) > nb_of_free_symbols:
             raise ValueError("The number of free_symbols in the expression"
-                                "is greater than %d" % nb_of_free_symbols)
+                             "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
             ranges = Tuple(*[range_expr for range_expr in args[
                            i:i + nb_of_free_symbols]])
@@ -1661,7 +1654,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             for i in range(expr_len):
                 if not isinstance(arg[i], Expr):
                     raise ValueError("Expected an expression, given %s" %
-                                        str(arg[i]))
+                                     str(arg[i]))
             for i in range(nb_of_free_symbols):
                 if not len(arg[i + expr_len]) == 3:
                     raise ValueError("The ranges should be a tuple of"

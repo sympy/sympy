@@ -292,7 +292,7 @@ def plot_implicit(expr, *args, **kwargs):
 
     #Check whether there is an equality in the expression provided.
         if any(isinstance(e, (Equality, GreaterThan, LessThan))
-                            for e in arg_list):
+               for e in arg_list):
             has_equality = True
 
     elif not isinstance(expr, Relational):
@@ -306,7 +306,7 @@ def plot_implicit(expr, *args, **kwargs):
     symbols = set_union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
-                                    "more than 2 variables")
+                                  "more than 2 variables")
 
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)

@@ -32,9 +32,9 @@ def test_pde_separate_mul():
         ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)]))
 
     assert pde_separate_mul(eq, F(x, y, z), [Y(y), u(x, z)]) == \
-            [D(Y(y), y)/Y(y), -D(u(x, z), x)/u(x, z) - D(u(x, z), z)/u(x, z)]
+        [D(Y(y), y)/Y(y), -D(u(x, z), x)/u(x, z) - D(u(x, z), z)/u(x, z)]
     assert pde_separate_mul(eq, F(x, y, z), [X(x), Y(y), Z(z)]) == \
-            [D(X(x), x)/X(x), -D(Z(z), z)/Z(z) - D(Y(y), y)/Y(y)]
+        [D(X(x), x)/X(x), -D(Z(z), z)/Z(z) - D(Y(y), y)/Y(y)]
 
     # wave equation
     wave = Eq(D(u(x, t), t, t), c**2*D(u(x, t), x, x))
@@ -48,8 +48,8 @@ def test_pde_separate_mul():
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [D(Z(z), z, z)/Z(z),
             -D(u(theta, r), r, r)/u(theta, r) -
-            D(u(theta, r), r)/(r*u(theta, r)) -
-            D(u(theta, r), theta, theta)/(r**2*u(theta, r))]
+        D(u(theta, r), r)/(r*u(theta, r)) -
+        D(u(theta, r), theta, theta)/(r**2*u(theta, r))]
     # Lets use the result to create a new equation...
     eq = Eq(res[1], c)
     # ...and separate theta...

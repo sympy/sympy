@@ -631,7 +631,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
         elif isinstance(fi, bool) or fi.is_Relational:
             return reduce_inequalities(f, assume=flags.get('assume'),
-                                          symbols=symbols)
+                                       symbols=symbols)
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])
@@ -789,7 +789,7 @@ def solve(f, *symbols, **flags):
 
         def _do_dict(solution):
             return dict([(k, v.subs(non_inverts)) for k, v in
-                          solution.iteritems()])
+                         solution.iteritems()])
         for i in range(1):
             if type(solution) is dict:
                 solution = _do_dict(solution)
@@ -823,7 +823,7 @@ def solve(f, *symbols, **flags):
     if symbol_swapped:
         if type(solution) is dict:
             solution = dict([(swap_sym[k], v.subs(swap_sym))
-                              for k, v in solution.iteritems()])
+                             for k, v in solution.iteritems()])
         elif solution and type(solution) is list and type(solution[0]) is dict:
             for i, sol in enumerate(solution):
                 solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
@@ -836,7 +836,7 @@ def solve(f, *symbols, **flags):
             type(solution) is not dict and
             type(solution[0]) is dict and
             all(s in solution[0] for s in symbols)
-            ):
+    ):
         solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
@@ -1221,7 +1221,7 @@ def _solve(f, *symbols, **flags):
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
         result = [s for s in result if
-                    all(not checksol(den, {symbol: s}, **flags)
+                  all(not checksol(den, {symbol: s}, **flags)
                     for den in dens)]
         # keep only results if the check is not False
         result = [r for r in result if
@@ -2181,7 +2181,7 @@ def _invert(eq, *symbols, **kwargs):
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
             if any(_ispow(i) for i in (ad, bd)) and \
-               ad.as_base_exp()[0] == bd.as_base_exp()[0]:
+                    ad.as_base_exp()[0] == bd.as_base_exp()[0]:
                 # a = -b
                 lhs = powsimp(powdenest(ad/bd))
                 rhs = -bi/ai
@@ -2218,8 +2218,8 @@ def _invert(eq, *symbols, **kwargs):
         # system is written in terms of sqrt(x + y) so it will just fail, so we
         # do that step here.
         if lhs.is_Pow and (
-           lhs.exp.is_Integer and dointpow or not lhs.exp.is_Integer and
-           len(symbols) > 1 and len(lhs.base.free_symbols & set(symbols)) > 1):
+            lhs.exp.is_Integer and dointpow or not lhs.exp.is_Integer and
+                len(symbols) > 1 and len(lhs.base.free_symbols & set(symbols)) > 1):
             rhs = rhs**(1/lhs.exp)
             lhs = lhs.base
 

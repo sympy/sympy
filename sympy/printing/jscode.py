@@ -16,21 +16,21 @@ from sympy.utilities.misc import default_sort_key
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
 # Used in JavascriptCodePrinter._print_Function(self)
 known_functions = {
-        }
+}
 
 function_translations = {
-        'Abs': 'Math.abs',
-        'acos': 'Math.acos',
-        'asin': 'Math.asin',
-        'atan': 'Math.atan',
-        'ceiling': 'Math.ceil',
-        'cos': 'Math.cos',
-        'exp': 'Math.exp',
-        'floor': 'Math.floor',
-        'log': 'Math.log',
-        'sin': 'Math.sin',
-        'tan': 'Math.tan',
-        }
+    'Abs': 'Math.abs',
+    'acos': 'Math.acos',
+    'asin': 'Math.asin',
+    'atan': 'Math.atan',
+    'ceiling': 'Math.ceil',
+    'cos': 'Math.cos',
+    'exp': 'Math.exp',
+    'floor': 'Math.floor',
+    'log': 'Math.log',
+    'sin': 'Math.sin',
+    'tan': 'Math.tan',
+}
 
 
 class JavascriptCodePrinter(CodePrinter):
@@ -175,7 +175,7 @@ class JavascriptCodePrinter(CodePrinter):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
-                       for e, c in expr.args[:-1]]
+                   for e, c in expr.args[:-1]]
         last_line = ""
         if expr.args[-1].cond is True:
             last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
@@ -229,7 +229,7 @@ class JavascriptCodePrinter(CodePrinter):
 
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
         decrease = [ int(any(map(line.startswith, dec_token)))
-                         for line in code ]
+                     for line in code ]
 
         pretty = []
         level = 0

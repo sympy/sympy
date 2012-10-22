@@ -36,8 +36,8 @@ import os
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2,5):
-    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" % \
+if sys.version_info[:2] < (2, 5):
+    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" %
           sys.version_info[:2])
     sys.exit(-1)
 
@@ -118,8 +118,8 @@ class audit(Command):
             sys.exit(-1)
         # We don't want to audit external dependencies
         ext = ('mpmath',)
-        dirs = (os.path.join(*d) for d in \
-                        (m.split('.') for m in modules) if d[1] not in ext)
+        dirs = (os.path.join(*d) for d in
+               (m.split('.') for m in modules) if d[1] not in ext)
         warns = 0
         for dir in dirs:
             for filename in os.listdir(dir):
@@ -134,7 +134,7 @@ class clean(Command):
     """
 
     description = "remove build files"
-    user_options = [("all","a","the same")]
+    user_options = [("all", "a", "the same")]
 
     def initialize_options(self):
         self.all = None
@@ -241,7 +241,7 @@ tests = [
     'sympy.stats.tests',
     'sympy.tensor.tests',
     'sympy.utilities.tests',
-    ]
+]
 
 classifiers = [
     'License :: OSI Approved :: BSD License',
@@ -256,7 +256,7 @@ classifiers = [
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
-    ]
+]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code
@@ -264,24 +264,24 @@ as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
 setup(
-      name = 'sympy',
-      version = sympy.__version__,
-      description = 'Computer algebra system (CAS) in Python',
-      long_description = long_description,
-      author = 'SymPy development team',
-      author_email = 'sympy@googlegroups.com',
-      license = 'BSD',
-      keywords = "Math CAS",
-      url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + modules + tests,
-      scripts = ['bin/isympy'],
-      ext_modules = [],
-      package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
-      data_files = [('share/man/man1', ['doc/man/isympy.1'])],
-      cmdclass    = {'test': test_sympy,
-                     'bench': run_benchmarks,
-                     'clean': clean,
-                     'audit' : audit,
+    name='sympy',
+    version=sympy.__version__,
+    description='Computer algebra system (CAS) in Python',
+    long_description=long_description,
+    author='SymPy development team',
+    author_email='sympy@googlegroups.com',
+    license='BSD',
+    keywords="Math CAS",
+    url='http://code.google.com/p/sympy',
+    packages=['sympy'] + modules + tests,
+    scripts=['bin/isympy'],
+    ext_modules=[],
+    package_data={ 'sympy.utilities.mathml': ['data/*.xsl'] },
+    data_files=[('share/man/man1', ['doc/man/isympy.1'])],
+    cmdclass={'test': test_sympy,
+              'bench': run_benchmarks,
+              'clean': clean,
+              'audit': audit,
                      },
-      classifiers = classifiers,
-      )
+    classifiers=classifiers,
+)

@@ -107,7 +107,7 @@ def test_sdm_ecart():
 def test_sdm_nf_mora():
     f = sdm_from_dict({(1, 2, 1, 1): QQ(1), (1, 1, 2, 1): QQ(1),
                 (1, 0, 2, 1): QQ(1), (1, 0, 0, 3): QQ(1), (1, 1, 1, 0): QQ(1)},
-            grlex)
+        grlex)
     f1 = sdm_from_dict({(1, 1, 1, 0): QQ(1), (1, 0, 2, 0): QQ(1),
                         (1, 0, 0, 0): QQ(-1)}, grlex)
     f2 = sdm_from_dict({(1, 1, 1, 0): QQ(1)}, grlex)
@@ -126,7 +126,7 @@ def test_sdm_nf_mora():
     f1 = sdm_from_vector([x, y, 1], lex, QQ, gens=[x, y, z])
     f2 = sdm_from_vector([x*y, z, z**2], lex, QQ, gens=[x, y, z])
     assert sdm_nf_mora(f, [f1, f2], lex, QQ) == \
-           sdm_nf_mora(f, [f2, f1], lex, QQ) == \
+        sdm_nf_mora(f, [f2, f1], lex, QQ) == \
         [((1, 0, 1, 1), QQ(1)), ((1, 0, 0, 1), QQ(-1)), ((0, 1, 1, 0), QQ(-1)),
          ((0, 1, 0, 1), QQ(1))]
 
@@ -165,10 +165,10 @@ def test_nontrivial():
     assert contains([x, 1 + x + y, 5 - 7*y], 1)
     assert contains(
         [x**3 + y**3, y**3 + z**3, z**3 + x**3, x**2*y + x**2*z + y**2*z],
-                    x**3)
+        x**3)
     assert not contains(
         [x**3 + y**3, y**3 + z**3, z**3 + x**3, x**2*y + x**2*z + y**2*z],
-                        x**2 + y**2)
+        x**2 + y**2)
 
     # compare local order
     assert not contains([x*(1 + x + y), y*(1 + z)], x)

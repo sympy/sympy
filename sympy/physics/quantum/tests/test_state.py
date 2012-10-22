@@ -219,7 +219,7 @@ def test_wavefunction():
     assert piab(0.5) == sin(0.5*n*pi/L)
     assert piab(0.5, n=1, L=1) == sin(0.5*pi)
     assert piab.normalize() == \
-           Wavefunction(sqrt(2)/sqrt(L)*sin(n*pi*x/L), (x, 0, L))
+        Wavefunction(sqrt(2)/sqrt(L)*sin(n*pi*x/L), (x, 0, L))
     assert conjugate(piab) == Wavefunction(conjugate(piab.expr), (x, 0, L))
     assert conjugate(piab) == Dagger(piab)
 

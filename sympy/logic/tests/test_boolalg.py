@@ -24,10 +24,10 @@ def test_And():
     assert And(A) == A
     assert And(True) is True
     assert And(False) is False
-    assert And(True,  True ) is True
-    assert And(True,  False) is False
+    assert And(True, True ) is True
+    assert And(True, False) is False
     assert And(False, False) is False
-    assert And(True,  A) == A
+    assert And(True, A) == A
     assert And(False, A) is False
     assert And(True, True, True) is True
     assert And(True, True, A) == A
@@ -41,8 +41,8 @@ def test_Or():
     assert Or(A) == A
     assert Or(True) is True
     assert Or(False) is False
-    assert Or(True,  True ) is True
-    assert Or(True,  False) is True
+    assert Or(True, True ) is True
+    assert Or(True, False) is True
     assert Or(False, False) is False
     assert Or(True, A) is True
     assert Or(False, A) == A
@@ -58,8 +58,8 @@ def test_Xor():
     assert Xor(A) == A
     assert Xor(True) is True
     assert Xor(False) is False
-    assert Xor(True,  True ) is False
-    assert Xor(True,  False) is True
+    assert Xor(True, True ) is False
+    assert Xor(True, False) is True
     assert Xor(False, False) is False
     assert Xor(True, A) == ~A
     assert Xor(False, A) == A
@@ -73,7 +73,7 @@ def test_Not():
     assert Not(False) is True
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
-    assert Not(False, False) == [True,  True ]
+    assert Not(False, False) == [True, True ]
 
 
 def test_Nand():
@@ -83,10 +83,10 @@ def test_Nand():
     assert Nand(A) == ~A
     assert Nand(True) is False
     assert Nand(False) is True
-    assert Nand(True,  True ) is False
-    assert Nand(True,  False) is True
+    assert Nand(True, True ) is False
+    assert Nand(True, False) is True
     assert Nand(False, False) is True
-    assert Nand(True,  A) == ~A
+    assert Nand(True, A) == ~A
     assert Nand(False, A) is True
     assert Nand(True, True, True) is False
     assert Nand(True, True, A) == ~A
@@ -100,10 +100,10 @@ def test_Nor():
     assert Nor(A) == ~A
     assert Nor(True) is False
     assert Nor(False) is True
-    assert Nor(True,  True ) is False
-    assert Nor(True,  False) is False
+    assert Nor(True, True ) is False
+    assert Nor(True, False) is False
     assert Nor(False, False) is True
-    assert Nor(True,  A) is False
+    assert Nor(True, A) is False
     assert Nor(False, A) == ~A
     assert Nor(True, True, True) is False
     assert Nor(True, True, A) is False
@@ -265,9 +265,9 @@ def test_to_int_repr():
             return arg
 
     assert sorted_recursive(to_int_repr([x | y, z | x], [x, y, z])) == \
-                                            sorted_recursive([[1, 2], [1, 3]])
+        sorted_recursive([[1, 2], [1, 3]])
     assert sorted_recursive(to_int_repr([x | y, z | ~x], [x, y, z])) == \
-                                            sorted_recursive([[1, 2], [3, -1]])
+        sorted_recursive([[1, 2], [3, -1]])
 
 
 def test_is_cnf():

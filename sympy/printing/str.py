@@ -491,7 +491,7 @@ class StrPrinter(Printer):
         cls = basis.__class__.__name__
 
         exprs = [ self._print_Add(arg, order=basis.order)
-                                  for arg in basis.exprs ]
+                  for arg in basis.exprs ]
         exprs = "[%s]" % ", ".join(exprs)
 
         gens = [ self._print(gen) for gen in basis.gens ]

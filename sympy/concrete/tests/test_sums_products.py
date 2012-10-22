@@ -125,7 +125,7 @@ def test_evalf_fast_series():
         n + 12463
     assert NS(Sum((-1)**n * P / 24 * (fac(2*n + 1)*fac(2*n)*fac(
         n))**3 / fac(3*n + 2) / fac(4*n + 3)**3, (n, 0, oo)), 100) == astr
-    assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 / \
+    assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 /
               fac(2*n + 1)**5, (n, 0, oo)), 100) == astr
 
 
@@ -207,7 +207,7 @@ def test_simple_products():
     assert product(n, (n, 1, b)) == factorial(b)
     assert product(n**3, (n, 1, b)) == factorial(b)**3
     assert product(3**(2 + n), (n, a, b)) \
-           == 3**(2*(1 - a + b) + b/2 + (b**2)/2 + a/2 - (a**2)/2)
+        == 3**(2*(1 - a + b) + b/2 + (b**2)/2 + a/2 - (a**2)/2)
     assert product(cos(n), (n, 3, 5)) == cos(3)*cos(4)*cos(5)
     assert product(cos(n), (n, x, x + 2)) == cos(x)*cos(x + 1)*cos(x + 2)
     assert isinstance(product(cos(n), (n, x, x + S.Half)), Product)
@@ -221,9 +221,9 @@ def test_rational_products():
     assert Product(n + 1, (n, a, b)) == factorial(1 + b)/factorial(a)
     assert Product((n + 1)/(n - 1), (n, a, b)) == b*(1 + b)/(a*(a - 1))
     assert Product(n/(n + 1)/(n + 2), (n, a, b)) \
-           == a*factorial(a + 1)/(b + 1)/factorial(b + 2)
+        == a*factorial(a + 1)/(b + 1)/factorial(b + 2)
     assert Product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b)) \
-           == b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
+        == b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
 @XFAIL
@@ -246,13 +246,12 @@ def test_telescopic_sums():
     f = Function("f")
     assert Sum(
         f(k) - f(k + 2), (k, m, n)).doit() == -f(1 + n) - f(2 + n) + f(m) + f(1 + m)
-    assert Sum(cos(k) - cos(k + 3), (k, 1, n)).doit() == -cos(1 + n) - cos(2 + n) - \
-                                           cos(3 + \
-                                               n) + cos(1) + cos(2) + cos(3)
+    assert Sum(cos(k) - cos(k + 3), (k, 1, n)).doit() == -cos(1 + n) - \
+        cos(2 + n) - cos(3 + n) + cos(1) + cos(2) + cos(3)
 
     # dummy variable shouldn't matter
     assert telescopic(1/m, -m/(1 + m), (m, n - 1, n)) == \
-           telescopic(1/k, -k/(1 + k), (k, n - 1, n))
+        telescopic(1/k, -k/(1 + k), (k, n - 1, n))
 
     assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 
@@ -267,7 +266,7 @@ def test_sum_reconstruct():
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
     assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
-           Sum(a, (a, c, 4))
+        Sum(a, (a, c, 4))
 
 
 @XFAIL
@@ -307,20 +306,17 @@ def test_eval_diff():
     e = Sum(x*y, (x, 1, a))
     assert e.diff(a) == Derivative(e, a)
     assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
-           Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
-           24
+        Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == 24
 
 
 def test_hypersum():
     from sympy import simplify, sin, hyper
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
-    assert simplify(summation((-1)**n*x**(2*n + 1)/factorial(2*n + 1),
-                              (n, 3, oo))) \
-           == -x + sin(x) + x**3/6 - x**5/120
+    assert simplify(summation((-1)**n*x**(2*n + 1) /
+        factorial(2*n + 1), (n, 3, oo))) == -x + sin(x) + x**3/6 - x**5/120
 
-    assert summation(1/(n + 2)**3, (n, 1, oo)) == \
-           -S(9)/8 + zeta(3)
+    assert summation(1/(n + 2)**3, (n, 1, oo)) == -S(9)/8 + zeta(3)
     assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))

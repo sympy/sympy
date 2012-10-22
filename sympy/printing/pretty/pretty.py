@@ -8,9 +8,9 @@ from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
-from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
-        annotated
+from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
+    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
+    annotated
 
 from sympy.utilities import default_sort_key
 
@@ -661,7 +661,7 @@ class PrettyPrinter(Printer):
 
         # max widths
         maxw = [max([P[i, j].width() for i in xrange(len_args)])
-                    for j in xrange(2)]
+                for j in xrange(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
         # drawing result
@@ -1088,7 +1088,7 @@ class PrettyPrinter(Printer):
         diagonal = stringPict('\n'.join(
             ' '*(linelength - i - 1) + _zZ + ' '*i
             for i in range(linelength)
-            ))
+        ))
         # Put baseline just below lowest line: next to exp
         diagonal.baseline = linelength - 1
         # Make the root symbol
@@ -1367,7 +1367,7 @@ class PrettyPrinter(Printer):
 
     def _print_GroebnerBasis(self, basis):
         exprs = [ self._print_Add(arg, order=basis.order)
-                                  for arg in basis.exprs ]
+                  for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
         gens = [ self._print(gen) for gen in basis.gens ]

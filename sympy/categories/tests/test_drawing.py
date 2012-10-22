@@ -137,7 +137,7 @@ def test_DiagramGrid():
                               k: FiniteSet()}
 
     assert str(grid) == '[[Object("A"), Object("B"), Object("D")], ' \
-           '[None, Object("C"), None]]'
+        '[None, Object("C"), None]]'
 
     # A chain of morphisms.
     f = NamedMorphism(A, B, "f")
@@ -484,7 +484,7 @@ def test_DiagramGrid():
                                    "transpose": True},
         FiniteSet(A_, B_, C_, D_, E_): {"layout": "sequential",
                                         "transpose": True}},
-                       transpose=True)
+        transpose=True)
 
     assert grid.width == 5
     assert grid.height == 2

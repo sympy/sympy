@@ -258,7 +258,7 @@ def test_piecewise_fold():
     assert piecewise_fold(p + p) == Piecewise((2*x, x < 1), (2, 1 <= x))
     assert piecewise_fold(Piecewise((1, x < 0), (2, True))
                           + Piecewise((10, x < 0), (-10, True))) == \
-           Piecewise((11, x < 0), (-8, True))
+        Piecewise((11, x < 0), (-8, True))
 
     p1 = Piecewise((0, x < 0), (x, x <= 1), (0, True))
     p2 = Piecewise((0, x < 0), (1 - x, x <= 1), (0, True))

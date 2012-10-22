@@ -363,7 +363,7 @@ class PygletPlot(object):
         else:
             self._render_lock.acquire()
             s += "\n".join(["%s[%i]: %s" % ("", i, str(self._functions[i]))
-                              for i in self._functions])
+                            for i in self._functions])
             self._render_lock.release()
         return s
 

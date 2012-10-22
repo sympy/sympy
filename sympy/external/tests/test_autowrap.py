@@ -17,6 +17,13 @@ if f2py:
     else:
         f2pyworks = True
 
+a, b, c = symbols('a b c')
+n, m, d = symbols('n m d', integer=True)
+A, B, C = symbols('A B C', cls=IndexedBase)
+i = Idx('i', m)
+j = Idx('j', n)
+k = Idx('k', d)
+
 
 def has_module(module):
     """
@@ -41,7 +48,6 @@ def has_module(module):
 
 
 def runtest_autowrap_twice(language, backend):
-    a, b, c = symbols('a b c')
     f = autowrap((((a + b)/c)**5).expand(), language, backend)
     g = autowrap((((a + b)/c)**4).expand(), language, backend)
 
@@ -52,19 +58,13 @@ def runtest_autowrap_twice(language, backend):
 
 def runtest_autowrap_trace(language, backend):
     has_module('numpy')
-    A = IndexedBase('A')
-    n = symbols('n', integer=True)
-    i = Idx('i', n)
     trace = autowrap(A[i, i], language, backend)
     assert trace(numpy.eye(100)) == 100
 
 
 def runtest_autowrap_matrix_vector(language, backend):
     has_module('numpy')
-    A, x, y = map(IndexedBase, ['A', 'x', 'y'])
-    n, m = symbols('n m', integer=True)
-    i = Idx('i', m)
-    j = Idx('j', n)
+    x, y = symbols('x y', cls=IndexedBase)
     expr = Eq(y[i], A[i, j]*x[j])
     mv = autowrap(expr, language, backend)
 
@@ -77,11 +77,6 @@ def runtest_autowrap_matrix_vector(language, backend):
 
 def runtest_autowrap_matrix_matrix(language, backend):
     has_module('numpy')
-    A, B, C = map(IndexedBase, ['A', 'B', 'C'])
-    n, m, d = symbols('n m d', integer=True)
-    i = Idx('i', m)
-    j = Idx('j', n)
-    k = Idx('k', d)
     expr = Eq(C[i, j], A[i, k]*B[k, j])
     matmat = autowrap(expr, language, backend)
 

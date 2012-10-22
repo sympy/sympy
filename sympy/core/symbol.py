@@ -65,7 +65,7 @@ class Symbol(AtomicExpr, Boolean):
                 feature="Symbol('x', dummy=True)",
                 useinstead="Dummy() or symbols(..., cls=Dummy)",
                 issue=3378, deprecated_since_version="0.7.0",
-                ).warn()
+            ).warn()
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
@@ -323,7 +323,7 @@ def symbols(names, **args):
             feature="each_char in the options to symbols() and var()",
             useinstead="spaces or commas between symbol names",
             issue=1919, deprecated_since_version="0.7.0", value=value
-            ).warn()
+        ).warn()
 
     if isinstance(names, basestring):
         names = names.strip()

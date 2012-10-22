@@ -162,10 +162,10 @@ class KroneckerDelta(Function):
             return KroneckerDelta(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
-           j.assumptions0.get("above_fermi"):
+                j.assumptions0.get("above_fermi"):
             return S.Zero
         if j.assumptions0.get("below_fermi") and \
-           i.assumptions0.get("above_fermi"):
+                i.assumptions0.get("above_fermi"):
             return S.Zero
 
     @property

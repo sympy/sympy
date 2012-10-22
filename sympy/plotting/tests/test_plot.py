@@ -107,7 +107,7 @@ def plot_and_save(name):
     # Multiple Parametric 3D plots.
     p = plot3d_parametric_surface(
         (x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
-                (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
+        (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface.png' % name))
 
     ###
@@ -133,8 +133,8 @@ def plot_and_save(name):
 
     p = plot3d_parametric_line(sin(x) + 0.1*sin(x)*cos(7*x),
              cos(x) + 0.1*cos(x)*cos(7*x),
-             0.1*sin(7*x),
-             (x, 0, 2*pi))
+        0.1*sin(7*x),
+        (x, 0, 2*pi))
     p[0].line_color = lambda a: sin(4*a)
     p.save(tmp_file('%s_colors_3d_line_arity1.png' % name))
     p[0].line_color = lambda a, b: b

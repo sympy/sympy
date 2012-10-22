@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
-                  Derivative, Expr, symbols, pi, I, S
+    Derivative, Expr, symbols, pi, I, S
 from sympy.utilities.pytest import raises
 
 

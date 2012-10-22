@@ -77,7 +77,7 @@ class CMod(Gate):
 
         # Place out in low memory
         for i in reversed(range(self.t)):
-            outarray.append((out >> i)&1)
+            outarray.append((out >> i) & 1)
 
         return Qubit(*outarray)
 

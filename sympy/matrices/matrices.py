@@ -463,8 +463,8 @@ class MatrixBase(object):
             blst = B.T.tolist()
             alst = A.tolist()
             return classof(A, B)._new(A.rows, B.cols, lambda i, j:
-                                                reduce(lambda k, l: k + l,
-                                                map(lambda n, m: n*m,
+                                      reduce(lambda k, l: k + l,
+                                             map(lambda n, m: n*m,
                                                 alst[i],
                                                 blst[j]), 0))
         else:
@@ -2114,7 +2114,7 @@ class MatrixBase(object):
         """
         # accept custom simplification
         simpfunc = simplify if isinstance(simplify, FunctionType) else \
-                   _simplify if simplify else False
+            _simplify if simplify else False
 
         if not self.is_square:
             return False
@@ -2410,15 +2410,16 @@ class MatrixBase(object):
             SymPyDeprecationWarning(
                 feature="'simplified' as a keyword to rref",
                 useinstead="simplify=True, or set simplify equal to your "
-                       "own custom simplification function",
+                "own custom simplification function",
                 issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
-        pivot, r = 0, self.as_mutable(
-            )  # pivot: index of next row to contain a pivot
-        pivotlist = []                  # indices of pivot variables (non-free)
+        # pivot: index of next row to contain a pivot
+        pivot, r = 0, self.as_mutable()
+        # pivotlist: indices of pivot variables (non-free)
+        pivotlist = []
         for i in range(r.cols):
             if pivot == r.rows:
                 break
@@ -2453,7 +2454,7 @@ class MatrixBase(object):
             SymPyDeprecationWarning(
                 feature="'simplified' as a keyword to nullspace",
                 useinstead="simplify=True, or set simplify equal to your "
-                       "own custom simplification function",
+                "own custom simplification function",
                 issue=3382, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True

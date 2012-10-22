@@ -87,7 +87,7 @@ class ConditionalDomain(RandomDomain):
         condition = condition.subs(dict((rs, rs.symbol)
             for rs in random_symbols(condition)))
         return RandomDomain.__new__(
-                cls, fulldomain.symbols, fulldomain, condition)
+            cls, fulldomain.symbols, fulldomain, condition)
 
     @property
     def fulldomain(self):

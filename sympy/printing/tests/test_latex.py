@@ -231,15 +231,15 @@ def test_hyper_printing():
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
                          (0, 1), Tuple(1, 2, 3/pi), z)) == \
-             r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
+        r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
-             r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
+        r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-               r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
-               r'\\ 3 \end{matrix}\middle| {z} \right)}'
+        r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+        r'\\ 3 \end{matrix}\middle| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
-               r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
-               r'\\ 1 \end{matrix}\middle| {z} \right)}'
+        r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
+        r'\\ 1 \end{matrix}\middle| {z} \right)}'
 
 
 def test_latex_bessel():
@@ -251,7 +251,7 @@ def test_latex_bessel():
     assert latex(besseli(n, z)) == r'I_{n}\left(z\right)'
     assert latex(besselk(n, z)) == r'K_{n}\left(z\right)'
     assert latex(hankel1(n, z**2)**2) == \
-              r'\left(H^{(1)}_{n}\left(z^{2}\right)\right)^{2}'
+        r'\left(H^{(1)}_{n}\left(z^{2}\right)\right)^{2}'
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
@@ -313,7 +313,7 @@ def test_latex_sets():
 
 def test_latex_Range():
     assert latex(Range(1, 51)) == \
-            r'\left\{1, 2, \ldots, 50\right\}'
+        r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
 
@@ -344,7 +344,7 @@ def test_latex_productset():
     fset = FiniteSet(1, 2, 3)
     assert latex(line**2) == r"%s^2" % latex(line)
     assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
-            latex(line), latex(bigline), latex(fset))
+        latex(line), latex(bigline), latex(fset))
 
 
 def test_latex_Naturals():
@@ -355,7 +355,7 @@ def test_latex_Naturals():
 def test_latex_TransformationSet():
     x = Symbol('x')
     assert latex(TransformationSet(Lambda(x, x**2), S.Naturals)) == \
-            r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+        r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
 
 
 def test_latex_sum():
@@ -393,9 +393,9 @@ def test_issue469():
 def test_latex():
     assert latex((2*tau)**Rational(7, 2)) == "8 \\sqrt{2} \\tau^{\\frac{7}{2}}"
     assert latex((2*mu)**Rational(7, 2), mode='equation*') == \
-            "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
+        "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
     assert latex((2*mu)**Rational(7, 2), mode='equation', itex=True) == \
-            "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
+        "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
     assert latex([2/x, y]) == "\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}"
 
 
@@ -414,9 +414,9 @@ def test_latex_rational():
     assert latex(-Rational(-1, 2)) == "\\frac{1}{2}"
     assert latex(-Rational(1, 2)*x) == "- \\frac{1}{2} x"
     assert latex(-Rational(1, 2)*x + Rational(-2, 3)*y) in [
-            "- \\frac{1}{2} x - \\frac{2}{3} y",
-            "- \\frac{2}{3} y - \\frac{1}{2} x",
-            ]
+        "- \\frac{1}{2} x - \\frac{2}{3} y",
+        "- \\frac{2}{3} y - \\frac{1}{2} x",
+    ]
 
 
 def test_latex_inverse():
@@ -456,15 +456,15 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -' \
                        '1\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
-    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &'\
-           ' x -1\\end{bmatrix}\\right]'
+    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &' \
+        ' x -1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1'\
-                       '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -1'\
+    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1' \
+        '\\end{bmatrix}'
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -1' \
                        '\\end{smallmatrix}\\right]'
 
 
@@ -665,7 +665,7 @@ def test_PolynomialRing():
     from sympy.polys.domains import QQ
     assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
     assert latex(QQ.poly_ring(x, y, order="ilex")) == \
-            r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
+        r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
 
 
 def test_categories():
@@ -694,21 +694,21 @@ def test_categories():
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
-           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
-           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
-           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
-           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
-           "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
+        "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+        "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+        "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+        "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}, " \
+        "& f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}"
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
     assert latex(d) == "\\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
-           "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
-           "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
-           "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
-           "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
-           " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
-           "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
-           "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
+        "\\rightarrow A_{3} : \\emptyset, & id:A_{1}\\rightarrow " \
+        "A_{1} : \\emptyset, & id:A_{2}\\rightarrow A_{2} : " \
+        "\\emptyset, & id:A_{3}\\rightarrow A_{3} : \\emptyset, " \
+        "& f_{1}:A_{1}\\rightarrow A_{2} : \\left\\{unique\\right\\}," \
+        " & f_{2}:A_{2}\\rightarrow A_{3} : \\emptyset\\end{Bmatrix}" \
+        "\\Longrightarrow \\begin{Bmatrix}f_{2}\\circ f_{1}:A_{1}" \
+        "\\rightarrow A_{3} : \\left\\{unique\\right\\}\\end{Bmatrix}"
 
     # A linear diagram.
     A = Object("A")
@@ -720,7 +720,7 @@ def test_categories():
     grid = DiagramGrid(d)
 
     assert latex(grid) == "\\begin{array}{cc}\n" \
-        "A & B \\\\\n"\
+        "A & B \\\\\n" \
         " & C \n" \
         "\\end{array}\n"
 

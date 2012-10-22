@@ -96,16 +96,16 @@ def test_sin_cos():
     for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
         for n in xrange(-2*d, d*2):
             x = n*pi/d
-            assert sin(x + pi/2) == cos(x),  "fails for %d*pi/%d" % (n, d)
+            assert sin(x + pi/2) == cos(x), "fails for %d*pi/%d" % (n, d)
             assert sin(x - pi/2) == -cos(x), "fails for %d*pi/%d" % (n, d)
-            assert sin(x) == cos(x - pi/2),  "fails for %d*pi/%d" % (n, d)
+            assert sin(x) == cos(x - pi/2), "fails for %d*pi/%d" % (n, d)
             assert -sin(x) == cos(x + pi/2), "fails for %d*pi/%d" % (n, d)
 
 
 def test_sin_series():
     x = Symbol('x')
     assert sin(x).series(x, 0, 9) == \
-                    x - x**3/6 + x**5/120 - x**7/5040 + O(x**9)
+        x - x**3/6 + x**5/120 - x**7/5040 + O(x**9)
 
 
 def test_sin_rewrite():
@@ -280,7 +280,7 @@ def test_issue_3091():
 def test_cos_series():
     x = Symbol('x')
     assert cos(x).series(x, 0, 9) == \
-                    1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**9)
+        1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**9)
 
 
 def test_cos_rewrite():
@@ -382,7 +382,7 @@ def test_tan():
 def test_tan_series():
     x = Symbol('x')
     assert tan(x).series(x, 0, 9) == \
-                    x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
+        x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
 
 
 def test_tan_rewrite():
@@ -478,7 +478,7 @@ def test_cot():
 def test_cot_series():
     x = Symbol('x')
     assert cot(x).series(x, 0, 9) == \
-                    1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
+        1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
 
 
 def test_cot_rewrite():
@@ -549,7 +549,7 @@ def test_asin():
 def test_asin_series():
     x = Symbol('x')
     assert asin(x).series(x, 0, 9) == \
-                    x + x**3/6 + 3*x**5/40 + 5*x**7/112 + O(x**9)
+        x + x**3/6 + 3*x**5/40 + 5*x**7/112 + O(x**9)
     t5 = asin(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
@@ -588,7 +588,7 @@ def test_acos():
 def test_acos_series():
     x = Symbol('x')
     assert acos(x).series(x, 0, 8) == \
-            pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
+        pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
     assert acos(x).series(x, 0, 8) == pi/2 - asin(x).series(x, 0, 8)
     t5 = acos(x).taylor_term(5, x)
     assert t5 == -3*x**5/40
@@ -757,8 +757,8 @@ def test_atan2_expansion():
                   + atan2(x, 1) - atan(x)) == O(y**4)
     assert cancel(atan((x + y)/y).series(y, 1, 3) - atan2(x + y, y).series(y, 1, 3)
                   + atan2(1 + x, 1) - atan(1 + x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) \
-                  == Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
+    assert Matrix([atan2(x, y)]).jacobian([x, y]) == \
+        Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
 
 
 def test_aseries():

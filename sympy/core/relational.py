@@ -6,9 +6,9 @@ from sympify import _sympify
 from sympy.logic.boolalg import Boolean
 
 __all__ = (
- 'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
- 'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
- 'StrictGreaterThan', 'GreaterThan',
+    'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+    'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
+    'StrictGreaterThan', 'GreaterThan',
 )
 
 
@@ -570,18 +570,18 @@ class StrictLessThan(_Less):
 # is defined here, rather than directly in the class, because the classes that
 # it references have not been defined until now (e.g. StrictLessThan).
 Relational.ValidRelationOperator = {
-  None: Equality,
-  '==': Equality,
-  'eq': Equality,
-  '!=': Unequality,
-  '<>': Unequality,
-  'ne': Unequality,
-  '>=': GreaterThan,
-  'ge': GreaterThan,
-  '<=': LessThan,
-  'le': LessThan,
-  '>': StrictGreaterThan,
-  'gt': StrictGreaterThan,
-  '<': StrictLessThan,
-  'lt': StrictLessThan,
+    None: Equality,
+    '==': Equality,
+    'eq': Equality,
+    '!=': Unequality,
+    '<>': Unequality,
+    'ne': Unequality,
+    '>=': GreaterThan,
+    'ge': GreaterThan,
+    '<=': LessThan,
+    'le': LessThan,
+    '>': StrictGreaterThan,
+    'gt': StrictGreaterThan,
+    '<': StrictLessThan,
+    'lt': StrictLessThan,
 }

@@ -78,7 +78,7 @@ def test_dict():
 def test_Dict():
     assert str(Dict({1: 1 + x})) == sstr({1: 1 + x}) == "{1: x + 1}"
     assert str(Dict({1: x**2, 2: y*x})) in (
-            "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
+        "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr(Dict({1: x**2, 2: y*x})) == "{1: x**2, 2: x*y}"
 
 
@@ -443,13 +443,13 @@ def test_GroebnerBasis():
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [
-            "Sample([x, y, 1])",
-            "Sample([y, 1, x])",
-            "Sample([1, x, y])",
-            "Sample([y, x, 1])",
-            "Sample([x, 1, y])",
-            "Sample([1, y, x])",
-            ]
+        "Sample([x, y, 1])",
+        "Sample([y, 1, x])",
+        "Sample([1, x, y])",
+        "Sample([y, x, 1])",
+        "Sample([x, 1, y])",
+        "Sample([1, y, x])",
+    ]
 
 
 def test_set():
@@ -548,17 +548,17 @@ def test_full_prec():
     assert sstr(S("0.3"), full_prec="auto") == "0.300000000000000"
     assert sstr(S("0.3"), full_prec=False) == "0.3"
     assert sstr(S("0.3")*x, full_prec=True) in [
-            "0.300000000000000*x",
-            "x*0.300000000000000"
-            ]
+        "0.300000000000000*x",
+        "x*0.300000000000000"
+    ]
     assert sstr(S("0.3")*x, full_prec="auto") in [
-            "0.3*x",
-            "x*0.3"
-            ]
+        "0.3*x",
+        "x*0.3"
+    ]
     assert sstr(S("0.3")*x, full_prec=False) in [
-            "0.3*x",
-            "x*0.3"
-            ]
+        "0.3*x",
+        "x*0.3"
+    ]
 
 
 def test_noncommutative():

@@ -119,7 +119,7 @@ def qapply_Mul(e, **options):
 
     # Make sure we have two non-commutative objects before proceeding.
     if (sympify(rhs).is_commutative and not isinstance(rhs, Wavefunction)) or \
-           (sympify(lhs).is_commutative and not isinstance(lhs, Wavefunction)):
+            (sympify(lhs).is_commutative and not isinstance(lhs, Wavefunction)):
         return e
 
     # For a Pow with an integer exponent, apply one of them and reduce the

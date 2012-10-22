@@ -69,8 +69,7 @@ def test_localring():
     raises(NotReversible, lambda: X.invert())
 
     assert R._sdm_to_vector(
-        R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order),
-                                             2) == \
+        R._vector_to_sdm([X/(X + 1), Y/(1 + X*Y)], R.order), 2) == \
         [X*(1 + X*Y), Y*(1 + X)]
 
 

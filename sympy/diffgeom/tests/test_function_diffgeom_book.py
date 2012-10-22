@@ -22,12 +22,12 @@ def test_functional_diffgeom_ch2():
     f = Function('f')
 
     assert (R2_p.point_to_coords(R2_r.point([x0, y0])) ==
-                Matrix([sqrt(x0**2 + y0**2), atan2(y0, x0)]))
+           Matrix([sqrt(x0**2 + y0**2), atan2(y0, x0)]))
     assert (R2_r.point_to_coords(R2_p.point([r0, theta0])) ==
-                Matrix([r0*cos(theta0), r0*sin(theta0)]))
+           Matrix([r0*cos(theta0), r0*sin(theta0)]))
 
     assert R2_p.jacobian(R2_r, [r0, theta0]) == Matrix(
-        [[cos(theta0), -r0*sin(theta0)], [sin(theta0),  r0*cos(theta0)]])
+        [[cos(theta0), -r0*sin(theta0)], [sin(theta0), r0*cos(theta0)]])
 
     field = f(R2.x, R2.y)
     p1_in_rect = R2_r.point([x0, y0])

@@ -26,7 +26,7 @@ def mplot2d(f, var, show=True):
         sys.exit("Matplotlib is required to use mplot2d.")
 
     if not is_sequence(f):
-        f = [f,]
+        f = [f, ]
 
     for f_i in f:
         x, y = sample(f_i, var)

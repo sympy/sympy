@@ -71,7 +71,7 @@ class IntegralTransform(Function):
         is evaluated.
         """
         return self.function.free_symbols.union(set([self.transform_variable])) \
-               - set([self.function_variable])
+            - set([self.function_variable])
 
     def _compute_transform(self, f, x, s, **hints):
         raise NotImplementedError
@@ -243,13 +243,13 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
                 d_ = d.replace(
                     re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
-                   d.rel_op not in ('>', '>=', '<', '<=') \
-                   or d_.has(s) or not d_.has(t):
+                    d.rel_op not in ('>', '>=', '<', '<=') \
+                        or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   soln.rel_op not in ('>', '>=', '<', '<='):
+                        soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
                 if soln.lts == t:
@@ -516,7 +516,7 @@ def _rewrite_gamma(f, s, a, b):
             s_multiplier = common_coefficient
         else:
             s_multiplier = common_coefficient \
-                           *reduce(igcd, [S(x.p) for x in s_multipliers])
+                *reduce(igcd, [S(x.p) for x in s_multipliers])
 
     exponent = S(1)
     fac = S(1)
@@ -726,7 +726,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             if h.is_Piecewise and len(h.args) == 3:
                 # XXX we break modularity here!
                 h = Heaviside(x - abs(C))*h.args[0].args[0] \
-                  + Heaviside(abs(C) - x)*h.args[1].args[0]
+                    + Heaviside(abs(C) - x)*h.args[1].args[0]
         # We must ensure that the intgral along the line we want converges,
         # and return that value.
         # See [L], 5.2
@@ -784,10 +784,10 @@ class InverseMellinTransform(IntegralTransform):
         if _allowed is None:
             from sympy import (
                 exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh,
-                               coth, factorial, rf)
+                coth, factorial, rf)
             _allowed = set(
                 [exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
-                            factorial, rf])
+                 factorial, rf])
         for f in postorder_traversal(F):
             if f.is_Function and f.has(s) and f.func not in _allowed:
                 raise IntegralTransformError('Inverse Mellin', F,
@@ -917,7 +917,7 @@ def _simplifyconds(expr, s, a):
     def replie(x, y):
         """ simplify x < y """
         if not (x.is_positive or x.func is Abs) \
-           or not (y.is_positive or y.func is Abs):
+                or not (y.is_positive or y.func is Abs):
             return (x < y)
         r = bigger(x, y)
         if r is not None:
@@ -991,13 +991,13 @@ def _laplace_transform(f, t, s_, simplify=True):
                 d_ = d.replace(
                     re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
                 if not d.is_Relational or \
-                   d.rel_op not in ('>', '>=', '<', '<=') \
-                   or d_.has(s) or not d_.has(t):
+                    d.rel_op not in ('>', '>=', '<', '<=') \
+                        or d_.has(s) or not d_.has(t):
                     aux_ += [d]
                     continue
                 soln = _solve_inequality(d_, t)
                 if not soln.is_Relational or \
-                   soln.rel_op not in ('>', '>=', '<', '<='):
+                        soln.rel_op not in ('>', '>=', '<', '<='):
                     aux_ += [d]
                     continue
                 if soln.lts == t:
@@ -1133,7 +1133,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         e1 = args[0].args[0]
         e2 = args[1].args[0]
         return Heaviside(1/abs(coeff) - t**exponent)*e1 \
-             + Heaviside(t**exponent - 1/abs(coeff))*e2
+            + Heaviside(t**exponent - 1/abs(coeff))*e2
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, oo),

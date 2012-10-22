@@ -100,7 +100,7 @@ class OracleGate(Gate):
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
-                    'supply the number of qubits and an unknown function.'
+                'supply the number of qubits and an unknown function.'
             )
         sub_args = (args[0],)
         sub_args = UnitaryOperator._eval_args(sub_args)
@@ -152,7 +152,7 @@ class OracleGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'OracleGate operates on %r qubits, got: %r'
-                    (self.nqubits, qubits.nqubits)
+                (self.nqubits, qubits.nqubits)
             )
         # If function returns 1 on qubits
             # return the negative of the qubits (flip the sign)
@@ -193,7 +193,7 @@ class WGate(Gate):
         if len(args) != 1:
             raise QuantumError(
                 'Insufficient/excessive arguments to W gate.  Please ' +
-                    'supply the number of qubits to operate on.'
+                'supply the number of qubits to operate on.'
             )
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
@@ -220,7 +220,7 @@ class WGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'WGate operates on %r qubits, got: %r'
-                    (self.nqubits, qubits.nqubits)
+                (self.nqubits, qubits.nqubits)
             )
 
         # See 'Quantum Computer Science' by David Mermin p.92 -> W|a> result
@@ -302,7 +302,7 @@ def apply_grover(oracle, nqubits, iterations=None):
     if nqubits <= 0:
         raise QuantumError(
             'Grover\'s algorithm needs nqubits > 0, received %r qubits'
-                % nqubits
+            % nqubits
         )
     if iterations is None:
         iterations = floor(sqrt(2**nqubits)*(pi/4))

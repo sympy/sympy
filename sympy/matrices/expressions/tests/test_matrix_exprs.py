@@ -158,7 +158,7 @@ def test_BlockMatrix():
     assert block_collapse(
         (X*Y, 2*X)) == (block_collapse(X*Y), block_collapse(2*X))
     assert block_collapse(Tuple(X*Y, 2*X)) == (
-            block_collapse(X*Y), block_collapse(2*X))
+        block_collapse(X*Y), block_collapse(2*X))
     assert (block_collapse(Transpose(X*Y)) ==
             block_collapse(Transpose(block_collapse(X*Y))))
 
