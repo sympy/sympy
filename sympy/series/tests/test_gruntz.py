@@ -22,7 +22,7 @@ m = Symbol('m', real=True)
 runslow = False
 
 
-def sskip():
+def _sskip():
     if not runslow:
         skip("slow")
 
@@ -84,7 +84,7 @@ def test_gruntz_evaluation():
 
 
 def test_gruntz_evaluation_slow():
-    sskip()
+    _sskip()
     # 8.4
     assert gruntz(exp(exp(exp(x)/(1 - 1/x)))
                   - exp(exp(exp(x)/(1 - 1/x - log(x)**(-log(x))))), x, oo) == -oo
@@ -114,7 +114,7 @@ def test_gruntz_eval_special():
 
 
 def test_gruntz_eval_special_slow():
-    sskip()
+    _sskip()
     assert gruntz(gamma(x + 1)/sqrt(2*pi)
                   - exp(-x)*(x**(x + S(1)/2) + x**(x - S(1)/2)/12), x, oo) == oo
     assert gruntz(exp(exp(exp(digamma(digamma(digamma(x))))))/x, x, oo) == 0
@@ -122,7 +122,7 @@ def test_gruntz_eval_special_slow():
 
 @XFAIL
 def test_grunts_eval_special_slow_sometimes_fail():
-    sskip()
+    _sskip()
     # XXX This sometimes fails!!!
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) == oo
 

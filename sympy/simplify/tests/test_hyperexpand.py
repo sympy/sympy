@@ -129,14 +129,14 @@ def test_shifted_sum():
            == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
 
 
-def randrat():
+def _randrat():
     """ Steer clear of integers. """
     return S(randrange(25) + 10)/50
 
 
 def randcplx(offset=-1):
     """ Polys is not good with real coefficients. """
-    return randrat() + I*randrat() + I*(1 + offset)
+    return _randrat() + I*_randrat() + I*(1 + offset)
 
 
 def test_formulae():

@@ -328,7 +328,7 @@ def test_factorint():
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
 
 
-def divisors_and_divisor_count():
+def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
     assert divisors(1) == [1]

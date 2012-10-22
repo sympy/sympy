@@ -28,7 +28,7 @@ from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.polys import polyconfig as config
 
 
-def helper_test_sdp_groebner():
+def _test_sdp_groebner():
     f = sdp_from_dict({(1, 2): QQ(2,), (2, 0): QQ(1)}, lex)
     g = sdp_from_dict({(0, 3): QQ(2), (1, 1): QQ(1), (0, 0): QQ(-1)},  lex)
 
@@ -184,12 +184,12 @@ def helper_test_sdp_groebner():
 
 def test_sdp_groebner():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_sdp_groebner()
+    _test_sdp_groebner()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_sdp_groebner()
+    _test_sdp_groebner()
 
 
-def helper_test_benchmark_minpoly():
+def _test_benchmark_minpoly():
     x, y, z = symbols('x,y,z')
 
     I = [x**3 + x + 1, y**2 + y + 1, (x + y) * z - (x**2 + y)]
@@ -211,9 +211,9 @@ def helper_test_benchmark_minpoly():
 
 def test_benchmark_minpoly():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_minpoly()
+    _test_benchmark_minpoly()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_minpoly()
+    _test_benchmark_minpoly()
 
 
 @XFAIL
@@ -255,7 +255,7 @@ def test_benchmark_coloring():
     assert groebner(I, V, order='lex') == [1]
 
 
-def helper_test_benchmark_katsura_3():
+def _test_benchmark_katsura_3():
     x0, x1, x2 = symbols('x:3')
 
     I = [x0 + 2*x1 + 2*x2 - 1,
@@ -278,12 +278,12 @@ def helper_test_benchmark_katsura_3():
 
 def test_benchmark_katsura3():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_katsura_3()
+    _test_benchmark_katsura_3()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_katsura_3()
+    _test_benchmark_katsura_3()
 
 
-def helper_test_benchmark_katsura_4():
+def _test_benchmark_katsura_4():
     x0, x1, x2, x3 = symbols('x:4')
 
     I = [x0 + 2*x1 + 2*x2 + 2*x3 - 1,
@@ -317,12 +317,12 @@ def helper_test_benchmark_katsura_4():
 
 def test_benchmark_kastura_4():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_katsura_4()
+    _test_benchmark_katsura_4()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_katsura_4()
+    _test_benchmark_katsura_4()
 
 
-def helper_test_benchmark_czichowski():
+def _test_benchmark_czichowski():
     x, t = symbols('x t')
 
     I = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9, (-72 - 72*t)*x**7 + (-256 - 252*t)*x**6 + (192 + 192*t)*x**5 + (1280 + 1260*t)*x**4 + (312 + 312*t)*x**3 + (-404*t)*x**2 + (-576 - 576*t)*x + 96 + 108*t]
@@ -345,12 +345,12 @@ def test_benchmark_czichowski():
     skip('This takes too much time (without gmpy)')
 
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_czichowski()
+    _test_benchmark_czichowski()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_czichowski()
+    _test_benchmark_czichowski()
 
 
-def helper_test_benchmark_cyclic_4():
+def _test_benchmark_cyclic_4():
     a, b, c, d = symbols('a b c d')
 
     I = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + \
@@ -377,9 +377,9 @@ def helper_test_benchmark_cyclic_4():
 
 def test_benchmark_cyclic_4():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_cyclic_4()
+    _test_benchmark_cyclic_4()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_cyclic_4()
+    _test_benchmark_cyclic_4()
 
 
 def test_sig_key():

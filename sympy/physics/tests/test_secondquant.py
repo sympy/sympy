@@ -128,7 +128,7 @@ def test_basic_state():
 
 
 @XFAIL
-def Xtest_move1():
+def test_move1():
     i, j = symbols('i,j')
     A, C = symbols('A,C', cls=Function)
     o = A(i)*C(j)
@@ -137,7 +137,7 @@ def Xtest_move1():
 
 
 @XFAIL
-def Xtest_move2():
+def test_move2():
     i, j = symbols('i,j')
     A, C = symbols('A,C', cls=Function)
     o = C(j)*A(i)

@@ -380,19 +380,25 @@ The first issue to keep in mind is how the Float is created: it is created
 with a value and a precision. The precision indicates how precise of a value
 to use when that Float (or an expression it appears in) is evaluated.
 
-The values can be given as strings, integers, or Rationals. We do so below
-with a few different values:
+The values can be given as strings, integers, floats, or Rationals.
 
-    - integer input always returns an exact Integer and precision is ignored
+    - strings and integers are interpreted as exact
 
-    >>> Float(1234, 3)
-    1234
+    >>> Float(100)
+    100.000000000000
+    >>> Float('100', 5)
+    100.00
     
-    - strings are interpreted as exact and always result in a Float
+    - to have the precision match the number of digits, the null string
+      can be used for the precision
 
-    >>> Float('100', 3)
+    >>> Float(100, '')
     100.
-    
+    >>> Float('12.34')
+    12.3400000000000
+    >>> Float('12.34', '')
+    12.34
+
     >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
     >>> for f in [s, r]:
     ...     print f
