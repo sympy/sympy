@@ -867,6 +867,7 @@ def test_nsimplify():
     e = x**0.0
     assert e.is_Pow and nsimplify(x**0.0) == 1
 
+
 def test_extract_minus_sign():
     x = Symbol("x")
     y = Symbol("y")
