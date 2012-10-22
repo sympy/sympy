@@ -115,7 +115,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         imag_is_zero = abs(first_element.imag) < eps
         is_one = real_is_one and imag_is_zero
         is_identity = is_one if identity_only else True
-        return is_diagonal and has_correct_trace and is_identity
+        return bool(is_diagonal and has_correct_trace and is_identity)
 
 
 def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
