@@ -1,6 +1,6 @@
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable
 
 
@@ -126,6 +126,7 @@ def test_Dict():
     assert d == Dict(d)
 
 
+@XFAIL
 def test_issue_2689():
     args = [(1, 2), (2, 1)]
     for o in [Dict, Tuple, FiniteSet]:
