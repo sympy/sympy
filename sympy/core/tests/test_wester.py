@@ -554,6 +554,7 @@ def test_K1():
     assert re(z1+I*z2) == -im(z2) + re(z1)
     assert im(z1+I*z2) ==  im(z1) + re(z2)
 
+@XFAIL  # abs(...).n() does evaluate to 1.00000...
 def test_K2():
     assert abs(3 - sqrt(7) + I*sqrt(6*sqrt(7)-15)) == 1
 
@@ -583,11 +584,12 @@ def test_K7():
     sexpr = simplify(expr)
     assert sexpr == sqrt(y)
 
+@XFAIL
 def test_K8():
     z = symbols('z', complex=True)
-    assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0
+    assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0  # Passes
     z = symbols('z', complex=True, negative=False)
-    assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
+    assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0  # Fails
 
 def test_K9():
     z = symbols('z', real=True, positive=True)
@@ -676,6 +678,7 @@ def test_M7():
         1 - sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2,
         1 + sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2])
 
+@XFAIL # There are an infinite number of solutions.
 def test_M8():
     z = symbols('z', complex = True)
     assert set(solve(exp(2*x)+2*exp(x)+1-z,x)) == \
