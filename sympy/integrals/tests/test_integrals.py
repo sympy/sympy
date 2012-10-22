@@ -3,7 +3,7 @@ from sympy import (
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
         Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
-        terms_gcd, EulerGamma, Ci)
+        terms_gcd, EulerGamma, Ci, Piecewise, Abs)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -596,7 +596,12 @@ def test_doit():
 
 
 def test_issue_1785():
-    assert integrate(sqrt(x)*(1 + x)) == 2*sqrt(x)**3/3 + 2*sqrt(x)**5/5
+    assert integrate(sqrt(x)*(1 + x)) == \
+        Piecewise(
+        (2*sqrt(x)*(x + 1)**2/5 - 2*sqrt(x)*(x + 1)/15 - 4*sqrt(x)/15,
+            Abs(x + 1) > 1),
+        (2*I*sqrt(-x)*(x + 1)**2/5 - 2*I*sqrt(-x)*(x + 1)/15 -
+            4*I*sqrt(-x)/15, True))
     assert integrate(x**x*(1 + log(x))) == x**x
 
 
