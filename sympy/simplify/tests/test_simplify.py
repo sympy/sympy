@@ -650,9 +650,11 @@ def test_collect_D():
 
 
 @XFAIL
-def collect_issues():
-    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x)) != \
-        (1 + x*D(f(x), x) + D(f(x), x))/f(x)
+def test_collect_issues():
+    D = Derivative
+    f = Function('f')
+    e = (1 + x*D(f(x), x) + D(f(x), x))/f(x)
+    assert collect(e.expand(), f(x).diff(x)) != e
 
 
 def test_collect_D_0():

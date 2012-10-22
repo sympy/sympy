@@ -384,7 +384,8 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-def xtest_failing_integrals():
+@XFAIL
+def test_failing_integrals():
     #---
     # Double integrals not implemented
     assert NS(Integral(
@@ -594,7 +595,7 @@ def test_doit():
     assert Integral(0, (x, 1, Integral(f(x), x))).doit() == 0
 
 
-def issue_1785():
+def test_issue_1785():
     assert integrate(sqrt(x)*(1 + x)) == 2*sqrt(x)**3/3 + 2*sqrt(x)**5/5
     assert integrate(x**x*(1 + log(x))) == x**x
 
@@ -671,7 +672,7 @@ def test_issue_1304_2():
         -x**2 - 4), x) == -2*atan(x/sqrt(-4 - x**2)) + x*sqrt(-4 - x**2)/2
 
 
-def tets_issue_1001():
+def test_issue_1001():
     R = Symbol('R', positive=True)
     assert integrate(sqrt(R**2 - x**2), (x, 0, R)) == pi*R**2/4
 

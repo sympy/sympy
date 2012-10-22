@@ -142,28 +142,28 @@ def test_dmp_mul_term():
                [[QQ(2, 15), QQ(4, 15)], [QQ(6, 15)], [], []]
 
 
-def dup_add_ground():
+def test_dup_add_ground():
     f = ZZ.map([1, 2, 3, 4])
     g = ZZ.map([1, 2, 3, 8])
 
     assert dup_add_ground(f, ZZ(4), ZZ) == g
 
 
-def dmp_add_ground():
+def test_dmp_add_ground():
     f = ZZ.map([[1], [2], [3], [4]])
     g = ZZ.map([[1], [2], [3], [8]])
 
     assert dmp_add_ground(f, ZZ(4), 1, ZZ) == g
 
 
-def dup_sub_ground():
+def test_dup_sub_ground():
     f = ZZ.map([1, 2, 3, 4])
     g = ZZ.map([1, 2, 3, 0])
 
     assert dup_sub_ground(f, ZZ(4), ZZ) == g
 
 
-def dmp_sub_ground():
+def test_dmp_sub_ground():
     f = ZZ.map([[1], [2], [3], [4]])
     g = ZZ.map([[1], [2], [3], []])
 
