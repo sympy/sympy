@@ -613,7 +613,7 @@ def sdm_groebner(G, NF, O, K, extended=False):
         LMj = sdm_LM(S[j])
         return max(Sugars[i] - sdm_monomial_deg(LMi),
                    Sugars[j] - sdm_monomial_deg(LMj)) \
-               + sdm_monomial_deg(sdm_monomial_lcm(LMi, LMj))
+            + sdm_monomial_deg(sdm_monomial_lcm(LMi, LMj))
 
     ourkey = lambda p: (p[2], O(p[3]), p[1])
 
@@ -634,7 +634,7 @@ def sdm_groebner(G, NF, O, K, extended=False):
             tik = sdm_monomial_lcm(LMf, sdm_LM(S[i]))
             tjk = sdm_monomial_lcm(LMf, sdm_LM(S[j]))
             return tik != t and tjk != t and sdm_monomial_divides(tik, t) and \
-                                             sdm_monomial_divides(tjk, t)
+                sdm_monomial_divides(tjk, t)
         # apply the chain criterion
         P = [p for p in P if not removethis(p)]
 

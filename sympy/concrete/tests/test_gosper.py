@@ -54,7 +54,7 @@ def test_gosper_sum_indefinite():
 def test_gosper_sum_parametric():
     assert gosper_sum(binomial(S(1)/2, m - j + 1)*binomial(S(1)/2, m + j), (j, 1, n)) == \
         n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S(1)/2, 1 + m - n)* \
-           binomial(S(1)/2, m + n)/(m*(1 + 2*m))
+        binomial(S(1)/2, m + n)/(m*(1 + 2*m))
 
 
 def test_gosper_sum_algebraic():
@@ -92,7 +92,7 @@ def test_gosper_sum_AeqB_part1():
     g1b = 26 + 2**(m + 1)*(m**3 - 3*m**2 + 9*m - 13)
     g1c = (m + 1)*(m*(m**2 - 7*m + 3)*sqrt(5) - (
         3*m**3 - 7*m**2 + 19*m - 6))/(2*m**3*sqrt(5) + m**4 + 5*m**2 - 1)/6
-    g1d = -S(2)/231 + 2*4**m*(m + 1)*(63*m**4 + 112*m**3 + 18*m**2 - \
+    g1d = -S(2)/231 + 2*4**m*(m + 1)*(63*m**4 + 112*m**3 + 18*m**2 -
              22*m + 3)/(693*binomial(2*m, m))
     g1e = -S(9)/2 + (81*m**2 + 261*m + 200)*factorial(
         3*m + 2)/(40*27**m*factorial(m)*factorial(m + 1)*factorial(m + 2))
@@ -161,7 +161,7 @@ def test_gosper_sum_AeqB_part3():
     f3d = n**2*4**n/((n + 1)*(n + 2))
     f3e = 2**n/(n + 1)
     f3f = 4*(n - 1)*(n**2 - 2*n - 1)/(n**2*(n + 1)**2*(n - 2)**2*(n - 3)**2)
-    f3g = (n**4 - 14*n**2 - 24*n - 9)*2**n/(n**2*(n + 1)**2*(n + 2)**2* \
+    f3g = (n**4 - 14*n**2 - 24*n - 9)*2**n/(n**2*(n + 1)**2*(n + 2)**2*
            (n + 3)**2)
 
     # g3a -> no closed form

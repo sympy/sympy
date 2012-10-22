@@ -76,10 +76,10 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         # the matrix into real and imaginary components
         # Find the real values in between -eps and eps
         bool_real = np.logical_and(dense_matrix.real > -eps,
-                                      dense_matrix.real < eps)
+                                   dense_matrix.real < eps)
         # Find the imaginary values between -eps and eps
         bool_imag = np.logical_and(dense_matrix.imag > -eps,
-                                      dense_matrix.imag < eps)
+                                   dense_matrix.imag < eps)
         # Replaces values between -eps and eps with 0
         corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
         corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
@@ -115,7 +115,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         imag_is_zero = abs(first_element.imag) < eps
         is_one = real_is_one and imag_is_zero
         is_identity = is_one if identity_only else True
-        return is_diagonal and has_correct_trace and is_identity
+        return bool(is_diagonal and has_correct_trace and is_identity)
 
 
 def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
@@ -159,9 +159,8 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
 
         # The matrix is scalar if it's diagonal and the adjusted trace
         # value is equal to 2^nqubits
-        return (matrix.is_diagonal() and
-                has_correct_trace and
-                is_identity)
+        return bool(
+            matrix.is_diagonal() and has_correct_trace and is_identity)
 
 if np and scipy:
     is_scalar_matrix = is_scalar_sparse_matrix
@@ -214,9 +213,7 @@ def ll_op(left, right):
     if (len(left) > 0):
         ll_gate = left[0]
         ll_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(ll_gate), ll_gate),
-                                 _get_min_qubits(ll_gate),
-                                 True)
+            (Dagger(ll_gate), ll_gate), _get_min_qubits(ll_gate), True)
 
     if (len(left) > 0 and ll_gate_is_unitary):
         # Get the new left side w/o the leftmost gate
@@ -267,9 +264,7 @@ def lr_op(left, right):
     if (len(left) > 0):
         lr_gate = left[len(left) - 1]
         lr_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(lr_gate), lr_gate),
-                                 _get_min_qubits(lr_gate),
-                                 True)
+            (Dagger(lr_gate), lr_gate), _get_min_qubits(lr_gate), True)
 
     if (len(left) > 0 and lr_gate_is_unitary):
         # Get the new left side w/o the rightmost gate
@@ -320,9 +315,7 @@ def rl_op(left, right):
     if (len(right) > 0):
         rl_gate = right[0]
         rl_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(rl_gate), rl_gate),
-                                 _get_min_qubits(rl_gate),
-                                 True)
+            (Dagger(rl_gate), rl_gate), _get_min_qubits(rl_gate), True)
 
     if (len(right) > 0 and rl_gate_is_unitary):
         # Get the new right side w/o the leftmost gate
@@ -373,9 +366,7 @@ def rr_op(left, right):
     if (len(right) > 0):
         rr_gate = right[len(right) - 1]
         rr_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(rr_gate), rr_gate),
-                                 _get_min_qubits(rr_gate),
-                                 True)
+            (Dagger(rr_gate), rr_gate), _get_min_qubits(rr_gate), True)
 
     if (len(right) > 0 and rr_gate_is_unitary):
         # Get the new right side w/o the rightmost gate

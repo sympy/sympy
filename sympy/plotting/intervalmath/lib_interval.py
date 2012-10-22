@@ -181,10 +181,10 @@ def imin(*args):
             else:
                 return interval(-np.inf, np.inf, is_valid=None)
         start_array = [a if isinstance(a, (int, float)) else a.start
-                        for a in new_args]
+                       for a in new_args]
 
         end_array = [a if isinstance(a, (int, float)) else a.end
-                        for a in new_args]
+                     for a in new_args]
         return interval(min(start_array), min(end_array))
 
 
@@ -201,10 +201,10 @@ def imax(*args):
             else:
                 return interval(-np.inf, np.inf, is_valid=None)
         start_array = [a if isinstance(a, (int, float)) else a.start
-                        for a in new_args]
+                       for a in new_args]
 
         end_array = [a if isinstance(a, (int, float)) else a.end
-                        for a in new_args]
+                     for a in new_args]
 
         return interval(max(start_array), max(end_array))
 

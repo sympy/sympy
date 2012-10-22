@@ -275,7 +275,7 @@ class CompositeMorphism(Morphism):
             following = components[i + 1]
 
             if not isinstance(current, Morphism) or \
-                   not isinstance(following, Morphism):
+                    not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")
 
             if current.codomain != following.domain:
@@ -726,7 +726,7 @@ class Diagram(Basic):
                             conclusions, morphism, empty, add_identities=False,
                             recurse_composites=False)
             elif isinstance(conclusions_arg, dict) or \
-                     isinstance(conclusions_arg, Dict):
+                    isinstance(conclusions_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in conclusions_arg.items():

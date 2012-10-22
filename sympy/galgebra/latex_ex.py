@@ -163,44 +163,44 @@ class LatexPrinter(Printer):
 
     greek_keys = sorted(
         ('alpha', 'beta', 'gamma', 'delta', 'varepsilon', 'epsilon', 'zeta',
-                         'vartheta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
-                         'varpi', 'pi', 'rho', 'varrho', 'varsigma', 'sigma', 'tau', 'upsilon',
-                         'varphi', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta',
-                         'Lambda', 'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega', 'partial',
+         'vartheta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
+         'varpi', 'pi', 'rho', 'varrho', 'varsigma', 'sigma', 'tau', 'upsilon',
+         'varphi', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta',
+         'Lambda', 'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega', 'partial',
                          'nabla', 'eta'), key=cmp_to_key(len_cmp))
 
     accent_keys = sorted(
         ('hat', 'check', 'dot', 'breve', 'acute', 'ddot', 'grave', 'tilde',
-                          'mathring', 'bar', 'vec', 'bm', 'prm', 'abs'), key=cmp_to_key(len_cmp))
+         'mathring', 'bar', 'vec', 'bm', 'prm', 'abs'), key=cmp_to_key(len_cmp))
 
     greek_cnt = 0
     greek_dict = {}
     accent_cnt = 0
     accent_dict = {}
 
-    preamble = '\\documentclass[10pt,letter,fleqn]{report}\n' +\
-               '\\pagestyle{empty}\n' +\
-               '\\usepackage[latin1]{inputenc}\n' +\
-               '\\usepackage[dvips,landscape,top=1cm,nohead,nofoot]{geometry}\n' +\
-               '\\usepackage{amsmath}\n' +\
-               '\\usepackage{bm}\n' +\
-               '\\usepackage{amsfonts}\n' +\
-               '\\usepackage{amssymb}\n' +\
-               '\\setlength{\\parindent}{0pt}\n' +\
-               '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n' +\
-               '\\newcommand{\\lp}{\\left (}\n' +\
-               '\\newcommand{\\rp}{\\right )}\n' +\
-               '\\newcommand{\\half}{\\frac{1}{2}}\n' +\
-               '\\newcommand{\\llt}{\\left <}\n' +\
-               '\\newcommand{\\rgt}{\\right >}\n' +\
-               '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n' +\
-               '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n' +\
-               '\\newcommand{\\lbrc}{\\left \\{}\n' +\
-               '\\newcommand{\\rbrc}{\\right \\}}\n' +\
-               '\\newcommand{\\W}{\\wedge}\n' +\
-               "\\newcommand{\\prm}[1]{{#1}'}\n" +\
-               '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n' +\
-               '\\newcommand{\\R}{\\dagger}\n' +\
+    preamble = '\\documentclass[10pt,letter,fleqn]{report}\n' \
+               '\\pagestyle{empty}\n' \
+               '\\usepackage[latin1]{inputenc}\n' \
+               '\\usepackage[dvips,landscape,top=1cm,nohead,nofoot]{geometry}\n' \
+               '\\usepackage{amsmath}\n' \
+               '\\usepackage{bm}\n' \
+               '\\usepackage{amsfonts}\n' \
+               '\\usepackage{amssymb}\n' \
+               '\\setlength{\\parindent}{0pt}\n' \
+               '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n' \
+               '\\newcommand{\\lp}{\\left (}\n' \
+               '\\newcommand{\\rp}{\\right )}\n' \
+               '\\newcommand{\\half}{\\frac{1}{2}}\n' \
+               '\\newcommand{\\llt}{\\left <}\n' \
+               '\\newcommand{\\rgt}{\\right >}\n' \
+               '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n' \
+               '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n' \
+               '\\newcommand{\\lbrc}{\\left \\{}\n' \
+               '\\newcommand{\\rbrc}{\\right \\}}\n' \
+               '\\newcommand{\\W}{\\wedge}\n' \
+               "\\newcommand{\\prm}[1]{{#1}'}\n" \
+               '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n' \
+               '\\newcommand{\\R}{\\dagger}\n' \
                '\\begin{document}\n'
     postscript = '\\end{document}\n'
 
@@ -878,9 +878,8 @@ class LatexPrinter(Printer):
                             base_str = base_str.replace('XYZW', '')
                         else:
                             base_str = base_str.replace('XYZW', '1')
-                        MV_str += base_str +\
-                                  LatexPrinter.build_base(
-                                      igrade, ibase, expr.bladeflg)
+                        MV_str += base_str + LatexPrinter.build_base(
+                            igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
                             line_lst.append(MV_str)
                             MV_str = ''
@@ -929,9 +928,8 @@ class LatexPrinter(Printer):
                             base_str = base_str.replace('XYZW', '')
                         else:
                             base_str = base_str.replace('XYZW', '1')
-                        MV_str += base_str +\
-                                  LatexPrinter.build_base(
-                                      igrade, ibase, expr.bladeflg)
+                        MV_str += base_str + LatexPrinter.build_base(
+                            igrade, ibase, expr.bladeflg)
                         if LatexPrinter.fmt_dict['mv'] == 3:
                             line_lst.append(MV_str)
                             MV_str = ''

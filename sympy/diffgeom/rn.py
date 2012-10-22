@@ -67,7 +67,7 @@ R3_c.connect_to(R3_r, [rho, psi, z],
                 inverse=False, fill_in_gaps=False)
 ## rectangular <-> spherical
 R3_r.connect_to(R3_s, [x, y, z],
-                      [sqrt(x**2 + y**2 + z**2), acos(z/ \
+                      [sqrt(x**2 + y**2 + z**2), acos(z/
                             sqrt(x**2 + y**2 + z**2)), atan2(y, x)],
                 inverse=False, fill_in_gaps=False)
 R3_s.connect_to(R3_r, [r, theta, phi],

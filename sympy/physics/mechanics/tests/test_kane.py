@@ -24,8 +24,8 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize(
-        ) == (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+    assert KM.linearize() == \
+        (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
 
 
 def test_two_dof():
@@ -231,7 +231,7 @@ def test_parallel_axis():
 
     # Creating and Locating the positions of the cart, C, and the
     # center of mass of the pendulum, A
-    C = O.locatenew('C',  q1 * N.x)
+    C = O.locatenew('C', q1 * N.x)
     Ao = C.locatenew('Ao', a * A.y)
 
     # Defining velocities of the points
@@ -250,7 +250,7 @@ def test_parallel_axis():
     forceList = [(Ao, -N.y * gravity * mA),
                  (C, -N.y * gravity * mC),
                  (C, -N.x * k * (q1 - ls)),
-                 (C,   N.x * F)]
+                 (C, N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
     (fr, frstar) = km.kanes_equations(forceList, bodyList)

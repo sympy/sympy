@@ -1187,7 +1187,7 @@ class asin(Function):
                 (1 - sqrt(3))/sqrt(2**3): -12,
                 (sqrt(5) + 1)/4: S(10)/3,
                 -(sqrt(5) + 1)/4: -S(10)/3
-                }
+            }
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
@@ -1298,7 +1298,7 @@ class acos(Function):
                 -1/sqrt(2): 3*S.Pi/4,
                 sqrt(3)/2: S.Pi/6,
                 -sqrt(3)/2: 5*S.Pi/6,
-                }
+            }
 
             if arg in cst_table:
                 return cst_table[arg]
@@ -1419,7 +1419,7 @@ class atan(Function):
                 -sqrt((5 + 2*sqrt(5))): -S(5)/2,
                 (2 - sqrt(3)): 12,
                 -(2 - sqrt(3)): -12
-                }
+            }
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
@@ -1449,9 +1449,8 @@ class atan(Function):
         return self.args[0].is_real
 
     def _eval_rewrite_as_log(self, x):
-        return S.ImaginaryUnit/2 * \
-               (C.log(
-                   (S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
+        return S.ImaginaryUnit/2 * (C.log(
+            (S(1) - S.ImaginaryUnit * x)/(S(1) + S.ImaginaryUnit * x)))
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
@@ -1516,7 +1515,7 @@ class acot(Function):
                 -(2 + sqrt(3)): -12,
                 (2 - sqrt(3)): S(12)/5,
                 -(2 - sqrt(3)): -S(12)/5,
-                }
+            }
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
@@ -1561,7 +1560,7 @@ class acot(Function):
 
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
-               (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
+            (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
 
 
 class atan2(Function):

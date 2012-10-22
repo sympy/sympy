@@ -7,8 +7,8 @@ class MPmathRealDomain(RealDomain):
     """Domain for real numbers based on mpmath mpf type. """
 
     dtype = MPmathRealType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'RR_mpmath'
 
     def __init__(self):

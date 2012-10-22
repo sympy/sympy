@@ -71,7 +71,7 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
-    ]
+]
 
 WINDOWED_EXAMPLES = [
     "beginner.plotting_nice_plot",
@@ -81,7 +81,7 @@ WINDOWED_EXAMPLES = [
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
     "advanced.pyglet_plotting",
-    ]
+]
 
 EXAMPLE_DIR = os.path.dirname(__file__)
 
@@ -177,7 +177,8 @@ def run_example(example, reporter=None):
 
 
 class DummyFile(object):
-    def write(self, x): pass
+    def write(self, x):
+        pass
 
 
 def suppress_output(fn):

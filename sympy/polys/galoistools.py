@@ -1016,7 +1016,7 @@ def gf_cofactors(f, g, p, K):
     h = gf_gcd(f, g, p, K)
 
     return (h, gf_quo(f, h, p, K),
-               gf_quo(g, h, p, K))
+            gf_quo(g, h, p, K))
 
 
 def gf_gcdex(f, g, p, K):
@@ -1836,7 +1836,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
         if g != [K.one] and g != f:
             factors = gf_edf_zassenhaus(g, n, p, K) \
-                    + gf_edf_zassenhaus(gf_quo(f, g, p, K), n, p, K)
+                + gf_edf_zassenhaus(gf_quo(f, g, p, K), n, p, K)
 
     return _sort_factors(factors, multiple=False)
 
@@ -1966,7 +1966,7 @@ def gf_edf_shoup(f, n, p, K):
         h2 = gf_quo(f, h1, p, K)
 
         factors = gf_edf_shoup(h1, n, p, K) \
-                + gf_edf_shoup(h2, n, p, K)
+            + gf_edf_shoup(h2, n, p, K)
     else:
         h = gf_pow_mod(H, (q - 1)//2, f, p, K)
 
@@ -1975,8 +1975,8 @@ def gf_edf_shoup(f, n, p, K):
         h3 = gf_quo(f, gf_mul(h1, h2, p, K), p, K)
 
         factors = gf_edf_shoup(h1, n, p, K) \
-                + gf_edf_shoup(h2, n, p, K) \
-                + gf_edf_shoup(h3, n, p, K)
+            + gf_edf_shoup(h2, n, p, K) \
+            + gf_edf_shoup(h3, n, p, K)
 
     return _sort_factors(factors, multiple=False)
 

@@ -308,10 +308,10 @@ class Variable(object):
 
         self._name = name
         self._datatype = {
-                'C': datatype.cname,
-                'FORTRAN': datatype.fname,
-                'PYTHON': datatype.pyname
-                }
+            'C': datatype.cname,
+            'FORTRAN': datatype.fname,
+            'PYTHON': datatype.pyname
+        }
         self.dimensions = dimensions
         self.precision = precision
 

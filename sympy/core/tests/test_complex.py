@@ -134,7 +134,7 @@ def test_expand_complex():
     a = Symbol('a', real=True)
     b = Symbol('b', real=True)
     assert exp(a*(2 + I*b)).expand(complex=True) == \
-           I*exp(2*a)*sin(a*b) + exp(2*a)*cos(a*b)
+        I*exp(2*a)*sin(a*b) + exp(2*a)*cos(a*b)
 
 
 def test_expand():

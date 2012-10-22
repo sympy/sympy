@@ -248,7 +248,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         (g, h, s, t), m = dup_zz_hensel_step(m, f, g, h, s, t, K), m**2
 
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
-         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
+        + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
 
 @cythonized("l,s")

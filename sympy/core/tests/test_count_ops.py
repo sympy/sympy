@@ -1,5 +1,5 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-                  count_ops, S, And, I, pi, Eq
+    count_ops, S, And, I, pi, Eq
 
 x, y, z = symbols('x,y,z')
 

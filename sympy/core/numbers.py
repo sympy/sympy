@@ -748,7 +748,7 @@ class Float(Number):
                 re, im = mlib.mpc_pow(
                     (self, mlib.fzero), (expt, mlib.fzero), prec, rnd)
                 return Float._new(re, prec) + \
-                       Float._new(im, prec)*S.ImaginaryUnit
+                    Float._new(im, prec)*S.ImaginaryUnit
 
     def __abs__(self):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
@@ -1141,7 +1141,7 @@ class Rational(Number):
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
                 return Integer(self.q)**Rational(expt.p*(expt.q - 1), expt.q) / \
-                       Integer(self.q)**Integer(expt.p)
+                    Integer(self.q)**Integer(expt.p)
 
         if self.is_negative and expt.is_even:
             return (-self)**expt
@@ -1712,9 +1712,9 @@ class Zero(IntegerConstant):
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if other is S.NaN or \
-           other is S.NegativeInfinity or \
-           other is S.Infinity or \
-           other is S.ComplexInfinity:
+            other is S.NegativeInfinity or \
+            other is S.Infinity or \
+                other is S.ComplexInfinity:
             return S.NaN
         return S.Zero
 
@@ -1897,13 +1897,13 @@ class Infinity(Number):
     def __div__(self, other):
         if isinstance(other, Number):
             if other is S.Infinity or \
-               other is S.NegativeInfinity or \
-               other is S.NaN:
+                other is S.NegativeInfinity or \
+                    other is S.NaN:
                 return S.NaN
             elif other.is_Float:
                 if other == Float('-inf') or \
-                   other == Float('inf') or \
-                   other._mpf_ == fnan:
+                    other == Float('inf') or \
+                        other._mpf_ == fnan:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 elif other >= 0:
@@ -2056,14 +2056,14 @@ class NegativeInfinity(Number):
     def __div__(self, other):
         if isinstance(other, Number):
             if other is S.Infinity or \
-               other is S.NegativeInfinity or \
-               other is S.NaN:
+                other is S.NegativeInfinity or \
+                    other is S.NaN:
                 return S.NaN
             elif other.is_Float:
                 if other == Float('-inf') or \
-                   other == Float('inf') or \
-                   other == Float('nan') or \
-                   other._mpf_ == fnan:
+                    other == Float('inf') or \
+                    other == Float('nan') or \
+                        other._mpf_ == fnan:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 elif other >= 0:
@@ -2102,8 +2102,8 @@ class NegativeInfinity(Number):
         """
         if isinstance(expt, Number):
             if expt is S.NaN or \
-               expt is S.Infinity or \
-               expt is S.NegativeInfinity:
+                expt is S.Infinity or \
+                    expt is S.NegativeInfinity:
                 return S.NaN
 
             if isinstance(expt, Integer) and expt.is_positive:

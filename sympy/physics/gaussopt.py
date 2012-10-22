@@ -88,8 +88,8 @@ class RayTransferMatrix(Matrix):
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
-             and isinstance(args[0], Matrix) \
-             and args[0].shape == (2, 2):
+            and isinstance(args[0], Matrix) \
+                and args[0].shape == (2, 2):
             temp = args[0]
         else:
             raise ValueError(filldedent('''
@@ -383,7 +383,7 @@ class GeometricRay(Matrix):
 
     def __new__(cls, *args):
         if len(args) == 1 and isinstance(args[0], Matrix) \
-                          and args[0].shape == (2, 1):
+                and args[0].shape == (2, 1):
             temp = args[0]
         elif len(args) == 2:
             temp = ((args[0],), (args[1],))

@@ -93,10 +93,10 @@ def test_dup_zz_hensel_lift():
 
     ff_list = dup_zz_hensel_lift(ZZ(5), f, [f1, f2, f3, f4], 4, ZZ)
 
-    assert dup_to_raw_dict(ff_list[0]) == {0: -1,   1: 1}
+    assert dup_to_raw_dict(ff_list[0]) == {0: -1, 1: 1}
     assert dup_to_raw_dict(ff_list[1]) == {0: -182, 1: 1}
     assert dup_to_raw_dict(ff_list[2]) == {0:  182, 1: 1}
-    assert dup_to_raw_dict(ff_list[3]) == {0:  1,   1: 1}
+    assert dup_to_raw_dict(ff_list[3]) == {0:  1, 1: 1}
 
 
 def test_dup_zz_irreducible_p():
@@ -164,7 +164,7 @@ def test_dup_zz_cyclotomic_factor():
 
     f = dup_from_raw_dict({1: 1, 0: 1}, ZZ)
     assert dup_zz_cyclotomic_factor(f, ZZ) == \
-         [[1, 1]]
+        [[1, 1]]
 
     f = dup_from_raw_dict({1: 1, 0: -1}, ZZ)
     assert dup_zz_cyclotomic_factor(f, ZZ) == \
@@ -214,39 +214,39 @@ def test_dup_zz_factor():
         assert dup_zz_factor(f, ZZ) == (1, [(f, 1)])
 
     assert dup_zz_factor(ZZ.map([1, 2, 2]), ZZ) == \
-        (1, [([1,2,2], 1)])
+        (1, [([1, 2, 2], 1)])
 
     assert dup_zz_factor(ZZ.map([18, 12, 2]), ZZ) == \
         (2, [([3, 1], 2)])
 
     assert dup_zz_factor(ZZ.map([-9, 0, 1]), ZZ) == \
-        (-1, [([3,-1], 1),
+        (-1, [([3, -1], 1),
               ([3, 1], 1)])
 
     assert dup_zz_factor_sqf(ZZ.map([-9, 0, 1]), ZZ) == \
-        (-1, [[3,-1],
+        (-1, [[3, -1],
               [3, 1]])
 
     assert dup_zz_factor(ZZ.map([1, -6, 11, -6]), ZZ) == \
-        (1, [([1,-3], 1),
-             ([1,-2], 1),
-             ([1,-1], 1)])
+        (1, [([1, -3], 1),
+             ([1, -2], 1),
+             ([1, -1], 1)])
 
     assert dup_zz_factor_sqf(ZZ.map([1, -6, 11, -6]), ZZ) == \
-        (1, [[1,-3],
-             [1,-2],
-             [1,-1]])
+        (1, [[1, -3],
+             [1, -2],
+             [1, -1]])
 
     assert dup_zz_factor(ZZ.map([3, 10, 13, 10]), ZZ) == \
-        (1, [([1,2], 1),
-             ([3,4,5], 1)])
+        (1, [([1, 2], 1),
+             ([3, 4, 5], 1)])
 
     assert dup_zz_factor_sqf(ZZ.map([3, 10, 13, 10]), ZZ) == \
-        (1, [[1,2],
-             [3,4,5]])
+        (1, [[1, 2],
+             [3, 4, 5]])
 
     assert dup_zz_factor(ZZ.map([-1, 0, 0, 0, 1, 0, 0]), ZZ) == \
-        (-1, [([1,-1], 1),
+        (-1, [([1, -1], 1),
               ([1, 1], 1),
               ([1, 0], 2),
               ([1, 0, 1], 1)])
@@ -274,7 +274,7 @@ def test_dup_zz_factor():
                            ([100, 10, -1], 2),
                            ([625, 125, 25, 5, 1], 1),
                            ([10000, -3000, 400, -20, 1], 2),
-                           ([10000,  2000, 400,  30, 1], 2)])
+                           ([10000, 2000, 400, 30, 1], 2)])
 
     f = dup_from_raw_dict({10: ZZ(1), 0: ZZ(-1)}, ZZ)
 
@@ -336,9 +336,9 @@ def test_dmp_zz_wang():
 
     _, H = dup_zz_factor_sqf(s, ZZ)
 
-    h_1 = dup_normal([44,  42,   1], ZZ)
-    h_2 = dup_normal([126, -9,  28], ZZ)
-    h_3 = dup_normal([187,  0, -23], ZZ)
+    h_1 = dup_normal([44, 42, 1], ZZ)
+    h_2 = dup_normal([126, -9, 28], ZZ)
+    h_3 = dup_normal([187, 0, -23], ZZ)
 
     assert H == [h_1, h_2, h_3]
 
@@ -353,9 +353,9 @@ def test_dmp_zz_wang():
     H_1 = [ dmp_normal(t, 0, ZZ) for t in [[44L, 42L, 1L], [126L, -9L,
                        28L], [187L, 0L, -23L]] ]
     H_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [
-                       [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
+                                           [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
     H_3 = [ dmp_normal(t, 1, ZZ) for t in [[[-4, -12], [-3, 0], [1]], [
-                       [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
+                                           [-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]] ]
 
     c_1 = dmp_normal([-70686, -5863, -17826, 2009, 5031, 74], 0, ZZ)
     c_2 = dmp_normal([[9, 12, -45, -108, -324], [18, -216, -810, 0], [2, 9, -252, -288, -945], [-30, -414, 0], [2, -54, -3, 81], [12, 0]], 1, ZZ)
@@ -366,7 +366,7 @@ def test_dmp_zz_wang():
     T_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-1, 0], []], [[-3], []], [[-6]]] ]
     T_3 = [ dmp_normal(t, 1, ZZ) for t in [[[]], [[]], [[-1]]] ]
 
-    assert dmp_zz_diophantine(H_1, c_1,        [], 5, p, 0, ZZ) == T_1
+    assert dmp_zz_diophantine(H_1, c_1, [], 5, p, 0, ZZ) == T_1
     assert dmp_zz_diophantine(H_2, c_2, [ZZ(-14)], 5, p, 1, ZZ) == T_2
     assert dmp_zz_diophantine(H_3, c_3, [ZZ(-14)], 5, p, 1, ZZ) == T_3
 
@@ -411,7 +411,7 @@ def test_dmp_zz_factor():
         (1, [([[1, 0, 1]], 1)])
 
     assert dmp_zz_factor(ZZ.map([[1, 0, -1]]), 1, ZZ) == \
-        (1, [([[1,-1]], 1),
+        (1, [([[1, -1]], 1),
              ([[1, 1]], 1)])
 
     assert dmp_zz_factor(ZZ.map([[1, 6, 9], [], [-1]]), 1, ZZ) == \
@@ -433,12 +433,12 @@ def test_dmp_zz_factor():
 
     assert dmp_zz_factor(f_1, 2, ZZ) == \
         (1, [([[[1]], [[1, 0], [20]]], 1),
-             ([[[1], []], [[1, 10]]],  1),
+             ([[[1], []], [[1, 10]]], 1),
              ([[[1, 0]], [[1], [30]]], 1)])
 
     assert dmp_zz_factor(f_2, 2, ZZ) == \
         (1, [([[[1], [], [1, 0, 0]], [[]], [[1], [90]]], 1),
-             ([[[1], [1, 0]], [[]], [[]], [[1, -11]]],   1)])
+             ([[[1], [1, 0]], [[]], [[]], [[1, -11]]], 1)])
 
     assert dmp_zz_factor(f_3, 2, ZZ) == \
         (1, [([[[1], [], []], [[1, 0, 0, 0, 1]], [[1, 0]]], 1),
@@ -508,7 +508,7 @@ def test_dup_ext_factor():
                 1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
             ([ANP([QQ(
                 1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
-         ])
+        ])
 
     f = [ANP([QQ(1)], h, QQ), ANP(
         [], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
@@ -519,7 +519,7 @@ def test_dup_ext_factor():
                 1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1), QQ(0)], h, QQ)], 1),
             ([ANP([QQ(
                 1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ)], 1),
-         ])
+        ])
 
     h = [QQ(1), QQ(0), QQ(-2)]
     K = QQ.algebraic_field(sqrt(2))
@@ -533,7 +533,7 @@ def test_dup_ext_factor():
              ANP([QQ(1)], h, QQ)], 1),
             ([ANP([QQ(1)], h, QQ), ANP([QQ( 1), QQ(0)], h, QQ),
              ANP([QQ(1)], h, QQ)], 1),
-         ])
+        ])
 
     f = [ANP([QQ(1, 1)], h, QQ), ANP([2, 0], h, QQ), ANP([QQ(2, 1)], h, QQ)]
 

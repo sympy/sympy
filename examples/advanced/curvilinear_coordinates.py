@@ -10,7 +10,7 @@ tensor, Laplace operator, ...
 """
 
 from sympy import var, sin, cos, pprint, Matrix, eye, trigsimp, Eq, \
-        Function, simplify, sinh, cosh, expand
+    Function, simplify, sinh, cosh, expand
 
 def laplace(f, g_inv, g_det, X):
     """
@@ -85,15 +85,15 @@ def main():
             Matrix([rho*sin(theta)*cos(phi), rho*sin(theta)*sin(phi),
                 rho*cos(theta)]),
             [rho, theta, phi],
-            recursive=True
-            )
+        recursive=True
+    )
 
     transform("rotating disk",
-            Matrix([t, x*cos(w*t)-y*sin(w*t), x*sin(w*t)+y*cos(w*t), z]),
+            Matrix([t, x*cos(w*t) - y*sin(w*t), x*sin(w*t) + y*cos(w*t), z]),
             [t, x, y, z])
 
     transform("parabolic",
-            Matrix([sigma*tau, (tau**2-sigma**2)/2]),
+            Matrix([sigma*tau, (tau**2 - sigma**2)/2]),
             [sigma, tau])
 
     # too complex:
@@ -106,7 +106,7 @@ def main():
     transform("elliptic",
             Matrix([a*cosh(mu)*cos(nu), a*sinh(mu)*sin(nu)]),
             [mu, nu]
-            )
+    )
 
 if __name__ == "__main__":
     main()

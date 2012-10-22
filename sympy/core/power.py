@@ -622,8 +622,8 @@ class Pow(Expr):
 
         if self.base.has(*syms):
             return self.base._eval_is_polynomial(syms) and \
-                   self.exp.is_Integer and \
-                   self.exp >= 0
+                self.exp.is_Integer and \
+                self.exp >= 0
         else:
             return True
 
@@ -645,7 +645,7 @@ class Pow(Expr):
 
         if self.base.has(*syms):
             return self.base._eval_is_rational_function(syms) and \
-                   self.exp.is_Integer
+                self.exp.is_Integer
         else:
             return True
 

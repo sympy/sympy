@@ -22,7 +22,7 @@ def test_gauss_opt():
     assert lens == Matrix([[   1, 0], [-1/f, 1]])
     assert lens.C == -1/f
     assert FreeSpace(d) == Matrix([[ 1, d], [0, 1]])
-    assert FlatRefraction(n1, n2) == Matrix([[1,     0], [0, n1/n2]])
+    assert FlatRefraction(n1, n2) == Matrix([[1, 0], [0, n1/n2]])
     assert CurvedRefraction(
         R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
     assert FlatMirror() == Matrix([[1, 0], [0, 1]])

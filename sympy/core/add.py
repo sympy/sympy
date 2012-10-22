@@ -554,7 +554,7 @@ class Add(AssocOp):
             if terms_self == terms_old:                       # (2 + a).subs( 3 + a, y) -> -1 + y
                 return Add( new, coeff_self, -coeff_old)
             if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
-                return Add(-new, coeff_self,  coeff_old)
+                return Add(-new, coeff_self, coeff_old)
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:

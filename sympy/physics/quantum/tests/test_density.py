@@ -56,8 +56,8 @@ def test_doit():
     # Density with simple tensor products as args
     t = TensorProduct(A, B, C)
     d = Density([t, 1.0])
-    assert d.doit(
-        ) == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
+    assert d.doit() == \
+        1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
 
     # Density with multiple Tensorproducts as states
     t2 = TensorProduct(A, B)
@@ -106,7 +106,7 @@ def test_doit():
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
-                                          [XOp()*Ket(1), 0.5])
+                                        [XOp()*Ket(1), 0.5])
 
 
 def test_represent():
@@ -175,15 +175,17 @@ def test_entropy():
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
         ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix) and \
-               ent.real == 0.69314718055994529 and ent.imag == 0
+        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
+        assert ent.real == 0.69314718055994529
+        assert ent.imag == 0
 
     scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
     if scipy and np:
         #do this test only if numpy and scipy are available
         mat = represent(d, format="scipy.sparse")
-        assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
-                      0.69314718055994529 and ent.imag == 0
+        assert isinstance(mat, scipy_sparse_matrix)
+        assert ent.real == 0.69314718055994529
+        assert ent.imag == 0
 
 
 def test_eval_trace():

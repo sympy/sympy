@@ -534,28 +534,27 @@ def _doctest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "doc/src/modules/mpmath",  # needs to be fixed upstream
-                    "sympy/mpmath",  # needs to be fixed upstream
-                    "doc/src/modules/plotting.rst",  # generates live plots
-                    # "sympy/plotting", # generates live plots
-                    "sympy/plotting/pygletplot",  # generates live plots
-                    "sympy/statistics",                # prints a deprecation
-                    "doc/src/modules/statistics.rst",  # warning (this module
-                                                       # is deprecated)
-                    "sympy/utilities/compilef.py",  # needs tcc
-                    "sympy/utilities/autowrap.py",  # needs installed compiler
-                    "sympy/galgebra/GA.py",  # needs numpy
-                    "sympy/galgebra/latex_ex.py",  # needs numpy
-                    "sympy/conftest.py",  # needs py.test
-                    "sympy/utilities/benchmarking.py",  # needs py.test
-                    "examples/advanced/autowrap_integrators.py",  # needs numpy
-                    "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-                    "examples/intermediate/mplot2d.py",
-                        # needs numpy and matplotlib
-                    "examples/intermediate/mplot3d.py",
-                        # needs numpy and matplotlib
-                    "examples/intermediate/sample.py",  # needs numpy
-                    ])
+        "doc/src/modules/mpmath",  # needs to be fixed upstream
+        "sympy/mpmath",  # needs to be fixed upstream
+        "doc/src/modules/plotting.rst",  # generates live plots
+        # "sympy/plotting", # generates live plots
+        "sympy/plotting/pygletplot",  # generates live plots
+        "sympy/statistics",                # prints a deprecation
+        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/utilities/autowrap.py",  # needs installed compiler
+        "sympy/galgebra/GA.py",  # needs numpy
+        "sympy/galgebra/latex_ex.py",  # needs numpy
+        "sympy/conftest.py",  # needs py.test
+        "sympy/utilities/benchmarking.py",  # needs py.test
+        "examples/advanced/autowrap_integrators.py",  # needs numpy
+        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
+        "examples/intermediate/mplot2d.py",
+        # needs numpy and matplotlib
+        "examples/intermediate/mplot3d.py",
+        # needs numpy and matplotlib
+        "examples/intermediate/sample.py",  # needs numpy
+    ])
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules
@@ -570,7 +569,7 @@ def _doctest(*paths, **kwargs):
     test_files.extend(t.get_test_files('examples', init_only=False))
 
     not_blacklisted = [f for f in test_files
-                         if not any(b in f for b in blacklist)]
+                       if not any(b in f for b in blacklist)]
     if len(paths) == 0:
         t._testfiles.extend(not_blacklisted)
     else:
@@ -604,7 +603,7 @@ def _doctest(*paths, **kwargs):
     test_files.sort()
 
     not_blacklisted = [f for f in test_files
-                            if not any(b in f for b in blacklist)]
+                       if not any(b in f for b in blacklist)]
 
     if len(paths) == 0:
         matched = not_blacklisted
@@ -634,7 +633,7 @@ def _doctest(*paths, **kwargs):
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
-                            pdoctest.IGNORE_EXCEPTION_DETAIL)
+                pdoctest.IGNORE_EXCEPTION_DETAIL)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
@@ -1195,8 +1194,8 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                     inspect.isclass(val) or
-                     isinstance(val, property)):
+                    inspect.isclass(val) or
+                        isinstance(val, property)):
                     in_module = self._from_module(module, val)
                     if not in_module:
                         # "double check" again
@@ -1470,7 +1469,8 @@ class PyTestReporter(Reporter):
             ("LightBlue", "1;34"),
             ("LightPurple", "1;35"),
             ("LightCyan", "1;36"),
-            ("White", "1;37"),  )
+            ("White", "1;37"),
+        )
 
         colors = {}
 
@@ -1637,7 +1637,7 @@ class PyTestReporter(Reporter):
 
         self.write_center(text)
         ok = len(self._failed) == 0 and len(self._exceptions) == 0 and \
-                len(self._failed_doctest) == 0
+            len(self._failed_doctest) == 0
         if not ok:
             self.write("DO *NOT* COMMIT!\n")
         return ok

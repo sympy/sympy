@@ -135,7 +135,7 @@ def test_multiple_expressions():
     assert cse([x + y, x + y + z]) == ([(x0, x + y)], [x0, z + x0])
     assert cse([x + y, x + z]) == ([], [x + y, x + z])
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
-           ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
+        ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
     assert cse(l) == ([], l)
@@ -172,20 +172,20 @@ def test_dont_cse_tuples():
     g = Function("g")
 
     name_val, (expr,) = cse(
-            Subs(f(x, y), (x, y), (0, 1))
-            + Subs(g(x, y), (x, y), (0, 1)))
+        Subs(f(x, y), (x, y), (0, 1))
+        + Subs(g(x, y), (x, y), (0, 1)))
 
     assert name_val == []
     assert expr == (Subs(f(x, y), (x, y), (0, 1))
             + Subs(g(x, y), (x, y), (0, 1)))
 
     name_val, (expr,) = cse(
-            Subs(f(x, y), (x, y), (0, x + y))
-            + Subs(g(x, y), (x, y), (0, x + y)))
+        Subs(f(x, y), (x, y), (0, x + y))
+        + Subs(g(x, y), (x, y), (0, x + y)))
 
     assert name_val == [(x0, x + y)]
     assert expr == Subs(f(x, y), (x, y), (0, x0)) + \
-          Subs(g(x, y), (x, y), (0, x0))
+        Subs(g(x, y), (x, y), (0, x0))
 
 
 def test_pow_invpow():
@@ -213,5 +213,5 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2],
            postprocess=cse_main.cse_separate) == \
-        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) + \
+        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) +
            cos(x0), z - 2]]

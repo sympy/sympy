@@ -352,9 +352,9 @@ class Piecewise(Function):
                     return or_intervals
 
         int_expr.sort(key=lambda x: x[1].sort_key(
-            ) if x[1].is_number else S.NegativeInfinity.sort_key())
+        ) if x[1].is_number else S.NegativeInfinity.sort_key())
         int_expr.sort(key=lambda x: x[0].sort_key(
-            ) if x[0].is_number else S.Infinity.sort_key())
+        ) if x[0].is_number else S.Infinity.sort_key())
         from sympy.functions.elementary.miscellaneous import MinMaxBase
         for n in xrange(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
@@ -494,7 +494,7 @@ def piecewise_fold(expr):
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
         new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
-                        for e, c in new_args[n].args]
+                    for e, c in new_args[n].args]
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)

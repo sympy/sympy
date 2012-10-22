@@ -18,7 +18,7 @@ def test_f_expand_complex():
     assert exp(x).expand(complex=True) == exp(x)
     assert exp(I*x).expand(complex=True) == cos(x) + I*sin(x)
     assert exp(z).expand(complex=True) == cos(im(z))*exp(re(z)) + \
-                                             I*sin(im(z))*exp(re(z))
+        I*sin(im(z))*exp(re(z))
 
 
 def test_bug1():
@@ -152,11 +152,11 @@ def test_Subs():
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
     assert Subs(f(x, y, z), (x, y, z), (0, 1, 1)) != \
-           Subs(f(x, y, z), (x, y, z), (0, 0, 1))
+        Subs(f(x, y, z), (x, y, z), (0, 0, 1))
     assert Subs(f(x, y), (x, y, z), (0, 1, 1)) == \
-           Subs(f(x, y), (x, y, z), (0, 1, 2))
+        Subs(f(x, y), (x, y, z), (0, 1, 2))
     assert Subs(f(x, y), (x, y, z), (0, 1, 1)) != \
-           Subs(f(x, y) + z, (x, y, z), (0, 1, 0))
+        Subs(f(x, y) + z, (x, y, z), (0, 1, 0))
     assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
     assert Subs(Subs(f(x, y), x, 0), y, 1).doit() == f(0, 1)
     raises(ValueError, lambda: Subs(f(x, y), (x, y), (0, 0, 1)))
@@ -181,7 +181,7 @@ def test_Subs():
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
     assert Subs(1 + f(x).diff(x), x, 0).doit(), 1 + Subs(f(x).diff(x), x, 0)
     assert Subs(y*f(x, y).diff(x), (x, y), (0, 2)).doit() == \
-            2*Subs(Derivative(f(x, 2), x), x, 0)
+        2*Subs(Derivative(f(x, 2), x), x, 0)
     assert Subs(y**2*f(x), x, 0).diff(y) == 2*y*f(0)
 
     e = Subs(y**2*f(x), x, y)
@@ -317,12 +317,12 @@ def test_function__eval_nseries():
     assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
     assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
-                   polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
+        polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
     raises(PoleError, lambda: acos(1 - x)._eval_nseries(x, 2, None))
     raises(PoleError, lambda: acos(1 + x)._eval_nseries(x, 2, None))
-    assert loggamma(1/x)._eval_nseries(x, 0, None) \
-           == log(x)/2 - log(x)/x - 1/x + O(1, x)
+    assert loggamma(1/x)._eval_nseries(x, 0, None) == \
+        log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
 
@@ -447,7 +447,7 @@ def test_diff_wrt():
     assert f(g(x)).diff(x) == \
         Subs(Derivative(f(x), x), (x,), (g(x),))*Derivative(g(x), x)
     assert diff(f(g(x), h(x)), x) == \
-        Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) +\
+        Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) + \
         Subs(Derivative(f(g(x), y), y), (y,), (h(x),))*Derivative(h(x), x)
     assert f(
         sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
@@ -543,7 +543,7 @@ def test_nfloat():
     big = 12345678901234567890
     Float_big = Float(big, '')
     assert _aresame(nfloat(x**big, exponent=True),
-                           x**Float_big)
+                    x**Float_big)
     assert _aresame(nfloat(big), Float_big)
 
     # issues 3243

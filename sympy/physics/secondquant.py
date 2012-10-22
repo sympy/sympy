@@ -223,10 +223,10 @@ class AntiSymmetricTensor(TensorSymbol):
 
     def _latex(self, printer):
         return "%s^{%s}_{%s}" % (
-                self.symbol,
-                "".join([ i.name for i in self.args[1]]),
-                "".join([ i.name for i in self.args[2]])
-                )
+            self.symbol,
+            "".join([ i.name for i in self.args[1]]),
+            "".join([ i.name for i in self.args[2]])
+        )
 
     @property
     def symbol(self):
@@ -1974,11 +1974,11 @@ class NO(Expr):
 
                     cls = type(self[i])
                     split = (
-                            self[i].__new__(cls, below)
-                            * KroneckerDelta(below, self[i].state)
-                            + self[i].__new__(cls, above)
-                            * KroneckerDelta(above, self[i].state)
-                            )
+                        self[i].__new__(cls, below)
+                        * KroneckerDelta(below, self[i].state)
+                        + self[i].__new__(cls, above)
+                        * KroneckerDelta(above, self[i].state)
+                    )
                     subslist.append((self[i], split))
                 else:
                     raise SubstitutionOfAmbigousOperatorFailed(self[i])
@@ -2301,8 +2301,8 @@ def evaluate_deltas(e):
     # for general function objects we don't evaluate KroneckerDeltas in arguments,
     # but here we hard code exceptions to this rule
     accepted_functions = (
-            Add,
-            )
+        Add,
+    )
     if isinstance(e, accepted_functions):
         return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
@@ -2606,7 +2606,7 @@ def _get_ordered_dummies(mul, verbose=False):
             masked_facs = [ fac.replace(dum_repr[d2], mask[d2])
                     for fac in masked_facs ]
         all_masked = [ fac.replace(dum_repr[d], mask[d])
-                                   for fac in masked_facs ]
+                       for fac in masked_facs ]
         masked_facs = dict(zip(dumstruct, masked_facs))
 
         # dummies for which the ordering cannot be determined
@@ -2848,11 +2848,11 @@ def wicks(e, **kw_args):
         return S.Zero
 
     opts = {
-            'simplify_kronecker_deltas': False,
-            'expand': True,
-            'simplify_dummies': False,
-            'keep_only_fully_contracted': False
-            }
+        'simplify_kronecker_deltas': False,
+        'expand': True,
+        'simplify_dummies': False,
+        'keep_only_fully_contracted': False
+    }
     opts.update(kw_args)
 
     # check if we are already normally ordered

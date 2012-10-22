@@ -19,7 +19,7 @@ class PlotSurface(PlotModeBase):
 
         self._calculating_verts_pos = 0.0
         self._calculating_verts_len = float(
-                        self.u_interval.v_len*self.v_interval.v_len)
+            self.u_interval.v_len*self.v_interval.v_len)
 
         verts = list()
         b = self.bounds

@@ -121,7 +121,7 @@ htmlhelp_basename = 'SymPydoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
-                        'SymPy Development Team', 'manual')]
+                    'SymPy Development Team', 'manual')]
 
 # Additional stuff for the LaTeX preamble.
 #latex_preamble = ''

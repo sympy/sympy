@@ -222,10 +222,10 @@ def test_RootSum___new__():
     assert RootSum(
         x**2 - 1, Lambda(x, exp(x)), quadratic=True) == exp(-1) + exp(1)
 
-    assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1,
-                   Lambda(x, tan(a*x)))
-    assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + \
-                   1, Lambda(x, tan(x/a)))
+    assert RootSum(x**3 + a*x + a**3, tan, x) == \
+        RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
+    assert RootSum(a**3*x**3 + a*x + 1, tan, x) == \
+        RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
 
 
 def test_RootSum_free_symbols():
@@ -273,7 +273,7 @@ def test_RootSum_evalf():
 def test_RootSum_diff():
     f = x**3 + x + 3
 
-    g = Lambda(r,   exp(r*x))
+    g = Lambda(r, exp(r*x))
     h = Lambda(r, r*exp(r*x))
 
     assert RootSum(f, g).diff(x) == RootSum(f, h)

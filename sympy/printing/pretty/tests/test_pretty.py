@@ -2714,17 +2714,17 @@ def test_pretty_prec():
     assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
     assert xpretty(S("0.3"), full_prec=False) == "0.3"
     assert xpretty(S("0.3")*x, full_prec=True, use_unicode=False) in [
-            "0.300000000000000*x",
-            "x*0.300000000000000"
-            ]
+        "0.300000000000000*x",
+        "x*0.300000000000000"
+    ]
     assert xpretty(S("0.3")*x, full_prec="auto", use_unicode=False) in [
-            "0.3*x",
-            "x*0.3"
-            ]
+        "0.3*x",
+        "x*0.3"
+    ]
     assert xpretty(S("0.3")*x, full_prec=False, use_unicode=False) in [
-            "0.3*x",
-            "x*0.3"
-            ]
+        "0.3*x",
+        "x*0.3"
+    ]
 
 
 def test_pprint():
@@ -3432,7 +3432,7 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = hyper([1, 2], [3, 4],  1/(1/(1/(1/x + 1) + 1) + 1))
+    expr = hyper([1, 2], [3, 4], 1/(1/(1/(1/x + 1) + 1) + 1))
     ucode_str = \
 u"""\
      ⎛     │       1      ⎞\n\
@@ -3773,20 +3773,20 @@ def test_categories():
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
+        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
 
     assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
-           u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
+        u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
-           "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
-           "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
-           " ==> {f2*f1:A1-->A3: {unique}}"
+        "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
+        "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
+        " ==> {f2*f1:A1-->A3: {unique}}"
     assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
-           u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
-           u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+        u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
+        u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
 
     grid = DiagramGrid(d)
     assert pretty(grid) == "A1  A2\n      \nA3    "

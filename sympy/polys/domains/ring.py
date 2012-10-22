@@ -85,7 +85,7 @@ class Ring(Domain):
         """
         from sympy.polys.agca.ideals import ModuleImplementedIdeal
         return ModuleImplementedIdeal(self, self.free_module(1).submodule(
-                *[[x] for x in gens]))
+            *[[x] for x in gens]))
 
     def quotient_ring(self, e):
         """

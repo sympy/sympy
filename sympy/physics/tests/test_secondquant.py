@@ -7,7 +7,7 @@ from sympy.physics.secondquant import (
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
     substitute_dummies
-        )
+)
 
 from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
@@ -40,7 +40,7 @@ def test_index_permutations_with_dummies():
     # No dummy substitution necessary
     expr = f(a, b, p, q) - f(b, a, p, q)
     assert simplify_index_permutations(
-            expr, [P(a, b)]) == P(a, b)*f(a, b, p, q)
+        expr, [P(a, b)]) == P(a, b)*f(a, b, p, q)
 
     # Cases where dummy substitution is needed
     expected = P(a, b)*substitute_dummies(f(a, b, p, q))
@@ -379,8 +379,8 @@ def test_NO():
     assert NO(1) == 1
     assert NO(i) == i
     assert (NO(Fd(a)*Fd(b)*(F(c) + F(d))) ==
-               NO(Fd(a)*Fd(b)*F(c)) +
-               NO(Fd(a)*Fd(b)*F(d)))
+            NO(Fd(a)*Fd(b)*F(c)) +
+            NO(Fd(a)*Fd(b)*F(d)))
 
     assert NO(Fd(a)*F(b))._remove_brackets() == Fd(a)*F(b)
     assert NO(F(j)*Fd(i))._remove_brackets() == F(j)*Fd(i)
@@ -491,7 +491,7 @@ def test_fully_contracted():
     Fock = (AntiSymmetricTensor('f', (p,), (q,))*
             NO(Fd(p)*F(q)))
     V = (AntiSymmetricTensor('v', (p, q), (r, s))*
-            NO(Fd(p)*Fd(q)*F(s)*F(r)))/4
+         NO(Fd(p)*Fd(q)*F(s)*F(r)))/4
 
     Fai = wicks(NO(Fd(i)*F(a))*Fock,
             keep_only_fully_contracted=True,
@@ -550,13 +550,13 @@ def test_dummy_order_inner_outer_lines_VT1T1T1():
     # Coupled-Cluster T1 terms with V*T1*T1*T1
     # t^{a}_{k} t^{c}_{i} t^{d}_{l} v^{lk}_{dc}
     exprs = [
-            # permut v and t <=> swapping internal lines, equivalent
-            # irrespective of symmetries in v
-            v(k, l, c, d)*t(c, ii)*t(d, l)*t(aa, k),
-            v(l, k, c, d)*t(c, ii)*t(d, k)*t(aa, l),
-            v(k, l, d, c)*t(d, ii)*t(c, l)*t(aa, k),
-            v(l, k, d, c)*t(d, ii)*t(c, k)*t(aa, l),
-            ]
+        # permut v and t <=> swapping internal lines, equivalent
+        # irrespective of symmetries in v
+        v(k, l, c, d)*t(c, ii)*t(d, l)*t(aa, k),
+        v(l, k, c, d)*t(c, ii)*t(d, k)*t(aa, l),
+        v(k, l, d, c)*t(d, ii)*t(c, l)*t(aa, k),
+        v(l, k, d, c)*t(d, ii)*t(c, k)*t(aa, l),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -574,42 +574,42 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
 
     # Coupled-Cluster T2 terms with V*T1*T1*T1*T1
     exprs = [
-            # permut t <=> swapping external lines, not equivalent
-            # except if v has certain symmetries.
-            v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            v(k, l, c, d)*t(c, jj)*t(d, ii)*t(aa, k)*t(bb, l),
-            v(k, l, c, d)*t(c, ii)*t(d, jj)*t(bb, k)*t(aa, l),
-            v(k, l, c, d)*t(c, jj)*t(d, ii)*t(bb, k)*t(aa, l),
-            ]
+        # permut t <=> swapping external lines, not equivalent
+        # except if v has certain symmetries.
+        v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+        v(k, l, c, d)*t(c, jj)*t(d, ii)*t(aa, k)*t(bb, l),
+        v(k, l, c, d)*t(c, ii)*t(d, jj)*t(bb, k)*t(aa, l),
+        v(k, l, c, d)*t(c, jj)*t(d, ii)*t(bb, k)*t(aa, l),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
     exprs = [
-            # permut v <=> swapping external lines, not equivalent
-            # except if v has certain symmetries.
-            #
-            # Note that in contrast to above, these permutations have identical
-            # dummy order.  That is because the proximity to external indices
-            # has higher influence on the canonical dummy ordering than the
-            # position of a dummy on the factors.  In fact, the terms here are
-            # similar in structure as the result of the dummy substitions above.
-            v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            v(l, k, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            ]
+        # permut v <=> swapping external lines, not equivalent
+        # except if v has certain symmetries.
+        #
+        # Note that in contrast to above, these permutations have identical
+        # dummy order.  That is because the proximity to external indices
+        # has higher influence on the canonical dummy ordering than the
+        # position of a dummy on the factors.  In fact, the terms here are
+        # similar in structure as the result of the dummy substitions above.
+        v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+        v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+        v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+        v(l, k, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) == dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
     exprs = [
-            # permut t and v <=> swapping internal lines, equivalent.
-            # Canonical dummy order is different, and a consistent
-            # substitution reveals the equivalence.
-            v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
-            v(k, l, d, c)*t(c, jj)*t(d, ii)*t(aa, k)*t(bb, l),
-            v(l, k, c, d)*t(c, ii)*t(d, jj)*t(bb, k)*t(aa, l),
-            v(l, k, d, c)*t(c, jj)*t(d, ii)*t(bb, k)*t(aa, l),
-            ]
+        # permut t and v <=> swapping internal lines, equivalent.
+        # Canonical dummy order is different, and a consistent
+        # substitution reveals the equivalence.
+        v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
+        v(k, l, d, c)*t(c, jj)*t(d, ii)*t(aa, k)*t(bb, l),
+        v(l, k, c, d)*t(c, ii)*t(d, jj)*t(bb, k)*t(aa, l),
+        v(l, k, d, c)*t(c, jj)*t(d, ii)*t(bb, k)*t(aa, l),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -624,36 +624,36 @@ def test_equivalent_internal_lines_VT1T1():
     dums = _get_ordered_dummies
 
     exprs = [  # permute v.  Different dummy order. Not equivalent.
-            v(i, j, a, b)*t(a, i)*t(b, j),
-            v(j, i, a, b)*t(a, i)*t(b, j),
-            v(i, j, b, a)*t(a, i)*t(b, j),
-            ]
+        v(i, j, a, b)*t(a, i)*t(b, j),
+        v(j, i, a, b)*t(a, i)*t(b, j),
+        v(i, j, b, a)*t(a, i)*t(b, j),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v.  Different dummy order. Equivalent
-            v(i, j, a, b)*t(a, i)*t(b, j),
-            v(j, i, b, a)*t(a, i)*t(b, j),
-            ]
+        v(i, j, a, b)*t(a, i)*t(b, j),
+        v(j, i, b, a)*t(a, i)*t(b, j),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
     exprs = [  # permute t.  Same dummy order, not equivalent.
-            v(i, j, a, b)*t(a, i)*t(b, j),
-            v(i, j, a, b)*t(b, i)*t(a, j),
-            ]
+        v(i, j, a, b)*t(a, i)*t(b, j),
+        v(i, j, a, b)*t(b, i)*t(a, j),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) == dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v and t.  Different dummy order, equivalent
-            v(i, j, a, b)*t(a, i)*t(b, j),
-            v(j, i, a, b)*t(a, j)*t(b, i),
-            v(i, j, b, a)*t(b, i)*t(a, j),
-            v(j, i, b, a)*t(b, j)*t(a, i),
-            ]
+        v(i, j, a, b)*t(a, i)*t(b, j),
+        v(j, i, a, b)*t(a, j)*t(b, i),
+        v(i, j, b, a)*t(b, i)*t(a, j),
+        v(j, i, b, a)*t(b, j)*t(a, i),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -750,42 +750,42 @@ def test_equivalent_internal_lines_VT2():
     t = Function('t')
     dums = _get_ordered_dummies
     exprs = [
-            # permute v. Same dummy order, not equivalent.
-            #
-            # This test show that the dummy order may not be sensitive to all
-            # index permutations.  The following expressions have identical
-            # structure as the resulting terms from of the dummy subsitutions
-            # in the test above.  Here, all expressions have the same dummy
-            # order, so they cannot be simplified by means of dummy
-            # substitution.  In order to simplify further, it is necessary to
-            # exploit symmetries in the objects, for instance if t or v is
-            # antisymmetric.
-            v(i, j, a, b)*t(a, b, i, j),
-            v(j, i, a, b)*t(a, b, i, j),
-            v(i, j, b, a)*t(a, b, i, j),
-            v(j, i, b, a)*t(a, b, i, j),
-            ]
+        # permute v. Same dummy order, not equivalent.
+        #
+        # This test show that the dummy order may not be sensitive to all
+        # index permutations.  The following expressions have identical
+        # structure as the resulting terms from of the dummy subsitutions
+        # in the test above.  Here, all expressions have the same dummy
+        # order, so they cannot be simplified by means of dummy
+        # substitution.  In order to simplify further, it is necessary to
+        # exploit symmetries in the objects, for instance if t or v is
+        # antisymmetric.
+        v(i, j, a, b)*t(a, b, i, j),
+        v(j, i, a, b)*t(a, b, i, j),
+        v(i, j, b, a)*t(a, b, i, j),
+        v(j, i, b, a)*t(a, b, i, j),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) == dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [
-            # permute t.
-            v(i, j, a, b)*t(a, b, i, j),
-            v(i, j, a, b)*t(b, a, i, j),
-            v(i, j, a, b)*t(a, b, j, i),
-            v(i, j, a, b)*t(b, a, j, i),
-            ]
+        # permute t.
+        v(i, j, a, b)*t(a, b, i, j),
+        v(i, j, a, b)*t(b, a, i, j),
+        v(i, j, a, b)*t(a, b, j, i),
+        v(i, j, a, b)*t(b, a, j, i),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v and t.  Relabelling of dummies should be equivalent.
-            v(i, j, a, b)*t(a, b, i, j),
-            v(j, i, a, b)*t(a, b, j, i),
-            v(i, j, b, a)*t(b, a, i, j),
-            v(j, i, b, a)*t(b, a, j, i),
-            ]
+        v(i, j, a, b)*t(a, b, i, j),
+        v(j, i, a, b)*t(a, b, j, i),
+        v(i, j, b, a)*t(b, a, i, j),
+        v(j, i, b, a)*t(b, a, j, i),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -802,29 +802,29 @@ def test_internal_external_VT2T2():
     dums = _get_ordered_dummies
 
     exprs = [
-            v(k, l, c, d)*t(aa, c, ii, k)*t(bb, d, jj, l),
-            v(l, k, c, d)*t(aa, c, ii, l)*t(bb, d, jj, k),
-            v(k, l, d, c)*t(aa, d, ii, k)*t(bb, c, jj, l),
-            v(l, k, d, c)*t(aa, d, ii, l)*t(bb, c, jj, k),
-            ]
+        v(k, l, c, d)*t(aa, c, ii, k)*t(bb, d, jj, l),
+        v(l, k, c, d)*t(aa, c, ii, l)*t(bb, d, jj, k),
+        v(k, l, d, c)*t(aa, d, ii, k)*t(bb, c, jj, l),
+        v(l, k, d, c)*t(aa, d, ii, l)*t(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
     exprs = [
-            v(k, l, c, d)*t(aa, c, ii, k)*t(d, bb, jj, l),
-            v(l, k, c, d)*t(aa, c, ii, l)*t(d, bb, jj, k),
-            v(k, l, d, c)*t(aa, d, ii, k)*t(c, bb, jj, l),
-            v(l, k, d, c)*t(aa, d, ii, l)*t(c, bb, jj, k),
-            ]
+        v(k, l, c, d)*t(aa, c, ii, k)*t(d, bb, jj, l),
+        v(l, k, c, d)*t(aa, c, ii, l)*t(d, bb, jj, k),
+        v(k, l, d, c)*t(aa, d, ii, k)*t(c, bb, jj, l),
+        v(l, k, d, c)*t(aa, d, ii, l)*t(c, bb, jj, k),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
     exprs = [
-            v(k, l, c, d)*t(c, aa, ii, k)*t(bb, d, jj, l),
-            v(l, k, c, d)*t(c, aa, ii, l)*t(bb, d, jj, k),
-            v(k, l, d, c)*t(d, aa, ii, k)*t(bb, c, jj, l),
-            v(l, k, d, c)*t(d, aa, ii, l)*t(bb, c, jj, k),
-            ]
+        v(k, l, c, d)*t(c, aa, ii, k)*t(bb, d, jj, l),
+        v(l, k, c, d)*t(c, aa, ii, l)*t(bb, d, jj, k),
+        v(k, l, d, c)*t(d, aa, ii, k)*t(bb, c, jj, l),
+        v(l, k, d, c)*t(d, aa, ii, l)*t(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -841,11 +841,11 @@ def test_internal_external_pqrs():
     dums = _get_ordered_dummies
 
     exprs = [
-            v(k, l, c, d)*t(aa, c, ii, k)*t(bb, d, jj, l),
-            v(l, k, c, d)*t(aa, c, ii, l)*t(bb, d, jj, k),
-            v(k, l, d, c)*t(aa, d, ii, k)*t(bb, c, jj, l),
-            v(l, k, d, c)*t(aa, d, ii, l)*t(bb, c, jj, k),
-            ]
+        v(k, l, c, d)*t(aa, c, ii, k)*t(bb, d, jj, l),
+        v(l, k, c, d)*t(aa, c, ii, l)*t(bb, d, jj, k),
+        v(k, l, d, c)*t(aa, d, ii, k)*t(bb, c, jj, l),
+        v(l, k, d, c)*t(aa, d, ii, l)*t(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
@@ -970,13 +970,13 @@ def test_dummy_order_inner_outer_lines_VT1T1T1_AT():
     # Coupled-Cluster T1 terms with V*T1*T1*T1
     # t^{a}_{k} t^{c}_{i} t^{d}_{l} v^{lk}_{dc}
     exprs = [
-            # permut v and t <=> swapping internal lines, equivalent
-            # irrespective of symmetries in v
-            atv(k, l, c, d)*att(c, ii)*att(d, l)*att(aa, k),
-            atv(l, k, c, d)*att(c, ii)*att(d, k)*att(aa, l),
-            atv(k, l, d, c)*att(d, ii)*att(c, l)*att(aa, k),
-            atv(l, k, d, c)*att(d, ii)*att(c, k)*att(aa, l),
-            ]
+        # permut v and t <=> swapping internal lines, equivalent
+        # irrespective of symmetries in v
+        atv(k, l, c, d)*att(c, ii)*att(d, l)*att(aa, k),
+        atv(l, k, c, d)*att(c, ii)*att(d, k)*att(aa, l),
+        atv(k, l, d, c)*att(d, ii)*att(c, l)*att(aa, k),
+        atv(l, k, d, c)*att(d, ii)*att(c, k)*att(aa, l),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
@@ -990,20 +990,20 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1_AT():
     # Coupled-Cluster T2 terms with V*T1*T1*T1*T1
     # non-equivalent substitutions (change of sign)
     exprs = [
-            # permut t <=> swapping external lines
-            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
-            atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(aa, k)*att(bb, l),
-            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(bb, k)*att(aa, l),
-            ]
+        # permut t <=> swapping external lines
+        atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
+        atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(aa, k)*att(bb, l),
+        atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(bb, k)*att(aa, l),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == -substitute_dummies(permut)
 
     # equivalent substitutions
     exprs = [
-            atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
-            # permut t <=> swapping external lines
-            atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(bb, k)*att(aa, l),
-            ]
+        atv(k, l, c, d)*att(c, ii)*att(d, jj)*att(aa, k)*att(bb, l),
+        # permut t <=> swapping external lines
+        atv(k, l, c, d)*att(c, jj)*att(d, ii)*att(bb, k)*att(aa, l),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
@@ -1013,33 +1013,33 @@ def test_equivalent_internal_lines_VT1T1_AT():
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
 
     exprs = [  # permute v.  Different dummy order. Not equivalent.
-            atv(i, j, a, b)*att(a, i)*att(b, j),
-            atv(j, i, a, b)*att(a, i)*att(b, j),
-            atv(i, j, b, a)*att(a, i)*att(b, j),
-            ]
+        atv(i, j, a, b)*att(a, i)*att(b, j),
+        atv(j, i, a, b)*att(a, i)*att(b, j),
+        atv(i, j, b, a)*att(a, i)*att(b, j),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v.  Different dummy order. Equivalent
-            atv(i, j, a, b)*att(a, i)*att(b, j),
-            atv(j, i, b, a)*att(a, i)*att(b, j),
-            ]
+        atv(i, j, a, b)*att(a, i)*att(b, j),
+        atv(j, i, b, a)*att(a, i)*att(b, j),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
     exprs = [  # permute t.  Same dummy order, not equivalent.
-            atv(i, j, a, b)*att(a, i)*att(b, j),
-            atv(i, j, a, b)*att(b, i)*att(a, j),
-            ]
+        atv(i, j, a, b)*att(a, i)*att(b, j),
+        atv(i, j, a, b)*att(b, i)*att(a, j),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v and t.  Different dummy order, equivalent
-            atv(i, j, a, b)*att(a, i)*att(b, j),
-            atv(j, i, a, b)*att(a, j)*att(b, i),
-            atv(i, j, b, a)*att(b, i)*att(a, j),
-            atv(j, i, b, a)*att(b, j)*att(a, i),
-            ]
+        atv(i, j, a, b)*att(a, i)*att(b, j),
+        atv(j, i, a, b)*att(a, j)*att(b, i),
+        atv(i, j, b, a)*att(b, i)*att(a, j),
+        atv(j, i, b, a)*att(b, j)*att(a, i),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
@@ -1118,29 +1118,29 @@ def test_equivalent_internal_lines_VT2_AT():
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)
 
     exprs = [
-            # permute v. Same dummy order, not equivalent.
-            atv(i, j, a, b)*att(a, b, i, j),
-            atv(j, i, a, b)*att(a, b, i, j),
-            atv(i, j, b, a)*att(a, b, i, j),
-            ]
+        # permute v. Same dummy order, not equivalent.
+        atv(i, j, a, b)*att(a, b, i, j),
+        atv(j, i, a, b)*att(a, b, i, j),
+        atv(i, j, b, a)*att(a, b, i, j),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [
-            # permute t.
-            atv(i, j, a, b)*att(a, b, i, j),
-            atv(i, j, a, b)*att(b, a, i, j),
-            atv(i, j, a, b)*att(a, b, j, i),
-            ]
+        # permute t.
+        atv(i, j, a, b)*att(a, b, i, j),
+        atv(i, j, a, b)*att(b, a, i, j),
+        atv(i, j, a, b)*att(a, b, j, i),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) != substitute_dummies(permut)
 
     exprs = [  # permute v and t.  Relabelling of dummies should be equivalent.
-            atv(i, j, a, b)*att(a, b, i, j),
-            atv(j, i, a, b)*att(a, b, j, i),
-            atv(i, j, b, a)*att(b, a, i, j),
-            atv(j, i, b, a)*att(b, a, j, i),
-            ]
+        atv(i, j, a, b)*att(a, b, i, j),
+        atv(j, i, a, b)*att(a, b, j, i),
+        atv(i, j, b, a)*att(b, a, i, j),
+        atv(j, i, b, a)*att(b, a, j, i),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
@@ -1152,27 +1152,27 @@ def test_internal_external_VT2T2_AT():
     c, d = symbols('c d', above_fermi=True, cls=Dummy)
 
     exprs = [
-            atv(k, l, c, d)*att(aa, c, ii, k)*att(bb, d, jj, l),
-            atv(l, k, c, d)*att(aa, c, ii, l)*att(bb, d, jj, k),
-            atv(k, l, d, c)*att(aa, d, ii, k)*att(bb, c, jj, l),
-            atv(l, k, d, c)*att(aa, d, ii, l)*att(bb, c, jj, k),
-            ]
+        atv(k, l, c, d)*att(aa, c, ii, k)*att(bb, d, jj, l),
+        atv(l, k, c, d)*att(aa, c, ii, l)*att(bb, d, jj, k),
+        atv(k, l, d, c)*att(aa, d, ii, k)*att(bb, c, jj, l),
+        atv(l, k, d, c)*att(aa, d, ii, l)*att(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
     exprs = [
-            atv(k, l, c, d)*att(aa, c, ii, k)*att(d, bb, jj, l),
-            atv(l, k, c, d)*att(aa, c, ii, l)*att(d, bb, jj, k),
-            atv(k, l, d, c)*att(aa, d, ii, k)*att(c, bb, jj, l),
-            atv(l, k, d, c)*att(aa, d, ii, l)*att(c, bb, jj, k),
-            ]
+        atv(k, l, c, d)*att(aa, c, ii, k)*att(d, bb, jj, l),
+        atv(l, k, c, d)*att(aa, c, ii, l)*att(d, bb, jj, k),
+        atv(k, l, d, c)*att(aa, d, ii, k)*att(c, bb, jj, l),
+        atv(l, k, d, c)*att(aa, d, ii, l)*att(c, bb, jj, k),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
     exprs = [
-            atv(k, l, c, d)*att(c, aa, ii, k)*att(bb, d, jj, l),
-            atv(l, k, c, d)*att(c, aa, ii, l)*att(bb, d, jj, k),
-            atv(k, l, d, c)*att(d, aa, ii, k)*att(bb, c, jj, l),
-            atv(l, k, d, c)*att(d, aa, ii, l)*att(bb, c, jj, k),
-            ]
+        atv(k, l, c, d)*att(c, aa, ii, k)*att(bb, d, jj, l),
+        atv(l, k, c, d)*att(c, aa, ii, l)*att(bb, d, jj, k),
+        atv(k, l, d, c)*att(d, aa, ii, k)*att(bb, c, jj, l),
+        atv(l, k, d, c)*att(d, aa, ii, l)*att(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
@@ -1184,10 +1184,10 @@ def test_internal_external_pqrs_AT():
     c, d = symbols('c d', cls=Dummy)
 
     exprs = [
-            atv(k, l, c, d)*att(aa, c, ii, k)*att(bb, d, jj, l),
-            atv(l, k, c, d)*att(aa, c, ii, l)*att(bb, d, jj, k),
-            atv(k, l, d, c)*att(aa, d, ii, k)*att(bb, c, jj, l),
-            atv(l, k, d, c)*att(aa, d, ii, l)*att(bb, c, jj, k),
-            ]
+        atv(k, l, c, d)*att(aa, c, ii, k)*att(bb, d, jj, l),
+        atv(l, k, c, d)*att(aa, c, ii, l)*att(bb, d, jj, k),
+        atv(k, l, d, c)*att(aa, d, ii, k)*att(bb, c, jj, l),
+        atv(l, k, d, c)*att(aa, d, ii, l)*att(bb, c, jj, k),
+    ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)

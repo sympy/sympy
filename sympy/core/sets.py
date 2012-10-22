@@ -593,7 +593,7 @@ class Interval(Set, EvalfMixin):
                 end = Max(self.end, other.end)
 
                 left_open = ((self.start != start or self.left_open) and
-                              (other.start != start or other.left_open))
+                             (other.start != start or other.left_open))
                 right_open = ((self.end != end or self.right_open) and
                               (other.end != end or other.right_open))
 

@@ -1,11 +1,11 @@
 from __future__ import division
 
-from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
+from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
     WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul,  Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together,  collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple,  default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+    simplify, together, collect, factorial, apart, combsimp, factor, refine,
+    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, Lambda)
 from sympy.core.function import AppliedUndef
 from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
@@ -218,7 +218,7 @@ def test_as_leading_term():
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
-            (sin(1 + sin(1)), 0)
+           (sin(1 + sin(1)), 0)
 
 
 def test_leadterm3():
@@ -227,7 +227,7 @@ def test_leadterm3():
 
 def test_as_leading_term2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).as_leading_term(x) == \
-            sin(1 + sin(1))
+        sin(1 + sin(1))
 
 
 def test_as_leading_term3():
@@ -269,11 +269,11 @@ def test_atoms():
 
     assert list((I*pi).atoms(NumberSymbol)) == [pi]
     assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-           sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
+        sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
-    assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == set(
-        [1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
+    assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
+        set([1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
 
     # issue 3033
     f = Function('f')
@@ -526,8 +526,8 @@ def test_as_independent():
     assert (n1*x*y).as_independent(x) == (n1*y, x)
     assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
     assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
-    assert (DiracDelta(x - n1)*DiracDelta(
-        x - y)).as_independent(x) == (1, DiracDelta(x - n1)*DiracDelta(x - y))
+    assert (DiracDelta(x - n1)*DiracDelta(x - y)).as_independent(x) \
+        == (1, DiracDelta(x - n1)*DiracDelta(x - y))
     assert (x*y*n1*n2*n3).as_independent(n2) == (x*y*n1, n2*n3)
     assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
     assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
@@ -920,26 +920,24 @@ def test_extractions():
 
     n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() is True
-    assert (-n*x + x).could_extract_minus_sign(
-        ) != (n*x - x).could_extract_minus_sign()
-    assert (
-        x - y).could_extract_minus_sign() != (-x + y).could_extract_minus_sign()
+    assert (-n*x + x).could_extract_minus_sign() != \
+        (n*x - x).could_extract_minus_sign()
+    assert (x - y).could_extract_minus_sign() != \
+        (-x + y).could_extract_minus_sign()
     assert (1 - x - y).could_extract_minus_sign() is True
     assert (1 - x + y).could_extract_minus_sign() is False
     assert ((-x - x*y)/y).could_extract_minus_sign() is True
     assert (-(x + x*y)/y).could_extract_minus_sign() is True
     assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
     assert ((x + x*y)/y).could_extract_minus_sign() is False
-    assert (x*(-x - x**3)).could_extract_minus_sign(
-        ) is True  # used to give inf recurs
-    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True  # is_Mul odd case
+    assert (x*(-x - x**3)).could_extract_minus_sign() is True
+    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
-    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or\
-           ((-x - y)/(y - x)).could_extract_minus_sign(
-               ) is False  # is_Mul even case
-    assert ( x - y).could_extract_minus_sign() is False
+    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or \
+           ((-x - y)/(y - x)).could_extract_minus_sign() is False
+    assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
 
 
@@ -1062,19 +1060,19 @@ def test_issue1864():
 
 
 def test_action_verbs():
-    assert nsimplify(
-        (1/(exp(3*pi*x/5) + 1))) == (1/(exp(3*pi*x/5) + 1)).nsimplify()
+    assert nsimplify((1/(exp(3*pi*x/5) + 1))) == \
+        (1/(exp(3*pi*x/5) + 1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
     assert radsimp(1/(2 + sqrt(2))) == (1/(2 + sqrt(2))).radsimp()
-    assert powsimp(x**y*x**z*y**z, combine='all') == (x**y*x**z* \
-                   y**z).powsimp(combine='all')
+    assert powsimp(x**y*x**z*y**z, combine='all') == \
+        (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
     # Not tested because it's deprecated
     #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
-    assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == (a*x**2 + b* \
-                   x**2 + a*x - b*x + c).collect(x)
+    assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
+        (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
     assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
     assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
@@ -1202,8 +1200,8 @@ def test_expr_sorting():
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, sqrt(x)**3, x**2]
     assert sorted(exprs, key=default_sort_key) == exprs
 
-    exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(
-        x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
+    exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n,
+             sin(x**2), cos(x), cos(x**2), tan(x)]
     assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
@@ -1241,8 +1239,8 @@ def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
 
     assert x.as_ordered_factors() == [x]
-    assert (2*x*x**n*sin(x)*cos(
-        x)).as_ordered_factors() == [Integer(2), x, x**n, sin(x), cos(x)]
+    assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() \
+        == [Integer(2), x, x**n, sin(x), cos(x)]
 
     args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
     expr = Mul(*args)
@@ -1259,8 +1257,8 @@ def test_as_ordered_terms():
     f, g = symbols('f,g', cls=Function)
 
     assert x.as_ordered_terms() == [x]
-    assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms(
-        ) == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
+    assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() \
+        == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
 
     args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
     expr = Add(*args)
@@ -1269,14 +1267,14 @@ def test_as_ordered_terms():
 
     assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
 
-    assert ( 2 + 3*I).as_ordered_terms() == [ 2,  3*I]
-    assert (-2 + 3*I).as_ordered_terms() == [-2,  3*I]
-    assert ( 2 - 3*I).as_ordered_terms() == [ 2, -3*I]
+    assert ( 2 + 3*I).as_ordered_terms() == [2, 3*I]
+    assert (-2 + 3*I).as_ordered_terms() == [-2, 3*I]
+    assert ( 2 - 3*I).as_ordered_terms() == [2, -3*I]
     assert (-2 - 3*I).as_ordered_terms() == [-2, -3*I]
 
-    assert ( 4 + 3*I).as_ordered_terms() == [ 4,  3*I]
-    assert (-4 + 3*I).as_ordered_terms() == [-4,  3*I]
-    assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
+    assert ( 4 + 3*I).as_ordered_terms() == [4, 3*I]
+    assert (-4 + 3*I).as_ordered_terms() == [-4, 3*I]
+    assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
     f = x**2*y**2 + x*y**4 + y + 2

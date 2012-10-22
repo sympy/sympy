@@ -49,7 +49,7 @@ class BesselBase(Function):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
-             - self._a/2 * self.__class__(self.order + 1, self.argument) \
+            - self._a/2 * self.__class__(self.order + 1, self.argument) \
 
 
 
@@ -412,7 +412,7 @@ class SphericalBesselBase(BesselBase):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
         return self.__class__(self.order - 1, self.argument) - \
-               self * (self.order + 1)/self.argument
+            self * (self.order + 1)/self.argument
 
 
 class jn(SphericalBesselBase):

@@ -72,7 +72,7 @@ def test_gruntz_evaluation():
                   / exp(x)**4, x, oo) == 1
     # 8.17
     assert gruntz(exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1))))/exp(x), x, oo) \
-           == 1
+        == 1
     # 8.19
     assert gruntz(log(x)*(log(log(x) + log(log(x))) - log(log(x)))
                   / (log(log(x) + log(log(log(x))))), x, oo) == 1
@@ -109,7 +109,7 @@ def test_gruntz_eval_special():
     assert gruntz(((gamma(x + 1/gamma(x)) - gamma(x))/log(x) - cos(1/x))
                   * x*log(x), x, oo) == -S(1)/2
     assert gruntz(x * (gamma(x - 1/gamma(x)) - gamma(x) + log(x)), x, oo) \
-           == S(1)/2
+        == S(1)/2
     assert gruntz((gamma(x + 1/gamma(x)) - gamma(x)) / log(x), x, oo) == 1
 
 
@@ -130,12 +130,12 @@ def test_grunts_eval_special_slow_sometimes_fail():
 @XFAIL
 def test_gruntz_eval_special_fail():
     # TODO exponential integral Ei
-    assert gruntz((Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x,
-                   x, oo) == -1
+    assert gruntz(
+        (Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
 
     # TODO zeta function series
-    assert gruntz(exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) \
-           == -log(2)
+    assert gruntz(
+        exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
 
     # TODO 8.35 - 8.37 (bessel, max-min)
 
@@ -313,7 +313,7 @@ def test_mrv_leadterm1():
 def test_mrv_leadterm2():
     #Gruntz: p51, 3.25
     assert mrv_leadterm((log(exp(x) + x) - x)/log(exp(x) + log(x))*exp(x), x) == \
-            (1, 0)
+        (1, 0)
 
 
 def test_mrv_leadterm3():

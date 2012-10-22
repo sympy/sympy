@@ -290,7 +290,7 @@ def magnitude(vector):
     magsq is determined and because of the way that absolute
     values are removed.
     """
-    magsq = sympy.expand((vector|vector)())
+    magsq = sympy.expand((vector | vector)())
     magsq = sympy.trigsimp(magsq, deep=True, recursive=True)
     #print magsq
     magsq_str = sympy.galgebra.latex_ex.LatexPrinter()._print(magsq)
@@ -391,7 +391,7 @@ def build_base(base_index, base_vectors, reverse=False):
     base = base_vectors[base_index[0]]
     if len(base_index) > 1:
         for i in base_index[1:]:
-            base = base^base_vectors[i]
+            base = base ^ base_vectors[i]
     if reverse:
         base = base.rev()
     return(base)
@@ -528,14 +528,14 @@ class MV(object):
             MV.E = MV.bvec[0]
             MV.brecp = []
             for i in range(1, MV.n):
-                MV.E = MV.E^MV.bvec[i]
+                MV.E = MV.E ^ MV.bvec[i]
             for i in range(MV.n):
                 tmp = ONE
                 if i % 2 != 0:
                     tmp = -ONE
                 for j in range(MV.n):
                     if i != j:
-                        tmp = tmp^MV.bvec[j]
+                        tmp = tmp ^ MV.bvec[j]
                 tmp = tmp*MV.E
                 MV.brecp.append(tmp)
             MV.Esq = (MV.E*MV.E)()
@@ -1027,13 +1027,13 @@ class MV(object):
 
         for irow in MV.nrg:
             for icol in MV.nrg:
-                magsq = sympy.expand((nbases[irow]|nbases[icol])())
+                magsq = sympy.expand((nbases[irow] | nbases[icol])())
                 g[irow][icol] = sympy.simplify(
                     sympy.trigsimp(magsq, deep=True, recursive=True))
 
         if debug:
-            print 'Metric $\\hat{g}_{ij} = \\hat{' + LaTeX_base + '}_{i}\\cdot \\hat{' +\
-                  LaTeX_base + '}_{j}$'
+            print 'Metric $\\hat{g}_{ij} = \\hat{' + LaTeX_base + \
+                '}_{i}\\cdot \\hat{' + LaTeX_base + '}_{j}$'
             print r'\hat{g}_{ij} =', sympy.galgebra.latex_ex.LaTeX(g)
 
         if debug_level == 2:
@@ -1078,7 +1078,7 @@ class MV(object):
         for ibasis in MV.nrg:
             evec = numpy.array(MV.n*[ZERO], dtype=numpy.object)
             for jbasis in MV.nrg:
-                evec[jbasis] = (MV.bvec[ibasis]|rnbases[jbasis])()
+                evec[jbasis] = (MV.bvec[ibasis] | rnbases[jbasis])()
             Acoef.append(evec)
 
         #Calculat metric tensors
@@ -1087,13 +1087,13 @@ class MV(object):
 
         for irow in MV.nrg:
             for icol in MV.nrg:
-                magsq = sympy.expand((rnbases[irow]|rnbases[icol])())
+                magsq = sympy.expand((rnbases[irow] | rnbases[icol])())
                 gr[irow][icol] = sympy.simplify(
                     sympy.trigsimp(magsq, deep=True, recursive=True))
 
         if debug:
-            print 'Metric $\\hat{g}^{ij} = \\hat{' + LaTeX_base + '}^{i}\\cdot \\hat{' +\
-                  LaTeX_base + '}^{j}$'
+            print 'Metric $\\hat{g}^{ij} = \\hat{' + LaTeX_base + \
+                '}^{i}\\cdot \\hat{' + LaTeX_base + '}^{j}$'
             print r'\hat{g}^{ij} =', sympy.galgebra.latex_ex.LaTeX(gr)
 
         if debug_level == 4:
@@ -1261,21 +1261,21 @@ class MV(object):
             for evec in MV.org_basis:
                 print evec
 
-            print 'Renormalized Reciprocal Vectors ' +\
-                  '$\\bfrac{' + bmhat + '^{k}}{\\abs{\\bm{' + LaTeX_base + '}_{k}}}$'
+            print 'Renormalized Reciprocal Vectors ' + '$\\bfrac{' + bmhat + \
+                '^{k}}{\\abs{\\bm{' + LaTeX_base + '}_{k}}}$'
 
             ibasis = 0
             while ibasis < MV.n:
                 c_str = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(
                     coords_lst[ibasis])
-                print '\\bfrac{\\bm{\\hat{' + LaTeX_base +\
-                       '}}^{' + c_str + '}}{\\abs{\\bm{' + LaTeX_base +\
-                       '}_{' + c_str + '}}} =', MV.Rframe[ibasis]
+                print '\\bfrac{\\bm{\\hat{' + LaTeX_base + '}}^{' + c_str + \
+                    '}}{\\abs{\\bm{' + LaTeX_base + '}_{' + c_str + '}}} =', \
+                    MV.Rframe[ibasis]
                 ibasis += 1
 
-            title_str = 'Connection Multivectors: $C\\lbrc' + bstr + '\\rbrc = ' +\
-                        '\\bfrac{' + bmhat + '^{k}}{\\abs{' + bmhat +\
-                        '_{k}}}\\pdiff{' + bstr + '}{\\theta^{k}}$'
+            title_str = 'Connection Multivectors: $C\\lbrc' + bstr + \
+                '\\rbrc = ' + '\\bfrac{' + bmhat + '^{k}}{\\abs{' + bmhat + \
+                '_{k}}}\\pdiff{' + bstr + '}{\\theta^{k}}$'
 
             print title_str
             igrade = 1
@@ -1335,8 +1335,8 @@ class MV(object):
                         base = base1 + base2
                         (coefs, bases) = MV.reduce_basis(base)
                         product = MV.convert(coefs, bases)
-                        product.name = '(' + MV.basislabel[igrade][ibase] + ')(' +\
-                                       MV.basislabel[jgrade][jbase] + ')'
+                        product.name = '(' + MV.basislabel[igrade][ibase] + \
+                            ')(' + MV.basislabel[jgrade][jbase] + ')'
                         MV.mtable[igrade][ibase][jgrade].append(product)
         if MV.debug:
             print 'Multiplication Table:'
@@ -2469,7 +2469,7 @@ class MV(object):
         else:
             recp = MV.brecp
         for (irbase, iD) in zip(recp, D):
-            dD.add_in_place(irbase^iD)
+            dD.add_in_place(irbase ^ iD)
         if MV.curvilinear_flg:  # Add Connection
             igrade = 1
             while igrade <= MV.n:
@@ -2497,7 +2497,7 @@ class MV(object):
         else:
             recp = MV.brecp
         for (irbase, iD) in zip(recp, D):
-            dD.add_in_place(irbase|iD)
+            dD.add_in_place(irbase | iD)
         if MV.curvilinear_flg:  # Add Connection
             igrade = 1
             while igrade <= MV.n:
@@ -2512,7 +2512,7 @@ class MV(object):
         """
         Calculate scalar component of square of multivector.
         """
-        return((self|self)())
+        return((self | self)())
 
     def Name(self):
         """
@@ -2550,14 +2550,14 @@ def reciprocal_frame(vlst, names=''):
         if names != '':
             name_lst = names.split()
     for i in range(1, MV.n):
-        E = E^vlst[i]
+        E = E ^ vlst[i]
     for i in range(MV.n):
         tmp = ONE
         if i % 2 != 0:
             tmp = -ONE
         for j in range(MV.n):
             if i != j:
-                tmp = tmp^vlst[j]
+                tmp = tmp ^ vlst[j]
         tmp = tmp*E
         recp.append(tmp)
     Esq = sympy.trigsimp(E.mag2(), deep=True, recursive=True)

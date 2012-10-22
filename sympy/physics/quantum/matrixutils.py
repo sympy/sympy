@@ -109,7 +109,7 @@ def to_numpy(m, **options):
 def to_scipy_sparse(m, **options):
     """Convert a sympy/numpy matrix to a scipy.sparse matrix."""
     dtype = options.get('dtype', 'complex')
-    if isinstance(m,  (Matrix, Expr)):
+    if isinstance(m, (Matrix, Expr)):
         return sympy_to_scipy_sparse(m, dtype=dtype)
     elif isinstance(m, numpy_ndarray):
         if not sparse:

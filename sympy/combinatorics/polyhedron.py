@@ -75,12 +75,12 @@ class Polyhedron(Basic):
         permutation, Permutation(range(4)), is not included since it does
         not change the orientation of the vertices.)
 
-        >>> pgroup = [Permutation([[0,1,2], [3]]),\
-                      Permutation([[0,1,3], [2]]),\
-                      Permutation([[0,2,3], [1]]),\
-                      Permutation([[1,2,3], [0]]),\
-                      Permutation([[0,1], [2,3]]),\
-                      Permutation([[0,2], [1,3]]),\
+        >>> pgroup = [Permutation([[0,1,2], [3]]), \
+                      Permutation([[0,1,3], [2]]), \
+                      Permutation([[0,2,3], [1]]), \
+                      Permutation([[1,2,3], [0]]), \
+                      Permutation([[0,1], [2,3]]), \
+                      Permutation([[0,2], [1,3]]), \
                       Permutation([[0,3], [1,2]])]
 
         The Polyhedron is now constructed and demonstrated:
@@ -105,17 +105,17 @@ class Polyhedron(Basic):
         Here is a demonstration that applying p and p**2 for every p in
         pgroup generates all the orientations of a tetrahedron and no others:
 
-        >>> all = ( (w, x, y, z) ,\
-                    (x, y, w, z) ,\
-                    (y, w, x, z) ,\
-                    (w, z, x, y) ,\
-                    (z, w, y, x) ,\
-                    (w, y, z, x) ,\
-                    (y, z, w, x) ,\
-                    (x, z, y, w) ,\
-                    (z, y, x, w) ,\
-                    (y, x, z, w) ,\
-                    (x, w, z, y) ,\
+        >>> all = ( (w, x, y, z), \
+                    (x, y, w, z), \
+                    (y, w, x, z), \
+                    (w, z, x, y), \
+                    (z, w, y, x), \
+                    (w, y, z, x), \
+                    (y, z, w, x), \
+                    (x, z, y, w), \
+                    (z, y, x, w), \
+                    (y, x, z, w), \
+                    (x, w, z, y), \
                     (z, x, w, y) )
 
         >>> got = []
@@ -666,7 +666,7 @@ def _pgroup_calcs():
         # A map between face and the vertex of the double is made so that
         # after rotation the position of the vertices can be located
         fmap = dict(zip(ordered_faces,
-                         range(len(ordered_faces))))
+                        range(len(ordered_faces))))
         flat_faces = flatten(ordered_faces)
         new_pgroup = []
         for i, p in enumerate(pgroup):
@@ -687,7 +687,7 @@ def _pgroup_calcs():
     tetrahedron_faces = [
         (0, 1, 2), (0, 2, 3), (0, 3, 1),  # upper 3
         (1, 2, 3),  # bottom
-        ]
+    ]
 
     # cw from top
     #
@@ -699,7 +699,7 @@ def _pgroup_calcs():
         Perm([[0, 1], [2, 3]]),  # through front left edge
         Perm([[0, 2], [1, 3]]),  # through front right edge
         Perm([[0, 3], [1, 2]]),  # through back edge
-        ]
+    ]
 
     tetrahedron = Polyhedron(
         range(4),
@@ -740,7 +740,7 @@ def _pgroup_calcs():
     octahedron_faces = [
         (0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 1, 4),  # top 4
         (1, 2, 5), (2, 3, 5), (3, 4, 5), (1, 4, 5),  # bottom 4
-        ]
+    ]
 
     octahedron = Polyhedron(
         range(6),
@@ -748,14 +748,14 @@ def _pgroup_calcs():
         _pgroup_of_double(cube, cube_faces, _c_pgroup))
 
     dodecahedron_faces = [
-         (0, 1, 2, 3, 4),  # top
-         (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7),  # upper 5
-         (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
-         (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18,
+        (0, 1, 2, 3, 4),  # top
+        (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7),  # upper 5
+        (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
+        (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18,
           12),  # lower 5
-         (8, 12, 18, 19, 13), (9, 13, 19, 15, 14),
-         (15, 16, 17, 18, 19)  # bottom
-         ]
+        (8, 12, 18, 19, 13), (9, 13, 19, 15, 14),
+        (15, 16, 17, 18, 19)  # bottom
+    ]
 
     def _string_to_perm(s):
         rv = [Perm(range(20))]

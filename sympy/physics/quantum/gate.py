@@ -195,7 +195,7 @@ class Gate(UnitaryOperator):
         if qubits.nqubits < self.min_qubits:
             raise QuantumError(
                 'Gate needs a minimum of %r qubits to act on, got: %r' %
-                    (self.min_qubits, qubits.nqubits)
+                (self.min_qubits, qubits.nqubits)
             )
 
         # If the controls are not met, just return
@@ -224,7 +224,7 @@ class Gate(UnitaryOperator):
             new_qubit = qubits.__class__(*qubits.args)
             # Flip the bits that need to be flipped.
             for bit in range(len(targets)):
-                if new_qubit[targets[bit]] != (index >> bit)&1:
+                if new_qubit[targets[bit]] != (index >> bit) & 1:
                     new_qubit = new_qubit.flip(targets[bit])
             # The value in that row and column times the flipped-bit qubit
             # is the result for that part.
@@ -398,8 +398,7 @@ class CGate(Gate):
     def _print_label(self, printer, *args):
         controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
-        return '(%s),%s' %\
-            (controls, gate)
+        return '(%s),%s' % (controls, gate)
 
     def _pretty(self, printer, *args):
         controls = self._print_sequence_pretty(
@@ -414,7 +413,7 @@ class CGate(Gate):
     def _latex(self, printer, *args):
         controls = self._print_sequence(self.controls, ',', printer, *args)
         gate = printer._print(self.gate, *args)
-        return r'%s_{%s}{\left(%s\right)}' %\
+        return r'%s_{%s}{\left(%s\right)}' % \
             (self.gate_name_latex, controls, gate)
 
     def plot_gate(self, circ_plot, gate_idx):
@@ -1064,8 +1063,8 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
             product2[nqubits - 1 - control] = op11
         product2[nqubits - 1 - target] = target_matrix - eye2
 
-        return matrix_eye(2**nqubits, format=format) +\
-               matrix_tensor_product(*product2)
+        return matrix_eye(2**nqubits, format=format) + \
+            matrix_tensor_product(*product2)
 
     # Multi-target, multi-control is not yet implemented.
     else:
@@ -1109,7 +1108,7 @@ def gate_simp(circuit):
         # T**2 = S, S**2 = Z
         if isinstance(circuit_args[i], Pow):
             if isinstance(circuit_args[i].base,
-                (HadamardGate, XGate, YGate, ZGate))\
+                (HadamardGate, XGate, YGate, ZGate)) \
                     and isinstance(circuit_args[i].exp, Number):
                 # Build a new circuit taking replacing the
                 # H,X,Y,Z squared with one.
@@ -1175,8 +1174,8 @@ def gate_sort(circuit):
         circ_array = circuit.args
         for i in xrange(len(circ_array) - 1):
             # Go through each element and switch ones that are in wrong order
-            if isinstance(circ_array[i], (Gate, Pow)) and\
-               isinstance(circ_array[i + 1], (Gate, Pow)):
+            if isinstance(circ_array[i], (Gate, Pow)) and \
+                    isinstance(circ_array[i + 1], (Gate, Pow)):
                 # If we have a Pow object, look at only the base
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()

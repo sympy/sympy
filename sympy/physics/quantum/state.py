@@ -146,8 +146,8 @@ class StateBase(QExpr):
         for bracket in lbracket, rbracket:
             # Create left bracket
             if bracket in set([_lbracket, _lbracket_ucode]):
-                bracket_args = [ ' ' * (height//2 - i - 1) + \
-                                        slash for i in range(height // 2)]
+                bracket_args = [ ' ' * (height//2 - i - 1) +
+                                 slash for i in range(height // 2)]
                 bracket_args.extend(
                     [ ' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
@@ -729,8 +729,8 @@ class Wavefunction(Function):
             #a symbol present in the limits;
             #Had problems with a comparison of x > L
             if isinstance(args[ct], Expr) and \
-                   not (lower in args[ct].free_symbols
-                        or upper in args[ct].free_symbols):
+                not (lower in args[ct].free_symbols
+                     or upper in args[ct].free_symbols):
                 continue
 
             if args[ct] < lower or args[ct] > upper:

@@ -128,17 +128,17 @@ class PlotMode(PlotObject):
             if not m._was_initialized:
                 raise ValueError(("To use unregistered plot mode %s "
                                   "you must first call %s._init_mode().")
-                                  % (m.__name__, m.__name__))
+                                 % (m.__name__, m.__name__))
             if d_var_count != m.d_var_count:
                 raise ValueError(("%s can only plot functions "
                                   "with %i dependent variables.")
-                                  % (m.__name__,
+                                 % (m.__name__,
                                      m.d_var_count))
             if i_var_count > m.i_var_count:
                 raise ValueError(("%s cannot plot functions "
                                   "with more than %i independent "
                                   "variables.")
-                                  % (m.__name__,
+                                 % (m.__name__,
                                      m.i_var_count))
             return m
         # If it is a string, there are two possibilities.
@@ -184,7 +184,7 @@ class PlotMode(PlotObject):
         if alias not in PlotMode._mode_alias_list:
             raise ValueError(("Couldn't find a mode called"
                               " %s. Known modes: %s.")
-                              % (alias, ", ".join(PlotMode._mode_alias_list)))
+                             % (alias, ", ".join(PlotMode._mode_alias_list)))
         try:
             return PlotMode._mode_map[d][i][alias]
         except TypeError:
@@ -197,7 +197,7 @@ class PlotMode(PlotObject):
                 raise ValueError(("Couldn't find a %s mode "
                                   "for %i independent and %i "
                                   "dependent variables.")
-                                  % (alias, i_vars, d))
+                                 % (alias, i_vars, d))
 
     @classmethod
     def _register(cls):

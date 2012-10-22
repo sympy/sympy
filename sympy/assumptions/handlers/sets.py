@@ -239,7 +239,7 @@ class AskRealHandler(CommonHandler):
             elif expr.exp.is_Rational:
                 if (expr.exp.q % 2 == 0):
                     return ask(Q.real(expr.base), assumptions) and \
-                       not ask(Q.negative(expr.base), assumptions)
+                        not ask(Q.negative(expr.base), assumptions)
                 else:
                     return True
             elif ask(Q.real(expr.exp), assumptions):

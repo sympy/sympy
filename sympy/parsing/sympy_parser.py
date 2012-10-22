@@ -73,14 +73,14 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
                     seq = [
                         (OP, '('),
-                            (NAME,
-                             'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
+                        (NAME,
+                         'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (
-                                NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
+                        (NAME, 'Rational'), (OP, '('), (
+                            NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (
-                                NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
+                        (NAME, 'Rational'), (OP, '('), (
+                            NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
                         (OP, ')'),
                     ]
                 elif rationalize:
@@ -88,7 +88,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                             '('), (STRING, repr(str(number))), (OP, ')')]
                 else:
                     seq = [(NAME, 'Float'), (OP, '('),
-                            (NUMBER, repr(str(number))), (OP, ')')]
+                           (NUMBER, repr(str(number))), (OP, ')')]
             else:
                 seq = [(NAME, 'Integer'), (OP, '('), (
                     NUMBER, number), (OP, ')')]

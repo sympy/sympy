@@ -593,7 +593,7 @@ class Polygon(GeometryEntity):
             side_perim_fraction = s.length/perimeter
             perim_fraction_end = perim_fraction_start + side_perim_fraction
             pt = s.arbitrary_point(parameter).subs(
-                  t, (t - perim_fraction_start)/side_perim_fraction)
+                t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
                 (pt, (perim_fraction_start <= t < perim_fraction_end)))
             perim_fraction_start = perim_fraction_end
@@ -1727,11 +1727,11 @@ class Triangle(Polygon):
 
         # There's only 6 permutations, so write them out
         return _are_similar(s1_1, s1_2, s1_3, *s2) or \
-               _are_similar(s1_1, s1_3, s1_2, *s2) or \
-               _are_similar(s1_2, s1_1, s1_3, *s2) or \
-               _are_similar(s1_2, s1_3, s1_1, *s2) or \
-               _are_similar(s1_3, s1_1, s1_2, *s2) or \
-               _are_similar(s1_3, s1_2, s1_1, *s2)
+            _are_similar(s1_1, s1_3, s1_2, *s2) or \
+            _are_similar(s1_2, s1_1, s1_3, *s2) or \
+            _are_similar(s1_2, s1_3, s1_1, *s2) or \
+            _are_similar(s1_3, s1_1, s1_2, *s2) or \
+            _are_similar(s1_3, s1_2, s1_1, *s2)
 
     def is_equilateral(self):
         """Are all the sides the same length?
@@ -1836,8 +1836,8 @@ class Triangle(Polygon):
         """
         s = self.sides
         return Segment.is_perpendicular(s[0], s[1]) or \
-               Segment.is_perpendicular(s[1], s[2]) or \
-               Segment.is_perpendicular(s[0], s[2])
+            Segment.is_perpendicular(s[1], s[2]) or \
+            Segment.is_perpendicular(s[0], s[2])
 
     @property
     def altitudes(self):
@@ -2203,7 +2203,7 @@ def _slope(d):
 def _asa(d1, l, d2):
     """Return triangle having side with length l on the x-axis."""
     xy = Line((0, 0), slope=_slope(d1)).intersection(
-         Line((l, 0), slope=_slope(180 - d2)))[0]
+        Line((l, 0), slope=_slope(180 - d2)))[0]
     return Triangle((0, 0), (l, 0), xy)
 
 

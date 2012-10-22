@@ -1,5 +1,5 @@
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
-                    tan)
+                   tan)
 from sympy.plotting.plot import matplotlib, unset_show
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
@@ -52,6 +52,6 @@ def plot_and_save(name):
 
 def test_matplotlib():
     if matplotlib:
-        plot_and_save()
+        plot_and_save('test')
     else:
         skip("Matplotlib not the default backend")

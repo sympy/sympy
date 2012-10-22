@@ -325,7 +325,7 @@ class QExpr(Expr):
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints)
-                                     for a in self.args ]
+                     for a in self.args ]
         else:
             args = self.args
 
@@ -395,7 +395,7 @@ class QExpr(Expr):
             return to_sympy(result)
         elif format == 'numpy' and not isinstance(result, numpy_ndarray):
             return to_numpy(result)
-        elif format == 'scipy.sparse' and\
+        elif format == 'scipy.sparse' and \
                 not isinstance(result, scipy_sparse_matrix):
             return to_scipy_sparse(result)
 
@@ -432,5 +432,5 @@ def dispatch_method(self, basename, arg, **options):
             return result
     raise NotImplementedError(
         "%s.%s can't handle: %r" %
-            (self.__class__.__name__, basename, arg)
+        (self.__class__.__name__, basename, arg)
     )

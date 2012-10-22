@@ -627,7 +627,7 @@ def dmp_prs_resultant(f, g, u, K):
         lc, i = dmp_LC(R[i], K), i + 1
 
         p = dmp_mul(dmp_mul(p, dmp_pow(b, dv, v, K), v, K),
-                               dmp_pow(lc, du - dw, v, K), v, K)
+                    dmp_pow(lc, du - dw, v, K), v, K)
         q = dmp_mul(q, dmp_pow(lc, dv*(1 + d), v, K), v, K)
 
         _, p, q = dmp_inner_gcd(p, q, v, K)

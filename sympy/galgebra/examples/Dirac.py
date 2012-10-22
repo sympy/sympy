@@ -8,9 +8,9 @@ import sympy
 
 if __name__ == '__main__':
 
-    metric = '1  0  0  0,' +\
-             '0 -1  0  0,' +\
-             '0  0 -1  0,' +\
+    metric = '1  0  0  0,' \
+             '0 -1  0  0,' \
+             '0  0 -1  0,' \
              '0  0  0 -1'
 
     vars = sympy.symbols('t x y z')
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     dirac_eq = psi.grad()*I*sig_z - e*A*psi - m*psi*gamma_t
     dirac_eq.simplify()
     dirac_eq.convert_to_blades()
-    print 'Dirac equation in terms of real geometric algebra/calculus ' +\
+    print 'Dirac equation in terms of real geometric algebra/calculus ' \
           r'$\lp\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi} = m\bm{\psi}\gamma_{t}\rp$'
     print 'Spin measured with respect to $z$ axis'
     tex.MV_format(3)
