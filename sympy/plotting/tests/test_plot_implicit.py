@@ -52,6 +52,6 @@ def plot_and_save(name):
 
 def test_matplotlib():
     if matplotlib:
-        plot_and_save()
+        plot_and_save('test')
     else:
         skip("Matplotlib not the default backend")
