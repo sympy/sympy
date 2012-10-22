@@ -73,9 +73,9 @@ import tempfile
 import subprocess
 
 from sympy.utilities.codegen import (
-        get_code_generator, Routine, OutputArgument, InOutArgument,
-        CodeGenArgumentListError, Result
-        )
+    get_code_generator, Routine, OutputArgument, InOutArgument,
+    CodeGenArgumentListError, Result
+)
 from sympy.utilities.lambdify import implemented_function
 from sympy import C
 
@@ -119,7 +119,7 @@ class CodeWrapper:
         routines.append(main_routine)
         self.generator.write(
             routines, self.filename, True, self.include_header,
-                self.include_empty)
+            self.include_empty)
 
     def wrap_code(self, routine, helpers=[]):
 
@@ -157,7 +157,7 @@ class CodeWrapper:
             retcode = 1
         if retcode:
             raise CodeWrapError(
-                    "Error while executing command: %s" % " ".join(command))
+                "Error while executing command: %s" % " ".join(command))
 
 
 class DummyWrapper(CodeWrapper):
@@ -188,11 +188,11 @@ def %(name)s():
                     retvals.append(val.result_var)
 
             print >> f, DummyWrapper.template % {
-                    'name': routine.name,
-                    'expr': printed,
-                    'args': ", ".join([str(arg.name) for arg in inargs]),
-                    'retvals': ", ".join([str(val) for val in retvals])
-                    }
+                'name': routine.name,
+                'expr': printed,
+                'args': ", ".join([str(arg.name) for arg in inargs]),
+                'retvals': ", ".join([str(val) for val in retvals])
+            }
 
     def _process_files(self, routine):
         return

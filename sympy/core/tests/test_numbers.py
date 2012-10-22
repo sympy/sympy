@@ -705,9 +705,10 @@ def test_powers_Integer():
     assert (2) ** (S(-3)/2) == sqrt(2) / 4
     assert (81) ** (S(2)/3) == 9 * (S(3) ** (S(2)/3))
     assert (-81) ** (S(2)/3) == 9 * (S(-3) ** (S(2)/3))
-    assert (
-        -3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
-    assert (-3) ** Rational(-2, 3) == -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
+    assert (-3) ** Rational(-7, 3) == \
+        -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
+    assert (-3) ** Rational(-2, 3) == \
+        -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
@@ -723,17 +724,18 @@ def test_powers_Integer():
     assert (2**64 + 1) ** Rational(17, 25)
 
     # negative rational power and negative base
-    assert (
-        -3) ** Rational(-7, 3) == -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
-    assert (-3) ** Rational(-2, 3) == -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
+    assert (-3) ** Rational(-7, 3) == \
+        -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
+    assert (-3) ** Rational(-2, 3) == \
+        -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
 
-    # test that eval_power factors numbers bigger than limit (2**15)
+    # test that eval_power factors numbers bigger than
+    # the current limit in factor_trial_division (2**15)
     from sympy import nextprime
-    n = nextprime(
-        2**15)  # bigger than the current limit in factor_trial_division
+    n = nextprime(2**15)
     assert sqrt(n**2) == n
     assert sqrt(n**3) == n*sqrt(n)
     assert sqrt(4*n) == 2*sqrt(n)
@@ -744,25 +746,24 @@ def test_powers_Integer():
 
     # check that bases sharing a gcd are exptracted
     assert 2**Rational(1, 3)*3**Rational(1, 4)*6**Rational(1, 5) == \
-           2**Rational(8, 15)*3**Rational(9, 20)
+        2**Rational(8, 15)*3**Rational(9, 20)
     assert sqrt(8)*24**Rational(1, 3)*6**Rational(1, 5) == \
-           4*2**Rational(7, 10)*3**Rational(8, 15)
+        4*2**Rational(7, 10)*3**Rational(8, 15)
     assert sqrt(8)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
-           4*(-3)**Rational(8, 15)*2**Rational(7, 10)
+        4*(-3)**Rational(8, 15)*2**Rational(7, 10)
     assert 2**Rational(1, 3)*2**Rational(8, 9) == 2*2**Rational(2, 9)
     assert 2**Rational(2, 3)*6**Rational(1, 3) == 2*3**Rational(1, 3)
-    assert 2**Rational(
-        2, 3)*6**Rational(8, 9) == 2*2**Rational(5, 9)*3**Rational(8, 9)
-    assert (
-        -2)**Rational(2, S(3))*(-4)**Rational(1, S(3)) == -2*2**Rational(1, 3)
+    assert 2**Rational(2, 3)*6**Rational(8, 9) == \
+        2*2**Rational(5, 9)*3**Rational(8, 9)
+    assert (-2)**Rational(2, S(3))*(-4)**Rational(1, S(3)) == -2*2**Rational(1, 3)
     assert 3*Pow(3, 2, evaluate=False) == 3**3
     assert 3*Pow(3, -1/S(3), evaluate=False) == 3**(2/S(3))
     assert (-2)**(1/S(3))*(-3)**(1/S(4))*(-5)**(5/S(6)) == \
-           -(-1)**Rational(
-               5, 12)*2**Rational(1, 3)*3**Rational(1, 4)*5**Rational(5, 6)
+        -(-1)**Rational(5, 12)*2**Rational(1, 3)*3**Rational(1, 4) * \
+        5**Rational(5, 6)
 
-    assert Integer(
-        -2)**Symbol('', even=True) == Integer(2)**Symbol('', even=True)
+    assert Integer(-2)**Symbol('', even=True) == \
+        Integer(2)**Symbol('', even=True)
     assert (-1)**Float(.5) == 1.0*I
 
 
@@ -772,8 +773,8 @@ def test_powers_Rational():
     assert Rational(1, 2) ** S.Infinity == 0
     assert Rational(3, 2) ** S.Infinity == S.Infinity
     assert Rational(-1, 2) ** S.Infinity == 0
-    assert Rational(
-        -3, 2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
+    assert Rational(-3, 2) ** S.Infinity == \
+        S.Infinity + S.Infinity * S.ImaginaryUnit
 
     # check Nan
     assert Rational(3, 4) ** S.NaN == S.NaN
@@ -798,17 +799,17 @@ def test_powers_Rational():
     assert sqrt(Rational(1, 2)) == sqrt(2) / 2
     assert sqrt(Rational(-4, 7)) == I * sqrt(Rational(4, 7))
     assert Rational(-3, 2)**Rational(-7, 3) == \
-           -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
+        -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
-           -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
+        -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
 
     a = Rational(1, 10)
     assert a**Float(a, 2) == Float(a, 2)**Float(a, 2)
-    assert Rational(
-        -2, 3)**Symbol('', even=True) == Rational(2, 3)**Symbol('', even=True)
+    assert Rational(-2, 3)**Symbol('', even=True) == \
+        Rational(2, 3)**Symbol('', even=True)
 
 
 def test_powers_Float():
@@ -872,7 +873,7 @@ def test_issue222():
 def test_issue593():
     assert ((-1)**Rational(1, 6)).expand(complex=True) == I/2 + sqrt(3)/2
     assert ((-5)**Rational(1, 6)).expand(complex=True) == \
-            5**Rational(1, 6)*I/2 + 5**Rational(1, 6)*sqrt(3)/2
+        5**Rational(1, 6)*I/2 + 5**Rational(1, 6)*sqrt(3)/2
     assert ((-64)**Rational(1, 6)).expand(complex=True) == I + sqrt(3)
 
 
@@ -946,15 +947,15 @@ def test_Integer_factors():
 
 
 def test_Rational_factors():
-    def F(p,q,visual=None):
-        return Rational(p,q).factors(visual=visual)
+    def F(p, q, visual=None):
+        return Rational(p, q).factors(visual=visual)
 
     assert F(2, 3) == {2: 1, 3: -1}
     assert F(2, 9) == {2: 1, 3: -2}
     assert F(2, 15) == {2: 1, 3: -1, 5: -1}
     assert F(6, 10) == {3: 1, 5: -1}
-    assert str(F(12,1, visual=True)) == '2**2*3**1'
-    assert str(F(1,1, visual=True)) == '1'
+    assert str(F(12, 1, visual=True)) == '2**2*3**1'
+    assert str(F(1, 1, visual=True)) == '1'
     assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
     assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
@@ -1003,8 +1004,8 @@ def test_Rational_gcd_lcm_cofactors():
     assert Rational(4, 5).lcm(Rational(2, 9)) == Integer(4)
 
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
-    assert Integer(
-        4).cofactors(Integer(2)) == (Integer(2), Integer(2), Integer(1))
+    assert Integer(4).cofactors(Integer(2)) == \
+        (Integer(2), Integer(2), Integer(1))
 
     assert Integer(4).gcd(Float(2.0)) == S.One
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
@@ -1012,8 +1013,8 @@ def test_Rational_gcd_lcm_cofactors():
 
     assert Rational(1, 2).gcd(Float(2.0)) == S.One
     assert Rational(1, 2).lcm(Float(2.0)) == Float(1.0)
-    assert Rational(
-        1, 2).cofactors(Float(2.0)) == (S.One, Rational(1, 2), Float(2.0))
+    assert Rational(1, 2).cofactors(Float(2.0)) == \
+        (S.One, Rational(1, 2), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
@@ -1023,8 +1024,8 @@ def test_Float_gcd_lcm_cofactors():
 
     assert Float(2.0).gcd(Rational(1, 2)) == S.One
     assert Float(2.0).lcm(Rational(1, 2)) == Float(1.0)
-    assert Float(
-        2.0).cofactors(Rational(1, 2)) == (S.One, Float(2.0), Rational(1, 2))
+    assert Float(2.0).cofactors(Rational(1, 2)) == \
+        (S.One, Float(2.0), Rational(1, 2))
 
 
 def test_issue1512():
@@ -1194,12 +1195,12 @@ def test_hashing_sympy_integers():
 
 
 def test_issue_1073():
-    assert int(
-        (E**100).round()) == 26881171418161354484126255515800135873611119
-    assert int((pi**100).round()
-               ) == 51878483143196131920862615246303013562686760680406
-    assert int(
-        (Rational(1)/EulerGamma**100).round()) == 734833795660954410469466
+    assert int((E**100).round()) == \
+        26881171418161354484126255515800135873611119
+    assert int((pi**100).round()) == \
+        51878483143196131920862615246303013562686760680406
+    assert int((Rational(1)/EulerGamma**100).round()) == \
+        734833795660954410469466
 
 
 @XFAIL

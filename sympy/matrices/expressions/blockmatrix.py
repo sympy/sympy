@@ -324,7 +324,7 @@ def block_collapse(expr):
             and expr.args[1].is_BlockMatrix):
         if expr.args[1].is_BlockDiagMatrix:
             return BlockDiagMatrix(
-                    *[expr.args[0]*arg for arg in expr.args[1].diag])
+                *[expr.args[0]*arg for arg in expr.args[1].diag])
         else:
             return BlockMatrix(expr.args[0]*expr.args[1]._mat)
 
@@ -345,7 +345,7 @@ def block_collapse(expr):
             c, M = mat.as_coeff_Mul()
             if M.is_Identity and block.is_structurally_symmetric:
                 block_id = BlockDiagMatrix(
-                        *[c*Identity(k) for k in block.rowblocksizes])
+                    *[c*Identity(k) for k in block.rowblocksizes])
                 nonblocks.pop(i)
                 block = block._blockadd(block_id)
 

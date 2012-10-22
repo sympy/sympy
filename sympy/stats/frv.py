@@ -136,7 +136,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
                     if frozenset(((self.fulldomain.symbol, elem),)) in self)
         else:
             raise NotImplementedError(
-                    "Not implemented on multi-dimensional conditional domain")
+                "Not implemented on multi-dimensional conditional domain")
         #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):

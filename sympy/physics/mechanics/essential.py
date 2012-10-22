@@ -4,8 +4,8 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
 
 from sympy import (
     Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-                   expand, zeros, Derivative, Function, symbols, Add,
-                   solve, S)
+    expand, zeros, Derivative, Function, symbols, Add,
+    solve, S)
 from sympy.core import C
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
@@ -1686,8 +1686,8 @@ class MechanicsLatexPrinter(LatexPrinter):
             inv_trig_power_case = False
             # If it is applicable to fold the argument brackets
             can_fold_brackets = self._settings['fold_func_brackets'] and \
-                                len(args) == 1 and \
-                                not self._needs_function_brackets(expr.args[0])
+                len(args) == 1 and \
+                not self._needs_function_brackets(expr.args[0])
 
             inv_trig_table = ["asin", "acos", "atan", "acot"]
 

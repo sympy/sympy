@@ -352,7 +352,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         inequalities = [inequalities]
 
     if len(inequalities) == 1 and len(symbols) == 1 \
-       and inequalities[0].is_Relational:
+            and inequalities[0].is_Relational:
         try:
             return _solve_inequality(inequalities[0], symbols[0])
         except NotImplementedError:

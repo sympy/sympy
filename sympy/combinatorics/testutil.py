@@ -27,7 +27,7 @@ def _cmp_perm_lists(first, second):
 
     """
     return set([tuple(a) for a in first]) == \
-           set([tuple(a) for a in second])
+        set([tuple(a) for a in second])
 
 
 def _naive_list_centralizer(self, other):
@@ -131,8 +131,8 @@ def _verify_centralizer(group, arg, centr=None):
     See Also
     ========
 
-    _naive_list_centralizer,\
-    sympy.combinatorics.perm_groups.PermutationGroup.centralizer,\
+    _naive_list_centralizer,
+    sympy.combinatorics.perm_groups.PermutationGroup.centralizer,
     _cmp_perm_lists
 
     """
@@ -154,7 +154,7 @@ def _verify_normal_closure(group, arg, closure=None):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,\
+    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
     ... AlternatingGroup)
     >>> from sympy.combinatorics.testutil import _verify_normal_closure
     >>> S = SymmetricGroup(3)

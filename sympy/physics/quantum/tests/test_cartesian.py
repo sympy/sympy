@@ -28,7 +28,7 @@ def test_x():
     assert XBra(x).position == x
     assert represent(XOp()*XKet()) == x*DiracDelta(x - x_2)
     assert represent(XOp()*XKet()*XBra('y')) == \
-           x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
     assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
     assert represent(
         XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
@@ -40,7 +40,7 @@ def test_x():
     assert rep_p == represent(XOp(), basis=PxKet())
 
     assert represent(XOp()*PxKet(), basis=PxKet) == \
-           hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
+        hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
 
 
 def test_p():
@@ -60,9 +60,9 @@ def test_p():
     assert rep_x == represent(PxOp(), basis=XKet())
 
     assert represent(PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
+        -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
     assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x - y)*DifferentialOperator(x)
+        -hbar*I*DiracDelta(x - y)*DifferentialOperator(x)
 
 
 def test_3dpos():
@@ -86,7 +86,7 @@ def test_3dpos():
 
     other_ket = PositionKet3D(x_1, y_1, z_1)
     assert (Dagger(other_ket)*test_ket).doit() == \
-           DiracDelta(x - x_1)*DiracDelta(y - y_1)*DiracDelta(z - z_1)
+        DiracDelta(x - x_1)*DiracDelta(y - y_1)*DiracDelta(z - z_1)
 
     assert test_ket.position_x == x
     assert test_ket.position_y == y

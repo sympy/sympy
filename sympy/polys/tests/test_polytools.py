@@ -94,7 +94,7 @@ def test_Poly_from_dict():
         {(0,): 1, (1,): 5}, gens=x, domain=K).rep == DMP([K(2), K(1)], K)
 
     assert Poly.from_dict({(0, 0): 1, (1, 1): 2}, gens=(
-        x, y), domain=K).rep == DMP([[K(2), K(0)], [K(1)]],  K)
+        x, y), domain=K).rep == DMP([[K(2), K(0)], [K(1)]], K)
 
     assert Poly.from_dict({0: 1, 1: 2}, gens=x).rep == DMP([ZZ(2), ZZ(1)], ZZ)
     assert Poly.from_dict(
@@ -466,13 +466,13 @@ def test_Poly__unify():
         (
             DMP([DMF(([[1], []], [[1]]), ZZ), DMF(([[]], [[1]]
                 ), ZZ)], ZZ.frac_field(a, b)),
-         DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
+            DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
 
     assert Poly(a*x, x, domain='ZZ(a)')._unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
         (
             DMP([DMF(([[1], []], [[1]]), ZZ), DMF(([[]], [[1]]
                 ), ZZ)], ZZ.frac_field(a, b)),
-         DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
+            DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
 
     raises(CoercionFailed, lambda: Poly(Poly(x**2 + x**2*z, y,
            field=True), domain='ZZ(x)'))
@@ -990,10 +990,10 @@ def test_Poly_all_terms():
 
     assert Poly(2*x + 1, x).all_terms() == [((1,), 2), ((0,), 1)]
 
-    assert Poly(
-        7*x**2 + 2*x + 1, x).all_terms() == [((2,), 7), ((1,), 2), ((0,), 1)]
-    assert Poly(7*x**4 + 2*x + 1, x).all_terms(
-        ) == [((4,), 7), ((3,), 0), ((2,), 0), ((1,), 2), ((0,), 1)]
+    assert Poly(7*x**2 + 2*x + 1, x).all_terms() == \
+        [((2,), 7), ((1,), 2), ((0,), 1)]
+    assert Poly(7*x**4 + 2*x + 1, x).all_terms() == \
+        [((4,), 7), ((3,), 0), ((2,), 0), ((1,), 2), ((0,), 1)]
 
 
 def test_Poly_termwise():
@@ -2272,7 +2272,7 @@ def test_factor():
     assert factor(x**11 + x + 1, modulus=65537, symmetric=True) == \
         (x**2 + x + 1)*(x**9 - x**8 + x**6 - x**5 + x**3 - x** 2 + 1)
     assert factor(x**11 + x + 1, modulus=65537, symmetric=False) == \
-        (x**2 + x + 1)*(x**9 + 65536*x**8 + x**6 + 65536*x**5 + \
+        (x**2 + x + 1)*(x**9 + 65536*x**8 + x**6 + 65536*x**5 +
          x**3 + 65536*x** 2 + 1)
 
     f = x/pi + x*sin(x)/pi
@@ -2294,7 +2294,7 @@ def test_factor():
     assert factor(f) == 3
     assert factor(f, x) == 3
 
-    assert factor(1/(x**2 + 2*x + 1/x) - 1) == -((1 - x + 2*x**2 + \
+    assert factor(1/(x**2 + 2*x + 1/x) - 1) == -((1 - x + 2*x**2 +
                   x**3)/(1 + 2*x**2 + x**3))
 
     assert factor(f, expand=False) == f
@@ -2335,14 +2335,14 @@ def test_factor_large():
     g = (x**2 + y**2)**200000*(x**7 + 1)
 
     assert factor(f) == \
-        (x + 1)*(x - y)**200000*(x + y)**200000*(x**6 - x**5 + \
+        (x + 1)*(x - y)**200000*(x + y)**200000*(x**6 - x**5 +
          x**4 - x**3 + x**2 - x + 1)
     assert factor(g, gaussian=True) == \
-        (x + 1)*(x - I*y)**200000*(x + I*y)**200000*(x**6 - x**5 + \
+        (x + 1)*(x - I*y)**200000*(x + I*y)**200000*(x**6 - x**5 +
          x**4 - x**3 + x**2 - x + 1)
 
     assert factor_list(f) == \
-        (1, [(x + 1, 1), (x - y, 200000), (x + y, 200000), (x**6 - \
+        (1, [(x + 1, 1), (x - y, 200000), (x + y, 200000), (x**6 -
          x**5 + x**4 - x**3 + x**2 - x + 1, 1)])
     assert factor_list(g, gaussian=True) == \
         (1, [(x + 1, 1), (x - I*y, 200000), (x + I*y, 200000), (
@@ -2411,7 +2411,7 @@ def test_intervals():
 
     assert intervals([x**2 - 200, x**2 - 201]) == \
         [((-S(71)/5, -S(85)/6), {1: 1}), ((-S(85)/6, -14), {0: 1}),
-          ((14, S(85)/6), {0: 1}), ((S(85)/6, S(71)/5), {1: 1})]
+         ((14, S(85)/6), {0: 1}), ((S(85)/6, S(71)/5), {1: 1})]
 
     assert intervals([x + 1, x + 2, x - 1, x + 1, 1, x - 1, x - 1, (x - 2)**2]) == \
         [((-2, -2), {1: 1}), ((-1, -1), {0: 1, 3: 1}), ((1, 1), {2:
@@ -2785,7 +2785,7 @@ def test_reduced():
     f = 2*x**3 + y**3 + 3*y
     G = groebner([x**2 + y**2 - 1, x*y - 2])
 
-    Q = [x**2 - x*y**3/2 + x*y/2 + y**6/4 - y**4/2 + y**2/4, -y**5/4 + \
+    Q = [x**2 - x*y**3/2 + x*y/2 + y**6/4 - y**4/2 + y**2/4, -y**5/4 +
         y**3/2 + 3*y/4]
     r = 0
 
@@ -2854,7 +2854,7 @@ def test_groebner():
 
 
 def test_fglm():
-    F = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + \
+    F = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d +
         b*c*d, a*b*c*d - 1]
     G = groebner(F, a, b, c, d, order='grlex')
 
@@ -2874,10 +2874,10 @@ def test_fglm():
     assert G.fglm('lex') == [
         203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 -
         10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 +
-        20362663855832380362*x**2 - 142079311455258371571*x + \
-            183756699868981873194,
-        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468* \
-            x**3 + 288*x**2 - 108*x + 9,
+        20362663855832380362*x**2 - 142079311455258371571*x +
+        183756699868981873194,
+        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*
+        x**3 + 288*x**2 - 108*x + 9,
     ]
 
     F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
@@ -2966,13 +2966,13 @@ def test_poly():
         y + z)**2 - x - 1) == Poly(2*y**2 + 4*y*z + 2*z**2 - x - 1, x, y, z)
     assert poly(x*(
         y + z)**2 - x - 1) == Poly(x*y**2 + 2*x*y*z + x*z**2 - x - 1, x, y, z)
-    assert poly(2*x*(y + z)**2 - x - 1) == Poly(2*x*y**2 + 4*x*y*z + 2* \
+    assert poly(2*x*(y + z)**2 - x - 1) == Poly(2*x*y**2 + 4*x*y*z + 2*
                 x*z**2 - x - 1, x, y, z)
 
     assert poly(x*y + (x + y)**2 + (x + z)**2) == \
         Poly(2*x*z + 3*x*y + y**2 + z**2 + 2*x**2, x, y, z)
     assert poly(x*y*(x + y)*(x + z)**2) == \
-        Poly(x**3*y**2 + x*y**2*z**2 + y*x**2*z**2 + 2*z*x**2* \
+        Poly(x**3*y**2 + x*y**2*z**2 + y*x**2*z**2 + 2*z*x**2*
              y**2 + 2*y*z*x**3 + y*x**4, x, y, z)
 
     assert poly(Poly(x + y + z, y, x, z)) == Poly(x + y + z, y, x, z)

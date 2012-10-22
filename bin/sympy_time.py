@@ -23,7 +23,7 @@ def new_import(name, globals={}, locals={}, fromlist=[]):
     level -= 1
     parent = old_parent
     t2 = time.time()
-    elapsed_times[name] = t2-t1
+    elapsed_times[name] = t2 - t1
     return module
 
 old_import = __builtins__.__import__
@@ -39,7 +39,7 @@ for name, level, parent in import_order:
 
 print "== Tree =="
 for name, level, parent in import_order:
-    print "%s%s: %.3f (%s)" % (" "*level, name, elapsed_times.get(name,0),
+    print "%s%s: %.3f (%s)" % (" "*level, name, elapsed_times.get(name, 0),
             parent)
 
 print "\n"

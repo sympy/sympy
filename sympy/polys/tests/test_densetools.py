@@ -153,7 +153,7 @@ def test_dmp_diff():
     assert dmp_diff([[[3]], [[1]], [[]]], 1, 2, ZZ) == [[[6]], [[1]]]
 
     assert dmp_diff([1, -1, 0, 0, 2], 1, 0, ZZ) == \
-           dup_diff([1, -1, 0, 0, 2], 1, ZZ)
+        dup_diff([1, -1, 0, 0, 2], 1, ZZ)
 
     assert dmp_diff(f_6, 0, 3, ZZ) == f_6
     assert dmp_diff(f_6, 1, 3, ZZ) == dmp_diff(f_6, 1, 3, ZZ)

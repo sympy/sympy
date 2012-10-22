@@ -41,7 +41,7 @@ class Density(HermitianOperator):
         for arg in args:
             # Check if arg is a tuple
             if not (isinstance(arg, Tuple) and
-                     len(arg) == 2 ):
+                    len(arg) == 2):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
 

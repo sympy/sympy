@@ -84,7 +84,7 @@ class PoleError(Exception):
 class ArgumentIndexError(ValueError):
     def __str__(self):
         return ("Invalid operation with argument number %s for Function %s" %
-                        (self.args[1], self.args[0]))
+               (self.args[1], self.args[0]))
 
 
 class FunctionClass(ManagedProperties):
@@ -1262,7 +1262,7 @@ class Subs(Expr):
 
         if uniq(variables) != variables:
             repeated = [ v for v in set(variables)
-                                    if list(variables).count(v) > 1 ]
+                         if list(variables).count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
@@ -1358,7 +1358,7 @@ class Subs(Expr):
         if s not in self.free_symbols:
             return S.Zero
         return Subs(self.expr.diff(s), self.variables, self.point).doit() \
-                + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
+            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
 

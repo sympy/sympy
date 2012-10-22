@@ -22,7 +22,7 @@ def test_kmp_table():
     word = ('P', 'A', 'R', 'T', 'I', 'C', 'I', 'P', 'A', 'T', 'E', ' ',
             'I', 'N', ' ', 'P', 'A', 'R', 'A', 'C', 'H', 'U', 'T', 'E')
     expected_table = [-1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0,
-                       0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0]
+                      0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0]
     assert expected_table == kmp_table(word)
 
     x = X(0)

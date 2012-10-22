@@ -343,7 +343,7 @@ class ModuleImplementedIdeal(Ideal):
         if not isinstance(J, ModuleImplementedIdeal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.submodule(
-                *[[x*y] for [x] in self._module.gens for [y] in J._module.gens]))
+            *[[x*y] for [x] in self._module.gens for [y] in J._module.gens]))
 
     def in_terms_of_generators(self, e):
         """

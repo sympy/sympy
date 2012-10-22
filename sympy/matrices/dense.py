@@ -1165,9 +1165,9 @@ def ones(r, c=None):
 
     if is_sequence(r):
         SymPyDeprecationWarning(
-                feature="The syntax ones([%i, %i])" % tuple(r),
-                useinstead="ones(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
+            feature="The syntax ones([%i, %i])" % tuple(r),
+            useinstead="ones(%i, %i)." % tuple(r),
+            issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
     else:

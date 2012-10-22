@@ -325,7 +325,7 @@ def generate_tokens(readline):
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield (ERRORTOKEN, contstr + line,
-                           strstart, (lnum, len(line)), contline)
+                       strstart, (lnum, len(line)), contline)
                 contstr = ''
                 contline = None
                 continue
@@ -388,7 +388,7 @@ def generate_tokens(readline):
                 token, initial = line[start:end], line[start]
 
                 if initial in numchars or \
-                   (initial == '.' and token != '.'):      # ordinary number
+                        (initial == '.' and token != '.'):      # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
                     yield (NL if parenlev > 0 else NEWLINE, token, spos, epos, line)
@@ -429,7 +429,7 @@ def generate_tokens(readline):
                     yield (OP, token, spos, epos, line)
             else:
                 yield (ERRORTOKEN, line[pos],
-                           (lnum, pos), (lnum, pos + 1), line)
+                       (lnum, pos), (lnum, pos + 1), line)
                 pos = pos + 1
 
     for indent in indents[1:]:                 # pop remaining indent levels

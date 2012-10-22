@@ -3,9 +3,9 @@ from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (
-        random_complex_number as randcplx,
-        test_numerically as tn,
-        test_derivative_numerically as td)
+    random_complex_number as randcplx,
+    test_numerically as tn,
+    test_derivative_numerically as td)
 
 
 def test_TupleParametersBase():
@@ -36,7 +36,7 @@ def test_hyper():
 
     a1, a2, b1, b2, b3 = symbols('a1:3, b1:4')
     assert hyper((a1, a2), (b1, b2, b3), z).diff(z) == \
-             a1*a2/(b1*b2*b3) * hyper((a1 + 1, a2 + 1), (b1 + 1, b2 + 1, b3 + 1), z)
+        a1*a2/(b1*b2*b3) * hyper((a1 + 1, a2 + 1), (b1 + 1, b2 + 1, b3 + 1), z)
 
     # differentiation wrt parameters is not supported
     assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
@@ -44,7 +44,7 @@ def test_hyper():
     # hyper is unbranched wrt parameters
     from sympy import polar_lift
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
-           hyper([z], [k], polar_lift(x))
+        hyper([z], [k], polar_lift(x))
 
 
 def test_expand_func():
@@ -53,7 +53,7 @@ def test_expand_func():
     from sympy import gamma, expand_func
     a1, b1, c1 = randcplx(), randcplx(), randcplx() + 5
     assert expand_func(hyper([a, b], [c], 1)) == \
-           gamma(c)*gamma(-a - b + c)/(gamma(-a + c)*gamma(-b + c))
+        gamma(c)*gamma(-a - b + c)/(gamma(-a + c)*gamma(-b + c))
     assert abs(expand_func(hyper([a1, b1], [c1], 1)).n()
                - hyper([a1, b1], [c1], 1).n()) < 1e-10
 
@@ -61,8 +61,8 @@ def test_expand_func():
     assert expand_func(hyper([], [], z)) == exp(z)
     assert expand_func(hyper([1, 2, 3], [], z)) == hyper([1, 2, 3], [], z)
     assert expand_func(meijerg([[1, 1], []], [[1], [0]], z)) == log(z + 1)
-    assert expand_func(meijerg([[1, 1], []], [[], []], z)) \
-           == meijerg([[1, 1], []], [[], []], z)
+    assert expand_func(meijerg([[1, 1], []], [[], []], z)) == \
+        meijerg([[1, 1], []], [[], []], z)
 
 
 def test_radius_of_convergence():
@@ -89,7 +89,7 @@ def test_meijer():
     raises(TypeError, lambda: meijerg(((1,), (2,)), (3,), (4,), z))
 
     assert meijerg(((1, 2), (3,)), ((4,), (5,)), z) == \
-           meijerg(Tuple(1, 2), Tuple(3), Tuple(4), Tuple(5), z)
+        meijerg(Tuple(1, 2), Tuple(3), Tuple(4), Tuple(5), z)
 
     g = meijerg((1, 2), (3, 4, 5), (6, 7, 8, 9), (10, 11, 12, 13, 14), z)
     assert g.an == Tuple(1, 2)
@@ -131,23 +131,23 @@ def test_meijer():
          + (a1 - 1)*meijerg((a1, a2), (b1, b2), (c1, c2), (d1, d2), z))/z
 
     assert meijerg([z, z], [], [], [], z).diff(z) == \
-           Derivative(meijerg([z, z], [], [], [], z), z)
+        Derivative(meijerg([z, z], [], [], [], z), z)
 
     # meijerg is unbranched wrt parameters
     from sympy import polar_lift as pl
     assert meijerg([pl(a1)], [pl(a2)], [pl(b1)], [pl(b2)], pl(z)) == \
-           meijerg([a1], [a2], [b1], [b2], pl(z))
+        meijerg([a1], [a2], [b1], [b2], pl(z))
 
     # integrand
     from sympy.abc import a, b, c, d, s
     assert meijerg([a], [b], [c], [d], z).integrand(s) == \
-           z**s*gamma(c - s)*gamma(-a + s + 1)/(gamma(b - s)*gamma(-d + s + 1))
+        z**s*gamma(c - s)*gamma(-a + s + 1)/(gamma(b - s)*gamma(-d + s + 1))
 
 
 def test_meijerg_derivative():
     assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \
-           log(z)*meijerg([], [1, 1], [0, 0, x], [], z) \
-           + 2*meijerg([], [1, 1, 1], [0, 0, x, 0], [], z)
+        log(z)*meijerg([], [1, 1], [0, 0, x], [], z) \
+        + 2*meijerg([], [1, 1, 1], [0, 0, x, 0], [], z)
 
     y = randcplx()
     a = 5  # mpmath chokes with non-real numbers, and Mod1 with floats
@@ -212,15 +212,15 @@ def test_hyperrep():
             return d*n
     assert myrep(z).rewrite('nonrep') == Piecewise((0, abs(z) > 1), (a, True))
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrep') == \
-           Piecewise((0, abs(z) > 1), (b, True))
+        Piecewise((0, abs(z) > 1), (b, True))
     assert myrep(exp_polar(2*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((c, abs(z) > 1), (a, True))
+        Piecewise((c, abs(z) > 1), (a, True))
     assert myrep(exp_polar(3*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((d, abs(z) > 1), (b, True))
+        Piecewise((d, abs(z) > 1), (b, True))
     assert myrep(exp_polar(4*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((2*c, abs(z) > 1), (a, True))
+        Piecewise((2*c, abs(z) > 1), (a, True))
     assert myrep(exp_polar(5*I*pi)*z).rewrite('nonrep') == \
-           Piecewise((2*d, abs(z) > 1), (b, True))
+        Piecewise((2*d, abs(z) > 1), (b, True))
     assert myrep(z).rewrite('nonrepsmall') == a
     assert myrep(exp_polar(I*pi)*z).rewrite('nonrepsmall') == b
 
@@ -234,8 +234,8 @@ def test_hyperrep():
         if not tn(
             func.rewrite('nonrepsmall').subs(
                 z, exp_polar(I*pi)*z).replace(exp_polar, exp),
-                  func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
-                  z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
+            func.subs(z, exp_polar(I*pi)*z).rewrite('nonrepsmall'),
+                z, a=S(-1)/2, b=S(-1)/2, c=S(1)/2, d=S(1)/2):
             return False
         # Next check continuity along exp_polar(I*pi)*t
         expr = func.subs(z, exp_polar(I*pi)*z).rewrite('nonrep')
@@ -293,11 +293,11 @@ def test_meijerg_eval():
     for x_ in [0.5, 1.5]:
         for k_ in [0.5, S(1)/3, 0.25, 0.75, S(2)/3, 1.0, 1.5]:
             assert abs((expr1 - expr2).n(
-                          subs={x: x_, k: k_ + eps, l: k_ - eps})) < 1e-10
+                       subs={x: x_, k: k_ + eps, l: k_ - eps})) < 1e-10
             assert abs((expr1 - expr2).n(
-                          subs={x: x_, k: -k_ + eps, l: -k_ - eps})) < 1e-10
+                       subs={x: x_, k: -k_ + eps, l: -k_ - eps})) < 1e-10
 
     expr = (meijerg(((0.5,), ()), ((0.5, 0, 0.5), ()), exp_polar(-I*pi)/4)
             + meijerg(((0.5,), ()), ((0.5, 0, 0.5), ()), exp_polar(I*pi)/4)) \
-         /(2*sqrt(pi))
+        /(2*sqrt(pi))
     assert (expr - pi/exp(1)).n(chop=True) == 0

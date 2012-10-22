@@ -1,5 +1,5 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients, Mul, S, Pow, sieve
+    multinomial_coefficients, Mul, S, Pow, sieve
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -109,7 +109,7 @@ def test_isprime():
 
     assert _mr_safe_helper(
         "if n < 170584961: return mr(n, [350, 3958281543])") == \
-     ' # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]'
+        ' # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]'
     assert _mr_safe_helper(
         "if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])") == \
         ' # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases'
@@ -180,10 +180,10 @@ def test_generate():
     func = lambda i: (i**2 + 1) % 51
     assert cycle_length(func, 4).next() == (6, 2)
     assert list(cycle_length(func, 4, values=True)) == \
-           [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
     assert cycle_length(func, 4, nmax=5).next() == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
-           [17, 35, 2, 5, 26]
+        [17, 35, 2, 5, 26]
 
 
 def test_randprime():
@@ -287,7 +287,7 @@ def test_factorint():
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
     assert factorint(primorial(17) + 1, use_pm1=0) == \
-           {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
+        {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
     a = nextprime(2**2**8)  # 78 digits

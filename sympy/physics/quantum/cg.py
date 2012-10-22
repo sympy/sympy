@@ -136,7 +136,7 @@ class Wigner3j(Expr):
         label = map(printer._print, (self.j1, self.j2, self.j3,
                     self.m1, self.m2, self.m3))
         return r'\left(\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right)' % \
-                tuple(label)
+            tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -296,7 +296,7 @@ class Wigner6j(Expr):
         label = map(printer._print, (self.j1, self.j2, self.j12,
                     self.j3, self.j, self.j23))
         return r'\left\{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \end{array}\right\}' % \
-                tuple(label)
+            tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -400,7 +400,7 @@ class Wigner9j(Expr):
         label = map(printer._print, (self.j1, self.j2, self.j12, self.j3,
                 self.j4, self.j34, self.j13, self.j24, self.j))
         return r'\left\{\begin{array}{ccc} %s & %s & %s \\ %s & %s & %s \\ %s & %s & %s \end{array}\right\}' % \
-                tuple(label)
+            tuple(label)
 
     def doit(self, **hints):
         if self.is_symbolic:

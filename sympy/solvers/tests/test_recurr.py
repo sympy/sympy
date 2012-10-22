@@ -16,8 +16,8 @@ def test_rsolve_poly():
     assert rsolve_poly([-n - 1, n], 1, n) == C1*n - 1
     assert rsolve_poly([-4*n - 2, 1], 4*n + 1, n) == -1
 
-    assert rsolve_poly([-1, 1], n**5 + n**3, n) == C0 - n**3 / 2 - \
-                       n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
+    assert rsolve_poly([-1, 1], n**5 + n**3, n) == \
+        C0 - n**3 / 2 - n**5 / 2 + n**2 / 6 + n**6 / 6 + 2*n**4 / 3
 
 
 def test_rsolve_ratio():
@@ -25,7 +25,7 @@ def test_rsolve_ratio():
         -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8], 0, n)
 
     assert solution in [
-                  C1*((-2*n + 3)/(n**2 - 1))/3,
+        C1*((-2*n + 3)/(n**2 - 1))/3,
         (S(1)/2)*(C1*(-3 + 2*n)/(-1 + n**2)),
         (S(1)/2)*(C1*( 3 - 2*n)/( 1 - n**2)),
         (S(1)/2)*(C2*(-3 + 2*n)/(-1 + n**2)),
@@ -71,9 +71,9 @@ def recurrence_term(c, f):
 
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
-    funcs = [ n, n + 1, n**2, n**3, n**4, n + n**2, 27*n + 52*n**2 - 3* \
+    funcs = [ n, n + 1, n**2, n**3, n**4, n + n**2, 27*n + 52*n**2 - 3*
         n**3 + 12*n**4 - 52*n**5 ]
-    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2 - \
+    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2 -
         n + 12, 1] ]
     for p in funcs:
         # compute difference
@@ -88,16 +88,16 @@ def test_rsolve_bulk():
 def test_rsolve():
     f = y(n + 2) - y(n + 1) - y(n)
     h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
-      - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
+        - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
 
     assert rsolve(f, y(n)) in [
         C0*(S.Half - S.Half*sqrt(5))**n + C1*(S.Half + S.Half*sqrt(5))**n,
         C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
     ]
 
-    assert rsolve(f, y(n), [      0,      5 ]) == h
-    assert rsolve(f, y(n), {   0: 0,   1: 5 }) == h
-    assert rsolve(f, y(n), { y(0): 0, y(1): 5 }) == h
+    assert rsolve(f, y(n), [0, 5]) == h
+    assert rsolve(f, y(n), {0: 0, 1: 5}) == h
+    assert rsolve(f, y(n), {y(0): 0, y(1): 5}) == h
     assert rsolve(y(n) - y(n - 1) - y(n - 2), y(n), [0, 5]) == h
     assert rsolve(Eq(y(n), y(n - 1) + y(n - 2)), y(n), [0, 5]) == h
 
@@ -111,9 +111,9 @@ def test_rsolve():
     assert rsolve(f, y(n), []) == g
     assert rsolve(f, y(n), {}) == g
 
-    assert rsolve(f, y(n), [      0,      3 ]) == h
-    assert rsolve(f, y(n), {   0: 0,   1: 3 }) == h
-    assert rsolve(f, y(n), { y(0): 0, y(1): 3 }) == h
+    assert rsolve(f, y(n), [0, 3]) == h
+    assert rsolve(f, y(n), {0: 0, 1: 3}) == h
+    assert rsolve(f, y(n), {y(0): 0, y(1): 3}) == h
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 

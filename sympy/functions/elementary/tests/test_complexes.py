@@ -66,7 +66,7 @@ def test_re():
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == \
-           (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
+        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
 
 def test_im():
@@ -125,7 +125,7 @@ def test_im():
     assert im(a * (2 + b*I)) == a*b
 
     assert im((1 + sqrt(a + b*I))/2) == \
-           (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
+        (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
 
 def test_sign():
@@ -207,7 +207,7 @@ def test_as_real_imag():
            (
                (a**2 + b**2)**Rational(
                    1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
-            (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
+               (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
 
 @XFAIL
@@ -396,16 +396,16 @@ def test_periodic_argument():
     assert N_equals(periodic_argument((1 + I)**2, 3*pi), pi/2)
     assert N_equals(periodic_argument((1 - I)**2, 3*pi), -pi/2)
 
-    assert unbranched_argument(principal_branch(x, pi)) \
-           == periodic_argument(x, pi)
+    assert unbranched_argument(principal_branch(x, pi)) == \
+        periodic_argument(x, pi)
 
     assert unbranched_argument(polar_lift(2 + I)) == unbranched_argument(2 + I)
-    assert periodic_argument(polar_lift(2 + I), 2*pi) \
-           == periodic_argument(2 + I, 2*pi)
-    assert periodic_argument(polar_lift(2 + I), 3*pi) \
-           == periodic_argument(2 + I, 3*pi)
-    assert periodic_argument(polar_lift(2 + I), pi) \
-           == periodic_argument(polar_lift(2 + I), pi)
+    assert periodic_argument(polar_lift(2 + I), 2*pi) == \
+        periodic_argument(2 + I, 2*pi)
+    assert periodic_argument(polar_lift(2 + I), 3*pi) == \
+        periodic_argument(2 + I, 3*pi)
+    assert periodic_argument(polar_lift(2 + I), pi) == \
+        periodic_argument(polar_lift(2 + I), pi)
 
     assert unbranched_argument(polar_lift(1 + I)) == pi/4
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
@@ -431,7 +431,7 @@ def test_principal_branch():
     assert principal_branch(-1, 2*pi) == exp_polar(I*pi)
     assert principal_branch(-1, pi) == exp_polar(0)
     assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
-           principal_branch(exp_polar(I*pi)*x, 2*pi)
+        principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
 
     assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)

@@ -156,7 +156,7 @@ class BernoulliPSpace(SingleFinitePSpace):
     {Heads: 1/2, Tails: 1/2}
     """
 
-    def __new__(cls, name,  p, succ, fail):
+    def __new__(cls, name, p, succ, fail):
         succ, fail, p = map(sympify, (succ, fail, p))
         density = {succ: p, fail: (1 - p)}
         return cls.fromdict(name, density)

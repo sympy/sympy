@@ -733,7 +733,7 @@ class KanesMethod(object):
             dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
                 fkf.jacobian(qi) + (fku.jacobian(qd) + fkf.jacobian(qd)) *
-                    dqd_dqi)
+                dqd_dqi)
             f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi)
             f1_u = f1.jacobian(ui)
             f2_jac_qdot = f2.jacobian(qdot)

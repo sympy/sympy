@@ -131,9 +131,9 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         k = 1
     if type(n) is not tuple:
         rv = (m, sorted([(f,
-                            tuple([M] + list(smoothness(f + m))))
-                            for f, M in [i for i in facs.items()]],
-                            key=lambda x: (x[1][k], x[0])))
+                          tuple([M] + list(smoothness(f + m))))
+                         for f, M in [i for i in facs.items()]],
+                        key=lambda x: (x[1][k], x[0])))
     else:
         rv = n
 
@@ -618,12 +618,8 @@ def _trial(factors, n, candidates, verbose=False):
     return int(n), len(factors) != nfactors
 
 
-def _check_termination(factors, n,
-                                   limitp1,
-                                   use_trial,
-                                   use_rho,
-                                   use_pm1,
-                                   verbose):
+def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
+                       verbose):
     """
     Helper function for integer factorization. Checks if ``n``
     is a prime or a perfect power, and in those cases updates
@@ -642,12 +638,8 @@ def _check_termination(factors, n,
             limit = limitp1 - 1
         else:
             limit = limitp1
-        facs = factorint(base,
-                               limit,
-                               use_trial,
-                               use_rho,
-                               use_pm1,
-                               verbose=False)
+        facs = factorint(base, limit, use_trial, use_rho, use_pm1,
+                         verbose=False)
         for b, e in facs.items():
             if verbose:
                 print factor_msg % (b, e)
@@ -912,13 +904,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     """
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
-        factordict = factorint(n,
-                     limit=limit,
-                     use_trial=use_trial,
-                     use_rho=use_rho,
-                     use_pm1=use_pm1,
-                     verbose=verbose,
-                     visual=False)
+        factordict = factorint(n, limit=limit, use_trial=use_trial,
+                               use_rho=use_rho, use_pm1=use_pm1,
+                               verbose=verbose, visual=False)
     elif isinstance(n, Mul):
         factordict = dict([(int(k), int(v)) for k, v in
                            n.as_powers_dict().items()])
@@ -930,13 +918,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if isprime(k):
                 continue
             e = factordict.pop(k)
-            d = factorint(k,
-                           limit=limit,
-                           use_trial=use_trial,
-                           use_rho=use_rho,
-                           use_pm1=use_pm1,
-                           verbose=verbose,
-                           visual=False)
+            d = factorint(k, limit=limit, use_trial=use_trial, use_rho=use_rho,
+                          use_pm1=use_pm1, verbose=verbose, visual=False)
             for k, v in d.items():
                 if k in factordict:
                     factordict[k] += v*e
@@ -968,7 +951,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if n < 0:
         factors = factorint(
             -n, limit=limit, use_trial=use_trial, use_rho=use_rho,
-        use_pm1=use_pm1, verbose=verbose, visual=False)
+            use_pm1=use_pm1, verbose=verbose, visual=False)
         factors[-1] = 1
         return factors
 
@@ -1024,12 +1007,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print 'Exceeded limit:', limit
 
-            _check_termination(factors, n,
-                                           limit,
-                                           use_trial,
-                                           use_rho,
-                                           use_pm1,
-                                           verbose)
+            _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
+                               verbose)
 
             if n > 1:
                 factors[int(n)] = 1
@@ -1057,22 +1036,15 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 if limit:
                     limit -= 1
                 for r in [a - b, a + b]:
-                    facs = factorint(r,
-                                limit=limit,
-                                use_trial=use_trial,
-                                use_rho=use_rho,
-                                use_pm1=use_pm1,
-                                verbose=verbose)
+                    facs = factorint(r, limit=limit, use_trial=use_trial,
+                                     use_rho=use_rho, use_pm1=use_pm1,
+                                     verbose=verbose)
                     factors.update(facs)
                 raise StopIteration
 
             # ...see if factorization can be terminated
-            _check_termination(factors, n,
-                                           limit,
-                                           use_trial,
-                                           use_rho,
-                                           use_pm1,
-                                           verbose)
+            _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
+                               verbose)
 
     except StopIteration:
         if verbose:
@@ -1101,12 +1073,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 ps = sieve.primerange(low, high_)
                 n, found_trial = _trial(factors, n, ps, verbose)
                 if found_trial:
-                    _check_termination(factors, n,
-                                                   limit,
-                                                   use_trial,
-                                                   use_rho,
-                                                   use_pm1,
-                                                   verbose)
+                    _check_termination(factors, n, limit, use_trial, use_rho,
+                                       use_pm1, verbose)
             else:
                 found_trial = False
 
@@ -1129,19 +1097,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                         c = pollard_pm1(n, B=high_root, seed=high_)
                         if c:
                             # factor it and let _trial do the update
-                            ps = factorint(c,
-                                            limit=limit - 1,
-                                            use_trial=use_trial,
-                                            use_rho=use_rho,
-                                            use_pm1=use_pm1,
-                                            verbose=verbose)
+                            ps = factorint(c, limit=limit - 1,
+                                           use_trial=use_trial,
+                                           use_rho=use_rho,
+                                           use_pm1=use_pm1,
+                                           verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
-                            _check_termination(factors, n,
-                                                           limit,
-                                                           use_trial,
-                                                           use_rho,
-                                                           use_pm1,
-                                                           verbose)
+                            _check_termination(factors, n, limit, use_trial,
+                                               use_rho, use_pm1, verbose)
 
                     # Pollard rho
                     if use_rho:
@@ -1149,22 +1112,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                         if verbose:
                             print (rho_msg % (1, max_steps, high_))
                         c = pollard_rho(n, retries=1, max_steps=max_steps,
-                                           seed=high_)
+                                        seed=high_)
                         if c:
                             # factor it and let _trial do the update
-                            ps = factorint(c,
-                                            limit=limit - 1,
-                                            use_trial=use_trial,
-                                            use_rho=use_rho,
-                                            use_pm1=use_pm1,
-                                            verbose=verbose)
+                            ps = factorint(c, limit=limit - 1,
+                                           use_trial=use_trial,
+                                           use_rho=use_rho,
+                                           use_pm1=use_pm1,
+                                           verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
-                            _check_termination(factors, n,
-                                                           limit,
-                                                           use_trial,
-                                                           use_rho,
-                                                           use_pm1,
-                                                           verbose)
+                            _check_termination(factors, n, limit, use_trial,
+                                               use_rho, use_pm1, verbose)
 
         except StopIteration:
             if verbose:

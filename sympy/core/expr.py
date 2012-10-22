@@ -561,14 +561,14 @@ class Expr(Basic, EvalfMixin):
             return True
 
         if all(f.is_Atom for m in Add.make_args(diff)
-                           for f in Mul.make_args(m)):
+               for f in Mul.make_args(m)):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
 
         constant = diff.is_constant(simplify=False, failing_number=True)
         if constant is False or \
-           not diff.free_symbols and not diff.is_number:
+                not diff.free_symbols and not diff.is_number:
             return False
         elif constant is True:
             ndiff = diff._random()
@@ -778,7 +778,7 @@ class Expr(Basic, EvalfMixin):
                     _order.append((term, repr))
 
             ordered = sorted(_terms, key=key, reverse=True) \
-                    + sorted(_order, key=key, reverse=True)
+                + sorted(_order, key=key, reverse=True)
 
         if data:
             return ordered, gens

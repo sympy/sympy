@@ -8,8 +8,8 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix,\
-     matrix_to_qubit
+from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix, \
+    matrix_to_qubit
 from sympy.physics.quantum.matrixutils import matrix_to_zero
 from sympy.physics.quantum.matrixcache import sqrt2_inv
 from sympy.physics.quantum import Dagger
@@ -222,7 +222,7 @@ def test_gate_sort():
     # trials = 10
     # for i in range(trials):
     #     c = random_circuit(ngates, nqubits)
-    #     assert represent(c, nqubits=nqubits) ==\
+    #     assert represent(c, nqubits=nqubits) == \
     #            represent(gate_sort(c), nqubits=nqubits)
 
 

@@ -719,7 +719,7 @@ class DiagramGrid(object):
                 def good_triangle(tri):
                     objs = DiagramGrid._triangle_objects(tri)
                     return obj in objs and \
-                           placed_objects & (objs - set([obj])) == set()
+                        placed_objects & (objs - set([obj])) == set()
 
                 tris = [tri for tri in triangles if good_triangle(tri)]
                 if not tris:
@@ -2048,7 +2048,7 @@ class XypicDiagramDrawer(object):
             # This is a loop morphism.
             (curving, label_pos, looping_start,
              looping_end) = XypicDiagramDrawer._process_loop_morphism(
-                i, j, grid, morphisms_str_info, object_coords)
+                 i, j, grid, morphisms_str_info, object_coords)
         elif (delta_i == 0) and (abs(j - target_j) > 1):
             # This is a horizontal morphism.
             (curving, label_pos) = XypicDiagramDrawer._process_horizontal_morphism(
@@ -2063,7 +2063,7 @@ class XypicDiagramDrawer(object):
         if curving:
             # This morphisms should be curved anyway.
             curving_amount = self.default_curving_amount + count * \
-                             self.default_curving_step
+                self.default_curving_step
         elif count:
             # There are no objects between the domain and codomain of
             # the current morphism, but this is not there already are
@@ -2073,8 +2073,8 @@ class XypicDiagramDrawer(object):
             filtered_morphisms = count_morphisms_filtered(
                 morphism.domain, morphism.codomain, curving)
             curving_amount = self.default_curving_amount + \
-                             filtered_morphisms * \
-                             self.default_curving_step
+                filtered_morphisms * \
+                self.default_curving_step
 
         # Let's now get the name of the morphism.
         morphism_name = ""
@@ -2288,7 +2288,7 @@ class XypicDiagramDrawer(object):
                 # Horizontal morphism.
                 (free_up, free_down,
                  backwards) = XypicDiagramDrawer._check_free_space_horizontal(
-                    dom_i, dom_j, cod_j, grid)
+                     dom_i, dom_j, cod_j, grid)
 
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)
@@ -2296,7 +2296,7 @@ class XypicDiagramDrawer(object):
                 # Vertical morphism.
                 (free_left, free_right,
                  backwards) = XypicDiagramDrawer._check_free_space_vertical(
-                    dom_i, cod_i, dom_j, grid)
+                     dom_i, cod_i, dom_j, grid)
 
                 set_label_position(free_left, free_right, "_", "^",
                                    backwards, m_str_info)
@@ -2304,7 +2304,7 @@ class XypicDiagramDrawer(object):
                 # A diagonal morphism.
                 (free_up, free_down,
                  backwards) = XypicDiagramDrawer._check_free_space_diagonal(
-                    dom_i, cod_i, dom_j, cod_j, grid)
+                     dom_i, cod_i, dom_j, cod_j, grid)
 
                 set_label_position(free_up, free_down, "^", "_",
                                    backwards, m_str_info)

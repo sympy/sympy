@@ -51,10 +51,10 @@ def test_checkodesol():
         solve_for_func=False) == (True, 0)
     assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
-            [(True, 0), (True, 0), (False, 2*C2)]
+        [(True, 0), (True, 0), (False, 2*C2)]
     assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
-            set([(True, 0), (True, 0), (False, 2*C2)])
+        set([(True, 0), (True, 0), (False, 2*C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -153,20 +153,16 @@ def test_classify_ode():
     assert a == b == c != ()
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-        ) == ('Bernoulli', 'Bernoulli_Integral')
-    assert 'Riccati_special_minus2' in\
+    ) == ('Bernoulli', 'Bernoulli_Integral')
+    assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
         y), f(x, y)))
     # 2077
     k = Symbol('k')
-    assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
-                 2*f(x)/(k*f(x) + k*x*f(x)) +
-                 x*f(x).diff(x)/(k*f(x) + k*x*f(x))
-                 + z, f(x)) == ('separable',
-                                '1st_exact',
-                                'separable_Integral',
-                                '1st_exact_Integral')
+    assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
+        k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
+        ('separable', '1st_exact', 'separable_Integral', '1st_exact_Integral')
     # preprocessing
     ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
@@ -383,7 +379,7 @@ def test_separable2():
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
     sol6str = ("Integral((_y - 2)/_y**3, (_y, f(x))) "
-                "== C1 + Integral(x**(-2), x)")
+               "== C1 + Integral(x**(-2), x)")
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
@@ -438,9 +434,9 @@ def test_separable5():
     sol19b = Eq(f(x), -1 + C1*exp(-x)/(-1 + x))
     sol19c = Eq(f(x), -1/(1 - x) + x/(1 - x) + C1*exp(-x)/(1 - x))
     sol19d = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x)) - exp(x) + x*exp(x))/
-                        ((1 - x)*(-x*exp(x) + exp(x))))
+                ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
-                            x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
+                       x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol19f = Eq(f(x), (C1 + (x - 1)*exp(x))*exp(-x)/(-x + 1))
     sol19g = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
@@ -451,7 +447,7 @@ def test_separable5():
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
     assert dsolve(
         eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
-                                              sol19d, sol19e]
+                                    sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
@@ -900,10 +896,10 @@ def test_undetermined_coefficients_match():
         sin(x)*x**2 + sin(x)*x + sin(x), x) == {'test': True, 'trialset': s}
     assert _undetermined_coefficients_match(
         exp(2*x)*sin(x)*(x**2 + x + 1), x
-        ) == {
-            'test': True, 'trialset': set([exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
+    ) == {
+        'test': True, 'trialset': set([exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
         cos(x)*exp(2*x), x**2*cos(x)*exp(2*x), x*cos(x)*exp(2*x),
-                x*exp(2*x)*sin(x)])}
+        x*exp(2*x)*sin(x)])}
     assert _undetermined_coefficients_match(1/sin(x), x) == {'test': False}
     assert _undetermined_coefficients_match(log(x), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x) == \
@@ -922,14 +918,14 @@ def test_undetermined_coefficients_match():
         {'test': False}
     assert _undetermined_coefficients_match(
         x**2*sin(x)*exp(x) + x*sin(x) + x, x
-        ) == {
-            'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
+    ) == {
+        'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
-                x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
+        x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
         'trialset': set([x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)]),
         'test': True,
-        }
+    }
     assert _undetermined_coefficients_match(2**x*x, x) == \
         {'test': True, 'trialset': set([2**x, x*2**x])}
     assert _undetermined_coefficients_match(2**x*exp(2*x), x) == \
@@ -985,8 +981,8 @@ def test_undetermined_coefficients_match():
     # converted from exp(2*x)*sin(x)**2
     assert _undetermined_coefficients_match(
         exp(2*x)*(S(1)/2 + cos(2*x)/2), x
-        ) == {
-            'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
+    ) == {
+        'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
         exp(2*x)])}
     assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x) == \
         {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
@@ -1065,7 +1061,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol24 = Eq(f(x), S(1)/2 - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
     sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) +
-                    (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
+               (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
     sol26 = Eq(f(x),
         C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
     sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
@@ -1337,8 +1333,8 @@ def test_constant_renumber_order_issue2209():
     from sympy.utilities.iterables import variations
 
     assert constant_renumber(C1*x + C2*y, "C", 1, 2) == \
-           constant_renumber(C1*y + C2*x, "C", 1, 2) == \
-           C1*x + C2*y
+        constant_renumber(C1*y + C2*x, "C", 1, 2) == \
+        C1*x + C2*y
     e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
         assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e

@@ -67,7 +67,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         if not isinstance(other, PolynomialRingBase):
             return False
         return self.dtype == other.dtype and self.dom == other.dom and \
-               self.gens == other.gens and self.order == other.order
+            self.gens == other.gens and self.order == other.order
 
     def __ne__(self, other):
         """Returns `False` if two domains are equivalent. """
@@ -305,7 +305,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):
             from sympy.printing.str import sstr
             raise CoercionFailed("denominator %s not allowed in %s"
-                                  % (sstr(res), self))
+                                 % (sstr(res), self))
         return res
 
     def __contains__(self, a):

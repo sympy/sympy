@@ -24,11 +24,11 @@
 
 from __future__ import with_statement
 
-from sympy import symbols
+from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
 from sympy.utilities.codegen import(
-        codegen, Routine, InputArgument, Result, get_code_generator
-        )
+    codegen, Routine, InputArgument, Result, get_code_generator
+)
 import sys
 import os
 import tempfile
@@ -85,35 +85,35 @@ numerical_test_template['F95'] = """
 
 compile_commands = {}
 compile_commands['cc'] = [
-        "cc -c codegen.c -o codegen.o",
-        "cc -c main.c -o main.o",
-        "cc main.o codegen.o -lm -o test.exe"
-        ]
+    "cc -c codegen.c -o codegen.o",
+    "cc -c main.c -o main.o",
+    "cc main.o codegen.o -lm -o test.exe"
+]
 
 compile_commands['gfortran'] = [
-        "gfortran -c codegen.f90 -o codegen.o",
-        "gfortran -ffree-line-length-none -c main.f90 -o main.o",
-        "gfortran main.o codegen.o -o test.exe"
-        ]
+    "gfortran -c codegen.f90 -o codegen.o",
+    "gfortran -ffree-line-length-none -c main.f90 -o main.o",
+    "gfortran main.o codegen.o -o test.exe"
+]
 
 compile_commands['g95'] = [
-        "g95 -c codegen.f90 -o codegen.o",
-        "g95 -ffree-line-length-huge -c main.f90 -o main.o",
-        "g95 main.o codegen.o -o test.exe"
-        ]
+    "g95 -c codegen.f90 -o codegen.o",
+    "g95 -ffree-line-length-huge -c main.f90 -o main.o",
+    "g95 main.o codegen.o -o test.exe"
+]
 
 compile_commands['ifort'] = [
-        "ifort -c codegen.f90 -o codegen.o",
-        "ifort -c main.f90 -o main.o",
-        "ifort main.o codegen.o -o test.exe"
-        ]
+    "ifort -c codegen.f90 -o codegen.o",
+    "ifort -c main.f90 -o main.o",
+    "ifort main.o codegen.o -o test.exe"
+]
 
 combinations_lang_compiler = [
-        ('C',   'cc'),
-        ('F95', 'ifort'),
-        ('F95', 'gfortran'),
-        ('F95', 'g95')
-        ]
+    ('C', 'cc'),
+    ('F95', 'ifort'),
+    ('F95', 'gfortran'),
+    ('F95', 'g95')
+]
 
 
 def try_run(commands):
@@ -182,7 +182,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         f_name = "main.c"
     else:
         raise NotImplemented(
-                "FIXME: filename extension unknown for language: %s" % language)
+            "FIXME: filename extension unknown for language: %s" % language)
 
     with open(f_name, "w") as f:
         f.write(
@@ -245,10 +245,9 @@ def fortranize_double_constants(code_string):
 
 def is_feasible(language, commands):
     # This test should always work, otherwise the compiler is not present.
-    x = symbols('x')
     routine = Routine("test", x)
     numerical_tests = [
-        ("test", ( 1.0,),  1.0, 1e-15),
+        ("test", ( 1.0,), 1.0, 1e-15),
         ("test", (-1.0,), -1.0, 1e-15),
     ]
     try:
@@ -293,7 +292,6 @@ def test_F95_g95():
 
 
 def test_basic_codegen():
-    x, y, z = symbols('x,y,z')
     numerical_tests = [
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),
@@ -307,7 +305,6 @@ def test_intrinsic_math1_codegen():
     # not included: log10
     from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
         sin, sinh, sqrt, tan, tanh, N
-    x = symbols('x')
     name_expr = [
         ("test_fabs", abs(x)),
         ("test_acos", acos(x)),
@@ -340,7 +337,6 @@ def test_intrinsic_math1_codegen():
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
-    x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
@@ -356,7 +352,6 @@ def test_instrinsic_math2_codegen():
 
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N
-    x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),

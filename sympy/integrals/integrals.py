@@ -664,8 +664,8 @@ class Integral(Expr):
         # There is no trivial answer, so continue
 
         undone_limits = []
-        ulj = set(
-            )  # free symbols of any undone limits' upper and lower limits
+        # ulj = free symbols of any undone limits' upper and lower limits
+        ulj = set()
         for xab in self.limits:
             # compute uli, the free symbols in the
             # Upper and Lower limits of limit I
@@ -717,8 +717,8 @@ class Integral(Expr):
 
             meijerg1 = meijerg
             if len(xab) == 3 and xab[1].is_real and xab[2].is_real \
-               and not function.is_Poly and \
-               (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
+                and not function.is_Poly and \
+                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
                 ret = try_meijerg(function, xab)
                 if ret is not None:
                     function = ret
