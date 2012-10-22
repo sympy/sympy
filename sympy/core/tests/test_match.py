@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    var, Wild
+    var, Wild, pi
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -443,7 +443,7 @@ def test_issue_784():
 
 
 def test_issue_1319():
-    x = symbols('x')
+    x = Symbol('x')
     a, b, c = symbols('a b c', cls=Wild, exclude=(x,))
     f, g = symbols('f g', cls=Function)
 
@@ -457,7 +457,7 @@ def test_issue_1319():
 
 def test_issue_1601():
     f = Function('f')
-    x = symbols('x')
+    x = Symbol('x')
     a, b = symbols('a b', cls=Wild, exclude=(f(x),))
 
     p = a*f(x) + b
@@ -474,7 +474,7 @@ def test_issue_1601():
 
 def test_issue_2069():
     a, b, c = symbols('a b c', cls=Wild)
-    x = symbols('x')
+    x = Symbol('x')
     f = Function('f')
 
     assert x.match(a) == {a: x}
@@ -496,3 +496,15 @@ def test_issue_2069():
     assert (-2*x).match(a*f(x)**c) == {a: -2*x, c: 0}
     assert (-2*x).match(a*b) == {a: -2, b: x}
     assert (-2*x).match(a*b*f(x)**c) == {a: -2, b: x, c: 0}
+
+
+def test_issue_1460():
+    a = Wild('a')
+    e = S(3)
+    assert e.match(1/a) == {a: 1/e}
+    assert e.match(1/a**2) == {a: 1/sqrt(e)}
+    e = pi
+    assert e.match(1/a) == {a: 1/e}
+    assert e.match(1/a**2) == {a: 1/sqrt(e)}
+    assert (-e).match(sqrt(a)) is None
+    assert (-e).match(a**2) == {a: I*sqrt(pi)}
