@@ -7,7 +7,7 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild)
+    symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -1416,3 +1416,11 @@ def test_Piecewise():
     s3 = simplify(e3)
     assert simplify(Piecewise((e1, x < e2), (e3, True))) == \
         Piecewise((s1, x < s2), (s3, True))
+
+def test_polymorphism():
+    class A(Basic):
+        def _simplify(x, **kwargs):
+            return 1
+
+    a = A(5, 2)
+    assert simplify(a) == 1
