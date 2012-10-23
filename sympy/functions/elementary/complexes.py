@@ -416,9 +416,9 @@ class Abs(Function):
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         when = Eq(direction, 0)
         return Piecewise(
-                         ((s.subs(direction, 0)), when),
-                         (sign(direction)*s, True),
-                         )
+            ((s.subs(direction, 0)), when),
+            (sign(direction)*s, True),
+        )
 
     def _sage_(self):
         import sage.all as sage
@@ -787,7 +787,7 @@ class principal_branch(Function):
         ub = periodic_argument(x, oo)
         barg = periodic_argument(x, period)
         if ub != barg and not ub.has(periodic_argument) \
-           and not barg.has(periodic_argument):
+                and not barg.has(periodic_argument):
             pl = polar_lift(x)
 
             def mr(expr):
@@ -821,7 +821,7 @@ class principal_branch(Function):
                 return abs(c)*principal_branch(Mul(*m), period)
             return principal_branch(exp_polar(I*arg)*Mul(*m), period)*abs(c)
         if arg.is_number and ((abs(arg) < period/2) is True or arg == period/2) \
-           and m == ():
+                and m == ():
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):

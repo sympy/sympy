@@ -51,7 +51,7 @@ class LatexPrinter(Printer):
 
         if 'mode' in self._settings:
             valid_modes = ['inline', 'plain', 'equation',
-                            'equation*']
+                           'equation*']
             if self._settings['mode'] not in valid_modes:
                 raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
@@ -271,8 +271,8 @@ class LatexPrinter(Printer):
             else:
                 return tex
         elif self._settings['fold_frac_powers'] \
-             and expr.exp.is_Rational \
-             and expr.exp.q != 1:
+            and expr.exp.is_Rational \
+                and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_Function:
@@ -389,7 +389,7 @@ class LatexPrinter(Printer):
             # \" is an escaped quote
             tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
             symbols = [r"\, d%s" % self._print(symbol[0])
-                                               for symbol in expr.limits]
+                       for symbol in expr.limits]
 
         else:
             for lim in reversed(expr.limits):
@@ -398,7 +398,7 @@ class LatexPrinter(Printer):
 
                 if len(lim) > 1:
                     if self._settings['mode'] in ['equation', 'equation*'] \
-                       and not self._settings['itex']:
+                            and not self._settings['itex']:
                         tex += r"\limits"
 
                     if len(lim) == 3:
@@ -437,8 +437,8 @@ class LatexPrinter(Printer):
             inv_trig_power_case = False
             # If it is applicable to fold the argument brackets
             can_fold_brackets = self._settings['fold_func_brackets'] and \
-                                len(args) == 1 and \
-                                not self._needs_function_brackets(expr.args[0])
+                len(args) == 1 and \
+                not self._needs_function_brackets(expr.args[0])
 
             inv_trig_table = ["asin", "acos", "atan", "acot"]
 
@@ -760,7 +760,7 @@ class LatexPrinter(Printer):
     def _print_hyper(self, expr, exp=None):
         tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
               r"\middle| {%s} \right)}" % \
-             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
 
@@ -771,7 +771,7 @@ class LatexPrinter(Printer):
     def _print_meijerg(self, expr, exp=None):
         tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
               r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
-             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
               self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
@@ -971,10 +971,10 @@ class LatexPrinter(Printer):
 
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
-                       for e, c in expr.args[:-1]]
+                   for e, c in expr.args[:-1]]
         if expr.args[-1].cond is True:
             ecpairs.append(r"%s & \text{otherwise}" %
-                               self._print(expr.args[-1].expr))
+                           self._print(expr.args[-1].expr))
         else:
             ecpairs.append(r"%s & \text{for}\: %s" %
                            (self._print(expr.args[-1].expr),
@@ -1136,9 +1136,9 @@ class LatexPrinter(Printer):
 
     def _print_TransformationSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}" % (
-                self._print(s.lamda.expr),
-                ', '.join([self._print(var) for var in s.lamda.variables]),
-                self._print(s.base_set))
+            self._print(s.lamda.expr),
+            ', '.join([self._print(var) for var in s.lamda.variables]),
+            self._print(s.base_set))
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1319,15 +1319,15 @@ class LatexPrinter(Printer):
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
         return r"\left[ %s \right]" % ",".join(
-                '{' + self._print(x) + '}' for x in m)
+            '{' + self._print(x) + '}' for x in m)
 
     def _print_SubModule(self, m):
         return r"\left< %s \right>" % ",".join(
-                '{' + self._print(x) + '}' for x in m.gens)
+            '{' + self._print(x) + '}' for x in m.gens)
 
     def _print_ModuleImplementedIdeal(self, m):
         return r"\left< %s \right>" % ",".join(
-                '{' + self._print(x) + '}' for [x] in m._module.gens)
+            '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

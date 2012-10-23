@@ -89,7 +89,7 @@ def test_logic_combine_args():
     assert Or( Or('a', 'b'), Or('c', 'd') ) == Or('a', 'b', 'c', 'd')
 
     assert Or( 't', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't', And('n', 'r') ) == \
-                    Or('t', And('n', 'p', 'r'), And('n', 'r'))
+        Or('t', And('n', 'p', 'r'), And('n', 'r'))
 
 
 def test_logic_expand():
@@ -100,8 +100,8 @@ def test_logic_expand():
     assert t.expand() == And('a', 'b')
 
     t = And(Or('a', 'b'), Or('c', 'd'))
-    assert t.expand(
-        ) == Or(And('a', 'c'), And('a', 'd'), And('b', 'c'), And('b', 'd'))
+    assert t.expand() == \
+        Or(And('a', 'c'), And('a', 'd'), And('b', 'c'), And('b', 'd'))
 
 
 def test_logic_fromstring():

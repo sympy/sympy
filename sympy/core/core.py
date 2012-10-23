@@ -40,7 +40,7 @@ ordering_of_classes = [
     # relational operations
     'Equality', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
     'GreaterThan', 'LessThan',
-    ]
+]
 
 
 class BasicType(type):

@@ -33,7 +33,7 @@ def fix_file(filename):
 
     # print differences in an unified diff format
     d = difflib.unified_diff(orig.split("\n"), s.split("\n"),
-        fromfile=filename, tofile=filename+".new", lineterm="")
+        fromfile=filename, tofile=filename + ".new", lineterm="")
     import sys
     for l in d:
         print l

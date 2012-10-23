@@ -9,8 +9,8 @@ import numpy
 import time
 
 if __name__ == '__main__':
-    metric = '1 0 0,' +\
-             '0 1 0,' +\
+    metric = '1 0 0,' \
+             '0 1 0,' \
              '0 0 1'
 
     gamma_x, gamma_y, gamma_z = GA.MV.setup(

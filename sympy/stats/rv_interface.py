@@ -82,9 +82,9 @@ def covariance(X, Y, condition=None, **kwargs):
     """
 
     return expectation(
-            (X - expectation(X, condition, **kwargs)) *
-            (Y - expectation(Y, condition, **kwargs)),
-                      condition, **kwargs)
+        (X - expectation(X, condition, **kwargs)) *
+        (Y - expectation(Y, condition, **kwargs)),
+        condition, **kwargs)
 
 
 def skewness(X, condition=None, **kwargs):

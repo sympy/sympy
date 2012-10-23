@@ -44,7 +44,7 @@ def Ylm(l, m, theta, phi):
     l, m, theta, phi = [sympify(x) for x in (l, m, theta, phi)]
     factorial = C.factorial
     return sqrt((2*l + 1)/(4*pi) * factorial(l - m)/factorial(l + m)) * \
-            Plmcos(l, m, theta) * C.exp(I*m*phi)
+        Plmcos(l, m, theta) * C.exp(I*m*phi)
 
 
 def Ylm_c(l, m, theta, phi):
@@ -58,13 +58,13 @@ def Zlm(l, m, th, ph):
     """
     from sympy import simplify
     if m > 0:
-        zz = C.NegativeOne(
-            )**m*(Ylm(l, m, th, ph) + Ylm_c(l, m, th, ph))/sqrt(2)
+        zz = C.NegativeOne()**m * \
+            (Ylm(l, m, th, ph) + Ylm_c(l, m, th, ph))/sqrt(2)
     elif m == 0:
         return Ylm(l, m, th, ph)
     else:
-        zz = C.NegativeOne(
-            )**m*(Ylm(l, -m, th, ph) - Ylm_c(l, -m, th, ph))/(I*sqrt(2))
+        zz = C.NegativeOne()**m * \
+            (Ylm(l, -m, th, ph) - Ylm_c(l, -m, th, ph))/(I*sqrt(2))
 
     zz = zz.expand(complex=True)
     zz = simplify(zz)

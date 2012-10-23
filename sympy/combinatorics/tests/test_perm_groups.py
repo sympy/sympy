@@ -6,7 +6,7 @@ from sympy.utilities.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
-     _verify_normal_closure
+    _verify_normal_closure
 
 rmul = Permutation.rmul
 
@@ -79,9 +79,9 @@ def test_stabilizer():
 
     gens = (
         (1, 2, 0, 4, 5, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
-            (0, 1, 2, 3, 4, 5, 19, 6, 8, 9, 10, 11, 12, 13, 14,
-             15, 16, 7, 17, 18),
-            (0, 1, 2, 3, 4, 5, 6, 7, 9, 18, 16, 11, 12, 13, 14, 15, 8, 17, 10, 19))
+        (0, 1, 2, 3, 4, 5, 19, 6, 8, 9, 10, 11, 12, 13, 14,
+         15, 16, 7, 17, 18),
+        (0, 1, 2, 3, 4, 5, 6, 7, 9, 18, 16, 11, 12, 13, 14, 15, 8, 17, 10, 19))
     gens = [Permutation(p) for p in gens]
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
@@ -532,7 +532,7 @@ def _subgroup_search(i, j, k):
         assert S.stabilizer(7).is_subgroup(S.subgroup_search(prop_fix_points))
         points = [3, 4]
         assert S.stabilizer(3).stabilizer(4).is_subgroup(
-               S.subgroup_search(prop_fix_points))
+            S.subgroup_search(prop_fix_points))
         points = [3, 5]
         fix35 = A.subgroup_search(prop_fix_points)
         points = [5]
@@ -542,7 +542,7 @@ def _subgroup_search(i, j, k):
         base, strong_gens = A.schreier_sims_incremental()
         g = A.generators[0]
         comm_g = \
-             A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
+            A.subgroup_search(prop_comm_g, base=base, strong_gens=strong_gens)
         assert _verify_bsgs(comm_g, base, comm_g.generators) is True
         assert [prop_comm_g(gen) is True for gen in comm_g.generators]
 

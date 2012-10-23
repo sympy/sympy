@@ -163,7 +163,7 @@ def test_issue1263():
     assert (b**(-y)).as_numer_denom() == (1, b**y)
     assert (b**(-S.One)).as_numer_denom() == ((notp + x)**2, notp**2)
     nonp = Symbol('nonp', nonpositive=True)
-    assert (((1 + x/nonp)**-2)**(-S.One)).as_numer_denom() == ((-nonp - \
+    assert (((1 + x/nonp)**-2)**(-S.One)).as_numer_denom() == ((-nonp -
             x)**2, nonp**2)
 
     n = Symbol('n', negative=True)

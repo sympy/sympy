@@ -926,7 +926,7 @@ class Mul(AssocOp):
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
         return has_polar and \
-               all(arg.is_polar or arg.is_positive for arg in self.args)
+            all(arg.is_polar or arg.is_positive for arg in self.args)
 
     # I*I -> R,  I*I*I -> -I
     def _eval_is_real(self):

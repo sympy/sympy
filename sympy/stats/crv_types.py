@@ -1358,10 +1358,10 @@ class TriangularPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
-                (2/(b - a), Eq(x, c)),
-                (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
-                (S.Zero, True))
+            (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
+            (2/(b - a), Eq(x, c)),
+            (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
+            (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         return obj
@@ -1433,8 +1433,8 @@ class UniformPSpace(SingleContinuousPSpace):
 
         x = Symbol(name)
         pdf = Piecewise(
-                (S.One/(right - left), And(left <= x, x <= right)),
-                (S.Zero, True))
+            (S.One/(right - left), And(left <= x, x <= right)),
+            (S.Zero, True))
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.left = left

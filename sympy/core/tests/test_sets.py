@@ -46,28 +46,28 @@ def test_union():
     assert Union(Interval(1, 2), Interval(1, 3)) == Interval(1, 3)
     assert Union(Interval(1, 3), Interval(1, 2)) == Interval(1, 3)
     assert Union(Interval(1, 3, False, True), Interval(1, 2)) == \
-           Interval(1, 3, False, True)
+        Interval(1, 3, False, True)
     assert Union(Interval(1, 3), Interval(1, 2, False, True)) == Interval(1, 3)
     assert Union(Interval(1, 2, True), Interval(1, 3)) == Interval(1, 3)
-    assert Union(
-        Interval(1, 2, True), Interval(1, 3, True)) == Interval(1, 3, True)
+    assert Union(Interval(1, 2, True), Interval(1, 3, True)) == \
+        Interval(1, 3, True)
     assert Union(Interval(1, 2, True), Interval(1, 3, True, True)) == \
-           Interval(1, 3, True, True)
+        Interval(1, 3, True, True)
     assert Union(Interval(1, 2, True, True), Interval(1, 3, True)) == \
-           Interval(1, 3, True)
+        Interval(1, 3, True)
     assert Union(Interval(1, 3), Interval(2, 3)) == Interval(1, 3)
     assert Union(Interval(1, 3, False, True), Interval(2, 3)) == \
-           Interval(1, 3)
+        Interval(1, 3)
     assert Union(Interval(1, 2, False, True), Interval(2, 3, True)) != \
-           Interval(1, 3)
+        Interval(1, 3)
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
     assert Union(Interval(0, 1), [FiniteSet(1.0/n) for n in range(1, 10)]) == \
-            Interval(0, 1)
+        Interval(0, 1)
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
-           Interval(1, 2) + Interval(2, 3)
+        Interval(1, 2) + Interval(2, 3)
 
     assert Interval(1, 2).union(Interval(2, 3)) == Interval(1, 3)
 
@@ -84,12 +84,12 @@ def test_union():
     y = Symbol("y")
     z = Symbol("z")
     assert S.EmptySet | FiniteSet(x, FiniteSet(y, z)) == \
-           FiniteSet(x, FiniteSet(y, z))
+        FiniteSet(x, FiniteSet(y, z))
 
     # Test that Intervals and FiniteSets play nicely
     assert Interval(1, 3) + FiniteSet(2) == Interval(1, 3)
-    assert Interval(
-        1, 3, True, True) + FiniteSet(3) == Interval(1, 3, True, False)
+    assert Interval(1, 3, True, True) + FiniteSet(3) == \
+        Interval(1, 3, True, False)
     X = Interval(1, 3) + FiniteSet(5)
     Y = Interval(1, 2) + FiniteSet(3)
     XandY = X.intersect(Y)
@@ -106,28 +106,28 @@ def test_difference():
     assert Interval(1, 3) - Interval(2, 3) == Interval(1, 2, False, True)
     assert Interval(1, 3, True) - Interval(2, 3) == Interval(1, 2, True, True)
     assert Interval(1, 3, True) - Interval(2, 3, True) == \
-           Interval(1, 2, True, False)
+        Interval(1, 2, True, False)
     assert Interval(0, 2) - FiniteSet(1) == \
-            Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
+        Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
 
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
     assert FiniteSet('ham', 'eggs') - FiniteSet(['eggs']) == FiniteSet(['ham'])
-    assert FiniteSet(
-        1, 2, 3, 4) - Interval(2, 10, True, False) == FiniteSet(1, 2)
+    assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == \
+        FiniteSet(1, 2)
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
     assert Union(Interval(0, 2), FiniteSet(2, 3, 4)) - Interval(1, 3) == \
-            Union(Interval(0, 1, False, True), FiniteSet(4))
+        Union(Interval(0, 1, False, True), FiniteSet(4))
 
 
 def test_complement():
     assert Interval(0, 1).complement == \
-           Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
+        Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
     assert Interval(0, 1, True, False).complement == \
-           Union(Interval(-oo, 0, True, False), Interval(1, oo, True, True))
+        Union(Interval(-oo, 0, True, False), Interval(1, oo, True, True))
     assert Interval(0, 1, False, True).complement == \
-           Union(Interval(-oo, 0, True, True), Interval(1, oo, False, True))
+        Union(Interval(-oo, 0, True, True), Interval(1, oo, False, True))
     assert Interval(0, 1, True, True).complement == \
-           Union(Interval(-oo, 0, True, False), Interval(1, oo, False, True))
+        Union(Interval(-oo, 0, True, False), Interval(1, oo, False, True))
 
     assert -S.EmptySet == S.EmptySet.complement
     assert ~S.EmptySet == S.EmptySet.complement
@@ -136,16 +136,18 @@ def test_complement():
     assert S.UniversalSet.complement == S.EmptySet
 
     assert Union(Interval(0, 1), Interval(2, 3)).complement == \
-           Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
-                 Interval(3, oo, True, True))
+        Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
+              Interval(3, oo, True, True))
 
     assert FiniteSet(0).complement == Union(Interval(-oo, 0, True, True),
             Interval(0, oo, True, True))
 
     assert (FiniteSet(5) + Interval(S.NegativeInfinity, 0)).complement == \
-            Interval(0, 5, True, True) + Interval(5, S.Infinity, True, True)
+        Interval(0, 5, True, True) + Interval(5, S.Infinity, True, True)
 
-    assert FiniteSet(1, 2, 3).complement == Interval(S.NegativeInfinity, 1, True, True) + Interval(1, 2, True, True) + Interval(2, 3, True, True) + Interval(3, S.Infinity, True, True)
+    assert FiniteSet(1, 2, 3).complement == \
+        Interval(S.NegativeInfinity, 1, True, True) + Interval(1, 2, True, True) + \
+        Interval(2, 3, True, True) + Interval(3, S.Infinity, True, True)
 
     X = Interval(1, 3) + FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
@@ -164,32 +166,32 @@ def test_intersect():
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
-           Interval(1, 2, True)
+        Interval(1, 2, True)
     assert Interval(0, 2, True).intersect(Interval(1, 2)) == \
-           Interval(1, 2, False, False)
+        Interval(1, 2, False, False)
     assert Interval(0, 2, True, True).intersect(Interval(1, 2)) == \
-           Interval(1, 2, False, True)
+        Interval(1, 2, False, True)
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
-           Union(Interval(0, 1), Interval(2, 2))
+        Union(Interval(0, 1), Interval(2, 2))
 
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet(['ham'])) == \
-            FiniteSet(['ham'])
+        FiniteSet(['ham'])
     assert FiniteSet(1, 2, 3, 4, 5).intersect(S.EmptySet) == S.EmptySet
 
     assert Interval(0, 5).intersect(FiniteSet(1, 3)) == FiniteSet(1, 3)
     assert Interval(0, 1, True, True).intersect(FiniteSet(1)) == S.EmptySet
 
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(Interval(1, 2)) == \
-           Union(Interval(1, 1), Interval(2, 2))
+        Union(Interval(1, 1), Interval(2, 2))
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(Interval(0, 2)) == \
-           Union(Interval(0, 1), Interval(2, 2))
+        Union(Interval(0, 1), Interval(2, 2))
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(Interval(1, 2, True, True)) == \
-           S.EmptySet
+        S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
-           S.EmptySet
+        S.EmptySet
     assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
-           FiniteSet(2, 3, 4, 5)
+        FiniteSet(2, 3, 4, 5)
 
 
 def test_intersection():
@@ -237,8 +239,8 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
-    assert Union(
-        Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure == 2
+    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure \
+        == 2
 
     assert FiniteSet(1, 2, oo, a, -oo, -5).measure == 0
 
@@ -266,11 +268,10 @@ def test_subset():
     assert Interval(0, 2).subset(FiniteSet(1))
     assert Interval(0, 2, True, True).subset(FiniteSet(1, 2)) is False
     assert (Interval(0, 2, False, True) + FiniteSet(2, 3)).subset(
-            Interval(1, 2) + FiniteSet(3))
+        Interval(1, 2) + FiniteSet(3))
 
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) is True
-    assert Union(
-        Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) is False
+    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) is False
 
     assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) is True
     assert FiniteSet(1, 2, 3).subset(S.EmptySet) is True
@@ -354,14 +355,14 @@ def test_Interval_is_right_unbounded():
 def test_Interval_as_relational():
     x = Symbol('x')
 
-    assert Interval(
-        -1, 2, False, False).as_relational(x) == And(Le(-1, x), Le(x, 2))
-    assert Interval(
-        -1, 2, True, False).as_relational(x) == And(Lt(-1, x), Le(x, 2))
-    assert Interval(
-        -1, 2, False, True).as_relational(x) == And(Le(-1, x), Lt(x, 2))
-    assert Interval(
-        -1, 2, True, True).as_relational(x) == And(Lt(-1, x), Lt(x, 2))
+    assert Interval(-1, 2, False, False).as_relational(x) == \
+        And(Le(-1, x), Le(x, 2))
+    assert Interval(-1, 2, True, False).as_relational(x) == \
+        And(Lt(-1, x), Le(x, 2))
+    assert Interval(-1, 2, False, True).as_relational(x) == \
+        And(Le(-1, x), Lt(x, 2))
+    assert Interval(-1, 2, True, True).as_relational(x) == \
+        And(Lt(-1, x), Lt(x, 2))
 
     assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
     assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
@@ -383,9 +384,9 @@ def test_Finite_as_relational():
 def test_Union_as_relational():
     x = Symbol('x')
     assert (Interval(0, 1) + FiniteSet(2)).as_relational(x) == \
-            Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
+        Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
-            And(Lt(0, x), Le(x, 1))
+        And(Lt(0, x), Le(x, 1))
 
 
 def test_Intersection_as_relational():
@@ -439,12 +440,12 @@ def test_product_basic():
 
     inf, neginf = S.Infinity, S.NegativeInfinity
     assert square.complement == Union(
-       Interval(0, 1) * (
-           Interval(neginf, 0, True, True) + Interval(1, inf, True, True)),
-       (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)
-        )*Interval(0, 1),
-       ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
-                * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
+        Interval(0, 1) *
+        (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)),
+        (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)) *
+        Interval(0, 1),
+        ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
+         * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
 
     assert (Interval(-10, 10)**3).subset(Interval(-5, 5)**3)
     assert not (Interval(-5, 5)**3).subset(Interval(-10, 10)**3)
@@ -483,10 +484,10 @@ def test_supinf():
     assert FiniteSet(5, 1, x).inf == Min(1, x)
     assert FiniteSet(5, 1, x, y).sup == Max(5, x, y)
     assert FiniteSet(5, 1, x, y).inf == Min(1, x, y)
-    assert FiniteSet(
-        5, 1, x, y, S.Infinity, S.NegativeInfinity).sup == S.Infinity
-    assert FiniteSet(
-        5, 1, x, y, S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
+    assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).sup == \
+        S.Infinity
+    assert FiniteSet(5, 1, x, y, S.Infinity, S.NegativeInfinity).inf == \
+        S.NegativeInfinity
     assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
 
 

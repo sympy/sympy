@@ -158,7 +158,7 @@ class lowergamma(Function):
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
-                   + meijerg([], [1, 1], [0, 0, a], [], z)
+                + meijerg([], [1, 1], [0, 0, a], [], z)
 
         else:
             raise ArgumentIndexError(self, argindex)
@@ -388,7 +388,7 @@ class polygamma(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[1] != oo or not \
-           (self.args[0].is_Integer and self.args[0].is_nonnegative):
+                (self.args[0].is_Integer and self.args[0].is_nonnegative):
             return super(polygamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[1]
         N = self.args[0]

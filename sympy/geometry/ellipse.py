@@ -104,7 +104,7 @@ class Ellipse(GeometryEntity):
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None,
-                **kwargs):
+            **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
 
@@ -329,9 +329,8 @@ class Ellipse(GeometryEntity):
             return 2*pi*self.hradius
         else:
             x = C.Dummy('x', real=True)
-            return 4*self.major*\
-                   C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
-                              (x, 0, 1))
+            return 4*self.major*C.Integral(
+                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
     @property
     def eccentricity(self):

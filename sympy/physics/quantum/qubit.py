@@ -289,7 +289,7 @@ class IntQubitState(QubitState):
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
             rvalues = reversed(xrange(bitcount(abs(args[0]))))
-            qubit_values = [(args[0] >> i)&1 for i in rvalues]
+            qubit_values = [(args[0] >> i) & 1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
@@ -298,7 +298,7 @@ class IntQubitState(QubitState):
             if args[1] < need:
                 raise ValueError(
                     'cannot represent %s with %s bits' % (args[0], args[1]))
-            qubit_values = [(args[0] >> i)&1 for i in reversed(range(args[1]))]
+            qubit_values = [(args[0] >> i) & 1 for i in reversed(range(args[1]))]
             return QubitState._eval_args(qubit_values)
         else:
             return QubitState._eval_args(args)
@@ -713,7 +713,7 @@ def _get_possible_outcomes(m, bits):
         trueness = 0  # This tells us to which output_matrix this value belongs
         # Find trueness
         for j in range(len(bit_masks)):
-            if i&bit_masks[j]:
+            if i & bit_masks[j]:
                 trueness += j + 1
         # Put the value in the correct output matrix
         output_matrices[trueness][i] = m[i]

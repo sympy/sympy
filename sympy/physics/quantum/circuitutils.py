@@ -355,12 +355,10 @@ def convert_to_real_indices(seq, qubit_map):
     for item in seq:
         # Nested items, so recurse
         if isinstance(item, Gate):
-            real_item = convert_to_real_indices(
-                                item.args, qubit_map)
+            real_item = convert_to_real_indices(item.args, qubit_map)
 
         elif isinstance(item, tuple) or isinstance(item, Tuple):
-            real_item = convert_to_real_indices(
-                                item, qubit_map)
+            real_item = convert_to_real_indices(item, qubit_map)
 
         else:
             real_item = qubit_map[item]

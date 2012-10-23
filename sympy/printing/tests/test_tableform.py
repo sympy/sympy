@@ -18,7 +18,7 @@ def test_TableForm():
         '1 | a b\n'
         '2 | c d\n'
         '3 | e  '
-        )
+    )
     s = str(TableForm([["a", "b"], ["c", "d"], ["e", 0]],
         headings="automatic", wipe_zeros=False))
     assert s == dedent('''\
@@ -33,7 +33,7 @@ def test_TableForm():
         '1 | x**2 b   \n'
         '2 | c    x**2\n'
         '3 | e    f   '
-        )
+    )
     s = str(TableForm([["a", "b"], ["c", "d"], ["e", "f"]],
             headings=(None, "automatic")))
     assert s == dedent('''\
@@ -50,15 +50,15 @@ def test_TableForm():
         'Group A | 5  7 \n'
         'Group B | 4  2 \n'
         'Group C | 10 3 '
-        )
+    )
     raises(
         ValueError,
         lambda:
-            TableForm(
-                [[5, 7], [4, 2], [10, 3]],
-                headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
-                alignments="middle")
-        )
+        TableForm(
+            [[5, 7], [4, 2], [10, 3]],
+            headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
+            alignments="middle")
+    )
     s = str(TableForm([[5, 7], [4, 2], [10, 3]],
             headings=[["Group A", "Group B", "Group C"], ["y1", "y2"]],
             alignments="right"))

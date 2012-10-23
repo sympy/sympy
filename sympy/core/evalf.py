@@ -304,7 +304,7 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     if gap >= -margin:
         ire, iim, ire_acc, iim_acc = \
-             evalf(expr, margin + assumed_size + gap, options)
+            evalf(expr, margin + assumed_size + gap, options)
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
@@ -887,7 +887,7 @@ def do_integral(expr, prec, options):
                 min(-prec, -max_real_term[0], -quadrature_error))
             re = scaled_zero(re)  # handled ok in evalf_integral
         else:
-            re_acc = -max(max_real_term[0] - fastlog(re) - \
+            re_acc = -max(max_real_term[0] - fastlog(re) -
                           prec, quadrature_error)
     else:
         re, re_acc = None, None
@@ -899,7 +899,7 @@ def do_integral(expr, prec, options):
                 min(-prec, -max_imag_term[0], -quadrature_error))
             im = scaled_zero(im)  # handled ok in evalf_integral
         else:
-            im_acc = -max(max_imag_term[0] - fastlog(im) - \
+            im_acc = -max(max_imag_term[0] - fastlog(im) -
                           prec, quadrature_error)
     else:
         im, im_acc = None, None

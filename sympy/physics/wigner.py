@@ -181,15 +181,15 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     _calc_factlist(int(maxfact))
 
     argsqrt = Integer(_Factlist[int(j_1 + j_2 - j_3)] *
-                          _Factlist[int(j_1 - j_2 + j_3)] *
-                          _Factlist[int(-j_1 + j_2 + j_3)] *
-                          _Factlist[int(j_1 - m_1)] *
-                          _Factlist[int(j_1 + m_1)] *
-                          _Factlist[int(j_2 - m_2)] *
-                          _Factlist[int(j_2 + m_2)] *
-                          _Factlist[int(j_3 - m_3)] *
-                          _Factlist[int(j_3 + m_3)]) / \
-                          _Factlist[int(j_1 + j_2 + j_3 + 1)]
+                     _Factlist[int(j_1 - j_2 + j_3)] *
+                     _Factlist[int(-j_1 + j_2 + j_3)] *
+                     _Factlist[int(j_1 - m_1)] *
+                     _Factlist[int(j_1 + m_1)] *
+                     _Factlist[int(j_2 - m_2)] *
+                     _Factlist[int(j_2 + m_2)] *
+                     _Factlist[int(j_3 - m_3)] *
+                     _Factlist[int(j_3 + m_3)]) / \
+        _Factlist[int(j_1 + j_2 + j_3 + 1)]
 
     ressqrt = sqrt(argsqrt)
     if ressqrt.is_complex:
@@ -307,9 +307,9 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     _calc_factlist(maxfact)
 
     argsqrt = Integer(_Factlist[int(aa + bb - cc)] *
-                          _Factlist[int(aa + cc - bb)] *
-                          _Factlist[int(bb + cc - aa)]) / \
-                          Integer(_Factlist[int(aa + bb + cc + 1)])
+                     _Factlist[int(aa + cc - bb)] *
+                     _Factlist[int(bb + cc - aa)]) / \
+        Integer(_Factlist[int(aa + bb + cc + 1)])
 
     ressqrt = sqrt(argsqrt)
     if prec:
@@ -374,7 +374,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     imax = min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff)
 
     maxfact = max(imax + 1, aa + bb + cc + dd, aa + dd + ee + ff,
-                      bb + cc + ee + ff)
+                 bb + cc + ee + ff)
     _calc_factlist(maxfact)
 
     sumres = 0
@@ -674,9 +674,9 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
-                     _Factlist[2 * bigL + 1]/ \
-                     (_Factlist[bigL - l_1] * \
-                      _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
+        _Factlist[2 * bigL + 1]/ \
+        (_Factlist[bigL - l_1] *
+         _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
 
     sumres = 0
     for ii in range(imin, imax + 1):

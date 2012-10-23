@@ -475,8 +475,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     isadd = isinstance(terms, Add)
     addlike = isadd or not isinstance(terms, Basic) and \
-              is_sequence(terms, include=set) and \
-              not isinstance(terms, Dict)
+        is_sequence(terms, include=set) and \
+        not isinstance(terms, Dict)
 
     if addlike:
         if isadd:  # i.e. an Add

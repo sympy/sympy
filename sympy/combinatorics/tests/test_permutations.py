@@ -90,13 +90,13 @@ def test_Permutation():
     assert p*Permutation([[0, 1]]) == Permutation([2, 5, 0, 6, 3, 1, 4])
     assert Permutation([[0, 1]])*p == Permutation([5, 2, 1, 6, 3, 0, 4])
 
-    pq = p^q
+    pq = p ^ q
     assert pq == Permutation([5, 6, 0, 4, 1, 2, 3])
     assert pq == rmul(q, p, ~q)
-    qp = q^p
+    qp = q ^ p
     assert qp == Permutation([4, 3, 6, 2, 1, 5, 0])
     assert qp == rmul(p, q, ~p)
-    raises(ValueError, lambda: p^Permutation([]))
+    raises(ValueError, lambda: p ^ Permutation([]))
 
     assert p.commutator(q) == Permutation(0, 1, 3, 4, 6, 5, 2)
     assert q.commutator(p) == Permutation(0, 2, 5, 6, 4, 3, 1)
@@ -111,7 +111,7 @@ def test_Permutation():
 
     assert Permutation.from_inversion_vector(p.inversion_vector()) == p
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
-           == q.array_form
+        == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
     assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
 

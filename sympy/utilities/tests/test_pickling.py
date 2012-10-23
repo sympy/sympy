@@ -15,8 +15,8 @@ from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
-        WildFunction
+from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
+    WildFunction
 from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
 from sympy.functions import exp
@@ -215,11 +215,10 @@ def test_geometry():
     p4 = Point(0, 1)
     for c in (
         GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1, 2),
-              Ellipse, Ellipse(p1, 3, 4), Line, Line(p1, p2), LinearEntity,
-              LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
-              Polygon, Polygon(
-                  p1, p2, p3, p4), RegularPolygon, RegularPolygon(p1, 4, 5),
-              Triangle, Triangle(p1, p2, p3)):
+        Ellipse, Ellipse(p1, 3, 4), Line, Line(p1, p2), LinearEntity,
+        LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
+        Polygon, Polygon(p1, p2, p3, p4), RegularPolygon,
+            RegularPolygon(p1, 4, 5), Triangle, Triangle(p1, p2, p3)):
         check(c, check_attr=False)
 
 #================== integrals ====================
@@ -279,19 +278,19 @@ def test_plotting():
     from sympy.plotting.plot_curve import PlotCurve
     from sympy.plotting.plot_interval import PlotInterval
     from sympy.plotting.plot_mode import PlotMode
-    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
+    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
         ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
     from sympy.plotting.plot_object import PlotObject
     from sympy.plotting.plot_surface import PlotSurface
     from sympy.plotting.plot_window import PlotWindow
     for c in (
         ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
-              ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
-              PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
-              PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,
-              Cylindrical, ParametricCurve2D, ParametricCurve3D,
-              ParametricSurface, Polar, Spherical, PlotObject, PlotSurface,
-              PlotWindow):
+        ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
+        PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
+        PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,
+        Cylindrical, ParametricCurve2D, ParametricCurve3D,
+        ParametricSurface, Polar, Spherical, PlotObject, PlotSurface,
+            PlotWindow):
         check(c)
 
 
@@ -306,7 +305,7 @@ def test_plotting2():
     from sympy.plotting.plot_curve import PlotCurve
     from sympy.plotting.plot_interval import PlotInterval
     from sympy.plotting.plot_mode import PlotMode
-    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
+    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
         ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
     from sympy.plotting.plot_object import PlotObject
     from sympy.plotting.plot_surface import PlotSurface

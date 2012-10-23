@@ -77,9 +77,9 @@ class FCodePrinter(CodePrinter):
             self._lead_comment = "! "
         else:
             raise ValueError(
-                    "Unknown source format: %s" % self._settings[
-                        'source_format']
-                    )
+                "Unknown source format: %s" % self._settings[
+                'source_format']
+            )
 
     def _pad_leading_columns(self, lines):
         result = []
@@ -346,11 +346,11 @@ class FCodePrinter(CodePrinter):
         dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
         increase = [ int(any(map(line.startswith, inc_keyword)))
-                         for line in code ]
+                     for line in code ]
         decrease = [ int(any(map(line.startswith, dec_keyword)))
-                         for line in code ]
+                     for line in code ]
         continuation = [ int(any(map(line.endswith, ['&', '&\n'])))
-                             for line in code ]
+                         for line in code ]
 
         level = 0
         cont_padding = 0

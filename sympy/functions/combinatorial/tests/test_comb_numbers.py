@@ -1,7 +1,7 @@
 from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
-                    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
-                    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
-                    Expr, sympify
+    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
+    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
+    Expr, sympify
 
 from sympy.utilities.pytest import XFAIL
 

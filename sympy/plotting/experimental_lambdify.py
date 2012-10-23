@@ -118,12 +118,12 @@ class vectorized_lambdify(object):
         except Exception, e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
-                   and 'unhashable type: \'numpy.ndarray\'' in str(e))
-                  or
-                  (isinstance(e, ValueError)
-                   and ('Invalid limits given:' in str(e)
-                        or 'negative dimensions are not allowed' in str(e)  # XXX
-                        or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
+                 and 'unhashable type: \'numpy.ndarray\'' in str(e))
+                or
+                (isinstance(e, ValueError)
+                 and ('Invalid limits given:' in str(e)
+                      or 'negative dimensions are not allowed' in str(e)  # XXX
+                      or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
                 # Almost all functions were translated to numpy, but some were
                 # left as sympy functions. They recieved an ndarray as an
                 # argument and failed.
@@ -148,9 +148,8 @@ class vectorized_lambdify(object):
                 else:
                     self.failure = True
                     self.lambda_func = experimental_lambdify(
-                        self.args, self.expr,
-                                                        use_evalf=True,
-                                                        complex_wrap_evalf=True)
+                        self.args, self.expr, use_evalf=True,
+                        complex_wrap_evalf=True)
                     self.vector_func = np.vectorize(
                         self.lambda_func, otypes=[np.complex])
                     results = self.vector_func(*args)
@@ -178,7 +177,7 @@ class lambdify(object):
         self.args = args
         self.expr = expr
         self.lambda_func = experimental_lambdify(args, expr, use_evalf=True,
-                                                    use_python_cmath=True)
+                                                 use_python_cmath=True)
         self.failure = False
 
     def __call__(self, args):
@@ -226,14 +225,10 @@ def experimental_lambdify(*args, **kwargs):
 
 
 class Lambdifier(object):
-    def __init__(self, args, expr, print_lambda=False,
-                                   use_evalf=False,
-                                   float_wrap_evalf=False,
-                                   complex_wrap_evalf=False,
-                                   use_np=False,
-                                   use_python_math=False,
-                                   use_python_cmath=False,
-                                   use_interval=False):
+    def __init__(self, args, expr, print_lambda=False, use_evalf=False,
+                 float_wrap_evalf=False, complex_wrap_evalf=False,
+                 use_np=False, use_python_math=False, use_python_cmath=False,
+                 use_interval=False):
 
         self.print_lambda = print_lambda
         self.use_evalf = use_evalf
@@ -295,16 +290,16 @@ class Lambdifier(object):
     ###
     # Functions with different names in builtins
     builtin_functions_different = {
-            'Min': 'min',
-            'Max': 'max',
-            'Abs': 'abs',
-            }
+        'Min': 'min',
+        'Max': 'max',
+        'Abs': 'abs',
+    }
 
     # Strings that should be translated
     builtin_not_functions = {
-            'I': '1j',
-            'oo': '1e400',
-            }
+        'I': '1j',
+        'oo': '1e400',
+    }
 
     ###
     # numpy
@@ -312,39 +307,35 @@ class Lambdifier(object):
 
     # Functions that are the same in numpy
     numpy_functions_same = [
-            'sin', 'cos', 'tan',
-            'sinh', 'cosh', 'tanh',
-            'exp', 'log',
-            'sqrt',
-            'floor',
-            'conjugate',
-            ]
+        'sin', 'cos', 'tan', 'sinh', 'cosh', 'tanh', 'exp', 'log',
+        'sqrt', 'floor', 'conjugate',
+    ]
 
     # Functions with different names in numpy
     numpy_functions_different = {
-            "acos": "arccos",
-            "acosh": "arccosh",
-            "arg": "angle",
-            "asin": "arcsin",
-            "asinh": "arcsinh",
-            "atan": "arctan",
-            "atan2": "arctan2",
-            "atanh": "arctanh",
-            "ceiling": "ceil",
-            "im": "imag",
-            "ln": "log",
-            "Max": "amax",
-            "Min": "amin",
-            "re": "real",
-            "Abs": "abs",
-            }
+        "acos": "arccos",
+        "acosh": "arccosh",
+        "arg": "angle",
+        "asin": "arcsin",
+        "asinh": "arcsinh",
+        "atan": "arctan",
+        "atan2": "arctan2",
+        "atanh": "arctanh",
+        "ceiling": "ceil",
+        "im": "imag",
+        "ln": "log",
+        "Max": "amax",
+        "Min": "amin",
+        "re": "real",
+        "Abs": "abs",
+    }
 
     # Strings that should be translated
     numpy_not_functions = {
-            'pi': 'np.pi',
-            'oo': 'np.inf',
-            'E': 'np.e',
-            }
+        'pi': 'np.pi',
+        'oo': 'np.inf',
+        'E': 'np.e',
+    }
 
     ###
     # python math
@@ -352,28 +343,23 @@ class Lambdifier(object):
 
     # Functions that are the same in math
     math_functions_same = [
-            'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan', 'atan2',
-            'sinh', 'cosh', 'tanh',
-            'asinh', 'acosh', 'atanh',
-            'exp', 'log', 'erf',
-            'sqrt',
-            'floor',
-            'factorial', 'gamma',
-            ]
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+        'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+        'exp', 'log', 'erf', 'sqrt', 'floor', 'factorial', 'gamma',
+    ]
 
     # Functions with different names in math
     math_functions_different = {
-            'ceiling': 'ceil',
-            'ln': 'log',
-            'loggamma': 'lgamma'
-            }
+        'ceiling': 'ceil',
+        'ln': 'log',
+        'loggamma': 'lgamma'
+    }
 
     # Strings that should be translated
     math_not_functions = {
-            'pi': 'math.pi',
-            'E': 'math.e',
-            }
+        'pi': 'math.pi',
+        'E': 'math.e',
+    }
 
     ###
     # python cmath
@@ -381,45 +367,42 @@ class Lambdifier(object):
 
     # Functions that are the same in cmath
     cmath_functions_same = [
-            'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan',
-            'sinh', 'cosh', 'tanh',
-            'asinh', 'acosh', 'atanh',
-            'exp', 'log',
-            'sqrt',
-            ]
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+        'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+        'exp', 'log', 'sqrt',
+    ]
 
     # Functions with different names in cmath
     cmath_functions_different = {
-            'ln': 'log',
-            'arg': 'phase',
-            }
+        'ln': 'log',
+        'arg': 'phase',
+    }
 
     # Strings that should be translated
     cmath_not_functions = {
-            'pi': 'cmath.pi',
-            'E': 'cmath.e',
-            }
+        'pi': 'cmath.pi',
+        'E': 'cmath.e',
+    }
     ###
     # intervalmath
     ###
     interval_not_functions = {
-            'pi': 'cmath.pi',
-            'E': 'cmath.e'
-            }
+        'pi': 'cmath.pi',
+        'E': 'cmath.e'
+    }
     interval_functions_same = [
-       'sin', 'cos', 'exp', 'tan', 'atan', 'log',
-       'sqrt', 'cosh', 'sinh', 'tanh', 'floor',
-       'acos', 'asin', 'acosh', 'asinh', 'atanh',
-       'Abs', 'And', 'Or'
-       ]
+        'sin', 'cos', 'exp', 'tan', 'atan', 'log',
+        'sqrt', 'cosh', 'sinh', 'tanh', 'floor',
+        'acos', 'asin', 'acosh', 'asinh', 'atanh',
+        'Abs', 'And', 'Or'
+    ]
 
     interval_functions_different = {
-            'Min': 'imin',
-            'Max': 'imax',
-            'ceiling': 'ceil',
+        'Min': 'imin',
+        'Max': 'imax',
+        'ceiling': 'ceil',
 
-            }
+    }
 
     ###
     # mpmath, etc
@@ -606,10 +589,10 @@ class Lambdifier(object):
             # Either one of those can be used but not all at the same time.
             # The code considers the sin example as the right one.
             regexlist = [
-                    r'<class \'sympy[\w.]*?.([\w]*)\'>$',
-                                             # the example Integral
-                    r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
-                    ]
+                r'<class \'sympy[\w.]*?.([\w]*)\'>$',
+                # the example Integral
+                r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
+            ]
             for r in regexlist:
                 m = re.match(r, funcname)
                 if m is not None:

@@ -273,7 +273,7 @@ class Prover(object):
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
         rules_beta = []     # &(...) -> b
-        for a,b in self.proved_rules:
+        for a, b in self.proved_rules:
             if isinstance(a, And):
                 rules_beta.append((a, b))
             else:
@@ -413,7 +413,7 @@ class FactRules(object):
         self.beta_rules = []
         for bcond, bimpl in P.rules_beta:
             self.beta_rules.append(
-                    (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
+                (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)

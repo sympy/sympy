@@ -408,7 +408,7 @@ class expint(Function):
             if (nu > 0) is not True:
                 return
             return expint(nu, z) \
-               - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
+                - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
         else:
             return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
@@ -434,8 +434,8 @@ class expint(Function):
             # DLMF, 8.19.7
             x = -unpolarify(z)
             return x**(nu - 1)/factorial(nu - 1)*E1(z).rewrite(Ei) + \
-                   exp(x)/factorial(nu - 1) * \
-                   Add(*[factorial(nu - k - 2)*x**k for k in range(nu - 1)])
+                exp(x)/factorial(nu - 1) * \
+                Add(*[factorial(nu - k - 2)*x**k for k in range(nu - 1)])
         else:
             return self
 
@@ -916,7 +916,7 @@ class FresnelIntegral(Function):
         x, y = self._as_real_imag(deep=deep, **hints)
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) - \
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                 self.func(x + x*sqrt(sq)))
         return (re, im)
 

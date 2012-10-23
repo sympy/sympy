@@ -57,10 +57,10 @@ def test_Ylm():
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
     assert Ylm(0, 0, th, ph) == sympify(1)/(2*sqrt(pi))
     assert Ylm(1, -1, th, ph) == sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
-            exp(-I*ph)
+        exp(-I*ph)
     assert Ylm(1, 0, th, ph) == sympify(1)/2 * sqrt(3/pi) * cos(th)
     assert Ylm(1, 1, th, ph) == -sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
-            exp(I*ph)
+        exp(I*ph)
     assert Ylm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) *
             (3*cos(th)**2 - 1)).expand()
     assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 *
@@ -68,7 +68,7 @@ def test_Ylm():
 
     # These last 2 return the correct answer, but the answer can be simplified
     assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
-            S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
+        S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
     assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(
         th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
 

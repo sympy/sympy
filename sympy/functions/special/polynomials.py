@@ -322,10 +322,10 @@ class gegenbauer(OrthogonalPolynomial):
             # Diff wrt a
             n, a, x = self.args
             k = C.Dummy("k")
-            factor1 = 2 * (1 + (-1)**(n - k)) * (k + a) / ((k + \
+            factor1 = 2 * (1 + (-1)**(n - k)) * (k + a) / ((k +
                            n + 2*a) * (n - k))
             factor2 = 2*(k + 1) / ((k + 2*a) * (2*k + 2*a + 1)) + \
-                         2 / (k + n + 2*a)
+                2 / (k + n + 2*a)
             kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
             return C.Sum(kern, (k, 0, n - 1))
         elif argindex == 3:

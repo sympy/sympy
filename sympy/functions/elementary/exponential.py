@@ -582,7 +582,7 @@ class log(Function):
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
             if force or (arg.exp.is_real and arg.base.is_positive) or \
-                        arg.base.is_polar:
+                    arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
                 return unpolarify(e) * self.func(b)._eval_expand_log(**hints)

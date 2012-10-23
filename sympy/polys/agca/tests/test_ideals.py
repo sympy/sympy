@@ -78,10 +78,10 @@ def test_nontriv_global():
     assert contains([x, 1 + x + y, 5 - 7*y], 1)
     assert contains(
         [x**3 + y**3, y**3 + z**3, z**3 + x**3, x**2*y + x**2*z + y**2*z],
-                    x**3)
+        x**3)
     assert not contains(
         [x**3 + y**3, y**3 + z**3, z**3 + x**3, x**2*y + x**2*z + y**2*z],
-                        x**2 + y**2)
+        x**2 + y**2)
 
     # compare local order
     assert not contains([x*(1 + x + y), y*(1 + z)], x)
@@ -113,7 +113,7 @@ def test_intersection():
 
     R = QQ.poly_ring(x, y, z, order="ilex")
     assert R.ideal(x, y).intersect(R.ideal(y**2 + y**2*z, z + z*x**3*y)) == \
-           R.ideal(y**2, y*z, x*z)
+        R.ideal(y**2, y*z, x*z)
 
 
 def test_quotient():

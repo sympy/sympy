@@ -13,17 +13,17 @@ def test_components():
     assert components(1/(x + y), x) == set([x])
     assert components(sin(x), x) == set([sin(x), x])
     assert components(sin(x)*sqrt(log(x)), x) == \
-       set([log(x), sin(x), sqrt(log(x)), x])
+        set([log(x), sin(x), sqrt(log(x)), x])
     assert components(x*sin(exp(x)*y), x) == \
-       set([sin(y*exp(x)), x, exp(x)])
+        set([sin(y*exp(x)), x, exp(x)])
     assert components(x**Rational(17, 54)/sqrt(sin(x)), x) == \
-       set([sin(x), x**Rational(1, 54), sqrt(sin(x)), x])
+        set([sin(x), x**Rational(1, 54), sqrt(sin(x)), x])
 
     assert components(f(x), x) == \
         set([x, f(x)])
     assert components(Derivative(f(x), x), x) == \
         set([x, f(x), Derivative(f(x), x)])
-    assert components(f(x)*diff(f(x), x),  x) == \
+    assert components(f(x)*diff(f(x), x), x) == \
         set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
 
 
@@ -88,7 +88,7 @@ def test_heurisch_trigonometric():
     assert heurisch(cos(x)/sin(x), x) == log(sin(x))
 
     assert heurisch(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
-    assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - \
+    assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) -
                     2*sin(x) + 2*x*cos(x))
 
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
@@ -117,7 +117,7 @@ def test_heurisch_radicals():
 
     assert heurisch(sin(x)*sqrt(cos(x)), x) == -2*sqrt(cos(x))**3/3
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
-                                          2*sqrt(x)*cos(y*sqrt(x))/y
+        2*sqrt(x)*cos(y*sqrt(x))/y
 
 
 def test_heurisch_special():
@@ -169,7 +169,7 @@ def test_heurisch_function():
 
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
-                                                   I*log(log(x) - I)/2
+        I*log(log(x) - I)/2
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/

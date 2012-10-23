@@ -116,7 +116,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
         if feature:
             if deprecated_since_version:
-                self.fullMessage = "%s has been deprecated since SymPy %s. " %\
+                self.fullMessage = "%s has been deprecated since SymPy %s. " % \
                                    (feature, deprecated_since_version)
             else:
                 self.fullMessage = "%s has been deprecated. " % feature

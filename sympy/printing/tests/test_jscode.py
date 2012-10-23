@@ -71,10 +71,10 @@ def test_jscode_inline_function():
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert jscode(g(A[i]), assign_to=A[i]) == (
-            "for (var i=0; i<n; i++){\n"
-            "   A[i] = (1 + A[i])*(2 + A[i])*A[i];\n"
-            "}"
-            )
+        "for (var i=0; i<n; i++){\n"
+        "   A[i] = (1 + A[i])*(2 + A[i])*A[i];\n"
+        "}"
+    )
 
 
 def test_jscode_exceptions():
@@ -151,15 +151,15 @@ def test_jscode_loops_matrix_vector():
     j = Idx('j', n)
 
     s = (
-            'for (var i=0; i<m; i++){\n'
-            '   y[i] = 0;\n'
-            '}\n'
-            'for (var i=0; i<m; i++){\n'
-            '   for (var j=0; j<n; j++){\n'
-            '      y[i] = y[i] + A[i*n + j]*x[j];\n'
-            '   }\n'
-            '}'
-            )
+        'for (var i=0; i<m; i++){\n'
+        '   y[i] = 0;\n'
+        '}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '   }\n'
+        '}'
+    )
     c = jscode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
@@ -177,7 +177,7 @@ def test_dummy_loops():
         'for (var i_%(icount)i=0; i_%(icount)i<m_%(mcount)i; i_%(icount)i++){\n'
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
-        ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+    ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = jscode(x[i], assign_to=y[i])
     assert code == expected
 
@@ -194,15 +194,15 @@ def test_jscode_loops_add():
     j = Idx('j', n)
 
     s = (
-            'for (var i=0; i<m; i++){\n'
-            '   y[i] = x[i] + z[i];\n'
-            '}\n'
-            'for (var i=0; i<m; i++){\n'
-            '   for (var j=0; j<n; j++){\n'
-            '      y[i] = y[i] + A[i*n + j]*x[j];\n'
-            '   }\n'
-            '}'
-            )
+        'for (var i=0; i<m; i++){\n'
+        '   y[i] = x[i] + z[i];\n'
+        '}\n'
+        'for (var i=0; i<m; i++){\n'
+        '   for (var j=0; j<n; j++){\n'
+        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '   }\n'
+        '}'
+    )
     c = jscode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
 
@@ -232,7 +232,7 @@ def test_jscode_loops_multiple_contractions():
         '      }\n'
         '   }\n'
         '}'
-            )
+    )
     c = jscode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
@@ -263,7 +263,7 @@ def test_jscode_loops_addfactor():
         '      }\n'
         '   }\n'
         '}'
-            )
+    )
     c = jscode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
 
@@ -307,7 +307,7 @@ def test_jscode_loops_multiple_terms():
         '      y[i] = b[j]*a[i*n + j] + y[i];\n'
         '   }\n'
         '}\n'
-            )
+    )
     c = jscode(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or

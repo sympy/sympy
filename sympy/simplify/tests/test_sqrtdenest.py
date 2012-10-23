@@ -12,8 +12,8 @@ def test_sqrtdenest():
         sqrt(r2): sqrt(r2),
         sqrt(5 + r7): sqrt(5 + r7),
         sqrt(3 + sqrt(5 + 2*r7)):
-            3*r2*(5 + 2*r7)**(S(1)/4)/(2*sqrt(6 + 3*r7)) +
-            r2*sqrt(6 + 3*r7)/(2*(5 + 2*r7)**(S(1)/4)),
+         3*r2*(5 + 2*r7)**(S(1)/4)/(2*sqrt(6 + 3*r7)) +
+         r2*sqrt(6 + 3*r7)/(2*(5 + 2*r7)**(S(1)/4)),
         sqrt(3 + 2*r3): 3**(S(3)/4)*(r6/2 + 3*r2/2)/3}
     for i in d:
         assert sqrtdenest(i) == d[i]
@@ -21,7 +21,7 @@ def test_sqrtdenest():
 
 def test_sqrtdenest2():
     assert sqrtdenest(sqrt(16 - 2*r29 + 2*sqrt(55 - 10*r29))) == \
-            r5 + sqrt(11 - 2*r29)
+        r5 + sqrt(11 - 2*r29)
     e = sqrt(-r5 + sqrt(-2*r29 + 2*sqrt(-10*r29 + 55) + 16))
     assert sqrtdenest(e) == root(-2*r29 + 11, 4)
     r = sqrt(1 + r7)
@@ -33,7 +33,7 @@ def test_sqrtdenest2():
         sqrt(2)*root(3, 4) + root(3, 4)**3
 
     assert sqrtdenest(sqrt(((1 + r5 + sqrt(1 + r3))**2).expand())) == \
-         1 + r5 + sqrt(1 + r3)
+        1 + r5 + sqrt(1 + r3)
 
     assert sqrtdenest(sqrt(((1 + r5 + r7 + sqrt(1 + r3))**2).expand())) == \
         1 + sqrt(1 + r3) + r5 + r7
@@ -56,13 +56,13 @@ def test_sqrtdenest2():
 
 def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 33)) == \
-      -r2 + r3 + 2*r7
+        -r2 + r3 + 2*r7
     assert sqrtdenest(sqrt(-28*r7 - 14*r5 + 4*sqrt(35) + 82)) == \
-      -7 + r5 + 2*r7
+        -7 + r5 + 2*r7
     assert sqrtdenest(sqrt(6*r2/11 + 2*sqrt(22)/11 + 6*sqrt(11)/11 + 2)) == \
-      sqrt(11)*(r2 + 3 + sqrt(11))/11
+        sqrt(11)*(r2 + 3 + sqrt(11))/11
     assert sqrtdenest(sqrt(468*r3 + 3024*r2 + 2912*r6 + 19735)) == \
-      9*r3 + 26 + 56*r6
+        9*r3 + 26 + 56*r6
     z = sqrt(-490*r3 - 98*sqrt(115) - 98*sqrt(345) - 2107)
     assert sqrtdenest(z) == sqrt(-1)*(7*r5 + 7*r15 + 7*sqrt(23))
     z = sqrt(-4*sqrt(14) - 2*r6 + 4*sqrt(21) + 34)
@@ -73,7 +73,7 @@ def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(8*r2/3 + 14*r5/3 + S(154)/9)) == \
         -r10/3 + r2 + r5 + 3
     assert sqrtdenest(sqrt(sqrt(2*r6 + 5) + sqrt(2*r7 + 8))) == \
-      sqrt(1 + r2 + r3 + r7)
+        sqrt(1 + r2 + r3 + r7)
     assert sqrtdenest(sqrt(4*r15 + 8*r5 + 12*r3 + 24)) == 1 + r3 + r5 + r15
 
     w = 1 + r2 + r3 + r5 + r7
@@ -164,9 +164,9 @@ def test_issue_2758():
 def test_subsets():
     assert subsets(1) == [[1]]
     assert subsets(4) == [
-      [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 1, 0], [1, 0, 1, 0],
-      [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
-      [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
+        [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 1, 0], [1, 0, 1, 0],
+        [0, 1, 1, 0], [1, 1, 1, 0], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 0, 1],
+        [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
 
 
 def test_issue_2554():

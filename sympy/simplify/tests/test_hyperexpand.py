@@ -20,11 +20,11 @@ from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
 
 def test_branch_bug():
     assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
-           -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
-           + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
+        -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
+        + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
     assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
-           2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(
-               S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
+        2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(
+                       S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
 
 
 def test_hyperexpand():
@@ -36,7 +36,7 @@ def test_hyperexpand():
     assert hyperexpand(hyper([], [S.Half], -z**2/4)) == cos(z)
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
-           == asin(z)
+        == asin(z)
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
@@ -56,7 +56,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
         [a, b, c, d] = [2, -2, 3, -1]
     return tn(
         hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z,
-              a=a, b=b, c=c, d=d)
+        a=a, b=b, c=c, d=d)
 
 
 def test_roach():
@@ -93,26 +93,26 @@ def test_polynomial():
 def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
         a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)* \
-                lowergamma(a - 1, z) - 1
+        lowergamma(a - 1, z) - 1
     # TODO [a+1, a-S.Half], [2*a]
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
-      -1/(2*z - 2) + atanh(sqrt(z))/sqrt(z)/2
+        -1/(2*z - 2) + atanh(sqrt(z))/sqrt(z)/2
     assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
-               (-3*z + 3)/4/(z*sqrt(-z + 1)) \
-               + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
+        (-3*z + 3)/4/(z*sqrt(-z + 1)) \
+        + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
     assert hyperexpand(hyper([1, 2], [S(3)/2], z)) == -1/(2*z - 2) \
-            - asin(sqrt(z))/(sqrt(z)*(2*z - 2)*sqrt(-z + 1))
+        - asin(sqrt(z))/(sqrt(z)*(2*z - 2)*sqrt(-z + 1))
     assert hyperexpand(hyper([-S.Half - 1, 1, 2], [S.Half, 3], z)) == \
-             sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
-           + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
+        sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
+        + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
     assert hyperexpand(hyper([1 + S.Half, 1, 1], [2, 2], z)) == \
-           -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
+        -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
     # TODO hyperexpand(hyper([a], [2*a + 1], z))
     # TODO [S.Half, a], [S(3)/2, a+1]
     assert hyperexpand(hyper([2], [b, 1], z)) == \
-             z**(-b/2 + S(1)/2)*besseli(b - 1, 2*sqrt(z))*gamma(b) \
-           + z**(-b/2 + 1)*besseli(b, 2*sqrt(z))*gamma(b)
+        z**(-b/2 + S(1)/2)*besseli(b - 1, 2*sqrt(z))*gamma(b) \
+        + z**(-b/2 + 1)*besseli(b, 2*sqrt(z))*gamma(b)
     # TODO [a], [a - S.Half, 2*a]
 
 
@@ -126,7 +126,7 @@ def test_hyperexpand_parametric():
 def test_shifted_sum():
     from sympy import simplify
     assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
-           == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
+        == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
 
 
 def _randrat():
@@ -347,19 +347,19 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([[1, 1], []], [[1], [1]], z)) == \
         z/(z + 1)
     assert hyperexpand(meijerg([[], []], [[S(1)/2], [0]], (z/2)**2)) \
-           == sin(z)/sqrt(pi)
+        == sin(z)/sqrt(pi)
     assert hyperexpand(meijerg([[], []], [[0], [S(1)/2]], (z/2)**2)) \
-           == cos(z)/sqrt(pi)
+        == cos(z)/sqrt(pi)
     assert can_do_meijer([], [a], [a - 1, a - S.Half], [])
     assert can_do_meijer([], [], [a/2], [-a/2], False)  # branches...
     assert can_do_meijer([a], [b], [a], [b, a - 1])
 
     # wikipedia
     assert hyperexpand(meijerg([1], [], [], [0], z)) == \
-       Piecewise((0, abs(z) < 1), (1, abs(1/z) < 1),
+        Piecewise((0, abs(z) < 1), (1, abs(1/z) < 1),
                  (meijerg([1], [], [], [0], z), True))
     assert hyperexpand(meijerg([], [1], [0], [], z)) == \
-       Piecewise((1, abs(z) < 1), (0, abs(1/z) < 1),
+        Piecewise((1, abs(z) < 1), (0, abs(1/z) < 1),
                  (meijerg([], [1], [0], [], z), True))
 
     # The Special Functions and their Approximations
@@ -388,32 +388,30 @@ def test_meijerg_expand():
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:
-    assert combsimp(
-        simplify(hyperexpand(meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2],
-                                                 [], 1/z)))) == \
-           -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
+    assert combsimp(simplify(hyperexpand(
+        meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2], [], 1/z)))) == \
+        -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
     # Test that hyper is returned
-    assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == \
-           z**a*gamma(a)*hyper(
-               (a,), (a + 1, a + 1), z*exp_polar(I*pi))/gamma(a + 1)**2
+    assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == hyper(
+        (a,), (a + 1, a + 1), z*exp_polar(I*pi))*z**a*gamma(a)/gamma(a + 1)**2
 
 
 def test_meijerg_lookup():
     from sympy import uppergamma, Si, Ci
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
-           z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
+        z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
     assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
-           exp(z)*uppergamma(0, z)
+        exp(z)*uppergamma(0, z)
     assert can_do_meijer([a], [], [b, a + 1], [])
     assert can_do_meijer([a], [], [b + 2, a], [])
     assert can_do_meijer([a], [], [b - 2, a], [])
 
     assert hyperexpand(meijerg([a], [], [a, a, a - S(1)/2], [], z)) == \
-           -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
-                                      - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
-           hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
-           hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
+        -sqrt(pi)*z**(a - S(1)/2)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+                                   - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
+        hyperexpand(meijerg([a], [], [a, a - S(1)/2, a], [], z)) == \
+        hyperexpand(meijerg([a], [], [a - S(1)/2, a, a], [], z))
     assert can_do_meijer([a - 1], [], [a + 2, a - S(3)/2, a + 1], [])
 
 
@@ -548,26 +546,22 @@ def test_lerchphi():
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
     assert hyperexpand(hyper([1, a, a, a], [a + 1, a + 1, a + 1], z)/a**3) == \
-           lerchphi(z, 3, a)
-    assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) \
-           == lerchphi(z, 10, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a], [], [0], [-a],
-                    exp_polar(-I*pi)*z))) == \
-           lerchphi(z, 1, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0], [-a, -a],
-                    exp_polar(-I*pi)*z))) == \
-           lerchphi(z, 2, a)
-    assert combsimp(
-        hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0], [-a, -a, -a],
-                    exp_polar(-I*pi)*z))) == \
-           lerchphi(z, 3, a)
+        lerchphi(z, 3, a)
+    assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) == \
+        lerchphi(z, 10, a)
+    assert combsimp(hyperexpand(meijerg([0, 1 - a], [], [0],
+        [-a], exp_polar(-I*pi)*z))) == lerchphi(z, 1, a)
+    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0],
+        [-a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 2, a)
+    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0],
+        [-a, -a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 3, a)
 
     assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + -z)
     assert hyperexpand(z*hyper([1, 1, 1], [2, 2], z)) == polylog(2, z)
     assert hyperexpand(z*hyper([1, 1, 1, 1], [2, 2, 2], z)) == polylog(3, z)
 
     assert hyperexpand(hyper([1, a, 1 + S(1)/2], [a + 1, S(1)/2], z)) == \
-           -2*a/(z - 1) + (-2*a**2 + a)*lerchphi(z, 1, a)
+        -2*a/(z - 1) + (-2*a**2 + a)*lerchphi(z, 1, a)
 
     # Now numerical tests. These make sure reductions etc are carried out
     # correctly
@@ -606,28 +600,28 @@ def test_partial_simp():
     # Now test that formulae are partially simplified.
     from sympy.abc import a, b, z
     assert hyperexpand(hyper([3, a], [1, b], z)) == \
-           (-a*b/2 + a*z/2 + 2*a)*hyper([a + 1], [b], z) \
-         + (a*b/2 - 2*a + 1)*hyper([a], [b], z)
+        (-a*b/2 + a*z/2 + 2*a)*hyper([a + 1], [b], z) \
+        + (a*b/2 - 2*a + 1)*hyper([a], [b], z)
     assert tn(
         hyperexpand(hyper([3, d], [1, e], z)), hyper([3, d], [1, e], z), z)
     assert hyperexpand(hyper([3], [1, a, b], z)) == \
-           hyper((), (a, b), z) \
-           + z*hyper((), (a + 1, b), z)/(2*a) \
-           - z*(b - 4)*hyper((), (a + 1, b + 1), z)/(2*a*b)
+        hyper((), (a, b), z) \
+        + z*hyper((), (a + 1, b), z)/(2*a) \
+        - z*(b - 4)*hyper((), (a + 1, b + 1), z)/(2*a*b)
     assert tn(
         hyperexpand(hyper([3], [1, d, e], z)), hyper([3], [1, d, e], z), z)
 
 
 def test_hyperexpand_special():
     assert hyperexpand(hyper([a, b], [c], 1)) == \
-           gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
+        gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
     assert hyperexpand(hyper([a, b], [1 + a - b], -1)) == \
-           gamma(1 + a/2)*gamma(1 + a - b)/gamma(1 + a)/gamma(1 + a/2 - b)
+        gamma(1 + a/2)*gamma(1 + a - b)/gamma(1 + a)/gamma(1 + a/2 - b)
     assert hyperexpand(hyper([a, b], [1 + b - a], -1)) == \
-           gamma(1 + b/2)*gamma(1 + b - a)/gamma(1 + b)/gamma(1 + b/2 - a)
+        gamma(1 + b/2)*gamma(1 + b - a)/gamma(1 + b)/gamma(1 + b/2 - a)
     assert hyperexpand(meijerg([1 - z - a/2], [1 - z + a/2], [b/2], [-b/2], 1)) == \
-           gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
-           /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
+        gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
+        /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
     assert hyperexpand(hyper([a], [b], 0)) == 0
     assert hyper([a], [b], 0) != 0
 
@@ -637,7 +631,7 @@ def test_Mod1_behavior():
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \
-           lowergamma(n + 1, z)
+        lowergamma(n + 1, z)
 
 
 @slow

@@ -808,8 +808,8 @@ class PermutationGroup(Basic):
         stab_pos = PermutationGroup(strong_gens_distr[pos])
         # size of orbit of base[pos] under the stabilizer we seek to insert
         # in the stabilizer chain at position pos + 1
-        size = len(basic_orbits[pos])*len(basic_orbits[pos + 1])\
-               //len(stab_pos.orbit(base[pos + 1]))
+        size = len(basic_orbits[pos])*len(basic_orbits[pos + 1]) \
+            //len(stab_pos.orbit(base[pos + 1]))
         # initialize the wanted stabilizer by a subgroup
         if pos + 2 > base_len - 1:
             T = []
@@ -1104,7 +1104,7 @@ class PermutationGroup(Basic):
             for j in range(num_rel_orbits):
                 rep = orbit_reps[j]
                 transversals[j] = dict(
-                                      other.orbit_transversal(rep, pairs=True))
+                    other.orbit_transversal(rep, pairs=True))
             trivial_test = lambda x: True
             tests = [None]*base_len
             for l in range(base_len):
@@ -2070,7 +2070,7 @@ class PermutationGroup(Basic):
         if G.order() % self.order() != 0:
             return False
         if self.degree == G.degree or \
-           (self.degree < G.degree and not strict):
+                (self.degree < G.degree and not strict):
             gens = self.generators
         else:
             return False
@@ -2297,7 +2297,7 @@ class PermutationGroup(Basic):
                 # union has side effects: performs union by rank on the list
                 # of representatives
                 temp = self._union_find_merge(gen(temp), gen(delta), ranks,
-                                                 parents, not_rep)
+                                              parents, not_rep)
                 if temp == -1:
                     return [0]*n
                 len_not_rep += temp
@@ -2363,7 +2363,7 @@ class PermutationGroup(Basic):
             base, strong_gens = Z.schreier_sims_incremental()
             strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
             basic_orbits, basic_transversals = \
-                    _orbits_transversals_from_bsgs(base, strong_gens_distr)
+                _orbits_transversals_from_bsgs(base, strong_gens_distr)
 
             self._random_pr_init(r=10, n=20)
 
@@ -2381,12 +2381,12 @@ class PermutationGroup(Basic):
                         Z = PermutationGroup(gens)
                         strong_gens.append(conj)
                         temp_base, temp_strong_gens = \
-                                Z.schreier_sims_incremental(base, strong_gens)
+                            Z.schreier_sims_incremental(base, strong_gens)
                         base, strong_gens = temp_base, temp_strong_gens
                         strong_gens_distr = \
-                                _distribute_gens_by_base(base, strong_gens)
+                            _distribute_gens_by_base(base, strong_gens)
                         basic_orbits, basic_transversals = \
-                                _orbits_transversals_from_bsgs(base,
+                            _orbits_transversals_from_bsgs(base,
                                 strong_gens_distr)
                 _loop = False
                 for g in self.generators:
@@ -3043,7 +3043,7 @@ class PermutationGroup(Basic):
                             for l in range(i + 1, j):
                                 strong_gens_distr[l].append(h)
                                 stabs[l] = \
-                                        PermutationGroup(strong_gens_distr[l])
+                                    PermutationGroup(strong_gens_distr[l])
                                 transversals[l] = \
                                     dict(stabs[l].orbit_transversal(_base[l],
                                                                 pairs=True))
@@ -3558,13 +3558,13 @@ class PermutationGroup(Basic):
         # line 8: main loop
         while True:
             # apply all the tests
-            while l < base_len - 1 and\
-                  computed_words[l](base[l]) in orbit_reps[l] and\
-                  base_ordering[computed_words[l](base[l])] >\
-                  base_ordering[mu[l]] and\
-                  base_ordering[computed_words[l](base[l])] <\
-                  base_ordering[nu[l]] and\
-                  tests[l](computed_words):
+            while l < base_len - 1 and \
+                computed_words[l](base[l]) in orbit_reps[l] and \
+                base_ordering[computed_words[l](base[l])] > \
+                base_ordering[mu[l]] and \
+                base_ordering[computed_words[l](base[l])] < \
+                base_ordering[nu[l]] and \
+                    tests[l](computed_words):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
@@ -3593,8 +3593,8 @@ class PermutationGroup(Basic):
                         if base_ordering[candidate] > base_ordering[new_mu]:
                             new_mu = candidate
                 mu[l] = new_mu
-                temp_index = len(basic_orbits[l]) + 1 -\
-                             len(res_basic_orbits_init_base[l])
+                temp_index = len(basic_orbits[l]) + 1 - \
+                    len(res_basic_orbits_init_base[l])
                 if temp_index >= len(sorted_orbits[l]):
                     nu[l] = base_ordering[degree]
                 else:
@@ -3610,12 +3610,12 @@ class PermutationGroup(Basic):
             # lines 17 & 18: apply the tests to the group element found
             g = computed_words[l]
             temp_point = g(base[l])
-            if l == base_len - 1 and\
-               base_ordering[temp_point] > base_ordering[mu[l]] and\
-               base_ordering[temp_point] < base_ordering[nu[l]] and\
-               temp_point in orbit_reps[l] and\
-               tests[l](computed_words) and\
-               prop(g):
+            if l == base_len - 1 and \
+                base_ordering[temp_point] > base_ordering[mu[l]] and \
+                base_ordering[temp_point] < base_ordering[nu[l]] and \
+                temp_point in orbit_reps[l] and \
+                tests[l](computed_words) and \
+                    prop(g):
                 # line 19: reset the base of K
                 gens = res.generators[:]
                 gens.append(g)
@@ -3660,8 +3660,8 @@ class PermutationGroup(Basic):
                 orbit_reps[f] = reps
                 # line 28: update variables used for minimality testing
                 mu[l] = degree + 1
-                temp_index = len(basic_orbits[l]) + 1 -\
-                             len(res_basic_orbits_init_base[l])
+                temp_index = len(basic_orbits[l]) + 1 - \
+                    len(res_basic_orbits_init_base[l])
                 if temp_index >= len(sorted_orbits[l]):
                     nu[l] = base_ordering[degree]
                 else:

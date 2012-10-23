@@ -17,9 +17,9 @@ from sympy.utilities.misc import default_sort_key
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
 known_functions = {
-        "ceiling": [(lambda x: True, "ceil")],
-        "Abs": [(lambda x: not x.is_integer, "fabs")],
-        }
+    "ceiling": [(lambda x: True, "ceil")],
+    "Abs": [(lambda x: not x.is_integer, "fabs")],
+}
 
 
 class CCodePrinter(CodePrinter):
@@ -163,7 +163,7 @@ class CCodePrinter(CodePrinter):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
-                       for e, c in expr.args[:-1]]
+                   for e, c in expr.args[:-1]]
         last_line = ""
         if expr.args[-1].cond is True:
             last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
@@ -214,7 +214,7 @@ class CCodePrinter(CodePrinter):
 
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
         decrease = [ int(any(map(line.startswith, dec_token)))
-                         for line in code ]
+                     for line in code ]
 
         pretty = []
         level = 0
