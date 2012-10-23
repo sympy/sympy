@@ -20,6 +20,7 @@ def test_symmetric():
     assert ask(Q.symmetric(X), Q.symmetric(X))
     assert ask(Q.symmetric(X*Z), Q.symmetric(X)) is None
     assert ask(Q.symmetric(X*Z), Q.symmetric(X) & Q.symmetric(Z)) is True
+    assert ask(Q.symmetric(X+Z), Q.symmetric(X) & Q.symmetric(Z)) is True
     assert ask(Q.symmetric(Y)) is False
     assert ask(Q.symmetric(Y*Y.T)) is True
     assert ask(Q.symmetric(Y.T*X*Y)) is None
@@ -36,6 +37,7 @@ def test_orthogonal():
     assert ask(Q.orthogonal(Identity(3))) is True
     assert ask(Q.orthogonal(ZeroMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.orthogonal(X))
+    assert not ask(Q.orthogonal(X+Z), Q.orthogonal(X) & Q.orthogonal(Z))
 
 def test_positive_definite():
     assert ask(Q.positive_definite(X), Q.positive_definite(X))
@@ -50,3 +52,6 @@ def test_positive_definite():
             Q.positive_definite(X) & Q.orthogonal(Y)) is True
     assert ask(Q.positive_definite(Identity(3))) is True
     assert ask(Q.positive_definite(ZeroMatrix(3, 3))) is False
+    assert ask(Q.positive_definite(X+Z), Q.positive_definite(X) &
+            Q.positive_definite(Z)) is True
+    assert not ask(Q.positive_definite(-X), Q.positive_definite(X))

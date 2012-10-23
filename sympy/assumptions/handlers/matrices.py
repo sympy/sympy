@@ -140,8 +140,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
 
     @staticmethod
     def MatAdd(expr, assumptions):
-        if (all(ask(Q.positive_definite(arg), assumptions) for arg in mmul.args)
-                and factor > 0):
+        if all(ask(Q.positive_definite(arg), assumptions) for arg in expr.args):
             return True
 
     @staticmethod
