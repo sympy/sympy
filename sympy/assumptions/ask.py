@@ -127,10 +127,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_full_inference(key, local_facts)
+    return ask_full_inference(key, local_facts, known_facts_cnf)
 
 
-def ask_full_inference(proposition, assumptions):
+def ask_full_inference(proposition, assumptions, known_facts_cnf):
     """
     Method for inferring properties about objects.
 
@@ -175,25 +175,29 @@ def remove_handler(key, handler):
     getattr(Q, key).remove_handler(handler)
 
 
-def compute_known_facts():
-    """Compute the various forms of knowledge compilation used by the
-    assumptions system.
-    """
-    # Compute the known facts in CNF form for logical inference
-    fact_string = "# -{ Known facts in CNF }-\n"
-    cnf = to_cnf(known_facts)
-    fact_string += "known_facts_cnf = And(\n    "
-    fact_string += ",\n    ".join(map(str, cnf.args))
-    fact_string += "\n)\n"
-
+def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask_full_inference(other_key, key):
+                if ask_full_inference(other_key, key, known_facts_cnf):
                     mapping[key].add(other_key)
+    return mapping
+
+def compute_known_facts(known_facts, known_facts_keys):
+    """Compute the various forms of knowledge compilation used by the
+    assumptions system.
+    """
+    # Compute the known facts in CNF form for logical inference
+    cnf = to_cnf(known_facts)
+    fact_string = "# -{ Known facts in CNF }-\n"
+    fact_string += "known_facts_cnf = And(\n    "
+    fact_string += ",\n    ".join(map(str, cnf.args))
+    fact_string += "\n)\n"
+
+    mapping = single_fact_lookup(known_facts_keys, cnf)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "
     fact_string += ",\n    ".join(
