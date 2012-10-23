@@ -576,119 +576,99 @@ def to_int_repr(clauses, symbols):
                                                             for c in clauses]
 
 
-def check_pair(minterm1, minterm2):
+def _check_pair(minterm1, minterm2):
     """
     Checks if a pair of minterms differs by only one bit.If yes, returns
     index. Otherwise, returns -1.
     """
-    if abs(minterm1.count(1) - minterm2.count(1)) == 1:
-        i = 0
-        count = 0
-        index = 0
-        while i <= (len(minterm1) - 1):
-            if minterm1[i] != minterm2[i]:
-                index = i
-                count += 1
-            i += 1
-        if count == 1:
-            return index
-        else:
-            return -1
-    else:
-        return -1
+    index = -1
+    for x, (i, j) in enumerate(zip(minterm1, minterm2)):
+        if i != j:
+            if index == -1:
+                index = x
+            else:
+                return -1
+    return index
 
 
-def convert_to_varsSOP(minterm, variables):
+def _convert_to_varsSOP(minterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for SOP).
     """
-    string = ""
-    i = 0
-    while i <= (len(minterm) - 1):
-        if minterm[i] == 0:
-            string = string + "~" + variables[i] + "&"
-        elif minterm[i] == 1:
-            string = string + (variables[i]) + "&"
-        i += 1
-    return string[:-1]
+    minterm = ['' if i else '~' for i in minterm]
+    temp = []
+    for i in range(len(minterm)):
+        temp.append(minterm[i] + variables[i])
+    return '&'.join(temp)
 
 
-def convert_to_varsPOS(maxterm, variables):
+def _convert_to_varsPOS(maxterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for POS).
     """
-    string = "("
-    i = 0
-    while i <= (len(maxterm) - 1):
-        if maxterm[i] == 0:
-            string = string + variables[i] + '|'
-        elif maxterm[i] == 1:
-            string = string + "~" + variables[i] + '|'
-        i += 1
-    string = string[:-1]
-    return (string + ")")
+    maxterm = ['~' if i else '' for i in maxterm]
+    temp = []
+    for i in range(len(maxterm)):
+        temp.append(maxterm[i] + variables[i])
+    return '(' + '|'.join(temp) + ')'
 
 
-def simplified_pairs(terms):
+def _simplified_pairs(terms):
     """
     Reduces a set of minterms, if possible, to a simplified set of minterms
     with one less variable in the terms using QM method.
     """
     simplified_terms = []
     i = 0
-    done_list = []
-    while i <= (len(terms) - 2):
+    done = set()
+    for i, term in enumerate(terms[:-1]):
         k = 1
         for x in terms[(i + 1):]:
-            index = check_pair(terms[i], x)
+            index = _check_pair(term, x)
             if index != -1:
-                done_list.append(i)
-                done_list.append(i + k)
-                temporary = terms[i][:index]
+                done.add(i)
+                done.add(i+k)
+                temporary = term[:index]
                 temporary.append(3)
-                temporary.extend(terms[i][(index + 1):])
+                temporary.extend(term[(index + 1):])
                 if temporary not in simplified_terms:
                     simplified_terms.append(temporary)
             k += 1
-        i += 1
-    done_list = list(set(done_list))
     i = 0
-    while i <= (len(terms) - 1):
-        if i not in done_list:
-            simplified_terms.append(terms[i])
-        i += 1
+    done = list(done)
+    for i, term in enumerate(terms):
+        if i not in done:
+            simplified_terms.append(term)
     return simplified_terms
 
 
-def compare_term(minterm, term):
+def _compare_term(minterm, term):
     """
     Compares if a binary term is satisfied by the given term. Used
     for recognising prime implicants.
     """
-    i = 0
     flag = True
-    while (i <= (len(term) - 1)):
-        if term[i] != 3:
-            if term[i] != minterm[i]:
+    for i, x in enumerate(term):
+        if x != 3:
+            if x != minterm[i]:
                 flag = False
                 break
-        i += 1
     return flag
 
 
-def rem_redundancy(l1, terms, variables, mode):
+def _rem_redundancy(l1, terms, variables, mode):
     """
-    After the truth table has been sufficiently simplified, uses the prime
+    After the truth table has been sufficiently simplified, use the prime
     implicant table method to recognise and eliminate redundant pairs,
-    and returns the relevant function in string form.
+    and return the relevant function in string form.
     """
     essential = []
     for x in terms:
         temporary = []
         for y in l1:
-            if compare_term(x, y):
+            if _compare_term(x, y):
                 temporary.append(y)
         if len(temporary) == 1:
             if temporary[0] not in essential:
@@ -696,23 +676,25 @@ def rem_redundancy(l1, terms, variables, mode):
     for x in terms:
         flag = False
         for y in essential:
-            if compare_term(x, y):
+            if _compare_term(x, y):
                 flag = True
                 break
-        if (Not(flag)):
+        if (not(flag)):
             for z in l1:
-                if compare_term(x, z):
+                if _compare_term(x, z):
                     if z not in essential:
                         essential.append(z)
                     break
-    string = ""
+    string = []
     if mode == 1:
         for x in essential:
-            string = string + convert_to_varsSOP(x, variables) + '|'
+            string.append(_convert_to_varsSOP(x, variables))
+            string.append('|')
     else:
         for x in essential:
-            string = string + convert_to_varsPOS(x, variables) + '&'
-    return string
+            string.append(_convert_to_varsPOS(x, variables))
+            string.append('&')
+    return ''.join(string)
 
 
 def SOPform(variables, minterms, dontcares=[]):
@@ -749,10 +731,10 @@ def SOPform(variables, minterms, dontcares=[]):
     l2 = [1]
     total = minterms + dontcares
     while (l1 != l2):
-        l1 = simplified_pairs(total)
-        l2 = simplified_pairs(l1)
+        l1 = _simplified_pairs(total)
+        l2 = _simplified_pairs(l1)
         total = l1[:]
-    string = rem_redundancy(l1, minterms, variables, 1)
+    string = _rem_redundancy(l1, minterms, variables, 1)
     if string == '':
         return True
     return compile_rule(string[:-1])
@@ -800,10 +782,10 @@ def POSform(variables, minterms, dontcares=[]):
     l2 = [1]
     total = maxterms + dontcares
     while (l1 != l2):
-        l1 = simplified_pairs(total)
-        l2 = simplified_pairs(l1)
+        l1 = _simplified_pairs(total)
+        l2 = _simplified_pairs(l1)
         total = l1[:]
-    string = rem_redundancy(l1, maxterms, variables, 2)
+    string = _rem_redundancy(l1, maxterms, variables, 2)
     if string == '':
         return True
     return compile_rule(string[:-1])
