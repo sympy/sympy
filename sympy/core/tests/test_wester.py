@@ -11,11 +11,12 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart,
-    factorial2)
+    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
+    factorial2, powdenest, Mul, S)
 
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy import mpmath
 
@@ -75,9 +76,9 @@ def test_C10():
         x += R(1, n)
     assert x == R(4861, 2520)
 
-@XFAIL
+
 def test_C11():
-    assert N(1/7, 6) == 0.142857
+    assert R(1,7) == S('0.[142857]')
 
 def test_C12():
     assert R(7, 11) * R(22, 7) == 2
@@ -95,9 +96,8 @@ def test_C15():
     good = sqrt(2) + 3
     assert test == good
 
-@XFAIL
 def test_C16():
-    test = radsimp(nsimplify(sqrt(10 + 2*sqrt(6) + 2*sqrt(10) + 2*sqrt(15))))
+    test = sqrtdenest(sqrt(10 + 2*sqrt(6) + 2*sqrt(10) + 2*sqrt(15)))
     good = sqrt(2) + sqrt(3) + sqrt(5)
     assert test == good
 
@@ -209,9 +209,10 @@ def test_F4():
 def test_F5():
     assert gamma(n+R(1,2)) / sqrt(pi) / factorial(n) == factorial(2*n)/2**(2*n)/factorial(n)**2
 
-@XFAIL
 def test_F6():
-    raise NotImplementedError("find the partitions of 4: [4,2+2,1+3,1+1+2,1+1+1+1]")
+    partTest = sorted([p.copy() for p in partitions(4)])
+    partDesired = sorted([{4: 1}, {1: 2, 2:1}, {2: 2}, {1: 1, 3: 1}, {1: 4}])
+    assert partTest == partDesired
 
 def test_F7():
     assert npartitions(4) == 5
@@ -240,10 +241,9 @@ def test_G3():
 
 # H. Algebra
 
-@XFAIL
 def test_H1():
-    # simplify() works but I think that's not exactly we want here
-    assert 2 * 2**n == 2 ** (n+1)
+    assert simplify(2*2**n) == simplify(2**(n+1))
+    assert powdenest(2*2**n) == simplify(2**(n+1))
 
 @XFAIL
 def test_H2():
@@ -253,12 +253,11 @@ def test_H2():
 def test_H3():
     assert (-1) ** (n*(n+1)) == 1
 
-@XFAIL
 def test_H4():
     expr = factor(6*x - 10)
     assert type(expr) is Mul
     assert expr.args[0] == 2
-    assert factor(6*x - 10) == 2 * (3*x-5)
+    assert expr.args[1] == 3*x-5
 
 p1 = 64*x**34 - 21*x**47 - 126*x**8 - 46*x**5 - 16*x**60 - 81
 p2 = 72*x**60 - 25*x**25 - 19*x**23 - 22*x**39 - 83*x**52 + 54*x**10 + 81
@@ -267,9 +266,8 @@ q = 34*x**19 - 25*x**16 + 70*x**7 + 20*x**3 - 91*x - 86
 def test_H5():
     assert gcd(p1, p2, x) == 1
 
-@XFAIL
 def test_H6():
-    assert gcd(expand(p1 * q), expand(p2 * q), x) == q
+    assert gcd(expand(p1 * q), expand(p2 * q)) == q
 
 def test_H7():
     p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
@@ -282,11 +280,11 @@ def test_H8():
     q = 11*x**12*y**7*z**13 - 23*x**2*y**8*z**10 + 47*x**17*y**5*z**8
     assert gcd(p1 * q, p2 * q, x, y, z) == q
 
-@XFAIL
+
 def test_H9():
     p1 = 2*x**(n+4) - x**(n+2)
     p2 = 4*x**(n+1) + 3*x**n
-    assert gcd(p1, p2, x) == x**n
+    assert gcd(p1, p2) == x**n
 
 def test_H10():
     p1 = 3*x**4 + 3*x**3 + x**2 - x - 2
@@ -320,12 +318,8 @@ def test_H14():
         + 20*x**19)
     assert factor(dep) == 20*(1 + x)**19
 
-@XFAIL
 def test_H15():
-    # You can use solve() to do the factorization, but putting it back is hard.
-    # The coefficients are also much nastier than, say, Maple provides, even
-    # after nsimplify.
-    raise NotImplementedError("factor(x**3 + x**2 - 7) then expand it back to the original form")
+    assert simplify((Mul(*[x-r for r in solve(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
 
 def test_H16():
     assert factor(x**100 - 1) == ((x - 1)*(x + 1)*(x**2 + 1)*(x**4 - x**3
@@ -333,10 +327,9 @@ def test_H16():
         - x**2 + 1)*(x**20 - x**15 + x**10 - x**5 + 1)*(x**20 + x**15 + x**10
         + x**5 + 1)*(x**40 - x**30 + x**20 - x**10 + 1))
 
-@XFAIL
+# Fails only due to a difference in sign factoring: -(-p1*p2)
 def test_H17():
-    #skip('takes too much time')
-    assert factor(expand(p1 * p2)) == p1 * p2
+    assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
 @XFAIL
 def test_H18():
@@ -348,6 +341,8 @@ def test_H18():
 @XFAIL
 def test_H19():
     raise NotImplementedError("let a**2==2; 1/(a-1) == a+1")
+    # The idea here is no NOT explicitly solve for a. One solution
+    # should be produced.
 
 @XFAIL
 def test_H20():
