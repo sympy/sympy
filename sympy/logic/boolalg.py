@@ -572,8 +572,8 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols[arg]
 
-    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
-                                                            for c in clauses]
+    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
+            for c in clauses]
 
 
 def _check_pair(minterm1, minterm2):
@@ -596,11 +596,15 @@ def _convert_to_varsSOP(minterm, variables):
     Converts a term in the expansion of a function from binary to it's
     variable form (for SOP).
     """
-    minterm = ['' if i else '~' for i in minterm]
-    temp = []
-    for i in range(len(minterm)):
-        temp.append(minterm[i] + variables[i])
-    return '&'.join(temp)
+    string = []
+    i = 0
+    while i <= (len(minterm)- 1):
+        if minterm[i]== 0:
+            string.append(''.join(["~", variables[i], "&"]))
+        elif minterm[i] == 1:
+            string.append(''.join([variables[i], "&"]))
+        i += 1
+    return (''.join(string))[:-1]
 
 
 def _convert_to_varsPOS(maxterm, variables):
@@ -608,11 +612,16 @@ def _convert_to_varsPOS(maxterm, variables):
     Converts a term in the expansion of a function from binary to it's
     variable form (for POS).
     """
-    maxterm = ['~' if i else '' for i in maxterm]
-    temp = []
-    for i in range(len(maxterm)):
-        temp.append(maxterm[i] + variables[i])
-    return '(' + '|'.join(temp) + ')'
+    string = []
+    string.append("(")
+    i = 0
+    while i <= (len(maxterm)- 1):
+        if maxterm[i]== 0:
+            string.append(''.join([variables[i], "|"]))
+        elif maxterm[i] == 1:
+            string.append(''.join(["~", variables[i], "|"]))
+        i += 1
+    return (''.join(string))[:-1] + ")"
 
 
 def _simplified_pairs(terms):
@@ -714,8 +723,8 @@ def SOPform(variables, minterms, dontcares=[]):
     ========
 
     >>> from sympy.logic import SOPform
-    >>> minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
-    >>> dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
+    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+    >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> SOPform(['w','x','y','z'], minterms, dontcares)
         Or(And(Not(w), z), And(y, z))
 
@@ -757,8 +766,8 @@ def POSform(variables, minterms, dontcares=[]):
     ========
 
     >>> from sympy.logic import POSform
-    >>> minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
-    >>> dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
+    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+    >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> POSform(['w','x','y','z'], minterms, dontcares)
         And(Or(Not(w), y), z)
 
