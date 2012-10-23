@@ -55,3 +55,17 @@ def test_positive_definite():
     assert ask(Q.positive_definite(X+Z), Q.positive_definite(X) &
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
+
+def test_triangular():
+    assert ask(Q.upper_triangular(X+Z.T+Identity(2)), Q.upper_triangular(X) &
+            Q.lower_triangular(Z)) is True
+    assert ask(Q.upper_triangular(X*Z.T), Q.upper_triangular(X) &
+            Q.lower_triangular(Z)) is True
+    assert ask(Q.lower_triangular(Identity(3))) is True
+    assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
+
+def test_diagonal():
+    assert ask(Q.diagonal(X+Z.T+Identity(2)), Q.diagonal(X) &
+                                              Q.diagonal(Z)) is True
+    assert ask(Q.diagonal(ZeroMatrix(3, 3)))
+    assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))

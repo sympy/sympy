@@ -162,3 +162,102 @@ class AskPositiveDefiniteHandler(CommonHandler):
     def Transpose(expr, assumptions):
         return ask(Q.positive_definite(expr.arg), assumptions)
     Inverse = Transpose
+
+class AskUpperTriangularHandler(CommonHandler):
+    """
+    Handler for key 'upper_triangular'
+    """
+    @staticmethod
+    def MatMul(expr, assumptions):
+        factor, matrices= expr.as_coeff_matrices()
+        if all(ask(Q.upper_triangular(m), assumptions) for m in matrices):
+            return True
+
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        if all(ask(Q.upper_triangular(arg), assumptions) for arg in expr.args):
+            return True
+
+    @staticmethod
+    def MatrixSymbol(expr, assumptions):
+        if Q.upper_triangular(expr) in conjuncts(assumptions):
+            return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+    ZeroMatrix = Identity
+
+    @staticmethod
+    def Transpose(expr, assumptions):
+        return ask(Q.lower_triangular(expr.arg), assumptions)
+
+    @staticmethod
+    def Inverse(expr, assumptions):
+        return ask(Q.upper_triangular(expr.arg), assumptions)
+
+class AskLowerTriangularHandler(CommonHandler):
+    """
+    Handler for key 'lower_triangular'
+    """
+    @staticmethod
+    def MatMul(expr, assumptions):
+        factor, matrices= expr.as_coeff_matrices()
+        if all(ask(Q.lower_triangular(m), assumptions) for m in matrices):
+            return True
+
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        if all(ask(Q.lower_triangular(arg), assumptions) for arg in expr.args):
+            return True
+
+    @staticmethod
+    def MatrixSymbol(expr, assumptions):
+        if Q.lower_triangular(expr) in conjuncts(assumptions):
+            return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+    ZeroMatrix = Identity
+
+    @staticmethod
+    def Transpose(expr, assumptions):
+        return ask(Q.upper_triangular(expr.arg), assumptions)
+
+    @staticmethod
+    def Inverse(expr, assumptions):
+        return ask(Q.lower_triangular(expr.arg), assumptions)
+
+class AskDiagonalHandler(CommonHandler):
+    """
+    Handler for key 'diagonal'
+    """
+    @staticmethod
+    def MatMul(expr, assumptions):
+        factor, matrices= expr.as_coeff_matrices()
+        if all(ask(Q.diagonal(m), assumptions) for m in matrices):
+            return True
+
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        if all(ask(Q.diagonal(arg), assumptions) for arg in expr.args):
+            return True
+
+    @staticmethod
+    def MatrixSymbol(expr, assumptions):
+        if Q.diagonal(expr) in conjuncts(assumptions):
+            return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+    ZeroMatrix = Identity
+
+    @staticmethod
+    def Transpose(expr, assumptions):
+        return ask(Q.diagonal(expr.arg), assumptions)
+
+    @staticmethod
+    def Inverse(expr, assumptions):
+        return ask(Q.diagonal(expr.arg), assumptions)

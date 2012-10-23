@@ -32,6 +32,9 @@ class Q:
     invertible = Predicate('invertible')
     orthogonal = Predicate('orthogonal')
     positive_definite= Predicate('positive_definite')
+    upper_triangular = Predicate('upper_triangular')
+    lower_triangular = Predicate('lower_triangular')
+    diagonal = Predicate('diagonal')
 
 def _extract_facts(expr, symbol):
     """
@@ -234,7 +237,10 @@ _handlers_dict = {
     'symmetric':       ['sympy.assumptions.handlers.matrices.AskSymmetricHandler'],
     'invertible':      ['sympy.assumptions.handlers.matrices.AskInvertibleHandler'],
     'orthogonal':      ['sympy.assumptions.handlers.matrices.AskOrthogonalHandler'],
-    'positive_definite':       ['sympy.assumptions.handlers.matrices.AskPositiveDefiniteHandler']
+    'positive_definite':       ['sympy.assumptions.handlers.matrices.AskPositiveDefiniteHandler'],
+    'upper_triangular':      ['sympy.assumptions.handlers.matrices.AskUpperTriangularHandler'],
+    'lower_triangular':      ['sympy.assumptions.handlers.matrices.AskLowerTriangularHandler'],
+    'diagonal':      ['sympy.assumptions.handlers.matrices.AskDiagonalHandler'],
 }
 for name, value in _handlers_dict.iteritems():
     register_handler(name, value[0])
@@ -260,7 +266,9 @@ known_facts = And(
     Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
     Implies(Q.orthogonal, Q.positive_definite),
-    Implies(Q.positive_definite, Q.invertible)
+    Implies(Q.positive_definite, Q.invertible),
+    Implies(Q.diagonal, Q.upper_triangular),
+    Implies(Q.diagonal, Q.lower_triangular)
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf
