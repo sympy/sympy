@@ -5,6 +5,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 from sympy.core.compatibility import is_sequence
 
+
 class PlotMode(PlotObject):
     """
     Grandparent class for plotting
@@ -47,12 +48,12 @@ class PlotMode(PlotObject):
         1: {1: {}, 2: {}},
         2: {1: {}, 2: {}},
         3: {1: {}, 2: {}},
-    } # [d][i][alias_str]: class
+    }  # [d][i][alias_str]: class
     _mode_default_map = {
         1: {},
         2: {},
         3: {},
-    } # [d][i]: class
+    }  # [d][i]: class
     _i_var_max, _d_var_max = 2, 3
 
     def __new__(cls, *args, **kwargs):
@@ -127,17 +128,17 @@ class PlotMode(PlotObject):
             if not m._was_initialized:
                 raise ValueError(("To use unregistered plot mode %s "
                                   "you must first call %s._init_mode().")
-                                  % (m.__name__, m.__name__))
+                                 % (m.__name__, m.__name__))
             if d_var_count != m.d_var_count:
                 raise ValueError(("%s can only plot functions "
                                   "with %i dependent variables.")
-                                  % (m.__name__,
+                                 % (m.__name__,
                                      m.d_var_count))
             if i_var_count > m.i_var_count:
                 raise ValueError(("%s cannot plot functions "
                                   "with more than %i independent "
                                   "variables.")
-                                  % (m.__name__,
+                                 % (m.__name__,
                                      m.i_var_count))
             return m
         # If it is a string, there are two possibilities.
@@ -170,7 +171,7 @@ class PlotMode(PlotObject):
             # which support the given d var count until we
             # reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_default_mode(i+1, d, i_vars)
+                return PlotMode._get_default_mode(i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a default mode "
                                   "for %i independent and %i "
@@ -183,7 +184,7 @@ class PlotMode(PlotObject):
         if alias not in PlotMode._mode_alias_list:
             raise ValueError(("Couldn't find a mode called"
                               " %s. Known modes: %s.")
-                              % (alias, ", ".join(PlotMode._mode_alias_list)))
+                             % (alias, ", ".join(PlotMode._mode_alias_list)))
         try:
             return PlotMode._mode_map[d][i][alias]
         except TypeError:
@@ -191,12 +192,12 @@ class PlotMode(PlotObject):
             # which support the given d var count and alias
             # until we reach the max i_var count.
             if i < PlotMode._i_var_max:
-                return PlotMode._get_aliased_mode(alias, i+1, d, i_vars)
+                return PlotMode._get_aliased_mode(alias, i + 1, d, i_vars)
             else:
                 raise ValueError(("Couldn't find a %s mode "
                                   "for %i independent and %i "
                                   "dependent variables.")
-                                  % (alias, i_vars, d))
+                                 % (alias, i_vars, d))
 
     @classmethod
     def _register(cls):
@@ -383,6 +384,7 @@ class PlotMode(PlotObject):
                 nargs.append(a)
         nkwargs = dict(nkwargs, **kwargs)
         return nargs, nkwargs
+
 
 def var_count_error(is_independent, is_plotting):
     """

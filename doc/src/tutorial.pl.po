@@ -1,12 +1,12 @@
 # Polish translation of the SymPy tutorial.
-# Copyright (C) 2008, 2009, 2010, 2011 SymPy Development Team
+# Copyright (C) 2008, 2009, 2010, 2011, 2012 SymPy Development Team
 # This file is distributed under the same license as the SymPy package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: SymPy 0.7.1\n"
+"Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-08-14 15:40\n"
 "PO-Revision-Date: 2012-08-15 10:51\n"

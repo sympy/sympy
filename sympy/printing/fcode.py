@@ -43,6 +43,7 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
     }
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
@@ -50,7 +51,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(assign_to, basestring):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("FCodePrinter cannot assign to object of type %s"%
+            raise TypeError("FCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
     def _rate_index_position(self, p):
@@ -76,8 +77,9 @@ class FCodePrinter(CodePrinter):
             self._lead_comment = "! "
         else:
             raise ValueError(
-                    "Unknown source format: %s" % self._settings['source_format']
-                    )
+                "Unknown source format: %s" % self._settings[
+                'source_format']
+            )
 
     def _pad_leading_columns(self, lines):
         result = []
@@ -96,11 +98,10 @@ class FCodePrinter(CodePrinter):
         for i in indices:
             # fortran arrays start at 1 and end at dimension
             var, start, stop = map(self._print,
-                    [i.label, i.lower+1, i.upper+1])
+                    [i.label, i.lower + 1, i.upper + 1])
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
-
 
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
@@ -111,21 +112,22 @@ class FCodePrinter(CodePrinter):
         # Fortran.
         self._not_supported = set()
 
-
         lines = []
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args)-1 and c == True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                lines.extend(self._doprint_a_piece(e, self._settings['assign_to']))
+                lines.extend(
+                    self._doprint_a_piece(e, self._settings['assign_to']))
             lines.append("end if")
         else:
-            lines.extend(self._doprint_a_piece(expr, self._settings['assign_to']))
+            lines.extend(
+                self._doprint_a_piece(expr, self._settings['assign_to']))
 
         # format the output
         if self._settings["human"]:
@@ -133,7 +135,7 @@ class FCodePrinter(CodePrinter):
             if len(self._not_supported) > 0:
                 frontlines.append("! Not Fortran:")
                 for expr in sorted(self._not_supported, key=self._print):
-                    frontlines.append("! %s" % expr)
+                    frontlines.append("! %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("parameter (%s = %s)" % (str(name), value))
             frontlines.extend(lines)
@@ -144,7 +146,8 @@ class FCodePrinter(CodePrinter):
         else:
             lines = self.indent_code(lines)
             lines = self._wrap_fortran(lines)
-            result = self._number_symbols, self._not_supported, "\n".join(lines)
+            result = self._number_symbols, self._not_supported, "\n".join(
+                lines)
 
         del self._not_supported
         del self._number_symbols
@@ -228,7 +231,7 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1.0/%s'%(self.parenthesize(expr.base, PREC))
+            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
@@ -249,7 +252,7 @@ class FCodePrinter(CodePrinter):
         printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
-            return "%sd%s" % (printed[:e], printed[e+1:])
+            return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
     def _print_Indexed(self, expr):
@@ -271,15 +274,16 @@ class FCodePrinter(CodePrinter):
         # routine to find split point in a code line
         my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
         my_white = set(" \t()")
+
         def split_pos_code(line, endpos):
             if len(line) <= endpos:
                 return len(line)
             pos = endpos
             split = lambda pos: \
-                (line[pos] in my_alnum and line[pos-1] not in my_alnum) or \
-                (line[pos] not in my_alnum and line[pos-1] in my_alnum) or \
-                (line[pos] in my_white and line[pos-1] not in my_white) or \
-                (line[pos] not in my_white and line[pos-1] in my_white)
+                (line[pos] in my_alnum and line[pos - 1] not in my_alnum) or \
+                (line[pos] not in my_alnum and line[pos - 1] in my_alnum) or \
+                (line[pos] in my_white and line[pos - 1] not in my_white) or \
+                (line[pos] not in my_white and line[pos - 1] in my_white)
             while not split(pos):
                 pos -= 1
                 if pos == 0:
@@ -315,13 +319,15 @@ class FCodePrinter(CodePrinter):
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
-                if line: hunk += trailing
+                if line:
+                    hunk += trailing
                 result.append(hunk)
                 while len(line) > 0:
                     pos = split_pos_code(line, 65)
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()
-                    if line: hunk += trailing
+                    if line:
+                        hunk += trailing
                     result.append("%s%s" % (self._lead_cont, hunk))
             else:
                 result.append(line)
@@ -339,9 +345,12 @@ class FCodePrinter(CodePrinter):
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
-        increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_keyword))) for line in code ]
-        continuation = [ int(any(map(line.endswith, ['&', '&\n']))) for line in code ]
+        increase = [ int(any(map(line.startswith, inc_keyword)))
+                     for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_keyword)))
+                     for line in code ]
+        continuation = [ int(any(map(line.endswith, ['&', '&\n'])))
+                         for line in code ]
 
         level = 0
         cont_padding = 0
@@ -373,6 +382,7 @@ class FCodePrinter(CodePrinter):
         if not free:
             return self._wrap_fortran(new_code)
         return new_code
+
 
 def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code

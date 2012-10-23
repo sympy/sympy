@@ -2,8 +2,9 @@ from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer
 
+
 def test_rigidbody():
-    m, m2, v1,v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
+    m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
     A = ReferenceFrame('A')
     A2 = ReferenceFrame('A2')
     P = Point('P')
@@ -28,9 +29,10 @@ def test_rigidbody():
     assert B.inertia == (I2, B.masscenter)
 
     # Testing linear momentum function assuming A2 is the inertial frame
-    N =  ReferenceFrame('N')
+    N = ReferenceFrame('N')
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
     assert B.linear_momentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
+
 
 def test_rigidbody2():
     M, v, r, omega, g, h = dynamicsymbols('M v r omega g h')
@@ -38,7 +40,7 @@ def test_rigidbody2():
     b = ReferenceFrame('b')
     b.set_ang_vel(N, omega * b.x)
     P = Point('P')
-    I = outer (b.x, b.x)
+    I = outer(b.x, b.x)
     Inertia_tuple = (I, P)
     B = RigidBody('B', P, b, M, Inertia_tuple)
     P.set_vel(N, v * b.x)

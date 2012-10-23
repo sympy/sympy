@@ -9,6 +9,7 @@ from str import StrPrinter
 STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
             "Pow", "Zero")
 
+
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
@@ -21,7 +22,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         # Create print methods for classes that should use StrPrinter instead
         # of ReprPrinter.
         for name in STRPRINT:
-            f_name = "_print_%s"%name
+            f_name = "_print_%s" % name
             f = getattr(StrPrinter, f_name)
             setattr(PythonPrinter, f_name, f)
 
@@ -59,8 +60,9 @@ def python(expr, **settings):
             while True:
                 newsymbolname += "_"
                 if (newsymbolname not in printer.symbols and
-                    newsymbolname not in printer.functions):
-                    renamings[sympy.Symbol(symbolname)] = sympy.Symbol(newsymbolname)
+                        newsymbolname not in printer.functions):
+                    renamings[sympy.Symbol(
+                        symbolname)] = sympy.Symbol(newsymbolname)
                     break
         result += newsymbolname + ' = Symbol(\'' + symbolname + '\')\n'
 
@@ -71,8 +73,9 @@ def python(expr, **settings):
             while True:
                 newfunctionname += "_"
                 if (newfunctionname not in printer.symbols and
-                    newfunctionname not in printer.functions):
-                    renamings[sympy.Function(functionname)] = sympy.Function(newfunctionname)
+                        newfunctionname not in printer.functions):
+                    renamings[sympy.Function(
+                        functionname)] = sympy.Function(newfunctionname)
                     break
         result += newfunctionname + ' = Function(\'' + functionname + '\')\n'
 
@@ -80,6 +83,7 @@ def python(expr, **settings):
         exprp = expr.subs(renamings)
     result += 'e = ' + printer._str(exprp)
     return result
+
 
 def print_python(expr, **settings):
     """Print output of python() function"""

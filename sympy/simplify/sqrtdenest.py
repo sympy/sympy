@@ -6,6 +6,7 @@ from sympy.polys import Poly, PolynomialError
 from sympy.core.function import count_ops
 from sympy.utilities import default_sort_key
 
+
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
 
@@ -94,10 +95,10 @@ def subsets(n):
         a = [[1, 0, 0], [0, 1, 0], [1, 1, 0],
              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
     else:
-        b = subsets(n-1)
-        a0 = [x+[0] for x in b]
-        a1 = [x+[1] for x in b]
-        a = a0 + [[0]*(n-1) + [1]] + a1
+        b = subsets(n - 1)
+        a0 = [x + [0] for x in b]
+        a1 = [x + [1] for x in b]
+        a = a0 + [[0]*(n - 1) + [1]] + a1
     return a
 
 
@@ -212,15 +213,17 @@ def _sqrt_match(p):
             res = []
     return list(res)
 
+
 class SqrtdenestStopIteration(StopIteration):
     pass
+
 
 def _sqrtdenest0(expr):
     """Returns expr after denesting its arguments."""
 
     if is_sqrt(expr):
         n, d = expr.as_numer_denom()
-        if d is S.One: # n is a square root
+        if d is S.One:  # n is a square root
             if n.base.is_Add:
                 args = sorted(n.base.args, key=default_sort_key)
                 if len(args) > 2 and all((x**2).is_Integer for x in args):
@@ -238,6 +241,7 @@ def _sqrtdenest0(expr):
         if args:
             return expr.func(*[_sqrtdenest0(a) for a in args])
     return expr
+
 
 def _sqrtdenest_rec(expr):
     """Helper that denests the square root of three or more surds.
@@ -297,6 +301,7 @@ def _sqrtdenest_rec(expr):
     r = d/sqrt(2) + num/(den*sqrt(2))
     r = radsimp(r)
     return _mexpand(r)
+
 
 def _sqrtdenest1(expr, denester=True):
     """Return denested expr after denesting with simpler methods or, that
@@ -433,6 +438,7 @@ def _sqrt_numeric_denest(a, b, r, d2):
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
+
 def sqrt_biquadratic_denest(expr, a, b, r, d2):
     """denest expr = sqrt(a + b*sqrt(r))
     where a, b, r are linear combinations of square roots of
@@ -503,6 +509,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
         return _mexpand(z)
     return None
 
+
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.
 
@@ -529,14 +536,14 @@ def _denester(nested, av0, h, max_depth_level):
     if av0[1] is None:
         return None, None
     if (av0[0] is None and
-        all(n.is_Number for n in nested)): # no arguments are nested
-        for f in subsets(len(nested)): # test subset 'f' of nested
+            all(n.is_Number for n in nested)):  # no arguments are nested
+        for f in subsets(len(nested)):  # test subset 'f' of nested
             p = _mexpand(Mul(*[nested[i] for i in range(len(f)) if f[i]]))
             if f.count(1) > 1 and f[-1]:
                 p = -p
             sqp = sqrt(p)
             if sqp.is_Rational:
-                return sqp, f # got a perfect square so return its square root.
+                return sqp, f  # got a perfect square so return its square root.
         # Otherwise, return the radicand from the previous invocation.
         return sqrt(nested[-1]), [0]*len(nested)
     else:
@@ -549,7 +556,7 @@ def _denester(nested, av0, h, max_depth_level):
         else:
             values = filter(None, [_sqrt_match(expr) for expr in nested])
             for v in values:
-                if v[2]: #Since if b=0, r is not defined
+                if v[2]:  # Since if b=0, r is not defined
                     if R is not None:
                         if R != v[2]:
                             av0[1] = None
@@ -574,7 +581,7 @@ def _denester(nested, av0, h, max_depth_level):
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested) - 1]:
                 v[0] = -v[0]
                 v[1] = -v[1]
-            if not f[len(nested)]: #Solution denests with square roots
+            if not f[len(nested)]:  # Solution denests with square roots
                 vad = _mexpand(v[0] + d)
                 if vad <= 0:
                     # return the radicand from the previous invocation.
@@ -593,7 +600,7 @@ def _denester(nested, av0, h, max_depth_level):
                 return res, f
 
                       #          sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
-            else: #Solution requires a fourth root
+            else:  # Solution requires a fourth root
                 s2 = _mexpand(v[1]*R) + d
                 if s2 <= 0:
                     return sqrt(nested[-1]), [0]*len(nested)

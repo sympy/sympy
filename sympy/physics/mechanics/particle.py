@@ -3,6 +3,7 @@ __all__ = ['Particle']
 from sympy import sympify
 from sympy.physics.mechanics.point import Point
 
+
 class Particle(object):
     """A particle.
 

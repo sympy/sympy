@@ -11,6 +11,7 @@ from textwrap import fill, dedent
 # text should not have leading or trailing spaces.
 filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
 
+
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.
 
@@ -44,7 +45,8 @@ def default_sort_key(item, order=None):
     Here are some examples of the key that is produced:
 
     >>> default_sort_key(UndefinedFunction('f'))
-    ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'), (0, ()), (), 1), 1)
+    ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'),
+        (0, ()), (), 1), 1)
     >>> default_sort_key('1')
     ((0, 0, 'str'), (1, ('1',)), ((1, 0, 'Number'), (0, ()), (), 1), 1)
     >>> default_sort_key(S.One)
@@ -161,6 +163,7 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+
 def rawlines(s):
     """Return a cut-and-pastable string that, when printed, is equivalent
     to the input. The string returned is formatted so it can be indented
@@ -240,7 +243,7 @@ def rawlines(s):
 
 import sys
 size = getattr(sys, "maxint", None)
-if size is None: #Python 3 doesn't have maxint
+if size is None:  # Python 3 doesn't have maxint
     size = sys.maxsize
 if size > 2**32:
     ARCH = "64-bit"

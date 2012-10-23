@@ -3,5 +3,5 @@ from get_sympy import path_hack
 path_hack()
 t = clock()
 import sympy
-t = clock()-t
+t = clock() - t
 print t

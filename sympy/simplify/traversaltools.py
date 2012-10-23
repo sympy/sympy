@@ -2,6 +2,7 @@
 
 from sympy.core import sympify
 
+
 def use(expr, func, level=0, args=(), kwargs={}):
     """
     Use ``func`` to transform ``expr`` at the given level.

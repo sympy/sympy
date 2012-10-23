@@ -4,6 +4,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
+
 class AskIntegerHandler(CommonHandler):
     """
     Handler for Q.integer
@@ -104,6 +105,7 @@ class AskIntegerHandler(CommonHandler):
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
+
 class AskRationalHandler(CommonHandler):
     """
     Handler for Q.rational
@@ -166,6 +168,7 @@ class AskRationalHandler(CommonHandler):
     def Exp1(expr, assumptions):
         return False
 
+
 class AskIrrationalHandler(CommonHandler):
 
     @staticmethod
@@ -173,9 +176,12 @@ class AskIrrationalHandler(CommonHandler):
         _real = ask(Q.real(expr), assumptions)
         if _real:
             _rational = ask(Q.rational(expr), assumptions)
-            if _rational is None: return None
+            if _rational is None:
+                return None
             return not _rational
-        else: return _real
+        else:
+            return _real
+
 
 class AskRealHandler(CommonHandler):
     """
@@ -233,8 +239,9 @@ class AskRealHandler(CommonHandler):
             elif expr.exp.is_Rational:
                 if (expr.exp.q % 2 == 0):
                     return ask(Q.real(expr.base), assumptions) and \
-                       not ask(Q.negative(expr.base), assumptions)
-                else: return True
+                        not ask(Q.negative(expr.base), assumptions)
+                else:
+                    return True
             elif ask(Q.real(expr.exp), assumptions):
                 if ask(Q.positive(expr.base), assumptions):
                     return True
@@ -284,6 +291,7 @@ class AskRealHandler(CommonHandler):
 
     cos, exp = sin, sin
 
+
 class AskExtendedRealHandler(AskRealHandler):
     """
     Handler for Q.extended_real
@@ -304,6 +312,7 @@ class AskExtendedRealHandler(AskRealHandler):
     @staticmethod
     def NegativeInfinity(expr, assumptions):
         return True
+
 
 class AskHermitianHandler(AskRealHandler):
     """
@@ -363,6 +372,7 @@ class AskHermitianHandler(AskRealHandler):
 
     cos, exp = sin, sin
 
+
 class AskComplexHandler(CommonHandler):
     """
     Handler for Q.complex
@@ -399,7 +409,8 @@ class AskComplexHandler(CommonHandler):
     def NegativeInfinity(expr, assumptions):
         return False
 
-    sin, cos, exp, re, im = [Abs]*5 # they are all complex functions
+    sin, cos, exp, re, im = [Abs]*5  # they are all complex functions
+
 
 class AskImaginaryHandler(CommonHandler):
     """
@@ -469,6 +480,7 @@ class AskImaginaryHandler(CommonHandler):
     def ImaginaryUnit(expr, assumptions):
         return True
 
+
 class AskAntiHermitianHandler(AskImaginaryHandler):
     """
     Handler for Q.antihermitian
@@ -528,6 +540,7 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
             elif ask(Q.odd(expr.exp), assumptions):
                 return True
 
+
 class AskAlgebraicHandler(CommonHandler):
     """Handler for Q.algebraic key. """
 
@@ -561,6 +574,7 @@ class AskAlgebraicHandler(CommonHandler):
 
 #### Helper methods
 
+
 def test_closed_group(expr, assumptions, key):
     """
     Test for membership in a group with respect
@@ -569,9 +583,12 @@ def test_closed_group(expr, assumptions, key):
     result = True
     for arg in expr.args:
         _out = ask(key(arg), assumptions)
-        if _out is None: break
+        if _out is None:
+            break
         elif _out is False:
-            if result: result = False
-            else: break
+            if result:
+                result = False
+            else:
+                break
     else:
         return result

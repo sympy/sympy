@@ -7,15 +7,16 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 
+
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """
 
-    dtype        = ANP
+    dtype = ANP
 
     is_Numerical = True
     is_Algebraic = True
 
-    has_assoc_Ring  = False
+    has_assoc_Ring = False
     has_assoc_Field = True
 
     def __init__(self, dom, *ext):
@@ -24,15 +25,15 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         from sympy.polys.numberfields import to_number_field
 
-        self.ext  = to_number_field(ext)
-        self.mod  = self.ext.minpoly.rep
-        self.dom  = dom
+        self.ext = to_number_field(ext)
+        self.mod = self.ext.minpoly.rep
+        self.dom = dom
 
         self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
         self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one  = self.dtype.one(self.mod.rep, dom)
+        self.one = self.dtype.one(self.mod.rep, dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
@@ -79,7 +80,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         try:
             return self(to_number_field(a, self.ext).native_coeffs())
         except (NotAlgebraic, IsomorphismFailed):
-            raise CoercionFailed("%s is not a valid algebraic number in %s" % (a, self))
+            raise CoercionFailed(
+                "%s is not a valid algebraic number in %s" % (a, self))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """

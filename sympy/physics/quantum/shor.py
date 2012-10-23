@@ -66,18 +66,18 @@ class CMod(Gate):
         k = 0
         # Determine the value stored in high memory.
         for i in range(self.t):
-            k = k + n*qubits[self.t+i]
+            k = k + n*qubits[self.t + i]
             n = n*2
 
         # The value to go in low memory will be out.
-        out = int(self.a**k%self.N)
+        out = int(self.a**k % self.N)
 
         # Create array for new qbit-ket which will have high memory unaffected
         outarray = list(qubits.args[0][:self.t])
 
         # Place out in low memory
         for i in reversed(range(self.t)):
-            outarray.append((out>>i)&1)
+            outarray.append((out >> i) & 1)
 
         return Qubit(*outarray)
 
@@ -92,18 +92,18 @@ def shor(N):
     be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
     These values are returned.
     """
-    a = random.randrange(N-2)+2
-    if igcd(N,a) != 1:
+    a = random.randrange(N - 2) + 2
+    if igcd(N, a) != 1:
         print "got lucky with rand"
-        return igcd(N,a)
-    print "a= ",a
-    print "N= ",N
-    r = period_find(a,N)
-    print "r= ",r
-    if r%2 == 1:
+        return igcd(N, a)
+    print "a= ", a
+    print "N= ", N
+    r = period_find(a, N)
+    print "r= ", r
+    if r % 2 == 1:
         print "r is not even, begin again"
         shor(N)
-    answer = (igcd(a**(r/2)-1, N), igcd(a**(r/2)+1, N))
+    answer = (igcd(a**(r/2) - 1, N), igcd(a**(r/2) + 1, N))
     return answer
 
 
@@ -119,14 +119,15 @@ def arr(num, t):
     [0, 1]
     """
     binary_array = [0]*t
-    b = list(bin(abs(num))[2:]) # strip 0b
+    b = list(bin(abs(num))[2:])  # strip 0b
     b = b[-t:]
     for i in range(-1, -min(len(b), t) - 1, -1):
         binary_array[i] = int(b[i])
     return binary_array
 
+
 def getr(x, y, N):
-    fraction = continued_fraction(x,y)
+    fraction = continued_fraction(x, y)
     # Now convert into r
     total = ratioize(fraction, N)
     return total
@@ -153,9 +154,9 @@ def continued_fraction(x, y):
     y = int(y)
     temp = x//y
     if temp*y == x:
-        return [temp,]
+        return [temp, ]
 
-    list = continued_fraction(y, x-temp*y)
+    list = continued_fraction(y, x - temp*y)
     list.insert(0, temp)
     return list
 
@@ -170,7 +171,7 @@ def period_find(a, N):
     """
     epsilon = .5
     #picks out t's such that maintains accuracy within epsilon
-    t = int(2*math.ceil(log(N,2)))
+    t = int(2*math.ceil(log(N, 2)))
     # make the first half of register be 0's |000...000>
     start = [0 for x in range(t)]
     #Put second half into superposition of states so we have |1>x|0> + |2>x|0> + ... |k>x>|0> + ... + |2**n-1>x|0>
@@ -182,7 +183,7 @@ def period_find(a, N):
     circuit = (factor*qubits).expand()
     #Controlled second half of register so that we have:
     # |1>x|a**1 %N> + |2>x|a**2 %N> + ... + |k>x|a**k %N >+ ... + |2**n-1=k>x|a**k % n>
-    circuit = CMod(t,a,N)*circuit
+    circuit = CMod(t, a, N)*circuit
     #will measure first half of register giving one of the a**k%N's
     circuit = qapply(circuit)
     print "controlled Mod'd"
@@ -192,10 +193,10 @@ def period_find(a, N):
     # circuit = qapply(circuit)
     print "measured 1"
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
-    circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
+    circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
     print "QFT'd"
     for i in range(t):
-        circuit = measure_partial_oneshot(circuit, i+t)
+        circuit = measure_partial_oneshot(circuit, i + t)
         # circuit = measure(i+t)*circuit
     # circuit = qapply(circuit)
     print circuit
@@ -210,10 +211,11 @@ def period_find(a, N):
     n = 1
     answer = 0
     for i in range(len(register)/2):
-        answer += n*register[i+t]
-        n = n<<1
+        answer += n*register[i + t]
+        n = n << 1
     if answer == 0:
-        raise OrderFindingException("Order finder returned 0. Happens with chance %f" % epsilon)
+        raise OrderFindingException(
+            "Order finder returned 0. Happens with chance %f" % epsilon)
     #turn answer into r using continued fractions
     g = getr(answer, 2**t, N)
     print g

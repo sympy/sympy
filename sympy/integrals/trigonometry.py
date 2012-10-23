@@ -12,6 +12,8 @@ from sympy.core.cache import cacheit
 # effectively block caching.
 #
 # so we cache the pattern
+
+
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
@@ -21,6 +23,7 @@ def _pat_sincos(x):
     return pat, a, n, m
 
 _u = Dummy('u')
+
 
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
@@ -58,7 +61,7 @@ def trigintegrate(f, x):
     if M is None:
         return
 
-    n, m  = M[n], M[m]
+    n, m = M[n], M[m]
     if n is S.Zero and m is S.Zero:
         return x
 
@@ -70,22 +73,22 @@ def trigintegrate(f, x):
 
         # take smallest n or m -- to choose simplest substitution
         if n_ and m_:
-            n_ = n_ and     (n < m)  # NB: careful here, one of the
-            m_ = m_ and not (n < m)  #     conditions *must* be true
+            n_ = n_ and (n < m)  # NB: careful here, one of the
+            m_ = m_ and not (n < m)  # conditions *must* be true
 
         #  n      m       u=C        (n-1)/2    m
         # S(x) * C(x) dx  --> -(1-u^2)       * u  du
         if n_:
-            ff = -(1-u**2)**((n-1)/2) * u**m
+            ff = -(1 - u**2)**((n - 1)/2) * u**m
             uu = cos(a*x)
 
         #  n      m       u=S   n         (m-1)/2
         # S(x) * C(x) dx  -->  u  * (1-u^2)       du
         elif m_:
-            ff = u**n * (1-u**2)**((m-1)/2)
+            ff = u**n * (1 - u**2)**((m - 1)/2)
             uu = sin(a*x)
 
-        fi = integrate(ff, u) # XXX cyclic deps
+        fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         return fx / a
 
@@ -111,10 +114,10 @@ def trigintegrate(f, x):
     if n_:
         #  2k         2 k             i             2i
         # C   = (1 - S )  = sum(i, (-) * B(k, i) * S  )
-        if m > 0 :
+        if m > 0:
             for i in range(0, m//2 + 1):
                 res += ((-1)**i * binomial(m//2, i) *
-                            _sin_pow_integrate(n+2*i, x))
+                        _sin_pow_integrate(n + 2*i, x))
 
         elif m == 0:
             res = _sin_pow_integrate(n, x)
@@ -136,9 +139,9 @@ def trigintegrate(f, x):
             #   m + 1                     m + 1   |
             #                                    /
 
-            res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
-                    Rational(n-1, m+1) *
-                    trigintegrate(cos(x)**(m+2)*sin(x)**(n-2), x))
+            res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
+                   Rational(n - 1, m + 1) *
+                   trigintegrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
 
     elif m_:
         #  2k         2 k            i             2i
@@ -160,9 +163,9 @@ def trigintegrate(f, x):
 
             for i in range(0, n//2 + 1):
                 res += ((-1)**i * binomial(n//2, i) *
-                            _cos_pow_integrate(m+2*i, x))
+                        _cos_pow_integrate(m + 2*i, x))
 
-        elif n == 0 :
+        elif n == 0:
 
             #   /
             #  |
@@ -192,11 +195,11 @@ def trigintegrate(f, x):
             #   n + 1                     n + 1   |
             #                                    /
 
-            res = (Rational(1, n+1) * cos(x)**(m-1)*sin(x)**(n+1) +
-                    Rational(m-1, n+1) *
-                    trigintegrate(cos(x)**(m-2)*sin(x)**(n+2), x))
+            res = (Rational(1, n + 1) * cos(x)**(m - 1)*sin(x)**(n + 1) +
+                   Rational(m - 1, n + 1) *
+                   trigintegrate(cos(x)**(m - 2)*sin(x)**(n + 2), x))
 
-    else :
+    else:
         if m == n:
             ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
             res = integrate((Rational(1, 2)*sin(2*x))**m, x)
@@ -206,17 +209,18 @@ def trigintegrate(f, x):
                 # the function argument to integrate in the end will
                 # be 1 , this cannot be integrated by trigintegrate.
                 # Hence use sympy.integrals.integrate.
-                res = (Rational(1, n+1) * cos(x)**(m-1) * sin(x)**(n+1) +
-                        Rational(m-1, n+1) *
-                        integrate(cos(x)**(m-2) * sin(x)**(n+2), x))
+                res = (Rational(1, n + 1) * cos(x)**(m - 1) * sin(x)**(n + 1) +
+                       Rational(m - 1, n + 1) *
+                       integrate(cos(x)**(m - 2) * sin(x)**(n + 2), x))
             else:
-                res = (Rational(-1, m+1) * cos(x)**(m+1) * sin(x)**(n-1) +
-                        Rational(n-1, m+1) *
-                        integrate(cos(x)**(m+2)*sin(x)**(n-2), x))
+                res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
+                       Rational(n - 1, m + 1) *
+                       integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
     return res.subs(x, a*x) / a
 
+
 def _sin_pow_integrate(n, x):
-    if n > 0 :
+    if n > 0:
         if n == 1:
             #Recursion break
             return -cos(x)
@@ -232,8 +236,8 @@ def _sin_pow_integrate(n, x):
         #
         #
 
-        return (Rational(-1, n) * cos(x) * sin(x)**(n-1) +
-                    Rational(n-1, n) * _sin_pow_integrate(n-2, x))
+        return (Rational(-1, n) * cos(x) * sin(x)**(n - 1) +
+                Rational(n - 1, n) * _sin_pow_integrate(n - 2, x))
 
     if n < 0:
         if n == -1:
@@ -251,17 +255,18 @@ def _sin_pow_integrate(n, x):
         #/                                                 /
         #
 
-        return (Rational(1, n+1) * cos(x) * sin(x)**(n+1) +
-                    Rational(n+2, n+1) * _sin_pow_integrate(n+2, x))
+        return (Rational(1, n + 1) * cos(x) * sin(x)**(n + 1) +
+                Rational(n + 2, n + 1) * _sin_pow_integrate(n + 2, x))
 
     else:
         #n == 0
         #Recursion break.
         return x
 
+
 def _cos_pow_integrate(n, x):
-    if n > 0 :
-        if n==1:
+    if n > 0:
+        if n == 1:
             #Recursion break.
             return sin(x)
 
@@ -275,8 +280,8 @@ def _cos_pow_integrate(n, x):
         #/                                                 /
         #
 
-        return (Rational(1, n) * sin(x) * cos(x)**(n-1) +
-                Rational(n-1, n) * _cos_pow_integrate(n-2, x))
+        return (Rational(1, n) * sin(x) * cos(x)**(n - 1) +
+                Rational(n - 1, n) * _cos_pow_integrate(n - 2, x))
 
     if n < 0:
         if n == -1:
@@ -293,9 +298,9 @@ def _cos_pow_integrate(n, x):
         #/                                                 /
         #
 
-        return (Rational(-1, n+1) * sin(x) * cos(x)**(n+1) +
-                Rational(n+2, n+1) * _cos_pow_integrate(n+2, x))
-    else :
+        return (Rational(-1, n + 1) * sin(x) * cos(x)**(n + 1) +
+                Rational(n + 2, n + 1) * _cos_pow_integrate(n + 2, x))
+    else:
         # n == 0
         #Recursion Break.
         return x

@@ -3,16 +3,18 @@ from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
 from sympy.physics.gaussopt import (BeamParameter, CurvedMirror,
   CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
   RayTransferMatrix, ThinLens, conjugate_gauss_beams,
-  gaussian_conj , geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
+  gaussian_conj, geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
   rayleigh2waist, waist2rayleigh)
+
 
 def streq(a, b):
     return str(a) == str(b)
 
+
 def test_gauss_opt():
-    mat = RayTransferMatrix(1,2,3,4)
-    assert mat == Matrix([[1, 2],[3, 4]])
-    assert mat == RayTransferMatrix( Matrix([[1,2],[3,4]]) )
+    mat = RayTransferMatrix(1, 2, 3, 4)
+    assert mat == Matrix([[1, 2], [3, 4]])
+    assert mat == RayTransferMatrix( Matrix([[1, 2], [3, 4]]) )
     assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
     d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
@@ -20,25 +22,27 @@ def test_gauss_opt():
     assert lens == Matrix([[   1, 0], [-1/f, 1]])
     assert lens.C == -1/f
     assert FreeSpace(d) == Matrix([[ 1, d], [0, 1]])
-    assert FlatRefraction(n1, n2) == Matrix([[1,     0], [0, n1/n2]])
-    assert CurvedRefraction(R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
+    assert FlatRefraction(n1, n2) == Matrix([[1, 0], [0, n1/n2]])
+    assert CurvedRefraction(
+        R, n1, n2) == Matrix([[1, 0], [(n1 - n2)/(R*n2), n1/n2]])
     assert FlatMirror() == Matrix([[1, 0], [0, 1]])
     assert CurvedMirror(R) == Matrix([[   1, 0], [-2/R, 1]])
     assert ThinLens(f) == Matrix([[   1, 0], [-1/f, 1]])
 
     mul = CurvedMirror(R)*FreeSpace(d)
     mul_mat = Matrix([[   1, 0], [-2/R, 1]])*Matrix([[ 1, d], [0, 1]])
-    assert mul.A == mul_mat[0,0]
-    assert mul.B == mul_mat[0,1]
-    assert mul.C == mul_mat[1,0]
-    assert mul.D == mul_mat[1,1]
+    assert mul.A == mul_mat[0, 0]
+    assert mul.B == mul_mat[0, 1]
+    assert mul.C == mul_mat[1, 0]
+    assert mul.D == mul_mat[1, 1]
 
     angle = symbols('angle')
-    assert GeometricRay(h,angle) == Matrix([[    h], [angle]])
-    assert FreeSpace(d)*GeometricRay(h,angle) == Matrix([[angle*d + h], [angle]])
-    assert GeometricRay( Matrix( ((h,),(angle,)) ) ) == Matrix([[h], [angle]])
-    assert (FreeSpace(d)*GeometricRay(h,angle)).height == angle*d + h
-    assert (FreeSpace(d)*GeometricRay(h,angle)).angle == angle
+    assert GeometricRay(h, angle) == Matrix([[    h], [angle]])
+    assert FreeSpace(
+        d)*GeometricRay(h, angle) == Matrix([[angle*d + h], [angle]])
+    assert GeometricRay( Matrix( ((h,), (angle,)) ) ) == Matrix([[h], [angle]])
+    assert (FreeSpace(d)*GeometricRay(h, angle)).height == angle*d + h
+    assert (FreeSpace(d)*GeometricRay(h, angle)).angle == angle
 
     p = BeamParameter(530e-9, 1, w=1e-3)
     assert streq(p.q, 1 + 1.88679245283019*I*pi)
@@ -63,13 +67,18 @@ def test_gauss_opt():
     assert geometric_conj_ab(a, oo) == a
 
     s_in, z_r_in, f = symbols('s_in z_r_in f')
-    assert gaussian_conj(s_in, z_r_in, f)[0] == 1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)
-    assert gaussian_conj(s_in, z_r_in, f)[1] == z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)
-    assert gaussian_conj(s_in, z_r_in, f)[2] == 1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
+    assert gaussian_conj(
+        s_in, z_r_in, f)[0] == 1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)
+    assert gaussian_conj(
+        s_in, z_r_in, f)[1] == z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)
+    assert gaussian_conj(
+        s_in, z_r_in, f)[2] == 1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
 
     l, w_i, w_o, f = symbols('l w_i w_o f')
-    assert conjugate_gauss_beams(l, w_i, w_o, f=f)[0] == f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
-    assert factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1]) == f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
+    assert conjugate_gauss_beams(l, w_i, w_o, f=f)[0] == f*(
+        -sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
+    assert factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1]) == f*w_o**2*(
+        w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
     assert conjugate_gauss_beams(l, w_i, w_o, f=f)[2] == f
 
     z, l, w = symbols('z l r', positive=True)

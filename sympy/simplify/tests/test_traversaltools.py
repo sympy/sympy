@@ -5,6 +5,7 @@ from sympy.simplify.traversaltools import use
 from sympy import expand, factor, I
 from sympy.abc import x, y
 
+
 def test_use():
     assert use(0, expand) == 0
 

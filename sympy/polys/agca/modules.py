@@ -37,6 +37,7 @@ from sympy.core.compatibility import iterable
 ## Abstract base classes #################################################
 ##########################################################################
 
+
 class Module(object):
     """
     Abstract base class for modules.
@@ -151,6 +152,7 @@ class Module(object):
         """Return the identity homomorphism on ``self``."""
         raise NotImplementedError
 
+
 class ModuleElement(object):
     """
     Base class for module element wrappers.
@@ -252,6 +254,7 @@ class ModuleElement(object):
 ## Free Modules ##########################################################
 ##########################################################################
 
+
 class FreeModuleElement(ModuleElement):
     """Element of a free module. Data stored as a tuple."""
 
@@ -273,6 +276,7 @@ class FreeModuleElement(ModuleElement):
 
     def __getitem__(self, idx):
         return self.data[idx]
+
 
 class FreeModule(Module):
     """
@@ -419,6 +423,7 @@ class FreeModule(Module):
         from sympy.polys.agca.homomorphisms import homomorphism
         return homomorphism(self, self, self.basis())
 
+
 class FreeModulePolyRing(FreeModule):
     """
     Free module over a generalized polynomial ring.
@@ -461,6 +466,7 @@ class FreeModulePolyRing(FreeModule):
         False
         """
         return SubModulePolyRing(gens, self, **opts)
+
 
 class FreeModuleQuotientRing(FreeModule):
     """
@@ -550,6 +556,7 @@ class FreeModuleQuotientRing(FreeModule):
 ##########################################################################
 ## Submodules and subquotients ###########################################
 ##########################################################################
+
 
 class SubModule(Module):
     """
@@ -656,7 +663,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self._intersect(other, **options)
 
     def module_quotient(self, other, **options):
@@ -692,7 +700,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self._module_quotient(other, **options)
 
     def union(self, other):
@@ -710,7 +719,8 @@ class SubModule(Module):
         if not isinstance(other, SubModule):
             raise TypeError('%s is not a SubModule' % other)
         if other.container != self.container:
-            raise ValueError('%s is contained in a different free module' % other)
+            raise ValueError(
+                '%s is contained in a different free module' % other)
         return self.__class__(self.gens + other.gens, self.container)
 
     def is_zero(self):
@@ -773,7 +783,7 @@ class SubModule(Module):
         """
         if isinstance(other, SubModule):
             return self.container == other.container and \
-                   all(self.contains(x) for x in other.gens)
+                all(self.contains(x) for x in other.gens)
         if isinstance(other, (FreeModule, QuotientModule)):
             return self.container == other and self.is_full_module()
         return False
@@ -905,6 +915,7 @@ class SubModule(Module):
         return self.container.identity_hom().restrict_domain(
             self).restrict_codomain(self)
 
+
 class SubQuotientModule(SubModule):
     """
     Submodule of a quotient module.
@@ -933,7 +944,7 @@ class SubQuotientModule(SubModule):
         # XXX it is important for some code below that the generators of base
         #     are in this particular order!
         self.base = self.container.base.submodule(
-                        *[x.data for x in self.gens], **opts).union(self.killed_module)
+            *[x.data for x in self.gens], **opts).union(self.killed_module)
 
     def _contains(self, elem):
         return self.base.contains(elem.data)
@@ -987,6 +998,8 @@ class SubQuotientModule(SubModule):
 
 _subs0 = lambda x: x[0]
 _subs1 = lambda x: x[1:]
+
+
 class ModuleOrder(ProductOrder):
     """A product monomial order with a zeroth term as module index."""
 
@@ -995,6 +1008,7 @@ class ModuleOrder(ProductOrder):
             ProductOrder.__init__(self, (o2, _subs1), (o1, _subs0))
         else:
             ProductOrder.__init__(self, (o1, _subs0), (o2, _subs1))
+
 
 class SubModulePolyRing(SubModule):
     """
@@ -1035,12 +1049,12 @@ class SubModulePolyRing(SubModule):
         from sympy.polys.distributedmodules import sdm_groebner, sdm_nf_mora
         if self._gbe is None and extended:
             gb, gbe = sdm_groebner(
-               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
-               sdm_nf_mora, self.order, self.ring.dom, extended=True)
+                [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+                sdm_nf_mora, self.order, self.ring.dom, extended=True)
             self._gb, self._gbe = tuple(gb), tuple(gbe)
         if self._gb is None:
             self._gb = tuple(sdm_groebner(
-               [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
+                             [self.ring._vector_to_sdm(x, self.order) for x in self.gens],
                sdm_nf_mora, self.order, self.ring.dom))
         if extended:
             return self._gb, self._gbe
@@ -1057,12 +1071,11 @@ class SubModulePolyRing(SubModule):
                  for x in gb],
                 [self.ring._sdm_to_vector(x, len(self.gens)) for x in gbe])
 
-
     def _contains(self, x):
         from sympy.polys.distributedmodules import sdm_zero, sdm_nf_mora
         return sdm_nf_mora(self.ring._vector_to_sdm(x, self.order),
                            self._groebner(), self.order, self.ring.dom) == \
-               sdm_zero()
+            sdm_zero()
 
     def _syzygies(self):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
@@ -1077,7 +1090,7 @@ class SubModulePolyRing(SubModule):
         Rkr = self.ring.free_module(r + k)
         newgens = []
         for j, f in enumerate(self.gens):
-            m = [0]*(r+k)
+            m = [0]*(r + k)
             for i, v in enumerate(f):
                 m[i] = f[i]
             for i in range(k):
@@ -1091,7 +1104,8 @@ class SubModulePolyRing(SubModule):
         G = F._groebner_vec()
 
         # Third bullet point: G0 = G intersect the new k components
-        G0 = [x[r:] for x in G if all(y == self.ring.convert(0) for y in x[:r])]
+        G0 = [x[r:] for x in G if all(y == self.ring.convert(0)
+                                      for y in x[:r])]
 
         # Fourth and fifth bullet points: we are done
         return G0
@@ -1100,7 +1114,8 @@ class SubModulePolyRing(SubModule):
         """Expression in terms of generators. See [SCA, 2.8.1]."""
         # NOTE: if gens is a standard basis, this can be done more efficiently
         M = self.ring.free_module(self.rank).submodule(*((e,) + self.gens))
-        S = M.syzygy_module(order="ilex", TOP=False) # We want decreasing order!
+        S = M.syzygy_module(
+            order="ilex", TOP=False)  # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
         e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
@@ -1117,15 +1132,15 @@ class SubModulePolyRing(SubModule):
         if NF is None:
             NF = sdm_nf_mora
         return self.container.convert(self.ring._sdm_to_vector(NF(
-                self.ring._vector_to_sdm(x, self.order), self._groebner(),
-                    self.order, self.ring.dom),
-                self.rank))
+            self.ring._vector_to_sdm(x, self.order), self._groebner(),
+            self.order, self.ring.dom),
+            self.rank))
 
     def _intersect(self, other, relations=False):
         # See: [SCA, section 2.8.2]
         fi = self.gens
         hi = other.gens
-        r  = self.rank
+        r = self.rank
         ci = [[0]*(2*r) for _ in range(r)]
         for k in range(r):
             ci[k][k] = 1
@@ -1135,8 +1150,8 @@ class SubModulePolyRing(SubModule):
         syz = self.ring.free_module(2*r).submodule(*(ci + di + ei))._syzygies()
         nonzero = [x for x in syz if any(y != self.ring.zero for y in x[:r])]
         res = self.container.submodule(*([-y for y in x[:r]] for x in nonzero))
-        reln1 = [x[r:r+len(fi)] for x in nonzero]
-        reln2 = [x[r+len(fi):] for x in nonzero]
+        reln1 = [x[r:r + len(fi)] for x in nonzero]
+        reln2 = [x[r + len(fi):] for x in nonzero]
         if relations:
             return res, reln1, reln2
         return res
@@ -1173,6 +1188,7 @@ class SubModulePolyRing(SubModule):
         return reduce(lambda x, y: x.intersect(y),
             (self._module_quotient(self.container.submodule(x)) for x in other.gens))
 
+
 class SubModuleQuotientRing(SubModule):
     """
     Class for submodules of free modules over quotient rings.
@@ -1204,15 +1220,16 @@ class SubModuleQuotientRing(SubModule):
 
     def _syzygies(self):
         return [tuple(self.ring.convert(y, self.quot.ring) for y in x)
-                    for x in self.quot._syzygies()]
+                for x in self.quot._syzygies()]
 
     def _in_terms_of_generators(self, elem):
-        return [self.ring.convert(x, self.quot.ring) for x in \
+        return [self.ring.convert(x, self.quot.ring) for x in
             self.quot._in_terms_of_generators(self.container.lift(elem))]
 
 ##########################################################################
 ## Quotient Modules ######################################################
 ##########################################################################
+
 
 class QuotientModuleElement(ModuleElement):
     """Element of a quotient module."""
@@ -1224,6 +1241,7 @@ class QuotientModuleElement(ModuleElement):
     def __repr__(self):
         from sympy import sstr
         return repr(self.data) + " + " + repr(self.module.killed_module)
+
 
 class QuotientModule(Module):
     """
@@ -1284,7 +1302,7 @@ class QuotientModule(Module):
         """
         if isinstance(other, QuotientModule):
             return self.killed_module == other.killed_module and \
-                   self.base.is_submodule(other.base)
+                self.base.is_submodule(other.base)
         if isinstance(other, SubQuotientModule):
             return other.container == self
         return False

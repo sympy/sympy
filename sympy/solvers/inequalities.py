@@ -9,6 +9,7 @@ from sympy.functions import re, im, Abs
 from sympy.logic import And
 from sympy.polys import Poly
 
+
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -70,20 +71,24 @@ def solve_poly_inequality(poly, rel):
         for left, multiplicity in reals:
             if multiplicity % 2:
                 if sign == eq_sign:
-                    intervals.insert(0, Interval(left, right, not equal, right_open))
+                    intervals.insert(
+                        0, Interval(left, right, not equal, right_open))
 
                 sign, right, right_open = -sign, left, not equal
             else:
                 if sign == eq_sign and not equal:
-                    intervals.insert(0, Interval(left, right, True, right_open))
+                    intervals.insert(
+                        0, Interval(left, right, True, right_open))
                     right, right_open = left, True
                 elif sign != eq_sign and equal:
                     intervals.insert(0, Interval(left, left))
 
         if sign == eq_sign:
-            intervals.insert(0, Interval(S.NegativeInfinity, right, True, right_open))
+            intervals.insert(
+                0, Interval(S.NegativeInfinity, right, True, right_open))
 
     return intervals
+
 
 def solve_poly_inequalities(polys):
     """Solve a system of polynomial inequalities with rational coefficients.
@@ -137,6 +142,7 @@ def solve_poly_inequalities(polys):
 
     return result
 
+
 def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
     """Reduce a system of polynomial inequalities with rational coefficients.
 
@@ -177,7 +183,8 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
             domain = poly.get_domain()
 
             if not (domain.is_ZZ or domain.is_QQ):
-                raise NotImplementedError("inequality solving is not supported over %s" % domain)
+                raise NotImplementedError(
+                    "inequality solving is not supported over %s" % domain)
 
             _polys.append((poly, rel))
 
@@ -199,6 +206,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
         result = solution.as_relational(gen)
 
     return result
+
 
 def reduce_abs_inequality(expr, rel, gen, assume=True):
     """Reduce an inequality with nested absolute values.
@@ -246,7 +254,8 @@ def reduce_abs_inequality(expr, rel, gen, assume=True):
             n = expr.exp
 
             if not n.is_Integer or n < 0:
-                raise ValueError("only non-negative integer powers are allowed")
+                raise ValueError(
+                    "only non-negative integer powers are allowed")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -278,6 +287,7 @@ def reduce_abs_inequality(expr, rel, gen, assume=True):
 
     return reduce_poly_inequalities(inequalities, gen, assume)
 
+
 def reduce_abs_inequalities(exprs, gen, assume=True):
     """Reduce a system of inequalities with nested absolute values.
 
@@ -302,6 +312,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
     """
     return And(*[ reduce_abs_inequality(expr, rel, gen, assume) for expr, rel in exprs ])
 
+
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
@@ -319,6 +330,7 @@ def _solve_inequality(ie, s):
         return ie.func(-b/a, s)
     else:
         raise NotImplementedError
+
 
 def reduce_inequalities(inequalities, assume=True, symbols=[]):
     """Reduce a system of inequalities with rational coefficients.
@@ -340,7 +352,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         inequalities = [inequalities]
 
     if len(inequalities) == 1 and len(symbols) == 1 \
-       and inequalities[0].is_Relational:
+            and inequalities[0].is_Relational:
         try:
             return _solve_inequality(inequalities[0], symbols[0])
         except NotImplementedError:
@@ -371,7 +383,8 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         elif len(gens) == 1:
             gen = gens.pop()
         else:
-            raise NotImplementedError("only univariate inequalities are supported")
+            raise NotImplementedError(
+                "only univariate inequalities are supported")
 
         components = expr.find(lambda u: u.is_Function)
 

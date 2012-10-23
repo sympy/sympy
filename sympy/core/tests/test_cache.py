@@ -1,5 +1,6 @@
 from sympy.core.cache import cacheit
 
+
 def test_cacheit_doc():
     @cacheit
     def testfn():

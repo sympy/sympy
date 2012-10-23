@@ -28,7 +28,7 @@ from sympy.core.sympify import SympifyError
 
 try:
     from ast import parse, NodeTransformer, Call, Name, Load, \
-            fix_missing_locations, Str, Tuple
+        fix_missing_locations, Str, Tuple
     ast_enabled = True
 except ImportError:
     ast_enabled = False
@@ -67,8 +67,10 @@ if ast_enabled:
         def visit_Lambda(self, node):
             args = [self.visit(arg) for arg in node.args.args]
             body = self.visit(node.body)
-            n = Call(Name('Lambda', Load()), [Tuple(args, Load()), body], [], None, None)
+            n = Call(Name('Lambda', Load()),
+                [Tuple(args, Load()), body], [], None, None)
             return fix_missing_locations(n)
+
 
 def parse_expr(s, local_dict):
     """
@@ -83,7 +85,7 @@ def parse_expr(s, local_dict):
         try:
             a = parse(s.strip(), mode="eval")
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))
         a = Transform(local_dict, global_dict).visit(a)
         e = compile(a, "<string>", "eval")
         return eval(e, global_dict, local_dict)
@@ -94,4 +96,4 @@ def parse_expr(s, local_dict):
         try:
             return SymPyParser(local_dict=local_dict).parse_expr(s)
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))

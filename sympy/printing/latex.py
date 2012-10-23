@@ -12,17 +12,19 @@ from sympy.core.sympify import SympifyError
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.utilities import default_sort_key
+from sympy.utilities.misc import default_sort_key
+from sympy.utilities.iterables import has_variety
 
 import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
-accepted_latex_functions = ['arcsin','arccos','arctan','sin','cos','tan',
-                    'theta','beta','alpha','gamma','sinh','cosh','tanh','sqrt',
-                    'ln','log','sec','csc','cot','coth','re','im','frac','root',
-                    'arg','zeta','psi']
+accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                    'theta', 'beta', 'alpha', 'gamma', 'sinh', 'cosh', 'tanh', 'sqrt',
+                    'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                    'arg', 'zeta', 'psi']
+
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -48,23 +50,23 @@ class LatexPrinter(Printer):
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
-            valid_modes = ['inline', 'plain', 'equation', \
-                            'equation*']
+            valid_modes = ['inline', 'plain', 'equation',
+                           'equation*']
             if self._settings['mode'] not in valid_modes:
-                raise ValueError("'mode' must be one of 'inline', 'plain', " \
+                raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
 
         mul_symbol_table = {
-            None : r" ",
-            "ldot" : r" \,.\, ",
-            "dot" : r" \cdot ",
-            "times" : r" \times "
+            None: r" ",
+            "ldot": r" \,.\, ",
+            "dot": r" \cdot ",
+            "times": r" \times "
         }
 
         self._settings['mul_symbol_latex'] = \
             mul_symbol_table[self._settings['mul_symbol']]
 
-        self._delim_dict = {'(':')','[':']'}
+        self._delim_dict = {'(': ')', '[': ']'}
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -223,7 +225,7 @@ class LatexPrinter(Printer):
                 # confusion
                 if separator == " " and re.search("[0-9][} ]*$", tex) and \
                         re.match("[{ ]*[-+0-9]", _tex):
-                    tex +=  r" \times " + _tex
+                    tex += r" \times " + _tex
                 else:
                     tex += separator + _tex
             else:
@@ -260,17 +262,17 @@ class LatexPrinter(Printer):
             if expq == 2:
                 tex = r"\sqrt{%s}" % base
             elif self._settings['itex']:
-                tex = r"\root{%d}{%s}" % (expq,base)
+                tex = r"\root{%d}{%s}" % (expq, base)
             else:
-                tex = r"\sqrt[%d]{%s}" % (expq,base)
+                tex = r"\sqrt[%d]{%s}" % (expq, base)
 
             if expr.exp.is_negative:
                 return r"\frac{1}{%s}" % tex
             else:
                 return tex
         elif self._settings['fold_frac_powers'] \
-             and expr.exp.is_Rational \
-             and expr.exp.q != 1:
+            and expr.exp.is_Rational \
+                and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_Function:
@@ -374,7 +376,8 @@ class LatexPrinter(Printer):
         latex_expr = self._print(expr)
         latex_old = (self._print(e) for e in old)
         latex_new = (self._print(e) for e in new)
-        latex_subs = r'\\ '.join(e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
+        latex_subs = r'\\ '.join(
+            e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
         return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr, latex_subs)
 
     def _print_Integral(self, expr):
@@ -384,8 +387,9 @@ class LatexPrinter(Printer):
         if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
-            tex = r"\i" + "i"*(len(expr.limits)-1) + "nt"
-            symbols = [r"\, d%s" % self._print(symbol[0]) for symbol in expr.limits]
+            tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
+            symbols = [r"\, d%s" % self._print(symbol[0])
+                       for symbol in expr.limits]
 
         else:
             for lim in reversed(expr.limits):
@@ -393,8 +397,8 @@ class LatexPrinter(Printer):
                 tex += r"\int"
 
                 if len(lim) > 1:
-                    if self._settings['mode'] in ['equation','equation*'] \
-                       and not self._settings['itex']:
+                    if self._settings['mode'] in ['equation', 'equation*'] \
+                            and not self._settings['itex']:
                         tex += r"\limits"
 
                     if len(lim) == 3:
@@ -433,8 +437,8 @@ class LatexPrinter(Printer):
             inv_trig_power_case = False
             # If it is applicable to fold the argument brackets
             can_fold_brackets = self._settings['fold_func_brackets'] and \
-                                len(args) == 1 and \
-                                not self._needs_function_brackets(expr.args[0])
+                len(args) == 1 and \
+                not self._needs_function_brackets(expr.args[0])
 
             inv_trig_table = ["asin", "acos", "atan", "acot"]
 
@@ -459,10 +463,11 @@ class LatexPrinter(Printer):
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
                 if func in accepted_latex_functions:
-                    name = r"\%s^{%s}" % (func,exp)
+                    name = r"\%s^{%s}" % (func, exp)
                 else:
                     # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}^{%s}" % (func.replace("_", r"\_"), exp)
+                    name = r"\operatorname{%s}^{%s}" % (
+                        func.replace("_", r"\_"), exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
@@ -755,7 +760,7 @@ class LatexPrinter(Printer):
     def _print_hyper(self, expr, exp=None):
         tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
               r"\middle| {%s} \right)}" % \
-             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
 
@@ -766,7 +771,7 @@ class LatexPrinter(Printer):
     def _print_meijerg(self, expr, exp=None):
         tex = r"{G_{%s, %s}^{%s, %s}\left(\begin{matrix} %s & %s \\" \
               r"%s & %s \end{matrix} \middle| {%s} \right)}" % \
-             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
               self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
@@ -953,25 +958,25 @@ class LatexPrinter(Printer):
             lt = "<"
 
         charmap = {
-            "==" : "=",
-            ">"  : gt,
-            "<"  : lt,
-            ">=" : r"\geq",
-            "<=" : r"\leq",
-            "!=" : r"\neq",
+            "==": "=",
+            ">": gt,
+            "<": lt,
+            ">=": r"\geq",
+            "<=": r"\leq",
+            "!=": r"\neq",
         }
 
         return "%s %s %s" % (self._print(expr.lhs),
             charmap[expr.rel_op], self._print(expr.rhs))
 
     def _print_Piecewise(self, expr):
-        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c)) \
-                       for e, c in expr.args[:-1]]
-        if expr.args[-1].cond == True:
-            ecpairs.append(r"%s & \text{otherwise}" % \
-                               self._print(expr.args[-1].expr))
+        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
+                   for e, c in expr.args[:-1]]
+        if expr.args[-1].cond is True:
+            ecpairs.append(r"%s & \text{otherwise}" %
+                           self._print(expr.args[-1].expr))
         else:
-            ecpairs.append(r"%s & \text{for}\: %s" % \
+            ecpairs.append(r"%s & \text{for}\: %s" %
                            (self._print(expr.args[-1].expr),
                             self._print(expr.args[-1].cond)))
         tex = r"\begin{cases} %s \end{cases}"
@@ -980,8 +985,8 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         lines = []
 
-        for line in range(expr.rows): # horrible, should be 'rows'
-            lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
+        for line in range(expr.rows):  # horrible, should be 'rows'
+            lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
         out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
@@ -1000,9 +1005,9 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         if mat.is_Add or mat.is_Mul:
-            return r"\left(%s\right)^T"%self._print(mat)
+            return r"\left(%s\right)^T" % self._print(mat)
         else:
-            return "%s^T"%self._print(mat)
+            return "%s^T" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         return self._print_Add(expr)
@@ -1013,9 +1018,9 @@ class LatexPrinter(Printer):
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         if base.is_Add or base.is_Mul:
-            return r"\left(%s\right)^{%s}"%(self._print(base), self._print(exp))
+            return r"\left(%s\right)^{%s}" % (self._print(base), self._print(exp))
         else:
-            return "%s^{%s}"%(self._print(base), self._print(exp))
+            return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
         return r"\bold{0}"
@@ -1051,19 +1056,19 @@ class LatexPrinter(Printer):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
-            self._print(expr.args[1]), self._print(expr.args[0]))
+            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (
+                self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
     def _print_ProductSet(self, p):
-        if len(set(p.sets)) == 1 and len(p.sets) > 1:
-            return self._print(p.sets[0]) + "^%d"%len(p.sets)
+        if len(p.sets) > 1 and not has_variety(p.sets):
+            return self._print(p.sets[0]) + "^%d" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: '+ self._print(d.as_boolean())
+            return 'Domain: ' + self._print(d.as_boolean())
         except:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
@@ -1130,10 +1135,10 @@ class LatexPrinter(Printer):
         return r"\mathbb{R}"
 
     def _print_TransformationSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}"%(
-                self._print(s.lamda.expr),
-                ', '.join([self._print(var) for var in s.lamda.variables]),
-                self._print(s.base_set))
+        return r"\left\{%s\; |\; %s \in %s\right\}" % (
+            self._print(s.lamda.expr),
+            ', '.join([self._print(var) for var in s.lamda.variables]),
+            self._print(s.base_set))
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1185,7 +1190,6 @@ class LatexPrinter(Printer):
             return r"\%s {\left(%s, %d\right)}" % (cls, expr, index)
         else:
             return r"\operatorname{%s} {\left(%s, %d\right)}" % (cls, expr, index)
-
 
     def _print_RootSum(self, expr):
         cls = expr.__class__.__name__
@@ -1268,7 +1272,7 @@ class LatexPrinter(Printer):
     def _print_CompositeMorphism(self, morphism):
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
-        component_names_list = [self._print(Symbol(component.name)) for \
+        component_names_list = [self._print(Symbol(component.name)) for
                                 component in morphism.components]
         component_names_list.reverse()
         component_names = "\\circ ".join(component_names_list) + ":"
@@ -1315,15 +1319,15 @@ class LatexPrinter(Printer):
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
         return r"\left[ %s \right]" % ",".join(
-                '{' + self._print(x) + '}' for x in m)
+            '{' + self._print(x) + '}' for x in m)
 
     def _print_SubModule(self, m):
         return r"\left< %s \right>" % ",".join(
-                '{' + self._print(x) + '}' for x in m.gens)
+            '{' + self._print(x) + '}' for x in m.gens)
 
     def _print_ModuleImplementedIdeal(self, m):
         return r"\left< %s \right>" % ",".join(
-                '{' + self._print(x) + '}' for [x] in m._module.gens)
+            '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
@@ -1359,7 +1363,7 @@ class LatexPrinter(Printer):
             string = field._coord_sys._names[field._index]
             return r'\mathbb{d}%s' % self._print(Symbol(string))
         else:
-            return 'd(%s)'%self._print(field)
+            return 'd(%s)' % self._print(field)
             string = self._print(field)
             return r'\mathbb{d}\left(%s\right)' % string
 
@@ -1468,6 +1472,7 @@ def latex(expr, **settings):
     """
 
     return LatexPrinter(settings).doprint(expr)
+
 
 def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression."""

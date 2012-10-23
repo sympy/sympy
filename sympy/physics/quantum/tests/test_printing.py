@@ -35,6 +35,8 @@ MutableDenseMatrix = Matrix
 
 ENV = {}
 exec "from sympy import *" in ENV
+
+
 def sT(expr, string):
     """
     sT := sreprTest
@@ -43,9 +45,11 @@ def sT(expr, string):
     assert srepr(expr) == string
     assert eval(string) == expr
 
+
 def pretty(expr):
     """ASCII pretty-printing"""
     return xpretty(expr, use_unicode=False, wrap_line=False)
+
 
 def upretty(expr):
     """Unicode pretty-printing"""
@@ -55,8 +59,8 @@ def upretty(expr):
 def test_anticommutator():
     A = Operator('A')
     B = Operator('B')
-    ac = AntiCommutator(A,B)
-    ac_tall = AntiCommutator(A**2,B)
+    ac = AntiCommutator(A, B)
+    ac_tall = AntiCommutator(A**2, B)
     assert str(ac) == '{A,B}'
     assert pretty(ac) == '{A,B}'
     assert upretty(ac) == u'{A,B}'
@@ -80,8 +84,9 @@ u"""\
     assert latex(ac_tall) == r'\left\{\left(A\right)^{2},B\right\}'
     sT(ac_tall, "AntiCommutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
+
 def test_cg():
-    cg = CG(1,2,3,4,5,6)
+    cg = CG(1, 2, 3, 4, 5, 6)
     wigner3j = Wigner3j(1, 2, 3, 4, 5, 6)
     wigner6j = Wigner6j(1, 2, 3, 4, 5, 6)
     wigner9j = Wigner9j(1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -161,6 +166,7 @@ u"""\
         r'\left\{\begin{array}{ccc} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{array}\right\}'
     sT(wigner9j, "Wigner9j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6), Integer(7), Integer(8), Integer(9))")
 
+
 def test_commutator():
     A = Operator('A')
     B = Operator('B')
@@ -187,12 +193,14 @@ u"""\
     assert latex(c_tall) == r'\left[\left(A\right)^{2},B\right]'
     sT(c_tall, "Commutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
+
 def test_constants():
     assert str(hbar) == 'hbar'
     assert pretty(hbar) == 'hbar'
     assert upretty(hbar) == u'ℏ'
     assert latex(hbar) == r'\hbar'
     sT(hbar, "HBar()")
+
 
 def test_dagger():
     x = symbols('x')
@@ -213,20 +221,22 @@ x \
     assert latex(expr) == r'x^{\dag}'
     sT(expr, "Dagger(Symbol('x'))")
 
+
 @XFAIL
 def test_gate_failing():
-    a,b,c,d = symbols('a,b,c,d')
-    uMat = Matrix([[a,b],[c,d]])
+    a, b, c, d = symbols('a,b,c,d')
+    uMat = Matrix([[a, b], [c, d]])
     g = UGate((0,), uMat)
     assert str(g) == 'U(0)'
 
+
 def test_gate():
-    a,b,c,d = symbols('a,b,c,d')
-    uMat = Matrix([[a,b],[c,d]])
-    q = Qubit(1,0,1,0,1)
+    a, b, c, d = symbols('a,b,c,d')
+    uMat = Matrix([[a, b], [c, d]])
+    q = Qubit(1, 0, 1, 0, 1)
     g1 = IdentityGate(2)
-    g2 = CGate((3,0), XGate(1))
-    g3 = CNotGate(1,0)
+    g2 = CGate((3, 0), XGate(1))
+    g3 = CNotGate(1, 0)
     g4 = UGate((0,), uMat)
     assert str(g1) == '1(2)'
     assert pretty(g1) == '1 \n 2'
@@ -295,11 +305,12 @@ U \n\
     assert latex(g4) == r'U_{0}'
     sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
+
 def test_hilbert():
     h1 = HilbertSpace()
     h2 = ComplexSpace(2)
     h3 = FockSpace()
-    h4 = L2(Interval(0,oo))
+    h4 = L2(Interval(0, oo))
     assert str(h1) == 'H'
     assert pretty(h1) == 'H'
     assert upretty(h1) == u'H'
@@ -340,7 +351,7 @@ L \
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
     sT(h4, "L2(Interval(Integer(0), oo, False, True))")
-    assert str(h1+h2) == 'H+C(2)'
+    assert str(h1 + h2) == 'H+C(2)'
     ascii_str = \
 """\
      2\n\
@@ -351,10 +362,10 @@ u"""\
      2\n\
 H ⊕ C \
 """
-    assert pretty(h1+h2) == ascii_str
-    assert upretty(h1+h2) == ucode_str
-    assert latex(h1+h2)
-    sT(h1+h2, "DirectSumHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
+    assert pretty(h1 + h2) == ascii_str
+    assert upretty(h1 + h2) == ucode_str
+    assert latex(h1 + h2)
+    sT(h1 + h2, "DirectSumHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
     assert str(h1*h2) == "H*C(2)"
     ascii_str = \
 """\
@@ -369,7 +380,8 @@ H ⨂ C \
     assert pretty(h1*h2) == ascii_str
     assert upretty(h1*h2) == ucode_str
     assert latex(h1*h2)
-    sT(h1*h2, "TensorProductHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
+    sT(h1*h2,
+       "TensorProductHilbertSpace(HilbertSpace(),ComplexSpace(Integer(2)))")
     assert str(h1**2) == 'H**2'
     ascii_str = \
 """\
@@ -386,19 +398,21 @@ H  \
     assert latex(h1**2) == r'{\mathcal{H}}^{\otimes 2}'
     sT(h1**2, "TensorPowerHilbertSpace(HilbertSpace(),Integer(2))")
 
+
 def test_innerproduct():
     x = symbols('x')
     ip1 = InnerProduct(Bra(), Ket())
-    ip2 = InnerProduct(TimeDepBra(),TimeDepKet())
-    ip3 = InnerProduct(JzBra(1,1),JzKet(1,1))
-    ip4 = InnerProduct(JzBraCoupled(1, 1, (1,1)),JzKetCoupled(1, 1, (1,1)))
+    ip2 = InnerProduct(TimeDepBra(), TimeDepKet())
+    ip3 = InnerProduct(JzBra(1, 1), JzKet(1, 1))
+    ip4 = InnerProduct(JzBraCoupled(1, 1, (1, 1)), JzKetCoupled(1, 1, (1, 1)))
     ip_tall1 = InnerProduct(Bra(x/2), Ket(x/2))
     ip_tall2 = InnerProduct(Bra(x), Ket(x/2))
     ip_tall3 = InnerProduct(Bra(x/2), Ket(x))
     assert str(ip1) == '<psi|psi>'
     assert pretty(ip1) == '<psi|psi>'
     assert upretty(ip1) == u'⟨ψ❘ψ⟩'
-    assert latex(ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
+    assert latex(
+        ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
     sT(ip1, "InnerProduct(Bra(Symbol('psi')),Ket(Symbol('psi')))")
     assert str(ip2) == '<psi;t|psi;t>'
     assert pretty(ip2) == '<psi;t|psi;t>'
@@ -456,7 +470,8 @@ u"""\
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
         r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
-    sT(ip_tall2, "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
+    sT(ip_tall2,
+       "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall3) == '<x/2|x>'
     ascii_str = \
 """\
@@ -476,7 +491,9 @@ u"""\
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
         r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
-    sT(ip_tall3, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
+    sT(ip_tall3,
+       "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
+
 
 def test_operator():
     a = Operator('A')
@@ -484,7 +501,7 @@ def test_operator():
     inv = a.inv()
     f = Function('f')
     x = symbols('x')
-    d = DifferentialOperator(Derivative(f(x),x), f(x))
+    d = DifferentialOperator(Derivative(f(x), x), f(x))
     op = OuterProduct(Ket(), Bra())
     assert str(a) == 'A'
     assert pretty(a) == 'A'
@@ -535,6 +552,7 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
     assert latex(op) == r'{\left|\psi\right\rangle }{\left\langle \psi\right|}'
     sT(op, "OuterProduct(Ket(Symbol('psi')),Bra(Symbol('psi')))")
 
+
 def test_qexpr():
     q = QExpr('q')
     assert str(q) == 'q'
@@ -543,6 +561,7 @@ def test_qexpr():
     assert latex(q) == r'q'
     sT(q, "QExpr(Symbol('q'))")
 
+
 def test_qubit():
     q1 = Qubit('0101')
     q2 = IntQubit(8)
@@ -550,12 +569,13 @@ def test_qubit():
     assert pretty(q1) == '|0101>'
     assert upretty(q1) == u'❘0101⟩'
     assert latex(q1) == r'{\left|0101\right\rangle }'
-    sT(q1,"Qubit(Integer(0),Integer(1),Integer(0),Integer(1))")
+    sT(q1, "Qubit(Integer(0),Integer(1),Integer(0),Integer(1))")
     assert str(q2) == '|8>'
     assert pretty(q2) == '|8>'
     assert upretty(q2) == u'❘8⟩'
     assert latex(q2) == r'{\left|8\right\rangle }'
     sT(q2, "IntQubit(8)")
+
 
 def test_spin():
     lz = JzOp('L')
@@ -563,11 +583,11 @@ def test_spin():
     bra = JzBra(1, 0)
     cket = JzKetCoupled(1, 0, (1, 2))
     cbra = JzBraCoupled(1, 0, (1, 2))
-    cket_big = JzKetCoupled(1, 0, (1,2,3))
-    cbra_big = JzBraCoupled(1, 0, (1,2,3))
-    rot = Rotation(1,2,3)
-    bigd = WignerD(1,2,3,4,5,6)
-    smalld = WignerD(1,2,3,0,4,0)
+    cket_big = JzKetCoupled(1, 0, (1, 2, 3))
+    cbra_big = JzBraCoupled(1, 0, (1, 2, 3))
+    rot = Rotation(1, 2, 3)
+    bigd = WignerD(1, 2, 3, 4, 5, 6)
+    smalld = WignerD(1, 2, 3, 0, 4, 0)
     assert str(lz) == 'Lz'
     ascii_str = \
 """\
@@ -687,6 +707,7 @@ d   (4)\n\
     assert latex(smalld) == r'd^{1}_{2,3}\left(4\right)'
     sT(smalld, "WignerD(Integer(1), Integer(2), Integer(3), Integer(0), Integer(4), Integer(0))")
 
+
 def test_state():
     x = symbols('x')
     bra = Bra()
@@ -754,8 +775,9 @@ u"""\
     assert latex(tket) == r'{\left|\psi;t\right\rangle }'
     sT(tket, "TimeDepKet(Symbol('psi'),Symbol('t'))")
 
+
 def test_tensorproduct():
-    tp = TensorProduct(JzKet(1,1),JzKet(1,0))
+    tp = TensorProduct(JzKet(1, 1), JzKet(1, 0))
     assert str(tp) == '|1,1>x|1,0>'
     assert pretty(tp) == '|1,1>x |1,0>'
     assert upretty(tp) == u'❘1,1⟩⨂ ❘1,0⟩'
@@ -763,13 +785,15 @@ def test_tensorproduct():
         r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
 
+
 def test_big_expr():
     f = Function('f')
     x = symbols('x')
-    e1 = Dagger(AntiCommutator(Operator('A')+Operator('B'),Pow(DifferentialOperator(Derivative(f(x), x), f(x)),3))*TensorProduct(Jz**2,Operator('A')+Operator('B')))*(JzBra(1,0)+JzBra(1,1))*(JzKet(0,0)+JzKet(1,-1))
-    e2 = Commutator(Jz**2,Operator('A')+Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')),Operator('E').inv()**2)*Dagger(Commutator(Jz,J2))
-    e3 = Wigner3j(1,2,3,4,5,6)*TensorProduct(Commutator(Operator('A')+Dagger(Operator('B')),Operator('C')+Operator('D')),Jz-J2)*Dagger(OuterProduct(Dagger(JzBra(1,1)),JzBra(1,0)))*TensorProduct(JzKetCoupled(1,1,(1,1))+JzKetCoupled(1,0,(1,1)),JzKetCoupled(1,-1,(1,1)))
-    e4 = (ComplexSpace(1)*ComplexSpace(2)+FockSpace()**2)*(L2(Interval(0,oo))+HilbertSpace())
+    e1 = Dagger(AntiCommutator(Operator('A') + Operator('B'), Pow(DifferentialOperator(Derivative(f(x), x), f(x)), 3))*TensorProduct(Jz**2, Operator('A') + Operator('B')))*(JzBra(1, 0) + JzBra(1, 1))*(JzKet(0, 0) + JzKet(1, -1))
+    e2 = Commutator(Jz**2, Operator('A') + Operator('B'))*AntiCommutator(Dagger(Operator('C')*Operator('D')), Operator('E').inv()**2)*Dagger(Commutator(Jz, J2))
+    e3 = Wigner3j(1, 2, 3, 4, 5, 6)*TensorProduct(Commutator(Operator('A') + Dagger(Operator('B')), Operator('C') + Operator('D')), Jz - J2)*Dagger(OuterProduct(Dagger(JzBra(1, 1)), JzBra(1, 0)))*TensorProduct(JzKetCoupled(1, 1, (1, 1)) + JzKetCoupled(1, 0, (1, 1)), JzKetCoupled(1, -1, (1, 1)))
+    e4 = (ComplexSpace(1)*ComplexSpace(2) + FockSpace()**2)*(L2(Interval(
+        0, oo)) + HilbertSpace())
     assert str(e1) == '(Jz**2)x(Dagger(A) + Dagger(B))*{Dagger(DifferentialOperator(Derivative(f(x), x),f(x)))**3,Dagger(A) + Dagger(B)}*(<1,0| + <1,1|)*(|0,0> + |1,-1>)'
     ascii_str = \
 """\

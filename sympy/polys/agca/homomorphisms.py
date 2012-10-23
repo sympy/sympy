@@ -13,6 +13,7 @@ from sympy.polys.polyerrors import CoercionFailed
 # The main computational task for module homomorphisms is kernels.
 # For this reason, the concrete classes are organised by domain module type.
 
+
 class ModuleHomomorphism(object):
     """
     Abstract base class for module homomoprhisms. Do not instantiate.
@@ -377,6 +378,7 @@ class ModuleHomomorphism(object):
     def __ne__(self, oth):
         return not (self == oth)
 
+
 class MatrixHomomorphism(ModuleHomomorphism):
     """
     Helper class for all homomoprhisms which are expressed via a matrix.
@@ -427,16 +429,16 @@ class MatrixHomomorphism(ModuleHomomorphism):
         return Matrix([[self.ring.to_sympy(y) for y in c(x)] for x in self.matrix]).T
 
     def __repr__(self):
-       lines = repr(self._sympy_matrix()).split('\n')
-       t = " : %s -> %s" % (self.domain, self.codomain)
-       s = ' '*len(t)
-       n = len(lines)
-       for i in range(n // 2):
-           lines[i] += s
-       lines[n // 2] += t
-       for i in range(n//2 + 1, n):
-           lines[i] += s
-       return '\n'.join(lines)
+        lines = repr(self._sympy_matrix()).split('\n')
+        t = " : %s -> %s" % (self.domain, self.codomain)
+        s = ' '*len(t)
+        n = len(lines)
+        for i in range(n // 2):
+            lines[i] += s
+        lines[n // 2] += t
+        for i in range(n//2 + 1, n):
+            lines[i] += s
+        return '\n'.join(lines)
 
     def _restrict_domain(self, sm):
         """Implementation of domain restriction."""
@@ -468,6 +470,7 @@ class MatrixHomomorphism(ModuleHomomorphism):
 
     def _compose(self, oth):
         return self.__class__(self.domain, oth.codomain, [oth(x) for x in self.matrix])
+
 
 class FreeModuleHomomorphism(MatrixHomomorphism):
     """
@@ -502,6 +505,7 @@ class FreeModuleHomomorphism(MatrixHomomorphism):
         syz = self.image().syzygy_module()
         return self.domain.submodule(*syz.gens)
 
+
 class SubModuleHomomorphism(MatrixHomomorphism):
     """
     Concrete class for homomorphism with domain a submodule of a free module
@@ -531,6 +535,7 @@ class SubModuleHomomorphism(MatrixHomomorphism):
         return self.domain.submodule(
             *[sum(xi*gi for xi, gi in zip(s, self.domain.gens))
               for s in syz.gens])
+
 
 def homomorphism(domain, codomain, matrix):
     r"""

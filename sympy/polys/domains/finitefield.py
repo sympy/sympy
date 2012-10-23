@@ -7,6 +7,7 @@ from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
 
@@ -14,20 +15,21 @@ class FiniteField(Field, SimpleDomain):
 
     is_Numerical = True
 
-    has_assoc_Ring         = False
-    has_assoc_Field        = True
+    has_assoc_Ring = False
+    has_assoc_Field = True
 
     dom = None
     mod = None
 
     def __init__(self, mod, symmetric=True):
         if mod <= 0:
-            raise ValueError('modulus must be a positive integer, got %s' % mod)
+            raise ValueError(
+                'modulus must be a positive integer, got %s' % mod)
 
         self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
-        self.zero  = self.dtype(0)
-        self.one   = self.dtype(1)
-        self.mod   = mod
+        self.zero = self.dtype(0)
+        self.one = self.dtype(1)
+        self.mod = mod
 
     def __str__(self):
         return 'GF(%s)' % self.mod
