@@ -1,7 +1,6 @@
 # Strategies to traverse a SymPy Tree
 from sympy import Basic
-
-new = Basic.__new__
+from util import new
 
 def top_down(rule):
     """ Apply a rule down an AST running it on the top nodes first """

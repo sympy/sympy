@@ -2,10 +2,9 @@
 # This file assumes knowledge of Basic and little else
 from sympy import Basic
 from sympy.utilities.iterables import sift
+from util import new
 
 # Functions that create rules
-
-new = Basic.__new__
 
 def rm_id(isid):
     """ Create a rule to remove identities
