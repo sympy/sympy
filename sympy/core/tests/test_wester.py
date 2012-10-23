@@ -15,7 +15,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     factorial2)
 
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, slow
 from sympy.mpmath import mpi, mpc
 from sympy import mpmath
 
@@ -277,7 +277,6 @@ def test_H7():
     assert gcd(p1, p2, x, y, z) == 1
 
 def test_H8():
-    skip('takes too much time')
     p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
     q = 11*x**12*y**7*z**13 - 23*x**2*y**8*z**10 + 47*x**17*y**5*z**8
@@ -336,7 +335,7 @@ def test_H16():
 
 @XFAIL
 def test_H17():
-    skip('takes too much time')
+    #skip('takes too much time')
     assert factor(expand(p1 * p2)) == p1 * p2
 
 @XFAIL
@@ -376,12 +375,10 @@ def test_H25():
     assert factor(expand(e)) == e
 
 def test_H26():
-    skip('takes too much time')
     g = expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20)
     assert factor(g, expand=False) == (-sin(x) + 2*cos(y)**2 - 3*tan(z)**3)**20
 
 def test_H27():
-    skip('takes too much time')
     f=24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     g=34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
     h=-2*z*y**7 \
@@ -518,7 +515,6 @@ def test_J11():
     assert simplify(assoc_legendre(3,1,x)) == simplify(-R(3,2)*sqrt(1-x**2)*(5*x**2 - 1))
 
 def test_J12():
-    skip('takes too much time')
     assert simplify(chebyshevt(1008,x) - 2*x*chebyshevt(1007,x) + chebyshevt(1006,x)) == 0
 
 @XFAIL
@@ -651,12 +647,6 @@ def test_M2():
     sol = solve(3*x**3-18*x**2+33*x-19,x)
     for i in sol:
         assert im(i) == 0
-
-def test_M3():
-    skip("This produces horrible output now")
-    # assert solve(x**4+x**3+x**2+x+1,x) == 0
-    # This produces horrible output now.  Hopefully someone will fix this so
-    # that I don't have to mark this as an XFAIL.  Same for M4.
 
 @XFAIL
 def test_M5():
