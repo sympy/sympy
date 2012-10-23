@@ -1207,7 +1207,6 @@ def eye(n, cls=None):
         from sympy.matrices import Matrix as cls
     return cls.eye(n)
 
-
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
 

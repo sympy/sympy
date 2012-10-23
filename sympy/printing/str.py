@@ -83,9 +83,9 @@ class StrPrinter(Printer):
         return expr.__class__.__name__ + "(%s)" % ", ".join(l)
 
     def _print_BlockMatrix(self, B):
-        if B._mat.shape == (1, 1):
-            self._print(B._mat[0, 0])
-        return self._print(B._mat)
+        if B.blocks.shape == (1, 1):
+            self._print(B.blocks[0, 0])
+        return self._print(B.blocks)
 
     def _print_Catalan(self, expr):
         return 'Catalan'
@@ -273,6 +273,10 @@ class StrPrinter(Printer):
 
     def _print_MatMul(self, expr):
         return '*'.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args])
+
+    def _print_MatAdd(self, expr):
+        return ' + '.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
     def _print_NaN(self, expr):
@@ -530,6 +534,7 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name

@@ -156,11 +156,9 @@ def test_numbered_symbols():
 
 
 def test_sift():
-    assert sift(range(5), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
-    assert sift(x + y, lambda _: _.has(x)) == {False: [y], True: [x]}
-    assert sift(x*y, lambda _: _.has(x)) == {False: [y], True: [x]}
-    assert sift(S.One, lambda _: _.has(x)) == {False: [1]}
-
+    assert sift(range(5), lambda _: _%2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift([x, y], lambda _: _.has(x)) == {False: [y], True: [x]}
+    assert sift([S.One], lambda _: _.has(x)) == {False: [1]}
 
 def test_take():
     X = numbered_symbols()
@@ -346,7 +344,6 @@ def test_common_prefix_suffix():
     assert common_suffix(range(3), range(4)) == []
     assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
     assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]
-
 
 def test_minlex():
     assert minlex([1, 2, 0]) == (0, 1, 2)

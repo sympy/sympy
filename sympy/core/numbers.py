@@ -3,7 +3,7 @@ from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
+from decorators import _sympifyit, deprecated, call_highest_priority
 from cache import cacheit, clear_cache
 from sympy.core.compatibility import as_int
 import sympy.mpmath as mpmath
@@ -1710,6 +1710,7 @@ class Zero(IntegerConstant):
         return S.Zero
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         if other is S.NaN or \
             other is S.NegativeInfinity or \
