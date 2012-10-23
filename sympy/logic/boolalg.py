@@ -746,7 +746,7 @@ def SOPform(variables, minterms, dontcares=[]):
     string = _rem_redundancy(l1, minterms, variables, 1)
     if string == '':
         return True
-    return compile_rule(string[:-1])
+    return sympify(string[:-1])
 
 
 def POSform(variables, minterms, dontcares=[]):
@@ -797,7 +797,7 @@ def POSform(variables, minterms, dontcares=[]):
     string = _rem_redundancy(l1, maxterms, variables, 2)
     if string == '':
         return True
-    return compile_rule(string[:-1])
+    return sympify(string[:-1])
 
 
 def simplify_logic(function):
@@ -816,7 +816,7 @@ def simplify_logic(function):
     """
     from sympy import Symbol
     from sympy.core.compatibility import bin
-    function = compile_rule(function)
+    function = sympify(function)
     string_variables = [x.__getnewargs__()[0] for x in function.atoms(Symbol)]
     variables = list(function.atoms(Symbol))
     truthtable = []
