@@ -2,7 +2,7 @@ from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import Mul, Add, Basic
 from sympy import sympify
 from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
-        do_one)
+        do_one, new)
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
@@ -103,7 +103,7 @@ def validate(*matrices):
 def newmul(*args):
     if args[0] == 1:
         args = args[1:]
-    return Basic.__new__(MatMul, *args)
+    return new(MatMul, *args)
 
 def any_zeros(mul):
     if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
