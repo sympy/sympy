@@ -53,7 +53,7 @@ class ImplicitSeries(BaseSeries):
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
         self.get_points = self.get_raster
-        self.has_equality = has_equality #If the expression has equality, i.e.
+        self.has_equality = has_equality  # If the expression has equality, i.e.
                                          #Eq, Greaterthan, LessThan.
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
@@ -62,11 +62,11 @@ class ImplicitSeries(BaseSeries):
     def __str__(self):
         return ('Implicit equation: %s for '
                 '%s over %s and %s over %s') % (
-                str(self.expr),
-                str(self.var_x),
-                str((self.start_x, self.end_x)),
-                str(self.var_y),
-                str((self.start_y, self.end_y)))
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
 
     def get_raster(self):
         func = experimental_lambdify((self.var_x, self.var_y), self.expr,
@@ -97,13 +97,17 @@ class ImplicitSeries(BaseSeries):
         #Add a small jitter so that there are no false positives for equality.
         # Ex: y==x becomes True for x interval(1, 2) and y interval(1, 2)
         #which will draw a rectangle.
-        jitterx = (np.random.rand(len(xsample)) * 2 - 1) * (self.end_x - self.start_x) / 2**20
-        jittery = (np.random.rand(len(ysample)) * 2 - 1) * (self.end_y - self.start_y) / 2**20
+        jitterx = (np.random.rand(
+            len(xsample)) * 2 - 1) * (self.end_x - self.start_x) / 2**20
+        jittery = (np.random.rand(
+            len(ysample)) * 2 - 1) * (self.end_y - self.start_y) / 2**20
         xsample += jitterx
         ysample += jittery
 
-        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1], xsample[1:])]
-        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1], ysample[1:])]
+        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1],
+                           xsample[1:])]
+        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1],
+                           ysample[1:])]
         interval_list = [[x, y] for x in xinter for y in yinter]
         plot_list = []
 
@@ -182,8 +186,8 @@ class ImplicitSeries(BaseSeries):
 
         func = vectorized_lambdify((self.var_x, self.var_y), expr)
         z_grid = func(x_grid, y_grid)
-        z_grid[np.ma.where(z_grid<0)] = -1
-        z_grid[np.ma.where(z_grid>0)] = 1
+        z_grid[np.ma.where(z_grid < 0)] = -1
+        z_grid[np.ma.where(z_grid > 0)] = 1
         if equal:
             return xarray, yarray, z_grid, 'contour'
         else:
@@ -236,35 +240,40 @@ def plot_implicit(expr, *args, **kwargs):
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5)) #doctest: +SKIP
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))  # doctest: +SKIP
 
     With the range for the symbols
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3)) #doctest: +SKIP
+    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
+    ...         (x, -3, 3), (y, -3, 3))  # doctest: +SKIP
 
     With depth of recursion as argument.
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2) #doctest: +SKIP
+    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -4, 4), (y, -4, 4), depth = 2)  # doctest: +SKIP
 
     Using mesh grid and not using adaptive meshing.
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2), adaptive=False) #doctest: +SKIP
+    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -5, 5), (y, -2, 2), adaptive=False)  # doctest: +SKIP
 
     Using mesh grid with number of points as input.
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2), adaptive=False, points=400) #doctest: +SKIP
+    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
+    ...         (x, -5, 5), (y, -2, 2),
+    ...         adaptive=False, points=400)  # doctest: +SKIP
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2) #doctest: +SKIP
+    >>> p6 = plot_implicit(y > x**2)  # doctest: +SKIP
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x)) #doctest: +SKIP
+    >>> p7 = plot_implicit(And(y > x, y > -x))  # doctest: +SKIP
     """
 
     assert isinstance(expr, Expr)
-    has_equality = False #Represents whether the expression contains an Equality,
+    has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
 
     def arg_expand(bool_expr):
@@ -283,7 +292,7 @@ def plot_implicit(expr, *args, **kwargs):
 
     #Check whether there is an equality in the expression provided.
         if any(isinstance(e, (Equality, GreaterThan, LessThan))
-                            for e in arg_list):
+               for e in arg_list):
             has_equality = True
 
     elif not isinstance(expr, Relational):
@@ -297,7 +306,7 @@ def plot_implicit(expr, *args, **kwargs):
     symbols = set_union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
-                                    "more than 2 variables")
+                                  "more than 2 variables")
 
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)

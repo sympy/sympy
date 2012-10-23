@@ -313,6 +313,7 @@ def main():
     args = {
         'pretty_print' : True,
         'use_unicode'  : None,
+        'use_latex'    : None,
         'order'        : None,
         'argv'         : ipy_args,
     }

@@ -93,8 +93,10 @@ if not USE_PYTEST:
     class RaisesContext(object):
         def __init__(self, expectedException):
             self.expectedException = expectedException
+
         def __enter__(self):
             return None
+
         def __exit__(self, exc_type, exc_value, traceback):
             if exc_type is None:
                 raise AssertionError("DID NOT RAISE")
@@ -130,7 +132,6 @@ if not USE_PYTEST:
     def skip(str):
         raise Skipped(str)
 
-
     def SKIP(reason):
         """Similar to :func:`skip`, but this is a decorator. """
         def wrapper(func):
@@ -144,6 +145,7 @@ if not USE_PYTEST:
 
     def slow(func):
         func._slow = True
+
         def func_wrapper():
             func()
 

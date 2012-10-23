@@ -87,8 +87,6 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.residue_ntheory
 
-.. autofunction:: int_tested
-
 .. autofunction:: n_order
 
 .. autofunction:: is_primitive_root

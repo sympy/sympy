@@ -2,6 +2,7 @@ from sympy.core.containers import Tuple
 
 from types import FunctionType
 
+
 class TableForm(object):
     """
     Create a nice table representation of data.
@@ -156,6 +157,7 @@ class TableForm(object):
 
         allow = ('l', 'r', 'c')
         alignments = kwarg.get("alignments", "l")
+
         def _std_align(a):
             a = a.strip().lower()
             if len(a) > 1:
@@ -180,8 +182,8 @@ class TableForm(object):
             _head_align = 'r'
         if len(_alignments) != _w:
             raise ValueError(
-            'wrong number of alignments: expected %s but got %s' %
-            (_w, len(_alignments)))
+                'wrong number of alignments: expected %s but got %s' %
+                (_w, len(_alignments)))
 
         _column_formats = kwarg.get("formats", [None]*_w)
 
@@ -276,15 +278,16 @@ class TableForm(object):
             self._headings[1] = new_line
 
         format_str = []
+
         def _align(align, w):
             return '%%%s%ss' % (
-                    ("-" if align == "l" else ""),
-                    str(w))
+                ("-" if align == "l" else ""),
+                str(w))
         format_str = [_align(align, w) for align, w in
                       zip(self._alignments, column_widths)]
         if self._headings[0]:
             format_str.insert(0, _align(self._head_align, _head_width))
-            format_str.insert(1,'|')
+            format_str.insert(1, '|')
         format_str = ' '.join(format_str) + '\n'
 
         s = []
@@ -297,14 +300,14 @@ class TableForm(object):
             s.append("-" * (len(first_line) - 1) + "\n")
         for i, line in enumerate(lines):
             d = [l if self._alignments[j] != 'c' else
-                 l.center(column_widths[j]) for j,l in enumerate(line)]
+                 l.center(column_widths[j]) for j, l in enumerate(line)]
             if self._headings[0]:
                 l = self._headings[0][i]
                 l = (l if self._head_align != 'c' else
                      l.center(_head_width))
                 d = [l] + d
             s.append(format_str % tuple(d))
-        return ''.join(s)[:-1] # don't include trailing newline
+        return ''.join(s)[:-1]  # don't include trailing newline
 
     def _latex(self, printer):
         """
@@ -315,9 +318,7 @@ class TableForm(object):
             new_line = []
             for i in range(self._w):
                 # Format the item somehow if needed:
-                s = str(self._headings[1][i])
-                w = len(s)
-                new_line.append(s)
+                new_line.append(str(self._headings[1][i]))
             self._headings[1] = new_line
 
         alignments = []

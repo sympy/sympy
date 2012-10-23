@@ -11,6 +11,7 @@ from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
+
 def _add_factorial_tokens(name, result):
     if result == [] or result[-1][1] == '(':
         raise TokenError()
@@ -23,7 +24,7 @@ def _add_factorial_tokens(name, result):
 
     for index, token in enumerate(result[::-1]):
         toknum, tokval = token
-        i = length-index-1
+        i = length - index - 1
 
         if tokval == ')':
             diff += 1
@@ -31,12 +32,13 @@ def _add_factorial_tokens(name, result):
             diff -= 1
 
         if diff == 0:
-            if i-1 >= 0 and result[i-1][0] == NAME:
-                return result[:i-1] + beginning + result[i-1:] + end
+            if i - 1 >= 0 and result[i - 1][0] == NAME:
+                return result[:i - 1] + beginning + result[i - 1:] + end
             else:
                 return result[:i] + beginning + result[i:] + end
 
     return result
+
 
 def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
@@ -62,7 +64,8 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     pre, post, repetend = match.groups()
 
                     zeros = '0'*len(post)
-                    post, repetends = [w.lstrip('0') for w in [post, repetend]] # or else interpreted as octal
+                    post, repetends = [w.lstrip('0') for w in [post, repetend]]
+                                                # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
@@ -70,19 +73,25 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
                     seq = [
                         (OP, '('),
-                            (NAME, 'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
+                        (NAME,
+                         'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
+                        (NAME, 'Rational'), (OP, '('), (
+                            NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
                         (OP, '+'),
-                            (NAME, 'Rational'), (OP, '('), (NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
+                        (NAME, 'Rational'), (OP, '('), (
+                            NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
                         (OP, ')'),
                     ]
                 elif rationalize:
-                    seq = [(NAME, 'Rational'), (OP, '('), (STRING, repr(str(number))), (OP, ')')]
+                    seq = [(NAME, 'Rational'), (OP,
+                            '('), (STRING, repr(str(number))), (OP, ')')]
                 else:
-                    seq = [(NAME, 'Float'), (OP, '('), (NUMBER, repr(str(number))), (OP, ')')]
+                    seq = [(NAME, 'Float'), (OP, '('),
+                           (NUMBER, repr(str(number))), (OP, ')')]
             else:
-                seq = [(NAME, 'Integer'), (OP, '('), (NUMBER, number), (OP, ')')]
+                seq = [(NAME, 'Integer'), (OP, '('), (
+                    NUMBER, number), (OP, ')')]
 
             result.extend(seq + postfix)
         elif toknum == NAME:
@@ -126,6 +135,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
     return untokenize(result)
 
+
 def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
@@ -149,7 +159,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
 
     # keep autosimplification from joining Integer or
     # minus sign into a Mul; this modification doesn't
-    # prevent the 2-arg Mul from becoming and Add.
+    # prevent the 2-arg Mul from becoming an Add, however.
     hit = False
     if '(' in s:
         kern = '_kern'
@@ -158,12 +168,17 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
         hit = kern in s
 
-    code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
-    expr = eval(code, global_dict, local_dict) # take local objects in preference
+    code = _transform(
+        s.strip(), local_dict, global_dict, rationalize, convert_xor)
+    expr = eval(
+        code, global_dict, local_dict)  # take local objects in preference
 
     if not hit:
         return expr
+    rep = {C.Symbol(kern): 1}
     try:
-        return expr.xreplace({C.Symbol(kern): 1})
+        return expr.xreplace(rep)
     except (TypeError, AttributeError):
+        if isinstance(expr, (list, tuple, set)):
+            return type(expr)([e.xreplace(rep) for e in expr])
         return expr

@@ -3,12 +3,13 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp
+from sympy.core.compatibility import cmp, quick_sort
 from sympy.core.logic import fuzzy_and
 
 # from add import Add /cyclic/
 # from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
+
 
 class AssocOp(Expr):
     """ Associative operations, can separate noncommutative and
@@ -118,7 +119,7 @@ class AssocOp(Expr):
         new_seq = []
         while seq:
             o = seq.pop()
-            if o.__class__ is cls: # classes must match exactly
+            if o.__class__ is cls:  # classes must match exactly
                 seq.extend(o.args)
             else:
                 new_seq.append(o)
@@ -217,6 +218,7 @@ class AssocOp(Expr):
 
         c, nc = _ncsplit(self)
         cls = self.__class__
+
         def is_in(expr):
             if expr == self:
                 return True
@@ -229,7 +231,7 @@ class AssocOp(Expr):
                         return True
                     elif len(nc) <= len(_nc):
                         for i in xrange(len(_nc) - len(nc)):
-                            if _nc[i:i+len(nc)] == nc:
+                            if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
         return is_in
@@ -277,8 +279,10 @@ class AssocOp(Expr):
         else:
             return (expr,)
 
+
 class ShortCircuit(Exception):
     pass
+
 
 class LatticeOp(AssocOp):
     """
@@ -365,9 +369,9 @@ class LatticeOp(AssocOp):
             return frozenset([expr])
 
     @property
+    @cacheit
     def args(self):
-        from sympy.utilities.misc import default_sort_key
-        return tuple(sorted(self._argset, key=default_sort_key))
+        return quick_sort(self._argset)
 
     @staticmethod
     def _compare_pretty(a, b):

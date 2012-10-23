@@ -40,6 +40,7 @@ from sympy.utilities import (
 
 from math import ceil as _ceil, log as _log
 
+
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
     """
@@ -63,14 +64,15 @@ def dup_integrate(f, m, K):
     g = [K.zero]*m
 
     for i, c in enumerate(reversed(f)):
-        n = i+1
+        n = i + 1
 
         for j in xrange(1, m):
-            n *= i+j+1
+            n *= i + j + 1
 
         g.insert(0, K.quo(c, K(n)))
 
     return g
+
 
 @cythonized("m,u,v,n,i,j")
 def dmp_integrate(f, m, u, K):
@@ -95,17 +97,18 @@ def dmp_integrate(f, m, u, K):
     if m <= 0 or dmp_zero_p(f, u):
         return f
 
-    g, v = dmp_zeros(m, u-1, K), u-1
+    g, v = dmp_zeros(m, u - 1, K), u - 1
 
     for i, c in enumerate(reversed(f)):
-        n = i+1
+        n = i + 1
 
         for j in xrange(1, m):
-            n *= i+j+1
+            n *= i + j + 1
 
         g.insert(0, dmp_quo_ground(c, K(n), v, K))
 
     return g
+
 
 @cythonized("m,v,w,i,j")
 def _rec_integrate_in(g, m, v, i, j, K):
@@ -113,9 +116,10 @@ def _rec_integrate_in(g, m, v, i, j, K):
     if i == j:
         return dmp_integrate(g, m, v, K)
 
-    w, i = v-1, i+1
+    w, i = v - 1, i + 1
 
     return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
+
 
 @cythonized("m,j,u")
 def dmp_integrate_in(f, m, j, u, K):
@@ -138,6 +142,7 @@ def dmp_integrate_in(f, m, j, u, K):
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
+
 
 @cythonized("m,n,k,i")
 def dup_diff(f, m, K):
@@ -174,13 +179,14 @@ def dup_diff(f, m, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n-1, n-m, -1):
+            for i in xrange(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(K(k)*coeff)
             n -= 1
 
     return dup_strip(deriv)
+
 
 @cythonized("u,v,m,n,k,i")
 def dmp_diff(f, m, u, K):
@@ -211,7 +217,7 @@ def dmp_diff(f, m, u, K):
     if n < m:
         return dmp_zero(u)
 
-    deriv, v = [], u-1
+    deriv, v = [], u - 1
 
     if m == 1:
         for coeff in f[:-m]:
@@ -221,7 +227,7 @@ def dmp_diff(f, m, u, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n-1, n-m, -1):
+            for i in xrange(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
@@ -229,15 +235,17 @@ def dmp_diff(f, m, u, K):
 
     return dmp_strip(deriv, u)
 
+
 @cythonized("m,v,w,i,j")
 def _rec_diff_in(g, m, v, i, j, K):
     """Recursive helper for :func:`dmp_diff_in`."""
     if i == j:
         return dmp_diff(g, m, v, K)
 
-    w, i = v-1, i+1
+    w, i = v - 1, i + 1
 
     return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
+
 
 @cythonized("m,j,u")
 def dmp_diff_in(f, m, j, u, K):
@@ -262,6 +270,7 @@ def dmp_diff_in(f, m, j, u, K):
         raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
 
     return _rec_diff_in(f, m, u, 0, j, K)
+
 
 def dup_eval(f, a, K):
     """
@@ -288,6 +297,7 @@ def dup_eval(f, a, K):
 
     return result
 
+
 @cythonized("u,v")
 def dmp_eval(f, a, u, K):
     """
@@ -311,7 +321,7 @@ def dmp_eval(f, a, u, K):
     if not a:
         return dmp_TC(f, K)
 
-    result, v = dmp_LC(f, K), u-1
+    result, v = dmp_LC(f, K), u - 1
 
     for coeff in f[1:]:
         result = dmp_mul_ground(result, a, v, K)
@@ -319,15 +329,17 @@ def dmp_eval(f, a, u, K):
 
     return result
 
+
 @cythonized("v,i,j")
 def _rec_eval_in(g, a, v, i, j, K):
     """Recursive helper for :func:`dmp_eval_in`."""
     if i == j:
         return dmp_eval(g, a, v, K)
 
-    v, i = v-1, i+1
+    v, i = v - 1, i + 1
 
     return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
+
 
 @cythonized("u")
 def dmp_eval_in(f, a, j, u, K):
@@ -353,18 +365,20 @@ def dmp_eval_in(f, a, j, u, K):
 
     return _rec_eval_in(f, a, u, 0, j, K)
 
+
 @cythonized("i,u")
 def _rec_eval_tail(g, i, A, u, K):
     """Recursive helper for :func:`dmp_eval_tail`."""
     if i == u:
         return dup_eval(g, A[-1], K)
     else:
-        h = [ _rec_eval_tail(c, i+1, A, u, K) for c in g ]
+        h = [ _rec_eval_tail(c, i + 1, A, u, K) for c in g ]
 
         if i < u - len(A) + 1:
             return h
         else:
-            return dup_eval(h, A[-u+i-1], K)
+            return dup_eval(h, A[-u + i - 1], K)
+
 
 @cythonized("u")
 def dmp_eval_tail(f, A, u, K):
@@ -393,10 +407,11 @@ def dmp_eval_tail(f, A, u, K):
 
     e = _rec_eval_tail(f, 0, A, u, K)
 
-    if u == len(A)-1:
+    if u == len(A) - 1:
         return e
     else:
         return dmp_strip(e, u - len(A))
+
 
 @cythonized("m,v,i,j")
 def _rec_diff_eval(g, m, a, v, i, j, K):
@@ -404,9 +419,10 @@ def _rec_diff_eval(g, m, a, v, i, j, K):
     if i == j:
         return dmp_eval(dmp_diff(g, m, v, K), a, v, K)
 
-    v, i = v-1, i+1
+    v, i = v - 1, i + 1
 
     return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
+
 
 @cythonized("m,j,u")
 def dmp_diff_eval_in(f, m, a, j, u, K):
@@ -433,6 +449,7 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
         return dmp_eval(dmp_diff(f, m, u, K), a, u, K)
 
     return _rec_diff_eval(f, m, a, u, 0, j, K)
+
 
 def dup_trunc(f, p, K):
     """
@@ -465,6 +482,7 @@ def dup_trunc(f, p, K):
 
     return dup_strip(g)
 
+
 @cythonized("u")
 def dmp_trunc(f, p, u, K):
     """
@@ -483,7 +501,8 @@ def dmp_trunc(f, p, u, K):
     [[11], [11], [5]]
 
     """
-    return dmp_strip([ dmp_rem(c, p, u-1, K) for c in f ], u)
+    return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u)
+
 
 @cythonized("u,v")
 def dmp_ground_trunc(f, p, u, K):
@@ -505,9 +524,10 @@ def dmp_ground_trunc(f, p, u, K):
     if not u:
         return dup_trunc(f, p, K)
 
-    v = u-1
+    v = u - 1
 
     return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
+
 
 def dup_monic(f, K):
     """
@@ -535,6 +555,7 @@ def dup_monic(f, K):
         return f
     else:
         return dup_exquo_ground(f, lc, K)
+
 
 @cythonized("u")
 def dmp_ground_monic(f, u, K):
@@ -569,6 +590,7 @@ def dmp_ground_monic(f, u, K):
         return f
     else:
         return dmp_exquo_ground(f, lc, u, K)
+
 
 def dup_content(f, K):
     """
@@ -607,6 +629,7 @@ def dup_content(f, K):
                 break
 
     return cont
+
 
 @cythonized("u,v")
 def dmp_ground_content(f, u, K):
@@ -650,6 +673,7 @@ def dmp_ground_content(f, u, K):
 
     return cont
 
+
 def dup_primitive(f, K):
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
@@ -678,6 +702,7 @@ def dup_primitive(f, K):
         return cont, f
     else:
         return cont, dup_quo_ground(f, cont, K)
+
 
 @cythonized("u")
 def dmp_ground_primitive(f, u, K):
@@ -712,6 +737,7 @@ def dmp_ground_primitive(f, u, K):
     else:
         return cont, dmp_quo_ground(f, cont, u, K)
 
+
 def dup_extract(f, g, K):
     """
     Extract common content from a pair of polynomials in ``K[x]``.
@@ -739,6 +765,7 @@ def dup_extract(f, g, K):
         g = dup_quo_ground(g, gcd, K)
 
     return gcd, f, g
+
 
 @cythonized("u")
 def dmp_ground_extract(f, g, u, K):
@@ -769,6 +796,7 @@ def dmp_ground_extract(f, g, u, K):
 
     return gcd, f, g
 
+
 def dup_real_imag(f, K):
     """
     Return bivariate polynomials ``f1`` and ``f2``, such that ``f = f1 + f2*I``.
@@ -784,7 +812,8 @@ def dup_real_imag(f, K):
 
     """
     if not K.is_ZZ and not K.is_QQ:
-        raise DomainError("computing real and imaginary parts is not supported over %s" % K)
+        raise DomainError(
+            "computing real and imaginary parts is not supported over %s" % K)
 
     f1 = dmp_zero(1)
     f2 = dmp_zero(1)
@@ -815,6 +844,7 @@ def dup_real_imag(f, K):
 
     return f1, f2
 
+
 @cythonized('i,n')
 def dup_mirror(f, K):
     """
@@ -832,10 +862,11 @@ def dup_mirror(f, K):
     """
     f, n, a = list(f), dup_degree(f), -K.one
 
-    for i in xrange(n-1, -1, -1):
+    for i in xrange(n - 1, -1, -1):
         f[i], a = a*f[i], -a
 
     return f
+
 
 @cythonized('i,n')
 def dup_scale(f, a, K):
@@ -854,10 +885,11 @@ def dup_scale(f, a, K):
     """
     f, n, b = list(f), dup_degree(f), a
 
-    for i in xrange(n-1, -1, -1):
+    for i in xrange(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
 
     return f
+
 
 @cythonized('i,j,n')
 def dup_shift(f, a, K):
@@ -878,9 +910,10 @@ def dup_shift(f, a, K):
 
     for i in xrange(n, 0, -1):
         for j in xrange(0, i):
-            f[j+1] += a*f[j]
+            f[j + 1] += a*f[j]
 
     return f
+
 
 @cythonized('i,n')
 def dup_transform(f, p, q, K):
@@ -917,6 +950,7 @@ def dup_transform(f, p, q, K):
 
     return h
 
+
 def dup_compose(f, g, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[x]``.
@@ -947,6 +981,7 @@ def dup_compose(f, g, K):
         h = dup_add_term(h, c, 0, K)
 
     return h
+
 
 @cythonized("u")
 def dmp_compose(f, g, u, K):
@@ -980,6 +1015,7 @@ def dmp_compose(f, g, u, K):
 
     return h
 
+
 @cythonized("s,n,r,i,j")
 def _dup_right_decompose(f, s, K):
     """Helper function for :func:`_dup_decompose`."""
@@ -987,7 +1023,7 @@ def _dup_right_decompose(f, s, K):
     lc = dup_LC(f, K)
 
     f = dup_to_raw_dict(f)
-    g = { s : K.one }
+    g = { s: K.one }
 
     r = n // s
 
@@ -995,18 +1031,19 @@ def _dup_right_decompose(f, s, K):
         coeff = K.zero
 
         for j in xrange(0, i):
-            if not n+j-i in f:
+            if not n + j - i in f:
                 continue
 
-            if not s-j in g:
+            if not s - j in g:
                 continue
 
-            fc, gc = f[n+j-i], g[s-j]
+            fc, gc = f[n + j - i], g[s - j]
             coeff += (i - r*j)*fc*gc
 
-        g[s-i] = K.quo(coeff, i*r*lc)
+        g[s - i] = K.quo(coeff, i*r*lc)
 
     return dup_from_raw_dict(g, K)
+
 
 @cythonized("i")
 def _dup_left_decompose(f, h, K):
@@ -1023,6 +1060,7 @@ def _dup_left_decompose(f, h, K):
             f, i = q, i + 1
 
     return dup_from_raw_dict(g, K)
+
 
 @cythonized("df,s")
 def _dup_decompose(f, K):
@@ -1042,6 +1080,7 @@ def _dup_decompose(f, K):
                 return g, h
 
     return None
+
 
 def dup_decompose(f, K):
     """
@@ -1094,6 +1133,7 @@ def dup_decompose(f, K):
 
     return [f] + F
 
+
 @cythonized("u")
 def dmp_lift(f, u, K):
     """
@@ -1114,7 +1154,8 @@ def dmp_lift(f, u, K):
 
     """
     if not K.is_Algebraic:
-        raise DomainError('computation can be done only in an algebraic domain')
+        raise DomainError(
+            'computation can be done only in an algebraic domain')
 
     F, monoms, polys = dmp_to_dict(f, u), [], []
 
@@ -1134,6 +1175,7 @@ def dmp_lift(f, u, K):
         polys.append(dmp_from_dict(G, u, K))
 
     return dmp_convert(dmp_expand(polys, u, K), u, K, K.dom)
+
 
 def dup_sign_variations(f, K):
     """
@@ -1161,6 +1203,7 @@ def dup_sign_variations(f, K):
             prev = coeff
 
     return k
+
 
 def dup_clear_denoms(f, K0, K1=None, convert=False):
     """
@@ -1197,6 +1240,7 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     else:
         return common, dup_convert(f, K0, K1)
 
+
 @cythonized("v,w")
 def _rec_clear_denoms(g, v, K0, K1):
     """Recursive helper for :func:`dmp_clear_denoms`."""
@@ -1206,12 +1250,13 @@ def _rec_clear_denoms(g, v, K0, K1):
         for c in g:
             common = K1.lcm(common, K0.denom(c))
     else:
-        w = v-1
+        w = v - 1
 
         for c in g:
             common = K1.lcm(common, _rec_clear_denoms(c, w, K0, K1))
 
     return common
+
 
 @cythonized("u")
 def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
@@ -1249,6 +1294,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     else:
         return common, dmp_convert(f, u, K0, K1)
 
+
 @cythonized('i,n')
 def dup_revert(f, n, K):
     """
@@ -1282,6 +1328,7 @@ def dup_revert(f, n, K):
         h = dup_lshift(h, dup_degree(h), K)
 
     return g
+
 
 def dmp_revert(f, g, u, K):
     """

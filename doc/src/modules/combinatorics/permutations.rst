@@ -8,10 +8,8 @@ Permutations
 .. autoclass:: Permutation
    :members:
 
-.. automethod:: sympy.combinatorics.permutations.perm_af_parity
-
-.. automethod:: sympy.combinatorics.permutations.perm_af_mul
-
+.. autoclass:: Cycle
+   :members:
 
 .. _combinatorics-generators:
 

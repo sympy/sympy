@@ -7,6 +7,7 @@ from sympy.abc import x, y, z
 
 A, B = symbols('A,B', commutative=False)
 
+
 def test_together():
     assert together(0) == 0
     assert together(1) == 1
@@ -35,18 +36,19 @@ def test_together():
     assert together(1/(x**7*y) + 1/(x*y)**4) == y**(-4)*x**(-7)*(x**3 + y**3)
 
     assert together(5/(2 + 6/(3 + 7/(4 + 8/(5 + 9/x))))) == \
-         (S(5)/2)*((171 + 119*x)/(279 + 203*x))
+        (S(5)/2)*((171 + 119*x)/(279 + 203*x))
 
     assert together(1 + 1/(x + 1)**2) == (1 + (x + 1)**2)/(x + 1)**2
     assert together(1 + 1/(x*(1 + x))) == (1 + x*(1 + x))/(x*(1 + x))
-    assert together(1/(x*(x + 1)) + 1/(x*(x + 2))) == (3 + 2*x)/(x*(1 + x)*(2 + x))
+    assert together(
+        1/(x*(x + 1)) + 1/(x*(x + 2))) == (3 + 2*x)/(x*(1 + x)*(2 + x))
     assert together(1 + 1/(2*x + 2)**2) == (4*(x + 1)**2 + 1)/(4*(x + 1)**2)
 
     assert together(sin(1/x + 1/y)) == sin(1/x + 1/y)
     assert together(sin(1/x + 1/y), deep=True) == sin((x + y)/(x*y))
 
-    assert together(1/exp(x) + 1/(x*exp(x))) == (1+x)/(x*exp(x))
-    assert together(1/exp(2*x) + 1/(x*exp(3*x))) == (1+exp(x)*x)/(x*exp(3*x))
+    assert together(1/exp(x) + 1/(x*exp(x))) == (1 + x)/(x*exp(x))
+    assert together(1/exp(2*x) + 1/(x*exp(3*x))) == (1 + exp(x)*x)/(x*exp(3*x))
 
     assert together(Integral(1/x + 1/y, x)) == Integral((x + y)/(x*y), x)
     assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq((x + y)/(x*y), (z + 1)/z)

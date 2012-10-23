@@ -2,6 +2,7 @@ from warnings import warn
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from pygletplot import PygletPlot
 
+
 def Plot(*args, **kwargs):
     """ A temporary proxy for an interface under deprecation.
 

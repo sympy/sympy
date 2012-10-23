@@ -19,9 +19,10 @@ from sympy.physics.quantum.cartesian import XKet, XOp, XBra
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state
 
-Amat = Matrix([[1,I],[-I,1]])
-Bmat = Matrix([[1,2],[3,4]])
-Avec = Matrix([[1],[I]])
+Amat = Matrix([[1, I], [-I, 1]])
+Bmat = Matrix([[1, 2], [3, 4]])
+Avec = Matrix([[1], [I]])
+
 
 class AKet(Ket):
 
@@ -77,19 +78,19 @@ _tests = [
     (A, Amat),
     (Dagger(A), Dagger(Amat)),
     # OuterProduct
-    (OuterProduct(k,b), Avec*Avec.H),
+    (OuterProduct(k, b), Avec*Avec.H),
     # TensorProduct
-    (TensorProduct(A,B), matrix_tensor_product(Amat,Bmat)),
+    (TensorProduct(A, B), matrix_tensor_product(Amat, Bmat)),
     # Pow
     (A**2, Amat**2),
     # Add/Mul
     (A*B + 2*A, Amat*Bmat + 2*Amat),
     # Commutator
-    (Commutator(A,B), Amat*Bmat - Bmat*Amat),
+    (Commutator(A, B), Amat*Bmat - Bmat*Amat),
     # AntiCommutator
-    (AntiCommutator(A,B), Amat*Bmat + Bmat*Amat),
+    (AntiCommutator(A, B), Amat*Bmat + Bmat*Amat),
     # InnerProduct
-    (InnerProduct(b,k), (Avec.H*Avec)[0])
+    (InnerProduct(b, k), (Avec.H*Avec)[0])
 ]
 
 
@@ -99,13 +100,15 @@ def test_format_sympy():
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
+
 def test_scalar_sympy():
     assert represent(Integer(1)) == Integer(1)
     assert represent(Float(1.0)) == Float(1.0)
-    assert represent(1.0+I) == 1.0+I
+    assert represent(1.0 + I) == 1.0 + I
 
 
 np = import_module('numpy', min_python_version=(2, 6))
+
 
 def test_format_numpy():
     if not np:
@@ -119,16 +122,18 @@ def test_format_numpy():
         else:
             assert lhs == rhs
 
+
 def test_scalar_numpy():
     if not np:
         skip("numpy not installed or Python too old.")
 
     assert represent(Integer(1), format='numpy') == 1
     assert represent(Float(1.0), format='numpy') == 1.0
-    assert represent(1.0+I, format='numpy') == 1.0+1.0j
+    assert represent(1.0 + I, format='numpy') == 1.0 + 1.0j
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 
 def test_format_scipy_sparse():
     if not np:
@@ -140,9 +145,10 @@ def test_format_scipy_sparse():
         lhs = represent(test[0], basis=A, format='scipy.sparse')
         rhs = to_scipy_sparse(test[1])
         if isinstance(lhs, scipy_sparse_matrix):
-            assert np.linalg.norm((lhs-rhs).todense()) == 0.0
+            assert np.linalg.norm((lhs - rhs).todense()) == 0.0
         else:
             assert lhs == rhs
+
 
 def test_scalar_scipy_sparse():
     if not np:
@@ -152,11 +158,12 @@ def test_scalar_scipy_sparse():
 
     assert represent(Integer(1), format='scipy.sparse') == 1
     assert represent(Float(1.0), format='scipy.sparse') == 1.0
-    assert represent(1.0+I, format='scipy.sparse') == 1.0+1.0j
+    assert represent(1.0 + I, format='scipy.sparse') == 1.0 + 1.0j
 
 x_ket = XKet('x')
 x_bra = XBra('x')
 x_op = XOp('X')
+
 
 def test_innerprod_represent():
     assert rep_innerproduct(x_ket) == InnerProduct(XBra("x_1"), x_ket).doit()
@@ -167,11 +174,15 @@ def test_innerprod_represent():
     except TypeError:
         return True
 
+
 def test_operator_represent():
     basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
-    assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+    assert rep_expectation(
+        x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+
 
 def test_enumerate_states():
     test = XKet("foo")
     assert enumerate_states(test, 1, 1) == [XKet("foo_1")]
-    assert enumerate_states(test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]
+    assert enumerate_states(
+        test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]

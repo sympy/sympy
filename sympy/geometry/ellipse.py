@@ -20,6 +20,7 @@ from util import _symbol, idiff
 
 import random
 
+
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -101,8 +102,9 @@ class Ellipse(GeometryEntity):
 
     """
 
-    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None,
-                **kwargs):
+    def __new__(
+        cls, center=None, hradius=None, vradius=None, eccentricity=None,
+            **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
 
@@ -114,7 +116,7 @@ class Ellipse(GeometryEntity):
             center = Point(center)
 
         if len(filter(None, (hradius, vradius, eccentricity))) != 2:
-            raise ValueError('Exactly two arguments of "hradius", '\
+            raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
         if eccentricity is not None:
@@ -288,7 +290,6 @@ class Ellipse(GeometryEntity):
             return self.hradius
         return rv
 
-
     @property
     def area(self):
         """The area of the ellipse.
@@ -328,9 +329,8 @@ class Ellipse(GeometryEntity):
             return 2*pi*self.hradius
         else:
             x = C.Dummy('x', real=True)
-            return 4*self.major*\
-                   C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
-                              (x, 0, 1))
+            return 4*self.major*C.Integral(
+                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
     @property
     def eccentricity(self):
@@ -648,7 +648,8 @@ class Ellipse(GeometryEntity):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][0] == p.x or tangent_points[0][1] == p.y
+                assert tangent_points[0][
+                    0] == p.x or tangent_points[0][1] == p.y
                 return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
 
             # others
@@ -850,13 +851,14 @@ class Ellipse(GeometryEntity):
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10): # should be enough?
+        for i in range(10):  # should be enough?
             c = nsimplify(2*rng.random() - 1)
             s = sqrt(1 - c**2)
             p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
             if p1 in self:
                 return p1
-        raise GeometryError('Having problems generating a point in the ellipse.')
+        raise GeometryError(
+            'Having problems generating a point in the ellipse.')
 
     def equation(self, x='x', y='y'):
         """The equation of the ellipse.
@@ -915,7 +917,7 @@ class Ellipse(GeometryEntity):
         a = ldir.dot(mdir)
         b = ldir.dot(mdiff)
         c = diff.dot(mdiff) - 1
-        det = simplify(b*b - a*c);
+        det = simplify(b*b - a*c)
 
         result = []
         if det == 0:
@@ -925,7 +927,7 @@ class Ellipse(GeometryEntity):
             is_good = True
             try:
                 is_good = (det > 0)
-            except NotImplementedError: #symbolic, allow
+            except NotImplementedError:  # symbolic, allow
                 is_good = True
 
             if is_good:
@@ -1123,7 +1125,8 @@ class Circle(Ellipse):
         if len(args) == 3:
             args = [Point(a) for a in args]
             if Point.is_collinear(*args):
-                raise GeometryError("Cannot construct a circle from three collinear points")
+                raise GeometryError(
+                    "Cannot construct a circle from three collinear points")
             from polygon import Triangle
             t = Triangle(*args)
             c = t.circumcenter

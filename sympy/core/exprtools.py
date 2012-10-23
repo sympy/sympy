@@ -18,6 +18,7 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
 
 from collections import defaultdict
 
+
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
@@ -66,25 +67,26 @@ def decompose_power(expr):
 
     return base, exp
 
+
 class Factors(object):
     """Efficient representation of ``f_1*f_2*...*f_n``. """
 
     __slots__ = ['factors', 'gens']
 
-    def __init__(self, factors=None): # Factors
+    def __init__(self, factors=None):  # Factors
         if factors is None:
             factors = {}
 
         self.factors = factors
         self.gens = frozenset(factors.keys())
 
-    def __hash__(self): # Factors
+    def __hash__(self):  # Factors
         return hash((tuple(self.factors), self.gens))
 
-    def __repr__(self): # Factors
+    def __repr__(self):  # Factors
         return "Factors(%s)" % self.factors
 
-    def as_expr(self): # Factors
+    def as_expr(self):  # Factors
         args = []
         for factor, exp in self.factors.iteritems():
             if exp != 1:
@@ -95,7 +97,7 @@ class Factors(object):
                 args.append(factor)
         return Mul(*args)
 
-    def normal(self, other): # Factors
+    def normal(self, other):  # Factors
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
 
@@ -120,7 +122,7 @@ class Factors(object):
 
         return Factors(self_factors), Factors(other_factors)
 
-    def mul(self, other): # Factors
+    def mul(self, other):  # Factors
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -135,7 +137,7 @@ class Factors(object):
 
         return Factors(factors)
 
-    def div(self, other): # Factors
+    def div(self, other):  # Factors
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
@@ -157,13 +159,13 @@ class Factors(object):
 
         return Factors(quo), Factors(rem)
 
-    def quo(self, other): # Factors
+    def quo(self, other):  # Factors
         return self.div(other)[0]
 
-    def rem(self, other): # Factors
+    def rem(self, other):  # Factors
         return self.div(other)[1]
 
-    def pow(self, other): # Factors
+    def pow(self, other):  # Factors
         if type(other) is int and other >= 0:
             factors = {}
 
@@ -175,7 +177,7 @@ class Factors(object):
         else:
             raise ValueError("expected non-negative integer, got %s" % other)
 
-    def gcd(self, other): # Factors
+    def gcd(self, other):  # Factors
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -185,7 +187,7 @@ class Factors(object):
 
         return Factors(factors)
 
-    def lcm(self, other): # Factors
+    def lcm(self, other):  # Factors
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -196,19 +198,19 @@ class Factors(object):
 
         return Factors(factors)
 
-    def __mul__(self, other): # Factors
+    def __mul__(self, other):  # Factors
         if isinstance(other, Factors):
             return self.mul(other)
         else:
             return NotImplemented
 
-    def __divmod__(self, other): # Factors
+    def __divmod__(self, other):  # Factors
         if isinstance(other, Factors):
             return self.div(other)
         else:
             return NotImplemented
 
-    def __div__(self, other): # Factors
+    def __div__(self, other):  # Factors
         if isinstance(other, Factors):
             return self.quo(other)
         else:
@@ -216,33 +218,35 @@ class Factors(object):
 
     __truediv__ = __div__
 
-    def __mod__(self, other): # Factors
+    def __mod__(self, other):  # Factors
         if isinstance(other, Factors):
             return self.rem(other)
         else:
             return NotImplemented
 
-    def __pow__(self, other): # Factors
+    def __pow__(self, other):  # Factors
         if type(other) is int:
             return self.pow(other)
         else:
             return NotImplemented
 
-    def __eq__(self, other): # Factors
+    def __eq__(self, other):  # Factors
         return self.factors == other.factors
 
-    def __ne__(self, other): # Factors
+    def __ne__(self, other):  # Factors
         return not self.__eq__(other)
+
 
 class Term(object):
     """Efficient representation of ``coeff*(numer/denom)``. """
 
     __slots__ = ['coeff', 'numer', 'denom']
 
-    def __init__(self, term, numer=None, denom=None): # Term
+    def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:
             if not term.is_commutative:
-                raise NonCommutativeExpression('commutative expression expected')
+                raise NonCommutativeExpression(
+                    'commutative expression expected')
 
             coeff, factors = term.as_coeff_mul()
             numer, denom = defaultdict(int), defaultdict(int)
@@ -274,16 +278,16 @@ class Term(object):
         self.numer = numer
         self.denom = denom
 
-    def __hash__(self): # Term
+    def __hash__(self):  # Term
         return hash((self.coeff, self.numer, self.denom))
 
-    def __repr__(self): # Term
+    def __repr__(self):  # Term
         return "Term(%s, %s, %s)" % (self.coeff, self.numer, self.denom)
 
-    def as_expr(self): # Term
+    def as_expr(self):  # Term
         return self.coeff*(self.numer.as_expr()/self.denom.as_expr())
 
-    def mul(self, other): # Term
+    def mul(self, other):  # Term
         coeff = self.coeff*other.coeff
         numer = self.numer.mul(other.numer)
         denom = self.denom.mul(other.denom)
@@ -292,37 +296,37 @@ class Term(object):
 
         return Term(coeff, numer, denom)
 
-    def inv(self): # Term
+    def inv(self):  # Term
         return Term(1/self.coeff, self.denom, self.numer)
 
-    def quo(self, other): # Term
+    def quo(self, other):  # Term
         return self.mul(other.inv())
 
-    def pow(self, other): # Term
+    def pow(self, other):  # Term
         if other < 0:
             return self.inv().pow(-other)
         else:
-            return Term(self.coeff **  other,
+            return Term(self.coeff ** other,
                         self.numer.pow(other),
                         self.denom.pow(other))
 
-    def gcd(self, other): # Term
+    def gcd(self, other):  # Term
         return Term(self.coeff.gcd(other.coeff),
                     self.numer.gcd(other.numer),
                     self.denom.gcd(other.denom))
 
-    def lcm(self, other): # Term
+    def lcm(self, other):  # Term
         return Term(self.coeff.lcm(other.coeff),
                     self.numer.lcm(other.numer),
                     self.denom.lcm(other.denom))
 
-    def __mul__(self, other): # Term
+    def __mul__(self, other):  # Term
         if isinstance(other, Term):
             return self.mul(other)
         else:
             return NotImplemented
 
-    def __div__(self, other): # Term
+    def __div__(self, other):  # Term
         if isinstance(other, Term):
             return self.quo(other)
         else:
@@ -330,19 +334,20 @@ class Term(object):
 
     __truediv__ = __div__
 
-    def __pow__(self, other): # Term
+    def __pow__(self, other):  # Term
         if type(other) is int:
             return self.pow(other)
         else:
             return NotImplemented
 
-    def __eq__(self, other): # Term
+    def __eq__(self, other):  # Term
         return (self.coeff == other.coeff and
                 self.numer == other.numer and
                 self.denom == other.denom)
 
-    def __ne__(self, other): # Term
+    def __ne__(self, other):  # Term
         return not self.__eq__(other)
+
 
 def _gcd_terms(terms, isprimitive=False, fraction=True):
     """Helper function for :func:`gcd_terms`.
@@ -365,7 +370,6 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     # the terms
     if len(terms) == 0:
         return S.Zero, S.Zero, S.One
-
 
     if len(terms) == 1:
         cont = terms[0].coeff
@@ -403,6 +407,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
         cont *= _cont
 
     return cont, numer, denom
+
 
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
@@ -470,11 +475,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     isadd = isinstance(terms, Add)
     addlike = isadd or not isinstance(terms, Basic) and \
-              is_sequence(terms, include=set) and \
-              not isinstance(terms, Dict)
+        is_sequence(terms, include=set) and \
+        not isinstance(terms, Dict)
 
     if addlike:
-        if isadd: # i.e. an Add
+        if isadd:  # i.e. an Add
             terms = list(terms.args)
         else:
             terms = sympify(terms)
@@ -584,14 +589,16 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
-        p = Add._from_args(list_args) # gcd_terms will fix up ordering
+        p = Add._from_args(list_args)  # gcd_terms will fix up ordering
     elif p.args:
-        p = p.func(*[factor_terms(a, radical, clear, fraction) for a in p.args])
+        p = p.func(
+            *[factor_terms(a, radical, clear, fraction) for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,
         fraction=fraction)
     return _keep_coeff(cont, p, clear=clear)
+
 
 def _mask_nc(eq):
     """Return ``eq`` with non-commutative objects replaced with dummy
@@ -710,6 +717,7 @@ def _mask_nc(eq):
     nc_syms.sort(key=default_sort_key)
     return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
 
+
 def factor_nc(expr):
     """Return the factored form of ``expr`` while handling non-commutative
     expressions.
@@ -752,9 +760,14 @@ def factor_nc(expr):
         if c is not S.One:
             hit = True
             c, g = c.as_coeff_Mul()
-            for i, (cc, _) in enumerate(args):
-                cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
-                args[i][0] = cc
+            if g is not S.One:
+                for i, (cc, _) in enumerate(args):
+                    cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
+                    args[i][0] = cc
+            else:
+                for i, (cc, _) in enumerate(args):
+                    cc[0] = cc[0]/c
+                    args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):
             if i == 0:

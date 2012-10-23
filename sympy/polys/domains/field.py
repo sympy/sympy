@@ -3,6 +3,7 @@
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, DomainError
 
+
 class Field(Ring):
     """Represents a field domain. """
 

@@ -26,6 +26,7 @@ __all__ = [
 # Operators and outer products
 #-----------------------------------------------------------------------------
 
+
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
@@ -311,7 +312,7 @@ class OuterProduct(Operator):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
         if not ket.dual_class() == bra.__class__:
             raise TypeError(
-                'ket and bra are not dual classes: %r, %r' % \
+                'ket and bra are not dual classes: %r, %r' %
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
@@ -333,7 +334,7 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket)+str(self.bra)
+        return str(self.ket) + str(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
@@ -346,18 +347,19 @@ class OuterProduct(Operator):
     def _latex(self, printer, *args):
         k = printer._print(self.ket, *args)
         b = printer._print(self.bra, *args)
-        return k+b
+        return k + b
 
     def _represent(self, **options):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
 
-    def _eval_trace(self,**kwargs):
+    def _eval_trace(self, **kwargs):
         # TODO if operands are tensorproducts this may be will be handled
         # differently.
 
-        return self.ket._eval_trace(self.bra,**kwargs);
+        return self.ket._eval_trace(self.bra, **kwargs)
+
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx
@@ -506,7 +508,7 @@ class DifferentialOperator(Operator):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
-          )
+        )
 
     def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)

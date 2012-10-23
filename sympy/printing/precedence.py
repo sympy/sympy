@@ -1,31 +1,30 @@
 """A module providing information about the necessity of brackets"""
 
-from sympy import S
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
 PRECEDENCE = {
-    "Lambda":1,
-    "Relational":20,
-    "Or":20,
-    "And":30,
-    "Add":40,
-    "Mul":50,
-    "Pow":60,
-    "Not":100,
-    "Atom":1000
+    "Lambda": 1,
+    "Relational": 20,
+    "Or": 20,
+    "And": 30,
+    "Add": 40,
+    "Mul": 50,
+    "Pow": 60,
+    "Not": 100,
+    "Atom": 1000
 }
 
 # A dictionary assigning precedence values to certain classes. These values are
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
-    "Or" : PRECEDENCE["Or"],
-    "And" : PRECEDENCE["And"],
-    "Add" : PRECEDENCE["Add"],
-    "Pow" : PRECEDENCE["Pow"],
-    "Relational" : PRECEDENCE["Relational"],
-    "Sub" : PRECEDENCE["Add"],
+    "Or": PRECEDENCE["Or"],
+    "And": PRECEDENCE["And"],
+    "Add": PRECEDENCE["Add"],
+    "Pow": PRECEDENCE["Pow"],
+    "Relational": PRECEDENCE["Relational"],
+    "Sub": PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
     "factorial": PRECEDENCE["Pow"],
     "factorial2": PRECEDENCE["Pow"],
@@ -38,20 +37,25 @@ PRECEDENCE_VALUES = {
 # precedence value.
 
 # Precedence functions
+
+
 def precedence_Mul(item):
     if _coeff_isneg(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
+
 
 def precedence_Rational(item):
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
+
 def precedence_Integer(item):
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
+
 
 def precedence_Float(item):
     if item < 0:
@@ -59,9 +63,9 @@ def precedence_Float(item):
     return PRECEDENCE["Atom"]
 
 PRECEDENCE_FUNCTIONS = {
-    "Integer" : precedence_Integer,
-    "Mul" : precedence_Mul,
-    "Rational" : precedence_Rational,
+    "Integer": precedence_Integer,
+    "Mul": precedence_Mul,
+    "Rational": precedence_Rational,
     "Float": precedence_Float,
 }
 

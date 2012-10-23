@@ -1,8 +1,9 @@
 from matrices import MatrixBase
 from dense import DenseMatrix
-from sparse import MutableSparseMatrix as SparseMatrix
+from sparse import SparseMatrix, MutableSparseMatrix
 from expressions import MatrixExpr
 from sympy import Basic, Integer, Tuple, Dict
+
 
 class ImmutableMatrix(MatrixExpr, DenseMatrix):
     """Create an immutable version of a matrix.
@@ -28,7 +29,8 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     def _new(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(*args, **kwargs)
+        rows, cols, flat_list = MatrixBase._handle_creation_inputs(
+            *args, **kwargs)
         rows = Integer(rows)
         cols = Integer(cols)
         mat = Tuple(*flat_list)
@@ -39,24 +41,27 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     @property
     def shape(self):
-        return self.args[:2]
+        return tuple([int(i) for i in self.args[:2]])
 
     @property
     def _mat(self):
-        return self.args[2]
+        return list(self.args[2])
 
     def _entry(self, i, j):
-        return DenseMatrix.__getitem__(self, (i,j))
+        return DenseMatrix.__getitem__(self, (i, j))
 
     __getitem__ = DenseMatrix.__getitem__
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
 
-    as_mutable = MatrixBase.as_mutable
-
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
+    # C and T are defined in MatrixExpr...I don't know why C alone
+    # needs to be defined here
+    C = MatrixBase.C
+
+    as_mutable = DenseMatrix.as_mutable
     _eval_trace = DenseMatrix._eval_trace
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate
@@ -75,6 +80,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+
 
 class ImmutableSparseMatrix(Basic, SparseMatrix):
     """Create an immutable version of a sparse matrix.
@@ -102,11 +108,15 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        s = SparseMatrix(*args)
+        s = MutableSparseMatrix(*args)
         rows = Integer(s.rows)
         cols = Integer(s.cols)
         mat = Dict(s._smat)
-        return Basic.__new__(cls, rows, cols, mat)
+        obj = Basic.__new__(cls, rows, cols, mat)
+        obj.rows = s.rows
+        obj.cols = s.cols
+        obj._smat = s._smat
+        return obj
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
@@ -114,7 +124,4 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
-    def _entry(self, i, j):
-        return SparseMatrix.__getitem__(self, (i, j))
-
-    __getitem__ = SparseMatrix.__getitem__
+    subs = MatrixBase.subs

@@ -134,7 +134,7 @@ class TensorProduct(Expr):
             s = s + sstr(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
-            if i != length-1:
+            if i != length - 1:
                 s = s + 'x'
         return s
 
@@ -148,7 +148,7 @@ class TensorProduct(Expr):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
+            if i != length - 1:
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right(u'\u2a02' + u' '))
                 else:
@@ -166,7 +166,7 @@ class TensorProduct(Expr):
             s = s + '{' + printer._print(self.args[i], *args) + '}'
             if isinstance(self.args[i], (Add, Mul)):
                 s = s + '\\right)'
-            if i != length-1:
+            if i != length - 1:
                 s = s + '\\otimes '
         return s
 
@@ -181,7 +181,7 @@ class TensorProduct(Expr):
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:
-                    tp = TensorProduct(*args[:i]+(aa,)+args[i+1:])
+                    tp = TensorProduct(*args[:i] + (aa,) + args[i + 1:])
                     if isinstance(tp, TensorProduct):
                         tp = tp._eval_expand_tensorproduct()
                     add_args.append(tp)
@@ -201,6 +201,7 @@ class TensorProduct(Expr):
         else:
             return Mul(*[Tr(value).doit() if idx in indices else value
                         for idx, value in enumerate(exp.args)])
+
 
 def tensor_product_simp_Mul(e):
     """Simplify a Mul with TensorProducts.
@@ -229,7 +230,8 @@ def tensor_product_simp_Mul(e):
     This is an example of the type of simplification that this function
     performs::
 
-        >>> from sympy.physics.quantum.tensorproduct import tensor_product_simp_Mul, TensorProduct
+        >>> from sympy.physics.quantum.tensorproduct import \
+                    tensor_product_simp_Mul, TensorProduct
         >>> from sympy import Symbol
         >>> A = Symbol('A',commutative=False)
         >>> B = Symbol('B',commutative=False)
@@ -262,7 +264,7 @@ def tensor_product_simp_Mul(e):
             if isinstance(next, TensorProduct):
                 if n_terms != len(next.args):
                     raise QuantumError(
-                        'TensorProducts of different lengths: %r and %r' % \
+                        'TensorProducts of different lengths: %r and %r' %
                         (current, next)
                     )
                 for i in range(len(new_args)):

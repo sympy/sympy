@@ -57,9 +57,9 @@ def richardson(A, k, n, N):
 
     """
     s = S.Zero
-    for j in range(0, N+1):
-        s += A.subs(k, Integer(n+j)).doit() * (n+j)**N * (-1)**(j+N) / \
-            (factorial(j) * factorial(N-j))
+    for j in range(0, N + 1):
+        s += A.subs(k, Integer(n + j)).doit() * (n + j)**N * (-1)**(j + N) / \
+            (factorial(j) * factorial(N - j))
     return s
 
 
@@ -85,12 +85,12 @@ def shanks(A, k, n, m=1):
 
     The correct value is 0.6931471805599453094172321215.
     """
-    table = [A.subs(k, Integer(j)).doit() for j in range(n+m+2)]
+    table = [A.subs(k, Integer(j)).doit() for j in range(n + m + 2)]
     table2 = table[:]
 
-    for i in range(1, m+1):
-        for j in range(i, n+m+1):
-            x, y, z = table[j-1], table[j], table[j+1]
+    for i in range(1, m + 1):
+        for j in range(i, n + m + 1):
+            x, y, z = table[j - 1], table[j], table[j + 1]
             table2[j] = (z*x - y**2) / (z + x - 2*y)
         table = table2[:]
     return table[n]

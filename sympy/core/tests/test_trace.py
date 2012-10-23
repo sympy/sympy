@@ -2,12 +2,13 @@ from sympy import S, Symbol, symbols, Matrix, Tuple
 from sympy.core.trace import Tr
 from sympy.utilities.pytest import raises
 
+
 def test_trace_new():
     a, b, c, d, Y = symbols('a b c d Y')
     A, B, C, D = symbols('A B C D', commutative=False)
 
-    assert Tr(a+b) == a + b
-    assert Tr(A+B) == Tr(A) + Tr(B)
+    assert Tr(a + b) == a + b
+    assert Tr(A + B) == Tr(A) + Tr(B)
 
     #check trace args not implicitly permuted
     assert Tr(C*D*A*B).args[0].args == (C, D, A, B)
@@ -26,7 +27,7 @@ def test_trace_new():
     assert isinstance(Tr(pow(A, a)), Tr)
 
     #Matrix
-    M = Matrix([[1,1], [2,2]])
+    M = Matrix([[1, 1], [2, 2]])
     assert Tr(M) == 3
 
     ##test indices in different forms
@@ -53,11 +54,11 @@ def test_trace_new():
     assert t.args[1] == Tuple(1, 2)
 
     #trace indices test
-    t = Tr((A+B), [2])
+    t = Tr((A + B), [2])
     assert t.args[0].args[1] == Tuple(2) and t.args[1].args[1] == Tuple(2)
 
-    t = Tr(a*A, [2,3])
-    assert t.args[1].args[1] == Tuple(2,3)
+    t = Tr(a*A, [2, 3])
+    assert t.args[1].args[1] == Tuple(2, 3)
 
     #class with trace method defined
     #to simulate numpy objects
@@ -71,11 +72,13 @@ def test_trace_new():
     raises(ValueError, lambda: Tr())
     raises(ValueError, lambda: Tr(A, 1, 2))
 
+
 def test_trace_doit():
     a, b, c, d = symbols('a b c d')
     A, B, C, D = symbols('A B C D', commutative=False)
 
     #TODO: needed while testing reduced density operations, etc.
+
 
 def test_permute():
     A, B, C, D, E, F, G = symbols('A B C D E F G', commutative=False)
@@ -92,8 +95,8 @@ def test_permute():
     assert t.permute(-5).args[0].args == (F, G, A, B, C, D, E)
     assert t.permute(-8).args[0].args == t.permute(-1).args[0].args
 
-    t = Tr((A+B)*(B*B)*C*D)
-    assert t.permute(2).args[0].args == (C, D, (A+B), (B**2))
+    t = Tr((A + B)*(B*B)*C*D)
+    assert t.permute(2).args[0].args == (C, D, (A + B), (B**2))
 
     t1 = Tr(A*B)
     t2 = t1.permute(1)

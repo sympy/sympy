@@ -6,7 +6,7 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: SymPy 0.7.1\n"
+"Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-08-14 15:40\n"
 "PO-Revision-Date: 2012-08-14 16:13\n"

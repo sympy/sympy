@@ -5,6 +5,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, Or
 from sympy.utilities.misc import default_sort_key
 
+
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
@@ -49,6 +50,7 @@ class ExprCondPair(Tuple):
     def __iter__(self):
         yield self.expr
         yield self.cond
+
 
 class Piecewise(Function):
     """
@@ -97,7 +99,7 @@ class Piecewise(Function):
                 continue
             if not isinstance(cond, (bool, Relational, Boolean)):
                 raise TypeError(
-                    "Cond %s is of type %s, but must be a Relational," \
+                    "Cond %s is of type %s, but must be a Relational,"
                     " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
             if cond is True:
@@ -147,7 +149,8 @@ class Piecewise(Function):
                 if all_conds_evaled:
                     return expr
             if len(non_false_ecpairs) != 0 and non_false_ecpairs[-1].expr == expr:
-                non_false_ecpairs[-1] = ExprCondPair(expr, Or(cond, non_false_ecpairs[-1].cond))
+                non_false_ecpairs[-1] = ExprCondPair(
+                    expr, Or(cond, non_false_ecpairs[-1].cond))
             else:
                 non_false_ecpairs.append( ExprCondPair(expr, cond) )
         if len(non_false_ecpairs) != len(args) or piecewise_again:
@@ -203,7 +206,8 @@ class Piecewise(Function):
         elif (a <= b) is not True:
             newargs = []
             for e, c in self.args:
-                intervals = self._sort_expr_cond(sym, S.NegativeInfinity, S.Infinity, c)
+                intervals = self._sort_expr_cond(
+                    sym, S.NegativeInfinity, S.Infinity, c)
                 values = []
                 for lower, upper in intervals:
                     if (a < lower) is True:
@@ -237,7 +241,7 @@ class Piecewise(Function):
                             """The evaluation of a Piecewise interval when both the lower
                             and the upper limit are symbolic is not yet implemented.""")
                     values.append(val)
-                if len(set(values)) == 1 :
+                if len(set(values)) == 1:
                     try:
                         c = c.subs(sym, rep)
                     except AttributeError:
@@ -259,7 +263,7 @@ class Piecewise(Function):
             ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
         return mul * ret_fun
 
-    def _sort_expr_cond(self, sym, a, b, targetcond = None):
+    def _sort_expr_cond(self, sym, a, b, targetcond=None):
         """Determine what intervals the expr, cond pairs affect.
 
         1) If cond is True, then log it as default
@@ -301,7 +305,7 @@ class Piecewise(Function):
                     elif cond2.gts.has(sym):
                         lower = Max(cond2.lts, lower)
             else:
-                lower, upper = cond.lts, cond.gts # part 1: initialize with givens
+                lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts.has(sym):     # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
                 elif cond.gts.has(sym):   # part 1a: ... that can be expanded
@@ -344,23 +348,25 @@ class Piecewise(Function):
                 or_cond = Or(or_cond, cond)
                 or_intervals.append((lower, upper))
                 if or_cond == targetcond:
-                    or_intervals.sort(key=lambda x:x[0])
+                    or_intervals.sort(key=lambda x: x[0])
                     return or_intervals
 
-        int_expr.sort(key=lambda x: x[1].sort_key() if x[1].is_number else S.NegativeInfinity.sort_key())
-        int_expr.sort(key=lambda x: x[0].sort_key() if x[0].is_number else S.Infinity.sort_key())
+        int_expr.sort(key=lambda x: x[1].sort_key(
+        ) if x[1].is_number else S.NegativeInfinity.sort_key())
+        int_expr.sort(key=lambda x: x[0].sort_key(
+        ) if x[0].is_number else S.Infinity.sort_key())
         from sympy.functions.elementary.miscellaneous import MinMaxBase
         for n in xrange(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
                     newval = Min(*int_expr[n][:-1])
-                    if n > 0 and int_expr[n][0] == int_expr[n-1][1]:
-                        int_expr[n-1][1] = newval
+                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:
+                        int_expr[n - 1][1] = newval
                     int_expr[n][0] = newval
                 else:
                     newval = Max(*int_expr[n][:-1])
-                    if n < len(int_expr) - 1 and int_expr[n][1] == int_expr[n+1][0]:
-                        int_expr[n+1][0] = newval
+                    if n < len(int_expr) - 1 and int_expr[n][1] == int_expr[n + 1][0]:
+                        int_expr[n + 1][0] = newval
                     int_expr[n][1] = newval
 
         # Add holes to list of intervals if there is a default value,
@@ -382,9 +388,9 @@ class Piecewise(Function):
             int_expr.extend(holes)
             if targetcond is True:
                 return [(h[0], h[1]) for h in holes]
-        elif holes and default == None:
-            raise ValueError("Called interval evaluation over piecewise " \
-                             "function on undefined intervals %s" % \
+        elif holes and default is None:
+            raise ValueError("Called interval evaluation over piecewise "
+                             "function on undefined intervals %s" %
                              ", ".join([str((h[0], h[1])) for h in holes]))
 
         return int_expr
@@ -410,7 +416,7 @@ class Piecewise(Function):
         return Piecewise(*args)
 
     def _eval_nseries(self, x, n, logx):
-        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
+        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
                    self.args)
         return self.func(*args)
 
@@ -426,21 +432,28 @@ class Piecewise(Function):
                 return when_multiple
         return b
 
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=False)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr(
+        'is_bounded', when_multiple=False)
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary')
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
+        'is_imaginary')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_irrational = lambda self: self._eval_template_is_attr('is_irrational')
+    _eval_is_irrational = lambda self: self._eval_template_is_attr(
+        'is_irrational')
     _eval_is_negative = lambda self: self._eval_template_is_attr('is_negative')
-    _eval_is_nonnegative = lambda self: self._eval_template_is_attr('is_nonnegative')
-    _eval_is_nonpositive = lambda self: self._eval_template_is_attr('is_nonpositive')
-    _eval_is_nonzero = lambda self: self._eval_template_is_attr('is_nonzero', when_multiple=True)
+    _eval_is_nonnegative = lambda self: self._eval_template_is_attr(
+        'is_nonnegative')
+    _eval_is_nonpositive = lambda self: self._eval_template_is_attr(
+        'is_nonpositive')
+    _eval_is_nonzero = lambda self: self._eval_template_is_attr(
+        'is_nonzero', when_multiple=True)
     _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
     _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_zero = lambda self: self._eval_template_is_attr('is_zero', when_multiple=False)
+    _eval_is_zero = lambda self: self._eval_template_is_attr(
+        'is_zero', when_multiple=False)
 
     @classmethod
     def __eval_cond(cls, cond):
@@ -448,6 +461,7 @@ class Piecewise(Function):
         if cond is True:
             return True
         return None
+
 
 def piecewise_fold(expr):
     """
@@ -479,8 +493,8 @@ def piecewise_fold(expr):
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
-        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n+1:])), c) \
-                        for e, c in new_args[n].args]
+        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
+                    for e, c in new_args[n].args]
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)

@@ -32,70 +32,68 @@ def test_eval_args():
     # check for value error, when prob is not provided
     raises(ValueError, lambda: Density([Ket(0)], [Ket(1)]))
 
+
 def test_doit():
 
-    x,y = symbols('x y')
-    A, B, C, D, E, F= symbols('A B C D E F', commutative=False)
-    d = Density([XKet(),0.5], [PxKet(),0.5])
+    x, y = symbols('x y')
+    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
+    d = Density([XKet(), 0.5], [PxKet(), 0.5])
     assert (0.5*(PxKet()*Dagger(PxKet())) +
             0.5*(XKet()*Dagger(XKet()))) == d.doit()
 
     # check for kets with expr in them
-    d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
+    d_with_sym = Density([XKet(x*y), 0.5], [PxKet(x*y), 0.5])
     assert (0.5*(PxKet(x*y)*Dagger(PxKet(x*y))) +
             0.5*(XKet(x*y)*Dagger(XKet(x*y)))) == d_with_sym.doit()
 
-
-    d = Density([(A+B)*C, 1.0])
+    d = Density([(A + B)*C, 1.0])
     assert d.doit() == (1.0*A*C*Dagger(C)*Dagger(A) +
                         1.0*A*C*Dagger(C)*Dagger(B) +
                         1.0*B*C*Dagger(C)*Dagger(A) +
                         1.0*B*C*Dagger(C)*Dagger(B))
 
-
     #  With TensorProducts as args
-
     # Density with simple tensor products as args
     t = TensorProduct(A, B, C)
     d = Density([t, 1.0])
-    assert d.doit() == 1.0 * TensorProduct(A*Dagger(A), B*Dagger(B),C*Dagger(C))
+    assert d.doit() == \
+        1.0 * TensorProduct(A*Dagger(A), B*Dagger(B), C*Dagger(C))
 
     # Density with multiple Tensorproducts as states
-    t2 = TensorProduct(A,B)
-    t3 = TensorProduct(C,D)
+    t2 = TensorProduct(A, B)
+    t3 = TensorProduct(C, D)
 
     d = Density([t2, 0.5], [t3, 0.5])
     assert d.doit() == (0.5 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
                         0.5 * TensorProduct(C*Dagger(C), D*Dagger(D)))
 
     #Density with mixed states
-    d = Density([t2+t3,1.0])
+    d = Density([t2 + t3, 1.0])
     assert d.doit() == (1.0 * TensorProduct(A*Dagger(A), B*Dagger(B)) +
                         1.0 * TensorProduct(A*Dagger(C), B*Dagger(D)) +
                         1.0 * TensorProduct(C*Dagger(A), D*Dagger(B)) +
                         1.0 * TensorProduct(C*Dagger(C), D*Dagger(D)))
 
-
     #Density operators with spin states
-    tp1 = TensorProduct(JzKet(1,1), JzKet(1,-1))
+    tp1 = TensorProduct(JzKet(1, 1), JzKet(1, -1))
     d = Density([tp1, 1])
 
     # full trace
-    t = Tr(d);
+    t = Tr(d)
     assert t.doit() == 1
 
     #Partial trace on density operators with spin states
     t = Tr(d, [0])
-    assert t.doit() == JzKet(1,-1) * Dagger(JzKet(1,-1))
+    assert t.doit() == JzKet(1, -1) * Dagger(JzKet(1, -1))
     t = Tr(d, [1])
-    assert t.doit() == JzKet(1,1) * Dagger(JzKet(1,1))
+    assert t.doit() == JzKet(1, 1) * Dagger(JzKet(1, 1))
 
     # with another spin state
     tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
     d = Density([tp2, 1])
 
     #full trace
-    t = Tr(d);
+    t = Tr(d)
     assert t.doit() == 1
 
     #Partial trace on density operators with spin states
@@ -104,19 +102,21 @@ def test_doit():
     t = Tr(d, [1])
     assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
 
+
 def test_apply_op():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     assert d.apply_op(XOp()) == Density([XOp()*Ket(0), 0.5],
-                                          [XOp()*Ket(1), 0.5])
+                                        [XOp()*Ket(1), 0.5])
+
 
 def test_represent():
-    x,y = symbols('x y')
-    d = Density([XKet(),0.5], [PxKet(),0.5])
+    x, y = symbols('x y')
+    d = Density([XKet(), 0.5], [PxKet(), 0.5])
     assert (represent(0.5*(PxKet()*Dagger(PxKet()))) +
             represent(0.5*(XKet()*Dagger(XKet())))) == represent(d)
 
     # check for kets with expr in them
-    d_with_sym = Density([XKet(x*y),0.5], [PxKet(x*y),0.5])
+    d_with_sym = Density([XKet(x*y), 0.5], [PxKet(x*y), 0.5])
     assert (represent(0.5*(PxKet(x*y)*Dagger(PxKet(x*y)))) +
             represent(0.5*(XKet(x*y)*Dagger(XKet(x*y))))) == \
         represent(d_with_sym)
@@ -126,10 +126,12 @@ def test_represent():
             represent(0.5*(PxKet()*Dagger(PxKet())), basis=PxOp())) == \
         represent(d, basis=PxOp())
 
+
 def test_states():
     d = Density([Ket(0), 0.5], [Ket(1), 0.5])
     states = d.states()
     assert states[0] == Ket(0) and states[1] == Ket(1)
+
 
 def test_probs():
     d = Density([Ket(0), .75], [Ket(1), 0.25])
@@ -137,52 +139,59 @@ def test_probs():
     assert probs[0] == 0.75 and probs[1] == 0.25
 
     #probs can be symbols
-    x,y = symbols('x y')
+    x, y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     probs = d.probs()
     assert probs[0] == x and probs[1] == y
 
+
 def test_get_state():
-    x,y = symbols('x y')
+    x, y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     states = (d.get_state(0), d.get_state(1))
     assert states[0] == Ket(0) and states[1] == Ket(1)
 
+
 def test_get_prob():
-    x,y = symbols('x y')
+    x, y = symbols('x y')
     d = Density([Ket(0), x], [Ket(1), y])
     probs = (d.get_prob(0), d.get_prob(1))
     assert probs[0] == x and probs[1] == y
 
+
 def test_entropy():
-    up = JzKet(S(1)/2,S(1)/2)
-    down = JzKet(S(1)/2,-S(1)/2)
-    d = Density((up,0.5),(down,0.5))
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    d = Density((up, 0.5), (down, 0.5))
 
     # test for density object
     ent = entropy(d)
     assert entropy(d) == 0.5*log(2)
     assert d.entropy() == 0.5*log(2)
 
-    np = import_module('numpy', min_python_version=(2, 6), min_module_version='1.4.0')
+    np = import_module(
+        'numpy', min_python_version=(2, 6), min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
         ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix) and \
-               ent.real == 0.69314718055994529 and ent.imag == 0
+        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
+        assert ent.real == 0.69314718055994529
+        assert ent.imag == 0
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
     if scipy and np:
         #do this test only if numpy and scipy are available
         mat = represent(d, format="scipy.sparse")
-        assert isinstance(mat, scipy_sparse_matrix) and ent.real == \
-                      0.69314718055994529 and ent.imag == 0
+        assert isinstance(mat, scipy_sparse_matrix)
+        assert ent.real == 0.69314718055994529
+        assert ent.imag == 0
+
 
 def test_eval_trace():
-    up = JzKet(S(1)/2,S(1)/2)
-    down = JzKet(S(1)/2,-S(1)/2)
-    d = Density((up,0.5),(down,0.5))
+    up = JzKet(S(1)/2, S(1)/2)
+    down = JzKet(S(1)/2, -S(1)/2)
+    d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
     assert t.doit() == 1
@@ -236,7 +245,6 @@ def test_fidelity():
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3
     assert abs(fidelity(d2, d1) - fidelity(d1, d2)) < 1e-3
 
-
     #using qubits/density(pure states)
     state1 = Qubit('0')
     state2 = Qubit('1')
@@ -255,7 +263,7 @@ def test_fidelity():
     #using qubits/density(mixed states)
     d1 = Density([state3, 0.70], [state4, 0.30])
     d2 = Density([state3, 0.20], [state4, 0.80])
-    assert abs(fidelity(d1, d1) -  1) < 1e-3
+    assert abs(fidelity(d1, d1) - 1) < 1e-3
     assert abs(fidelity(d1, d2) - 0.996) < 1e-3
     assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 
@@ -278,5 +286,5 @@ def test_fidelity():
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unsupported data-type
-    x, y = 1, 2 #random values that is not a matrix
+    x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))

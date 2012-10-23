@@ -2,7 +2,6 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float
 from sympy.printing.mathml import mathml, MathMLPrinter
-from xml.dom.minidom import parseString
 
 from sympy.utilities.pytest import raises
 
@@ -10,16 +9,18 @@ x = Symbol('x')
 y = Symbol('y')
 mp = MathMLPrinter()
 
+
 def test_printmethod():
-    assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
+    assert mp.doprint(1 + x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
+
 
 def test_mathml_core():
-    mml_1 = mp._print(1+x)
+    mml_1 = mp._print(1 + x)
     assert mml_1.nodeName == 'apply'
     nodes = mml_1.childNodes
     assert len(nodes) == 3
     assert nodes[0].nodeName == 'plus'
-    assert nodes[0].hasChildNodes() == False
+    assert nodes[0].hasChildNodes() is False
     assert nodes[0].nodeValue is None
     assert nodes[1].nodeName in ['cn', 'ci']
     if nodes[1].nodeName == 'cn':
@@ -42,12 +43,13 @@ def test_mathml_core():
     assert nodes[1].childNodes[0].nodeValue == '2'
     assert nodes[2].childNodes[0].nodeValue == 'x'
 
-    mml = mp._print(Float(1.0,2)*x)
+    mml = mp._print(Float(1.0, 2)*x)
     assert mml.nodeName == 'apply'
     nodes = mml.childNodes
     assert nodes[0].nodeName == 'times'
     assert nodes[1].childNodes[0].nodeValue == '1.0'
     assert nodes[2].childNodes[0].nodeValue == 'x'
+
 
 def test_mathml_functions():
     mml_1 = mp._print(sin(x))
@@ -59,7 +61,9 @@ def test_mathml_functions():
     assert mml_2.nodeName == 'apply'
     assert mml_2.childNodes[0].nodeName == 'diff'
     assert mml_2.childNodes[1].nodeName == 'bvar'
-    assert mml_2.childNodes[1].childNodes[0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+    assert mml_2.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+
 
 def test_mathml_limits():
     # XXX No unevaluated limits
@@ -70,6 +74,7 @@ def test_mathml_limits():
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].toxml() == mp._print(lim_fun).toxml()
 
+
 def test_mathml_integrals():
     integrand = x
     mml_1 = mp._print(Integral(integrand, (x, 0, 1)))
@@ -79,6 +84,7 @@ def test_mathml_integrals():
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
 
+
 def test_mathml_sums():
     summand = x
     mml_1 = mp._print(Sum(summand, (x, 1, 10)))
@@ -87,6 +93,7 @@ def test_mathml_sums():
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(summand).toxml()
+
 
 def test_mathml_tuples():
     mml_1 = mp._print([2])
@@ -100,19 +107,22 @@ def test_mathml_tuples():
     assert mml_2.childNodes[1].nodeName == 'cn'
     assert len(mml_2.childNodes) == 2
 
+
 def test_mathml_add():
     mml = mp._print(x**5 - x**4 + x)
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
     assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
 
+
 def test_mathml_Rational():
-    mml_1 = mp._print(Rational(1,1))
+    mml_1 = mp._print(Rational(1, 1))
     """should just return a number"""
     assert mml_1.nodeName == 'cn'
 
-    mml_2 = mp._print(Rational(2,5))
+    mml_2 = mp._print(Rational(2, 5))
     assert mml_2.childNodes[0].nodeName == 'divide'
+
 
 def test_mathml_constants():
     mml = mp._print(I)
@@ -131,6 +141,7 @@ def test_mathml_constants():
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'
+
 
 def test_mathml_trig():
     mml = mp._print(sin(x))
@@ -169,8 +180,9 @@ def test_mathml_trig():
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
 
+
 def test_mathml_relational():
-    mml_1 = mp._print(Eq(x,1))
+    mml_1 = mp._print(Eq(x, 1))
     assert mml_1.nodeName == 'apply'
     assert mml_1.childNodes[0].nodeName == 'eq'
     assert mml_1.childNodes[1].nodeName == 'ci'
@@ -178,7 +190,7 @@ def test_mathml_relational():
     assert mml_1.childNodes[2].nodeName == 'cn'
     assert mml_1.childNodes[2].childNodes[0].nodeValue == '1'
 
-    mml_2 = mp._print(Ne(1,x))
+    mml_2 = mp._print(Ne(1, x))
     assert mml_2.nodeName == 'apply'
     assert mml_2.childNodes[0].nodeName == 'neq'
     assert mml_2.childNodes[1].nodeName == 'cn'
@@ -186,7 +198,7 @@ def test_mathml_relational():
     assert mml_2.childNodes[2].nodeName == 'ci'
     assert mml_2.childNodes[2].childNodes[0].nodeValue == 'x'
 
-    mml_3 = mp._print(Ge(1,x))
+    mml_3 = mp._print(Ge(1, x))
     assert mml_3.nodeName == 'apply'
     assert mml_3.childNodes[0].nodeName == 'geq'
     assert mml_3.childNodes[1].nodeName == 'cn'
@@ -194,7 +206,7 @@ def test_mathml_relational():
     assert mml_3.childNodes[2].nodeName == 'ci'
     assert mml_3.childNodes[2].childNodes[0].nodeValue == 'x'
 
-    mml_4 = mp._print(Lt(1,x))
+    mml_4 = mp._print(Lt(1, x))
     assert mml_4.nodeName == 'apply'
     assert mml_4.childNodes[0].nodeName == 'lt'
     assert mml_4.childNodes[1].nodeName == 'cn'
@@ -202,14 +214,6 @@ def test_mathml_relational():
     assert mml_4.childNodes[2].nodeName == 'ci'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
 
-
-def test_c2p():
-    """This tests some optional routines that depend on libxslt1 (which is optional)"""
-    try:
-        from sympy.modules.mathml import c2p
-        assert c2p(f.mathml) == result
-    except ImportError:
-        pass
 
 def test_symbol():
     mml = mp._print(Symbol("x"))
@@ -273,11 +277,14 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
 
     mml = mp._print(Symbol("x^2^a"))
@@ -287,11 +294,14 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
 
     mml = mp._print(Symbol("x__2__a"))
@@ -301,12 +311,16 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[
+        0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[
+        0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[
+        0].nodeValue == 'a'
     del mml
+
 
 def test_mathml_greek():
     mml = mp._print(Symbol('alpha'))
@@ -364,6 +378,7 @@ def test_mathml_greek():
     assert mp.doprint(Symbol('Psi')) == '<ci>&#936;</ci>'
     assert mp.doprint(Symbol('Omega')) == '<ci>&#937;</ci>'
 
+
 def test_mathml_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 
@@ -389,13 +404,16 @@ def test_mathml_order():
     assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'x'
     assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
 
+
 def test_settings():
     raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
+
 
 def test_toprettyxml_hooking():
     # test that the patch doesn't influence the behavior of the standard library
     import xml.dom.minidom
-    doc = xml.dom.minidom.parseString("<apply><plus/><ci>x</ci><cn>1</cn></apply>")
+    doc = xml.dom.minidom.parseString(
+        "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
     prettyxml_old = doc.toprettyxml()
 
     mp.apply_patch()

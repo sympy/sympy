@@ -8,14 +8,15 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
+
 class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """
 
-    dtype        = DMF
-    is_Frac      = True
+    dtype = DMF
+    is_Frac = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     def __init__(self, dom, *gens):
         if not gens:
@@ -24,9 +25,9 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one  = self.dtype.one(lev, dom, ring=self)
+        self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom  = dom
+        self.dom = dom
         self.gens = gens
 
     def __str__(self):
@@ -37,7 +38,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
     def __call__(self, a):
         """Construct an element of ``self`` domain from ``a``. """
-        return DMF(a, self.dom, len(self.gens)-1, ring=self)
+        return DMF(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
@@ -143,8 +144,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
                 return K1((a.numer().convert(K1.dom).rep,
                            a.denom().convert(K1.dom).rep))
         elif set(K0.gens).issubset(K1.gens):
-            nmonoms, ncoeffs = _dict_reorder(a.numer().to_dict(), K0.gens, K1.gens)
-            dmonoms, dcoeffs = _dict_reorder(a.denom().to_dict(), K0.gens, K1.gens)
+            nmonoms, ncoeffs = _dict_reorder(
+                a.numer().to_dict(), K0.gens, K1.gens)
+            dmonoms, dcoeffs = _dict_reorder(
+                a.denom().to_dict(), K0.gens, K1.gens)
 
             if K1.dom != K0.dom:
                 ncoeffs = [ K1.dom.convert(c, K0.dom) for c in ncoeffs ]

@@ -2,6 +2,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
 from sympy.functions import tan, cot
 from gruntz import gruntz
 
+
 def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
@@ -81,7 +82,7 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Pow:
         b, ex = e.args
-        c = None # records sign of b if b is +/-z or has a bounded value
+        c = None  # records sign of b if b is +/-z or has a bounded value
         if b.is_Mul:
             c, b = b.as_two_terms()
             if c is S.NegativeOne and b == z:
@@ -169,6 +170,7 @@ def limit(e, z, z0, dir="+"):
         unknown_result = []
         finite = []
         zero = []
+
         def _sift(term):
             if z not in term.free_symbols:
                 if term.is_unbounded:
@@ -266,6 +268,7 @@ def limit(e, z, z0, dir="+"):
         r = heuristics(e, z, z0, dir)
     return r
 
+
 def heuristics(e, z, z0, dir):
     if abs(z0) is S.Infinity:
         return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
@@ -314,7 +317,8 @@ class Limit(Expr):
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
         if str(dir) not in ('+', '-'):
-            raise ValueError("direction must be either '+' or '-', not %s" % dir)
+            raise ValueError(
+                "direction must be either '+' or '-', not %s" % dir)
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
         return obj

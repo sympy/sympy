@@ -18,6 +18,7 @@ from sympy import S, sympify, Rational, binomial
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']
 
+
 def FiniteRV(name, density):
     """
     Create a Finite Random Variable given a dict representing the density.
@@ -35,6 +36,7 @@ def FiniteRV(name, density):
     0.700000000000000
     """
     return SingleFinitePSpace.fromdict(name, density).value
+
 
 class DiscreteUniformPSpace(SingleFinitePSpace):
     """
@@ -64,6 +66,7 @@ class DiscreteUniformPSpace(SingleFinitePSpace):
                        for item in items)
         return cls.fromdict(name, density)
 
+
 def DiscreteUniform(name, items):
     """
     Create a Finite Random Variable representing a uniform distribution over
@@ -88,6 +91,7 @@ def DiscreteUniform(name, items):
     """
     return DiscreteUniformPSpace(name, items).value
 
+
 class DiePSpace(DiscreteUniformPSpace):
     """
     Create a Finite Random Variable representing a fair die.
@@ -107,7 +111,8 @@ class DiePSpace(DiscreteUniformPSpace):
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
     def __new__(cls, name, sides):
-        return DiscreteUniformPSpace.__new__(cls, name, range(1, sides+1))
+        return DiscreteUniformPSpace.__new__(cls, name, range(1, sides + 1))
+
 
 def Die(name, sides=6):
     """
@@ -127,6 +132,7 @@ def Die(name, sides=6):
     """
 
     return DiePSpace(name, sides).value
+
 
 class BernoulliPSpace(SingleFinitePSpace):
     """
@@ -150,10 +156,11 @@ class BernoulliPSpace(SingleFinitePSpace):
     {Heads: 1/2, Tails: 1/2}
     """
 
-    def __new__(cls, name,  p, succ, fail):
+    def __new__(cls, name, p, succ, fail):
         succ, fail, p = map(sympify, (succ, fail, p))
-        density = {succ: p, fail: (1-p)}
+        density = {succ: p, fail: (1 - p)}
         return cls.fromdict(name, density)
+
 
 def Bernoulli(name, p, succ=1, fail=0):
     """
@@ -174,6 +181,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     """
 
     return BernoulliPSpace(name, p, succ, fail).value
+
 
 class CoinPSpace(BernoulliPSpace):
     """
@@ -199,6 +207,7 @@ class CoinPSpace(BernoulliPSpace):
     def __new__(cls, name, p):
         return BernoulliPSpace.__new__(cls, name, p, 'H', 'T')
 
+
 def Coin(name, p=S.Half):
     """
     Create a Finite Random Variable representing a Coin toss.
@@ -219,6 +228,7 @@ def Coin(name, p=S.Half):
     {H: 3/5, T: 2/5}
     """
     return CoinPSpace(name, p).value
+
 
 class BinomialPSpace(SingleFinitePSpace):
     """
@@ -241,9 +251,10 @@ class BinomialPSpace(SingleFinitePSpace):
 
     def __new__(cls, name, n, p, succ, fail):
         n, p, succ, fail = map(sympify, (n, p, succ, fail))
-        density = dict((k*succ + (n-k)*fail,
-                binomial(n, k) * p**k * (1-p)**(n-k)) for k in range(0, n+1))
+        density = dict((k*succ + (n - k)*fail,
+                binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
         return cls.fromdict(name, density)
+
 
 def Binomial(name, n, p, succ=1, fail=0):
     """
@@ -263,6 +274,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     """
 
     return BinomialPSpace(name, n, p, succ, fail).value
+
 
 class HypergeometricPSpace(SingleFinitePSpace):
     """
@@ -285,9 +297,10 @@ class HypergeometricPSpace(SingleFinitePSpace):
 
     def __new__(cls, name, N, m, n):
         N, m, n = map(sympify, (N, m, n))
-        density = dict((k, binomial(m, k) * binomial(N-m, n-k) / binomial(N, n))
-                for k in range(max(0, n+m-N), min(m, n) + 1))
+        density = dict((k, binomial(m, k) * binomial(N - m, n - k) / binomial(N, n))
+                for k in range(max(0, n + m - N), min(m, n) + 1))
         return cls.fromdict(name, density)
+
 
 def Hypergeometric(name, N, m, n):
     """

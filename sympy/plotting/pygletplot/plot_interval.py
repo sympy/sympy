@@ -1,5 +1,6 @@
 from sympy import Symbol, Integer, sympify
 
+
 class PlotInterval(object):
     """
     """
@@ -56,6 +57,7 @@ class PlotInterval(object):
 
     def get_v_min(self):
         return self._v_min
+
     def set_v_min(self, v_min):
         if v_min is None:
             self._v_min = None
@@ -68,6 +70,7 @@ class PlotInterval(object):
 
     def get_v_max(self):
         return self._v_max
+
     def set_v_max(self, v_max):
         if v_max is None:
             self._v_max = None
@@ -153,7 +156,7 @@ class PlotInterval(object):
         v_min to v_max.
         """
         d = (self.v_max - self.v_min) / self.v_steps
-        for i in xrange(self.v_steps+1):
+        for i in xrange(self.v_steps + 1):
             a = self.v_min + (d * Integer(i))
             yield a
 
@@ -166,7 +169,7 @@ class PlotInterval(object):
         d = (self.v_max - self.v_min) / self.v_steps
         a = self.v_min + (d * Integer(0))
         for i in xrange(self.v_steps):
-            b = self.v_min + (d * Integer(i+1))
+            b = self.v_min + (d * Integer(i + 1))
             yield a, b
             a = b
 

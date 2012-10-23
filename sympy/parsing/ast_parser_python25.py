@@ -15,6 +15,7 @@ from sympy.core.compatibility import callable
 
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
+
 class SymPyTransformer(Transformer):
     def __init__(self, local_dict, global_dict):
         Transformer.__init__(self)
@@ -65,7 +66,8 @@ class SymPyTransformer(Transformer):
         lineno = nodelist[1][2]
         code = self.com_node(nodelist[-1])
 
-        assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
+        assert not defaults, repr(defaults)
+            # sympy.Lambda does not support optional arguments
 
         def convert(x):
             return CallFunc(Name('sympify'), [Const(x)])
@@ -76,7 +78,7 @@ class SymPyTransformer(Transformer):
 
 
 class SymPyParser:
-    def __init__(self, local_dict={}): #Contents of local_dict change, but it has proper effect only in global scope
+    def __init__(self, local_dict={}):  # Contents of local_dict change, but it has proper effect only in global scope
         global_dict = {}
         exec 'from sympy import *' in global_dict
 
@@ -85,13 +87,13 @@ class SymPyParser:
         self.global_dict = global_dict
 
     def parse_expr(self, ws_expression):
-        expression = ws_expression.strip() #in case of "   x"
+        expression = ws_expression.strip()  # in case of "   x"
         ast_tree = parser.expr(expression)
         ast_tree = self.r_transformer.transform(ast_tree)
 
         compiler.misc.set_filename('<sympify>', ast_tree)
         code = ExpressionCodeGenerator(ast_tree).getCode()
 
-        parsed_expr = eval(code, self.local_dict, self.global_dict) #Changed order to prefer sympy objects to user defined
+        parsed_expr = eval(code, self.local_dict, self.global_dict)  # Changed order to prefer sympy objects to user defined
 
         return parsed_expr
