@@ -17,57 +17,10 @@ class RaisingOp(Operator):
 		return("a",)
 	
 	def _eval_adjoint(self):
-		return Dagger(self)
+		return LoweringOp(*self.args)
 		
-	# Printing
+	# Printing look at Dagger code
 	
-	_label_separator = ','
-	
-	def _print_sequence(self, seq, printer, *args):
-		result = []
-		for item in seq:
-			result.append(printer._print(item, *args))
-		return sep.join(result)
-		
-	def _print_sequence_pretty(self, seq, printer, *args):
-		pform = printer._print(seq[0], *args)
-		for item in seq[1]:
-			pform = prettyForm(*pform.right((sep)))
-			pform = prettyForm(*pform.right((printer._print(item, *args))))
-		return pform
-	
-	def _print_label(self, printer, *args):
-		return self._print_sequence(
-			self.label, self._label_separator, printer, *args
-		)
-	
-	def _print_label_repr(self, printer, *args):
-		return self._print_sequence(
-			self.label, ',', printer, *args
-		)
-		
-	def _print_label_pretty(self, printer, *args):
-		return self._print_sequence_pretty(
-			self.label, self._label_separator, printer, *args
-		)
-		
-	def _print_label_latex(self, printer, *args):
-		return self._print_sequence(
-			self.label, self._label_separator, printer, *args
-		)
-		
-	def _print_contents(self, printer, *args):
-		return self._printer_label(printer, *args)
-		
-	def _print_contents_repr(self, printer, *args):
-		return self._print_label_repr(printer, *args)
-		
-	def _print_contents_pretty(self, printer, *args):
-		return self._print_label_pretty(printer, *args)
-		
-	def _print_contents_latex(self, printer, *args):
-		return self._print_label_latex(printer, *args)
-
 class LoweringOp(Operator):
 
 	@classmethod
@@ -75,29 +28,28 @@ class LoweringOp(Operator):
 		return ("a",)
 		
 	def _eval_adjoint(self):
-		return Dagger(self)
+		return RaisingOp(*self.args)
 
 
 #--------------------------------------------------------------------
 
 		
-class SHOBase(StateBase):
-	pass
-
-
 	
-class SHOState(SHOBase):
+class SHOState(State):
 	pass
 
 
-class SHOKet(SHOState, KetBase):
+class SHOKet(SHOState, Ket):
 	
 	@classmethod
 	def dual_class(self):
 		return SHOBra
 		
-class SHOBra(SHOState, BraBase):
+class SHOBra(SHOState, Bra):
 
 	@classmethod
 	def dual_class(self):
 		return SHOKet
+		
+		
+#Make ipython notebooks to test
