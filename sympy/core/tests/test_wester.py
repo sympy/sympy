@@ -210,8 +210,8 @@ def test_F5():
     assert gamma(n+R(1,2)) / sqrt(pi) / factorial(n) == factorial(2*n)/2**(2*n)/factorial(n)**2
 
 def test_F6():
-    partTest = sorted([p.copy() for p in partitions(4)])
-    partDesired = sorted([{4: 1}, {1: 2, 2:1}, {2: 2}, {1: 1, 3: 1}, {1: 4}])
+    partTest = [p.copy() for p in partitions(4)]
+    partDesired = [{4: 1}, {1: 1, 3: 1}, {2: 2}, {1: 2, 2:1}, {1: 4}]
     assert partTest == partDesired
 
 def test_F7():
