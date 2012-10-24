@@ -694,12 +694,12 @@ def _rem_redundancy(l1, terms, variables, mode):
     if mode == 1:
         for x in essential:
             string.append(_convert_to_varsSOP(x, variables))
-            string.append('|')
+        op = '|'
     else:
         for x in essential:
             string.append(_convert_to_varsPOS(x, variables))
-            string.append('&')
-    return ''.join(string)
+        op = "&"
+    return op.join(string)
 
 
 def SOPform(variables, minterms, dontcares=[]):
@@ -743,7 +743,7 @@ def SOPform(variables, minterms, dontcares=[]):
     string = _rem_redundancy(l1, minterms, variables, 1)
     if string == '':
         return True
-    return sympify(string[:-1])
+    return sympify(string)
 
 
 def POSform(variables, minterms, dontcares=[]):
@@ -795,7 +795,7 @@ def POSform(variables, minterms, dontcares=[]):
     string = _rem_redundancy(l1, maxterms, variables, 2)
     if string == '':
         return True
-    return sympify(string[:-1])
+    return sympify(string)
 
 
 def simplify_logic(function):
