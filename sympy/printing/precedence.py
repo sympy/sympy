@@ -29,6 +29,8 @@ PRECEDENCE_VALUES = {
     "factorial": PRECEDENCE["Pow"],
     "factorial2": PRECEDENCE["Pow"],
     "NegativeInfinity": PRECEDENCE["Add"],
+    "MatAdd": PRECEDENCE["Add"],
+    "MatMul": PRECEDENCE["Mul"]
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
