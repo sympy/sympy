@@ -3,6 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.matrices import ShapeError
+from sympy.simplify import simplify
 
 class MatrixExpr(Basic):
     """ Matrix Expression Class
@@ -112,6 +113,12 @@ class MatrixExpr(Basic):
 
     def _eval_inverse(self):
         raise NotImplementedError()
+
+    def _eval_simplify(self, **kwargs):
+        if self.is_Atom:
+            return self
+        else:
+            return self.__class__(*[simplify(x, **kwargs) for x in self.args])
 
     def _entry(self, i, j):
         raise NotImplementedError(
