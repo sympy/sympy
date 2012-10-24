@@ -530,9 +530,6 @@ class transpose(Function):
     def _eval_adjoint(self):
         return conjugate(self.args[0])
 
-    def _eval_derivative(self, x):
-        return transpose(Derivative(self.args[0], x, **{'evaluate': True}))
-
     def _eval_transpose(self):
         return self.args[0]
 
@@ -558,9 +555,6 @@ class adjoint(Function):
 
     def _eval_conjugate(self):
         return transpose(self.args[0])
-
-    def _eval_derivative(self, x):
-        return adjoint(Derivative(self.args[0], x, **{'evaluate': True}))
 
     def _eval_transpose(self):
         return conjugate(self.args[0])
