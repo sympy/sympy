@@ -586,8 +586,8 @@ def to_int_repr(clauses, symbols):
 
 def _check_pair(minterm1, minterm2):
     """
-    Checks if a pair of minterms differs by only one bit.If yes, returns
-    index. Otherwise, returns -1.
+    Checks if a pair of minterms differs by only one bit. If yes, returns
+    index, else returns -1.
     """
     index = -1
     for x, (i, j) in enumerate(zip(minterm1, minterm2)):
@@ -598,38 +598,35 @@ def _check_pair(minterm1, minterm2):
                 return -1
     return index
 
-
 def _convert_to_varsSOP(minterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for SOP).
     """
-    string = []
-    i = 0
-    while i <= (len(minterm)- 1):
-        if minterm[i]== 0:
-            string.append(''.join(["~", variables[i], "&"]))
-        elif minterm[i] == 1:
-            string.append(''.join([variables[i], "&"]))
-        i += 1
-    return (''.join(string))[:-1]
-
+    temp = []
+    for i, m in enumerate(minterm):
+        if m == 0:
+            temp.append("~" + variables[i])
+        elif m == 1:
+            temp.append(variables[i])
+        else:
+            pass  # ignore the 3s
+    return '&'.join(temp)
 
 def _convert_to_varsPOS(maxterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for POS).
     """
-    string = []
-    string.append("(")
-    i = 0
-    while i <= (len(maxterm)- 1):
-        if maxterm[i]== 0:
-            string.append(''.join([variables[i], "|"]))
-        elif maxterm[i] == 1:
-            string.append(''.join(["~", variables[i], "|"]))
-        i += 1
-    return (''.join(string))[:-1] + ")"
+    temp = []
+    for i, m in enumerate(maxterm):
+        if m == 1:
+            temp.append('~' + variables[i])
+        elif m == 0:
+            temp.append(variables[i])
+        else:
+            pass  # ignore the 3s
+    return '(' +'|'.join(temp) + ')'
 
 
 def _simplified_pairs(terms):
@@ -638,26 +635,18 @@ def _simplified_pairs(terms):
     with one less variable in the terms using QM method.
     """
     simplified_terms = []
-    i = 0
-    done = set()
-    for i, term in enumerate(terms[:-1]):
-        k = 1
-        for x in terms[(i + 1):]:
-            index = _check_pair(term, x)
+    todo = range(len(terms))
+    for i, ti in enumerate(terms[:-1]):
+        for j_i, tj in enumerate(terms[(i + 1):]):
+            index = _check_pair(ti, tj)
             if index != -1:
-                done.add(i)
-                done.add(i+k)
-                temporary = term[:index]
-                temporary.append(3)
-                temporary.extend(term[(index + 1):])
-                if temporary not in simplified_terms:
-                    simplified_terms.append(temporary)
-            k += 1
-    i = 0
-    done = list(done)
-    for i, term in enumerate(terms):
-        if i not in done:
-            simplified_terms.append(term)
+                todo[i] = todo[j_i + i + 1] = None
+                newterm = ti[:]
+                newterm[index] = 3
+                if newterm not in simplified_terms:
+                    simplified_terms.append(newterm)
+    simplified_terms.extend([terms[i] for i in
+        filter(lambda _: _ is not None, todo)])
     return simplified_terms
 
 
