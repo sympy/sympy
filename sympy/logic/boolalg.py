@@ -155,6 +155,8 @@ class Not(BooleanFunction):
         arg = args[0]
         if type(arg) is bool:
             return not arg
+        if arg in (0, 1):
+            return not bool(arg)
         # apply De Morgan Rules
         if arg.func is And:
             return Or(*[Not(a) for a in arg.args])
