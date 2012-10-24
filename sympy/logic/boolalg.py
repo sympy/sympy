@@ -534,6 +534,7 @@ def eliminate_implications(expr):
     else:
         return expr.func(*args)
 
+
 @deprecated(useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
@@ -599,6 +600,7 @@ def _check_pair(minterm1, minterm2):
                 return -1
     return index
 
+
 def _convert_to_varsSOP(minterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
@@ -613,6 +615,7 @@ def _convert_to_varsSOP(minterm, variables):
         else:
             pass  # ignore the 3s
     return '&'.join(temp)
+
 
 def _convert_to_varsPOS(maxterm, variables):
     """

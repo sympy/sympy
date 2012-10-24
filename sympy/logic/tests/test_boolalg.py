@@ -134,6 +134,7 @@ def test_Equivalent():
     assert Equivalent(A, B, True) == A & B
     assert Equivalent(A, B, False) == ~A & ~B
 
+
 def test_simplification():
     """
     Test working of simplification methods.
@@ -145,6 +146,7 @@ def test_simplification():
     assert Equivalent(SOPform(['x', 'y', 'z'], set1)) == Equivalent(Not(SOPform(['x', 'y', 'z'], set2)))
     assert Equivalent(SOPform(['w', 'x', 'y', 'z'], minterms, dontcares)) == Equivalent(POSform(['w', 'x', 'y', 'z'], minterms, dontcares))
     assert Equivalent(simplify_logic('A & (B | C)')) == Equivalent(simplify_logic('(A & B) | (A & C)'))
+
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
