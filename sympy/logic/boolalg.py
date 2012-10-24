@@ -734,13 +734,11 @@ def SOPform(variables, minterms, dontcares=[]):
     """
     if minterms == []:
         return False
-    l1 = []
     l2 = [1]
-    total = minterms + dontcares
+    l1 = minterms + dontcares
     while (l1 != l2):
-        l1 = _simplified_pairs(total)
+        l1 = _simplified_pairs(l1)
         l2 = _simplified_pairs(l1)
-        total = l1[:]
     string = _rem_redundancy(l1, minterms, variables, 1)
     if string == '':
         return True
@@ -786,13 +784,11 @@ def POSform(variables, minterms, dontcares=[]):
         t[-len(b):] = b
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t[:])
-    l1 = []
     l2 = [1]
-    total = maxterms + dontcares
+    l1 = maxterms + dontcares
     while (l1 != l2):
-        l1 = _simplified_pairs(total)
+        l1 = _simplified_pairs(l1)
         l2 = _simplified_pairs(l1)
-        total = l1[:]
     string = _rem_redundancy(l1, maxterms, variables, 2)
     if string == '':
         return True
