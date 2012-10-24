@@ -18,8 +18,7 @@ class AskSymmetricHandler(CommonHandler):
         if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
             return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
-            return ask(Q.symmetric(MatMul(*mmul.args[1:-1], evaluate=False)),
-                                   assumptions)
+            return ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
 
     @staticmethod
     def MatAdd(expr, assumptions):
@@ -135,8 +134,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
             return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
             return ask(Q.positive_definite(
-                                MatMul(*mmul.args[1:-1], evaluate=False)),
-                                assumptions)
+                                MatMul(*mmul.args[1:-1])), assumptions)
 
     @staticmethod
     def MatAdd(expr, assumptions):
