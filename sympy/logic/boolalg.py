@@ -1,5 +1,6 @@
 """Boolean algebra module for SymPy"""
 from sympy.core.basic import Basic
+from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
 from sympy.core.compatibility import bin
@@ -533,7 +534,7 @@ def eliminate_implications(expr):
     else:
         return expr.func(*args)
 
-
+@deprecated(useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a sympy expression
