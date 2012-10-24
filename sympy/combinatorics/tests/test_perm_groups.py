@@ -160,16 +160,6 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
-
-def test_stabilizer_cosets():
-    a = Permutation([0, 2, 1])
-    b = Permutation([1, 0, 2])
-    G = PermutationGroup([a, b])
-    assert G.stabilizer_cosets(af=True) == \
-        [[[0, 1, 2], [1, 0, 2], [2, 0, 1]], [[0, 1, 2], [0, 2, 1]]]
-    assert G.stabilizer_gens(af=True) == [[0, 2, 1]]
-
-
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
@@ -181,30 +171,22 @@ def test_coset_rank():
         h1 = G.coset_unrank(rk, af=True)
         assert h == h1
         i += 1
-    assert G.coset_unrank(48) is None
-    assert G.coset_rank(gens[0]) == 6
-    assert G.coset_unrank(6) == gens[0]
-
+    assert G.coset_unrank(48) == None
 
 def test_coset_factor():
-    a = Permutation([2, 0, 1, 3, 4, 5])
-    b = Permutation([2, 1, 3, 4, 5, 0])
+    a = Permutation([2,0,1,3,4,5])
+    b = Permutation([2,1,3,4,5,0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1, 0, 2, 3, 4, 5])
+    d = Permutation([1,0,2,3,4,5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1, 0, 2, 3, 5, 4])
-    v = g.coset_factor(c, af=True)
-    assert _af_rmuln(*v) == [1, 0, 2, 3, 5, 4]
+    c = Permutation([1,0,2,3,5,4])
+    v = g.coset_factor(c)
+    tr = g.basic_transversals
+    p = Permutation.rmul(*[tr[i][v[i]] for i in range(len(g.base))])
+    assert p == c
     assert g.contains(c)
-
-    a = Permutation([0, 2, 1])
-    g = PermutationGroup([a])
-    c = Permutation([2, 1, 0])
-    assert not g.coset_factor(c)
-    assert g.coset_rank(c) is None
-
 
 def test_orbits():
     a = Permutation([2, 0, 1])
@@ -456,7 +438,7 @@ def test_transitivity_degree():
 
 
 def test_schreier_sims_random():
-    assert Tetra.pgroup.base == [0, 1]
+    assert sorted(Tetra.pgroup.base) == [0, 1]
 
     S = SymmetricGroup(3)
     base = [0, 1]
@@ -471,7 +453,6 @@ def test_schreier_sims_random():
                   Permutation([0, 2, 1])]
     assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
-
 
 def test_baseswap():
     S = SymmetricGroup(4)
