@@ -710,14 +710,14 @@ def SOPform(variables, minterms, dontcares=[]):
     eliminating algorithm to convert the list of all input combos that
     generate '1'(the minterms) into the smallest Sum of Products form.
 
-    The variables must be given as the first argument, in the form of
-    strings.
+    The variables must be given as the first argument.
 
-    The return type from SOPform is an instance of Or.
+    Return a logical Or function (i.e., the "sum of products" or "SOP"
+    form) that gives the desired outcome. If there are inputs that can
+    be ignored, pass them as a list too.
 
-    If there are any input combinations whose outputs are insignificant,
-    give their list as the last argument. In such a case, the resulting
-    function is one of the multiple effective ones.
+    The result will be one of the (perhaps many) functions that satisfy
+    the conditions.
 
     Examples
     ========
@@ -735,6 +735,7 @@ def SOPform(variables, minterms, dontcares=[]):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
+    variables = [str(v) for v in variables]
     if minterms == []:
         return False
     l2 = [1]
@@ -754,14 +755,14 @@ def POSform(variables, minterms, dontcares=[]):
     eliminating algorithm to convert the list of all input combinations
     that generate '1' (the minterms) into the smallest Product of Sums form.
 
-    The variables must be given as the first argument, in the form of
-    strings.
+    The variables must be given as the first argument.
 
-    The return type from POSform is an instance of And.
+    Return a logical And function (i.e., the "product of sums" or "POS"
+    form) that gives the desired outcome. If there are inputs that can
+    be ignored, pass them as a list too.
 
-    If there are any input combos whose outputs are insignificant, give
-    their list as the last argument. In such a case, the resulting
-    function is one of the multiple effective ones.
+    The result will be one of the (perhaps many) functions that satisfy
+    the conditions.
 
     Examples
     ========
@@ -779,6 +780,7 @@ def POSform(variables, minterms, dontcares=[]):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
+    variables = [str(v) for v in variables]
     from sympy.core.compatibility import bin
     if minterms == []:
         return False
@@ -800,11 +802,11 @@ def POSform(variables, minterms, dontcares=[]):
     return sympify(string)
 
 
-def simplify_logic(function):
+def simplify_logic(expr):
     """
     This function simplifies a boolean function to its
     simplified version in SOP or POS form. The return type is a
-    Or object or And object in Sympy. The input can be a string
+    Or object or And object in SymPy. The input can be a string
     or a boolean expression.
 
     Examples
@@ -825,15 +827,15 @@ def simplify_logic(function):
 
     """
     from sympy.core.compatibility import bin
-    function = sympify(function)
-    variables = list(function.free_symbols)
+    expr = sympify(expr)
+    variables = list(expr.free_symbols)
     string_variables = [x.name for x in variables]
     truthtable = []
     t = [0] * len(variables)
     for x in range(2 ** len(variables)):
         b = [int(y) for y in bin(x)[2:]]
         t[-len(b):] = b
-        if function.subs(zip(variables, [bool(i) for i in t])) is True:
+        if expr.subs(zip(variables, [bool(i) for i in t])) is True:
             truthtable.append(t[:])
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(string_variables, truthtable)
