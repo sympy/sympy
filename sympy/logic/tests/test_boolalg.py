@@ -142,7 +142,7 @@ def test_simplification():
     set2=[[0,0,0], [0,1,0], [1,0,1], [1,1,1]]
     minterms = [[0,0,0,1], [0,0,1,1], [0,1,1,1], [1,0,1,1], [1,1,1,1]]
     dontcares = [[0,0,0,0], [0,0,1,0], [0,1,0,1]]
-    assert Equivalent(SOPform(['x','y','z'], set1)) == Equivalent(Not (SOPform(['x','y','z'], set2)))
+    assert Equivalent(SOPform(['x','y','z'], set1)) == Equivalent(Not(SOPform(['x','y','z'], set2)))
     assert Equivalent(SOPform(['w','x','y','z'], minterms, dontcares)) == Equivalent(POSform(['w','x','y','z'], minterms, dontcares))
     assert Equivalent(simplify_logic('A & (B | C)')) == Equivalent(simplify_logic('(A & B) | (A & C)'))
 
