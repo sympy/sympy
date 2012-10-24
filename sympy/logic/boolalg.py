@@ -1,6 +1,5 @@
 """Boolean algebra module for SymPy"""
 from sympy.core.basic import Basic
-from sympy.core.symbol import Symbol
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
 from sympy.core.compatibility import bin
@@ -55,10 +54,10 @@ class And(LatticeOp, BooleanFunction):
     Examples
     ========
 
-        >>> from sympy.core import symbols
-        >>> from sympy.abc import x, y
-        >>> x & y
-        And(x, y)
+    >>> from sympy.core import symbols
+    >>> from sympy.abc import x, y
+    >>> x & y
+    And(x, y)
     """
     zero = False
     identity = True
@@ -651,10 +650,9 @@ def _compare_term(minterm, term):
     """
     flag = True
     for i, x in enumerate(term):
-        if x != 3:
-            if x != minterm[i]:
-                flag = False
-                break
+        if x != 3 and x != minterm[i]:
+            flag = False
+            break
     return flag
 
 
@@ -674,12 +672,10 @@ def _rem_redundancy(l1, terms, variables, mode):
             if temporary[0] not in essential:
                 essential.append(temporary[0])
     for x in terms:
-        flag = False
         for y in essential:
             if _compare_term(x, y):
-                flag = True
                 break
-        if (not(flag)):
+        else:
             for z in l1:
                 if _compare_term(x, z):
                     if z not in essential:
@@ -689,12 +685,12 @@ def _rem_redundancy(l1, terms, variables, mode):
     if mode == 1:
         for x in essential:
             string.append(_convert_to_varsSOP(x, variables))
-            string.append('|')
+        rv = '|'.join(string)
     else:
         for x in essential:
             string.append(_convert_to_varsPOS(x, variables))
-            string.append('&')
-    return ''.join(string)
+        rv = '&'.join(string)
+    return rv
 
 
 def SOPform(variables, minterms, dontcares=[]):
@@ -727,17 +723,15 @@ def SOPform(variables, minterms, dontcares=[]):
     """
     if minterms == []:
         return False
-    l1 = []
     l2 = [1]
-    total = minterms + dontcares
+    l1 = minterms + dontcares
     while (l1 != l2):
-        l1 = _simplified_pairs(total)
+        l1 = _simplified_pairs(l1)
         l2 = _simplified_pairs(l1)
-        total = l1[:]
     string = _rem_redundancy(l1, minterms, variables, 1)
     if string == '':
         return True
-    return sympify(string[:-1])
+    return sympify(string)
 
 
 def POSform(variables, minterms, dontcares=[]):
@@ -778,17 +772,15 @@ def POSform(variables, minterms, dontcares=[]):
         t[-len(b):] = b
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t[:])
-    l1 = []
     l2 = [1]
-    total = maxterms + dontcares
+    l1 = maxterms + dontcares
     while (l1 != l2):
-        l1 = _simplified_pairs(total)
+        l1 = _simplified_pairs(l1)
         l2 = _simplified_pairs(l1)
-        total = l1[:]
     string = _rem_redundancy(l1, maxterms, variables, 2)
     if string == '':
         return True
-    return sympify(string[:-1])
+    return sympify(string)
 
 
 def simplify_logic(function):
@@ -806,7 +798,7 @@ def simplify_logic(function):
 
     """
     function = compile_rule(function)
-    variables = list(function.atoms(Symbol))
+    variables = list(function.free_symbols)
     string_variables = [x.name for x in variables]
     truthtable = []
     t = [0] * len(variables)
