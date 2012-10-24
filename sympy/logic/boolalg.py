@@ -627,7 +627,7 @@ def _convert_to_varsPOS(maxterm, variables):
             temp.append(variables[i])
         else:
             pass  # ignore the 3s
-    return '(' +'|'.join(temp) + ')'
+    return '(' + '|'.join(temp) + ')'
 
 
 def _simplified_pairs(terms):
