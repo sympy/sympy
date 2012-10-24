@@ -680,12 +680,10 @@ def _rem_redundancy(l1, terms, variables, mode):
             if temporary[0] not in essential:
                 essential.append(temporary[0])
     for x in terms:
-        flag = False
         for y in essential:
             if _compare_term(x, y):
-                flag = True
                 break
-        if (not(flag)):
+        else:
             for z in l1:
                 if _compare_term(x, z):
                     if z not in essential:
@@ -809,11 +807,10 @@ def simplify_logic(function):
         And(Not(x), Not(y))
 
     """
-    from sympy import Symbol
     from sympy.core.compatibility import bin
     function = sympify(function)
-    string_variables = [x.__getnewargs__()[0] for x in function.atoms(Symbol)]
-    variables = list(function.atoms(Symbol))
+    variables = list(function.free_symbols)
+    string_variables = [x.name for x in variables]
     truthtable = []
     t = [0] * len(variables)
     for x in range(2 ** len(variables)):
