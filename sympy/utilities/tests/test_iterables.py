@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        ordered, minlex, runs, reshape)
+        ordered, minlex, runs, reshape, _toposort, reverse_dict)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -397,3 +397,14 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(range(12), [2, [3], set([2]), (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+
+def test_reverse_dict():
+    d = {'a': (1, 2), 'b': (2, 3), 'c': ()}
+    assert reverse_dict(d) == {1: ('a',), 2: ('a', 'b'), 3: ('b',)}
+
+def test__toposort():
+    edges = {1: set((4, 6, 7)), 2: set((4, 6, 7)),
+             3: set((5, 7)),    4: set((6, 7)), 5: set((7,))}
+    order = _toposort(edges)
+    assert not any(a in edges.get(b, ()) for i, a in enumerate(order)
+                                         for b    in order[i:])
