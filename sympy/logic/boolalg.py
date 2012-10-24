@@ -707,11 +707,13 @@ def SOPform(variables, minterms, dontcares=[]):
     eliminating algorithm to convert the list of all input combos that
     generate '1'(the minterms) into the smallest Sum of Products form.
 
-    The return type from SOPform is an instance of Or.
     The variables must be given as the first argument, in the form of
     strings.
-    If there are any input combos whose outputs are insignificant, give
-    their list as the last argument. In such a case, the resulting
+
+    The return type from SOPform is an instance of Or.
+
+    If there are any input combinations whose outputs are insignificant,
+    give their list as the last argument. In such a case, the resulting
     function is one of the multiple effective ones.
 
     Examples
@@ -745,13 +747,15 @@ def SOPform(variables, minterms, dontcares=[]):
 
 def POSform(variables, minterms, dontcares=[]):
     """
-    The POSform function uses simplified_pairs and a redundant group-
-    eliminating algorithm to convert the list of all input combos that
-    generate '1'(the minterms) into the smallest Product of Sums form.
+    The POSform function uses simplified_pairs and a redundant-group
+    eliminating algorithm to convert the list of all input combinations
+    that generate '1' (the minterms) into the smallest Product of Sums form.
 
-    The return type from POSform is an instance of And.
     The variables must be given as the first argument, in the form of
     strings.
+
+    The return type from POSform is an instance of And.
+
     If there are any input combos whose outputs are insignificant, give
     their list as the last argument. In such a case, the resulting
     function is one of the multiple effective ones.
@@ -795,16 +799,26 @@ def POSform(variables, minterms, dontcares=[]):
 
 def simplify_logic(function):
     """
-    This function simplifies a boolean function in string form to its
+    This function simplifies a boolean function to its
     simplified version in SOP or POS form. The return type is a
-    Or object or And object in Sympy.
+    Or object or And object in Sympy. The input can be a string
+    or a boolean expression.
 
     Examples
     ========
 
     >>> from sympy.logic import simplify_logic
-    >>> simplify_logic( '(~x & ~y & ~z) | ( ~x & ~y & z)')
-        And(Not(x), Not(y))
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import S
+
+    >>> b = '(~x & ~y & ~z) | ( ~x & ~y & z)'
+    >>> simplify_logic(b)
+    And(Not(x), Not(y))
+
+    >>> S(b)
+    Or(And(Not(x), Not(y), Not(z)), And(Not(x), Not(y), z))
+    >>> simplify_logic(_)
+    And(Not(x), Not(y))
 
     """
     from sympy.core.compatibility import bin
