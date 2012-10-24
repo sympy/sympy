@@ -20,6 +20,8 @@ def test_simple_products():
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
 
+    assert Product(x**k, (k, 1, n)).variables == [k]
+
     raises(ValueError, lambda: Product(n))
     raises(ValueError, lambda: Product(n, k))
     raises(ValueError, lambda: Product(n, k, 1))
@@ -38,6 +40,8 @@ def test_multiple_products():
         Product(f(n)**k, (n, 1, k))
     assert Product(
         x, (x, 1, k), (k, 1, n)).doit() == Product(factorial(k), (k, 1, n))
+
+    assert Product(x**k, (n, 1, k), (k, 1, m)).variables == [n, k]
 
 
 def test_rational_products():
@@ -72,3 +76,16 @@ def test_product_pow():
 def test_infinite_product():
     # Issue 2638
     assert isinstance(Product(2**(1/factorial(n)), (n, 0, oo)), Product)
+
+
+def test_conjugate_transpose():
+    p = Product(x**k, (k, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
+
+    A, B = symbols("A B", commutative=False)
+    p = Product(A*B**k, (k, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()

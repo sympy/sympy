@@ -1,10 +1,11 @@
-from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
-                   log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
-                   Rational, Basic, Function, I, conjugate, re, im, And, Or,
-                   Max, Min)
+from sympy import (
+    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
+    Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
+    Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
+)
 from sympy.utilities.pytest import XFAIL, raises
 
-x, y = symbols('x,y')
+x, y = symbols('x y')
 
 
 def test_piecewise():
@@ -370,6 +371,17 @@ def test_piecewise_complex():
 
     assert p1.as_real_imag() == (p1, 0)
     assert p2.as_real_imag() == (0, -I*p2)
+
+
+def test_conjugate_transpose():
+    A, B = symbols("A B", commutative=False)
+    p = Piecewise((A*B**2, x > 0), (A**2*B, True))
+    assert p.adjoint() == \
+        Piecewise((adjoint(A*B**2), x > 0), (adjoint(A**2*B), True))
+    assert p.conjugate() == \
+        Piecewise((conjugate(A*B**2), x > 0), (conjugate(A**2*B), True))
+    assert p.transpose() == \
+        Piecewise((transpose(A*B**2), x > 0), (transpose(A**2*B), True))
 
 
 def test_piecewise_evaluate():

@@ -1,13 +1,15 @@
 from sympy import (
-    S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
-    Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
-    sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-    Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
-    terms_gcd, EulerGamma, Ci, Piecewise, Abs)
+    Abs, acos, acosh, Add, adjoint, asin, asinh, atan, Ci, conjugate, cos,
+    Derivative, diff, DiracDelta, E, exp, erf, EulerGamma, factor, Function,
+    Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
+    Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
+    sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
+    Tuple,
+)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
-x, y, a, t, x_1, x_2, z = symbols('x,y,a,t,x_1,x_2,z')
+x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -95,6 +97,22 @@ def test_basics_multiple():
     assert diff_test(Integral(y*x, x, y)) == set([x, y])
     assert diff_test(Integral(x + y, y, (y, 1, x))) == set([x])
     assert diff_test(Integral(x + y, (x, x, y), (y, y, x))) == set([x, y])
+
+
+def test_conjugate_transpose():
+    A, B = symbols("A B", commutative=False)
+
+    x = Symbol("x", complex=True)
+    p = Integral(A*B, (x,))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
+
+    x = Symbol("x", real=True)
+    p = Integral(A*B, (x,))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
 
 def test_integration():
