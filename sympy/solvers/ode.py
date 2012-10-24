@@ -2539,30 +2539,15 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     This is an equation with form 0 = a0*f(x) + a1*x*f'(x) + a2*x**2*f"(x)...
 
     These equations can be solved in a general manner, by substituting
-    solutions of the form f(x) = x**r, and deriving a characteristic
-    equation for r.  When there are repeated roots, we include
-    extra terms of the form Crk*ln(x)**k*x**r, where Cnk is an
-    arbitrary integration constant, r is a root of the characteristic
-    equation, and k ranges over the multiplicity of r.
-    For
-
-
-    TO DO.........
-
-    roots of the characteristic equation a_n*m**n + a_(n-1)*m**(n-1) +
-    ... + a1*m + a0 = 0.  The solution will then be the sum of
-    Cn*x**i*exp(r*x) terms, for each where Cn is an arbitrary constant,
-    r is a root of the characteristic equation and i is is one of each
-    from 0 to the multiplicity of the root - 1 (for example, a root 3 of
-    multiplicity 2 would create the terms C1*exp(3*x) + C2*x*exp(3*x)).
-    The exponential is usually expanded for complex roots using Euler's
-    equation exp(I*x) = cos(x) + I*sin(x).  Complex roots always come in
-    conjugate pars in polynomials with real coefficients, so the two
-    roots will be represented (after simplifying the constants) as
-    exp(a*x)*(C1*cos(b*x) + C2*sin(b*x)).
-
-    If SymPy cannot find exact roots to the characteristic equation, a
-    RootOf instance will be return in its stead.
+    solutions of the form f(x) = x**r, and deriving a characteristic equation
+    for r.  When there are repeated roots, we include extra terms of the form
+    Crk*ln(x)**k*x**r, where Cnk is an arbitrary integration constant, r is a
+    root of the characteristic equation, and k ranges over the multiplicity of
+    r.  In the cases where the roots are complex, solutions of the form
+    C1*x**a*sin(b*log(x)) + C2*x**a*cos(b*log(x)) are returned, based on
+    expansions with Eulers formula.  The general solution is the sum of the
+    terms found.  If SymPy cannot find exact roots to the characteristic
+    equation, a RootOf instance will be return in its stead.
 
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
@@ -2570,7 +2555,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
     ... hint='nth_linear_euler_eq_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == x**2*(C1 + C2*x)
+    f(x) == sqrt(x)*(C1 + C2*log(x))
 
     Note that because this method does not involve integration, there is
     no 'nth_linear_euler_eq_homogeneous_Integral' hint.
@@ -2594,7 +2579,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = diff(f(x), x, 2)*x**2 - 4*diff(f(x), x)*x + 6*f(x)
+    >>> eq = f(x).diff(x, 2)*x**2 - 4*f(x).diff(x)*x + 6*f(x)
     >>> pprint(dsolve(eq, f(x),
     ... hint='nth_linear_euler_eq_homogeneous'))
             2
