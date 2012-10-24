@@ -1,7 +1,9 @@
 """Boolean algebra module for SymPy"""
 from sympy.core.basic import Basic
+from sympy.core.symbol import Symbol
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
+from sympy.core.compatibility import bin
 
 
 class Boolean(Basic):
@@ -359,7 +361,8 @@ def fuzzy_not(arg):
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
@@ -375,7 +378,8 @@ def conjuncts(expr):
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
@@ -556,10 +560,10 @@ def to_int_repr(clauses, symbols):
     Examples
     ========
 
-        >>> from sympy.logic.boolalg import to_int_repr
-        >>> from sympy.abc import x, y
-        >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
-        True
+    >>> from sympy.logic.boolalg import to_int_repr
+    >>> from sympy.abc import x, y
+    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    True
 
     """
 
@@ -590,38 +594,31 @@ def _check_pair(minterm1, minterm2):
                 return -1
     return index
 
-
 def _convert_to_varsSOP(minterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for SOP).
     """
-    string = []
-    i = 0
-    while i <= (len(minterm)- 1):
-        if minterm[i]== 0:
-            string.append(''.join(["~", variables[i], "&"]))
-        elif minterm[i] == 1:
-            string.append(''.join([variables[i], "&"]))
-        i += 1
-    return (''.join(string))[:-1]
-
+    temp = []
+    for i, m in enumerate(minterm):
+        if m == 0:
+            temp.append("~" + variables[i])
+        elif m == 1:
+            temp.append(variables[i])
+    return '&'.join(temp)
 
 def _convert_to_varsPOS(maxterm, variables):
     """
     Converts a term in the expansion of a function from binary to it's
     variable form (for POS).
     """
-    string = []
-    string.append("(")
-    i = 0
-    while i <= (len(maxterm)- 1):
-        if maxterm[i]== 0:
-            string.append(''.join([variables[i], "|"]))
-        elif maxterm[i] == 1:
-            string.append(''.join(["~", variables[i], "|"]))
-        i += 1
-    return (''.join(string))[:-1] + ")"
+    temp = []
+    for i, m in enumerate(maxterm):
+        if m == 1:
+            temp.append('~' + variables[i])
+        elif m == 0:
+            temp.append(variables[i])
+    return '(' +'|'.join(temp) + ')'
 
 
 def _simplified_pairs(terms):
@@ -630,23 +627,17 @@ def _simplified_pairs(terms):
     with one less variable in the terms using QM method.
     """
     simplified_terms = []
-    i = 0
     done = set()
-    for i, term in enumerate(terms[:-1]):
-        k = 1
-        for x in terms[(i + 1):]:
-            index = _check_pair(term, x)
+    for i, ti in enumerate(terms[:-1]):
+        for k, tj in enumerate(terms[(i + 1):]):
+            index = _check_pair(ti, tj)
             if index != -1:
                 done.add(i)
-                done.add(i+k)
-                temporary = term[:index]
-                temporary.append(3)
-                temporary.extend(term[(index + 1):])
-                if temporary not in simplified_terms:
-                    simplified_terms.append(temporary)
-            k += 1
-    i = 0
-    done = list(done)
+                done.add(i + k)
+                temp = terms[:]
+                temp.insert(index, 3)
+                if temp not in simplified_terms:
+                    simplified_terms.append(temp)
     for i, term in enumerate(terms):
         if i not in done:
             simplified_terms.append(term)
@@ -814,11 +805,9 @@ def simplify_logic(function):
         And(Not(x), Not(y))
 
     """
-    from sympy import Symbol
-    from sympy.core.compatibility import bin
-    function = sympify(function)
-    string_variables = [x.__getnewargs__()[0] for x in function.atoms(Symbol)]
+    function = compile_rule(function)
     variables = list(function.atoms(Symbol))
+    string_variables = [x.name for x in variables]
     truthtable = []
     t = [0] * len(variables)
     for x in range(2 ** len(variables)):
