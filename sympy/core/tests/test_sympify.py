@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
@@ -447,6 +447,8 @@ def test_no_autosimplify_into_Mul():
     assert ss != 1 and ss.simplify() == -1
 
 
-def test_issue_3441():
+def test_issue_3441_3453():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
+    assert S('[[[2*(1)]]]') == [[[2]]]
+    assert S('Matrix([2*(1)])') == Matrix([2])
