@@ -2,6 +2,7 @@
 from sympy.core.basic import Basic
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
+from sympy.core.compatibility import bin
 
 
 class Boolean(Basic):
@@ -47,16 +48,16 @@ class And(LatticeOp, BooleanFunction):
     """
     Logical AND function.
 
-    It evaluates its arguments in order, giving False immediately if any of them
-    are False, and True if they are all True.
+    It evaluates its arguments in order, giving False immediately
+    if any of them are False, and True if they are all True.
 
     Examples
     ========
 
-        >>> from sympy.core import symbols
-        >>> from sympy.abc import x, y
-        >>> x & y
-        And(x, y)
+    >>> from sympy.core import symbols
+    >>> from sympy.abc import x, y
+    >>> x & y
+    And(x, y)
     """
     zero = False
     identity = True
@@ -66,8 +67,8 @@ class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
 
-    It evaluates its arguments in order, giving True immediately if any of them are
-    True, and False if they are all False.
+    It evaluates its arguments in order, giving True immediately
+    if any of them are True, and False if they are all False.
     """
     zero = True
     identity = False
@@ -82,8 +83,10 @@ class Xor(BooleanFunction):
         """
         Logical XOR (exclusive OR) function.
 
-        Returns True if an odd number of the arguments are True, and the rest are False.
-        Returns False if an even number of the arguments are True, and the rest are False.
+        Returns True if an odd number of the arguments are True
+            and the rest are False.
+        Returns False if an even number of the arguments are True
+            and the rest are False.
 
         Examples
         ========
@@ -253,7 +256,8 @@ class Implies(BooleanFunction):
         try:
             A, B = args
         except ValueError:
-            raise ValueError("%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args)))
+            raise ValueError("%d operand(s) used for an Implies "
+                "(pairs are required): %s" % (len(args), str(args)))
         if A is True or A is False or B is True or B is False:
             return Or(Not(A), B)
         else:
@@ -264,7 +268,7 @@ class Equivalent(BooleanFunction):
     """
     Equivalence relation.
 
-    Equivalent(A, B) is True if and only if A and B are both True or both False
+    Equivalent(A, B) is True iff A and B are both True or both False
     """
     @classmethod
     def eval(cls, *args):
@@ -359,7 +363,8 @@ def fuzzy_not(arg):
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
@@ -375,7 +380,8 @@ def conjuncts(expr):
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
@@ -506,7 +512,8 @@ def eliminate_implications(expr):
     Examples
     ========
 
-    >>> from sympy.logic.boolalg import Implies, Equivalent, eliminate_implications
+    >>> from sympy.logic.boolalg import Implies, Equivalent, \
+         eliminate_implications
     >>> from sympy.abc import A, B, C
     >>> eliminate_implications(Implies(A, B))
     Or(B, Not(A))
@@ -546,7 +553,8 @@ def compile_rule(s):
     """
     import re
     from sympy.core import Symbol
-    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol': Symbol})
+    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s),
+        {'Symbol': Symbol})
 
 
 def to_int_repr(clauses, symbols):
@@ -556,10 +564,10 @@ def to_int_repr(clauses, symbols):
     Examples
     ========
 
-        >>> from sympy.logic.boolalg import to_int_repr
-        >>> from sympy.abc import x, y
-        >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
-        True
+    >>> from sympy.logic.boolalg import to_int_repr
+    >>> from sympy.abc import x, y
+    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    True
 
     """
 
@@ -656,21 +664,20 @@ def _simplified_pairs(terms):
 def _compare_term(minterm, term):
     """
     Compares if a binary term is satisfied by the given term. Used
-    for recognising prime implicants.
+    for recognizing prime implicants.
     """
     flag = True
     for i, x in enumerate(term):
-        if x != 3:
-            if x != minterm[i]:
-                flag = False
-                break
+        if x != 3 and x != minterm[i]:
+            flag = False
+            break
     return flag
 
 
 def _rem_redundancy(l1, terms, variables, mode):
     """
     After the truth table has been sufficiently simplified, use the prime
-    implicant table method to recognise and eliminate redundant pairs,
+    implicant table method to recognize and eliminate redundant pairs,
     and return the relevant function in string form.
     """
     essential = []
@@ -723,7 +730,8 @@ def SOPform(variables, minterms, dontcares=[]):
     ========
 
     >>> from sympy.logic import SOPform
-    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1],
+    ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> SOPform(['w','x','y','z'], minterms, dontcares)
         Or(And(Not(w), z), And(y, z))
@@ -766,10 +774,11 @@ def POSform(variables, minterms, dontcares=[]):
     ========
 
     >>> from sympy.logic import POSform
-    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
+    >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1],
+    ...             [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> POSform(['w','x','y','z'], minterms, dontcares)
-        And(Or(Not(w), y), z)
+    And(Or(Not(w), y), z)
 
     References
     ==========
