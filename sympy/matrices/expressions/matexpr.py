@@ -120,6 +120,9 @@ class MatrixExpr(Basic):
         else:
             return self.__class__(*[simplify(x, **kwargs) for x in self.args])
 
+    def _eval_adjoint(self):
+        return self.T.conjugate()
+
     def _entry(self, i, j):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
