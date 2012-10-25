@@ -499,7 +499,34 @@ def test_issue_2069():
 
 
 def test_issue_1460():
+    w=Wild('w')
+    y=Wild('y')
+
+    # this is as it should be
+
+    assert (3/x).match(w/y) == {w: 3, y: x}
+    assert (x/3).match(w/y) == {w: x, y: 3}
+
+    # in theory the reverse could be obtained
+
+    assert (3*x).match(w*y) == {w: 3, y: x}
+
+    # these could fail or be reversed
+
+    assert (3*x).match(w/y) == {w: x, y: S(1)/3}
+    assert (3/x).match(w*y) == {w: 3, y: 1/x}
+
+    # since (x**i = y) -> x = y**(1/i) where i is an integer
+    # the following should also be valid as long as x is not
+    # zero when i is negative
+
     a = Wild('a')
+
+    e = S(0)
+    assert e.match(a) == {a: e}
+    assert e.match(1/a) is None
+    assert e.match(a**.3) is None
+
     e = S(3)
     assert e.match(1/a) == {a: 1/e}
     assert e.match(1/a**2) == {a: 1/sqrt(e)}
