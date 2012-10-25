@@ -37,12 +37,12 @@ class MatMul(MatrixExpr):
         return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j):
-        coeff, matmul = self.as_coeff_mmul()
+        coeff, matrices = self.as_coeff_matrices()
 
-        if not matmul.is_MatMul: # situation like 2*X, matmul is just X
-            return coeff * matmul[i, j]
+        if len(matrices) == 1: # situation like 2*X, matmul is just X
+            return coeff * matrices[0][i, j]
 
-        head, tail = matmul.args[0], matmul.args[1:]
+        head, tail = matrices[0], matrices[1:]
         assert len(tail) != 0
 
         X = head
