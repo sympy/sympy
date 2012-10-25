@@ -1,12 +1,18 @@
-from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
-    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
-from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE, simplify_logic, POSform, SOPform
+from sympy import symbols
+from sympy.logic.boolalg import (
+    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
+    SOPform, Xor, compile_rule, conjuncts, disjuncts,
+    distribute_and_over_or, eliminate_implications, is_cnf,
+    simplify_logic, to_cnf, to_int_repr
+)
 from sympy.utilities.pytest import raises
+
+
+A, B, C = symbols('A,B,C')
 
 
 def test_overloading():
     """Test that |, & are overloaded as expected"""
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert A & B == And(A, B)
     assert A | B == Or(A, B)
@@ -18,7 +24,6 @@ def test_overloading():
 
 
 def test_And():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert And() is True
     assert And(A) == A
@@ -35,7 +40,6 @@ def test_And():
 
 
 def test_Or():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert Or() is False
     assert Or(A) == A
@@ -52,7 +56,6 @@ def test_Or():
 
 
 def test_Xor():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert Xor() is False
     assert Xor(A) == A
@@ -77,7 +80,6 @@ def test_Not():
 
 
 def test_Nand():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert Nand() is False
     assert Nand(A) == ~A
@@ -94,7 +96,6 @@ def test_Nand():
 
 
 def test_Nor():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert Nor() is True
     assert Nor(A) == ~A
@@ -111,7 +112,6 @@ def test_Nor():
 
 
 def test_Implies():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     raises(ValueError, lambda: Implies(A, B, C))
     assert Implies(True, True) is True
@@ -122,7 +122,6 @@ def test_Implies():
 
 
 def test_Equivalent():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert Equivalent(A, B) == Equivalent(B, A) == Equivalent(A, B, A)
     assert Equivalent() is True
@@ -142,16 +141,25 @@ def test_simplification():
     set1 = [[0, 0, 1], [0, 1, 1], [1, 0, 0], [1, 1, 0]]
     set2 = [[0, 0, 0], [0, 1, 0], [1, 0, 1], [1, 1, 1]]
     from sympy.abc import w, x, y, z
+    assert SOPform('xyz', set1) == Or(And(Not(x), z), And(Not(z), x))
+    assert Not(SOPform('xyz', set2)) == And(Or(Not(x), Not(z)), Or(x, z))
+    assert POSform('xyz', set1 + set2) is True
+    assert SOPform('xyz', set1 + set2) is True
+
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
-    assert SOPform(['x', 'y', 'z'], set1) == Or(And(Not(x), z), And(Not(z), x))
-    assert Not(SOPform('xyz', set2)) == And(Or(Not(x), Not(z)), Or(x, z))
-    assert SOPform(['w', 'x', 'y', 'z'], minterms, dontcares) == Or(And(Not(w), z), And(y, z))
-    assert POSform(['w', 'x', 'y', 'z'], minterms, dontcares) == And(Or(Not(w), y), z)
-    assert simplify_logic('A & (B | C)') == simplify_logic('(A & B) | (A & C)')
-    assert POSform('xyz', set1 + set2) == True
-    assert SOPform('xyz', set1 + set2) == True
+    assert (
+        SOPform('wxyz', minterms, dontcares) ==
+        Or(And(Not(w), z), And(y, z)))
+    assert POSform('wxyz', minterms, dontcares) == And(Or(Not(w), y), z)
+
+    # test simplification
+    ans = And(A, Or(B, C))
+    assert simplify_logic('A & (B | C)') == ans
+    assert simplify_logic('(A & B) | (A & C)') == ans
+
+    # check input
     ans = SOPform('xy', [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
     assert POSform(['x', 'y'], [[1, 0]]) == ans
@@ -160,7 +168,6 @@ def test_simplification():
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
     works as expected"""
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert And(A, True) == A
     assert And(A, True, True) == A
@@ -171,7 +178,6 @@ def test_bool_symbol():
 
 
 def test_subs():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert (A & B).subs(A, True) == B
     assert (A & B).subs(A, False) is False
@@ -200,13 +206,11 @@ def test_commutative():
 
 def test_and_associativity():
     """Test for associativity of And"""
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert (A & B) & C == A & (B & C)
 
 
 def test_or_assicativity():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert ((A | B) | C) == (A | (B | C))
 
@@ -217,7 +221,6 @@ def test_double_negation():
 
 
 def test_De_Morgan():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert ~(A & B) == (~A) | (~B)
     assert ~(A | B) == (~A) & (~B)
@@ -227,7 +230,6 @@ def test_De_Morgan():
 
 
 def test_eliminate_implications():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert eliminate_implications(Implies(A, B, evaluate=False)) == (~A) | B
     assert eliminate_implications(
@@ -235,7 +237,6 @@ def test_eliminate_implications():
 
 
 def test_conjuncts():
-    A, B, C = map(Boolean, symbols('A,B,C'))
     assert conjuncts(A & B & C) == set([A, B, C])
     assert conjuncts((A | B) & C) == set([A | B, C])
     assert conjuncts(A) == set([A])
@@ -244,7 +245,6 @@ def test_conjuncts():
 
 
 def test_disjuncts():
-    A, B, C = map(Boolean, symbols('A,B,C'))
     assert disjuncts(A | B | C) == set([A, B, C])
     assert disjuncts((A | B) & C) == set([(A | B) & C])
     assert disjuncts(A) == set([A])
@@ -253,13 +253,11 @@ def test_disjuncts():
 
 
 def test_distribute():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
 
 
 def test_to_cnf():
-    A, B, C = map(Boolean, symbols('A,B,C'))
 
     assert to_cnf(~(B | C)) == And(Not(B), Not(C))
     assert to_cnf((A & B) | C) == And(Or(A, C), Or(B, C))
@@ -302,6 +300,7 @@ def test_is_cnf():
 
 def test_ITE():
     A, B, C = map(Boolean, symbols('A,B,C'))
+
     assert ITE(True, False, True) is False
     assert ITE(True, True, False) is True
     assert ITE(False, True, False) is False
