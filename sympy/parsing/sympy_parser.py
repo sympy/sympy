@@ -176,9 +176,12 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     if not hit:
         return expr
     rep = {C.Symbol(kern): 1}
-    try:
-        return expr.xreplace(rep)
-    except (TypeError, AttributeError):
-        if isinstance(expr, (list, tuple, set)):
-            return type(expr)([e.xreplace(rep) for e in expr])
+    def _clear(expr):
+        if hasattr(expr, 'xreplace'):
+            return expr.xreplace(rep)
+        elif isinstance(expr, (list, tuple, set)):
+            return type(expr)([_clear(e) for e in expr])
+        if hasattr(expr, 'subs'):
+            return expr.subs(rep)
         return expr
+    return _clear(expr)
