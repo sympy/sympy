@@ -1,4 +1,4 @@
-from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I, S
+from sympy import Ylm, Zlm, Symbol, sqrt, pi, sin, cos, exp, I, S
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos
 from sympy.utilities.pytest import XFAIL
 
@@ -20,20 +20,19 @@ def test_Plm():
     assert Plm(0, 0, x) == 1
     assert Plm(1, -1, x) == -Plm(1, 1, x)/2
     assert Plm(1, 0, x) == x
-    assert Plm(1, 1, x) == -(1 - x**2)**(sympify(1)/2)
+    assert Plm(1, 1, x) == -sqrt(1 - x**2)
     assert Plm(2, -2, x) == Plm(2, 2, x)/24
     assert Plm(2, -1, x) == -Plm(2, 1, x)/6
     assert Plm(2, 0, x) == (3*x**2 - 1)/2
-    assert Plm(2, 1, x) == -3*x*(1 - x**2)**(sympify(1)/2)
+    assert Plm(2, 1, x) == -3*x*sqrt(1 - x**2)
     assert Plm(2, 2, x) == 3*(1 - x**2)
     assert Plm(3, -3, x) == -Plm(3, 3, x)/720
     assert Plm(3, -2, x) == Plm(3, 2, x)/120
     assert Plm(3, -1, x) == -Plm(3, 1, x)/12
     assert Plm(3, 0, x) == (5*x**3 - 3*x)/2
-    assert Plm(3, 1, x).expand() == (( 3*(1 - 5*x**2)/2 ).expand()
-            *(1 - x**2)**(sympify(1)/2)).expand()
+    assert Plm(3, 1, x).expand() == (3*(1 - 5*x**2)/2*sqrt(1 - x**2)).expand()
     assert Plm(3, 2, x) == 15*x*(1 - x**2)
-    assert Plm(3, 3, x) == -15*(1 - x**2)**(sympify(3)/2)
+    assert Plm(3, 3, x) == -15*sqrt(1 - x**2)**3
 
 
 def test_Plmcos():
@@ -55,22 +54,20 @@ def test_Plmcos():
 def test_Ylm():
     #http://en.wikipedia.org/wiki/Spherical_harmonics
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
-    assert Ylm(0, 0, th, ph) == sympify(1)/(2*sqrt(pi))
-    assert Ylm(1, -1, th, ph) == sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
-        exp(-I*ph)
-    assert Ylm(1, 0, th, ph) == sympify(1)/2 * sqrt(3/pi) * cos(th)
-    assert Ylm(1, 1, th, ph) == -sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
-        exp(I*ph)
-    assert Ylm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) *
-            (3*cos(th)**2 - 1)).expand()
-    assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 *
-            sqrt(3)*sqrt(5/(2*pi)) * (sin(th)*cos(th)) * exp(I*ph)).expand()
+    assert Ylm(0, 0, th, ph) == 1/(2*sqrt(pi))
+    assert Ylm(1, -1, th, ph) == S.Half*sqrt(3/(2*pi))*sin(th)*exp(-I*ph)
+    assert Ylm(1, 0, th, ph) == S.Half*sqrt(3/pi)*cos(th)
+    assert Ylm(1, 1, th, ph) == -S.Half*sqrt(3/(2*pi))*sin(th)*exp(I*ph)
+    assert Ylm(2, 0, th, ph).expand() == (
+        S(1)/4*sqrt(5/pi)*(3*cos(th)**2 - 1)).expand()
+    assert Ylm(2, 1, th, ph).expand() == (
+        -S.Half*sqrt(3)*sqrt(5/(2*pi))*(sin(th)*cos(th))*exp(I*ph)).expand()
 
     # These last 2 return the correct answer, but the answer can be simplified
-    assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
-        S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
-    assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(
-        th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
+    assert Ylm(2, -2, th, ph).expand() == (-sqrt(30)*exp(-2*I*ph)*
+        cos(th)**2/(8*sqrt(pi)) + sqrt(30)*exp(-2*I*ph)/(8*sqrt(pi)))
+    assert Ylm(2, 2, th, ph).expand() == (-sqrt(30)*exp(2*I*ph)*
+        cos(th)**2/(8*sqrt(pi)) + sqrt(30)*exp(2*I*ph)/(8*sqrt(pi)))
 
 
 def test_Zlm():
@@ -82,6 +79,6 @@ def test_Zlm():
     assert Zlm(1, 1, th, ph) == sqrt(3/(4*pi))*sin(th)*cos(ph)
 
     assert Zlm(2, -1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*sin(ph)
-    assert Zlm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) *
+    assert Zlm(2, 0, th, ph).expand() == (S(1)/4*sqrt(5/pi) *
             (3*cos(th)**2 - 1)).expand()
     assert Zlm(2, 1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*cos(ph)
