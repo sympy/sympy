@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, FallingFactorial, FiniteSet,
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
     Float, FourierTransform, Function, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -475,6 +475,12 @@ def test_latex_Piecewise():
     p = Piecewise((x, x < 0), (0, x >= 0))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
                        " \\text{for}\\: x \\geq 0 \\end{cases}"
+    A, B = symbols("A B", commutative=False)
+    p = Piecewise((A**2, Eq(A, B)), (A*B, True))
+    s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
+    assert latex(p) == s
+    assert latex(A*p) == r"A %s" % s
+    assert latex(p*A) == r"\left(%s\right) A" % s
 
 
 def test_latex_Matrix():
