@@ -37,6 +37,7 @@ class Q:
     lower_triangular = Predicate('lower_triangular')
     diagonal = Predicate('diagonal')
     triangular = Predicate('triangular')
+    unit_triangular = Predicate('unit_triangular')
 
 
 def _extract_facts(expr, symbol):
