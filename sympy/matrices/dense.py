@@ -398,30 +398,32 @@ class DenseMatrix(MatrixBase):
         Without the error checks.
         To be used privately.
         """
-        X = zeros(self.rows, 1)
-        for i in range(self.rows):
-            if self[i, i] == 0:
-                raise TypeError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
-                for k in range(i))) / self[i, i]
+        X = zeros(self.rows, rhs.cols)
+        for j in range(rhs.cols):
+            for i in range(self.rows):
+                if self[i, i] == 0:
+                    raise TypeError("Matrix must be non-singular.")
+                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
+                    for k in range(i))) / self[i, i]
         return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
-        X = zeros(self.rows, 1)
-        for i in reversed(range(self.rows)):
-            if self[i, i] == 0:
-                raise ValueError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
-                for k in range(i + 1, self.rows))) / self[i, i]
+        X = zeros(self.rows, rhs.cols)
+        for j in range(rhs.cols):
+            for i in reversed(range(self.rows)):
+                if self[i, i] == 0:
+                    raise ValueError("Matrix must be non-singular.")
+                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
+                    for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
 
     def _diagonal_solve(self, rhs):
         """Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
-        return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
