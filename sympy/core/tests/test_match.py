@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    var, Wild, pi
+    Wild, pi
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -187,6 +187,13 @@ def test_functions():
 
 @XFAIL
 def test_functions_X1():
+    from sympy.core.function import WildFunction
+    x = Symbol('x')
+    g = WildFunction('g')
+    p = Wild('p')
+    q = Wild('q')
+
+    f = cos(5*x)
     assert f.match(p*g(q*x)) == {p: 1, g: cos, q: 5}
 
 
@@ -401,7 +408,7 @@ def test_match_wild_wild():
 
 
 def test_combine_inverse():
-    x, y = var("x y")
+    x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*I*y, y*I) == x
     assert Mul._combine_inverse(oo*I*y, y*I) == oo
@@ -411,6 +418,7 @@ def test_combine_inverse():
 
 
 def test_issue_674():
+    x = symbols('x')
     z, phi, r = symbols('z phi r')
     c, A, B, N = symbols('c A B N', cls=Wild)
     l = Wild('l', exclude=(0,))
@@ -432,7 +440,7 @@ def test_issue_674():
 
 
 def test_issue_784():
-    from sympy.abc import gamma, mu, pi, x
+    from sympy.abc import gamma, mu, x
     f = (-gamma * (x - mu)**2 - log(gamma) + log(2*pi))/2
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
@@ -499,21 +507,21 @@ def test_issue_2069():
 
 
 def test_issue_1460():
-    w=Wild('w')
-    y=Wild('y')
+    x = Symbol('x')
+    w = Wild('w', exclude=[x])
+    y = Wild('y')
 
     # this is as it should be
 
     assert (3/x).match(w/y) == {w: 3, y: x}
-    assert (x/3).match(w/y) == {w: x, y: 3}
-
-    # in theory the reverse could be obtained
-
     assert (3*x).match(w*y) == {w: 3, y: x}
+    assert (x/3).match(y/w) == {w: 3, y: x}
+    assert (3*x).match(y/w) == {w: S(1)/3, y: x}
 
-    # these could fail or be reversed
+    # these could be allowed to fail
 
-    assert (3*x).match(w/y) == {w: x, y: S(1)/3}
+    assert (x/3).match(w/y) is None
+    assert (3*x).match(w/y) is None
     assert (3/x).match(w*y) == {w: 3, y: 1/x}
 
     # since (x**i = y) -> x = y**(1/i) where i is an integer
