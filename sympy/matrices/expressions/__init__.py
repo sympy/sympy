@@ -11,3 +11,4 @@ from matpow import MatPow
 from trace import Trace
 from transpose import Transpose
 from adjoint import Adjoint
+from hadamard import Hadamard
