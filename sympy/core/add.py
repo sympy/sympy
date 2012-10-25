@@ -70,7 +70,7 @@ class Add(AssocOp):
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
-        coeff = S.Zero  # standalone term (Number or zoo will always be in slot 0)
+        coeff = S.Zero  # coefficient (Number or zoo) to always be in slot 0
                         # e.g. 3 + ...
         order_factors = []
 
@@ -90,7 +90,8 @@ class Add(AssocOp):
 
             # 3 or NaN
             elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o.is_bounded is False:
+                if (o is S.NaN or coeff is S.ComplexInfinity and
+                        o.is_bounded is False):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
@@ -128,7 +129,8 @@ class Add(AssocOp):
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
             elif o.is_Pow:
                 b, e = o.as_base_exp()
-                if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
+                if b.is_Number and (e.is_Integer or
+                                   (e.is_Rational and e.is_negative)):
                     seq.append(b**e)
                     continue
                 c, s = S.One, o
@@ -177,24 +179,24 @@ class Add(AssocOp):
 
         # oo, -oo
         if coeff is S.Infinity:
-            newseq = [f for f in newseq if not (f.is_nonnegative or f.is_real and
-                                                (f.is_bounded or
-                                                 f.is_finite or
-                                                 f.is_infinitesimal))]
+            newseq = [f for f in newseq if not
+                      (f.is_nonnegative or f.is_real and
+                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+
         elif coeff is S.NegativeInfinity:
-            newseq = [f for f in newseq if not (f.is_nonpositive or f.is_real and
-                                                (f.is_bounded or
-                                                 f.is_finite or
-                                                 f.is_infinitesimal))]
+            newseq = [f for f in newseq if not
+                      (f.is_nonpositive or f.is_real and
+                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+
         if coeff is S.ComplexInfinity:
             # zoo might be
             #   unbounded_real + bounded_im
             #   bounded_real + unbounded_im
             #   unbounded_real + unbounded_im
             # addition of a bounded real or imaginary number won't be able to
-            # change the zoo nature; if unbounded a NaN condition could result if
-            # the unbounded symbol had sign opposite of the unbounded portion of zoo,
-            # e.g. unbounded_real - unbounded_real
+            # change the zoo nature; if unbounded a NaN condition could result
+            # if the unbounded symbol had sign opposite of the unbounded
+            # portion of zoo, e.g., unbounded_real - unbounded_real.
             newseq = [c for c in newseq if not (c.is_bounded and
                                                 c.is_real is not None)]
 
@@ -385,7 +387,8 @@ class Add(AssocOp):
         # check for quick exit
         if len(nd) == 1:
             d, n = nd.popitem()
-            return Add(*[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
+            return Add(
+                *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
         for d, n in nd.iteritems():
@@ -551,16 +554,16 @@ class Add(AssocOp):
         coeff_old, terms_old = old.as_coeff_Add()
 
         if coeff_self.is_Rational and coeff_old.is_Rational:
-            if terms_self == terms_old:                       # (2 + a).subs( 3 + a, y) -> -1 + y
-                return Add( new, coeff_self, -coeff_old)
-            if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
+            if terms_self == terms_old:   # (2 + a).subs( 3 + a, y) -> -1 + y
+                return Add(new, coeff_self, -coeff_old)
+            if terms_self == -terms_old:  # (2 + a).subs(-3 - a, y) -> -1 - y
                 return Add(-new, coeff_self, coeff_old)
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
             args_old, args_self = Add.make_args(
                 terms_old), Add.make_args(terms_self)
-            if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
+            if len(args_old) < len(args_self):  # (a+b+c).subs(b+c,x) -> a+x
                 self_set = set(args_self)
                 old_set = set(args_old)
 
