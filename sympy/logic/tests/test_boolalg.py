@@ -145,11 +145,11 @@ def test_simplification():
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
-    assert Equivalent(SOPform(['x', 'y', 'z'], set1)) == Equivalent(
-        Not(SOPform('xyz', set2)))
-    assert Equivalent(SOPform(['w', 'x', 'y', 'z'], minterms, dontcares)) == Equivalent(POSform(['w', 'x', 'y', 'z'], minterms, dontcares))
-    assert Equivalent(simplify_logic(
-        'A & (B | C)')) == Equivalent(simplify_logic('(A & B) | (A & C)'))
+    assert SOPform(['x', 'y', 'z'], set1) == Or(And(Not(x), z), And(Not(z), x))
+    assert Not(SOPform('xyz', set2)) == And(Or(Not(x), Not(z)), Or(x, z))
+    assert SOPform(['w', 'x', 'y', 'z'], minterms, dontcares) == Or(And(Not(w), z), And(y, z))
+    assert POSform(['w', 'x', 'y', 'z'], minterms, dontcares) == And(Or(Not(w), y), z)
+    assert simplify_logic('A & (B | C)') == simplify_logic('(A & B) | (A & C)')
     assert POSform('xyz', set1 + set2) == True
     assert SOPform('xyz', set1 + set2) == True
     ans = SOPform('xy', [[1, 0]])
