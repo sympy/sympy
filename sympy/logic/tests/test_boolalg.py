@@ -74,6 +74,9 @@ def test_Not():
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
     assert Not(False, False) == [True, True ]
+    assert Not(0) is True
+    assert Not(1) is False
+    assert Not(2).func is Not
 
 
 def test_Nand():
