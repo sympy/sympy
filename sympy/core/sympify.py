@@ -10,6 +10,7 @@ class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
         self.base_exc = base_exc
+
     def __str__(self):
         if self.base_exc is None:
             return "SympifyError: %r" % (self.expr,)
@@ -18,7 +19,8 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {} #See sympify docstring.
+converter = {}  # See sympify docstring.
+
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -109,7 +111,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
     try:
         cls = a.__class__
-    except AttributeError:  #a is probably an old-style class object
+    except AttributeError:  # a is probably an old-style class object
         cls = type(a)
     if cls in sympy_classes:
         return a
@@ -180,6 +182,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError('could not parse %r' % a)
 
     return expr
+
 
 def _sympify(a):
     """Short version of sympify for internal usage for __add__ and __eq__

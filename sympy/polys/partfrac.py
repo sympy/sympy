@@ -7,6 +7,7 @@ from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
+
 @threaded
 def apart(f, x=None, full=False, **options):
     """
@@ -40,7 +41,8 @@ def apart(f, x=None, full=False, **options):
     (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
 
     if P.is_multivariate:
-        raise NotImplementedError("multivariate partial fraction decomposition")
+        raise NotImplementedError(
+            "multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
 
@@ -65,6 +67,7 @@ def apart(f, x=None, full=False, **options):
 
     return common*(poly.as_expr() + terms)
 
+
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """
     X = numbered_symbols(cls=Dummy)
@@ -75,7 +78,7 @@ def apart_undetermined_coeffs(P, Q):
     for f, k in factors:
         n, q = f.degree(), Q
 
-        for i in xrange(1, k+1):
+        for i in xrange(1, k + 1):
             coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)
@@ -102,6 +105,7 @@ def apart_undetermined_coeffs(P, Q):
         result += h/f.as_expr()**k
 
     return result
+
 
 def apart_full_decomposition(P, Q):
     """
@@ -131,7 +135,7 @@ def apart_full_decomposition(P, Q):
 
     for d, n in Q.sqf_list_include(all=True):
         b = d.as_expr()
-        U += [ u.diff(x, n-1) ]
+        U += [ u.diff(x, n - 1) ]
 
         h = cancel(f*b**n) / u**n
 
@@ -140,14 +144,14 @@ def apart_full_decomposition(P, Q):
         for j in range(1, n):
             H += [ H[-1].diff(x) / j ]
 
-        for j in range(1, n+1):
-            subs += [ (U[j-1], b.diff(x, j) / j) ]
+        for j in range(1, n + 1):
+            subs += [ (U[j - 1], b.diff(x, j) / j) ]
 
         for j in range(0, n):
             P, Q = cancel(H[j]).as_numer_denom()
 
-            for i in range(0, j+1):
-                P = P.subs(*subs[j-i])
+            for i in range(0, j + 1):
+                P = P.subs(*subs[j - i])
 
             Q = Q.subs(*subs[0])
 
@@ -161,7 +165,7 @@ def apart_full_decomposition(P, Q):
             b = (P * B.quo(g)).rem(D)
 
             numer = b.as_expr()
-            denom = (x-a)**(n-j)
+            denom = (x - a)**(n - j)
 
             func = Lambda(a, numer.subs(x, a)/denom)
             partial += RootSum(D, func, auto=False)

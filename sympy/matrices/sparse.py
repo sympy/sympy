@@ -2,7 +2,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.sympify import sympify
@@ -10,16 +10,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from matrices import MatrixBase, ShapeError, a2idx
 from dense import Matrix
-
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-#from sympy.core.compatibility import as_int
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 class SparseMatrix(MatrixBase):
@@ -348,7 +338,7 @@ class SparseMatrix(MatrixBase):
             Blist[i].append((j, v))
         Cdict = defaultdict(int)
         for k, j, Akj in A.row_list():
-            for n, Bjn  in Blist[j]:
+            for n, Bjn in Blist[j]:
                 temp = Akj*Bjn
                 Cdict[k, n] += temp
         rv = self.zeros(A.rows, B.cols)
@@ -839,12 +829,13 @@ class SparseMatrix(MatrixBase):
         return self._new(M)
 
     def LDLdecomposition(self):
-        """Returns the LDL Decomposition (L,D) of matrix A,
-        such that L * D * L.T == A
-        This method eliminates the use of square root.
-        Further this ensures that all the diagonal entries of L are 1.
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
+        """
+        Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
+        ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
+        symmetric, positive-definite and non-singular.
+
+        This method eliminates the use of square root and ensures that all
+        the diagonal entries of L are 1.
 
         Examples
         ========

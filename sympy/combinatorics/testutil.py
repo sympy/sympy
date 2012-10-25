@@ -1,6 +1,8 @@
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
-AlternatingGroup, CyclicGroup
 from sympy.combinatorics.util import _distribute_gens_by_base
+from sympy.combinatorics import Permutation
+
+rmul = Permutation.rmul
+
 
 def _cmp_perm_lists(first, second):
     """
@@ -24,9 +26,9 @@ def _cmp_perm_lists(first, second):
     True
 
     """
-    first.sort(key = lambda x: x.array_form)
-    second.sort(key = lambda x: x.array_form)
-    return first == second
+    return set([tuple(a) for a in first]) == \
+        set([tuple(a) for a in second])
+
 
 def _naive_list_centralizer(self, other):
     from sympy.combinatorics.perm_groups import PermutationGroup
@@ -54,8 +56,8 @@ def _naive_list_centralizer(self, other):
     if hasattr(other, 'generators'):
         elements = list(self.generate_dimino())
         gens = other.generators
-        commutes_with_gens = lambda x: [x*gen for gen in gens] ==\
-                                       [gen*x for gen in gens]
+        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] == \
+                                       [rmul(gen, x) for gen in gens]
         centralizer_list = []
         for element in elements:
             if commutes_with_gens(element):
@@ -65,6 +67,7 @@ def _naive_list_centralizer(self, other):
         return _naive_list_centralizer(self, PermutationGroup(other))
     elif hasattr(other, 'array_form'):
         return _naive_list_centralizer(self, PermutationGroup([other]))
+
 
 def _verify_bsgs(group, base, gens):
     """
@@ -93,10 +96,8 @@ def _verify_bsgs(group, base, gens):
     """
     from sympy.combinatorics.perm_groups import PermutationGroup
     strong_gens_distr = _distribute_gens_by_base(base, gens)
-    base_len = len(base)
-    degree = group.degree
     current_stabilizer = group
-    for i in range(base_len):
+    for i in range(len(base)):
         candidate = PermutationGroup(strong_gens_distr[i])
         if current_stabilizer.order() != candidate.order():
             return False
@@ -104,6 +105,7 @@ def _verify_bsgs(group, base, gens):
     if current_stabilizer.order() != 1:
         return False
     return True
+
 
 def _verify_centralizer(group, arg, centr=None):
     """
@@ -129,8 +131,8 @@ def _verify_centralizer(group, arg, centr=None):
     See Also
     ========
 
-    _naive_list_centralizer,\
-    sympy.combinatorics.perm_groups.PermutationGroup.centralizer,\
+    _naive_list_centralizer,
+    sympy.combinatorics.perm_groups.PermutationGroup.centralizer,
     _cmp_perm_lists
 
     """
@@ -139,6 +141,7 @@ def _verify_centralizer(group, arg, centr=None):
     centr_list = list(centr.generate_dimino())
     centr_list_naive = _naive_list_centralizer(group, arg)
     return _cmp_perm_lists(centr_list, centr_list_naive)
+
 
 def _verify_normal_closure(group, arg, closure=None):
     from sympy.combinatorics.perm_groups import PermutationGroup
@@ -151,7 +154,7 @@ def _verify_normal_closure(group, arg, closure=None):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,\
+    >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
     ... AlternatingGroup)
     >>> from sympy.combinatorics.testutil import _verify_normal_closure
     >>> S = SymmetricGroup(3)
@@ -177,8 +180,8 @@ def _verify_normal_closure(group, arg, closure=None):
         subgr_gens = [arg]
     for el in group_els:
         for gen in subgr_gens:
-            conjugate = (~el)*gen*el
+            conjugate = rmul(~el, gen, el)
             if conjugate not in conjugates:
                 conjugates.append(conjugate)
     naive_closure = PermutationGroup(conjugates)
-    return closure == naive_closure
+    return closure.is_subgroup(naive_closure)

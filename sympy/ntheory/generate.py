@@ -2,14 +2,15 @@
 Generating and counting primes.
 
 """
-
 import random
 from bisect import bisect
-from primetest import isprime
-
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
+
+from sympy.core.compatibility import as_int
+from primetest import isprime
+
 
 def _arange(a, b):
     ar = _array('l', [0]*(b - a))
@@ -99,7 +100,7 @@ class Sieve:
         >>> sieve._list
         array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
         """
-        i = int_tested(i)
+        i = as_int(i)
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
@@ -125,7 +126,7 @@ class Sieve:
         i = self.search(a)[1]
         maxi = len(self._list) + 1
         while i < maxi:
-            p = self._list[i-1]
+            p = self._list[i - 1]
             if p < b:
                 yield p
                 i += 1
@@ -167,7 +168,7 @@ class Sieve:
 
     def __contains__(self, n):
         try:
-            n = int_tested(n)
+            n = as_int(n)
             assert n >= 2
         except (ValueError, AssertionError):
             return False
@@ -178,7 +179,7 @@ class Sieve:
 
     def __getitem__(self, n):
         """Return the nth prime number"""
-        n = int_tested(n)
+        n = as_int(n)
         self.extend_to_no(n)
         return self._list[n - 1]
 
@@ -212,10 +213,11 @@ def prime(nth):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-    n = int_tested(nth)
+    n = as_int(nth)
     if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2");
+        raise ValueError("nth must be a positive integer; prime(1) == 2")
     return sieve[n]
+
 
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
@@ -242,6 +244,7 @@ def primepi(n):
         n = int(n)
         return sieve.search(n)[0]
 
+
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
 
@@ -267,7 +270,7 @@ def nextprime(n, ith=1):
 
     """
     n = int(n)
-    i = int_tested(ith)
+    i = as_int(ith)
     if i > 1:
         pr = n
         j = 1
@@ -302,6 +305,7 @@ def nextprime(n, ith=1):
         if isprime(n):
             return n
         n += 4
+
 
 def prevprime(n):
     """ Return the largest prime smaller than n.
@@ -346,6 +350,7 @@ def prevprime(n):
         if isprime(n):
             return n
         n -= 4
+
 
 def primerange(a, b):
     """ Generate a list of all prime numbers in the range [a, b).
@@ -427,6 +432,7 @@ def primerange(a, b):
         else:
             return
 
+
 def randprime(a, b):
     """ Return a random prime number in the range [a, b).
 
@@ -463,6 +469,7 @@ def randprime(a, b):
     if p < a:
         raise ValueError("no primes exist in the specified range")
     return p
+
 
 def primorial(n, nth=True):
     """
@@ -512,7 +519,7 @@ def primorial(n, nth=True):
 
     """
     if nth:
-        n = int_tested(n)
+        n = as_int(n)
     else:
         n = int(n)
     if n < 1:
@@ -525,6 +532,7 @@ def primorial(n, nth=True):
         for i in primerange(2, n + 1):
             p *= i
     return p
+
 
 def cycle_length(f, x0, nmax=None, values=False):
     """For a given iterated sequence, return a generator that gives
@@ -582,7 +590,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     # main phase: search successive powers of two
     power = lam = 1
-    tortoise, hare = x0, f(x0) # f(x0) is the element/node next to x0.
+    tortoise, hare = x0, f(x0)  # f(x0) is the element/node next to x0.
     i = 0
     while tortoise != hare and (not nmax or i < nmax):
         i += 1
@@ -613,5 +621,3 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
-
-from sympy.ntheory.residue_ntheory import int_tested

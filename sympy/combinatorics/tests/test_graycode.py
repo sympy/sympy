@@ -1,7 +1,15 @@
 from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
     random_bitstring, get_subset_from_bitstring, graycode_subsets)
 
+
 def test_graycode():
+    g = GrayCode(2)
+    got = []
+    for i in g.generate_gray():
+        if i.startswith('0'):
+            g.skip()
+        got.append(i)
+    assert got == '00 11 10'.split()
     a = GrayCode(6)
     assert a.current == '0'*6
     assert a.rank == 0
@@ -15,7 +23,8 @@ def test_graycode():
     '101100', '100100', '100101', '100111', '100110', '100010', '100011',
     '100001', '100000']
     assert list(a.generate_gray(start='011001')) == codes
-    assert list(a.generate_gray(rank=GrayCode(6, start='011001').rank)) == codes
+    assert list(
+        a.generate_gray(rank=GrayCode(6, start='011001').rank)) == codes
     assert a.next().current == '000001'
     assert a.next(2).current == '000011'
     assert a.next(-1).current == '100000'
@@ -27,8 +36,8 @@ def test_graycode():
 
     assert GrayCode(6, rank=4).current == '000110'
     assert GrayCode(6, rank=4).rank == 4
-    assert [GrayCode(4, start=s).rank for s in \
-            GrayCode(4).generate_gray()] == [0, 1, 2, 3, 4, 5, 6, 7, 8, \
+    assert [GrayCode(4, start=s).rank for s in
+            GrayCode(4).generate_gray()] == [0, 1, 2, 3, 4, 5, 6, 7, 8,
                                              9, 10, 11, 12, 13, 14, 15]
     a = GrayCode(15, rank=15)
     assert a.current == '000000000001000'
@@ -40,8 +49,9 @@ def test_graycode():
     assert len(a) == 5
     assert all(i in ['0', '1'] for i in a)
 
-    assert get_subset_from_bitstring(['a','b','c','d'], '0011') == ['c', 'd']
-    assert get_subset_from_bitstring('abcd','1001') == ['a', 'd']
-    assert list(graycode_subsets(['a','b','c'])) == \
-    [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
+    assert get_subset_from_bitstring(
+        ['a', 'b', 'c', 'd'], '0011') == ['c', 'd']
+    assert get_subset_from_bitstring('abcd', '1001') == ['a', 'd']
+    assert list(graycode_subsets(['a', 'b', 'c'])) == \
+        [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],
     ['a', 'c'], ['a']]

@@ -4,6 +4,7 @@ from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
 from sympy import S, Float, I, cos, sin, oo, pi, Add
 
+
 def test_Min():
     from sympy.abc import x, y, z
     n = Symbol('n', negative=True)
@@ -77,10 +78,10 @@ def test_Min():
     assert Min(x, y, z) == Min(z, y, x)
     assert Min(x, Min(y, z)) == Min(z, y, x)
     assert Min(x, Max(y, -oo)) == Min(x, y)
-    assert Min(p, oo, n,  p, p, p_) == n
+    assert Min(p, oo, n, p, p, p_) == n
     assert Min(p_, n_, p) == n_
-    assert Min(n, oo, -7, p,  p, 2) == Min(n, -7)
-    assert Min(2, x, p, n, oo, n_,  p, 2, -2, -2) == Min(-2, x, n, n_)
+    assert Min(n, oo, -7, p, p, 2) == Min(n, -7)
+    assert Min(2, x, p, n, oo, n_, p, 2, -2, -2) == Min(-2, x, n, n_)
     assert Min(0, x, 1, y) == Min(0, x, y)
     assert Min(1000, 100, -100, x, p, n) == Min(n, x, -100)
     assert Min(cos(x), sin(x)) == Min(cos(x), sin(x))
@@ -112,9 +113,9 @@ def test_Max():
     assert Max(x, y, z) == Max(z, y, x)
     assert Max(x, Max(y, z)) == Max(z, y, x)
     assert Max(x, Min(y, oo)) == Max(x, y)
-    assert Max(n, -oo, n_,  p, 2) == Max(p, 2)
-    assert Max(n, -oo, n_,  p) == p
-    assert Max(2, x, p, n, -oo, S.NegativeInfinity, n_,  p, 2) == Max(2, x, p)
+    assert Max(n, -oo, n_, p, 2) == Max(p, 2)
+    assert Max(n, -oo, n_, p) == p
+    assert Max(2, x, p, n, -oo, S.NegativeInfinity, n_, p, 2) == Max(2, x, p)
     assert Max(0, x, 1, y) == Max(1, x, y)
     assert Max(x, x + 1, x - 1) == 1 + x
     assert Max(1000, 100, -100, x, p, n) == Max(p, x, 1000)
@@ -138,8 +139,8 @@ def test_root():
 
     assert root(2, 2) == sqrt(2)
     assert root(2, 1) == 2
-    assert root(2, 3) == 2**Rational(1,3)
-    assert root(2, -5) == 2**Rational(4,5)/2
+    assert root(2, 3) == 2**Rational(1, 3)
+    assert root(2, -5) == 2**Rational(4, 5)/2
 
     assert root(-2, 1) == -2
 
@@ -148,11 +149,12 @@ def test_root():
 
     assert root(x, 2) == sqrt(x)
     assert root(x, 1) == x
-    assert root(x, 3) == x**Rational(1,3)
-    assert root(x, -5) == x**Rational(-1,5)
+    assert root(x, 3) == x**Rational(1, 3)
+    assert root(x, -5) == x**Rational(-1, 5)
 
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
+
 
 def test_nthroot():
     assert real_root(-8, 3) == -2

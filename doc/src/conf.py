@@ -22,7 +22,7 @@ sys.path.extend(['../sympy', 'ext'])
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive',]
+              'numpydoc', 'sympylive', ]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -143,8 +143,8 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
 latex_elements = {
-  'babel':     '',
-  'fontenc': r'''
+    'babel':     '',
+    'fontenc': r'''
 \usepackage{amssymb}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
@@ -152,10 +152,10 @@ latex_elements = {
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 ''',
-  'fontpkg':   '',
-  'inputenc':  '',
-  'utf8extra': '',
-  'preamble':  ''
+    'fontpkg':   '',
+    'inputenc':  '',
+    'utf8extra': '',
+    'preamble':  ''
 }
 
 # SymPy logo on title page
@@ -171,18 +171,16 @@ latex_show_pagerefs = True
 latex_use_modindex = False
 
 default_role = 'math'
-pngmath_divpng_args = ['-gamma 1.5','-D 110']
+pngmath_divpng_args = ['-gamma 1.5', '-D 110']
 # Note, this is ignored by the mathjax extension
 # Any \newcommand should be defined in the file
-pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
-              '\\usepackage{bm}\n'+\
-              '\\usepackage{amsfonts}\n'+\
-              '\\usepackage{amssymb}\n'+\
-              '\\setlength{\\parindent}{0pt}\n'
+pngmath_latex_preamble = '\\usepackage{amsmath}\n' \
+    '\\usepackage{bm}\n' \
+    '\\usepackage{amsfonts}\n' \
+    '\\usepackage{amssymb}\n' \
+    '\\setlength{\\parindent}{0pt}\n'
 
 texinfo_documents = [
-  (master_doc, 'sympy', 'SymPy Documentation',
-   'SymPy Development Team',
-   'SymPy', 'Computer algebra system (CAS) in Python', 'Programming',
-   1),
+    (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
+   'SymPy', 'Computer algebra system (CAS) in Python', 'Programming', 1),
 ]

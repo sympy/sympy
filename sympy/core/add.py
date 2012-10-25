@@ -6,6 +6,7 @@ from numbers import ilcm, igcd
 
 from collections import defaultdict
 
+
 class Add(AssocOp):
 
     __slots__ = []
@@ -38,7 +39,6 @@ class Add(AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
-            assert a
             if a.is_Rational:
                 if b.is_Mul:
                     # if it's an unevaluated 2-arg, expand it
@@ -70,7 +70,7 @@ class Add(AssocOp):
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
-        coeff = S.Zero  # standalone term (Number or zoo will always be in slot 0)
+        coeff = S.Zero  # coefficient (Number or zoo) to always be in slot 0
                         # e.g. 3 + ...
         order_factors = []
 
@@ -84,12 +84,14 @@ class Add(AssocOp):
                         break
                 if o is None:
                     continue
-                order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
+                order_factors = [o] + [
+                    o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
             # 3 or NaN
             elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o.is_bounded is False:
+                if (o is S.NaN or coeff is S.ComplexInfinity and
+                        o.is_bounded is False):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
@@ -127,7 +129,8 @@ class Add(AssocOp):
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
             elif o.is_Pow:
                 b, e = o.as_base_exp()
-                if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
+                if b.is_Number and (e.is_Integer or
+                                   (e.is_Rational and e.is_negative)):
                     seq.append(b**e)
                     continue
                 c, s = S.One, o
@@ -137,13 +140,11 @@ class Add(AssocOp):
                 c = S.One
                 s = o
 
-
             # now we have:
             # o = c*s, where
             #
             # c is a Number
             # s is an expression with number factor extracted
-
             # let's collect terms with the same s, so e.g.
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
@@ -151,12 +152,11 @@ class Add(AssocOp):
             else:
                 terms[s] = c
 
-
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
-        for s,c in terms.items():
+        for s, c in terms.items():
             # 0*s
             if c is S.Zero:
                 continue
@@ -173,30 +173,30 @@ class Add(AssocOp):
 
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    newseq.append(Mul(c,s))
+                    newseq.append(Mul(c, s))
 
             noncommutative = noncommutative or not s.is_commutative
 
         # oo, -oo
         if coeff is S.Infinity:
-            newseq = [f for f in newseq if not (f.is_nonnegative or f.is_real and
-                                                (f.is_bounded or
-                                                 f.is_finite or
-                                                 f.is_infinitesimal))]
+            newseq = [f for f in newseq if not
+                      (f.is_nonnegative or f.is_real and
+                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+
         elif coeff is S.NegativeInfinity:
-            newseq = [f for f in newseq if not (f.is_nonpositive or f.is_real and
-                                                (f.is_bounded or
-                                                 f.is_finite or
-                                                 f.is_infinitesimal))]
+            newseq = [f for f in newseq if not
+                      (f.is_nonpositive or f.is_real and
+                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+
         if coeff is S.ComplexInfinity:
             # zoo might be
             #   unbounded_real + bounded_im
             #   bounded_real + unbounded_im
             #   unbounded_real + unbounded_im
             # addition of a bounded real or imaginary number won't be able to
-            # change the zoo nature; if unbounded a NaN condition could result if
-            # the unbounded symbol had sign opposite of the unbounded portion of zoo,
-            # e.g. unbounded_real - unbounded_real
+            # change the zoo nature; if unbounded a NaN condition could result
+            # if the unbounded symbol had sign opposite of the unbounded
+            # portion of zoo, e.g., unbounded_real - unbounded_real.
             newseq = [c for c in newseq if not (c.is_bounded and
                                                 c.is_real is not None)]
 
@@ -218,7 +218,6 @@ class Add(AssocOp):
                 if o.contains(coeff):
                     coeff = S.Zero
                     break
-
 
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
@@ -328,7 +327,7 @@ class Add(AssocOp):
     def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
         coeff, terms = self.as_coeff_add()
-        if len(terms)==1:
+        if len(terms) == 1:
             return terms[0].matches(expr - coeff, repl_dict)
         return
 
@@ -388,7 +387,8 @@ class Add(AssocOp):
         # check for quick exit
         if len(nd) == 1:
             d, n = nd.popitem()
-            return Add(*[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
+            return Add(
+                *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
         for d, n in nd.iteritems():
@@ -399,7 +399,7 @@ class Add(AssocOp):
 
         # assemble single numerator and denominator
         denoms, numers = [list(i) for i in zip(*nd.iteritems())]
-        n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+        n, d = Add(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
                    for i in xrange(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
@@ -411,16 +411,23 @@ class Add(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real', when_multiple=None)
-    _eval_is_antihermitian = lambda self: self._eval_template_is_attr('is_antihermitian', when_multiple=None)
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded', when_multiple=None)
-    _eval_is_hermitian = lambda self: self._eval_template_is_attr('is_hermitian', when_multiple=None)
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr('is_imaginary', when_multiple=None)
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
+    _eval_is_real = lambda self: self._eval_template_is_attr(
+        'is_real', when_multiple=None)
+    _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
+        'is_antihermitian', when_multiple=None)
+    _eval_is_bounded = lambda self: self._eval_template_is_attr(
+        'is_bounded', when_multiple=None)
+    _eval_is_hermitian = lambda self: self._eval_template_is_attr(
+        'is_hermitian', when_multiple=None)
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
+        'is_imaginary', when_multiple=None)
+    _eval_is_integer = lambda self: self._eval_template_is_attr(
+        'is_integer', when_multiple=None)
+    _eval_is_commutative = lambda self: self._eval_template_is_attr(
+        'is_commutative')
 
     def _eval_is_odd(self):
-        l = [f for f in self.args if not (f.is_even==True)]
+        l = [f for f in self.args if not (f.is_even is True)]
         if not l:
             return False
         if l[0].is_odd:
@@ -547,15 +554,16 @@ class Add(AssocOp):
         coeff_old, terms_old = old.as_coeff_Add()
 
         if coeff_self.is_Rational and coeff_old.is_Rational:
-            if terms_self == terms_old:                       # (2 + a).subs( 3 + a, y) -> -1 + y
-                return Add( new, coeff_self, -coeff_old)
-            if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
-                return Add(-new, coeff_self,  coeff_old)
+            if terms_self == terms_old:   # (2 + a).subs( 3 + a, y) -> -1 + y
+                return Add(new, coeff_self, -coeff_old)
+            if terms_self == -terms_old:  # (2 + a).subs(-3 - a, y) -> -1 - y
+                return Add(-new, coeff_self, coeff_old)
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
-            args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
-            if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
+            args_old, args_self = Add.make_args(
+                terms_old), Add.make_args(terms_self)
+            if len(args_old) < len(args_self):  # (a+b+c).subs(b+c,x) -> a+x
                 self_set = set(args_self)
                 old_set = set(args_old)
 
@@ -564,7 +572,8 @@ class Add(AssocOp):
                     return Add(new, coeff_self, -coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-                args_old = Add.make_args(-terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                args_old = Add.make_args(
+                    -terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
@@ -781,7 +790,8 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(radical=radical)) for a in self.args]).primitive()
+        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(
+            radical=radical)) for a in self.args]).primitive()
         if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args

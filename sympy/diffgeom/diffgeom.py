@@ -12,6 +12,7 @@ from sympy.combinatorics import Permutation
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
 
+
 class Manifold(Basic):
     """Object representing a mathematical manifold.
 
@@ -163,7 +164,7 @@ class CoordSystem(Basic):
         super(CoordSystem, self).__init__()
         self.name = name
         if not names:
-            names = ['%s_%d'%(name, i) for i in range(patch.dim)]
+            names = ['%s_%d' % (name, i) for i in range(patch.dim)]
         self._names = names
         self.patch = patch
         self._args = self.name, self.patch
@@ -224,7 +225,8 @@ class CoordSystem(Basic):
         # format instead of wondering dict/tuple/whatever.
         # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
-        inv_to = solve([t[0]-t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
+        inv_to = solve(
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
         if isinstance(inv_to, dict):
             inv_to = [inv_to[fc] for fc in from_coords]
         else:
@@ -248,7 +250,8 @@ class CoordSystem(Basic):
 
     def jacobian(self, to_sys, coords):
         """Return the jacobian matrix of a transformation."""
-        with_dummies = self.coord_tuple_transform_to(to_sys, self._dummies).jacobian(self._dummies)
+        with_dummies = self.coord_tuple_transform_to(
+            to_sys, self._dummies).jacobian(self._dummies)
         return with_dummies.subs(zip(self._dummies, coords))
 
     ##########################################################################
@@ -321,7 +324,7 @@ class CoordSystem(Basic):
 
     def _latex(self, printer, *args):
         return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
-                self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
+            self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 
 class Point(Basic):
@@ -457,7 +460,8 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols=set()
+    free_symbols = set()
+
     def doit(self):
         return self
 
@@ -543,7 +547,8 @@ class BaseVectorField(Expr):
         # First step: e_x(x+r**2) -> e_x(x) + 2*r*e_x(r)
         d_var = self._coord_sys._dummy
         # TODO: you need a real dummy function for the next line
-        d_funcs = [Function('_#_%s' % i)(d_var) for i, b in enumerate(base_scalars)]
+        d_funcs = [Function('_#_%s' % i)(d_var) for i,
+                   b in enumerate(base_scalars)]
         d_result = scalar_field.subs(zip(base_scalars, d_funcs))
         d_result = d_result.diff(d_var)
 
@@ -559,7 +564,7 @@ class BaseVectorField(Expr):
         # Remove the dummies
         result = d_result.subs(zip(d_funcs, base_scalars))
         result = result.subs(zip(coords, self._coord_sys.coord_functions()))
-        return result.doit() # XXX doit for the Subs instances
+        return result.doit()  # XXX doit for the Subs instances
 
 
 class Commutator(Expr):
@@ -598,8 +603,9 @@ class Commutator(Expr):
     #"""
     def __new__(cls, v1, v2):
         if (covariant_order(v1) or contravariant_order(v1) != 1
-            or covariant_order(v2) or contravariant_order(v2) != 1):
-            raise ValueError('Only commutators of vector fields are supported.')
+                or covariant_order(v2) or contravariant_order(v2) != 1):
+            raise ValueError(
+                'Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
         coord_sys = set.union(*[v.atoms(CoordSystem) for v in (v1, v2)])
@@ -608,7 +614,8 @@ class Commutator(Expr):
             # actually evaluate the commutator.
             if all(isinstance(v, BaseVectorField) for v in (v1, v2)):
                 return Zero()
-            bases_1, bases_2 = [list(v.atoms(BaseVectorField)) for v in (v1, v2)]
+            bases_1, bases_2 = [list(v.atoms(BaseVectorField))
+                                for v in (v1, v2)]
             coeffs_1 = [v1.expand().coeff(b) for b in bases_1]
             coeffs_2 = [v2.expand().coeff(b) for b in bases_2]
             res = 0
@@ -683,7 +690,8 @@ class Differential(Expr):
     """
     def __new__(cls, form_field):
         if contravariant_order(form_field):
-            raise ValueError('A vector field was supplied as an argument to Differential.')
+            raise ValueError(
+                'A vector field was supplied as an argument to Differential.')
         if isinstance(form_field, Differential):
             return Zero()
         else:
@@ -717,7 +725,7 @@ class Differential(Expr):
                 for a in vector_fields):
             raise ValueError('The arguments supplied to Differential should be vector fields or Nones.')
         k = len(vector_fields)
-        if k==1:
+        if k == 1:
             if vector_fields[0]:
                 return vector_fields[0](self._form_field)
             return self
@@ -731,14 +739,14 @@ class Differential(Expr):
             v = vector_fields
             ret = 0
             for i in range(k):
-                t = v[i](f(*v[:i]+v[i+1:]))
+                t = v[i](f(*v[:i] + v[i + 1:]))
                 ret += (-1)**i*t
-                for j in range(i+1,k):
+                for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
-                    if c: # TODO this is ugly - the Commutator can be Zero and
+                    if c:  # TODO this is ugly - the Commutator can be Zero and
                           # this causes the next line to fail
-                        t = f(*(c,)+v[:i]+v[i+1:j]+v[j+1:])
-                        ret += (-1)**(i+j)*t
+                        t = f(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
+                        ret += (-1)**(i + j)*t
             return ret
 
 
@@ -790,7 +798,7 @@ class TensorProduct(Expr):
     def __new__(cls, *args):
         if any(contravariant_order(a) for a in args):
             raise ValueError('A vector field was supplied as an argument to TensorProduct.')
-        scalar = Mul(*[m for m in args if covariant_order(m)==0])
+        scalar = Mul(*[m for m in args if covariant_order(m) == 0])
         forms = [m for m in args if covariant_order(m)]
         if forms:
             if len(forms) == 1:
@@ -817,10 +825,10 @@ class TensorProduct(Expr):
         tot_order = covariant_order(self)
         tot_args = len(v_fields)
         if tot_args != tot_order:
-            v_fields = list(v_fields) + [None]*(tot_order-tot_args)
+            v_fields = list(v_fields) + [None]*(tot_order - tot_args)
         orders = [covariant_order(f) for f in self._args]
-        indices = [sum(orders[:i+1]) for i in range(len(orders)-1)]
-        v_fields = [v_fields[i:j] for i, j in zip([0]+indices, indices+[None])]
+        indices = [sum(orders[:i + 1]) for i in range(len(orders) - 1)]
+        v_fields = [v_fields[i:j] for i, j in zip([0] + indices, indices + [None])]
         multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
         return TensorProduct(*multipliers)
 
@@ -868,7 +876,8 @@ class WedgeProduct(TensorProduct):
         orders = (covariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(vector_fields)
-        perms_par = (Permutation(p).signature() for p in permutations(range(len(vector_fields))))
+        perms_par = (Permutation(
+            p).signature() for p in permutations(range(len(vector_fields))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
@@ -890,7 +899,7 @@ class LieDerivative(Expr):
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
             raise ValueError('Lie derivatives are defined only wrt vector fields.'
                              ' The supplied argument was not a vector field.')
-        if expr_form_ord>0:
+        if expr_form_ord > 0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
@@ -907,7 +916,7 @@ class LieDerivative(Expr):
         v = self._v_field
         expr = self._expr
         lead_term = v(expr(*args))
-        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i+1:])
+        rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i + 1:])
                      for i in range(len(args))])
         return lead_term - rest
 
@@ -958,7 +967,8 @@ class BaseCovarDerivativeOp(Expr):
         # First step: replace all vectors with something susceptible to
         # derivation and do the derivation
         # TODO: you need a real dummy function for the next line
-        d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i, b in enumerate(vectors)]
+        d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i,
+                   b in enumerate(vectors)]
         d_result = field.subs(zip(vectors, d_funcs))
         d_result = wrt_vector(d_result)
 
@@ -970,12 +980,12 @@ class BaseCovarDerivativeOp(Expr):
         for v in vectors:
             d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
                        *v._coord_sys.base_vector(k))
-                           for k in range(v._coord_sys.dim)])
+                      for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(zip(to_subs, derivs))
 
-        return result #TODO .doit() # XXX doit for the Subs instances
+        return result  # TODO .doit() # XXX doit for the Subs instances
 
 
 class CovarDerivativeOp(Expr):
@@ -1012,7 +1022,7 @@ class CovarDerivativeOp(Expr):
     def __call__(self, field):
         vectors = list(self._wrt.atoms(BaseVectorField))
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
-                        for v in vectors]
+                    for v in vectors]
         return self._wrt.subs(zip(vectors, base_ops))(field)
 
     def _latex(self, printer, *args):
@@ -1090,7 +1100,8 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
     The series in the polar coordinate system:
 
-    >>> series = intcurve_series(vector_field, t, start_point, n=3, coord_sys=R2_p, coeffs=True)
+    >>> series = intcurve_series(vector_field, t, start_point,
+    ...             n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
     [sqrt(x**2 + y**2)]
     [      atan2(y, x)]
@@ -1104,9 +1115,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
+
     def iter_vfield(scalar_field, i):
         """Return `vector_field` called `i` times on `scalar_field`."""
-        return reduce(lambda s, v: v(s), [vector_field,]*i, scalar_field)
+        return reduce(lambda s, v: v(s), [vector_field, ]*i, scalar_field)
+
     def taylor_terms_per_coord(coord_function):
         """Return the series for one of the coordinates."""
         return [param**i*iter_vfield(coord_function, i)(start_point)/factorial(i)
@@ -1188,12 +1201,13 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
-    gammas = [Function('f_%d'%i)(param) for i in range(start_point._coord_sys.dim)]
+    gammas = [Function('f_%d' % i)(param) for i in range(
+        start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
     equations = [simplify(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [simplify(cf(arbitrary_p).subs(param,0) - cf(start_point))
+    init_cond = [simplify(cf(arbitrary_p).subs(param, 0) - cf(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 
@@ -1250,13 +1264,14 @@ def contravariant_order(expr, _strict=False):
         return 0 if not not_zero else not_zero[0]
     elif isinstance(expr, Pow):
         if covariant_order(expr.base) or covariant_order(expr.exp):
-            raise ValueError('Misformed expression containing a power of a vector.')
+            raise ValueError(
+                'Misformed expression containing a power of a vector.')
         return 0
     elif isinstance(expr, BaseVectorField):
         return 1
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
-    else: # If it does not contain anything related to the diffgeom module and it is _strict
+    else:  # If it does not contain anything related to the diffgeom module and it is _strict
         return -1
 
 
@@ -1292,7 +1307,8 @@ def covariant_order(expr, _strict=False):
         return 0 if not not_zero else not_zero[0]
     elif isinstance(expr, Pow):
         if covariant_order(expr.base) or covariant_order(expr.exp):
-            raise ValueError('Misformed expression containing a power of a form.')
+            raise ValueError(
+                'Misformed expression containing a power of a form.')
         return 0
     elif isinstance(expr, Differential):
         return covariant_order(*expr.args) + 1
@@ -1300,7 +1316,7 @@ def covariant_order(expr, _strict=False):
         return sum(covariant_order(a) for a in expr.args)
     elif not _strict or expr.atoms(BaseScalarField):
         return 0
-    else: # If it does not contain anything related to the diffgeom module and it is _strict
+    else:  # If it does not contain anything related to the diffgeom module and it is _strict
         return -1
 
 
@@ -1371,7 +1387,7 @@ def twoform_to_matrix(expr):
     vectors = coord_sys.base_vectors()
     expr = expr.expand()
     matrix_content = [[expr(v1, v2) for v1 in vectors]
-                                    for v2 in vectors]
+                      for v2 in vectors]
     return Matrix(matrix_content)
 
 
@@ -1395,14 +1411,16 @@ def metric_to_Christoffel_1st(expr):
     """
     matrix = twoform_to_matrix(expr)
     if not matrix.is_symmetric():
-        raise ValueError('The two-form representing the metric is not symmetric.')
+        raise ValueError(
+            'The two-form representing the metric is not symmetric.')
     coord_sys = expr.atoms(CoordSystem).pop()
-    deriv_matrices = [matrix.applyfunc(lambda a: d(a)) for d in coord_sys.base_vectors()]
+    deriv_matrices = [matrix.applyfunc(lambda a: d(a))
+                      for d in coord_sys.base_vectors()]
     indices = range(coord_sys.dim)
-    christoffel = [[[(deriv_matrices[k][i,j] + deriv_matrices[j][i,k] - deriv_matrices[i][j,k])/2
+    christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
-                     for j in indices]
-                     for i in indices]
+                    for j in indices]
+                   for i in indices]
     return list_to_tuple_rec(christoffel)
 
 
@@ -1438,10 +1456,10 @@ def metric_to_Christoffel_2nd(expr):
     dums = coord_sys._dummies
     matrix = matrix.subs(zip(s_fields, dums)).inv().subs(zip(dums, s_fields))
     # XXX end of workaround
-    christoffel = [[[Add(*[matrix[i,l]*ch_1st[l][j][k] for l in indices])
+    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
                      for k in indices]
-                     for j in indices]
-                     for i in indices]
+                    for j in indices]
+                   for i in indices]
     return list_to_tuple_rec(christoffel)
 
 
@@ -1460,14 +1478,17 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0), (0, 0))))
+    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0),
+     (0, 0))))
 
-    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + R2.r**2*TP(R2.dtheta, R2.dtheta)
+    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
+        R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0]
-    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)), (exp(-2*r)*r - 2*r*exp(-2*r), 0)))
+    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)),
+        (exp(-2*r)*r - 2*r*exp(-2*r), 0)))
     >>> riemann[1]
     (((0, -r**(-1)), (r**(-1), 0)), ((0, 0), (0, 0)))
 
@@ -1476,25 +1497,25 @@ def metric_to_Riemann_components(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = range(coord_sys.dim)
     deriv_ch = [[[[d(ch_2nd[i][j][k])
-                     for d in coord_sys.base_vectors()]
-                     for k in indices]
-                     for j in indices]
-                     for i in indices]
+                   for d in coord_sys.base_vectors()]
+                  for k in indices]
+                 for j in indices]
+                for i in indices]
     riemann_a = [[[[deriv_ch[rho][sig][nu][mu] - deriv_ch[rho][sig][mu][nu]
-                     for nu in indices]
-                     for mu in indices]
-                     for sig in indices]
+                    for nu in indices]
+                   for mu in indices]
+                  for sig in indices]
                      for rho in indices]
     riemann_b = [[[[Add(*[ch_2nd[rho][l][mu]*ch_2nd[l][sig][nu] - ch_2nd[rho][l][nu]*ch_2nd[l][sig][mu] for l in indices])
-                     for nu in indices]
-                     for mu in indices]
-                     for sig in indices]
-                     for rho in indices]
+                    for nu in indices]
+                   for mu in indices]
+                  for sig in indices]
+                 for rho in indices]
     riemann = [[[[riemann_a[rho][sig][mu][nu] + riemann_b[rho][sig][mu][nu]
-                     for nu in indices]
+                  for nu in indices]
                      for mu in indices]
-                     for sig in indices]
-                     for rho in indices]
+                for sig in indices]
+               for rho in indices]
     return list_to_tuple_rec(riemann)
 
 
@@ -1515,7 +1536,8 @@ def metric_to_Ricci_components(expr):
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     ((0, 0), (0, 0))
 
-    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + R2.r**2*TP(R2.dtheta, R2.dtheta)
+    >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
+                             R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric) #TODO why is this not simpler
@@ -1526,6 +1548,6 @@ def metric_to_Ricci_components(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = range(coord_sys.dim)
     ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
-                     for j in indices]
-                     for i in indices]
+              for j in indices]
+             for i in indices]
     return list_to_tuple_rec(ricci)

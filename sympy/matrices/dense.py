@@ -1,7 +1,7 @@
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -15,16 +15,6 @@ from sympy.utilities.misc import filldedent
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
-
-# uncomment the import of as_int and delete the function when merged with 0.7.2
-#from sympy.core.compatibility import as_int
-
-
-def as_int(i):
-    ii = int(i)
-    if i != ii:
-        raise TypeError()
-    return ii
 
 
 def _iszero(x):
@@ -408,30 +398,32 @@ class DenseMatrix(MatrixBase):
         Without the error checks.
         To be used privately.
         """
-        X = zeros(self.rows, 1)
-        for i in range(self.rows):
-            if self[i, i] == 0:
-                raise TypeError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
-                for k in range(i))) / self[i, i]
+        X = zeros(self.rows, rhs.cols)
+        for j in range(rhs.cols):
+            for i in range(self.rows):
+                if self[i, i] == 0:
+                    raise TypeError("Matrix must be non-singular.")
+                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
+                    for k in range(i))) / self[i, i]
         return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
-        X = zeros(self.rows, 1)
-        for i in reversed(range(self.rows)):
-            if self[i, i] == 0:
-                raise ValueError("Matrix must be non-singular.")
-            X[i, 0] = (rhs[i, 0] - sum(self[i, k]*X[k, 0]
-                for k in range(i + 1, self.rows))) / self[i, i]
+        X = zeros(self.rows, rhs.cols)
+        for j in range(rhs.cols):
+            for i in reversed(range(self.rows)):
+                if self[i, i] == 0:
+                    raise ValueError("Matrix must be non-singular.")
+                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
+                    for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
 
     def _diagonal_solve(self, rhs):
         """Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
-        return self._new(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
@@ -718,7 +710,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         copyin_matrix
         """
         if not is_sequence(value):
-            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
+            raise TypeError(
+                "`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, Matrix(value))
 
     def row_op(self, i, f):
@@ -874,7 +867,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure)
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
+                                     measure=measure)
 
     def fill(self, value):
         """Fill the matrix with the scalar value.
@@ -1173,9 +1167,9 @@ def ones(r, c=None):
 
     if is_sequence(r):
         SymPyDeprecationWarning(
-                feature="The syntax ones([%i, %i])" % tuple(r),
-                useinstead="ones(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
+            feature="The syntax ones([%i, %i])" % tuple(r),
+            useinstead="ones(%i, %i)." % tuple(r),
+            issue=3381, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
     else:
@@ -1214,7 +1208,6 @@ def eye(n, cls=None):
     if cls is None:
         from sympy.matrices import Matrix as cls
     return cls.eye(n)
-
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1449,7 +1442,8 @@ def GramSchmidt(vlist, orthog=False):
         for j in range(i):
             tmp -= vlist[i].project(out[j])
         if not tmp.values():
-            raise ValueError("GramSchmidt: vector set not linearly independent")
+            raise ValueError(
+                "GramSchmidt: vector set not linearly independent")
         out.append(tmp)
     if orthog:
         for i in range(len(out)):
@@ -1578,7 +1572,8 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     else:
         prng = random.Random(seed)
     if symmetric and r != c:
-        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+        raise ValueError(
+            'For symmetric matrices, r must equal c, but %i != %i' % (r, c))
     if not symmetric:
         m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
     else:

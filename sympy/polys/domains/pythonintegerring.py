@@ -9,12 +9,13 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class PythonIntegerRing(IntegerRing):
     """Integer ring based on Python's ``int`` type. """
 
     dtype = PythonIntegerType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'ZZ_python'
 
     def __init__(self):

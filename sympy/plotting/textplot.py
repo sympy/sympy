@@ -1,5 +1,6 @@
 from sympy import *
 
+
 def textplot(expr, a, b, W=55, H=18):
     """
     Print a crude ASCII art plot of the SymPy expression 'expr' (which
@@ -23,7 +24,7 @@ def textplot(expr, a, b, W=55, H=18):
     y = [0] * W
     for x in range(W):
         try:
-            y[x] = f(a+(b-a)/float(W)*x)
+            y[x] = f(a + (b - a)/float(W)*x)
         except TypeError:
             y[x] = 0
 
@@ -36,21 +37,21 @@ def textplot(expr, a, b, W=55, H=18):
         else:
             mi, ma = -1, 1
     for x in range(W):
-        y[x] = int(float(H)*(y[x]-mi)/(ma-mi))
+        y[x] = int(float(H)*(y[x] - mi)/(ma - mi))
     margin = 7
     print
 
-    for h in range(H-1, -1, -1):
+    for h in range(H - 1, -1, -1):
         s = [' '] * W
         for x in range(W):
             if y[x] == h:
                 s[x] = '.'
 
         # Print y values
-        if h == H-1:
+        if h == H - 1:
             prefix = ("%g" % ma).rjust(margin)[:margin]
         elif h == H//2:
-            prefix = ("%g" % ((mi+ma)/2)).rjust(margin)[:margin]
+            prefix = ("%g" % ((mi + ma)/2)).rjust(margin)[:margin]
         elif h == 0:
             prefix = ("%g" % mi).rjust(margin)[:margin]
         else:
@@ -62,7 +63,7 @@ def textplot(expr, a, b, W=55, H=18):
 
     # Print x values
     bottom = " " * (margin + 3)
-    bottom += ("%g" % a).ljust(W//2-4)
-    bottom += ("%g" % ((a+b)/2)).ljust(W//2)
+    bottom += ("%g" % a).ljust(W//2 - 4)
+    bottom += ("%g" % ((a + b)/2)).ljust(W//2)
     bottom += "%g" % b
     print bottom

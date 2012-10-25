@@ -1,6 +1,7 @@
 from sympy import Basic, Expr
 from matexpr import ShapeError
 
+
 class Trace(Expr):
     """Matrix Trace
 
@@ -15,6 +16,7 @@ class Trace(Expr):
     3
     """
     is_Trace = True
+
     def __new__(cls, mat):
         if not mat.is_Matrix:
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
@@ -36,4 +38,4 @@ class Trace(Expr):
 
     def doit(self):
         from sympy import Add
-        return Add(*[self.arg[i,i] for i in range(self.arg.rows)])
+        return Add(*[self.arg[i, i] for i in range(self.arg.rows)])

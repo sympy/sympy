@@ -22,6 +22,7 @@ See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
+
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
@@ -68,6 +69,7 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     return message
 
+
 def int_to_Integer(s):
     """
     Wrap integer literals with Integer.
@@ -106,7 +108,7 @@ def int_to_Integer(s):
 
     result = []
     g = generate_tokens(StringIO(s).readline)   # tokenize the string
-    for toknum, tokval, _, _, _  in g:
+    for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
                 (NAME, 'Integer'),
@@ -155,6 +157,7 @@ def int_to_Integer(s):
 #     """
 #     app.shell.prefilter_manager.register_transformer(int_transformer)
 
+
 def enable_automatic_int_sympification(app):
     """
     Allow IPython to automatically convert integer literals to Integer.
@@ -166,6 +169,7 @@ def enable_automatic_int_sympification(app):
         old_run_cell = app.shell.run_cell
     else:
         old_run_cell = app.run_cell
+
     def my_run_cell(cell, *args, **kwargs):
         try:
             # Check the cell for syntax errors.  This way, the syntax error
@@ -184,6 +188,7 @@ def enable_automatic_int_sympification(app):
         app.shell.run_cell = my_run_cell
     else:
         app.run_cell = my_run_cell
+
 
 def enable_automatic_symbols(app):
     """Allow IPython to automatially create symbols (``isympy -a``). """
@@ -225,7 +230,8 @@ def enable_automatic_symbols(app):
     # multiple times.
 
     import re
-    re_nameerror = re.compile("name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
+    re_nameerror = re.compile(
+        "name '(?P<symbol>[A-Za-z_][A-Za-z0-9_]*)' is not defined")
 
     def _handler(self, etype, value, tb, tb_offset=None):
         """Handle :exc:`NameError` exception and allow injection of missing symbols. """
@@ -248,7 +254,8 @@ def enable_automatic_symbols(app):
                     self.run_cell("del %s" % match.group("symbol"),
                                   store_history=False)
 
-        stb = self.InteractiveTB.structured_traceback(etype, value, tb, tb_offset=tb_offset)
+        stb = self.InteractiveTB.structured_traceback(
+            etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
     if hasattr(app, 'shell'):
@@ -256,6 +263,7 @@ def enable_automatic_symbols(app):
     else:
         # This was restructured in IPython 0.13
         app.set_custom_exc((NameError,), _handler)
+
 
 def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
@@ -279,6 +287,7 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
+
 
 def init_python_session():
     """Construct new Python session. """
@@ -312,8 +321,10 @@ def init_python_session():
 
     return SymPyConsole()
 
+
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, quiet=False, auto_symbols=False, auto_int_to_Integer=False, argv=[]):
+        use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
+        auto_int_to_Integer=False, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -335,6 +346,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
     use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
+    use_latex: boolean or None
+        If True, use latex rendering if IPython GUI's;
+        if False, do not use latex rendering.
     quiet: boolean
         If True, init_session will not print messages regarding its status;
         if False, init_session will print messages regarding its status.
@@ -434,7 +448,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # runsource is gone, use run_cell instead, which doesn't
                 # take a symbol arg.  The second arg is `store_history`,
                 # and False means don't add the line to IPython's history.
-                ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+                ip.runsource = lambda src, symbol='exec': ip.run_cell(
+                    src, False)
 
                 #Enable interactive plotting using pylab.
                 try:
@@ -456,7 +471,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
     _preexec_source = preexec_source
 
     ip.runsource(_preexec_source, symbol='exec')
-    init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode, ip=ip)
+    init_printing(pretty_print=pretty_print, order=order,
+        use_unicode=use_unicode, use_latex=use_latex, ip=ip)
 
     message = _make_message(ipython, quiet, _preexec_source)
 

@@ -12,16 +12,17 @@ def _add_splines(c, b1, d, b2):
         return expand(piecewise_fold(c*b1))
     new_args = []
     n_intervals = len(b1.args)
-    assert(n_intervals==len(b2.args))
+    assert(n_intervals == len(b2.args))
     new_args.append((expand(c*b1.args[0].expr), b1.args[0].cond))
-    for i in range(1, n_intervals-1):
+    for i in range(1, n_intervals - 1):
         new_args.append((
-            expand(c*b1.args[i].expr+d*b2.args[i-1].expr),
+            expand(c*b1.args[i].expr + d*b2.args[i - 1].expr),
             b1.args[i].cond
         ))
     new_args.append((expand(d*b2.args[-2].expr), b2.args[-2].cond))
     new_args.append(b2.args[-1])
     return Piecewise(*new_args)
+
 
 def bspline_basis(d, knots, n, x, close=True):
     """The n-th B-spline at x of degree d with knots.
@@ -84,26 +85,28 @@ def bspline_basis(d, knots, n, x, close=True):
     d = int(d)
     n = int(n)
     n_knots = len(knots)
-    n_intervals = n_knots-1
-    if n+d+1 > n_intervals:
+    n_intervals = n_knots - 1
+    if n + d + 1 > n_intervals:
         raise ValueError('n+d+1 must not exceed len(knots)-1')
-    if d==0:
+    if d == 0:
         result = Piecewise(
-            (S.One, Interval(knots[n], knots[n+1], False, not close).contains(x)),
+            (S.One, Interval(knots[n], knots[n + 1], False,
+             not close).contains(x)),
             (0, True)
         )
     elif d > 0:
-        denom = knots[n+d+1] - knots[n+1]
+        denom = knots[n + d + 1] - knots[n + 1]
         if denom != S.Zero:
-            B = (knots[n+d+1] - x)/denom
-            b2 = bspline_basis(d-1, knots, n+1, x, close)
+            B = (knots[n + d + 1] - x)/denom
+            b2 = bspline_basis(d - 1, knots, n + 1, x, close)
         else:
             b2 = B = S.Zero
 
-        denom = knots[n+d] - knots[n]
+        denom = knots[n + d] - knots[n]
         if denom != S.Zero:
             A = (x - knots[n])/denom
-            b1 = bspline_basis(d-1, knots, n, x, close and (B == S.Zero or b2 == S.Zero))
+            b1 = bspline_basis(
+                d - 1, knots, n, x, close and (B == S.Zero or b2 == S.Zero))
         else:
             b1 = A = S.Zero
 
@@ -111,6 +114,7 @@ def bspline_basis(d, knots, n, x, close=True):
     else:
         raise ValueError('degree must be non-negative: %r' % n)
     return result
+
 
 def bspline_basis_set(d, knots, x):
     """Return the len(knots)-d-1 B-splines at x of degree d with knots.
@@ -142,5 +146,5 @@ def bspline_basis_set(d, knots, x):
 
     bsplines_basis
     """
-    n_splines = len(knots)-d-1
+    n_splines = len(knots) - d - 1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]

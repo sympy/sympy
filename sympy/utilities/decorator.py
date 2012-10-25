@@ -26,6 +26,7 @@ def threaded_factory(func, use_add):
 
     return threaded_func
 
+
 def threaded(func):
     """Apply ``func`` to sub--elements of an object, including :class:`Add`.
 
@@ -45,6 +46,7 @@ def threaded(func):
     """
     return threaded_factory(func, True)
 
+
 def xthreaded(func):
     """Apply ``func`` to sub--elements of an object, excluding :class:`Add`.
 
@@ -63,6 +65,7 @@ def xthreaded(func):
 
     """
     return threaded_factory(func, False)
+
 
 def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to

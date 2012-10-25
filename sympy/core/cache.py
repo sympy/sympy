@@ -8,6 +8,7 @@ CACHE = []  # [] of
 
 from sympy.core.decorators import wraps
 
+
 def print_cache():
     """print cache content"""
 
@@ -32,6 +33,7 @@ def print_cache():
             for k, v in kv.iteritems():
                 print '  %s :\t%s' % (k, v)
 
+
 def clear_cache():
     """clear cache content"""
     for item, cache in CACHE:
@@ -43,8 +45,10 @@ def clear_cache():
 
 ########################################
 
+
 def __cacheit_nocache(func):
     return func
+
 
 def __cacheit(func):
     """caching decorator.
@@ -89,6 +93,7 @@ def __cacheit(func):
         return r
     return wrapper
 
+
 def __cacheit_debug(func):
     """cacheit + code to check cache consistency"""
     cfunc = __cacheit(func)
@@ -96,7 +101,7 @@ def __cacheit_debug(func):
     @wraps(func)
     def wrapper(*args, **kw_args):
         # always call function itself and compare it with cached version
-        r1 = func (*args, **kw_args)
+        r1 = func(*args, **kw_args)
         r2 = cfunc(*args, **kw_args)
 
         # try to see if the result is immutable
@@ -116,6 +121,7 @@ def __cacheit_debug(func):
         return r1
     return wrapper
 
+
 def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
@@ -124,10 +130,11 @@ def _getenv(key, default=None):
 USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
 
 if USE_CACHE == 'no':
-    cacheit  = __cacheit_nocache
+    cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
-    cacheit  = __cacheit
+    cacheit = __cacheit
 elif USE_CACHE == 'debug':
-    cacheit  = __cacheit_debug   # a lot slower
+    cacheit = __cacheit_debug   # a lot slower
 else:
-    raise RuntimeError('unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+    raise RuntimeError(
+        'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)

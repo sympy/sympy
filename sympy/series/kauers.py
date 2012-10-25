@@ -1,7 +1,8 @@
 from sympy import expand
 from sympy import diff
 
-def finite_diff(expression, variable, increment = 1):
+
+def finite_diff(expression, variable, increment=1):
     """
     Takes as input the expression and the variable used in constructing the expression
     and returns the diffrence between function's value when the input is incremented

@@ -1,6 +1,7 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame
 
+
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
@@ -32,4 +33,5 @@ def test_particle():
     assert p.angular_momentum(O, N) == m2 * r * (v3 * N.x - v1 * N.z)
     p.set_potential_energy(m * g * h)
     assert p.potential_energy == m * g * h
-    assert p.kinetic_energy(N) == m2 * v1**2 / 2 + m2 * v2**2 / 2+ m2 * v3**2 / 2
+    assert p.kinetic_energy(
+        N) == m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2

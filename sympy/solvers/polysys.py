@@ -8,8 +8,10 @@ from sympy.utilities import postfixes
 from sympy.simplify import rcollect
 from sympy.core import S
 
+
 class SolveFailed(Exception):
     """Raised when solver's conditions weren't met. """
+
 
 def solve_poly_system(seq, *gens, **args):
     """
@@ -44,6 +46,7 @@ def solve_poly_system(seq, *gens, **args):
 
     return solve_generic(polys, opt)
 
+
 def solve_biquadratic(f, g, opt):
     """Solve a system of two bivariate quadratic polynomial equations.
 
@@ -63,7 +66,8 @@ def solve_biquadratic(f, g, opt):
     >>> a = Poly(y + x**2 - 3, y, x, domain='ZZ')
     >>> b = Poly(-y + x - 4, y, x, domain='ZZ')
     >>> solve_biquadratic(a, b, NewOption)
-    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + sqrt(29)/2)]
+    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \
+      sqrt(29)/2)]
     """
     G = groebner([f, g])
 
@@ -90,6 +94,7 @@ def solve_biquadratic(f, g, opt):
             solutions.append(solution)
 
     return sorted(solutions)
+
 
 def solve_generic(polys, opt):
     """
@@ -226,6 +231,7 @@ def solve_generic(polys, opt):
         return sorted(result)
     else:
         return None
+
 
 def solve_triangulated(polys, *gens, **args):
     """

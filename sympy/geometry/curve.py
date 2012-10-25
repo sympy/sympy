@@ -292,7 +292,7 @@ class Curve(GeometryEntity):
         tnew = _symbol(parameter, self.parameter)
         t = self.parameter
         if (tnew.name != t.name and
-            tnew.name in (f.name for f in self.free_symbols)):
+                tnew.name in (f.name for f in self.free_symbols)):
             raise ValueError('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % tnew.name)
         return Point(*[w.subs(t, tnew) for w in self.functions])

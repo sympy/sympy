@@ -5,6 +5,7 @@ General SymPy exceptions and warnings.
 from sympy.utilities.misc import filldedent
 from warnings import warn as warning
 
+
 class SymPyDeprecationWarning(DeprecationWarning):
     r"""A warning for deprecated features of SymPy.
 
@@ -13,8 +14,11 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     >>> import warnings
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> warnings.simplefilter("always", SymPyDeprecationWarning)
-    >>> warnings.warn("Don't do this, it's deprecated", SymPyDeprecationWarning) #doctest:+SKIP
+    >>> warnings.simplefilter(
+    ...     "always", SymPyDeprecationWarning)
+    >>> warnings.warn(
+    ...     "Don't do this, it's deprecated",
+    ...     SymPyDeprecationWarning) #doctest:+SKIP
     __main__:1: SymPyDeprecationWarning: "Don't do this, it's deprecated"
 
     The recommended way to use this class is, however, is by calling
@@ -112,7 +116,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
         if feature:
             if deprecated_since_version:
-                self.fullMessage = "%s has been deprecated since SymPy %s. " %\
+                self.fullMessage = "%s has been deprecated since SymPy %s. " % \
                                    (feature, deprecated_since_version)
             else:
                 self.fullMessage = "%s has been deprecated. " % feature
@@ -126,7 +130,6 @@ class SymPyDeprecationWarning(DeprecationWarning):
             self.fullMessage += ("See "
                 "http://code.google.com/p/sympy/issues/detail?id=%d for more "
                 "info. ") % issue
-
 
         if value:
             if not isinstance(value, str):
@@ -143,4 +146,4 @@ class SymPyDeprecationWarning(DeprecationWarning):
     def warn(self):
         see_above = self
         # the next line is what the user will see after the error is printed
-        warning (see_above, SymPyDeprecationWarning)
+        warning(see_above, SymPyDeprecationWarning)

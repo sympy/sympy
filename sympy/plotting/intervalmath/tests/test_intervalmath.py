@@ -2,6 +2,8 @@ from __future__ import division
 from sympy.plotting.intervalmath import interval
 from sympy.utilities.pytest import raises
 from sympy.external import import_module
+
+
 def test_interval():
     assert (interval(1, 1) == interval(1, 1, is_valid=True)) == (True, True)
     assert (interval(1, 1) == interval(1, 1, is_valid=False)) == (True, False)
@@ -12,7 +14,8 @@ def test_interval():
     assert (interval(1, 2) != interval(1, 2)) == (False, True)
     assert (interval(1, 3) != interval(2, 3)) == (None, True)
     assert (interval(1, 3) != interval(-5, -3)) == (True, True)
-    assert (interval(1, 3, is_valid=False) != interval(-5, -3)) == (True, False)
+    assert (
+        interval(1, 3, is_valid=False) != interval(-5, -3)) == (True, False)
     assert (interval(1, 3, is_valid=None) != interval(-5, 3)) == (None, None)
     assert (interval(4, 4) != 4) == (False, True)
     assert (interval(1, 1) == 1) == (True, True)
@@ -34,7 +37,8 @@ def test_interval():
     assert interval(0, float('inf')) in interb
     assert interval(-float('inf'), 5) in interb
     assert interval(-1e50, 1e50) in interb
-    assert (-interval(-1, -2, is_valid=False) == interval(1, 2)) == (True, False)
+    assert (
+        -interval(-1, -2, is_valid=False) == interval(1, 2)) == (True, False)
     raises(ValueError, lambda: interval(1, 2, 3))
 
 
@@ -45,15 +49,15 @@ def test_interval_add():
     compare = (1 + interval(0, float('inf')) == interval(1, float('inf')))
     assert compare == (True, True)
     a = 1 + interval(2, 5, is_valid=False)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = 1 + interval(2, 5, is_valid=None)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + interval(3, 5, is_valid=None)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(3, 5) + interval(-1, 1, is_valid=None)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(2, 5, is_valid=False) + 1
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_interval_sub():
@@ -61,13 +65,13 @@ def test_interval_sub():
     assert (interval(1, 2) - 1 == interval(0, 1)) == (True, True)
     assert (1 - interval(1, 2) == interval(-1, 0)) == (True, True)
     a = 1 - interval(1, 2, is_valid=False)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(1, 4, is_valid=None) - 1
     assert a.is_valid is None
     a = interval(1, 3, is_valid=False) - interval(1, 3)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(1, 3, is_valid=None) - interval(1, 3)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
 
 def test_interval_inequality():
@@ -78,7 +82,8 @@ def test_interval_inequality():
     assert (interval(1, 2) <= interval(1.5, 6)) == (None, True)
     assert (interval(2, 3) <= interval(1, 2)) == (None, True)
     assert (interval(2, 3) <= interval(1, 1.5)) == (False, True)
-    assert (interval(1, 2, is_valid=False) <= interval(-2, 0)) == (False, False)
+    assert (
+        interval(1, 2, is_valid=False) <= interval(-2, 0)) == (False, False)
     assert (interval(1, 2, is_valid=None) <= interval(-2, 0)) == (False, None)
     assert (interval(1, 2) <= 1.5) == (None, True)
     assert (interval(1, 2) <= 3) == (True, True)
@@ -113,7 +118,8 @@ def test_interval_inequality():
 
 
 def test_interval_mul():
-    assert (interval(1, 5) * interval(2, 10) == interval(2, 50)) == (True, True)
+    assert (
+        interval(1, 5) * interval(2, 10) == interval(2, 50)) == (True, True)
     a = interval(-1, 1) * interval(2, 10) == interval(-10, 10)
     assert a == (True, True)
 
@@ -143,14 +149,14 @@ def test_interval_div():
     div = 3 / interval(1, 2, is_valid=None)
     assert div == interval(-float('inf'), float('inf'), is_valid=None)
     a = interval(1, 2) / 0
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(0.5, 1) / interval(-1, 0)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(0, 1) / interval(0, 1)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
     a = interval(-1, 1) / interval(-1, 1)
-    assert a.is_valid == None
+    assert a.is_valid is None
 
     a = interval(-1, 2) / interval(0.5, 1) == interval(-2.0, 4.0)
     assert a == (True, True)
@@ -185,4 +191,4 @@ def test_interval_div():
     a = interval(-4, -0.5) / interval(-2, -0.5) == interval(0.25, 8.0)
     assert a == (True, True)
     a = interval(-5, 5, is_valid=False) / 2
-    assert a.is_valid == False
+    assert a.is_valid is False

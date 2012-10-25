@@ -85,14 +85,14 @@ Python definitions. They are not altered by changes made afterwards.
 Consider the following:
 
     >>> from sympy import Symbol
-    >>> a = Symbol('a') # Create a Symbol named a, that is also stored in the variable "a"
-    >>> b = a + 1       # Create another object, b, that refers to 'a'
+    >>> a = Symbol('a') # Symbol, `a`, stored as variable "a"
+    >>> b = a + 1       # an expression involving `a` stored as variable "b"
     >>> print b
     a + 1
-    >>> a = 4           # a now points to the literal integer 4, not Symbol('a')
+    >>> a = 4           # "a" now points to literal integer 4, not Symbol('a')
     >>> print a
     4
-    >>> b               # But b is still pointing at Symbol('a')
+    >>> b               # "b" is still pointing at the expression involving `a`
     a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
@@ -328,7 +328,10 @@ you don't have to worry about this problem:
     >>> a = solve(7*x - 22,x)
     >>> a
     [22/7]
-    >>> # The other solution is to put quotes around the expression and run it through S() (sympify)
+
+    The other solution is to put quotes around the expression
+    and run it through S() (i.e., sympify it):
+
     >>> S("22/7")
     22/7
 
@@ -377,19 +380,25 @@ The first issue to keep in mind is how the Float is created: it is created
 with a value and a precision. The precision indicates how precise of a value
 to use when that Float (or an expression it appears in) is evaluated.
 
-The values can be given as strings, integers, or Rationals. We do so below
-with a few different values:
+The values can be given as strings, integers, floats, or Rationals.
 
-    - integer input always returns an exact Integer and precision is ignored
+    - strings and integers are interpreted as exact
 
-    >>> Float(1234, 3)
-    1234
+    >>> Float(100)
+    100.000000000000
+    >>> Float('100', 5)
+    100.00
     
-    - strings are interpreted as exact and always result in a Float
+    - to have the precision match the number of digits, the null string
+      can be used for the precision
 
-    >>> Float('100', 3)
+    >>> Float(100, '')
     100.
-    
+    >>> Float('12.34')
+    12.3400000000000
+    >>> Float('12.34', '')
+    12.34
+
     >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
     >>> for f in [s, r]:
     ...     print f
@@ -632,14 +641,23 @@ square brackets.
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
     TypeError: 'tuple' object does not support item assignment
-    >>> (x,) # Single element tuples, unlike lists, must have a comma in them.
+
+    Single element tuples, unlike lists, must have a comma in them:
+
+    >>> (x,)
     (x,)
-    >>> (x) # Not a tuple
+
+    Without the comma, a single expression without a comma is not a tuple:
+
+    >>> (x)
     x
-    >>> # integrate takes a tuple as the second argument if you want to integrate with limits.
+
+    integrate takes a sequence as the second argument if you want to integrate
+    with limits (and a tuple or list will work):
+
     >>> integrate(x**2, (x, 0, 1))
     1/3
-    >>> integrate(x**2, [x, 0, 1]) # But a list works too.
+    >>> integrate(x**2, [x, 0, 1])
     1/3
 
 
@@ -661,25 +679,41 @@ a name in the parameters list (usually ``**kwargs`` or
 ``**assumptions``) allow you to add any number of ``key=value`` pairs
 that you want, and they will all be evaluated according to the function.
 
-    >>> # sqrt(x**2) doesn't auto simplify to x because x is assumed to be
-    >>> # complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1.
+    sqrt(x**2) doesn't auto simplify to x because x is assumed to be
+    complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1:
+
     >>> sqrt(x**2)
     sqrt(x**2)
-    >>> x = Symbol('x', positive=True) # One example of keyword arguments is assumptions for Symbols
-    >>> sqrt(x**2) # only == x if x >= 0
+
+    Giving assumptions to Symbols is an example of using the keyword argument:
+
+    >>> x = Symbol('x', positive=True)
+
+    The square root will now simplify since it knows that x >= 0:
+
+    >>> sqrt(x**2)
     x
-    >>> pprint(powsimp(x**n*x**m*y**n*y**m)) # powsimp has a default argument, combine='all'
+
+    powsimp has a default argument of combine='all':
+
+    >>> pprint(powsimp(x**n*x**m*y**n*y**m))
          m + n
     (x*y)
-    >>> # Setting combine to the default value is the same as not setting it.
+
+    Setting combine to the default value is the same as not setting it.
+
     >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='all'))
          m + n
     (x*y)
-    >>> # The non-default options are 'exp', which combines exponents...
+
+    The non-default options are 'exp', which combines exponents...
+
     >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='exp'))
      m + n  m + n
     x     *y
-    >>> # ...and 'base', which combines bases.
+
+    ...and 'base', which combines bases.
+
     >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='base'))
          m      n
     (x*y) *(x*y)

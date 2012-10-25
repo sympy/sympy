@@ -43,12 +43,19 @@ typically much more convenient for the user::
 
   >>> from sympy.physics.mechanics import ReferenceFrame, inertia
   >>> N = ReferenceFrame('N')
-  >>> # supply a reference frame and the moments of inertia if the object is symmetrical
+
+  Supply a reference frame and the moments of inertia if the object
+  is symmetrical:
+
   >>> inertia(N, 1, 2, 3)
   (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
-  >>> # supply a reference frame along with the products and moments of inertia for a general object
+
+  Supply a reference frame along with the products and moments of inertia
+  for a general object:
+
   >>> inertia(N, 1, 2, 3, 4, 5, 6)
-  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
+  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) +
+              5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
 
 Notice that the ``inertia`` function returns a dyadic with each component
 represented as two unit vectors separated by a ``|``. Refer to the

@@ -4,6 +4,7 @@ from sympy import homomorphism, QQ, S
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
+
 def test_printing():
     R = QQ[x]
 
@@ -14,6 +15,7 @@ def test_printing():
     assert str(homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])) == \
         '[0] : QQ[x]**1 -> QQ[x]**1/<[x]>'
     assert str(R.free_module(0).identity_hom()) == '[] : QQ[x]**0 -> QQ[x]**0'
+
 
 def test_operations():
     F = QQ[x].free_module(2)
@@ -49,6 +51,7 @@ def test_operations():
     raises(TypeError, lambda: f - 1)
     raises(TypeError, lambda: f*i)
 
+
 def test_creation():
     F = QQ[x].free_module(3)
     G = QQ[x].free_module(2)
@@ -75,14 +78,20 @@ def test_creation():
     assert SQ.quotient_hom() == homomorphism(SQ.base, SQ, im)
 
     class conv(object):
-        def convert(x, y=None): return x
+        def convert(x, y=None):
+            return x
+
     class dummy(object):
         container = conv()
-        def submodule(*args): return None
+
+        def submodule(*args):
+            return None
     raises(TypeError, lambda: homomorphism(dummy(), G, matrix))
     raises(TypeError, lambda: homomorphism(F, dummy(), matrix))
-    raises(ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))
+    raises(
+        ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))
     raises(ValueError, lambda: homomorphism(F, G, [0, 0]))
+
 
 def test_properties():
     R = QQ[x, y]
@@ -94,7 +103,8 @@ def test_properties():
     assert not h.is_surjective()
     assert h.restrict_codomain(h.image()).is_surjective()
     assert h.restrict_domain(F.submodule([1, 0])).is_injective()
-    assert h.quotient_domain(h.kernel()).restrict_codomain(h.image()).is_isomorphism()
+    assert h.quotient_domain(
+        h.kernel()).restrict_codomain(h.image()).is_isomorphism()
 
     R2 = QQ.poly_ring(x, y, order=(("lex", x), ("ilex", y))) / [x**2 + 1]
     F = R2.free_module(2)

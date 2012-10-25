@@ -30,6 +30,7 @@ from sympy.utilities import lambdify
 _reals_cache = {}
 _complexes_cache = {}
 
+
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
@@ -60,7 +61,8 @@ class RootOf(Expr):
             raise PolynomialError("can't construct RootOf object for %s" % f)
 
         if index < -degree or index >= degree:
-            raise IndexError("root index out of [%d, %d] range, got %d" % (-degree, degree-1, index))
+            raise IndexError("root index out of [%d, %d] range, got %d" %
+                             (-degree, degree - 1, index))
         elif index < 0:
             index += degree
 
@@ -139,7 +141,8 @@ class RootOf(Expr):
             real_part = _reals_cache[factor]
         else:
             _reals_cache[factor] = real_part = \
-                dup_isolate_real_roots_sqf(factor.rep.rep, factor.rep.dom, blackbox=True)
+                dup_isolate_real_roots_sqf(
+                    factor.rep.rep, factor.rep.dom, blackbox=True)
 
         return real_part
 
@@ -150,7 +153,8 @@ class RootOf(Expr):
             complex_part = _complexes_cache[factor]
         else:
             _complexes_cache[factor] = complex_part = \
-                dup_isolate_complex_roots_sqf(factor.rep.rep, factor.rep.dom, blackbox=True)
+                dup_isolate_complex_roots_sqf(
+                    factor.rep.rep, factor.rep.dom, blackbox=True)
 
         return complex_part
 
@@ -182,9 +186,9 @@ class RootOf(Expr):
         cache = {}
 
         for i, (u, f, k) in enumerate(reals):
-            for j, (v, g, m) in enumerate(reals[i+1:]):
+            for j, (v, g, m) in enumerate(reals[i + 1:]):
                 u, v = u.refine_disjoint(v)
-                reals[i+j+1] = (v, g, m)
+                reals[i + j + 1] = (v, g, m)
 
             reals[i] = (u, f, k)
 
@@ -207,9 +211,9 @@ class RootOf(Expr):
         cache = {}
 
         for i, (u, f, k) in enumerate(complexes):
-            for j, (v, g, m) in enumerate(complexes[i+1:]):
+            for j, (v, g, m) in enumerate(complexes[i + 1:]):
                 u, v = u.refine_disjoint(v)
-                complexes[i+j+1] = (v, g, m)
+                complexes[i + j + 1] = (v, g, m)
 
             complexes[i] = (u, f, k)
 
@@ -281,7 +285,7 @@ class RootOf(Expr):
         else:
             complexes = cls._get_complexes(factors)
             complexes = cls._complexes_sorted(complexes)
-            return cls._complexes_index(complexes, index-reals_count)
+            return cls._complexes_index(complexes, index - reals_count)
 
     @classmethod
     def _real_roots(cls, poly):
@@ -403,7 +407,7 @@ class RootOf(Expr):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
-            refined =  False
+            refined = False
 
             while True:
                 if self.is_real:
@@ -427,6 +431,7 @@ class RootOf(Expr):
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
+
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
@@ -437,7 +442,8 @@ class RootSum(Expr):
         coeff, poly = cls._transform(expr, x)
 
         if not poly.is_univariate:
-            raise MultivariatePolynomialError("only univariate polynomials are allowed")
+            raise MultivariatePolynomialError(
+                "only univariate polynomials are allowed")
 
         if func is None:
             func = Lambda(poly.gen, poly.gen)
@@ -451,7 +457,8 @@ class RootSum(Expr):
                 if not isinstance(func, Lambda):
                     func = Lambda(poly.gen, func(poly.gen))
             else:
-                raise ValueError("expected a univariate function, got %s" % func)
+                raise ValueError(
+                    "expected a univariate function, got %s" % func)
 
         var, expr = func.variables[0], func.expr
 
@@ -499,7 +506,7 @@ class RootSum(Expr):
         obj = Expr.__new__(cls)
 
         obj.poly = poly
-        obj.fun  = func
+        obj.fun = func
         obj.auto = auto
 
         return obj
