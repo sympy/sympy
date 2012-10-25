@@ -24,7 +24,10 @@ class RaisingOp(Operator):
 		return LoweringOp(*self.args)
 		
 	def _eval_commutator_LoweringOp(self, other):
-		return -1
+		return Integer(-1)
+		
+	#def _apply_operator_SHOKet(self, ket):
+	#	return ket.energy + Integer(1)
 		
 	# Printing 
 	def _sympyrepr(self, printer, *args):
@@ -65,7 +68,6 @@ class LoweringOp(Operator):
 
 	@classmethod
 	def default_args(self):
-
 		args = QExpr._eval_args(args)
 		if len(args) == 1:
 			return("a",)
@@ -76,14 +78,16 @@ class LoweringOp(Operator):
 		return RaisingOp(*self.args)
 		
 	def _eval_commutator_RaisingOp(self, other):
-		return 1
+		return Integer(1)
 
+	#def _apply_operator_SHOKet(self, ket):
+	#	return ket.energy - Integer(1)
 
 
 #--------------------------------------------------------------------
 
 
-class SHOState(SHOBase):
+class SHOState(State):
 	pass
 
 
@@ -96,6 +100,13 @@ class SHOKet(SHOState, Ket):
 	def _eval_innerproduct_SHOBra(self, bra, **hints):
 		result = KroneckerDelta(self, bra)
 		return result
+		
+	#@property	
+	#def energy(self):
+	#	"Energy Level of the state"
+	#	return self.args[1]
+		
+		
 		
 class SHOBra(SHOState, Bra):
 
