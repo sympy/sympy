@@ -610,9 +610,20 @@ class PrettyPrinter(Printer):
 
     def _print_Transpose(self, T):
         pform = self._print(T.arg)
-        if (T.arg.is_Add or T.arg.is_Mul or T.arg.is_Pow):
+        if (T.arg.is_MatAdd or T.arg.is_MatMul):
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right("'"))
+        return pform
+
+    def _print_Adjoint(self, A):
+        pform = self._print(A.arg)
+        if self._use_unicode:
+            dag = prettyForm(u'\u2020')
+        else:
+            dag = prettyForm('+')
+        if (A.arg.is_MatAdd or A.arg.is_MatMul):
+            pform = prettyForm(*pform.parens())
+        pform = pform**prettyForm(u'\u2020')
         return pform
 
     def _print_Inverse(self, I):

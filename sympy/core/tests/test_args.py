@@ -1642,6 +1642,10 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
+def test_sympy__matrices__expressions__adjoint__Adjoint():
+    from sympy.matrices.expressions.adjoint import Adjoint
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Adjoint(MatrixSymbol('A', 3, 5)))
 
 def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions.trace import Trace
