@@ -726,6 +726,15 @@ class MatrixBase(object):
         """Solves Ax = B efficiently, where A is a diagonal Matrix,
         with non-zero diagonal entries.
 
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> A = eye(2)*2
+        >>> B = Matrix([[1, 2], [3, 4]])
+        >>> A.diagonal_solve(B) == B/2
+        True
+
         See Also
         ========
 
@@ -748,6 +757,15 @@ class MatrixBase(object):
 
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> A = eye(2)*2
+        >>> B = Matrix([[1, 2], [3, 4]])
+        >>> A.LDLsolve(B) == B/2
+        True
 
         See Also
         ========
