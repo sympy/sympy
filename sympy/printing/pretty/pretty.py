@@ -651,7 +651,7 @@ class PrettyPrinter(Printer):
     def _print_MatAdd(self, expr):
         return self._print_seq(expr.args, None, None, ' + ')
 
-    def _print_Hadamard(self, expr):
+    def _print_HadamardProduct(self, expr):
         return self._print_seq(expr.args, None, None, '.*')
 
     _print_MatrixSymbol = _print_Symbol

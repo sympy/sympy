@@ -2,17 +2,17 @@ from matexpr import MatrixExpr, ShapeError
 from sympy import Mul, Basic
 from sympy.rules import (unpack, flatten, sort, condition, exhaust, do_one)
 
-class Hadamard(MatrixExpr):
+class HadamardProduct(MatrixExpr):
     """Elementwise Product of Matrix Expressions
 
-    >>> from sympy import Hadamard, MatrixSymbol
+    >>> from sympy import HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> C = MatrixSymbol('C', 5, 5)
-    >>> Hadamard(A, B, C)
+    >>> HadamardProduct(A, B, C)
     A.*B.*C
     """
-    is_Hadamard = True
+    is_HadamardProduct = True
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', True)
@@ -35,7 +35,7 @@ class Hadamard(MatrixExpr):
 
     def _eval_transpose(self):
         from transpose import Transpose
-        return Hadamard(*[Transpose(arg) for arg in self.args])
+        return HadamardProduct(*[Transpose(arg) for arg in self.args])
 
     def canonicalize(self):
         return canonicalize(self)
@@ -52,5 +52,5 @@ rules = (unpack,
          flatten,
          sort(str))
 
-canonicalize = exhaust(condition(lambda x: isinstance(x, Hadamard),
+canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))

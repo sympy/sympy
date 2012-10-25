@@ -1038,13 +1038,13 @@ class LatexPrinter(Printer):
             return self._print(x)
         return ' '.join(map(parens, expr.args))
 
-    def _print_Hadamard(self, expr):
+    def _print_HadamardProduct(self, expr):
         from sympy import Add, MatAdd
         def parens(x):
             if isinstance(x, (Add, MatAdd)):
                 return r"\left(%s\right)"%self._print(x)
             return self._print(x)
-        return '.*'.join(map(parens, expr.args))
+        return ' \circ '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp

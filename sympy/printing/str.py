@@ -275,7 +275,7 @@ class StrPrinter(Printer):
         return '*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
-    def _print_Hadamard(self, expr):
+    def _print_HadamardProduct(self, expr):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
