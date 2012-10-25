@@ -108,6 +108,15 @@ def distribute(A, B):
         return expr
     return distribute_rl
 
+def subs(a, b):
+    """ Replace expressions exactly """
+    def subs_rl(expr):
+        if expr == a:
+            return b
+        else:
+            return expr
+    return subs_rl
+
 # Functions that are rules
 
 def unpack(expr):
